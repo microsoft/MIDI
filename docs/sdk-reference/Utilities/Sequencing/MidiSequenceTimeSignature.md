@@ -14,10 +14,10 @@ description: One time signature change in a sequence
 | ----- | ----------- |
 | `Tick` | Where the change takes effect |
 | `Numerator` | Beats per bar |
-| `Denominator` | The note value which gets the beat. 4 means a quarter note, 8 an eighth, and so on |
-| `TicksPerBar` | How long a bar is under this signature |
+| `Denominator` | The note value that gets the beat. 4 means a quarter note, 8 an eighth note, and so on |
+| `TicksPerBar` | How long a bar is with this time signature |
 | `BarNumberAtTick` | The bar number at `Tick`, counted from one |
 
 ## Remarks
 
-`TicksPerBar` and `BarNumberAtTick` are worked out while reading, so asking where a tick falls in the music does not mean walking the file. That is also what makes `GetBarPositionAtTick` on the sequence cheap enough to call while drawing.
+`TicksPerBar` and `BarNumberAtTick` are worked out while reading, so finding where a tick falls in the music doesn't mean going through the whole file. That's also what makes `GetBarPositionAtTick` on the sequence fast enough to call while drawing.

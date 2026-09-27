@@ -5,16 +5,16 @@ namespace: Windows.Devices.Midi2.Diagnostics
 type: runtimeclass
 description: Response from a single ping message
 ---
-This class represents a single ping message response. This is used to assess health and performance of the Windows service. This is not normally used by applications.
+The answer to one ping message. It's used to check how well the MIDI service is working. Most applications don't need it.
 
 ## Properties
 
 | Property | Description |
 |---|---|
-| `SourceId` | Id used to track this ping source connection instance, in the case of multiple applications using the same ping endpoint |
-| `Index` | Index of the ping |
-| `ClientSendMidiTimestamp` | The time the client sent the ping message |
-| `ServiceReportedMidiTimestamp` | The time the service reported receiving the ping message |
-| `ClientReceiveMidiTimestamp` | The time the client received the ping response |
-| `ClientDeltaTimestamp` | The delta between the client sending the message and receiving the response |
+| `SourceId` | An id for the connection that sent the ping, so answers don't get mixed up when several applications ping at once |
+| `Index` | Which ping this is |
+| `ClientSendMidiTimestamp` | When your application sent the ping |
+| `ServiceReportedMidiTimestamp` | When the service says it received the ping |
+| `ClientReceiveMidiTimestamp` | When your application got the answer |
+| `ClientDeltaTimestamp` | The time between sending the ping and getting the answer |
 

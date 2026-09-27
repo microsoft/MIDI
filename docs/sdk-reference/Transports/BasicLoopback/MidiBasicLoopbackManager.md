@@ -6,25 +6,31 @@ type: runtimeclass
 description: The primary class used to create or remove basic MIDI 1.0-style loopback endpoints
 ---
 
+Creates, removes, mutes, and lists basic loopback endpoints.
+
 ## Static Properties
 
 | Static Property | Description |
 | -------- | ----------- |
-| `IsTransportAvailable` | Returns true if this transport is available in the service. |
-| `TransportId` | Returns the GUID of this transport. |
+| `IsTransportAvailable` | True if this transport is available in the service |
+| `TransportId` | The GUID of this transport |
+| `IsFeedbackProtectionAvailable` | False when the basic loopback transport on this PC can't watch for feedback |
 
 ## Static Methods
 
 | Static Method | Description |
 | -------- | ----------- |
-| `CreateTransientLoopback(creationConfig)` | Create a transient loopback endpoint which will live until removed or the service is restarted. Returns a `MidiBasicLoopbackCreationResponse`. |
-| `RemoveTransientLoopback(removalConfig)` | Remove a transient loopback endpoint. Returns a `MidiBasicLoopbackRemovalResponse`. |
-| `GetAssociationId(basicLoopbackEndpoint)` | Returns the association GUID for the given basic loopback endpoint. |
-| `DoesLoopbackExist(uniqueIdentifier)` | Returns true if a basic loopback with the specified unique identifier already exists. |
-| `MuteLoopback(associationId)` | Mutes (suppresses all messages for) the loopback with the given association id. Returns a `MidiBasicLoopbackUpdateResponse`. |
-| `UnmuteLoopback(associationId)` | Unmutes the loopback with the given association id. Returns a `MidiBasicLoopbackUpdateResponse`. |
-| `GetActiveLoopbackEntries()` | Returns a collection of all active `MidiBasicLoopbackEntry` objects. |
+| `CreateTransientLoopback(creationConfig)` | Creates a temporary loopback endpoint. It lasts until you remove it or the service restarts. Returns a `MidiBasicLoopbackCreationResponse` |
+| `RemoveTransientLoopback(removalConfig)` | Removes a temporary loopback endpoint. Returns a `MidiBasicLoopbackRemovalResponse` |
+| `GetAssociationId(basicLoopbackEndpoint)` | Returns the association GUID of this basic loopback endpoint |
+| `DoesLoopbackExist(uniqueIdentifier)` | Returns true if a basic loopback with this unique id already exists |
+| `MuteLoopback(associationId)` | Mutes the loopback with this association id, so no messages get through. Returns a `MidiBasicLoopbackUpdateResponse` |
+| `UnmuteLoopback(associationId)` | Unmutes the loopback with this association id. Returns a `MidiBasicLoopbackUpdateResponse` |
+| `SetFeedbackProtection(associationId, feedbackProtection)` | Changes what the loopback does if MIDI feeds back into it. Takes effect right away. Save the change to the configuration to keep it after a restart. Returns a `MidiBasicLoopbackUpdateResponse` |
+| `GetActiveLoopbackEntries()` | Returns a `MidiBasicLoopbackEntry` for each active basic loopback |
 
-Applications creating endpoints for app-to-app MIDI should generally use the Virtual Device support built into the API. However, applications may need to create lightweight loopback endpoints without the protocol negotiation, MIDI 2.0 discovery process, and lifetime management provided by the Virtual Device support. For those scenarios, we have a simple loopback endpoint type.
+## Remarks
 
-Loopback endpoints created by the user and stored in the configuration file will persist after the service is restarted or the PC rebooted. Loopback endpoints created through this API call are temporary, and will disappear if the service is restarted. In both cases, this feature requires that the basic loopback endpoint transport is installed and enabled.
+If your app creates endpoints so it can talk to other apps, it should usually use the virtual device support in the API. But sometimes an app needs a simpler loopback endpoint, without the protocol negotiation, MIDI 2.0 discovery, and lifetime management that virtual devices have. That's what basic loopbacks are for.
+
+Loopback endpoints that people create in the MIDI tools are saved in the configuration, so they stay after the service restarts or the PC reboots. Loopback endpoints created with this API are temporary, and go away when the service restarts. Either way, the basic loopback transport must be installed and turned on.

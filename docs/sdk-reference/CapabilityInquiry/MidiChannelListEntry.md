@@ -7,28 +7,28 @@ implements: Windows.Foundation.IStringable
 description: One channel a device describes, from its ChannelList resource
 ---
 
-The channel number here is **one based, and runs from 1 to 256** rather than 1 to 16. The specification numbers channels from the first channel of the first group and runs across all sixteen groups, which is why this cannot be a [`MidiChannel`]({{ site.baseurl }}/sdk-reference/MidiChannel): that type addresses a channel within one group and stops at 16.
+The channel number here **starts at 1 and goes up to 256**, not 16. The specification numbers channels across all sixteen groups, starting with the first channel of the first group. That's why this can't be a [`MidiChannel`]({{ site.baseurl }}/sdk-reference/MidiChannel), which is a channel within one group and stops at 16.
 
-Note also that the channel number is one based while the bank and program values are zero based. That is the specification's own inconsistency, carried through as it arrives rather than quietly corrected into something a caller would have to undo before transmitting.
+Also, the channel number starts at 1, but the bank and program numbers start at 0. That's how the specification does it. The values are passed through exactly as they arrive, so you don't have to undo a change before you send them back to the device.
 
 ## Constructors
 
 | Constructor | Description |
 | ----------- | ----------- |
-| `MidiChannelListEntry()` | Constructs an empty entry |
-| `MidiChannelListEntry(channel, title)` | Constructs an entry for a channel |
+| `MidiChannelListEntry()` | Creates an empty entry |
+| `MidiChannelListEntry(channel, title)` | Creates an entry for a channel |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `Title` | Display name for the channel, from the entry's `title` |
-| `Channel` | One based, and 1 to 256 rather than 1 to 16 |
-| `BankMsb` | Bank select most significant byte of whatever is selected. Zero based |
-| `BankLsb` | Bank select least significant byte. Zero based |
-| `ProgramChange` | Program change number. Zero based |
-| `ProgramTitle` | Name of whatever is currently selected on the channel, when the device reports one |
-| `Links` | Where this channel's programs come from. A device offering several collections is only reachable by following these |
+| `Title` | The channel's display name, from the entry's `title` |
+| `Channel` | The channel number, from 1 to 256 |
+| `BankMsb` | The bank select most significant byte of whatever is selected. Starts at 0 |
+| `BankLsb` | The bank select least significant byte. Starts at 0 |
+| `ProgramChange` | The program change number. Starts at 0 |
+| `ProgramTitle` | The name of whatever is selected on the channel now, if the device reports one |
+| `Links` | Where this channel's programs come from. For a device with several collections, following these is the only way to reach them |
 
 ## Methods
 

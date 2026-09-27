@@ -6,14 +6,14 @@ type: runtimeclass
 description: Overall response from pinging the MIDI Service
 ---
 
-This class represents a summary of the ping attempts against the Windows service. This is not normally used by applications.
+A summary of all the pings sent to the MIDI service. Most applications don't need it.
 
 ## Properties
 
 | Property | Description |
 |---|---|
-| `Success` | True if the ping was a success |
-| `FailureReason` | In case of a failure, this includes information about why the failure happened. |
-| `TotalPingRoundTripMidiClock` | The total MIDI Clock time for all ping messages to be sent and received |
-| `AveragePingRoundTripMidiClock` | Calculated average round trip time for ping messages |
-| `Responses` | A list of all the responses for the ping messages |
+| `Success` | True if the ping worked |
+| `FailureReason` | If the ping failed, why |
+| `TotalPingRoundTripMidiClock` | The total `MidiClock` time to send and receive all the pings |
+| `AveragePingRoundTripMidiClock` | The average round trip time for one ping |
+| `Responses` | A list of the answers to each ping |

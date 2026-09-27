@@ -13,20 +13,20 @@ Pass to `MidiNetworkTransportManager.ConnectNetworkClientAsync`.
 
 | Constructor | Description |
 | -------- | ----------- |
-| `MidiNetworkClientConnectConfig()` | Create an empty config |
+| `MidiNetworkClientConnectConfig()` | Creates an empty configuration |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `ClientId` | The GUID which identifies this client entry, used for later disconnect and to match the entry in the configuration file |
-| `Comment` | Optional comment written to the configuration file. Not used by the service |
-| `CreateOnlyUmpEndpoints` | When true, only UMP endpoints are created. When false, MIDI 1.0 ports are created alongside them |
-| `FallbackMidi1PortCount` | Source and destination ports to create when the remote host declares no function blocks. 1 to 16, defaults to 1. Ignored when the host does describe itself, and when `CreateOnlyUmpEndpoints` is true |
-| `UmpEndpointName` | The UMP Endpoint Name to use for the local end of this connection |
-| `CustomEndpointName` | What the customer chose to call the MIDI endpoint this connection creates. It is applied before the endpoint is activated, so the endpoint and its MIDI 1.0 ports are never created under the remote's own name and renamed afterwards. Leave it empty to use the name the remote announces |
-| `MatchCriteria` | A `MidiNetworkClientMatchCriteria` identifying the remote host |
+| `ClientId` | The GUID that identifies this client entry. It's used to disconnect later, and to find the entry in the configuration |
+| `Comment` | An optional comment saved with the entry in the configuration. The service doesn't use it |
+| `CreateOnlyUmpEndpoints` | When true, only UMP endpoints are created. When false, MIDI 1.0 ports are created with them |
+| `FallbackMidi1PortCount` | How many source and destination ports to create when the remote host declares no function blocks. 1 to 16, and 1 by default. Ignored when the host does describe itself, and when `CreateOnlyUmpEndpoints` is true |
+| `UmpEndpointName` | The UMP Endpoint Name to use for this PC's end of the connection |
+| `CustomEndpointName` | The name the person chose for the MIDI endpoint this connection creates. It's applied before the endpoint is turned on, so the endpoint and its MIDI 1.0 ports never appear under the remote device's own name first. Leave it empty to use the name the remote device announces |
+| `MatchCriteria` | A `MidiNetworkClientMatchCriteria` that says which remote host to connect to |
 
 ## Remarks
 
-Calling `ConnectNetworkClientAsync` with a `ClientId` which already exists does not create a duplicate. It re-arms the existing entry, which is how a direct connection marked `Unavailable` is retried.
+Calling `ConnectNetworkClientAsync` with a `ClientId` that already exists doesn't create a copy. It starts the existing entry trying again, which is how you retry a direct connection marked `Unavailable`.

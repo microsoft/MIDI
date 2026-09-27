@@ -12,6 +12,6 @@ Returned by `MidiBasicLoopbackManager.MuteLoopback()` and `MidiBasicLoopbackMana
 
 | Property | Description |
 | -------- | ----------- |
-| `Success` | True if the operation succeeded |
-| `ErrorCode` | A `MidiBasicLoopbackErrorCode` value if `Success` is false |
-| `ErrorMessage` | A human-readable error message if `Success` is false |
+| `Success` | True if it worked |
+| `ErrorCode` | A `MidiBasicLoopbackErrorCode`, if `Success` is false |
+| `ErrorMessage` | An error message people can read, if `Success` is false |

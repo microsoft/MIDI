@@ -12,16 +12,16 @@ Implements `IMidiServiceTransportPluginConfig`.
 
 | Constructor | Description |
 | -------- | ----------- |
-| `MidiBluetoothPeripheralConfig()` | Creates a configuration which advertises Bluetooth Low Energy MIDI 1.0. |
-| `MidiBluetoothPeripheralConfig(protocol)` | Creates a configuration which advertises the given `MidiBluetoothProtocol`. |
+| `MidiBluetoothPeripheralConfig()` | Creates a configuration that advertises Bluetooth Low Energy MIDI 1.0 |
+| `MidiBluetoothPeripheralConfig(protocol)` | Creates a configuration that advertises this `MidiBluetoothProtocol` |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `Protocol` | Which `MidiBluetoothProtocol` to advertise. Only one can be advertised at a time, so a MIDI 1.0 device cannot connect while MIDI 2.0 is selected. |
-| `IsEnabled` | Saving with this false is how a caller stops the peripheral being published on the next service start, since stopping it is otherwise only for this session. |
-| `TransportId` | The Bluetooth transport's GUID. |
-| `ConfigJson` | The configuration file representation of this setting. |
+| `Protocol` | Which `MidiBluetoothProtocol` to advertise. Only one can be advertised at a time, so a MIDI 1.0 device can't connect while MIDI 2.0 is selected |
+| `IsEnabled` | Save with this set to false to stop publishing this PC when the service next starts. Otherwise, stopping the peripheral only lasts until the service restarts |
+| `TransportId` | The Bluetooth transport's GUID |
+| `ConfigJson` | This setting, as JSON |
 
-The advertised name is not configurable. Windows takes it from the computer name and the GATT service provider gives an application no way to override it, so it is reported through `MidiBluetoothPeripheralStatus.AdvertisedName` instead.
+You can't set the advertised name. Windows uses the computer name, and it gives apps no way to change it. So the name is reported in `MidiBluetoothPeripheralStatus.AdvertisedName` instead.

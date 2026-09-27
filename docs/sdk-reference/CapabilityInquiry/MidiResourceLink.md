@@ -7,22 +7,22 @@ implements: Windows.Foundation.IStringable
 description: A pointer from one resource to another, as carried in a links array
 ---
 
-This is how a device says which ProgramList a given channel selects from. A device with several collections is only reachable by following these.
+This is how a device says which ProgramList a channel uses. For a device with several collections, following these links is the only way to reach them all.
 
 ## Constructors
 
 | Constructor | Description |
 | ----------- | ----------- |
-| `MidiResourceLink()` | Constructs an empty link |
-| `MidiResourceLink(resource, resourceId)` | Constructs a link to one instance of a resource |
+| `MidiResourceLink()` | Creates an empty link |
+| `MidiResourceLink(resource, resourceId)` | Creates a link to one copy of a resource |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
 | `Resource` | The resource being pointed at, for example `ProgramList` |
-| `ResourceId` | Which instance of that resource, when the device offers more than one. Empty means the device has only the one and the request carries no identifier |
-| `Title` | Display name for the collection, when the device gives one |
+| `ResourceId` | Which copy of that resource, when the device offers more than one. Empty means the device has only one, and requests for it don't include an id |
+| `Title` | The collection's display name, if the device gives one |
 
 ## Methods
 

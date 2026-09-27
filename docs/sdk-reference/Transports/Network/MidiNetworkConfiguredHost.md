@@ -12,25 +12,25 @@ Returned by `MidiNetworkTransportManager.GetConfiguredHosts()`.
 
 | Property | Description |
 | -------- | ----------- |
-| `HostId` | The GUID which identifies this host entry |
-| `IsEnabled` | True if this host is permitted to accept connections |
+| `HostId` | The GUID that identifies this host entry |
+| `IsEnabled` | True if this host is allowed to accept connections |
 | `HasStarted` | True if the host is running and listening |
-| `ActualPort` | The UDP port the host is bound to. A string, because that is what the underlying socket reports |
-| `ActualAddress` | The local address the host is bound to |
-| `ConfiguredPort` | What the host was configured to use, or `auto`. Compare with `ActualPort` to see whether the customer got the port they asked for |
-| `AllowPortFallback` | True when the host was permitted to start on an allocated port if the configured one was unavailable |
-| `UsedPortFallback` | True when that happened. The host is working, but not where the customer asked it to be, so this is worth surfacing |
+| `ActualPort` | The UDP port the host is using. It's a string, because that's what the network socket reports |
+| `ActualAddress` | The local address the host is using |
+| `ConfiguredPort` | The port the host was set up to use, or `auto`. Compare it with `ActualPort` to see whether the host got the port that was asked for |
+| `AllowPortFallback` | True when the host was allowed to start on another port if the one it was set up with wasn't available |
+| `UsedPortFallback` | True when that happened. The host works, but not on the port that was asked for, so it's worth showing people |
 | `UmpEndpointName` | The UMP Endpoint Name remote devices see |
 | `ProductInstanceId` | The Product Instance Id advertised for this host |
 | `ServiceInstanceName` | The mDNS service instance name |
-| `ActualServiceInstanceName` | The DNS-SD instance label actually on the network. A responder renames a colliding label rather than refusing it, so this is not always the configured name |
-| `ServiceInstanceNameWasChanged` | True when that happened. The host works, but other devices see a different name than the one configured, so this is worth showing |
-| `CreateMidi1Ports` | True if MIDI 1.0 ports are created alongside the UMP endpoints |
-| `RemoteClientPolicy` | What this host does when an unknown remote client requests a connection. See `MidiNetworkRemoteClientPolicy`. |
-| `Connections` | The current remote clients that have reached this host, including clients waiting for approval. |
+| `ActualServiceInstanceName` | The DNS-SD name really in use on the network. When two devices use the same name, the network renames one instead of refusing it, so this isn't always the name that was set up |
+| `ServiceInstanceNameWasChanged` | True when that happened. The host works, but other devices see a different name than the one set up, so it's worth showing people |
+| `CreateMidi1Ports` | True if MIDI 1.0 ports are created with the UMP endpoints |
+| `RemoteClientPolicy` | What this host does when an unknown remote client asks to connect. See `MidiNetworkRemoteClientPolicy` |
+| `Connections` | The remote clients that have reached this host right now, including clients waiting for approval |
 
 ## Remarks
 
-`ActualPort` is the port the host actually bound, which is what you want to display when the host was created with `UseAutomaticPortAllocation`.
+`ActualPort` is the port the host is really using. Show it when the host was created with `UseAutomaticPortAllocation`.
 
-`Connections` is a snapshot, not a live collection. Poll `GetConfiguredHosts()` to refresh.
+`Connections` is a copy taken when you asked, not a list that updates itself. Call `GetConfiguredHosts()` again to refresh it.

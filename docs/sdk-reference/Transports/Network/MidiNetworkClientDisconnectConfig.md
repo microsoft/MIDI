@@ -13,8 +13,8 @@ Pass to `MidiNetworkTransportManager.DisconnectNetworkClientAsync`.
 
 | Constructor | Description |
 | -------- | ----------- |
-| `MidiNetworkClientDisconnectConfig()` | Create an empty config |
-| `MidiNetworkClientDisconnectConfig(clientId)` | Create a config for the specified client |
+| `MidiNetworkClientDisconnectConfig()` | Creates an empty configuration |
+| `MidiNetworkClientDisconnectConfig(clientId)` | Creates a configuration for this client |
 
 ## Properties
 
@@ -24,4 +24,4 @@ Pass to `MidiNetworkTransportManager.DisconnectNetworkClientAsync`.
 
 ## Remarks
 
-A client disconnected this way stays disconnected. The service does not treat a user-requested disconnect as a connection loss, so it is not reconnected automatically.
+A client disconnected this way stays disconnected. The service doesn't treat a disconnect someone asked for as a lost connection, so it doesn't reconnect it automatically.

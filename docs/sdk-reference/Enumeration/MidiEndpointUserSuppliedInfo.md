@@ -6,36 +6,43 @@ type: runtimeclass
 description: Custom information supplied by the user for an endpoint
 ---
 
-This is all information supplied by the user through the MIDI Settings app and/or through the main configuration file.
+Everything here was set by the user, through MIDI Settings or another tool that saves endpoint customizations. Changing an object you got from `MidiEndpointDeviceInformation` doesn't change the saved settings. To change those, use [`MidiServiceEndpointCustomizationConfig`]({{ site.baseurl }}/sdk-reference/ServiceConfig/MidiServiceEndpointCustomizationConfig/).
+
+## Constructors
+
+| Constructor | Description |
+| ----------- | ----------- |
+| `MidiEndpointUserSuppliedInfo()` | Creates an empty object |
+| `MidiEndpointUserSuppliedInfo(name, imageFileName, requiresNoteOffTranslation, recommendedControlChangeAutomationIntervalMilliseconds, supportsMidiPolyphonicExpression, customMidiOutgoingLatencyTicks, useCustomMidiOutgoingLatencyTicksForScheduling)` | Creates an object with these values. There's no description parameter, so set `Description` afterward if you need it |
 
 ## Properties
 
 | Property | Description |
 | --------------- | ----------- |
-| `IsReadOnly` | True if this object should be treated as read-only |
-| `Name` | User-supplied name for this endpoint, which overrides the transport-supplied name |
-| `Description` | User-supplied description for this endpoint |
-| `ImageFileName` | Path to an image file for use in applications |
-| `RequiresNoteOffTranslation` | True if a Note On of zero velocity should be translated to a Note Off message |
-| `RecommendedControlChangeAutomationIntervalMilliseconds` | For applications, this is the recommended maximum CC interval to use to avoid flooding the device |
-| `SupportsMidiPolyphonicExpression` | True if this device is known to support MPE |
-| `CustomMidiOutgoingLatencyTicks` | Custom outgoing latency in MIDI clock ticks, used when scheduling outgoing messages. May be negative for an endpoint which runs early |
-| `UseCustomMidiOutgoingLatencyTicksForScheduling` | True if `CustomMidiOutgoingLatencyTicks` should be used for message scheduling |
-| `CalculatedMidiOutgoingLatencyTicks` | The compensation the transport worked out for this endpoint. Supplied by the transport rather than by the customer, and reported here so an application can show what is in effect without reading device properties itself |
+| `IsReadOnly` | True if you should treat this object as read-only |
+| `Name` | The name the user gave this endpoint. It's used instead of the name from the transport |
+| `Description` | The description the user gave this endpoint |
+| `ImageFileName` | The path to an image file that applications can show for this endpoint |
+| `RequiresNoteOffTranslation` | True if a Note On with a velocity of zero should be changed into a Note Off message |
+| `RecommendedControlChangeAutomationIntervalMilliseconds` | The time, in milliseconds, that applications should leave between control change messages, so they don't flood the device |
+| `SupportsMidiPolyphonicExpression` | True if this device supports MIDI Polyphonic Expression (MPE) |
+| `CustomMidiOutgoingLatencyTicks` | A custom outgoing latency, in MIDI clock ticks, used when scheduling outgoing messages. It can be negative for an endpoint that runs early |
+| `UseCustomMidiOutgoingLatencyTicksForScheduling` | True if `CustomMidiOutgoingLatencyTicks` should be used when scheduling messages |
+| `CalculatedMidiOutgoingLatencyTicks` | The latency compensation the transport worked out for this endpoint. The transport supplies it, not the user. It's here so your application can show what's in effect without reading device properties itself |
 
 ## Outgoing latency compensation
 
-The outbound message scheduler releases a message early by the endpoint's compensation value, so that it reaches the device at the timestamp the application asked for rather than some time after it. Two values feed that, and this property decides between them.
+The scheduler sends each message early by the endpoint's compensation value, so the message reaches the device at the time the application asked for, not a little after. There are two possible values, and `UseCustomMidiOutgoingLatencyTicksForScheduling` picks between them.
 
 | Source | Where it comes from |
 | ------ | ------------------- |
-| Calculated | Worked out by the transport. Bluetooth uses half the negotiated connection interval; Network MIDI 2.0 uses half the measured ping round trip. Nothing to configure. |
+| Calculated | Worked out by the transport. Bluetooth uses half the connection interval it agreed on with the device. Network MIDI 2.0 uses half the measured ping round trip time. There's nothing to set up. |
 | Custom | `CustomMidiOutgoingLatencyTicks`, supplied by the user through the MIDI Console or a settings app. |
 
-`UseCustomMidiOutgoingLatencyTicksForScheduling` is set automatically when a user supplies a custom value, and cleared when that value is removed. When it is true the custom value is used; otherwise the calculated value is used. The two are never combined.
+`UseCustomMidiOutgoingLatencyTicksForScheduling` is set when a user supplies a custom value, and cleared when that value is removed. When it's true, the custom value is used. Otherwise, the calculated value is used. The two are never added together.
 
-A customer can also make that choice explicitly, through `UseCustomOutgoingLatency` on `MidiServiceEndpointCustomizationConfig`. That is what allows compensation to be switched off without discarding a value which took a loopback cable and a measurement to obtain.
+A customer can also make that choice directly, through `UseCustomOutgoingLatency` on `MidiServiceEndpointCustomizationConfig`. That lets them turn compensation off without throwing away a value that took a loopback cable and a measurement to get.
 
-The scheduler reads the compensation when a connection to the endpoint is opened, so a change takes effect the next time an application connects rather than immediately.
+The scheduler reads the compensation when a connection to the endpoint opens. So a change takes effect the next time an application connects, not right away.
 
-Transports which cannot work out a meaningful value, including endpoints served by MIDI 1.0 drivers that are not USB devices, supply no calculated latency. Those endpoints are uncompensated unless a custom value is supplied.
+Transports that can't work out a useful value don't supply a calculated latency. That includes endpoints that come from MIDI 1.0 drivers for devices that aren't USB. Those endpoints get no compensation unless someone supplies a custom value.

@@ -10,13 +10,13 @@ description: Specifies the sort order to use when enumerating a static list of d
 
 | Property | Value | Description |
 | --------------- | ---------- | ----------- |
-| `None` | `0x00000000` | No sort. Return in default order |
+| `None` | `0x00000000` | Don't sort. Use the default order |
 | `Name` | `0x00000001` | Sort by the name of the endpoint |
 | `EndpointDeviceId` | `0x00000002` | Sort by the id of the endpoint (the SWD id) |
 | `DeviceInstanceId` | `0x00000003` | Sort by the device instance id |
-| `ContainerThenName` | `0x0000000B` | Sort by the container and then by name. This is helpful when you want endpoints grouped by parent. |
-| `ContainerThenEndpointDeviceId` | `0x0000000C` | Sort by the container and then by the endpoint id |
-| `ContainerThenDeviceInstanceId` | `0x0000000D` | Sort by the container and then by the device instance id |
-| `TransportCodeThenName` | `0x00000015` | Sort by the transport abbreviation (example: "DIAG", formerly called the mnemonic) and then by the device instance id |
-| `TransportCodeThenEndpointDeviceId` | `0x00000016` | Sort by the transport abbreviation (formerly called the mnemonic) and then by the endpoint id |
-| `TransportCodeThenDeviceInstanceId` | `0x00000017` | Sort by the transport abbreviation (formerly called the mnemonic) and then by the device instance id |
+| `ContainerThenName` | `0x0000000B` | Sort by the device container, and then by name. This keeps endpoints grouped by their parent device |
+| `ContainerThenEndpointDeviceId` | `0x0000000C` | Sort by the device container, and then by the endpoint id |
+| `ContainerThenDeviceInstanceId` | `0x0000000D` | Sort by the device container, and then by the device instance id |
+| `TransportCodeThenName` | `0x00000015` | Sort by the transport code, such as "DIAG", and then by name |
+| `TransportCodeThenEndpointDeviceId` | `0x00000016` | Sort by the transport code, and then by the endpoint id |
+| `TransportCodeThenDeviceInstanceId` | `0x00000017` | Sort by the transport code, and then by the device instance id |

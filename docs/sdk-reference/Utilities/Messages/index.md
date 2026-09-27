@@ -5,6 +5,6 @@ namespace: Windows.Devices.Midi2.Utilities.Messages
 description: Namespace with MIDI message helper, builder, and converter classes
 ---
 
-There are many open source and internal libraries that can be used for creating and parsing message data. For a functional MIDI API, however, we did have to create a number of these ourselves, and so surface them in the API so that you may take advantage of them in your own code.
+There are many open source libraries for creating and reading MIDI message data. But a working MIDI API needed some of these helpers too, so we built them and made them part of the API. You can use them in your own code.
 
-For other open source MIDI libraries, visit the official site [midi2.dev](https://midi2.dev), run by members of the MIDI Association. The Windows MIDI Services service and API code uses some of this open source internally.
+For other open source MIDI libraries, visit [midi2.dev](https://midi2.dev), which is run by members of the MIDI Association. The Windows MIDI Services service and API use some of that open source code.

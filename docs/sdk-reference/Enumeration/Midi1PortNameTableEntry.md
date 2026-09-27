@@ -6,16 +6,16 @@ type: runtimeclass
 description: Represents the names generated when constructing a MIDI 1.0 port from a UMP device
 ---
 
-This entry is generated when the parent UMP device is enumerated, and is then stored in a property on the parent UMP endpoint. The table is later used to set the FriendlyName on the Software Device (SWD) which represents the MIDI 1.0 port. 
+These entries are made when the parent UMP device is found, and saved in a property on the parent UMP endpoint. Later, the table is used to set the friendly name of the software device (SWD) for each MIDI 1.0 port.
 
-A list of these is returned by `MidiEndpointDeviceInformation.GetNameTable()`.
+`MidiEndpointDeviceInformation.GetNameTable()` returns a list of these.
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `Group` | The `MidiGroup` associated with this MIDI 1.0 port entry |
-| `Flow` | A `Midi1PortFlow` value indicating the direction for this port |
-| `CustomName` | A user-supplied custom name, if any |
-| `LegacyCompatibleName` | A name compatible with legacy MIDI port naming conventions |
-| `NewStyleName` | A name using the new Windows MIDI Services naming style |
+| `Group` | The `MidiGroup` this MIDI 1.0 port uses |
+| `Flow` | A `Midi1PortFlow` value that says which way this port sends messages |
+| `CustomName` | A name the user gave the port, if there is one |
+| `LegacyCompatibleName` | A name made the same way older versions of Windows named MIDI ports |
+| `NewStyleName` | A name made the new Windows MIDI Services way |

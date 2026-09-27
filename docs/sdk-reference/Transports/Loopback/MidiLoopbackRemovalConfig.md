@@ -7,16 +7,16 @@ implements: Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfi
 description: Config sent to the service to remove a loopback endpoint pair
 ---
 
-The configuration passed to the service when an application wants to remove a transient loopback endpoint pair.
+The configuration your app sends to the service to remove a temporary loopback endpoint pair.
 
 ## Constructors
 
 | Constructor | Description |
 | -------- | ----------- |
-| `MidiLoopbackRemovalConfig(associationId)` | Construct a removal config with the specified association id |
+| `MidiLoopbackRemovalConfig(associationId)` | Creates a removal configuration for the loopback pair with this association id |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `AssociationId` | The GUID used to uniquely identify the loopback pair to remove |
+| `AssociationId` | The GUID of the loopback pair to remove |

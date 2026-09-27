@@ -12,26 +12,26 @@ Returned by `MidiNetworkTransportManager.GetConfiguredClients()`.
 
 | Property | Description |
 | -------- | ----------- |
-| `ClientId` | The GUID which identifies this client entry |
-| `IsSessionActive` | True if a MIDI session is currently established |
+| `ClientId` | The GUID that identifies this client entry |
+| `IsSessionActive` | True if a MIDI session is set up right now |
 | `EntryState` | Where this entry is in its life. See `MidiNetworkClientEntryState` |
-| `IsDirectConnection` | True if this client was configured with an address and port rather than discovered |
-| `ConfiguredDirectAddress` | The configured remote address, for a direct connection |
-| `ConfiguredDirectPort` | The configured remote port, for a direct connection |
-| `MatchDeviceId` | The Windows device id for the discovered host this client targets. Empty for direct connections. |
-| `ConnectedRemoteAddress` | The remote address currently in use |
-| `ConnectedRemotePort` | The remote port currently in use |
-| `ConnectedLocalAddress` | The local address currently in use |
-| `ConnectedLocalPort` | The local port currently in use |
+| `IsDirectConnection` | True if this client was set up with an address and port, instead of being discovered |
+| `ConfiguredDirectAddress` | The remote address it was set up with, for a direct connection |
+| `ConfiguredDirectPort` | The remote port it was set up with, for a direct connection |
+| `MatchDeviceId` | The Windows device id of the discovered host this client connects to. Empty for direct connections |
+| `ConnectedRemoteAddress` | The remote address in use now |
+| `ConnectedRemotePort` | The remote port in use now |
+| `ConnectedLocalAddress` | The local address in use now |
+| `ConnectedLocalPort` | The local port in use now |
 | `EndpointDeviceId` | The device id of the MIDI endpoint created for this connection |
-| `RetransmitCount` | Number of times messages have been retransmitted to this remote. Diagnostic |
-| `RetransmitRequestCount` | Number of retransmit requests received from this remote. Diagnostic |
-| `CurrentLatencyTicks` | Measured latency in ticks. Diagnostic. Reading this resets the running average |
-| `TotalCountNetworkPacketsSent` | Total datagrams sent on this connection |
-| `TotalCountNetworkPacketsReceived` | Total datagrams received on this connection |
+| `RetransmitCount` | How many times messages have been sent again to this remote device. For troubleshooting |
+| `RetransmitRequestCount` | How many requests to send again have come from this remote device. For troubleshooting |
+| `CurrentLatencyTicks` | The measured latency, in ticks. For troubleshooting. Reading this resets the running average |
+| `TotalCountNetworkPacketsSent` | The total number of network packets sent on this connection |
+| `TotalCountNetworkPacketsReceived` | The total number of network packets received on this connection |
 
 ## Remarks
 
-Every configured client is reported, whether or not it is connected, so an entry which has never reached its remote host still appears. Use `EntryState` to tell the cases apart, and the `Configured*` properties rather than the `Connected*` ones when there is no live session.
+Every client that's set up is reported, whether or not it's connected, so an entry that has never reached its remote host still shows up. Use `EntryState` to tell the cases apart. When there's no session running, use the `Configured*` properties, not the `Connected*` ones.
 
-`CurrentLatencyTicks` is an average which resets each time it is read, so poll it at a steady interval if you are charting it.
+`CurrentLatencyTicks` is an average that resets each time it's read. If you're graphing it, read it at a steady interval.

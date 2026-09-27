@@ -6,13 +6,13 @@ type: enum
 description: Indicates the number of words in a MIDI message
 ---
 
-## Properties
+Each value is the number of 32-bit words in the packet, so you can use it as a word count.
 
-The values correspond to the number of 32-bit MIDI words in the packet.
+## Properties
 
 | Property | Value | Description |
 | -------- | ------- | ------ |
-| `UnknownOrInvalid` | `0x00000000` | An invalid zero-length Universal MIDI Packet |
+| `UnknownOrInvalid` | `0x00000000` | The packet isn't valid, or its size isn't known |
 | `UniversalMidiPacket32` | `0x00000001` | 32-bit (1 word) Universal MIDI Packet |
 | `UniversalMidiPacket64` | `0x00000002` | 64-bit (2 words) Universal MIDI Packet |
 | `UniversalMidiPacket96` | `0x00000003` | 96-bit (3 words) Universal MIDI Packet |

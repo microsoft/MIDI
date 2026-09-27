@@ -6,7 +6,7 @@ type: enum
 description: MIDI 2.0 channel voice message status values
 ---
 
-Status to use for MIDI 2.0 Channel Voice messages. These are message type 4 messages.
+The status values for MIDI 2.0 channel voice messages. These are message type 4 messages.
 
 ## Properties
 

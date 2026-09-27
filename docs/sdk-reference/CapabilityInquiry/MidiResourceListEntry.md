@@ -4,19 +4,19 @@ title: MidiResourceListEntry
 namespace: Windows.Devices.Midi2.CapabilityInquiry
 type: runtimeclass
 implements: Windows.Foundation.IStringable
-description: One resource a device offers, together with what may be done with it
+description: One resource a device offers, and what you can do with it
 ---
 
-A client reads these before asking for anything: they say whether a resource can be read, written, subscribed to, or paged through.
+Read these before you ask for anything. They say whether a resource can be read, written, subscribed to, or asked for a page at a time.
 
-`CanSet` is a string rather than a flag because the set is open. The specification defines three values and a device may declare its own, so an enumeration here would be unable to carry what a real device sends.
+`CanSet` is text instead of a true-or-false value because the list of possible values isn't fixed. The specification defines three values, and a device can add its own, so an enum couldn't hold everything a real device might send.
 
 ## Constructors
 
 | Constructor | Description |
 | ----------- | ----------- |
-| `MidiResourceListEntry()` | Constructs an empty entry |
-| `MidiResourceListEntry(resource)` | Constructs an entry for a named resource |
+| `MidiResourceListEntry()` | Creates an empty entry |
+| `MidiResourceListEntry(resource)` | Creates an entry for a named resource |
 
 ## Properties
 
@@ -24,13 +24,13 @@ A client reads these before asking for anything: they say whether a resource can
 | -------- | ----------- |
 | `Resource` | The resource name, for example `DeviceInfo` or `ProgramList` |
 | `CanGet` | Whether the resource can be read. True unless the device says otherwise |
-| `CanSet` | Whether and how the resource can be written. Compare against the static properties below rather than against a literal |
-| `CanSubscribe` | Whether a client may subscribe to changes |
+| `CanSet` | Whether the resource can be written, and how. Compare it with the static properties below instead of typing the text yourself |
+| `CanSubscribe` | Whether you can subscribe to changes |
 | `CanPaginate` | Whether the resource can be asked for a page at a time |
-| `RequireResourceId` | True when a request for this resource must name which instance of it is wanted |
-| `MediaTypes` | Media types the device declares for this resource |
-| `Encodings` | Encodings the device will accept or produce, for example `Mcoded7` |
-| `Schema` | The declared JSON Schema, carried through untouched. It is arbitrary schema rather than anything this API interprets, so it is offered as it arrived |
+| `RequireResourceId` | True when a request for this resource must say which copy of it you want |
+| `MediaTypes` | The media types the device lists for this resource |
+| `Encodings` | The encodings the device accepts or sends, for example `Mcoded7` |
+| `Schema` | The JSON Schema the device gave, exactly as it arrived. This API doesn't read it |
 
 ## Methods
 
@@ -43,9 +43,9 @@ A client reads these before asking for anything: they say whether a resource can
 
 | Static Property | Description |
 | --------------- | ----------- |
-| `CanSetNone` | The value meaning the resource cannot be written |
-| `CanSetFull` | The value meaning the whole resource may be replaced |
-| `CanSetPartial` | The value meaning part of the resource may be replaced |
+| `CanSetNone` | The value that means the resource can't be written |
+| `CanSetFull` | The value that means the whole resource can be replaced |
+| `CanSetPartial` | The value that means part of the resource can be replaced |
 
 ## Static Methods
 

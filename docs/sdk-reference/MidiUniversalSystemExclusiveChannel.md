@@ -4,37 +4,43 @@ title: MidiUniversalSystemExclusiveChannel
 namespace: Windows.Devices.Midi2
 type: runtimeclass
 implements: Windows.Foundation.IStringable
-description: Class used to provide formatting and data validation for Universal System Exclusive (SysEx 8) channels.
+description: Holds and checks the channel number in a Universal System Exclusive message
 ---
 
-The `MidiUniversalSystemExclusiveChannel` class is used to provide formatting and data validation for Universal System Exclusive (SysEx 7) channel types used in MIDI 2.0.
+A Universal System Exclusive message carries a number from 0 to 127 that says which device or channel it's meant for. `MidiUniversalSystemExclusiveChannel` holds that number and keeps it in range. The value 127 means "every device." The MIDI specification calls it "disregard channel," and `DisregardChannel` returns it.
 
 ## Constructors
 
 | Constructor | Description |
 | ----------- | ----------- |
-| `MidiUniversalSystemExclusiveChannel()` | Create a `MidiUniversalSystemExclusiveChannel` with index 0 |
-| `MidiUniversalSystemExclusiveChannel(UInt8)` | Create a `MidiUniversalSystemExclusiveChannel` with the specified channel index |
+| `MidiUniversalSystemExclusiveChannel()` | Creates a channel with index 0 |
+| `MidiUniversalSystemExclusiveChannel(index)` | Creates a channel with this index, from 0 to 127. Only the lower 7 bits are used |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `Index` | The channel index value |
-| `DisplayValue` | The number that should be displayed in any UI (Index + 1) |
+| `Index` | The channel number used in messages, from 0 to 127. When you set it, only the lower 7 bits are kept |
+| `DisplayValue` | The number to show people, which is `Index` + 1 |
 
 ## Static Properties
 
 | Static Property | Description |
 | --------------- | ----------- |
-| `ShortLabel` | Returns the localized abbreviation. |
-| `ShortLabelPlural` | Returns the localized plural abbreviation. |
-| `LongLabel` | Returns the localized full name. |
-| `LongLabelPlural` | Returns the localized full plural name. |
-| `DisregardChannel` | Returns a `MidiUniversalSystemExclusiveChannel` instance representing the "disregard channel" value per the MIDI 2.0 specification. |
+| `ShortLabel` | The short name for this kind of channel in the user's language |
+| `ShortLabelPlural` | The plural of the short name |
+| `LongLabel` | The full name in the user's language |
+| `LongLabelPlural` | The plural of the full name |
+| `DisregardChannel` | Returns a channel with index 127, which means the message is for every device |
 
 ## Static Methods
 
 | Static Method | Description |
 | ------------- | ----------- |
-| `IsValidIndex(UInt8)` | Verifies that the provided index is valid. |
+| `IsValidIndex(index)` | Returns true if the index is from 0 to 127 |
+
+## Methods
+
+| Method | Description |
+| ------ | ----------- |
+| `ToString()` | (From `IStringable`) The channel as text, for display |

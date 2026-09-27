@@ -12,5 +12,5 @@ Supplied by `MidiNetworkAdvertisedHostWatcher.Removed`.
 
 | Property | Description |
 | -------- | ----------- |
-| `HostDeviceId` | The device id of the host which went away |
-| `FullName` | The full DNS-SD name, such as `instance._midi2._udp.local`, for logging and for matching against a stored entry |
+| `HostDeviceId` | The device id of the host that went away |
+| `FullName` | The full DNS-SD name, such as `instance._midi2._udp.local`, for logging and for matching against a saved entry |

@@ -6,14 +6,14 @@ type: runtimeclass
 description: Arguments supplied by the watcher when an endpoint is removed from the system
 ---
 
-Represents a notification that an endpoint has been removed from the system.
+The watcher passes this to your `Removed` handler when an endpoint is removed.
 
 ## Properties
 
 | Property | Description |
 | --------------- | ----------- |
-| `RemovedDevice` | The `MidiEndpointDeviceInformation` for the endpoint which was removed |
+| `RemovedDevice` | The `MidiEndpointDeviceInformation` for the endpoint that was removed |
 
 ## Remarks
 
-The removed device's properties are a snapshot taken before removal. The endpoint is already gone by the time this is raised, so use this to update your own state rather than to query the device.
+The removed device's properties are a copy taken before it was removed. The endpoint is already gone when this is raised, so use it to update your own list, not to ask the device anything.

@@ -7,7 +7,7 @@ description: Utility class for working with Windows MIDI Services endpoint devic
 ---
 
 
-There are parts of the Endpoint Device Id which, for a Windows MIDI Service endpoint, are exactly the same. In cases where you may need to display an id in a list or other constrained space, it can be helpful to have a short form of the id. This class is used to convert between the full (long) form and the short form. 
+Parts of the endpoint device id are the same for every Windows MIDI Services endpoint. When you need to show an id in a list or another small space, a short form of the id helps. This class converts between the full (long) form and the short form.
 
 For example:
 
@@ -19,28 +19,28 @@ Another example:
 - Full id: `\\?\swd#midisrv#midiu_loop_b_default_loopback_b#{e7cce071-3c03-423f-88d3-f1045d02552b}`
 - Short id: `loop_b_default_loopback_b`
 
-You can see that in both cases, the common information from the beginning, and the interface Id from the end, are both stripped out.
+In both cases, the shared text at the start and the interface id at the end are removed.
 
-> Note: Functions in Windows MIDI Services outside of this class always require the full id. When using shortened ids in the app, always use `GetFullIdFromShortId(shortEndpointDeviceId)` before passing the id to a function
+> **Note:** Every other function in Windows MIDI Services needs the full id. If your application uses short ids, always call `GetFullIdFromShortId(shortEndpointDeviceId)` before you pass an id to a function.
 
-This class works on Windows MIDI Services UMP endpoints only. It does not work on WinRT or WinMM MIDI 1.0 port Ids.
+This class works only with Windows MIDI Services UMP endpoints. It doesn't work with WinRT or WinMM MIDI 1.0 port ids.
 
 ## Static Methods
 
 | Static Method | Description |
 | --------------- | ----------- |
-| `GetShortIdFromFullId(fullEndpointDeviceId)` | Returns the short form of the Endpoint Device Id |
-| `GetFullIdFromShortId(shortEndpointDeviceId)` | Given a short id, returns the full id. No validation is performed to ensure the id is a valid UMP Endpoint |
-| `IsPossibleWindowsMidiServicesEndpointDeviceId(fullEndpointDeviceId)` | Returns true if the endpoint device id appears to be a Windows MIDI Services UMP Endpoint Device Id. No actual lookup is performed. |
-| `IsPossibleWindowsMidiServicesLegacyApiPortDeviceId(legacyPortDeviceId)` | Returns true if the id appears to be a WinRT or WinMM MIDI 1.0 port device id created by Windows MIDI Services. No actual lookup is performed. |
-| `NormalizeFullId(fullEndpointDeviceId)` | Returns the id in normalized form: trimmed and lowercase. |
-| `EnsureCompliantUmpEndpointName(endpointName)` | Returns the supplied name shortened, if necessary, to fit the UMP Endpoint Name limit in the MIDI 2.0 specification. |
-| `EnsureCompliantProductInstanceId(productInstanceId)` | Returns the supplied Product Instance Id with characters which are not valid in a device identifier removed, shortened if necessary to the specification limit. |
+| `GetShortIdFromFullId(fullEndpointDeviceId)` | Returns the short form of the endpoint device id |
+| `GetFullIdFromShortId(shortEndpointDeviceId)` | Returns the full id for a short id. It doesn't check that the id belongs to a real UMP endpoint |
+| `IsPossibleWindowsMidiServicesEndpointDeviceId(fullEndpointDeviceId)` | Returns true if the id looks like a Windows MIDI Services UMP endpoint device id. It only checks the text, and doesn't look the id up |
+| `IsPossibleWindowsMidiServicesLegacyApiPortDeviceId(legacyPortDeviceId)` | Returns true if the id looks like a WinRT or WinMM MIDI 1.0 port id that Windows MIDI Services created. It only checks the text, and doesn't look the id up |
+| `NormalizeFullId(fullEndpointDeviceId)` | Returns the id with spaces trimmed from both ends and every letter in lowercase, so ids can be compared |
+| `EnsureCompliantUmpEndpointName(endpointName)` | Returns the name, shortened if needed to fit the UMP endpoint name limit in the MIDI 2.0 specification |
+| `EnsureCompliantProductInstanceId(productInstanceId)` | Returns the product instance id with any characters that aren't allowed in a device id removed, and shortened if needed to fit the specification limit |
 
-## Name and Id Compliance
+## Name and id limits
 
-The MIDI 2.0 specification states its UMP Endpoint Name and Product Instance Id limits as **UTF-8 byte counts, not character counts**. A name which looks comfortably short can still exceed the limit once encoded: accented Latin characters take two bytes each, CJK characters three, and emoji four. A 40-character name using CJK characters is 120 bytes, well over the 98 byte endpoint name limit.
+The MIDI 2.0 specification sets the limits for UMP endpoint names and product instance ids as **UTF-8 byte counts, not character counts**. A name that looks short enough can still be too long once it's encoded. Accented Latin letters take two bytes each, Chinese, Japanese, and Korean characters take three, and emoji take four. A 40-character name in Chinese, Japanese, or Korean is 120 bytes, well over the 98-byte limit for endpoint names.
 
-`EnsureCompliantUmpEndpointName` measures in bytes and never cuts a character in half, so the result is always valid text rather than a truncated multi-byte sequence.
+`EnsureCompliantUmpEndpointName` counts bytes and never cuts a character in half, so the result is always valid text.
 
-Use these when you accept a name or id from a user and want to know what the service will actually store, before you submit it.
+Use these when someone types a name or id, to see what the service will really store before you send it.

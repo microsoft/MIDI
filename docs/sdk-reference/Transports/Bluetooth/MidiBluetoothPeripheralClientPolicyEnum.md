@@ -3,7 +3,7 @@ layout: sdk_reference_page
 title: MidiBluetoothPeripheralClientPolicy
 namespace: Windows.Devices.Midi2.Transports.Bluetooth
 type: enum
-description: Whether a remote Central connecting to this PC is let through without asking
+description: Whether a remote device connecting to this PC is let in without asking
 ---
 
 Reported by `MidiBluetoothPeripheralStatus.ClientPolicy`.
@@ -12,13 +12,13 @@ Reported by `MidiBluetoothPeripheralStatus.ClientPolicy`.
 
 | Value | Numeric Value | Description |
 | ----- | ------------- | ----------- |
-| `RequireApproval` | `0` | A connecting device waits for someone to approve or deny it. |
-| `AllowAny` | `1` | Any device which connects is given a MIDI endpoint straight away. |
+| `RequireApproval` | `0` | A device that connects waits for someone to approve or deny it |
+| `AllowAny` | `1` | Any device that connects gets a MIDI endpoint right away |
 
-## What "requiring approval" actually does
+## What approval does
 
-Bluetooth does not let Windows refuse the connection itself. A device which connects stays connected either way. What approval controls is whether it gets a MIDI endpoint and whether any data flows.
+Bluetooth doesn't let Windows refuse the connection itself. A device that connects stays connected either way. Approval controls whether it gets a MIDI endpoint, and whether any data gets through.
 
-So under `RequireApproval`, an unapproved device sits there connected and silent until somebody decides. Poll `MidiBluetoothTransportManager.GetPendingPeripheralClients` to find those waiting, and resolve each with `ApprovePeripheralClientAsync` or `DenyPeripheralClientAsync`.
+So with `RequireApproval`, a device that hasn't been approved stays connected and silent until someone decides. Call `MidiBluetoothTransportManager.GetPendingPeripheralClients` from time to time to find the ones waiting, and decide on each with `ApprovePeripheralClientAsync` or `DenyPeripheralClientAsync`.
 
-`AllowAny` is convenient on a machine you control, but it means any Bluetooth MIDI Central in range can send messages into this PC without being asked about.
+`AllowAny` is handy on a PC you control. But it means any Bluetooth MIDI device in range can connect and send messages into this PC without anyone being asked.

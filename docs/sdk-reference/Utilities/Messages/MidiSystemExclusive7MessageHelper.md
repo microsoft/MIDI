@@ -6,17 +6,17 @@ type: runtimeclass
 description: Helper class for working with MIDI 1.0 System Exclusive (SysEx 7) messages
 ---
 
-This class provides helper functions for working with MIDI 1.0 System Exclusive (SysEx 7) messages encoded as 64-bit UMP Data Messages (`MidiMessage64` with message type `DataMessage64`).
+Helper functions for MIDI 1.0 System Exclusive (SysEx 7) messages, which UMP carries as 64-bit data messages (`MidiMessage64` with message type `DataMessage64`).
 
 ## Static Methods
 
 | Static Method | Description |
 | ------------- | ----------- |
-| `GetDataBytesFromMultipleSystemExclusiveMessages(messages)` | Extracts and returns the SysEx data bytes from a collection of SysEx 7 UMP messages, assembling the full payload. |
-| `GetDataBytesFromSingleSystemExclusiveMessage(message)` | Returns the SysEx data bytes from a single `MidiMessage64` SysEx 7 message. |
-| `GetDataBytesFromSingleSystemExclusiveMessage(word0, word1)` | Returns the SysEx data bytes from the two raw words of a SysEx 7 message. |
-| `AppendDataBytesFromSingleSystemExclusiveMessage(message, dataBytesToAppendTo)` | Appends the SysEx data bytes from a single `MidiMessage64` SysEx 7 message to the given collection. Returns the count of bytes appended. |
-| `AppendDataBytesFromSingleSystemExclusiveMessage(word0, word1, dataBytesToAppendTo)` | Appends the SysEx data bytes from the two raw words of a SysEx 7 message to the given collection. Returns the count of bytes appended. |
-| `GetDataByteCountFromSystemExclusiveMessageFirstWord(word0)` | Returns the number of valid data bytes indicated in the first word of a SysEx 7 message. |
-| `MessageIsSystemExclusiveMessage(word0)` | Returns true if the first word's message type indicates a SysEx 7 message. |
-| `VerifyContainsOnlyDataBytes(dataBytesToTest)` | Returns true when every byte in the collection is a data byte, meaning its high bit is clear. SysEx 7 carries only data bytes, so this is the check to run over a payload before packing it into messages. |
+| `GetDataBytesFromMultipleSystemExclusiveMessages(messages)` | Pulls the SysEx data bytes out of a list of SysEx 7 UMP messages, and joins them into the full data |
+| `GetDataBytesFromSingleSystemExclusiveMessage(message)` | Returns the SysEx data bytes from one `MidiMessage64` SysEx 7 message |
+| `GetDataBytesFromSingleSystemExclusiveMessage(word0, word1)` | Returns the SysEx data bytes from the two words of a SysEx 7 message |
+| `AppendDataBytesFromSingleSystemExclusiveMessage(message, dataBytesToAppendTo)` | Adds the SysEx data bytes from one `MidiMessage64` SysEx 7 message to the end of `dataBytesToAppendTo`. Returns how many bytes it added |
+| `AppendDataBytesFromSingleSystemExclusiveMessage(word0, word1, dataBytesToAppendTo)` | Adds the SysEx data bytes from the two words of a SysEx 7 message to the end of `dataBytesToAppendTo`. Returns how many bytes it added |
+| `GetDataByteCountFromSystemExclusiveMessageFirstWord(word0)` | Returns how many data bytes the first word of a SysEx 7 message says it holds |
+| `MessageIsSystemExclusiveMessage(word0)` | Returns true if the first word's message type is SysEx 7 |
+| `VerifyContainsOnlyDataBytes(dataBytesToTest)` | Returns true when every byte has its high bit clear, which makes it a data byte. SysEx 7 only carries data bytes, so check your data with this before you pack it into messages |

@@ -9,43 +9,43 @@ description: Plays a sequence to one or more endpoints
 
 `MidiSequencePlayer` plays a [`MidiSequence`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequence/) to one or more endpoints.
 
-The player hands its messages to the service with a timestamp for each and lets the service release them, rather than waking up to send each one itself. That is what keeps playback steady, and it is why a sequence has to be prepared before it starts.
+The player gives its messages to the service with a timestamp on each one, and lets the service send them at the right time. It doesn't wake up to send each one itself. That's what keeps playback steady, and it's why a sequence has to be prepared before it starts.
 
 ## Getting a player
 
-A player can borrow a connection your application already has open, or open and own one of its own. **Prefer borrowing.** A connection is not cheap, and an application which already has one should not be made to pay for a second.
+A player can borrow a connection your app already has open, or open one of its own. **Borrowing is better.** A connection costs memory and setup time, and an app that already has one shouldn't have to pay for a second.
 
 | Constructor or method | Description |
 | --------------------- | ----------- |
-| `MidiSequencePlayer(connection, group)` | Borrows a [`MidiEndpointConnection`]({{ site.baseurl }}/sdk-reference/MidiEndpointConnection/) your application opened. Closing the player leaves it open |
-| `CreateForEndpointAsync(session, endpointDeviceId, group)` | Opens and owns a connection on the supplied [`MidiSession`]({{ site.baseurl }}/sdk-reference/MidiSession/). Closing the player closes it. The session still belongs to you |
+| `MidiSequencePlayer(connection, group)` | Borrows a [`MidiEndpointConnection`]({{ site.baseurl }}/sdk-reference/MidiEndpointConnection/) your app opened. Closing the player leaves it open |
+| `CreateForEndpointAsync(session, endpointDeviceId, group)` | Opens a connection on your [`MidiSession`]({{ site.baseurl }}/sdk-reference/MidiSession/), and owns it. Closing the player closes the connection. The session is still yours |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `OwnsConnection` | True when the player opened the connection itself and will close it |
+| `OwnsConnection` | True when the player opened the connection itself, and will close it |
 | `Connection` | The connection the player is sending to |
-| `Sequence` | The sequence currently loaded |
+| `Sequence` | The sequence loaded now |
 | `State` | The current [`MidiSequencePlayerState`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequencePlayerStateEnum/) |
-| `Position` | A [`MidiSequencePlayerPosition`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequencePlayerPosition/) snapshot. Poll this to drive a display. There is deliberately no position event |
-| `SoloTrackIndex` | The track to solo, or negative for none. Soloing silences the others without forgetting their own mute state |
+| `Position` | A [`MidiSequencePlayerPosition`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequencePlayerPosition/) taken at the moment you read it. Read it from time to time to update a display. There's no position event, on purpose |
+| `SoloTrackIndex` | The track to solo, or a negative number for none. Soloing silences the other tracks without changing whether each one is muted |
 
 ## Methods
 
 | Method | Description |
 | ------ | ----------- |
-| `SetSequenceAsync(sequence)` | Loads a sequence. Preparing converts it once, so this is the expensive call and `Play` is not |
+| `SetSequenceAsync(sequence)` | Loads a sequence. It's converted once while loading, so this is the slow call, and `Play` is fast |
 | `Play()` | Starts or resumes playback |
-| `Pause()` | Stops sending, keeping the current position |
-| `Stop()` | Stops sending and returns to the start |
+| `Pause()` | Stops sending, and keeps the current position |
+| `Stop()` | Stops sending, and goes back to the start |
 | `SeekToMicroseconds(microseconds)` | Moves to a point in time |
 | `SeekToTick(tick)` | Moves to a tick |
 | `GetTrackRouting(trackIndex)` | The [`MidiSequenceTrackRouting`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequenceTrackRouting/) for a track |
 | `SetTrackRouting(trackIndex, routing)` | Sets where a track's messages go |
 | `SetTrackMuted(trackIndex, muted)` | Mutes or unmutes a track |
 | `IsTrackMuted(trackIndex)` | Whether a track is muted |
-| `SilenceAllNotes()` | Silences everything this player has started |
+| `SilenceAllNotes()` | Silences every note this player has started |
 
 ## Events
 
@@ -56,15 +56,15 @@ A player can borrow a connection your application already has open, or open and 
 
 ## Remarks
 
-**Seeking re-sends state.** Moving the position re-sends the bank, program, controllers and pitch bend each channel was left in, so starting in the middle of a file does not play the rest of it on the wrong sound.
+**Seeking sends the channel settings again.** Moving the position sends the bank, program, controllers, and pitch bend each channel should have at that point. So starting in the middle of a file doesn't play the rest of it with the wrong sound.
 
-**Muting and soloing only hold back note starts.** Everything else still goes out, because otherwise a track comes back on the wrong sound, and with a chord still sounding.
+**Muting and soloing only hold back new notes.** Everything else is still sent. Otherwise, a track would come back with the wrong sound, and with a chord still sounding.
 
-**`SilenceAllNotes` is sent for you.** It runs on stop, on pause, on seek and at the end of a sequence. It sends note offs for what is sounding, then sustain off, all notes off, all sound off and pitch bend center on each channel the sequence uses. Call it yourself only when you have some other reason to.
+**`SilenceAllNotes` is called for you.** It runs when you stop, pause, or seek, and at the end of a sequence. It sends note offs for what's sounding, and then sustain off, all notes off, all sound off, and pitch bend center on each channel the sequence uses. Only call it yourself if you have some other reason to.
 
-**Poll `Position` rather than asking for an event.** A transport display refreshes tens of times a second, and an event per frame would cost more than the drawing does.
+**Read `Position` on a timer, instead of waiting for an event.** A transport display updates tens of times a second, and an event for every frame would cost more than the drawing does.
 
-**How far ahead messages are handed to the service is not settable**, and that is deliberate. The figure depends on how often the player sweeps and on how late a high resolution timer wakes, neither of which a caller can know, and the service refuses anything scheduled beyond five minutes ahead in any case.
+**You can't set how far ahead messages are given to the service**, on purpose. The right amount depends on how often the player checks for messages to send, and on how late a high-resolution timer wakes up. Your app can't know either one. And the service refuses anything scheduled more than five minutes ahead anyway.
 
 ## Example
 

@@ -7,35 +7,37 @@ implements: Windows.Foundation.IStringable
 description: An optional and static definition of the use of groups for an endpoint
 ---
 
-A Group Terminal Block is a USB-only feature used to describe the groups on a device. When available, Function Blocks are the preferred mechanism for finding active groups, names, and more, meaning that the Group Terminal Block can typically be ignored in those cases. For more context, please see the documentation for the [MidiFunctionBlock]({{ site.baseurl }}/sdk-reference/Enumeration/MidiFunctionBlock/) type.
+A group terminal block describes the groups on a USB device. It exists only for USB. When a device has function blocks, use them instead to find its active groups, names, and more, and you can usually ignore its group terminal blocks. To learn more, see [MidiFunctionBlock]({{ site.baseurl }}/sdk-reference/Enumeration/MidiFunctionBlock/).
 
-> Note: In Windows MIDI Services, we translate MIDI 1.0 device "ports" into individual Group Terminal Blocks. Each virtual cable number in the stream, which used to become a separate input or output port, now maps to a group number. For example, a 5 port MIDI 1.0 device will now show up as a single endpoint with 5 Group Terminal Blocks each spanning a single group. 
+> **Note:** Windows MIDI Services turns each "port" on a MIDI 1.0 device into its own group terminal block. Each virtual cable number, which used to become a separate input or output port, now becomes a group number. For example, a MIDI 1.0 device with 5 ports shows up as one endpoint with 5 group terminal blocks, each covering one group.
 
 ## Properties
 
 | Property | Description |
 | --------------- | ----------- |
-| `Number` | Block number |
-| `Name` | Name provided by USB. In the case of MIDI 1.0 devices, when available, this is the `iJack` string |
-| `Direction` | Direction of the block, from the block's point of view |
-| `Protocol` | Information about the protocol in use. Note that the Jitter Reduction values here should be ignored. Jitter reduction timestamp handling is negotiated through protocol negotiation, and is entirely handled by the service |
-| `FirstGroup` | First group spanned by this block |
-| `GroupCount` | The number of groups spanned |
-| `MaxDeviceInputBandwidthIn4KBitsPerSecondUnits` | Please see the USB MIDI 2.0 specification for the actual value for this field. |
-| `MaxDeviceOutputBandwidthIn4KBitsPerSecondUnits` | Please see the USB MIDI 2.0 specification for the actual value for this field. |
-| `CalculatedMaxDeviceInputBandwidthBitsPerSecond` | Bits-per-second calculated value for the `MaxDeviceInputBandwidthIn4KBitsPerSecondUnits` property |
-| `CalculatedMaxDeviceOutputBandwidthBitsPerSecond` | Bits-per-second calculated value for the `MaxDeviceOutputBandwidthIn4KBitsPerSecondUnits` property |
+| `Number` | The block number |
+| `Name` | The name from the USB descriptors. For a MIDI 1.0 device, this is the `iJack` string, if the device has one |
+| `Direction` | Which way messages go, from the block's point of view |
+| `Protocol` | Which protocol the block uses. Ignore the jitter reduction values here. Jitter reduction timestamps are agreed on during protocol negotiation, and the service handles them completely |
+| `FirstGroup` | The first group this block covers |
+| `GroupCount` | How many groups this block covers |
+| `MaxDeviceInputBandwidthIn4KBitsPerSecondUnits` | The device's maximum input bandwidth from the USB descriptors, in units of 4 kilobits per second. See the USB MIDI 2.0 specification for details |
+| `MaxDeviceOutputBandwidthIn4KBitsPerSecondUnits` | The device's maximum output bandwidth from the USB descriptors, in units of 4 kilobits per second. See the USB MIDI 2.0 specification for details |
+| `CalculatedMaxDeviceInputBandwidthBitsPerSecond` | `MaxDeviceInputBandwidthIn4KBitsPerSecondUnits`, worked out in bits per second |
+| `CalculatedMaxDeviceOutputBandwidthBitsPerSecond` | `MaxDeviceOutputBandwidthIn4KBitsPerSecondUnits`, worked out in bits per second |
 
 ## Functions
 
 | Function | Description |
 | --------------- | ----------- |
-| `IncludesGroup(group)` | Helper function which returns true if this function exists on the supplied group |
-| `AsEquivalentFunctionBlock()` | Helper function which returns a `MidiFunctionBlock` that is approximately equivalent to this `MidiGroupTerminalBlock`. This is to enable applications to be able to deal with only a single type of block when showing the metadata |
+| `IncludesGroup(group)` | Returns true if this block covers the group |
+| `AsEquivalentFunctionBlock()` | Returns a `MidiFunctionBlock` that's roughly the same as this block, so your application only has to deal with one kind of block when it shows this information |
 
 ## Static Properties
 
-| `ShortLabel` | Returns the localized abbreviation for use in UI. |
-| `ShortLabelPlural` | Returns the localized abbreviation for use in UI. |
-| `LongLabel` | Returns the localized full name for use in UI. |
-| `LongLabelPlural` | Returns the localized full name for use in UI. |
+| Static Property | Description |
+| --------------- | ----------- |
+| `ShortLabel` | The short name for a group terminal block in the user's language |
+| `ShortLabelPlural` | The plural of the short name |
+| `LongLabel` | The full name in the user's language |
+| `LongLabelPlural` | The plural of the full name |

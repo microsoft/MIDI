@@ -6,30 +6,30 @@ type: enum
 description: Return value when sending a MIDI message
 ---
 
-When an application sends a message, it should check the result of sending to ensure that the message was transmitted. Each of the message sending functions returns a `MidiSendMessageResult` flags enum. Values in this enum are OR'd together to indicate success or failure, and in the case of failure, the reason.
+Every function that sends messages returns a `MidiSendMessageResults` value. Check it to make sure the message was sent. The value is a set of flags combined with a bitwise OR: one flag says whether the send worked, and if it didn't, other flags say why.
 
-The `MidiEndpointConnection` type includes static helper functions to process the `MidiSendMessageResult` and determine success or failure. The application may then optionally look at the remaining data to see which failure reason(s) apply. 
+`MidiEndpointConnection` has two static functions, `SendMessageSucceeded` and `SendMessageFailed`, that read the result for you. If the send failed, you can then check the other flags to learn the reason.
 
 ## Properties
 
-These values are flags, and may be combined
+These values are flags, and they can be combined.
 
 | Property | Value | Description |
 | -------- | ----- | ----------- |
-| `Succeeded` | `0x80000000` | Indicates success. |
-| `Failed` | `0x10000000` | Indicates failure. The actual failure reason will be combined with the result. |
-| `BufferFull` | `0x00010000` | The message could not be sent because the outgoing buffer to the service was full |
-| `EndpointConnectionClosedOrInvalid` | `0x00040000` | The endpoint connection was closed or invalidated before the message could be sent. |
-| `InvalidMessageTypeForWordCount` | `0x00100000` | The number of words sent does not match the message type of the first word. |
-| `InvalidMessageOther` | `0x00200000` | The message sent was invalid for another reason. |
-| `DataIndexOutOfRange` | `0x00400000` | Reading a full message would result in overrunning the provided array, collection, or buffer. |
-| `TimestampOutOfRange` | `0x00800000` | The provided timestamp is too far in the future to be scheduled. |
-| `TransmissionWordCountExceeded` | `0x01000000` | The number of MIDI words in the transmission exceeded the maximum supported count. |
+| `Succeeded` | `0x80000000` | The send worked. |
+| `Failed` | `0x10000000` | The send failed. One or more of the flags below says why. |
+| `BufferFull` | `0x00010000` | The outgoing buffer to the service was full, so the message couldn't be sent. |
+| `EndpointConnectionClosedOrInvalid` | `0x00040000` | The connection was closed, or stopped being valid, before the message could be sent. |
+| `InvalidMessageTypeForWordCount` | `0x00100000` | The number of words sent doesn't match the message type in the first word. |
+| `InvalidMessageOther` | `0x00200000` | The message wasn't valid for some other reason. |
+| `DataIndexOutOfRange` | `0x00400000` | Reading the whole message would go past the end of the array, collection, or buffer you passed. |
+| `TimestampOutOfRange` | `0x00800000` | The timestamp is too far in the future to schedule. |
+| `TransmissionWordCountExceeded` | `0x01000000` | The call held more MIDI words than one call can carry. See `GetSupportedMaxMidiWordsPerTransmission` on `MidiEndpointConnection`. |
 
 ## Example
 
 ```cpp
-auto sendResult = myConnection.SendMessageWords(MidiClock::TimestampConstantSendImmediately(), 0x28675309);
+auto sendResult = myConnection.SendSingleMessageWords(MidiClock::TimestampConstantSendImmediately(), 0x28675309);
 
 if (MidiEndpointConnection::SendMessageSucceeded(sendResult))
 {
@@ -37,7 +37,7 @@ if (MidiEndpointConnection::SendMessageSucceeded(sendResult))
 }
 else
 {
-    // one or more failure reasons in the result. Use bitwise AND `&` operator to decipher.
+    // one or more failure reasons are in the result. Use the bitwise AND (&) operator to check each one.
 }
 
 ```

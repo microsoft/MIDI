@@ -6,29 +6,35 @@ type: runtimeclass
 description: The primary class used to create or remove loopback endpoints
 ---
 
+Creates, removes, mutes, and lists loopback endpoint pairs.
+
 ## Static Properties
 
 | Static Property | Description |
 | -------- | ----------- |
-| `IsTransportAvailable` | Returns true if this transport is available in the service. |
-| `TransportId` | Returns the GUID of this transport. |
+| `IsTransportAvailable` | True if this transport is available in the service |
+| `TransportId` | The GUID of this transport |
+| `IsFeedbackProtectionAvailable` | False when the loopback transport on this PC can't watch for feedback |
 
 ## Static Methods
 
 | Static Method | Description |
 | -------- | ----------- |
-| `CreateTransientLoopback(creationConfig)` | Create a transient pair of loopback endpoints which will live until removed or the service is restarted. Returns a `MidiLoopbackCreationResponse`. |
-| `RemoveTransientLoopback(removalConfig)` | Remove a pair of transient loopback endpoints. Returns a `MidiLoopbackRemovalResponse`. |
-| `GetAssociatedLoopbackEndpointForId(loopbackEndpointId)` | Returns the `MidiEndpointDeviceInformation` for the other endpoint in a loopback pair, given a loopback endpoint device id. |
-| `GetAssociatedLoopbackEndpoint(loopbackEndpoint, endpointsToSearch)` | Returns the associated endpoint in a loopback pair, searching the provided endpoint collection. |
-| `GetAssociatedLoopbackEndpoint(loopbackEndpoint)` | Returns the associated endpoint in a loopback pair by searching all current endpoints. |
-| `GetAssociationId(loopbackEndpoint)` | Returns the association GUID for the given loopback endpoint. |
-| `DoesLoopbackAExist(uniqueIdentifier)` | Returns true if the A-side of a loopback with the specified unique identifier already exists. |
-| `DoesLoopbackBExist(uniqueIdentifier)` | Returns true if the B-side of a loopback with the specified unique identifier already exists. |
-| `MuteLoopback(associationId)` | Mutes the loopback pair with the given association id. Returns a `MidiLoopbackUpdateResponse`. |
-| `UnmuteLoopback(associationId)` | Unmutes the loopback pair with the given association id. Returns a `MidiLoopbackUpdateResponse`. |
-| `GetActiveLoopbackEntries()` | Returns a collection of all active `MidiLoopbackEntry` objects. |
+| `CreateTransientLoopback(creationConfig)` | Creates a temporary pair of loopback endpoints. They last until you remove them or the service restarts. Returns a `MidiLoopbackCreationResponse` |
+| `RemoveTransientLoopback(removalConfig)` | Removes a temporary pair of loopback endpoints. Returns a `MidiLoopbackRemovalResponse` |
+| `GetAssociatedLoopbackEndpointForId(loopbackEndpointId)` | Given the device id of one loopback endpoint, returns the `MidiEndpointDeviceInformation` for the other endpoint in its pair |
+| `GetAssociatedLoopbackEndpoint(loopbackEndpoint, endpointsToSearch)` | Returns the other endpoint in a loopback pair, looking only in `endpointsToSearch` |
+| `GetAssociatedLoopbackEndpoint(loopbackEndpoint)` | Returns the other endpoint in a loopback pair, looking in all current endpoints |
+| `GetAssociationId(loopbackEndpoint)` | Returns the association GUID of this loopback endpoint |
+| `DoesLoopbackAExist(uniqueIdentifier)` | Returns true if the A side of a loopback with this unique id already exists |
+| `DoesLoopbackBExist(uniqueIdentifier)` | Returns true if the B side of a loopback with this unique id already exists |
+| `MuteLoopback(associationId)` | Mutes the loopback pair with this association id, so no messages get through. Returns a `MidiLoopbackUpdateResponse` |
+| `UnmuteLoopback(associationId)` | Unmutes the loopback pair with this association id. Returns a `MidiLoopbackUpdateResponse` |
+| `SetFeedbackProtection(associationId, feedbackProtection)` | Changes what the loopback pair does if MIDI feeds back into it. Takes effect right away. Save the change to the configuration to keep it after a restart. Returns a `MidiLoopbackUpdateResponse` |
+| `GetActiveLoopbackEntries()` | Returns a `MidiLoopbackEntry` for each active loopback pair |
 
-Applications creating endpoints for app-to-app MIDI should generally use the Virtual Device support built into the API. However, applications may need to create lightweight loopback endpoints without the protocol negotiation, MIDI 2.0 discovery process, and lifetime management provided by the Virtual Device support. For those scenarios, we have a simple loopback endpoint type.
+## Remarks
 
-Loopback endpoints created by the user and stored in the configuration file will persist after the service is restarted or the PC rebooted. Loopback endpoints created through this API call are temporary, and will disappear if the service is restarted. In both cases, this feature requires that the loopback endpoint transport is installed and enabled.
+If your app creates endpoints so it can talk to other apps, it should usually use the virtual device support in the API. But sometimes an app needs a simpler loopback endpoint, without the protocol negotiation, MIDI 2.0 discovery, and lifetime management that virtual devices have. That's what loopbacks are for.
+
+Loopback endpoints that people create in the MIDI tools are saved in the configuration, so they stay after the service restarts or the PC reboots. Loopback endpoints created with this API are temporary, and go away when the service restarts. Either way, the loopback transport must be installed and turned on.

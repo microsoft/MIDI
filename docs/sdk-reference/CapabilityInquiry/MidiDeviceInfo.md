@@ -7,33 +7,33 @@ implements: Windows.Foundation.IStringable
 description: What a device says about itself, from its DeviceInfo resource
 ---
 
-The identifiers and the names are not alternatives. A device declares both: the names are what a person reads and the identifiers are what code matches on.
+A device gives both identifiers and names, and you need both. The names are for people to read, and the identifiers are for your code to match on.
 
-The identity is deliberately the same type an endpoint declares elsewhere. A device states who it is through several different carriers and they are required to agree, so sharing the type is what keeps them from drifting apart.
+The identity uses the same type an endpoint uses to describe itself elsewhere, on purpose. A device says who it is in several different messages, and those must agree. Using one type for all of them helps keep them the same.
 
 ## Constructors
 
 | Constructor | Description |
 | ----------- | ----------- |
-| `MidiDeviceInfo()` | Constructs an empty DeviceInfo |
-| `MidiDeviceInfo(identity)` | Constructs one from the identity alone |
-| `MidiDeviceInfo(identity, manufacturer, family, model)` | Constructs one from the identity and the names that go with it |
+| `MidiDeviceInfo()` | Creates an empty DeviceInfo |
+| `MidiDeviceInfo(identity)` | Creates one from the identity alone |
+| `MidiDeviceInfo(identity, manufacturer, family, model)` | Creates one from the identity and the names that go with it |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `Identity` | The same identity the endpoint declares elsewhere |
-| `Manufacturer` | Name of the manufacturer, when the device gives one |
-| `Family` | Name of the device family |
-| `Model` | Name of the model |
-| `Version` | Version string, when the device gives one |
+| `Identity` | The same identity the endpoint gives elsewhere |
+| `Manufacturer` | The manufacturer's name, if the device gives one |
+| `Family` | The device family's name |
+| `Model` | The model's name |
+| `Version` | The version text, if the device gives one |
 
 ## Methods
 
 | Method | Description |
 | ------ | ----------- |
-| `GetJson()` | The DeviceInfo resource, which is a JSON object |
+| `GetJson()` | The DeviceInfo resource as a JSON object |
 | `ToString` | (From `IStringable`) A readable summary |
 
 ## Static Methods

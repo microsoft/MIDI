@@ -6,26 +6,30 @@ type: runtimeclass
 description: Utility class for testing Windows MIDI Services
 ---
 
-The MidiDiagnostics class contains a number of static functions which enable working with the service outside of a specific session. These are not normally used by applications.
+`MidiDiagnostics` has static functions for checking on the service without opening a session. Most applications don't need them.
 
-## Static Methods
+## Static Properties
 
 | Static Property | Description |
 | --------------- | ----------- |
-| `DiagnosticsLoopbackAEndpointDeviceId` | Returns the endpoint device Id for the diagnostic loopback used for development and support purposes. |
-| `DiagnosticsLoopbackBEndpointDeviceId` | Returns the endpoint device Id for the diagnostic loopback used for development and support purposes. |
+| `DiagnosticsLoopbackAEndpointDeviceId` | The endpoint device id of diagnostic loopback A, for development and support. Messages sent to A come in on B |
+| `DiagnosticsLoopbackBEndpointDeviceId` | The endpoint device id of diagnostic loopback B, for development and support. Messages sent to B come in on A |
 
-### Service Health
+For more about these loopbacks, see [About the Diagnostics Endpoints Transport]({{ site.baseurl }}/kb/diagnostic-endpoints/).
 
-| `PingService (UInt8)` | Send the specified count of ping messages to the ping endpoint and report on the status and time. Return if the responses are not received in an internally calculated timeout period. |
-| `PingService (UInt8, UInt32)` | Send the specified count of ping messages to the ping endpoint and report on the status and time. Return if responses are not received in the specified timeout period (milliseconds). |
+## Static Methods
 
-Pinging the Windows service uses the same mechanism as sending any UMP message. The actual message sent is a prioprietary message. (At the time this was created, there was no standard MIDI 2.0 UMP ping message). The message itself is sent to the diagnostics endpoint in the service, which is implemented like any other transport. Therefore, the speed of the pings here and the success of the ping process is a reasonable indicator of service, cross-process queue, and client API health.
+| Static Method | Description |
+| --------------- | ----------- |
+| `PingService(pingCount)` | Sends `pingCount` ping messages to the ping endpoint, and reports whether they came back and how long they took. Gives up if the answers don't arrive within a timeout the API works out. Returns a `MidiServicePingResponseSummary` |
+| `PingService(pingCount, timeoutMilliseconds)` | The same, but gives up if the answers don't arrive within `timeoutMilliseconds` |
 
-The diagnostic ping endpoint does not understand any other type of message, and should not be used by applications other than through the ping functions here.
+A ping is sent the same way as any other UMP message. The message itself is one Microsoft defined, because when this was built, MIDI 2.0 had no standard ping message. It goes to the diagnostics endpoint in the service, which works like any other transport. So how fast the pings come back, and whether they succeed, is a good sign of whether the service, the message queues between processes, and the client API are working.
 
-The ping does not tell you if a specific transport or device is in a bad state. For example, if a specific USB MIDI device has crashed, this ping message will still work because it is not sent out over USB.
+The diagnostic ping endpoint doesn't understand any other kind of message. Applications should only use it through the ping functions here.
 
-Here's an example of ping responses through the MIDI console app
+A ping doesn't tell you whether a particular transport or device has a problem. For example, if a USB MIDI device has stopped working, the ping still works, because it isn't sent over USB.
 
-![MIDI Console Ping](./console-ping.png)
+Here's what ping responses look like in the MIDI Console:
+
+![MIDI Console Ping]({{ site.baseurl }}/assets/images/console-midi-service-ping-verbose.png)

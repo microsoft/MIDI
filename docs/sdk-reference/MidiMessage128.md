@@ -7,27 +7,27 @@ implements: Windows.Foundation.IStringable, Windows.Devices.Midi2.IMidiUniversal
 description: Represents a four-word (128-bit) UMP message
 ---
 
-`MidiMessage128` is used for some data messages as well as important "Type F" stream metadata messages.
+`MidiMessage128` holds a four-word (128-bit) Universal MIDI Packet. System Exclusive 8, Mixed Data Set, Flex Data, and stream messages are this size. Stream messages (message type F) are how endpoints describe themselves, so this size matters a lot.
 
 ## Properties and Methods
 
-Includes all functions and properties in `IMidiUniversalPacket`, as well as:
+It has everything in [`IMidiUniversalPacket`]({{ site.baseurl }}/sdk-reference/IMidiUniversalPacket/), plus:
 
 | Property | Description |
 | -------- | ----------- |
-| `Word0` | First 32-bit MIDI word |
-| `Word1` | Second 32-bit MIDI word |
-| `Word2` | Third 32-bit MIDI word |
-| `Word3` | Fourth 32-bit MIDI word |
+| `Word0` | The first 32-bit word |
+| `Word1` | The second 32-bit word |
+| `Word2` | The third 32-bit word |
+| `Word3` | The fourth 32-bit word |
 
-| Function | Description |
+| Constructor | Description |
 | -------- | ----------- |
-| `MidiMessage128()` | Default constructor |
-| `MidiMessage128(timestamp, word0, word1, word2, word3)` | Construct a new message with a timestamp and all 32-bit MIDI words |
-| `MidiMessage128(timestamp, words)` | Construct a new message from a timestamp and array of 32-bit words |
+| `MidiMessage128()` | Creates an empty message |
+| `MidiMessage128(timestamp, word0, word1, word2, word3)` | Creates a message with this timestamp and all four words |
+| `MidiMessage128(timestamp, words)` | Creates a message with this timestamp from an array of 32-bit words |
 
 ## Static Methods
 
 | Static Method | Description |
 | ------------- | ----------- |
-| `CreateFromStruct(timestamp, message)` | Creates a `MidiMessage128` from a `MidiMessageStruct` and a timestamp |
+| `CreateFromStruct(timestamp, message)` | Creates a `MidiMessage128` from a `MidiMessageStruct`, with this timestamp |

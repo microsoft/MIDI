@@ -6,13 +6,13 @@ type: runtimeclass
 description: Response from the attempt to create a basic MIDI 1.0-style loopback endpoint
 ---
 
-This class represents the result of an attempt to create a runtime transient basic loopback endpoint.
+The result of trying to create a temporary basic loopback endpoint.
 
 ## Properties
 
 | Property | Description |
 |---|---|
-| `Success` | True if the creation of the endpoint was successful |
-| `ErrorCode` | A `MidiBasicLoopbackErrorCode` value if `Success` is false |
-| `ErrorMessage` | A human-readable error message if `Success` is false |
-| `CreatedLoopbackEntry` | A `MidiBasicLoopbackEntry` object with information about the created loopback, if successful |
+| `Success` | True if the endpoint was created |
+| `ErrorCode` | A `MidiBasicLoopbackErrorCode`, if `Success` is false |
+| `ErrorMessage` | An error message people can read, if `Success` is false |
+| `CreatedLoopbackEntry` | A `MidiBasicLoopbackEntry` with information about the new loopback, if it worked |

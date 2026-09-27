@@ -6,35 +6,35 @@ type: runtimeclass
 description: Argument supplied by the watcher when the properties of an endpoint have been updated.
 ---
 
-Represents a notification that endpoint properties have been updated
+The watcher passes this to your `Updated` handler when an endpoint's properties change. The flags say which groups of properties changed.
 
 ## Properties
 
 | Property | Description |
 | --------------- | ----------- |
-| `UpdatedDevice` | The `MidiEndpointDeviceInformation` for the endpoint which was updated, carrying the current property values |
-| `DeviceInformationUpdate` | The source `Windows.Devices.Enumeration.DeviceInformationUpdate` object. |
-| `IsNameUpdated` | True if the name properties have been updated  |
-| `IsEndpointInformationUpdated` | True if the in-protocol endpoint information has been updated |
-| `IsDeviceIdentityUpdated` | True if the in-protocol device identity information has been updated |
-| `IsStreamConfigurationUpdated` | True if protocol negotiation changed configuration of the endpoint |
-| `AreFunctionBlocksUpdated` | True if any function blocks have been updated |
-| `IsUserMetadataUpdated` | True if any user-supplied metadata fields have been updated |
-| `AreAdditionalCapabilitiesUpdated` | True if the additional capabilities have been updated |
-| `AreUniqueIdsUpdated` | True if any unique identifier properties have been updated |
-| `AreGroupTerminalBlocksUpdated` | True if any group terminal blocks have been updated |
-| `IsMutedStateUpdated` | True if the muted state of the endpoint has been updated |
-| `IsEndpointDiscoveryStateUpdated` | True if `MidiEndpointDeviceInformation.IsEndpointDiscoveryComplete` has changed |
-| `IsMidi1PortMappingUpdated` | True if the MIDI 1.0 port name table or naming approach for this endpoint has changed. The set of MIDI 1.0 ports for the endpoint typically changes at the same time |
-| `IsDevicePresenceUpdated` | True if the device interface was enabled or disabled, or the device arrived or was removed |
-| `AreLatencyPropertiesUpdated` | True if the calculated or user-supplied outgoing latency values have changed |
-| `AreTransportSuppliedPropertiesUpdated` | True if anything returned by `GetTransportSuppliedInfo()`, or any transport-specific property such as the network remote host, has changed |
-| `AreSystemDevicePropertiesUpdated` | True if a Windows PnP property such as the parent, the manufacturer or the interface class changed |
+| `UpdatedDevice` | The `MidiEndpointDeviceInformation` for the endpoint that changed, with the current property values |
+| `DeviceInformationUpdate` | The `Windows.Devices.Enumeration.DeviceInformationUpdate` object this update came from |
+| `IsNameUpdated` | True if any of the name properties changed |
+| `IsEndpointInformationUpdated` | True if the endpoint information from discovery changed |
+| `IsDeviceIdentityUpdated` | True if the device identity from discovery changed |
+| `IsStreamConfigurationUpdated` | True if protocol negotiation changed the endpoint's stream configuration |
+| `AreFunctionBlocksUpdated` | True if any function blocks changed |
+| `IsUserMetadataUpdated` | True if any of the information the user supplied changed |
+| `AreAdditionalCapabilitiesUpdated` | True if the additional capabilities changed |
+| `AreUniqueIdsUpdated` | True if any of the unique id properties changed |
+| `AreGroupTerminalBlocksUpdated` | True if any group terminal blocks changed |
+| `IsMutedStateUpdated` | True if the endpoint was muted or unmuted |
+| `IsEndpointDiscoveryStateUpdated` | True if `MidiEndpointDeviceInformation.IsEndpointDiscoveryComplete` changed |
+| `IsMidi1PortMappingUpdated` | True if the MIDI 1.0 port name table or naming approach for this endpoint changed. The endpoint's MIDI 1.0 ports usually change at the same time |
+| `IsDevicePresenceUpdated` | True if the device interface was turned on or off, or the device arrived or was removed |
+| `AreLatencyPropertiesUpdated` | True if the calculated or user-supplied outgoing latency values changed |
+| `AreTransportSuppliedPropertiesUpdated` | True if anything returned by `GetTransportSuppliedInfo()` changed, or any property that belongs to the transport, such as the network remote host |
+| `AreSystemDevicePropertiesUpdated` | True if a Windows Plug and Play property, such as the parent, the manufacturer, or the interface class, changed |
 
 ## Reacting to updates
 
-Every property the watcher requests belongs to at least one group above, so at least one of these is always true. Do not write code which treats "no flag set" as a meaningful state.
+Every property the watcher asks for belongs to at least one group above, so at least one flag is always true. Don't write code that treats "no flag set" as something that can happen.
 
-Groups deliberately overlap, because a single property can be relevant to more than one of them. A custom endpoint name, for example, sets both `IsNameUpdated` and `IsUserMetadataUpdated`.
+The groups overlap on purpose, because one property can matter to more than one group. For example, a custom endpoint name sets both `IsNameUpdated` and `IsUserMetadataUpdated`.
 
-A device coming online produces a sequence of updates rather than a single one, because the service writes properties as the information arrives from the device. Treat each update as "re-read what you care about", not as "this is the final state". See [Endpoint arrival and update ordering]({{ site.baseurl }}/kb/endpoint-arrival-and-update-ordering/).
+A device coming online causes a series of updates, not just one, because the service writes properties as the information arrives from the device. Treat each update as "read again what you care about," not as "this is the final state." See [Endpoint arrival and update ordering]({{ site.baseurl }}/kb/endpoint-arrival-and-update-ordering/).

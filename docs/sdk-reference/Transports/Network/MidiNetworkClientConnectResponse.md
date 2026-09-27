@@ -12,11 +12,11 @@ Returned by `MidiNetworkTransportManager.ConnectNetworkClientAsync`.
 
 | Property | Description |
 | -------- | ----------- |
-| `ClientId` | The GUID of the client entry the request referred to |
+| `ClientId` | The GUID of the client entry the request was about |
 | `Success` | True if the connection request was accepted |
 | `ErrorCode` | A `MidiNetworkClientConnectErrorCode` when `Success` is false |
-| `ErrorMessage` | A human-readable description of the failure |
+| `ErrorMessage` | A description of the failure that people can read |
 
 ## Remarks
 
-Check `Success` first. When it is false, `ErrorCode` gives the machine-readable reason and `ErrorMessage` a localized description suitable for display.
+Check `Success` first. When it's false, `ErrorCode` tells your code why, and `ErrorMessage` is a translated description you can show to people.

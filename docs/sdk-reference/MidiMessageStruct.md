@@ -6,7 +6,7 @@ type: struct
 description: Represents a MIDI message in struct format
 ---
 
-`MidiMessageStruct` is provided for cases where the API consumer wants to have a fixed value type they can use to send and receive messages. In the case of receiving messages, a function which fills the struct will typically return a count of valid words. The `MidiMessageStruct` struct type is simpler than the other runtime class types and may therefore perform better in some projections and for some uses. Note that this type does not include the timestamp field.
+`MidiMessageStruct` is a plain value type with room for four 32-bit words, which is enough for any message. Use it when you want a fixed-size value for sending and receiving messages. When a function fills one in with an incoming message, it returns how many of the words are valid. Because it's simpler than the message classes, it can be faster in some languages. It doesn't hold a timestamp, so functions that use it take the timestamp separately.
 
 ## Struct Fields
 

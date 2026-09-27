@@ -8,27 +8,27 @@ description: Sets how long a MIDI endpoint outlives its Bluetooth device going o
 
 Implements `IMidiServiceTransportPluginConfig`.
 
-Sets how long a MIDI endpoint outlives its device going offline, either for one device or for the transport as a whole. See `MidiBluetoothOfflineRetention` for what the values mean and why the choice matters.
+Sets how long a MIDI endpoint stays after its device goes offline, for one device or for the whole transport. `MidiBluetoothOfflineRetention` explains what the values mean and why the choice matters.
 
 ## Constructors
 
 | Constructor | Description |
 | -------- | ----------- |
-| `MidiBluetoothOfflineRetentionConfig(retentionSeconds)` | Sets the transport-wide default, used by every device set to `UseTransportDefault`. |
-| `MidiBluetoothOfflineRetentionConfig(bluetoothDeviceId, retentionSeconds)` | Sets the value for a single device. Pass `UseTransportDefault` to drop the override. |
+| `MidiBluetoothOfflineRetentionConfig(retentionSeconds)` | Sets the default for the whole transport, used by every device that's set to `UseTransportDefault` |
+| `MidiBluetoothOfflineRetentionConfig(bluetoothDeviceId, retentionSeconds)` | Sets the value for one device. Pass `UseTransportDefault` to go back to the transport's default |
 
-`retentionSeconds` is a `MidiBluetoothOfflineRetention` value or a positive number of seconds. The transport-wide form cannot be `UseTransportDefault`, because there is nothing above it to defer to.
+`retentionSeconds` is a `MidiBluetoothOfflineRetention` value, or a number of seconds greater than zero. The transport-wide version can't be `UseTransportDefault`, because there's nothing above it to fall back to.
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `TransportId` | The Bluetooth transport's GUID. |
-| `ConfigJson` | The configuration file representation of this setting. |
+| `TransportId` | The Bluetooth transport's GUID |
+| `ConfigJson` | This setting, as JSON |
 
 ## Applying and saving
 
-Send it to apply it now, save it to keep it across a service restart. Both are usually wanted:
+Send it to apply it now, and save it to keep it after the service restarts. You usually want both:
 
 ```cpp
 MidiBluetoothOfflineRetentionConfig config{ deviceId, 30 };
@@ -37,4 +37,4 @@ MidiServiceTransportPluginConfigManager::SendUpdate(config);
 MidiServiceTransportPluginConfigManager::SaveUpdate(config);
 ```
 
-A device entry is merged into the configuration file by its Bluetooth device id, so setting one device leaves every other device, and its enabled state, alone.
+A device's entry is matched in the configuration by its Bluetooth device id. So setting one device leaves every other device alone, along with whether it's turned on.

@@ -7,38 +7,40 @@ implements: Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfi
 description: Configuration object for customizing a MIDI endpoint in the service
 ---
 
-This class is used to send endpoint customization settings to the service. It contains information that will override transport-supplied properties for the matched endpoint.
+Use this class to send endpoint customizations to the service. What you set here replaces the values the transport supplied for the matching endpoint.
 
 ## Constructors
 
 | Constructor | Description |
 | ----------- | ----------- |
-| `MidiServiceEndpointCustomizationConfig(transportId)` | Create an empty customization config for the specified transport |
-| `MidiServiceEndpointCustomizationConfig(transportId, name, description)` | Create a customization config with a name and description |
-| `MidiServiceEndpointCustomizationConfig(transportId, name, description, imageFileName)` | Create a customization config with name, description, and image |
-| `MidiServiceEndpointCustomizationConfig(transportId, name, description, imageFileName, requiresNoteOffTranslation, supportsMidiPolyphonicExpression, recommendedControlChangeIntervalMilliseconds)` | Create a fully-specified customization config |
+| `MidiServiceEndpointCustomizationConfig()` | Creates an empty customization with no transport id. You can't set `TransportId` later, so use one of the other constructors if you plan to send it to the service |
+| `MidiServiceEndpointCustomizationConfig(transportId)` | Creates an empty customization for this transport |
+| `MidiServiceEndpointCustomizationConfig(transportId, name, description)` | Creates a customization with a name and description |
+| `MidiServiceEndpointCustomizationConfig(transportId, name, description, imageFileName)` | Creates a customization with a name, description, and image |
+| `MidiServiceEndpointCustomizationConfig(transportId, name, description, imageFileName, requiresNoteOffTranslation, supportsMidiPolyphonicExpression, recommendedControlChangeIntervalMilliseconds)` | Creates a customization with all of these values set |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `Name` | Display name for this customization |
-| `Description` | Description of this customization |
-| `ImageFileName` | Path to an icon file for this customization |
-| `ClearDisplayProperties` | Set this when the caller owns the whole set, as an editor does. An empty name, description, or image is then written as empty rather than left out, which is what clears a stored value |
-| `MatchCriteria` | The `MidiServiceConfigEndpointMatchCriteria` that identifies which endpoint this applies to |
-| `RequiresNoteOffTranslation` | True if the endpoint requires Note On velocity 0 to be translated to Note Off |
+| `Name` | The name to show for the endpoint |
+| `Description` | The description to show for the endpoint |
+| `ImageFileName` | The image file to show for the endpoint |
+| `ClearDisplayProperties` | Set this when your code manages all of these values at once, as an editor does. Then an empty name, description, or image is saved as empty, instead of being left out. That's how you clear a stored value |
+| `MatchCriteria` | The `MidiServiceConfigEndpointMatchCriteria` that says which endpoint this applies to |
+| `Provenance` | A [`MidiServiceEndpointCustomizationProvenance`]({{ site.baseurl }}/sdk-reference/ServiceConfig/MidiServiceEndpointCustomizationProvenance/) that records which device this entry was made for, so people can still recognize the entry if the endpoint's id changes later. It isn't used for matching. Set it whenever you create or edit a customization. `MidiServiceEndpointCustomizationProvenance.CreateForEndpoint` fills it in for you |
+| `RequiresNoteOffTranslation` | True if the endpoint needs a Note On with a velocity of 0 changed to a Note Off |
 | `SupportsMidiPolyphonicExpression` | True if the endpoint supports MIDI Polyphonic Expression (MPE) |
-| `RecommendedControlChangeIntervalMilliseconds` | Recommended interval in milliseconds between control change messages |
-| `OutgoingLatencyTicks` | Outgoing latency in MIDI clock ticks to compensate for when scheduling outgoing messages. May be negative for an endpoint which runs early once the endpoints around it are compensated |
-| `UseCustomOutgoingLatency` | Whether `OutgoingLatencyTicks` should be used in place of the value the transport calculated. Setting this either way makes the choice explicit, so a measured value can be kept while compensation is switched off. Leave it alone and supplying a non-zero latency continues to mean the value should be used |
-| `Midi1PortNamingApproach` | The `Midi1PortNamingApproach` to use when generating MIDI 1.0 port names |
+| `RecommendedControlChangeIntervalMilliseconds` | The recommended time, in milliseconds, between control change messages |
+| `OutgoingLatencyTicks` | The outgoing latency, in `MidiClock` ticks, to make up for when scheduling outgoing messages. It can be negative, for an endpoint that runs early once the endpoints around it are adjusted |
+| `UseCustomOutgoingLatency` | Whether to use `OutgoingLatencyTicks` instead of the value the transport worked out. Setting it either way makes the choice clear, so you can keep a measured value while the adjustment is turned off. If you don't set it, a latency other than zero still means the value is used |
+| `Midi1PortNamingApproach` | The `Midi1PortNamingApproach` to use when naming MIDI 1.0 ports |
 
 ## Methods
 
 | Method | Description |
 | ------ | ----------- |
-| `AddMidi1SourcePortCustomName(group, name)` | Add a custom name for a MIDI 1.0 source port for the specified group |
-| `AddMidi1DestinationPortCustomName(group, name)` | Add a custom name for a MIDI 1.0 destination port for the specified group |
+| `AddMidi1SourcePortCustomName(group, name)` | Adds a custom name for the MIDI 1.0 source port on this group |
+| `AddMidi1DestinationPortCustomName(group, name)` | Adds a custom name for the MIDI 1.0 destination port on this group |
 
-An empty `Name`, `Description`, or `ImageFileName` is left out of the saved configuration, so that saving a name does not wipe a stored description. Because of that, an entry cannot be emptied by overwriting it. Use `MidiServiceEndpointCustomizationRemovalConfig` to delete a stored customization outright.
+An empty `Name`, `Description`, or `ImageFileName` is left out of the saved configuration, so saving a name doesn't erase a stored description. Because of that, writing over an entry never removes it. To delete a stored customization completely, use `MidiServiceEndpointCustomizationRemovalConfig`.

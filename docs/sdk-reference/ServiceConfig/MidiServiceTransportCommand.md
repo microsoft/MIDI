@@ -7,19 +7,22 @@ implements: Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfi
 description: A command to send to a transport plugin in the MIDI service
 ---
 
-This class represents a command (verb + arguments) to be sent to a transport plugin via `MidiServiceTransportPluginConfigManager.SendCommand()`. Common verbs are available as static properties on `MidiServiceTransportCommonCommands`.
+A command to send to a transport with `MidiServiceTransportPluginConfigManager.SendCommand()`. A command has a verb, which says what to do, and arguments, which give the details. `MidiServiceTransportCommonCommands` has the common verbs.
 
 ## Constructors
 
 | Constructor | Description |
 | ----------- | ----------- |
-| `MidiServiceTransportCommand(transportId)` | Create an empty command for the specified transport |
-| `MidiServiceTransportCommand(transportId, verb)` | Create a command with the specified verb |
-| `MidiServiceTransportCommand(transportId, verb, arguments)` | Create a command with the specified verb and arguments |
+| `MidiServiceTransportCommand()` | Creates an empty command with no transport id. You can't set `TransportId` later, so use one of the other constructors if you plan to send it |
+| `MidiServiceTransportCommand(transportId)` | Creates an empty command for this transport |
+| `MidiServiceTransportCommand(transportId, verb)` | Creates a command with this verb |
+| `MidiServiceTransportCommand(transportId, verb, arguments)` | Creates a command with this verb and these arguments |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `Verb` | The command verb string (e.g., from `MidiServiceTransportCommonCommands`) |
-| `Arguments` | A map of string key/value argument pairs for this command |
+| `Verb` | The command's verb, such as one from `MidiServiceTransportCommonCommands` |
+| `Arguments` | The command's arguments, as pairs of text keys and values |
+| `TransportId` | The GUID of the transport the command is for. From `IMidiServiceTransportPluginConfig` |
+| `ConfigJson` | The command, as JSON. From `IMidiServiceTransportPluginConfig` |

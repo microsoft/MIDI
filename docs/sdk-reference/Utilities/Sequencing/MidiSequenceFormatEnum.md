@@ -18,6 +18,6 @@ description: How the tracks in a sequence relate to each other
 
 ## Remarks
 
-`SingleTrack` does not mean one instrument. A format 0 file routinely carries all sixteen channels on its single track, which is why [`MidiSequenceTrack`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequenceTrack/) has a `UsedChannelMask` rather than a single channel.
+`SingleTrack` doesn't mean one instrument. A format 0 file often has all sixteen channels on its one track. That's why [`MidiSequenceTrack`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequenceTrack/) has a `UsedChannelMask`, not a single channel.
 
-`MultiSequence` is rare, and the tracks in such a file are not meant to be played at the same time.
+`MultiSequence` is rare, and the tracks in a file like that aren't meant to be played at the same time.

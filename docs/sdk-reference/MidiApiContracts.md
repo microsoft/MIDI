@@ -7,7 +7,7 @@ idl: MidiApiContracts.idl
 description: API contracts used by the Windows MIDI Services WinRT API namespaces
 ---
 
-Windows MIDI Services WinRT API namespaces are versioned using WinRT API contracts.
+Each Windows MIDI Services WinRT API namespace has its own API contract, and the contract's version goes up when the namespace changes. Your application can check for a contract version with `Windows.Foundation.Metadata.ApiInformation.IsApiContractPresent` before it uses a namespace, so it keeps working on a PC that has an older version of the API.
 
 ## Contracts
 

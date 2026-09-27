@@ -7,7 +7,7 @@ implements: Windows.Foundation.IStringable
 description: Information about the parent device of a MIDI endpoint
 ---
 
-This class provides detailed information about the parent device of a MIDI endpoint. It is returned by `MidiEndpointDeviceInformation.GetParentDeviceInformation()` and similar methods.
+Details about the parent device of a MIDI endpoint, such as a USB device. `MidiEndpointDeviceInformation.GetParentDeviceInformation()` returns one.
 
 ## Properties
 
@@ -16,22 +16,22 @@ This class provides detailed information about the parent device of a MIDI endpo
 | `Id` | The device instance id of the parent device |
 | `Name` | The friendly name of the parent device |
 | `ContainerId` | The container GUID for this device |
-| `ParentDeviceInstanceId` | The device instance id of the parent's parent device |
-| `RelatedParentMediaDriverDeviceInstanceId` | Device instance id of any related parent media driver device |
-| `DriverInfPath` | Path to the driver INF file |
-| `DriverKey` | The driver registry key |
-| `DriverProvider` | The name of the driver provider |
-| `ServiceName` | The name of the logical service associated with this device |
-| `DriverVersion` | The version string for the driver |
-| `EnumeratorName` | The name of the device enumerator (e.g., "USB") |
-| `UsbVendorId` | USB vendor id (VID), if applicable |
-| `UsbProductId` | USB product id (PID), if applicable |
-| `UsbSerialNumber` | USB serial number string, if applicable |
-| `ReportedDeviceIdsHash` | Hash of reported device ids for quick comparison |
+| `ParentDeviceInstanceId` | The device instance id of this device's own parent |
+| `RelatedParentMediaDriverDeviceInstanceId` | The device instance id of the related parent media driver device, if there is one |
+| `DriverInfPath` | The path to the driver's INF file |
+| `DriverKey` | The driver's registry key |
+| `DriverProvider` | The name of the company that provided the driver |
+| `ServiceName` | The name of the driver service for this device |
+| `DriverVersion` | The driver's version |
+| `EnumeratorName` | The name of the device enumerator, such as "USB" |
+| `UsbVendorId` | The USB vendor id (VID), for a USB device |
+| `UsbProductId` | The USB product id (PID), for a USB device |
+| `UsbSerialNumber` | The USB serial number, for a USB device that has one |
+| `ReportedDeviceIdsHash` | A hash of the device ids the device reported, for quick comparisons |
 
 ## Samples
 
-These show where to find the USB vendor and product ids, and how this type differs from the identifiers reported by the transport. Under WinMM you would have used `DRV_QUERYDEVICEINTERFACE` and parsed the interface string yourself.
+These show where to find the USB vendor and product ids, and how this type is different from the ids the transport reports. With WinMM, you would have used `DRV_QUERYDEVICEINTERFACE` and read the ids out of the interface string yourself.
 
 * [C++/WinRT get-vid-pid](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/get-vid-pid)
 * [C# get-vid-pid](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/get-vid-pid)

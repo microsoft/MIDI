@@ -6,27 +6,27 @@ type: enum
 description: How the synthesizer opens the audio device it plays through
 ---
 
-`MidiSynthAudioOutputMode` chooses how the synthesizer opens the default audio render device.
+`MidiSynthAudioOutputMode` chooses how the synthesizer opens the default audio output device.
 
 ## Values
 
 | Value | Numeric Value | Description |
 | ----- | ------------- | ----------- |
-| `WasapiShared` | `0` | Opens the endpoint with the format it already reports, so no device setting is changed and every other application keeps playing |
-| `WasapiSharedLowLatency` | `1` | The same, but asks for the smallest period the audio engine will allow |
-| `WasapiExclusive` | `2` | Takes the device for the synthesizer alone |
+| `WasapiShared` | `0` | Opens the audio device with the format it already uses, so no device setting changes and every other app keeps playing |
+| `WasapiSharedLowLatency` | `1` | The same, but asks the Windows audio engine for the shortest processing period it allows, which lowers latency |
+| `WasapiExclusive` | `2` | Takes the device for the synthesizer alone. Not built yet. See the remarks |
 
 ## Remarks
 
-`WasapiShared` is the default and is the right answer for almost every PC.
+`WasapiShared` is the default, and it's the right choice for almost every PC.
 
-**`WasapiExclusive` is defined but not implemented yet.** Setting it does not take the device away from everything else on the machine; the synthesizer continues in shared mode. It is in the enumeration because it is coming, and because a settings UI written now should not have to change shape later. Check [MidiSynthStatus]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthStatus/).`AudioOutputMode` after sending a configuration to see what was actually taken.
+**`WasapiExclusive` is listed but not built yet.** Setting it doesn't take the device away from everything else on the PC. The synthesizer keeps using shared mode. It's in the list because it's coming, and so a settings screen written now won't have to change later. After you send a configuration, check [MidiSynthStatus]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthStatus/).`AudioOutputMode` to see which mode is really in use.
 
-**ASIO is deliberately not here.** There is no default ASIO device, so offering it needs a device selection to go with it, and an enumeration value an application can set but the service always refuses is worse than no value at all.
+**ASIO is left out on purpose.** There's no default ASIO device, so offering ASIO would also need a way to pick a device. And a value that apps can set but the service always refuses is worse than no value at all.
 
-**The synthesizer only holds the audio device while sound is happening.** The device is acquired when a channel voice message arrives and released after a short idle with nothing sounding, so a connected application which is not playing anything is not keeping the device away from anyone. Channel state survives that release, so a song which sets up its instruments and then rests does not come back playing pianos.
+**The synthesizer only holds the audio device while it's making sound.** It opens the device when a channel voice message arrives, and lets it go after a short quiet time with nothing playing. So a connected app that isn't playing anything isn't keeping the device from anyone else. The channel settings are kept when the device is let go, so a song that sets up its instruments and then pauses doesn't come back playing pianos.
 
-If you need the synthesizer to hold no audio device at all, switch it off with `IsEnabled`. See [MidiSynthConfig]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthConfig/).
+If you need the synthesizer to never hold the audio device, turn it off with `IsEnabled`. See [MidiSynthConfig]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthConfig/).
 
 ## See also
 

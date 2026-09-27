@@ -6,12 +6,12 @@ type: runtimeclass
 description: Information about an open connection in the service
 ---
 
-This class represents an open connection in a Windows MIDI Services session. This is an informational class only for reporting system-wide connection usage. 
+One open connection in a Windows MIDI Services session. It's only for reporting which connections are open across the PC.
 
 ## Properties
 
 | Property | Description |
 |---|---|
-| `EndpointOrPortDeviceId` | The device id for the connection. This is a UMP endpoint id or a MIDI 1.0 port id, because a session can hold both |
-| `InstanceCount` | The number of instances of this connection which are open in the parent session |
-| `EarliestConnectionTime` | The date and time the first instance of the connection was opened |
+| `EndpointOrPortDeviceId` | The device id for the connection. It's a UMP endpoint id or a MIDI 1.0 port id, because a session can have both open |
+| `InstanceCount` | How many of this connection the session has open |
+| `EarliestConnectionTime` | When the first of those connections was opened |

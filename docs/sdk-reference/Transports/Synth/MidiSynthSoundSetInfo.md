@@ -8,24 +8,24 @@ description: What the synthesizer's active sound set contains
 
 `MidiSynthSoundSetInfo` describes the sound set the synthesizer is playing. Get one from [MidiSynthManager]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthManager/).`GetSoundSetInfo()`.
 
-It is read-only. The synthesizer plays the sound set Windows installed and nothing else, so there is no property here to point it somewhere different, and no file a caller supplies is ever parsed.
+It's read-only. The synthesizer plays only the sound set Windows installed. There's no property to point it at a different one, and it never reads a sound file from your app.
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
 | `Name` | The name the sound set gives itself |
-| `Version` | The sound set's own four-part version, as text |
+| `Version` | The sound set's own four-part version number, as text |
 | `FilePath` | Where the sound set was loaded from |
-| `MelodicInstrumentCount` | How many melodic instruments it holds. Drum kits are not counted here |
-| `WaveCount` | How many individual recorded samples it holds. Useful as a measure of the sound set, not as something to address |
+| `MelodicInstrumentCount` | How many melodic instruments it has. Drum kits aren't counted here |
+| `WaveCount` | How many separate recorded samples it has. It's a measure of the sound set's size, not something you can select |
 | `DrumKits` | Every [MidiSynthDrumKitInfo]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthDrumKitInfo/) in the sound set |
 
 ## Remarks
 
-**The melodic instruments are deliberately not listed here.** There are hundreds of them, and most callers only want the counts. When you do want the list, use [MidiSynthManager.GetMelodicInstruments()]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthManager/), or better, ask the synthesizer over MIDI Capability Inquiry Property Exchange, which is the standard way to ask any device what it can play. Drum kits are here because there are only a handful and they cannot be reached by a bank select.
+**The melodic instruments aren't listed here, on purpose.** There are hundreds of them, and most apps only want the counts. When you do want the list, use [MidiSynthManager.GetMelodicInstruments()]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthManager/). Or better, ask the synthesizer with MIDI Capability Inquiry Property Exchange, which is the standard way to ask any device what it can play. Drum kits are listed because there are only a few, and a bank select can't reach them.
 
-**Reading this does not need the synthesizer to be sounding**, and does not need a connection. The sound set is loaded to answer the question if nothing has loaded it already.
+**Reading this doesn't need the synthesizer to be playing**, and it doesn't need a connection. If the sound set isn't loaded yet, it's loaded to answer the question.
 
 ## See also
 

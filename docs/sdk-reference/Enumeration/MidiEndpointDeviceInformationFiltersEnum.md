@@ -6,16 +6,16 @@ type: enum
 description: Filter used when enumerating endpoints
 ---
 
-When enumerating devices, it is helpful to be able to filter for different types of devices. For example, an application providing diagnostic or development services may want to enumerate the diagnostic loopback endpoints. A Digital Audio Workstation, on the other hand, would only want to enumerate the normal UMP and Byte Stream native endpoints.
+When you list devices, it helps to be able to pick which kinds of endpoints to include. For example, a diagnostic or developer tool might want the diagnostic loopback endpoints. A digital audio workstation (DAW), on the other hand, only wants the normal endpoints, whether they natively use UMP or the MIDI 1.0 byte format.
 
 ## Properties
 
 | Property | Value | Description |
 | --------------- | ---------- | ----------- |
-| `StandardNativeUniversalMidiPacketFormat` | `0x00000001` | Include endpoints which are MIDI UMP endpoints natively. These are typically considered MIDI 2.0 devices even if they only send MIDI 1.0 messages in UMP. |
-| `StandardNativeMidi1ByteFormat` | `0x00000002` | Include endpoints which are MIDI 1.0 byte stream endpoints natively. These are converted to UMP internally in Windows MIDI Services. |
-| `VirtualDeviceResponder` | `0x00000100` | Include endpoints which are virtual devices. Note that this is the device side of the endpoint, not the side available to other applications. Typically, you would not use this. |
-| `DiagnosticLoopback` | `0x00010000` | Use this value only when providing development, test, or diagnostic services for MIDI. |
-| `DiagnosticPing` | `0x00020000` | You would not normally include this in an enumeration. This endpoint is internal. |
-| `AllStandardEndpoints` | `0x00000003` | `StandardNativeUniversalMidiPacketFormat` and `StandardNativeMidi1ByteFormat` together. This is the value most applications should use, and is the default. |
+| `StandardNativeUniversalMidiPacketFormat` | `0x00000001` | Include endpoints that natively use UMP. These are usually thought of as MIDI 2.0 devices, even if they only send MIDI 1.0 messages in UMP. |
+| `StandardNativeMidi1ByteFormat` | `0x00000002` | Include endpoints that natively use the MIDI 1.0 byte format. Windows MIDI Services converts their messages to and from UMP. |
+| `VirtualDeviceResponder` | `0x00000100` | Include the device side of virtual devices, not the side other applications use. You usually won't need this. |
+| `DiagnosticLoopback` | `0x00010000` | Include the diagnostic loopback endpoints. Use this only in development, test, or diagnostic tools. |
+| `DiagnosticPing` | `0x00020000` | Include the diagnostic ping endpoint. You normally wouldn't, because this endpoint is only for the service's own use. |
+| `AllStandardEndpoints` | `0x00000003` | `StandardNativeUniversalMidiPacketFormat` and `StandardNativeMidi1ByteFormat` together. This is the default, and it's the value most applications should use. |
 

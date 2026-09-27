@@ -12,13 +12,13 @@ Returned by `MidiNetworkTransportManager.CreateNetworkHostAsync`.
 
 | Property | Description |
 | -------- | ----------- |
-| `HostId` | The GUID of the host the request referred to |
+| `HostId` | The GUID of the host the request was about |
 | `Success` | True if the host was created and started |
 | `ErrorCode` | A `MidiNetworkHostCreationErrorCode` when `Success` is false |
-| `ErrorMessage` | A human-readable description of the failure |
+| `ErrorMessage` | A description of the failure that people can read |
 
 ## Remarks
 
-Check `Success` first. When it is false, `ErrorCode` gives the machine-readable reason and `ErrorMessage` a localized description suitable for display.
+Check `Success` first. When it's false, `ErrorCode` tells your code why, and `ErrorMessage` is a translated description you can show to people.
 
-Because `CreateNetworkHostAsync` waits for the host to start, a `Success` of true means the host is listening and, if requested, advertising. If the definition was accepted but the host did not come up in time, `ErrorCode` is `TimedOutWaitingForHostToStart`.
+Because `CreateNetworkHostAsync` waits for the host to start, a `Success` of true means the host is listening and, if you asked for it, advertising. If the service accepted the host but it didn't start in time, `ErrorCode` is `TimedOutWaitingForHostToStart`.

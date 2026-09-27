@@ -6,12 +6,12 @@ type: struct
 description: Information about the current Windows system timer configuration
 ---
 
-This struct is returned by `MidiClock.GetCurrentSystemTimerInfo()` and provides information about the current Windows system timer frequency configuration. This is primarily useful when determining whether to call `MidiClock.BeginLowLatencySystemTimerPeriod()`.
+`MidiClock.GetCurrentSystemTimerInfo()` returns this struct. It tells you how often the Windows system timer fires right now, and the fastest and slowest it can go. Use it to decide whether calling `MidiClock.BeginLowLatencySystemTimerPeriod()` would help.
 
 ## Struct Fields
 
 | Field | Description |
 | ----- | ----------- |
-| `CurrentIntervalTicks` | The current timer interrupt interval in 100-nanosecond ticks |
-| `MinimumIntervalTicks` | The minimum supported timer interrupt interval in 100-nanosecond ticks |
-| `MaximumIntervalTicks` | The maximum supported timer interrupt interval in 100-nanosecond ticks |
+| `CurrentIntervalTicks` | The time between timer interrupts right now, in 100-nanosecond units |
+| `MinimumIntervalTicks` | The shortest time between timer interrupts this PC supports, in 100-nanosecond units |
+| `MaximumIntervalTicks` | The longest time between timer interrupts this PC supports, in 100-nanosecond units |

@@ -10,5 +10,5 @@ description: Enumeration specifying the direction or flow of a MIDI 1.0 port.
 
 | Property | Value | Description |
 | --------------- | ---------- | ----------- |
-| `MidiMessageSource` | `0x00000000` | A source of messages for applications: a MIDI Input to the system | 
-| `MidiMessageDestination` | `0x00000001` | A destination for messages : a MIDI Output from the system | 
+| `MidiMessageSource` | `0x00000000` | A port that sends messages to applications. In WinMM, this is a MIDI input port | 
+| `MidiMessageDestination` | `0x00000001` | A port that applications send messages to. In WinMM, this is a MIDI output port | 

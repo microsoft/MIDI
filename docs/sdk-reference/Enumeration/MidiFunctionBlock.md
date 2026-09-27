@@ -7,54 +7,62 @@ implements: Windows.Foundation.IStringable
 description: Represents a MIDI 2.0 Function Block per the specification
 ---
 
-The original MIDI 2.0 USB specification includes the concept of a Group Terminal Block. After ratification of that specification, it was found that Group Terminal Blocks were insufficient for two main reasons:
-1. Group Terminal Blocks are USB-specific, and so are not available on other transports like Network or Virtual.
-2. Group Terminal Blocks are static, defined in USB descriptors, and so cannot change during runtime.
+The first MIDI 2.0 USB specification introduced group terminal blocks. After it was approved, it turned out that group terminal blocks weren't enough, for two main reasons:
 
-Group Terminal Blocks are still available, but function blocks are the preferred approach for defining capapbilities of a device. When both are available, you should use the function block information.
+1. Group terminal blocks exist only for USB, so other transports, such as network and virtual devices, don't have them.
+2. Group terminal blocks are fixed in the USB descriptors, so they can't change while the device is running.
 
-A function block represents a function of a MIDI 2.0 device. A function block may span one or more groups, and if not a static function block, those group numbers may change during operation. For example, a Tone Generator function of a device may need 64 channels to represent its multi-timbral nature. One way it can accomplish this is to declare a function block which spans 4 groups, each of which has 16 channels of data (16x4 = 64).
+Group terminal blocks are still available, but function blocks are the better way to describe what a device can do. When a device has both, use the function blocks.
 
-Function blocks also represent the valid groups for communication with an endpoint. If an endpoint declares 4 function blocks, which together cover only group indexes 0-5, and all of those blocks are marked active, only those groups should be available to users of an application. This helps cut down on clutter caused by always displaying 16 groups.
+A function block is one job a MIDI 2.0 device does. It can cover one or more groups, and unless it's a static function block, those groups can change while the device is running. For example, a device's tone generator might need 64 channels so it can play many sounds at once. One way to do that is a function block that covers 4 groups of 16 channels each (4 x 16 = 64).
 
-Function blocks have names which should be displayed to the user along with the group numbers. In the end, the actual addressible entity is the endpoint stream with the group number in the Universal MIDI Packet. But the function block provides context for that group number.
+Function blocks also tell you which groups an endpoint really uses. If an endpoint has 4 active function blocks that together cover only group indexes 0 to 5, offer only those groups to the people using your application. That's much less cluttered than always showing all 16 groups.
 
-Per the specification, function blocks can span more than one group, and can overlap with each other so that different functions can be available on the same group.
+Show a function block's name along with its group numbers. Messages are still sent to the endpoint with a group number in each Universal MIDI Packet, but the function block tells people what that group number is for.
 
-Function blocks are used in the Windwos MIDI Services API in three ways:
+The specification lets function blocks cover more than one group, and overlap each other, so different functions can share a group.
 
-1. A property of a `MidiEndpointDeviceInformation` object, representing function blocks discovered through endpoint discovery. These function blocks are read-only.
-2. The return value of the AsEquivalentFunctionBlock method of the GroupTerminalBlock class. This is a convenience function. These function blocks are read-only
-3. Provided by the application as part of the device definition for a virtual device in app-to-app MIDI. These function blocks are editable before adding them to the device definition.
+The Windows MIDI Services API uses function blocks in three ways:
+
+1. From `MidiEndpointDeviceInformation.GetDeclaredFunctionBlocks()`, for the function blocks found during endpoint discovery. These are read-only.
+2. From `MidiGroupTerminalBlock.AsEquivalentFunctionBlock()`, which turns a group terminal block into a function block for convenience. These are read-only.
+3. Created by your application as part of the definition of a virtual device for app-to-app MIDI. You can change these until you add them to the device definition.
+
+## Constructors
+
+| Constructor | Description |
+| ----------- | ----------- |
+| `MidiFunctionBlock()` | Creates an empty function block |
 
 ## Properties
 
-Most properties are 1:1 with the MIDI 2.0 UMP specification section on function blocks. We assemble the name for you and map values to enumerations when possible.
+Most properties match the function block fields in the UMP specification one for one. The API puts the name together for you, and turns values into enums where it can.
 
 | Property | Description |
 | --------------- | ----------- |
-| `IsReadOnly` | True if this function block should be treated as read-only. If you attempt to assign a value to a property in a read-only function block, the assignment will silently fail. |
-| `Number` | The index of the block 0-31. We use "number" here to be consistent with the specification |
-| `Name` | The assembled name of the function block |
+| `IsReadOnly` | True if this function block is read-only. If you set a property on a read-only function block, nothing happens, and no error is raised |
+| `Number` | The block's index, from 0 to 31. It's called "number" to match the specification |
+| `Name` | The function block's name, put together from the messages that carried it |
 | `IsActive` | True if this block is active |
-| `Direction` | The direction of the block from the block's point of view. |
-| `UIHint` | A hint which tells you how this block should be treated in a user interface. This should be considered a "soft filter" for display, not a mechanism to keep blocks completely hidden from a user. |
-| `RepresentsMidi10Connection` | How to treat this block if it is a MIDI 1.0 connection. A newly constructed block defaults to `Not10`, so a virtual device only needs to set this when the block really does bridge a MIDI 1.0 connection. |
-| `FirstGroup` | First group spanned by this block. |
-| `GroupCount` | The number of groups spanned. |
-| `MidiCIMessageVersionFormat` | MIDI CI version format value |
-| `MaxSystemExclusive8Streams` | The maximum number of System Exclusive 8 streams allowed. Please refer to the UMP specification for how to treat this value. |
+| `Direction` | Which way messages go, from the block's point of view |
+| `UIHint` | A hint about how to show this block in a user interface. Use it to decide what to show first, not to hide blocks from people completely |
+| `RepresentsMidi10Connection` | Whether this block stands for a MIDI 1.0 connection, and how to treat it. A new block starts as `Not10`, so a virtual device only needs to set this when the block really does connect to MIDI 1.0 |
+| `FirstGroup` | The first group this block covers |
+| `GroupCount` | How many groups this block covers |
+| `MidiCIMessageVersionFormat` | The MIDI-CI message version the block uses |
+| `MaxSystemExclusive8Streams` | The most System Exclusive 8 streams the block allows at once. See the UMP specification for how to use this value |
 
 ## Functions
 
 | Function | Description |
 | --------------- | ----------- |
-| `MidiFunctionBlock()` | Construct an empty function block |
-| `IncludesGroup(group)` | Helper function which returns true if this function exists on the supplied group |
+| `IncludesGroup(group)` | Returns true if this block covers the group |
 
 ## Static Properties
 
-| `ShortLabel` | Returns the localized abbreviation for use in UI. |
-| `ShortLabelPlural` | Returns the localized abbreviation for use in UI. |
-| `LongLabel` | Returns the localized full name for use in UI. |
-| `LongLabelPlural` | Returns the localized full name for use in UI. |
+| Static Property | Description |
+| --------------- | ----------- |
+| `ShortLabel` | The short name for a function block in the user's language |
+| `ShortLabelPlural` | The plural of the short name |
+| `LongLabel` | The full name in the user's language |
+| `LongLabelPlural` | The plural of the full name |

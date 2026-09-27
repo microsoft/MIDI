@@ -6,10 +6,10 @@ type: runtimeclass
 description: Event args for when a MIDI 1.0 port is added
 ---
 
-Raised by `MidiLegacyPortDeviceWatcher` when a new MIDI 1.0 port is added.
+`MidiLegacyPortDeviceWatcher` passes this to your `Added` handler when a MIDI 1.0 port is added.
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `AddedDevice` | The `MidiLegacyPortDeviceInformation` for the newly added port |
+| `AddedDevice` | The `MidiLegacyPortDeviceInformation` for the new port |

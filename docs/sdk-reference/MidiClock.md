@@ -6,87 +6,87 @@ type: runtimeclass
 description: Used for all timestamps in Windows MIDI Services.
 ---
 
-The `MidiClock` is what is used for all timestamps in Windows MIDI Services. Although it is internally backed by `QueryPerformanceCounter`, we recommend using the MidiClock type directly instead of calling QPC yourself.
+Every timestamp in Windows MIDI Services comes from `MidiClock`. It reads the same counter as `QueryPerformanceCounter`, but we recommend using `MidiClock` instead of calling `QueryPerformanceCounter` yourself, so your timestamps always match the API's.
 
-Also note that `QueryPerformanceCounter` technically returns a signed 64 bit integer, but the timestamp values used in Windows MIDI Services are unsigned 64 bit integers. Typically, this is of no practical concern as the tick resolution is currently 100ns and takes tens of thousands of years to wrap around even with a 64 bit signed integer.
+`QueryPerformanceCounter` returns a signed 64-bit number, but Windows MIDI Services timestamps are unsigned 64-bit numbers. That difference doesn't matter in practice. Each tick is currently 100 nanoseconds, and even a signed 64-bit counter would take tens of thousands of years to run out.
 
-> Note: The MIDI Clock is unrelated to wall clock time. It is an ever-increasing value of period `1/TimestampFrequency` seconds that starts over when the PC is rebooted. To convert to wall clock time, you need to get the `MidiClock.Now` value at a known time, and then use that as a baseline until the next time you reboot the PC.
+> **Note:** The MIDI clock has nothing to do with the time of day. It's a count that goes up by one every `1/TimestampFrequency` seconds, and it starts over when the PC restarts. To turn a timestamp into a time of day, read `MidiClock.Now` at a known time of day, and measure from there until the PC restarts.
 
-You can learn more about high-resolution timestamps in Windows at [https://aka.ms/miditimestamp](https://aka.ms/miditimestamp).
+To learn more about high-resolution timestamps in Windows, see [https://aka.ms/miditimestamp](https://aka.ms/miditimestamp).
 
 ## Static Properties
 
 | Static Property | Description |
 | --------------- | ----------- |
 | `Now` | Returns the current timestamp |
-| `TimestampFrequency` | Returns the number of timestamp ticks per second. This is calculated the first time it is called, and then cached for future calls. |
-| `TimestampConstantSendImmediately` | Returns the constant to use when you want to send messages immediately and bypass outgoing message scheduling. Developers may use this value or simply provide `0` in place of the timestamp when sending messages.  |
-| `TimestampConstantMessageQueueMaximumFutureTicks` | Returns the maximum future timestamp value that the scheduler will accept. Messages scheduled too far in the future will fail to send. |
+| `TimestampFrequency` | The number of timestamp ticks in one second. It's worked out on the first call and then remembered |
+| `TimestampConstantSendImmediately` | The timestamp that means "send this right away, don't schedule it." Its value is `0`, so you can also pass `0` |
+| `TimestampConstantMessageQueueMaximumFutureTicks` | How far ahead you can schedule a message, in ticks. It's currently five minutes. A message scheduled further ahead than this fails to send |
 
 ## Static Functions for Conversion
 
-The static functions are for convenience in calculating offsets to a timestamp, and for converting between units.
+These functions convert a timestamp from ticks to other units.
 
 | Static Function | Description |
 | --------------- | ----------- |
-| `ConvertTimestampTicksToNanoseconds(timestampValue)` | Converts the provided timestamp to nanoseconds |
-| `ConvertTimestampTicksToMicroseconds(timestampValue)` | Converts the provided timestamp to microseconds |
-| `ConvertTimestampTicksToMilliseconds(timestampValue)` | Converts the provided timestamp to milliseconds |
-| `ConvertTimestampTicksToSeconds(timestampValue)` | Converts the provided timestamp to seconds |
+| `ConvertTimestampTicksToNanoseconds(timestampValue)` | Converts the timestamp to nanoseconds |
+| `ConvertTimestampTicksToMicroseconds(timestampValue)` | Converts the timestamp to microseconds |
+| `ConvertTimestampTicksToMilliseconds(timestampValue)` | Converts the timestamp to milliseconds |
+| `ConvertTimestampTicksToSeconds(timestampValue)` | Converts the timestamp to seconds |
 
 ## Static Functions for Offset
 
-When scheduling messages, you may want to use a more convenient time units. These functions make that easy.
+When you schedule messages, it's usually easier to think in milliseconds or seconds than in ticks. These functions add an amount of time, in the unit you choose, to a timestamp.
 
 | Static Function | Description |
 | --------------- | ----------- |
-| `OffsetTimestampByTicks(timestampValue, offsetTicks)` | Offsets a given timestamp by the provided (signed) number of ticks |
-| `OffsetTimestampByMicroseconds(timestampValue, offsetMicroseconds)` | Offsets a given timestamp by the provided (signed) number of microseconds |
-| `OffsetTimestampByMilliseconds(timestampValue, offsetMilliseconds)` | Offsets a given timestamp by the provided (signed) number of milliseconds |
-| `OffsetTimestampBySeconds(timestampValue, offsetSeconds)` | Offsets a given timestamp by the provided (signed) number of seconds |
+| `OffsetTimestampByTicks(timestampValue, offsetTicks)` | Adds a number of ticks, which can be negative, to the timestamp |
+| `OffsetTimestampByMicroseconds(timestampValue, offsetMicroseconds)` | Adds a number of microseconds, which can be negative, to the timestamp |
+| `OffsetTimestampByMilliseconds(timestampValue, offsetMilliseconds)` | Adds a number of milliseconds, which can be negative, to the timestamp |
+| `OffsetTimestampBySeconds(timestampValue, offsetSeconds)` | Adds a number of seconds, which can be negative, to the timestamp |
 
-A negative offset moves the timestamp earlier, which is how you compensate for a known output latency. An offset which would take the timestamp below zero returns zero rather than wrapping around to a very large value.
+A negative offset moves the timestamp earlier, which is how you make up for a known output delay. If the offset would take the timestamp below zero, you get zero back, not a huge number.
 
 ## Static Functions for Windows Timer Frequency
 
-Windows supports putting the system timer into a low-latency / high-frequency mode. Drivers have more control over this, but applications can also specify that they want to enter a low-latency period, providing better timing characteristics. If you call the `BeginLowLatencyTimerPeriod` function, your application **must** call the `EndLowLatencyTimePeriod` before it closes. If drivers have not already set the timer period to the lowest value, these functions typically change the timer period from around 15ms to around 1ms.
+Windows can run its system timer faster, which makes waits and timeouts more precise. Drivers have the most control over this, but an application can ask for a faster timer too. If drivers haven't already sped it up, these functions usually change the timer period from about 15 ms to about 1 ms. If your application calls `BeginLowLatencySystemTimerPeriod`, it **must** call `EndLowLatencySystemTimerPeriod` before it closes.
 
 | Static Function | Description |
 | --------------- | ----------- |
-| `GetCurrentSystemTimerInfo` | Returns a `MidiSystemTimerSettings` struct containing the current timer characteristics |
-| `BeginLowLatencySystemTimerPeriod` | Request a low-latency timer period for **this process**. Internally calls `timeBeginPeriod` |
-| `EndLowLatencySystemTimerPeriod` | End the started low-latency timer period. You must call this before the application closes if you previously called the Begin function. Internally calls `timeEndPeriod` |
+| `GetCurrentSystemTimerInfo()` | Returns a `MidiSystemTimerSettings` with the timer's current period, and the shortest and longest periods it supports |
+| `BeginLowLatencySystemTimerPeriod()` | Asks for a low-latency timer period for **this process**. It calls `timeBeginPeriod` |
+| `EndLowLatencySystemTimerPeriod()` | Ends the low-latency timer period. If you called Begin, call this before your application closes. It calls `timeEndPeriod` |
 
-### These calls are counted, so independent components can each ask
+### Each part of your application can ask separately
 
-`timeBeginPeriod` and `timeEndPeriod` are reference counted by Windows precisely so that independent components in one process can each ask for a low-latency period without coordinating. These functions follow that model.
+Windows counts `timeBeginPeriod` and `timeEndPeriod` calls, so separate parts of one process can each ask for a low-latency period without checking with each other. These functions count calls the same way.
 
-This matters because the WinRT API is frequently loaded into a host which also loads plugins. If a host asks for a low-latency period and a plugin asks as well, both receive `true`, and the period is only released once both have called the End function. A caller which is told `true` can rely on being in a low-latency period regardless of whether it was the one that started it.
+This matters because the WinRT API is often loaded into a host application that also loads plugins. If the host asks for a low-latency period and a plugin asks too, both get `true`, and the period ends only after both have called End. If you get `true`, you're in a low-latency period, whether or not your call is the one that started it.
 
-`BeginLowLatencySystemTimerPeriod` returns `false` only when the request actually failed. `EndLowLatencySystemTimerPeriod` returns `false` when there was no outstanding request to release, which usually means it has been called more times than Begin was.
+`BeginLowLatencySystemTimerPeriod` returns `false` only when the request failed. `EndLowLatencySystemTimerPeriod` returns `false` when there was nothing left to end, which usually means End was called more times than Begin.
 
-### The benefit is per-process, even though the cost is not
+### The benefit stays in your process, but the cost doesn't
 
-This is the part which catches people out, and it is worth being precise about because it changed in Windows 10 2004 and the older behavior is still widely assumed.
+This part surprises people. It changed in Windows 10 version 2004, and many people still expect the old behavior.
 
-`timeBeginPeriod` does still raise the **global** timer interrupt rate, so the power cost of asking for a low-latency period is paid by the whole machine. What changed is that the scheduling **benefit** no longer spreads to other processes. A process which has not called `timeBeginPeriod` itself now sees roughly the default `Sleep` and wait granularity even while another process is holding the interrupt rate high.
+`timeBeginPeriod` still speeds up the timer for the **whole PC**, so the whole PC pays the power cost. What changed is that the **benefit** no longer reaches other processes. A process that hasn't called `timeBeginPeriod` itself still gets the normal, slower `Sleep` and wait timing, even while another process is holding the timer at the faster rate.
 
-Two consequences for MIDI applications:
+This means two things for MIDI applications:
 
-- **You cannot raise the timer period on someone else's behalf, and nobody can raise it on yours.** If your application needs fine-grained waits, it has to ask for them itself. Multi-process applications need to call this in each process which does timing-sensitive work, not just in a main or controller process.
-- **Calling this does not make the MIDI service schedule outgoing messages more precisely.** Message scheduling happens in the service, not in your process. This function affects your own waits and timeouts.
+- **You can't speed up the timer for another process, and no other process can speed it up for yours.** If your application needs precise waits, it has to ask for them itself. An application made of several processes needs to call this in each process that does timing work, not only in the main one.
+- **Calling this doesn't make the MIDI service send scheduled messages more precisely.** Scheduling happens in the service, not in your process. This function only changes your own waits and timeouts.
 
-Bruce Dawson's [Windows Timer Resolution: The Great Rule Change](https://randomascii.wordpress.com/2020/10/04/windows-timer-resolution-the-great-rule-change/) is the clearest write-up of the behavior and how it was measured.
+Bruce Dawson's [Windows Timer Resolution: The Great Rule Change](https://randomascii.wordpress.com/2020/10/04/windows-timer-resolution-the-great-rule-change/) is the clearest explanation of the change and how it was measured.
 
-### Do not use a `Sleep` count as a timeout
+### Don't use a count of `Sleep` calls as a timeout
 
-Related, and a common bug: `Sleep(1)` does not sleep for one millisecond. It sleeps until the next timer interrupt at or after one millisecond, which by default is up to about 15.6ms away. A retry loop bounded by an iteration count therefore runs far longer than intended — a "5000 iteration" loop of `Sleep(1)` can easily take over a minute rather than five seconds.
+A common bug: `Sleep(1)` doesn't sleep for one millisecond. It sleeps until the next timer tick that's at least one millisecond away, and by default that can be about 15.6 ms. So a retry loop that stops after a set number of tries runs far longer than you'd expect. A loop of 5,000 `Sleep(1)` calls can take more than a minute instead of five seconds.
 
-Bound retry loops by a deadline you read from a clock, not by counting iterations.
+End a retry loop at a deadline you read from a clock, not after a number of tries.
 
 ## Samples
 
-The `OffsetTimestampBy...` functions are how you schedule a message for the future. Read `Now` once and offset that single value, rather than reading the clock again for each message. There was no WinMM equivalent for scheduled sending.
+Use the `OffsetTimestampBy...` functions to schedule a message for later. Read `Now` once and offset that one value for each message, instead of reading the clock again for every message. WinMM had no way to schedule messages like this.
 
 * [C++/WinRT scheduled-send-messages](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/scheduled-send-messages)
 * [C# scheduled-send-messages](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/scheduled-send-messages)

@@ -6,30 +6,30 @@ type: runtimeclass
 description: Everything a device offers through property exchange, from its ResourceList resource
 ---
 
-Asking this before making a request is what stops a client sending an inquiry the device will only reject.
+Read this before you make a request, so you don't send a request the device will only refuse.
 
 ## Constructors
 
 | Constructor | Description |
 | ----------- | ----------- |
-| `MidiResourceList()` | Constructs an empty list |
+| `MidiResourceList()` | Creates an empty list |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `Entries` | The resources the device declared |
+| `Entries` | The resources the device listed |
 
 ## Methods
 
 | Method | Description |
 | ------ | ----------- |
-| `GetEntry(resource)` | The entry for a named resource, or null when the device does not offer it |
-| `SupportsResource(resource)` | True when the device declared that resource |
-| `GetJson()` | The ResourceList resource is a JSON array of entries |
+| `GetEntry(resource)` | The entry for a named resource, or null if the device doesn't offer it |
+| `SupportsResource(resource)` | True if the device lists that resource |
+| `GetJson()` | The list as JSON. The ResourceList resource is a JSON array of entries |
 
 ## Static Methods
 
 | Static Method | Description |
 | ------------- | ----------- |
-| `FromJson(json)` | Reads a list from the JSON array the resource is |
+| `FromJson(json)` | Reads a list from the resource's JSON array |

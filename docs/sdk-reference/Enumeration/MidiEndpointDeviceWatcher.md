@@ -6,84 +6,84 @@ type: runtimeclass
 description: Recommended class to use when enumerating endpoints
 ---
 
-WinRT provides a `Windows.Devices.Enumeration` namespace with a `DeviceWatcher` class. That class is generic to any type of device, and so requires additional work to use with MIDI devices. Because of that, we've wrapped that functionality in the `MidiEndpointDeviceWatcher` class and the related `MidiEndpointDeviceInformation` class.
+WinRT has a `DeviceWatcher` class in the `Windows.Devices.Enumeration` namespace. It works with every kind of device, so it takes extra work to use with MIDI devices. That's why we wrapped it in `MidiEndpointDeviceWatcher` and the related `MidiEndpointDeviceInformation` class.
 
-This is the class applications should use when they want to find devices, and also be notified when devices are added or removed, or when properties like function blocks or device names change.
+Use this class to find devices, and to hear about it when devices are added or removed, or when properties such as function blocks or device names change.
 
-Create a `MidiEndpointDeviceWatcher` on a background thread, and use the internal list of Endpoints as your source of record for device properties.
+Create a `MidiEndpointDeviceWatcher` on a background thread, and treat its list of endpoints as the true source of device properties.
 
 ## Properties
 
-| Function | Description |
+| Property | Description |
 | --------------- | ----------- |
-| `Status` | The current status of the watcher itself. See the `Windows.Devices.Enumeration.DeviceWatcherStatus` enumeration |
-| `EnumeratedEndpointDevices` | The list of enumerated devices. Provided here for convenience so applications do not need to keep their own list of MIDI devices. The key into this map is the full MIDI Endpoint Device Id.  |
+| `Status` | The watcher's own status. See the `Windows.Devices.Enumeration.DeviceWatcherStatus` enumeration |
+| `EnumeratedEndpointDevices` | The endpoints the watcher has found. It's here so your application doesn't have to keep its own list of MIDI devices. The map key is the endpoint's full device id |
 
 ## Functions
 
 | Function | Description |
 | --------------- | ----------- |
-| `Start()` | Begin device enumeration. Wire up event handlers before calling this function.  |
-| `Stop()` | Stop device enumeration. |
+| `Start()` | Starts finding devices. Attach your event handlers before you call this |
+| `Stop()` | Stops finding devices |
 
 ## Static Functions
 
 | Static Function | Description |
 | --------------- | ----------- |
-| `Create (endpointFilter)` | Create a watcher which will enumerate devices based on the provided filter |
-| `Create ()` | Create a watcher which will enumerate devices based on the default filter, appropriate for most apps |
+| `Create(endpointFilters)` | Creates a watcher that finds the kinds of endpoints in the filter |
+| `Create()` | Creates a watcher that uses the default filter, which is right for most applications |
 
 ## Events
 
-Watcher events are raised synchronously from the underlying Device Watcher, and so follow the same rules and guidance as the WinRT `Windows.Devices.Enumeration.DeviceWatcher` type. In addition, we recommend the following:
+The underlying `DeviceWatcher` raises these events and waits for your handlers, so the same rules and advice apply as for the WinRT `Windows.Devices.Enumeration.DeviceWatcher` type. We also recommend:
 
-- Do not perform any long-running work inside an event handler.
-- Do not create or destroy any virtual devices, loopbacks, or network connections from within a handler, and do not update properties in any way which would cause additional PnP events to be raised.
-- When in doubt, hand the data off to a worker thread and return from the handler quickly.
+- Don't do slow work in an event handler.
+- Don't create or remove virtual devices, loopbacks, or network connections in a handler, and don't change properties in a way that would cause more Plug and Play events.
+- If you're not sure, pass the data to a worker thread and return from the handler quickly.
 
 | Event | Description |
 | --------------- | ----------- |
-| `Added (source, deviceInformationAddedEventArgs)` | A new endpoint has been added.  |
-| `Removed (source, deviceInformationRemovedEventArgs)` | An endpoint has been removed. |
-| `Updated (source deviceInformationUpdatedEventArgs)` | Properties of an endpoint have been updated. This is much more common than it was with the older MIDI 1.0 APIs due to both in-protocol endpoint information, and user configuration. |
-| `EnumerationCompleted (source)` | Raised when the initial device enumeration has been completed. Devices may still be added or removed after this event, but use this to decide when you have enough information to display an initial list. |
-| `Stopped (source)` | Enumeration has been stopped. |
+| `Added(source, deviceInformationAddedEventArgs)` | Raised when an endpoint is added |
+| `Removed(source, deviceInformationRemovedEventArgs)` | Raised when an endpoint is removed |
+| `Updated(source, deviceInformationUpdatedEventArgs)` | Raised when an endpoint's properties change. This happens much more often than with the older MIDI 1.0 APIs, because devices describe themselves in the protocol, and users can change settings |
+| `EnumerationCompleted(source)` | Raised when the first pass of finding devices is done. Devices can still be added or removed after this, but use it to decide when you have enough to show a first list |
+| `Stopped(source)` | Raised when the watcher stops |
 
-## Endpoint connectivity detection
+## Detecting connects and disconnects
 
-Whether and when an event fires depends upon the underlying transport. In the case of USB, in the service, we have a lower-level device watcher checking for the USB disconnects. When we receive one, we add/remove/update the software devices as appropriate. This, in turn, causes these events to fire in the API.
+Whether and when an event fires depends on the transport. For USB, the service watches for USB devices being connected and disconnected. When that happens, it adds, removes, or updates the endpoint's software device, and that raises these events in the API.
 
-**All Windows MIDI Services endpoints are enumerated and tied to the lifetime of the Windows service.** Shutting down the Windows service will cause all enumerated devices to disconnect and raise the watcher removed events.
+**Every Windows MIDI Services endpoint lasts only as long as the MIDI service.** Stopping the service disconnects every endpoint and raises the watcher's `Removed` events.
 
 ### USB
 
-When the USB stack disconnects a device, we see it as a device removal event. This can happen when the USB device is physically disconnected, when it is powered down, or when the PC is put into suspend and disconnects all USB devices. When the PC wakes from suspend, and the USB stack notifies us that the device is reconnected, it reappears and you can then reconnect to it. 
+When Windows disconnects a USB device, its endpoint is removed. That happens when the device is unplugged or switched off, or when the PC goes to sleep and disconnects all its USB devices. When the PC wakes up and Windows reports that the device is back, the endpoint comes back and you can connect to it again.
 
 ### Bluetooth MIDI
 
-The Blueooth MIDI stack has more of a delay, depending upon how often the device is checked for connectivity. It may be a few seconds before a powered-down BLE MIDI device triggers a `Remove` event. 
+By default, a Bluetooth MIDI endpoint stays when its device sleeps, goes out of range, or is switched off, so no `Removed` event fires. When the device comes back, the endpoint starts working again. The customer can change this for one device or for all Bluetooth devices, so the endpoint is removed right away or after a delay. See [`MidiBluetoothOfflineRetention`]({{ site.baseurl }}/sdk-reference/Transports/Bluetooth/MidiBluetoothOfflineRetentionEnum/). When a Bluetooth device is disconnected on purpose, its endpoint is removed and `Removed` fires.
 
-### Virtual Device (app to app) MIDI
+### Virtual device (app to app) MIDI
 
-In the case of the virtual device MIDI feature, when the hosting application closes the device-side connection, the device is removed and the appropriate event fires. 
+When the application that hosts a virtual device closes its device-side connection, the device is removed and `Removed` fires.
 
 ### Loopback (app to app) MIDI
 
-Loopback endpoints (other than the two diagnostic loopbacks built-in for testing/development) are controlled through either the API or the configuration file. Those created through the configuration file never go away, so there is no `Removed` event fired. Those created through the API can be created/removed through the API at any time, and so will have the appropriate events fire off.
+Loopback endpoints, other than the two built-in diagnostic loopbacks, are either created through the API or saved in the MIDI configuration. Saved ones never go away, so they never raise `Removed`. Ones created through the API can be created and removed at any time, and they raise the matching events.
 
 ### Network MIDI 2.0
 
-When the connection is lost or explicitly closed, the endpoint device will be removed and the `Removed` event will fire.
+When the connection is lost or closed, the endpoint is removed and `Removed` fires.
 
 ## What happens when an endpoint is disconnected
 
-When an endpoint is disconnected due to the parent device going away, all client connections are closed, and the device connection in the service is also closed. The cross-process message queues are torn down, and any messages there, in the outbound scheduler, or otherwise in the service pipelines are lost.
+When an endpoint disconnects because its device went away, every application's connection to it is closed, and so is the service's connection to the device. The message queues between processes are shut down. Any messages still waiting in them, in the scheduler, or anywhere else in the service are lost.
 
-If the auto-reconnect option was used when creating the connection from the WinRT API, a watcher is set up behind the scenes, and the endpoint is reconnected when it comes back online, assuming its id has not changed.
+If you turned on `AutoReconnect` when you created the connection, the API watches for the endpoint in the background, and reconnects when the endpoint comes back, as long as its id hasn't changed.
 
 ## Samples
 
-Use the watcher rather than polling the device count, which is the habit WinMM forced on everyone. Handle `Updated` for the whole lifetime of the watcher, not just during a window after startup: a MIDI 2.0 endpoint answers discovery after it first appears, and there is no point at which its information is guaranteed final.
+Use the watcher instead of checking the device count over and over, which is what WinMM made everyone do. Handle `Updated` for as long as the watcher runs, not just for a while after it starts. A MIDI 2.0 endpoint answers discovery after it first appears, and its information is never guaranteed to be final.
 
 * [C++/WinRT watch-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/watch-endpoints)
 * [C# watch-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/watch-endpoints)

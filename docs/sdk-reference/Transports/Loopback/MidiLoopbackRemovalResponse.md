@@ -12,6 +12,6 @@ Returned by `MidiLoopbackManager.RemoveTransientLoopback()`.
 
 | Property | Description |
 | -------- | ----------- |
-| `Success` | True if the removal succeeded |
-| `ErrorCode` | A `MidiLoopbackErrorCode` value if `Success` is false |
-| `ErrorMessage` | A human-readable error message if `Success` is false |
+| `Success` | True if the loopback pair was removed |
+| `ErrorCode` | A `MidiLoopbackErrorCode`, if `Success` is false |
+| `ErrorMessage` | An error message people can read, if `Success` is false |

@@ -13,17 +13,17 @@ Pass to `MidiNetworkTransportManager.DisconnectRemoteClientAsync`.
 
 | Constructor | Description |
 | -------- | ----------- |
-| `MidiNetworkRemoteClientDisconnectConfig()` | Create an empty config |
-| `MidiNetworkRemoteClientDisconnectConfig(hostId, remoteClientName, remoteClientProductInstanceId)` | Create a fully populated config |
+| `MidiNetworkRemoteClientDisconnectConfig()` | Creates an empty configuration |
+| `MidiNetworkRemoteClientDisconnectConfig(hostId, remoteClientName, remoteClientProductInstanceId)` | Creates a configuration with all of these values set |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `HostId` | The host entry GUID on this PC |
-| `RemoteClientName` | UMP Endpoint Name of the remote client |
-| `RemoteClientProductInstanceId` | Product Instance Id of the remote client |
+| `HostId` | The GUID of the host entry on this PC |
+| `RemoteClientName` | The UMP Endpoint Name of the remote client |
+| `RemoteClientProductInstanceId` | The Product Instance Id of the remote client |
 
 ## Remarks
 
-This request ends the current session only. It does not persist an allow/deny decision for future connection attempts.
+This only ends the current session. It doesn't save an allow or deny decision for future connections.

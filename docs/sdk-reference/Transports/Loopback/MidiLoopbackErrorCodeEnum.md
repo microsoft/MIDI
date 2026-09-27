@@ -15,8 +15,8 @@ Error codes returned in `MidiLoopbackCreationResponse`, `MidiLoopbackRemovalResp
 | `NoErrorInformationAvailable` | `0x00000000` | No additional error information is available |
 | `UnrecognizedCommand` | `0x00000001` | The command sent to the service was not recognized |
 | `InvalidJson` | `0x00000011` | The JSON configuration provided was not valid |
-| `EndpointCreationFailed` | `0x00000021` | Endpoint creation failed in the service |
-| `EndpointNotFound` | `0x00001065` | The specified endpoint could not be found |
+| `EndpointCreationFailed` | `0x00000021` | The service couldn't create the endpoint |
+| `EndpointNotFound` | `0x00001065` | The endpoint couldn't be found |
 | `InvalidOrMissingAssociationId` | `0x00000031` | The association id is invalid or missing |
 | `InvalidOrMissingUniqueIdA` | `0x00000142` | The unique identifier for the A-side is invalid or missing |
 | `DuplicateUniqueIdA` | `0x00000141` | An A-side endpoint with this unique id already exists |

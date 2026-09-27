@@ -8,107 +8,105 @@ description: The primary way to send and receive messages with an endpoint.
 tags: session, connection, endpoint
 ---
 
-The `MidiEndpointConnection` type represents a single connection to a single endpoint managed by Windows MIDI Services. It is created using the functions of the `MidiSession`, and is tied to the lifetime of that session.
+A `MidiEndpointConnection` is your application's connection to one endpoint. You get one from `MidiSession.CreateEndpointConnection`, and it lasts only as long as that session.
 
-Connections allocate resources including send/receive buffers, and processing threads. For that reason, a session should generally not open more than one connection to a single endpoint. If you need to partition out messages more easily (by group or channel, for example) the `MessageProcessingPlugins` collection will help you do that.
+Each connection uses memory for its send and receive buffers, plus a thread to process messages. So a session should usually open only one connection to each endpoint. If you want to split up incoming messages, for example by group or channel, add message processing plugins to that one connection instead of opening more.
 
-To ensure an application is able to wire up processing plugins and event handlers before the connection is active, the connection returned by the `MidiSession` is not yet open. Once the connection is acquired, the application should assign event handlers, and optionally assign any message processing plugins. Once complete, the application calls the `Open()` function to connect to the service, create the queues, and begin sending and receiving messages.
+The session gives you the connection before it's open. That way you can attach your event handlers and any message processing plugins before the first message arrives. When you're ready, call `Open()`. That connects to the service, sets up the message queues, and starts sending and receiving.
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `ConnectionId` | The generated GUID which uniquely identifes this connection instance. This is what is provided to the `MidiSession` when disconnecting an endpoint |
-| `ConnectedEndpointDeviceId` | The system-wide identifier for the endpoint device. This is returned through enumeration calls. |
-| `LogMessageDataValidationErrorDetails` | When true, message data validation errors are logged to any connected ETL listener, in addition to other errors. |
-| `Tag` | You may use this `Tag` property to hold any additional information you wish to have associated with the connection. |
-| `IsOpen` | True if this connection is currently open. When first created, the connection is not open until the consuming code calls the `Open` method |
-| `Settings` | Settings used to create this connection. Treat this as read-only. |
-| `MessageProcessingPlugins` | Collection of all message processing plugins which will optionally handle incoming messages. |
+| `ConnectionId` | A GUID that identifies this connection. Pass it to `MidiSession.DisconnectEndpointConnection` to close the connection |
+| `ConnectedEndpointDeviceId` | The id of the endpoint this connection is for. It's the same id that enumeration returns |
+| `LogMessageDataValidationErrorDetails` | When true, details about messages that fail validation are also written to Event Tracing for Windows (ETW), along with other errors. Useful while debugging |
+| `Tag` | Holds any extra information you want to keep with the connection |
+| `IsOpen` | True when the connection is open. A new connection stays closed until you call `Open()` |
+| `Settings` | The settings used to create this connection. Treat this as read-only |
+| `MessageProcessingPlugins` | The message processing plugins attached to this connection. Each one gets a chance to handle incoming messages |
 
 ## Static Member Functions
 
 | Static Function | Description |
 | -------- | ----------- |
-| `GetDeviceSelector ()` | Returns the device selector used for enumerating endpoint devices compatible with this API. |
-| `SendMessageSucceeded (sendResult)` | Helper function to decipher the return result of a message sending function to tell if it succeeded. |
-| `SendMessageFailed (sendResult)` | Helper function to decipher the return result of a message sending function to tell if it failed. |
+| `GetDeviceSelector()` | Returns the selector string for finding endpoints that work with this API, for when you enumerate devices with `Windows.Devices.Enumeration` yourself |
+| `SendMessageSucceeded(sendResult)` | Returns true if the result from a send function means the message was sent |
+| `SendMessageFailed(sendResult)` | Returns true if the result from a send function means the send failed |
 
 ## Other Functions
 
 | Function | Description |
 | -------- | ----------- |
-| `Open()` | Open the connection and start receiving messages. Wire up the message event handler before calling this method. |
-| `AddMessageProcessingPlugin (plugin)` | Add a message processing plugin to this connection |
-| `RemoveMessageProcessingPlugin (id)` | Remove a message processing plugin from this connection |
-| `GetSupportedMaxMidiWordsPerTransmission` | Returns the maximum number of MIDI words which can be sent in a single call |
+| `Open()` | Opens the connection and starts receiving messages. Returns true if the connection opened. Attach your `MessageReceived` handler before you call this |
+| `AddMessageProcessingPlugin(plugin)` | Attaches a message processing plugin to this connection. Returns a [`MidiMessageProcessingPluginAddResult`]({{ site.baseurl }}/sdk-reference/MidiMessageProcessingPluginAddResultEnum/) that says whether it was added. Check it, because a plugin that wasn't added never sees any messages |
+| `RemoveMessageProcessingPlugin(id)` | Removes the message processing plugin with this id |
+| `GetSupportedMaxMidiWordsPerTransmission()` | Returns the most MIDI words you can send in one call. See [Sending more data than fits in one call](#sending-more-data-than-fits-in-one-call) |
 
-# Sending and Receiving Messages through WinRT
+## Sending and receiving messages
 
-There are multiple mechanisms available for sending and recieving messages, each suitable to different programming languages and app data storage models.
+There are several ways to send messages. Each one suits different languages and different ways of storing message data.
 
-In addition to these functions, C++ (and other COM-aware and pointer-friendly languages) developers can optionally use the COM Extensions to send and receive messages on a valid and open connection.
+C++ developers, and developers using other languages that can work with COM and pointers, can also use the [COM extensions]({{ site.baseurl }}/sdk-reference/MidiEndpointConnection_COM-Extensions) to send and receive messages on an open connection.
 
-## Single-Message Sender Functions
+### Sending one message
 
-Each function sends a single message at a time. Each message must be a complete and valid Universal MIDI Packet.
-
-| Function | Description |
-| -------- | ----------- |
-| `SendSingleMessagePacket (message)` | Send an `IMidiUniversalPacket`-implementing type such as `MidiMessage64` or a strongly-typed message class. |
-| `SendSingleMessageStruct  (timestamp, message, wordCount)` | Send a fixed-sized `MidiMessageStruct` containing `wordCount` valid words. Additional words are ignored. |
-| `SendSingleMessageWordArray (timestamp, startIndex, wordCount, words)` | Send an array of words for a single message. Note: Some projections will send the entire array as a copy, so this may not be the most effecient way to send messages from your language. |
-| `SendSingleMessageWords (timestamp, word0)` | Send a single 32-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
-| `SendSingleMessageWords (timestamp, word0, word1)` | Send a single 64-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
-| `SendSingleMessageWords (timestamp, word0, word1, word2)` | Send a single 96-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
-| `SendSingleMessageWords (timestamp, word0, word1, word2, word3)` | Send a single 128-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
-| `SendSingleMessageBuffer (timestamp, byteOffset, byteCount, buffer)` | Send a single Universal MIDI Packet as bytes from a buffer. The number of bytes sent must match the size read from the first 4 bits of the data starting at the specified offset, and must be laid out correctly with the first byte corresponding to the MSB of the first word of the UMP (the word which contains hte message type). If you want to manage a chunk of buffer memory, the `IMemoryBuffer` type is the acceptable WinRT approach, and is as close as you get to sending a pointer into a buffer. |
-
-> # Tip: 
-> In all the functions which accept a timestamp to schedule the message, **you can send a timestamp of 0 (zero) to bypass the scheduler and send the message immediately** or use the `MidiClock::TimestampConstantSendImmediately` static property. Otherwise, the provided timestamp is treated as an absolute time for when the message should be sent from the service. Note that the service-based scheduler (currently based on a `std::priority_queue`) gets less efficient when there are thousands of messages in it, so it's recommended that you not schedule too many messages at a time or too far out into the future. 
-
-## Multiple-Message Sender Functions
-
-When sending multiple messages, each message must be complete within the transmission. A single UMP shall not be split across multiple transmissions. If the transmission does not contain whole valid UMPs, the call will fail.
-
-When constructing the buffer or list to send, be sure to call `GetSupportedMaxMidiWordsPerTransmission` to get the maximum number of 32-bit MIDI words which can be sent in a single transmission. This number may change over time, and so should not be assumed to be a static constant.
-
-These functions send all data at once, without allocating any additional buffers. Each message is sent with the same timestamp.
+Each of these functions sends one message. The message must be one complete, valid Universal MIDI Packet (UMP).
 
 | Function | Description |
 | -------- | ----------- |
-| `SendMultipleMessagesBuffer (timestamp, byteOffset, byteCount, buffer)` | Send multiple messages using the `IMemoryBuffer` approach and a single timestamp. |
-| `SendMultipleMessagesWordArray (timestamp, startIndex, wordCount, words)` | Similar to the WordList approach, this will send multiple messages from an array, starting at the zero-based `startIndex` and continuing for `wordCount` words. The messages within that range must be valid and complete.|
+| `SendSingleMessagePacket(message)` | Sends any type that implements `IMidiUniversalPacket`, such as `MidiMessage64` or a strongly typed message class |
+| `SendSingleMessageStruct(timestamp, wordCount, message)` | Sends a fixed-size `MidiMessageStruct` that holds `wordCount` valid words. Any other words are ignored |
+| `SendSingleMessageWordArray(timestamp, startIndex, wordCount, words)` | Sends one message from an array of words. Some languages copy the whole array when they call this, so it may not be the fastest choice for yours |
+| `SendSingleMessageWords(timestamp, word0)` | Sends one 32-bit UMP, given as one 32-bit word. This is often the fastest way to send a message of this size |
+| `SendSingleMessageWords(timestamp, word0, word1)` | Sends one 64-bit UMP, given as two 32-bit words. This is often the fastest way to send a message of this size |
+| `SendSingleMessageWords(timestamp, word0, word1, word2)` | Sends one 96-bit UMP, given as three 32-bit words. This is often the fastest way to send a message of this size |
+| `SendSingleMessageWords(timestamp, word0, word1, word2, word3)` | Sends one 128-bit UMP, given as four 32-bit words. This is often the fastest way to send a message of this size |
+| `SendSingleMessageBuffer(timestamp, byteOffset, byteCount, buffer)` | Sends one UMP from a buffer of bytes, starting at `byteOffset`. `byteCount` must match the size that the message type in the first 4 bits calls for. The bytes must be in order, starting with the most significant byte of the first word, which is the byte that holds the message type. `IMemoryBuffer` is how WinRT lets you work with a block of memory, so it's the closest you can get to passing a pointer |
 
-These functions need to copy the data to a new buffer, and then send in a single call. Each message is sent with the same timestamp.
+> **Tip:** In every function that takes a timestamp, **pass 0 (zero) to skip the scheduler and send the message right away**. `MidiClock::TimestampConstantSendImmediately` is the same value. Any other timestamp is the exact time the service should send the message. The service's scheduler slows down when it holds thousands of messages, so don't schedule too many at once, or too far ahead.
+
+### Sending several messages in one call
+
+When you send several messages in one call, every message must be complete. Never split one UMP across two calls. If a call holds anything other than whole, valid UMPs, it fails.
+
+Before you build the buffer or list, call `GetSupportedMaxMidiWordsPerTransmission` to find the most 32-bit MIDI words one call can carry. The number can change, so don't hard-code it.
+
+These functions send everything at once, without making an extra copy. Every message gets the same timestamp.
 
 | Function | Description |
 | -------- | ----------- |
-| `SendMultipleMessagesWordList (timestamp, words)` | When supplied an `IIterable` of 32 bit unsigned integers, this sends more than one message with the same timestamp. Message words must be ordered contiguously from word-0 to word-n for each message, and the message types must be valid for the number of words for each message.|
-| `SendMultipleMessagesStructList (timestamp, messages)` | Send an `IIterable` of `MidiMessageStruct` messages. All messages are sent with the same timestamp|
-| `SendMultipleMessagesStructArray (timestamp, startIndex, messageCount, messages)` | Send an an array of `MidiMessageStruct` messages, starting at `startIndex` and continuing for `messageCount` messages.|
+| `SendMultipleMessagesBuffer(timestamp, byteOffset, byteCount, buffer)` | Sends the messages in an `IMemoryBuffer`, starting at `byteOffset` and continuing for `byteCount` bytes |
+| `SendMultipleMessagesWordArray(timestamp, startIndex, wordCount, words)` | Sends the messages in an array, starting at the zero-based `startIndex` and continuing for `wordCount` words. Every message in that range must be whole and valid |
 
-This function sends each packet one at a time, because each packet has its own timestamp
+These functions copy the data into a new buffer first, and then send it in one call. Every message gets the same timestamp.
 
 | Function | Description |
 | -------- | ----------- |
-| `SendMultipleMessagesPacketList (messages)` | Send an `IIterable` of `IMidiUniversalPacket` messages, each with their own timestamp. |
+| `SendMultipleMessagesWordList(timestamp, words)` | Sends the messages in an `IIterable` of 32-bit unsigned integers. Put each message's words in order, one message after another, and make sure each message has the right number of words for its message type |
+| `SendMultipleMessagesStructList(timestamp, messages)` | Sends an `IIterable` of `MidiMessageStruct` messages |
+| `SendMultipleMessagesStructArray(timestamp, startIndex, messageCount, messages)` | Sends an array of `MidiMessageStruct` messages, starting at `startIndex` and continuing for `messageCount` messages |
 
-> # Tip 
-> To learn more about how collections are handled in WinRT, and how they may convert to constructs like `std::vector`, see the [Collections with C++/WinRT](https://learn.microsoft.com/windows/uwp/cpp-and-winrt-apis/collections) page in our documentation.
+This function sends each packet separately, because each one has its own timestamp.
 
-## Sending More Data Than Fits in a Single Transmission
+| Function | Description |
+| -------- | ----------- |
+| `SendMultipleMessagesPacketList(messages)` | Sends an `IIterable` of `IMidiUniversalPacket` messages, each with its own timestamp |
 
-If a call contains more words than `GetSupportedMaxMidiWordsPerTransmission` allows, the entire call is rejected and **nothing is sent**. The result is `MidiSendMessageResults.Failed` combined with `MidiSendMessageResults.TransmissionWordCountExceeded`. Because the rejection is all-or-nothing, no data has reached the device, and it is safe to retry with a smaller buffer.
+> **Tip:** To learn how WinRT collections work, and how they convert to types like `std::vector`, see [Collections with C++/WinRT](https://learn.microsoft.com/windows/uwp/cpp-and-winrt-apis/collections).
 
-Some payloads exceed the limit by their very nature. A System Exclusive message carries six data bytes per 64-bit SysEx7 UMP, so a 64 KB bulk dump becomes roughly 10,900 UMPs, or about 21,800 MIDI words. That will never fit in a single transmission, and so must be split by the sending code.
+### Sending more data than fits in one call
 
-When splitting a large buffer:
+If a call holds more words than `GetSupportedMaxMidiWordsPerTransmission` allows, the whole call is rejected and **nothing is sent**. The result is `MidiSendMessageResults.Failed` combined with `MidiSendMessageResults.TransmissionWordCountExceeded`. Because nothing reached the device, it's safe to try again with a smaller buffer.
 
-1. Call `GetSupportedMaxMidiWordsPerTransmission` on the same connection you are sending to. Do not hard-code the value, and do not assume it is the same for every endpoint or for every release.
-2. Split only on message boundaries. A single UMP shall never span two transmissions.
-3. Stop as soon as a transmission fails. Continuing to send the remaining chunks after a failure only makes the device's state harder to recover.
-4. Decide in advance how to handle a partial transfer. Once an earlier chunk has been accepted, those messages have already reached the device. For System Exclusive in particular, a partially delivered message normally means the transfer has to be abandoned and restarted from the beginning.
+Some data is always too big for one call. A System Exclusive 7 packet carries six data bytes in each 64-bit UMP, so a 64 KB bulk dump becomes about 10,900 UMPs, or about 21,800 MIDI words. That will never fit in one call, so your code has to split it up.
+
+When you split a large buffer:
+
+1. Call `GetSupportedMaxMidiWordsPerTransmission` on the same connection you're sending to. Don't hard-code the value, and don't assume it's the same for every endpoint or every release.
+2. Split only between messages. One UMP must never be spread across two calls.
+3. Stop as soon as a call fails. Sending the rest after a failure only makes it harder for the device to recover.
+4. Decide ahead of time what to do if only part of the data gets through. The chunks that were accepted have already reached the device. For System Exclusive in particular, a message that was only partly delivered usually means you have to give up and start the whole transfer again.
 
 ```cpp
 // Send a large buffer as a series of transmissions, without splitting any UMP.
@@ -150,29 +148,28 @@ while (offset < totalWords)
 }
 ```
 
-> # Note for framework and language projection authors
-> If you are wrapping this API for another language or app framework, perform this splitting inside your wrapper instead of requiring the applications built on it to do so. Those applications usually have no way to reach `GetSupportedMaxMidiWordsPerTransmission` through your abstraction, so if they must split the data themselves, they will hard-code a limit which is not guaranteed to stay correct.
+> **Note for framework and language projection authors:** If you wrap this API for another language or app framework, do this splitting inside your wrapper. Don't make the applications built on your wrapper do it. They usually can't reach `GetSupportedMaxMidiWordsPerTransmission` through your wrapper, so they would have to hard-code a limit, and a hard-coded limit isn't guaranteed to stay correct.
 
 
 ## Events
 
-The `MessageReceived` event is raised synchronously, and needs to be handled quickly and efficiently by the calling application.
+The connection waits for your `MessageReceived` handler to finish before it hands over the next message, so keep your handler fast.
 
-Applications are typically much faster than devices at handling messages. However, failing to drain the incoming message queue fast enough can result in transmission errors. With MIDI 2.0 there is no upper performance limit on devices, and USB 3 and Network MIDI devices, among others, are capable of transmitting a large number of messages in a very short period of time.
+Applications are usually much faster than devices. But if your handler can't keep up, the incoming message queue can fill up and cause errors. MIDI 2.0 has no speed limit for devices, and USB 3 and network devices, among others, can send a lot of messages in a very short time.
 
-If you need to do long-running processing of incoming messages, add them to your own incoming queue and have them processed by another application thread.
+If you need to do slow work with incoming messages, copy them to your own queue and process them on another thread.
 
 | Event | Description |
 | -------- | ----------- |
-| `MessageReceived (source, args)` | From `IMidiMessageReceivedEventSource`. This is the event for receiving MIDI Messages, one at a time. |
-| `EndpointDeviceDisconnected (source, args)` | From `IMidiEndpointConnectionSource`. Raised when the endpoint device has disconnected. |
-| `EndpointDeviceReconnected (source, args)` | From `IMidiEndpointConnectionSource`. Raised when the endpoint device has reconnected, when automatic reconnection is enabled. |
+| `MessageReceived(source, args)` | From `IMidiMessageReceivedEventSource`. This is how you receive MIDI messages, one at a time |
+| `EndpointDeviceDisconnected(source, args)` | From `IMidiEndpointConnectionSource`. Raised when the endpoint device disconnects |
+| `EndpointDeviceReconnected(source, args)` | From `IMidiEndpointConnectionSource`. Raised when the endpoint device reconnects, if `AutoReconnect` is turned on in the connection's [settings]({{ site.baseurl }}/sdk-reference/MidiEndpointConnectionSettings) |
 
-> # Note: 
-> Wire up event handlers and add message processing plugins prior to calling `Open()`. 
+> **Note:** Attach your event handlers and add any message processing plugins before you call `Open()`.
 
-## Sample
+## Samples
 
-Here's an excerpt from the full "API client basics" sample. It shows sending and receiving messages using the two built-in loopback endpoints. For more information on the loopback endpoints, see [diagnostics endpoints](../../endpoints/diagnostic-endpoints.md).
+The "API client basics" samples send and receive messages using the two built-in diagnostic loopback endpoints. To learn more about those endpoints, see [Diagnostic endpoints]({{ site.baseurl }}/kb/diagnostic-endpoints/).
 
-Complete examples [available on Github](https://aka.ms/midirepo)
+* [C++ Sample](https://github.com/microsoft/MIDI/blob/main/samples/cpp-winrt/basics/main_client_basics.cpp)
+* [C# Sample](https://github.com/microsoft/MIDI/blob/main/samples/csharp-net/basics/Program.cs)

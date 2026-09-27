@@ -77,3 +77,7 @@ Each loopback endpoint is identified by a GUID for the association id. This was 
 ## Implementation
 
 Internally, the Basic Loopback transport creates one endpoint that is wired out-to-in. Anything sent to the loopback Destination/Output port arrives on the Source/Input port of that same endpoint. There's no practical limit to the number of loopback endpoints you can define.
+
+## Feedback protection
+
+A basic loopback mutes itself when MIDI keeps coming back into it, which stops a feedback loop before it takes over the PC. Because the output of a basic loopback feeds its own input, an app that passes MIDI through while listening to and sending to the same basic loopback makes a loop on its own. See [Why a loopback mutes itself]({{ site.baseurl }}/kb/loopback-feedback-protection/).

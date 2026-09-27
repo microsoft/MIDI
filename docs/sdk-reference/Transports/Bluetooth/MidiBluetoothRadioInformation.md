@@ -12,15 +12,15 @@ Returned by `MidiBluetoothTransportManager.GetRadioInformation`.
 
 | Property | Description |
 | -------- | ----------- |
-| `IsPresent` | True when this PC has a Bluetooth radio at all. |
-| `IsLowEnergySupported` | True when that radio supports Bluetooth Low Energy, which is what Bluetooth MIDI uses. |
-| `IsCentralRoleSupported` | Required to connect out to a device. Without it, nothing can be discovered or connected. |
-| `IsPeripheralRoleSupported` | Required to publish this PC so other devices can connect to it. |
+| `IsPresent` | True when this PC has a Bluetooth radio at all |
+| `IsLowEnergySupported` | True when that radio supports Bluetooth Low Energy, which is what Bluetooth MIDI uses |
+| `IsCentralRoleSupported` | Needed to connect to a device. Without it, nothing can be found or connected |
+| `IsPeripheralRoleSupported` | Needed to publish this PC so other devices can connect to it |
 
-## Why an application should check this
+## Why your app should check this
 
-A machine with no Bluetooth, or with a radio which cannot advertise, still loads the transport successfully. Every call keeps working and simply achieves nothing, so without checking here an application has no way to explain to the customer why no devices ever appear.
+On a PC with no Bluetooth, or with a radio that can't advertise, the transport still loads. Every call still works, but nothing happens. Without checking here, your app can't explain to people why no devices ever show up.
 
-`IsPeripheralRoleSupported` is the one most often false. Plenty of radios support the Central role but not the Peripheral role, and that is not a failure of the transport: connecting out to devices keeps working normally, and only publishing this PC is unavailable. Check it before offering that option rather than letting `StartPeripheralAsync` fail.
+`IsPeripheralRoleSupported` is the one that's most often false. Plenty of radios support the central role but not the peripheral role. That isn't a problem with the transport. Connecting to devices still works normally, and only publishing this PC isn't available. Check it before you offer that choice, instead of letting `StartPeripheralAsync` fail.
 
-Returns `null` on a service too old to report this, which is worth distinguishing from "no radio" — saying the PC has no Bluetooth when the service simply did not say would be worse than saying nothing.
+`GetRadioInformation` returns null with a service that's too old to report this. Treat that differently from "no radio." Telling people the PC has no Bluetooth when the service just didn't say would be worse than saying nothing.

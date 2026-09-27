@@ -6,10 +6,10 @@ type: runtimeclass
 description: Arguments supplied by the watcher when an endpoint is added to the system
 ---
 
-Represents a notification that endpoint properties have been updated
+The watcher passes this to your `Added` handler when an endpoint is added.
 
-## Functions
+## Properties
 
 | Property | Description |
 | --------------- | ----------- |
-| `AddedDevice` | `MidiEndpointDeviceInformation` for the new endpoint device |
+| `AddedDevice` | The `MidiEndpointDeviceInformation` for the new endpoint |

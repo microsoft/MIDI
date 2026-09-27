@@ -6,9 +6,15 @@ type: runtimeclass
 description: The settings which apply to the Network MIDI 2.0 transport as a whole, rather than to any one host or client
 ---
 
-Read the current values with [MidiNetworkTransportManager]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkTransportManager/).`GetTransportSettings()`, change what you need, then send the object back to apply it.
+Read the current values with [MidiNetworkTransportManager]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkTransportManager/).`GetTransportSettings()`, change what you need, and then send the object back to apply it.
 
-This class implements [IMidiServiceTransportPluginConfig]({{ site.baseurl }}/sdk-reference/ServiceConfig/IMidiServiceTransportPluginConfig), so the same object is passed to `MidiServiceTransportPluginConfigManager.SendUpdate` to apply it now, or `SaveUpdate` to also keep it across a service restart.
+This class implements [IMidiServiceTransportPluginConfig]({{ site.baseurl }}/sdk-reference/ServiceConfig/IMidiServiceTransportPluginConfig/). Pass the same object to `MidiServiceTransportPluginConfigManager.SendUpdate` to apply it now, or to `SaveUpdate` to also keep it after the service restarts.
+
+## Constructors
+
+| Constructor | Description |
+| ----------- | ----------- |
+| `MidiNetworkTransportSettings()` | Creates settings with every property at its default. Sending it puts every setting back to its default, so start from `GetTransportSettings()` instead |
 
 ## Properties
 
@@ -23,7 +29,7 @@ This class implements [IMidiServiceTransportPluginConfig]({{ site.baseurl }}/sdk
 
 ## Static Properties
 
-Every property above has a matching pair of statics giving its supported range, so a UI can bind to them rather than hard-coding numbers which may change.
+Every property above has a matching pair of static properties with its supported range. A settings screen can use them, instead of hard-coding numbers that may change.
 
 | Static Property | Description |
 | --------------- | ----------- |
@@ -36,16 +42,16 @@ Every property above has a matching pair of statics giving its supported range, 
 
 ## Remarks
 
-**Values are clamped, not refused.** A value outside the supported range becomes the nearest bound, and a missing or wrong-typed value becomes the default. A setting therefore always ends up somewhere usable. Read the object back afterwards to see what was actually taken.
+**Values out of range are adjusted, not refused.** A value outside the supported range is changed to the nearest limit, and a missing value or one of the wrong type becomes the default. So a setting always ends up with a value that works. Read the object afterward to see what was really used.
 
-**Sending a partial set of settings resets the rest.** The service parses this section starting from the defaults each time rather than merging it into what is already there. Always read the current settings with `GetTransportSettings()`, change the properties you care about, and send the whole object back. Constructing a fresh `MidiNetworkTransportSettings` and setting one property will return everything else to its default.
+**Sending only some of the settings resets the rest.** Each time, the service starts from the defaults and reads this section, instead of merging it with what's already there. Always read the current settings with `GetTransportSettings()`, change the properties you care about, and send the whole object back. If you create a new `MidiNetworkTransportSettings` and set one property, everything else goes back to its default.
 
-**What you read back is what is running, not what is in the file.** `GetTransportSettings()` reports the values the transport is actually using, after any correction. If a hand-edited configuration file contains an out-of-range value, this is how you see what it became.
+**What you read is what's really running.** `GetTransportSettings()` reports the values the transport is really using, after any corrections. If the configuration has a value that's out of range, this is how you see what it became.
 
-Lowering `MaxHostConnections` does not disconnect clients which are already connected. It only affects invitations which arrive afterwards.
+Lowering `MaxHostConnections` doesn't disconnect clients that are already connected. It only affects invitations that arrive later.
 
 ## See also
 
 - [MidiNetworkTransportManager]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkTransportManager/)
-- [MidiServiceTransportPluginConfigManager]({{ site.baseurl }}/sdk-reference/ServiceConfig/MidiServiceTransportPluginConfigManager)
+- [MidiServiceTransportPluginConfigManager]({{ site.baseurl }}/sdk-reference/ServiceConfig/MidiServiceTransportPluginConfigManager/)
 - [How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/)

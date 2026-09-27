@@ -6,13 +6,13 @@ type: enum
 description: Indicates how MIDI 1.0 port names are generated for a UMP endpoint
 ---
 
-Controls how MIDI 1.0 API port names are generated when Windows MIDI Services creates legacy-compatible ports for a UMP endpoint.
+Sets how Windows MIDI Services names the MIDI 1.0 ports it creates for a UMP endpoint. To learn how the names are made, see [How MIDI 1.0 port names are generated]({{ site.baseurl }}/kb/how-midi1-port-names-are-generated/).
 
 ## Values
 
 | Value | Numeric Value | Description |
 | ----- | ------------- | ----------- |
-| `Default` | `0x00000000` | Use the default naming approach as determined by the system. |
-| `UseClassicCompatible` | `0x00000001` | Use names compatible with the classic WinMM MIDI port naming scheme. |
-| `UseNewStyle` | `0x00000002` | Use the new Windows MIDI Services style port names. |
-| `UseAutomatic` | `0x00000003` | Let Windows decide for this endpoint, from what the device reported. An endpoint whose ports already existed under WinMM names keeps them; one which has no classic equivalent gets new-style names. |
+| `Default` | `0x00000000` | Use the default approach, which Windows chooses. |
+| `UseClassicCompatible` | `0x00000001` | Use names made the way WinMM has always named MIDI ports. |
+| `UseNewStyle` | `0x00000002` | Use the newer Windows MIDI Services style of port names. |
+| `UseAutomatic` | `0x00000003` | Let Windows decide for this endpoint, based on what the device reported. An endpoint whose ports already had WinMM names keeps them. One with no classic equivalent gets new-style names. |

@@ -101,6 +101,39 @@ You can also reorder the list, by dragging a row or by focusing one and pressing
 
 The list refreshes on its own, so a loopback created by another tool appears here without you having to do anything.
 
+## When MIDI feeds back into a loopback
+
+A feedback loop happens when an app sends what it receives right back out to the same loopback. The same MIDI goes around and around, as fast as your PC can move it. Notes get stuck, controls jump around, and apps can slow down or stop responding. It's an easy mistake to make, especially with a MIDI thru or echo setting turned on in a DAW.
+
+Windows MIDI Services watches each loopback for this. When it finds a loop, it mutes the loopback, just as if you'd selected **Mute** yourself. That stops the loop right away. The endpoints stay where they are, so no app loses its ports.
+
+When that happens:
+
+- The loopback's row says when it was muted and why.
+- A **Feedback detected** message appears at the top of the page.
+- If the MIDI notifications app is running, you get a notification. Select it to come straight here.
+
+To fix it, find the app that sends what it receives back to the same loopback, and turn that off. The usual suspects are MIDI thru, "echo MIDI input" and "soft thru" settings, and a routing app with its input and its output both set to the same loopback. Then select **Unmute**. If you unmute without fixing the loop, the loopback mutes itself again a moment later.
+
+### Will it mute a loopback by mistake?
+
+It's designed not to. Plenty of normal MIDI is busy: clock, a controller updating its lights, a big SysEx dump. Busy traffic alone never mutes a loopback.
+
+When the traffic looks like it might be a loop, Windows MIDI Services holds that loopback's messages for a fraction of a second to see whether they stop coming. MIDI in a loop only keeps going because the loopback keeps delivering it, so a real loop dies down during the pause, while an app that's really sending keeps on sending. Nothing is lost by the check. Whatever arrived during the pause is delivered, in order, right afterward.
+
+There's one kind of app it can't tell apart from a loop: one that answers every message it gets by sending another one back, as fast as it can, over and over. That really is a loop, just a deliberate one. If you use an app like that, set its loopback to **Do nothing**.
+
+### Choosing what happens
+
+Every loopback is protected unless you say otherwise. **If MIDI feeds back into this loopback** is in the dialog when you create a loopback, and in the dialog you get when you select **Edit**.
+
+- **Mute the loopback (recommended)** watches for feedback, and mutes the loopback when it finds some.
+- **Do nothing** doesn't watch at all. Pick it only when you know you need it, such as for the kind of app described above.
+
+The option only appears if the version of Windows MIDI Services on this PC supports it.
+
+To stop the notifications without turning off the protection, open the MIDI Settings app, select **Notifications**, and turn off **Loopbacks muted because of feedback**. Loopbacks still mute themselves. You just aren't told about it until you open this app.
+
 ## Settings
 
 The gear button in the title bar opens the settings.
@@ -122,6 +155,8 @@ There's nothing to do about it by hand. A compatible version arrives with a Wind
 The two pages are checked separately, so it's normal for one to work while the other doesn't while we roll out the updates.
 
 ## Learn more
+
+For help tracking down a feedback loop, see [Why a loopback mutes itself]({{ site.baseurl }}/kb/loopback-feedback-protection/).
 
 For the technical detail of how each kind of loopback is implemented, and how they appear in the configuration file, see [About the MIDI 2.0 Loopback Transport]({{ site.baseurl }}/kb/virtual-loopback/) and [About the MIDI 1.0 Basic Loopback Transport]({{ site.baseurl }}/kb/virtual-basic-midi1-loopback/).
 
