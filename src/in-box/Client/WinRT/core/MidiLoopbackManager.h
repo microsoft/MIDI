@@ -48,6 +48,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         static loop::MidiLoopbackUpdateResponse MuteLoopback(_In_ winrt::guid const& associationId) noexcept;
         static loop::MidiLoopbackUpdateResponse UnmuteLoopback(_In_ winrt::guid const& associationId) noexcept;
 
+        static bool IsFeedbackProtectionAvailable() noexcept;
+
+        static loop::MidiLoopbackUpdateResponse SetFeedbackProtection(
+            _In_ winrt::guid const& associationId,
+            _In_ loop::MidiLoopbackFeedbackProtection const& feedbackProtection) noexcept;
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::Transports::Loopback::factory_implementation

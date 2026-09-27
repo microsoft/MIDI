@@ -170,7 +170,14 @@ CMidi2LoopbackMidiBidi::SendMidiMessage(
 
         if (device)
         {
-            return device->SendMessageAToB(Message, Size, Position, m_callbackContext);
+            if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+            {
+                return device->SendMessageAToBWithFeedbackProtection(Message, Size, Position, m_callbackContext);
+            }
+            else
+            {
+                return device->SendMessageAToB(Message, Size, Position, m_callbackContext);
+            }
         }
         else
         {
@@ -194,7 +201,14 @@ CMidi2LoopbackMidiBidi::SendMidiMessage(
 
         if (device)
         {
-            return device->SendMessageBToA(Message, Size, Position, m_callbackContext);
+            if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+            {
+                return device->SendMessageBToAWithFeedbackProtection(Message, Size, Position, m_callbackContext);
+            }
+            else
+            {
+                return device->SendMessageBToA(Message, Size, Position, m_callbackContext);
+            }
         }
         else
         {

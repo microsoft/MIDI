@@ -77,6 +77,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
                 MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY,
                 json::JsonValue::CreateBooleanValue(IsMuted()));
 
+            // anything that is not Off is treated as Mute, which is also the transport's default
+            endpointDeviceObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_PROTECTION_PROPERTY,
+                json::JsonValue::CreateStringValue(internal::FeedbackProtectionJsonValue(
+                    m_feedbackProtection != bloop::MidiBasicLoopbackFeedbackProtection::Off)));
+
             // create the association object (this is here just to keep the structure apx the same as the main loopback types, for simplicity
 
             endpointAssociationObject.SetNamedValue(

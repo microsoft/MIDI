@@ -18,6 +18,7 @@ import "MidiBasicLoopbackCreationConfig.idl";
 import "MidiBasicLoopbackRemovalConfig.idl";
 
 import "MidiEndpointDeviceInformation.idl";
+import "MidiBasicLoopbackFeedbackProtectionEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.BasicLoopback
 {
@@ -45,6 +46,14 @@ namespace Windows.Devices.Midi2.Transports.BasicLoopback
         [noexcept] static MidiBasicLoopbackUpdateResponse UnmuteLoopback(Guid associationId);
 
         [noexcept] static IVector<MidiBasicLoopbackEntry> GetActiveLoopbackEntries();
+
+        // False when the basic loopback transport on this PC cannot watch for feedback.
+        [noexcept] static Boolean IsFeedbackProtectionAvailable{ get; };
+
+        // Takes effect at once. Save the change to the configuration to keep it after a restart.
+        [noexcept] static MidiBasicLoopbackUpdateResponse SetFeedbackProtection(
+            Guid associationId,
+            MidiBasicLoopbackFeedbackProtection feedbackProtection);
 
     }
 }

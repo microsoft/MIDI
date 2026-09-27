@@ -26,6 +26,7 @@ Error codes returned in `MidiLoopbackCreationResponse`, `MidiLoopbackRemovalResp
 | `DuplicateNameA` | `0x00000143` | An A-side endpoint with this name already exists |
 | `InvalidOrMissingEndpointNameB` | `0x00000244` | The B-side endpoint name is invalid or missing |
 | `DuplicateNameB` | `0x00000243` | A B-side endpoint with this name already exists |
+| `FeedbackProtectionNotAvailable` | `0x00000041` | The loopback transport on this PC can't watch for feedback. See `MidiLoopbackManager.IsFeedbackProtectionAvailable` |
 | `ClientApiException` | `0x11000035` | An exception occurred in the client API |
 | `InvalidArgument` | `0x11000055` | An invalid argument was provided |
 | `ClientApiAllocationFailure` | `0x11000999` | Memory allocation failed in the client API |

@@ -231,12 +231,24 @@
                          newer features the transport currently on it does not have yet. Title,
                          message and severity all depend on which, so all three are set from code
                          rather than declared here. -->
-                    <InfoBar x:Name="LoopbackUnavailableBar"
-                             Grid.Row="2"
-                             Margin="0,0,0,8"
-                             Severity="Error"
-                             IsOpen="False"
-                             IsClosable="False" />
+                    <StackPanel Grid.Row="2">
+                        <InfoBar x:Name="LoopbackUnavailableBar"
+                                 Margin="0,0,0,8"
+                                 Severity="Error"
+                                 IsOpen="False"
+                                 IsClosable="False" />
+
+                        <!-- Open while any loopback on this page is muted for feedback, so the
+                             reason is on screen even when that row is scrolled out of view. -->
+                        <InfoBar x:Name="LoopbackFeedbackBar"
+                                 x:Uid="LoopbackFeedbackBar"
+                                 Margin="0,0,0,8"
+                                 Severity="Warning"
+                                 IsOpen="False"
+                                 IsClosable="False"
+                                 Title="Feedback detected"
+                                 Message="MIDI sent into a loopback kept coming back into it, so that loopback was muted to stop it. Find the app that sends what it receives back out to the same loopback, and turn that off. Then unmute the loopback." />
+                    </StackPanel>
 
                     <ListView x:Name="LoopbacksListView"
                               x:Uid="LoopbacksListView"
@@ -319,6 +331,24 @@
                                                        TextWrapping="Wrap"
                                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                            <!-- why the loopback is muted, when feedback protection muted it -->
+                                            <Grid ColumnSpacing="6" Visibility="{x:Bind FeedbackVisibility, Mode=OneWay}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <FontIcon Glyph="&#xE7BA;"
+                                                          FontSize="14"
+                                                          Margin="0,1,0,0"
+                                                          VerticalAlignment="Top"
+                                                          Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                                          AutomationProperties.AccessibilityView="Raw" />
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{x:Bind FeedbackText, Mode=OneWay}"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                                            </Grid>
 
                                             <StackPanel Spacing="2">
                                                 <TextBlock Text="{x:Bind NameA, Mode=OneWay}"
@@ -464,13 +494,23 @@
                            Stretch="Uniform"
                            HorizontalAlignment="Center" />
 
-                    <InfoBar x:Name="BasicLoopbackUnavailableBar"
-                             x:Uid="BasicLoopbackUnavailableBar"
-                             Grid.Row="2"
-                             Margin="0,0,0,8"
-                             Severity="Error"
-                             IsOpen="False"
-                             IsClosable="False" />
+                    <StackPanel Grid.Row="2">
+                        <InfoBar x:Name="BasicLoopbackUnavailableBar"
+                                 x:Uid="BasicLoopbackUnavailableBar"
+                                 Margin="0,0,0,8"
+                                 Severity="Error"
+                                 IsOpen="False"
+                                 IsClosable="False" />
+
+                        <InfoBar x:Name="BasicLoopbackFeedbackBar"
+                                 x:Uid="LoopbackFeedbackBar"
+                                 Margin="0,0,0,8"
+                                 Severity="Warning"
+                                 IsOpen="False"
+                                 IsClosable="False"
+                                 Title="Feedback detected"
+                                 Message="MIDI sent into a loopback kept coming back into it, so that loopback was muted to stop it. Find the app that sends what it receives back out to the same loopback, and turn that off. Then unmute the loopback." />
+                    </StackPanel>
 
                     <ListView x:Name="BasicLoopbacksListView"
                               x:Uid="BasicLoopbacksListView"
@@ -551,6 +591,23 @@
                                                        TextWrapping="Wrap"
                                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                            <Grid ColumnSpacing="6" Visibility="{x:Bind FeedbackVisibility, Mode=OneWay}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <FontIcon Glyph="&#xE7BA;"
+                                                          FontSize="14"
+                                                          Margin="0,1,0,0"
+                                                          VerticalAlignment="Top"
+                                                          Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                                          AutomationProperties.AccessibilityView="Raw" />
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{x:Bind FeedbackText, Mode=OneWay}"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                                            </Grid>
 
                                             <TextBlock Text="{x:Bind EndpointDeviceIdA, Mode=OneWay}"
                                                        Style="{StaticResource EndpointIdTextStyle}" />
@@ -713,6 +770,23 @@
                         </Grid>
                     </StackPanel>
 
+                    <!-- Hidden unless the transport can watch for feedback. -->
+                    <StackPanel x:Name="LoopbackFeedbackPanel" Spacing="4" Visibility="Collapsed">
+                        <ComboBox x:Name="LoopbackFeedbackComboBox"
+                                  x:Uid="FeedbackProtectionComboBox"
+                                  Header="If MIDI feeds back into this loopback"
+                                  HorizontalAlignment="Stretch"
+                                  SelectedIndex="0">
+                            <ComboBoxItem x:Uid="FeedbackProtectionMuteItem" Content="Mute the loopback (recommended)" />
+                            <ComboBoxItem x:Uid="FeedbackProtectionOffItem" Content="Do nothing" />
+                        </ComboBox>
+                        <TextBlock x:Uid="FeedbackProtectionHelp"
+                                   Text="Feedback is when an app sends what it receives back out to the same loopback, so the same MIDI goes around and around."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
                     <CheckBox x:Name="LoopbackPersistCheckBox"
                               x:Uid="LoopbackPersistCheckBox"
                               Content="Keep this loopback after a restart"
@@ -826,6 +900,22 @@
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             </StackPanel>
                         </Grid>
+                    </StackPanel>
+
+                    <StackPanel x:Name="BasicLoopbackFeedbackPanel" Spacing="4" Visibility="Collapsed">
+                        <ComboBox x:Name="BasicLoopbackFeedbackComboBox"
+                                  x:Uid="FeedbackProtectionComboBox"
+                                  Header="If MIDI feeds back into this loopback"
+                                  HorizontalAlignment="Stretch"
+                                  SelectedIndex="0">
+                            <ComboBoxItem x:Uid="FeedbackProtectionMuteItem" Content="Mute the loopback (recommended)" />
+                            <ComboBoxItem x:Uid="FeedbackProtectionOffItem" Content="Do nothing" />
+                        </ComboBox>
+                        <TextBlock x:Uid="FeedbackProtectionHelp"
+                                   Text="Feedback is when an app sends what it receives back out to the same loopback, so the same MIDI goes around and around."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
 
                     <CheckBox x:Name="BasicLoopbackPersistCheckBox"
@@ -944,6 +1034,22 @@
                         </Grid>
                     </StackPanel>
 
+                    <StackPanel x:Name="EditLoopbackFeedbackPanel" Spacing="4" Visibility="Collapsed">
+                        <ComboBox x:Name="EditLoopbackFeedbackComboBox"
+                                  x:Uid="FeedbackProtectionComboBox"
+                                  Header="If MIDI feeds back into this loopback"
+                                  HorizontalAlignment="Stretch"
+                                  SelectedIndex="0">
+                            <ComboBoxItem x:Uid="FeedbackProtectionMuteItem" Content="Mute the loopback (recommended)" />
+                            <ComboBoxItem x:Uid="FeedbackProtectionOffItem" Content="Do nothing" />
+                        </ComboBox>
+                        <TextBlock x:Uid="FeedbackProtectionHelp"
+                                   Text="Feedback is when an app sends what it receives back out to the same loopback, so the same MIDI goes around and around."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
                     <TextBlock x:Name="EditLoopbackStatusText"
                                TextWrapping="Wrap"
                                Style="{ThemeResource CaptionTextBlockStyle}" />
@@ -1009,6 +1115,22 @@
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             </StackPanel>
                         </Grid>
+                    </StackPanel>
+
+                    <StackPanel x:Name="EditBasicLoopbackFeedbackPanel" Spacing="4" Visibility="Collapsed">
+                        <ComboBox x:Name="EditBasicLoopbackFeedbackComboBox"
+                                  x:Uid="FeedbackProtectionComboBox"
+                                  Header="If MIDI feeds back into this loopback"
+                                  HorizontalAlignment="Stretch"
+                                  SelectedIndex="0">
+                            <ComboBoxItem x:Uid="FeedbackProtectionMuteItem" Content="Mute the loopback (recommended)" />
+                            <ComboBoxItem x:Uid="FeedbackProtectionOffItem" Content="Do nothing" />
+                        </ComboBox>
+                        <TextBlock x:Uid="FeedbackProtectionHelp"
+                                   Text="Feedback is when an app sends what it receives back out to the same loopback, so the same MIDI goes around and around."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
 
                     <TextBlock x:Name="EditBasicLoopbackStatusText"

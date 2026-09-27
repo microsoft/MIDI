@@ -10,6 +10,7 @@
 import "MidiApiContracts.idl";
 
 import "MidiLoopbackEndpointEntry.idl";
+import "MidiLoopbackFeedbackProtectionEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Loopback
 {
@@ -24,5 +25,15 @@ namespace Windows.Devices.Midi2.Transports.Loopback
         [noexcept] MidiLoopbackEndpointEntry EndpointB{ get; };
 
         [noexcept] Boolean IsMuted{ get; };
+
+        // Off when the transport on this PC cannot watch for feedback.
+        [noexcept] MidiLoopbackFeedbackProtection FeedbackProtection{ get; };
+
+        // True when the loopback is muted because MIDI was feeding back into it. Any change to
+        // the muted state clears it.
+        [noexcept] Boolean IsMutedForFeedback{ get; };
+
+        // When the feedback was detected. Zero unless IsMutedForFeedback is true.
+        [noexcept] Windows.Foundation.DateTime FeedbackDetectedTime{ get; };
     };
 }

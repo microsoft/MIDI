@@ -22,6 +22,9 @@ namespace midiloopbacksetup
         // working against a copy rather than the machine's live configuration.
         std::wstring ConfigFilePath{};
 
+        // Opened from a notification about feedback, so start on the page that has the muted loopback.
+        bool ShowFeedback{ false };
+
         static CommandLineOptions Parse(std::vector<std::wstring> const& arguments) noexcept;
         static CommandLineOptions ParseProcessCommandLine() noexcept;
     };

@@ -89,6 +89,26 @@ CMidi2BasicLoopbackMidiConfigurationManager::ExecuteCommandListEntries(
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MESSAGE_COUNT_KEY,
             json::JsonValue::CreateNumberValue(static_cast<double>(entry.MessageCount)));
 
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_PROTECTION_PROPERTY,
+            json::JsonValue::CreateStringValue(internal::FeedbackProtectionJsonValue(entry.FeedbackProtectionEnabled)));
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_FOR_FEEDBACK_PROPERTY,
+            json::JsonValue::CreateBooleanValue(entry.FeedbackStatus.MutedForFeedback));
+
+        if (entry.FeedbackStatus.MutedForFeedback)
+        {
+            obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_DETECTED_TIME_PROPERTY,
+                json::JsonValue::CreateStringValue(internal::FileTimeToDecimalString(entry.FeedbackStatus.DetectedTime)));
+
+            obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_TEST_PROPERTY,
+                json::JsonValue::CreateStringValue(entry.FeedbackStatus.Info.Test == internal::MidiFeedbackTest::Runaway ?
+                    MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_TEST_VALUE_RUNAWAY :
+                    MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_TEST_VALUE_REPEAT));
+
+            obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_MESSAGES_PER_SECOND_PROPERTY,
+                json::JsonValue::CreateNumberValue(static_cast<double>(entry.FeedbackStatus.Info.MessagesPerSecond)));
+        }
+
         entriesArray.Append(obj);
     }
 
@@ -122,11 +142,87 @@ CMidi2BasicLoopbackMidiConfigurationManager::ExecuteCommandChangeMutedState(
     auto device = TransportState::Current().GetEndpointTable()->GetDevice(associationId);
     RETURN_HR_IF_NULL(E_NOTFOUND, device);
 
+    // before the flag changes, so a trip still being handled cannot mute it again afterward
+    if (device->Feedback != nullptr)
+    {
+        device->Feedback->OnMutedStateChanging();
+    }
+
     device->Definition->IsMuted = isMuted;
 
     RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointManager());
 
     RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->UpdateEndpointMutedStateProperty(device->Definition));
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2BasicLoopbackMidiConfigurationManager::ExecuteCommandSetFeedbackProtection(
+    std::map<std::wstring, std::wstring> const& arguments,
+    json::JsonObject& responseObject)
+{
+    auto const associationArgument = arguments.find(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID);
+
+    GUID associationId{};
+
+    if (associationArgument == arguments.end())
+    {
+        internal::SetConfigurationResponseObjectFailWithErrorCode(
+            responseObject,
+            BASIC_LOOPBACK_ERROR_CODE_MISSING_ASSOCIATION_ID,
+            internal::ResourceGetWString(IDS_ERROR_MISSING_ASSOCIATION_ID));
+
+        return S_OK;
+    }
+
+    if (!internal::TryParseGuidString(associationArgument->second, associationId))
+    {
+        internal::SetConfigurationResponseObjectFailWithErrorCode(
+            responseObject,
+            BASIC_LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
+            internal::ResourceGetWString(IDS_ERROR_INVALID_ASSOCIATION_ID));
+
+        return S_OK;
+    }
+
+    auto const protectionArgument = arguments.find(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_PARAMETER_FEEDBACK_PROTECTION);
+
+    bool enabled{ true };
+
+    if (protectionArgument == arguments.end() || !internal::TryParseFeedbackProtectionValue(protectionArgument->second, enabled))
+    {
+        internal::SetConfigurationResponseObjectFailWithErrorCode(
+            responseObject,
+            BASIC_LOOPBACK_ERROR_CODE_INVALID_JSON,
+            internal::ResourceGetWString(IDS_ERROR_INVALID_FEEDBACK_PROTECTION));
+
+        return S_OK;
+    }
+
+    auto const table = TransportState::Current().GetEndpointTable();
+    auto const device = table == nullptr ? nullptr : table->GetDevice(associationId);
+
+    if (device == nullptr || device->Feedback == nullptr)
+    {
+        internal::SetConfigurationResponseObjectFailWithErrorCode(
+            responseObject,
+            BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+            internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+
+        return S_OK;
+    }
+
+    device->Feedback->SetEnabled(enabled);
+
+    if (device->Definition != nullptr)
+    {
+        device->Definition->FeedbackProtectionEnabled = enabled;
+    }
+
+    internal::SetConfigurationResponseObjectSuccess(responseObject);
 
     return S_OK;
 }
@@ -160,9 +256,14 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT, true);        // mute implies unmute
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENTRIES, true);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CREATE_WITH_IMAGE, true);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_FEEDBACK_PROTECTION, true);
 
         internal::SetConfigurationResponseObjectSuccess(responseObject);
         internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_SET_FEEDBACK_PROTECTION)
+    {
+        RETURN_IF_FAILED(ExecuteCommandSetFeedbackProtection(*commandHelper.Arguments(), responseObject));
     }
     else if (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT ||
         commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_UNMUTE_ENDPOINT)
@@ -383,6 +484,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         definition->EndpointUniqueIdentifier = endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, L"");
                         definition->InstanceIdPrefix = instanceIdPrefix;
                         definition->IsMuted = endpointObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY, false);
+                        definition->FeedbackProtectionEnabled = internal::ReadFeedbackProtectionEnabled(endpointObject);
 
                         // anyone can hand-edit the configuration file, so a path here is cut back
                         // to a bare file name rather than trusted

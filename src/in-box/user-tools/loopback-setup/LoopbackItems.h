@@ -95,6 +95,13 @@ namespace midiloopbacksetup
         bool IsMuted{ false };
         bool IsPersisted{ false };
 
+        // Set when feedback protection muted the loopback, with the localized line that says so.
+        bool IsMutedForFeedback{ false };
+        winrt::hstring FeedbackText{};
+
+        // what the edit dialog starts from; false as well when the transport cannot watch at all
+        bool IsFeedbackProtectionOn{ false };
+
         // running total the service reports, and whether it reported one at all: the MIDI 2.0
         // loopback transport has no counter, so its rows must not draw an empty graph
         uint64_t MessageCount{ 0 };
@@ -334,6 +341,16 @@ namespace winrt::midiloopbacksetup::implementation
             return m_isMuted ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
         }
 
+        bool IsMutedForFeedback() const noexcept { return m_isMutedForFeedback; }
+        winrt::hstring FeedbackText() const noexcept { return m_feedbackText; }
+
+        xaml::Visibility FeedbackVisibility() const noexcept
+        {
+            return m_isMutedForFeedback ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
+        }
+
+        bool IsFeedbackProtectionOn() const noexcept { return m_isFeedbackProtectionOn; }
+
         bool CanMute() const noexcept { return m_canMute; }
         void CanMute(bool const value) noexcept
         {
@@ -429,6 +446,14 @@ namespace winrt::midiloopbacksetup::implementation
                 RaisePropertyChanged(L"MutedBadgeVisibility");
             }
 
+            if (UpdateField(m_isMutedForFeedback, data.IsMutedForFeedback, L"IsMutedForFeedback"))
+            {
+                RaisePropertyChanged(L"FeedbackVisibility");
+            }
+
+            UpdateField(m_feedbackText, data.FeedbackText, L"FeedbackText");
+            UpdateField(m_isFeedbackProtectionOn, data.IsFeedbackProtectionOn, L"IsFeedbackProtectionOn");
+
             UpdateField(m_muteButtonLabel, data.MuteButtonLabel, L"MuteButtonLabel");
             UpdateField(m_muteButtonAccessibleName, data.MuteButtonAccessibleName, L"MuteButtonAccessibleName");
             UpdateField(m_deleteButtonAccessibleName, data.DeleteButtonAccessibleName, L"DeleteButtonAccessibleName");
@@ -515,12 +540,15 @@ namespace winrt::midiloopbacksetup::implementation
         winrt::hstring m_deleteButtonAccessibleName{};
         winrt::hstring m_editButtonAccessibleName{};
         winrt::hstring m_persistenceText{};
+        winrt::hstring m_feedbackText{};
 
         winrt::hstring m_imageFileName{};
         xaml::Media::ImageSource m_imageSource{ nullptr };
 
         bool m_hasSecondEndpoint{ false };
         bool m_isMuted{ false };
+        bool m_isMutedForFeedback{ false };
+        bool m_isFeedbackProtectionOn{ false };
         bool m_canMute{ false };
         bool m_canCustomize{ false };
         bool m_isPersisted{ false };

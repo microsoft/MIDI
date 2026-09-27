@@ -115,6 +115,7 @@ BEGIN
     IDS_ERROR_ENDPOINT_REMOVAL_FAILED   "Endpoint removal failed for an unknown reason."
     IDS_ERROR_DUPLICATE_ENDPOINT_NAME   "The two endpoints in a loopback pair cannot have the same name."
     IDS_ERROR_ENDPOINT_NAME_IN_USE      "Another loopback endpoint is already using this name."
+    IDS_ERROR_INVALID_FEEDBACK_PROTECTION   "Feedback protection must be ""mute"" or ""off""."
 
 END
 

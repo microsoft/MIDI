@@ -26,7 +26,7 @@ Creates, removes, mutes, and lists basic loopback endpoints.
 | `DoesLoopbackExist(uniqueIdentifier)` | Returns true if a basic loopback with this unique id already exists |
 | `MuteLoopback(associationId)` | Mutes the loopback with this association id, so no messages get through. Returns a `MidiBasicLoopbackUpdateResponse` |
 | `UnmuteLoopback(associationId)` | Unmutes the loopback with this association id. Returns a `MidiBasicLoopbackUpdateResponse` |
-| `SetFeedbackProtection(associationId, feedbackProtection)` | Changes what the loopback does if MIDI feeds back into it. Takes effect right away. Save the change to the configuration to keep it after a restart. Returns a `MidiBasicLoopbackUpdateResponse` |
+| `SetFeedbackProtection(associationId, feedbackProtection)` | Changes what the loopback does if MIDI feeds back into it. Takes effect right away. Save the change to the configuration to keep it after a restart. Fails with `FeedbackProtectionNotAvailable` when `IsFeedbackProtectionAvailable` is false. Returns a `MidiBasicLoopbackUpdateResponse` |
 | `GetActiveLoopbackEntries()` | Returns a `MidiBasicLoopbackEntry` for each active basic loopback |
 
 ## Remarks

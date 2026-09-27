@@ -30,7 +30,7 @@ Creates, removes, mutes, and lists loopback endpoint pairs.
 | `DoesLoopbackBExist(uniqueIdentifier)` | Returns true if the B side of a loopback with this unique id already exists |
 | `MuteLoopback(associationId)` | Mutes the loopback pair with this association id, so no messages get through. Returns a `MidiLoopbackUpdateResponse` |
 | `UnmuteLoopback(associationId)` | Unmutes the loopback pair with this association id. Returns a `MidiLoopbackUpdateResponse` |
-| `SetFeedbackProtection(associationId, feedbackProtection)` | Changes what the loopback pair does if MIDI feeds back into it. Takes effect right away. Save the change to the configuration to keep it after a restart. Returns a `MidiLoopbackUpdateResponse` |
+| `SetFeedbackProtection(associationId, feedbackProtection)` | Changes what the loopback pair does if MIDI feeds back into it. Takes effect right away. Save the change to the configuration to keep it after a restart. Fails with `FeedbackProtectionNotAvailable` when `IsFeedbackProtectionAvailable` is false. Returns a `MidiLoopbackUpdateResponse` |
 | `GetActiveLoopbackEntries()` | Returns a `MidiLoopbackEntry` for each active loopback pair |
 
 ## Remarks

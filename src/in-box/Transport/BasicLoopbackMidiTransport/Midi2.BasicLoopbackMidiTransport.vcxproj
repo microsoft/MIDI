@@ -370,6 +370,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MidiBasicLoopbackDeviceTable.cpp" />
+    <ClCompile Include="MidiBasicLoopbackFeedback.cpp" />
     <ClCompile Include="TransportState.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.BasicLoopbackMidiTransport.cpp" />
@@ -410,6 +411,7 @@
     <ClInclude Include="MidiBasicLoopbackDevice.h" />
     <ClInclude Include="MidiBasicLoopbackDeviceDefinition.h" />
     <ClInclude Include="MidiBasicLoopbackDeviceTable.h" />
+    <ClInclude Include="MidiBasicLoopbackFeedback.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>

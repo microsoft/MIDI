@@ -116,6 +116,9 @@ namespace winrt::midiloopbacksetup::implementation
             bool CanSetImage{ false };
             // the transport can change an existing endpoint, so the row can offer to edit it
             bool CanCustomize{ false };
+            // the transport can watch for MIDI feeding back into a loopback, so the choice of
+            // what to do about it is worth offering
+            bool CanProtectFromFeedback{ false };
             // the well known default loopback is already on this PC, so there is nothing to offer
             bool DefaultExists{ false };
             // association identifiers the configuration file has an entry for, lowercase and
@@ -238,6 +241,12 @@ namespace winrt::midiloopbacksetup::implementation
             ::midiloopbacksetup::LoopbackKind const kind,
             bool const mute);
 
+        // "Muted at 3:14 PM because MIDI kept coming back into it..." for a row. Empty when the
+        // loopback is not muted for feedback.
+        static winrt::hstring FeedbackStatusText(
+            _In_ bool const isMutedForFeedback,
+            _In_ foundation::DateTime const& detectedTime) noexcept;
+
         winrt::fire_and_forget DeleteAsync(
             midiloopbacksetup::LoopbackItem const item,
             ::midiloopbacksetup::LoopbackKind const kind);
@@ -280,6 +289,10 @@ namespace winrt::midiloopbacksetup::implementation
 
         // which row the open edit dialog belongs to, so its own names are not treated as taken
         winrt::hstring m_editingAssociationId{};
+
+        // from the last refresh; decides whether an edit sends the feedback protection choice
+        bool m_loopbackCanProtectFromFeedback{ false };
+        bool m_basicLoopbackCanProtectFromFeedback{ false };
 
         // a drag reorders the collection the list is bound to, so a refresh landing mid drag
         // would fight the customer for it

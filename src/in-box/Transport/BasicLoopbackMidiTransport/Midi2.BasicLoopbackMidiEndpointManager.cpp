@@ -451,6 +451,7 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
     // store for tracking
     auto device = std::make_shared<MidiBasicLoopbackDevice>();
     device->Definition = definition;
+    device->Feedback = MidiBasicLoopbackFeedback::Create(definition->AssociationId, definition->FeedbackProtectionEnabled);
 
 
     TransportState::Current().GetEndpointTable()->SetDevice(definition->AssociationId, device);

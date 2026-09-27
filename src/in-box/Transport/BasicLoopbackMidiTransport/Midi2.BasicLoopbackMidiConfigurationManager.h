@@ -33,6 +33,10 @@ private:
     HRESULT ExecuteCommandListEntries(
         _Inout_ json::JsonObject const& responseObject);
 
+    HRESULT ExecuteCommandSetFeedbackProtection(
+        _In_ std::map<std::wstring, std::wstring> const& arguments,
+        _Inout_ json::JsonObject& responseObject);
+
     // A loopback is entirely user-owned, so an update replaces the endpoint's own name,
     // description and picture rather than overlaying custom properties on top of them.
     HRESULT ProcessEndpointUpdates(

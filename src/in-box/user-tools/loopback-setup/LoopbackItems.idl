@@ -51,6 +51,14 @@ namespace midiloopbacksetup
         String MuteButtonGlyph{ get; };
         Microsoft.UI.Xaml.Visibility MutedBadgeVisibility{ get; };
 
+        // Feedback protection muted this loopback, and the line that says when and why.
+        Boolean IsMutedForFeedback{ get; };
+        String FeedbackText{ get; };
+        Microsoft.UI.Xaml.Visibility FeedbackVisibility{ get; };
+
+        // What the edit dialog starts from. False as well when the transport cannot watch.
+        Boolean IsFeedbackProtectionOn{ get; };
+
         // Every row has one of each of these buttons, so the visible label alone would give a
         // screen reader the same name many times over. These name the loopback as well.
         String MuteButtonAccessibleName{ get; };

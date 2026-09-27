@@ -16,6 +16,7 @@ import "MidiLoopbackUpdateResponse.idl";
 
 import "MidiLoopbackCreationConfig.idl";
 import "MidiLoopbackRemovalConfig.idl";
+import "MidiLoopbackFeedbackProtectionEnum.idl";
 
 import "MidiEndpointDeviceInformation.idl";
 
@@ -56,6 +57,14 @@ namespace Windows.Devices.Midi2.Transports.Loopback
 
 
         [noexcept] static IVectorView<MidiLoopbackEntry> GetActiveLoopbackEntries();
+
+        // False when the loopback transport on this PC cannot watch for feedback.
+        [noexcept] static Boolean IsFeedbackProtectionAvailable{ get; };
+
+        // Takes effect at once. Save the change to the configuration to keep it after a restart.
+        [noexcept] static MidiLoopbackUpdateResponse SetFeedbackProtection(
+            Guid associationId,
+            MidiLoopbackFeedbackProtection feedbackProtection);
 
     }
 }

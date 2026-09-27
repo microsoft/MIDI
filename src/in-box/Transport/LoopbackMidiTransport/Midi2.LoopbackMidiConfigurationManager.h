@@ -32,6 +32,16 @@ private:
     HRESULT ExecuteCommandListEntries(
         _Inout_ json::JsonObject const& responseObject);
 
+    // Net-new for Feature_Servicing_MIDI2LoopbackFeedbackProtection.
+    HRESULT ExecuteCommandSetFeedbackProtection(
+        _In_ std::map<std::wstring, std::wstring> const& arguments,
+        _Inout_ json::JsonObject& responseObject);
+
+    // Net-new for Feature_Servicing_MIDI2LoopbackFeedbackProtection.
+    void AddFeedbackStatusToListEntry(
+        _Inout_ json::JsonObject& entryObject,
+        _In_ std::shared_ptr<MidiLoopbackDevice> const& device);
+
     // One update can touch both sides of a pair, so everything is validated before anything is
     // written. A half-applied rename is worse than a rejected one.
     struct PendingEndpointUpdate

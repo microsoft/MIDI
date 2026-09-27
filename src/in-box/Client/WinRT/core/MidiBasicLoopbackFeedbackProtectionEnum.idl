@@ -1,0 +1,24 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.BasicLoopback
+{
+    // What a basic loopback does when the MIDI it delivers keeps coming back into it.
+    [contract(MidiTransportsBasicLoopbackApiContract, 1)]
+    enum MidiBasicLoopbackFeedbackProtection
+    {
+        // Mute the loopback, just as if the customer had muted it. This is the default.
+        Mute = 0,
+
+        // Do nothing, and do not watch for feedback at all.
+        Off = 1,
+    };
+}
