@@ -242,6 +242,11 @@ namespace winrt::midiglass::implementation
         void OnTurntableDegreesChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnTurntableGripChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        void OnLineDirectionChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnLineThicknessChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnLineColorChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnLineEndsChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+
         // ---- what a control listens for (EditorControlProperties.cpp) ----
 
         void OnFeedbackEnabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -406,6 +411,7 @@ namespace winrt::midiglass::implementation
         void ApplyClockEdit();
         void ApplyLfoEdit();
         void ApplyTurntableEdit();
+        void ApplyLineEdit();
         void ApplyFeedbackEdit();
 
         // One number box per stop, rather than one line of text with separators in it. A comma

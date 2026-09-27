@@ -837,6 +837,223 @@ namespace glass
                     list.push_back(saw);
                 }
 
+                // ---- Five-iSH ----
+                // Black metal with the panel printed on it twice: a tan section named in black
+                // across its top, and a green block inside it where the controls live, named in
+                // white. Silver knobs with black caps, and the white line printed on the cap.
+                //
+                // Two surfaces and two inks on one page, which no theme before it has had. And
+                // nothing on it is colored: every value is the print white, and the six slots are
+                // the colors a panel lamp came in. They light a lamp or a meter and nothing else,
+                // because no hue reads on the tan, the green and the black at once.
+
+                {
+                    auto five = MakeDarkTheme(L"Five-iSH", 0x1C1C1B,
+                        { 0xFF4B36, 0xFFA43C, 0xF5D94C, 0x70DB6E, 0x86C4FF, 0xFFE2B0 });
+
+                    five.Deck.Color = Rgb(0x222221);
+                    five.Deck.GradientEndColor = Rgb(0x171716);
+
+                    // The cream cap the instrument puts on the one row of sliders it wants you to
+                    // find. A control on the neutral slot wears it; everything else is black.
+                    five.NeutralColor = Rgb(0xE3DCC4);
+                    five.NeutralCaps = true;
+
+                    // Black molded plastic, with a gloss line along its top edge and a hard black
+                    // edge all the way round.
+                    five.PlateColor = Rgb(0x3A3A36);
+                    five.PlateEndColor = Rgb(0x111110);
+                    five.GlassTintPercent = 0;
+                    five.FillAtRest = 0.0;
+                    five.PlateSheenPercent = 0;
+                    five.PlateHighlightPercent = 17;
+                    five.PlateElevation = 60;
+                    five.ShadowSpread = 3;
+                    five.CornerRadius = 3;
+
+                    five.Rim = RimSource::NeutralEdge;
+                    five.NeutralRimColor = { 0, 0, 0, 217 };
+
+                    // On lights a round lamp at the top of the cap and leaves the cap black.
+                    five.FillWhenOnPercent = 0;
+                    five.LampShape = LampStyle::Dot;
+                    five.ValueStrip = ValueStripPlacement::None;
+                    five.GlowStrength = 36;
+                    five.PipeFalloff = 1.0;
+                    five.TouchFillPercent = 14;
+
+                    // Every value, every scale and every pointer is the print white.
+                    five.ValueColor = Rgb(0xF2EFE3);
+                    five.PointerColor = Rgb(0xF2EFE3);
+                    five.CapLineColor = Rgb(0xF2EFE3);
+                    five.CapLineWide = true;
+
+                    // A silver skirt with a black cap on it. The line is on the cap, the part
+                    // that turns, and a scale of eleven marks is printed round the outside.
+                    five.KnobFaceColor = Rgb(0xF7F7F4);
+                    five.KnobFaceEndColor = Rgb(0x6C6C67);
+                    five.KnobCapColor = Rgb(0x3E3E3B);
+                    five.KnobCapEndColor = Rgb(0x0A0A0A);
+                    five.KnobCapSizePercent = 64;
+                    five.KnobTickCount = 11;
+                    five.PointerOnCap = true;
+                    five.ArcTrackColor = { 8, 12, 8, 102 };
+
+                    // A slider is a slot cut straight into the panel with a scale printed either
+                    // side of it, a black cap with a white line, and only a faint light below the
+                    // cap, because on the instrument the cap position is the whole value.
+                    five.FaderPlate = FaderPlateStyle::None;
+                    five.FaderFillPercent = 16;
+                    five.FaderScalePercent = 62;
+                    five.ThumbShadowPercent = 75;
+                    five.RecessShadePercent = 90;
+
+                    five.Thumb = ThumbStyle::Neutral;
+                    five.ThumbColor = Rgb(0x4A4A45);
+                    five.ThumbEndColor = Rgb(0x121211);
+
+                    five.TrackColor = Rgb(0x121311);
+                    five.WellColor = Rgb(0x121311);
+
+                    // A section is a tan block printed flat on the metal and named in black across
+                    // the middle of its top. A section inside it is the green.
+                    five.PanelFill = PanelFillStyle::Color;
+                    five.PanelColor = Rgb(0xCAC5AC);
+                    five.PanelEndColor = Rgb(0xBFBA9F);
+                    five.InsetPanelColor = Rgb(0x566D55);
+                    five.InsetPanelEndColor = Rgb(0x4F654E);
+                    five.PanelOutlineColor = { 0, 0, 0, 41 };
+                    five.PanelElevation = 0;
+                    five.SectionHeader = SectionHeaderStyle::Centered;
+
+                    // White print on the green and the black, black print on the tan. Neither
+                    // one reads on the other's surface.
+                    five.InkColor = Rgb(0xF2EFE3);
+                    five.SectionInkColor = Rgb(0x1D1D1A);
+
+                    // The white rules printed on the metal between groups of sections.
+                    five.RuleColor = { 242, 239, 227, 179 };
+                    five.RuleFades = false;
+
+                    five.Labels = LabelPlacement::Above;
+
+                    five.KeyWhiteColor = Rgb(0xF2EFE3);
+                    five.KeyBlackColor = Rgb(0x1D1D1A);
+
+                    five.MeterSlots = { 3, 2, 0 };
+
+                    five.CautionResourceKey = L"ThemeCautionFiveIsh";
+
+                    list.push_back(five);
+                }
+
+                // ---- Airy System ----
+                // Black brushed metal and green light. One panel with three families of control,
+                // each lit a different way: what turns or slides is lit all the time, a button is
+                // black until it is on, and a pad is colored plastic with a lamp behind it.
+                //
+                // Every theme before it lights all of its controls one way. This one needs three
+                // resting states on one page.
+
+                {
+                    auto airy = MakeDarkTheme(L"Airy System", 0x131414,
+                        { 0x35EE7A, 0xFF4D38, 0xFF9D3A, 0xEEE35A, 0x45A8FF, 0xB783FF });
+
+                    airy.Deck.Color = Rgb(0x1A1B1B);
+                    airy.Deck.GradientEndColor = Rgb(0x0C0D0D);
+
+                    // The brushing: long fine streaks along the panel rather than specks, always
+                    // lighter, the way the ridges of brushed metal catch the light.
+                    airy.Overlay.GrainPercent = 32;
+                    airy.Overlay.GrainColor = Rgb(0xFFFFFF);
+                    airy.Overlay.GrainStreak = 48;
+
+                    // The white steps on the drum machine: the absence of a color.
+                    airy.NeutralColor = Rgb(0xE8ECEA);
+
+                    airy.PlateColor = Rgb(0x232525);
+                    airy.PlateEndColor = Rgb(0x0F1010);
+                    airy.GlassTintPercent = 0;
+                    airy.FillAtRest = 0.0;
+                    airy.PlateSheenPercent = 0;
+                    airy.PlateHighlightPercent = 11;
+                    airy.PlateElevation = 60;
+                    airy.ShadowSpread = 4;
+                    airy.CornerRadius = 4;
+                    airy.PipeFalloff = 1.0;
+
+                    // A knob sits in a ring of its own light and a slider in a lit frame, touched
+                    // or not. That light is how the panel says "this is a control" in a dark room.
+                    airy.Rim = RimSource::ControlHue;
+                    airy.RimStrengthPercent = 85;
+                    airy.RestingGlowPercent = 30;
+                    airy.GlowStrength = 70;
+                    airy.TouchFillPercent = 20;
+
+                    // A button is black until it is on, and then its edge lights in its own color.
+                    // The comp fills a lit button at 12 per cent; the red one then measures 1.14 : 1
+                    // against itself at rest, under the 1.15 every shipped theme's lit plate has
+                    // to move by, so it is 14 here.
+                    airy.SwitchRimStrengthPercent = 0;
+                    airy.SwitchRestingGlowPercent = 0;
+                    airy.FillWhenOnPercent = 14;
+                    airy.ValueStrip = ValueStripPlacement::None;
+
+                    // A pad is dim plastic at rest and its color outright when it is lit. The rest
+                    // stops at a third: any stronger and the white and yellow pads land in the
+                    // middle gray where neither a light name nor a dark one can be read.
+                    airy.PadFillAtRest = 0.34;
+                    airy.PadFillWhenOnPercent = 100;
+                    airy.NamesInsideSwitches = true;
+
+                    // A black cap in the ring. The ring is the control's own color at rest, and
+                    // the value is the part of it lit full, with a halo.
+                    airy.KnobFaceColor = Rgb(0x353737);
+                    airy.KnobFaceEndColor = Rgb(0x090A0A);
+                    airy.PointerColor = Rgb(0xEEF1EF);
+                    airy.ArcTrackHuePercent = 30;
+                    airy.ArcGlow = true;
+
+                    // A slider is lit the way an AIRA one is: the frame and its glow go around the
+                    // slot, the scale is printed outside them, and the cap is black with a white
+                    // line. Crossing the lit frame is what lets a black cap read on a black panel.
+                    airy.FaderPlate = FaderPlateStyle::Frame;
+                    airy.FaderFillPercent = 38;
+                    airy.FaderScalePercent = 45;
+                    airy.ThumbShadowPercent = 80;
+                    airy.RecessShadePercent = 90;
+
+                    airy.Thumb = ThumbStyle::Neutral;
+                    airy.ThumbColor = Rgb(0x353737);
+                    airy.ThumbEndColor = Rgb(0x090A0A);
+                    airy.CapLineColor = Rgb(0xFFFFFF);
+                    airy.CapLineWide = true;
+
+                    airy.TrackColor = Rgb(0x060707);
+                    airy.WellColor = Rgb(0x060707);
+
+                    // A section is a line of light with its name in the same light, centered
+                    // across its top.
+                    airy.PanelFill = PanelFillStyle::None;
+                    airy.SectionHeader = SectionHeaderStyle::Centered;
+                    airy.SectionNameInHue = true;
+
+                    airy.RuleColor = { 228, 231, 229, 66 };
+                    airy.RuleFades = false;
+
+                    airy.Labels = LabelPlacement::Below;
+                    airy.InkColor = Rgb(0xE4E7E5);
+
+                    airy.KeyWhiteColor = Rgb(0xE4E7E5);
+                    airy.KeyBlackColor = Rgb(0x131414);
+
+                    airy.MeterSlots = { 0, 3, 1 };
+
+                    airy.CautionResourceKey = L"ThemeCautionAirySystem";
+
+                    list.push_back(airy);
+                }
+
                 return list;
             }();
 
@@ -959,6 +1176,12 @@ namespace glass
     bool HasNeutralColor(Theme const& theme) noexcept
     {
         return theme.NeutralColor.A != 0;
+    }
+
+    _Use_decl_annotations_
+    int32_t EffectivePanelElevation(Theme const& theme) noexcept
+    {
+        return std::clamp(theme.PanelElevation >= 0 ? theme.PanelElevation : theme.PlateElevation, 0, 100);
     }
 
     _Use_decl_annotations_

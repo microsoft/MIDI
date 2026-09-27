@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - Five-iSH theme</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .chiprow { position: absolute; left: 14px; top: 13px; display: flex; gap: 6px; align-items: center; }
+    .tchip {
+        height: 26px; padding: 0 11px; border-radius: 13px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: var(--text3);
+        background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .tchip i { width: 11px; height: 11px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    .tchip.new { color: #D9D4BC; background: rgba(202,197,172,.10); box-shadow: inset 0 0 0 1px rgba(202,197,172,.50); }
+
+    .deck {
+        position: absolute; left: 14px; top: 54px; width: 972px; height: 456px;
+        border-radius: 4px; overflow: hidden;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.07);
+    }
+    .decktag { position: absolute; left: 14px; top: 522px; font-size: 11px; color: var(--text3); }
+    .decktag b { color: var(--text2); font-weight: 600; }
+
+    /* ---- the print. White on the green and on the metal, black on the tan ---- */
+    .silk {
+        position: absolute; font-size: 7.5px; font-weight: 600; letter-spacing: .08em;
+        color: rgba(242,239,227,.94); text-align: center; white-space: nowrap;
+    }
+    .silk.dim { color: rgba(242,239,227,.64); }
+    .silk.onsect { color: #1D1D1A; }
+    .scalenum { position: absolute; width: 14px; font-size: 6.5px; font-weight: 600; color: rgba(242,239,227,.80); text-align: center; }
+    .logo { position: absolute; font-size: 10px; font-weight: 600; letter-spacing: .34em; color: #F2EFE3; white-space: nowrap; }
+    .logo small { font-size: 7.5px; letter-spacing: .20em; color: rgba(242,239,227,.72); margin-left: 12px; }
+
+    .rhead { position: absolute; font-size: 11px; letter-spacing: .10em; color: rgba(242,239,227,.48); }
+    .kcap { position: absolute; text-align: center; font-size: 10.5px; color: rgba(242,239,227,.62); }
+    .kcap b { display: block; color: #F2EFE3; font-weight: 600; font-size: 11px; margin-bottom: 2px; }
+    .measure { position: absolute; font-size: 11.5px; line-height: 1.6; color: rgba(242,239,227,.74); }
+    .measure b { color: #FFFFFF; font-weight: 600; }
+    .measure .num { font-family: "Cascadia Mono","Consolas",monospace; color: #DCD5B8; font-weight: 600; }
+    /* the figure is printed in whichever ink reads on that surface, so the word above it is the only thing failing */
+    .ratio { position: absolute; width: 84px; text-align: center; font-family: "Cascadia Mono","Consolas",monospace; font-size: 8.5px; font-weight: 600; }
+    .ratio.ontan { color: #1D1D1A; }
+    .ratio.ongreen { color: #F2EFE3; }
+    .rowtag { position: absolute; font-size: 8.5px; letter-spacing: .08em; color: rgba(242,239,227,.46); }
+
+    .swatches { display: flex; gap: 0; width: 1000px; border-radius: 7px; overflow: hidden; margin-top: 14px; }
+    .swatches div {
+        flex: 1; height: 58px; display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 6px 7px; font-size: 9.5px; font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .swatches div span { display: block; font-family: "Segoe UI Variable Text","Segoe UI",sans-serif; font-size: 10px; opacity: .78; }
+
+    .costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; width: 1000px; margin-top: 12px; }
+    .cost {
+        border-radius: 7px; padding: 12px 14px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 11.5px; color: var(--text3); line-height: 1.55;
+    }
+    .cost h4 { margin: 0 0 7px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .cost b { color: var(--text2); font-weight: 600; }
+    .cost .yes { color: var(--success); font-weight: 600; }
+    .cost .no { color: var(--caution); font-weight: 600; }
+    .cost .mono { color: var(--accent); }
+
+    .asks { width: 1000px; margin-top: 11px; border-radius: 7px; padding: 12px 14px 6px 14px; box-sizing: border-box;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke); }
+    .asks h4 { margin: 0 0 8px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .asks table { width: 100%; border-collapse: collapse; font-size: 11.5px; line-height: 1.5; color: var(--text3); }
+    .asks th { text-align: left; font-weight: 600; color: var(--text2); padding: 0 10px 6px 0; border-bottom: 1px solid var(--divider); font-size: 11px; }
+    .asks td { vertical-align: top; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--divider); }
+    .asks tr:last-child td { border-bottom: none; }
+    .asks td.n { width: 18px; color: var(--caution); font-weight: 600; }
+    .asks td.ask { width: 270px; }
+    .asks td.ask b { color: var(--text); font-weight: 600; }
+    .asks td.without { width: 230px; }
+    .asks .mono { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 21 &mdash; <b>Five-iSH</b>, after the Roland SH-7, and the look it shares with the SH-5 and the modular systems of the same years. Black metal, and a panel <b>printed in two layers</b>: each section is a tan block with its name in black across the top, and the controls sit on a green block inside it, with their names and scales in white. Knobs are silver with a black cap; sliders are black, with one row in cream. <b>This is the first theme with two surfaces and two inks on one page</b>, and nothing on it is colored except the lamps.</p>
+
+<!-- ============================================================= DECK -->
+<div class="board" style="height:546px;">
+
+    <div class="chiprow">
+        <div class="tchip"><i style="background:#4CE0FF"></i>Studio Dark</div>
+        <div class="tchip"><i style="background:#F98B31"></i>Bigwig</div>
+        <div class="tchip"><i style="background:#E3DAC9"></i>Bone</div>
+        <div class="tchip"><i style="background:#E8601C"></i>Jove</div>
+        <div class="tchip"><i style="background:#39465F"></i>Supersaw</div>
+        <div class="tchip new"><i style="background:#566D55; box-shadow: inset 0 0 0 2px #CAC5AC"></i>Five-iSH</div>
+        <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
+    </div>
+
+    <div class="deck surf tonal fiveish">
+
+        <div class="surftext h1" style="left:18px; top:8px; font-size:15px;">Five-iSH</div>
+        <div class="surftext small" style="left:94px; top:13px;">mono &middot; upper panel</div>
+        <div class="logo" style="left:496px; top:13px;">SYNTHESIZER<small>MODEL FIVE-iSH</small></div>
+
+        <div class="pagetabs" style="right:14px; top:8px; gap:4px;">
+            <div class="tab sel" style="height:20px; padding:0 10px; font-size:10px">Panel</div>
+            <div class="tab" style="height:20px; padding:0 10px; font-size:10px">Patch</div>
+            <div class="tab" style="height:20px; padding:0 10px; font-size:10px">Keys</div>
+        </div>
+
+        <!-- ======================================== band A: the sources -->
+
+        <!-- LFO -->
+        <div class="ctlpanel" style="left:16px; top:38px; width:142px; height:166px;"><div class="ptitle">LFO</div></div>
+        <div class="ctlpanel inset" style="left:24px; top:58px; width:126px; height:138px;"></div>
+        <div class="silk" style="left:28px; top:64px; width:60px;">WAVE</div>
+        <div class="silk" style="left:87px; top:64px; width:36px;">RATE</div>
+        <div class="silk" style="left:117px; top:64px; width:36px;">DELAY</div>
+        <div class="ctl knob detent" style="left:38px; top:84px; width:40px; height:40px;">
+            <div class="dial"><div class="arc" style="--pct:.5625turn"></div><div class="skirt"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(67.5deg)"></div></div>
+        </div>
+        <div class="ctl fader" style="left:94px; top:78px; width:22px; height:110px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:10%"></i><i style="top:20%"></i><i style="top:30%"></i><i style="top:40%"></i><i style="top:50%"></i><i style="top:60%"></i><i style="top:70%"></i><i style="top:80%"></i><i style="top:90%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:62%"></div><div class="capbar" style="bottom:calc(62% - 6px);"></div>
+            </div>
+        </div>
+        <div class="ctl fader" style="left:124px; top:78px; width:22px; height:110px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:10%"></i><i style="top:20%"></i><i style="top:30%"></i><i style="top:40%"></i><i style="top:50%"></i><i style="top:60%"></i><i style="top:70%"></i><i style="top:80%"></i><i style="top:90%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:30%"></div><div class="capbar" style="bottom:calc(30% - 6px);"></div>
+            </div>
+        </div>
+        <div class="silk" style="left:28px; top:148px; width:60px;">KEY TRIG</div>
+        <div class="ctl btn-ctl hue1 on" style="left:42px; top:160px; width:32px; height:20px;"><div class="pipe lit"></div></div>
+
+        <!-- VCO-1 -->
+        <div class="ctlpanel" style="left:168px; top:38px; width:300px; height:166px;"><div class="ptitle">VCO-1</div></div>
+        <div class="ctlpanel inset" style="left:176px; top:58px; width:284px; height:138px;"></div>
+        <div class="silk" style="left:180px; top:64px; width:60px;">RANGE</div>
+        <div class="silk" style="left:240px; top:64px; width:60px;">WAVE FORM</div>
+        <div class="silk" style="left:305px; top:64px; width:36px;">PW</div>
+        <div class="silk" style="left:347px; top:64px; width:20px;">32'</div>
+        <div class="silk" style="left:369px; top:64px; width:20px;">16'</div>
+        <div class="silk" style="left:391px; top:64px; width:20px;">8'</div>
+        <div class="silk" style="left:413px; top:64px; width:20px;">4'</div>
+        <div class="silk" style="left:435px; top:64px; width:20px;">2'</div>
+        <div class="ctl knob detent" style="left:190px; top:84px; width:40px; height:40px;">
+            <div class="dial"><div class="arc" style="--pct:.375turn"></div><div class="skirt"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        </div>
+        <div class="ctl knob" style="left:250px; top:84px; width:40px; height:40px;">
+            <div class="dial"><div class="arc" style="--pct:.5625turn"></div><div class="skirt"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(67.5deg)"></div></div>
+        </div>
+        <div class="ctl fader" style="left:312px; top:78px; width:22px; height:110px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:10%"></i><i style="top:20%"></i><i style="top:30%"></i><i style="top:40%"></i><i style="top:50%"></i><i style="top:60%"></i><i style="top:70%"></i><i style="top:80%"></i><i style="top:90%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:44%"></div><div class="capbar" style="bottom:calc(44% - 6px);"></div>
+            </div>
+        </div>
+        <div class="ctl fader cream" style="left:348px; top:78px; width:18px; height:110px;">
+            <div class="slot"><div class="fill" style="height:90%"></div><div class="capbar" style="bottom:calc(90% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader cream" style="left:370px; top:78px; width:18px; height:110px;">
+            <div class="slot"><div class="fill" style="height:70%"></div><div class="capbar" style="bottom:calc(70% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader cream" style="left:392px; top:78px; width:18px; height:110px;">
+            <div class="slot"><div class="fill" style="height:100%"></div><div class="capbar" style="bottom:calc(100% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader cream" style="left:414px; top:78px; width:18px; height:110px;">
+            <div class="slot"><div class="fill" style="height:40%"></div><div class="capbar" style="bottom:calc(40% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader cream" style="left:436px; top:78px; width:18px; height:110px;">
+            <div class="slot"><div class="fill" style="height:15%"></div><div class="capbar" style="bottom:calc(15% - 6px);"></div></div>
+        </div>
+        <div class="silk" style="left:180px; top:148px; width:60px;">SYNC</div>
+        <div class="silk" style="left:240px; top:148px; width:60px;">LFO MOD</div>
+        <div class="ctl btn-ctl hue1 on" style="left:194px; top:160px; width:32px; height:20px;"><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:254px; top:160px; width:32px; height:20px;"><div class="pipe"></div></div>
+
+        <!-- VCO-2 -->
+        <div class="ctlpanel" style="left:478px; top:38px; width:170px; height:166px;"><div class="ptitle">VCO-2</div></div>
+        <div class="ctlpanel inset" style="left:486px; top:58px; width:154px; height:138px;"></div>
+        <div class="silk" style="left:488px; top:64px; width:60px;">RANGE</div>
+        <div class="silk" style="left:546px; top:64px; width:60px;">TUNE</div>
+        <div class="silk" style="left:605px; top:64px; width:36px;">FINE</div>
+        <div class="ctl knob detent" style="left:498px; top:84px; width:40px; height:40px;">
+            <div class="dial"><div class="arc" style="--pct:.28125turn"></div><div class="skirt"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-33.75deg)"></div></div>
+        </div>
+        <div class="ctl knob detent" style="left:556px; top:84px; width:40px; height:40px;">
+            <div class="dial"><div class="arc" style="--pct:.40turn"></div><div class="skirt"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(9deg)"></div></div>
+        </div>
+        <div class="ctl fader" style="left:612px; top:78px; width:22px; height:110px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:10%"></i><i style="top:20%"></i><i style="top:30%"></i><i style="top:40%"></i><i style="top:50%"></i><i style="top:60%"></i><i style="top:70%"></i><i style="top:80%"></i><i style="top:90%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:50%"></div><div class="capbar" style="bottom:calc(50% - 6px);"></div>
+            </div>
+        </div>
+        <div class="silk" style="left:491px; top:148px; width:30px;">SAW</div>
+        <div class="silk" style="left:525px; top:148px; width:30px;">SQR</div>
+        <div class="silk" style="left:559px; top:148px; width:30px;">TRI</div>
+        <div class="ctl btn-ctl hue2 on" style="left:492px; top:160px; width:28px; height:20px;"><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue2" style="left:526px; top:160px; width:28px; height:20px;"><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue2" style="left:560px; top:160px; width:28px; height:20px;"><div class="pipe"></div></div>
+
+        <div class="surfrule" style="left:653px; top:38px; width:1px; height:166px;"></div>
+
+        <!-- AUDIO MIXER, and the tan strip beside it for the lamp and a switch -->
+        <div class="ctlpanel" style="left:658px; top:38px; width:298px; height:166px;"><div class="ptitle">AUDIO MIXER</div></div>
+        <div class="ctlpanel inset" style="left:666px; top:58px; width:226px; height:138px;"></div>
+        <div class="silk" style="left:667px; top:64px; width:48px;">VCO-1</div>
+        <div class="silk" style="left:709px; top:64px; width:48px;">VCO-2</div>
+        <div class="silk" style="left:751px; top:64px; width:48px;">NOISE</div>
+        <div class="silk" style="left:793px; top:64px; width:48px;">RING</div>
+        <div class="silk" style="left:835px; top:64px; width:48px;">EXT</div>
+        <div class="scalenum" style="left:667px; top:82px;">10</div>
+        <div class="scalenum" style="left:667px; top:130px;">5</div>
+        <div class="scalenum" style="left:667px; top:178px;">0</div>
+        <div class="ctl fader" style="left:680px; top:78px; width:22px; height:110px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:10%"></i><i style="top:20%"></i><i style="top:30%"></i><i style="top:40%"></i><i style="top:50%"></i><i style="top:60%"></i><i style="top:70%"></i><i style="top:80%"></i><i style="top:90%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:80%"></div><div class="capbar" style="bottom:calc(80% - 6px);"></div>
+            </div>
+        </div>
+        <div class="ctl fader" style="left:722px; top:78px; width:22px; height:110px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:10%"></i><i style="top:20%"></i><i style="top:30%"></i><i style="top:40%"></i><i style="top:50%"></i><i style="top:60%"></i><i style="top:70%"></i><i style="top:80%"></i><i style="top:90%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:66%"></div><div class="capbar" style="bottom:calc(66% - 6px);"></div>
+            </div>
+        </div>
+        <div class="ctl fader" style="left:764px; top:78px; width:22px; height:110px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:10%"></i><i style="top:20%"></i><i style="top:30%"></i><i style="top:40%"></i><i style="top:50%"></i><i style="top:60%"></i><i style="top:70%"></i><i style="top:80%"></i><i style="top:90%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:20%"></div><div class="capbar" style="bottom:calc(20% - 6px);"></div>
+            </div>
+        </div>
+        <div class="ctl fader" style="left:806px; top:78px; width:22px; height:110px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:10%"></i><i style="top:20%"></i><i style="top:30%"></i><i style="top:40%"></i><i style="top:50%"></i><i style="top:60%"></i><i style="top:70%"></i><i style="top:80%"></i><i style="top:90%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:0%"></div><div class="capbar" style="bottom:calc(0% - 6px);"></div>
+            </div>
+        </div>
+        <div class="ctl fader" style="left:848px; top:78px; width:22px; height:110px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:10%"></i><i style="top:20%"></i><i style="top:30%"></i><i style="top:40%"></i><i style="top:50%"></i><i style="top:60%"></i><i style="top:70%"></i><i style="top:80%"></i><i style="top:90%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:10%"></div><div class="capbar" style="bottom:calc(10% - 6px);"></div>
+            </div>
+        </div>
+        <div class="silk onsect" style="left:896px; top:70px; width:56px;">OVER LOAD</div>
+        <div class="ctl led hue1 on" style="left:918px; top:86px; width:12px; height:12px;"></div>
+        <div class="silk onsect" style="left:896px; top:132px; width:56px;">EXT SIG</div>
+        <div class="ctl btn-ctl hue1" style="left:908px; top:146px; width:32px; height:20px;"><div class="pipe"></div></div>
+
+        <!-- ======================================== band B: the shapers -->
+
+        <div class="ctlpanel" style="left:16px; top:214px; width:300px; height:142px;"><div class="ptitle">VCF</div></div>
+        <div class="ctlpanel inset" style="left:24px; top:234px; width:284px; height:114px;"></div>
+        <div class="silk" style="left:32px; top:240px; width:60px;">CUTOFF</div>
+        <div class="silk" style="left:100px; top:240px; width:60px;">RESO</div>
+        <div class="silk" style="left:169px; top:240px; width:36px;">ENV</div>
+        <div class="silk" style="left:199px; top:240px; width:36px;">LFO</div>
+        <div class="silk" style="left:229px; top:240px; width:36px;">KYBD</div>
+        <div class="silk" style="left:259px; top:240px; width:36px;">NOISE</div>
+        <div class="ctl knob" style="left:38px; top:264px; width:48px; height:48px;">
+            <div class="dial"><div class="arc" style="--pct:.58turn"></div><div class="skirt"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(73.8deg)"></div></div>
+        </div>
+        <div class="ctl knob" style="left:110px; top:268px; width:40px; height:40px;">
+            <div class="dial"><div class="arc" style="--pct:.30turn"></div><div class="skirt"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-27deg)"></div></div>
+        </div>
+        <div class="ctl fader" style="left:176px; top:254px; width:22px; height:86px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:56%"></div><div class="capbar" style="bottom:calc(56% - 6px);"></div>
+            </div>
+        </div>
+        <div class="ctl fader" style="left:206px; top:254px; width:22px; height:86px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:18%"></div><div class="capbar" style="bottom:calc(18% - 6px);"></div>
+            </div>
+        </div>
+        <div class="ctl fader" style="left:236px; top:254px; width:22px; height:86px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:50%"></div><div class="capbar" style="bottom:calc(50% - 6px);"></div>
+            </div>
+        </div>
+        <div class="ctl fader" style="left:266px; top:254px; width:22px; height:86px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:8%"></div><div class="capbar" style="bottom:calc(8% - 6px);"></div>
+            </div>
+        </div>
+
+        <div class="surfrule" style="left:321px; top:214px; width:1px; height:142px;"></div>
+
+        <div class="ctlpanel" style="left:326px; top:214px; width:160px; height:142px;"><div class="ptitle">ENV-1</div></div>
+        <div class="ctlpanel inset" style="left:334px; top:234px; width:144px; height:114px;"></div>
+        <div class="silk" style="left:345px; top:240px; width:24px;">A</div>
+        <div class="silk" style="left:377px; top:240px; width:24px;">D</div>
+        <div class="silk" style="left:409px; top:240px; width:24px;">S</div>
+        <div class="silk" style="left:441px; top:240px; width:24px;">R</div>
+        <div class="ctl fader" style="left:346px; top:254px; width:22px; height:86px;">
+            <div class="slot"><div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+            <div class="fill" style="height:12%"></div><div class="capbar" style="bottom:calc(12% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader" style="left:378px; top:254px; width:22px; height:86px;">
+            <div class="slot"><div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+            <div class="fill" style="height:46%"></div><div class="capbar" style="bottom:calc(46% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader" style="left:410px; top:254px; width:22px; height:86px;">
+            <div class="slot"><div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+            <div class="fill" style="height:74%"></div><div class="capbar" style="bottom:calc(74% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader" style="left:442px; top:254px; width:22px; height:86px;">
+            <div class="slot"><div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+            <div class="fill" style="height:36%"></div><div class="capbar" style="bottom:calc(36% - 6px);"></div></div>
+        </div>
+
+        <div class="ctlpanel" style="left:496px; top:214px; width:160px; height:142px;"><div class="ptitle">ENV-2</div></div>
+        <div class="ctlpanel inset" style="left:504px; top:234px; width:144px; height:114px;"></div>
+        <div class="silk" style="left:515px; top:240px; width:24px;">A</div>
+        <div class="silk" style="left:547px; top:240px; width:24px;">D</div>
+        <div class="silk" style="left:579px; top:240px; width:24px;">S</div>
+        <div class="silk" style="left:611px; top:240px; width:24px;">R</div>
+        <div class="ctl fader" style="left:516px; top:254px; width:22px; height:86px;">
+            <div class="slot"><div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+            <div class="fill" style="height:30%"></div><div class="capbar" style="bottom:calc(30% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader" style="left:548px; top:254px; width:22px; height:86px;">
+            <div class="slot"><div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+            <div class="fill" style="height:58%"></div><div class="capbar" style="bottom:calc(58% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader" style="left:580px; top:254px; width:22px; height:86px;">
+            <div class="slot"><div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+            <div class="fill" style="height:50%"></div><div class="capbar" style="bottom:calc(50% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader" style="left:612px; top:254px; width:22px; height:86px;">
+            <div class="slot"><div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+            <div class="fill" style="height:64%"></div><div class="capbar" style="bottom:calc(64% - 6px);"></div></div>
+        </div>
+
+        <div class="ctlpanel" style="left:666px; top:214px; width:134px; height:142px;"><div class="ptitle">VCA</div></div>
+        <div class="ctlpanel inset" style="left:674px; top:234px; width:118px; height:114px;"></div>
+        <div class="silk" style="left:679px; top:240px; width:36px;">LFO</div>
+        <div class="silk" style="left:709px; top:240px; width:36px;">HOLD</div>
+        <div class="silk" style="left:744px; top:240px; width:48px;">ENV 1</div>
+        <div class="silk" style="left:744px; top:280px; width:48px;">ENV 2</div>
+        <div class="ctl fader" style="left:686px; top:254px; width:22px; height:86px;">
+            <div class="slot"><div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+            <div class="fill" style="height:22%"></div><div class="capbar" style="bottom:calc(22% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader" style="left:716px; top:254px; width:22px; height:86px;">
+            <div class="slot"><div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+            <div class="fill" style="height:70%"></div><div class="capbar" style="bottom:calc(70% - 6px);"></div></div>
+        </div>
+        <div class="ctl btn-ctl hue4 on" style="left:752px; top:252px; width:32px; height:20px;"><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue4" style="left:752px; top:292px; width:32px; height:20px;"><div class="pipe"></div></div>
+
+        <div class="ctlpanel" style="left:810px; top:214px; width:146px; height:142px;"><div class="ptitle">SAMPLE / HOLD</div></div>
+        <div class="ctlpanel inset" style="left:818px; top:234px; width:130px; height:114px;"></div>
+        <div class="silk" style="left:820px; top:240px; width:60px;">MODE</div>
+        <div class="silk" style="left:885px; top:240px; width:36px;">TIME</div>
+        <div class="silk" style="left:913px; top:240px; width:36px;">LAG</div>
+        <div class="ctl knob detent" style="left:830px; top:268px; width:40px; height:40px;">
+            <div class="dial"><div class="arc" style="--pct:.1875turn"></div><div class="skirt"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-67.5deg)"></div></div>
+        </div>
+        <div class="ctl fader" style="left:892px; top:254px; width:22px; height:86px;">
+            <div class="slot"><div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+            <div class="fill" style="height:40%"></div><div class="capbar" style="bottom:calc(40% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader" style="left:920px; top:254px; width:22px; height:86px;">
+            <div class="slot"><div class="ticks"><i style="top:0%"></i><i style="top:20%"></i><i style="top:40%"></i><i style="top:60%"></i><i style="top:80%"></i><i style="top:100%"></i></div>
+            <div class="fill" style="height:12%"></div><div class="capbar" style="bottom:calc(12% - 6px);"></div></div>
+        </div>
+
+        <!-- ======================================== band C: the rest of the family -->
+
+        <div class="ctlpanel" style="left:16px; top:366px; width:250px; height:82px;"><div class="ptitle">BENDER</div></div>
+        <div class="ctlpanel inset" style="left:24px; top:384px; width:234px; height:58px;"></div>
+        <div class="silk" style="left:35px; top:390px; width:40px;">VCO</div>
+        <div class="silk" style="left:77px; top:390px; width:40px;">VCF</div>
+        <div class="silk" style="left:119px; top:390px; width:40px;">VCA</div>
+        <div class="silk" style="left:168px; top:390px; width:80px;">BEND</div>
+        <div class="ctl knob nomarks" style="left:40px; top:404px; width:30px; height:30px;">
+            <div class="dial"><div class="arc" style="--pct:.20turn"></div><div class="skirt"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-63deg)"></div></div>
+        </div>
+        <div class="ctl knob nomarks" style="left:82px; top:404px; width:30px; height:30px;">
+            <div class="dial"><div class="arc" style="--pct:.45turn"></div><div class="skirt"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(27deg)"></div></div>
+        </div>
+        <div class="ctl knob nomarks" style="left:124px; top:404px; width:30px; height:30px;">
+            <div class="dial"><div class="arc" style="--pct:.62turn"></div><div class="skirt"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(88.2deg)"></div></div>
+        </div>
+        <div class="ctl fader horiz" style="left:168px; top:406px; width:80px; height:24px;">
+            <div class="slot"><div class="fill" style="width:50%"></div><div class="capbar" style="left:calc(50% - 6px);"></div></div>
+        </div>
+
+        <div class="silk" style="left:284px; top:372px; width:96px;">XY</div>
+        <div class="ctl xy" style="left:284px; top:386px; width:96px; height:56px;">
+            <div class="field2">
+                <div class="cross h" style="top:40%"></div>
+                <div class="cross v" style="left:58%"></div>
+                <div class="puck" style="left:58%; top:40%; width:12px; height:12px; margin:-6px 0 0 -6px"></div>
+            </div>
+        </div>
+
+        <div class="silk" style="left:394px; top:372px; width:104px;">LFO VIEW</div>
+        <div class="ctl lfo" style="left:394px; top:386px; width:104px; height:56px;">
+            <div class="lwell"></div>
+            <svg viewBox="0 0 120 40" preserveAspectRatio="none">
+                <path d="M0,20 C10,2 20,2 30,20 C40,38 50,38 60,20 C70,2 80,2 90,20 C100,38 110,38 120,20"
+                      fill="none" stroke="rgb(242,239,227)" stroke-width="1.6"/>
+                <circle cx="76" cy="7" r="3.2" fill="rgb(242,239,227)"/>
+            </svg>
+        </div>
+
+        <div class="silk" style="left:506px; top:372px; width:58px;">LEVEL</div>
+        <div class="ctl meter hue1" style="left:512px; top:386px; width:20px; height:56px;">
+            <i></i><i class="lit hot"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+        <div class="ctl meter hue1" style="left:538px; top:386px; width:20px; height:56px;">
+            <i></i><i></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+
+        <div class="silk" style="left:574px; top:372px; width:140px;">SEQUENCE</div>
+        <div class="ctl steps hue1" style="left:574px; top:386px; width:140px; height:56px;">
+            <div class="row"><i class="on cur"></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i></div>
+            <div class="row"><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i></div>
+        </div>
+
+        <div class="silk" style="left:726px; top:372px; width:44px;">HOLD</div>
+        <div class="ctl btn-ctl hue2 held" style="left:726px; top:386px; width:44px; height:56px;"><div class="pipe lit"></div></div>
+
+        <div class="silk" style="left:776px; top:372px; width:44px;">DATA</div>
+        <div class="ctl btn-ctl hue1 offline" style="left:780px; top:386px; width:36px; height:56px;">
+            <div class="cap" style="font-size:7px; color:rgba(242,239,227,.45); margin-top:auto; margin-bottom:6px;">no link</div>
+        </div>
+
+        <div class="ctlpanel" style="left:826px; top:366px; width:130px; height:82px;"><div class="ptitle">TRANSPOSE</div></div>
+        <div class="silk onsect" style="left:846px; top:390px; width:20px;">L</div>
+        <div class="silk onsect" style="left:882px; top:390px; width:20px;">M</div>
+        <div class="silk onsect" style="left:918px; top:390px; width:20px;">H</div>
+        <div class="ctl btn-ctl hue1" style="left:842px; top:404px; width:28px; height:26px;"><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:878px; top:404px; width:28px; height:26px;"><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:914px; top:404px; width:28px; height:26px;"><div class="pipe"></div></div>
+
+    </div>
+    <div class="decktag"><b>Five-iSH</b> &mdash; black metal, tan sections named in black, green insets printed in white, silver knobs with black caps, and color only in the lamps</div>
+
+</div>
+
+<!-- ============================================= WHAT THE PANEL DOES -->
+<div class="board" style="height:340px; margin-top:13px;">
+
+    <div class="surf tonal fiveish" style="position:absolute; inset:0;">
+
+        <div class="rhead" style="left:20px; top:14px;">TWO LAYERS OF PRINT, TWO INKS, AND A KNOB THAT IS SILVER WITH A BLACK CAP.</div>
+
+        <!-- the section: two surfaces -->
+        <div class="ctlpanel" style="left:24px; top:44px; width:232px; height:170px;"><div class="ptitle">VCF</div></div>
+        <div class="ctlpanel inset" style="left:34px; top:64px; width:212px; height:140px;"></div>
+        <div class="silk" style="left:44px; top:74px; width:100px;">CUTOFF FREQ</div>
+        <div class="silk" style="left:162px; top:74px; width:70px;">RESONANCE</div>
+        <div class="ctl knob" style="left:66px; top:104px; width:56px; height:56px;">
+            <div class="dial"><div class="arc" style="--pct:.58turn"></div><div class="skirt"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(73.8deg)"></div></div>
+        </div>
+        <div class="ctl fader" style="left:185px; top:90px; width:24px; height:106px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:10%"></i><i style="top:20%"></i><i style="top:30%"></i><i style="top:40%"></i><i style="top:50%"></i><i style="top:60%"></i><i style="top:70%"></i><i style="top:80%"></i><i style="top:90%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:34%"></div><div class="capbar" style="bottom:calc(34% - 6px);"></div>
+            </div>
+        </div>
+        <div class="kcap" style="left:24px; top:224px; width:232px;"><b>Section</b>tan, named in black; the green inside it is printed in white</div>
+
+        <!-- the knob, big -->
+        <div class="ctlpanel inset" style="left:276px; top:44px; width:190px; height:170px;"></div>
+        <div class="ctl knob" style="left:319px; top:74px; width:104px; height:104px;">
+            <div class="dial"><div class="arc" style="--pct:.62turn"></div><div class="skirt"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(88.2deg)"></div></div>
+        </div>
+        <div class="scalenum" style="left:316px; top:172px;">0</div>
+        <div class="scalenum" style="left:364px; top:52px;">5</div>
+        <div class="scalenum" style="left:412px; top:172px;">10</div>
+        <div class="kcap" style="left:276px; top:224px; width:190px;"><b>Knob</b>silver skirt, black cap, and the white line is on the cap</div>
+
+        <!-- the faders: black, and the cream row -->
+        <div class="ctlpanel inset" style="left:486px; top:44px; width:128px; height:170px;"></div>
+        <div class="scalenum" style="left:490px; top:60px;">10</div>
+        <div class="scalenum" style="left:490px; top:127px;">5</div>
+        <div class="scalenum" style="left:490px; top:194px;">0</div>
+        <div class="ctl fader" style="left:512px; top:56px; width:30px; height:148px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:10%"></i><i style="top:20%"></i><i style="top:30%"></i><i style="top:40%"></i><i style="top:50%"></i><i style="top:60%"></i><i style="top:70%"></i><i style="top:80%"></i><i style="top:90%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:62%"></div><div class="capbar" style="bottom:calc(62% - 6px);"></div>
+            </div>
+        </div>
+        <div class="ctl fader cream" style="left:566px; top:56px; width:30px; height:148px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:10%"></i><i style="top:20%"></i><i style="top:30%"></i><i style="top:40%"></i><i style="top:50%"></i><i style="top:60%"></i><i style="top:70%"></i><i style="top:80%"></i><i style="top:90%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:40%"></div><div class="capbar" style="bottom:calc(40% - 6px);"></div>
+            </div>
+        </div>
+        <div class="kcap" style="left:486px; top:224px; width:128px;"><b>Fader</b>black cap, white line; cream for the row you should find</div>
+
+        <!-- the switches, on the tan -->
+        <div class="ctlpanel" style="left:634px; top:44px; width:150px; height:170px;"><div class="ptitle">ASSIGN</div></div>
+        <div class="silk onsect" style="left:650px; top:64px; width:48px;">OFF</div>
+        <div class="silk onsect" style="left:710px; top:64px; width:48px;">ON</div>
+        <div class="ctl btn-ctl hue1" style="left:650px; top:76px; width:48px; height:38px;"><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:710px; top:76px; width:48px; height:38px;"><div class="pipe lit"></div></div>
+        <div class="silk onsect" style="left:650px; top:130px; width:48px;">OFF</div>
+        <div class="silk onsect" style="left:710px; top:130px; width:48px;">ON</div>
+        <div class="ctl btn-ctl hue4" style="left:650px; top:142px; width:48px; height:38px;"><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue4 on" style="left:710px; top:142px; width:48px; height:38px;"><div class="pipe lit"></div></div>
+        <div class="kcap" style="left:634px; top:224px; width:150px;"><b>Switch</b>black either way; only the lamp moves, in the slot's color</div>
+
+        <!-- one ink cannot do both -->
+        <div class="rowtag" style="left:806px; top:46px;">ONE INK</div>
+        <div class="ctlpanel" style="left:804px; top:58px; width:84px; height:62px;"></div>
+        <div class="ctlpanel inset" style="left:892px; top:58px; width:84px; height:62px;"></div>
+        <div class="silk" style="left:804px; top:78px; width:84px; font-size:10px;">CUTOFF</div>
+        <div class="silk onsect" style="left:892px; top:78px; width:84px; font-size:10px;">CUTOFF</div>
+        <div class="ratio ontan" style="left:804px; top:98px;">1.5 : 1 fails</div>
+        <div class="ratio ongreen" style="left:892px; top:98px;">3.0 : 1 fails</div>
+        <div class="rowtag" style="left:806px; top:130px;">INK BY SURFACE</div>
+        <div class="ctlpanel" style="left:804px; top:142px; width:84px; height:62px;"></div>
+        <div class="ctlpanel inset" style="left:892px; top:142px; width:84px; height:62px;"></div>
+        <div class="silk onsect" style="left:804px; top:162px; width:84px; font-size:10px;">CUTOFF</div>
+        <div class="silk" style="left:892px; top:162px; width:84px; font-size:10px;">CUTOFF</div>
+        <div class="ratio ontan" style="left:804px; top:182px;">9.7 : 1</div>
+        <div class="ratio ongreen" style="left:892px; top:182px;">4.9 : 1</div>
+        <div class="kcap" style="left:804px; top:224px; width:172px;"><b>Ink</b>neither one can do both surfaces</div>
+
+        <div class="measure" style="left:40px; top:270px; width:912px;">
+            <b>Why the second ink is not a detail.</b>
+            Every theme so far prints every name in one ink, picked against the plate. This panel prints on two surfaces a long way apart in value &mdash; the tan measures <span class="num">9.8 : 1</span> against the metal &mdash; so the print has to change with the surface under it. White on the tan is <span class="num">1.5 : 1</span> and black on the green is <span class="num">3.0 : 1</span>. The renderer already knows where every control sits to lay it out. Knowing what a label sits on as well is the same question, and so is drawing a green panel inside a tan one.
+        </div>
+    </div>
+</div>
+
+<div class="swatches">
+    <div style="background:#1C1C1B; color:#F2EFE3">#1C1C1B <span>Black metal</span></div>
+    <div style="background:#CAC5AC; color:#1D1D1A">#CAC5AC <span>Tan</span></div>
+    <div style="background:#566D55; color:#F2EFE3">#566D55 <span>Panel green</span></div>
+    <div style="background:#F2EFE3; color:#1D1D1A">#F2EFE3 <span>Print white</span></div>
+    <div style="background:#1D1D1A; color:#F2EFE3; box-shadow: inset 1px 0 0 rgba(255,255,255,.08)">#1D1D1A <span>Print black</span></div>
+    <div style="background:#D6D6D1; color:#1D1D1A">#D6D6D1 <span>Silver</span></div>
+    <div style="background:#E3DCC4; color:#1D1D1A">#E3DCC4 <span>Cream cap</span></div>
+    <div style="background:#FF4B36; color:#1A0703">#FF4B36 <span>Red</span></div>
+    <div style="background:#FFA43C; color:#1A0E03">#FFA43C <span>Amber</span></div>
+    <div style="background:#F5D94C; color:#1A1605">#F5D94C <span>Yellow</span></div>
+    <div style="background:#70DB6E; color:#06170A">#70DB6E <span>Lamp green</span></div>
+    <div style="background:#86C4FF; color:#06111D">#86C4FF <span>Blue</span></div>
+    <div style="background:#FFE2B0; color:#1A1405">#FFE2B0 <span>Clear</span></div>
+</div>
+
+<div class="costgrid">
+    <div class="cost">
+        <h4><span class="yes">Built</span> &mdash; what the engine already does for this panel</h4>
+        A knob is a <b>silver skirt with a black cap</b> (<span class="mono">KnobFaceColor</span>, <span class="mono">KnobCapColor</span>, <span class="mono">KnobCapSizePercent</span>) and a <b>printed scale</b> of eleven marks (<span class="mono">KnobTickCount</span>). Every value &mdash; arc, fill, puck, LFO wave &mdash; is the <b>print white</b> (<span class="mono">ValueColor</span>), and so is every pointer and cap line. A fader is a slot cut straight into the panel with a black cap standing off it (<span class="mono">FaderPlate</span> none, <span class="mono">ThumbShadowPercent</span>, <span class="mono">RecessShadePercent</span>). A switch <b>lights a lamp in its slot's color</b> and leaves the cap black (<span class="mono">FillWhenOnPercent</span> 0). A section is <b>tan</b> (<span class="mono">PanelFill</span> color), labels sit above, and the meter is green, yellow and red (<span class="mono">MeterSlots</span>).
+    </div>
+    <div class="cost">
+        <h4><span class="no">Needs</span> &mdash; the second layer and the second ink</h4>
+        <b>A panel inside a panel.</b> Tan and green are two colors and a theme has one panel color today, so every section comes out the same and there is nowhere for the controls to sit. <b>Ink by surface.</b> One ink cannot do both: the print white measures 1.5 : 1 on the tan and black 3.0 : 1 on the green. Both ask one question &mdash; <i>what is under this?</i> &mdash; and between them they are most of what makes this look like the instrument rather than like a dark theme with a beige box on it.
+    </div>
+    <div class="cost">
+        <h4>What it costs</h4>
+        <b>Color is a lamp.</b> Knobs and faders are all silver, black and white, so this theme <b>cannot group knobs by color</b>; a slot shows only when a switch lights or a meter moves. <b>Controls belong on the green.</b> A white value on the tan is 1.5 : 1 and the lamp red on the green is 1.7 : 1, so values stay on the green or the metal and lamps stay on their caps. The picker should say both. Every lamp clears 4.9 : 1 against its cap, and the closest two, amber and yellow, are delta E 33.5 apart.
+    </div>
+</div>
+
+<div class="asks">
+    <h4>Seven asks, smallest first. Each is independent, and the page above uses all seven.</h4>
+    <table>
+        <tr><th></th><th>Ask</th><th>Why Five-iSH needs it</th><th>Without it</th></tr>
+        <tr>
+            <td class="n">1</td>
+            <td class="ask"><b>Printed fader scales.</b> No new property: a theme that prints a scale round every knob prints a fader's marks the same way.</td>
+            <td>The instrument prints a scale beside every slider as boldly as round every knob. Today a fader's marks are the faint ones meant for inside a plate.</td>
+            <td class="without">Barely visible marks beside the sliders.</td>
+        </tr>
+        <tr>
+            <td class="n">2</td>
+            <td class="ask"><b>A round lamp.</b> <span class="mono">LampShape</span>: bar or dot.</td>
+            <td>A panel lamp of this era is a round lens. The bar is right for the JP-8000 and wrong here.</td>
+            <td class="without">A short bar across the top of the cap.</td>
+        </tr>
+        <tr>
+            <td class="n">3</td>
+            <td class="ask"><b>The pointer on the cap.</b> The line is drawn over the cap rather than under it, from the cap's edge to near its middle.</td>
+            <td>The white line is printed on the black cap, the part that turns. Today the cap covers the pointer's inner end, so here the line would be a short stub on the silver, white on silver.</td>
+            <td class="without">A knob that is hard to read at a glance.</td>
+        </tr>
+        <tr>
+            <td class="n">4</td>
+            <td class="ask"><b>A section name centered.</b> A fourth header style beside caption, filled bar and notched.</td>
+            <td>Each section's name is centered across the top of its tan block. Airy System, screen 22, asks for the same thing.</td>
+            <td class="without">The name at the top left.</td>
+        </tr>
+        <tr>
+            <td class="n">5</td>
+            <td class="ask"><b>Cream caps on the neutral slot.</b> A fader or a switch on the neutral slot wears the theme's neutral as its cap.</td>
+            <td>Black and cream are both the instrument's colors, and the one cream row is how it says "these five belong together". It is the neutral slot's job: the absence of a color, not a seventh one.</td>
+            <td class="without">Every cap black.</td>
+        </tr>
+        <tr>
+            <td class="n">6</td>
+            <td class="ask"><b>A panel inside a panel.</b> A second panel color and end color, for a panel that sits inside another one. Printed flat: no shadow.</td>
+            <td>The two layers are the theme.</td>
+            <td class="without">All tan or all green.</td>
+        </tr>
+        <tr>
+            <td class="n">7</td>
+            <td class="ask"><b>Ink by surface.</b> A section ink, for anything printed on a section rather than on an inset or the deck.</td>
+            <td>Neither ink can do both surfaces: 1.5 : 1 or 3.0 : 1.</td>
+            <td class="without">Every name on the tan set by hand in a literal color, which the next theme swap leaves behind.</td>
+        </tr>
+    </table>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>What I left out on purpose.</b> The printed numbers round every knob and beside every scale are on the big specimens only; on a real page they are text a customer can add, and at deck size they are noise. The arrows and waveform symbols that tie a switch to what it selects are documentation rather than controls. The instrument's lever switches have no equivalent in the app, so a two or three way switch is drawn as buttons with lamps, one lit. <b>Where I was honest rather than faithful:</b> the instrument has one lamp color, red, and a lamp or a meter is the only place a slot can show here, so slots two to six are the other colors a panel lamp came in &mdash; amber, yellow, green, blue and a warm clear. Colors are eyeballed from your photographs rather than sampled from anything of Roland's, and every one was then measured.
+</p>
+
+</div>
+</body>
+</html>

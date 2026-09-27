@@ -165,7 +165,7 @@ If it ever does need more, the right escape hatch is a **tiny expression grammar
 
 A theme is **six hue slots, a deck, and a handful of control defaults**. A control stores "slot 3", never `#FFC247`. Switch theme and every amber control becomes lime together, and the mute buttons still all match. A control can still override with a literal color when it has to, and the theme editor says how many controls are using each slot so a customer knows what a change will touch.
 
-- Shipped themes: **Studio Dark**, **Neon Booth**, **Daylight**, **Blueprint**, **High contrast**, and the nine worked out below — Pigment Light, Pigment Dark, Bigwig, Bone, Cathode, **Amber Console**, Terminal Green, Jove and Supersaw. Amber Console was a swatch in this picker from the start; screen 17 is that swatch finally built, which is why it keeps the name rather than getting a new one.
+- Shipped themes: **Studio Dark**, **Neon Booth**, **Daylight**, **Blueprint**, **High contrast**, and the nine worked out below — Pigment Light, Pigment Dark, Bigwig, Bone, Cathode, **Amber Console**, Terminal Green, Jove and Supersaw. Amber Console was a swatch in this picker from the start; screen 17 is that swatch finally built, which is why it keeps the name rather than getting a new one. Two more, **Five-iSH** and **Airy System**, are designed on screens 21 and 22 and not built yet.
 - Deck: one color, a two-stop gradient, or an image.
 - Control defaults in the theme: corner rounding, glass tint percentage, glow strength, label placement. This is how a customer makes their whole surface squarer or flatter in one move.
 - **Contrast is measured, not guessed.** Each slot is checked against the deck and flagged before it ships to a stage. In the mockup, slot 5 at 4.1 : 1 is called out with what to do about it.
@@ -256,9 +256,27 @@ That second one mattered beyond this theme. It became **fill when on**, and at z
 
 **Still different from the screens, on purpose or for now.** Both decks are flat rather than the screens' soft gradients, which the panel themes' tests hold them to. Silkscreen type is whatever font a control's label is set in, so Jove's bold letter-spaced names need setting per control. Jove's banner has no bracket line under it, and its pointer is drawn 2 px wide rather than 3.
 
+### Two more Roland panels — Five-iSH and Airy System
+
+**Screens 21 and 22** (`21-five-ish.html`, `22-airy-system.html`). Designed, not built. Each one breaks a different thing the engine still assumes.
+
+**Five-iSH** is after the Roland SH-7, and the look it shares with the SH-5 and the modular systems of the same years. Black metal, and a panel **printed in two layers**: each section is a tan block with its name in black across the top, and the controls sit on a green block printed inside it, with their names and scales in white. A knob is a silver skirt with a black cap, and the white line is on the cap. Sliders are black, with one row in cream. Nothing on the instrument is colored, so every value is drawn in the print white, and the six slots are the six colors a panel lamp came in. They light a lamp or a meter and nothing else.
+
+**What it breaks: one panel color and one ink.** The tan and the green are far apart in value, so the print has to change with the surface under it. White on the tan measures 1.5 : 1 and black on the green 3.0 : 1, so neither ink can do both. That gives the two main asks: **a panel inside a panel** draws in a second panel color, and **ink by surface** gives anything printed on a section the section's own ink. Both come down to one question, what is under this control, and the renderer already knows the answer when it lays the page out. The smaller asks are the pointer drawn on the cap, cream caps for the neutral slot, a round lamp, and fader scales printed as boldly as the scale round a knob, which needs no new property at all.
+
+**What it costs.** Color is a lamp: knobs and faders are silver, black and white, so this theme cannot group knobs by color. And controls belong on the green. A white value on the tan is 1.5 : 1, and the lamp red on the green is 1.7 : 1.
+
+**Airy System** is after Roland's AIRA family: the synthesizers, the drum machine and the mixer. Black brushed metal and green light, and it is meant to be loud. A knob sits in a ring of its own light and a fader in a lit frame, all the time. A button is black until it is on, and then its edge glows in its own color: green on the synthesizers, and on the mixer whatever that channel's job is. A drum pad is colored plastic, dim until it plays, in red, orange, yellow and white fours.
+
+**What it breaks: one rest state for the whole page.** Every theme so far says once what a control looks like when nothing is happening to it. This one needs three: lit for what turns or slides, dark for a button, and dim colored plastic for a pad. So the asks are **a switch rests dark**, with its own resting rim and resting glow, and **a pad is its own family**, with its own fill at rest and fill when on. Both follow the pattern Jove started with fill at rest by kind. It also asks for a **brushed grain**, streaks rather than Supersaw's specks, a **knob ring in the control's own color**, and **a halo on the arc**, which screen 9 has drawn since the first comp and the app never has.
+
+**What it costs.** It is a light show on purpose, so on a dense page a touch has less to stand out against than it does on Studio Dark. It is for a dark room, and the picker should say so. A glow never carries a state alone: a lit button's edge goes from nothing to its full color, 5.6 : 1 or better against the deck on every slot.
+
+**Both** center a section's name across its top, which is a fourth section header style.
+
 ### The theme model, consolidated
 
-Nine themes past the original six have each asked for one small thing, and together they settle what a theme actually is. This is the list to build against.
+Eleven themes past the original six have each asked for something small, and together they settle what a theme actually is. This is the list to build against.
 
 | Property | Values | Added for |
 | --- | --- | --- |
@@ -309,6 +327,17 @@ Nine themes past the original six have each asked for one small thing, and toget
 | **Value color** | every value in one color, or each control's own hue | Jove |
 | **Cap shadow and wide cap line** | a shadow under a fader cap; a line nearly the cap's width | Jove, Supersaw, Bone |
 | **Keyboard keys** | the naturals and the sharps in the theme's own light and dark | the tubes, Bone, Bigwig, Jove, Supersaw |
+| **Inset panel** *(asked)* | a second panel color, for a panel that sits inside another one. Printed flat, no shadow | Five-iSH |
+| **Ink by surface** *(asked)* | a section ink, for anything printed on a section rather than on an inset or the deck | Five-iSH |
+| **Pointer on the cap** *(asked)* | the knob's line drawn over its cap rather than under it | Five-iSH |
+| **Neutral caps** *(asked)* | a fader or a switch on the neutral slot wears the neutral as its cap | Five-iSH |
+| **Lamp shape** *(asked)* | a bar or a round lens | Five-iSH |
+| **Centered section name** *(asked)* | a fourth section header style | Five-iSH, Airy System |
+| **Brushed grain** *(asked)* | how long a grain speck is along the page: one is a speck, forty or more a streak | Airy System |
+| **Arc halo** *(asked)* | the knob's arc glows the way a fader's fill does, on a theme that asks for it | Airy System |
+| **Ring in the control's color** *(asked)* | the unlit part of the arc in the control's own hue at a strength | Airy System |
+| **Switch rest** *(asked)* | a resting rim and a resting glow for switches, apart from knobs and faders | Airy System |
+| **Pad family** *(asked)* | fill at rest and fill when on for pads, apart from buttons and toggles | Airy System |
 
 The track color is worth calling out separately: it is not a cost of any of these themes, it is a gap in the original model. The dark themes get away with hardcoding it as black, and the first customer who built a light theme of their own would have hit it.
 
@@ -531,9 +560,11 @@ Everything that was an open question is now answered. Recorded here so the reaso
 | `18-green.html` | Terminal Green — the green screen, on glass that is not green |
 | `19-jove.html` | Jove — matte black steel, one orange, and tabs that are their own color |
 | `20-supersaw.html` | Supersaw — a grained blue panel, and a switch that says "on" with one lamp |
-| `mock.css` | Shared styles for all twenty |
+| `21-five-ish.html` | Five-iSH — a panel printed in two layers, tan and green, and so two inks on one page |
+| `22-airy-system.html` | Airy System — brushed black and green light, and three rest states on one panel |
+| `mock.css` | Shared styles for all twenty-two |
 | `serve.ps1` | Local static server on port 8742 |
-| `shots\` | PNG captures of all twenty screens |
+| `shots\` | PNG captures of all twenty-two screens |
 | `MIDI-Glass-implementation-plan.md` | Remaining design gaps, the engine layering, the API work, and the phases |
 
 These live in `src/prototypes/midi-glass/design/` so the design record is versioned. Nothing in this folder ships; when the app is real it goes to `src/in-box/user-tools/midi-glass/` like every other tool.

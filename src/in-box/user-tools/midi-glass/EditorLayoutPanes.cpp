@@ -675,7 +675,8 @@ namespace winrt::midiglass::implementation
                         if (control.Label.empty() &&
                             control.Kind != glass::ControlKind::Panel &&
                             control.Kind != glass::ControlKind::Image &&
-                            control.Kind != glass::ControlKind::Label)
+                            control.Kind != glass::ControlKind::Label &&
+                            control.Kind != glass::ControlKind::Line)
                         {
                             unnamed++;
                         }

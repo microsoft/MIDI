@@ -49,6 +49,14 @@ namespace glass
 
         comp::ShapeVisual Shape{ nullptr };
 
+        // Light that has to reach past the control's own edges: a knob's glowing arc, the line
+        // of light round an outlined section, a lit lamp. Larger than the control and offset so
+        // nothing is cut at its bounding box. Null on every control that has none.
+        comp::ShapeVisual Halo{ nullptr };
+
+        // The halo is a lamp's, so it is only shown while the switch is on.
+        bool HaloFollowsLamp{ false };
+
         // Struck through when the device this control sends to is not here. Built once and
         // hidden, because a device coming and going must not rebuild a page.
         comp::ShapeVisual Unavailable{ nullptr };
@@ -347,7 +355,33 @@ namespace glass
             _In_ comp::Compositor const& compositor,
             _Inout_ SurfaceVisual& visual,
             _In_ Control const& control,
-            _In_ Theme const& theme);
+            _In_ Theme const& theme,
+            _In_ PrintSurface surface);
+
+        // What is printed under the middle of this item: the deck, a section or an inset.
+        PrintSurface SurfaceFor(_In_ size_t itemIndex, _In_ Control const& control) const noexcept;
+
+        // Concentric strokes of a shape's own geometry, widest and faintest first, into the
+        // item's halo visual. `baseThickness` is the stroke the shape itself is drawn with.
+        void AppendHalo(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ comp::CompositionGeometry const& geometry,
+            _In_ ThemeColor const& color,
+            _In_ float baseThickness,
+            _In_ float reach,
+            _In_ double peak,
+            _In_ bool roundCaps);
+
+        // A printed rule, across or down.
+        void LayoutLine(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ThemeColor const& ruleColor,
+            _In_ bool fades,
+            _In_ float width,
+            _In_ float height);
 
         void LayoutLabel(
             _In_ size_t itemIndex,
@@ -515,6 +549,12 @@ namespace glass
             _In_ comp::Compositor const& compositor,
             _In_ ThemeColor const& color);
 
+        // Clear at both ends and the color in the middle, along a line.
+        comp::CompositionLinearGradientBrush FadedLineBrush(
+            _In_ comp::Compositor const& compositor,
+            _In_ ThemeColor const& color,
+            _In_ bool across);
+
         // The shadow inside something cut into the surface: strongest at its top edge and gone a
         // few pixels down. The fade is a fraction of the recess's own height.
         comp::CompositionLinearGradientBrush RecessBrush(
@@ -647,6 +687,10 @@ namespace glass
         std::vector<comp::Visual> m_maskSources{};
 
         ThemeColor m_deck{};
+
+        // Every filled grouping panel on the page, so a control or a label can be inked for the
+        // surface it is printed on.
+        std::vector<PanelFootprint> m_panels{};
 
         // How tall the page is, so a notch in a panel's frame can be filled with the deck color
         // at that height rather than the color at the top of the page.

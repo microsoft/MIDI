@@ -10,6 +10,7 @@
 #include "SurfaceColors.h"
 
 #include <algorithm>
+#include <vector>
 
 using namespace winrt::Windows::Foundation::Numerics;
 using namespace winrt::Microsoft::UI::Composition;
@@ -59,6 +60,12 @@ namespace glass
         // grain and starts being a second color.
         constexpr uint32_t GrainDensityOfTen = 3;
 
+        // Brushed metal is every row lit a little differently, in a handful of shades either
+        // side of the average. The step is measured off the Airy System comp, where one row
+        // differs from the next by about two and a half levels on a deck near thirty.
+        constexpr int32_t BrushedShadeCount = 7;
+        constexpr double BrushedShadeStep = 0.09;
+
         // Deterministic, so a re-render is the same grain rather than a shimmer. A real random
         // source here would make every resize look like the panel was re-manufactured.
         uint32_t NextGrainNoise(_Inout_ uint32_t& state) noexcept
@@ -103,25 +110,91 @@ namespace glass
 
             uint32_t state = 0x9E3779B9u;
 
-            for (int32_t row = 0; row < cells; ++row)
+            if (theme.Overlay.GrainStreak > 1)
             {
-                for (int32_t column = 0; column < cells; ++column)
+                // Brushed rather than sanded: one pixel rows, each a shade of the grain color,
+                // in runs about as long as the theme asks. Always lighter, never darker, the way
+                // light catches the ridges of a brushed panel.
+                auto const averageAlpha = 255.0 * strength * 0.16;
+
+                std::vector<CompositionColorBrush> shades{};
+                shades.reserve(BrushedShadeCount);
+
+                for (int32_t level = 0; level < BrushedShadeCount; ++level)
                 {
-                    auto const roll = NextGrainNoise(state);
+                    auto streak = speckle;
+                    streak.A = static_cast<uint8_t>(std::clamp(
+                        std::lround(averageAlpha * (1.0 + BrushedShadeStep * (level - BrushedShadeCount / 2))),
+                        0L,
+                        255L));
 
-                    if (roll % 10u >= GrainDensityOfTen)
+                    shades.push_back(compositor.CreateColorBrush(ToColor(streak)));
+                }
+
+                auto const typicalRun = static_cast<float>(theme.Overlay.GrainStreak) * GrainCellSize;
+                auto const rows = static_cast<int32_t>(GrainTileSize);
+
+                for (int32_t row = 0; row < rows; ++row)
+                {
+                    auto const first = static_cast<int32_t>(NextGrainNoise(state) % BrushedShadeCount);
+
+                    auto level = first;
+                    auto x = 0.0f;
+
+                    while (x < GrainTileSize)
                     {
-                        continue;
+                        auto const roll = NextGrainNoise(state);
+
+                        // Half to one and a half times the typical run.
+                        auto run = typicalRun * (0.5f + static_cast<float>(roll % 1000u) / 1000.0f);
+
+                        // A row ends on the shade it started with, so the tile repeats across the
+                        // page without a seam every tile's width.
+                        if (x + run >= GrainTileSize)
+                        {
+                            run = GrainTileSize - x;
+                            level = first;
+                        }
+
+                        auto geometry = compositor.CreateRectangleGeometry();
+                        geometry.Size(float2{ run, 1.0f });
+                        geometry.Offset(float2{ x, static_cast<float>(row) });
+
+                        auto shape = compositor.CreateSpriteShape(geometry);
+                        shape.FillBrush(shades[static_cast<size_t>(level)]);
+
+                        tile.Shapes().Append(shape);
+
+                        x += run;
+
+                        // The next run along is a shade either side of this one at most, which is
+                        // what keeps a row reading as one streak rather than as dashes.
+                        level = std::clamp(level + static_cast<int32_t>((roll >> 16) % 3u) - 1, 0, BrushedShadeCount - 1);
                     }
+                }
+            }
+            else
+            {
+                for (int32_t row = 0; row < cells; ++row)
+                {
+                    for (int32_t column = 0; column < cells; ++column)
+                    {
+                        auto const roll = NextGrainNoise(state);
 
-                    auto geometry = compositor.CreateRectangleGeometry();
-                    geometry.Size(float2{ GrainCellSize, GrainCellSize });
-                    geometry.Offset(float2{ column * GrainCellSize, row * GrainCellSize });
+                        if (roll % 10u >= GrainDensityOfTen)
+                        {
+                            continue;
+                        }
 
-                    auto shape = compositor.CreateSpriteShape(geometry);
-                    shape.FillBrush((roll >> 8) % 2u == 0u ? lightBrush : darkBrush);
+                        auto geometry = compositor.CreateRectangleGeometry();
+                        geometry.Size(float2{ GrainCellSize, GrainCellSize });
+                        geometry.Offset(float2{ column * GrainCellSize, row * GrainCellSize });
 
-                    tile.Shapes().Append(shape);
+                        auto shape = compositor.CreateSpriteShape(geometry);
+                        shape.FillBrush((roll >> 8) % 2u == 0u ? lightBrush : darkBrush);
+
+                        tile.Shapes().Append(shape);
+                    }
                 }
             }
 

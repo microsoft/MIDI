@@ -123,6 +123,19 @@ namespace glass
         // The printed ring of marks around a knob, where the theme draws one.
         ThemeColor KnobTick{ 0, 0, 0, 0 };
 
+        // The marks beside a fader's slot: the faint ones inside a plate, or a printed scale.
+        ThemeColor FaderTick{};
+
+        // Everything printed on a section rather than on an inset or on the deck. The same as
+        // the ones above on every theme that does not name a section ink.
+        ThemeColor SectionLabel{};
+        ThemeColor SectionKnobTick{ 0, 0, 0, 0 };
+        ThemeColor SectionFaderTick{};
+
+        // A line control, on the deck or an inset, and on a section.
+        ThemeColor Rule{};
+        ThemeColor SectionRule{};
+
         // A fader's fill, already at the theme's own strength. The same as the pipe on every
         // theme that fills a fader outright.
         ThemeColor Fill{};
@@ -158,6 +171,15 @@ namespace glass
     // says apart from an LFO: its plate is where the wave is drawn, and a wave the same color as
     // the plate under it cannot be seen at all.
     bool FillsLikeASwitch(_In_ ControlKind kind) noexcept;
+
+    // Something a hand turns or slides, as against something it presses or something that only
+    // shows a value. A theme can light the first kind at rest and leave the second dark.
+    bool IsTurnedOrSlid(_In_ ControlKind kind) noexcept;
+
+    // How much of its own hue a control carries at rest, and while it is on. A pad can be its
+    // own family, apart from the buttons beside it.
+    double FillAtRestForKind(_In_ Theme const& theme, _In_ ControlKind kind) noexcept;
+    int32_t FillWhenOnFor(_In_ Theme const& theme, _In_ ControlKind kind) noexcept;
 
     // The theme's own ink where it is readable on this background, and a measured one where it
     // is not. Type needs 4.5 : 1, and a named ink is a preference rather than a promise.

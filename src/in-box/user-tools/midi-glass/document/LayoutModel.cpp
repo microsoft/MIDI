@@ -729,4 +729,77 @@ namespace glass
 
         return masks;
     }
+
+    _Use_decl_annotations_
+    bool PanelIsFilled(Control const& panel, Theme const& theme) noexcept
+    {
+        switch (panel.Style)
+        {
+        case ControlStyleOverride::Outline:
+        case ControlStyleOverride::Bare:
+            return false;
+
+        case ControlStyleOverride::Solid:
+            return true;
+
+        default:
+            return theme.PanelFill != PanelFillStyle::None;
+        }
+    }
+
+    _Use_decl_annotations_
+    std::vector<PanelFootprint> PanelFootprints(Page const& page, Theme const& theme) noexcept
+    {
+        std::vector<PanelFootprint> panels{};
+
+        try
+        {
+            for (size_t order = 0; order < page.Controls.size(); ++order)
+            {
+                auto const& control = page.Controls[order];
+
+                if (control.Kind != ControlKind::Panel || !PanelIsFilled(control, theme))
+                {
+                    continue;
+                }
+
+                PanelFootprint footprint{ control.X, control.Y, control.Width, control.Height, order, false };
+
+                // Its middle rather than its whole rectangle, so an inset drawn a pixel over the
+                // edge of the section it belongs to is still that section's inset.
+                footprint.IsInset = SurfaceAt(
+                    panels,
+                    control.X + control.Width * 0.5,
+                    control.Y + control.Height * 0.5,
+                    order) != PrintSurface::Deck;
+
+                panels.push_back(footprint);
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return panels;
+    }
+
+    _Use_decl_annotations_
+    PrintSurface SurfaceAt(std::vector<PanelFootprint> const& panels, double x, double y, size_t order) noexcept
+    {
+        for (auto walk = panels.rbegin(); walk != panels.rend(); ++walk)
+        {
+            if (walk->Order >= order)
+            {
+                continue;
+            }
+
+            if (x >= walk->X && x < walk->X + walk->Width &&
+                y >= walk->Y && y < walk->Y + walk->Height)
+            {
+                return walk->IsInset ? PrintSurface::Inset : PrintSurface::Section;
+            }
+        }
+
+        return PrintSurface::Deck;
+    }
 }

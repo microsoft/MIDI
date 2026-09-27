@@ -62,6 +62,19 @@ namespace glass
         // The name sits in a gap cut into the top of the frame, the way a group box is printed
         // on a hardware panel. It reads right on a panel drawn as an outline.
         Notched = 2,
+
+        // The name centered across the top of the section, inside it.
+        Centered = 3,
+    };
+
+    // The lamp a switch lights when the theme says "on" with a lamp rather than a fill.
+    enum class LampStyle
+    {
+        // A short bar across the top of the cap.
+        Bar = 0,
+
+        // A round lens, which is what a panel lamp of the seventies and eighties is.
+        Dot = 1,
     };
 
     // What fills a grouping panel.
@@ -88,6 +101,10 @@ namespace glass
 
         // No plate: the slot is cut straight into the panel.
         None = 2,
+
+        // The strip's shape, but cut into the panel rather than standing on it: the rim and the
+        // resting glow go around the slot and the marks are printed outside them.
+        Frame = 3,
     };
 
     // Where the rim color comes from. Bigwig needs a neutral edge so that orange only ever means
@@ -188,6 +205,10 @@ namespace glass
 
         // Alpha 0 means light and dark speckle worked out from the deck itself.
         ThemeColor GrainColor{ 0, 0, 0, 0 };
+
+        // How long one speck is along the page, in grain cells. One is a speck, which is
+        // sandpaper; forty or more is a streak, which is brushed metal.
+        int32_t GrainStreak{ 1 };
 
         bool IsEmpty() const noexcept
         {
@@ -375,6 +396,23 @@ namespace glass
         // before this. A panel drawn as an outline wants a faint light line rather than a hue.
         ThemeColor PanelOutlineColor{ 0, 0, 0, 0 };
 
+        // A panel that sits inside another panel. Alpha 0 means it is drawn like any other panel.
+        // Named, it is printed flat: a second layer of ink on the first, so it casts no shadow.
+        ThemeColor InsetPanelColor{ 0, 0, 0, 0 };
+        ThemeColor InsetPanelEndColor{ 0, 0, 0, 0 };
+
+        // How hard a section sits above the deck, 0 to 100. Below zero means the plate's own
+        // elevation, which is what every theme did before this. A printed section has none.
+        int32_t PanelElevation{ -1 };
+
+        // The ink for anything printed on a section, rather than on an inset or on the deck.
+        // Alpha 0 means the theme's ink wherever it is printed.
+        //
+        // Earned by a panel printed on two surfaces a long way apart in value: white print
+        // measures 1.5 : 1 on its tan sections and black print 3.0 : 1 on its green insets, so
+        // neither ink can do both.
+        ThemeColor SectionInkColor{ 0, 0, 0, 0 };
+
         // ---- knobs ----
 
         // The top face of a knob, lit from above and falling off to its edge. Alpha 0 means the
@@ -393,6 +431,18 @@ namespace glass
         // that asks for its own marks still gets those instead.
         int32_t KnobTickCount{ 0 };
 
+        // The pointer is printed on the cap, the part that turns, from the cap's edge to near its
+        // middle. Off, the cap covers the pointer's inner end, which is what every theme did.
+        bool PointerOnCap{ false };
+
+        // A knob's arc carries the same halo a fader's fill does. Off on every theme drawn before
+        // this, so nothing shipped moves.
+        bool ArcGlow{ false };
+
+        // The unlit part of a knob's arc in the control's own hue at this strength, 0 to 100,
+        // rather than one track color for every knob. Zero means the arc track color.
+        int32_t ArcTrackHuePercent{ 0 };
+
         // ---- switches ----
 
         // A switch shows its name in the middle of itself, whatever the theme does with every
@@ -408,6 +458,28 @@ namespace glass
         // The lamp a switch lights when the theme says "on" with a lamp rather than a fill.
         // Alpha 0 means the control's own hue.
         ThemeColor LampColor{ 0, 0, 0, 0 };
+
+        LampStyle LampShape{ LampStyle::Bar };
+
+        // The rim and the resting glow of anything that is pressed or read rather than turned or
+        // slid, 0 to 100. Below zero means the same as every other control, which is what every
+        // theme did before this.
+        //
+        // Earned by a panel whose knobs and faders are lit all the time while its buttons are
+        // black until they are on. One number for the whole theme gives either every button a
+        // glow at rest, so turning one on is a smaller change than it should be, or no fader a
+        // lit frame at all.
+        int32_t SwitchRimStrengthPercent{ -1 };
+        int32_t SwitchRestingGlowPercent{ -1 };
+
+        // A pad is its own family: colored plastic with a lamp behind it, on the same page as
+        // black buttons. Below zero means the same as every other switch.
+        double PadFillAtRest{ -1.0 };
+        int32_t PadFillWhenOnPercent{ -1 };
+
+        // A fader or a switch on the neutral slot wears the neutral as its cap, the way one row
+        // of cream caps on a panel of black ones says "these belong together".
+        bool NeutralCaps{ false };
 
         // ---- plates ----
 
@@ -448,6 +520,20 @@ namespace glass
         // The line across a fader cap runs nearly its full width and three pixels thick, the way
         // a hardware panel paints it, rather than a hairline.
         bool CapLineWide{ false };
+
+        // How strongly a fader's scale is printed beside its slot, 0 to 100, in the ink. Zero is
+        // the faint marks inside a plate that every theme drew before this. A printed scale
+        // reaches the control's edges, the way it does beside a slider on a hardware panel.
+        int32_t FaderScalePercent{ 0 };
+
+        // ---- lines ----
+
+        // A line control, and the rules a hardware panel prints between groups of sections.
+        // Alpha 0 means the ink at a sixth of its strength.
+        ThemeColor RuleColor{ 0, 0, 0, 0 };
+
+        // The line fades out at both ends rather than stopping square.
+        bool RuleFades{ true };
 
         // ---- the piano keyboard ----
 
@@ -574,6 +660,9 @@ namespace glass
 
     // Whether this theme has one.
     bool HasNeutralColor(_In_ Theme const& theme) noexcept;
+
+    // How hard a section sits above the deck, once "the same as the plate" is worked out.
+    int32_t EffectivePanelElevation(_In_ Theme const& theme) noexcept;
 
     // Whether this theme lights up in a color of its own rather than in each control's hue.
     bool HasNamedBloomColor(_In_ Theme const& theme) noexcept;

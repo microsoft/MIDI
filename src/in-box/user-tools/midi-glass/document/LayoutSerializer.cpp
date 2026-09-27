@@ -116,6 +116,9 @@ namespace glass
         constexpr wchar_t KeyTurntable[] = L"turntable";
         constexpr wchar_t KeyDegreesForFullRange[] = L"degreesForFullRange";
         constexpr wchar_t KeyShowsGrip[] = L"showsGrip";
+        constexpr wchar_t KeyLine[] = L"line";
+        constexpr wchar_t KeyThickness[] = L"thickness";
+        constexpr wchar_t KeyEnds[] = L"ends";
         constexpr wchar_t KeyTempoControl[] = L"tempoControl";
         constexpr wchar_t KeyLowestBeatsPerMinute[] = L"lowestBeatsPerMinute";
         constexpr wchar_t KeyHighestBeatsPerMinute[] = L"highestBeatsPerMinute";
@@ -200,6 +203,14 @@ namespace glass
             { ControlKind::TimeDisplay, L"timeDisplay" },
             { ControlKind::Lfo, L"lfo" },
             { ControlKind::Turntable, L"turntable" },
+            { ControlKind::Line, L"line" },
+        };
+
+        constexpr EnumName<LineEnds> LineEndsNames[]
+        {
+            { LineEnds::UseTheme, L"useTheme" },
+            { LineEnds::Square, L"square" },
+            { LineEnds::Faded, L"faded" },
         };
 
         constexpr EnumName<LfoWave> LfoWaveNames[]
@@ -951,6 +962,27 @@ namespace glass
             return turntable;
         }
 
+        LineSpec ReadLine(_In_ mjson::JsonObject const& object) noexcept
+        {
+            LineSpec line{};
+
+            auto const nested = ReadObject(object, KeyLine);
+
+            if (nested == nullptr)
+            {
+                return line;
+            }
+
+            line.Thickness = std::clamp(
+                ReadNumber(nested, KeyThickness, 1.0), MinimumLineThickness, MaximumLineThickness);
+            line.Color = ReadString(nested, KeyColor);
+            line.Ends = ValueOf(LineEndsNames, ReadString(nested, KeyEnds), LineEnds::UseTheme);
+
+            line.Unknown = CaptureUnknown(nested, { KeyThickness, KeyColor, KeyEnds });
+
+            return line;
+        }
+
         Control ReadControl(_In_ mjson::JsonObject const& object) noexcept
         {            Control control{};
 
@@ -1009,6 +1041,7 @@ namespace glass
             control.Clock = ReadClock(object);
             control.Lfo = ReadLfo(object);
             control.Turntable = ReadTurntable(object);
+            control.Line = ReadLine(object);
             control.DefaultValue = std::clamp(ReadNumber(object, KeyDefaultValue, 0.0), 0.0, 1.0);
             control.DefaultValueY = std::clamp(ReadNumber(object, KeyDefaultValueY, 0.0), 0.0, 1.0);
             control.ReturnsToDefault = ReadBool(object, KeyReturnsToDefault, false);
@@ -1037,7 +1070,7 @@ namespace glass
                 { KeyId, KeyKind, KeyLabel, KeyX, KeyY, KeyWidth, KeyHeight, KeyHueSlot,
                   KeyLiteralColor, KeyAspectLocked, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
                   KeyReturnsToDefault, KeyDrag, KeyTicks, KeyShowDetentValues, KeyPicture,
-                  KeyKeyboard, KeyClock, KeyLfo, KeyTurntable, KeyDefaultValueY, KeyVelocityFromTouch,
+                  KeyKeyboard, KeyClock, KeyLfo, KeyTurntable, KeyLine, KeyDefaultValueY, KeyVelocityFromTouch,
                   KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback,
                   KeyStyle, KeyLabelPlaced, KeyLabelStyle, KeyShowValue });
 
@@ -1558,6 +1591,16 @@ namespace glass
                 writer.Write(KeyDegreesForFullRange, control.Turntable.DegreesForFullRange);
                 writer.Write(KeyShowsGrip, control.Turntable.ShowsGrip);
                 WriteUnknown(writer, control.Turntable.Unknown);
+                writer.EndObject();
+            }
+
+            if (control.Kind == ControlKind::Line || control.Line.Unknown != nullptr)
+            {
+                writer.BeginObject(KeyLine);
+                writer.Write(KeyThickness, control.Line.Thickness);
+                writer.Write(KeyColor, control.Line.Color);
+                writer.Write(KeyEnds, NameOf(LineEndsNames, control.Line.Ends));
+                WriteUnknown(writer, control.Line.Unknown);
                 writer.EndObject();
             }
 

@@ -138,6 +138,7 @@ namespace glass
         case ControlKind::Label:
         case ControlKind::Image:
         case ControlKind::Panel:
+        case ControlKind::Line:
             return false;
 
         default:

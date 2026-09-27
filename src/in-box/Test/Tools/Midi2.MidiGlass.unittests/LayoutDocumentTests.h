@@ -37,6 +37,12 @@ public:
     TEST_METHOD(ACustomPlacementWithNoBoxFallsBackToTheTheme);
     TEST_METHOD(ALabelBoxFromAFileIsBounded);
 
+    // ---- lines, and what a control is printed on ----
+
+    TEST_METHOD(ALineSurvivesARoundTrip);
+    TEST_METHOD(ALineFromAFileIsBounded);
+    TEST_METHOD(ASectionKnowsWhatIsPrintedOnIt);
+
     // ---- the forward rule ----
     TEST_METHOD(KeepsFieldsFromANewerVersion);
     TEST_METHOD(SaysWhenAFileIsFromANewerVersion);

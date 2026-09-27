@@ -115,6 +115,23 @@ namespace glass
         constexpr wchar_t KeyCapLineWide[] = L"capLineWide";
         constexpr wchar_t KeyKeyWhite[] = L"keyWhiteColor";
         constexpr wchar_t KeyKeyBlack[] = L"keyBlackColor";
+        constexpr wchar_t KeyInsetPanelColor[] = L"insetPanelColor";
+        constexpr wchar_t KeyInsetPanelEnd[] = L"insetPanelEndColor";
+        constexpr wchar_t KeyPanelElevation[] = L"panelElevation";
+        constexpr wchar_t KeySectionInk[] = L"sectionInkColor";
+        constexpr wchar_t KeyGrainStreak[] = L"grainStreak";
+        constexpr wchar_t KeyPointerOnCap[] = L"pointerOnCap";
+        constexpr wchar_t KeyArcGlow[] = L"arcGlow";
+        constexpr wchar_t KeyArcTrackHue[] = L"arcTrackHuePercent";
+        constexpr wchar_t KeyLampShape[] = L"lampShape";
+        constexpr wchar_t KeySwitchRim[] = L"switchRimStrengthPercent";
+        constexpr wchar_t KeySwitchRestingGlow[] = L"switchRestingGlowPercent";
+        constexpr wchar_t KeyPadFillAtRest[] = L"padFillAtRest";
+        constexpr wchar_t KeyPadFillWhenOn[] = L"padFillWhenOnPercent";
+        constexpr wchar_t KeyNeutralCaps[] = L"neutralCaps";
+        constexpr wchar_t KeyFaderScale[] = L"faderScalePercent";
+        constexpr wchar_t KeyRuleColor[] = L"ruleColor";
+        constexpr wchar_t KeyRuleFades[] = L"ruleFades";
 
         template <typename TEnum>
         struct EnumName
@@ -143,6 +160,13 @@ namespace glass
             { SectionHeaderStyle::Caption, L"caption" },
             { SectionHeaderStyle::FilledBar, L"filledBar" },
             { SectionHeaderStyle::Notched, L"notched" },
+            { SectionHeaderStyle::Centered, L"centered" },
+        };
+
+        constexpr EnumName<LampStyle> LampStyleNames[]
+        {
+            { LampStyle::Bar, L"bar" },
+            { LampStyle::Dot, L"dot" },
         };
 
         constexpr EnumName<PanelFillStyle> PanelFillNames[]
@@ -157,6 +181,7 @@ namespace glass
             { FaderPlateStyle::Full, L"full" },
             { FaderPlateStyle::Strip, L"strip" },
             { FaderPlateStyle::None, L"none" },
+            { FaderPlateStyle::Frame, L"frame" },
         };
 
         constexpr EnumName<RimSource> RimNames[]
@@ -600,6 +625,31 @@ namespace glass
             theme.KeyWhiteColor = ReadColor(root, KeyKeyWhite, base.KeyWhiteColor);
             theme.KeyBlackColor = ReadColor(root, KeyKeyBlack, base.KeyBlackColor);
 
+            // What the two printed panels asked for. Below zero means "follow" on every one that
+            // takes a number, so the bound starts there.
+            theme.InsetPanelColor = ReadColor(root, KeyInsetPanelColor, base.InsetPanelColor);
+            theme.InsetPanelEndColor = ReadColor(root, KeyInsetPanelEnd, base.InsetPanelEndColor);
+            theme.PanelElevation = static_cast<int32_t>(
+                ReadNumber(root, KeyPanelElevation, base.PanelElevation, -1, 100));
+            theme.SectionInkColor = ReadColor(root, KeySectionInk, base.SectionInkColor);
+            theme.PointerOnCap = ReadBoolean(root, KeyPointerOnCap, base.PointerOnCap);
+            theme.ArcGlow = ReadBoolean(root, KeyArcGlow, base.ArcGlow);
+            theme.ArcTrackHuePercent = static_cast<int32_t>(
+                ReadNumber(root, KeyArcTrackHue, base.ArcTrackHuePercent, 0, 100));
+            theme.LampShape = ValueOf(LampStyleNames, ReadString(root, KeyLampShape), base.LampShape);
+            theme.SwitchRimStrengthPercent = static_cast<int32_t>(
+                ReadNumber(root, KeySwitchRim, base.SwitchRimStrengthPercent, -1, 100));
+            theme.SwitchRestingGlowPercent = static_cast<int32_t>(
+                ReadNumber(root, KeySwitchRestingGlow, base.SwitchRestingGlowPercent, -1, 100));
+            theme.PadFillAtRest = ReadNumber(root, KeyPadFillAtRest, base.PadFillAtRest, -1.0, 1.0);
+            theme.PadFillWhenOnPercent = static_cast<int32_t>(
+                ReadNumber(root, KeyPadFillWhenOn, base.PadFillWhenOnPercent, -1, 100));
+            theme.NeutralCaps = ReadBoolean(root, KeyNeutralCaps, base.NeutralCaps);
+            theme.FaderScalePercent = static_cast<int32_t>(
+                ReadNumber(root, KeyFaderScale, base.FaderScalePercent, 0, 100));
+            theme.RuleColor = ReadColor(root, KeyRuleColor, base.RuleColor);
+            theme.RuleFades = ReadBoolean(root, KeyRuleFades, base.RuleFades);
+
             // A resource key rather than a sentence, so it is translated like everything else. A
             // theme from a stranger has no business naming one of ours, so it is dropped.
             theme.CautionResourceKey.clear();
@@ -662,6 +712,8 @@ namespace glass
                     ReadNumber(overlay, KeyGrainPercent, base.Overlay.GrainPercent, 0, 100));
                 theme.Overlay.GrainColor =
                     ReadColor(overlay, KeyGrainColor, base.Overlay.GrainColor);
+                theme.Overlay.GrainStreak = static_cast<int32_t>(
+                    ReadNumber(overlay, KeyGrainStreak, base.Overlay.GrainStreak, 1, 64));
             }
         }
         catch (...)
@@ -802,6 +854,22 @@ namespace glass
             writer.Write(KeyCapLineWide, theme.CapLineWide);
             writer.Write(KeyKeyWhite, ColorToText(theme.KeyWhiteColor));
             writer.Write(KeyKeyBlack, ColorToText(theme.KeyBlackColor));
+            writer.Write(KeyInsetPanelColor, ColorToText(theme.InsetPanelColor));
+            writer.Write(KeyInsetPanelEnd, ColorToText(theme.InsetPanelEndColor));
+            writer.Write(KeyPanelElevation, static_cast<int64_t>(theme.PanelElevation));
+            writer.Write(KeySectionInk, ColorToText(theme.SectionInkColor));
+            writer.Write(KeyPointerOnCap, theme.PointerOnCap);
+            writer.Write(KeyArcGlow, theme.ArcGlow);
+            writer.Write(KeyArcTrackHue, static_cast<int64_t>(theme.ArcTrackHuePercent));
+            writer.Write(KeyLampShape, NameOf(LampStyleNames, theme.LampShape));
+            writer.Write(KeySwitchRim, static_cast<int64_t>(theme.SwitchRimStrengthPercent));
+            writer.Write(KeySwitchRestingGlow, static_cast<int64_t>(theme.SwitchRestingGlowPercent));
+            writer.Write(KeyPadFillAtRest, theme.PadFillAtRest);
+            writer.Write(KeyPadFillWhenOn, static_cast<int64_t>(theme.PadFillWhenOnPercent));
+            writer.Write(KeyNeutralCaps, theme.NeutralCaps);
+            writer.Write(KeyFaderScale, static_cast<int64_t>(theme.FaderScalePercent));
+            writer.Write(KeyRuleColor, ColorToText(theme.RuleColor));
+            writer.Write(KeyRuleFades, theme.RuleFades);
 
             writer.BeginArray(KeyMeterSlots);
 
@@ -822,6 +890,7 @@ namespace glass
             writer.Write(KeyFaceplateColor, ColorToText(theme.Overlay.FaceplateSheenColor));
             writer.Write(KeyGrainPercent, static_cast<int64_t>(theme.Overlay.GrainPercent));
             writer.Write(KeyGrainColor, ColorToText(theme.Overlay.GrainColor));
+            writer.Write(KeyGrainStreak, static_cast<int64_t>(theme.Overlay.GrainStreak));
             writer.EndObject();
         }
         catch (...)

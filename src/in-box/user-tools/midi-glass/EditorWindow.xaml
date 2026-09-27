@@ -1463,6 +1463,56 @@
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                     </StackPanel>
 
+                                    <!-- A printed line: which way it runs, how thick it is, its
+                                         color and how its ends finish. -->
+                                    <StackPanel x:Name="LinePanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorLineHeading" Text="Line" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+
+                                        <ComboBox x:Name="LineDirectionCombo"
+                                                  x:Uid="LineDirectionCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnLineDirectionChanged" />
+
+                                        <NumberBox x:Name="LineThicknessBox"
+                                                   x:Uid="LineThicknessBox"
+                                                   Minimum="1"
+                                                   Maximum="64"
+                                                   Margin="0,6,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnLineThicknessChanged" />
+
+                                        <Grid ColumnSpacing="6" Margin="0,6,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBox x:Name="LineColorBox"
+                                                     x:Uid="LineColorBox"
+                                                     Grid.Column="0"
+                                                     PlaceholderText="the theme's line color"
+                                                     LostFocus="OnLineColorChanged" />
+
+                                            <Button x:Name="LineColorButton"
+                                                    x:Uid="LineColorButton"
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Bottom" />
+                                        </Grid>
+
+                                        <ComboBox x:Name="LineEndsCombo"
+                                                  x:Uid="LineEndsCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,6,0,0"
+                                                  SelectionChanged="OnLineEndsChanged" />
+
+                                        <TextBlock x:Uid="LineCaption"
+                                                   Text="A line divides one part of a page from another. It sends nothing and can't be pressed, so it's safe to put right beside a control."
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
                                     <StackPanel x:Name="KeyboardPanel" Visibility="Collapsed">
                                         <TextBlock x:Uid="InspectorKeysHeading" Text="Keys" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
 

@@ -59,6 +59,9 @@ namespace glass
             // A platter is pushed with a whole hand, so it is the biggest round thing on the
             // page by some way.
             case ControlKind::Turntable: return { 160, 160 };
+
+            // Across by default. The short side is the handle the editor grabs, not the line.
+            case ControlKind::Line: return { 240, 8 };
             }
 
             return { 56, 56 };

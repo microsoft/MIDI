@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - Airy System theme</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .chiprow { position: absolute; left: 14px; top: 13px; display: flex; gap: 6px; align-items: center; }
+    .tchip {
+        height: 26px; padding: 0 11px; border-radius: 13px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: var(--text3);
+        background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .tchip i { width: 11px; height: 11px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    .tchip.new { color: #7CF5A6; background: rgba(53,238,122,.10); box-shadow: inset 0 0 0 1px rgba(53,238,122,.55); }
+
+    .deck {
+        position: absolute; left: 14px; top: 54px; width: 972px; height: 486px;
+        border-radius: 8px; overflow: hidden;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    }
+    .decktag { position: absolute; left: 14px; top: 552px; font-size: 11px; color: var(--text3); }
+    .decktag b { color: var(--text2); font-weight: 600; }
+
+    /* the print: white, small, spaced, under what it names */
+    .silk {
+        position: absolute; font-size: 7.5px; font-weight: 600; letter-spacing: .10em;
+        color: rgba(228,231,229,.80); text-align: center; white-space: nowrap;
+    }
+    .silk.dim { color: rgba(228,231,229,.52); }
+    .sect { position: absolute; text-align: center; }
+
+    /* the drum machine's instrument names: a white tag with the name in black. In the app this is a
+       label with a solid style and a black name, which it can already draw one label at a time */
+    .tag {
+        position: absolute; height: 14px; border-radius: 3px;
+        background: #E8ECEA; color: #0B0C0C;
+        font-size: 8.5px; font-weight: 600; letter-spacing: .02em;
+        display: flex; align-items: center; justify-content: center;
+    }
+
+    .rhead { position: absolute; font-size: 11px; letter-spacing: .10em; color: rgba(228,231,229,.48); }
+    .kcap { position: absolute; text-align: center; font-size: 10.5px; color: rgba(228,231,229,.62); }
+    .kcap b { display: block; color: #E4E7E5; font-weight: 600; font-size: 11px; margin-bottom: 2px; }
+    .measure { position: absolute; font-size: 11.5px; line-height: 1.6; color: rgba(228,231,229,.74); }
+    .measure b { color: #FFFFFF; font-weight: 600; }
+    .measure .num { font-family: "Cascadia Mono","Consolas",monospace; color: #7CF5A6; font-weight: 600; }
+    .state { position: absolute; font-size: 8.5px; letter-spacing: .08em; color: rgba(228,231,229,.46); text-align: center; }
+
+    /* the brushing shown at five times its strength, on the same black */
+    .brush5 {
+        position: absolute; border-radius: 4px; overflow: hidden;
+        background: linear-gradient(180deg, #1A1B1B 0%, #131414 42%, #0C0D0D 100%);
+        box-shadow: inset 0 0 0 1px rgba(228,231,229,.14);
+    }
+    .brush5::before {
+        content: ""; position: absolute; inset: 0;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='160'><filter id='b5'><feTurbulence type='fractalNoise' baseFrequency='0.0035 0.95' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='640' height='160' filter='url(%23b5)'/></svg>");
+        background-size: 640px 160px;
+        opacity: .50; mix-blend-mode: screen;
+    }
+
+    .swatches { display: flex; gap: 0; width: 1000px; border-radius: 7px; overflow: hidden; margin-top: 14px; }
+    .swatches div {
+        flex: 1; height: 58px; display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 6px 7px; font-size: 9.5px; font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .swatches div span { display: block; font-family: "Segoe UI Variable Text","Segoe UI",sans-serif; font-size: 10px; opacity: .78; }
+
+    .costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; width: 1000px; margin-top: 12px; }
+    .cost {
+        border-radius: 7px; padding: 12px 14px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 11.5px; color: var(--text3); line-height: 1.55;
+    }
+    .cost h4 { margin: 0 0 7px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .cost b { color: var(--text2); font-weight: 600; }
+    .cost .yes { color: var(--success); font-weight: 600; }
+    .cost .no { color: var(--caution); font-weight: 600; }
+    .cost .mono { color: var(--accent); }
+
+    .asks { width: 1000px; margin-top: 11px; border-radius: 7px; padding: 12px 14px 6px 14px; box-sizing: border-box;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke); }
+    .asks h4 { margin: 0 0 8px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .asks table { width: 100%; border-collapse: collapse; font-size: 11.5px; line-height: 1.5; color: var(--text3); }
+    .asks th { text-align: left; font-weight: 600; color: var(--text2); padding: 0 10px 6px 0; border-bottom: 1px solid var(--divider); font-size: 11px; }
+    .asks td { vertical-align: top; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--divider); }
+    .asks tr:last-child td { border-bottom: none; }
+    .asks td.n { width: 18px; color: var(--caution); font-weight: 600; }
+    .asks td.ask { width: 270px; }
+    .asks td.ask b { color: var(--text); font-weight: 600; }
+    .asks td.without { width: 230px; }
+    .asks .mono { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 22 &mdash; <b>Airy System</b>, after Roland's AIRA family: the synthesizers, the drum machine and the mixer. Black brushed metal and green light, and it is meant to be loud. <b>The first theme that lights three kinds of control three different ways at rest</b>: a knob sits in a ring of its own light and a fader in a lit frame, all the time; a button is black until it is on and then its edge glows; and a drum pad is colored plastic, dim until it plays. The mixer spends the same palette on its buttons, one job to a color.</p>
+
+<!-- ============================================================= DECK -->
+<div class="board" style="height:576px;">
+
+    <div class="chiprow">
+        <div class="tchip"><i style="background:#4CE0FF"></i>Studio Dark</div>
+        <div class="tchip"><i style="background:#F98B31"></i>Bigwig</div>
+        <div class="tchip"><i style="background:#E8601C"></i>Jove</div>
+        <div class="tchip"><i style="background:#39465F"></i>Supersaw</div>
+        <div class="tchip"><i style="background:#566D55; box-shadow: inset 0 0 0 2px #CAC5AC"></i>Five-iSH</div>
+        <div class="tchip new"><i style="background:#131414; box-shadow: inset 0 0 0 2px #35EE7A, 0 0 5px rgba(53,238,122,.7)"></i>Airy System</div>
+        <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
+    </div>
+
+    <div class="deck surf tonal airy">
+
+        <!-- the frame round the page is a section like any other, drawn the size of the page -->
+        <div class="ctlpanel" style="left:5px; top:5px; width:962px; height:476px;"></div>
+
+        <div class="surftext h1" style="left:20px; top:12px; font-size:15px;">Airy System</div>
+        <div class="surftext small" style="left:122px; top:17px;">synth &middot; rhythm &middot; mix</div>
+
+        <div class="silk dim" style="left:612px; top:19px; width:40px;">TEMPO</div>
+        <div class="surftext readout" style="left:656px; top:9px; font-size:20px; letter-spacing:.04em;">128.0</div>
+
+        <div class="pagetabs" style="right:20px; top:11px; gap:4px;">
+            <div class="tab" style="height:20px; padding:0 10px; font-size:10px">Synth</div>
+            <div class="tab sel" style="height:20px; padding:0 10px; font-size:10px">Rhythm</div>
+            <div class="tab" style="height:20px; padding:0 10px; font-size:10px">Mix</div>
+        </div>
+
+        <!-- ======================================== band A: the synthesizer -->
+
+        <div class="surftext h2 sect" style="left:20px; top:44px; width:130px;">LFO</div>
+        <div class="surftext h2 sect" style="left:160px; top:44px; width:260px;">OSC</div>
+        <div class="surftext h2 sect" style="left:430px; top:44px; width:210px;">FILTER</div>
+        <div class="surftext h2 sect" style="left:650px; top:44px; width:150px;">ENVELOPE</div>
+        <div class="surftext h2 sect" style="left:810px; top:44px; width:142px;">AMP</div>
+        <div class="surfrule" style="left:155px; top:46px; width:1px; height:134px;"></div>
+        <div class="surfrule" style="left:425px; top:46px; width:1px; height:134px;"></div>
+        <div class="surfrule" style="left:645px; top:46px; width:1px; height:134px;"></div>
+        <div class="surfrule" style="left:805px; top:46px; width:1px; height:134px;"></div>
+
+        <!-- LFO -->
+        <div class="ctl knob hue1" style="left:34px; top:66px; width:44px; height:44px;">
+            <div class="dial"><div class="halo"><div class="arc" style="--pct:.46turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(30.6deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:92px; top:66px; width:44px; height:44px;">
+            <div class="dial"><div class="halo"><div class="arc" style="--pct:.28turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-34.2deg)"></div></div>
+        </div>
+        <div class="silk" style="left:26px; top:116px; width:60px;">RATE</div>
+        <div class="silk" style="left:84px; top:116px; width:60px;">FADE</div>
+        <div class="ctl btn-ctl hue1 on" style="left:30px; top:136px; width:52px; height:22px;"><div class="name" style="font-size:8px">SYNC</div></div>
+        <div class="ctl btn-ctl hue1" style="left:88px; top:136px; width:52px; height:22px;"><div class="name" style="font-size:8px">TRIG</div></div>
+
+        <!-- OSC -->
+        <div class="ctl knob hue1 detent" style="left:172px; top:66px; width:44px; height:44px;">
+            <div class="dial"><div class="halo"><div class="arc" style="--pct:.375turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:228px; top:66px; width:44px; height:44px;">
+            <div class="dial"><div class="halo"><div class="arc" style="--pct:.62turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(88.2deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:284px; top:66px; width:44px; height:44px;">
+            <div class="dial"><div class="halo"><div class="arc" style="--pct:.20turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-63deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1 detent" style="left:340px; top:66px; width:44px; height:44px;">
+            <div class="dial"><div class="halo"><div class="arc" style="--pct:.50turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(45deg)"></div></div>
+        </div>
+        <div class="silk" style="left:164px; top:116px; width:60px;">PITCH</div>
+        <div class="silk" style="left:220px; top:116px; width:60px;">COLOR</div>
+        <div class="silk" style="left:276px; top:116px; width:60px;">MOD</div>
+        <div class="silk" style="left:332px; top:116px; width:60px;">OSC 2</div>
+        <div class="ctl btn-ctl hue1 on" style="left:172px; top:136px; width:44px; height:22px;"><div class="name" style="font-size:8px">SAW</div></div>
+        <div class="ctl btn-ctl hue1" style="left:228px; top:136px; width:44px; height:22px;"><div class="name" style="font-size:8px">SQR</div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:284px; top:136px; width:44px; height:22px;"><div class="name" style="font-size:8px">RING</div></div>
+        <div class="ctl btn-ctl hue1" style="left:340px; top:136px; width:44px; height:22px;"><div class="name" style="font-size:8px">SYNC</div></div>
+
+        <!-- FILTER -->
+        <div class="ctl knob hue1" style="left:444px; top:58px; width:56px; height:56px;">
+            <div class="dial"><div class="halo"><div class="arc" style="--pct:.58turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(73.8deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:516px; top:66px; width:44px; height:44px;">
+            <div class="dial"><div class="halo"><div class="arc" style="--pct:.34turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-12.6deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:572px; top:66px; width:44px; height:44px;">
+            <div class="dial"><div class="halo"><div class="arc" style="--pct:.50turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(45deg)"></div></div>
+        </div>
+        <div class="silk" style="left:442px; top:118px; width:60px;">CUTOFF</div>
+        <div class="silk" style="left:508px; top:116px; width:60px;">RESO</div>
+        <div class="silk" style="left:564px; top:116px; width:60px;">ENV</div>
+        <div class="ctl btn-ctl hue1 on" style="left:444px; top:136px; width:56px; height:22px;"><div class="name" style="font-size:8px">-24 dB</div></div>
+        <div class="ctl btn-ctl hue1" style="left:516px; top:136px; width:44px; height:22px;"><div class="name" style="font-size:8px">HPF</div></div>
+        <div class="ctl btn-ctl hue1" style="left:572px; top:136px; width:44px; height:22px;"><div class="name" style="font-size:8px">KEY</div></div>
+
+        <!-- ENVELOPE -->
+        <div class="ctl fader hue1" style="left:662px; top:58px; width:24px; height:108px;">
+            <div class="slot"><div class="fill" style="height:20%"></div><div class="capbar" style="bottom:calc(20% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:696px; top:58px; width:24px; height:108px;">
+            <div class="slot"><div class="fill" style="height:52%"></div><div class="capbar" style="bottom:calc(52% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:730px; top:58px; width:24px; height:108px;">
+            <div class="slot"><div class="fill" style="height:70%"></div><div class="capbar" style="bottom:calc(70% - 6px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:764px; top:58px; width:24px; height:108px;">
+            <div class="slot"><div class="fill" style="height:38%"></div><div class="capbar" style="bottom:calc(38% - 6px);"></div></div>
+        </div>
+        <div class="silk" style="left:662px; top:170px; width:24px;">A</div>
+        <div class="silk" style="left:696px; top:170px; width:24px;">D</div>
+        <div class="silk" style="left:730px; top:170px; width:24px;">S</div>
+        <div class="silk" style="left:764px; top:170px; width:24px;">R</div>
+
+        <!-- AMP -->
+        <div class="ctl knob hue1" style="left:822px; top:66px; width:44px; height:44px;">
+            <div class="dial"><div class="halo"><div class="arc" style="--pct:.72turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(124.2deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:880px; top:66px; width:44px; height:44px;">
+            <div class="dial"><div class="halo"><div class="arc" style="--pct:.30turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-27deg)"></div></div>
+        </div>
+        <div class="silk" style="left:814px; top:116px; width:60px;">LEVEL</div>
+        <div class="silk" style="left:872px; top:116px; width:60px;">DRIVE</div>
+        <div class="ctl btn-ctl hue1" style="left:822px; top:136px; width:44px; height:22px;"><div class="name" style="font-size:8px">DELAY</div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:880px; top:136px; width:44px; height:22px;"><div class="name" style="font-size:8px">VERB</div></div>
+
+        <div class="surfrule" style="left:16px; top:188px; width:940px; height:1px;"></div>
+
+        <!-- ======================================== band B: the drum machine -->
+
+        <!-- six instrument columns: a name tag, tune and decay, and a level fader -->
+        <div class="tag" style="left:24px; top:198px; width:104px;">BassDrum</div>
+        <div class="tag" style="left:138px; top:198px; width:104px;">SnareDrum</div>
+        <div class="tag" style="left:252px; top:198px; width:104px;">LowTom</div>
+        <div class="tag" style="left:366px; top:198px; width:104px;">HandClap</div>
+        <div class="tag" style="left:480px; top:198px; width:104px;">ClosedHat</div>
+        <div class="tag" style="left:594px; top:198px; width:104px;">Cymbal</div>
+
+        <div class="ctl knob hue1" style="left:30px; top:220px; width:36px; height:36px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.46turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(30.6deg)"></div></div></div>
+        <div class="ctl knob hue1" style="left:30px; top:276px; width:36px; height:36px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.62turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(88.2deg)"></div></div></div>
+        <div class="ctl fader hue1" style="left:90px; top:220px; width:26px; height:112px;"><div class="slot"><div class="fill" style="height:80%"></div><div class="capbar" style="bottom:calc(80% - 6px);"></div></div></div>
+
+        <div class="ctl knob hue1" style="left:144px; top:220px; width:36px; height:36px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.50turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(45deg)"></div></div></div>
+        <div class="ctl knob hue1" style="left:144px; top:276px; width:36px; height:36px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.35turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-9deg)"></div></div></div>
+        <div class="ctl fader hue1" style="left:204px; top:220px; width:26px; height:112px;"><div class="slot"><div class="fill" style="height:66%"></div><div class="capbar" style="bottom:calc(66% - 6px);"></div></div></div>
+
+        <div class="ctl knob hue1" style="left:258px; top:220px; width:36px; height:36px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.38turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(1.8deg)"></div></div></div>
+        <div class="ctl knob hue1" style="left:258px; top:276px; width:36px; height:36px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.50turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(45deg)"></div></div></div>
+        <div class="ctl fader hue1" style="left:318px; top:220px; width:26px; height:112px;"><div class="slot"><div class="fill" style="height:55%"></div><div class="capbar" style="bottom:calc(55% - 6px);"></div></div></div>
+
+        <div class="ctl knob hue1" style="left:372px; top:220px; width:36px; height:36px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.60turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(81deg)"></div></div></div>
+        <div class="ctl knob hue1" style="left:372px; top:276px; width:36px; height:36px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.28turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-34.2deg)"></div></div></div>
+        <div class="ctl fader hue1" style="left:432px; top:220px; width:26px; height:112px;"><div class="slot"><div class="fill" style="height:40%"></div><div class="capbar" style="bottom:calc(40% - 6px);"></div></div></div>
+
+        <div class="ctl knob hue1" style="left:486px; top:220px; width:36px; height:36px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.42turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(16.2deg)"></div></div></div>
+        <div class="ctl knob hue1" style="left:486px; top:276px; width:36px; height:36px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.20turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-63deg)"></div></div></div>
+        <div class="ctl fader hue1" style="left:546px; top:220px; width:26px; height:112px;"><div class="slot"><div class="fill" style="height:72%"></div><div class="capbar" style="bottom:calc(72% - 6px);"></div></div></div>
+
+        <div class="ctl knob hue1" style="left:600px; top:220px; width:36px; height:36px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.55turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(63deg)"></div></div></div>
+        <div class="ctl knob hue1" style="left:600px; top:276px; width:36px; height:36px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.70turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(117deg)"></div></div></div>
+        <div class="ctl fader hue1" style="left:660px; top:220px; width:26px; height:112px;"><div class="slot"><div class="fill" style="height:30%"></div><div class="capbar" style="bottom:calc(30% - 6px);"></div></div></div>
+
+        <div class="silk dim" style="left:18px; top:258px; width:60px;">TUNE</div>
+        <div class="silk dim" style="left:18px; top:314px; width:60px;">DECAY</div>
+        <div class="silk dim" style="left:132px; top:258px; width:60px;">TUNE</div>
+        <div class="silk dim" style="left:132px; top:314px; width:60px;">SNAPPY</div>
+        <div class="silk dim" style="left:246px; top:258px; width:60px;">TUNE</div>
+        <div class="silk dim" style="left:246px; top:314px; width:60px;">DECAY</div>
+        <div class="silk dim" style="left:360px; top:258px; width:60px;">TUNE</div>
+        <div class="silk dim" style="left:360px; top:314px; width:60px;">DECAY</div>
+        <div class="silk dim" style="left:474px; top:258px; width:60px;">TUNE</div>
+        <div class="silk dim" style="left:474px; top:314px; width:60px;">DECAY</div>
+        <div class="silk dim" style="left:588px; top:258px; width:60px;">TUNE</div>
+        <div class="silk dim" style="left:588px; top:314px; width:60px;">DECAY</div>
+
+        <!-- scatter: a section drawn as a line of light, named in green -->
+        <div class="ctlpanel" style="left:716px; top:196px; width:240px; height:138px;"><div class="ptitle">SCATTER</div></div>
+        <div class="ctl knob hue1 stops" style="left:740px; top:230px; width:76px; height:76px;">
+            <div class="dial"><div class="halo"><div class="arc" style="--pct:.25turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-45deg)"></div></div>
+        </div>
+        <div class="ctl btn-ctl hue1 on" style="left:840px; top:234px; width:54px; height:26px;"><div class="name" style="font-size:8px">DEPTH</div></div>
+        <div class="ctl btn-ctl hue1" style="left:840px; top:270px; width:54px; height:26px;"><div class="name" style="font-size:8px">ON</div></div>
+        <div class="silk dim" style="left:900px; top:230px; width:48px;">TYPE</div>
+        <div class="surftext readout" style="left:916px; top:246px; font-size:26px;">4</div>
+        <div class="silk dim" style="left:758px; top:316px; width:40px;">DEPTH</div>
+
+        <!-- the sixteen steps, in fours, with start and stop in front of them -->
+        <div class="ctl btn-ctl pad hue1 on" style="left:20px; top:342px; width:74px; height:36px;"><div class="name" style="font-size:8.5px">START</div></div>
+        <div class="ctl btn-ctl pad hue2 on" style="left:104px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">1</div></div>
+        <div class="ctl btn-ctl pad hue2" style="left:142px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">2</div></div>
+        <div class="ctl btn-ctl pad hue2" style="left:180px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">3</div></div>
+        <div class="ctl btn-ctl pad hue2" style="left:218px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">4</div></div>
+        <div class="ctl btn-ctl pad hue3 on" style="left:256px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">5</div></div>
+        <div class="ctl btn-ctl pad hue3" style="left:294px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">6</div></div>
+        <div class="ctl btn-ctl pad hue3" style="left:332px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">7</div></div>
+        <div class="ctl btn-ctl pad hue3" style="left:370px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">8</div></div>
+        <div class="ctl btn-ctl pad hue4 on" style="left:408px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">9</div></div>
+        <div class="ctl btn-ctl pad hue4" style="left:446px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">10</div></div>
+        <div class="ctl btn-ctl pad hue4 on" style="left:484px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">11</div></div>
+        <div class="ctl btn-ctl pad hue4" style="left:522px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">12</div></div>
+        <div class="ctl btn-ctl pad neutral on" style="left:560px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">13</div></div>
+        <div class="ctl btn-ctl pad neutral" style="left:598px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">14</div></div>
+        <div class="ctl btn-ctl pad neutral" style="left:636px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">15</div></div>
+        <div class="ctl btn-ctl pad neutral" style="left:674px; top:344px; width:34px; height:34px;"><div class="name" style="font-size:8px">16</div></div>
+
+        <div class="ctl btn-ctl hue1 on" style="left:720px; top:346px; width:60px; height:30px;"><div class="name" style="font-size:8px">TR-REC</div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:788px; top:346px; width:30px; height:30px;"><div class="name" style="font-size:8px">A</div></div>
+        <div class="ctl btn-ctl hue1" style="left:822px; top:346px; width:30px; height:30px;"><div class="name" style="font-size:8px">B</div></div>
+        <div class="ctl btn-ctl hue1" style="left:860px; top:346px; width:42px; height:30px;"><div class="name" style="font-size:8px">TAP</div></div>
+        <div class="ctl btn-ctl hue1" style="left:908px; top:346px; width:44px; height:30px;"><div class="name" style="font-size:8px">CLEAR</div></div>
+
+        <div class="surfrule" style="left:16px; top:388px; width:940px; height:1px;"></div>
+
+        <!-- ======================================== band C: the mixer -->
+        <!-- every strip: a lit fader, a meter, a send, and three buttons that glow in their job's color -->
+
+        <div class="ctl fader hue1" style="left:22px; top:396px; width:24px; height:76px;"><div class="slot"><div class="fill" style="height:72%"></div><div class="capbar" style="bottom:calc(72% - 6px);"></div></div></div>
+        <div class="ctl meter hue1" style="left:50px; top:396px; width:10px; height:76px; padding:4px 2px;"><i></i><i></i><i></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl knob hue1" style="left:68px; top:398px; width:34px; height:34px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.30turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-27deg)"></div></div></div>
+        <div class="silk" style="left:60px; top:446px; width:50px;">CH 1</div>
+        <div class="ctl btn-ctl hue2" style="left:110px; top:396px; width:38px; height:20px;"><div class="name" style="font-size:7px">MUTE</div></div>
+        <div class="ctl btn-ctl hue3 on" style="left:110px; top:420px; width:38px; height:20px;"><div class="name" style="font-size:7px">CUE</div></div>
+        <div class="ctl btn-ctl hue5" style="left:110px; top:444px; width:38px; height:20px;"><div class="name" style="font-size:7px">FX</div></div>
+
+        <div class="ctl fader hue1" style="left:156px; top:396px; width:24px; height:76px;"><div class="slot"><div class="fill" style="height:40%"></div><div class="capbar" style="bottom:calc(40% - 6px);"></div></div></div>
+        <div class="ctl meter hue1" style="left:184px; top:396px; width:10px; height:76px; padding:4px 2px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="ctl knob hue1" style="left:202px; top:398px; width:34px; height:34px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.50turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(45deg)"></div></div></div>
+        <div class="silk" style="left:194px; top:446px; width:50px;">CH 2</div>
+        <div class="ctl btn-ctl hue2 on" style="left:244px; top:396px; width:38px; height:20px;"><div class="name" style="font-size:7px">MUTE</div></div>
+        <div class="ctl btn-ctl hue3" style="left:244px; top:420px; width:38px; height:20px;"><div class="name" style="font-size:7px">CUE</div></div>
+        <div class="ctl btn-ctl hue5" style="left:244px; top:444px; width:38px; height:20px;"><div class="name" style="font-size:7px">FX</div></div>
+
+        <div class="ctl fader hue1" style="left:290px; top:396px; width:24px; height:76px;"><div class="slot"><div class="fill" style="height:66%"></div><div class="capbar" style="bottom:calc(66% - 6px);"></div></div></div>
+        <div class="ctl meter hue1" style="left:318px; top:396px; width:10px; height:76px; padding:4px 2px;"><i></i><i></i><i></i><i></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl knob hue1" style="left:336px; top:398px; width:34px; height:34px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.20turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-63deg)"></div></div></div>
+        <div class="silk" style="left:328px; top:446px; width:50px;">CH 3</div>
+        <div class="ctl btn-ctl hue2" style="left:378px; top:396px; width:38px; height:20px;"><div class="name" style="font-size:7px">MUTE</div></div>
+        <div class="ctl btn-ctl hue3" style="left:378px; top:420px; width:38px; height:20px;"><div class="name" style="font-size:7px">CUE</div></div>
+        <div class="ctl btn-ctl hue5 on" style="left:378px; top:444px; width:38px; height:20px;"><div class="name" style="font-size:7px">FX</div></div>
+
+        <div class="ctl fader hue1" style="left:424px; top:396px; width:24px; height:76px;"><div class="slot"><div class="fill" style="height:20%"></div><div class="capbar" style="bottom:calc(20% - 6px);"></div></div></div>
+        <div class="ctl meter hue1" style="left:452px; top:396px; width:10px; height:76px; padding:4px 2px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl knob hue1" style="left:470px; top:398px; width:34px; height:34px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.60turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(81deg)"></div></div></div>
+        <div class="silk" style="left:462px; top:446px; width:50px;">CH 4</div>
+        <div class="ctl btn-ctl hue2 offline" style="left:512px; top:396px; width:38px; height:20px;"><div class="name" style="font-size:7px; color:rgba(228,231,229,.40)">MUTE</div></div>
+        <div class="ctl btn-ctl hue3 dim" style="left:512px; top:420px; width:38px; height:20px;"><div class="name" style="font-size:7px; color:rgba(228,231,229,.34)">CUE</div></div>
+        <div class="ctl btn-ctl hue5 held" style="left:512px; top:444px; width:38px; height:20px;"><div class="name" style="font-size:7px">FX</div></div>
+
+        <div class="ctl fader hue1" style="left:558px; top:396px; width:24px; height:76px;"><div class="slot"><div class="fill" style="height:55%"></div><div class="capbar" style="bottom:calc(55% - 6px);"></div></div></div>
+        <div class="ctl meter hue1" style="left:586px; top:396px; width:10px; height:76px; padding:4px 2px;"><i></i><i class="lit hot"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl knob hue1" style="left:604px; top:398px; width:34px; height:34px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.45turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(27deg)"></div></div></div>
+        <div class="silk" style="left:596px; top:446px; width:50px;">CH 5</div>
+        <div class="ctl btn-ctl hue2" style="left:646px; top:396px; width:38px; height:20px;"><div class="name" style="font-size:7px">MUTE</div></div>
+        <div class="ctl btn-ctl hue3 on" style="left:646px; top:420px; width:38px; height:20px;"><div class="name" style="font-size:7px">CUE</div></div>
+        <div class="ctl btn-ctl hue5 on" style="left:646px; top:444px; width:38px; height:20px;"><div class="name" style="font-size:7px">FX</div></div>
+
+        <div class="ctl fader hue1" style="left:692px; top:396px; width:24px; height:76px;"><div class="slot"><div class="fill" style="height:80%"></div><div class="capbar" style="bottom:calc(80% - 6px);"></div></div></div>
+        <div class="ctl meter hue1" style="left:720px; top:396px; width:10px; height:76px; padding:4px 2px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="ctl knob hue1" style="left:738px; top:398px; width:34px; height:34px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.25turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-45deg)"></div></div></div>
+        <div class="silk" style="left:730px; top:446px; width:50px;">CH 6</div>
+        <div class="ctl btn-ctl hue2 on" style="left:780px; top:396px; width:38px; height:20px;"><div class="name" style="font-size:7px">MUTE</div></div>
+        <div class="ctl btn-ctl hue3" style="left:780px; top:420px; width:38px; height:20px;"><div class="name" style="font-size:7px">CUE</div></div>
+        <div class="ctl btn-ctl hue5" style="left:780px; top:444px; width:38px; height:20px;"><div class="name" style="font-size:7px">FX</div></div>
+
+        <div class="ctl fader hue1" style="left:826px; top:396px; width:24px; height:76px;"><div class="slot"><div class="fill" style="height:70%"></div><div class="capbar" style="bottom:calc(70% - 6px);"></div></div></div>
+        <div class="ctl meter hue1" style="left:854px; top:396px; width:10px; height:76px; padding:4px 2px;"><i></i><i></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl knob hue1" style="left:872px; top:398px; width:34px; height:34px;"><div class="dial"><div class="halo"><div class="arc" style="--pct:.38turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(1.8deg)"></div></div></div>
+        <div class="silk" style="left:864px; top:446px; width:50px;">MASTER</div>
+        <div class="ctl btn-ctl hue6 on" style="left:914px; top:396px; width:38px; height:20px;"><div class="name" style="font-size:7px">SYNC</div></div>
+        <div class="ctl btn-ctl hue2" style="left:914px; top:420px; width:38px; height:20px;"><div class="name" style="font-size:7px">REC</div></div>
+        <div class="ctl btn-ctl hue5" style="left:914px; top:444px; width:38px; height:20px;"><div class="name" style="font-size:7px">FX</div></div>
+
+    </div>
+    <div class="decktag"><b>Airy System</b> &mdash; brushed black, knobs and faders lit all the time, buttons dark until they are on, and pads that are colored plastic</div>
+
+</div>
+
+<!-- ============================================= WHAT THE PANEL DOES -->
+<div class="board" style="height:362px; margin-top:13px;">
+
+    <div class="surf tonal airy" style="position:absolute; inset:0;">
+
+        <div class="rhead" style="left:20px; top:14px;">THREE REST STATES ON ONE PANEL: LIT, DARK, AND COLORED PLASTIC.</div>
+
+        <!-- a knob, and a knob on another slot -->
+        <div class="ctl knob hue1" style="left:40px; top:56px; width:96px; height:96px;">
+            <div class="dial"><div class="halo"><div class="arc" style="--pct:.58turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(73.8deg)"></div></div>
+        </div>
+        <div class="ctl knob hue5" style="left:150px; top:108px; width:44px; height:44px;">
+            <div class="dial"><div class="halo"><div class="arc" style="--pct:.40turn"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(9deg)"></div></div>
+        </div>
+        <div class="kcap" style="left:22px; top:232px; width:184px;"><b>Knob</b>a black cap in a ring of its own light; the value is the bright part</div>
+
+        <!-- a fader -->
+        <div class="ctl fader hue1" style="left:232px; top:48px; width:34px; height:150px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:25%"></i><i style="top:50%"></i><i style="top:75%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:62%"></div><div class="capbar" style="bottom:calc(62% - 6px);"></div>
+            </div>
+        </div>
+        <div class="kcap" style="left:206px; top:232px; width:86px;"><b>Fader</b>a lit frame, a gray cap, a white line</div>
+
+        <!-- buttons: dark, then lit in their own color -->
+        <div class="state" style="left:314px; top:48px; width:66px;">AT REST</div>
+        <div class="ctl btn-ctl hue1" style="left:314px; top:60px; width:66px; height:34px;"><div class="name" style="font-size:9px">SYNC</div></div>
+        <div class="state" style="left:314px; top:102px; width:66px;">ON</div>
+        <div class="ctl btn-ctl hue1 on" style="left:314px; top:114px; width:66px; height:34px;"><div class="name" style="font-size:9px">SYNC</div></div>
+        <div class="state" style="left:304px; top:156px; width:86px;">ON, ON THE MIXER</div>
+        <div class="ctl btn-ctl hue2 on" style="left:314px; top:168px; width:66px; height:34px;"><div class="name" style="font-size:9px">MUTE</div></div>
+        <div class="kcap" style="left:300px; top:232px; width:94px;"><b>Button</b>black until it is on; then its edge lights</div>
+
+        <!-- pads: at rest, and lit -->
+        <div class="state" style="left:422px; top:48px; width:184px;">AT REST</div>
+        <div class="ctl btn-ctl pad hue2" style="left:422px; top:60px; width:40px; height:40px;"><div class="name" style="font-size:9px">1</div></div>
+        <div class="ctl btn-ctl pad hue3" style="left:470px; top:60px; width:40px; height:40px;"><div class="name" style="font-size:9px">5</div></div>
+        <div class="ctl btn-ctl pad hue4" style="left:518px; top:60px; width:40px; height:40px;"><div class="name" style="font-size:9px">9</div></div>
+        <div class="ctl btn-ctl pad neutral" style="left:566px; top:60px; width:40px; height:40px;"><div class="name" style="font-size:9px">13</div></div>
+        <div class="state" style="left:422px; top:114px; width:184px;">LIT</div>
+        <div class="ctl btn-ctl pad hue2 on" style="left:422px; top:126px; width:40px; height:40px;"><div class="name" style="font-size:9px">1</div></div>
+        <div class="ctl btn-ctl pad hue3 on" style="left:470px; top:126px; width:40px; height:40px;"><div class="name" style="font-size:9px">5</div></div>
+        <div class="ctl btn-ctl pad hue4 on" style="left:518px; top:126px; width:40px; height:40px;"><div class="name" style="font-size:9px">9</div></div>
+        <div class="ctl btn-ctl pad neutral on" style="left:566px; top:126px; width:40px; height:40px;"><div class="name" style="font-size:9px">13</div></div>
+        <div class="kcap" style="left:414px; top:232px; width:200px;"><b>Pad</b>colored plastic: dim at rest, its color outright when it plays</div>
+
+        <!-- the brushing, turned up -->
+        <div class="brush5" style="left:640px; top:52px; width:150px; height:150px;"></div>
+        <div class="kcap" style="left:630px; top:232px; width:170px;"><b>The brushing</b>long streaks, not specks, shown at five times strength</div>
+
+        <!-- the display and a name tag -->
+        <div class="surftext readout" style="left:842px; top:70px; font-size:30px; letter-spacing:.04em;">128.0</div>
+        <div class="tag" style="left:836px; top:136px; width:110px;">SnareDrum</div>
+        <div class="kcap" style="left:820px; top:232px; width:150px;"><b>Display and tags</b>tempo in orange; instrument names on white tags</div>
+
+        <div class="measure" style="left:40px; top:284px; width:912px;">
+            <b>Why three rest states.</b>
+            Every theme so far says what "at rest" looks like once, for the whole page. This panel says it three ways, and each is the instrument's own. Draw a button like a fader and every button glows all the time, so turning one on is a smaller change than it should be. Draw a pad like a button and the drum machine's colors only show on the steps that are playing. Both are one more number on something the engine already sets by kind &mdash; <span class="num">SwitchFillAtRest</span> is the precedent, from Jove.
+        </div>
+    </div>
+</div>
+
+<div class="swatches">
+    <div style="background:#131414; color:#E4E7E5">#131414 <span>Brushed black</span></div>
+    <div style="background:#232525; color:#E4E7E5">#232525 <span>Button</span></div>
+    <div style="background:#35EE7A; color:#04150A">#35EE7A <span>Green</span></div>
+    <div style="background:#FF4D38; color:#1A0703">#FF4D38 <span>Red</span></div>
+    <div style="background:#FF9D3A; color:#1A0E03">#FF9D3A <span>Orange</span></div>
+    <div style="background:#EEE35A; color:#191605">#EEE35A <span>Yellow</span></div>
+    <div style="background:#E8ECEA; color:#0B0C0C">#E8ECEA <span>White</span></div>
+    <div style="background:#45A8FF; color:#04101C">#45A8FF <span>Blue</span></div>
+    <div style="background:#B783FF; color:#120A20">#B783FF <span>Violet</span></div>
+    <div style="background:#737876; color:#0B0C0C">#737876 <span>Cap gray</span></div>
+    <div style="background:#E4E7E5; color:#0B0C0C">#E4E7E5 <span>Print</span></div>
+</div>
+
+<div class="costgrid">
+    <div class="cost">
+        <h4><span class="yes">Built</span> &mdash; what the engine already does for this panel</h4>
+        A knob is a <b>black cap</b> (<span class="mono">KnobFaceColor</span>) with a <b>white pointer</b> (<span class="mono">PointerColor</span>) inside its arc. A fader is a <b>lit frame</b>: the rim in the control's color near full strength (<span class="mono">RimStrengthPercent</span>), its light spilling at rest (<span class="mono">RestingGlowPercent</span>), a gray cap and a white line (<span class="mono">ThumbColor</span>, <span class="mono">CapLineColor</span>). A lit button keeps its black and <b>its edge comes up</b> in its own color with a glow (<span class="mono">FillWhenOnPercent</span> about 12). Names sit inside switches (<span class="mono">NamesInsideSwitches</span>). The scatter box and the page frame are <b>sections drawn as a line of green</b> (<span class="mono">PanelFill</span> none, <span class="mono">PanelOutlineColor</span>), named in green (<span class="mono">SectionNameInHue</span>). The meter is green, yellow and red (<span class="mono">MeterSlots</span>).
+    </div>
+    <div class="cost">
+        <h4><span class="no">Needs</span> &mdash; three rest states, and a brushed panel</h4>
+        <b>A switch rests dark</b> while a knob and a fader stay lit. Today the resting rim and the resting glow are one number each for the whole theme, so either every button glows at rest or no fader frame does. <b>A pad is its own family</b>: dim colored plastic at rest and its color outright when lit, on the same page as buttons that are black with a lit edge. And the panel is <b>brushed</b>: long streaks along one direction, where the grain today can only draw specks.
+    </div>
+    <div class="cost">
+        <h4>What it costs</h4>
+        <b>This is a light show, on purpose.</b> Everything that turns or slides glows all the time, so on a dense page most of the surface is light, and a touch has less to stand out against than it does on Studio Dark. It is for a dark room, and the picker should say so. <b>A glow never carries a state on its own</b>: a lit button's edge goes from nothing to its full color, 5.6 : 1 or better against the deck on every slot, so somebody who cannot see a glow still sees the edge arrive. The closest two slots, red and orange, are delta E 41.7 apart.
+    </div>
+</div>
+
+<div class="asks">
+    <h4>Six asks, smallest first. Each is independent, and the page above uses all six.</h4>
+    <table>
+        <tr><th></th><th>Ask</th><th>Why Airy System needs it</th><th>Without it</th></tr>
+        <tr>
+            <td class="n">1</td>
+            <td class="ask"><b>A section name centered.</b> A fourth header style beside caption, filled bar and notched.</td>
+            <td>The scatter box names itself centered across its top, and so does every section on the synthesizers. Five-iSH, screen 21, asks for the same thing.</td>
+            <td class="without">The name at the top left.</td>
+        </tr>
+        <tr>
+            <td class="n">2</td>
+            <td class="ask"><b>A brushed grain.</b> One number on the grain that is there today: how long a speck is, along the page. One is a speck; forty or more is a brushed streak.</td>
+            <td>Brushed metal is fine streaks running one way. Same tile, same one brush for the whole deck, nothing per control.</td>
+            <td class="without">Sandpaper, like Supersaw, or a flat black.</td>
+        </tr>
+        <tr>
+            <td class="n">3</td>
+            <td class="ask"><b>The arc glows.</b> A knob's arc gets the halo a fader's fill already has, on a theme that asks for it, so nothing shipped moves.</td>
+            <td>Here the ring is the light source. Screen 9 has drawn a glowing arc since the first comp; the app draws a flat one on every theme.</td>
+            <td class="without">A ring that is painted, not lit.</td>
+        </tr>
+        <tr>
+            <td class="n">4</td>
+            <td class="ask"><b>A ring in the control's own color.</b> The unlit part of the arc can be the control's own hue at a strength, instead of one track color for every knob.</td>
+            <td>A knob sits in a ring of its own light. With one track color, a blue knob sits in a green ring.</td>
+            <td class="without">Every ring one color, so a dim gray.</td>
+        </tr>
+        <tr>
+            <td class="n">5</td>
+            <td class="ask"><b>A switch rests dark.</b> A resting rim and a resting glow for switches, apart from knobs and faders. Below zero means follow the theme, which is what every shipped theme does.</td>
+            <td>Knobs and faders are lit at rest; a button is black until it is on. It is fill at rest by kind again, for the rim and the glow.</td>
+            <td class="without">Every button glows at rest and on is a smaller change, or no fader frame is lit.</td>
+        </tr>
+        <tr>
+            <td class="n">6</td>
+            <td class="ask"><b>A pad is its own family.</b> Fill at rest and fill when on for pads, apart from buttons and toggles.</td>
+            <td>The steps are colored plastic, dim at rest and full when lit, beside black buttons with lit edges. One fill for every switch cannot draw both. The solid style can do it one pad at a time today, but then it follows the pad into every other theme.</td>
+            <td class="without">Pads drawn like buttons: the drum machine's colors only show on the steps that are playing.</td>
+        </tr>
+    </table>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>What I left out on purpose.</b> The drum machine lights one numbered lamp of ten round its scatter knob to show one position; the app's lamp ring lights everything up to the value, so this screen prints the ten positions as marks instead. The instrument names under every step, the bass synthesizer's touch pad and the family's logo are left out as well. The white name tags are labels with a solid style and a black name, which the app can already draw one label at a time. <b>Where I was honest rather than faithful:</b> the green and the four step colors are the family's own; blue and violet are mine, picked to glow the same way, so the mixer has six jobs to give colors to. Colors are eyeballed from your photographs rather than sampled from anything of Roland's, and every one was then measured.
+</p>
+
+</div>
+</body>
+</html>

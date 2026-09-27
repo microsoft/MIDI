@@ -118,6 +118,11 @@ namespace glass
         // jog wheel on a DJ controller does and why a nudge is a nudge rather than a new
         // position.
         Turntable = 20,
+
+        // A printed rule, across or down whichever way its rectangle is longer. It sends nothing
+        // and takes no input: it divides a page the way the lines between groups of sections
+        // on a hardware panel do.
+        Line = 21,
     };
 
     // The shape an LFO sweeps. The first five repeat, so one cycle of them can be drawn with a
@@ -535,6 +540,32 @@ namespace glass
     constexpr double MinimumTurntableDegrees = 15.0;
     constexpr double MaximumTurntableDegrees = 1440.0;
 
+    // How a line's two ends finish.
+    enum class LineEnds
+    {
+        // Whatever the theme's rules do.
+        UseTheme = 0,
+        Square = 1,
+        Faded = 2,
+    };
+
+    // A line runs the long way across its own rectangle. The rectangle is what a mouse or a
+    // finger grabs in the editor, so the line can be one pixel while its handle is eight.
+    struct LineSpec
+    {
+        double Thickness{ 1.0 };
+
+        // Empty means the theme's rule color.
+        std::wstring Color{};
+
+        LineEnds Ends{ LineEnds::UseTheme };
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    constexpr double MinimumLineThickness = 1.0;
+    constexpr double MaximumLineThickness = 64.0;
+
     // What lights a lamp or moves a meter. A meter following one controller is the ordinary
     // case; a lamp is more often "is anything coming from this device at all".
     enum class FeedbackMode
@@ -790,6 +821,9 @@ namespace glass
         // Only read when the kind is Turntable.
         TurntableSpec Turntable{};
 
+        // Only read when the kind is Line.
+        LineSpec Line{};
+
         // A layout always starts from its own defaults; this is the value it starts at.
         double DefaultValue{ 0.0 };
 
@@ -1041,4 +1075,42 @@ namespace glass
     // the moment it matters, so which groups a layout drives is worth deriving rather than
     // guessing, and worth a test.
     std::vector<uint16_t> CollectGroupMasks(_In_ LayoutDocument const& document) noexcept;
+
+    // What a control or a label is printed on. A theme can ink each one differently, because a
+    // panel printed in two layers is two surfaces a long way apart in value.
+    enum class PrintSurface
+    {
+        Deck = 0,
+        Section = 1,
+
+        // A section inside another section.
+        Inset = 2,
+    };
+
+    // A grouping panel that is a surface: one that fills its frame. An outline is not one,
+    // because whatever is printed inside it is printed on whatever is under the frame.
+    struct PanelFootprint
+    {
+        double X{ 0 };
+        double Y{ 0 };
+        double Width{ 0 };
+        double Height{ 0 };
+
+        // Its place in the page's drawing order. A panel only lies under what comes after it.
+        size_t Order{ 0 };
+
+        bool IsInset{ false };
+    };
+
+    // Whether a panel fills its frame under this theme, once its own style has had its say.
+    bool PanelIsFilled(_In_ Control const& panel, _In_ Theme const& theme) noexcept;
+
+    std::vector<PanelFootprint> PanelFootprints(_In_ Page const& page, _In_ Theme const& theme) noexcept;
+
+    // The topmost filled panel drawn before `order` that contains the point, or the deck.
+    PrintSurface SurfaceAt(
+        _In_ std::vector<PanelFootprint> const& panels,
+        _In_ double x,
+        _In_ double y,
+        _In_ size_t order) noexcept;
 }

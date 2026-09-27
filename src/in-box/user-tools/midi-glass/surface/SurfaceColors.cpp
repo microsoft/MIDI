@@ -21,13 +21,48 @@ namespace glass
                 std::lround(base + (over - base) * amount), 0L, 255L));
         }
 
-        // How strong a control's rim is when nothing is happening to it. The theme's own
-        // RimStrengthPercent, as a fraction; this is only the fallback for a half-written file.
-        constexpr double RestingRimAlpha = 0.28;
-
         // Tick marks and center dots are orientation, not information. They have to be findable
         // when looked for and invisible when not.
         constexpr uint8_t MarkAlpha = 46;
+
+        // A rule the theme does not name is the ink at a sixth, which is the design sheet's own.
+        constexpr double DerivedRuleStrength = 0.16;
+
+        // A printed ring of marks round a knob is the ink at six tenths.
+        constexpr double KnobTickStrength = 0.60;
+
+        ThemeColor AtStrength(_In_ ThemeColor color, _In_ double strength) noexcept
+        {
+            color.A = static_cast<uint8_t>(std::clamp(std::lround(color.A * std::clamp(strength, 0.0, 1.0)), 0L, 255L));
+
+            return color;
+        }
+
+        // A cap in the neutral: lifted where the light catches it and shaded at the bottom, with
+        // a line through it dark enough to read on cream.
+        ThemeColor NeutralCapTop(_In_ ThemeColor const& neutral) noexcept
+        {
+            auto top = BlendOver(neutral, ThemeColor{ 255, 255, 255, 255 }, 0.45);
+            top.A = 255;
+
+            return top;
+        }
+
+        ThemeColor NeutralCapBottom(_In_ ThemeColor const& neutral) noexcept
+        {
+            auto bottom = BlendOver(neutral, ThemeColor{ 0, 0, 0, 255 }, 0.12);
+            bottom.A = 255;
+
+            return bottom;
+        }
+
+        ThemeColor NeutralCapLine(_In_ ThemeColor const& neutral) noexcept
+        {
+            auto line = BlendOver(neutral, ThemeColor{ 0, 0, 0, 255 }, 0.74);
+            line.A = 255;
+
+            return line;
+        }
     }
 
     _Use_decl_annotations_
@@ -108,6 +143,47 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool IsTurnedOrSlid(ControlKind kind) noexcept
+    {
+        switch (kind)
+        {
+        case ControlKind::Knob:
+        case ControlKind::Encoder:
+        case ControlKind::Fader:
+        case ControlKind::XYPad:
+        case ControlKind::Joystick:
+        case ControlKind::Ribbon:
+        case ControlKind::Turntable:
+            return true;
+
+        default:
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
+    double FillAtRestForKind(Theme const& theme, ControlKind kind) noexcept
+    {
+        if (kind == ControlKind::Pad && theme.PadFillAtRest >= 0.0)
+        {
+            return theme.PadFillAtRest;
+        }
+
+        return FillAtRestFor(theme, FillsLikeASwitch(kind));
+    }
+
+    _Use_decl_annotations_
+    int32_t FillWhenOnFor(Theme const& theme, ControlKind kind) noexcept
+    {
+        if (kind == ControlKind::Pad && theme.PadFillWhenOnPercent >= 0)
+        {
+            return theme.PadFillWhenOnPercent;
+        }
+
+        return theme.FillWhenOnPercent;
+    }
+
+    _Use_decl_annotations_
     ThemeColor InkOn(ThemeColor const& themeInk, ThemeColor const& background) noexcept
     {
         if (themeInk.A != 0 && ContrastRatio(themeInk, background) >= 4.5)
@@ -131,11 +207,29 @@ namespace glass
 
         // A switch can be filled at rest while a knob on the same panel is bare, so the wash is
         // asked for by kind rather than read straight off the theme.
-        auto const fillAtRest = FillAtRestFor(theme, FillsLikeASwitch(control.Kind));
+        auto const fillAtRest = FillAtRestForKind(theme, control.Kind);
+
+        // Anything pressed or read rather than turned or slid. A theme can light a knob's ring
+        // and a fader's frame all the time while its buttons stay black until they are on.
+        auto const pressedOrRead = !IsTurnedOrSlid(control.Kind) &&
+            control.Kind != ControlKind::Panel &&
+            control.Kind != ControlKind::Line;
+
+        // One row of cream caps on a panel of black ones. A theme with no neutral has nothing to
+        // put on the cap, so the control stays what it was.
+        auto const neutralCap = theme.NeutralCaps &&
+            control.HueSlot == NeutralSlot &&
+            HasNeutralColor(theme);
+
+        auto const fillWhenOn = FillWhenOnFor(theme, control.Kind);
 
         colors.Pipe = value;
         colors.Track = theme.TrackColor;
-        colors.ArcTrack = EffectiveArcTrackColor(theme);
+
+        // A ring of its own light, or the one track every knob shares.
+        colors.ArcTrack = theme.ArcTrackHuePercent > 0
+            ? AtStrength(hue, theme.ArcTrackHuePercent / 100.0)
+            : EffectiveArcTrackColor(theme);
 
         for (int32_t zone = 0; zone < MeterZoneCount; ++zone)
         {
@@ -174,6 +268,13 @@ namespace glass
         if (theme.PlateEndColor.A != 0 && theme.PlateColor.A != 0 && fillAtRest <= 0.0)
         {
             colors.PlateEnd = theme.PlateEndColor;
+        }
+
+        // A switch on the neutral slot wears the neutral as its cap, whatever the plate is.
+        if (neutralCap && FillsLikeASwitch(control.Kind))
+        {
+            colors.Plate = NeutralCapTop(theme.NeutralColor);
+            colors.PlateEnd = NeutralCapBottom(theme.NeutralColor);
         }
 
         // What the resting plate actually comes out as once it is over the deck. The touch and
@@ -223,9 +324,14 @@ namespace glass
             // A light theme has to run it much higher, because a hairline that reads as a line
             // on near-black is not there at all on near-white. That is what the property is
             // for; it is not a taste setting.
-            auto const strength = theme.RimStrengthPercent > 0
-                ? theme.RimStrengthPercent / 100.0
-                : RestingRimAlpha;
+            //
+            // Zero is no rim at all. It used to fall back to a quarter, so a slider taken to the
+            // bottom still drew one.
+            auto const percent = pressedOrRead && theme.SwitchRimStrengthPercent >= 0
+                ? theme.SwitchRimStrengthPercent
+                : theme.RimStrengthPercent;
+
+            auto const strength = std::clamp(percent, 0, 100) / 100.0;
 
             colors.Rim = hue;
             colors.Rim.A = static_cast<uint8_t>(std::clamp(std::lround(hue.A * strength), 0L, 255L));
@@ -259,7 +365,11 @@ namespace glass
         // The floor under the animated value rather than a second layer. A lit thing on a tube
         // spills a little all the time, and on those themes that spill is the only thing
         // separating a control from the glass.
-        colors.RestingGlow = std::clamp(theme.RestingGlowPercent / 100.0, 0.0, 1.0);
+        auto const glowPercent = pressedOrRead && theme.SwitchRestingGlowPercent >= 0
+            ? theme.SwitchRestingGlowPercent
+            : theme.RestingGlowPercent;
+
+        colors.RestingGlow = std::clamp(glowPercent / 100.0, 0.0, 1.0);
 
         // The bar is brightest where the value is and falls away behind it. A falloff of one
         // means the theme wants a flat bar, which is what the tonal themes and Bigwig ask for.
@@ -310,6 +420,13 @@ namespace glass
             break;
         }
 
+        if (neutralCap && theme.Thumb != ThumbStyle::None)
+        {
+            colors.Thumb = NeutralCapTop(theme.NeutralColor);
+            colors.ThumbEnd = NeutralCapBottom(theme.NeutralColor);
+            colors.ThumbLine = NeutralCapLine(theme.NeutralColor);
+        }
+
         // On is the plate itself carrying the hue, top brighter than bottom. The same two
         // numbers on every theme: what changes between them is the hue and whether it glows.
         //
@@ -320,25 +437,30 @@ namespace glass
         //
         // A theme can turn the fill off entirely and say it with a lamp alone, which is what
         // alpha 0 means here.
-        if (theme.FillWhenOnPercent <= 0)
+        if (fillWhenOn <= 0)
         {
             colors.OnPlate = { hue.R, hue.G, hue.B, 0 };
             colors.OnPlateEnd = colors.OnPlate;
 
-            // The lamp, and the faint line of its light around the switch while it is lit.
-            colors.Lamp = theme.LampColor.A != 0 ? theme.LampColor : hue;
+            // The lamp, and the faint line of its light around the switch while it is lit. A
+            // lamp the color of the cream cap it sits in would not be there at all, so a neutral
+            // cap lights the theme's first lamp.
+            colors.Lamp = theme.LampColor.A != 0
+                ? theme.LampColor
+                : (neutralCap ? theme.HueSlots[0] : hue);
+
             colors.LampRim = colors.Lamp;
             colors.LampRim.A = static_cast<uint8_t>(std::clamp(std::lround(colors.Lamp.A * 0.40), 0L, 255L));
 
             // A lit lamp spills its own light, not the switch's hue.
-            if (theme.LampColor.A != 0 && FillsLikeASwitch(control.Kind))
+            if ((theme.LampColor.A != 0 || neutralCap) && FillsLikeASwitch(control.Kind))
             {
-                colors.Bloom = { theme.LampColor.R, theme.LampColor.G, theme.LampColor.B, colors.Bloom.A };
+                colors.Bloom = { colors.Lamp.R, colors.Lamp.G, colors.Lamp.B, colors.Bloom.A };
             }
         }
         else
         {
-            auto const onFill = std::clamp(theme.FillWhenOnPercent / 100.0, 0.0, 1.0);
+            auto const onFill = std::clamp(fillWhenOn / 100.0, 0.0, 1.0);
 
             // The bottom carries half as much at a third's worth of fill, which is the lit top
             // edge every theme is drawn with. It catches up as the fill grows, so a tab that IS
@@ -423,9 +545,34 @@ namespace glass
         // control.
         if (theme.KnobTickCount > 0)
         {
-            colors.KnobTick = colors.Label;
-            colors.KnobTick.A = static_cast<uint8_t>(std::clamp(std::lround(colors.Label.A * 0.60), 0L, 255L));
+            colors.KnobTick = AtStrength(colors.Label, KnobTickStrength);
         }
+
+        // A fader's scale printed beside its slot the way the ring is printed round a knob.
+        colors.FaderTick = theme.FaderScalePercent > 0
+            ? AtStrength(colors.Label, theme.FaderScalePercent / 100.0)
+            : colors.Marks;
+
+        // Ink by surface. A section is printed in its own ink where the theme names one; an inset
+        // and the deck keep the theme's.
+        colors.SectionLabel = theme.SectionInkColor.A != 0 ? theme.SectionInkColor : colors.Label;
+
+        if (theme.KnobTickCount > 0)
+        {
+            colors.SectionKnobTick = AtStrength(colors.SectionLabel, KnobTickStrength);
+        }
+
+        colors.SectionFaderTick = theme.FaderScalePercent > 0
+            ? AtStrength(colors.SectionLabel, theme.FaderScalePercent / 100.0)
+            : colors.Marks;
+
+        colors.Rule = theme.RuleColor.A != 0
+            ? theme.RuleColor
+            : AtStrength(colors.Label, DerivedRuleStrength);
+
+        colors.SectionRule = theme.SectionInkColor.A != 0
+            ? ThemeColor{ theme.SectionInkColor.R, theme.SectionInkColor.G, theme.SectionInkColor.B, colors.Rule.A }
+            : colors.Rule;
 
         auto const withStrength = [](ThemeColor color, int32_t percent) noexcept
             {

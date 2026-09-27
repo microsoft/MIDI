@@ -89,8 +89,18 @@
 #define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_NAME      L"name_transport_supplied"
 #define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_DESC      L"desc_transport_supplied"
 #define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_DESC           L"desc_user_supplied"
+#define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_MUTED                        L"muted"
+#define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_DISCOVERY_COMPLETE           L"endpoint_discovery_complete"
 #define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_ID                    L"parent_id"
 #define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_NAME                  L"parent_name"
+#define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_USB_VID               L"parent_usb_vid"
+#define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_USB_PID               L"parent_usb_pid"
+#define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_USB_SERIAL            L"parent_usb_serial"
+#define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_DRIVER_DEVICE_ID      L"parent_driver_device_id"
+#define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_ENUMERATOR_NAME       L"parent_enumerator_name"
+#define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_SERVICE_NAME          L"parent_service_name"
+#define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_DRIVER_INF_PATH       L"parent_driver_inf_path"
+#define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_DRIVER_VERSION        L"parent_driver_version"
 
 #define MIDIDIAG_FIELD_LABEL_GTB_NUMBER                                  L"gtb_number"
 #define MIDIDIAG_FIELD_LABEL_GTB_NAME                                    L"gtb_name"
@@ -132,6 +142,18 @@
 #define MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_NAME                         L"name"
 #define MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_COUNT                        L"endpoint_count"
 #define MIDIDIAG_FIELD_LABEL_WINMM_ERROR_COUNT                           L"dev_caps_error_count"
+
+
+#define MIDIDIAG_SECTION_LABEL_SESSIONS                                  L"enum_sessions"
+#define MIDIDIAG_FIELD_LABEL_SESSION_COUNT                               L"session_count"
+#define MIDIDIAG_FIELD_LABEL_SESSION_NAME                                L"session_name"
+#define MIDIDIAG_FIELD_LABEL_SESSION_PROCESS_NAME                        L"process_name"
+#define MIDIDIAG_FIELD_LABEL_SESSION_PROCESS_ID                          L"process_id"
+#define MIDIDIAG_FIELD_LABEL_SESSION_START_TIME                          L"session_start_time"
+#define MIDIDIAG_FIELD_LABEL_SESSION_CONNECTION_COUNT                    L"connection_count"
+#define MIDIDIAG_FIELD_LABEL_SESSION_CONNECTION_DEVICE_ID                L"connection_device_id"
+#define MIDIDIAG_FIELD_LABEL_SESSION_CONNECTION_INSTANCE_COUNT           L"connection_instance_count"
+#define MIDIDIAG_FIELD_LABEL_SESSION_CONNECTION_EARLIEST_TIME            L"connection_earliest_time"
 
 
 #define MIDIDIAG_SECTION_LABEL_PING_TEST                                 L"ping_test"

@@ -245,6 +245,17 @@ namespace winrt::midiglass::implementation
                     resources::FormatString(L"ChannelNumberFormat", std::to_wstring(channel))));
             }
 
+            // In the order of the two answers a line's rectangle can give, and of LineEnds.
+            for (auto const* const key : { L"LineDirectionAcross", L"LineDirectionDown" })
+            {
+                LineDirectionCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            for (auto const* const key : { L"LineEndsUseTheme", L"LineEndsSquare", L"LineEndsFaded" })
+            {
+                LineEndsCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
             // Every color code in the inspector gets the same swatch button beside it. Blank is
             // a real answer on all four: it means the theme decides.
             auto const keyboardEdit = [weak = get_weak()]()
@@ -265,6 +276,15 @@ namespace winrt::midiglass::implementation
                     if (auto strong = weak.get())
                     {
                         strong->OnPictureTintChanged(nullptr, nullptr);
+                    }
+                });
+
+            AttachColorPicker(LineColorButton(), LineColorBox(), true,
+                [weak = get_weak()]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->ApplyLineEdit();
                     }
                 });
         }
@@ -470,6 +490,20 @@ namespace winrt::midiglass::implementation
             {
                 TurntableDegreesBox().Value(control.Turntable.DegreesForFullRange);
                 TurntableGripCheck().IsChecked(control.Turntable.ShowsGrip);
+            }
+
+            // ---- the line ----
+
+            auto const line = control.Kind == glass::ControlKind::Line;
+
+            show(LinePanel(), line);
+
+            if (line)
+            {
+                LineDirectionCombo().SelectedIndex(control.Width >= control.Height ? 0 : 1);
+                LineThicknessBox().Value(control.Line.Thickness);
+                LineColorBox().Text(winrt::hstring{ control.Line.Color });
+                LineEndsCombo().SelectedIndex(static_cast<int32_t>(control.Line.Ends));
             }
 
             // ---- where it springs back to ----

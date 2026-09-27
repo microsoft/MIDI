@@ -990,6 +990,133 @@ namespace winrt::midiglass::implementation
         ApplyTurntableEdit();
     }
 
+    // ---------------------------------------------------------------- the line
+
+    void EditorWindow::ApplyLineEdit()
+    {
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr)
+        {
+            return;
+        }
+
+        auto line = control->Line;
+
+        if (!std::isnan(LineThicknessBox().Value()))
+        {
+            line.Thickness = LineThicknessBox().Value();
+        }
+
+        // Kept as typed, the way every other color in the inspector is. The surface ignores a
+        // code it cannot read and falls back to the theme's line color.
+        line.Color = std::wstring{ LineColorBox().Text() };
+
+        auto const ends = LineEndsCombo().SelectedIndex();
+
+        if (ends >= 0)
+        {
+            line.Ends = static_cast<glass::LineEnds>(std::clamp(
+                ends, static_cast<int32_t>(glass::LineEnds::UseTheme), static_cast<int32_t>(glass::LineEnds::Faded)));
+        }
+
+        ApplyControlEdit(control->Id, [&](std::wstring const& id)
+            { return m_editor.SetControlLine(id, line); });
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLineDirectionChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const* const control = SingleSelectedControl();
+
+            if (control == nullptr)
+            {
+                return;
+            }
+
+            auto const index = LineDirectionCombo().SelectedIndex();
+
+            if (index < 0)
+            {
+                return;
+            }
+
+            // A line runs the long way across its rectangle, so turning it is swapping the two
+            // sides. Turned about its own middle, so it stays where it was put.
+            auto const across = control->Width >= control->Height;
+
+            if ((index == 0) == across)
+            {
+                return;
+            }
+
+            auto const id = control->Id;
+            auto const width = control->Height;
+            auto const height = control->Width;
+            auto const x = control->X + (control->Width - control->Height) * 0.5;
+            auto const y = control->Y + (control->Height - control->Width) * 0.5;
+
+            if (m_editor.SetControlBounds(id, x, y, width, height))
+            {
+                RebuildSurface();
+                UpdateStatusBar();
+                MarkChanged();
+                RefreshInspector();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to turn the line.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLineThicknessChanged(
+        controls::NumberBox const& sender,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyLineEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLineColorChanged(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyLineEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLineEndsChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyLineEdit();
+    }
+
     // ---------------------------------------------------------------- the stops
 
     _Use_decl_annotations_

@@ -1034,6 +1034,10 @@
   <data name="PalettePanel" xml:space="preserve">
     <value>Group</value>
   </data>
+  <data name="PaletteLine" xml:space="preserve">
+    <value>Line</value>
+    <comment>A palette item: a printed line that divides one part of a layout from another. It does not send anything.</comment>
+  </data>
   <data name="CanvasScaleFormat" xml:space="preserve">
     <value>{0} %</value>
   </data>
@@ -1210,6 +1214,45 @@
   </data>
   <data name="PictureTintCaption.Text" xml:space="preserve">
     <value>Black dims the picture, which is what a busy clip behind a page of controls usually needs. Any other color tints it.</value>
+  </data>
+  <data name="InspectorLineHeading.Text" xml:space="preserve">
+    <value>Line</value>
+  </data>
+  <data name="LineDirectionCombo.Header" xml:space="preserve">
+    <value>Which way it runs</value>
+  </data>
+  <data name="LineDirectionAcross" xml:space="preserve">
+    <value>Across</value>
+  </data>
+  <data name="LineDirectionDown" xml:space="preserve">
+    <value>Up and down</value>
+  </data>
+  <data name="LineThicknessBox.Header" xml:space="preserve">
+    <value>Thickness in pixels</value>
+  </data>
+  <data name="LineColorBox.Header" xml:space="preserve">
+    <value>Color, or blank for the theme's</value>
+  </data>
+  <data name="LineColorBox.PlaceholderText" xml:space="preserve">
+    <value>the theme's line color</value>
+  </data>
+  <data name="LineColorButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pick the line color</value>
+  </data>
+  <data name="LineEndsCombo.Header" xml:space="preserve">
+    <value>Ends</value>
+  </data>
+  <data name="LineEndsUseTheme" xml:space="preserve">
+    <value>Whatever the theme does</value>
+  </data>
+  <data name="LineEndsSquare" xml:space="preserve">
+    <value>Square</value>
+  </data>
+  <data name="LineEndsFaded" xml:space="preserve">
+    <value>Fade out</value>
+  </data>
+  <data name="LineCaption.Text" xml:space="preserve">
+    <value>A line divides one part of a page from another. It sends nothing and can't be pressed, so it's safe to put right beside a control.</value>
   </data>
   <data name="PictureFilterBothFormat" xml:space="preserve">
     <value>Pictures and video ({0})</value>
@@ -2903,6 +2946,12 @@
   <data name="ThemeCautionSupersaw" xml:space="preserve">
     <value>A switch that is on looks exactly like a switch that is off, apart from its lamp. That is what makes a rack of them readable at arm's length, but it does mean the state is one small light rather than a whole button.</value>
   </data>
+  <data name="ThemeCautionFiveIsh" xml:space="preserve">
+    <value>Color is only a lamp here. Knobs and faders are silver, black and white, so you can't group them by color. Put controls on the green or on the black, not on the tan: a white value on the tan is too faint to read.</value>
+  </data>
+  <data name="ThemeCautionAirySystem" xml:space="preserve">
+    <value>A light show, on purpose. Everything that turns or slides glows all the time, so on a busy page a touch has less to stand out against. It's made for a dark room.</value>
+  </data>
   <data name="ThemeCautionPigment" xml:space="preserve">
     <value>Every control carries a wash of its own color at rest, so a busy page is colorful even when nothing is happening and activity has less room to stand out.</value>
   </data>
@@ -2982,6 +3031,15 @@
   <data name="ThemeFillWhenOnNote" xml:space="preserve">
     <value>At zero a switch that is on looks like one that is off, apart from its lamp. A rack of identical switches with one lamp lit is easier to read across a room than a rack of colored blocks.</value>
   </data>
+  <data name="ThemeRowPadFillAtRest" xml:space="preserve">
+    <value>Pad fill at rest</value>
+  </data>
+  <data name="ThemeRowPadFillWhenOn" xml:space="preserve">
+    <value>Pad fill when on</value>
+  </data>
+  <data name="ThemePadNote" xml:space="preserve">
+    <value>Pads can be colored plastic that glows when lit, while the buttons beside them stay dark. At Same, a pad looks like any other switch.</value>
+  </data>
   <data name="ThemeRowSectionHeader" xml:space="preserve">
     <value>Section header</value>
   </data>
@@ -2994,6 +3052,10 @@
   <data name="ThemeSectionNotched" xml:space="preserve">
     <value>Name in the frame</value>
     <comment>A section header style: the section's name sits in a gap cut into the top line of its frame.</comment>
+  </data>
+  <data name="ThemeSectionCentered" xml:space="preserve">
+    <value>Name centered at the top</value>
+    <comment>A section header style: the section's name is centered across the top of the section.</comment>
   </data>
   <data name="ThemeRowSectionNameInHue" xml:space="preserve">
     <value>Section name in color</value>
@@ -3025,8 +3087,18 @@
   <data name="ThemeFaderPlateNone" xml:space="preserve">
     <value>None, just the slot</value>
   </data>
+  <data name="ThemeFaderPlateFrame" xml:space="preserve">
+    <value>A lit frame around the slot</value>
+    <comment>A fader plate style: the rim and its glow go around the fader's slot, and the marks are printed outside them.</comment>
+  </data>
   <data name="ThemeRowFaderFill" xml:space="preserve">
     <value>Fader fill</value>
+  </data>
+  <data name="ThemeRowFaderScale" xml:space="preserve">
+    <value>Fader scale</value>
+  </data>
+  <data name="ThemeFaderScaleNote" xml:space="preserve">
+    <value>Above zero, the marks beside a fader are printed in the ink at this strength, like the scale next to a slider on a hardware panel. At zero they're the faint marks meant for inside a plate.</value>
   </data>
   <data name="ThemeRowThumbShadow" xml:space="preserve">
     <value>Cap shadow</value>
@@ -3061,6 +3133,9 @@
   <data name="ThemeRowKnobCapSize" xml:space="preserve">
     <value>Knob cap size</value>
   </data>
+  <data name="ThemeRowPointerOnCap" xml:space="preserve">
+    <value>Pointer on the cap</value>
+  </data>
   <data name="ThemeRowKnobTicks" xml:space="preserve">
     <value>Knob marks</value>
   </data>
@@ -3072,6 +3147,15 @@
   </data>
   <data name="ThemeRowLampColor" xml:space="preserve">
     <value>Lamp color</value>
+  </data>
+  <data name="ThemeRowLampShape" xml:space="preserve">
+    <value>Lamp shape</value>
+  </data>
+  <data name="ThemeRowNeutralCaps" xml:space="preserve">
+    <value>Neutral caps</value>
+  </data>
+  <data name="ThemeNeutralCapsNote" xml:space="preserve">
+    <value>A switch or fader set to the neutral slot wears the neutral color as its cap. It's how a panel marks one row of controls as belonging together without giving it a color.</value>
   </data>
   <data name="ThemeRowPanelFill" xml:space="preserve">
     <value>Section fill</value>
@@ -3093,6 +3177,30 @@
   </data>
   <data name="ThemeRowPanelOutline" xml:space="preserve">
     <value>Section outline</value>
+  </data>
+  <data name="ThemeRowPanelElevation" xml:space="preserve">
+    <value>Section raised</value>
+  </data>
+  <data name="ThemeRowInsetPanel" xml:space="preserve">
+    <value>Inner section</value>
+  </data>
+  <data name="ThemeRowInsetPanelEnd" xml:space="preserve">
+    <value>Inner section bottom</value>
+  </data>
+  <data name="ThemeInsetPanelNote" xml:space="preserve">
+    <value>A section placed inside another section uses this color, printed flat with no shadow. Leave it empty and it looks like any other section.</value>
+  </data>
+  <data name="ThemeRowSectionInk" xml:space="preserve">
+    <value>Section ink</value>
+  </data>
+  <data name="ThemeSectionInkNote" xml:space="preserve">
+    <value>Names and scales printed on a filled section use this ink. Anything on the deck or on an inner section keeps the main ink. Use it when no single ink can be read on both.</value>
+  </data>
+  <data name="ThemeRowRuleColor" xml:space="preserve">
+    <value>Line color</value>
+  </data>
+  <data name="ThemeRowRuleFades" xml:space="preserve">
+    <value>Lines fade at the ends</value>
   </data>
   <data name="ThemeRowKeyWhite" xml:space="preserve">
     <value>Natural keys</value>
@@ -3142,6 +3250,12 @@
   <data name="ThemeRowRimStrength" xml:space="preserve">
     <value>Rim strength</value>
   </data>
+  <data name="ThemeRowSwitchRimStrength" xml:space="preserve">
+    <value>Switch rim strength</value>
+  </data>
+  <data name="ThemeSwitchRimNote" xml:space="preserve">
+    <value>Buttons, pads and lamps can rest darker than knobs and faders. At zero a switch has no rim until it's on. At Same, it follows the row above.</value>
+  </data>
   <data name="ThemeRowNeutralRim" xml:space="preserve">
     <value>Neutral rim</value>
   </data>
@@ -3150,6 +3264,15 @@
   </data>
   <data name="ThemeRowArcTrack" xml:space="preserve">
     <value>Knob arc track</value>
+  </data>
+  <data name="ThemeRowArcTrackHue" xml:space="preserve">
+    <value>Knob ring in its color</value>
+  </data>
+  <data name="ThemeArcTrackHueNote" xml:space="preserve">
+    <value>Above zero, the unlit part of a knob's ring is the knob's own color at this strength, instead of the arc track color. A blue knob then sits in a blue ring.</value>
+  </data>
+  <data name="ThemeRowArcGlow" xml:space="preserve">
+    <value>Knob value glows</value>
   </data>
   <data name="ThemeRowValueStrip" xml:space="preserve">
     <value>Value strip</value>
@@ -3197,6 +3320,9 @@
   <data name="ThemeRowRestingGlow" xml:space="preserve">
     <value>Resting glow</value>
   </data>
+  <data name="ThemeRowSwitchRestingGlow" xml:space="preserve">
+    <value>Switch resting glow</value>
+  </data>
   <data name="ThemeRowStaysLit" xml:space="preserve">
     <value>Stays lit for</value>
   </data>
@@ -3229,6 +3355,12 @@
   </data>
   <data name="ThemeGrainNote" xml:space="preserve">
     <value>Texture in the panel rather than a color over it. At full it reads as sandpaper and at a quarter it is only a warmth. Controls sit on top of it, so the grain never touches them.</value>
+  </data>
+  <data name="ThemeRowGrainStreak" xml:space="preserve">
+    <value>Grain length</value>
+  </data>
+  <data name="ThemeGrainStreakNote" xml:space="preserve">
+    <value>At 1 the grain is fine specks. Longer, it turns into streaks running across the page, like brushed metal.</value>
   </data>
   <data name="ThemeRowMeterSignal" xml:space="preserve">
     <value>Signal</value>
@@ -3294,6 +3426,12 @@
   </data>
   <data name="ThemeCapControlColor" xml:space="preserve">
     <value>The control's color</value>
+  </data>
+  <data name="ThemeLampBar" xml:space="preserve">
+    <value>A bar</value>
+  </data>
+  <data name="ThemeLampDot" xml:space="preserve">
+    <value>A round lamp</value>
   </data>
   <data name="ThemeSlotOne" xml:space="preserve">
     <value>Slot 1</value>

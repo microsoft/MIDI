@@ -710,6 +710,35 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool EditorController::SetControlLine(std::wstring const& id, LineSpec const& line)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr)
+        {
+            return false;
+        }
+
+        auto const thickness = std::clamp(line.Thickness, MinimumLineThickness, MaximumLineThickness);
+
+        if (control->Line.Thickness == thickness &&
+            control->Line.Color == line.Color &&
+            control->Line.Ends == line.Ends)
+        {
+            return false;
+        }
+
+        // Field by field, so anything a newer version wrote into the line survives the edit.
+        control->Line.Thickness = thickness;
+        control->Line.Color = line.Color;
+        control->Line.Ends = line.Ends;
+
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
     bool EditorController::SetControlDefaultValueY(std::wstring const& id, double value)
     {
         auto* const control = MutableControl(id);

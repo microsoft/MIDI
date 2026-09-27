@@ -241,6 +241,9 @@ namespace glass
         bool SetControlLfo(_In_ std::wstring const& id, _In_ LfoSpec const& lfo);
         bool SetControlTurntable(_In_ std::wstring const& id, _In_ TurntableSpec const& turntable);
 
+        // A printed line's thickness, color and ends.
+        bool SetControlLine(_In_ std::wstring const& id, _In_ LineSpec const& line);
+
         // The second axis's starting value, for an XY pad and a joystick.
         bool SetControlDefaultValueY(_In_ std::wstring const& id, _In_ double value);
 

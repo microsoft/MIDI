@@ -51,6 +51,7 @@ namespace winrt::midiglass::implementation
             glass::ControlKind::Image,
             glass::ControlKind::PageTab,
             glass::ControlKind::Panel,
+            glass::ControlKind::Line,
         };
 
         constexpr wchar_t const* KindResourceKeys[]
@@ -61,7 +62,7 @@ namespace winrt::midiglass::implementation
             L"PaletteLfo",
             L"PaletteTimeDisplay",
             L"PaletteMeter", L"PaletteLamp", L"PaletteReadout",
-            L"PaletteLabel", L"PaletteImage", L"PalettePageTab", L"PalettePanel",
+            L"PaletteLabel", L"PaletteImage", L"PalettePageTab", L"PalettePanel", L"PaletteLine",
         };
 
         static_assert(std::size(KindOrder) == std::size(KindResourceKeys));
@@ -561,7 +562,8 @@ namespace winrt::midiglass::implementation
             auto const passive =
                 control->Kind == glass::ControlKind::Label ||
                 control->Kind == glass::ControlKind::Image ||
-                control->Kind == glass::ControlKind::Panel;
+                control->Kind == glass::ControlKind::Panel ||
+                control->Kind == glass::ControlKind::Line;
 
             MidiInTab().IsEnabled(!passive);
             BehaviorTab().IsEnabled(!passive);

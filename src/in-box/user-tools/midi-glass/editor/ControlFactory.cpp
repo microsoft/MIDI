@@ -112,6 +112,8 @@ namespace glass
             // ---- Grouping ----
             { ControlKind::Panel,   L"PalettePanel",   L"PaletteGroupLayout", L'\uE7C1',
                 { PaletteArtShape::Rectangle, 24, 16, 3, 0.70, 0.00 } },
+            { ControlKind::Line,    L"PaletteLine",    L"PaletteGroupLayout", L'\uE738',
+                { PaletteArtShape::Rectangle, 24, 2, 1, 0.00, 0.85 } },
         };
 
         return entries;
@@ -145,6 +147,7 @@ namespace glass
         case ControlKind::PageTab:
         case ControlKind::Panel:
         case ControlKind::TimeDisplay:
+        case ControlKind::Line:
             return false;
 
         default:
@@ -229,6 +232,13 @@ namespace glass
         {
             control.Style = ControlStyleOverride::Bare;
             control.LabelPlaced = LabelPlacementOverride::InsideCenter;
+        }
+
+        // A rule has no name to show, and the theme's own rule color rather than a hue.
+        if (kind == ControlKind::Line)
+        {
+            control.LabelPlaced = LabelPlacementOverride::None;
+            control.Ticks.Show = false;
         }
 
         // A joystick that does not recenter is an XY pad drawn as a circle, so the spring is on

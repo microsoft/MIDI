@@ -2583,7 +2583,7 @@ html, body {
 
 /* =========================================================================
    "SUPERSAW" - a matte blue panel with the texture of very fine sandpaper,
-   shiny black moulding, and one small red lamp per switch.
+   shiny black molding, and one small red lamp per switch.
    After the Roland JP-8000.
 
    Two things here that no other theme has asked for:
@@ -2790,4 +2790,661 @@ html, body {
     background: linear-gradient(180deg, rgba(255, 255, 255, .28), rgba(0, 0, 0, .06)), rgb(var(--h1));
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .40), 0 0 12px rgba(var(--h1), .40);
     color: #150D05;
+}
+
+
+/* =========================================================================
+   "FIVE-iSH" - black metal, a panel printed in two layers, and silver knobs
+   with black caps. After the Roland SH-7, which shares its look with the
+   SH-5 and some of the modular systems of the same decade.
+
+   The idea that makes it different: THE PANEL IS PRINTED TWICE. A section is
+   a tan block with its name in black across the top, and the controls sit on
+   a green block printed inside it, with their names and scales in white. Two
+   surfaces and two inks on one page. Every theme so far has one panel color
+   and one ink, and that is the strain this one puts on the model.
+
+   Nothing on the instrument is colored. Every value is drawn in the print
+   white, so a knob or a fader never carries a hue; the six slots are the six
+   colors a panel lamp came in, and they light a lamp or a meter and nothing
+   else.
+
+   Measured in g:\midi-scratch\sh7-aira-contrast.ps1: white print on the green
+   4.9 : 1, black print on the tan 9.7 : 1. White on the tan is 1.5 and black
+   on the green 3.0, so neither ink can do both surfaces; and the lamp red on
+   the green is 1.7, so a slot color is never drawn bare on the green.
+   ========================================================================= */
+
+.surf.fiveish {
+    --deck: linear-gradient(180deg, #222221 0%, #1C1C1B 46%, #171716 100%);
+    --section: linear-gradient(180deg, #CAC5AC 0%, #BFBA9F 100%);
+    --inset: linear-gradient(180deg, #566D55 0%, #4F654E 100%);
+    --plate: linear-gradient(180deg, #3A3A36 0%, #1E1E1C 42%, #111110 100%);
+    --track: #121311;
+    --arc-track: rgba(8, 12, 8, .40);
+    --on-hue: #1D1D1A;
+    --deck-ink: #F2EFE3;                /* print on the green and on the black */
+    --deck-ink2: rgba(242, 239, 227, .70);
+    --section-ink: #1D1D1A;             /* print on the tan */
+    --print: 242, 239, 227;             /* every value, every scale, every pointer */
+    --grid1: rgba(255, 255, 255, .12);
+    --grid2: rgba(255, 255, 255, .045);
+    --tonal-rest: 0;
+    --tonal-held: .14;
+    --rim-rest: 0;
+    --tonal-radius: 3px;
+    --cap-shadow: 0 2px 4px rgba(0, 0, 0, .75);
+    --edge: rgba(0, 0, 0, .85);
+    --gloss: inset 0 1px 0 rgba(255, 255, 255, .17);
+
+    --silver: radial-gradient(circle at 50% 26%, #F7F7F4 0%, #D6D6D1 28%, #A4A49E 64%, #6C6C67 100%);
+    --knob-black: radial-gradient(circle at 50% 30%, #3E3E3B 0%, #1C1C1B 56%, #0A0A0A 100%);
+    --cream: linear-gradient(180deg, #F4EFDC 0%, #E3DCC4 46%, #C8C0A5 100%);
+
+    --h1: 255,  75,  54;   /* #FF4B36 red    - the lamp this instrument actually has */
+    --h2: 255, 164,  60;   /* #FFA43C amber  */
+    --h3: 245, 217,  76;   /* #F5D94C yellow */
+    --h4: 112, 219, 110;   /* #70DB6E green  */
+    --h5: 134, 196, 255;   /* #86C4FF blue   */
+    --h6: 255, 226, 176;   /* #FFE2B0 clear  - a warm white pilot lamp */
+}
+
+/* anything that is not a knob or a fader is black molded plastic */
+.surf.fiveish .ctl {
+    border-radius: var(--tonal-radius);
+    background: var(--plate);
+    box-shadow: var(--gloss), inset 0 0 0 1px var(--edge), 0 2px 3px rgba(0, 0, 0, .60);
+    color: var(--deck-ink);
+}
+.surf.fiveish .ctl .cap,
+.surf.fiveish .ctl.btn-ctl .name,
+.surf.fiveish .ctl.btn-ctl .glyph { color: var(--deck-ink); }
+
+/* on lights the lamp and leaves the cap black. The faint line round it is the
+   lamp's own light, which the engine already draws in lamp mode */
+.surf.fiveish .ctl.on {
+    background: var(--plate);
+    box-shadow:
+        var(--gloss),
+        inset 0 0 0 1px rgba(var(--hue), .40),
+        0 0 10px rgba(var(--hue), .20),
+        0 2px 3px rgba(0, 0, 0, .60);
+    color: var(--deck-ink);
+}
+.surf.fiveish .ctl.on .cap,
+.surf.fiveish .ctl.on .name,
+.surf.fiveish .ctl.on .glyph,
+.surf.fiveish .ctl.btn-ctl.on .glyph { color: var(--deck-ink); }
+
+.surf.fiveish .ctl.held {
+    box-shadow:
+        inset 0 0 0 2px rgba(242, 239, 227, .55),
+        inset 0 2px 5px rgba(0, 0, 0, .70),
+        0 1px 2px rgba(0, 0, 0, .70);
+}
+.surf.fiveish .ctl.dim {
+    opacity: 1;
+    background: linear-gradient(180deg, #2C2C29 0%, #242422 100%);
+    box-shadow: inset 0 0 0 1px var(--edge);
+    color: rgba(242, 239, 227, .38);
+}
+.surf.fiveish .ctl.offline {
+    background:
+        repeating-linear-gradient(135deg, rgba(242, 239, 227, .07) 0 6px, transparent 6px 12px),
+        #1E1E1C;
+    box-shadow: inset 0 0 0 1px var(--edge);
+}
+
+/* the lamp: a round lens at the top of the cap, not a bar. Unlit it is the same
+   lens with the light off, so there is always somewhere to look for it */
+.surf.fiveish .pipe {
+    left: 50%; right: auto; bottom: auto; top: 5px;
+    width: 7px; height: 7px; margin-left: -3.5px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%, rgba(255, 255, 255, .26) 0 16%, rgba(var(--hue), .24) 44%, rgba(var(--hue), .12) 100%);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .55);
+}
+.surf.fiveish .pipe.lit,
+.surf.fiveish .ctl.on .pipe.lit {
+    background: radial-gradient(circle at 38% 34%, #FFFFFF 0 16%, rgb(var(--hue)) 50%, rgba(var(--hue), .88) 100%);
+    box-shadow: 0 0 5px rgba(var(--hue), .95), 0 0 13px rgba(var(--hue), .50);
+    opacity: 1;
+}
+
+/* a lamp on its own, set into the panel: the overload light */
+.surf.fiveish .ctl.led {
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%, rgba(255, 255, 255, .28) 0 16%, rgba(var(--hue), .32) 46%, rgba(var(--hue), .16) 100%);
+    box-shadow: 0 0 0 2px #1A1A18, 0 1px 1px 2px rgba(0, 0, 0, .45);
+}
+.surf.fiveish .ctl.led.on {
+    background: radial-gradient(circle at 38% 34%, #FFFFFF 0 14%, rgb(var(--hue)) 48%, rgba(var(--hue), .90) 100%);
+    box-shadow: 0 0 0 2px #1A1A18, 0 0 8px 2px rgba(var(--hue), .80), 0 0 18px 4px rgba(var(--hue), .35);
+}
+
+/* ------------------------------------------------------------ knobs */
+/* A silver skirt with a black cap on it, and the white line is printed on the
+   CAP - the part that turns - rather than on the skirt under it. Round the
+   outside, the value in the print white on a dark groove, and outside that a
+   printed scale of eleven marks, nought to ten. */
+.surf.fiveish .knob { background: none; box-shadow: none; }
+.surf.fiveish .knob .dial { background: none; box-shadow: none; }
+.surf.fiveish .knob .dial::before {
+    content: "";
+    position: absolute; inset: -8px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(from 224.2deg,
+        rgba(var(--print), .62) 0 1.6deg, transparent 1.6deg 27deg);
+    -webkit-mask:
+        radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 5px)),
+        conic-gradient(from 222deg, #000 0 276deg, transparent 276deg 360deg);
+    -webkit-mask-composite: source-in;
+    mask:
+        radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 5px)),
+        conic-gradient(from 222deg, #000 0 276deg, transparent 276deg 360deg);
+    mask-composite: intersect;
+    pointer-events: none;
+}
+/* under 36 px a knob has no room for its scale, and the engine leaves it off too */
+.surf.fiveish .knob.nomarks .dial::before { display: none; }
+.surf.fiveish .knob .arc {
+    inset: 0;
+    background: conic-gradient(from 225deg,
+        rgb(var(--print)) 0turn var(--pct, .35turn),
+        var(--arc-track) var(--pct, .35turn) .75turn,
+        transparent .75turn 1turn);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+    filter: none;
+}
+.surf.fiveish .knob .skirt {
+    position: absolute; inset: 5px; border-radius: 50%;
+    background: var(--silver);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .30), 0 2px 4px rgba(0, 0, 0, .65);
+}
+.surf.fiveish .knob .knobcap {
+    position: absolute; inset: 24%; border-radius: 50%;
+    background: var(--knob-black);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 1px 2px rgba(0, 0, 0, .70);
+}
+/* from the cap's edge nearly to its middle */
+.surf.fiveish .knob .ptr {
+    left: 50%; top: 25%; width: 2px; height: 20%; margin-left: -1px;
+    border-radius: 1px;
+    background: rgb(var(--print));
+    box-shadow: none;
+    transform-origin: 50% 125%;
+}
+.surf.fiveish .knob.detent .dial::after { top: -11px; background: rgba(var(--print), .85); }
+.surf.fiveish .knob .kval { color: var(--deck-ink); }
+
+/* ----------------------------------------------------------- faders */
+/* No plate: a slot cut straight into the green, a scale printed either side of
+   it, and a black cap with a white line. The slot below the cap is only faintly
+   lit, because on the instrument the cap position is the whole value. */
+.surf.fiveish .fader { background: none; box-shadow: none; }
+.surf.fiveish .fader .slot {
+    width: 6px; border-radius: 3px;
+    background: var(--track);
+    box-shadow: inset 0 2px 3px rgba(0, 0, 0, .90), 0 1px 0 rgba(255, 255, 255, .10);
+}
+.surf.fiveish .fader .fill {
+    border-radius: 3px;
+    background: rgba(var(--print), .16);
+    box-shadow: none;
+}
+.surf.fiveish .fader .capbar {
+    left: -8px; right: -8px; height: 12px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #4A4A45 0%, #252523 34%, #121211 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .24), 0 3px 5px rgba(0, 0, 0, .75);
+}
+.surf.fiveish .fader .capbar::after {
+    left: 3px; right: 3px; height: 2px; margin-top: -1px;
+    border-radius: 0;
+    background: rgb(var(--print));
+    box-shadow: none;
+    opacity: 1;
+}
+.surf.fiveish .fader.horiz .slot { width: auto; height: 6px; }
+.surf.fiveish .fader.horiz .capbar { top: -8px; bottom: -8px; width: 12px; height: auto; }
+.surf.fiveish .fader.horiz .capbar::after {
+    top: 3px; bottom: 3px; left: 50%; right: auto;
+    width: 2px; height: auto; margin: 0 0 0 -1px;
+}
+/* printed either side of the slot, never across it */
+.surf.fiveish .fader .ticks i {
+    width: 24px; margin-left: -12px;
+    background: linear-gradient(90deg,
+        rgba(var(--print), .62) 0 30%, transparent 30% 70%, rgba(var(--print), .62) 70% 100%);
+}
+/* not asked for: the cream cap the instrument puts on the one row it wants you to find */
+.surf.fiveish .fader.cream .capbar {
+    background: var(--cream);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .60), 0 3px 5px rgba(0, 0, 0, .70);
+}
+.surf.fiveish .fader.cream .capbar::after { background: #3C3A31; }
+
+/* ------------------------------------------------- two axis controls */
+.surf.fiveish .xy .field2 {
+    inset: 3px; border-radius: 2px;
+    background: var(--track);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, .90);
+}
+.surf.fiveish .xy .field2::before {
+    background-image:
+        linear-gradient(rgba(var(--print), .10) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--print), .10) 1px, transparent 1px);
+}
+.surf.fiveish .xy .cross { background: rgba(var(--print), .45); box-shadow: none; }
+.surf.fiveish .xy .puck { background: var(--silver); box-shadow: 0 2px 4px rgba(0, 0, 0, .80); }
+.surf.fiveish .xy .trail { background: rgba(var(--print), .20); }
+
+.surf.fiveish .joy .ring { box-shadow: inset 0 0 0 1px rgba(var(--print), .16); }
+.surf.fiveish .joy .spring { box-shadow: inset 0 0 0 1px rgba(var(--print), .32); }
+.surf.fiveish .joy .puck { background: var(--silver); box-shadow: 0 3px 6px rgba(0, 0, 0, .80); }
+.surf.fiveish .joy .puck::after { inset: 24%; background: var(--knob-black); box-shadow: none; }
+
+.surf.fiveish .wheel .body {
+    background: linear-gradient(90deg, #0C0C0B, #262624 42%, #0C0C0B);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .80);
+}
+.surf.fiveish .wheel .ridges { background: repeating-linear-gradient(180deg, rgba(255, 255, 255, .07) 0 1px, transparent 1px 6px); }
+.surf.fiveish .wheel .ind { background: rgb(var(--print)); box-shadow: none; }
+
+/* the LFO, like everything else that shows a value, sits in a dark well */
+.surf.fiveish .lfo { padding: 0; }
+.surf.fiveish .lfo .lwell {
+    position: absolute; inset: 3px; border-radius: 2px;
+    background: var(--track);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, .90);
+}
+.surf.fiveish .lfo svg { position: absolute; left: 8px; top: 8px; width: calc(100% - 16px); height: calc(100% - 16px); }
+
+/* ------------------------------------------- meters, steps, clock */
+/* The trap every theme here has hit: `.surf.fiveish .meter i` outranks the base
+   `.meter i.lit`, so the three lit zones have to be named again. */
+.surf.fiveish .meter i { background: rgba(255, 255, 255, .07); }
+.surf.fiveish .meter i.lit { background: rgb(var(--h4)); box-shadow: 0 0 5px rgba(var(--h4), .55); }
+.surf.fiveish .meter i.lit.warn { background: rgb(var(--h3)); box-shadow: 0 0 5px rgba(var(--h3), .55); }
+.surf.fiveish .meter i.lit.hot { background: rgb(var(--h1)); box-shadow: 0 0 5px rgba(var(--h1), .55); }
+
+.surf.fiveish .steps .row i { border-radius: 2px; background: rgba(var(--hue), .14); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .60); }
+.surf.fiveish .steps .row i.on { background: rgb(var(--hue)); box-shadow: 0 0 7px rgba(var(--hue), .60); }
+.surf.fiveish .steps .row i.cur { box-shadow: inset 0 0 0 2px rgb(var(--print)); }
+
+/* --------------------------------------------- text, panels, tabs */
+.surf.fiveish .surftext.readout { color: rgb(var(--h1)); text-shadow: 0 0 9px rgba(var(--h1), .55); }
+
+/* the white rules printed on the metal between groups of sections */
+.surf.fiveish .surfrule { background: rgba(var(--print), .70); }
+
+/* a section is a tan block printed on the metal, named in black across its top */
+.surf.fiveish .ctlpanel {
+    border-radius: 4px;
+    background: var(--section);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .16);
+}
+.surf.fiveish .ctlpanel > .ptitle {
+    top: 5px; left: 0; right: 0; padding: 0;
+    background: none;
+    text-align: center;
+    font-size: 9px; font-weight: 700; letter-spacing: .14em;
+    color: var(--section-ink);
+}
+/* and the green inside it, where the controls live. Printed flat, so no shadow */
+.surf.fiveish .ctlpanel.inset {
+    border-radius: 5px;
+    background: var(--inset);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12);
+}
+.surf.fiveish .ctlpanel.inset > .ptitle { color: var(--deck-ink); }
+
+/* a page tab is a switch like the rest: a black cap, and the lamp says which page */
+.surf.fiveish .pagetabs .tab {
+    gap: 6px;
+    border-radius: 3px;
+    background: var(--plate);
+    box-shadow: var(--gloss), inset 0 0 0 1px var(--edge);
+    color: var(--deck-ink2);
+}
+.surf.fiveish .pagetabs .tab::before {
+    content: "";
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(var(--h1), .22);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .50);
+}
+.surf.fiveish .pagetabs .tab.sel {
+    background: var(--plate);
+    box-shadow: var(--gloss), inset 0 0 0 1px var(--edge);
+    color: var(--deck-ink);
+}
+.surf.fiveish .pagetabs .tab.sel::before { background: rgb(var(--h1)); box-shadow: 0 0 5px rgba(var(--h1), .90); }
+
+
+/* =========================================================================
+   "AIRY SYSTEM" - black brushed metal and green light. After Roland's AIRA
+   family: the synthesizers, the drum machine and the mixer.
+
+   One panel, three families of control, and each is lit a different way:
+
+   1. WHAT TURNS OR SLIDES IS LIT ALL THE TIME. A knob sits in a ring of its
+      own light and a fader in a lit frame, whether anybody is touching it or
+      not. That light is not the value; it is how the panel says "this is a
+      control" in a dark room. The value is the brighter part of the ring.
+   2. A BUTTON IS BLACK UNTIL IT IS ON, and then its edge lights - green on
+      the synthesizers, and on the mixer whatever color that channel's job is.
+   3. A PAD IS COLORED PLASTIC WITH A LAMP BEHIND IT: dim at rest and its
+      color outright when lit. Red, orange, yellow and white in fours, the way
+      the drum machine's sixteen steps are.
+
+   Every theme so far lights all of its controls one way. This one needs three
+   rest states on one page, and that is what it asks of the model.
+
+   Measured in g:\midi-scratch\sh7-aira-contrast.ps1: every slot clears 5.6
+   against the deck, the closest two slots (red and orange) are delta E 41.7
+   apart, and a name on a pad clears 4.5 at rest and lit.
+   ========================================================================= */
+
+.surf.airy {
+    --deck: linear-gradient(180deg, #1A1B1B 0%, #131414 42%, #0C0D0D 100%);
+    --plate: linear-gradient(180deg, #232525 0%, #171818 48%, #0F1010 100%);
+    --track: #060707;
+    --on-hue: #0B0C0C;
+    --deck-ink: #E4E7E5;
+    --deck-ink2: rgba(228, 231, 229, .62);
+    --grid1: rgba(255, 255, 255, .12);
+    --grid2: rgba(255, 255, 255, .045);
+    --tonal-rest: 0;
+    --tonal-held: .20;
+    --rim-rest: 0;
+    --tonal-radius: 4px;
+    --cap-shadow: 0 2px 5px rgba(0, 0, 0, .80);
+    --edge: rgba(0, 0, 0, .85);
+    --gloss: inset 0 1px 0 rgba(255, 255, 255, .11);
+
+    --ring-rest: .30;                   /* a knob's ring at rest, in its own color */
+    --frame: .85;                       /* a fader's frame at rest */
+    --pad-rest: .34;                    /* a pad's plastic at rest */
+    --mark: #EEF1EF;                    /* pointers and cap lines */
+    --neutral: 232, 236, 234;           /* the white steps: the absence of a color */
+    --knob-black: radial-gradient(circle at 50% 30%, #353737 0%, #191A1A 58%, #090A0A 100%);
+    --cap-gray: linear-gradient(180deg, #A4A9A7 0%, #737876 44%, #4A4E4D 100%);
+
+    --h1:  53, 238, 122;   /* #35EE7A green  - the family's own, and the default */
+    --h2: 255,  77,  56;   /* #FF4D38 red    - steps 1 to 4 */
+    --h3: 255, 157,  58;   /* #FF9D3A orange - steps 5 to 8 */
+    --h4: 238, 227,  90;   /* #EEE35A yellow - steps 9 to 12 */
+    --h5:  69, 168, 255;   /* #45A8FF blue   */
+    --h6: 183, 131, 255;   /* #B783FF violet */
+}
+
+/* The brushing: fractal noise at a very low frequency across and a high one
+   down, which draws long fine streaks rather than Supersaw's specks. On
+   ::before so it sits UNDER the controls, where the engine lays its grain, and
+   laid on with screen because an overlay blend has nothing to lighten on a
+   deck this dark. */
+.surf.airy::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='160'><filter id='b'><feTurbulence type='fractalNoise' baseFrequency='0.0035 0.95' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='640' height='160' filter='url(%23b)'/></svg>");
+    background-size: 640px 160px;
+    opacity: .10;
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+.surf.airy .ctl {
+    border-radius: var(--tonal-radius);
+    background: var(--plate);
+    box-shadow: var(--gloss), inset 0 0 0 1px var(--edge), 0 2px 4px rgba(0, 0, 0, .60);
+    color: var(--deck-ink);
+}
+.surf.airy .ctl .cap,
+.surf.airy .ctl.btn-ctl .name,
+.surf.airy .ctl.btn-ctl .glyph { color: var(--deck-ink); }
+
+/* on: the button stays black and its edge lights, in the button's own color */
+.surf.airy .ctl.on {
+    background: linear-gradient(0deg, rgba(var(--hue), .12), rgba(var(--hue), .12)), var(--plate);
+    box-shadow:
+        var(--gloss),
+        inset 0 0 0 1.5px rgba(var(--hue), .95),
+        inset 0 0 9px rgba(var(--hue), .28),
+        0 0 11px rgba(var(--hue), .48),
+        0 0 26px rgba(var(--hue), .16);
+    color: var(--deck-ink);
+}
+.surf.airy .ctl.on .cap,
+.surf.airy .ctl.on .name,
+.surf.airy .ctl.on .glyph,
+.surf.airy .ctl.btn-ctl.on .glyph { color: var(--deck-ink); }
+
+.surf.airy .ctl.held {
+    box-shadow:
+        inset 0 0 0 2px rgba(var(--hue), .70),
+        inset 0 2px 5px rgba(0, 0, 0, .70),
+        0 0 14px rgba(var(--hue), .30);
+}
+.surf.airy .ctl.dim {
+    opacity: 1;
+    background: linear-gradient(180deg, #1C1D1D 0%, #151616 100%);
+    box-shadow: inset 0 0 0 1px var(--edge);
+    color: rgba(228, 231, 229, .34);
+}
+.surf.airy .ctl.offline {
+    background:
+        repeating-linear-gradient(135deg, rgba(228, 231, 229, .06) 0 6px, transparent 6px 12px),
+        #141515;
+    box-shadow: inset 0 0 0 1px rgba(228, 231, 229, .10);
+}
+
+/* no value strip: the lit edge is the whole of "on" */
+.surf.airy .pipe { display: none; }
+
+/* a pad is colored plastic with a lamp behind it: dim at rest, lit outright. The rest
+   fill stops at a third: any stronger and the white and yellow steps land in the middle
+   gray where neither a light name nor a dark one reaches 4.5 */
+.surf.airy .ctl.pad {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(0, 0, 0, .18)),
+        linear-gradient(0deg, rgba(var(--hue), var(--pad-rest)), rgba(var(--hue), var(--pad-rest))),
+        #121313;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), inset 0 0 0 1px rgba(0, 0, 0, .55), 0 2px 4px rgba(0, 0, 0, .60);
+    color: var(--deck-ink);
+}
+.surf.airy .ctl.pad.on {
+    background:
+        radial-gradient(circle at 50% 44%, rgba(255, 255, 255, .50) 0%, rgba(255, 255, 255, 0) 64%),
+        linear-gradient(180deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .04)),
+        rgb(var(--hue));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .50),
+        inset 0 0 0 1px rgba(0, 0, 0, .30),
+        0 0 14px rgba(var(--hue), .60),
+        0 0 32px rgba(var(--hue), .22);
+    color: var(--on-hue);
+}
+.surf.airy .ctl.pad.on .name,
+.surf.airy .ctl.pad.on .cap { color: var(--on-hue); }
+.surf.airy .neutral { --hue: var(--neutral); }
+
+/* ------------------------------------------------------------ knobs */
+/* A black cap sitting in a ring of its own light. The ring is lit at rest in the
+   control's own color; the value is the part of it lit full, with a halo. The
+   halo is on a wrapper because a mask is applied after a filter, so a glow on
+   the masked arc itself would be cut away with everything else. */
+.surf.airy .knob { background: none; box-shadow: none; }
+.surf.airy .knob .dial { background: none; box-shadow: none; }
+.surf.airy .knob .halo {
+    position: absolute; inset: 0;
+    filter: drop-shadow(0 0 3px rgba(var(--hue), .80)) drop-shadow(0 0 8px rgba(var(--hue), .32));
+}
+.surf.airy .knob .arc {
+    inset: 0;
+    background: conic-gradient(from 225deg,
+        rgb(var(--hue)) 0turn var(--pct, .35turn),
+        rgba(var(--hue), var(--ring-rest)) var(--pct, .35turn) .75turn,
+        transparent .75turn 1turn);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+    filter: none;
+}
+.surf.airy .knob .knobcap {
+    position: absolute; inset: 7px; border-radius: 50%;
+    background: var(--knob-black);
+    box-shadow:
+        inset 0 0 0 1px rgba(var(--hue), .50),
+        inset 0 1px 0 rgba(255, 255, 255, .10),
+        0 0 9px rgba(var(--hue), .24),
+        0 2px 4px rgba(0, 0, 0, .80);
+}
+/* from just inside the cap's edge to a fifth of the way from its middle */
+.surf.airy .knob .ptr {
+    left: 50%; top: 0; width: 2px; height: 50%; margin-left: -1px;
+    border-radius: 1px;
+    background: linear-gradient(180deg,
+        transparent 0, transparent 9px,
+        var(--mark) 9px, var(--mark) 78%,
+        transparent 78%);
+    box-shadow: none;
+    transform-origin: 50% 100%;
+}
+.surf.airy .knob.detent .dial::after { top: -8px; background: var(--mark); }
+.surf.airy .knob .kval { color: var(--deck-ink); }
+/* a knob with ten stops gets a printed mark at each, in its own light */
+.surf.airy .knob.stops .dial::before {
+    content: "";
+    position: absolute; inset: -10px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(from 224deg,
+        rgb(var(--hue)) 0 2deg, transparent 2deg 30deg);
+    -webkit-mask:
+        radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 5px)),
+        conic-gradient(from 222deg, #000 0 276deg, transparent 276deg 360deg);
+    -webkit-mask-composite: source-in;
+    mask:
+        radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 5px)),
+        conic-gradient(from 222deg, #000 0 276deg, transparent 276deg 360deg);
+    mask-composite: intersect;
+    filter: drop-shadow(0 0 3px rgba(var(--hue), .70));
+    pointer-events: none;
+}
+
+/* ------------------------------------------------------------ faders */
+/* a lit frame round the travel in the control's own color, touched or not, a
+   dark slot, and a gray cap with a white line across it */
+.surf.airy .fader {
+    border-radius: 5px;
+    background: linear-gradient(180deg, #141515 0%, #0B0C0C 100%);
+    box-shadow:
+        inset 0 0 0 1.5px rgba(var(--hue), var(--frame)),
+        inset 0 0 7px rgba(var(--hue), .14),
+        0 0 9px rgba(var(--hue), .30);
+}
+.surf.airy .fader .slot {
+    width: 4px; border-radius: 2px;
+    background: var(--track);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .90);
+}
+.surf.airy .fader .fill {
+    border-radius: 2px;
+    background: rgba(var(--hue), .38);
+    box-shadow: 0 0 6px rgba(var(--hue), .35);
+}
+.surf.airy .fader .capbar {
+    left: -8px; right: -8px; height: 12px;
+    border-radius: 2px;
+    background: var(--cap-gray);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 3px 5px rgba(0, 0, 0, .80);
+}
+.surf.airy .fader .capbar::after {
+    left: 2px; right: 2px; height: 2px; margin-top: -1px;
+    border-radius: 0;
+    background: #FFFFFF;
+    box-shadow: none;
+    opacity: 1;
+}
+.surf.airy .fader.horiz .slot { width: auto; height: 4px; }
+.surf.airy .fader.horiz .capbar { top: -8px; bottom: -8px; width: 12px; height: auto; }
+.surf.airy .fader.horiz .capbar::after {
+    top: 2px; bottom: 2px; left: 50%; right: auto;
+    width: 2px; height: auto; margin: 0 0 0 -1px;
+}
+.surf.airy .fader .ticks i { background: rgba(228, 231, 229, .12); }
+
+/* ------------------------------------------------- two axis controls */
+.surf.airy .xy {
+    box-shadow: var(--gloss), inset 0 0 0 1.5px rgba(var(--hue), .70), 0 0 9px rgba(var(--hue), .22);
+}
+.surf.airy .xy .field2 { inset: 3px; border-radius: 2px; background: var(--track); }
+.surf.airy .xy .field2::before {
+    background-image:
+        linear-gradient(rgba(228, 231, 229, .07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(228, 231, 229, .07) 1px, transparent 1px);
+}
+.surf.airy .xy .cross { background: rgba(var(--hue), .55); box-shadow: 0 0 6px rgba(var(--hue), .50); }
+.surf.airy .xy .puck { background: rgb(var(--hue)); box-shadow: 0 0 10px rgba(var(--hue), .90), 0 0 24px rgba(var(--hue), .40); }
+.surf.airy .xy .trail { background: rgba(var(--hue), .25); }
+
+.surf.airy .joy .ring { box-shadow: inset 0 0 0 1px rgba(var(--hue), .30); }
+.surf.airy .joy .spring { box-shadow: inset 0 0 0 1px rgba(var(--hue), .55), 0 0 8px rgba(var(--hue), .25); }
+.surf.airy .joy .puck { background: var(--knob-black); box-shadow: 0 3px 7px rgba(0, 0, 0, .80), 0 0 10px rgba(var(--hue), .35); }
+.surf.airy .joy .puck::after { inset: 30%; background: rgb(var(--hue)); box-shadow: 0 0 8px rgba(var(--hue), .90); }
+
+.surf.airy .wheel .body {
+    background: linear-gradient(90deg, #080909, #1F2121 42%, #080909);
+    box-shadow: inset 0 0 0 1.5px rgba(var(--hue), .70), 0 0 8px rgba(var(--hue), .25);
+}
+.surf.airy .wheel .ind { background: rgb(var(--hue)); box-shadow: 0 0 9px rgba(var(--hue), .95); }
+
+.surf.airy .lfo { padding: 0; }
+.surf.airy .lfo .lwell { position: absolute; inset: 3px; border-radius: 2px; background: var(--track); }
+.surf.airy .lfo svg { position: absolute; left: 8px; top: 8px; width: calc(100% - 16px); height: calc(100% - 16px); }
+
+/* ------------------------------------------- meters, steps, clock */
+/* named again, for the same specificity reason as every theme before it */
+.surf.airy .meter i { background: rgba(255, 255, 255, .06); }
+.surf.airy .meter i.lit { background: rgb(var(--h1)); box-shadow: 0 0 6px rgba(var(--h1), .70); }
+.surf.airy .meter i.lit.warn { background: rgb(var(--h4)); box-shadow: 0 0 6px rgba(var(--h4), .70); }
+.surf.airy .meter i.lit.hot { background: rgb(var(--h2)); box-shadow: 0 0 6px rgba(var(--h2), .70); }
+
+.surf.airy .steps .row i { background: rgba(var(--hue), .16); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .50); }
+.surf.airy .steps .row i.on { background: rgb(var(--hue)); box-shadow: 0 0 8px rgba(var(--hue), .70); }
+.surf.airy .steps .row i.cur { box-shadow: inset 0 0 0 2px var(--mark), 0 0 8px rgba(var(--hue), .70); }
+
+/* --------------------------------------------- text, panels, tabs */
+.surf.airy .surftext.readout { color: rgb(var(--h3)); text-shadow: 0 0 10px rgba(var(--h3), .65); }
+.surf.airy .surftext.h2 { color: var(--deck-ink); font-size: 10px; font-weight: 700; letter-spacing: .18em; }
+.surf.airy .surfrule { background: rgba(228, 231, 229, .26); }
+
+/* a section is a line of green light with its name in green across the top.
+   The frame round the whole page is one of these, drawn the size of the page */
+.surf.airy .ctlpanel {
+    border-radius: 7px;
+    background: none;
+    box-shadow:
+        inset 0 0 0 1.5px rgba(var(--h1), .80),
+        inset 0 0 10px rgba(var(--h1), .12),
+        0 0 10px rgba(var(--h1), .28);
+}
+.surf.airy .ctlpanel > .ptitle {
+    top: 6px; left: 0; right: 0; padding: 0;
+    background: none;
+    text-align: center;
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    color: rgb(var(--h1));
+    text-shadow: 0 0 8px rgba(var(--h1), .60);
+}
+
+.surf.airy .pagetabs .tab {
+    border-radius: 4px;
+    background: var(--plate);
+    box-shadow: var(--gloss), inset 0 0 0 1px var(--edge);
+    color: var(--deck-ink2);
+}
+.surf.airy .pagetabs .tab.sel {
+    background: linear-gradient(0deg, rgba(var(--h1), .12), rgba(var(--h1), .12)), var(--plate);
+    box-shadow: inset 0 0 0 1.5px rgba(var(--h1), .95), 0 0 10px rgba(var(--h1), .45);
+    color: var(--deck-ink);
 }
