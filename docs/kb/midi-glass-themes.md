@@ -2,12 +2,12 @@
 layout: kb
 title: How MIDI Glass themes work
 audience: everyone
-description: What a MIDI Glass theme is, where theme files go, what every setting in a theme file changes on screen, and how to design a theme for someone else.
+description: What a Windows MIDI Glass theme is, where theme files go, what every setting in a theme file changes on screen, and how to design a theme for someone else.
 categories:
   - Developer Guidance
 ---
 
-MIDI Glass is the Windows MIDI Services app for building your own touch control surface. You put knobs, faders, pads, and buttons on a page, tell each one what MIDI to send, and play it with a finger, a pen, or a mouse.
+Windows MIDI Glass ("MIDI Glass") is the Windows MIDI Services app for building your own touch control surface. You put knobs, faders, pads, and buttons on a page, tell each one what MIDI to send, and play it with a finger, a pen, or a mouse.
 
 Two things decide what you see. A **layout** says what's on the page: where each control sits, how big it is, what it's called, and what it sends. A **theme** says how the page looks. Put a different theme on a layout and every control keeps its place, its name, and its messages. Only the look changes.
 
@@ -57,7 +57,7 @@ The light themes add a second idea: **what you press is raised, what shows a val
 
 Several shipping themes bend these rules on purpose. Jove's buttons are solid color at rest, and Airy System keeps every knob lit. Each theme that bends a rule says what it costs in the theme gallery, so you can decide before you take it on stage.
 
-![The same page of controls in all sixteen shipping themes]({{ site.baseurl }}/assets/images/midiglass-themes-gallery.png)
+![The same page of controls in all sixteen shipping themes]({{ site.baseurl }}/assets/images/midiglass-themes-gallery.jpg)
 
 ## Colors: six slots and a neutral
 
@@ -213,11 +213,11 @@ These four are laid over the whole page once, so they cost the same with four co
 - **Grain** is texture in the panel. It's drawn under the controls, so it never touches them. `grainPercent` is how strong it is: at full it's sandpaper, and at a quarter it's only a warmth. `grainStreak` is how long each speck is. At 1 you get fine specks, like Supersaw's bead-blasted blue panel (34 percent of `#8496B4`). At 40 or more you get streaks running across the page, like Airy System's brushed metal (32 percent of `#FFFFFF`, streak 48). Brushed grain is always lighter than the deck, the way light catches the ridges. An unset grain color is the deck's own color, lifted a little.
 - **Scan lines** are the raster of a picture tube: one dark line every few pixels, drawn over everything, controls included. `scanLinePitch` is the distance between lines. It's measured in screen pixels rather than page pixels, so the lines stay the same distance apart and stay sharp at every zoom. `scanLineStrength` is how dark each line is. Cathode, Terminal Amber, and Terminal Green use a pitch of 3 at about 45 percent.
 - **Corner fall-off** (`vignettePercent`) darkens the corners, the way a tube is brightest in the middle. It's drawn over the controls. The tube themes use 60. An unset `vignetteColor` is the deck's floor color, taken further down.
-- **Faceplate reflection** (`faceplateSheenPercent`) is a soft diagonal light across the upper left: the room, reflected in the glass. It's in every photograph of a real terminal, and it's what makes glass look like glass instead of paint. Terminal Green uses 5 percent of `#BEE1F0`, which is also what an unset color means.
+- **Faceplate reflection** (`faceplateSheenPercent`) is a soft diagonal light across the upper left: the room, reflected in the glass. It's in every photograph of a real terminal, and it's what makes glass look like glass instead of paint. Terminal Green uses 5 percent of `#BEE1F0`, which is also what an unset color means. It's meant to be faint: at 5 percent, the top left of the page is only a little lighter than the top right, so you won't see it in a close-up.
 
 From the bottom up, the order is: grain, the controls, the corner fall-off, the scan lines, and the reflection.
 
-![Fine grain on Supersaw and brushed grain on Airy System, enlarged three times, then scan lines and corner fall-off in a corner of Cathode, and the faceplate reflection in the top left corner of Terminal Green]({{ site.baseurl }}/assets/images/midiglass-theme-decks.png)
+![Fine grain on Supersaw and brushed grain on Airy System, enlarged three times, and scan lines with corner fall-off in the bottom right corner of Cathode]({{ site.baseurl }}/assets/images/midiglass-theme-decks.png)
 
 ### The plate
 
