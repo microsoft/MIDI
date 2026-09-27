@@ -1309,7 +1309,7 @@
     <value>Opacity</value>
   </data>
   <data name="PictureLoopsCheck.Content" xml:space="preserve">
-    <value>Play it in a loop</value>
+    <value>Loop between start/stop points</value>
   </data>
   <data name="PictureVideoHeading.Text" xml:space="preserve">
     <value>Video</value>
@@ -1326,7 +1326,7 @@
     <value>Videos stay still while you design, so they don't distract you. This plays the selected one on the page.</value>
   </data>
   <data name="PictureVideoRangeLabel.Text" xml:space="preserve">
-    <value>The part that plays</value>
+    <value>Start and Stop Points</value>
   </data>
   <data name="PictureVideoStartBox.Header" xml:space="preserve">
     <value>Starts at, in seconds</value>
@@ -1345,13 +1345,13 @@
     <value>Finding out how long the clip is…</value>
   </data>
   <data name="PictureAutoPlayCheck.Content" xml:space="preserve">
-    <value>Play as soon as the layout runs</value>
+    <value>Start playing with layout start</value>
   </data>
   <data name="PictureClickToPlayCheck.Content" xml:space="preserve">
-    <value>A click on it stops and starts it</value>
+    <value>Click to start/stop</value>
   </data>
   <data name="PictureScrubberCheck.Content" xml:space="preserve">
-    <value>Show a bar to scrub through it</value>
+    <value>Show scrub bar</value>
   </data>
   <data name="PictureVideoInputCaption.Text" xml:space="preserve">
     <value>Only an image control can take a click or show a bar. A panel's fill sits behind the controls on the panel, so it just plays.</value>
@@ -3886,6 +3886,27 @@
   </data>
   <data name="ThemeDeckPicture" xml:space="preserve">
     <value>Picture</value>
+  </data>
+  <data name="ThemeRowDeckPicture" xml:space="preserve">
+    <value>Picture</value>
+  </data>
+  <data name="ThemeDeckPictureNone" xml:space="preserve">
+    <value>None chosen</value>
+  </data>
+  <data name="ThemeDeckPictureChoose" xml:space="preserve">
+    <value>Choose…</value>
+  </data>
+  <data name="ThemeDeckPictureChooseName" xml:space="preserve">
+    <value>Choose a picture for the background</value>
+  </data>
+  <data name="ThemeDeckPictureRemove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="ThemeDeckPictureRemoveName" xml:space="preserve">
+    <value>Remove the background picture</value>
+  </data>
+  <data name="ThemeDeckPictureNote" xml:space="preserve">
+    <value>The picture is copied into the Themes folder, next to your theme files. It fills the page and is cut to fit. A layout sent to someone else doesn't bring it along.</value>
   </data>
   <data name="ThemeLabelsInside" xml:space="preserve">
     <value>Inside the control</value>

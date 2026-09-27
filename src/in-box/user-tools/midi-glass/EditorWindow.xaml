@@ -1540,7 +1540,7 @@
                                                          stops, and the line is where it is now. The
                                                          two boxes under it do the same by number, and
                                                          are what a keyboard or a screen reader uses. -->
-                                                    <TextBlock x:Uid="PictureVideoRangeLabel" Text="The part that plays" Margin="0,10,0,0" />
+                                                    <TextBlock x:Uid="PictureVideoRangeLabel" Text="Start and Stop Points" Margin="0,10,0,0" />
 
                                                     <Grid x:Name="PictureTimeline"
                                                           Height="34"
@@ -1587,26 +1587,26 @@
 
                                                     <CheckBox x:Name="PictureLoopsCheck"
                                                               x:Uid="PictureLoopsCheck"
-                                                              Content="Play it in a loop"
+                                                              Content="Loop between start/stop points"
                                                               Margin="0,6,0,0"
                                                               Checked="OnPictureLoopsChanged"
                                                               Unchecked="OnPictureLoopsChanged" />
 
                                                     <CheckBox x:Name="PictureAutoPlayCheck"
                                                               x:Uid="PictureAutoPlayCheck"
-                                                              Content="Play as soon as the layout runs"
+                                                              Content="Start playing with layout start"
                                                               Checked="OnPictureVideoFlagChanged"
                                                               Unchecked="OnPictureVideoFlagChanged" />
 
                                                     <CheckBox x:Name="PictureClickToPlayCheck"
                                                               x:Uid="PictureClickToPlayCheck"
-                                                              Content="A click on it stops and starts it"
+                                                              Content="Click to start/stop"
                                                               Checked="OnPictureVideoFlagChanged"
                                                               Unchecked="OnPictureVideoFlagChanged" />
 
                                                     <CheckBox x:Name="PictureScrubberCheck"
                                                               x:Uid="PictureScrubberCheck"
-                                                              Content="Show a bar to scrub through it"
+                                                              Content="Show scrub bar"
                                                               Checked="OnPictureVideoFlagChanged"
                                                               Unchecked="OnPictureVideoFlagChanged" />
 

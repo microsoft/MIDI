@@ -437,6 +437,120 @@ namespace winrt::midiglass::implementation
                 edit([index](glass::Theme& theme) { theme.Deck.Kind = static_cast<glass::DeckKind>(index); });
             });
 
+        // The picture a Picture deck is drawn with. Choosing one switches the deck over to it.
+        {
+            auto row = RowHost();
+
+            auto label = RowLabel(L"ThemeRowDeckPicture");
+            controls::Grid::SetColumn(label, 0);
+            row.Children().Append(label);
+
+            controls::TextBlock name{};
+            name.Text(m_theme.Deck.ImageFileName.empty()
+                ? resources::GetString(L"ThemeDeckPictureNone")
+                : winrt::hstring{ m_theme.Deck.ImageFileName });
+            name.FontSize(12.0);
+            name.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
+            name.VerticalAlignment(xaml::VerticalAlignment::Center);
+            controls::Grid::SetColumn(name, 1);
+            row.Children().Append(name);
+
+            // The panel is rebuilt after either button, so the combo above shows what changed.
+            // Not from inside the click: that would take the button away under its own event.
+            auto const rebuildSoon = [](winrt::weak_ref<EditorWindow> const& weak)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->DispatcherQueue().TryEnqueue([weak]()
+                            {
+                                if (auto again = weak.get())
+                                {
+                                    again->RebuildThemeProperties();
+                                }
+                            });
+                    }
+                };
+
+            controls::Button choose{};
+            choose.Content(box_value(resources::GetString(L"ThemeDeckPictureChoose")));
+            choose.FontSize(12.0);
+            automation::AutomationProperties::SetName(choose, resources::GetString(L"ThemeDeckPictureChooseName"));
+
+            choose.Click([weak = get_weak(), rebuildSoon](auto&&, auto&&)
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr)
+                    {
+                        return;
+                    }
+
+                    auto const picked = strong->PickBackgroundImageFile(true);
+
+                    if (picked.empty())
+                    {
+                        return;
+                    }
+
+                    auto const stored = glass::CopyDeckImageToThemes(picked);
+
+                    if (stored.empty())
+                    {
+                        return;
+                    }
+
+                    strong->EditTheme([stored](glass::Theme& theme)
+                        {
+                            theme.Deck.ImageFileName = stored;
+                            theme.Deck.Kind = glass::DeckKind::Image;
+                        });
+
+                    rebuildSoon(weak);
+                });
+
+            controls::Button remove{};
+            remove.Content(box_value(resources::GetString(L"ThemeDeckPictureRemove")));
+            remove.FontSize(12.0);
+            remove.IsEnabled(!m_theme.Deck.ImageFileName.empty());
+            automation::AutomationProperties::SetName(remove, resources::GetString(L"ThemeDeckPictureRemoveName"));
+
+            // Only the reference goes. The file stays in the themes folder, because another
+            // theme may be using it.
+            remove.Click([weak = get_weak(), rebuildSoon](auto&&, auto&&)
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr)
+                    {
+                        return;
+                    }
+
+                    strong->EditTheme([](glass::Theme& theme)
+                        {
+                            theme.Deck.ImageFileName.clear();
+
+                            if (theme.Deck.Kind == glass::DeckKind::Image)
+                            {
+                                theme.Deck.Kind = glass::DeckKind::SolidColor;
+                            }
+                        });
+
+                    rebuildSoon(weak);
+                });
+
+            controls::StackPanel buttons{};
+            buttons.Orientation(controls::Orientation::Horizontal);
+            buttons.Spacing(6.0);
+            buttons.Children().Append(choose);
+            buttons.Children().Append(remove);
+            controls::Grid::SetColumn(buttons, 2);
+            row.Children().Append(buttons);
+
+            ThemePropertyPanel().Children().Append(row);
+        }
+
+        AddThemeNote(L"ThemeDeckPictureNote");
+
         AddThemeColorRow(L"ThemeRowDeckTop", m_theme.Deck.Color, false,
             [edit, color](std::wstring const& code)
             {

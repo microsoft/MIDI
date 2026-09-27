@@ -494,7 +494,7 @@ namespace winrt::midiglass::implementation
         void RefreshPicturePosition(_In_ glass::Control const& control);
         void DrawPictureCropBox();
         void DrawPictureOpacityRamp();
-        winrt::fire_and_forget LoadPictureCropThumbnail(_In_ std::wstring path, _In_ bool isVideo);
+        winrt::fire_and_forget LoadPictureCropThumbnail(_In_ std::wstring path, _In_ bool isVideo, _In_ double frameSeconds);
 
         // Where the picture's middle goes, from the alignment buttons, the crop box and the
         // arrow keys. Only moves what can move: a picture that fits across has nothing to crop
@@ -564,7 +564,7 @@ namespace winrt::midiglass::implementation
         winrt::fire_and_forget ShowBackgroundDialog();
 
         // The full path of a picture the customer chose, or empty. Does not copy anything.
-        std::wstring PickBackgroundImageFile();
+        std::wstring PickBackgroundImageFile(_In_ bool picturesOnly);
         winrt::fire_and_forget ShowRenameDialog();
 
         // ---- the sequence editor (EditorSequenceDialog.cpp) ----
@@ -876,6 +876,9 @@ namespace winrt::midiglass::implementation
         double m_cropNaturalHeight{ 0.0 };
         xaml::Media::ImageSource m_cropThumbnail{ nullptr };
         uint64_t m_cropLoadToken{ 0 };
+
+        // For a video, the time the small copy was taken at.
+        double m_cropFrameSeconds{ 0.0 };
 
         // Where the drag started, in box coordinates, and the middle it started from.
         bool m_cropDragging{ false };

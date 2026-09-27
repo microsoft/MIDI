@@ -948,6 +948,74 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    std::wstring DeckImagePath(ThemeDeck const& deck) noexcept
+    {
+        try
+        {
+            if (deck.ImageFileName.empty())
+            {
+                return {};
+            }
+
+            std::filesystem::path const name{ deck.ImageFileName };
+
+            if (name.has_parent_path() || name.has_root_name() || !name.has_filename())
+            {
+                return {};
+            }
+
+            auto const extension = name.extension().wstring();
+
+            if (_wcsicmp(extension.c_str(), L".png") != 0 &&
+                _wcsicmp(extension.c_str(), L".jpg") != 0 &&
+                _wcsicmp(extension.c_str(), L".jpeg") != 0)
+            {
+                return {};
+            }
+
+            auto const folder = ThemesFolder();
+
+            if (folder.empty())
+            {
+                return {};
+            }
+
+            auto const full = std::filesystem::path{ folder } / name;
+
+            std::error_code ignored{};
+
+            return std::filesystem::is_regular_file(full, ignored) ? full.wstring() : std::wstring{};
+        }
+        catch (...)
+        {
+            return {};
+        }
+    }
+
+    _Use_decl_annotations_
+    std::wstring CopyDeckImageToThemes(std::wstring const& sourcePath) noexcept
+    {
+        try
+        {
+            auto const folder = ThemesFolder();
+
+            if (folder.empty())
+            {
+                return {};
+            }
+
+            // Copied the way a layout's background is, with the themes folder standing in for the
+            // layout's own folder: a taken name gets a number rather than an overwrite.
+            return CopyBackgroundImageBeside(
+                sourcePath, (std::filesystem::path{ folder } / ThemeFolderName).wstring());
+        }
+        catch (...)
+        {
+            return {};
+        }
+    }
+
+    _Use_decl_annotations_
     ThemeReadResult ReadThemeFile(std::wstring const& filePath) noexcept
     {
         ThemeReadResult result{};

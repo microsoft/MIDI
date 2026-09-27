@@ -95,7 +95,8 @@ namespace winrt::midiglass::implementation
 
     // The Win32 common item dialog, not Windows.Storage.Pickers: this is a desktop app and the
     // picker needs a window handle it can be modal to.
-    std::wstring EditorWindow::PickBackgroundImageFile()
+    _Use_decl_annotations_
+    std::wstring EditorWindow::PickBackgroundImageFile(bool picturesOnly)
     {
         try
         {
@@ -127,7 +128,20 @@ namespace winrt::midiglass::implementation
                 { videoLabel.c_str(), VideoExtensions },
             };
 
-            dialog->SetFileTypes(static_cast<UINT>(std::size(filters)), filters);
+            // A theme's deck is drawn by a brush, which takes a picture and not a video.
+            COMDLG_FILTERSPEC const pictureFilters[]
+            {
+                { pictureLabel.c_str(), PictureExtensions },
+            };
+
+            if (picturesOnly)
+            {
+                dialog->SetFileTypes(static_cast<UINT>(std::size(pictureFilters)), pictureFilters);
+            }
+            else
+            {
+                dialog->SetFileTypes(static_cast<UINT>(std::size(filters)), filters);
+            }
             dialog->SetTitle(resources::GetString(L"BackgroundOpenTitle").c_str());
 
             if (FAILED(dialog->Show(m_chrome.WindowHandle())))
@@ -302,7 +316,7 @@ namespace winrt::midiglass::implementation
 
             chooseButton.Click([=](auto&&, auto&&)
                 {
-                    if (auto picked = PickBackgroundImageFile(); !picked.empty())
+                    if (auto picked = PickBackgroundImageFile(false); !picked.empty())
                     {
                         *chosenPath = picked;
                         chosenName->clear();

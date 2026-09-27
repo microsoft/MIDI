@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "DeckBrush.h"
 #include "SurfaceColors.h"
+#include "ThemeStore.h"
 
 #include <algorithm>
 #include <vector>
@@ -372,10 +373,26 @@ namespace glass
     _Use_decl_annotations_
     media::Brush MakeDeckBrush(ThemeDeck const& deck)
     {
+        if (deck.Kind == DeckKind::Image)
+        {
+            // A missing or unreadable picture leaves the deck its color, never a hole.
+            if (auto const path = DeckImagePath(deck); !path.empty())
+            {
+                media::Imaging::BitmapImage bitmap{};
+                bitmap.UriSource(winrt::Windows::Foundation::Uri{ L"file:///" + winrt::hstring{ path } });
+
+                media::ImageBrush brush{};
+                brush.ImageSource(bitmap);
+                brush.Stretch(media::Stretch::UniformToFill);
+                brush.AlignmentX(media::AlignmentX::Center);
+                brush.AlignmentY(media::AlignmentY::Center);
+
+                return brush;
+            }
+        }
+
         if (deck.Kind != DeckKind::Gradient)
         {
-            // An image deck is drawn over its color by the surface, so the color is right here
-            // for that case too.
             return media::SolidColorBrush(ToColor(deck.Color));
         }
 

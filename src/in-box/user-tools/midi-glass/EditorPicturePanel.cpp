@@ -19,6 +19,7 @@
 #include "LayoutStore.h"
 
 #include <winrt/Windows.Storage.FileProperties.h>
+#include <winrt/Windows.Media.Editing.h>
 
 #include <chrono>
 #include <filesystem>
@@ -214,10 +215,14 @@ namespace winrt::midiglass::implementation
                 m_pictureAlignCells[index].IsChecked(static_cast<int32_t>(index) == selected);
             }
 
-            // The small copy is fetched again only when the file changes, not on every edit.
+            // The small copy is fetched again only when the file changes, or for a video when
+            // its start point does, since that is the frame the canvas holds in the designer.
             auto const path = image.IsEmpty()
                 ? std::wstring{}
                 : glass::ControlPicturePath(m_filePath, image.FileName);
+
+            auto const isVideo = glass::IsVideoFileName(image.FileName);
+            auto const frameSeconds = isVideo ? glass::VideoPlayRange(image, 0.0).StartSeconds : 0.0;
 
             if (path != m_cropPicturePath)
             {
@@ -226,12 +231,20 @@ namespace winrt::midiglass::implementation
                 m_cropNaturalHeight = 0.0;
                 m_cropThumbnail = nullptr;
                 m_videoDurationSeconds = 0.0;
+                m_cropFrameSeconds = frameSeconds;
                 ++m_cropLoadToken;
 
                 if (!path.empty())
                 {
-                    LoadPictureCropThumbnail(path, glass::IsVideoFileName(image.FileName));
+                    LoadPictureCropThumbnail(path, isVideo, frameSeconds);
                 }
+            }
+            else if (isVideo && !path.empty() && frameSeconds != m_cropFrameSeconds)
+            {
+                m_cropFrameSeconds = frameSeconds;
+                ++m_cropLoadToken;
+
+                LoadPictureCropThumbnail(path, isVideo, frameSeconds);
             }
 
             DrawPictureCropBox();
@@ -242,7 +255,7 @@ namespace winrt::midiglass::implementation
     // The canvas renderer needs the file's real size to crop it, and so does the box, or the
     // box would show a different crop from the one on the page.
     _Use_decl_annotations_
-    winrt::fire_and_forget EditorWindow::LoadPictureCropThumbnail(std::wstring path, bool isVideo)
+    winrt::fire_and_forget EditorWindow::LoadPictureCropThumbnail(std::wstring path, bool isVideo, double frameSeconds)
     {
         auto lifetime = get_strong();
         auto const token = m_cropLoadToken;
@@ -323,17 +336,59 @@ namespace winrt::midiglass::implementation
             DrawPictureCropBox();
             RefreshPictureVideoPanel();
 
-            auto const thumbnail = co_await file.GetThumbnailAsync(
-                winrt::Windows::Storage::FileProperties::ThumbnailMode::SingleItem, 320);
+            // The shell's thumbnail for many videos is a media icon, so the frame is read from
+            // the video itself, at the start point the canvas shows.
+            winrt::Windows::Storage::Streams::IRandomAccessStream still{ nullptr };
 
-            if (thumbnail == nullptr || m_cropLoadToken != token)
+            try
+            {
+                auto const clip = co_await winrt::Windows::Media::Editing::MediaClip::CreateFromFileAsync(file);
+
+                winrt::Windows::Media::Editing::MediaComposition composition{};
+                composition.Clips().Append(clip);
+
+                constexpr int32_t StillWidth = 320;
+
+                auto const stillHeight = m_cropNaturalWidth > 0.0 && m_cropNaturalHeight > 0.0
+                    ? std::clamp(static_cast<int32_t>(std::lround(StillWidth * m_cropNaturalHeight / m_cropNaturalWidth)), 1, StillWidth * 4)
+                    : (StillWidth * 3) / 4;
+
+                // A frame asked for at or past the end is refused, so it stays just inside.
+                auto const at = m_videoDurationSeconds > 0.0
+                    ? std::clamp(frameSeconds, 0.0, std::max(m_videoDurationSeconds - 0.05, 0.0))
+                    : std::max(frameSeconds, 0.0);
+
+                still = co_await composition.GetThumbnailAsync(
+                    std::chrono::duration_cast<winrt::Windows::Foundation::TimeSpan>(
+                        std::chrono::duration<double>(at)),
+                    StillWidth,
+                    stillHeight,
+                    winrt::Windows::Media::Editing::VideoFramePrecision::NearestFrame);
+            }
+            catch (...)
+            {
+                still = nullptr;
+            }
+
+            if (m_cropLoadToken != token)
+            {
+                co_return;
+            }
+
+            if (still == nullptr)
+            {
+                still = co_await file.GetThumbnailAsync(
+                    winrt::Windows::Storage::FileProperties::ThumbnailMode::SingleItem, 320);
+            }
+
+            if (still == nullptr || m_cropLoadToken != token)
             {
                 co_return;
             }
 
             imaging::BitmapImage frame{};
 
-            co_await frame.SetSourceAsync(thumbnail);
+            co_await frame.SetSourceAsync(still);
 
             if (m_cropLoadToken != token)
             {
