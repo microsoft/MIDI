@@ -92,6 +92,7 @@
     <ClCompile Include="spike_winrt.cpp" />
     <ClCompile Include="spike_transport_test.cpp" Condition="'$(RtpTransportTest)'=='true'" />
     <ClCompile Include="spike_sdk_check.cpp" Condition="'$(RtpSdkCheck)'=='true'" />
+    <ClCompile Include="spike_service.cpp" Condition="'$(RtpSdkCheck)'=='true'" />
   </ItemGroup>
 
   <ItemGroup>

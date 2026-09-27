@@ -29,30 +29,48 @@ namespace
     using GetActivationFactory = HRESULT(STDAPICALLTYPE*)(HSTRING, void**);
 
     GetActivationFactory g_getActivationFactory{ nullptr };
+    GetActivationFactory g_getMidi2ActivationFactory{ nullptr };
 
-    // C++/WinRT calls this instead of RoGetActivationFactory once it is set, so everything that
-    // is not the SDK's goes to the system as usual
+    bool StartsWith(wchar_t const* text, std::wstring_view const prefix)
+    {
+        return text != nullptr && std::wstring_view{ text }.substr(0, prefix.size()) == prefix;
+    }
+
+    HRESULT FromLibrary(GetActivationFactory const getFactory, void* classId, winrt::guid const& iid, void** factory)
+    {
+        IUnknown* activationFactory{ nullptr };
+
+        auto const hr = getFactory(static_cast<HSTRING>(classId), reinterpret_cast<void**>(&activationFactory));
+        if (FAILED(hr) || activationFactory == nullptr) return FAILED(hr) ? hr : E_NOINTERFACE;
+
+        auto const result = activationFactory->QueryInterface(reinterpret_cast<GUID const&>(iid), factory);
+        activationFactory->Release();
+
+        return result;
+    }
+
+    // C++/WinRT calls this instead of RoGetActivationFactory once it is set. The rtpMIDI SDK is
+    // never registered, and the Windows MIDI Services SDK may be an app-local copy, which is how
+    // the installed tools use it.
     int32_t __stdcall ActivationHandler(void* classId, winrt::guid const& iid, void** factory) noexcept
     {
         *factory = nullptr;
 
         auto const className = WindowsGetStringRawBuffer(static_cast<HSTRING>(classId), nullptr);
-        std::wstring_view const prefix{ L"Windows.Devices.Midi2.Transports.Rtp." };
 
-        if (g_getActivationFactory != nullptr && className != nullptr && std::wstring_view{ className }.substr(0, prefix.size()) == prefix)
+        if (g_getActivationFactory != nullptr && StartsWith(className, L"Windows.Devices.Midi2.Transports.Rtp."))
         {
-            IUnknown* activationFactory{ nullptr };
-
-            auto const hr = g_getActivationFactory(static_cast<HSTRING>(classId), reinterpret_cast<void**>(&activationFactory));
-            if (FAILED(hr) || activationFactory == nullptr) return FAILED(hr) ? hr : E_NOINTERFACE;
-
-            auto const result = activationFactory->QueryInterface(reinterpret_cast<GUID const&>(iid), factory);
-            activationFactory->Release();
-
-            return result;
+            return FromLibrary(g_getActivationFactory, classId, iid, factory);
         }
 
-        return RoGetActivationFactory(static_cast<HSTRING>(classId), reinterpret_cast<GUID const&>(iid), factory);
+        auto const hr = RoGetActivationFactory(static_cast<HSTRING>(classId), reinterpret_cast<GUID const&>(iid), factory);
+
+        if (FAILED(hr) && g_getMidi2ActivationFactory != nullptr && StartsWith(className, L"Windows.Devices.Midi2."))
+        {
+            return FromLibrary(g_getMidi2ActivationFactory, classId, iid, factory);
+        }
+
+        return hr;
     }
 
     // The service hands a transport only its own section, keyed by transport id in the wrapper
@@ -84,6 +102,40 @@ bool SdkCheckStart(std::wstring const& dllPath)
 
     winrt_activation_handler = ActivationHandler;
     return true;
+}
+
+// Loads Windows.Devices.Midi2.dll by full path. Once it is loaded, C++/WinRT's own fallback in
+// the rtpMIDI SDK finds it by name as well. A copy next to this exe wins, then the one the
+// installed tools use, which matches the installed service, then the local SDK build.
+std::wstring SdkLoadMidi2Runtime()
+{
+    wchar_t exePath[MAX_PATH]{};
+    GetModuleFileNameW(nullptr, exePath, ARRAYSIZE(exePath));
+
+    std::wstring const exeDirectory = std::wstring{ exePath }.substr(0, std::wstring{ exePath }.find_last_of(L'\\') + 1);
+
+    wchar_t programFiles[MAX_PATH]{};
+    GetEnvironmentVariableW(L"ProgramFiles", programFiles, ARRAYSIZE(programFiles));
+
+    std::vector<std::wstring> const candidates
+    {
+        exeDirectory + L"Windows.Devices.Midi2.dll",
+        std::wstring{ programFiles } + L"\\Windows MIDI Services\\Tools\\Console\\Windows.Devices.Midi2.dll",
+        exeDirectory + L"..\\..\\..\\..\\..\\in-box\\vsfiles-sdk\\out\\Windows.Devices.Midi2\\x64\\Release\\Windows.Devices.Midi2.dll",
+    };
+
+    for (auto const& candidate : candidates)
+    {
+        if (GetFileAttributesW(candidate.c_str()) == INVALID_FILE_ATTRIBUTES) continue;
+
+        auto const module = LoadLibraryExW(candidate.c_str(), nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
+        if (module == nullptr) continue;
+
+        g_getMidi2ActivationFactory = reinterpret_cast<GetActivationFactory>(GetProcAddress(module, "DllGetActivationFactory"));
+        if (g_getMidi2ActivationFactory != nullptr) return candidate;
+    }
+
+    return {};
 }
 
 bool SdkStaticsAreRight()

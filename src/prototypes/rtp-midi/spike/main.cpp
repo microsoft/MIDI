@@ -19,6 +19,8 @@
 //   rtpmidi-spike loopback [--sysex BYTES]
 //   rtpmidi-spike mdns-watch [--filter TEXT] [--seconds N] [--queries]
 //   rtpmidi-spike transport-test [--dll PATH]   (runs the service transport DLL against mocks)
+//   rtpmidi-spike service status | host | connect | remove   (drives the transport in the running
+//                          service; options are at the top of spike_service.cpp)
 // ============================================================================
 
 #include "spike_common.h"
@@ -35,6 +37,10 @@ int RegisterWithWinRt(std::wstring const& fullName, uint16_t port, uint32_t seco
 
 #ifdef RTP_TRANSPORT_TEST
 int RunTransportTest(std::wstring const& dllPath);
+#endif
+
+#ifdef RTP_SDK_CHECK
+int RunServiceCommand(std::vector<std::wstring> const& arguments);
 #endif
 
 using namespace RtpMidi;
@@ -847,6 +853,9 @@ int wmain(int argc, wchar_t** argv)
         result = RunTransportTest(options.Has("--dll") ? ToWide(options.Get("--dll")) : defaultDll);
     }
 #endif
+#ifdef RTP_SDK_CHECK
+    else if (command == "service") result = RunServiceCommand(std::vector<std::wstring>(argv + 2, argv + argc));
+#endif
     else if (command == "register-winrt")
     {
         auto const fullName = ToWide(options.Get("--name", "WinRT probe") + "." + options.Get("--type", "_wmsprobe._udp.local"));
@@ -854,7 +863,7 @@ int wmain(int argc, wchar_t** argv)
     }
     else
     {
-        Print("rtpmidi-spike selftest | browse | register | listen | connect <target> | loopback | mdns-watch | transport-test");
+        Print("rtpmidi-spike selftest | browse | register | listen | connect <target> | loopback | mdns-watch | transport-test | service");
         Print("See the comment at the top of main.cpp for the options.");
     }
 
