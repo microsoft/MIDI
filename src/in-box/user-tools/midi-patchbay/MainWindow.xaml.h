@@ -40,6 +40,8 @@ namespace winrt::midipatchbay::implementation
         void OnOpenFolderClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNewPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNewQuickPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnImportPatchClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnNotRoutingStartClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnSortClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSavePatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnPatchMenuClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -117,6 +119,23 @@ namespace winrt::midipatchbay::implementation
 
         // An empty preferred name gives the numbered untitled name.
         void CreateNewPatch(_In_ std::wstring const& preferredName = {}) noexcept;
+
+        // Patch files from the Import button, from the command line, or double-clicked while the
+        // app was already open. Each is copied into the patch folder and none of them routes. The
+        // last one is selected. False when none of them could be imported.
+        bool ImportPatchFiles(_In_ std::vector<std::wstring> const& paths) noexcept;
+
+        // A patch double-clicked while the app is open arrives from the second copy as
+        // WM_COPYDATA, which XAML does not pass on, so the window is subclassed to see it.
+        static LRESULT CALLBACK HandoffSubclassProcedure(
+            _In_ HWND window,
+            _In_ UINT message,
+            _In_ WPARAM wParam,
+            _In_ LPARAM lParam,
+            _In_ UINT_PTR subclassId,
+            _In_ DWORD_PTR referenceData) noexcept;
+
+        static winrt::weak_ref<MainWindow> s_instance;
 
         ::midipatchbay::PatchDocument* CurrentPatch() noexcept;
 

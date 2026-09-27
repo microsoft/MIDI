@@ -98,6 +98,21 @@
   <data name="NewQuickPatchText.Text" xml:space="preserve">
     <value>New quick patch</value>
   </data>
+  <data name="ImportPatchButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Import a patch</value>
+  </data>
+  <data name="ImportPatchButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Copy a .midipatch file from another folder into your patches. It won't route until you turn it on.</value>
+  </data>
+  <data name="ImportPatchText.Text" xml:space="preserve">
+    <value>Import a patch…</value>
+  </data>
+  <data name="ImportPatchTitle" xml:space="preserve">
+    <value>Import a patch</value>
+  </data>
+  <data name="ImportPatchFilter" xml:space="preserve">
+    <value>MIDI Patchbay patches</value>
+  </data>
   <data name="PatchesHeaderText.Text" xml:space="preserve">
     <value>Patches</value>
   </data>
@@ -283,6 +298,9 @@
   <data name="StatusPatchSavedFormat" xml:space="preserve">
     <value>"{0}" was saved.</value>
   </data>
+  <data name="StatusPatchImportedFormat" xml:space="preserve">
+    <value>"{0}" was added to your patches. It isn't routing yet.</value>
+  </data>
   <data name="StatusNoPatchOpen" xml:space="preserve">
     <value>Create or select a patch first.</value>
   </data>
@@ -305,6 +323,15 @@
   </data>
   <data name="ServiceBar.Message" xml:space="preserve">
     <value>Patches cannot route until the service is running.</value>
+  </data>
+  <data name="NotRoutingBar.Title" xml:space="preserve">
+    <value>This patch isn't routing</value>
+  </data>
+  <data name="NotRoutingBar.Message" xml:space="preserve">
+    <value>Nothing passes through its connections until you start routing.</value>
+  </data>
+  <data name="NotRoutingStartButton.Content" xml:space="preserve">
+    <value>Start routing</value>
   </data>
   <data name="LoopShowButton.Content" xml:space="preserve">
     <value>Show me the loop</value>
@@ -1243,6 +1270,9 @@
   </data>
   <data name="ErrorSavePatchFormat" xml:space="preserve">
     <value>The patch could not be written to "{0}".</value>
+  </data>
+  <data name="ErrorImportPatchFormat" xml:space="preserve">
+    <value>"{0}" isn't a patch MIDI Patchbay can read.</value>
   </data>
   <data name="ErrorDeletePatch" xml:space="preserve">
     <value>The patch file could not be deleted.</value>

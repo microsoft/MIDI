@@ -7,6 +7,9 @@
 
 #include "pch.h"
 #include "CommandLineOptions.h"
+#include "PatchStore.h"
+
+#include <filesystem>
 
 namespace midipatchbay
 {
@@ -64,6 +67,15 @@ namespace midipatchbay
                         options.HasError = true;
                         options.ErrorText = L"--patch needs the name of a patch.";
                     }
+                }
+                else if (PatchStore::IsPatchFileName(argument))
+                {
+                    // The running copy may have been started from a different folder, so a
+                    // relative path is made whole here, while it still means this one.
+                    std::error_code ignored{};
+                    auto const absolute = std::filesystem::absolute(std::filesystem::path{ argument }, ignored);
+
+                    options.FilesToImport.push_back(ignored ? std::wstring{ argument } : absolute.wstring());
                 }
                 else
                 {

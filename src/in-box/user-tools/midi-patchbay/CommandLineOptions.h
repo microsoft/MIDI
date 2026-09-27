@@ -19,6 +19,9 @@ namespace midipatchbay
         // the customer cares about.
         std::wstring PatchName{};
 
+        // Patch files to import, which is what a double-click in Explorer sends.
+        std::vector<std::wstring> FilesToImport{};
+
         std::wstring ErrorText{};
 
         static CommandLineOptions ParseProcessCommandLine() noexcept;

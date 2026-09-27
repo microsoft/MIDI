@@ -35,6 +35,7 @@ namespace winrt::midipatchbay::implementation
                 PatchMenuButton().IsEnabled(false);
                 AddEndpointButton().IsEnabled(false);
                 CreateLoopbackButton().IsEnabled(false);
+                NotRoutingBar().IsOpen(false);
                 return;
             }
 
@@ -57,6 +58,8 @@ namespace winrt::midipatchbay::implementation
             RoutingToggleText().Text(routing
                 ? resources::GetString(L"ChipRouting")
                 : resources::GetString(L"ChipNotRouting"));
+
+            NotRoutingBar().IsOpen(!routing);
 
             SavePatchButton().IsEnabled(true);
             PatchMenuButton().IsEnabled(true);
@@ -87,6 +90,22 @@ namespace winrt::midipatchbay::implementation
             UpdatePatchHeader();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to change whether the patch is routing.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnNotRoutingStartClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            if (auto const* patch = CurrentPatch())
+            {
+                SetPatchRouting(PatchKey(*patch), true);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to start routing the patch.")
     }
 
     void MainWindow::MarkDirty() noexcept
@@ -490,6 +509,9 @@ namespace winrt::midipatchbay::implementation
             ApplyRouting();
             UpdateTray();
             UpdateStatusStrip();
+
+            // The notification area can change this for a patch that is on screen.
+            UpdatePatchHeader();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to change whether a patch is routing.")
     }
@@ -501,6 +523,7 @@ namespace winrt::midipatchbay::implementation
         ApplyRouting();
         UpdateTray();
         UpdateStatusStrip();
+        UpdatePatchHeader();
     }
 
     _Use_decl_annotations_

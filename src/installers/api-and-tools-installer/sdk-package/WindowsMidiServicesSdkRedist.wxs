@@ -177,6 +177,7 @@
             <ComponentRef Id="WindowsMidiServicesToolsRegistration" />
             <ComponentRef Id="WindowsMidiServicesCollectMidiLogsRegistration"/>
             <ComponentRef Id="WindowsMidiServicesMidiFileAssociation"/>
+            <ComponentRef Id="PatchbayFileAssociation"/>
             <ComponentRef Id="LoopbackSetupProtocol"/>
     </Feature>
 

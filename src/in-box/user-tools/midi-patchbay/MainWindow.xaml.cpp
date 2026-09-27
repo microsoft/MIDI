@@ -13,6 +13,7 @@
 
 #include "App.xaml.h"
 #include "BackgroundWork.h"
+#include "DocumentHandoff.h"
 #include "StringResources.h"
 #include "resource.h"
 
@@ -68,6 +69,57 @@ namespace winrt::midipatchbay::implementation
     MainWindow::MainWindow()
     {
         // XAML objects must not call InitializeComponent during construction; winrt::make does it
+    }
+
+    winrt::weak_ref<MainWindow> MainWindow::s_instance{};
+
+    _Use_decl_annotations_
+    LRESULT CALLBACK MainWindow::HandoffSubclassProcedure(
+        HWND window,
+        UINT message,
+        WPARAM wParam,
+        LPARAM lParam,
+        UINT_PTR subclassId,
+        DWORD_PTR referenceData) noexcept
+    {
+        UNREFERENCED_PARAMETER(referenceData);
+
+        if (message == WM_COPYDATA)
+        {
+            try
+            {
+                auto paths = ::midiapp::ReadDocumentsFromCopyData(
+                    reinterpret_cast<COPYDATASTRUCT const*>(lParam));
+
+                // Imported after the sender has been answered, so a slow disk never holds the
+                // other process up.
+                if (!paths.empty())
+                {
+                    if (auto const queue = winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread())
+                    {
+                        queue.TryEnqueue([paths = std::move(paths)]()
+                            {
+                                if (auto strong = s_instance.get())
+                                {
+                                    strong->ImportPatchFiles(paths);
+                                }
+                            });
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return TRUE;
+        }
+
+        if (message == WM_NCDESTROY)
+        {
+            ::RemoveWindowSubclass(window, &MainWindow::HandoffSubclassProcedure, subclassId);
+        }
+
+        return ::DefSubclassProc(window, message, wParam, lParam);
     }
 
     void MainWindow::RestoreWindowPlacement() noexcept
@@ -449,6 +501,10 @@ namespace winrt::midipatchbay::implementation
             // Now that there is a window, a later launch has something to bring forward.
             ::midiapp::SingleInstance::PublishMainWindow(m_chrome.WindowHandle());
 
+            // And something to hand a double-clicked patch to.
+            s_instance = get_weak();
+            ::SetWindowSubclass(m_chrome.WindowHandle(), &MainWindow::HandoffSubclassProcedure, 1, 0);
+
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
 
             Title(resources::GetString(L"AppDisplayName"));
@@ -702,6 +758,12 @@ namespace winrt::midipatchbay::implementation
             RebuildNavigation();
 
             auto const& options = App::StartupOptions();
+
+            // A patch double-clicked in Explorer, which is what started the app.
+            if (!options.FilesToImport.empty() && ImportPatchFiles(options.FilesToImport))
+            {
+                return;
+            }
 
             if (!options.PatchName.empty())
             {
