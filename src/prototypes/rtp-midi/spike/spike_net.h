@@ -122,8 +122,9 @@ namespace Spike
         UdpSocket(UdpSocket const&) = delete;
         UdpSocket& operator=(UdpSocket const&) = delete;
 
-        // loopbackOnly binds ::1, which never listens on the network and never needs a firewall rule
-        bool Bind(uint16_t port, int& error, bool loopbackOnly = false)
+        // loopbackOnly binds ::1, which never listens on the network and never needs a firewall rule.
+        // ipv4 with it binds 127.0.0.1 instead, which a peer sees as a different host from ::1.
+        bool Bind(uint16_t port, int& error, bool loopbackOnly = false, bool ipv4 = false)
         {
             auto const socket = WSASocketW(AF_INET6, SOCK_DGRAM, IPPROTO_UDP, nullptr, 0, WSA_FLAG_OVERLAPPED);
             if (socket == INVALID_SOCKET) { error = WSAGetLastError(); return false; }
@@ -147,6 +148,15 @@ namespace Spike
             local.sin6_family = AF_INET6;
             local.sin6_addr = loopbackOnly ? in6addr_loopback : in6addr_any;
             local.sin6_port = htons(port);
+
+            if (loopbackOnly && ipv4)
+            {
+                local.sin6_addr = in6_addr{};
+                local.sin6_addr.u.Byte[10] = 0xFF;
+                local.sin6_addr.u.Byte[11] = 0xFF;
+                local.sin6_addr.u.Byte[12] = 127;
+                local.sin6_addr.u.Byte[15] = 1;
+            }
 
             if (bind(socket, reinterpret_cast<sockaddr const*>(&local), sizeof(local)) == SOCKET_ERROR)
             {
@@ -229,10 +239,11 @@ namespace Spike
     class PortPair
     {
     public:
-        bool Bind(uint16_t preferredControlPort, uint16_t searchFrom, uint16_t searchTo, std::string& failure, bool loopbackOnly = false)
+        bool Bind(uint16_t preferredControlPort, uint16_t searchFrom, uint16_t searchTo, std::string& failure, bool loopbackOnly = false, bool ipv4 = false)
         {
             int error = 0;
             m_loopbackOnly = loopbackOnly;
+            m_ipv4 = ipv4;
 
             if (preferredControlPort != 0)
             {
@@ -262,9 +273,9 @@ namespace Spike
     private:
         bool TryBind(uint16_t port, int& error)
         {
-            if (!m_control.Bind(port, error, m_loopbackOnly)) return false;
+            if (!m_control.Bind(port, error, m_loopbackOnly, m_ipv4)) return false;
 
-            if (!m_data.Bind(static_cast<uint16_t>(port + 1), error, m_loopbackOnly))
+            if (!m_data.Bind(static_cast<uint16_t>(port + 1), error, m_loopbackOnly, m_ipv4))
             {
                 m_control.Close();
                 return false;
@@ -276,5 +287,6 @@ namespace Spike
         UdpSocket m_control;
         UdpSocket m_data;
         bool m_loopbackOnly{ false };
+        bool m_ipv4{ false };
     };
 }

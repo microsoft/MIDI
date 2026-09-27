@@ -945,6 +945,44 @@ namespace
         }
     }
 
+    // Two connections to one host, each with its own stream. A shared encoder would carry B's
+    // running status into C's stream and C's into B's.
+    void TestSendToOneParticipant()
+    {
+        SimulatedNetwork network;
+        auto& host = network.AddNode(1, ClockA, Config("Host"));
+        auto& b = network.AddNode(2, ClockB, Config("B"));
+        auto& c = network.AddNode(3, ClockA + 777, Config("C"));
+
+        b.Engine->Invite(host.Control, b.Clock());
+        c.Engine->Invite(host.Control, c.Clock());
+        network.Advance(3000);
+
+        auto const participants = host.Engine->Snapshot();
+        CHECK_EQ(participants.size(), 2u);
+        if (participants.size() != 2) return;
+
+        uint32_t toB = 0;
+        uint32_t toC = 0;
+        for (auto const& p : participants) (p.RemoteName == "B" ? toB : toC) = p.Id;
+
+        uint8_t const noteOn[] = { 0x90, 0x3C, 0x64 };
+        uint8_t const noteOff[] = { 0x80, 0x3C, 0x40 };
+        uint8_t const runningStatusNote[] = { 0x3E, 0x64 };
+
+        CHECK(host.Engine->SendMidiTo(toB, noteOn, sizeof(noteOn), host.Clock()));
+        CHECK(host.Engine->SendMidiTo(toC, noteOff, sizeof(noteOff), host.Clock()));
+        CHECK(host.Engine->SendMidiTo(toB, runningStatusNote, sizeof(runningStatusNote), host.Clock()));
+        CHECK(!host.Engine->SendMidiTo(9999, noteOn, sizeof(noteOn), host.Clock()));
+        network.Advance(200);
+
+        std::vector<uint8_t> const expectedB = { 0x90, 0x3C, 0x64, 0x90, 0x3E, 0x64 };
+        std::vector<uint8_t> const expectedC = { 0x80, 0x3C, 0x40 };
+
+        CHECK(b.ReceivedStream() == expectedB);
+        CHECK(c.ReceivedStream() == expectedC);
+    }
+
     void TestLossRecoveredFromJournal()
     {
         uint64_t recovered = 0, covered = 0;
@@ -1173,6 +1211,7 @@ int RunSelfTest()
     Run("session: clock filter rejects asymmetric delay", TestClockFilterRejectsAsymmetricDelay);
     Run("session: CK exchanges the peer starts are used", TestPeerStartedSyncIsUsed);
     Run("session: MIDI both ways, SysEx, timestamp wrap", TestSessionCarriesMidiBothWays);
+    Run("session: each connection keeps its own stream", TestSendToOneParticipant);
     Run("session: loss repaired from the journal", TestLossRecoveredFromJournal);
     Run("session: loss without a journal silences notes", TestLossWithoutJournalSilences);
     Run("session: receiver feedback trims the journal", TestFeedbackTrimsJournal);

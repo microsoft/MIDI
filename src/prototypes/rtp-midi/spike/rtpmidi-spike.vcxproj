@@ -38,6 +38,17 @@
   <PropertyGroup>
     <OutDir>$(MSBuildThisFileDirectory)..\out\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(MSBuildThisFileDirectory)..\out\intermediate\$(Platform)\$(Configuration)\</IntDir>
+
+    <!-- The SDK cross-check is compiled in only once the rtpMIDI SDK has been built -->
+    <RtpSdkWinmd>$(MSBuildThisFileDirectory)..\out\$(Platform)\Release\sdk\Windows.Devices.Midi2.Transports.Rtp.winmd</RtpSdkWinmd>
+    <Midi2Winmd>$(MSBuildThisFileDirectory)..\..\..\in-box\vsfiles-sdk\out\Windows.Devices.Midi2\$(Platform)\Release\Windows.Devices.Midi2.winmd</Midi2Winmd>
+    <RtpProjectionDir>$(MSBuildThisFileDirectory)..\out\intermediate\projection\$(Platform)\</RtpProjectionDir>
+    <RtpSdkCheck Condition="Exists('$(RtpSdkWinmd)') And Exists('$(Midi2Winmd)')">true</RtpSdkCheck>
+
+    <!-- The transport harness needs the service interfaces from an in-box build -->
+    <InBoxIdlDir>$(MSBuildThisFileDirectory)..\..\..\in-box\VSFiles\intermediate\IDL\$(Platform)\Release\</InBoxIdlDir>
+    <RtpTransportTest Condition="Exists('$(InBoxIdlDir)WindowsMidiServices.h')">true</RtpTransportTest>
+    <RtpSdkCheck Condition="'$(RtpTransportTest)'!='true'"></RtpSdkCheck>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -61,10 +72,26 @@
     </Link>
   </ItemDefinitionGroup>
 
+  <ItemDefinitionGroup Condition="'$(RtpTransportTest)'=='true'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(InBoxIdlDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>RTP_TRANSPORT_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(RtpSdkCheck)'=='true'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(RtpProjectionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>RTP_SDK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="selftest.cpp" />
     <ClCompile Include="spike_winrt.cpp" />
+    <ClCompile Include="spike_transport_test.cpp" Condition="'$(RtpTransportTest)'=='true'" />
+    <ClCompile Include="spike_sdk_check.cpp" Condition="'$(RtpSdkCheck)'=='true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -78,4 +105,10 @@
   </ItemGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+
+  <!-- Uses the Windows SDK's cppwinrt, which matches the C++/WinRT headers this project compiles with -->
+  <Target Name="GenerateRtpSdkProjection" BeforeTargets="ClCompile" Condition="'$(RtpSdkCheck)'=='true'"
+          Inputs="$(RtpSdkWinmd);$(Midi2Winmd)" Outputs="$(RtpProjectionDir)winrt\Windows.Devices.Midi2.Transports.Rtp.h">
+    <Exec Command="&quot;$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\cppwinrt.exe&quot; -in &quot;$(RtpSdkWinmd)&quot; -in &quot;$(Midi2Winmd)&quot; -ref sdk -out &quot;$(RtpProjectionDir.TrimEnd('\'))&quot;" />
+  </Target>
 </Project>

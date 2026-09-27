@@ -18,6 +18,7 @@
 //   (discard every Nth incoming RTP packet, to exercise recovery from the peer's journal)
 //   rtpmidi-spike loopback [--sysex BYTES]
 //   rtpmidi-spike mdns-watch [--filter TEXT] [--seconds N] [--queries]
+//   rtpmidi-spike transport-test [--dll PATH]   (runs the service transport DLL against mocks)
 // ============================================================================
 
 #include "spike_common.h"
@@ -31,6 +32,10 @@
 
 int RunSelfTest();
 int RegisterWithWinRt(std::wstring const& fullName, uint16_t port, uint32_t seconds, bool withText);
+
+#ifdef RTP_TRANSPORT_TEST
+int RunTransportTest(std::wstring const& dllPath);
+#endif
 
 using namespace RtpMidi;
 using Spike::Print;
@@ -63,7 +68,7 @@ namespace
     Options ParseOptions(int argc, wchar_t** argv, int first)
     {
         // options that take a value; everything else starting with -- is a flag
-        static std::set<std::string> const valued = { "--seconds", "--type", "--name", "--port", "--sysex", "--timeout", "--filter", "--rtp-log", "--drop-every" };
+        static std::set<std::string> const valued = { "--seconds", "--type", "--name", "--port", "--sysex", "--timeout", "--filter", "--rtp-log", "--drop-every", "--dll" };
 
         Options options;
 
@@ -829,6 +834,19 @@ int wmain(int argc, wchar_t** argv)
     else if (command == "connect") result = CommandConnect(options);
     else if (command == "loopback") result = CommandLoopback(options);
     else if (command == "mdns-watch") result = Spike::WatchMdns(options.Get("--filter", "_apple-midi"), options.GetNumber("--seconds", 20), options.Has("--queries"));
+#ifdef RTP_TRANSPORT_TEST
+    else if (command == "transport-test")
+    {
+        // the transport builds into the same output folder as this executable
+        wchar_t exePath[MAX_PATH]{};
+        GetModuleFileNameW(nullptr, exePath, ARRAYSIZE(exePath));
+
+        std::wstring defaultDll{ exePath };
+        defaultDll = defaultDll.substr(0, defaultDll.find_last_of(L'\\') + 1) + L"Midi2.RtpMidiTransport.dll";
+
+        result = RunTransportTest(options.Has("--dll") ? ToWide(options.Get("--dll")) : defaultDll);
+    }
+#endif
     else if (command == "register-winrt")
     {
         auto const fullName = ToWide(options.Get("--name", "WinRT probe") + "." + options.Get("--type", "_wmsprobe._udp.local"));
@@ -836,7 +854,7 @@ int wmain(int argc, wchar_t** argv)
     }
     else
     {
-        Print("rtpmidi-spike selftest | browse | register | listen | connect <target> | loopback | mdns-watch");
+        Print("rtpmidi-spike selftest | browse | register | listen | connect <target> | loopback | mdns-watch | transport-test");
         Print("See the comment at the top of main.cpp for the options.");
     }
 

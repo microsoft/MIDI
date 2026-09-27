@@ -1,0 +1,14 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {54c9b2f6-c235-4000-a675-9f6958a1a4fa} = s 'Midi2RtpMidiTransport Class'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Both'
+			}
+			'Version' = s '0.1'
+		}
+	}
+}

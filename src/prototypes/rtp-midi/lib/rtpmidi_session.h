@@ -230,6 +230,9 @@ namespace RtpMidi
 
         uint16_t NextSendSequence{ 0 };
 
+        // running status and an open SysEx belong to one outgoing stream, so each participant has its own
+        CommandSectionEncoder Encoder{};
+
         // sent-side journal: the latest state of each note and the packet that changed it
         struct SentNote
         {
@@ -328,6 +331,7 @@ namespace RtpMidi
             participant->RemoteData = remoteControl.WithPort(static_cast<uint16_t>(remoteControl.Port + 1));
             participant->Created = now;
             participant->NextSendSequence = static_cast<uint16_t>(NextRandom32());
+            participant->Encoder = CommandSectionEncoder{ m_config.MaxListBytes };
 
             auto& added = *participant;
             m_participants.push_back(std::move(participant));
@@ -450,44 +454,90 @@ namespace RtpMidi
             auto const lists = m_encoder.TakeLists();
             if (lists.empty()) return;
 
-            auto const timestamp = static_cast<uint32_t>(now);
-
             for (auto& entry : m_participants)
             {
-                auto& participant = *entry;
-
-                if (participant.State != ParticipantState::Connected && participant.State != ParticipantState::Synchronizing) continue;
-
-                for (auto const& list : lists)
-                {
-                    auto const sequence = participant.NextSendSequence;
-                    std::vector<uint8_t> datagram;
-
-                    if (m_config.SendJournal)
-                    {
-                        if (!participant.HaveSentRtp)
-                        {
-                            // the first packet's checkpoint is itself: an empty history
-                            participant.HaveSentRtp = true;
-                            participant.JournalCheckpoint = sequence;
-                        }
-
-                        // the journal describes the packets before this one, never this one
-                        auto const journal = BuildOutgoingJournal(participant, sequence);
-                        datagram = BuildRtpMidiPacket(sequence, timestamp, m_config.Ssrc, list, &journal);
-                        RecordSentNotes(participant, list, sequence);
-                    }
-                    else
-                    {
-                        datagram = BuildRtpMidiPacket(sequence, timestamp, m_config.Ssrc, list);
-                    }
-
-                    participant.NextSendSequence++;
-                    m_host.SendData(participant.RemoteData, datagram);
-                    participant.Stats.PacketsSent++;
-                }
+                if (IsReadyForData(*entry)) SendLists(*entry, lists, now);
             }
         }
+
+        // A MIDI 1.0 byte stream for one participant. False when it is not ready for data.
+        bool SendMidiTo(uint32_t participantId, uint8_t const* bytes, size_t count, uint64_t now)
+        {
+            auto participant = FindById(participantId);
+            if (participant == nullptr || !IsReadyForData(*participant)) return false;
+
+            participant->Encoder.Append(bytes, count);
+
+            auto const lists = participant->Encoder.TakeLists();
+            if (!lists.empty()) SendLists(*participant, lists, now);
+
+            return true;
+        }
+
+        bool TrySnapshot(uint32_t participantId, Participant& snapshot) const
+        {
+            for (auto const& entry : m_participants)
+            {
+                if (entry->Id != participantId) continue;
+
+                snapshot = *entry;
+                return true;
+            }
+
+            return false;
+        }
+
+    private:
+        static bool IsReadyForData(Participant const& participant)
+        {
+            return participant.State == ParticipantState::Connected || participant.State == ParticipantState::Synchronizing;
+        }
+
+        Participant* FindById(uint32_t id)
+        {
+            for (auto& entry : m_participants)
+            {
+                if (entry->Id == id && entry->State != ParticipantState::Ended) return entry.get();
+            }
+
+            return nullptr;
+        }
+
+        void SendLists(Participant& participant, std::vector<std::vector<uint8_t>> const& lists, uint64_t now)
+        {
+            auto const timestamp = static_cast<uint32_t>(now);
+
+            for (auto const& list : lists)
+            {
+                auto const sequence = participant.NextSendSequence;
+                std::vector<uint8_t> datagram;
+
+                if (m_config.SendJournal)
+                {
+                    if (!participant.HaveSentRtp)
+                    {
+                        // the first packet's checkpoint is itself: an empty history
+                        participant.HaveSentRtp = true;
+                        participant.JournalCheckpoint = sequence;
+                    }
+
+                    // the journal describes the packets before this one, never this one
+                    auto const journal = BuildOutgoingJournal(participant, sequence);
+                    datagram = BuildRtpMidiPacket(sequence, timestamp, m_config.Ssrc, list, &journal);
+                    RecordSentNotes(participant, list, sequence);
+                }
+                else
+                {
+                    datagram = BuildRtpMidiPacket(sequence, timestamp, m_config.Ssrc, list);
+                }
+
+                participant.NextSendSequence++;
+                m_host.SendData(participant.RemoteData, datagram);
+                participant.Stats.PacketsSent++;
+            }
+        }
+
+    public:
 
         void EndParticipant(uint32_t id, uint64_t now)
         {
@@ -864,6 +914,7 @@ namespace RtpMidi
             participant->Created = now;
             participant->LastSyncActivity = now;
             participant->NextSendSequence = static_cast<uint16_t>(NextRandom32());
+            participant->Encoder = CommandSectionEncoder{ m_config.MaxListBytes };
 
             auto& added = *participant;
             m_participants.push_back(std::move(participant));
