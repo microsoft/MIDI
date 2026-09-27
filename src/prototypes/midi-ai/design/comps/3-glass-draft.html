@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>AI drafts - 3 - MIDI Glass, a drafted layout in the library</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="ai.css">
+</head>
+<body>
+<div class="page">
+
+<div class="caption-above"><b>3. A drafted layout in MIDI Glass.</b> The picture on the card is the same one the assistant looked at while it designed the layout. Glass keeps the draft marker through saves, so the card stays a draft until the customer keeps or discards it.</div>
+
+<div class="window">
+
+  <div class="titlebar">
+    <img src="appicon.png" alt="">
+    <div class="title">Windows MIDI Glass</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="content" style="border-left:0;border-top-left-radius:0">
+
+    <div class="toolbar">
+      <div class="btn accent"><span class="gl">&#xE710;</span>New layout</div>
+      <div class="field" style="width:220px;height:32px"><span class="gl">&#xE721;</span><span style="color:var(--text3);font-size:12px">Search layouts</span></div>
+      <div class="sep"></div>
+      <div class="field combo" style="width:140px;height:32px"><span style="font-size:12px">Last used</span><span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+      <div class="spacer"></div>
+      <div class="btn subtle"><span class="gl">&#xE8E5;</span>Open a file</div>
+    </div>
+
+    <div class="canvas-row">
+      <div class="library">
+        <div class="section-head"><span class="gl">&#xE70F;</span>Drafts<span class="count">1</span></div>
+        <div class="cards">
+          <div class="lcard draft">
+            <div class="thumb"><img src="glass-draft-thumb.png" alt=""></div>
+            <div class="meta">
+              <div class="nm">Eight channel mixer</div>
+              <div class="ds">Volume and pan for channels 1 to 8, and a filter pad.</div>
+              <div class="row"><div class="chip draft"><span class="gl">&#xE70F;</span>Draft</div><div class="when">5 min ago</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-head" style="margin-top:4px"><span class="gl">&#xE734;</span>Favorites<span class="count">2</span></div>
+        <div class="cards">
+          <div class="lcard"><div class="thumb"><div class="ph"></div></div><div class="meta"><div class="nm">Live drums</div><div class="ds">Sixteen pads and the transport for the SP-404.</div><div class="row"><div class="chip on"><span class="gl">&#xE73E;</span>Ready</div><div class="when">Yesterday</div></div></div></div>
+          <div class="lcard"><div class="thumb"><div class="ph"></div></div><div class="meta"><div class="nm">DAW mixer</div><div class="ds">Faders for the first eight tracks.</div><div class="row"><div class="chip on"><span class="gl">&#xE73E;</span>Ready</div><div class="when">2 days ago</div></div></div></div>
+        </div>
+      </div>
+
+      <div class="side-card">
+        <div>
+          <div style="font-size:15px;font-weight:600">Eight channel mixer</div>
+          <div class="footnote" style="margin-top:2px">Drafted by GitHub Copilot, 5 minutes ago</div>
+        </div>
+
+        <div class="card" style="font-size:12px;color:var(--text2);line-height:1.45">You asked: <i style="color:var(--text)">Faders and pan knobs for my eight synth channels, and something for the filter.</i></div>
+
+        <div>
+          <div class="insp-label">What it sends</div>
+          <div class="does">
+            <div class="route"><div class="n">8</div><div><b>Faders</b> send controller 7 (volume) on channels 1 to 8.</div></div>
+            <div class="route"><div class="n">8</div><div><b>Knobs</b> send controller 10 (pan) on channels 1 to 8.</div></div>
+            <div class="route"><div class="n">1</div><div><b>XY pad</b> sends controller 74 across and 71 up, on channel 1.</div></div>
+          </div>
+          <div class="footnote" style="margin-top:8px">Everything goes to <b style="color:var(--text2)">Synth</b>, which is the Default Basic App Loopback on this PC.</div>
+        </div>
+
+        <div>
+          <div class="insp-label">Checks</div>
+          <div class="checks">
+            <div class="check ok"><span class="gl">&#xE73E;</span><span>Nothing is sent until you run it.</span></div>
+            <div class="check ok"><span class="gl">&#xE73E;</span><span>No system exclusive in this layout.</span></div>
+            <div class="check ok"><span class="gl">&#xE73E;</span><span>Every control is on the page.</span></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:auto">
+          <div class="btn accent small"><span class="gl">&#xE70F;</span>Open in editor</div>
+          <div class="btn small">Keep</div>
+          <div class="btn small subtle"><span class="gl">&#xE74D;</span>Discard</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="statusbar">
+      <span><span class="gl">&#xE8B7;</span>3 layouts in Documents &rsaquo; MIDI Layouts</span>
+      <span class="spacer"></span>
+      <span class="chip on"><span class="gl">&#xE73E;</span>MIDI service running</span>
+    </div>
+
+  </div>
+</div>
+
+</div>
+</body>
+</html>

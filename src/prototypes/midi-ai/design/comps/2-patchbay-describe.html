@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>AI drafts - 2 - MIDI Patchbay, describing a patch (in-app option)</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="ai.css">
+<script src="mock.js" defer></script>
+</head>
+<body>
+<div class="page">
+
+<div class="caption-above"><b>2. Only if we ever add an in-app model.</b> One entry point, never a chat bubble that follows you around. Follow-up questions are built from the devices that are really connected, so the customer taps an answer instead of typing one. The result is the same draft and the same review as screen 1.</div>
+
+<div class="window">
+
+  <div class="titlebar">
+    <img src="appicon.png" alt="">
+    <div class="title">Windows MIDI Patchbay</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="shell">
+
+    <div class="nav">
+      <div class="nav-item" style="margin-top:4px"><div class="gl" style="color:var(--accent)">&#xE710;</div><div class="nav-text">New empty patch</div></div>
+      <div class="nav-item"><div class="gl">&#xE8AB;</div><div class="nav-text">New quick patch</div></div>
+      <div class="nav-item selected"><div class="gl">&#xE8BD;</div><div class="nav-text">Describe a patch</div></div>
+      <div class="nav-divider"></div>
+      <div class="nav-header"><span>Patches</span><span class="spacer"></span><span class="nav-sort">&#xE8CB;</span></div>
+      <div class="nav-item"><div class="gl">&#xE71B;</div><div class="nav-text">Studio Rig</div></div>
+      <div class="nav-item"><div class="gl">&#xE71B;</div><div class="nav-text">Live Set A</div></div>
+      <div class="nav-item"><div class="gl">&#xE71B;</div><div class="nav-text">Bench test</div></div>
+
+      <div class="nav-footer">
+        <div class="nav-divider"></div>
+        <div class="nav-item"><div class="gl">&#xE8B7;</div><div class="nav-text">Open patch folder</div></div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="patch-header">
+        <div style="flex:1;min-width:0">
+          <h1>Describe a patch</h1>
+          <div class="desc">Say what you want to connect. Patchbay asks about anything it cannot tell from your devices.</div>
+        </div>
+      </div>
+
+      <div class="ask">
+        <div class="ask-box">Send my keyboard to the Hydrasynth, only the top two octaves, and turn the mod wheel into filter cutoff.<span class="hint">Nothing is routed until you review the draft</span></div>
+
+        <div class="two-col">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="question">
+              <div class="q">Which keyboard?</div>
+              <div class="choices">
+                <div class="choice picked"><span class="gl">&#xE73E;</span>Launchkey 49 MK3<span class="sub">USB</span></div>
+                <div class="choice">KOMPLETE KONTROL M32<span class="sub">USB</span></div>
+                <div class="choice">Keystation 61<span class="sub">Bluetooth</span></div>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q">The Launchkey has 49 keys, C1 to C5. Top two octaves means C3 to C5?</div>
+              <div class="choices">
+                <div class="choice picked"><span class="gl">&#xE73E;</span>Yes, C3 to C5</div>
+                <div class="choice">Everything from C3 up</div>
+                <div class="choice"><span class="gl">&#xE70F;</span>Pick notes</div>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q">Send the mod wheel (controller 1) as filter cutoff (controller 74)?</div>
+              <div class="why">74 is the usual cutoff controller. A device that publishes its controller list through MIDI-CI would answer this instead of a guess.</div>
+              <div class="choices">
+                <div class="choice picked"><span class="gl">&#xE73E;</span>Yes, 1 becomes 74</div>
+                <div class="choice">Send both 1 and 74</div>
+                <div class="choice"><span class="gl">&#xE70F;</span>Other number</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="display:flex;flex-direction:column;gap:10px;flex:0 0 240px">
+            <div class="insp-label" style="margin:0">Draft so far</div>
+            <div class="does">
+              <div class="route"><div class="n">1</div><div><b>Launchkey 49 MK3 to Hydrasynth.</b> Notes C3 to C5 only. Controller 1 becomes controller 74.</div></div>
+            </div>
+            <div class="checks">
+              <div class="check ok"><span class="gl">&#xE73E;</span><span>No feedback loops.</span></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:4px">
+              <div class="btn accent small"><span class="gl">&#xE70F;</span>Create draft</div>
+              <div class="btn small subtle">Start over</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="statusbar">
+        <span><span class="gl">&#xE7F6;</span>6 endpoints connected</span>
+        <span class="spacer"></span>
+        <span><span class="gl">&#xE72E;</span>Language model on this PC</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

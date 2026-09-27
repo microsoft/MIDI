@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>AI drafts - 1 - MIDI Patchbay, reviewing a draft</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="ai.css">
+<script src="mock.js" defer></script>
+</head>
+<body>
+<div class="page">
+
+<div class="caption-above"><b>1. Reviewing a draft.</b> The customer asked their own assistant for a keyboard split. It saved a draft through the MCP server; nothing routes until the customer says so. The right pane is written by the app from the patch itself, not by the assistant.</div>
+
+<div class="window">
+
+  <div class="titlebar">
+    <img src="appicon.png" alt="">
+    <div class="title">Windows MIDI Patchbay</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="shell">
+
+    <div class="nav">
+      <div class="nav-item" style="margin-top:4px"><div class="gl" style="color:var(--accent)">&#xE710;</div><div class="nav-text">New empty patch</div></div>
+      <div class="nav-item"><div class="gl">&#xE8AB;</div><div class="nav-text">New quick patch</div></div>
+      <div class="nav-divider"></div>
+      <div class="nav-header"><span>Patches</span><span class="spacer"></span><span class="nav-sort">&#xE8CB;</span></div>
+      <div class="nav-item selected"><div class="gl">&#xE71B;</div><div class="nav-text">Keyboard split</div><div class="badge" style="color:var(--accent)" title="Draft">&#xE70F;</div></div>
+      <div class="nav-item"><div class="gl">&#xE71B;</div><div class="nav-text">Studio Rig</div></div>
+      <div class="nav-item"><div class="gl">&#xE71B;</div><div class="nav-text">Live Set A</div></div>
+      <div class="nav-item"><div class="gl">&#xE71B;</div><div class="nav-text">Bench test</div></div>
+
+      <div class="nav-footer">
+        <div class="nav-divider"></div>
+        <div class="nav-item"><div class="gl">&#xE8B7;</div><div class="nav-text">Open patch folder</div></div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="patch-header">
+        <div style="flex:1;min-width:0">
+          <h1>Keyboard split</h1>
+          <div class="desc">Launchkey below middle C to the Bass Station, the rest to the Hydrasynth.</div>
+        </div>
+        <div class="chip draft"><span class="gl">&#xE70F;</span>Draft</div>
+        <div class="chip off"><span class="gl">&#xE768;</span>Not routing</div>
+      </div>
+
+      <div class="draft-bar">
+        <div class="gl">&#xE70F;</div>
+        <div class="body">
+          <div class="t">Drafted by GitHub Copilot, 2 minutes ago</div>
+          <div class="m">You asked: <q>Split my Launchkey at middle C. Bass Station below, Hydrasynth above, and keep clock off both.</q> Nothing is routed until you start it.</div>
+        </div>
+        <div class="actions">
+          <div class="btn accent small"><span class="gl">&#xE768;</span>Start routing</div>
+          <div class="btn small">Keep, don't route</div>
+          <div class="btn small subtle"><span class="gl">&#xE74D;</span>Discard</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="btn"><span class="gl">&#xE710;</span>Add endpoint<span class="gl">&#xE70D;</span></div>
+        <div class="btn"><span class="gl">&#xE895;</span>Create loopback<span class="gl">&#xE70D;</span></div>
+        <div class="sep"></div>
+        <div class="btn subtle"><span class="gl">&#xF0E2;</span>Auto arrange</div>
+        <div class="spacer"></div>
+        <div class="btn"><span class="gl">&#xE9D9;</span>Test<span class="gl">&#xE70D;</span></div>
+      </div>
+
+      <div class="canvas-row">
+
+        <div class="canvas">
+          <i data-conn data-from="K-out-1" data-to="B-in-1" data-label="1 &rarr; 1" data-glyph="&#xE71C;" data-state="draft"></i>
+          <i data-conn data-from="K-out-1" data-to="H-in-1" data-label="1 &rarr; 1" data-glyph="&#xE71C;" data-state="draft"></i>
+
+          <div class="node draft" style="left:14px;top:96px;width:196px">
+            <div class="node-head">
+              <div class="node-art">&#xE765;</div>
+              <div class="txt"><div class="nm">Launchkey 49 MK3</div><div class="sub">Novation &middot; USB</div></div>
+              <div class="status-dot"></div>
+            </div>
+            <div class="port-cols">
+              <div class="port-col left">
+                <div class="col-head">In</div>
+                <div class="port" id="K-in-1"><div class="dot"></div><div class="port-label">1 &ndash; Keys</div></div>
+              </div>
+              <div class="port-col right">
+                <div class="col-head">Out</div>
+                <div class="port hot" id="K-out-1"><div class="dot linked"></div><div class="port-label">1 &ndash; Keys</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="node draft" style="left:268px;top:16px;width:226px">
+            <div class="node-head">
+              <div class="node-art">&#xE8D6;</div>
+              <div class="txt"><div class="nm">Bass Station II</div><div class="sub">Novation &middot; USB</div></div>
+              <div class="status-dot"></div>
+            </div>
+            <div class="port-cols">
+              <div class="port-col left">
+                <div class="col-head">In</div>
+                <div class="port hot" id="B-in-1"><div class="dot linked"></div><div class="port-label">1 &ndash; Bass Station</div></div>
+              </div>
+              <div class="port-col right">
+                <div class="col-head">Out</div>
+                <div class="port" id="B-out-1"><div class="dot"></div><div class="port-label">1 &ndash; Bass Station</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="node draft" style="left:268px;top:196px;width:226px">
+            <div class="node-head">
+              <div class="node-art">&#xE8D6;</div>
+              <div class="txt"><div class="nm">Hydrasynth</div><div class="sub">ASM &middot; USB</div></div>
+              <div class="status-dot"></div>
+            </div>
+            <div class="port-cols">
+              <div class="port-col left">
+                <div class="col-head">In</div>
+                <div class="port hot" id="H-in-1"><div class="dot linked"></div><div class="port-label">1 &ndash; Hydrasynth</div></div>
+              </div>
+              <div class="port-col right">
+                <div class="col-head">Out</div>
+                <div class="port" id="H-out-1"><div class="dot"></div><div class="port-label">1 &ndash; Hydrasynth</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="inspector">
+          <div class="insp-head">
+            <span style="font-family:'Segoe Fluent Icons';color:var(--accent);font-size:15px">&#xE8FD;</span>
+            <div class="t">What this draft does</div>
+          </div>
+
+          <div class="insp-body">
+            <div class="card does">
+              <div class="route"><div class="n">1</div><div><b>Launchkey 49 MK3 to Bass Station II.</b> Notes C-2 to B2 only, which is everything below middle C. Channel 1 moves to channel 2. No clock.</div></div>
+              <div class="route"><div class="n">2</div><div><b>Launchkey 49 MK3 to Hydrasynth.</b> Notes C3 to G8 only, which is middle C and up. No clock.</div></div>
+            </div>
+
+            <div class="insp-section">
+              <div class="insp-label">Checks</div>
+              <div class="checks">
+                <div class="check ok"><span class="gl">&#xE73E;</span><span>No feedback loops, including with the two patches that route when Patchbay starts.</span></div>
+                <div class="check ok"><span class="gl">&#xE73E;</span><span>All three devices are connected now.</span></div>
+                <div class="check warn"><span class="gl">&#xE7BA;</span><span>The Hydrasynth also gets notes from <b>Studio Rig</b>. With both routing, it hears two keyboards.</span></div>
+              </div>
+            </div>
+
+            <div class="footnote">Patchbay writes this from the draft itself, so it says what will really happen, whatever the assistant said in chat.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="statusbar">
+        <span><span class="gl">&#xE7F6;</span>3 endpoints</span>
+        <span><span class="gl">&#xE71B;</span>2 connections</span>
+        <span class="spacer"></span>
+        <span><span class="gl">&#xE70F;</span>Draft, not routing</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,168 @@
+/* PROTOTYPE comps. Additions to the MIDI Patchbay mockup styles for AI drafts. */
+
+.caption-above b { color: var(--text2); font-weight: 600; }
+
+/* The bar that says a patch or layout is a draft. InfoBar shape, informational severity. */
+.draft-bar {
+    margin: 0 20px 12px 20px;
+    padding: 10px 12px 10px 14px;
+    border-radius: 6px;
+    background: rgba(96, 205, 255, 0.075);
+    border: 1px solid rgba(96, 205, 255, 0.32);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.draft-bar > .gl {
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 16px;
+    color: var(--accent);
+    margin-top: 2px;
+}
+
+.draft-bar .body { flex: 1; min-width: 0; }
+.draft-bar .t { font-size: 13px; font-weight: 600; }
+.draft-bar .m { font-size: 12px; color: var(--text2); margin-top: 3px; line-height: 1.45; }
+.draft-bar .m q { color: var(--text); font-style: italic; }
+.draft-bar .actions { display: flex; gap: 8px; align-items: center; flex: 0 0 auto; }
+
+.chip.draft { color: var(--accent); border-color: rgba(96, 205, 255, .45); border-style: dashed; background: rgba(96, 205, 255, .06); }
+.chip.off { color: var(--text3); }
+
+.node.draft { border-style: dashed; border-color: rgba(96, 205, 255, .55); }
+
+.conn-pill.draft { border-style: dashed; border-color: rgba(96, 205, 255, .6); color: var(--text); }
+
+/* What the draft does, written by the app from the file itself. */
+.does { display: flex; flex-direction: column; gap: 10px; }
+
+.does .route {
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.45;
+}
+
+.does .route .n {
+    flex: 0 0 20px;
+    height: 20px;
+    border-radius: 10px;
+    background: rgba(96, 205, 255, .14);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.does .route b { color: var(--text); font-weight: 600; }
+
+.checks { display: flex; flex-direction: column; gap: 7px; }
+
+.check { display: flex; gap: 8px; font-size: 12px; color: var(--text2); line-height: 1.4; }
+.check .gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 13px; flex: 0 0 14px; margin-top: 1px; }
+.check.ok .gl { color: var(--success); }
+.check.warn .gl { color: var(--caution); }
+
+.footnote { font-size: 11px; color: var(--text3); line-height: 1.45; }
+
+/* The Describe panel, for the in-app option. */
+.ask {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 4px 20px 16px 20px;
+    overflow: hidden;
+}
+
+.ask-box {
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid var(--stroke-strong);
+    border-bottom: 2px solid var(--accent);
+    padding: 10px 12px;
+    font-size: 14px;
+    line-height: 1.45;
+    min-height: 64px;
+    position: relative;
+}
+
+.ask-box .hint { position: absolute; right: 10px; bottom: 8px; font-size: 11px; color: var(--text3); }
+
+.question { display: flex; flex-direction: column; gap: 8px; }
+.question .q { font-size: 13px; font-weight: 600; }
+.question .why { font-size: 12px; color: var(--text3); margin-top: -4px; }
+.question .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.choice {
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 15px;
+    border: 1px solid var(--stroke-strong);
+    background: rgba(255, 255, 255, 0.045);
+    font-size: 12px;
+    color: var(--text);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.choice .sub { color: var(--text3); font-size: 11px; }
+.choice .gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 12px; color: var(--text3); }
+.choice.picked { border-color: var(--accent); background: rgba(96, 205, 255, .14); color: var(--accent); }
+.choice.picked .gl { color: var(--accent); }
+
+.two-col { display: flex; gap: 14px; min-height: 0; }
+.two-col > * { flex: 1; min-width: 0; }
+
+/* MIDI Glass library, drawn with the same chrome. */
+.library { flex: 1; padding: 6px 20px 16px 20px; overflow: hidden; display: flex; flex-direction: column; gap: 14px; }
+.section-head { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.section-head .gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 14px; color: var(--text2); }
+.section-head .count { color: var(--text3); font-weight: 400; font-size: 12px; }
+.cards { display: flex; gap: 14px; flex-wrap: wrap; }
+
+.lcard {
+    width: 232px;
+    border-radius: 8px;
+    background: var(--card);
+    border: 1px solid var(--stroke);
+    overflow: hidden;
+}
+
+.lcard.draft { border: 1px dashed rgba(96, 205, 255, .6); }
+.lcard .thumb { height: 145px; background: #111; position: relative; }
+.lcard .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lcard .thumb .ph { position: absolute; inset: 0; background: linear-gradient(160deg, #22262D, #121418); }
+.lcard .meta { padding: 8px 10px 10px 10px; display: flex; flex-direction: column; gap: 5px; }
+.lcard .nm { font-size: 13px; font-weight: 600; }
+.lcard .ds { font-size: 11px; color: var(--text3); line-height: 1.35; height: 30px; overflow: hidden; }
+.lcard .row { display: flex; align-items: center; gap: 8px; }
+.lcard .row .when { font-size: 11px; color: var(--text3); margin-left: auto; }
+
+.side-card {
+    width: 300px;
+    flex: 0 0 300px;
+    border-left: 1px solid var(--divider);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.014);
+}
+
+/* Settings */
+.settings { padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+.settings h2 { font-size: 16px; font-weight: 600; margin: 0; }
+.setting { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 6px; background: var(--card); border: 1px solid var(--stroke); }
+.setting .txt { flex: 1; min-width: 0; }
+.setting .t { font-size: 13px; }
+.setting .d { font-size: 12px; color: var(--text3); margin-top: 2px; line-height: 1.4; }
+.setting > .gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 16px; color: var(--text2); flex: 0 0 18px; }
+.setting.fixed > .gl { color: var(--success); }
+.activity { font-size: 12px; color: var(--text2); display: flex; flex-direction: column; gap: 6px; }
+.activity .when { color: var(--text3); }

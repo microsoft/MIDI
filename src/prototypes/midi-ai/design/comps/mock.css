@@ -1,0 +1,782 @@
+/* Mockup styling approximating WinUI 3 dark theme, for MIDI Patchbay design review. */
+
+:root {
+    --bg-top: #262626;
+    --bg-bottom: #1F1F1F;
+    --card: #2B2B2B;
+    --card-alt: #313131;
+    --subtle: rgba(255, 255, 255, 0.0605);
+    --stroke: rgba(255, 255, 255, 0.0698);
+    --stroke-strong: rgba(255, 255, 255, 0.14);
+    --divider: rgba(255, 255, 255, 0.0837);
+    --text: #FFFFFF;
+    --text2: rgba(255, 255, 255, 0.786);
+    --text3: rgba(255, 255, 255, 0.5442);
+    --text-disabled: rgba(255, 255, 255, 0.3628);
+    --accent: #60CDFF;
+    --accent-deep: #4CC2FF;
+    --on-accent: #000000;
+    --critical: #FF99A4;
+    --critical-bg: rgba(255, 153, 164, 0.14);
+    --caution: #FCE100;
+    --caution-bg: rgba(252, 225, 0, 0.11);
+    --success: #6CCB5F;
+    --nav-selected: rgba(255, 255, 255, 0.0837);
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.52);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #101010;
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+}
+
+.page {
+    width: 1024px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    align-items: flex-start;
+}
+
+.caption-above {
+    font-size: 12px;
+    color: var(--text3);
+    margin: 0 0 -12px 2px;
+}
+
+/* ----------------------------------------------------------- window chrome */
+
+.window {
+    width: 1000px;
+    height: 740px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.window.small { width: 620px; height: 470px; }
+
+.titlebar {
+    height: 40px;
+    flex: 0 0 40px;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    gap: 12px;
+}
+
+.titlebar img { width: 16px; height: 16px; }
+
+.titlebar .title {
+    font-size: 12px;
+    color: var(--text2);
+}
+
+.titlebar .spacer { flex: 1; }
+
+.caption-btn {
+    width: 46px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text2);
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 14px;
+    border-radius: 4px;
+}
+
+.caption-btn.hover { background: rgba(255, 255, 255, 0.06); }
+
+.sys-btns {
+    display: flex;
+    height: 40px;
+    align-self: flex-start;
+}
+
+.sys-btns div {
+    width: 46px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text2);
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 10px;
+}
+
+/* ------------------------------------------------------------------- shell */
+
+.shell { flex: 1; display: flex; min-height: 0; }
+
+.nav {
+    width: 216px;
+    flex: 0 0 216px;
+    padding: 0 4px 8px 4px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.nav-item {
+    height: 36px;
+    margin: 2px 4px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 12px;
+    color: var(--text2);
+    font-size: 14px;
+    position: relative;
+}
+
+.nav-item .gl {
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 16px;
+    width: 16px;
+    text-align: center;
+    flex: 0 0 16px;
+}
+
+.nav-item.selected { background: var(--nav-selected); color: var(--text); }
+
+.nav-item.selected::before {
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: 9px;
+    bottom: 9px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--accent);
+}
+
+.nav-item.hovered { background: rgba(255, 255, 255, 0.0455); }
+
+.nav-item .nav-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.nav-item .badge {
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 13px;
+}
+
+.nav-item .badge.warn { color: var(--caution); }
+.nav-item .badge.err { color: var(--critical); }
+.nav-item .badge.temp { color: var(--text3); }
+
+.nav-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px 4px 16px;
+    color: var(--text3);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+.nav-header .spacer { flex: 1; }
+
+.nav-sort {
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 13px;
+    color: var(--text3);
+    padding: 4px 6px;
+    border-radius: 4px;
+}
+
+.nav-divider { height: 1px; background: var(--divider); margin: 8px 12px; }
+
+.nav-footer { margin-top: auto; }
+
+/* --------------------------------------------------------------- tooltip */
+
+.tooltip {
+    position: absolute;
+    background: #2D2D2D;
+    border: 1px solid var(--stroke-strong);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text2);
+    max-width: 280px;
+    line-height: 1.45;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .5);
+    z-index: 40;
+}
+
+.tooltip b { color: var(--text); font-weight: 600; display: block; margin-bottom: 2px; font-size: 12px; }
+
+/* --------------------------------------------------------------- content */
+
+.content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.0228);
+    border-top-left-radius: 8px;
+    border-left: 1px solid var(--stroke);
+    border-top: 1px solid var(--stroke);
+    overflow: hidden;
+}
+
+.patch-header {
+    padding: 14px 20px 12px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.patch-header h1 { font-size: 20px; font-weight: 600; margin: 0; }
+.patch-header .desc { font-size: 12px; color: var(--text3); margin-top: 3px; }
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 22px;
+    padding: 0 9px;
+    border-radius: 11px;
+    font-size: 11px;
+    border: 1px solid var(--stroke-strong);
+    color: var(--text2);
+    background: rgba(255, 255, 255, 0.04);
+    white-space: nowrap;
+}
+
+.chip .gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 11px; }
+.chip.on { color: var(--success); border-color: rgba(108, 203, 95, .45); background: rgba(108, 203, 95, .12); }
+.chip.warn { color: var(--caution); border-color: rgba(252, 225, 0, .4); background: var(--caution-bg); }
+.chip.err { color: var(--critical); border-color: rgba(255, 153, 164, .42); background: var(--critical-bg); }
+.chip.info { color: var(--accent); border-color: rgba(96, 205, 255, .4); background: rgba(96, 205, 255, .10); }
+.chip.step2 { color: var(--text3); border-style: dashed; }
+
+/* -------------------------------------------------------------- buttons */
+
+.btn {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.0605);
+    border: 1px solid var(--stroke-strong);
+    border-bottom-color: rgba(0, 0, 0, .28);
+    color: var(--text);
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.btn .gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 14px; color: var(--text2); }
+.btn.accent { background: var(--accent-deep); color: var(--on-accent); border-color: rgba(255, 255, 255, .08); }
+.btn.accent .gl { color: var(--on-accent); }
+.btn.subtle { background: transparent; border-color: transparent; }
+.btn.icon { width: 32px; padding: 0; justify-content: center; }
+.btn.small { height: 28px; font-size: 12px; padding: 0 10px; }
+.btn.disabled { color: var(--text-disabled); }
+.btn.disabled .gl { color: var(--text-disabled); }
+
+.toggle-sw {
+    width: 40px;
+    height: 20px;
+    border-radius: 10px;
+    background: var(--accent-deep);
+    position: relative;
+    flex: 0 0 40px;
+}
+
+.toggle-sw::after {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 6px;
+    background: #000;
+    top: 4px;
+    right: 4px;
+}
+
+.toggle-sw.off { background: rgba(255, 255, 255, .10); border: 1px solid var(--stroke-strong); }
+.toggle-sw.off::after { background: var(--text2); left: 4px; right: auto; top: 3px; }
+
+/* -------------------------------------------------------------- toolbar */
+
+.toolbar {
+    height: 46px;
+    flex: 0 0 46px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    border-top: 1px solid var(--divider);
+    border-bottom: 1px solid var(--divider);
+}
+
+.toolbar .sep { width: 1px; height: 20px; background: var(--divider); margin: 0 4px; }
+.toolbar .spacer { flex: 1; }
+
+/* --------------------------------------------------------------- canvas */
+
+.canvas-row { flex: 1; display: flex; min-height: 0; }
+
+.canvas {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.16);
+    background-image: radial-gradient(circle, rgba(255, 255, 255, .055) 1px, transparent 1px);
+    background-size: 22px 22px;
+    background-position: 8px 8px;
+}
+
+.canvas svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+.canvas [data-conn] { display: none; }
+
+/* ----------------------------------------------------------------- node */
+
+.node {
+    position: absolute;
+    border-radius: 8px;
+    background: var(--card);
+    border: 1px solid var(--stroke-strong);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .40);
+    z-index: 5;
+}
+
+.node.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 4px 18px rgba(0, 0, 0, .5); }
+.node.offline { border-style: dashed; border-color: rgba(255, 153, 164, .55); background: rgba(43, 43, 43, .62); }
+.node.offline .node-head .nm, .node.offline .port-label { color: var(--text3); }
+
+.node-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--divider);
+    cursor: move;
+}
+
+.node-art {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: linear-gradient(140deg, #3A5470, #24303E);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 14px;
+    color: var(--accent);
+    flex: 0 0 28px;
+    position: relative;
+}
+
+.node-art.loop { background: linear-gradient(140deg, #6B3A63, #3A2338); color: #FFA3EF; }
+.node-art.dead { background: linear-gradient(140deg, #4A3A3D, #2E2427); color: var(--critical); }
+
+.node-badge {
+    position: absolute;
+    right: -5px;
+    bottom: -5px;
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+}
+
+.node-badge.err { background: #FF99A4; color: #1F1F1F; }
+.node-badge.warn { background: #FCE100; color: #1F1F1F; }
+
+.node-head .txt { flex: 1; min-width: 0; }
+.node-head .nm { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.node-head .sub { font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.status-dot { width: 8px; height: 8px; border-radius: 4px; background: var(--success); flex: 0 0 8px; }
+.status-dot.off { background: var(--critical); }
+.status-dot.idle { background: var(--text-disabled); }
+
+.port-cols { display: flex; }
+.port-col { flex: 1; min-width: 0; padding-bottom: 6px; }
+.port-col.right { text-align: right; }
+
+.col-head {
+    font-size: 11px;
+    letter-spacing: .01em;
+    color: var(--text-disabled);
+    padding: 6px 12px 2px 12px;
+}
+
+.port {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    position: relative;
+    font-size: 12px;
+}
+
+.port-col.right .port { flex-direction: row-reverse; }
+
+.port-label { color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.port.all .port-label { color: var(--text); font-weight: 600; }
+.port.hot { background: rgba(96, 205, 255, .10); }
+
+.dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 6px;
+    background: var(--card-alt);
+    border: 2px solid var(--text3);
+    position: absolute;
+    top: 9px;
+    z-index: 6;
+}
+
+.port-col.left .dot { left: -6px; }
+.port-col.right .dot { right: -6px; }
+.dot.linked { background: var(--accent); border-color: var(--accent); }
+.dot.live { box-shadow: 0 0 0 4px rgba(96, 205, 255, .18); }
+.dot.err { background: var(--critical); border-color: var(--critical); }
+
+.node-more {
+    font-size: 11px;
+    color: var(--accent);
+    padding: 4px 12px 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.node-more .gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 10px; }
+
+.node-alert {
+    margin: 0 8px 8px 8px;
+    padding: 8px 10px;
+    border-radius: 5px;
+    background: var(--critical-bg);
+    border: 1px solid rgba(255, 153, 164, .32);
+    font-size: 11px;
+    color: var(--text2);
+    line-height: 1.45;
+}
+
+.node-alert .row { display: flex; gap: 6px; margin-top: 8px; }
+
+/* ------------------------------------------------------- connection pill */
+
+.conn-pill {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    height: 22px;
+    padding: 0 9px;
+    border-radius: 11px;
+    background: #2F2F2F;
+    border: 1px solid var(--stroke-strong);
+    font-size: 11px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 7;
+    white-space: nowrap;
+}
+
+.conn-pill .gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 10px; }
+.conn-pill.sel { border-color: var(--accent); color: var(--accent); }
+.conn-pill.err { border-color: var(--critical); color: var(--critical); background: #35262A; }
+
+/* ------------------------------------------------------------- inspector */
+
+.inspector {
+    width: 278px;
+    flex: 0 0 278px;
+    border-left: 1px solid var(--divider);
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.014);
+    overflow: hidden;
+}
+
+.inspector.collapsed {
+    width: 40px;
+    flex: 0 0 40px;
+    align-items: center;
+    padding-top: 8px;
+    gap: 4px;
+}
+
+.inspector.collapsed .rail {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text3);
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 14px;
+    border-radius: 4px;
+}
+
+.insp-head {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--divider);
+}
+
+.insp-head .t { font-size: 14px; font-weight: 600; flex: 1; }
+.insp-body { padding: 14px 16px; overflow: hidden; display: flex; flex-direction: column; gap: 14px; }
+
+.insp-section { display: flex; flex-direction: column; gap: 7px; }
+.insp-label { font-size: 12px; color: var(--text3); letter-spacing: .01em; }
+
+.field {
+    background: rgba(255, 255, 255, .045);
+    border: 1px solid var(--stroke-strong);
+    border-bottom-color: rgba(255, 255, 255, .45);
+    border-radius: 4px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 13px;
+    color: var(--text);
+    gap: 8px;
+}
+
+.field.combo { border-bottom-color: var(--stroke-strong); }
+.field .spacer { flex: 1; }
+.field .gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 11px; color: var(--text3); }
+.field.multiline { height: auto; padding: 8px 10px; display: block; line-height: 1.5; font-size: 12px; color: var(--text2); }
+
+.kv { display: flex; align-items: baseline; gap: 8px; font-size: 12px; }
+.kv .k { color: var(--text3); width: 92px; flex: 0 0 92px; }
+.kv .v { color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.card {
+    border-radius: 6px;
+    background: rgba(255, 255, 255, .038);
+    border: 1px solid var(--stroke);
+    padding: 12px;
+}
+
+.radio { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; padding: 5px 0; }
+
+.radio .rb {
+    width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    border: 1.5px solid var(--text3);
+    flex: 0 0 18px;
+    margin-top: 1px;
+    position: relative;
+}
+
+.radio.on .rb { border: 5px solid var(--accent-deep); background: #fff; }
+.radio .sub { font-size: 11px; color: var(--text3); margin-top: 2px; line-height: 1.4; }
+
+.check { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; padding: 5px 0; }
+
+.check .cb {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    border: 1.3px solid var(--text3);
+    flex: 0 0 18px;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 10px;
+    color: transparent;
+}
+
+.check.on .cb { background: var(--accent-deep); border-color: var(--accent-deep); color: #000; }
+
+/* ------------------------------------------------------------ status bar */
+
+.statusbar {
+    height: 30px;
+    flex: 0 0 30px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 16px;
+    border-top: 1px solid var(--divider);
+    font-size: 11px;
+    color: var(--text3);
+}
+
+.statusbar .spacer { flex: 1; }
+.statusbar .gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 11px; margin-right: 5px; }
+
+/* --------------------------------------------------------------- infobar */
+
+.infobar {
+    margin: 10px 16px 0 16px;
+    border-radius: 5px;
+    border: 1px solid;
+    display: flex;
+    gap: 12px;
+    padding: 11px 13px;
+    font-size: 12px;
+    align-items: flex-start;
+}
+
+.infobar .gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 15px; flex: 0 0 auto; margin-top: 1px; }
+.infobar .tt { font-weight: 600; font-size: 12px; margin-bottom: 2px; }
+.infobar .bd { flex: 1; color: var(--text2); line-height: 1.5; }
+.infobar.caution { background: var(--caution-bg); border-color: rgba(252, 225, 0, .3); }
+.infobar.caution .gl, .infobar.caution .tt { color: var(--caution); }
+.infobar.err { background: var(--critical-bg); border-color: rgba(255, 153, 164, .32); }
+.infobar.err .gl, .infobar.err .tt { color: var(--critical); }
+.infobar.info { background: rgba(96, 205, 255, .09); border-color: rgba(96, 205, 255, .28); }
+.infobar.info .gl, .infobar.info .tt { color: var(--accent); }
+
+/* ---------------------------------------------------------------- dialog */
+
+.scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, .45); z-index: 60; }
+
+.dialog {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 560px;
+    background: #2C2C2C;
+    border: 1px solid var(--stroke-strong);
+    border-radius: 8px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, .7);
+    z-index: 61;
+    overflow: hidden;
+}
+
+.dialog .dlg-body { padding: 22px 24px; display: flex; flex-direction: column; gap: 14px; }
+.dialog.static { position: static; transform: none; }
+.flyout.static { position: static; }
+.dialog h2 { margin: 0; font-size: 20px; font-weight: 600; }
+.dialog .dlg-sub { font-size: 13px; color: var(--text2); line-height: 1.5; margin: -4px 0 4px 0; }
+.dialog .dlg-foot { padding: 20px 24px; display: flex; gap: 8px; background: rgba(0, 0, 0, .16); }
+.dialog .dlg-foot .btn { flex: 1; justify-content: center; height: 34px; }
+
+/* ---------------------------------------------------------------- flyout */
+
+.flyout {
+    position: absolute;
+    background: #2D2D2D;
+    border: 1px solid var(--stroke-strong);
+    border-radius: 8px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, .64);
+    z-index: 50;
+    overflow: hidden;
+}
+
+.menu-item {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px;
+    font-size: 13px;
+    color: var(--text);
+}
+
+.menu-item .gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 14px; color: var(--text2); width: 16px; }
+.menu-item.hovered { background: rgba(255, 255, 255, .055); }
+.menu-item .spacer { flex: 1; }
+.menu-item .acc { color: var(--text3); font-size: 11px; }
+.menu-sep { height: 1px; background: var(--divider); margin: 4px 10px; }
+.menu-head { padding: 10px 14px 4px; font-size: 12px; color: var(--text3); }
+
+/* ------------------------------------------------------------- palette */
+
+.palette-search {
+    margin: 10px;
+    height: 32px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, .045);
+    border: 1px solid var(--stroke-strong);
+    border-bottom-color: rgba(255, 255, 255, .45);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text3);
+}
+
+.palette-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    font-size: 13px;
+}
+
+.palette-item .art {
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    background: linear-gradient(140deg, #3A5470, #24303E);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 12px;
+    flex: 0 0 24px;
+}
+
+.palette-item .art.loop { background: linear-gradient(140deg, #6B3A63, #3A2338); color: #FFA3EF; }
+.palette-item .art.off { background: #383036; color: var(--critical); }
+.palette-item .tx { flex: 1; min-width: 0; }
+.palette-item .tx .n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.palette-item .tx .s { font-size: 11px; color: var(--text3); }
+.palette-item.hovered { background: rgba(255, 255, 255, .055); }
+.palette-item.dragging { background: rgba(96, 205, 255, .14); border: 1px dashed var(--accent); border-radius: 5px; }
+
+/* -------------------------------------------------------------- tray ui */
+
+.taskbar {
+    width: 420px;
+    height: 48px;
+    border-radius: 8px;
+    background: rgba(32, 32, 32, .94);
+    border: 1px solid var(--stroke-strong);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 16px;
+    box-shadow: var(--shadow);
+}
+
+.taskbar .gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 15px; color: var(--text2); }
+
+.mini-note { font-size: 12px; color: var(--text3); max-width: 1000px; line-height: 1.55; }
+.mini-note b { color: var(--text2); }
+
+.grid2 { display: flex; gap: 22px; align-items: flex-start; flex-wrap: wrap; }
+
+.spark { display: flex; align-items: flex-end; gap: 2px; height: 26px; }
+.spark i { width: 4px; background: var(--accent); border-radius: 1px; display: block; opacity: .85; }
