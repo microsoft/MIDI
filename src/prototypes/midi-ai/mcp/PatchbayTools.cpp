@@ -10,7 +10,7 @@
 #include "EndpointTools.h"
 #include "ToolText.h"
 
-// The file this writes is MIDI Patchbay's own .midipatch.json, key for key: see PatchStore.cpp,
+// The file this writes is MIDI Patchbay's own .midipatch, key for key: see PatchStore.cpp,
 // MessageFilter.cpp and MessageTransform.cpp in src/in-box/user-tools/midi-patchbay. A shipping
 // version would compile those files instead of repeating their shape here; they include the
 // app's precompiled header, which is the only reason this prototype does not.
@@ -20,7 +20,10 @@ namespace midimcp
     namespace
     {
         constexpr wchar_t PatchFolderName[] = L"MIDI Patchbay";
-        constexpr wchar_t PatchFileExtension[] = L".midipatch.json";
+        constexpr wchar_t PatchFileExtension[] = L".midipatch";
+
+        // What the first builds of MIDI Patchbay wrote. It renames them when it starts.
+        constexpr wchar_t LegacyPatchFileExtension[] = L".midipatch.json";
 
         constexpr int32_t AllGroups = -1;
         constexpr int32_t GroupCount = 16;
@@ -993,10 +996,25 @@ namespace midimcp
                 }
 
                 auto const name = entry.path().filename().wstring();
-                constexpr size_t extensionLength = std::size(PatchFileExtension) - 1;
 
-                if (!entry.is_regular_file(ec) || name.size() <= extensionLength ||
-                    !EqualsIgnoringCase(std::wstring_view{ name }.substr(name.size() - extensionLength), PatchFileExtension))
+                auto const endsWith = [&name](std::wstring_view extension)
+                    {
+                        return name.size() > extension.size() &&
+                            EqualsIgnoringCase(std::wstring_view{ name }.substr(name.size() - extension.size()), extension);
+                    };
+
+                size_t extensionLength{ 0 };
+
+                if (endsWith(PatchFileExtension))
+                {
+                    extensionLength = std::size(PatchFileExtension) - 1;
+                }
+                else if (endsWith(LegacyPatchFileExtension))
+                {
+                    extensionLength = std::size(LegacyPatchFileExtension) - 1;
+                }
+
+                if (!entry.is_regular_file(ec) || extensionLength == 0)
                 {
                     continue;
                 }

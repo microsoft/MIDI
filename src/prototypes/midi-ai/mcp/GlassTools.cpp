@@ -21,7 +21,7 @@ namespace midimcp
 {
     namespace
     {
-        constexpr wchar_t LayoutFileExtension[] = L".midilayout.json";
+        constexpr wchar_t LayoutFileExtension[] = L".midilayout";
         constexpr int32_t PageMargin = 32;
         constexpr int32_t ControlGap = 24;
         constexpr int32_t MinimumPageSide = 320;
@@ -1133,15 +1133,15 @@ namespace midimcp
                         for (auto const& entry : std::filesystem::directory_iterator{ folder, ec })
                         {
                             auto const name = entry.path().filename().wstring();
-                            constexpr size_t extensionLength = std::size(LayoutFileExtension) - 1;
 
                             if (ec || count >= 256)
                             {
                                 break;
                             }
 
-                            if (!entry.is_regular_file(ec) || name.size() <= extensionLength ||
-                                !EqualsIgnoringCase(std::wstring_view{ name }.substr(name.size() - extensionLength), LayoutFileExtension))
+                            // Either extension: MIDI Glass renames old files when it starts, but it
+                            // may not have been started since.
+                            if (!entry.is_regular_file(ec) || !glass::IsLayoutFileName(name))
                             {
                                 continue;
                             }
