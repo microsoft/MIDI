@@ -49,6 +49,7 @@ namespace winrt::midisettings::implementation
         winrt::fire_and_forget OnNotificationsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNotificationsEnabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNotificationsNetworkToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnNotificationsLoopbackFeedbackToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNotificationsStartupToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNotificationsAllUsersToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNotificationsRestartElevatedClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);

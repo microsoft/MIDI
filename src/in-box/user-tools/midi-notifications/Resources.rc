@@ -29,4 +29,13 @@ BEGIN
 
     IDS_NOTIFICATION_NETWORK_ATTRIBUTION    "Network MIDI 2.0"
     IDS_NOTIFICATION_REVIEW_BUTTON          "Review"
+
+    // %s is the name the customer gave the loopback. It is sanitized before it gets here.
+    IDS_NOTIFICATION_LOOPBACK_FEEDBACK_ONE  "A feedback loop was detected in %s, so the loopback was muted. Fix the loop, then unmute it in MIDI Loopback Setup."
+
+    // %s is a count of loopbacks.
+    IDS_NOTIFICATION_LOOPBACK_FEEDBACK_MANY "Feedback loops were detected in %s loopbacks, so they were muted. Fix the loops, then unmute them in MIDI Loopback Setup."
+
+    IDS_NOTIFICATION_LOOPBACK_ATTRIBUTION   "MIDI loopbacks"
+    IDS_NOTIFICATION_OPEN_LOOPBACK_SETUP_BUTTON "Open Loopback Setup"
 END

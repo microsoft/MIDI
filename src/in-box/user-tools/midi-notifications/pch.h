@@ -32,9 +32,12 @@
 
 #include <winrt/Windows.Devices.Midi2.h>
 #include <winrt/Windows.Devices.Midi2.Transports.Network.h>
+#include <winrt/Windows.Devices.Midi2.Transports.Loopback.h>
+#include <winrt/Windows.Devices.Midi2.Transports.BasicLoopback.h>
 
 #include "..\..\Transport\UdpNetworkMidi2Transport\network_notification_defs.h"
 #include "..\network-midi-setup\network_setup_protocol_defs.h"
+#include "..\loopback-setup\loopback_setup_protocol_defs.h"
 
 #include "notification_settings_defs.h"
 #include "resource.h"
@@ -45,3 +48,4 @@
 #include "ToastSender.h"
 #include "RegistryChangeWatcher.h"
 #include "NetworkApprovalNotifier.h"
+#include "LoopbackFeedbackNotifier.h"

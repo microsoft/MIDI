@@ -17,6 +17,11 @@ bool AppSettings::NetworkApprovalNotificationsEnabled() noexcept
     return ReadFlag(MIDI_NOTIFICATIONS_VALUE_NETWORK_APPROVAL, true);
 }
 
+bool AppSettings::LoopbackFeedbackNotificationsEnabled() noexcept
+{
+    return ReadFlag(MIDI_NOTIFICATIONS_VALUE_LOOPBACK_FEEDBACK, true);
+}
+
 _Use_decl_annotations_
 bool AppSettings::ReadFlag(PCWSTR const valueName, bool const defaultValue) noexcept
 {

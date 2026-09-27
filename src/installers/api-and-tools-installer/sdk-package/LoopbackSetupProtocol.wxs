@@ -1,0 +1,30 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <!--
+      Lets a loopback feedback notification send the customer to MIDI Loopback Setup. Referenced
+      from the WindowsMIDIServices feature in WindowsMidiServicesSdkRedist.wxs.
+
+      One scheme per app, so a request naming this one cannot be answered by another. A protocol
+      handler can be invoked by anything on the machine, a web page included, so the app treats a
+      URI as a request to show a page and nothing more. See loopback_setup_protocol_defs.h.
+  -->
+  <Fragment>
+    <Component Id="LoopbackSetupProtocol"
+               Bitness="always64"
+               Directory="TOOL_LOOPSETUP_FOLDER"
+               Guid="fa7723a9-9f2a-4a73-9de5-c4730029a183">
+
+      <RegistryKey Root="HKCR" Key="ms-midi-loopback-setup">
+        <RegistryValue Type="string" Value="URL:Windows MIDI Services Loopback Setup" KeyPath="yes" />
+        <RegistryValue Type="string" Name="URL Protocol" Value="" />
+        <RegistryKey Key="DefaultIcon">
+          <RegistryValue Type="string" Value="[#midiloopbacksetupExe],0" />
+        </RegistryKey>
+        <RegistryKey Key="shell\open\command">
+          <RegistryValue Type="string" Value="&quot;[#midiloopbacksetupExe]&quot; &quot;%1&quot;" />
+        </RegistryKey>
+      </RegistryKey>
+    </Component>
+  </Fragment>
+
+</Wix>

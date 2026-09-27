@@ -14,6 +14,7 @@ class AppSettings
 public:
     static bool NotificationsEnabled() noexcept;
     static bool NetworkApprovalNotificationsEnabled() noexcept;
+    static bool LoopbackFeedbackNotificationsEnabled() noexcept;
 
 private:
     static bool ReadFlag(_In_ PCWSTR const valueName, _In_ bool const defaultValue) noexcept;

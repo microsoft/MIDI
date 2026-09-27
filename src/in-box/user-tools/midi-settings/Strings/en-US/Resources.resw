@@ -276,6 +276,18 @@
   <data name="NotificationsNetworkHelp.Text" xml:space="preserve">
     <value>Tells you when a device on your network is waiting for you to allow or block it. Choosing is still done in Network MIDI Setup.</value>
   </data>
+  <data name="NotificationsLoopbackFeedbackToggle.Header" xml:space="preserve">
+    <value>Loopbacks muted because of feedback</value>
+  </data>
+  <data name="NotificationsLoopbackFeedbackToggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="NotificationsLoopbackFeedbackToggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="NotificationsLoopbackFeedbackHelp.Text" xml:space="preserve">
+    <value>Tells you when a loopback muted itself because MIDI kept coming back into it. Unmuting is still done in MIDI Loopback Setup.</value>
+  </data>
   <data name="NotificationsStartupHeader.Text" xml:space="preserve">
     <value>Start with Windows</value>
   </data>

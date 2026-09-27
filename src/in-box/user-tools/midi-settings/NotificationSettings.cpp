@@ -95,6 +95,17 @@ namespace midisettings
         WriteFlag(MIDI_NOTIFICATIONS_VALUE_NETWORK_APPROVAL, value);
     }
 
+    bool NotificationSettings::LoopbackFeedbackEnabled() noexcept
+    {
+        return ReadFlag(MIDI_NOTIFICATIONS_VALUE_LOOPBACK_FEEDBACK, true);
+    }
+
+    _Use_decl_annotations_
+    void NotificationSettings::LoopbackFeedbackEnabled(bool const value) noexcept
+    {
+        WriteFlag(MIDI_NOTIFICATIONS_VALUE_LOOPBACK_FEEDBACK, value);
+    }
+
     std::wstring NotificationSettings::AppPath() noexcept
     {
         try
