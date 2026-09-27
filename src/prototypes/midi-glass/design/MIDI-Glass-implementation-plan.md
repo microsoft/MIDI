@@ -26,8 +26,8 @@ Companion to `MIDI-Glass-design.md` and the twelve mockup screens. This is the *
 build  msbuild <proj> /t:Build /p:Configuration=Release /p:Platform=x64 "/p:SolutionDir=<repo>\src\in-box\\" /v:minimal /nologo /nodeReuse:false
 run    "C:\Program Files (x86)\Windows Kits\10\Testing\Runtimes\TAEF\x64\TE.exe" <out>\tests\x64\Release\Midi2.MidiGlass.unittests.dll /logOutput:Low
 spell  pwsh build\check_en_us_spelling.ps1 -Path src\in-box\user-tools\midi-glass
-card   midiglass --thumbnail <layout.midilayout.json> <out.png> [width]
-run    midiglass --run "<layout.midilayout.json>"
+card   midiglass --thumbnail <layout.midilayout> <out.png> [width]
+run    midiglass --run "<layout.midilayout>"
 ```
 
 ### What the app does today
@@ -174,7 +174,7 @@ Layered the way MIDI Patchbay is, because that worked and because it is what let
 
 ```
 LayoutModel        the document: pages, controls, bindings, sequences, devices. Pure data + validation.
-LayoutStore        one .midilayout.json per layout, auto-save, thumbnails, import marking.
+LayoutStore        one .midilayout per layout, auto-save, thumbnails, import marking.
 ThemeModel/Store   the theme property table, contrast measurement, built-in themes.
 DeviceCatalog      watcher, match resolution, present/absent, reuses MidiServiceConfigEndpointMatchCriteria.
 OutputRouter       named destination -> one connection per endpoint per PROCESS. Send and feedback.
@@ -327,7 +327,7 @@ Project scaffold copied from `midiscratchpad` per the family checklist, `WindowC
 
 `LayoutModel`, `LayoutStore`, `ThemeModel`, `ThemeStore`, the six built-in themes plus Pigment Light, Pigment Dark and Bigwig, contrast measurement, the version-and-round-trip rule, thumbnails, the page size templates and the size-derived control defaults.
 
-**Exit:** a hand-authored `.midilayout.json` round-trips byte for byte, a thumbnail is generated without opening a window, and a file from a "newer version" keeps its unknown parts. Pure tests, no device needed.
+**Exit:** a hand-authored `.midilayout` round-trips byte for byte, a thumbnail is generated without opening a window, and a file from a "newer version" keeps its unknown parts. Pure tests, no device needed.
 
 > **Part done, 23 September 2026.** In `src/in-box/user-tools/midi-glass/document/` and `thumbnail/`, with 55 tests in `Midi2.MidiGlass.unittests` that need no window and no device. Landed: `LayoutModel` and its validation, the serializer, `LayoutStore`, the page templates and size-derived defaults, `ThemeModel` with all nine shipped themes and measured contrast, `ThemeStore` with themes as their own shareable files, and thumbnails. **Auto-save moved to phase 5**: there is no editor yet, so nothing can be dirty, and a debounced saver written now would be a timer with no input and no honest way to test it.
 >
