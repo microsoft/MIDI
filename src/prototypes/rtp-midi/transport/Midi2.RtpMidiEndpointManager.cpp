@@ -251,6 +251,7 @@ CMidi2RtpMidiEndpointManager::Shutdown()
         }
 
         m_lastWrittenLatencyTicks.clear();
+        m_followUpAnnouncementTicks.clear();
 
         m_midiDeviceManager.reset();
         m_midiProtocolManager.reset();
@@ -292,6 +293,7 @@ CMidi2RtpMidiEndpointManager::WorkerLoop(std::stop_token stopToken)
             ReconcileHosts();
             ReconcileClients();
             ProcessEndpointWork();
+            SendDueFollowUpAnnouncements();
 
             auto const now = GetTickCount64();
 
@@ -303,9 +305,19 @@ CMidi2RtpMidiEndpointManager::WorkerLoop(std::stop_token stopToken)
         }
         CATCH_LOG();
 
+        auto wait = std::chrono::milliseconds(MIDI_RTP_WORKER_INTERVAL_MS);
+
+        if (!m_followUpAnnouncementTicks.empty())
+        {
+            auto const now = GetTickCount64();
+            auto const next = *std::min_element(m_followUpAnnouncementTicks.begin(), m_followUpAnnouncementTicks.end());
+
+            wait = (std::min)(wait, std::chrono::milliseconds(static_cast<int64_t>(next > now ? next - now : 0)));
+        }
+
         auto lock = std::unique_lock{ m_workLock };
 
-        m_workChanged.wait_for(lock, std::chrono::milliseconds(MIDI_RTP_WORKER_INTERVAL_MS),
+        m_workChanged.wait_for(lock, wait,
             [&]() { return m_wakeRequested || stopToken.stop_requested(); });
 
         m_wakeRequested = false;
@@ -418,6 +430,18 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts()
         {
             advertiseHr = node->Advertise(definition.EffectiveServiceInstanceName());
             LOG_IF_FAILED(advertiseHr);
+
+            // the DNS client's own announcement of it needs repeating, even if the host is not kept
+            if (SUCCEEDED(advertiseHr))
+            {
+                auto const registered = GetTickCount64();
+
+                m_followUpAnnouncementTicks =
+                {
+                    registered + MIDI_RTP_FOLLOW_UP_ANNOUNCEMENT_FIRST_DELAY_MS,
+                    registered + MIDI_RTP_FOLLOW_UP_ANNOUNCEMENT_SECOND_DELAY_MS
+                };
+            }
         }
 
         bool keep{ false };
@@ -1002,6 +1026,53 @@ CMidi2RtpMidiEndpointManager::RefreshCalculatedLatency()
 }
 
 
+// Works around the Windows DNS client's announcements. See RtpMidiMdns.h.
+void
+CMidi2RtpMidiEndpointManager::SendDueFollowUpAnnouncements()
+{
+    auto const now = GetTickCount64();
+
+    if (std::erase_if(m_followUpAnnouncementTicks, [&](uint64_t const tick) { return tick <= now; }) == 0) return;
+
+    std::vector<std::shared_ptr<RtpMidiNode>> hosts;
+
+    {
+        auto lock = std::scoped_lock{ m_runtimeLock };
+        for (auto const& entry : m_hosts) if (entry.second.Node != nullptr) hosts.push_back(entry.second.Node);
+    }
+
+    // Only what is still registered. Hosts are only ever stopped on this thread, so none can
+    // withdraw its registration between here and the send.
+    std::vector<std::string> labels;
+
+    for (auto const& node : hosts)
+    {
+        if (node->IsAdvertised()) labels.push_back(RtpMidiText::WideToUtf8(node->AdvertisedLabel()));
+    }
+
+    if (labels.empty()) return;
+
+    auto const packets = RtpMidiMdns::BuildPtrAnnouncements(
+        RtpMidiText::WideToUtf8(MIDI_RTP_DNSSD_SERVICE_TYPE), labels, MIDI_RTP_ANNOUNCED_PTR_TTL_SECONDS, MIDI_RTP_ANNOUNCEMENT_MAX_PACKET_BYTES);
+
+    auto const result = RtpMidiMdns::SendAnnouncements(packets);
+
+    TraceLoggingWrite(
+        MidiRtpMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Repeated the DNS-SD announcement of this PC's hosts", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(static_cast<uint32_t>(labels.size()), "hosts"),
+        TraceLoggingUInt32(static_cast<uint32_t>(packets.size()), "packets"),
+        TraceLoggingUInt32(result.IPv4Interfaces, "IPv4 interfaces"),
+        TraceLoggingUInt32(result.IPv6Interfaces, "IPv6 interfaces"),
+        TraceLoggingInt32(result.LastError, "last error")
+    );
+}
+
+
 _Use_decl_annotations_
 void
 CMidi2RtpMidiEndpointManager::OnConnectionUp(std::shared_ptr<RtpMidiConnection> const& connection)
@@ -1197,6 +1268,7 @@ CMidi2RtpMidiEndpointManager::BuildConnectionsJson(std::shared_ptr<RtpMidiNode> 
     if (node == nullptr) return connections;
 
     auto const liveConnections = node->Connections();
+    auto const advertised = m_browser.EnumeratedServices();
 
     for (auto const& participant : node->Snapshot())
     {
@@ -1213,6 +1285,7 @@ CMidi2RtpMidiEndpointManager::BuildConnectionsJson(std::shared_ptr<RtpMidiNode> 
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_NAME_KEY, JsonString(RtpMidiText::Utf8ToWide(participant.RemoteName)));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_ADDRESS_KEY, JsonString(RtpMidiNet::AddressToString(participant.RemoteControl)));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_PORT_KEY, JsonNumber(participant.RemoteControl.Port));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_HOST_NAME_KEY, JsonString(RtpMidiMdns::FindHostNameForAddress(advertised, participant.RemoteControl)));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_LOCAL_PORT_KEY, JsonNumber(node->ControlPort()));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CONNECTION_STATE_KEY, JsonString(ConnectionStateToken(participant.State)));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_IS_CONNECTED_KEY, JsonBoolean(participant.State == RtpMidi::ParticipantState::Connected));

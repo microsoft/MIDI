@@ -18,6 +18,15 @@
 
 #define MIDI_RTP_DNSSD_SERVICE_TYPE                             L"_apple-midi._udp.local"
 
+// The repeats of this PC's announcements after each new registration. See RtpMidiMdns.h. The first
+// waits out the second in which the DNS client's cache-flush bit takes effect (RFC 6762 section
+// 10.2). The TTL is the one the DNS client gives its own PTR records, and a packet stays inside
+// the smallest link an IPv6 network may have.
+#define MIDI_RTP_FOLLOW_UP_ANNOUNCEMENT_FIRST_DELAY_MS          1500
+#define MIDI_RTP_FOLLOW_UP_ANNOUNCEMENT_SECOND_DELAY_MS         4500
+#define MIDI_RTP_ANNOUNCED_PTR_TTL_SECONDS                      4500
+#define MIDI_RTP_ANNOUNCEMENT_MAX_PACKET_BYTES                  1200
+
 // macOS, iOS and rtpMIDI for Windows all default to 5004, with data on 5005.
 #define MIDI_RTP_DEFAULT_HOST_PORT                              5004
 

@@ -134,6 +134,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "rtp_transport_error_codes.h"
 #include "RtpMidiDefinitions.h"
 #include "RtpMidiNet.h"
+#include "RtpMidiMdns.h"
 #include "RtpMidiEndpointProperties.h"
 
 class CMidi2RtpMidiEndpointManager;

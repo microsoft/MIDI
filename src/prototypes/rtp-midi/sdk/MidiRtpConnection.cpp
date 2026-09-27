@@ -15,6 +15,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         m_remoteAddress = RtpSdkJson::String(source, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_ADDRESS_KEY);
         m_remotePort = RtpSdkJson::Unsigned<uint16_t>(source, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_PORT_KEY);
         m_localPort = RtpSdkJson::Unsigned<uint16_t>(source, MIDI_CONFIG_JSON_RTP_MIDI_LOCAL_PORT_KEY);
+        m_remoteHostName = RtpSdkJson::String(source, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_HOST_NAME_KEY);
         m_isConnected = RtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_IS_CONNECTED_KEY);
         m_thisPcInvited = RtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_WE_INITIATED_KEY);
         m_endpointDeviceId = RtpSdkJson::String(source, MIDI_CONFIG_JSON_RTP_MIDI_ENDPOINT_DEVICE_ID_KEY);

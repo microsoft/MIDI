@@ -15,6 +15,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         winrt::hstring RemoteAddress() const noexcept { return m_remoteAddress; }
         uint16_t RemotePort() const noexcept { return m_remotePort; }
         uint16_t LocalPort() const noexcept { return m_localPort; }
+        winrt::hstring RemoteHostName() const noexcept { return m_remoteHostName; }
         bool IsConnected() const noexcept { return m_isConnected; }
         bool ThisPcInvited() const noexcept { return m_thisPcInvited; }
         winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
@@ -36,6 +37,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         winrt::hstring m_remoteAddress{};
         uint16_t m_remotePort{ 0 };
         uint16_t m_localPort{ 0 };
+        winrt::hstring m_remoteHostName{};
         bool m_isConnected{ false };
         bool m_thisPcInvited{ false };
         winrt::hstring m_endpointDeviceId{};

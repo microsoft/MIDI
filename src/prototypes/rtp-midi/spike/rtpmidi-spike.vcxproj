@@ -99,6 +99,7 @@
     <ClInclude Include="..\lib\rtpmidi_protocol.h" />
     <ClInclude Include="..\lib\rtpmidi_journal.h" />
     <ClInclude Include="..\lib\rtpmidi_session.h" />
+    <ClInclude Include="..\transport\RtpMidiMdns.h" />
     <ClInclude Include="spike_common.h" />
     <ClInclude Include="spike_dnssd.h" />
     <ClInclude Include="spike_mdns_watch.h" />

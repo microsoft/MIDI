@@ -78,6 +78,10 @@
 #define MIDI_CONFIG_JSON_RTP_MIDI_CONNECTION_ID_KEY                     L"connectionId"
 #define MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_NAME_KEY                       L"remoteName"
 #define MIDI_CONFIG_JSON_RTP_MIDI_LOCAL_PORT_KEY                        L"localPort"
+
+// The host name from the remote's rtpMIDI advertisement, for matching it with the same device on
+// Network MIDI 2.0. Empty when no single advertised host lists the remote's address.
+#define MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_HOST_NAME_KEY                  L"remoteHostName"
 #define MIDI_CONFIG_JSON_RTP_MIDI_CONNECTION_STATE_KEY                  L"connectionState"
 #define MIDI_CONFIG_JSON_RTP_MIDI_IS_CONNECTED_KEY                      L"connected"
 #define MIDI_CONFIG_JSON_RTP_MIDI_WE_INITIATED_KEY                      L"thisPcInvited"

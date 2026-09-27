@@ -10,6 +10,7 @@
 //   rtpmidi-spike selftest
 //   rtpmidi-spike browse   [--seconds N] [--type _apple-midi._udp.local]
 //   rtpmidi-spike register [--name LABEL] [--port P] [--seconds N] [--terminate] [--type T] [--txt]
+//                          [--follow-up]   (repeats the announcement the way the transport does)
 //   rtpmidi-spike register-winrt [--name LABEL] [--type _wmsprobe._udp.local] [--port P] [--seconds N] [--txt]
 //   rtpmidi-spike listen   [--name LABEL] [--port P] [--seconds N] [--no-advertise] [--journal] [--send-test] [--echo]
 //   rtpmidi-spike connect  <instance label | address:port> [--port P] [--seconds N] [--journal]
@@ -27,6 +28,8 @@
 #include "spike_dnssd.h"
 #include "spike_mdns_watch.h"
 #include "spike_net.h"
+
+#include "../transport/RtpMidiMdns.h"
 
 #include <map>
 #include <set>
@@ -471,6 +474,30 @@ namespace
         }
 
         if (!registered) return 1;
+
+        if (options.Has("--follow-up"))
+        {
+            auto registeredLabel = advertiser.RegisteredName().empty() ? advertiser.RequestedName() : advertiser.RegisteredName();
+            auto const suffix = L"." + type;
+
+            if (registeredLabel.size() > suffix.size() && _wcsicmp(registeredLabel.c_str() + registeredLabel.size() - suffix.size(), suffix.c_str()) == 0)
+            {
+                registeredLabel.resize(registeredLabel.size() - suffix.size());
+            }
+
+            auto const packets = RtpMidiMdns::BuildPtrAnnouncements(ToUtf8(type), { ToUtf8(registeredLabel) }, 4500, 1200);
+            auto const registeredAt = started + elapsed;
+
+            for (auto const delay : { 1500ull, 4500ull })
+            {
+                while (GetTickCount64() < registeredAt + delay) Sleep(10);
+
+                auto const result = RtpMidiMdns::SendAnnouncements(packets);
+
+                Print("  follow-up announcement at +%llu ms: %zu packet(s) on %u IPv4 and %u IPv6 interfaces, last error %d",
+                    delay, packets.size(), result.IPv4Interfaces, result.IPv6Interfaces, result.LastError);
+            }
+        }
 
         if (options.Has("--terminate"))
         {

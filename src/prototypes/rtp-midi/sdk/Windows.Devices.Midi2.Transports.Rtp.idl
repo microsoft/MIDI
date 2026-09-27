@@ -70,6 +70,11 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         [noexcept] UInt16 RemotePort{ get; };
         [noexcept] UInt16 LocalPort{ get; };
 
+        // The remote's DNS host name, such as "Studio-Mac.local", from its rtpMIDI advertisement,
+        // or empty. For matching: compare it with MidiNetworkAdvertisedHost.HostName, ignoring
+        // case, to find the same device on Network MIDI 2.0.
+        [noexcept] String RemoteHostName{ get; };
+
         // false while the two sides are still connecting
         [noexcept] Boolean IsConnected{ get; };
 

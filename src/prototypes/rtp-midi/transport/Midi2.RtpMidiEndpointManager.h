@@ -86,6 +86,7 @@ private:
     void ReconcileHosts();
     void ReconcileClients();
     void RefreshCalculatedLatency();
+    void SendDueFollowUpAnnouncements();
 
     HRESULT CreateEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
     HRESULT RemoveEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
@@ -123,6 +124,7 @@ private:
     // worker thread only
     std::map<std::wstring, uint64_t> m_lastWrittenLatencyTicks;
     uint64_t m_nextLatencyRefreshTick{ 0 };
+    std::vector<uint64_t> m_followUpAnnouncementTicks;
 
     std::jthread m_worker;
 };

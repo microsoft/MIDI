@@ -13,6 +13,9 @@
 
 #include "spike_common.h"
 #include "spike_net.h"
+#include "spike_mdns_watch.h"
+
+#include "../transport/RtpMidiMdns.h"
 
 #include <objbase.h>
 #include "WindowsMidiServices.h"
@@ -773,6 +776,8 @@ int RunTransportTest(std::wstring const& dllPath)
         Check(hostConnection.GetNamedBoolean(L"connected", false), "status: connected");
         Check(!hostConnection.GetNamedBoolean(L"thisPcInvited", true), "status: the remote invited");
         Check(SameText(std::wstring{ hostConnection.GetNamedString(L"endpointDeviceId", L"") }, hostEndpoint.InterfaceId), "status: endpoint id");
+        Check(hostConnection.HasKey(L"remoteHostName") && hostConnection.GetNamedString(L"remoteHostName", L"x").empty(),
+            "status: no host name for a remote that nothing advertises");
         Check(hostConnection.GetNamedNumber(L"totalNetworkPacketsReceived", 0) >= 4, "status: packets received");
         Check(hostConnection.GetNamedNumber(L"totalMessagesSent", 0) == 3, "status: three messages sent");
         Print("   latency %.0f ticks, best %.0f ticks",
@@ -1237,6 +1242,102 @@ int RunTransportTest(std::wstring const& dllPath)
     endpointManager->Release();
     configuration->Release();
     transport->Release();
+
+    // ------------------------------------------------------------------------------------------
+    Print("9. The multicast DNS helpers, with made-up advertisements and no network");
+
+    {
+        using WindowsMidiServicesInternal::MidiDnssdService;
+
+        MidiDnssdService mac{};
+        mac.HostName = L"Studio-Mac.local";
+        mac.IPv4Addresses = { L"192.168.1.183" };
+        mac.IPv6Addresses = { L"fe80::cec:e610:74fd:7d8d" };
+
+        // a second session the same Mac advertises
+        MidiDnssdService macSecondSession{};
+        macSecondSession.HostName = L"studio-mac.local";
+        macSecondSession.IPv4Addresses = { L"192.168.1.183" };
+
+        MidiDnssdService interfaceBox{};
+        interfaceBox.HostName = L"Interface.local";
+        interfaceBox.IPv4Addresses = { L"192.168.1.50" };
+
+        auto const at = [](std::wstring const& text, uint32_t scope)
+        {
+            RtpMidi::PeerAddress address{};
+            Spike::TryParseAddress(text, 5004, address);
+            address.ScopeId = scope;
+            return address;
+        };
+
+        std::vector<MidiDnssdService> const services{ mac, macSecondSession, interfaceBox };
+
+        Check(RtpMidiMdns::FindHostNameForAddress(services, at(L"192.168.1.183", 0)) == L"Studio-Mac.local", "host name: IPv4");
+        Check(RtpMidiMdns::FindHostNameForAddress(services, at(L"fe80::cec:e610:74fd:7d8d", 21)) == L"Studio-Mac.local",
+            "host name: a link-local IPv6 address with a scope, advertised without one");
+        Check(RtpMidiMdns::FindHostNameForAddress(services, at(L"192.168.1.50", 0)) == L"Interface.local", "host name: another device");
+        Check(RtpMidiMdns::FindHostNameForAddress(services, at(L"192.168.1.99", 0)).empty(), "host name: none for an address nothing advertises");
+        Check(RtpMidiMdns::FindHostNameForAddress(services, RtpMidi::PeerAddress{}).empty(), "host name: none for no address");
+
+        MidiDnssdService stale{};
+        stale.HostName = L"Old-Laptop.local";
+        stale.IPv4Addresses = { L"192.168.1.183" };
+
+        Check(RtpMidiMdns::FindHostNameForAddress({ mac, stale }, at(L"192.168.1.183", 0)).empty(),
+            "host name: none when two different hosts list the same address");
+
+        std::string const macName{ "Pete\xE2\x80\x99s MacBook Pro" };
+        auto const packets = RtpMidiMdns::BuildPtrAnnouncements("_apple-midi._udp.local", { "Pete PC", macName }, 4500, 1200);
+
+        Check(packets.size() == 1, "announcement: two hosts fit in one packet");
+
+        if (packets.size() == 1)
+        {
+            Spike::Mdns::Message message{};
+            Check(Spike::Mdns::Parse(packets[0].data(), packets[0].size(), message), "announcement: parses as mDNS");
+            Check(message.Id == 0 && message.Flags == 0x8400 && message.IsResponse, "announcement: ID 0, an authoritative response");
+
+            bool recordsRight = message.Records.size() == 2;
+
+            for (auto const& record : message.Records)
+            {
+                recordsRight = recordsRight && std::string{ record.Section } == "an" && record.Type == 12 && !record.TopBit &&
+                    record.Ttl == 4500 && record.Name == "_apple-midi._udp.local";
+            }
+
+            Check(recordsRight, "announcement: two shared PTR answers, TTL 4500, no cache-flush bit");
+
+            if (message.Records.size() == 2)
+            {
+                Check(message.Records[0].Data == "-> Pete PC._apple-midi._udp.local", "announcement: a record points at its instance");
+                Check(message.Records[1].Data == "-> " + macName + "._apple-midi._udp.local", "announcement: a UTF-8 name goes out unchanged");
+            }
+        }
+
+        Check(RtpMidiMdns::BuildPtrAnnouncements("_apple-midi._udp.local", { "", "a.b", std::string(64, 'x') }, 4500, 1200).empty(),
+            "announcement: empty, dotted and over-long labels are left out");
+        Check(RtpMidiMdns::BuildPtrAnnouncements("", { "Pete PC" }, 4500, 1200).empty(), "announcement: nothing without a service type");
+        Check(RtpMidiMdns::BuildPtrAnnouncements("_apple-midi..local", { "Pete PC" }, 4500, 1200).empty(),
+            "announcement: nothing for a service type with an empty label");
+
+        std::vector<std::string> many;
+        for (int i = 0; i < 40; i++) many.push_back("Host " + std::to_string(i) + std::string(50, 'h'));
+
+        auto const split = RtpMidiMdns::BuildPtrAnnouncements("_apple-midi._udp.local", many, 4500, 1200);
+
+        bool splitRight = split.size() > 1;
+        size_t splitRecords{ 0 };
+
+        for (auto const& packet : split)
+        {
+            Spike::Mdns::Message message{};
+            splitRight = splitRight && packet.size() <= 1200 && Spike::Mdns::Parse(packet.data(), packet.size(), message);
+            splitRecords += message.Records.size();
+        }
+
+        Check(splitRight && splitRecords == many.size(), "announcement: forty hosts split across packets under the limit, none lost");
+    }
 
     Print("");
     Print("%d checks, %d failed", g_checks, g_failures);

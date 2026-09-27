@@ -160,8 +160,10 @@ namespace
 
     void PrintConnection(rtp::MidiRtpConnection const& connection)
     {
-        Print("      [%u] \"%s\" at %s:%u, %s, %s", connection.ConnectionId(), Text(connection.RemoteName()).c_str(),
-            Text(connection.RemoteAddress()).c_str(), connection.RemotePort(),
+        auto const hostName = connection.RemoteHostName().empty() ? std::string{} : " (" + Text(connection.RemoteHostName()) + ")";
+
+        Print("      [%u] \"%s\" at %s:%u%s, %s, %s", connection.ConnectionId(), Text(connection.RemoteName()).c_str(),
+            Text(connection.RemoteAddress()).c_str(), connection.RemotePort(), hostName.c_str(),
             connection.IsConnected() ? "connected" : "connecting",
             connection.ThisPcInvited() ? "this PC invited" : "the remote invited");
 

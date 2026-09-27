@@ -76,7 +76,7 @@
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>$(InBoxLibDir)MidiEndpointNamingLib.lib;$(InBoxLibDir)MidiPluginConfigurationLib.lib;$(InBoxLibDir)MidiSrvTransportLib.lib;ws2_32.lib;Dnsapi.lib;bcrypt.lib;onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(InBoxLibDir)MidiEndpointNamingLib.lib;$(InBoxLibDir)MidiPluginConfigurationLib.lib;$(InBoxLibDir)MidiSrvTransportLib.lib;ws2_32.lib;Dnsapi.lib;iphlpapi.lib;bcrypt.lib;onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.RtpMidiTransport.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OptimizeReferences>true</OptimizeReferences>
@@ -116,6 +116,7 @@
     <ClInclude Include="RtpMidiConnection.h" />
     <ClInclude Include="RtpMidiDefinitions.h" />
     <ClInclude Include="RtpMidiEndpointProperties.h" />
+    <ClInclude Include="RtpMidiMdns.h" />
     <ClInclude Include="RtpMidiNet.h" />
     <ClInclude Include="RtpMidiNode.h" />
     <ClInclude Include="transport_defs.h" />
