@@ -136,6 +136,9 @@ namespace glass
             // A pad that takes its velocity from how hard it was hit.
             bool VelocityFromTouch{ false };
 
+            // A finger dragging a video's bar, rather than doing anything a control does.
+            bool Scrubbing{ false };
+
             // Whether a press has to be held or latches. Per control rather than per kind,
             // because an LFO is one or the other depending on what the customer asked for.
             bool Momentary{ false };
@@ -185,6 +188,10 @@ namespace glass
         void PressPad(_In_ Binding& binding, _In_ xaml::Input::PointerRoutedEventArgs const& args);
         void MovePad(_In_ Binding& binding, _In_ xaml::Input::PointerRoutedEventArgs const& args);
         void ReleasePad(_In_ Binding& binding, _In_ uint32_t pointerId);
+
+        // An image control sends nothing. A press on its video's bar scrubs, and a press
+        // anywhere else stops or starts the video, if the layout asked for either.
+        void PressPicture(_In_ Binding& binding, _In_ xaml::Input::PointerRoutedEventArgs const& args);
 
         std::vector<Binding> m_bindings{};
         SurfaceRenderer* m_renderer{ nullptr };

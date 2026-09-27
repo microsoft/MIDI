@@ -80,6 +80,15 @@ public:
     TEST_METHOD(AlignmentAndCropShareOneNumberPerAxis);
     TEST_METHOD(AnUndecodedPictureFillsTheControl);
 
+    // ---- the part of a video that plays ----
+
+    TEST_METHOD(ThePartThatPlaysStaysInsideTheFile);
+    TEST_METHOD(APartTooShortToPlayIsLengthened);
+    TEST_METHOD(AnUnopenedVideoKeepsItsPoints);
+    TEST_METHOD(TheBarMapsAcrossThePartThatPlays);
+    TEST_METHOD(AVideoTimeReadsLikeAPlayer);
+    TEST_METHOD(TheBarSpansOnlyWhatIsShown);
+
     // ---- wheel and switch ----
 
     TEST_METHOD(ANewWheelIsAPitchWheel);

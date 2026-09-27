@@ -626,6 +626,11 @@ void LayoutDocumentTests::AControlPictureSurvivesARoundTrip()
     control.Image.CenterY = 0.75;
     control.Image.TintColor = L"#2E6CC8";
     control.Image.TintStrength = 0.55;
+    control.Image.VideoStartSeconds = 2.5;
+    control.Image.VideoEndSeconds = 9.75;
+    control.Image.AutoPlays = false;
+    control.Image.ClickToPlay = true;
+    control.Image.ShowsScrubber = true;
 
     document.Pages[0].Controls.push_back(control);
 
@@ -644,8 +649,43 @@ void LayoutDocumentTests::AControlPictureSurvivesARoundTrip()
     VERIFY_ARE_EQUAL(0.75, back.CenterY);
     VERIFY_ARE_EQUAL(std::wstring{ L"#2E6CC8" }, back.TintColor);
     VERIFY_ARE_EQUAL(0.55, back.TintStrength);
+    VERIFY_ARE_EQUAL(2.5, back.VideoStartSeconds);
+    VERIFY_ARE_EQUAL(9.75, back.VideoEndSeconds);
+    VERIFY_IS_FALSE(back.AutoPlays);
+    VERIFY_IS_TRUE(back.ClickToPlay);
+    VERIFY_IS_TRUE(back.ShowsScrubber);
 
     VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
+}
+
+void LayoutDocumentTests::AVideoFromBeforeTrimmingPlaysWhole()
+{
+    // A layout saved before a video could be trimmed, clicked or scrubbed.
+    auto const reread = glass::ReadLayoutFromJson(LR"({
+        "fileVersion": 1,
+        "name": "Old clip",
+        "pages": [ { "id": "p", "name": "Page", "controls": [
+            { "id": "clip", "kind": "image", "label": "Clip", "x": 0, "y": 0, "width": 320, "height": 180,
+              "picture": { "file": "stage clip.mp4", "fit": "fill", "loops": true } } ] } ] })");
+
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const& picture = reread.Document.Pages[0].Controls[0].Image;
+
+    // The whole file, on its own, on a loop, exactly as it always played.
+    VERIFY_ARE_EQUAL(0.0, picture.VideoStartSeconds);
+    VERIFY_ARE_EQUAL(0.0, picture.VideoEndSeconds);
+    VERIFY_IS_TRUE(picture.AutoPlays);
+    VERIFY_IS_FALSE(picture.ClickToPlay);
+    VERIFY_IS_FALSE(picture.ShowsScrubber);
+    VERIFY_IS_TRUE(picture.Loops);
+
+    // And written back without any of the new keys.
+    auto const written = glass::WriteLayoutToJson(reread.Document);
+
+    VERIFY_IS_TRUE(written.find(L"startSeconds") == std::wstring::npos);
+    VERIFY_IS_TRUE(written.find(L"autoPlays") == std::wstring::npos);
+    VERIFY_IS_TRUE(written.find(L"showsScrubber") == std::wstring::npos);
 }
 
 void LayoutDocumentTests::ABackgroundPictureThatIsAPathIsRefused()

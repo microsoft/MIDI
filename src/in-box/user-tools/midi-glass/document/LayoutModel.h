@@ -414,6 +414,25 @@ namespace glass
         std::wstring TintColor{};
         double TintStrength{ 0.0 };
 
+        // The part of a video that plays, in seconds from the start of the file. A stop of zero
+        // means the end of the file. A loop runs from the start to the stop and round again, so
+        // a few seconds can be taken out of a longer clip without cutting the file.
+        double VideoStartSeconds{ 0.0 };
+        double VideoEndSeconds{ 0.0 };
+
+        // A video plays as soon as its page is running. Off, it waits on the first frame of the
+        // part that plays until somebody clicks it or drags its bar.
+        bool AutoPlays{ true };
+
+        // A click on a running video stops it, and the next click starts it again. Image controls
+        // only: a panel's fill sits behind the controls on the panel.
+        bool ClickToPlay{ false };
+
+        // A bar along the bottom of the video to drag through the part that plays. It spans only
+        // the part of the control the video covers, not the empty space around a fitted clip.
+        // Image controls only, for the same reason.
+        bool ShowsScrubber{ false };
+
         // Nothing at all to draw.
         bool IsEmpty() const noexcept { return FileName.empty(); }
 
@@ -422,6 +441,37 @@ namespace glass
 
     constexpr double MinimumPictureZoom = 1.0;
     constexpr double MaximumPictureZoom = 8.0;
+
+    // The longest time a start or stop point can name. A day, which no clip on a control surface
+    // gets near.
+    constexpr double MaximumVideoSeconds = 86400.0;
+
+    // The shortest part of a video that plays. Anything shorter is a stutter, not a loop.
+    constexpr double MinimumVideoPlaySeconds = 0.1;
+
+    // The part of a video that plays, in seconds from the start of the file.
+    struct VideoRange
+    {
+        double StartSeconds{ 0.0 };
+
+        // Zero while the length of the file is not known and no stop point was set.
+        double EndSeconds{ 0.0 };
+
+        double Length() const noexcept { return EndSeconds > StartSeconds ? EndSeconds - StartSeconds : 0.0; }
+    };
+
+    // Works out the part that plays from the start and stop points and the length of the file.
+    // A length of zero means the file has not been opened yet. A stop of zero, past the end of the
+    // file or before the start is the end of the file, and a start past the end of the file is
+    // the beginning, because the file must have been swapped for a shorter one.
+    VideoRange VideoPlayRange(_In_ Picture const& picture, _In_ double durationSeconds) noexcept;
+
+    // Where a time sits along that part, from 0 at the start to 1 at the stop, and back again.
+    double VideoRangeFraction(_In_ VideoRange const& range, _In_ double seconds) noexcept;
+    double VideoRangeSeconds(_In_ VideoRange const& range, _In_ double fraction) noexcept;
+
+    // A time in a video the way a player shows one, to the tenth: 0:03.2, 1:05.0, 1:02:03.4.
+    std::wstring FormatVideoTime(_In_ double seconds);
 
     // Where a picture ends up inside the control that shows it, in the control's own pixels.
     // Anything outside the control is cut off by the caller.
@@ -442,6 +492,14 @@ namespace glass
         _In_ double controlHeight,
         _In_ double naturalWidth,
         _In_ double naturalHeight) noexcept;
+
+    // The part of the control a picture actually covers: its crop rectangle cut to the control's
+    // edges. A video's bar is drawn across this, so it sits on the video and not on the empty
+    // space beside a fitted clip. Empty when the two do not overlap.
+    PictureRect VisiblePictureRect(
+        _In_ PictureRect const& content,
+        _In_ double controlWidth,
+        _In_ double controlHeight) noexcept;
 
     // The keys on a piano keyboard control. Width and height come from the control's own
     // rectangle; this is only what is drawn inside it.

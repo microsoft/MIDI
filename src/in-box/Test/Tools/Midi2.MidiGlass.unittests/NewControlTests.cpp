@@ -19,6 +19,7 @@
 #include "StepPattern.h"
 
 #include <array>
+#include <limits>
 
 using namespace WEX::Common;
 using namespace WEX::Logging;
@@ -986,6 +987,161 @@ void NewControlTests::AnUndecodedPictureFillsTheControl()
     VERIFY_IS_TRUE(Near(rect.Height, 240.0));
     VERIFY_IS_TRUE(Near(rect.X, 0.0));
     VERIFY_IS_TRUE(Near(rect.Y, 0.0));
+}
+
+// ------------------------------------------- the part of a video that plays
+
+void NewControlTests::ThePartThatPlaysStaysInsideTheFile()
+{
+    glass::Picture picture{};
+
+    // Nothing set is the whole file.
+    auto const whole = glass::VideoPlayRange(picture, 20.0);
+
+    VERIFY_IS_TRUE(Near(whole.StartSeconds, 0.0));
+    VERIFY_IS_TRUE(Near(whole.EndSeconds, 20.0));
+
+    // A trimmed part is taken at its word.
+    picture.VideoStartSeconds = 3.0;
+    picture.VideoEndSeconds = 7.5;
+
+    auto const trimmed = glass::VideoPlayRange(picture, 20.0);
+
+    VERIFY_IS_TRUE(Near(trimmed.StartSeconds, 3.0));
+    VERIFY_IS_TRUE(Near(trimmed.EndSeconds, 7.5));
+    VERIFY_IS_TRUE(Near(trimmed.Length(), 4.5));
+
+    // A stop past the end of a file that was swapped for a shorter one is the end of the file.
+    picture.VideoEndSeconds = 90.0;
+
+    VERIFY_IS_TRUE(Near(glass::VideoPlayRange(picture, 20.0).EndSeconds, 20.0));
+
+    // So is a stop before the start, rather than a part that plays backward.
+    picture.VideoEndSeconds = 1.0;
+
+    VERIFY_IS_TRUE(Near(glass::VideoPlayRange(picture, 20.0).StartSeconds, 3.0));
+    VERIFY_IS_TRUE(Near(glass::VideoPlayRange(picture, 20.0).EndSeconds, 20.0));
+
+    // And a start past the end starts at the beginning.
+    picture.VideoStartSeconds = 30.0;
+    picture.VideoEndSeconds = 0.0;
+
+    auto const late = glass::VideoPlayRange(picture, 20.0);
+
+    VERIFY_IS_TRUE(Near(late.StartSeconds, 0.0));
+    VERIFY_IS_TRUE(Near(late.EndSeconds, 20.0));
+}
+
+void NewControlTests::APartTooShortToPlayIsLengthened()
+{
+    glass::Picture picture{};
+
+    picture.VideoStartSeconds = 5.0;
+    picture.VideoEndSeconds = 5.02;
+
+    auto const range = glass::VideoPlayRange(picture, 20.0);
+
+    // The stop stays where it was put, and the start gives way.
+    VERIFY_IS_TRUE(Near(range.EndSeconds, 5.02));
+    VERIFY_IS_TRUE(range.Length() >= glass::MinimumVideoPlaySeconds - 0.0001);
+
+    // A clip shorter than the minimum plays whole.
+    auto const blink = glass::VideoPlayRange(glass::Picture{}, 0.04);
+
+    VERIFY_IS_TRUE(Near(blink.StartSeconds, 0.0));
+    VERIFY_IS_TRUE(Near(blink.EndSeconds, 0.04));
+}
+
+void NewControlTests::AnUnopenedVideoKeepsItsPoints()
+{
+    glass::Picture picture{};
+
+    picture.VideoStartSeconds = 2.0;
+
+    // The length of the file is not known yet, so the stop is not known either.
+    auto const open = glass::VideoPlayRange(picture, 0.0);
+
+    VERIFY_IS_TRUE(Near(open.StartSeconds, 2.0));
+    VERIFY_IS_TRUE(Near(open.EndSeconds, 0.0));
+
+    picture.VideoEndSeconds = 6.0;
+
+    VERIFY_IS_TRUE(Near(glass::VideoPlayRange(picture, 0.0).EndSeconds, 6.0));
+
+    // Nonsense from a hand edited file is not a time at all.
+    picture.VideoStartSeconds = std::numeric_limits<double>::quiet_NaN();
+    picture.VideoEndSeconds = -4.0;
+
+    auto const junk = glass::VideoPlayRange(picture, 10.0);
+
+    VERIFY_IS_TRUE(Near(junk.StartSeconds, 0.0));
+    VERIFY_IS_TRUE(Near(junk.EndSeconds, 10.0));
+}
+
+void NewControlTests::TheBarMapsAcrossThePartThatPlays()
+{
+    glass::VideoRange const range{ 4.0, 12.0 };
+
+    VERIFY_IS_TRUE(Near(glass::VideoRangeFraction(range, 4.0), 0.0));
+    VERIFY_IS_TRUE(Near(glass::VideoRangeFraction(range, 8.0), 0.5));
+    VERIFY_IS_TRUE(Near(glass::VideoRangeFraction(range, 12.0), 1.0));
+
+    // Outside the part, held to its ends.
+    VERIFY_IS_TRUE(Near(glass::VideoRangeFraction(range, 1.0), 0.0));
+    VERIFY_IS_TRUE(Near(glass::VideoRangeFraction(range, 40.0), 1.0));
+
+    VERIFY_IS_TRUE(Near(glass::VideoRangeSeconds(range, 0.25), 6.0));
+    VERIFY_IS_TRUE(Near(glass::VideoRangeSeconds(range, 2.0), 12.0));
+    VERIFY_IS_TRUE(Near(glass::VideoRangeSeconds(range, -1.0), 4.0));
+
+    // A part with no known end has nowhere to go.
+    VERIFY_IS_TRUE(Near(glass::VideoRangeFraction(glass::VideoRange{ 3.0, 0.0 }, 5.0), 0.0));
+}
+
+void NewControlTests::AVideoTimeReadsLikeAPlayer()
+{
+    VERIFY_ARE_EQUAL(std::wstring{ L"0:03.2" }, glass::FormatVideoTime(3.24));
+    VERIFY_ARE_EQUAL(std::wstring{ L"1:05.0" }, glass::FormatVideoTime(65.0));
+    VERIFY_ARE_EQUAL(std::wstring{ L"1:02:03.4" }, glass::FormatVideoTime(3723.44));
+
+    // Rounded to the tenth, carrying into the next second rather than showing 60.
+    VERIFY_ARE_EQUAL(std::wstring{ L"1:00.0" }, glass::FormatVideoTime(59.97));
+
+    // Nothing silly reaches the screen.
+    VERIFY_ARE_EQUAL(std::wstring{ L"0:00.0" }, glass::FormatVideoTime(-3.0));
+    VERIFY_ARE_EQUAL(std::wstring{ L"0:00.0" }, glass::FormatVideoTime(std::numeric_limits<double>::quiet_NaN()));
+}
+
+void NewControlTests::TheBarSpansOnlyWhatIsShown()
+{
+    // A wide clip fitted in a square control is 200 by 100, with the spare space shared above
+    // and below. The bar goes along the bottom of the clip, not the bottom of the control.
+    auto const content = glass::PictureCropRect(
+        Cropped(glass::BackgroundFit::Uniform), 200.0, 200.0, 400.0, 200.0);
+
+    auto const shown = glass::VisiblePictureRect(content, 200.0, 200.0);
+
+    VERIFY_IS_TRUE(Near(shown.X, 0.0));
+    VERIFY_IS_TRUE(Near(shown.Y, 50.0));
+    VERIFY_IS_TRUE(Near(shown.Width, 200.0));
+    VERIFY_IS_TRUE(Near(shown.Height, 100.0));
+
+    // Filled and zoomed, the clip hangs over every edge, and what shows is the control.
+    auto const zoomed = glass::PictureCropRect(
+        Cropped(glass::BackgroundFit::Fill, 3.0), 200.0, 120.0, 1920.0, 1080.0);
+
+    auto const cut = glass::VisiblePictureRect(zoomed, 200.0, 120.0);
+
+    VERIFY_IS_TRUE(Near(cut.X, 0.0));
+    VERIFY_IS_TRUE(Near(cut.Y, 0.0));
+    VERIFY_IS_TRUE(Near(cut.Width, 200.0));
+    VERIFY_IS_TRUE(Near(cut.Height, 120.0));
+
+    // Nothing in common is nothing to draw across.
+    auto const none = glass::VisiblePictureRect(glass::PictureRect{ 300.0, 0.0, 50.0, 50.0 }, 200.0, 200.0);
+
+    VERIFY_IS_TRUE(none.Width == 0.0);
+    VERIFY_IS_TRUE(none.Height == 0.0);
 }
 
 // --------------------------------------------------------------- wheel and switch

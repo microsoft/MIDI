@@ -59,6 +59,7 @@ public:
 
     TEST_METHOD(ABackgroundPictureSurvivesARoundTrip);
     TEST_METHOD(AControlPictureSurvivesARoundTrip);
+    TEST_METHOD(AVideoFromBeforeTrimmingPlaysWhole);
     TEST_METHOD(ABackgroundPictureThatIsAPathIsRefused);
     TEST_METHOD(NoBackgroundPictureWritesNothing);
 

@@ -97,6 +97,11 @@ namespace glass
         constexpr wchar_t KeyCenterY[] = L"centerY";
         constexpr wchar_t KeyTint[] = L"tint";
         constexpr wchar_t KeyTintStrength[] = L"tintStrength";
+        constexpr wchar_t KeyStartSeconds[] = L"startSeconds";
+        constexpr wchar_t KeyEndSeconds[] = L"endSeconds";
+        constexpr wchar_t KeyAutoPlays[] = L"autoPlays";
+        constexpr wchar_t KeyClickToPlay[] = L"clickToPlay";
+        constexpr wchar_t KeyShowsScrubber[] = L"showsScrubber";
         constexpr wchar_t KeyKeyboard[] = L"keyboard";
         constexpr wchar_t KeyKeyCount[] = L"keyCount";
         constexpr wchar_t KeyLowestNote[] = L"lowestNote";
@@ -948,11 +953,19 @@ namespace glass
             picture.CenterY = std::clamp(ReadNumber(nested, KeyCenterY, 0.5), 0.0, 1.0);
             picture.TintColor = ReadString(nested, KeyTint);
             picture.TintStrength = std::clamp(ReadNumber(nested, KeyTintStrength, 0.0), 0.0, 1.0);
+            picture.VideoStartSeconds = std::clamp(
+                ReadNumber(nested, KeyStartSeconds, 0.0), 0.0, MaximumVideoSeconds);
+            picture.VideoEndSeconds = std::clamp(
+                ReadNumber(nested, KeyEndSeconds, 0.0), 0.0, MaximumVideoSeconds);
+            picture.AutoPlays = ReadBool(nested, KeyAutoPlays, true);
+            picture.ClickToPlay = ReadBool(nested, KeyClickToPlay, false);
+            picture.ShowsScrubber = ReadBool(nested, KeyShowsScrubber, false);
 
             picture.Unknown = CaptureUnknown(
                 nested,
                 { KeyFile, KeyFit, KeyOpacity, KeyLoops, KeyZoom, KeyCenterX, KeyCenterY,
-                  KeyTint, KeyTintStrength });
+                  KeyTint, KeyTintStrength, KeyStartSeconds, KeyEndSeconds, KeyAutoPlays,
+                  KeyClickToPlay, KeyShowsScrubber });
 
             return picture;
         }
@@ -1772,6 +1785,33 @@ namespace glass
                 writer.Write(KeyCenterY, control.Image.CenterY);
                 writer.Write(KeyTint, control.Image.TintColor);
                 writer.Write(KeyTintStrength, control.Image.TintStrength);
+
+                // Only when changed, so a still picture's entry stays as short as it always was.
+                if (control.Image.VideoStartSeconds > 0.0)
+                {
+                    writer.Write(KeyStartSeconds, control.Image.VideoStartSeconds);
+                }
+
+                if (control.Image.VideoEndSeconds > 0.0)
+                {
+                    writer.Write(KeyEndSeconds, control.Image.VideoEndSeconds);
+                }
+
+                if (!control.Image.AutoPlays)
+                {
+                    writer.Write(KeyAutoPlays, false);
+                }
+
+                if (control.Image.ClickToPlay)
+                {
+                    writer.Write(KeyClickToPlay, true);
+                }
+
+                if (control.Image.ShowsScrubber)
+                {
+                    writer.Write(KeyShowsScrubber, true);
+                }
+
                 WriteUnknown(writer, control.Image.Unknown);
                 writer.EndObject();
             }

@@ -578,6 +578,20 @@ namespace glass
         safe.CenterY = std::clamp(picture.CenterY, 0.0, 1.0);
         safe.TintStrength = std::clamp(picture.TintStrength, 0.0, 1.0);
 
+        auto const seconds = [](double value) noexcept
+            {
+                return std::isfinite(value) ? std::clamp(value, 0.0, MaximumVideoSeconds) : 0.0;
+            };
+
+        safe.VideoStartSeconds = seconds(picture.VideoStartSeconds);
+        safe.VideoEndSeconds = seconds(picture.VideoEndSeconds);
+
+        // A stop that is not after the start would play nothing, so it means the end of the file.
+        if (safe.VideoEndSeconds > 0.0 && safe.VideoEndSeconds <= safe.VideoStartSeconds)
+        {
+            safe.VideoEndSeconds = 0.0;
+        }
+
         if (control->Image.FileName == safe.FileName &&
             control->Image.Fit == safe.Fit &&
             control->Image.Opacity == safe.Opacity &&
@@ -586,7 +600,12 @@ namespace glass
             control->Image.CenterX == safe.CenterX &&
             control->Image.CenterY == safe.CenterY &&
             control->Image.TintColor == safe.TintColor &&
-            control->Image.TintStrength == safe.TintStrength)
+            control->Image.TintStrength == safe.TintStrength &&
+            control->Image.VideoStartSeconds == safe.VideoStartSeconds &&
+            control->Image.VideoEndSeconds == safe.VideoEndSeconds &&
+            control->Image.AutoPlays == safe.AutoPlays &&
+            control->Image.ClickToPlay == safe.ClickToPlay &&
+            control->Image.ShowsScrubber == safe.ShowsScrubber)
         {
             return false;
         }
@@ -600,6 +619,11 @@ namespace glass
         control->Image.CenterY = safe.CenterY;
         control->Image.TintColor = safe.TintColor;
         control->Image.TintStrength = safe.TintStrength;
+        control->Image.VideoStartSeconds = safe.VideoStartSeconds;
+        control->Image.VideoEndSeconds = safe.VideoEndSeconds;
+        control->Image.AutoPlays = safe.AutoPlays;
+        control->Image.ClickToPlay = safe.ClickToPlay;
+        control->Image.ShowsScrubber = safe.ShowsScrubber;
 
         if (coalesce)
         {

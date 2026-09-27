@@ -814,6 +814,51 @@ namespace glass
 
             foundation::Uri const uri{ L"file:///" + winrt::hstring{ path } };
 
+            // A video plays behind the page the way one plays in a panel: silent, on a loop,
+            // held on its first frame in the designer, and cropped to the page by a clipped
+            // canvas. Tiling a moving picture is not a thing, so tiled means filled.
+            if (IsVideoFileName(document.BackgroundImage))
+            {
+                auto const width = static_cast<double>(std::max(document.PageWidth, 1));
+                auto const height = static_cast<double>(std::max(document.PageHeight, 1));
+
+                Picture spec{};
+
+                spec.FileName = document.BackgroundImage;
+                spec.Fit = document.BackgroundFitMode == BackgroundFit::Tiled
+                    ? BackgroundFit::Fill
+                    : document.BackgroundFitMode;
+
+                controls::Canvas container{};
+
+                container.Width(width);
+                container.Height(height);
+                container.IsHitTestVisible(false);
+                container.Opacity(std::clamp(document.BackgroundOpacity, 0.0, 1.0));
+
+                media::RectangleGeometry clip{};
+                clip.Rect(winrt::Windows::Foundation::Rect{
+                    0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height) });
+                container.Clip(clip);
+
+                xaml::Automation::AutomationProperties::SetAccessibilityView(
+                    container, xaml::Automation::Peers::AccessibilityView::Raw);
+
+                auto video = CreateVideo(uri, spec, width, height, false);
+
+                container.Children().Append(video->Element);
+
+                controls::Canvas::SetLeft(container, 0.0);
+                controls::Canvas::SetTop(container, 0.0);
+                controls::Canvas::SetZIndex(container, -1);
+
+                m_host.Children().InsertAt(0, container);
+                m_background = container;
+                m_backgroundVideo = std::move(video);
+
+                return;
+            }
+
             media::Imaging::BitmapImage bitmap{};
             bitmap.UriSource(uri);
 
@@ -952,6 +997,7 @@ namespace glass
             MinimumTurntableDegrees,
             MaximumTurntableDegrees));
         m_pictures.push_back(nullptr);
+        m_videos.push_back(nullptr);
         m_detentTexts.push_back(nullptr);
         m_padNames.push_back({});
         m_beatTexts.push_back(nullptr);
@@ -2970,6 +3016,22 @@ namespace glass
         }
 
         // Before the children go, or every video on the page keeps decoding into nothing.
+        StopVideoTimer();
+
+        for (auto const& video : m_videos)
+        {
+            if (video != nullptr)
+            {
+                CloseVideo(*video);
+            }
+        }
+
+        if (m_backgroundVideo != nullptr)
+        {
+            CloseVideo(*m_backgroundVideo);
+            m_backgroundVideo = nullptr;
+        }
+
         for (auto const& picture : m_pictures)
         {
             if (picture != nullptr)
@@ -2997,6 +3059,7 @@ namespace glass
         m_latches.clear();
         m_turnDegrees.clear();
         m_pictures.clear();
+        m_videos.clear();
         m_detentTexts.clear();
         m_padNames.clear();
         m_beatTexts.clear();

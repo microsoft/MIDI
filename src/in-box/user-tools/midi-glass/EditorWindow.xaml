@@ -1518,11 +1518,106 @@
                                                     </Slider>
                                                 </Grid>
 
-                                                <CheckBox x:Name="PictureLoopsCheck"
-                                                          x:Uid="PictureLoopsCheck"
-                                                          Content="Play a video in a loop"
-                                                          Checked="OnPictureLoopsChanged"
-                                                          Unchecked="OnPictureLoopsChanged" />
+                                                <!-- Only for a video: which part of the file plays,
+                                                     when it plays, and what a click on it does. The
+                                                     designer holds every video still, so the play
+                                                     button is the way to watch one while building. -->
+                                                <StackPanel x:Name="PictureVideoPanel" Visibility="Collapsed">
+                                                    <TextBlock x:Uid="PictureVideoHeading" Text="Video" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                                    <Button x:Name="PictureVideoPlayButton"
+                                                            x:Uid="PictureVideoPlayButton"
+                                                            FontSize="11"
+                                                            Click="OnPictureVideoPlayClick">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <FontIcon x:Name="PictureVideoPlayGlyph" Glyph="&#xE768;" FontSize="11" />
+                                                            <TextBlock x:Name="PictureVideoPlayText" FontSize="11" />
+                                                        </StackPanel>
+                                                    </Button>
+
+                                                    <!-- The strip is the whole clip. The two handles
+                                                         are where the part that plays starts and
+                                                         stops, and the line is where it is now. The
+                                                         two boxes under it do the same by number, and
+                                                         are what a keyboard or a screen reader uses. -->
+                                                    <TextBlock x:Uid="PictureVideoRangeLabel" Text="The part that plays" Margin="0,10,0,0" />
+
+                                                    <Grid x:Name="PictureTimeline"
+                                                          Height="34"
+                                                          Margin="0,4,0,0"
+                                                          Background="Transparent"
+                                                          PointerPressed="OnPictureTimelinePressed"
+                                                          PointerMoved="OnPictureTimelineMoved"
+                                                          PointerReleased="OnPictureTimelineReleased"
+                                                          PointerCaptureLost="OnPictureTimelineCaptureLost"
+                                                          SizeChanged="OnPictureTimelineSizeChanged">
+                                                        <Canvas x:Name="PictureTimelineCanvas" />
+                                                    </Grid>
+
+                                                    <Grid ColumnSpacing="8" Margin="0,4,0,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <NumberBox x:Name="PictureVideoStartBox"
+                                                                   x:Uid="PictureVideoStartBox"
+                                                                   Grid.Column="0"
+                                                                   Minimum="0"
+                                                                   SmallChange="0.1"
+                                                                   LargeChange="1"
+                                                                   SpinButtonPlacementMode="Compact"
+                                                                   ValueChanged="OnPictureVideoRangeChanged" />
+
+                                                        <NumberBox x:Name="PictureVideoEndBox"
+                                                                   x:Uid="PictureVideoEndBox"
+                                                                   Grid.Column="1"
+                                                                   Minimum="0"
+                                                                   SmallChange="0.1"
+                                                                   LargeChange="1"
+                                                                   SpinButtonPlacementMode="Compact"
+                                                                   ValueChanged="OnPictureVideoRangeChanged" />
+                                                    </Grid>
+
+                                                    <TextBlock x:Name="PictureVideoRangeCaption"
+                                                               FontSize="11"
+                                                               Margin="0,4,0,0"
+                                                               TextWrapping="Wrap"
+                                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                                    <CheckBox x:Name="PictureLoopsCheck"
+                                                              x:Uid="PictureLoopsCheck"
+                                                              Content="Play it in a loop"
+                                                              Margin="0,6,0,0"
+                                                              Checked="OnPictureLoopsChanged"
+                                                              Unchecked="OnPictureLoopsChanged" />
+
+                                                    <CheckBox x:Name="PictureAutoPlayCheck"
+                                                              x:Uid="PictureAutoPlayCheck"
+                                                              Content="Play as soon as the layout runs"
+                                                              Checked="OnPictureVideoFlagChanged"
+                                                              Unchecked="OnPictureVideoFlagChanged" />
+
+                                                    <CheckBox x:Name="PictureClickToPlayCheck"
+                                                              x:Uid="PictureClickToPlayCheck"
+                                                              Content="A click on it stops and starts it"
+                                                              Checked="OnPictureVideoFlagChanged"
+                                                              Unchecked="OnPictureVideoFlagChanged" />
+
+                                                    <CheckBox x:Name="PictureScrubberCheck"
+                                                              x:Uid="PictureScrubberCheck"
+                                                              Content="Show a bar to scrub through it"
+                                                              Checked="OnPictureVideoFlagChanged"
+                                                              Unchecked="OnPictureVideoFlagChanged" />
+
+                                                    <TextBlock x:Name="PictureVideoInputCaption"
+                                                               x:Uid="PictureVideoInputCaption"
+                                                               Text="A click or a bar needs an image control. A panel's fill sits behind the controls on it, so it only plays."
+                                                               FontSize="11"
+                                                               TextWrapping="Wrap"
+                                                               Visibility="Collapsed"
+                                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                </StackPanel>
 
                                                 <TextBlock x:Uid="PicturePositionHeading" Text="Position and crop" Style="{StaticResource InspectorHeadingStyle}" />
 

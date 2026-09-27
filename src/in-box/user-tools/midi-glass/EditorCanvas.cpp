@@ -96,6 +96,10 @@ namespace winrt::midiglass::implementation
             UpdateWorkArea();
 
             m_renderer.Teardown();
+
+            // Before the build, so a video on a page being designed never gets a frame of
+            // playing in before it is told to stop.
+            m_renderer.SetVideosLive(m_tryMode);
             m_renderer.Build(SurfaceCanvas(), document, m_theme, m_editor.PageIndex());
 
             auto weak = get_weak();
@@ -116,6 +120,10 @@ namespace winrt::midiglass::implementation
             // overlay, which knows about selection, handles and guides. Try mode flips it, and
             // has to be re-applied here because a rebuild makes new elements.
             ApplySurfaceInputMode();
+
+            // A rebuild makes new players too. One the inspector was playing carries on, so
+            // changing a setting while it plays shows the change rather than stopping it.
+            ResumeVideoPreview();
 
             ApplyCanvasScale();
             RebuildGrid();

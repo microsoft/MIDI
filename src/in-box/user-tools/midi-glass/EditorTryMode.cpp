@@ -259,6 +259,10 @@ namespace winrt::midiglass::implementation
         {
             m_tryMode = tryMode;
 
+            // A video played from the inspector was a look at one clip. Either mode starts
+            // every video over from its own rules.
+            m_previewingVideoId.clear();
+
             EditModeToggle().IsChecked(!tryMode);
             TryModeToggle().IsChecked(tryMode);
 
@@ -288,6 +292,7 @@ namespace winrt::midiglass::implementation
             }
 
             ApplySurfaceInputMode();
+            RefreshPictureVideoPanel();
 
             // The snap grid is for placing things. In Try mode the page is being played, and a
             // field of dots over it is the one thing that makes it look like the editor still.
@@ -314,6 +319,10 @@ namespace winrt::midiglass::implementation
             // A stopwatch counts in Try mode and while a layout is running, and never while it
             // is being designed.
             m_renderer.SetElapsedRunning(m_tryMode);
+
+            // Videos the same way. The inspector's play button is the one way to watch one
+            // while designing.
+            m_renderer.SetVideosLive(m_tryMode);
 
             for (size_t index = 0; index < m_renderer.ItemCount(); ++index)
             {

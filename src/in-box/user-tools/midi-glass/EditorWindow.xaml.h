@@ -257,6 +257,42 @@ namespace winrt::midiglass::implementation
         winrt::Windows::Foundation::IAsyncOperation<bool> ConfirmPictureSizeAsync(
             _In_ std::wstring filePath);
         void OnPictureLoopsChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        // ---- a video's own settings (EditorPictureVideo.cpp) ----
+
+        void OnPictureVideoPlayClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPictureVideoFlagChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPictureVideoRangeChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnPictureTimelineSizeChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::SizeChangedEventArgs const& args);
+        void OnPictureTimelinePressed(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void OnPictureTimelineMoved(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void OnPictureTimelineReleased(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void OnPictureTimelineCaptureLost(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+
+        // Brings the play button, the timeline and the two times into step with the selected
+        // control and with what its video on the canvas is doing.
+        void RefreshPictureVideoPanel();
+
+        // A rebuild makes new players. The one the inspector was playing is started again.
+        void ResumeVideoPreview();
+
+        // The strip, the two handles and the line for where the video is now.
+        void DrawPictureTimeline();
+
+        // Where a control sits among the items the canvas drew. False when it is not on the
+        // page being shown.
+        bool TryFindCanvasItem(_In_ std::wstring const& controlId, _Out_ size_t& itemIndex) const;
+
+        // A dragged end of the part that plays, committed as one edit.
+        void DragPictureTimelineTo(_In_ double x);
+        void CommitPictureTimelineDrag();
+
+        // How long the selected video is: from the shell, or from the canvas's own player when
+        // the shell could not say. Zero while neither knows.
+        double KnownVideoDuration(_In_ glass::Control const& control) const;
+
+        void StartVideoPlayheadTimer();
+        void StopVideoPlayheadTimer();
         void OnAddSwitchPositionClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         void OnKeyCountChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
@@ -856,6 +892,31 @@ namespace winrt::midiglass::implementation
         double m_cropWindowTop{ 0.0 };
         double m_cropWindowWidth{ 1.0 };
         double m_cropWindowHeight{ 1.0 };
+
+        // ---- a video's own settings ----
+
+        // How long the selected video's file is, read from the shell with the thumbnail. Zero
+        // until it is known.
+        double m_videoDurationSeconds{ 0.0 };
+
+        // The control whose video the inspector's play button started, so a rebuild can start
+        // it again. Empty when nothing is playing in the designer.
+        std::wstring m_previewingVideoId{};
+
+        // An end of the part that plays being dragged: which one, and where it is now.
+        bool m_timelineDragging{ false };
+        bool m_timelineDraggingEnd{ false };
+        double m_timelineDragSeconds{ 0.0 };
+
+        // The shapes on the strip, made once and moved after that.
+        xaml::Shapes::Rectangle m_timelineTrack{ nullptr };
+        xaml::Shapes::Rectangle m_timelineRange{ nullptr };
+        xaml::Shapes::Rectangle m_timelineStartHandle{ nullptr };
+        xaml::Shapes::Rectangle m_timelineEndHandle{ nullptr };
+        xaml::Shapes::Rectangle m_timelinePlayhead{ nullptr };
+
+        // Moves the line on the strip while the selected video plays.
+        xaml::DispatcherTimer m_videoPlayheadTimer{ nullptr };
 
         // ---- pane dividers ----
 

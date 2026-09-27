@@ -1309,7 +1309,60 @@
     <value>Opacity</value>
   </data>
   <data name="PictureLoopsCheck.Content" xml:space="preserve">
-    <value>Play a video in a loop</value>
+    <value>Play it in a loop</value>
+  </data>
+  <data name="PictureVideoHeading.Text" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="PictureVideoPlay" xml:space="preserve">
+    <value>Play</value>
+    <comment>The button that plays the selected video on the page while the layout is being designed.</comment>
+  </data>
+  <data name="PictureVideoStop" xml:space="preserve">
+    <value>Stop</value>
+    <comment>The same button while the video is playing.</comment>
+  </data>
+  <data name="PictureVideoPlayButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Videos stay still while you design, so they don't distract you. This plays the selected one on the page.</value>
+  </data>
+  <data name="PictureVideoRangeLabel.Text" xml:space="preserve">
+    <value>The part that plays</value>
+  </data>
+  <data name="PictureVideoStartBox.Header" xml:space="preserve">
+    <value>Starts at, in seconds</value>
+  </data>
+  <data name="PictureVideoEndBox.Header" xml:space="preserve">
+    <value>Stops at, in seconds</value>
+  </data>
+  <data name="PictureVideoEndBox.PlaceholderText" xml:space="preserve">
+    <value>the end</value>
+  </data>
+  <data name="PictureVideoRangeFormat" xml:space="preserve">
+    <value>Plays from {0} to {1}. The whole clip is {2} long.</value>
+    <comment>{0}, {1} and {2} are times in minutes, seconds and tenths, like 1:05.3.</comment>
+  </data>
+  <data name="PictureVideoReadingCaption" xml:space="preserve">
+    <value>Finding out how long the clip is…</value>
+  </data>
+  <data name="PictureAutoPlayCheck.Content" xml:space="preserve">
+    <value>Play as soon as the layout runs</value>
+  </data>
+  <data name="PictureClickToPlayCheck.Content" xml:space="preserve">
+    <value>A click on it stops and starts it</value>
+  </data>
+  <data name="PictureScrubberCheck.Content" xml:space="preserve">
+    <value>Show a bar to scrub through it</value>
+  </data>
+  <data name="PictureVideoInputCaption.Text" xml:space="preserve">
+    <value>Only an image control can take a click or show a bar. A panel's fill sits behind the controls on the panel, so it just plays.</value>
+  </data>
+  <data name="VideoStatusPlayingFormat" xml:space="preserve">
+    <value>Playing, at {0}</value>
+    <comment>What a screen reader hears about a video on a running page. {0} is a time like 1:05.3.</comment>
+  </data>
+  <data name="VideoStatusStoppedFormat" xml:space="preserve">
+    <value>Stopped at {0}</value>
+    <comment>The same, for a video that is not playing. {0} is a time like 1:05.3.</comment>
   </data>
   <data name="PicturePositionHeading.Text" xml:space="preserve">
     <value>Position and crop</value>
@@ -2741,22 +2794,22 @@
     <value>Save</value>
   </data>
   <data name="LayoutMenuBackground" xml:space="preserve">
-    <value>Background picture…</value>
+    <value>Background picture or video…</value>
   </data>
   <data name="BackgroundDialogTitle" xml:space="preserve">
-    <value>Background picture</value>
+    <value>Background picture or video</value>
   </data>
   <data name="BackgroundOpenTitle" xml:space="preserve">
-    <value>Choose a background picture</value>
+    <value>Choose a background picture or video</value>
   </data>
   <data name="BackgroundChoose" xml:space="preserve">
-    <value>Choose a picture…</value>
+    <value>Choose a picture or video…</value>
   </data>
   <data name="BackgroundClear" xml:space="preserve">
     <value>Take it away</value>
   </data>
   <data name="BackgroundNone" xml:space="preserve">
-    <value>No picture. The surface uses the theme's own background.</value>
+    <value>No picture or video. The surface uses the theme's own background.</value>
   </data>
   <data name="BackgroundFitHeader" xml:space="preserve">
     <value>Scale and Stretch</value>
@@ -2777,7 +2830,7 @@
     <value>Fill, cutting off what does not fit</value>
   </data>
   <data name="BackgroundWillCopyFormat" xml:space="preserve">
-    <value>This picture will be copied to {0}, so that the layout and the picture travel together.</value>
+    <value>This file will be copied to {0}, so that the layout and the file travel together.</value>
   </data>
   <data name="LayoutMenuPagesDevices" xml:space="preserve">
     <value>Pages and devices…</value>

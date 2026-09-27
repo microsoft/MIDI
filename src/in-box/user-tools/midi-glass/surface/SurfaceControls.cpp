@@ -2281,6 +2281,12 @@ namespace glass
 
         auto const drop = [&]()
             {
+                if (itemIndex < m_videos.size() && m_videos[itemIndex] != nullptr)
+                {
+                    CloseVideo(*m_videos[itemIndex]);
+                    m_videos[itemIndex] = nullptr;
+                }
+
                 if (m_pictures[itemIndex] == nullptr)
                 {
                     return;
@@ -2342,12 +2348,22 @@ namespace glass
                 container, xaml::Automation::Peers::AccessibilityView::Raw);
 
             xaml::FrameworkElement content{ nullptr };
+            std::shared_ptr<SurfaceVideo> video{};
 
             auto const picture = control.Image;
 
             if (IsVideoFileName(control.Image.FileName))
             {
-                content = BuildVideoContent(uri, picture, width, height);
+                // Clicks and the bar belong to an image control. A panel's fill sits behind the
+                // controls on the panel, so it only plays.
+                video = CreateVideo(uri, picture, width, height, control.Kind == ControlKind::Image);
+
+                if (control.Kind == ControlKind::Image && itemIndex < m_elements.size())
+                {
+                    video->Owner = m_elements[itemIndex];
+                }
+
+                content = video->Element;
             }
             else
             {
@@ -2375,6 +2391,13 @@ namespace glass
             if (auto const wash = BuildPictureTint(picture, width, height); wash != nullptr)
             {
                 container.Children().Append(wash);
+            }
+
+            // The bar goes over both, so it can always be seen.
+            if (video != nullptr && itemIndex < m_videos.size())
+            {
+                m_videos[itemIndex] = video;
+                LayoutScrubber(*video);
             }
 
             controls::Canvas::SetLeft(container, control.X);
@@ -2434,114 +2457,6 @@ namespace glass
         controls::Canvas::SetTop(wash, 0.0);
 
         return wash;
-    }
-
-    _Use_decl_annotations_
-    xaml::FrameworkElement SurfaceRenderer::BuildVideoContent(
-        foundation::Uri const& uri,
-        Picture const& picture,
-        double width,
-        double height)
-    {
-        // A video on a control surface that stops four seconds in looks broken, so a loop is
-        // the default and the customer turns it off rather than on.
-        winrt::Windows::Media::Playback::MediaPlayer media{};
-
-        media.IsLoopingEnabled(picture.Loops);
-        media.AutoPlay(true);
-
-        // Silent, and silent the expensive way as well as the cheap one: muting stops the
-        // sound, deselecting the audio track stops it being decoded at all. A layout is a
-        // control surface, and audio out of a decorative clip during a set is never what
-        // anybody wanted.
-        media.IsMuted(true);
-        media.Volume(0.0);
-
-        // Everything from here to the source is a nicety. None of it is allowed to take the
-        // picture down with it if a particular file or a particular Windows build disagrees.
-        try
-        {
-            // Without this every clip on the page registers with the system media transport
-            // controls, so the keyboard's play button and the volume flyout start driving a
-            // piece of somebody's stage backdrop.
-            media.CommandManager().IsEnabled(false);
-        }
-        catch (...)
-        {
-        }
-
-        auto const source = winrt::Windows::Media::Core::MediaSource::CreateFromUri(uri);
-
-        try
-        {
-            // Muting stops the sound; deselecting the track stops it being decoded at all. The
-            // list is empty until the file has been opened, so the event is where the work
-            // really happens and this first call is only for a source that opened early.
-            winrt::Windows::Media::Playback::MediaPlaybackItem const item{ source };
-
-            item.AudioTracksChanged([](auto const& sender, auto const&)
-                {
-                    try
-                    {
-                        sender.AudioTracks().SelectedIndex(-1);
-                    }
-                    catch (...)
-                    {
-                    }
-                });
-
-            try
-            {
-                item.AudioTracks().SelectedIndex(-1);
-            }
-            catch (...)
-            {
-            }
-
-            media.Source(item);
-        }
-        catch (...)
-        {
-            media.Source(source);
-        }
-
-        controls::MediaPlayerElement player{};
-
-        player.AreTransportControlsEnabled(false);
-        player.AutoPlay(true);
-
-        // The element is already at the exact size the crop wants, so it must not do any
-        // fitting of its own on top of that.
-        player.Stretch(media::Stretch::Fill);
-        player.SetMediaPlayer(media);
-
-        // The natural size is not known until the file has been opened, and it arrives on a
-        // media thread. Until then the clip fills the control.
-        auto const weak = winrt::make_weak(player.as<xaml::FrameworkElement>());
-        auto const queue = player.DispatcherQueue();
-
-        media.PlaybackSession().NaturalVideoSizeChanged(
-            [weak, queue, picture, width, height](auto const& session, auto const&)
-            {
-                auto const naturalWidth = static_cast<double>(session.NaturalVideoWidth());
-                auto const naturalHeight = static_cast<double>(session.NaturalVideoHeight());
-
-                if (naturalWidth <= 0.0 || naturalHeight <= 0.0 || queue == nullptr)
-                {
-                    return;
-                }
-
-                queue.TryEnqueue([weak, picture, width, height, naturalWidth, naturalHeight]()
-                    {
-                        if (auto const element = weak.get())
-                        {
-                            ArrangePictureContent(
-                                element, picture, width, height, naturalWidth, naturalHeight);
-                        }
-                    });
-            });
-
-        return player;
     }
 
     _Use_decl_annotations_

@@ -27,7 +27,12 @@ namespace glass
         {
             auto const kind = renderer.KindAt(i);
 
-            if (!IsInteractive(kind))
+            // A picture sends nothing, but a video on one can be asked to take clicks or to
+            // draw a bar, and then it needs a pointer like anything else.
+            auto const takesPictureInput = kind == ControlKind::Image &&
+                (renderer.VideoTakesClicks(i) || renderer.VideoShowsScrubber(i));
+
+            if (!IsInteractive(kind) && !takesPictureInput)
             {
                 continue;
             }
@@ -160,6 +165,19 @@ namespace glass
                 continue;
             }
 
+            if (binding.Scrubbing)
+            {
+                binding.PointerId = 0;
+                binding.Scrubbing = false;
+
+                if (m_renderer != nullptr)
+                {
+                    m_renderer->EndScrub(binding.ItemIndex);
+                }
+
+                continue;
+            }
+
             // A key held on a keyboard ends its note the same way a pad does, or a layout that
             // loses focus mid press leaves it sounding.
             if (PlaysKeys(binding.Kind))
@@ -287,6 +305,12 @@ namespace glass
         if (binding.PlaysPads)
         {
             PressPad(binding, args);
+            return;
+        }
+
+        if (binding.Kind == ControlKind::Image)
+        {
+            PressPicture(binding, args);
             return;
         }
 
@@ -452,6 +476,22 @@ namespace glass
             return;
         }
 
+        if (binding.Scrubbing)
+        {
+            auto const position = args.GetCurrentPoint(binding.Element).Position();
+            double fraction{ 0.0 };
+
+            args.Handled(true);
+
+            if (m_renderer != nullptr &&
+                m_renderer->TryGetScrubFraction(binding.ItemIndex, position.X, position.Y, true, fraction))
+            {
+                m_renderer->ScrubVideo(binding.ItemIndex, fraction);
+            }
+
+            return;
+        }
+
         if (binding.Momentary || binding.Toggling)
         {
             return;
@@ -612,6 +652,20 @@ namespace glass
         binding.PointerId = 0;
         m_heldCount = std::max(0, m_heldCount - 1);
 
+        // A finger coming off a video's bar lets the video carry on. Nothing was sent, so there
+        // is nothing to put back.
+        if (binding.Scrubbing)
+        {
+            binding.Scrubbing = false;
+
+            if (m_renderer != nullptr)
+            {
+                m_renderer->EndScrub(binding.ItemIndex);
+            }
+
+            return;
+        }
+
         if (TouchChanged)
         {
             TouchChanged(binding.ItemIndex, false);
@@ -680,6 +734,44 @@ namespace glass
             auto const pressure = point.Properties().Pressure();
 
             return pressure > 0.0f && pressure <= 1.0f ? pressure : 1.0;
+        }
+    }
+
+    _Use_decl_annotations_
+    void InputRouter::PressPicture(Binding& binding, PointerRoutedEventArgs const& args)
+    {
+        if (m_renderer == nullptr || binding.Element == nullptr || binding.PointerId != 0 ||
+            !m_renderer->HasVideo(binding.ItemIndex))
+        {
+            return;
+        }
+
+        auto const position = args.GetCurrentPoint(binding.Element).Position();
+        double fraction{ 0.0 };
+
+        // On the bar: held, so the drag can carry on past the ends of the bar.
+        if (m_renderer->TryGetScrubFraction(binding.ItemIndex, position.X, position.Y, false, fraction))
+        {
+            if (!binding.Element.CapturePointer(args.Pointer()))
+            {
+                return;
+            }
+
+            binding.PointerId = args.Pointer().PointerId();
+            binding.Scrubbing = true;
+            m_heldCount++;
+
+            args.Handled(true);
+
+            m_renderer->ScrubVideo(binding.ItemIndex, fraction);
+            return;
+        }
+
+        if (m_renderer->VideoTakesClicks(binding.ItemIndex))
+        {
+            args.Handled(true);
+
+            m_renderer->ToggleVideo(binding.ItemIndex);
         }
     }
 

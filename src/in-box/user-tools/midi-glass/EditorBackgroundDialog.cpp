@@ -17,6 +17,8 @@
 #include "StringResources.h"
 #include "LayoutStore.h"
 
+#include <winrt/Windows.Storage.FileProperties.h>
+
 #include <shobjidl.h>
 #include <filesystem>
 
@@ -54,6 +56,41 @@ namespace winrt::midiglass::implementation
 
             return 0;
         }
+
+        // A video has no picture of its own for an Image to show, so the preview is the frame
+        // the shell shows for it. The token drops a frame that arrives after the choice moved on.
+        winrt::fire_and_forget ShowVideoFrameAsync(
+            controls::Image preview,
+            std::wstring path,
+            std::shared_ptr<uint32_t> token,
+            uint32_t expected)
+        {
+            try
+            {
+                auto const file = co_await winrt::Windows::Storage::StorageFile::GetFileFromPathAsync(path);
+                auto const thumbnail = co_await file.GetThumbnailAsync(
+                    winrt::Windows::Storage::FileProperties::ThumbnailMode::SingleItem, 320);
+
+                if (thumbnail == nullptr || *token != expected)
+                {
+                    co_return;
+                }
+
+                media::Imaging::BitmapImage frame{};
+
+                co_await frame.SetSourceAsync(thumbnail);
+
+                if (*token == expected)
+                {
+                    preview.Source(frame);
+                }
+            }
+            catch (...)
+            {
+                // No frame is not worth a word. The file name under the preview still says
+                // what was chosen.
+            }
+        }
     }
 
     // The Win32 common item dialog, not Windows.Storage.Pickers: this is a desktop app and the
@@ -69,9 +106,25 @@ namespace winrt::midiglass::implementation
                 return {};
             }
 
+            // The same files a control's picture takes. A background is copied beside the
+            // layout the same way, so it is held to the same list.
+            constexpr wchar_t PictureExtensions[] = L"*.png;*.jpg;*.jpeg";
+            constexpr wchar_t VideoExtensions[] =
+                L"*.mp4;*.m4v;*.mkv;*.webm;*.wmv;*.avi;*.mov;*.mpeg;*.mpg;*.m2v;*.asf";
+
+            auto const both = std::wstring{ PictureExtensions } + L";" + VideoExtensions;
+
+            auto const bothLabel = resources::FormatString(L"PictureFilterBothFormat", both);
+            auto const pictureLabel =
+                resources::FormatString(L"PictureFilterPicturesFormat", PictureExtensions);
+            auto const videoLabel =
+                resources::FormatString(L"PictureFilterVideoFormat", VideoExtensions);
+
             COMDLG_FILTERSPEC const filters[]
             {
-                { L"Pictures (*.png;*.jpg;*.jpeg)", L"*.png;*.jpg;*.jpeg" },
+                { bothLabel.c_str(), both.c_str() },
+                { pictureLabel.c_str(), PictureExtensions },
+                { videoLabel.c_str(), VideoExtensions },
             };
 
             dialog->SetFileTypes(static_cast<UINT>(std::size(filters)), filters);
@@ -183,6 +236,7 @@ namespace winrt::midiglass::implementation
             buttonRow.Children().Append(clearButton);
 
             auto const layoutPath = m_filePath;
+            auto const previewToken = std::make_shared<uint32_t>(0);
 
             // Shows whatever is chosen right now: the file already beside the layout, or one
             // picked from somewhere else that has not been copied yet.
@@ -193,8 +247,15 @@ namespace winrt::midiglass::implementation
                         : *chosenPath;
 
                     auto const showing = !source.empty();
+                    auto const expected = ++(*previewToken);
 
-                    if (showing)
+                    preview.Source(nullptr);
+
+                    if (showing && glass::IsVideoFileName(source))
+                    {
+                        ShowVideoFrameAsync(preview, source, previewToken, expected);
+                    }
+                    else if (showing)
                     {
                         try
                         {
@@ -206,10 +267,6 @@ namespace winrt::midiglass::implementation
                         {
                             preview.Source(nullptr);
                         }
-                    }
-                    else
-                    {
-                        preview.Source(nullptr);
                     }
 
                     winrt::hstring caption{ resources::GetString(L"BackgroundNone") };
@@ -258,6 +315,7 @@ namespace winrt::midiglass::implementation
                 {
                     chosenPath->clear();
                     chosenName->clear();
+                    ++(*previewToken);
 
                     preview.Source(nullptr);
                     fileText.Text(resources::GetString(L"BackgroundNone"));
@@ -296,6 +354,13 @@ namespace winrt::midiglass::implementation
 
             if (!chosenPath->empty())
             {
+                // A video can be larger than everything else the customer has made with this
+                // app, so the size is said before the copy, the same as for a control's picture.
+                if (!co_await ConfirmPictureSizeAsync(*chosenPath))
+                {
+                    co_return;
+                }
+
                 // Copying happens on Save, not on choosing, so a canceled dialog never leaves a
                 // file behind in the customer's folder.
                 name = glass::CopyBackgroundImageBeside(*chosenPath, layoutPath);

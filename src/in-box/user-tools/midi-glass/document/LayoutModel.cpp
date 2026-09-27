@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <unordered_set>
 
 namespace glass
@@ -195,6 +196,107 @@ namespace glass
             place(picture.CenterY, height, available.Height),
             std::max(width, 1.0),
             std::max(height, 1.0) };
+    }
+
+    _Use_decl_annotations_
+    PictureRect VisiblePictureRect(
+        PictureRect const& content,
+        double controlWidth,
+        double controlHeight) noexcept
+    {
+        auto const left = std::max(content.X, 0.0);
+        auto const top = std::max(content.Y, 0.0);
+        auto const right = std::min(content.X + content.Width, std::max(controlWidth, 0.0));
+        auto const bottom = std::min(content.Y + content.Height, std::max(controlHeight, 0.0));
+
+        if (!(right > left) || !(bottom > top))
+        {
+            return PictureRect{};
+        }
+
+        return PictureRect{ left, top, right - left, bottom - top };
+    }
+
+    _Use_decl_annotations_
+    VideoRange VideoPlayRange(Picture const& picture, double durationSeconds) noexcept
+    {
+        auto const finiteOrZero = [](double value) noexcept
+            {
+                return std::isfinite(value) ? std::clamp(value, 0.0, MaximumVideoSeconds) : 0.0;
+            };
+
+        auto const duration = finiteOrZero(durationSeconds);
+        auto start = finiteOrZero(picture.VideoStartSeconds);
+        auto end = finiteOrZero(picture.VideoEndSeconds);
+
+        // Not opened yet. The points are taken at their word, and a stop that is not after the
+        // start means the end of the file, whenever that turns out to be.
+        if (duration <= 0.0)
+        {
+            return VideoRange{ start, end > start ? end : 0.0 };
+        }
+
+        if (start >= duration)
+        {
+            start = 0.0;
+        }
+
+        if (end <= start || end > duration)
+        {
+            end = duration;
+        }
+
+        // Too short to be worth playing, so the start gives way. A clip shorter than the minimum
+        // plays whole.
+        if (end - start < MinimumVideoPlaySeconds)
+        {
+            start = std::max(0.0, end - MinimumVideoPlaySeconds);
+        }
+
+        return VideoRange{ start, end };
+    }
+
+    _Use_decl_annotations_
+    double VideoRangeFraction(VideoRange const& range, double seconds) noexcept
+    {
+        auto const length = range.Length();
+
+        if (length <= 0.0 || !std::isfinite(seconds))
+        {
+            return 0.0;
+        }
+
+        return std::clamp((seconds - range.StartSeconds) / length, 0.0, 1.0);
+    }
+
+    _Use_decl_annotations_
+    double VideoRangeSeconds(VideoRange const& range, double fraction) noexcept
+    {
+        auto const clamped = std::isfinite(fraction) ? std::clamp(fraction, 0.0, 1.0) : 0.0;
+
+        return range.StartSeconds + (range.Length() * clamped);
+    }
+
+    _Use_decl_annotations_
+    std::wstring FormatVideoTime(double seconds)
+    {
+        auto const safe = std::isfinite(seconds) ? std::clamp(seconds, 0.0, MaximumVideoSeconds) : 0.0;
+        auto const tenths = static_cast<long long>(std::llround(safe * 10.0));
+        auto const whole = tenths / 10;
+
+        wchar_t text[32]{};
+
+        if (whole >= 3600)
+        {
+            swprintf_s(text, L"%lld:%02lld:%02lld.%lld",
+                whole / 3600, (whole / 60) % 60, whole % 60, tenths % 10);
+        }
+        else
+        {
+            swprintf_s(text, L"%lld:%02lld.%lld", whole / 60, whole % 60, tenths % 10);
+        }
+
+        return text;
     }
 
     _Use_decl_annotations_

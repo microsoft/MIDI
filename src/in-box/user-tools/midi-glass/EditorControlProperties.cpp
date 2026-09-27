@@ -481,14 +481,37 @@ namespace winrt::midiglass::implementation
 
                 PictureFitCombo().SelectedIndex(IndexOfValue(PictureFitOrder, image.Fit));
                 PictureOpacitySlider().Value(image.Opacity * 100.0);
-                PictureLoopsCheck().IsChecked(image.Loops);
-                PictureLoopsCheck().IsEnabled(glass::IsVideoFileName(image.FileName));
+
+                // A video's own settings, for a video only. Clicks and the bar belong to an
+                // image control: a panel's fill sits behind the controls on the panel.
+                auto const isVideo = chosen && glass::IsVideoFileName(image.FileName);
+
+                show(PictureVideoPanel(), isVideo);
+
+                if (isVideo)
+                {
+                    auto const takesInput = control.Kind == glass::ControlKind::Image;
+
+                    PictureLoopsCheck().IsChecked(image.Loops);
+                    PictureAutoPlayCheck().IsChecked(image.AutoPlays);
+                    PictureClickToPlayCheck().IsChecked(image.ClickToPlay);
+                    PictureScrubberCheck().IsChecked(image.ShowsScrubber);
+                    PictureClickToPlayCheck().IsEnabled(takesInput);
+                    PictureScrubberCheck().IsEnabled(takesInput);
+
+                    show(PictureVideoInputCaption(), !takesInput);
+                }
 
                 PictureZoomSlider().Value(image.Zoom * 100.0);
                 PictureTintBox().Text(winrt::hstring{ image.TintColor });
                 PictureTintStrengthSlider().Value(image.TintStrength * 100.0);
 
                 RefreshPicturePosition(control);
+                RefreshPictureVideoPanel();
+            }
+            else
+            {
+                RefreshPictureVideoPanel();
             }
 
             // ---- switch positions ----

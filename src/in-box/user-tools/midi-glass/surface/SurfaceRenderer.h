@@ -14,6 +14,8 @@
 #include "SurfaceColors.h"
 #include "GlassControl.h"
 
+#include <winrt/Windows.Media.Playback.h>
+
 namespace glass
 {
     namespace comp = ::winrt::Microsoft::UI::Composition;
@@ -352,6 +354,48 @@ namespace glass
         // nothing to do with the work, and the number it reaches is the time spent editing.
         void SetElapsedRunning(_In_ bool running) noexcept;
 
+        // Whether videos play. The designer holds every video still on the first frame of the
+        // part that plays, for the same reason it holds a stopwatch at zero, and plays one only
+        // when the inspector's play button asks. Try mode and the running window play them.
+        void SetVideosLive(_In_ bool live) noexcept;
+
+        // Whether this item shows a video at all, and whether a click on it stops and starts it.
+        bool HasVideo(_In_ size_t itemIndex) const noexcept;
+        bool VideoTakesClicks(_In_ size_t itemIndex) const noexcept;
+        bool VideoShowsScrubber(_In_ size_t itemIndex) const noexcept;
+
+        // Plays or stops one video: the inspector's play button, and a click on a running video.
+        bool IsVideoPlaying(_In_ size_t itemIndex) const noexcept;
+        void SetVideoPlaying(_In_ size_t itemIndex, _In_ bool playing) noexcept;
+        void ToggleVideo(_In_ size_t itemIndex) noexcept;
+
+        // Stops a video on the frame at this time, while one end of the part that plays is
+        // being dragged in the inspector.
+        void ShowVideoFrame(_In_ size_t itemIndex, _In_ double seconds) noexcept;
+
+        // Where a video is and how long its file is, for the inspector's timeline. False until
+        // the file has opened.
+        bool TryGetVideoPosition(
+            _In_ size_t itemIndex,
+            _Out_ double& seconds,
+            _Out_ double& durationSeconds,
+            _Out_ bool& playing) const noexcept;
+
+        // A point in the control's own units, as a fraction along the video's bar. False off the
+        // bar, unless `anywhere` is set: a drag that started on the bar keeps scrubbing when the
+        // finger wanders off it.
+        bool TryGetScrubFraction(
+            _In_ size_t itemIndex,
+            _In_ double x,
+            _In_ double y,
+            _In_ bool anywhere,
+            _Out_ double& fraction) const noexcept;
+
+        // A finger on the bar. The video holds still under it, and carries on when the finger
+        // comes off if it was playing before.
+        void ScrubVideo(_In_ size_t itemIndex, _In_ double fraction) noexcept;
+        void EndScrub(_In_ size_t itemIndex) noexcept;
+
         // The device this control sends to is not here. It is struck through rather than hidden
         // or disabled: a layout with a missing device still has to be editable, and the person
         // looking at it has to be able to see which controls have gone quiet.
@@ -404,6 +448,85 @@ namespace glass
         ThemeColor DeckColor() const noexcept { return m_deck; }
 
     private:
+        // A video on the page: its player, what it was asked to do, and the bar along its bottom.
+        // Shared, so the player's events, which arrive on media threads and are handed to the UI
+        // thread, can tell when the page they were meant for has gone.
+        struct SurfaceVideo
+        {
+            winrt::Windows::Media::Playback::MediaPlayer Player{ nullptr };
+            Picture Spec{};
+
+            // The element the frames land in, so a closed player can be taken out of it.
+            controls::MediaPlayerElement Element{ nullptr };
+
+            // The control it belongs to, for its status, or null for the page background.
+            GlassControlElement Owner{ nullptr };
+
+            // A panel's fill and the page background play and loop, but take no clicks and
+            // draw no bar: both sit behind the controls.
+            bool TakesInput{ false };
+
+            // The control's own size, which the bar is laid out inside.
+            double Width{ 0.0 };
+            double Height{ 0.0 };
+
+            // Known once the file has opened. Until then the part that plays is whatever the
+            // layout says.
+            bool Opened{ false };
+            double DurationSeconds{ 0.0 };
+
+            // What it has been asked to do. The player is told the same whenever it can listen.
+            bool Playing{ false };
+
+            // A frame asked for before the file had opened, or below zero for none.
+            double PendingFrameSeconds{ -1.0 };
+
+            // Held still under a finger on the bar, and whether to carry on afterward.
+            bool Scrubbing{ false };
+            bool ResumeAfterScrub{ false };
+
+            // The part of the control the video covers, which the bar spans.
+            PictureRect Visible{};
+
+            controls::Canvas Scrubber{ nullptr };
+            xaml::Shapes::Rectangle ScrubTrack{ nullptr };
+            xaml::Shapes::Rectangle ScrubFill{ nullptr };
+            xaml::Shapes::Ellipse ScrubThumb{ nullptr };
+
+            // What a screen reader was last told, so it is only told again when it changes.
+            std::wstring Status{};
+        };
+
+        // A new video on the page, silent, paused and waiting for its file to open.
+        std::shared_ptr<SurfaceVideo> CreateVideo(
+            _In_ foundation::Uri const& uri,
+            _In_ Picture const& picture,
+            _In_ double width,
+            _In_ double height,
+            _In_ bool takesInput);
+
+        // Shuts a video's player down. A player left open keeps a decoder and its threads alive
+        // long after the page it was on has gone.
+        static void CloseVideo(_Inout_ SurfaceVideo& video) noexcept;
+
+        SurfaceVideo* VideoAt(_In_ size_t itemIndex) const noexcept;
+
+        // Tells the player what the video was asked to do, once it can listen.
+        void ApplyVideoState(_Inout_ SurfaceVideo& video) noexcept;
+
+        // The file opened, or played through to its end.
+        void OnVideoOpened(_Inout_ SurfaceVideo& video) noexcept;
+        void OnVideoEnded(_Inout_ SurfaceVideo& video) noexcept;
+
+        // The bar along the bottom, across the part of the control the video covers.
+        void LayoutScrubber(_Inout_ SurfaceVideo& video) noexcept;
+        void RefreshScrubber(_Inout_ SurfaceVideo& video, _In_ double seconds) noexcept;
+
+        // Ticks while any video plays: holds each to the part it plays and moves the bars.
+        void RefreshVideos() noexcept;
+        void StartVideoTimerIfNeeded();
+        void StopVideoTimer() noexcept;
+
         void BuildBackground(_In_ LayoutDocument const& document);
 
         void BuildControl(
@@ -458,14 +581,9 @@ namespace glass
             _In_ size_t itemIndex,
             _In_ Control const& control);
 
-        // The two things a picture can turn out to be. Both hand back an element already sized
+        // The two things a picture can turn out to be. Both end up as an element already sized
         // and positioned for the crop, sitting inside the clipped container LayoutPicture made.
-        xaml::FrameworkElement BuildVideoContent(
-            _In_ foundation::Uri const& uri,
-            _In_ Picture const& picture,
-            _In_ double width,
-            _In_ double height);
-
+        // A video's element is the one in the SurfaceVideo that CreateVideo hands back.
         xaml::FrameworkElement BuildImageContent(
             _In_ foundation::Uri const& uri,
             _In_ Picture const& picture,
@@ -722,6 +840,18 @@ namespace glass
         // The picture or video a control shows, and the fill behind a grouping panel. A XAML
         // child of the host like the label, so it has to be carried when the control moves.
         std::vector<xaml::FrameworkElement> m_pictures{};
+
+        // Parallel to m_pictures: the video each one plays, null for a still picture.
+        std::vector<std::shared_ptr<SurfaceVideo>> m_videos{};
+
+        // A video behind the whole page, or null.
+        std::shared_ptr<SurfaceVideo> m_backgroundVideo{};
+
+        // Ticks only while a video is playing.
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_videoTimer{ nullptr };
+
+        // False while a layout is being designed rather than run.
+        bool m_videosLive{ true };
 
         // The numbers beside a stepped control's marks, one canvas per control.
         std::vector<controls::Canvas> m_detentTexts{};

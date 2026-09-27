@@ -238,6 +238,7 @@
     <ClCompile Include="EditorLayoutPanes.cpp" />
     <ClCompile Include="EditorControlProperties.cpp" />
     <ClCompile Include="EditorPicturePanel.cpp" />
+    <ClCompile Include="EditorPictureVideo.cpp" />
     <ClCompile Include="EditorClipboard.cpp" />
     <ClCompile Include="EditorStepsPanel.cpp" />
     <ClCompile Include="EditorControlEdits.cpp" />
@@ -375,6 +376,7 @@
     <ClCompile Include="surface\SurfaceControls.cpp" />
     <ClCompile Include="surface\SurfacePads.cpp" />
     <ClCompile Include="surface\SurfaceRenderer.cpp" />
+    <ClCompile Include="surface\SurfaceVideo.cpp" />
     <ClCompile Include="thumbnail\ThumbnailRenderer.cpp" />
     <ClCompile Include="thumbnail\SurfaceThumbnail.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />

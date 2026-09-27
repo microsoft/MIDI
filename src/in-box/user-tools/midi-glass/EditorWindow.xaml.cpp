@@ -189,6 +189,7 @@ namespace winrt::midiglass::implementation
                 m_player->Stop();
             }
 
+            StopVideoPlayheadTimer();
             m_renderer.Teardown();
             m_chrome.Shutdown();
         }

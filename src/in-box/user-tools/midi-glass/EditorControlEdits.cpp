@@ -325,6 +325,13 @@ namespace winrt::midiglass::implementation
                 co_return;
             }
 
+            // The part to play belonged to the old clip, and means nothing in a new one.
+            if (copied != picture.FileName)
+            {
+                picture.VideoStartSeconds = 0.0;
+                picture.VideoEndSeconds = 0.0;
+            }
+
             picture.FileName = copied;
 
             ApplyControlEdit(id, [&](std::wstring const& controlId)

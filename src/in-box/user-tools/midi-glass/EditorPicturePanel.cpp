@@ -20,6 +20,7 @@
 
 #include <winrt/Windows.Storage.FileProperties.h>
 
+#include <chrono>
 #include <filesystem>
 
 namespace resources = ::midiglass::resources;
@@ -224,6 +225,7 @@ namespace winrt::midiglass::implementation
                 m_cropNaturalWidth = 0.0;
                 m_cropNaturalHeight = 0.0;
                 m_cropThumbnail = nullptr;
+                m_videoDurationSeconds = 0.0;
                 ++m_cropLoadToken;
 
                 if (!path.empty())
@@ -314,7 +316,12 @@ namespace winrt::midiglass::implementation
             m_cropNaturalWidth = static_cast<double>(turned ? properties.Height() : properties.Width());
             m_cropNaturalHeight = static_cast<double>(turned ? properties.Width() : properties.Height());
 
+            // How long it is, for the strip that picks the part that plays.
+            m_videoDurationSeconds = std::max(
+                std::chrono::duration<double>(properties.Duration()).count(), 0.0);
+
             DrawPictureCropBox();
+            RefreshPictureVideoPanel();
 
             auto const thumbnail = co_await file.GetThumbnailAsync(
                 winrt::Windows::Storage::FileProperties::ThumbnailMode::SingleItem, 320);
