@@ -69,6 +69,98 @@ namespace glass
         }
     }
 
+    _Use_decl_annotations_
+    bool HasFileExtension(std::wstring_view fileName, std::wstring_view extension) noexcept
+    {
+        if (extension.empty() || fileName.size() <= extension.size())
+        {
+            return false;
+        }
+
+        auto const tail = fileName.substr(fileName.size() - extension.size());
+
+        return ::CompareStringOrdinal(
+            tail.data(), static_cast<int>(tail.size()),
+            extension.data(), static_cast<int>(extension.size()),
+            TRUE) == CSTR_EQUAL;
+    }
+
+    _Use_decl_annotations_
+    bool IsLayoutFileName(std::wstring_view fileName) noexcept
+    {
+        return HasFileExtension(fileName, LayoutFileExtension) ||
+            HasFileExtension(fileName, LegacyLayoutFileExtension);
+    }
+
+    _Use_decl_annotations_
+    std::wstring LayoutNameFromFileName(std::wstring const& fileName) noexcept
+    {
+        try
+        {
+            for (std::wstring_view const extension : { LegacyLayoutFileExtension, LayoutFileExtension })
+            {
+                if (HasFileExtension(fileName, extension))
+                {
+                    return fileName.substr(0, fileName.size() - extension.size());
+                }
+            }
+
+            return fileName;
+        }
+        catch (...)
+        {
+            return {};
+        }
+    }
+
+    _Use_decl_annotations_
+    std::vector<std::pair<std::wstring, std::wstring>> RenameLegacyFiles(
+        std::wstring const& folder,
+        std::wstring_view legacyExtension,
+        std::wstring_view extension) noexcept
+    {
+        std::vector<std::pair<std::wstring, std::wstring>> renamed{};
+
+        try
+        {
+            if (folder.empty() || legacyExtension.empty() || extension.empty())
+            {
+                return renamed;
+            }
+
+            std::error_code ec{};
+            std::vector<std::filesystem::path> found{};
+
+            // Collected before any rename, so the walk never meets a file it has just renamed.
+            for (auto const& entry : std::filesystem::directory_iterator{ folder, ec })
+            {
+                if (entry.is_regular_file(ec) &&
+                    HasFileExtension(entry.path().filename().wstring(), legacyExtension))
+                {
+                    found.push_back(entry.path());
+                }
+            }
+
+            for (auto const& from : found)
+            {
+                auto const name = from.filename().wstring();
+                auto const to = from.parent_path() /
+                    (name.substr(0, name.size() - legacyExtension.size()) + std::wstring{ extension });
+
+                // No replace flag: a file already holding the new name is somebody's, and stays.
+                if (::MoveFileExW(from.c_str(), to.c_str(), 0))
+                {
+                    renamed.emplace_back(from.wstring(), to.wstring());
+                }
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return renamed;
+    }
+
     std::wstring LayoutsFolder() noexcept
     {
         try
@@ -534,14 +626,7 @@ namespace glass
 
                 auto const name = entry.path().filename().wstring();
 
-                if (name.size() <= std::size(LayoutFileExtension) - 1)
-                {
-                    continue;
-                }
-
-                auto const tail = name.substr(name.size() - (std::size(LayoutFileExtension) - 1));
-
-                if (::CompareStringOrdinal(tail.c_str(), -1, LayoutFileExtension, -1, TRUE) == CSTR_EQUAL)
+                if (IsLayoutFileName(name))
                 {
                     files.push_back(entry.path().wstring());
                 }

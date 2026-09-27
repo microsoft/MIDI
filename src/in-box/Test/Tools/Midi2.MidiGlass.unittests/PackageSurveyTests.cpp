@@ -12,6 +12,7 @@
 
 #include "LayoutPackage.h"
 #include "LayoutSerializer.h"
+#include "LayoutStore.h"
 
 #include <filesystem>
 #include <fstream>
@@ -42,7 +43,9 @@ namespace
     }
 
     // A layout naming the pictures given, written where the survey will look for it.
-    std::wstring WriteLayout(_In_ std::vector<std::wstring> const& pictureNames)
+    std::wstring WriteLayout(
+        _In_ std::vector<std::wstring> const& pictureNames,
+        _In_ std::wstring const& fileName = L"Survey.midilayout")
     {
         glass::LayoutDocument document{};
 
@@ -64,7 +67,7 @@ namespace
 
         document.Pages.push_back(std::move(page));
 
-        auto const path = (g_folder / L"Survey.midilayout.json").wstring();
+        auto const path = (g_folder / fileName).wstring();
         auto const json = glass::WriteLayoutToJson(document);
 
         std::ofstream file{ path, std::ios::binary | std::ios::trunc };
@@ -169,7 +172,7 @@ void PackageSurveyTests::APictureNamedAsAPathIsNotCounted()
 void PackageSurveyTests::AMissingLayoutSurveysAsNothing()
 {
     auto const survey = glass::SurveyLayoutPackage(
-        (g_folder / L"never written.midilayout.json").wstring());
+        (g_folder / L"never written.midilayout").wstring());
 
     VERIFY_ARE_EQUAL(0u, survey.FileCount);
     VERIFY_ARE_EQUAL(uint64_t{ 0 }, survey.TotalBytes);
@@ -256,4 +259,80 @@ void PackageSurveyTests::ABackupWithoutVideoStillCarriesTheStills()
     VERIFY_IS_TRUE(read.Succeeded);
     VERIFY_IS_TRUE(std::filesystem::is_regular_file(target / L"photo.png", ignored));
     VERIFY_IS_FALSE(std::filesystem::is_regular_file(target / L"clip.mp4", ignored));
+}
+
+// ------------------------------------------------ the file extension
+
+void PackageSurveyTests::ALayoutNameLosesEitherExtension()
+{
+    VERIFY_ARE_EQUAL(std::wstring{ L"Studio" }, glass::LayoutNameFromFileName(L"Studio.midilayout"));
+    VERIFY_ARE_EQUAL(std::wstring{ L"Studio" }, glass::LayoutNameFromFileName(L"Studio.MIDILAYOUT.JSON"));
+
+    // A dot inside the name belongs to the name.
+    VERIFY_ARE_EQUAL(std::wstring{ L"Set v1.2" }, glass::LayoutNameFromFileName(L"Set v1.2.midilayout"));
+    VERIFY_ARE_EQUAL(std::wstring{ L"notes.txt" }, glass::LayoutNameFromFileName(L"notes.txt"));
+
+    VERIFY_IS_TRUE(glass::IsLayoutFileName(L"a.midilayout"));
+    VERIFY_IS_TRUE(glass::IsLayoutFileName(L"a.midilayout.json"));
+
+    // Half written, or nothing but the extension, is not a layout.
+    VERIFY_IS_FALSE(glass::IsLayoutFileName(L"a.midilayout.writing"));
+    VERIFY_IS_FALSE(glass::IsLayoutFileName(L".midilayout"));
+}
+
+void PackageSurveyTests::AnOldLayoutFileIsRenamedOnce()
+{
+    auto const old = WriteLayout({}, L"Old.midilayout.json");
+
+    auto const renamed = glass::RenameLegacyFiles(
+        g_folder.wstring(), glass::LegacyLayoutFileExtension, glass::LayoutFileExtension);
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, renamed.size());
+    VERIFY_ARE_EQUAL(old, renamed[0].first);
+    VERIFY_ARE_EQUAL((g_folder / L"Old.midilayout").wstring(), renamed[0].second);
+
+    std::error_code ignored{};
+
+    VERIFY_IS_FALSE(std::filesystem::exists(old, ignored));
+    VERIFY_IS_TRUE(glass::ReadLayoutFile(renamed[0].second).Succeeded);
+
+    // The second start finds nothing left to do.
+    VERIFY_ARE_EQUAL(size_t{ 0 }, glass::RenameLegacyFiles(
+        g_folder.wstring(), glass::LegacyLayoutFileExtension, glass::LayoutFileExtension).size());
+}
+
+void PackageSurveyTests::ARenameNeverWritesOverAFile()
+{
+    WriteFile(L"Both.midilayout.json", 100);
+    WriteFile(L"Both.midilayout", 200);
+
+    auto const renamed = glass::RenameLegacyFiles(
+        g_folder.wstring(), glass::LegacyLayoutFileExtension, glass::LayoutFileExtension);
+
+    VERIFY_ARE_EQUAL(size_t{ 0 }, renamed.size());
+
+    std::error_code ignored{};
+
+    VERIFY_ARE_EQUAL(uint64_t{ 100 }, static_cast<uint64_t>(std::filesystem::file_size(g_folder / L"Both.midilayout.json", ignored)));
+    VERIFY_ARE_EQUAL(uint64_t{ 200 }, static_cast<uint64_t>(std::filesystem::file_size(g_folder / L"Both.midilayout", ignored)));
+}
+
+void PackageSurveyTests::APackageFromAnOlderBuildImportsUnderTheNewName()
+{
+    auto const old = WriteLayout({}, L"Old set.midilayout.json");
+
+    auto const written = glass::WriteLayoutPackage(old, (g_folder / L"old.zip").wstring(), true);
+
+    VERIFY_IS_TRUE(written.Succeeded);
+
+    auto const target = g_folder / L"imported";
+
+    std::error_code ignored{};
+    std::filesystem::create_directories(target, ignored);
+
+    auto const read = glass::ReadLayoutPackage(written.Path, target.wstring());
+
+    VERIFY_IS_TRUE(read.Succeeded);
+    VERIFY_ARE_EQUAL((target / L"Old set.midilayout").wstring(), read.Path);
+    VERIFY_IS_TRUE(std::filesystem::is_regular_file(target / L"Old set.midilayout", ignored));
 }

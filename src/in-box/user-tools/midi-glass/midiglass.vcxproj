@@ -150,6 +150,7 @@
     <ClInclude Include="..\midi-app-shared\LiveRegion.h" />
     <ClInclude Include="..\midi-app-shared\PreviewBuild.h" />
     <ClInclude Include="..\midi-app-shared\SingleInstance.h" />
+    <ClInclude Include="..\midi-app-shared\DocumentHandoff.h" />
     <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
     <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
@@ -254,6 +255,7 @@
     <ClCompile Include="EditorPanes.cpp" />
     <ClCompile Include="EditorTryMode.cpp" />
     <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
+    <ClCompile Include="..\midi-app-shared\DocumentHandoff.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />

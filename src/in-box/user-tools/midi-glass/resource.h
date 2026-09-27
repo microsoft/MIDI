@@ -5,6 +5,13 @@
 // Explorer and Task Manager show the lowest numbered icon group, so this stays at 1.
 #define IDI_APPICON                     1
 
+// Shown by Explorer in the Type column, by the Open With dialog and by Default apps in Settings.
+// The installer references them from the registry as indirect strings (@path,-id), which is what
+// makes them localizable.
+#define IDS_LAYOUT_FILE_TYPE            101
+#define IDS_FRIENDLY_APP_NAME           102
+#define IDS_APP_DESCRIPTION             103
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

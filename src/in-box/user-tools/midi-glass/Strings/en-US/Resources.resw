@@ -160,6 +160,9 @@
   <data name="OpenFileTitle" xml:space="preserve">
     <value>Open a layout</value>
   </data>
+  <data name="OpenFileFilterLayouts" xml:space="preserve">
+    <value>MIDI Glass layouts</value>
+  </data>
   <data name="FavoritesHeading.Text" xml:space="preserve">
     <value>Favorites</value>
   </data>
@@ -4205,6 +4208,9 @@
   </data>
   <data name="ImportThemeTitle" xml:space="preserve">
     <value>Import a theme</value>
+  </data>
+  <data name="ImportThemeFilter" xml:space="preserve">
+    <value>MIDI Glass themes</value>
   </data>
   <data name="ImportThemeFailedTitle" xml:space="preserve">
     <value>The theme was not imported</value>
