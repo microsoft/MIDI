@@ -1,0 +1,34 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // An RTP-MIDI device advertising itself on the local network
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpAdvertisedHost", UUID_IMidiRtpAdvertisedHost)]
+    runtimeclass MidiRtpAdvertisedHost
+    {
+        // what to put in MidiRtpClientMatchCriteria.ServiceInstanceName to connect to it
+        [noexcept] String ServiceInstanceName{ get; };
+
+        [noexcept] String HostName{ get; };
+        [noexcept] UInt16 Port{ get; };
+
+        [noexcept] Windows.Foundation.Collections.IVectorView<String> IPAddresses{ get; };
+        [noexcept] Windows.Foundation.Collections.IVectorView<String> IPv4Addresses{ get; };
+        [noexcept] Windows.Foundation.Collections.IVectorView<String> IPv6Addresses{ get; };
+
+        // A host on this PC shows up in its own results. A list of devices to connect to should
+        // leave it out.
+        [noexcept] Boolean IsThisPc{ get; };
+    }
+}

@@ -160,6 +160,9 @@
   <data name="OpenFileTitle" xml:space="preserve">
     <value>Open a layout</value>
   </data>
+  <data name="OpenFileFilterLayouts" xml:space="preserve">
+    <value>MIDI Glass layouts</value>
+  </data>
   <data name="FavoritesHeading.Text" xml:space="preserve">
     <value>Favorites</value>
   </data>
@@ -2379,6 +2382,15 @@
   <data name="MessageNumberLabel.Text" xml:space="preserve">
     <value>Number</value>
   </data>
+  <data name="MessageParameterLabel.Text" xml:space="preserve">
+    <value>Parameter</value>
+  </data>
+  <data name="ParameterBankBox.Header" xml:space="preserve">
+    <value>Bank (MSB)</value>
+  </data>
+  <data name="ParameterIndexBox.Header" xml:space="preserve">
+    <value>Index (LSB)</value>
+  </data>
   <data name="TriggerCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>When this message is sent</value>
   </data>
@@ -2431,10 +2443,16 @@
     <value>Per-note controller</value>
   </data>
   <data name="MessageRegisteredController" xml:space="preserve">
-    <value>Registered controller</value>
+    <value>RPN (registered controller)</value>
   </data>
   <data name="MessageAssignedController" xml:space="preserve">
-    <value>Assigned controller</value>
+    <value>NRPN (assignable controller)</value>
+  </data>
+  <data name="MessageRowRegisteredController" xml:space="preserve">
+    <value>RPN</value>
+  </data>
+  <data name="MessageRowAssignedController" xml:space="preserve">
+    <value>NRPN</value>
   </data>
   <data name="MessageSystemExclusive" xml:space="preserve">
     <value>System exclusive</value>
@@ -4205,6 +4223,9 @@
   </data>
   <data name="ImportThemeTitle" xml:space="preserve">
     <value>Import a theme</value>
+  </data>
+  <data name="ImportThemeFilter" xml:space="preserve">
+    <value>MIDI Glass themes</value>
   </data>
   <data name="ImportThemeFailedTitle" xml:space="preserve">
     <value>The theme was not imported</value>

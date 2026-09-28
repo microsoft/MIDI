@@ -153,6 +153,7 @@
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
     <ClInclude Include="..\midi-app-shared\SingleInstance.h" />
+    <ClInclude Include="..\midi-app-shared\DocumentHandoff.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
     <ClInclude Include="..\midi-app-shared\EndpointMatch.h" />
     <ClInclude Include="..\midi-app-shared\EndpointCatalog.h" />
@@ -195,6 +196,7 @@
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
     <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
+    <ClCompile Include="..\midi-app-shared\DocumentHandoff.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointMatch.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

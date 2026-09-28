@@ -11,17 +11,39 @@
 
 #include <sal.h>
 #include <string>
+#include <string_view>
+#include <utility>
 #include <vector>
 
 #include "LayoutSerializer.h"
 
 namespace glass
 {
-    // One .midilayout.json per layout, in the customer's Documents folder, exactly the shape
-    // MIDI Patchbay uses for patches. This is the only part of the document layer that touches
-    // a disk.
+    // One .midilayout per layout, in the customer's Documents folder, exactly the shape MIDI
+    // Patchbay uses for patches. This is the only part of the document layer that touches a disk.
+    //
+    // The first builds wrote ".midilayout.json". Explorer sees that as a JSON file and never
+    // offers this app for it, so those are still read, and renamed when the app starts.
     constexpr wchar_t LayoutFolderName[] = L"MIDI Layouts";
-    constexpr wchar_t LayoutFileExtension[] = L".midilayout.json";
+    constexpr wchar_t LayoutFileExtension[] = L".midilayout";
+    constexpr wchar_t LegacyLayoutFileExtension[] = L".midilayout.json";
+
+    // Whether a file name ends in this extension, ignoring case.
+    bool HasFileExtension(_In_ std::wstring_view fileName, _In_ std::wstring_view extension) noexcept;
+
+    // A layout file under either name.
+    bool IsLayoutFileName(_In_ std::wstring_view fileName) noexcept;
+
+    // The file name without its layout extension, old or new. Anything else comes back whole.
+    std::wstring LayoutNameFromFileName(_In_ std::wstring const& fileName) noexcept;
+
+    // Renames every file in the folder ending in the old extension to the same name with the new
+    // one. A file whose new name is already taken is left as it is. Returns the old and new path
+    // of each file renamed, so anything that remembered the old path can follow it.
+    std::vector<std::pair<std::wstring, std::wstring>> RenameLegacyFiles(
+        _In_ std::wstring const& folder,
+        _In_ std::wstring_view legacyExtension,
+        _In_ std::wstring_view extension) noexcept;
 
     // Created if it is not there. Empty when it cannot be.
     std::wstring LayoutsFolder() noexcept;

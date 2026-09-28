@@ -927,3 +927,45 @@ void LayoutDocumentTests::HexWordsRoundTrip()
     VERIFY_IS_TRUE(glass::ParseHexWords(L"40903C0", 4).empty());
     VERIFY_IS_TRUE(glass::ParseHexWords(L"40903C00 FFFF0000 00000000 11111111 22222222", 4).empty());
 }
+
+void LayoutDocumentTests::AnRpnOrNrpnNumberIsABankAndAnIndex()
+{
+    VERIFY_IS_TRUE(glass::HasBankAndIndex(glass::MessageKind::RegisteredController));
+    VERIFY_IS_TRUE(glass::HasBankAndIndex(glass::MessageKind::AssignedController));
+    VERIFY_IS_FALSE(glass::HasBankAndIndex(glass::MessageKind::ControlChange));
+
+    // NRPN 3:17 the way a manual prints it, which MIDI 1.0 sends as CC 99 = 3 and CC 98 = 17.
+    auto const number = glass::ControllerNumber(3, 17);
+
+    VERIFY_ARE_EQUAL(uint32_t{ 401 }, number);
+    VERIFY_ARE_EQUAL(uint32_t{ 3 }, glass::ControllerBank(number));
+    VERIFY_ARE_EQUAL(uint32_t{ 17 }, glass::ControllerIndex(number));
+    VERIFY_ARE_EQUAL(std::wstring{ L"3:17" }, glass::FormatMessageNumber(glass::MessageKind::AssignedController, number));
+    VERIFY_ARE_EQUAL(std::wstring{ L"74" }, glass::FormatMessageNumber(glass::MessageKind::ControlChange, 74));
+
+    // Each half is seven bits, so a stray larger number cannot spill into the other half.
+    VERIFY_ARE_EQUAL(glass::MaximumControllerNumber, glass::ControllerNumber(200, 300));
+}
+
+void LayoutDocumentTests::AnNrpnAbove127SurvivesARoundTrip()
+{
+    auto document = MinimalDocument();
+
+    glass::DeviceEntry synth{};
+    synth.Name = L"Synth";
+    document.Devices.push_back(synth);
+
+    glass::ControlMessage message{};
+    message.Kind = glass::MessageKind::AssignedController;
+    message.DeviceName = L"Synth";
+    message.Number = glass::ControllerNumber(3, 17);
+    document.Pages[0].Controls[0].Messages.push_back(message);
+
+    auto const reread = glass::ReadLayoutFromJson(glass::WriteLayoutToJson(document));
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const& back = reread.Document.Pages[0].Controls[0].Messages;
+    VERIFY_ARE_EQUAL(size_t{ 1 }, back.size());
+    VERIFY_IS_TRUE(back[0].Kind == glass::MessageKind::AssignedController);
+    VERIFY_ARE_EQUAL(uint32_t{ 401 }, back[0].Number);
+}

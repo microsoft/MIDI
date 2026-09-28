@@ -80,6 +80,27 @@ CMidi2NetworkMidiEndpointManager::Initialize(
 
     m_initialized = true;
 
+    // Before anything can start a host. A failure costs only the repeated announcements, so the
+    // hosts still start.
+    LOG_IF_FAILED(m_dnssdAnnouncer.Start(
+        std::wstring{ DNS_PTR_SERVICE_TYPE },
+        [this](size_t const hostCount, size_t const packetCount, ::WindowsMidiServicesInternal::MidiDnssdAnnouncementResult const& result)
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Repeated the DNS-SD announcement of this PC's hosts", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingUInt64(hostCount, "hosts"),
+                TraceLoggingUInt64(packetCount, "packets"),
+                TraceLoggingUInt32(result.IPv4Interfaces, "IPv4 interfaces"),
+                TraceLoggingUInt32(result.IPv6Interfaces, "IPv6 interfaces"),
+                TraceLoggingInt32(result.LastError, "last error")
+            );
+        }));
+
     // start background thread that creates endpoints
     RETURN_IF_FAILED(StartBackgroundEndpointCreator());
     RETURN_IF_FAILED(StartBackgroundConnectionShutdown());
@@ -2222,6 +2243,21 @@ CMidi2NetworkMidiEndpointManager::FindMatchingInstantiatedEndpoint(
 }
 
 
+_Use_decl_annotations_
+void
+CMidi2NetworkMidiEndpointManager::OnHostRegistered(std::wstring_view const serviceInstanceLabel)
+{
+    m_dnssdAnnouncer.AddRegistration(serviceInstanceLabel);
+}
+
+_Use_decl_annotations_
+void
+CMidi2NetworkMidiEndpointManager::OnHostRegistrationEnding(std::wstring_view const serviceInstanceLabel) noexcept
+{
+    m_dnssdAnnouncer.RemoveRegistration(serviceInstanceLabel);
+}
+
+
 HRESULT
 CMidi2NetworkMidiEndpointManager::Shutdown()
 {
@@ -2235,6 +2271,9 @@ CMidi2NetworkMidiEndpointManager::Shutdown()
     );
 
     m_browser.Stop();
+
+    // Before the hosts below withdraw their registrations, so no repeat can follow a goodbye
+    m_dnssdAnnouncer.Stop();
 
     {
         auto lock = m_advertisedHostsLock.lock_exclusive();

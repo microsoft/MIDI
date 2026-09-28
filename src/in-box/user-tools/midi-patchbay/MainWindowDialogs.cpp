@@ -87,7 +87,8 @@ namespace winrt::midipatchbay::implementation
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to validate the patch name.")
     }
 
-    winrt::fire_and_forget MainWindow::ShowSavePatchDialogAsync()
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::ShowSavePatchDialogAsync(bool startAutomatically)
     {
         auto strong = get_strong();
 
@@ -106,7 +107,7 @@ namespace winrt::midipatchbay::implementation
             SavePatchDescriptionBox().Text(winrt::hstring{ patch->Description });
             SavePatchKeepRadio().IsChecked(!patch->IsTemporary || patch->FilePath.empty());
             SavePatchTemporaryRadio().IsChecked(false);
-            SavePatchStartupCheck().IsChecked(patch->ActivateAtStartup);
+            SavePatchStartupCheck().IsChecked(startAutomatically || patch->ActivateAtStartup);
             SavePatchDialog().IsPrimaryButtonEnabled(!patch->Name.empty());
             SavePatchDialog().XamlRoot(Content().XamlRoot());
 
@@ -114,6 +115,8 @@ namespace winrt::midipatchbay::implementation
 
             if (result != controls::ContentDialogResult::Primary)
             {
+                // Turns the Start automatically switch back off if it opened this dialog.
+                UpdatePatchHeader();
                 co_return;
             }
 
@@ -189,6 +192,110 @@ namespace winrt::midipatchbay::implementation
             UpdateTray();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to save the patch.")
+    }
+
+    // --------------------------------------------------------- import a patch
+
+    _Use_decl_annotations_
+    void MainWindow::OnImportPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            // The Win32 common item dialog, never Windows.Storage.Pickers, which needs a package
+            // identity this unpackaged app does not have.
+            auto dialog = wil::CoCreateInstance<IFileOpenDialog>(CLSID_FileOpenDialog);
+
+            auto const filterName = resources::GetString(L"ImportPatchFilter");
+
+            COMDLG_FILTERSPEC const filters[]
+            {
+                { filterName.c_str(), L"*.midipatch" },
+            };
+
+            dialog->SetFileTypes(ARRAYSIZE(filters), filters);
+            dialog->SetTitle(resources::GetString(L"ImportPatchTitle").c_str());
+
+            if (FAILED(dialog->Show(m_chrome.WindowHandle())))
+            {
+                return;
+            }
+
+            winrt::com_ptr<IShellItem> item{};
+
+            if (FAILED(dialog->GetResult(item.put())) || item == nullptr)
+            {
+                return;
+            }
+
+            wil::unique_cotaskmem_string path{};
+
+            if (FAILED(item->GetDisplayName(SIGDN_FILESYSPATH, &path)) || path.get() == nullptr)
+            {
+                return;
+            }
+
+            ImportPatchFiles({ std::wstring{ path.get() } });
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to import a patch.")
+    }
+
+    _Use_decl_annotations_
+    bool MainWindow::ImportPatchFiles(std::vector<std::wstring> const& paths) noexcept
+    {
+        try
+        {
+            auto& store = patchbay::PatchStore::Current();
+
+            std::wstring selectKey{};
+            std::wstring selectName{};
+
+            for (auto const& path : paths)
+            {
+                auto imported = store.Import(path);
+
+                if (!imported.has_value())
+                {
+                    ShowStatus(store.LastErrorMessage(), controls::InfoBarSeverity::Error);
+                    continue;
+                }
+
+                auto const key = PatchKey(imported.value());
+
+                // A file that was in the folder all along is already in the list.
+                auto const existing = std::find_if(m_patches.begin(), m_patches.end(),
+                    [&key](patchbay::PatchDocument const& p) { return PatchKey(p) == key; });
+
+                selectKey = key;
+                selectName = imported->Name;
+
+                if (existing == m_patches.end())
+                {
+                    m_patches.push_back(std::move(imported.value()));
+                }
+            }
+
+            if (selectKey.empty())
+            {
+                return false;
+            }
+
+            // Never routed on the way in. Somebody else wrote this file, and the customer turns
+            // it on once they have looked at it.
+            RebuildNavigation();
+            SelectPatch(selectKey);
+            UpdateTray();
+
+            ShowStatus(resources::FormatString(L"StatusPatchImportedFormat", selectName),
+                controls::InfoBarSeverity::Success);
+
+            return true;
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to import the patches.")
+
+        return false;
     }
 
     // -------------------------------------------------------------- patch menu

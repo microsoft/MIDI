@@ -20,7 +20,15 @@ It's the software version of the patchbay in a studio rack: keys into a sound mo
 
 A **patch** is one canvas: the endpoints on it, the connections between them, and a name. Patches are saved as files in **Documents &rsaquo; MIDI Patchbay**, one file per patch, so you can back one up or copy it to another PC.
 
+Patch files end in `.midipatch`. To add one that somebody sent you, or one an AI assistant saved in another folder, select **Import a patch…** and pick the file. You can also double-click it in File Explorer. The first time you do, Windows asks which app to open it with, so pick MIDI Patchbay. Either way, the patch is copied into your patches. It doesn't route, and it doesn't start automatically, until you turn those on. A file from somewhere else shouldn't connect your devices before you've looked at it.
+
+Older versions of Patchbay named patch files `.midipatch.json`. Patchbay renames them to `.midipatch` the next time it starts. If a file with the new name is already there, the old one is left alone.
+
 You can have as many patches as you like, and more than one can be routing at the same time. Whether a patch is routing is separate from whether it's the one on screen, so you can look at one patch while three others are working.
+
+When the patch on screen isn't routing, a warning bar across the top says so. Select **Start routing** on the bar to turn it on, and the bar goes away.
+
+To have a saved patch start routing by itself every time Patchbay starts, turn on **Start automatically** next to the routing button. While it's off, another bar reminds you that you'll need to start the patch yourself each time. You can close that reminder. A temporary patch can't start by itself, so turning the switch on for one asks you to save it first. The **Start routing saved patches at startup** setting turns automatic starting off for every patch at once.
 
 A patch you don't name is **temporary**: it routes right now and disappears when Patchbay closes. Nothing is written to disk. Give it a name and it sticks around.
 

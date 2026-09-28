@@ -2267,6 +2267,24 @@
                                         <NumberBox x:Name="MessageNumberBox" x:Uid="MessageNumberBox" Grid.Row="5" Grid.Column="1"
                                                    Minimum="0" Maximum="127" SpinButtonPlacementMode="Compact"
                                                    ValueChanged="OnMessageNumberChanged" />
+
+                                        <!-- An RPN or NRPN takes the Number row's place with the two numbers device manuals print. -->
+                                        <TextBlock x:Name="MessageParameterLabel" x:Uid="MessageParameterLabel" Grid.Row="5" Grid.Column="0" Text="Parameter"
+                                                   Style="{StaticResource InspectorLabelStyle}" VerticalAlignment="Bottom" Margin="0,0,0,8" Visibility="Collapsed" />
+                                        <Grid x:Name="ParameterPanel" Grid.Row="5" Grid.Column="1" ColumnSpacing="8" Visibility="Collapsed">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <NumberBox x:Name="ParameterBankBox" x:Uid="ParameterBankBox" Grid.Column="0"
+                                                       Minimum="0" Maximum="127" SpinButtonPlacementMode="Compact"
+                                                       ValueChanged="OnMessageParameterChanged" />
+
+                                            <NumberBox x:Name="ParameterIndexBox" x:Uid="ParameterIndexBox" Grid.Column="1"
+                                                       Minimum="0" Maximum="127" SpinButtonPlacementMode="Compact"
+                                                       ValueChanged="OnMessageParameterChanged" />
+                                        </Grid>
                                     </Grid>
 
                                     <!-- Stops, so a control does not have to be smooth. A six

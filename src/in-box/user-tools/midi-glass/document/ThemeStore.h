@@ -26,7 +26,10 @@ namespace glass
     // Same rules as a layout: the platform parses, we write, and anything this build did not
     // understand comes back out again.
     constexpr wchar_t ThemeFolderName[] = L"Themes";
-    constexpr wchar_t ThemeFileExtension[] = L".miditheme.json";
+    constexpr wchar_t ThemeFileExtension[] = L".miditheme";
+
+    // What the first builds wrote. Still read, and renamed when the app starts.
+    constexpr wchar_t LegacyThemeFileExtension[] = L".miditheme.json";
 
     constexpr uint32_t ThemeFileVersion = 1;
 

@@ -194,6 +194,25 @@ void BindingEngineTests::SendsRegisteredControllersForTheServiceToExpand()
     VERIFY_ARE_EQUAL(0x40200509u, sends[0].Words[0]);
 }
 
+void BindingEngineTests::SendsAnNrpnAsOneAssignableControllerMessage()
+{
+    auto document = OneControlDocument();
+    document.Pages[0].Controls[0].Messages[0].Kind = glass::MessageKind::AssignedController;
+    document.Pages[0].Controls[0].Messages[0].Number = glass::ControllerNumber(3, 17);
+
+    glass::BindingEngine engine{};
+    engine.Prepare(document, DeskOn(glass::DestinationProtocol::Midi1));
+
+    std::array<glass::PreparedSend, glass::MaximumSendsPerEvent> sends{};
+
+    VERIFY_ARE_EQUAL(uint32_t{ 1 }, engine.Evaluate(0, glass::MessageTrigger::Changes, 1.0, sends));
+    VERIFY_ARE_EQUAL(uint32_t{ 2 }, sends[0].WordCount);
+
+    // NRPN 3:17 at full travel, one MIDI 2.0 message. The service sends CC 99 / 98 / 6 / 38 on.
+    VERIFY_ARE_EQUAL(0x40300311u, sends[0].Words[0]);
+    VERIFY_ARE_EQUAL(0xFFFFFFFFu, sends[0].Words[1]);
+}
+
 void BindingEngineTests::NeverScalesAProgramNumber()
 {
     auto document = OneControlDocument();

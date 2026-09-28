@@ -1,0 +1,47 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+import "MidiRtpClientMatchCriteria.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // Send with MidiRtpTransportManager.ConnectRtpClientAsync, and save with
+    // MidiServiceTransportPluginConfigManager.SaveUpdate to reconnect after a restart
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpClientConnectConfig", UUID_IMidiRtpClientConnectConfig)]
+    runtimeclass MidiRtpClientConnectConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        // with a new ClientId
+        MidiRtpClientConnectConfig();
+
+        [noexcept] Guid ClientId;
+
+        // optional, and written into the configuration file with the entry
+        [noexcept] String Comment;
+
+        // What the remote shows for this PC. Empty for this PC's name. At most 63 bytes in UTF-8.
+        [noexcept] String Name;
+
+        // Used instead of the remote's name for the endpoint, from the moment it is created.
+        // Empty to use the name the remote sends.
+        [noexcept] String CustomEndpointName;
+
+        [noexcept] MidiRtpClientMatchCriteria MatchCriteria;
+
+        // false to connect once, and stay disconnected after the connection ends
+        [noexcept] Boolean AutoReconnect;
+
+        // So the remote can repair a lost Note Off. Only turn off for a device which cannot parse it.
+        [noexcept] Boolean SendRecoveryJournal;
+    }
+}

@@ -4,12 +4,13 @@ rem install, for development. There is no installer for it.
 rem
 rem Needs an administrator prompt, and Windows developer mode, because the plugin is not signed
 rem and the service only loads unsigned plugins in developer mode.
-rem Build Midi2.RtpMidiTransport.vcxproj (Release, x64) first. Undo with unregister-dev-transport.cmd.
+rem Build src\in-box\Transport\RtpMidiTransport (Release, x64) first. Undo with unregister-dev-transport.cmd.
+rem Once registered, build\replace_just_rtpmidi_x64.bat is enough to deploy a new build.
 
 echo This must be run as administrator, with developer mode on.
 
 set servicepath="%ProgramFiles%\Windows MIDI Services\Service"
-set buildoutput="%~dp0out\x64\Release"
+set buildoutput="%~dp0..\..\in-box\VSFiles\x64\Release"
 
 if not exist %buildoutput%\Midi2.RtpMidiTransport.dll (
     echo ERROR: %buildoutput%\Midi2.RtpMidiTransport.dll is missing. Build the transport first.

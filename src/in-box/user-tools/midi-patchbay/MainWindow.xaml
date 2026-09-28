@@ -221,6 +221,27 @@
                         </StackPanel>
                     </Button>
 
+                    <!-- A patch written somewhere else, by an agent or a friend, comes in here. -->
+                    <Button x:Name="ImportPatchButton"
+                            x:Uid="ImportPatchButton"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Height="36"
+                            Padding="12,0,12,0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Click="OnImportPatchClick">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <FontIcon Glyph="&#xE8B5;"
+                                      FontSize="15"
+                                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                            <TextBlock x:Name="ImportPatchText"
+                                       x:Uid="ImportPatchText"
+                                       Text="Import a patch…"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
                     <Border Height="1" Margin="12,8,12,2"
                             Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
 
@@ -279,6 +300,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
@@ -316,16 +338,24 @@
                         </StackPanel>
                     </ToggleButton>
 
+                    <ToggleSwitch x:Name="AutoStartSwitch"
+                                  x:Uid="AutoStartSwitch"
+                                  Grid.Column="3"
+                                  VerticalAlignment="Center"
+                                  OnContent="Start automatically"
+                                  OffContent="Start automatically"
+                                  Toggled="OnAutoStartToggled" />
+
                     <Button x:Name="SavePatchButton"
                             x:Uid="SavePatchButton"
-                            Grid.Column="3"
+                            Grid.Column="4"
                             Content="Save"
                             VerticalAlignment="Center"
                             Click="OnSavePatchClick" />
 
                     <Button x:Name="PatchMenuButton"
                             x:Uid="PatchMenuButton"
-                            Grid.Column="4"
+                            Grid.Column="5"
                             Width="36"
                             VerticalAlignment="Center"
                             Click="OnPatchMenuClick">
@@ -335,6 +365,32 @@
 
                 <!-- ============================== messages ============================== -->
                 <StackPanel Grid.Row="1" Margin="20,0,16,0" Spacing="6">
+                    <!-- The toggle in the header is easy to miss, and a patch that is not routing
+                         looks exactly like one that is until a note fails to arrive. -->
+                    <InfoBar x:Name="NotRoutingBar"
+                             x:Uid="NotRoutingBar"
+                             Severity="Warning"
+                             IsOpen="False"
+                             IsClosable="False"
+                             Title="This patch isn't routing"
+                             Message="Nothing passes through its connections until you start routing.">
+                        <InfoBar.ActionButton>
+                            <Button x:Name="NotRoutingStartButton"
+                                    x:Uid="NotRoutingStartButton"
+                                    Content="Start routing"
+                                    Click="OnNotRoutingStartClick" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+
+                    <!-- A patch routing today looks set up for good, and after a restart it is not. -->
+                    <InfoBar x:Name="AutoStartBar"
+                             x:Uid="AutoStartBar"
+                             Severity="Warning"
+                             IsOpen="False"
+                             IsClosable="True"
+                             Title="This patch doesn't automatically start with the Patchbay app"
+                             CloseButtonClick="OnAutoStartBarCloseClick" />
+
                     <InfoBar x:Name="ServiceBar"
                              x:Uid="ServiceBar"
                              Severity="Error"

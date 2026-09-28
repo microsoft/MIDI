@@ -55,7 +55,7 @@ The app opens on a wall of cards, not a file dialog. Each card is a **thumbnail 
 - **New layout** is a card in the grid, and it offers templates — blank, mixer, DJ deck, drum pads, transport.
 - A **missing device never blocks opening.** The card says "1 device missing", the layout still runs, and the controls that need it show as unavailable until it comes back. Nothing has to be repaired before a show.
 
-Files live in **`Documents\MIDI Layouts`**, one `.midilayout.json` per layout, exactly the shape MIDI Patchbay uses for patches. Thumbnails are cached under `%LOCALAPPDATA%` and regenerated when the file changes, so the Documents folder stays clean. "Open a file…" and "Show in folder" exist for the day someone is handed a layout by a friend, and that is the only time a customer sees a path.
+Files live in **`Documents\MIDI Layouts`**, one `.midilayout` per layout, exactly the shape MIDI Patchbay uses for patches. Thumbnails are cached under `%LOCALAPPDATA%` and regenerated when the file changes, so the Documents folder stays clean. "Open a file…" and "Show in folder" exist for the day someone is handed a layout by a friend, and that is the only time a customer sees a path.
 
 ---
 
@@ -424,7 +424,7 @@ Nothing here is a new pattern — the point is that it is the same app family.
 | `EndpointImageAssets` + the Win32 common item dialog | Deck images and layout export — **never `Windows.Storage.Pickers`** |
 | The `PREVIEW` chiclet | Title bar badge while this is a preview |
 
-Proposed identity: executable `midiglass`, title bar **Windows MIDI Glass**, Start menu **MIDI Glass**, settings under `HKCU\Software\Microsoft\Windows MIDI Services\Tools\midiglass`, documents in `Documents\MIDI Layouts` as `*.midilayout.json`.
+Proposed identity: executable `midiglass`, title bar **Windows MIDI Glass**, Start menu **MIDI Glass**, settings under `HKCU\Software\Microsoft\Windows MIDI Services\Tools\midiglass`, documents in `Documents\MIDI Layouts` as `*.midilayout`.
 
 ---
 

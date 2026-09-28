@@ -207,6 +207,7 @@ namespace winrt::midiglass::implementation
         void OnRemoveMessageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnMessageFieldChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnMessageNumberChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnMessageParameterChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
 
         void OnSysExChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSysExFromFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);

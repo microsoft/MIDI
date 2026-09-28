@@ -689,6 +689,8 @@ namespace midipatchbay
                 return true;
             }
 
+            RenameLegacyFiles();
+
             for (auto const& entry : std::filesystem::directory_iterator{ m_folder, ec })
             {
                 if (ec)
@@ -706,16 +708,7 @@ namespace midipatchbay
                     continue;
                 }
 
-                auto const name = entry.path().filename().wstring();
-
-                if (name.size() <= ARRAYSIZE(FileExtension) - 1)
-                {
-                    continue;
-                }
-
-                auto const tail = name.substr(name.size() - (ARRAYSIZE(FileExtension) - 1));
-
-                if (::CompareStringOrdinal(tail.c_str(), -1, FileExtension, -1, TRUE) != CSTR_EQUAL)
+                if (!IsPatchFileName(entry.path().filename().wstring()))
                 {
                     continue;
                 }
@@ -734,6 +727,112 @@ namespace midipatchbay
 
         m_lastError = resources::GetString(L"ErrorReadPatches");
         return false;
+    }
+
+    _Use_decl_annotations_
+    bool PatchStore::IsPatchFileName(std::wstring_view fileName) noexcept
+    {
+        for (std::wstring_view const extension : { std::wstring_view{ FileExtension }, std::wstring_view{ LegacyFileExtension } })
+        {
+            if (fileName.size() > extension.size() && ::CompareStringOrdinal(
+                fileName.data() + (fileName.size() - extension.size()), static_cast<int>(extension.size()),
+                extension.data(), static_cast<int>(extension.size()), TRUE) == CSTR_EQUAL)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void PatchStore::RenameLegacyFiles() noexcept
+    {
+        try
+        {
+            std::error_code ec{};
+            std::vector<std::filesystem::path> found{};
+
+            std::wstring_view const legacy{ LegacyFileExtension };
+
+            // Collected before any rename, so the walk never meets a file it has just renamed.
+            for (auto const& entry : std::filesystem::directory_iterator{ m_folder, ec })
+            {
+                auto const name = entry.path().filename().wstring();
+
+                if (entry.is_regular_file(ec) && name.size() > legacy.size() && ::CompareStringOrdinal(
+                    name.c_str() + (name.size() - legacy.size()), static_cast<int>(legacy.size()),
+                    legacy.data(), static_cast<int>(legacy.size()), TRUE) == CSTR_EQUAL)
+                {
+                    found.push_back(entry.path());
+                }
+            }
+
+            for (auto const& from : found)
+            {
+                auto const name = from.filename().wstring();
+                auto const to = from.parent_path() / (name.substr(0, name.size() - legacy.size()) + FileExtension);
+
+                // No replace flag: a file already holding the new name is somebody's, and stays.
+                ::MoveFileExW(from.c_str(), to.c_str(), 0);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to rename the older patch files.")
+    }
+
+    _Use_decl_annotations_
+    std::optional<PatchDocument> PatchStore::Import(std::wstring const& sourcePath) noexcept
+    {
+        try
+        {
+            auto const fileName = std::filesystem::path{ sourcePath }.filename().wstring();
+
+            std::error_code ec{};
+
+            if (sourcePath.empty() || !IsPatchFileName(fileName) ||
+                !std::filesystem::is_regular_file(sourcePath, ec))
+            {
+                m_lastError = resources::FormatString(L"ErrorImportPatchFormat", fileName);
+                return std::nullopt;
+            }
+
+            auto patch = LoadFile(sourcePath);
+
+            if (!patch.has_value())
+            {
+                m_lastError = resources::FormatString(L"ErrorImportPatchFormat", fileName);
+                return std::nullopt;
+            }
+
+            if (!EnsureFolder())
+            {
+                return std::nullopt;
+            }
+
+            if (std::filesystem::equivalent(std::filesystem::path{ sourcePath }.parent_path(), m_folder, ec))
+            {
+                return patch;
+            }
+
+            // Written by this app rather than copied, so the file in the folder is one it wrote
+            // itself, under a name that is free, whatever the other file was called.
+            patch->FilePath.clear();
+            patch->CreatedTimestamp = 0;
+
+            // Somebody else wrote this file, so it does not start routing by itself the next time
+            // the app starts either. The customer chooses that in the app.
+            patch->ActivateAtStartup = false;
+
+            if (!Save(patch.value()))
+            {
+                return std::nullopt;
+            }
+
+            return patch;
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to import a patch.")
+
+        m_lastError = resources::GetString(L"ErrorSavePatch");
+        return std::nullopt;
     }
 
     _Use_decl_annotations_

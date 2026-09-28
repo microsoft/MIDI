@@ -21,7 +21,7 @@ namespace midimcp
 {
     namespace
     {
-        constexpr wchar_t LayoutFileExtension[] = L".midilayout.json";
+        constexpr wchar_t LayoutFileExtension[] = L".midilayout";
         constexpr int32_t PageMargin = 32;
         constexpr int32_t ControlGap = 24;
         constexpr int32_t MinimumPageSide = 320;
@@ -277,9 +277,17 @@ namespace midimcp
             {
                 send.Kind = glass::MessageKind::ChannelPressure;
             }
+            else if (EqualsIgnoringCase(kind, L"rpn"))
+            {
+                send.Kind = glass::MessageKind::RegisteredController;
+            }
+            else if (EqualsIgnoringCase(kind, L"nrpn"))
+            {
+                send.Kind = glass::MessageKind::AssignedController;
+            }
             else
             {
-                problems.Errors.push_back(role + L": this prototype can draft controlChange, note, pitchBend and channelPressure. \"" +
+                problems.Errors.push_back(role + L": this prototype can draft controlChange, note, pitchBend, channelPressure, rpn and nrpn. \"" +
                     kind + L"\" has to be set up in MIDI Glass itself.");
                 return false;
             }
@@ -304,12 +312,57 @@ namespace midimcp
 
             auto const channel = OptionalInteger(item, L"channel").value_or(1);
             auto const group = OptionalInteger(item, L"group").value_or(1);
-            auto const number = OptionalInteger(item, L"number").value_or(0);
+            auto number = OptionalInteger(item, L"number").value_or(0);
 
-            if (channel < 1 || channel > 16 || group < 1 || group > 16 || number < 0 || number > 127)
+            if (channel < 1 || channel > 16 || group < 1 || group > 16)
             {
-                problems.Errors.push_back(role + L": channel and group are 1 to 16, and number is 0 to 127.");
+                problems.Errors.push_back(role + L": channel and group are 1 to 16.");
                 return false;
+            }
+
+            auto const msb = OptionalInteger(item, L"msb");
+            auto const lsb = OptionalInteger(item, L"lsb");
+
+            if (glass::HasBankAndIndex(send.Kind))
+            {
+                if (msb || lsb)
+                {
+                    if (msb.value_or(0) < 0 || msb.value_or(0) > 127 || lsb.value_or(0) < 0 || lsb.value_or(0) > 127)
+                    {
+                        problems.Errors.push_back(role + L": msb and lsb are 0 to 127.");
+                        return false;
+                    }
+
+                    auto const combined = static_cast<int64_t>(glass::ControllerNumber(
+                        static_cast<uint32_t>(msb.value_or(0)), static_cast<uint32_t>(lsb.value_or(0))));
+
+                    if (item.HasKey(L"number") && number != combined)
+                    {
+                        problems.Errors.push_back(role + L": give number or msb and lsb, not both.");
+                        return false;
+                    }
+
+                    number = combined;
+                }
+
+                if (number < 0 || number > static_cast<int64_t>(glass::MaximumControllerNumber))
+                {
+                    problems.Errors.push_back(role + L": an rpn or nrpn number is 0 to 16383, which is msb x 128 + lsb.");
+                    return false;
+                }
+            }
+            else
+            {
+                if (msb || lsb)
+                {
+                    problems.Warnings.push_back(role + L": msb and lsb only apply to rpn and nrpn, so they were ignored.");
+                }
+
+                if (number < 0 || number > 127)
+                {
+                    problems.Errors.push_back(role + L": number is 0 to 127.");
+                    return false;
+                }
             }
 
             if (!known->Endpoint.DestinationGroups[static_cast<size_t>(group - 1)])
@@ -746,6 +799,8 @@ namespace midimcp
             case glass::MessageKind::ControlChange: what = L"CC " + std::to_wstring(message.Number); break;
             case glass::MessageKind::PitchBend: what = L"pitch bend"; break;
             case glass::MessageKind::ChannelPressure: what = L"channel pressure"; break;
+            case glass::MessageKind::RegisteredController: what = L"RPN " + glass::FormatMessageNumber(message.Kind, message.Number); break;
+            case glass::MessageKind::AssignedController: what = L"NRPN " + glass::FormatMessageNumber(message.Kind, message.Number); break;
             case glass::MessageKind::RawUmp: what = L"clock"; break;
             default: what = L"a message"; break;
             }
@@ -1015,11 +1070,13 @@ namespace midimcp
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
-                                                    "kind": { "type": "string", "enum": ["controlChange", "note", "pitchBend", "channelPressure"] },
+                                                    "kind": { "type": "string", "enum": ["controlChange", "note", "pitchBend", "channelPressure", "rpn", "nrpn"], "description": "rpn and nrpn go out as one MIDI 2.0 registered or assignable controller message. Windows turns that into CC 101/100 (RPN) or CC 99/98 (NRPN), then CC 6 and CC 38, for a MIDI 1.0 device." },
                                                     "device": { "type": "string", "description": "A name from devices. May be left out when there is one device." },
                                                     "channel": { "type": "integer", "minimum": 1, "maximum": 16 },
                                                     "group": { "type": "integer", "minimum": 1, "maximum": 16 },
-                                                    "number": { "type": "integer", "minimum": 0, "maximum": 127, "description": "Controller or note number." }
+                                                    "number": { "type": "integer", "minimum": 0, "maximum": 16383, "description": "Controller or note number, 0 to 127. For rpn and nrpn, the parameter number, 0 to 16383, which is msb x 128 + lsb. Or give msb and lsb instead." },
+                                                    "msb": { "type": "integer", "minimum": 0, "maximum": 127, "description": "rpn and nrpn only. The parameter number's MSB, the value of CC 101 (RPN) or CC 99 (NRPN). MIDI 2.0 calls it the bank." },
+                                                    "lsb": { "type": "integer", "minimum": 0, "maximum": 127, "description": "rpn and nrpn only. The parameter number's LSB, the value of CC 100 (RPN) or CC 98 (NRPN). MIDI 2.0 calls it the index." }
                                                 },
                                                 "required": ["kind"]
                                             }
@@ -1104,6 +1161,8 @@ namespace midimcp
 
                     text += L"Page sizes: " + Join(pages, L", ") + L". Positions and sizes are in page pixels, snapped to 4.\n";
                     text += L"Each control uses one of the theme's six colors (hue 1 to 6), so a new theme recolors the whole surface.\n";
+                    text += L"A control can send control changes, notes, pitch bend, channel pressure, RPN and NRPN. An RPN or NRPN goes "
+                        L"out as one MIDI 2.0 message, and Windows turns it into the CC 101/100 or 99/98, CC 6 and CC 38 a MIDI 1.0 device expects.\n";
 
                     ToolResult result{};
                     result.AddText(text);
@@ -1133,15 +1192,15 @@ namespace midimcp
                         for (auto const& entry : std::filesystem::directory_iterator{ folder, ec })
                         {
                             auto const name = entry.path().filename().wstring();
-                            constexpr size_t extensionLength = std::size(LayoutFileExtension) - 1;
 
                             if (ec || count >= 256)
                             {
                                 break;
                             }
 
-                            if (!entry.is_regular_file(ec) || name.size() <= extensionLength ||
-                                !EqualsIgnoringCase(std::wstring_view{ name }.substr(name.size() - extensionLength), LayoutFileExtension))
+                            // Either extension: MIDI Glass renames old files when it starts, but it
+                            // may not have been started since.
+                            if (!entry.is_regular_file(ec) || !glass::IsLayoutFileName(name))
                             {
                                 continue;
                             }

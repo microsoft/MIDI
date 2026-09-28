@@ -23,7 +23,7 @@ pwsh -File mcp\build.ps1
 pwsh -File mcp\build.ps1 -Platform ARM64
 ```
 
-The exe lands in `out\<platform>\Release\`.
+The exe lands in `out\<platform>\Release\`. If an MCP host is running the server, the build moves the files it has open aside, so restart the server in the host afterward.
 
 ## Test
 
@@ -32,7 +32,7 @@ pwsh -File mcp\test\patch-oracle\build-oracle.ps1
 pwsh -File mcp\test\Invoke-McpHarness.ps1
 ```
 
-The MIDI service has to be running. The test writes only to temporary folders. If `midiglass.exe` is in this repository's build output, the test also uses it to draw a layout and to read back a saved draft. Last run: 89 passed, 0 failed.
+The MIDI service has to be running. The test writes only to temporary folders. If `midiglass.exe` is in this repository's build output, the test also uses it to draw a layout and to read back a saved draft. Last run: 94 passed, 0 failed.
 
 ## Try it with an assistant
 

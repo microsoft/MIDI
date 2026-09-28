@@ -254,7 +254,7 @@ Check 'a group out of range is refused' ((Text-Of $badGroup) -match 'group must 
 
 $saved = Invoke-Tool $server 'save_patch_draft' $split
 Check 'save_patch_draft succeeds' ($saved.result.isError -eq $false) (Text-Of $saved)
-$file = Get-ChildItem $patchFolder -Filter '*.midipatch.json' | Select-Object -First 1
+$file = Get-ChildItem $patchFolder -Filter '*.midipatch' | Select-Object -First 1
 Check 'the draft file exists' ($null -ne $file)
 
 if ($file) {
@@ -303,10 +303,14 @@ if ($file) {
 }
 
 $again = Invoke-Tool $server 'save_patch_draft' $split
-Check 'a second save never replaces the first' ((Get-ChildItem $patchFolder -Filter '*.midipatch.json').Count -eq 2)
+Check 'a second save never replaces the first' ((Get-ChildItem $patchFolder -Filter '*.midipatch').Count -eq 2)
 
 $patches = Invoke-Tool $server 'list_patches' @{}
 Check 'list_patches shows the drafts' ((Text-Of $patches) -match '\[draft by midi-mcp-harness')
+
+# The apps rename old .json files only when they next start.
+[IO.File]::WriteAllText((Join-Path $patchFolder 'Old build.midipatch.json'), (@{ fileVersion = 1; name = 'Old build'; activateAtStartup = $false; endpoints = @(); connections = @() } | ConvertTo-Json -Depth 5))
+Check 'list_patches still reads the old .midipatch.json extension' ((Text-Of (Invoke-Tool $server 'list_patches' @{})) -match '"Old build"')
 
 # A saved patch that routes at startup can close a loop the draft cannot close alone.
 $startup = [ordered]@{
@@ -317,7 +321,7 @@ $startup = [ordered]@{
     )
     connections = @(@{ id = 'c1'; sourceEndpointId = 'n1'; sourceGroup = -1; destinationEndpointId = 'n2'; destinationGroup = -1 })
 }
-[IO.File]::WriteAllText((Join-Path $patchFolder 'Already routing.midipatch.json'), ($startup | ConvertTo-Json -Depth 20))
+[IO.File]::WriteAllText((Join-Path $patchFolder 'Already routing.midipatch'), ($startup | ConvertTo-Json -Depth 20))
 
 $crossLoop = Invoke-Tool $server 'preview_patch' ([ordered]@{
         name   = 'Closes the circle'
@@ -363,7 +367,7 @@ Check 'a control off the page is caught' ((Text-Of $tooBig) -match 'outside the 
 
 $glassSaved = Invoke-Tool $server 'save_layout_draft' $layout
 Check 'save_layout_draft succeeds' ($glassSaved.result.isError -eq $false) (Text-Of $glassSaved)
-$layoutFile = Get-ChildItem $layoutFolder -Filter '*.midilayout.json' | Select-Object -First 1
+$layoutFile = Get-ChildItem $layoutFolder -Filter '*.midilayout' | Select-Object -First 1
 Check 'the layout file exists' ($null -ne $layoutFile)
 
 if ($layoutFile) {
@@ -382,6 +386,35 @@ if ($layoutFile) {
 
 $layouts = Invoke-Tool $server 'list_glass_layouts' @{}
 Check 'list_glass_layouts reads it back through the app reader' ((Text-Of $layouts) -match 'Eight channel mixer" \[draft')
+
+$parameters = [ordered]@{
+    name     = 'Synth parameters'
+    devices  = @(@{ name = 'Synth'; endpoint = $bloop.name })
+    controls = @(
+        [ordered]@{ kind = 'knob'; label = 'Cutoff'; sends = @(@{ kind = 'nrpn'; msb = 3; lsb = 17 }) },
+        [ordered]@{ kind = 'fader'; label = 'Bend range'; sends = @(@{ kind = 'rpn'; number = 0 }) }
+    )
+}
+$parameterPreview = Invoke-Tool $server 'preview_layout' $parameters
+Check 'preview_layout names an NRPN and an RPN the way a manual does' ((Text-Of $parameterPreview) -match 'NRPN 3:17 on channel 1 to Synth' -and (Text-Of $parameterPreview) -match 'RPN 0:0 on channel 1 to Synth') (Text-Of $parameterPreview)
+
+$parameterSaved = Invoke-Tool $server 'save_layout_draft' $parameters
+$parameterFile = Get-ChildItem $layoutFolder -Filter 'Synth parameters*.midilayout' | Select-Object -First 1
+if ($parameterFile) {
+    $sent = (Get-Content $parameterFile.FullName -Raw | ConvertFrom-Json -Depth 60).pages[0].controls | ForEach-Object { $_.messages[0] }
+    Check 'the saved draft carries the app''s RPN and NRPN kinds and numbers' ($sent[0].kind -eq 'assignedController' -and $sent[0].number -eq 401 -and $sent[1].kind -eq 'registeredController' -and $sent[1].number -eq 0)
+}
+else {
+    Check 'the saved draft carries the app''s RPN and NRPN kinds and numbers' $false (Text-Of $parameterSaved)
+}
+
+$badParameter = Invoke-Tool $server 'preview_layout' ([ordered]@{ name = 'Bad NRPN'; devices = @(@{ endpoint = $bloop.name }); controls = @(@{ kind = 'knob'; sends = @(@{ kind = 'nrpn'; number = 20000 }) }) })
+Check 'an NRPN number past 16383 is refused' ((Text-Of $badParameter) -match '0 to 16383')
+
+if ($layoutFile) {
+    Copy-Item $layoutFile.FullName (Join-Path $layoutFolder 'Old build.midilayout.json')
+    Check 'list_glass_layouts still reads the old .midilayout.json extension' ((Text-Of (Invoke-Tool $server 'list_glass_layouts' @{})) -match '^3 saved layouts')
+}
 
 # ------------------------------------------------------------------------------------------------
 Write-Host "`n== Shutdown ==" -ForegroundColor Cyan

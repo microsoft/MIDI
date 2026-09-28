@@ -14,7 +14,9 @@
 #include "AppSettings.h"
 #include "StringResources.h"
 #include "CommandLine.h"
+#include "LayoutStore.h"
 #include "OutputRouter.h"
+#include "ThemeStore.h"
 
 using namespace winrt::Microsoft::UI::Xaml;
 
@@ -193,6 +195,14 @@ namespace winrt::midiglass::implementation
         try
         {
             ::midiglass::AppSettings::Current().Load();
+
+            // Files from the first builds end in ".json", which Explorer will not open with this
+            // app. Renamed before the library reads them, and the recent list follows.
+            ::midiglass::AppSettings::Current().RenameLayouts(glass::RenameLegacyFiles(
+                glass::LayoutsFolder(), glass::LegacyLayoutFileExtension, glass::LayoutFileExtension));
+
+            glass::RenameLegacyFiles(
+                glass::ThemesFolder(), glass::LegacyThemeFileExtension, glass::ThemeFileExtension);
 
             auto window = winrt::make_self<MainWindow>();
 

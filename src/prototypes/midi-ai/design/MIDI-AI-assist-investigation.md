@@ -79,11 +79,11 @@ Pete asked to see the size first. These are lines of code, not counting blank li
 | Text and JSON helpers (`ToolText`) | 431 | About 100 lines |
 | Startup and options (`main.cpp`, `pch.h`) | 165 | Some |
 | Endpoint tools (`EndpointTools`) | 271 | No |
-| Patchbay tools (`PatchbayTools`) | 1,492 | No |
-| Glass tools (`GlassTools`) | 1,041 | No |
-| **Total** | **3,927** | **About 700, or one sixth** |
+| Patchbay tools (`PatchbayTools`) | 1,505 | No |
+| Glass tools (`GlassTools`) | 1,039 | No |
+| **Total** | **3,938** | **About 700, or one sixth** |
 
-Tests add 315 lines of PowerShell and 124 lines for the Patchbay checker. The exe is 1.8 MB for x64 and 2.1 MB for ARM64. Most of that is the C++/WinRT projection and the Glass document code, not the protocol.
+Tests add 321 lines of PowerShell and 124 lines for the Patchbay checker. The exe is 1.8 MB for x64 and 2.1 MB for ARM64. Most of that is the C++/WinRT projection and the Glass document code, not the protocol.
 
 What this shows:
 
@@ -96,7 +96,7 @@ What this shows:
 - **The only thing a tool can write is a new draft file** in the app's own folder. No tool sends MIDI, starts routing, changes or deletes an existing file, or reads the Windows MIDI Services configuration file. Everything about devices comes from the MIDI SDK.
 - **Everything a tool is sent is treated as untrusted.** An assistant can be steered by text it read somewhere else, like a web page. So every value is checked for size, range and allowed names. File names are built by the server and cleaned the same way the app cleans them. The folder is fixed. Messages over 8 MB are dropped.
 - **Text sent back to the assistant is untrusted too.** Device names, patch names and layout names come from devices and files, and one could hold instructions aimed at the assistant. That's one more reason tools can only make drafts, and why the review screens describe a draft from the app's own reading of the file, never from the assistant's words.
-- **What an assistant can see:** endpoint names, ids and transports, groups, loopback pairs, and saved patch and layout names and what they do. Patchbay already stores endpoint ids in every patch file. Not serial numbers, not MIDI traffic, and not full paths. Paths are shown under Documents, like `Documents\MIDI Patchbay\Keyboard split.midipatch.json`.
+- **What an assistant can see:** endpoint names, ids and transports, groups, loopback pairs, and saved patch and layout names and what they do. Patchbay already stores endpoint ids in every patch file. Not serial numbers, not MIDI traffic, and not full paths. Paths are shown under Documents, like `Documents\MIDI Patchbay\Keyboard split.midipatch`.
 - **Hosts can tell reading tools from writing tools.** Each tool is marked with MCP annotations (`readOnlyHint` and related hints), so a host can ask before a save and not before a list.
 
 ## Package identity and Windows agent connectors
@@ -136,7 +136,7 @@ These are in the comps. None of it is built.
 Tested on Pete's PC on September 27, 2026, with the MIDI service running:
 
 - The server builds for x64 and ARM64 (Release, warnings treated as errors).
-- The test script passes all 89 checks against the x64 build. It covers both spec versions, bad requests, every tool, the files the tools write, and feedback loops, including loops that go through a patch that's already saved.
+- The test script passes all 94 checks against the x64 build. It covers both spec versions, bad requests, every tool, the files the tools write, and feedback loops, including loops that go through a patch that's already saved.
 - Patch drafts were run through Patchbay's own filter and transform code: 12 checks, such as "a low note goes up an octave at 80% velocity", "a note above the split is dropped" and "clock is dropped".
 - Layout drafts were read back and drawn by `midiglass.exe` itself.
 - Two drafts made through the server's own tools, with Pete's real devices, were opened in the real apps. Patchbay listed the patch draft and showed it as "Not routing", with a "Route this patch" button. Glass showed the layout draft in its library with its picture and "1 device ready".
@@ -154,7 +154,7 @@ Not tested:
 ## Gaps in the spike
 
 - It covers the common Patchbay filters and transforms: channels, message kinds, note ranges, transpose, channel, note, controller and program maps, and velocity. Not all of them.
-- Glass controls can send control changes, notes, pitch bend and channel pressure. No SysEx, sequences or MIDI 2.0 messages.
+- Glass controls can send control changes, notes, pitch bend, channel pressure, RPN and NRPN. No SysEx, sequences or other MIDI 2.0 messages.
 - There's no way to change an existing patch or layout. That needs a "get" tool and a way to save a changed copy as a draft.
 - Glass previews don't draw labels, so the preview text lists them.
 - Tool text is in the code, not in resource files.

@@ -765,11 +765,18 @@ namespace winrt::midiglass::implementation
             {
                 auto const& message = control->Messages[index];
 
+                // The list is narrow, so an RPN or NRPN row uses the short name the monitor prints.
+                auto const kindName = message.Kind == glass::MessageKind::RegisteredController
+                    ? resources::GetString(L"MessageRowRegisteredController")
+                    : message.Kind == glass::MessageKind::AssignedController
+                        ? resources::GetString(L"MessageRowAssignedController")
+                        : resources::GetString(MessageKindResourceKeys[IndexOf(MessageKindOrder, message.Kind)]);
+
                 auto text = resources::FormatString(
                     L"MessageRowFormat",
                     resources::GetString(TriggerResourceKeys[IndexOf(TriggerOrder, message.Trigger)]),
-                    resources::GetString(MessageKindResourceKeys[IndexOf(MessageKindOrder, message.Kind)]),
-                    std::to_wstring(message.Number),
+                    kindName,
+                    glass::FormatMessageNumber(message.Kind, message.Number),
                     message.DeviceName.empty()
                         ? std::wstring{ resources::GetString(L"MessageNoDevice") }
                         : message.DeviceName);
@@ -907,6 +914,8 @@ namespace winrt::midiglass::implementation
 
             ChannelCombo().SelectedIndex(std::clamp(message.ChannelIndex, 0, 15));
             MessageNumberBox().Value(message.Number);
+            ParameterBankBox().Value(glass::ControllerBank(message.Number));
+            ParameterIndexBox().Value(glass::ControllerIndex(message.Number));
 
             RefreshMessageKindFields(message);
 
@@ -1025,6 +1034,8 @@ namespace winrt::midiglass::implementation
             ChannelCombo().Visibility(xaml::Visibility::Collapsed);
             MessageNumberLabel().Visibility(xaml::Visibility::Collapsed);
             MessageNumberBox().Visibility(xaml::Visibility::Collapsed);
+            MessageParameterLabel().Visibility(xaml::Visibility::Collapsed);
+            ParameterPanel().Visibility(xaml::Visibility::Collapsed);
         }
 
         // Same for a keyboard and a grid of pads: the key or the pad decides the note, so the
@@ -1055,14 +1066,18 @@ namespace winrt::midiglass::implementation
         auto const usesDevice = kind != glass::MessageKind::Sequence && kind != glass::MessageKind::GoToPage;
         auto const usesGroup = usesDevice;
 
+        auto const bankAndIndex = glass::HasBankAndIndex(kind);
+
         show(MessageDeviceLabel(), usesDevice);
         show(DevicePanel(), usesDevice);
         show(MessageGroupLabel(), usesGroup);
         show(GroupPanel(), usesGroup);
         show(MessageChannelLabel(), isChannelVoice);
         show(ChannelCombo(), isChannelVoice);
-        show(MessageNumberLabel(), isChannelVoice);
-        show(MessageNumberBox(), isChannelVoice);
+        show(MessageNumberLabel(), isChannelVoice && !bankAndIndex);
+        show(MessageNumberBox(), isChannelVoice && !bankAndIndex);
+        show(MessageParameterLabel(), bankAndIndex);
+        show(ParameterPanel(), bankAndIndex);
 
         show(SysExPanel(), kind == glass::MessageKind::SystemExclusive);
         show(RawWordsPanel(), kind == glass::MessageKind::RawUmp);
@@ -1973,6 +1988,12 @@ namespace winrt::midiglass::implementation
             if (kindIndex >= 0 && kindIndex < static_cast<int32_t>(std::size(MessageKindOrder)))
             {
                 message.Kind = MessageKindOrder[kindIndex];
+
+                // An RPN or NRPN number goes up to 16383; every other kind stops at 127.
+                if (!glass::HasBankAndIndex(message.Kind))
+                {
+                    message.Number = (std::min)(message.Number, 127u);
+                }
             }
 
             if (deviceIndex >= 0 && deviceIndex < static_cast<int32_t>(m_editor.Document().Devices.size()))
@@ -2055,6 +2076,56 @@ namespace winrt::midiglass::implementation
             RefreshMessageList();
             MarkChanged();
         }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnMessageParameterChanged(
+        controls::NumberBox const& sender,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const* const control = SingleSelectedControl();
+
+            if (control == nullptr ||
+                m_messageIndex < 0 ||
+                m_messageIndex >= static_cast<int32_t>(control->Messages.size()))
+            {
+                return;
+            }
+
+            auto const bank = ParameterBankBox().Value();
+            auto const index = ParameterIndexBox().Value();
+
+            if (!std::isfinite(bank) || !std::isfinite(index))
+            {
+                return;
+            }
+
+            auto message = control->Messages[static_cast<size_t>(m_messageIndex)];
+
+            message.Number = glass::ControllerNumber(
+                static_cast<uint32_t>(std::clamp(std::lround(bank), 0L, 127L)),
+                static_cast<uint32_t>(std::clamp(std::lround(index), 0L, 127L)));
+
+            auto const id = control->Id;
+            auto const messageIndex = static_cast<size_t>(m_messageIndex);
+
+            if (m_editor.SetMessage(id, messageIndex, message))
+            {
+                RefreshMessageList();
+                MarkChanged();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to change the message parameter.")
     }
 
     // ---------------------------------------------------------------- behavior

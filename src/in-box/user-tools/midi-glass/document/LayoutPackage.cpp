@@ -361,7 +361,8 @@ namespace glass
         {
             auto stem = std::filesystem::path{ layoutFilePath }.filename().wstring();
 
-            // ".midilayout.json" is two extensions, so `stem()` only takes one of them off.
+            // An old ".midilayout.json" name has two extensions, so `stem()` would only take one
+            // of them off.
             auto const dot = stem.find(L'.');
 
             return dot == std::wstring::npos ? stem : stem.substr(0, dot);
@@ -735,11 +736,7 @@ namespace glass
 
             for (auto const& file : files)
             {
-                if (file.Name.size() > wcslen(LayoutFileExtension) &&
-                    file.Name.compare(
-                        file.Name.size() - wcslen(LayoutFileExtension),
-                        wcslen(LayoutFileExtension),
-                        LayoutFileExtension) == 0)
+                if (IsLayoutFileName(file.Name))
                 {
                     layout = &file;
                     break;
@@ -756,8 +753,10 @@ namespace glass
 
             // The name inside the package, unless it is taken. Writing over a layout somebody
             // already has because a friend's copy happened to share its name is not a thing
-            // this app gets to do.
-            auto layoutPath = std::filesystem::path{ targetFolder } / layout->Name;
+            // this app gets to do. A package made by an older build is written under the new
+            // extension.
+            auto layoutPath = std::filesystem::path{ targetFolder } /
+                (LayoutNameFromFileName(layout->Name) + LayoutFileExtension);
 
             if (std::filesystem::exists(layoutPath, ignored))
             {
@@ -941,12 +940,7 @@ namespace glass
                     continue;
                 }
 
-                auto const isLayout =
-                    safe.size() > wcslen(LayoutFileExtension) &&
-                    safe.compare(
-                        safe.size() - wcslen(LayoutFileExtension),
-                        wcslen(LayoutFileExtension),
-                        LayoutFileExtension) == 0;
+                auto const isLayout = IsLayoutFileName(safe);
 
                 if (!isLayout && !IsSupportedPictureFileName(safe))
                 {

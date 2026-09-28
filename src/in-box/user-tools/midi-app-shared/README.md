@@ -21,6 +21,8 @@ app's `pch.h`, so a new project can pick the file up without matching another ap
 Because shared code cannot reach any one app's telemetry, a swallowed exception goes to
 `midiapp::SetEndpointErrorHandler`; set it before starting the catalog or the errors are dropped.
 
+`DocumentHandoff` is for a tool that opens files by double-click. When a copy is already running, the new one sends its paths to the running window with `WM_COPYDATA` and exits. The receiving window has to subclass itself to see the message, because XAML does not pass it on.
+
 ## What a consuming project has to do
 
 There is no `.props` file and no MSBuild import. Each app's `.vcxproj` lists these files with

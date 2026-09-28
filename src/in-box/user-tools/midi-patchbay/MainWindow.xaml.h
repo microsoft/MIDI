@@ -40,10 +40,14 @@ namespace winrt::midipatchbay::implementation
         void OnOpenFolderClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNewPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNewQuickPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnImportPatchClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnNotRoutingStartClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnSortClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSavePatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnPatchMenuClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRoutingToggleClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAutoStartToggled(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnAutoStartBarCloseClick(_In_ controls::InfoBar const& sender, _In_ foundation::IInspectable const& args);
 
         void OnAddEndpointClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCreateLoopbackClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -118,6 +122,23 @@ namespace winrt::midipatchbay::implementation
         // An empty preferred name gives the numbered untitled name.
         void CreateNewPatch(_In_ std::wstring const& preferredName = {}) noexcept;
 
+        // Patch files from the Import button, from the command line, or double-clicked while the
+        // app was already open. Each is copied into the patch folder and none of them routes. The
+        // last one is selected. False when none of them could be imported.
+        bool ImportPatchFiles(_In_ std::vector<std::wstring> const& paths) noexcept;
+
+        // A patch double-clicked while the app is open arrives from the second copy as
+        // WM_COPYDATA, which XAML does not pass on, so the window is subclassed to see it.
+        static LRESULT CALLBACK HandoffSubclassProcedure(
+            _In_ HWND window,
+            _In_ UINT message,
+            _In_ WPARAM wParam,
+            _In_ LPARAM lParam,
+            _In_ UINT_PTR subclassId,
+            _In_ DWORD_PTR referenceData) noexcept;
+
+        static winrt::weak_ref<MainWindow> s_instance;
+
         ::midipatchbay::PatchDocument* CurrentPatch() noexcept;
 
         // A patch's identity in the UI is its file path, or a session id while it has never been
@@ -184,7 +205,8 @@ namespace winrt::midipatchbay::implementation
         winrt::hstring ConnectionActivityText(_In_ std::wstring const& connectionId) const noexcept;
 
         // ---- dialogs and menus, in MainWindowDialogs.cpp ----
-        winrt::fire_and_forget ShowSavePatchDialogAsync();
+        // True ticks the dialog's startup box, for the Start automatically switch on a temporary patch.
+        winrt::fire_and_forget ShowSavePatchDialogAsync(_In_ bool startAutomatically = false);
         winrt::fire_and_forget ShowCreateLoopbackDialogAsync();
         winrt::fire_and_forget ShowQuickPatchDialogAsync();
         winrt::fire_and_forget ShowDeletePatchDialogAsync();
@@ -232,6 +254,9 @@ namespace winrt::midipatchbay::implementation
         // Patches whose routes are live. A patch can be open without routing, and routing
         // without being open, which is why this is a set rather than a flag on the document.
         std::unordered_set<std::wstring> m_routingPatchKeys{};
+
+        // Patches whose "doesn't start automatically" bar was closed, until the app closes.
+        std::unordered_set<std::wstring> m_autoStartNoticeDismissedKeys{};
 
         ::midipatchbay::PatchAnalysis m_analysis{};
         std::vector<::midipatchbay::LiveEndpoint> m_liveEndpoints{};

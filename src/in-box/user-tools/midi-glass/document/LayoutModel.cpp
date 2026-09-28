@@ -333,6 +333,41 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool HasBankAndIndex(MessageKind kind) noexcept
+    {
+        return kind == MessageKind::RegisteredController || kind == MessageKind::AssignedController;
+    }
+
+    _Use_decl_annotations_
+    uint32_t ControllerBank(uint32_t number) noexcept
+    {
+        return (number >> 7) & 0x7F;
+    }
+
+    _Use_decl_annotations_
+    uint32_t ControllerIndex(uint32_t number) noexcept
+    {
+        return number & 0x7F;
+    }
+
+    _Use_decl_annotations_
+    uint32_t ControllerNumber(uint32_t bank, uint32_t index) noexcept
+    {
+        return ((std::min)(bank, 127u) << 7) | (std::min)(index, 127u);
+    }
+
+    _Use_decl_annotations_
+    std::wstring FormatMessageNumber(MessageKind kind, uint32_t number)
+    {
+        if (HasBankAndIndex(kind))
+        {
+            return std::to_wstring(ControllerBank(number)) + L":" + std::to_wstring(ControllerIndex(number));
+        }
+
+        return std::to_wstring(number);
+    }
+
+    _Use_decl_annotations_
     int32_t DetentStopCount(Control const& control) noexcept
     {
         int32_t highest{ 0 };

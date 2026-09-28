@@ -7,7 +7,7 @@
 
 // PROTOTYPE test helper.
 //
-//   patch-oracle <file.midipatch.json> <connection index> <word> [<word> ...]
+//   patch-oracle <file.midipatch> <connection index> <word> [<word> ...]
 //
 // Reads a patch file's filter and transform with MIDI Patchbay's own FilterFromJson and
 // TransformFromJson, runs each one-word message through the app's own Allows and Apply, and

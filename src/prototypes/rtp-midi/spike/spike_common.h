@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "../lib/rtpmidi_session.h"
+#include "rtpmidi_session.h"
 
 namespace Spike
 {

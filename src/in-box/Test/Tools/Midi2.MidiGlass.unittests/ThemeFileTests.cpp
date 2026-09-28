@@ -268,7 +268,7 @@ void ThemeFileTests::AThemeFileCannotClaimToBeBuiltIn()
     VERIFY_IS_FALSE(read.Value.IsBuiltIn);
 
     // and saving it must not be allowed to destroy the shipped one
-    VERIFY_IS_FALSE(glass::WriteThemeFile(read.Value, L"C:\\nowhere\\Studio Dark.miditheme.json"));
+    VERIFY_IS_FALSE(glass::WriteThemeFile(read.Value, L"C:\\nowhere\\Studio Dark.miditheme"));
 }
 
 void ThemeFileTests::RefusesADeckImageThatEscapesItsFolder()

@@ -1,0 +1,32 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // Drops whichever decision a host holds for a remote, so the next time it asks it is judged on
+    // the host's policy alone. The running service applies this at once. Save a
+    // MidiRtpHostKnownClientsConfig without it as well, or the decision returns after a restart.
+    // A connection which is already up is left running.
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpRemoteClientForgetConfig", UUID_IMidiRtpRemoteClientForgetConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpRemoteClientForgetConfigFactory", UUID_IMidiRtpRemoteClientForgetConfigFactory)]
+    runtimeclass MidiRtpRemoteClientForgetConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiRtpRemoteClientForgetConfig();
+        MidiRtpRemoteClientForgetConfig(Guid hostId, String remoteClientName);
+
+        [noexcept] Guid HostId{ get; set; };
+        [noexcept] String RemoteClientName{ get; set; };
+    }
+}

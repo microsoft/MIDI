@@ -7,6 +7,8 @@
 
 #include "pch.h"
 #include "App.xaml.h"
+#include "CommandLineOptions.h"
+#include "DocumentHandoff.h"
 
 // The XAML compiler emits its own wWinMain; we supply this one so startup stays under our
 // control. The apartment must stay STA: an MTA UI thread makes UI Automation fail with
@@ -22,6 +24,15 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
     // it back.
     if (!::midiapp::SingleInstance::AcquireOrActivateExisting(L"Patchbay"))
     {
+        // The running copy has been brought forward. A patch this launch was asked to open is
+        // handed to it rather than lost.
+        auto const files = ::midipatchbay::CommandLineOptions::ParseProcessCommandLine().FilesToImport;
+
+        if (!files.empty())
+        {
+            ::midiapp::SendDocumentsToExistingInstance(L"Patchbay", files);
+        }
+
         return 0;
     }
 

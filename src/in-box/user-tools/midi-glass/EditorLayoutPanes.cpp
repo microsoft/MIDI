@@ -836,9 +836,9 @@ namespace winrt::midiglass::implementation
                 m_chrome.WindowHandle(),
                 false,
                 L"ImportThemeTitle",
-                L"MIDI Glass theme (*.miditheme.json)",
-                L"*.miditheme.json",
-                L"json",
+                resources::GetString(L"ImportThemeFilter").c_str(),
+                L"*.miditheme;*.miditheme.json",
+                L"miditheme",
                 {});
 
             if (source.empty())

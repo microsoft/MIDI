@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64EC">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64EC</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64EC">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64EC</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{5E7A2C41-93B8-4D0F-B6E2-8A4C1F3D7E95}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Midi2RtpMidiTransport</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Debug'">true</UseDebugLibraries>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Release'">false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <PropertyGroup>
+    <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows</VcpkgTriplet>
+    <VcpkgTriplet Condition="'$(Platform)'=='ARM64'">arm64-windows</VcpkgTriplet>
+    <VcpkgTriplet Condition="'$(Platform)'=='ARM64EC'">arm64ec-windows</VcpkgTriplet>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <SDLCheck>true</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>$(SolutionDir)idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;Dnsapi.lib;iphlpapi.lib;bcrypt.lib;onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>Midi2.RtpMidiTransport.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <Link>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Midi2.RtpMidiTransport.cpp" />
+    <ClCompile Include="Midi2.RtpMidiBidi.cpp" />
+    <ClCompile Include="Midi2.RtpMidiEndpointManager.cpp" />
+    <ClCompile Include="Midi2.RtpMidiConfigurationManager.cpp" />
+    <ClCompile Include="Midi2.RtpMidiPluginMetadataProvider.cpp" />
+    <ClCompile Include="RtpMidiConnection.cpp" />
+    <ClCompile Include="RtpMidiApprovals.cpp" />
+    <ClCompile Include="RtpMidiNode.cpp" />
+    <ClCompile Include="RtpMidiNotificationSignal.cpp" />
+    <ClCompile Include="TransportState.cpp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClInclude Include="rtpmidi_journal.h" />
+    <ClInclude Include="rtpmidi_protocol.h" />
+    <ClInclude Include="rtpmidi_session.h" />
+    <ClInclude Include="dllmain.h" />
+    <ClInclude Include="Midi2.RtpMidiBidi.h" />
+    <ClInclude Include="Midi2.RtpMidiConfigurationManager.h" />
+    <ClInclude Include="Midi2.RtpMidiEndpointManager.h" />
+    <ClInclude Include="Midi2.RtpMidiPluginMetadataProvider.h" />
+    <ClInclude Include="Midi2.RtpMidiTransport.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="rtp_json_defs.h" />
+    <ClInclude Include="rtp_notification_defs.h" />
+    <ClInclude Include="rtp_transport_error_codes.h" />
+    <ClInclude Include="RtpMidiApprovals.h" />
+    <ClInclude Include="RtpMidiConnection.h" />
+    <ClInclude Include="RtpMidiDefinitions.h" />
+    <ClInclude Include="RtpMidiEndpointProperties.h" />
+    <ClInclude Include="RtpMidiMdns.h" />
+    <ClInclude Include="RtpMidiNet.h" />
+    <ClInclude Include="RtpMidiNode.h" />
+    <ClInclude Include="RtpMidiNotificationSignal.h" />
+    <ClInclude Include="transport_defs.h" />
+    <ClInclude Include="TransportState.h" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Midl Include="Midi2RtpMidiTransport.idl" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ResourceCompile Include="Midi2.RtpMidiTransport.rc" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Midi2.RtpMidiTransport.def" />
+    <None Include="Midi2.RtpMidiTransport.rgs" />
+    <None Include="packages.config" />
+    <None Include="vcpkg.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\idl\IDL.vcxproj">
+      <Project>{efb7cf90-7def-44cf-868a-191ca30e0fcf}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libs\MidiEndpointNamingLib\MidiEndpointNamingLib.vcxproj">
+      <Project>{fb45bb5e-f3cb-4079-ad0c-6cac3a14029e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libs\MidiPluginConfigurationLib\MidiPluginConfigurationLib.vcxproj">
+      <Project>{a631658b-3552-48e3-9df1-eea3e5016257}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libs\MidiSrvTransportLib\MidiSrvTransportLib.vcxproj">
+      <Project>{02d828be-2362-4733-b82e-dc3a511d6fee}</Project>
+    </ProjectReference>
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
+  </ImportGroup>
+
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
+  </Target>
+</Project>

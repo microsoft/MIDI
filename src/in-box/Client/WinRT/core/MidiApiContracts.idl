@@ -96,6 +96,12 @@ namespace Windows.Devices.Midi2
             apicontract MidiTransportsSynthApiContract { };
         }
 
+        namespace Rtp
+        {
+            [contractversion(1)]
+            apicontract MidiTransportsRtpApiContract { };
+        }
+
     }
 
 

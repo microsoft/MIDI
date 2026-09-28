@@ -31,4 +31,11 @@ class PackageSurveyTests
     TEST_METHOD(AStillPictureIsNotCountedAsVideo);
     TEST_METHOD(ABackupWithoutVideoLeavesTheClipOut);
     TEST_METHOD(ABackupWithoutVideoStillCarriesTheStills);
+
+    // ---- the file extension ----
+
+    TEST_METHOD(ALayoutNameLosesEitherExtension);
+    TEST_METHOD(AnOldLayoutFileIsRenamedOnce);
+    TEST_METHOD(ARenameNeverWritesOverAFile);
+    TEST_METHOD(APackageFromAnOlderBuildImportsUnderTheNewName);
 };

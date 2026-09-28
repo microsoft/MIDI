@@ -8,15 +8,24 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 #include "MainWindow.g.cpp"
+#include "App.xaml.h"
 
 #include "AppSettings.h"
 #include "StringResources.h"
 #include "AppearanceFlyout.h"
+#include "DocumentHandoff.h"
 #include "EndpointCatalog.h"
+#include "LayoutStore.h"
 #include "MidiServiceStatus.h"
 #include "SingleInstance.h"
 #include "PreviewBuild.h"
 #include "resource.h"
+
+#include <commctrl.h>
+
+#include <filesystem>
+
+#pragma comment(lib, "comctl32.lib")
 
 namespace resources = ::midiglass::resources;
 
@@ -26,6 +35,64 @@ namespace winrt::midiglass::implementation
     {
         constexpr int32_t DefaultWindowWidth = 1280;
         constexpr int32_t DefaultWindowHeight = 860;
+
+        constexpr UINT_PTR HandoffSubclassId = 1;
+    }
+
+    _Use_decl_annotations_
+    LRESULT CALLBACK MainWindow::HandoffSubclassProcedure(
+        HWND window,
+        UINT message,
+        WPARAM wParam,
+        LPARAM lParam,
+        UINT_PTR subclassId,
+        DWORD_PTR referenceData) noexcept
+    {
+        UNREFERENCED_PARAMETER(referenceData);
+
+        if (message == WM_COPYDATA)
+        {
+            try
+            {
+                auto paths = ::midiapp::ReadDocumentsFromCopyData(
+                    reinterpret_cast<COPYDATASTRUCT const*>(lParam));
+
+                // Opened after the sender has been answered, so a window that takes a moment to
+                // build never holds the other process up.
+                if (!paths.empty())
+                {
+                    if (auto const queue = winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread())
+                    {
+                        queue.TryEnqueue([paths = std::move(paths)]()
+                            {
+                                for (auto const& path : paths)
+                                {
+                                    std::error_code ignored{};
+
+                                    // Another process named it, so it has to be a layout that is there.
+                                    if (glass::IsLayoutFileName(path) &&
+                                        std::filesystem::is_regular_file(path, ignored))
+                                    {
+                                        App::OpenRuntimeWindow(path);
+                                    }
+                                }
+                            });
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return TRUE;
+        }
+
+        if (message == WM_NCDESTROY)
+        {
+            ::RemoveWindowSubclass(window, &MainWindow::HandoffSubclassProcedure, subclassId);
+        }
+
+        return ::DefSubclassProc(window, message, wParam, lParam);
     }
 
     void MainWindow::RestoreWindowPlacement()
@@ -58,6 +125,7 @@ namespace winrt::midiglass::implementation
 
             // Now that there is a window, a later launch has something to bring forward.
             ::midiapp::SingleInstance::PublishMainWindow(m_chrome.WindowHandle());
+            ::SetWindowSubclass(m_chrome.WindowHandle(), &MainWindow::HandoffSubclassProcedure, HandoffSubclassId, 0);
 
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
 

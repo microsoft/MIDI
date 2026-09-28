@@ -114,6 +114,9 @@
     <ClInclude Include="midi_network_defs.h">
       <Filter>SDK\Transports\Network</Filter>
     </ClInclude>
+    <ClInclude Include="MidiRtpSdkJson.h">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </ClInclude>
     <ClInclude Include="$(SolutionDir)inc\midi_file_sequence.h">
       <Filter>SDK\Utilities\Files</Filter>
     </ClInclude>
@@ -866,6 +869,108 @@
     <Midl Include="MidiSequenceTrackRouting.idl">
       <Filter>SDK\Utilities\Sequencing</Filter>
     </Midl>
+    <Midl Include="MidiRtpClientConnectErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpClientDisconnectErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpClientEntryStateEnum.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpHostCreationErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpHostRemovalErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpHostUpdateErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpRemoteClientApprovalErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpRemoteClientDisconnectErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpRemoteClientForgetErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpRemoteClientPolicyEnum.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpAdvertisedHost.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpClientConnectConfig.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpClientConnectResponse.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpClientDisconnectConfig.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpClientDisconnectResponse.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpClientMatchCriteria.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpConfiguredClient.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpConfiguredHost.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpConnection.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpHostCreationConfig.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpHostCreationResponse.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpHostKnownClientsConfig.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpHostRemovalConfig.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpHostRemovalResponse.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpHostUpdateResponse.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpKnownRemoteClient.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpPendingRemoteClient.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpRemoteClientApprovalConfig.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpRemoteClientApprovalResponse.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpRemoteClientDisconnectConfig.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpRemoteClientDisconnectResponse.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpRemoteClientForgetConfig.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpRemoteClientForgetResponse.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpTransportManager.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -971,6 +1076,9 @@
     </Filter>
     <Filter Include="SDK\Utilities\Files">
       <UniqueIdentifier>{beb13447-3310-4854-b6f6-52c08c80ab78}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Transports\Rtp">
+      <UniqueIdentifier>{5d2a8e61-3c7f-4b19-a0e4-9f6b21c7d835}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

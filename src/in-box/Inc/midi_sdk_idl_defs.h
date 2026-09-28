@@ -514,4 +514,45 @@
 #define UUID_IMidiSynthInstrumentInfo                           8087b303-0519-c0de-31d1-dd00F0606000
 
 
+// ============================================================================
+// Windows.Devices.Midi2.Transports.Rtp : Interface number 00F07
+// RTP-MIDI (IETF RFC 6295) with Apple's session protocol. Shapes follow Transports.Network.
+
+#define UUID_IMidiRtpTransportManagerStatics                    8087b303-0519-c0de-31d1-ee00F0701000
+
+#define UUID_IMidiRtpHostCreationConfig                         8087b303-0519-c0de-31d1-dd00F0702000
+#define UUID_IMidiRtpHostCreationResponse                       8087b303-0519-c0de-31d1-dd00F0703000
+#define UUID_IMidiRtpHostRemovalConfig                          8087b303-0519-c0de-31d1-dd00F0704000
+#define UUID_IMidiRtpHostRemovalConfigFactory                   8087b303-0519-c0de-31d1-ff00F0704000
+#define UUID_IMidiRtpHostRemovalResponse                        8087b303-0519-c0de-31d1-dd00F0705000
+#define UUID_IMidiRtpHostUpdateResponse                         8087b303-0519-c0de-31d1-dd00F0706000
+
+#define UUID_IMidiRtpClientConnectConfig                        8087b303-0519-c0de-31d1-dd00F0707000
+#define UUID_IMidiRtpClientConnectResponse                      8087b303-0519-c0de-31d1-dd00F0708000
+#define UUID_IMidiRtpClientDisconnectConfig                     8087b303-0519-c0de-31d1-dd00F0709000
+#define UUID_IMidiRtpClientDisconnectConfigFactory              8087b303-0519-c0de-31d1-ff00F0709000
+#define UUID_IMidiRtpClientDisconnectResponse                   8087b303-0519-c0de-31d1-dd00F070A000
+#define UUID_IMidiRtpClientMatchCriteria                        8087b303-0519-c0de-31d1-dd00F070B000
+
+#define UUID_IMidiRtpConfiguredHost                             8087b303-0519-c0de-31d1-dd00F070C000
+#define UUID_IMidiRtpConfiguredClient                           8087b303-0519-c0de-31d1-dd00F070D000
+#define UUID_IMidiRtpConnection                                 8087b303-0519-c0de-31d1-dd00F070E000
+#define UUID_IMidiRtpAdvertisedHost                             8087b303-0519-c0de-31d1-dd00F070F000
+
+#define UUID_IMidiRtpPendingRemoteClient                        8087b303-0519-c0de-31d1-dd00F0710000
+#define UUID_IMidiRtpRemoteClientApprovalConfig                 8087b303-0519-c0de-31d1-dd00F0711000
+#define UUID_IMidiRtpRemoteClientApprovalConfigFactory          8087b303-0519-c0de-31d1-ff00F0711000
+#define UUID_IMidiRtpRemoteClientApprovalResponse               8087b303-0519-c0de-31d1-dd00F0712000
+#define UUID_IMidiRtpRemoteClientDisconnectConfig               8087b303-0519-c0de-31d1-dd00F0713000
+#define UUID_IMidiRtpRemoteClientDisconnectConfigFactory        8087b303-0519-c0de-31d1-ff00F0713000
+#define UUID_IMidiRtpRemoteClientDisconnectResponse             8087b303-0519-c0de-31d1-dd00F0714000
+#define UUID_IMidiRtpRemoteClientForgetConfig                   8087b303-0519-c0de-31d1-dd00F0715000
+#define UUID_IMidiRtpRemoteClientForgetConfigFactory            8087b303-0519-c0de-31d1-ff00F0715000
+#define UUID_IMidiRtpRemoteClientForgetResponse                 8087b303-0519-c0de-31d1-dd00F0716000
+#define UUID_IMidiRtpKnownRemoteClient                          8087b303-0519-c0de-31d1-dd00F0717000
+#define UUID_IMidiRtpKnownRemoteClientFactory                   8087b303-0519-c0de-31d1-ff00F0717000
+#define UUID_IMidiRtpHostKnownClientsConfig                     8087b303-0519-c0de-31d1-dd00F0718000
+#define UUID_IMidiRtpHostKnownClientsConfigFactory              8087b303-0519-c0de-31d1-ff00F0718000
+
+
 #endif

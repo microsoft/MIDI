@@ -352,3 +352,10 @@
 #define IDS_BLUETOOTH_ERROR_NO_SERVICE_RESPONSE                             IDS_BLUETOOTH_ERROR_IDS_BASE_INDEX + 0
 #define IDS_BLUETOOTH_ERROR_MISSING_DEVICE_ID                               IDS_BLUETOOTH_ERROR_IDS_BASE_INDEX + 1
 #define IDS_BLUETOOTH_ERROR_PERIPHERAL_PROTOCOL_REQUIRED                    IDS_BLUETOOTH_ERROR_IDS_BASE_INDEX + 2
+
+
+#define IDS_RTP_ERROR_IDS_BASE_INDEX                                        62300
+
+#define IDS_RTP_ERROR_NULL_CONFIG                                           IDS_RTP_ERROR_IDS_BASE_INDEX + 0
+#define IDS_RTP_ERROR_HOST_START_TIMEOUT                                    IDS_RTP_ERROR_IDS_BASE_INDEX + 1
+#define IDS_RTP_ERROR_SERVICE_UNAVAILABLE                                   IDS_RTP_ERROR_IDS_BASE_INDEX + 2

@@ -29,7 +29,14 @@ namespace midipatchbay
         winrt::hstring LastErrorMessage() const noexcept { return m_lastError; }
 
         // A folder that is not there yet is not a failure: the app simply starts with no patches.
+        // Files the first builds wrote as ".midipatch.json" are renamed first, because Explorer
+        // sees that as a JSON file and never offers this app for it.
         bool LoadAll(_Out_ std::vector<PatchDocument>& patches) noexcept;
+
+        // Brings a patch file from anywhere into the patch folder under a name of its own, and
+        // returns it as read from there. Nothing is written unless the file reads as a patch. A
+        // file that is already in the folder is returned as it is.
+        std::optional<PatchDocument> Import(_In_ std::wstring const& sourcePath) noexcept;
 
         // Writes the patch and fills in FilePath and ModifiedFileTime. When the name changed, the
         // file is written under the new name and the old one is removed, so the folder never
@@ -50,12 +57,20 @@ namespace midipatchbay
             _In_ std::wstring const& patchName,
             _In_ std::wstring const& currentPath) const noexcept;
 
-        static constexpr wchar_t FileExtension[] = L".midipatch.json";
+        static constexpr wchar_t FileExtension[] = L".midipatch";
+        static constexpr wchar_t LegacyFileExtension[] = L".midipatch.json";
+
+        // A patch file under either name.
+        static bool IsPatchFileName(_In_ std::wstring_view fileName) noexcept;
 
     private:
         PatchStore() noexcept;
 
         std::optional<PatchDocument> LoadFile(_In_ std::wstring const& path) noexcept;
+
+        // Gives every old ".midipatch.json" in the folder the new extension, unless a file
+        // already has that name.
+        void RenameLegacyFiles() noexcept;
 
         std::wstring m_folder{};
         winrt::hstring m_lastError{};

@@ -1,0 +1,47 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiRtpConnection.idl";
+import "MidiRtpClientEntryStateEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // A remote device this PC connects to
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpConfiguredClient", UUID_IMidiRtpConfiguredClient)]
+    runtimeclass MidiRtpConfiguredClient
+    {
+        [noexcept] Guid ClientId{ get; };
+
+        // what the remote shows for this PC
+        [noexcept] String Name{ get; };
+
+        [noexcept] MidiRtpClientEntryState EntryState{ get; };
+
+        // configured by address rather than found by its advertised name
+        [noexcept] Boolean IsDirectConnection{ get; };
+        [noexcept] String RemoteServiceInstanceName{ get; };
+        [noexcept] String ConfiguredDirectAddress{ get; };
+        [noexcept] UInt16 ConfiguredDirectPort{ get; };
+
+        [noexcept] String CustomEndpointName{ get; };
+        [noexcept] Boolean AutoReconnect{ get; };
+        [noexcept] Boolean IsEnabled{ get; };
+        [noexcept] Boolean SendRecoveryJournal{ get; };
+
+        // the HRESULT of the last attempt, or 0
+        [noexcept] Int32 LastErrorCode{ get; };
+
+        // null when not connected
+        [noexcept] MidiRtpConnection Connection{ get; };
+    }
+}

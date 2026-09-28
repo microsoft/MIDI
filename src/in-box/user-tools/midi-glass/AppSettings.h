@@ -53,6 +53,9 @@ namespace midiglass
         int64_t LayoutLastUsed(_In_ std::wstring const& layoutFilePath) const noexcept;
         void RecordLayoutUse(_In_ std::wstring const& layoutFilePath) noexcept;
 
+        // A layout file renamed from one path to another keeps when it was last used.
+        void RenameLayouts(_In_ std::vector<std::pair<std::wstring, std::wstring>> const& renamed) noexcept;
+
         // The designer keeps its own window placement and its own pane sizes. It is a different
         // window doing a different job, so sharing the library's would make opening one move the
         // other.

@@ -9,11 +9,14 @@
 #include "App.xaml.h"
 
 #include "CommandLine.h"
+#include "DocumentHandoff.h"
 #include "LayoutStore.h"
 #include "ThemeModel.h"
 #include "ThemeStore.h"
 #include "ThumbnailLayout.h"
 #include "ThumbnailRenderer.h"
+
+#include <filesystem>
 
 namespace midiglass
 {
@@ -112,19 +115,51 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
         return RunThumbnail(arguments);
     }
 
+    // midiglass --run "<layout file>" opens the layout beside the library. So does the file on
+    // its own, which is what a double-click in Explorer sends.
+    std::wstring runPath{};
+
+    if (arguments.size() > 2 && ::CompareStringOrdinal(
+        arguments[1].c_str(), -1, L"--run", -1, TRUE) == CSTR_EQUAL)
+    {
+        runPath = arguments[2];
+    }
+    else if (arguments.size() == 2 && glass::IsLayoutFileName(arguments[1]))
+    {
+        runPath = arguments[1];
+    }
+
+    if (!runPath.empty())
+    {
+        // The running copy has its own working folder, so a relative path would mean a
+        // different file there.
+        std::error_code ignored{};
+        auto const absolute = std::filesystem::absolute(runPath, ignored);
+
+        if (!ignored)
+        {
+            runPath = absolute.wstring();
+        }
+    }
+
     // One process, however many windows. Two copies would each open their own connection to the
     // same instrument and neither would know what the other had sent, so a running layout and a
     // Panic have to mean the same thing across all of them.
     if (!::midiapp::SingleInstance::AcquireOrActivateExisting(L"Glass"))
     {
+        // The running copy has been brought forward. A layout this launch was asked to run is
+        // handed to it rather than lost.
+        if (!runPath.empty())
+        {
+            ::midiapp::SendDocumentsToExistingInstance(L"Glass", { runPath });
+        }
+
         return 0;
     }
 
-    // midiglass --run "<layout file>" opens the layout beside the library.
-    if (arguments.size() > 2 && ::CompareStringOrdinal(
-        arguments[1].c_str(), -1, L"--run", -1, TRUE) == CSTR_EQUAL)
+    if (!runPath.empty())
     {
-        ::midiglass::SetPendingRunLayoutPath(arguments[2]);
+        ::midiglass::SetPendingRunLayoutPath(runPath);
     }
 
     ::winrt::Microsoft::UI::Xaml::Application::Start([](auto&&)

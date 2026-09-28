@@ -1,0 +1,98 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiRtpHostCreationConfig.idl";
+import "MidiRtpHostCreationResponse.idl";
+import "MidiRtpHostRemovalConfig.idl";
+import "MidiRtpHostRemovalResponse.idl";
+import "MidiRtpHostUpdateResponse.idl";
+import "MidiRtpClientConnectConfig.idl";
+import "MidiRtpClientConnectResponse.idl";
+import "MidiRtpClientDisconnectConfig.idl";
+import "MidiRtpClientDisconnectResponse.idl";
+import "MidiRtpRemoteClientApprovalConfig.idl";
+import "MidiRtpRemoteClientApprovalResponse.idl";
+import "MidiRtpRemoteClientDisconnectConfig.idl";
+import "MidiRtpRemoteClientDisconnectResponse.idl";
+import "MidiRtpRemoteClientForgetConfig.idl";
+import "MidiRtpRemoteClientForgetResponse.idl";
+import "MidiRtpConfiguredHost.idl";
+import "MidiRtpConfiguredClient.idl";
+import "MidiRtpPendingRemoteClient.idl";
+import "MidiRtpAdvertisedHost.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // RTP-MIDI, the network MIDI 1.0 protocol macOS, iOS and many interfaces speak. The protocol
+    // itself only has peers. A host is what this PC offers for remotes to connect to, and a client
+    // is a remote this PC connects to, which is the same split Network MIDI 2.0 makes.
+    [static_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpTransportManagerStatics", UUID_IMidiRtpTransportManagerStatics)]
+    static runtimeclass MidiRtpTransportManager
+    {
+        // true when the RTP-MIDI transport is installed in the service
+        [noexcept] static Boolean IsTransportAvailable{ get; };
+        [noexcept] static Guid TransportId{ get; };
+
+        // Returns once the host has started, or with TimedOutWaitingForHostToStart. The service
+        // keeps trying either way.
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiRtpHostCreationResponse> CreateRtpHostAsync(
+            MidiRtpHostCreationConfig creationConfig);
+
+        // Ends every connection on the host and forgets it
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiRtpHostRemovalResponse> RemoveRtpHostAsync(
+            MidiRtpHostRemovalConfig removalConfig);
+
+        // A stopped host keeps its entry, but ends its connections and cannot be reached
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiRtpHostUpdateResponse> StopRtpHostAsync(Guid hostId);
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiRtpHostUpdateResponse> StartRtpHostAsync(Guid hostId);
+
+        // Returns once the service has the entry. Connecting happens in the background: watch the
+        // entry's EntryState, or wait for its endpoint to appear.
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiRtpClientConnectResponse> ConnectRtpClientAsync(
+            MidiRtpClientConnectConfig connectConfig);
+
+        // tries again now, rather than after the retry wait
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiRtpClientConnectResponse> ReconnectRtpClientAsync(Guid clientId);
+
+        // Ends the connection and removes the entry from the service
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiRtpClientDisconnectResponse> DisconnectRtpClientAsync(
+            MidiRtpClientDisconnectConfig disconnectConfig);
+
+        // Refusing a remote also ends any connection it already has to that host
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiRtpRemoteClientApprovalResponse> ApproveOrDenyRemoteClientConnectRequestAsync(
+            MidiRtpRemoteClientApprovalConfig approvalConfig);
+
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiRtpRemoteClientDisconnectResponse> DisconnectRemoteClientAsync(
+            MidiRtpRemoteClientDisconnectConfig disconnectConfig);
+
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiRtpRemoteClientForgetResponse> ForgetRemoteClientAsync(
+            MidiRtpRemoteClientForgetConfig forgetConfig);
+
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiRtpConfiguredHost> GetConfiguredHosts();
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiRtpConfiguredClient> GetConfiguredClients();
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiRtpPendingRemoteClient> GetPendingRemoteClients();
+
+        // the RTP-MIDI devices the service can see advertised on the local network right now
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiRtpAdvertisedHost> GetAdvertisedHosts();
+
+        // "_apple-midi._udp", the DNS-SD service type RTP-MIDI devices advertise
+        [noexcept] static String MidiRtpDnsServiceType{ get; };
+        [noexcept] static String MidiRtpDnsDomain{ get; };
+
+        // "_apple-midi._udp.local", as passed to DnsServiceBrowse
+        [noexcept] static String MidiRtpDnsSdQueryName{ get; };
+
+        // 5004, where other RTP-MIDI software looks first. Data uses the port after it.
+        [noexcept] static UInt16 DefaultHostPort{ get; };
+    }
+}

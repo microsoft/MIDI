@@ -160,6 +160,9 @@ namespace bluetooth = ::winrt::Windows::Devices::Midi2::Transports::Bluetooth;
 namespace winrt::Windows::Devices::Midi2::Transports::Synth {};
 namespace synth = ::winrt::Windows::Devices::Midi2::Transports::Synth;
 
+namespace winrt::Windows::Devices::Midi2::Transports::Rtp {};
+namespace rtp = ::winrt::Windows::Devices::Midi2::Transports::Rtp;
+
 
 #define SAFE_COTASKMEMFREE(p) \
     if (NULL != p) { \

@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+    enum MidiRtpClientEntryState
+    {
+        // configured, and waiting to find or reach the remote
+        Pending = 0,
+
+        // connected
+        Active = 1,
+
+        // The last attempt did not work, and the service tries again by itself. LastErrorCode
+        // says why.
+        Retrying = 2,
+
+        // Disconnected from this PC, or not answering with AutoReconnect off. The service will
+        // not try again until ReconnectRtpClientAsync is called.
+        Unavailable = 3,
+    };
+}

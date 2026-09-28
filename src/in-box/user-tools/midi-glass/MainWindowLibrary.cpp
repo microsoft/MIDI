@@ -243,17 +243,7 @@ namespace winrt::midiglass::implementation
         {
             try
             {
-                auto name = std::filesystem::path{ filePath }.filename().wstring();
-
-                auto const suffix = std::wstring{ glass::LayoutFileExtension };
-
-                if (name.size() > suffix.size() &&
-                    name.compare(name.size() - suffix.size(), suffix.size(), suffix) == 0)
-                {
-                    name.erase(name.size() - suffix.size());
-                }
-
-                return name;
+                return glass::LayoutNameFromFileName(std::filesystem::path{ filePath }.filename().wstring());
             }
             catch (...)
             {
@@ -913,9 +903,12 @@ namespace winrt::midiglass::implementation
             // of this tool family uses in an unpackaged app.
             auto dialog = wil::CoCreateInstance<IFileOpenDialog>(CLSID_FileOpenDialog);
 
+            // The old extension too, for a layout somebody was sent before it changed.
+            auto const filterName = resources::GetString(L"OpenFileFilterLayouts");
+
             COMDLG_FILTERSPEC const filters[]
             {
-                { L"MIDI Glass layout", L"*.midilayout.json" },
+                { filterName.c_str(), L"*.midilayout;*.midilayout.json" },
             };
 
             dialog->SetFileTypes(ARRAYSIZE(filters), filters);

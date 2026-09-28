@@ -135,6 +135,16 @@ namespace winrt::midiglass::implementation
             foundation::IInspectable const& sender,
             xaml::WindowEventArgs const& args);
 
+        // A layout double-clicked while the app is open arrives from the second copy as
+        // WM_COPYDATA, which XAML does not pass on, so the window is subclassed to see it.
+        static LRESULT CALLBACK HandoffSubclassProcedure(
+            _In_ HWND window,
+            _In_ UINT message,
+            _In_ WPARAM wParam,
+            _In_ LPARAM lParam,
+            _In_ UINT_PTR subclassId,
+            _In_ DWORD_PTR referenceData) noexcept;
+
         void RefreshLibrary();
         void ApplyCards(_In_ std::vector<::midiglass::LayoutCardData> const& cards);
         void RebuildSections();

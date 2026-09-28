@@ -1176,16 +1176,8 @@ namespace glass
                 }
 
                 auto const name = entry.path().filename().wstring();
-                auto const tailLength = std::size(ThemeFileExtension) - 1;
 
-                if (name.size() <= tailLength)
-                {
-                    continue;
-                }
-
-                auto const tail = name.substr(name.size() - tailLength);
-
-                if (::CompareStringOrdinal(tail.c_str(), -1, ThemeFileExtension, -1, TRUE) == CSTR_EQUAL)
+                if (HasFileExtension(name, ThemeFileExtension) || HasFileExtension(name, LegacyThemeFileExtension))
                 {
                     files.push_back(entry.path().wstring());
                 }

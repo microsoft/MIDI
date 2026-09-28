@@ -1,0 +1,73 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <!--
+      Lets the customer double-click a .midipatch file to add it to MIDI Patchbay. Referenced from
+      the WindowsMIDIServices feature in WindowsMidiServicesSdkRedist.wxs.
+
+      !! THIS DELIBERATELY DOES NOT TAKE THE DEFAULT ASSOCIATION. !!
+      Same rules as the MIDI file association for the player: this registers a ProgId, adds it to
+      the extension's OpenWithProgIds list and publishes the app's capabilities. The extension's
+      own default value is never written, so Windows asks the customer once, on the first
+      double-click.
+
+      Opening a patch file copies it into the customer's patches and never starts routing it. A
+      file can come from anywhere, an assistant or a download included, so connecting devices
+      stays the customer's decision, made in the app.
+
+      The names are indirect string references into the executable (see resource.h there), so they
+      are localized along with the rest of the app.
+  -->
+  <Fragment>
+    <Component Id="PatchbayFileAssociation"
+               Permanent="no"
+               Bitness="always64"
+               Directory="TOOL_PATCHBAY_FOLDER"
+               Guid="7e765993-e17e-44a6-b562-3ab3a3c41c93">
+
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\WindowsMidiServices.MidiPatch" ForceDeleteOnUninstall="yes">
+        <RegistryValue Type="string" Value="MIDI Patchbay patch" />
+        <RegistryValue Type="string" Name="FriendlyTypeName" Value="@[#midipatchbayExe],-101" />
+        <RegistryKey Key="DefaultIcon">
+          <RegistryValue Type="string" Value="[#midipatchbayExe],0" />
+        </RegistryKey>
+        <RegistryKey Key="shell\open\command">
+          <RegistryValue Type="string" Value="&quot;[#midipatchbayExe]&quot; &quot;%1&quot;" />
+        </RegistryKey>
+      </RegistryKey>
+
+      <!-- Adding to the list, not replacing the default. -->
+      <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.midipatch\OpenWithProgIds" Name="WindowsMidiServices.MidiPatch" Type="string" Value="" />
+
+      <!-- What puts the app in the Open With list, and gives it a name there. -->
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Applications\midipatchbay.exe" ForceDeleteOnUninstall="yes">
+        <RegistryValue Type="string" Name="FriendlyAppName" Value="@[#midipatchbayExe],-102" />
+        <RegistryKey Key="shell\open\command">
+          <RegistryValue Type="string" Value="&quot;[#midipatchbayExe]&quot; &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Key="SupportedTypes">
+          <RegistryValue Type="string" Name=".midipatch" Value="" />
+        </RegistryKey>
+      </RegistryKey>
+
+      <!-- Default apps in Settings reads this. -->
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Patchbay\Capabilities" ForceDeleteOnUninstall="yes">
+        <RegistryValue Type="string" Name="ApplicationName" Value="@[#midipatchbayExe],-102" />
+        <RegistryValue Type="string" Name="ApplicationDescription" Value="@[#midipatchbayExe],-103" />
+        <RegistryKey Key="FileAssociations">
+          <RegistryValue Type="string" Name=".midipatch" Value="WindowsMidiServices.MidiPatch" />
+        </RegistryKey>
+      </RegistryKey>
+
+      <RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications"
+                     Name="Windows MIDI Patchbay"
+                     Type="string"
+                     Value="SOFTWARE\Microsoft\Windows MIDI Services\Patchbay\Capabilities" />
+
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
+        <RegistryValue Type="string" Name="PatchFileAssociation" Value="registered" KeyPath="yes" />
+      </RegistryKey>
+
+    </Component>
+  </Fragment>
+
+</Wix>

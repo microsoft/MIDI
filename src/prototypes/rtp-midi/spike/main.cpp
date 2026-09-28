@@ -7,7 +7,8 @@
 // and the Windows mDNS stack, so the protocol and the discovery plan can be proven before any
 // of it becomes a service transport. It does not touch the MIDI service.
 //
-//   rtpmidi-spike selftest
+// The protocol and transport tests are TAEF tests in src\in-box\Test\Midi2.Transport.RtpMidi.unittests.
+//
 //   rtpmidi-spike browse   [--seconds N] [--type _apple-midi._udp.local]
 //   rtpmidi-spike register [--name LABEL] [--port P] [--seconds N] [--terminate] [--type T] [--txt]
 //                          [--follow-up]   (repeats the announcement the way the transport does)
@@ -19,7 +20,6 @@
 //   (discard every Nth incoming RTP packet, to exercise recovery from the peer's journal)
 //   rtpmidi-spike loopback [--sysex BYTES]
 //   rtpmidi-spike mdns-watch [--filter TEXT] [--seconds N] [--queries]
-//   rtpmidi-spike transport-test [--dll PATH]   (runs the service transport DLL against mocks)
 //   rtpmidi-spike service status | host | connect | remove   (drives the transport in the running
 //                          service; options are at the top of spike_service.cpp)
 // ============================================================================
@@ -29,18 +29,13 @@
 #include "spike_mdns_watch.h"
 #include "spike_net.h"
 
-#include "../transport/RtpMidiMdns.h"
+#include "midi_dnssd_announcer.h"
 
 #include <map>
 #include <set>
 #include <thread>
 
-int RunSelfTest();
 int RegisterWithWinRt(std::wstring const& fullName, uint16_t port, uint32_t seconds, bool withText);
-
-#ifdef RTP_TRANSPORT_TEST
-int RunTransportTest(std::wstring const& dllPath);
-#endif
 
 #ifdef RTP_SDK_CHECK
 int RunServiceCommand(std::vector<std::wstring> const& arguments);
@@ -485,14 +480,16 @@ namespace
                 registeredLabel.resize(registeredLabel.size() - suffix.size());
             }
 
-            auto const packets = RtpMidiMdns::BuildPtrAnnouncements(ToUtf8(type), { ToUtf8(registeredLabel) }, 4500, 1200);
+            auto const packets = WindowsMidiServicesInternal::BuildDnssdPtrAnnouncements(ToUtf8(type), { ToUtf8(registeredLabel) },
+                WindowsMidiServicesInternal::MidiDnssdAnnouncedPtrTtlSeconds, WindowsMidiServicesInternal::MidiDnssdAnnouncementMaxPacketBytes);
+
             auto const registeredAt = started + elapsed;
 
-            for (auto const delay : { 1500ull, 4500ull })
+            for (auto const delay : { WindowsMidiServicesInternal::MidiDnssdFirstRepeatDelayMilliseconds, WindowsMidiServicesInternal::MidiDnssdSecondRepeatDelayMilliseconds })
             {
                 while (GetTickCount64() < registeredAt + delay) Sleep(10);
 
-                auto const result = RtpMidiMdns::SendAnnouncements(packets);
+                auto const result = WindowsMidiServicesInternal::SendDnssdAnnouncements(packets);
 
                 Print("  follow-up announcement at +%llu ms: %zu packet(s) on %u IPv4 and %u IPv6 interfaces, last error %d",
                     delay, packets.size(), result.IPv4Interfaces, result.IPv6Interfaces, result.LastError);
@@ -860,26 +857,12 @@ int wmain(int argc, wchar_t** argv)
 
     int result = 0;
 
-    if (command == "selftest") result = RunSelfTest();
-    else if (command == "browse") result = CommandBrowse(options);
+    if (command == "browse") result = CommandBrowse(options);
     else if (command == "register") result = CommandRegister(options);
     else if (command == "listen") result = CommandListen(options);
     else if (command == "connect") result = CommandConnect(options);
     else if (command == "loopback") result = CommandLoopback(options);
     else if (command == "mdns-watch") result = Spike::WatchMdns(options.Get("--filter", "_apple-midi"), options.GetNumber("--seconds", 20), options.Has("--queries"));
-#ifdef RTP_TRANSPORT_TEST
-    else if (command == "transport-test")
-    {
-        // the transport builds into the same output folder as this executable
-        wchar_t exePath[MAX_PATH]{};
-        GetModuleFileNameW(nullptr, exePath, ARRAYSIZE(exePath));
-
-        std::wstring defaultDll{ exePath };
-        defaultDll = defaultDll.substr(0, defaultDll.find_last_of(L'\\') + 1) + L"Midi2.RtpMidiTransport.dll";
-
-        result = RunTransportTest(options.Has("--dll") ? ToWide(options.Get("--dll")) : defaultDll);
-    }
-#endif
 #ifdef RTP_SDK_CHECK
     else if (command == "service") result = RunServiceCommand(std::vector<std::wstring>(argv + 2, argv + argc));
 #endif
@@ -890,7 +873,7 @@ int wmain(int argc, wchar_t** argv)
     }
     else
     {
-        Print("rtpmidi-spike selftest | browse | register | listen | connect <target> | loopback | mdns-watch | transport-test | service");
+        Print("rtpmidi-spike browse | register | listen | connect <target> | loopback | mdns-watch | service");
         Print("See the comment at the top of main.cpp for the options.");
     }
 
