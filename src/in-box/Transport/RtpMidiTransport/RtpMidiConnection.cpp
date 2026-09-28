@@ -92,6 +92,20 @@ RtpMidiConnection::DisconnectMidiCallback()
     return S_OK;
 }
 
+_Use_decl_annotations_
+HRESULT
+RtpMidiConnection::DisconnectMidiCallbackIfCurrent(IMidiCallback* callback)
+{
+    auto lock = std::scoped_lock{ m_callbackLock };
+
+    if (m_callback.get() != callback) return S_FALSE;
+
+    m_callback = nullptr;
+    m_callbackContext = 0;
+
+    return S_OK;
+}
+
 
 _Use_decl_annotations_
 void

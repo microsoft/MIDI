@@ -35,6 +35,9 @@ public:
     HRESULT ConnectMidiCallback(_In_ IMidiCallback* callback, _In_ LONGLONG const context);
     HRESULT DisconnectMidiCallback();
 
+    // The service can connect a new endpoint before the one it replaces shuts down
+    HRESULT DisconnectMidiCallbackIfCurrent(_In_ IMidiCallback* callback);
+
     // A MIDI 1.0 byte stream piece from the network, stamped in MIDI timestamp ticks
     void DeliverFromNetwork(_In_ std::vector<uint8_t> const& bytes, _In_ uint64_t const midiTimestamp);
 
