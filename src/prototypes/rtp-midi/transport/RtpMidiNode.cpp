@@ -437,12 +437,14 @@ RtpMidiNode::SendData(RtpMidi::PeerAddress const& to, std::vector<uint8_t> const
 
 _Use_decl_annotations_
 void
-RtpMidiNode::OnMidi(RtpMidi::Participant const& participant, uint64_t localTimestamp, int64_t, bool, std::vector<uint8_t> const& bytes)
+RtpMidiNode::OnMidi(RtpMidi::Participant const& participant, uint64_t localTimestamp, int64_t senderLeadTicks, bool, std::vector<uint8_t> const& bytes)
 {
     PendingEvent event{};
     event.IsMidi = true;
     event.ParticipantId = participant.Id;
-    event.LocalTicks = localTimestamp;
+
+    // never later than arrival: a sender may stamp ahead, and the clock mapping has error
+    event.LocalTicks = senderLeadTicks > 0 ? localTimestamp - static_cast<uint64_t>(senderLeadTicks) : localTimestamp;
     event.Bytes = bytes;
 
     m_pending.push_back(std::move(event));

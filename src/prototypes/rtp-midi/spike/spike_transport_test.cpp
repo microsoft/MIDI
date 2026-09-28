@@ -293,6 +293,9 @@ namespace
     public:
         STDMETHODIMP Callback(MessageOptionFlags, PVOID message, UINT size, LONGLONG position, LONGLONG context) override
         {
+            LARGE_INTEGER now{};
+            QueryPerformanceCounter(&now);
+
             if (message == nullptr || size < sizeof(uint32_t)) return E_INVALIDARG;
 
             auto lock = std::scoped_lock{ m_lock };
@@ -302,6 +305,7 @@ namespace
 
             if (context != m_expectedContext) m_wrongContext = true;
             if (position <= 0 || position < m_lastPosition) m_badPosition = true;
+            if (position > now.QuadPart) m_stampedAfterArrival = true;
             m_lastPosition = position;
 
             return S_OK;
@@ -312,6 +316,7 @@ namespace
         void Clear() { auto lock = std::scoped_lock{ m_lock }; m_words.clear(); }
         bool WrongContext() { auto lock = std::scoped_lock{ m_lock }; return m_wrongContext; }
         bool BadPosition() { auto lock = std::scoped_lock{ m_lock }; return m_badPosition; }
+        bool StampedAfterArrival() { auto lock = std::scoped_lock{ m_lock }; return m_stampedAfterArrival; }
 
     private:
         std::mutex m_lock;
@@ -320,6 +325,7 @@ namespace
         LONGLONG m_lastPosition{ 0 };
         bool m_wrongContext{ false };
         bool m_badPosition{ false };
+        bool m_stampedAfterArrival{ false };
     };
 
     // A remote rtpMIDI device: the protocol engine on a loopback-only port pair
@@ -402,6 +408,13 @@ namespace
         {
             auto lock = std::scoped_lock{ m_lock };
             m_session.SendMidi(bytes.data(), bytes.size(), m_clock.Now());
+        }
+
+        // like a sender that schedules ahead: the RTP timestamp is later than the send
+        void SendAhead(std::vector<uint8_t> const& bytes, uint64_t const aheadSessionTicks)
+        {
+            auto lock = std::scoped_lock{ m_lock };
+            m_session.SendMidi(bytes.data(), bytes.size(), m_clock.Now() + aheadSessionTicks);
         }
 
         void EndAll()
@@ -788,6 +801,11 @@ int RunTransportTest(std::wstring const& dllPath)
     uint64_t latencyTicks{ 0 };
     Check(WaitFor([&]() { return deviceManager.LatencyWritesFor(hostEndpoint.InterfaceId, latencyTicks) > 0; }, 8000),
         "the one-way latency is written to the endpoint for the scheduler");
+
+    // clock sync is done by now, so the remote's RTP timestamps are mapped to local time
+    remote.SendAhead({ 0x90, 0x3D, 0x21 }, 500);
+    Check(WaitFor([&]() { return Contains(hostCallback.Words(), 0x20903D21); }, 3000), "a message the remote stamped 50 ms ahead arrives");
+    Check(!hostCallback.StampedAfterArrival(), "no message is stamped later than it reached the service");
 
     auto const connectionId = hostConnection != nullptr ? static_cast<uint32_t>(hostConnection.GetNamedNumber(L"connectionId", 0)) : 0u;
 
