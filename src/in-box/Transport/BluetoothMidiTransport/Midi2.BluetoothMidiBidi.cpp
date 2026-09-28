@@ -33,19 +33,26 @@ CMidi2BluetoothMidiBidi::Initialize(
 
     RETURN_HR_IF_NULL(E_INVALIDARG, callback);
 
-    m_callback = callback;
-    m_context = context;
+    try
+    {
+        m_endpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
 
-    m_endpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
+        auto connection = TransportState::Current().GetConnectionByEndpointDeviceInterfaceId(m_endpointDeviceInterfaceId);
+        RETURN_HR_IF_NULL(E_NOTFOUND, connection);
 
-    auto connection = TransportState::Current().GetConnectionByEndpointDeviceInterfaceId(m_endpointDeviceInterfaceId);
-    RETURN_HR_IF_NULL(E_NOTFOUND, connection);
+        {
+            auto lock = std::scoped_lock{ m_lock };
 
-    m_connection = connection;
+            m_callback = callback;
+            m_context = context;
+            m_connection = connection;
+        }
 
-    RETURN_IF_FAILED(connection->ConnectMidiCallback(this, context));
+        RETURN_IF_FAILED(connection->ConnectMidiCallback(this, context));
 
-    return S_OK;
+        return S_OK;
+    }
+    CATCH_RETURN();
 }
 
 HRESULT
@@ -60,17 +67,37 @@ CMidi2BluetoothMidiBidi::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    if (auto connection = m_connection.lock())
+    try
     {
-        LOG_IF_FAILED(connection->DisconnectMidiCallback());
+        std::shared_ptr<MidiBleConnection> connection{ nullptr };
+
+        {
+            auto lock = std::scoped_lock{ m_lock };
+            connection = m_connection.lock();
+        }
+
+        // before the callback goes, so the connection stops handing messages to this endpoint
+        if (connection != nullptr)
+        {
+            LOG_IF_FAILED(connection->DisconnectMidiCallbackIfCurrent(this));
+        }
+
+        wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
+
+        {
+            auto lock = std::scoped_lock{ m_lock };
+
+            m_connection.reset();
+            callback = std::move(m_callback);
+            m_context = 0;
+        }
+
+        // released outside the lock, and a message already on its way holds its own reference
+        callback.reset();
+
+        return S_OK;
     }
-
-    m_connection.reset();
-
-    m_callback = nullptr;
-    m_context = 0;
-
-    return S_OK;
+    CATCH_RETURN();
 }
 
 _Use_decl_annotations_
@@ -109,15 +136,25 @@ CMidi2BluetoothMidiBidi::SendMidiMessage(
     UNREFERENCED_PARAMETER(position);
     UNREFERENCED_PARAMETER(optionFlags);
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, data);
-    RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
+    try
+    {
+        RETURN_HR_IF_NULL(E_INVALIDARG, data);
+        RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
 
-    auto connection = m_connection.lock();
-    RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), connection);
+        std::shared_ptr<MidiBleConnection> connection{ nullptr };
 
-    RETURN_IF_FAILED(connection->QueueMidiMessagesToSendToDevice(data, length));
+        {
+            auto lock = std::scoped_lock{ m_lock };
+            connection = m_connection.lock();
+        }
 
-    return S_OK;
+        RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), connection);
+
+        RETURN_IF_FAILED(connection->QueueMidiMessagesToSendToDevice(data, length));
+
+        return S_OK;
+    }
+    CATCH_RETURN();
 }
 
 _Use_decl_annotations_
@@ -154,11 +191,24 @@ CMidi2BluetoothMidiBidi::Callback(
     );
 #endif
 
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_callback);
-    RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
+    try
+    {
+        RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
 
-    RETURN_IF_FAILED(m_callback->Callback(optionFlags, data, length, timestamp, context));
+        wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
 
-    return S_OK;
+        {
+            auto lock = std::scoped_lock{ m_lock };
+            callback = m_callback;
+        }
+
+        // the endpoint was closed while this message was on its way
+        if (callback == nullptr) return S_FALSE;
+
+        RETURN_IF_FAILED(callback->Callback(optionFlags, data, length, timestamp, context));
+
+        return S_OK;
+    }
+    CATCH_RETURN();
 }
 

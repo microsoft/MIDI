@@ -36,6 +36,7 @@ public:
     TEST_METHOD(TestClientConnectsToRemoteHost);
     TEST_METHOD(TestSameNameFromTwoRemotesGetsTwoEndpoints);
     TEST_METHOD(TestRestartedRemoteReplacesItsOldConnection);
+    TEST_METHOD(TestEndpointOpenedAgainBeforeTheOldOneCloses);
     TEST_METHOD(TestHostileConfigurationIsRejected);
     TEST_METHOD(TestDeeplyNestedJsonIsRejected);
     TEST_METHOD(TestEightRemotesWithMidiBothWays);

@@ -51,6 +51,9 @@ public:
     HRESULT ConnectMidiCallback(_In_ IMidiCallback* callback, _In_ LONGLONG context);
     HRESULT DisconnectMidiCallback();
 
+    // The service can connect a new endpoint before the one it replaces shuts down
+    HRESULT DisconnectMidiCallbackIfCurrent(_In_ IMidiCallback* callback);
+
     HRESULT QueueMidiMessagesToSendToDevice(
         _In_reads_bytes_(byteCount) void const* const data,
         _In_ uint32_t const byteCount);

@@ -442,6 +442,36 @@ void RtpMidiTransportTests::TestRestartedRemoteReplacesItsOldConnection()
     VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints()[baseline + 1].Removed; }, 3000), L"the endpoint goes when it leaves");
 }
 
+void RtpMidiTransportTests::TestEndpointOpenedAgainBeforeTheOldOneCloses()
+{
+    auto const baseline = m_deviceManager->Endpoints().size();
+
+    Peer remote("Reopening Peer", false);
+    VERIFY_IS_TRUE(remote.Start(), L"the remote binds a loopback port pair");
+    remote.Invite(m_hostPort);
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints().size() == baseline + 1; }, 5000), L"one endpoint is created for the connection");
+    auto const endpoint = m_deviceManager->Endpoints()[baseline];
+
+    // the service shuts a closed endpoint down after releasing its lock, so another client can open it again first
+    auto older = std::make_unique<RtpMidiTest::OpenedEndpoint>(m_transport, endpoint.InterfaceId, 1);
+    VERIFY_IS_TRUE(older->IsOpen(), L"the first endpoint opens");
+
+    RtpMidiTest::OpenedEndpoint newer(m_transport, endpoint.InterfaceId, 2);
+    VERIFY_IS_TRUE(newer.IsOpen(), L"the second endpoint opens while the first is still open");
+
+    older.reset();
+
+    remote.Send({ 0x90, 0x3C, 0x64 });
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return Contains(newer.Received().Words(), 0x20903C64); }, 3000), L"the endpoint opened second still receives after the first shuts down");
+    VERIFY_IS_FALSE(newer.Received().WrongContext(), L"with its own context");
+
+    remote.Stop();
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints()[baseline].Removed; }, 3000), L"the endpoint goes when the remote leaves");
+}
+
 void RtpMidiTransportTests::TestHostileConfigurationIsRejected()
 {
     struct Case { std::wstring Json; uint32_t ExpectedError; wchar_t const* What; };

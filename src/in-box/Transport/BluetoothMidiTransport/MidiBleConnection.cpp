@@ -556,6 +556,47 @@ MidiBleConnection::DisconnectMidiCallback()
 
 
 _Use_decl_annotations_
+HRESULT
+MidiBleConnection::DisconnectMidiCallbackIfCurrent(IMidiCallback* callback)
+{
+    auto lock = std::scoped_lock{ m_callbackLock };
+
+    if (m_callback.get() != callback)
+    {
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Leaving the MIDI callback connected, because a newer one replaced the one closing", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+            TraceLoggingPointer(m_callback.get(), "connected callback"),
+            TraceLoggingPointer(callback, "closing callback")
+        );
+
+        return S_FALSE;
+    }
+
+    TraceLoggingWrite(
+        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Disconnecting the MIDI callback from this BLE connection", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+        TraceLoggingPointer(m_callback.get(), "callback being cleared")
+    );
+
+    m_callback = nullptr;
+    m_callbackContext = 0;
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
 std::wstring
 MidiBleConnection::EndpointDeviceInterfaceId() const
 {
