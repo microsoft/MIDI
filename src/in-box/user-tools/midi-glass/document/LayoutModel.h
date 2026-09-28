@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <winrt/Windows.Foundation.h>
@@ -351,8 +352,8 @@ namespace glass
     constexpr int32_t MinimumTickCount = 2;
     constexpr int32_t MaximumTickCount = 64;
 
-    // Which way a finger moves to turn a knob up. A circle is hard to trace on glass, so every
-    // plug-in on the market is dragged in a straight line instead; which line is a preference.
+    // Which way a finger moves to turn a knob up. A circle is hard to trace on a small knob, so
+    // most plug-ins drag in a straight line; which line, or a circle after all, is a preference.
     enum class DragAxis
     {
         // Up is more. The default, and what a plug-in does.
@@ -360,6 +361,10 @@ namespace glass
 
         // Right is more, for a row of knobs under a narrow strip of screen.
         Horizontal = 1,
+
+        // Round and round, like the real thing: clockwise is more, and the knob turns from where
+        // it is rather than jumping to the finger.
+        Circular = 2,
     };
 
     // How a picture fills the rectangle it is drawn into, whether that is the whole page or one
@@ -1026,6 +1031,13 @@ namespace glass
     // The number the way a device manual prints it: "3:17" for an RPN or NRPN, "74" otherwise.
     std::wstring FormatMessageNumber(_In_ MessageKind kind, _In_ uint32_t number);
 
+    // Whether a row goes out to a device, and so has a device and a group. A page change and a
+    // sequence stay inside the app.
+    bool SendsToADevice(_In_ MessageKind kind) noexcept;
+
+    // Whether a row carries a channel. Only the channel voice messages do.
+    bool CarriesAChannel(_In_ MessageKind kind) noexcept;
+
     // What a control listens for, so a fader can follow the DAW rather than only lead it.
     struct FeedbackBinding
     {
@@ -1185,6 +1197,17 @@ namespace glass
     // More than this and the numbers run into each other whatever size the control is.
     constexpr int32_t MaximumLabeledStops = 16;
 
+    // What a group is called. Which controls are in it is on the controls themselves; this is only
+    // the name, so a page of channel strips reads as Drums and Bass rather than Group 1 and 2. A
+    // group nobody named has no entry.
+    struct ControlGroup
+    {
+        std::wstring Id{};
+        std::wstring Name{};
+
+        UnknownFields Unknown{ nullptr };
+    };
+
     struct Page
     {
         std::wstring Id{};
@@ -1196,7 +1219,13 @@ namespace glass
 
         std::vector<Control> Controls{};
 
+        // Names for the groups on this page, by the group id the controls carry.
+        std::vector<ControlGroup> Groups{};
+
         UnknownFields Unknown{ nullptr };
+
+        ControlGroup* FindGroup(_In_ std::wstring const& id) noexcept;
+        ControlGroup const* FindGroup(_In_ std::wstring const& id) const noexcept;
     };
 
     // An entry in the layout's own device table. The criteria are the same ones the service
@@ -1369,8 +1398,26 @@ namespace glass
     std::wstring SanitizeStoredString(_In_ std::wstring value) noexcept;
 
     // Copies of grouped controls get groups of their own, so a copy never joins the group it
-    // was copied from. Copies that were together are still together.
-    void RegroupCopies(_Inout_ std::vector<Control>& copies);
+    // was copied from. Copies that were together are still together. Hands back each group that
+    // is still a group among the copies, as the id it was copied from and the id it has now.
+    std::vector<std::pair<std::wstring, std::wstring>> RegroupCopies(_Inout_ std::vector<Control>& copies);
+
+    // A name for the copy of a group called this. The name itself while no group on the page has
+    // it, so a cut and paste changes nothing. Otherwise the number at its end moves on to one that
+    // is free, or a 2 goes on the end, so copies of Strip 1 read Strip 2 and Strip 3.
+    std::wstring NameForCopiedGroup(_In_ std::wstring const& name, _In_ Page const& page);
+
+    // Names the groups RegroupCopies made after the ones they were copied from, in order, so a
+    // bank of copies is numbered along the bank. The originals are a copy because they are often
+    // the page's own list, which this adds to.
+    void NameCopiedGroups(
+        _Inout_ Page& page,
+        _In_ std::vector<ControlGroup> originals,
+        _In_ std::vector<std::pair<std::wstring, std::wstring>> const& regrouped);
+
+    // Drops the names of groups with no control left on the page, and entries that carry
+    // nothing. Run after any edit that can empty a group.
+    void PruneControlGroups(_Inout_ Page& page) noexcept;
 
     // What is wrong with a document, in the order a person would want to fix it. An empty result
     // means the document is safe to run; it never means the document is beautiful.

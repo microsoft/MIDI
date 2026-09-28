@@ -53,6 +53,7 @@ namespace glass
         constexpr wchar_t KeyHueSlot[] = L"hueSlot";
         constexpr wchar_t KeySharedBand[] = L"sharedBand";
         constexpr wchar_t KeyControls[] = L"controls";
+        constexpr wchar_t KeyControlGroups[] = L"controlGroups";
 
         constexpr wchar_t KeyKind[] = L"kind";
         constexpr wchar_t KeyLabel[] = L"label";
@@ -341,6 +342,7 @@ namespace glass
         {
             { DragAxis::Vertical, L"vertical" },
             { DragAxis::Horizontal, L"horizontal" },
+            { DragAxis::Circular, L"circular" },
         };
 
         constexpr EnumName<FeedbackMode> FeedbackModeNames[]
@@ -1335,7 +1337,37 @@ namespace glass
                 }
             }
 
-            page.Unknown = CaptureUnknown(object, { KeyId, KeyName, KeyHueSlot, KeySharedBand, KeyControls });
+            // A page cannot hold more groups than controls, so that bounds how many entries are
+            // looked at. One with no id, or a second one for the same group, is dropped rather
+            // than guessed at.
+            if (auto const groups = ReadArray(object, KeyControlGroups))
+            {
+                for (uint32_t i = 0; i < groups.Size() && i < MaximumControlsPerPage; ++i)
+                {
+                    auto const value = groups.GetAt(i);
+
+                    if (value == nullptr || value.ValueType() != mjson::JsonValueType::Object)
+                    {
+                        continue;
+                    }
+
+                    auto const entry = value.GetObject();
+
+                    ControlGroup group{};
+                    group.Id = ReadString(entry, KeyId);
+                    group.Name = ReadString(entry, KeyName);
+
+                    if (group.Id.empty() || page.FindGroup(group.Id) != nullptr)
+                    {
+                        continue;
+                    }
+
+                    group.Unknown = CaptureUnknown(entry, { KeyId, KeyName });
+                    page.Groups.push_back(std::move(group));
+                }
+            }
+
+            page.Unknown = CaptureUnknown(object, { KeyId, KeyName, KeyHueSlot, KeySharedBand, KeyControls, KeyControlGroups });
 
             return page;
         }
@@ -2062,6 +2094,37 @@ namespace glass
                 }
 
                 writer.EndArray();
+
+                // Only groups that still have a control on the page and something to say. A
+                // layout with no named groups writes no list, so older files come back unchanged.
+                std::vector<ControlGroup const*> groups{};
+
+                for (auto const& group : page.Groups)
+                {
+                    auto const inUse = std::any_of(page.Controls.begin(), page.Controls.end(),
+                        [&group](Control const& control) { return control.GroupId == group.Id; });
+
+                    if (inUse && !group.Id.empty() && (!group.Name.empty() || group.Unknown != nullptr))
+                    {
+                        groups.push_back(&group);
+                    }
+                }
+
+                if (!groups.empty())
+                {
+                    writer.BeginArray(KeyControlGroups);
+
+                    for (auto const* const group : groups)
+                    {
+                        writer.BeginObject();
+                        writer.Write(KeyId, group->Id);
+                        writer.Write(KeyName, group->Name);
+                        WriteUnknown(writer, group->Unknown);
+                        writer.EndObject();
+                    }
+
+                    writer.EndArray();
+                }
 
                 WriteUnknown(writer, page.Unknown);
                 writer.EndObject();

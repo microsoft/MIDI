@@ -48,4 +48,10 @@ public:
     TEST_METHOD(APlatterPushedPastTheTopKeepsGoing);
     TEST_METHOD(AnAngleDeltaTakesTheShortWayRound);
     TEST_METHOD(OnlyThePlatterIsTurnedByHand);
+
+    // ---- a knob turned round and round ----
+
+    TEST_METHOD(AKnobTurnedRoundItsArcGoesEndToEnd);
+    TEST_METHOD(TurningAKnobBackFromPastItsEndMovesItAtOnce);
+    TEST_METHOD(TheMiddleOfAKnobDoesNotTurnIt);
 };

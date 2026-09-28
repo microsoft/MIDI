@@ -84,4 +84,14 @@ public:
     // ---- RPN and NRPN ----
     TEST_METHOD(AnRpnOrNrpnNumberIsABankAndAnIndex);
     TEST_METHOD(AnNrpnAbove127SurvivesARoundTrip);
+
+    // ---- how a knob is turned ----
+
+    TEST_METHOD(AKnobTurnedRoundAndRoundSurvivesARoundTrip);
+
+    // ---- what a group is called ----
+
+    TEST_METHOD(AGroupNameSurvivesARoundTrip);
+    TEST_METHOD(AGroupNameFromAFileIsChecked);
+    TEST_METHOD(ACopiedGroupIsNumberedOnFromItsName);
 };

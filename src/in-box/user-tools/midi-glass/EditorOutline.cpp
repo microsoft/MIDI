@@ -26,6 +26,10 @@ namespace winrt::midiglass::implementation
     {
         namespace shapes = ::winrt::Microsoft::UI::Xaml::Shapes;
 
+        // How far in an outline row starts, and how much further a member of a group goes.
+        constexpr double OutlineIndent = 4.0;
+        constexpr double OutlineGroupIndent = 20.0;
+
         // Matched against the palette search box. Case insensitive, and a match anywhere in the
         // name counts, because somebody typing "fad" should find Fader.
         bool Matches(_In_ std::wstring_view name, _In_ std::wstring_view query) noexcept
@@ -902,67 +906,94 @@ namespace winrt::midiglass::implementation
             auto const previous = m_updatingInspector;
             m_updatingInspector = true;
 
-            auto const* const page = m_editor.CurrentPage();
+            auto const& document = m_editor.Document();
 
             auto items = winrt::single_threaded_observable_vector<foundation::IInspectable>();
 
-            if (page != nullptr)
+            // Reading order is the keyboard order, because that is the property the layout
+            // actually carries and the one somebody can change. A group is a heading with its
+            // members under it, one step in, so the list shows what moves together.
+            for (auto const& row : m_editor.OutlineRows())
             {
-                auto const& document = m_editor.Document();
+                ::midiglass::EditorItemData data{};
 
-                // Reading order is the keyboard order, because that is the property the layout
-                // actually carries and the one somebody can change.
-                std::vector<glass::Control const*> ordered{};
+                data.Key = row.Id;
+                data.IndentPixels = OutlineIndent + row.Depth * OutlineGroupIndent;
 
-                for (auto const& control : page->Controls)
+                auto item = winrt::make_self<EditorItem>();
+
+                // A group goes by its number until somebody names it.
+                auto const groupName = row.GroupNumber == 0
+                    ? std::wstring{}
+                    : row.GroupName.empty()
+                        ? std::wstring{ resources::FormatString(L"OutlineGroupFormat", std::to_wstring(row.GroupNumber)) }
+                        : row.GroupName;
+
+                if (row.IsGroupHeading)
                 {
-                    ordered.push_back(&control);
-                }
+                    data.IsGroup = true;
+                    data.DisplayName = groupName;
+                    data.AccessibleName = std::wstring{ resources::FormatString(
+                        L"OutlineGroupAccessibleFormat", groupName, std::to_wstring(row.MemberCount)) };
 
-                std::stable_sort(
-                    ordered.begin(),
-                    ordered.end(),
-                    [](glass::Control const* left, glass::Control const* right)
-                    {
-                        return left->KeyboardOrder < right->KeyboardOrder;
-                    });
-
-                for (auto const* const control : ordered)
-                {
-                    ::midiglass::EditorItemData data{};
-
-                    data.Key = control->Id;
-                    data.DisplayName = control->Label.empty()
-                        ? NameForKind(control->Kind)
-                        : control->Label;
-
-                    data.Detail = NameForKind(control->Kind);
-                    data.Glyph = std::wstring(1, GlyphForKind(control->Kind));
-                    data.Badge = std::to_wstring(control->KeyboardOrder);
-                    data.IndentPixels = 4.0;
-
-                    data.IsOutsidePage = glass::IsOutsidePage(
-                        { control->X, control->Y, control->Width, control->Height },
-                        document.PageWidth,
-                        document.PageHeight);
-
-                    auto item = winrt::make_self<EditorItem>();
                     item->Update(data);
 
-                    // The same miniature the palette draws, built per row because a XAML element
-                    // belongs to one parent.
-                    auto art = BuildTileArt(ArtForKind(control->Kind));
+                    // The same mark as the toolbar's Group button.
+                    controls::FontIcon icon{};
 
-                    if (auto const element = art.try_as<xaml::FrameworkElement>())
-                    {
-                        element.HorizontalAlignment(xaml::HorizontalAlignment::Center);
-                        element.VerticalAlignment(xaml::VerticalAlignment::Center);
-                    }
+                    icon.Glyph(L"\uE71D");
+                    icon.FontSize(13.0);
+                    icon.Foreground(AccentAt(1.0));
+                    icon.HorizontalAlignment(xaml::HorizontalAlignment::Center);
+                    icon.VerticalAlignment(xaml::VerticalAlignment::Center);
 
-                    item->Art(art);
+                    item->Art(icon);
 
                     items.Append(*item);
+                    continue;
                 }
+
+                auto const* const control = document.FindControl(row.Id);
+
+                if (control == nullptr)
+                {
+                    continue;
+                }
+
+                data.DisplayName = control->Label.empty()
+                    ? NameForKind(control->Kind)
+                    : control->Label;
+
+                if (row.GroupNumber > 0)
+                {
+                    data.AccessibleName = std::wstring{ resources::FormatString(
+                        L"OutlineMemberAccessibleFormat", data.DisplayName, groupName) };
+                }
+
+                data.Detail = NameForKind(control->Kind);
+                data.Glyph = std::wstring(1, GlyphForKind(control->Kind));
+                data.Badge = std::to_wstring(control->KeyboardOrder);
+
+                data.IsOutsidePage = glass::IsOutsidePage(
+                    { control->X, control->Y, control->Width, control->Height },
+                    document.PageWidth,
+                    document.PageHeight);
+
+                item->Update(data);
+
+                // The same miniature the palette draws, built per row because a XAML element
+                // belongs to one parent.
+                auto art = BuildTileArt(ArtForKind(control->Kind));
+
+                if (auto const element = art.try_as<xaml::FrameworkElement>())
+                {
+                    element.HorizontalAlignment(xaml::HorizontalAlignment::Center);
+                    element.VerticalAlignment(xaml::VerticalAlignment::Center);
+                }
+
+                item->Art(art);
+
+                items.Append(*item);
             }
 
             OutlineList().ItemsSource(items);
@@ -974,6 +1005,8 @@ namespace winrt::midiglass::implementation
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to rebuild the outline.")
     }
 
+    // A group whose every member is selected shows as its heading. Anything else selected shows
+    // as its own row.
     void EditorWindow::SelectOutlineRowForSelection()
     {
         try
@@ -981,23 +1014,42 @@ namespace winrt::midiglass::implementation
             auto const previous = m_updatingInspector;
             m_updatingInspector = true;
 
-            auto const* const control = SingleSelectedControl();
+            auto const selected = OutlineList().SelectedItems();
 
-            if (control == nullptr)
-            {
-                OutlineList().SelectedIndex(-1);
-            }
-            else if (auto const source = OutlineList().ItemsSource()
+            selected.Clear();
+
+            if (auto const source = OutlineList().ItemsSource()
                 .try_as<collections::IVector<foundation::IInspectable>>())
             {
-                for (uint32_t index = 0; index < source.Size(); ++index)
+                for (auto const& entry : source)
                 {
-                    auto const item = source.GetAt(index).try_as<midiglass::EditorItem>();
+                    auto const item = entry.try_as<midiglass::EditorItem>();
 
-                    if (item != nullptr && std::wstring{ item.Key() } == control->Id)
+                    if (item == nullptr)
                     {
-                        OutlineList().SelectedIndex(static_cast<int32_t>(index));
-                        break;
+                        continue;
+                    }
+
+                    auto const key = std::wstring{ item.Key() };
+
+                    auto show = false;
+
+                    if (item.IsGroup())
+                    {
+                        show = m_editor.IsWholeGroupSelected(key);
+                    }
+                    else if (m_editor.IsSelected(key))
+                    {
+                        auto const* const control = m_editor.Document().FindControl(key);
+
+                        show = control == nullptr ||
+                            control->GroupId.empty() ||
+                            !m_editor.IsWholeGroupSelected(control->GroupId);
+                    }
+
+                    if (show)
+                    {
+                        selected.Append(entry);
                     }
                 }
             }
@@ -1007,13 +1059,14 @@ namespace winrt::midiglass::implementation
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to follow the selection in the outline.")
     }
 
+    // A group's heading picks every member. A member's own row picks that one alone, the way a
+    // second click on a group does on the canvas.
     _Use_decl_annotations_
     void EditorWindow::OnOutlineSelectionChanged(
         foundation::IInspectable const& sender,
         controls::SelectionChangedEventArgs const& args)
     {
         UNREFERENCED_PARAMETER(sender);
-        UNREFERENCED_PARAMETER(args);
 
         if (m_updatingInspector)
         {
@@ -1022,20 +1075,104 @@ namespace winrt::midiglass::implementation
 
         try
         {
-            auto const item = OutlineList().SelectedItem().try_as<midiglass::EditorItem>();
-
-            if (item == nullptr)
+            // Replacing the rows raises this too, naming rows that are gone. That is not somebody
+            // picking anything, and reading it as a pick would empty the selection.
+            if (auto const source = OutlineList().ItemsSource()
+                .try_as<collections::IVector<foundation::IInspectable>>())
             {
-                return;
+                uint32_t index{ 0 };
+
+                for (auto const& removed : args.RemovedItems())
+                {
+                    if (!source.IndexOf(removed, index))
+                    {
+                        return;
+                    }
+                }
             }
 
-            m_editor.SelectOnly(std::wstring{ item.Key() });
+            m_editor.ClearSelection();
+
+            for (auto const& entry : OutlineList().SelectedItems())
+            {
+                auto const item = entry.try_as<midiglass::EditorItem>();
+
+                if (item == nullptr)
+                {
+                    continue;
+                }
+
+                if (item.IsGroup())
+                {
+                    m_editor.AddGroupToSelection(std::wstring{ item.Key() });
+                }
+                else
+                {
+                    m_editor.AddToSelection(std::wstring{ item.Key() });
+                }
+            }
 
             UpdateOverlay();
             RefreshInspector();
             UpdateStatusBar();
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to select from the outline.")
+    }
+
+    // A right click on a row that is not picked picks it, the way a file list does, so the menu
+    // is about the row under the pointer rather than about whatever was picked before.
+    _Use_decl_annotations_
+    void EditorWindow::OnOutlineContextRequested(
+        xaml::UIElement const& sender,
+        xaml::Input::ContextRequestedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+
+        try
+        {
+            controls::ListViewItem container{ nullptr };
+
+            for (auto element = args.OriginalSource().try_as<xaml::DependencyObject>();
+                element != nullptr && container == nullptr;
+                element = media::VisualTreeHelper::GetParent(element))
+            {
+                container = element.try_as<controls::ListViewItem>();
+            }
+
+            if (container == nullptr || container.IsSelected())
+            {
+                return;
+            }
+
+            auto const item = OutlineList().ItemFromContainer(container);
+
+            // Emptied quietly, so the pick below is the one change the editor hears about.
+            auto const previous = m_updatingInspector;
+            m_updatingInspector = true;
+            OutlineList().SelectedItems().Clear();
+            m_updatingInspector = previous;
+
+            OutlineList().SelectedItems().Append(item);
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to pick the row under the menu.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnOutlineMenuOpening(foundation::IInspectable const& sender, foundation::IInspectable const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            // The same rules as the toolbar's Group button, which Try mode turns off too.
+            OutlineGroupItem().IsEnabled(
+                !m_tryMode && m_editor.Selection().size() > 1 && !m_editor.SelectionIsOneGroup());
+
+            OutlineUngroupItem().IsEnabled(!m_tryMode && m_editor.SelectionHasGroup());
+            OutlineRenameItem().IsEnabled(CanRename());
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to fill in the outline menu.")
     }
 
     _Use_decl_annotations_

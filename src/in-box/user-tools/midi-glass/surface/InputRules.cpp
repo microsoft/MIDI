@@ -83,6 +83,31 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool IsFarEnoughToTurn(double width, double height, double x, double y) noexcept
+    {
+        // The knob is drawn in the middle at the smaller of the two sizes.
+        auto const radius = std::min(width, height) * 0.5;
+
+        if (radius <= 0.0)
+        {
+            return false;
+        }
+
+        auto const across = x - width * 0.5;
+        auto const down = y - height * 0.5;
+
+        return std::sqrt(across * across + down * down) >= radius * KnobTurnDeadZone;
+    }
+
+    _Use_decl_annotations_
+    double ClampKnobTurn(double startValue, double turnedDegrees) noexcept
+    {
+        auto const start = std::clamp(startValue, 0.0, 1.0);
+
+        return std::clamp(turnedDegrees, -start * KnobTurnDegrees, (1.0 - start) * KnobTurnDegrees);
+    }
+
+    _Use_decl_annotations_
     bool ShowsAValueReadout(ControlKind kind) noexcept
     {
         switch (kind)

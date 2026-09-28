@@ -152,4 +152,26 @@ public:
     TEST_METHOD(ScalingSeveralKeepsTheirPlacesInTheBox);
     TEST_METHOD(AGroupSurvivesSavingAndLoading);
     TEST_METHOD(RemovingASwitchPositionRenumbersItsRows);
+
+    // ---- the outline ----
+
+    TEST_METHOD(TheOutlineListsAGroupUnderItsHeading);
+    TEST_METHOD(AGroupOfOneIsListedAsAControl);
+    TEST_METHOD(AGroupsHeadingPicksEveryMember);
+
+    // ---- what a group is called ----
+
+    TEST_METHOD(AGroupCanBeNamed);
+    TEST_METHOD(UngroupingOrDeletingForgetsTheName);
+    TEST_METHOD(AddingToANamedGroupKeepsItsName);
+    TEST_METHOD(ACopyOfANamedGroupIsNumbered);
+    TEST_METHOD(ARepeatNumbersItsGroups);
+    TEST_METHOD(MovingAPagesControlsTakesTheirNames);
+
+    // ---- where several controls send and listen ----
+
+    TEST_METHOD(SeveralControlsCanBeSentSomewhereElseAtOnce);
+    TEST_METHOD(ADestinationLeavesRowsThatGoNowhereAlone);
+    TEST_METHOD(ADestinationMustBeInTheDeviceTable);
+    TEST_METHOD(OnlyTheControlsThatListenAreMoved);
 };

@@ -12,6 +12,7 @@
 #include <sal.h>
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "LayoutModel.h"
@@ -67,6 +68,10 @@ namespace glass
 
         // New controls, with new ids, offset and stepped. They go on the page in this order.
         std::vector<Control> Copies{};
+
+        // Each group among the copies, as the group it was copied from and its own new id, in
+        // the order of the copies. What names the strips of a bank.
+        std::vector<std::pair<std::wstring, std::wstring>> Regrouped{};
     };
 
     // Takes a selection and builds a bank from it.

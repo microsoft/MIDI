@@ -5,8 +5,8 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-// The two generators: the shape an LFO sweeps, and the angles a platter is pushed through.
-// Both are pure arithmetic, which is why they live where a test can reach them.
+// The two generators: the shape an LFO sweeps, and the angles a platter or a knob is turned
+// through. Both are pure arithmetic, which is why they live where a test can reach them.
 
 #include "GeneratorTests.h"
 
@@ -257,4 +257,40 @@ void GeneratorTests::OnlyThePlatterIsTurnedByHand()
     VERIFY_IS_FALSE(glass::IsTurnedByHand(glass::ControlKind::Knob));
     VERIFY_IS_FALSE(glass::IsTurnedByHand(glass::ControlKind::Encoder));
     VERIFY_IS_FALSE(glass::IsTurnedByHand(glass::ControlKind::Joystick));
+}
+
+// ---- a knob turned round and round ----
+
+void GeneratorTests::AKnobTurnedRoundItsArcGoesEndToEnd()
+{
+    // Once round the arc it draws is the whole range, so the pointer stays under the finger.
+    VERIFY_IS_TRUE(Near(glass::ClampKnobTurn(0.0, glass::KnobTurnDegrees) / glass::KnobTurnDegrees, 1.0));
+
+    // And no further either way.
+    VERIFY_IS_TRUE(Near(glass::ClampKnobTurn(0.5, 1000.0), glass::KnobTurnDegrees * 0.5));
+    VERIFY_IS_TRUE(Near(glass::ClampKnobTurn(0.5, -1000.0), -glass::KnobTurnDegrees * 0.5));
+}
+
+void GeneratorTests::TurningAKnobBackFromPastItsEndMovesItAtOnce()
+{
+    // Picked up at 90 %, turned well past the top, then back ten degrees.
+    auto turned = glass::ClampKnobTurn(0.9, 100.0);
+
+    VERIFY_IS_TRUE(Near(0.9 + turned / glass::KnobTurnDegrees, 1.0));
+
+    turned = glass::ClampKnobTurn(0.9, turned - 10.0);
+
+    VERIFY_IS_TRUE(0.9 + turned / glass::KnobTurnDegrees < 1.0);
+}
+
+void GeneratorTests::TheMiddleOfAKnobDoesNotTurnIt()
+{
+    VERIFY_IS_FALSE(glass::IsFarEnoughToTurn(100.0, 100.0, 50.0, 50.0));
+    VERIFY_IS_FALSE(glass::IsFarEnoughToTurn(100.0, 100.0, 55.0, 52.0));
+    VERIFY_IS_TRUE(glass::IsFarEnoughToTurn(100.0, 100.0, 50.0, 5.0));
+
+    // The knob is drawn at the smaller of the two sizes, so a tall control keeps a small middle.
+    VERIFY_IS_TRUE(glass::IsFarEnoughToTurn(60.0, 200.0, 30.0, 88.0));
+
+    VERIFY_IS_FALSE(glass::IsFarEnoughToTurn(0.0, 0.0, 0.0, 0.0));
 }

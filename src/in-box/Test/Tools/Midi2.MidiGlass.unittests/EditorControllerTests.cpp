@@ -1875,3 +1875,460 @@ void EditorControllerTests::RemovingASwitchPositionRenumbersItsRows()
     VERIFY_IS_TRUE(controller.SetSwitchPositionName(id, 1, L"Wide"));
     VERIFY_ARE_EQUAL(std::wstring{ L"Wide" }, controller.Document().FindControl(id)->Switch.Positions[1]);
 }
+
+// ---- the outline ----
+
+void EditorControllerTests::TheOutlineListsAGroupUnderItsHeading()
+{
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Knob, 200, 96, 64, 64);
+    auto const third = PlaceExactly(controller, glass::ControlKind::Fader, 300, 96, 40, 180);
+    auto const fourth = PlaceExactly(controller, glass::ControlKind::Pad, 400, 96, 64, 64);
+
+    // The second and the fourth go together, so the fourth is listed under the heading rather
+    // than in its own place.
+    controller.SelectOnly(second);
+    controller.AddToSelection(fourth);
+    VERIFY_IS_TRUE(controller.GroupSelection());
+
+    auto const rows = controller.OutlineRows();
+
+    VERIFY_ARE_EQUAL(size_t{ 5 }, rows.size());
+
+    VERIFY_ARE_EQUAL(first, rows[0].Id);
+    VERIFY_IS_FALSE(rows[0].IsGroupHeading);
+    VERIFY_ARE_EQUAL(0, rows[0].Depth);
+
+    VERIFY_IS_TRUE(rows[1].IsGroupHeading);
+    VERIFY_ARE_EQUAL(ControlAt(controller, 1)->GroupId, rows[1].Id);
+    VERIFY_ARE_EQUAL(1, rows[1].GroupNumber);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, rows[1].MemberCount);
+
+    VERIFY_ARE_EQUAL(second, rows[2].Id);
+    VERIFY_ARE_EQUAL(1, rows[2].Depth);
+    VERIFY_ARE_EQUAL(fourth, rows[3].Id);
+    VERIFY_ARE_EQUAL(1, rows[3].Depth);
+
+    VERIFY_ARE_EQUAL(third, rows[4].Id);
+    VERIFY_ARE_EQUAL(0, rows[4].Depth);
+    VERIFY_ARE_EQUAL(0, rows[4].GroupNumber);
+}
+
+void EditorControllerTests::AGroupOfOneIsListedAsAControl()
+{
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Knob, 200, 96, 64, 64);
+
+    controller.SelectOnly(first);
+    controller.AddToSelection(second);
+    VERIFY_IS_TRUE(controller.GroupSelection());
+
+    // Nothing moves with the one that is left, so it gets no heading.
+    controller.SelectOnly(second);
+    VERIFY_IS_TRUE(controller.DeleteSelection());
+
+    auto const rows = controller.OutlineRows();
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, rows.size());
+    VERIFY_ARE_EQUAL(first, rows[0].Id);
+    VERIFY_IS_FALSE(rows[0].IsGroupHeading);
+    VERIFY_ARE_EQUAL(0, rows[0].GroupNumber);
+}
+
+void EditorControllerTests::AGroupsHeadingPicksEveryMember()
+{
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Knob, 200, 96, 64, 64);
+    auto const loose = PlaceExactly(controller, glass::ControlKind::Pad, 400, 96, 64, 64);
+
+    controller.SelectOnly(first);
+    controller.AddToSelection(second);
+    VERIFY_IS_TRUE(controller.GroupSelection());
+
+    auto const group = ControlAt(controller, 0)->GroupId;
+
+    controller.SelectOnly(loose);
+    VERIFY_IS_FALSE(controller.IsWholeGroupSelected(group));
+
+    controller.AddGroupToSelection(group);
+    VERIFY_ARE_EQUAL(size_t{ 3 }, controller.Selection().size());
+    VERIFY_IS_TRUE(controller.IsWholeGroupSelected(group));
+
+    // One member on its own is not the whole group.
+    controller.SelectOnly(first);
+    VERIFY_IS_FALSE(controller.IsWholeGroupSelected(group));
+    VERIFY_IS_FALSE(controller.IsWholeGroupSelected(L""));
+}
+
+// ---- what a group is called ----
+
+namespace
+{
+    // Groups the controls and hands back the group, still selected.
+    std::wstring GroupOf(_Inout_ glass::EditorController& controller, _In_ std::vector<std::wstring> const& ids)
+    {
+        controller.ClearSelection();
+
+        for (auto const& id : ids)
+        {
+            controller.AddToSelection(id);
+        }
+
+        VERIFY_IS_TRUE(controller.GroupSelection());
+
+        auto const group = controller.SelectedGroupId();
+
+        VERIFY_IS_FALSE(group.empty());
+
+        return group;
+    }
+
+    std::vector<std::wstring> HeadingNames(_In_ glass::EditorController const& controller)
+    {
+        std::vector<std::wstring> names{};
+
+        for (auto const& row : controller.OutlineRows())
+        {
+            if (row.IsGroupHeading)
+            {
+                names.push_back(row.GroupName);
+            }
+        }
+
+        return names;
+    }
+}
+
+void EditorControllerTests::AGroupCanBeNamed()
+{
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Fader, 200, 96, 40, 180);
+
+    auto const group = GroupOf(controller, { first, second });
+
+    VERIFY_ARE_EQUAL(1, controller.GroupNumber(group));
+    VERIFY_IS_TRUE(controller.GroupName(group).empty());
+
+    // Typed a letter at a time, and one step to undo.
+    auto const depth = controller.UndoDepth();
+
+    VERIFY_IS_TRUE(controller.SetGroupName(group, L"D"));
+    VERIFY_IS_TRUE(controller.SetGroupName(group, L"Dr"));
+    VERIFY_IS_TRUE(controller.SetGroupName(group, L"Drums"));
+    VERIFY_IS_FALSE(controller.SetGroupName(group, L"Drums"));
+
+    VERIFY_ARE_EQUAL(depth + 1, controller.UndoDepth());
+    VERIFY_ARE_EQUAL(std::wstring{ L"Drums" }, controller.GroupName(group));
+
+    // On the heading, and on each member.
+    auto const rows = controller.OutlineRows();
+
+    VERIFY_ARE_EQUAL(size_t{ 3 }, rows.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"Drums" }, rows[0].GroupName);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Drums" }, rows[2].GroupName);
+
+    // Saved with the layout.
+    auto const read = glass::ReadLayoutFromJson(glass::WriteLayoutToJson(controller.Document()));
+
+    VERIFY_IS_TRUE(read.Succeeded);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, read.Document.Pages.front().Groups.size());
+    VERIFY_ARE_EQUAL(group, read.Document.Pages.front().Groups[0].Id);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Drums" }, read.Document.Pages.front().Groups[0].Name);
+
+    VERIFY_IS_TRUE(controller.Undo());
+    VERIFY_IS_TRUE(controller.GroupName(group).empty());
+    VERIFY_IS_TRUE(controller.Redo());
+    VERIFY_ARE_EQUAL(std::wstring{ L"Drums" }, controller.GroupName(group));
+
+    // Cleared, it goes back to its number and leaves nothing behind.
+    VERIFY_IS_TRUE(controller.SetGroupName(group, L""));
+    VERIFY_IS_TRUE(controller.Document().Pages.front().Groups.empty());
+
+    // Only a group that is on the page.
+    VERIFY_IS_FALSE(controller.SetGroupName(L"nothing-has-this-id", L"Bass"));
+    VERIFY_IS_FALSE(controller.SetGroupName(L"", L"Bass"));
+
+    // One member on its own is not the group, so there is nothing to name.
+    controller.SelectOnly(first);
+    VERIFY_IS_TRUE(controller.SelectedGroupId().empty());
+}
+
+void EditorControllerTests::UngroupingOrDeletingForgetsTheName()
+{
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Fader, 200, 96, 40, 180);
+
+    VERIFY_IS_TRUE(controller.SetGroupName(GroupOf(controller, { first, second }), L"Drums"));
+    VERIFY_IS_TRUE(controller.UngroupSelection());
+    VERIFY_IS_TRUE(controller.Document().Pages.front().Groups.empty());
+
+    // Grouped again, it is a new group and has no name.
+    auto const again = GroupOf(controller, { first, second });
+
+    VERIFY_IS_TRUE(controller.GroupName(again).empty());
+
+    VERIFY_IS_TRUE(controller.SetGroupName(again, L"Bass"));
+    VERIFY_IS_TRUE(controller.DeleteSelection());
+    VERIFY_IS_TRUE(controller.Document().Pages.front().Groups.empty());
+
+    // And undoing the delete brings the name back with the controls.
+    VERIFY_IS_TRUE(controller.Undo());
+    VERIFY_ARE_EQUAL(std::wstring{ L"Bass" }, controller.GroupName(again));
+}
+
+void EditorControllerTests::AddingToANamedGroupKeepsItsName()
+{
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Knob, 200, 96, 64, 64);
+    auto const third = PlaceExactly(controller, glass::ControlKind::Fader, 300, 96, 40, 180);
+    auto const fourth = PlaceExactly(controller, glass::ControlKind::Pad, 400, 96, 64, 64);
+
+    VERIFY_IS_TRUE(controller.SetGroupName(GroupOf(controller, { first, second }), L"Drums"));
+
+    // The whole of Drums and one more is still Drums.
+    auto const bigger = GroupOf(controller, { first, second, third });
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"Drums" }, controller.GroupName(bigger));
+    VERIFY_ARE_EQUAL(size_t{ 1 }, controller.Document().Pages.front().Groups.size());
+
+    // Part of it is not, and what is left of Drums keeps the name.
+    auto const other = GroupOf(controller, { third, fourth });
+
+    VERIFY_IS_TRUE(controller.GroupName(other).empty());
+    VERIFY_ARE_EQUAL(std::wstring{ L"Drums" }, controller.GroupName(controller.Document().FindControl(first)->GroupId));
+}
+
+void EditorControllerTests::ACopyOfANamedGroupIsNumbered()
+{
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Fader, 200, 96, 40, 180);
+
+    VERIFY_IS_TRUE(controller.SetGroupName(GroupOf(controller, { first, second }), L"Strip 1"));
+
+    // A duplicate sits beside the original, so it takes the next number.
+    VERIFY_IS_TRUE(controller.DuplicateSelection());
+    VERIFY_ARE_EQUAL(std::wstring{ L"Strip 2" }, controller.GroupName(controller.SelectedGroupId()));
+
+    // A cut and paste is the same group back again, name and all.
+    auto const clip = controller.CutSelection();
+
+    VERIFY_IS_FALSE(clip.empty());
+    VERIFY_IS_TRUE(controller.PasteControls(clip));
+    VERIFY_ARE_EQUAL(std::wstring{ L"Strip 2" }, controller.GroupName(controller.SelectedGroupId()));
+
+    // Pasted a second time, it is a third strip.
+    VERIFY_IS_TRUE(controller.PasteControls(clip));
+    VERIFY_ARE_EQUAL(std::wstring{ L"Strip 3" }, controller.GroupName(controller.SelectedGroupId()));
+
+    auto const names = HeadingNames(controller);
+
+    VERIFY_ARE_EQUAL(size_t{ 3 }, names.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"Strip 1" }, names[0]);
+}
+
+void EditorControllerTests::ARepeatNumbersItsGroups()
+{
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Fader, 96, 180, 40, 180);
+
+    VERIFY_IS_TRUE(controller.SetGroupName(GroupOf(controller, { first, second }), L"Channel 1"));
+
+    glass::RepeatOptions options{};
+    options.Copies = 3;
+    options.Direction = glass::RepeatDirection::Right;
+
+    VERIFY_IS_TRUE(controller.RepeatSelection(options));
+
+    auto const names = HeadingNames(controller);
+
+    VERIFY_ARE_EQUAL(size_t{ 4 }, names.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"Channel 1" }, names[0]);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Channel 2" }, names[1]);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Channel 3" }, names[2]);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Channel 4" }, names[3]);
+}
+
+void EditorControllerTests::MovingAPagesControlsTakesTheirNames()
+{
+    auto controller = LoadedController();
+
+    VERIFY_IS_TRUE(controller.AddPage(L"Page 2"));
+    controller.SetPageIndex(1);
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Fader, 200, 96, 40, 180);
+
+    auto const group = GroupOf(controller, { first, second });
+
+    VERIFY_IS_TRUE(controller.SetGroupName(group, L"Bass"));
+    VERIFY_IS_TRUE(controller.MoveControlsAndRemovePage(1, 0));
+
+    VERIFY_ARE_EQUAL(size_t{ 0 }, controller.PageIndex());
+    VERIFY_ARE_EQUAL(std::wstring{ L"Bass" }, controller.GroupName(group));
+}
+
+// ---- where several controls send and listen ----
+
+void EditorControllerTests::SeveralControlsCanBeSentSomewhereElseAtOnce()
+{
+    auto controller = LoadedController();
+
+    glass::DeviceEntry drums{};
+    drums.Name = L"Drums";
+    VERIFY_IS_TRUE(controller.AddDevice(drums));
+
+    auto const knob = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const fader = PlaceExactly(controller, glass::ControlKind::Fader, 200, 96, 40, 180);
+
+    // Two channels, so the channel is something they disagree on.
+    auto message = ControlAt(controller, 1)->Messages[0];
+    message.ChannelIndex = 4;
+    VERIFY_IS_TRUE(controller.SetMessage(fader, 0, message));
+
+    std::vector<std::wstring> const ids{ knob, fader };
+
+    auto const before = controller.SharedSendDestination(ids);
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, before.DeviceRows);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, before.ChannelRows);
+    VERIFY_IS_TRUE(before.Fields.DeviceName == std::wstring{ L"Synth" });
+    VERIFY_IS_FALSE(before.Fields.ChannelIndex.has_value());
+
+    auto const depth = controller.UndoDepth();
+
+    glass::DestinationFields change{};
+    change.DeviceName = L"Drums";
+    change.GroupIndex = 2;
+
+    VERIFY_IS_TRUE(controller.SetSendDestination(ids, change));
+    VERIFY_ARE_EQUAL(depth + 1, controller.UndoDepth());
+
+    // The device and the group moved. The channels, which nobody asked about, did not.
+    VERIFY_ARE_EQUAL(std::wstring{ L"Drums" }, ControlAt(controller, 0)->Messages[0].DeviceName);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Drums" }, ControlAt(controller, 1)->Messages[0].DeviceName);
+    VERIFY_ARE_EQUAL(2, ControlAt(controller, 0)->Messages[0].GroupIndex);
+    VERIFY_ARE_EQUAL(2, ControlAt(controller, 1)->Messages[0].GroupIndex);
+    VERIFY_ARE_EQUAL(4, ControlAt(controller, 1)->Messages[0].ChannelIndex);
+
+    // Asking for what they already have is not an edit.
+    VERIFY_IS_FALSE(controller.SetSendDestination(ids, change));
+
+    VERIFY_IS_TRUE(controller.Undo());
+    VERIFY_ARE_EQUAL(std::wstring{ L"Synth" }, ControlAt(controller, 0)->Messages[0].DeviceName);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Synth" }, ControlAt(controller, 1)->Messages[0].DeviceName);
+}
+
+void EditorControllerTests::ADestinationLeavesRowsThatGoNowhereAlone()
+{
+    auto controller = LoadedController();
+
+    auto const knob = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+
+    // A knob arrives with one row. A second changes page, and a third sends a dump, which has
+    // no channel.
+    VERIFY_ARE_EQUAL(size_t{ 1 }, ControlAt(controller, 0)->Messages.size());
+    VERIFY_IS_TRUE(controller.AddMessage(knob));
+    VERIFY_IS_TRUE(controller.AddMessage(knob));
+
+    auto page = ControlAt(controller, 0)->Messages[1];
+    page.Kind = glass::MessageKind::GoToPage;
+    page.DeviceName.clear();
+    VERIFY_IS_TRUE(controller.SetMessage(knob, 1, page));
+
+    auto dump = ControlAt(controller, 0)->Messages[2];
+    dump.Kind = glass::MessageKind::SystemExclusive;
+    dump.ChannelIndex = 7;
+    VERIFY_IS_TRUE(controller.SetMessage(knob, 2, dump));
+
+    std::vector<std::wstring> const ids{ knob };
+
+    auto const shared = controller.SharedSendDestination(ids);
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, shared.DeviceRows);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, shared.ChannelRows);
+
+    glass::DestinationFields change{};
+    change.DeviceName = L"Synth";
+    change.ChannelIndex = 9;
+
+    VERIFY_IS_TRUE(controller.SetSendDestination(ids, change));
+
+    auto const* const control = ControlAt(controller, 0);
+
+    VERIFY_ARE_EQUAL(9, control->Messages[0].ChannelIndex);
+    VERIFY_IS_TRUE(control->Messages[1].DeviceName.empty());
+    VERIFY_ARE_EQUAL(7, control->Messages[2].ChannelIndex);
+}
+
+void EditorControllerTests::ADestinationMustBeInTheDeviceTable()
+{
+    auto controller = LoadedController();
+
+    auto const knob = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+
+    std::vector<std::wstring> const ids{ knob };
+
+    glass::DestinationFields unknown{};
+    unknown.DeviceName = L"Nowhere";
+    VERIFY_IS_FALSE(controller.SetSendDestination(ids, unknown));
+
+    // A message has to go somewhere. Only listening can take any device.
+    glass::DestinationFields none{};
+    none.DeviceName = std::wstring{};
+    VERIFY_IS_FALSE(controller.SetSendDestination(ids, none));
+
+    glass::DestinationFields group{};
+    group.GroupIndex = glass::MaximumGroupCount;
+    VERIFY_IS_FALSE(controller.SetSendDestination(ids, group));
+
+    glass::DestinationFields channel{};
+    channel.ChannelIndex = 16;
+    VERIFY_IS_FALSE(controller.SetSendDestination(ids, channel));
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"Synth" }, ControlAt(controller, 0)->Messages[0].DeviceName);
+}
+
+void EditorControllerTests::OnlyTheControlsThatListenAreMoved()
+{
+    auto controller = LoadedController();
+
+    // A lamp arrives listening. A knob does not.
+    auto const lamp = PlaceExactly(controller, glass::ControlKind::Lamp, 96, 96, 40, 40);
+    auto const knob = PlaceExactly(controller, glass::ControlKind::Knob, 200, 96, 64, 64);
+
+    VERIFY_IS_TRUE(ControlAt(controller, 0)->Feedback.Enabled);
+    VERIFY_IS_FALSE(ControlAt(controller, 1)->Feedback.Enabled);
+
+    std::vector<std::wstring> const ids{ lamp, knob };
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, controller.SharedListenDestination(ids).DeviceRows);
+
+    glass::DestinationFields change{};
+    change.DeviceName = std::wstring{};
+    change.GroupIndex = 3;
+
+    VERIFY_IS_TRUE(controller.SetListenDestination(ids, change));
+
+    // An empty name is any device, which listening can take.
+    VERIFY_IS_TRUE(ControlAt(controller, 0)->Feedback.DeviceName.empty());
+    VERIFY_ARE_EQUAL(3, ControlAt(controller, 0)->Feedback.GroupIndex);
+
+    VERIFY_IS_FALSE(ControlAt(controller, 1)->Feedback.Enabled);
+    VERIFY_ARE_EQUAL(0, ControlAt(controller, 1)->Feedback.GroupIndex);
+}

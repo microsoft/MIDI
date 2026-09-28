@@ -29,6 +29,26 @@ namespace glass
     // can be set precisely without running out of screen, which is what every plug-in does.
     constexpr double KnobDragPixels = 200.0;
 
+    // How far round a knob turned round and round goes from one end to the other: the arc it
+    // draws, so the knob's pointer stays under the finger.
+    constexpr double KnobTurnDegrees = 270.0;
+
+    // Near the middle of a knob a tiny move swings the angle a long way, so a turn is only read
+    // outside this share of the knob's radius.
+    constexpr double KnobTurnDeadZone = 0.2;
+
+    // Whether a point is far enough from the middle of a knob to turn it.
+    bool IsFarEnoughToTurn(
+        _In_ double width,
+        _In_ double height,
+        _In_ double x,
+        _In_ double y) noexcept;
+
+    // How far a knob has been turned since the finger landed, held so the knob stays inside its
+    // travel. Holding the total rather than the value is what makes turning back move the knob
+    // at once, instead of only after the finger has unwound everything that went past the end.
+    double ClampKnobTurn(_In_ double startValue, _In_ double turnedDegrees) noexcept;
+
     // Two values rather than one. Worth asking about separately from "does a touch set it
     // outright", because a joystick answers yes to both and a ribbon only to the second.
     bool UsesTwoAxes(_In_ ControlKind kind) noexcept;

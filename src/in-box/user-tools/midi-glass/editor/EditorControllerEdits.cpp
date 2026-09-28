@@ -83,6 +83,75 @@ namespace glass
                 left.TempoControlId == right.TempoControlId &&
                 left.HoldMilliseconds == right.HoldMilliseconds;
         }
+
+        // One value that several rows either all agree on or do not.
+        template <typename T>
+        class Agreement
+        {
+        public:
+            void Add(_In_ T const& value)
+            {
+                if (m_mixed)
+                {
+                    return;
+                }
+
+                if (!m_value.has_value())
+                {
+                    m_value = value;
+                }
+                else if (*m_value != value)
+                {
+                    m_value.reset();
+                    m_mixed = true;
+                }
+            }
+
+            std::optional<T> const& Value() const noexcept { return m_value; }
+
+        private:
+            std::optional<T> m_value{};
+            bool m_mixed{ false };
+        };
+
+        // A device has to be in the layout's own table, so a row is never pointed at a name
+        // that means nothing on this layout. Listening can also take no device at all, which
+        // means any device.
+        bool IsValidDestination(
+            _In_ LayoutDocument const& document,
+            _In_ DestinationFields const& change,
+            _In_ bool noDeviceMeansAny) noexcept
+        {
+            if (change.DeviceName.has_value())
+            {
+                auto const& name = *change.DeviceName;
+
+                if (name.empty() ? !noDeviceMeansAny : document.FindDevice(name) == nullptr)
+                {
+                    return false;
+                }
+            }
+
+            if (change.GroupIndex.has_value() &&
+                *change.GroupIndex != AllGroups &&
+                (*change.GroupIndex < 0 || *change.GroupIndex >= MaximumGroupCount))
+            {
+                return false;
+            }
+
+            if (change.ChannelIndex.has_value() && (*change.ChannelIndex < 0 || *change.ChannelIndex > 15))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        // A tempo listener follows the clock of a whole device, so it has no channel to set.
+        bool ListensOnAChannel(_In_ FeedbackBinding const& feedback) noexcept
+        {
+            return feedback.Mode != FeedbackMode::Tempo;
+        }
     }
 
     // ---------------------------------------------------------------- control properties
@@ -1232,6 +1301,197 @@ namespace glass
         return true;
     }
 
+    // ---------------------------------------------------------------- where several send
+
+    _Use_decl_annotations_
+    SharedDestination EditorController::SharedSendDestination(std::vector<std::wstring> const& ids) const
+    {
+        SharedDestination shared{};
+
+        Agreement<std::wstring> device{};
+        Agreement<int32_t> group{};
+        Agreement<int32_t> channel{};
+
+        for (auto const& id : ids)
+        {
+            auto const* const control = m_document.FindControl(id);
+
+            if (control == nullptr)
+            {
+                continue;
+            }
+
+            for (auto const& message : control->Messages)
+            {
+                if (!SendsToADevice(message.Kind))
+                {
+                    continue;
+                }
+
+                ++shared.DeviceRows;
+                device.Add(message.DeviceName);
+                group.Add(message.GroupIndex);
+
+                if (CarriesAChannel(message.Kind))
+                {
+                    ++shared.ChannelRows;
+                    channel.Add(message.ChannelIndex);
+                }
+            }
+        }
+
+        shared.Fields.DeviceName = device.Value();
+        shared.Fields.GroupIndex = group.Value();
+        shared.Fields.ChannelIndex = channel.Value();
+
+        return shared;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetSendDestination(std::vector<std::wstring> const& ids, DestinationFields const& change)
+    {
+        if (!IsValidDestination(m_document, change, false))
+        {
+            return false;
+        }
+
+        auto changed = false;
+
+        for (auto const& id : ids)
+        {
+            auto* const control = MutableControl(id);
+
+            if (control == nullptr)
+            {
+                continue;
+            }
+
+            for (auto& message : control->Messages)
+            {
+                if (!SendsToADevice(message.Kind))
+                {
+                    continue;
+                }
+
+                if (change.DeviceName.has_value() && message.DeviceName != *change.DeviceName)
+                {
+                    message.DeviceName = *change.DeviceName;
+                    changed = true;
+                }
+
+                if (change.GroupIndex.has_value() && message.GroupIndex != *change.GroupIndex)
+                {
+                    message.GroupIndex = *change.GroupIndex;
+                    changed = true;
+                }
+
+                if (change.ChannelIndex.has_value() &&
+                    CarriesAChannel(message.Kind) &&
+                    message.ChannelIndex != *change.ChannelIndex)
+                {
+                    message.ChannelIndex = *change.ChannelIndex;
+                    changed = true;
+                }
+            }
+        }
+
+        if (changed)
+        {
+            Commit(EditNames::Messages);
+        }
+
+        return changed;
+    }
+
+    _Use_decl_annotations_
+    SharedDestination EditorController::SharedListenDestination(std::vector<std::wstring> const& ids) const
+    {
+        SharedDestination shared{};
+
+        Agreement<std::wstring> device{};
+        Agreement<int32_t> group{};
+        Agreement<int32_t> channel{};
+
+        for (auto const& id : ids)
+        {
+            auto const* const control = m_document.FindControl(id);
+
+            if (control == nullptr || !control->Feedback.Enabled)
+            {
+                continue;
+            }
+
+            auto const& feedback = control->Feedback;
+
+            ++shared.DeviceRows;
+            device.Add(feedback.DeviceName);
+            group.Add(feedback.GroupIndex);
+
+            if (ListensOnAChannel(feedback))
+            {
+                ++shared.ChannelRows;
+                channel.Add(feedback.ChannelIndex);
+            }
+        }
+
+        shared.Fields.DeviceName = device.Value();
+        shared.Fields.GroupIndex = group.Value();
+        shared.Fields.ChannelIndex = channel.Value();
+
+        return shared;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetListenDestination(std::vector<std::wstring> const& ids, DestinationFields const& change)
+    {
+        if (!IsValidDestination(m_document, change, true))
+        {
+            return false;
+        }
+
+        auto changed = false;
+
+        for (auto const& id : ids)
+        {
+            auto* const control = MutableControl(id);
+
+            // Turning listening on is left to each control, because what it listens for is its own.
+            if (control == nullptr || !control->Feedback.Enabled)
+            {
+                continue;
+            }
+
+            auto& feedback = control->Feedback;
+
+            if (change.DeviceName.has_value() && feedback.DeviceName != *change.DeviceName)
+            {
+                feedback.DeviceName = *change.DeviceName;
+                changed = true;
+            }
+
+            if (change.GroupIndex.has_value() && feedback.GroupIndex != *change.GroupIndex)
+            {
+                feedback.GroupIndex = *change.GroupIndex;
+                changed = true;
+            }
+
+            if (change.ChannelIndex.has_value() &&
+                ListensOnAChannel(feedback) &&
+                feedback.ChannelIndex != *change.ChannelIndex)
+            {
+                feedback.ChannelIndex = *change.ChannelIndex;
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            Commit(EditNames::Messages);
+        }
+
+        return changed;
+    }
+
     // ---------------------------------------------------------------- keyboard order
 
     _Use_decl_annotations_
@@ -1516,6 +1776,19 @@ namespace glass
         destination.insert(destination.end(),
             std::make_move_iterator(moved.begin()),
             std::make_move_iterator(moved.end()));
+
+        // The names go with their groups.
+        auto& destinationPage = m_document.Pages[destinationIndex];
+
+        for (auto& group : m_document.Pages[index].Groups)
+        {
+            if (destinationPage.FindGroup(group.Id) == nullptr)
+            {
+                destinationPage.Groups.push_back(std::move(group));
+            }
+        }
+
+        PruneControlGroups(destinationPage);
 
         m_document.Pages.erase(m_document.Pages.begin() + static_cast<ptrdiff_t>(index));
 
@@ -2219,6 +2492,19 @@ namespace glass
             page.Controls.push_back(*control);
         }
 
+        // The names of the groups the copies are in, so a paste can name its copies after them.
+        if (auto const* const current = CurrentPage())
+        {
+            for (auto const& group : current->Groups)
+            {
+                if (std::any_of(page.Controls.begin(), page.Controls.end(),
+                    [&group](Control const& control) { return control.GroupId == group.Id; }))
+                {
+                    page.Groups.push_back(group);
+                }
+            }
+        }
+
         // The devices and sequences the copies name. Everything else about the layout stays
         // behind: a paste adds controls, it does not change somebody's theme or page size.
         auto const namesDevice = [&page](std::wstring const& name)
@@ -2302,6 +2588,8 @@ namespace glass
                 [this](Control const& control) { return IsSelected(control.Id); }),
             page->Controls.end());
 
+        PruneControlGroups(*page);
+
         m_selection.clear();
         Commit(EditNames::Cut);
 
@@ -2326,6 +2614,7 @@ namespace glass
         }
 
         auto copies = std::move(read.Document.Pages.front().Controls);
+        auto const copiedGroups = std::move(read.Document.Pages.front().Groups);
 
         if (copies.empty() || page->Controls.size() + copies.size() > MaximumControlsPerPage)
         {
@@ -2373,7 +2662,7 @@ namespace glass
             follow(copy.Feedback.TempoControlId);
         }
 
-        RegroupCopies(copies);
+        auto const regrouped = RegroupCopies(copies);
 
         // Devices and sequences this layout does not have yet. One it already has by that name
         // is left alone: it is this layout's idea of what the name means.
@@ -2446,6 +2735,8 @@ namespace glass
             selection.push_back(copy.Id);
             page->Controls.push_back(std::move(copy));
         }
+
+        NameCopiedGroups(*page, copiedGroups, regrouped);
 
         m_selection = std::move(selection);
         Commit(EditNames::Paste);

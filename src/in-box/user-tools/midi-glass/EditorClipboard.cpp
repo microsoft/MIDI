@@ -294,6 +294,7 @@ namespace winrt::midiglass::implementation
 
             CanvasGroupItem().IsEnabled(m_editor.Selection().size() > 1 && !m_editor.SelectionIsOneGroup());
             CanvasUngroupItem().IsEnabled(m_editor.SelectionHasGroup());
+            CanvasRenameItem().IsEnabled(CanRename());
 
             auto canPaste = false;
 
@@ -404,5 +405,55 @@ namespace winrt::midiglass::implementation
 
         args.Handled(true);
         ApplyGrouping(false);
+    }
+
+    bool EditorWindow::CanRename()
+    {
+        return !m_tryMode && (SingleSelectedControl() != nullptr || !m_editor.SelectedGroupId().empty());
+    }
+
+    void EditorWindow::BeginRename()
+    {
+        if (!CanRename() || m_dispatcher == nullptr)
+        {
+            return;
+        }
+
+        // The heading is the name, for one control and for a whole group, so renaming puts the
+        // cursor there with the old name ready to type over. Queued, because a menu that is
+        // closing hands focus back to wherever it was opened from.
+        m_dispatcher.TryEnqueue([weak = get_weak()]()
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->InspectorTitleText().Focus(xaml::FocusState::Keyboard);
+                    strong->InspectorTitleText().SelectAll();
+                }
+            });
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnRenameMenuClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        BeginRename();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnRenameAccelerator(
+        xaml::Input::KeyboardAccelerator const& sender,
+        xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+
+        if (IsTextEntryFocused() || !CanRename())
+        {
+            return;
+        }
+
+        args.Handled(true);
+        BeginRename();
     }
 }

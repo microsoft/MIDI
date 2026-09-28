@@ -14,10 +14,18 @@ namespace midiglass
     {
         EditorItem();
 
-        // A control id for an outline row, a control kind for a palette tile.
+        // A control id for an outline row, a control kind for a palette tile, or a group's id
+        // for the heading the members of a group are listed under.
         String Key{ get; };
 
         String DisplayName{ get; };
+
+        // What a screen reader says for the row. The name, plus the group a member is in,
+        // because the indent that shows it on screen says nothing out loud.
+        String AccessibleName{ get; };
+
+        // The heading of a group rather than a control.
+        Boolean IsGroup{ get; };
 
         // "Fader · 40 × 180", or the group a palette tile belongs to.
         String Detail{ get; };

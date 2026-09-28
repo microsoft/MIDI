@@ -604,6 +604,33 @@
   <data name="CanvasMenuUngroup.KeyboardAcceleratorTextOverride" xml:space="preserve">
     <value>Ctrl+Shift+G</value>
   </data>
+  <data name="OutlineMenuGroup.Text" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="OutlineMenuGroup.KeyboardAcceleratorTextOverride" xml:space="preserve">
+    <value>Ctrl+G</value>
+  </data>
+  <data name="OutlineMenuUngroup.Text" xml:space="preserve">
+    <value>Ungroup</value>
+  </data>
+  <data name="OutlineMenuUngroup.KeyboardAcceleratorTextOverride" xml:space="preserve">
+    <value>Ctrl+Shift+G</value>
+  </data>
+  <data name="OutlineMenuRename.Text" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="OutlineMenuRename.KeyboardAcceleratorTextOverride" xml:space="preserve">
+    <value>F2</value>
+  </data>
+  <data name="OutlineGroupFormat" xml:space="preserve">
+    <value>Group {0}</value>
+  </data>
+  <data name="OutlineGroupAccessibleFormat" xml:space="preserve">
+    <value>{0}, {1} controls</value>
+  </data>
+  <data name="OutlineMemberAccessibleFormat" xml:space="preserve">
+    <value>{0}, in {1}</value>
+  </data>
   <data name="EditorLockButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Lock — not built yet</value>
   </data>
@@ -904,6 +931,12 @@
   <data name="CanvasMenuDelete.KeyboardAcceleratorTextOverride" xml:space="preserve">
     <value>Del</value>
   </data>
+  <data name="CanvasMenuRename.Text" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="CanvasMenuRename.KeyboardAcceleratorTextOverride" xml:space="preserve">
+    <value>F2</value>
+  </data>
   <data name="CanvasMenuToFront.Text" xml:space="preserve">
     <value>Bring to front</value>
   </data>
@@ -1014,6 +1047,12 @@
   </data>
   <data name="InspectorTitleText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>What this control is called</value>
+  </data>
+  <data name="InspectorTitleControlAccessibleName" xml:space="preserve">
+    <value>What this control is called</value>
+  </data>
+  <data name="InspectorTitleGroupAccessibleName" xml:space="preserve">
+    <value>What this group is called</value>
   </data>
   <data name="FontDialogTitle" xml:space="preserve">
     <value>Label font</value>
@@ -1740,8 +1779,11 @@
   <data name="DragAxisHorizontal" xml:space="preserve">
     <value>Left and right</value>
   </data>
+  <data name="DragAxisCircular" xml:space="preserve">
+    <value>Round and round</value>
+  </data>
   <data name="DragAxisCaption.Text" xml:space="preserve">
-    <value>A circle is hard to trace on glass, so a knob is dragged in a straight line instead. Up is more, or right is more for a row of knobs in a narrow strip.</value>
+    <value>Up is more, or right is more for a row of knobs in a narrow strip. Round and round turns it like a real knob: clockwise is more, and it turns from where it is instead of jumping to your finger. It works best on a big knob.</value>
   </data>
   <data name="SpringTargetCombo.Header" xml:space="preserve">
     <value>Springs back to</value>
@@ -2297,6 +2339,69 @@
   </data>
   <data name="InspectorManySelected" xml:space="preserve">
     <value>Several controls</value>
+  </data>
+  <data name="InspectorGroupSelectedFormat" xml:space="preserve">
+    <value>A group of {0} controls</value>
+  </data>
+  <data name="ManySendHeading.Text" xml:space="preserve">
+    <value>Where they send</value>
+  </data>
+  <data name="ManySendDeviceLabel.Text" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="ManySendGroupLabel.Text" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="ManySendChannelLabel.Text" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="ManySendDeviceCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Where all of their messages go</value>
+  </data>
+  <data name="ManySendGroupCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Group for all of their messages</value>
+  </data>
+  <data name="ManySendChannelCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Channel for all of their messages</value>
+  </data>
+  <data name="ManySendDevicesLink.Content" xml:space="preserve">
+    <value>Set up devices…</value>
+  </data>
+  <data name="ManySendCaptionOne" xml:space="preserve">
+    <value>Changes where their one message goes.</value>
+  </data>
+  <data name="ManySendCaptionFormat" xml:space="preserve">
+    <value>Changes where all {0} of their messages go. A blank box means they don't all agree yet. Pick a setting to give it to every one of them.</value>
+  </data>
+  <data name="ManyListenHeading.Text" xml:space="preserve">
+    <value>Where they listen</value>
+  </data>
+  <data name="ManyListenDeviceLabel.Text" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="ManyListenGroupLabel.Text" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="ManyListenChannelLabel.Text" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="ManyListenDeviceCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Device they all listen to</value>
+  </data>
+  <data name="ManyListenGroupCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Group they all listen on</value>
+  </data>
+  <data name="ManyListenChannelCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Channel they all listen on</value>
+  </data>
+  <data name="ManyListenCaptionOne" xml:space="preserve">
+    <value>Changes the one control here that follows what arrives.</value>
+  </data>
+  <data name="ManyListenCaptionFormat" xml:space="preserve">
+    <value>Changes the {0} controls here that follow what arrives. A blank box means they don't all agree yet. Pick a setting to give it to every one of them.</value>
+  </data>
+  <data name="ManyListenNothing" xml:space="preserve">
+    <value>None of these controls follow what arrives. Turn that on for each one on its own Listens tab.</value>
   </data>
   <data name="InspectorUnnamedControl" xml:space="preserve">
     <value>Unnamed</value>

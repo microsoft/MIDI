@@ -969,3 +969,126 @@ void LayoutDocumentTests::AnNrpnAbove127SurvivesARoundTrip()
     VERIFY_IS_TRUE(back[0].Kind == glass::MessageKind::AssignedController);
     VERIFY_ARE_EQUAL(uint32_t{ 401 }, back[0].Number);
 }
+
+// ---- how a knob is turned ----
+
+void LayoutDocumentTests::AKnobTurnedRoundAndRoundSurvivesARoundTrip()
+{
+    auto document = MinimalDocument();
+
+    // Up and down is the default and stays out of the file.
+    VERIFY_IS_TRUE(glass::WriteLayoutToJson(document).find(L"\"drag\"") == std::wstring::npos);
+
+    document.Pages[0].Controls[0].Drag = glass::DragAxis::Circular;
+
+    auto const text = glass::WriteLayoutToJson(document);
+
+    VERIFY_IS_TRUE(text.find(L"\"drag\": \"circular\"") != std::wstring::npos);
+
+    auto const reread = glass::ReadLayoutFromJson(text);
+
+    VERIFY_IS_TRUE(reread.Succeeded);
+    VERIFY_IS_TRUE(reread.Document.Pages[0].Controls[0].Drag == glass::DragAxis::Circular);
+}
+
+// ---- what a group is called ----
+
+namespace
+{
+    // Two controls in one group, so there is a group to name.
+    glass::LayoutDocument GroupedDocument()
+    {
+        auto document = MinimalDocument();
+
+        auto second = document.Pages[0].Controls[0];
+        second.Id = L"c2";
+        document.Pages[0].Controls.push_back(second);
+
+        document.Pages[0].Controls[0].GroupId = L"g1";
+        document.Pages[0].Controls[1].GroupId = L"g1";
+
+        return document;
+    }
+}
+
+void LayoutDocumentTests::AGroupNameSurvivesARoundTrip()
+{
+    auto document = GroupedDocument();
+
+    // A group nobody named writes no list at all, so a file from before names comes back as it was.
+    VERIFY_IS_TRUE(glass::WriteLayoutToJson(document).find(L"\"controlGroups\"") == std::wstring::npos);
+
+    document.Pages[0].Groups.push_back({ L"g1", L"Drums", nullptr });
+
+    // The name of a group with nothing left in it is not written.
+    document.Pages[0].Groups.push_back({ L"g2", L"Bass", nullptr });
+
+    auto const text = glass::WriteLayoutToJson(document);
+
+    VERIFY_IS_TRUE(text.find(L"Bass") == std::wstring::npos);
+
+    auto const reread = glass::ReadLayoutFromJson(text);
+
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const& page = reread.Document.Pages[0];
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, page.Groups.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"g1" }, page.Groups[0].Id);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Drums" }, page.Groups[0].Name);
+
+    // Understood, so not kept aside as something this build does not know.
+    VERIFY_IS_TRUE(page.Unknown == nullptr);
+
+    VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
+}
+
+void LayoutDocumentTests::AGroupNameFromAFileIsChecked()
+{
+    auto document = GroupedDocument();
+
+    document.Pages[0].Groups.push_back({ L"g1", L"Drums", nullptr });
+
+    auto text = glass::WriteLayoutToJson(document);
+
+    // An entry with no id, a second name for the same group, and something that is not an
+    // entry at all, ahead of the real one.
+    std::wstring const list{ L"\"controlGroups\": [" };
+    auto const at = text.find(list);
+
+    VERIFY_ARE_NOT_EQUAL(std::wstring::npos, at);
+
+    text.insert(at + list.size(),
+        L"{ \"name\": \"Nobody\" }, 7, { \"id\": \"g1\", \"name\": \"First\\u0007\" }, { \"id\": \"g1\", \"name\": \"Second\" }, ");
+
+    auto const reread = glass::ReadLayoutFromJson(text);
+
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    // The first name for a group wins, cleaned of what cannot be shown, and the rest are dropped.
+    auto const& groups = reread.Document.Pages[0].Groups;
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, groups.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"g1" }, groups[0].Id);
+    VERIFY_ARE_EQUAL(std::wstring{ L"First" }, groups[0].Name);
+}
+
+void LayoutDocumentTests::ACopiedGroupIsNumberedOnFromItsName()
+{
+    glass::Page page{};
+
+    // A name nobody on the page has yet stays as it is, so a cut and paste changes nothing.
+    VERIFY_ARE_EQUAL(std::wstring{ L"Strip 1" }, glass::NameForCopiedGroup(L"Strip 1", page));
+    VERIFY_ARE_EQUAL(std::wstring{}, glass::NameForCopiedGroup(L"", page));
+
+    page.Groups.push_back({ L"a", L"Strip 1", nullptr });
+    page.Groups.push_back({ L"b", L"Strip 2", nullptr });
+    page.Groups.push_back({ L"c", L"Drums", nullptr });
+    page.Groups.push_back({ L"d", L"Bus 9", nullptr });
+    page.Groups.push_back({ L"e", L"7", nullptr });
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"Strip 3" }, glass::NameForCopiedGroup(L"Strip 1", page));
+    VERIFY_ARE_EQUAL(std::wstring{ L"Drums 2" }, glass::NameForCopiedGroup(L"Drums", page));
+    VERIFY_ARE_EQUAL(std::wstring{ L"Bus 10" }, glass::NameForCopiedGroup(L"Bus 9", page));
+    VERIFY_ARE_EQUAL(std::wstring{ L"8" }, glass::NameForCopiedGroup(L"7", page));
+}

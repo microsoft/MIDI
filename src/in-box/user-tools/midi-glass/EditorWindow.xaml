@@ -71,7 +71,7 @@
                 <Grid Height="32"
                       Margin="{x:Bind Indent}"
                       ColumnSpacing="8"
-                      AutomationProperties.Name="{x:Bind DisplayName}">
+                      AutomationProperties.Name="{x:Bind AccessibleName}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
@@ -121,6 +121,7 @@
             <KeyboardAccelerator Key="V" Modifiers="Control" Invoked="OnPasteAccelerator" />
             <KeyboardAccelerator Key="G" Modifiers="Control" Invoked="OnGroupAccelerator" />
             <KeyboardAccelerator Key="G" Modifiers="Control,Shift" Invoked="OnUngroupAccelerator" />
+            <KeyboardAccelerator Key="F2" Invoked="OnRenameAccelerator" />
             <KeyboardAccelerator Key="A" Modifiers="Control" Invoked="OnSelectAllAccelerator" />
             <KeyboardAccelerator Key="Delete" Invoked="OnDeleteAccelerator" />
 
@@ -634,15 +635,30 @@
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
+                                <!-- Shift and Ctrl pick several rows, so the outline can make a
+                                     group as well as show one. -->
                                 <ListView x:Name="OutlineList"
                                           x:Uid="OutlineList"
                                           Grid.Row="0"
-                                          SelectionMode="Single"
+                                          SelectionMode="Extended"
                                           ItemTemplate="{StaticResource OutlineTemplate}"
-                                          SelectionChanged="OnOutlineSelectionChanged">
+                                          SelectionChanged="OnOutlineSelectionChanged"
+                                          ContextRequested="OnOutlineContextRequested">
                                     <ListView.ItemContainerTransitions>
                                         <TransitionCollection />
                                     </ListView.ItemContainerTransitions>
+                                    <ListView.ContextFlyout>
+                                        <MenuFlyout x:Name="OutlineMenu" Opening="OnOutlineMenuOpening">
+                                            <MenuFlyoutItem x:Name="OutlineRenameItem" x:Uid="OutlineMenuRename" Text="Rename" Click="OnRenameMenuClick">
+                                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon>
+                                            </MenuFlyoutItem>
+                                            <MenuFlyoutSeparator />
+                                            <MenuFlyoutItem x:Name="OutlineGroupItem" x:Uid="OutlineMenuGroup" Text="Group" Click="OnGroupMenuClick">
+                                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE71D;" /></MenuFlyoutItem.Icon>
+                                            </MenuFlyoutItem>
+                                            <MenuFlyoutItem x:Name="OutlineUngroupItem" x:Uid="OutlineMenuUngroup" Text="Ungroup" Click="OnUngroupMenuClick" />
+                                        </MenuFlyout>
+                                    </ListView.ContextFlyout>
                                 </ListView>
 
                                 <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6" Margin="0,0,0,8">
@@ -707,6 +723,9 @@
                                 <MenuFlyoutItem x:Name="CanvasDuplicateItem" x:Uid="CanvasMenuDuplicate" Text="Duplicate" Click="OnDuplicateSelectionClick" />
                                 <MenuFlyoutItem x:Name="CanvasDeleteItem" x:Uid="CanvasMenuDelete" Text="Delete" Click="OnDeleteSelectionClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Name="CanvasRenameItem" x:Uid="CanvasMenuRename" Text="Rename" Click="OnRenameMenuClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutSeparator />
                                 <MenuFlyoutItem x:Name="CanvasGroupItem" x:Uid="CanvasMenuGroup" Text="Group" Click="OnGroupMenuClick">
@@ -2117,6 +2136,8 @@
                             </ScrollViewer>
 
                             <ScrollViewer x:Name="MidiPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                                <!-- One control's messages, or where several controls send. -->
+                                <Grid>
                                 <StackPanel x:Name="MidiPanel" Margin="8,0,16,16" Spacing="4">
 
                                     <TextBlock x:Uid="InspectorMessagesHeading" Text="What it sends" Style="{StaticResource InspectorHeadingStyle}" />
@@ -2420,12 +2441,57 @@
                                                   SelectionChanged="OnTargetPageChanged" />
                                     </StackPanel>
                                 </StackPanel>
+
+                                <!-- Moving a strip of controls to another synth is one change
+                                     here rather than one per message. A box they disagree on is
+                                     blank until something is picked for all of them. -->
+                                <StackPanel x:Name="ManySendPanel" Margin="8,0,16,16" Spacing="4" Visibility="Collapsed">
+                                    <TextBlock x:Uid="ManySendHeading" Text="Where they send" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <TextBlock x:Name="ManySendCaption"
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <Grid ColumnSpacing="8" RowSpacing="6" Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock x:Uid="ManySendDeviceLabel" Grid.Row="0" Grid.Column="0" Text="To" Style="{StaticResource InspectorLabelStyle}" />
+                                        <StackPanel Grid.Row="0" Grid.Column="1" Spacing="3">
+                                            <ComboBox x:Name="ManySendDeviceCombo" x:Uid="ManySendDeviceCombo"
+                                                      HorizontalAlignment="Stretch" SelectionChanged="OnManySendChanged" />
+                                            <HyperlinkButton x:Uid="ManySendDevicesLink"
+                                                             Padding="0"
+                                                             FontSize="11"
+                                                             Content="Set up devices…"
+                                                             Click="OnLayoutSettingsClick" />
+                                        </StackPanel>
+
+                                        <TextBlock x:Uid="ManySendGroupLabel" Grid.Row="1" Grid.Column="0" Text="Group" Style="{StaticResource InspectorLabelStyle}" />
+                                        <ComboBox x:Name="ManySendGroupCombo" x:Uid="ManySendGroupCombo" Grid.Row="1" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch" SelectionChanged="OnManySendChanged" />
+
+                                        <TextBlock x:Name="ManySendChannelLabel" x:Uid="ManySendChannelLabel" Grid.Row="2" Grid.Column="0" Text="Channel" Style="{StaticResource InspectorLabelStyle}" />
+                                        <ComboBox x:Name="ManySendChannelCombo" x:Uid="ManySendChannelCombo" Grid.Row="2" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch" SelectionChanged="OnManySendChanged" />
+                                    </Grid>
+                                </StackPanel>
+                                </Grid>
                             </ScrollViewer>
 
                             <!-- What the control listens for. A meter and a lamp do nothing else;
                                  a fader can both lead and follow, which is why this is its own
                                  tab rather than a section at the bottom of the sends one. -->
                             <ScrollViewer x:Name="MidiInPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                                <!-- What one control listens for, or where several listen. -->
+                                <Grid>
                                 <StackPanel x:Name="MidiInPanel" Margin="8,0,16,16" Spacing="4">
 
                                     <ToggleSwitch x:Name="FeedbackEnabledSwitch"
@@ -2523,6 +2589,42 @@
                                         </StackPanel>
                                     </ContentControl>
                                 </StackPanel>
+
+                                <!-- Only the controls that follow what arrives are changed.
+                                     Turning that on is still done one control at a time, because
+                                     what each one listens for is its own. -->
+                                <StackPanel x:Name="ManyListenPanel" Margin="8,0,16,16" Spacing="4" Visibility="Collapsed">
+                                    <TextBlock x:Uid="ManyListenHeading" Text="Where they listen" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <TextBlock x:Name="ManyListenCaption"
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <Grid x:Name="ManyListenFields" ColumnSpacing="8" RowSpacing="6" Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock x:Uid="ManyListenDeviceLabel" Grid.Row="0" Grid.Column="0" Text="From" Style="{StaticResource InspectorLabelStyle}" />
+                                        <ComboBox x:Name="ManyListenDeviceCombo" x:Uid="ManyListenDeviceCombo" Grid.Row="0" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch" SelectionChanged="OnManyListenChanged" />
+
+                                        <TextBlock x:Uid="ManyListenGroupLabel" Grid.Row="1" Grid.Column="0" Text="Group" Style="{StaticResource InspectorLabelStyle}" />
+                                        <ComboBox x:Name="ManyListenGroupCombo" x:Uid="ManyListenGroupCombo" Grid.Row="1" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch" SelectionChanged="OnManyListenChanged" />
+
+                                        <TextBlock x:Name="ManyListenChannelLabel" x:Uid="ManyListenChannelLabel" Grid.Row="2" Grid.Column="0" Text="Channel" Style="{StaticResource InspectorLabelStyle}" />
+                                        <ComboBox x:Name="ManyListenChannelCombo" x:Uid="ManyListenChannelCombo" Grid.Row="2" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch" SelectionChanged="OnManyListenChanged" />
+                                    </Grid>
+                                </StackPanel>
+                                </Grid>
                             </ScrollViewer>
 
                             <ScrollViewer x:Name="BehaviorPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
@@ -2578,7 +2680,7 @@
                                                   HorizontalAlignment="Stretch"
                                                   SelectionChanged="OnDragAxisChanged" />
                                         <TextBlock x:Uid="DragAxisCaption"
-                                                   Text="A circle is hard to trace on glass, so a knob is dragged in a straight line instead. Up is more, or right is more for a row of knobs in a narrow strip."
+                                                   Text="Up is more, or right is more for a row of knobs in a narrow strip. Round and round turns it like a real knob: clockwise is more, and it turns from where it is instead of jumping to your finger. It works best on a big knob."
                                                    FontSize="11"
                                                    TextWrapping="Wrap"
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
