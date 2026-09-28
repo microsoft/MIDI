@@ -174,7 +174,10 @@ namespace winrt::miditroubleshooter::implementation
                     L"DriverFollowUpRestartServiceTitle",
                     L"DriverChangeServiceRestartMessage");
 
-                co_await OfferServiceRestartAsync();
+                co_await OfferServiceRestartAsync(
+                    res::GetString(L"DriverChangeServiceRestartMessage"),
+                    DriversStatusText(),
+                    DriversProgressRing());
                 break;
 
             case native::DriverChangeFollowUp::ReplugDevice:
@@ -253,7 +256,11 @@ namespace winrt::miditroubleshooter::implementation
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to retire the driver change outcome.")
     }
 
-    foundation::IAsyncAction MainWindow::OfferServiceRestartAsync()
+    _Use_decl_annotations_
+    foundation::IAsyncAction MainWindow::OfferServiceRestartAsync(
+        winrt::hstring const message,
+        controls::TextBlock const statusText,
+        controls::ProgressRing const progressRing)
     {
         auto lifetime = get_strong();
 
@@ -276,24 +283,24 @@ namespace winrt::miditroubleshooter::implementation
                 co_return;
             }
 
-            std::wstring message{ res::GetString(L"DriverChangeServiceRestartMessage") };
+            std::wstring text{ message };
 
             if (!clients.empty())
             {
-                message += L"\r\n\r\n";
-                message += res::GetString(L"DriverChangeServiceRestartClientsIntro");
+                text += L"\r\n\r\n";
+                text += res::GetString(L"DriverChangeServiceRestartClientsIntro");
 
                 for (auto const& client : clients)
                 {
-                    message += L"\r\n\x2022 ";
-                    message += client;
+                    text += L"\r\n\x2022 ";
+                    text += client;
                 }
 
-                message += L"\r\n\r\n";
-                message += res::GetString(L"DriverChangeServiceRestartClientsOutro");
+                text += L"\r\n\r\n";
+                text += res::GetString(L"DriverChangeServiceRestartClientsOutro");
             }
 
-            RestartServiceDialogText().Text(winrt::hstring{ message });
+            RestartServiceDialogText().Text(winrt::hstring{ text });
             RestartServiceDialog().XamlRoot(Content().XamlRoot());
 
             m_openDialog = RestartServiceDialog();
@@ -302,22 +309,22 @@ namespace winrt::miditroubleshooter::implementation
 
             m_openDialog = nullptr;
 
-            // Later is a real answer. The driver is already in place either way.
+            // Later is a real answer. The change is already in place either way.
             if (answer != controls::ContentDialogResult::Primary || m_closing)
             {
                 co_return;
             }
 
-            DriversProgressRing().IsActive(true);
-            DriversStatusText().Text(res::GetString(L"ServiceRestarting"));
+            progressRing.IsActive(true);
+            statusText.Text(res::GetString(L"ServiceRestarting"));
 
-            auto const clearRing = wil::scope_exit([this]() noexcept
+            auto const clearRing = wil::scope_exit([this, progressRing]() noexcept
                 {
                     try
                     {
                         if (!m_closing)
                         {
-                            DriversProgressRing().IsActive(false);
+                            progressRing.IsActive(false);
                         }
                     }
                     catch (...)
@@ -337,7 +344,7 @@ namespace winrt::miditroubleshooter::implementation
                 co_return;
             }
 
-            DriversStatusText().Text(restart.Succeeded ?
+            statusText.Text(restart.Succeeded ?
                 res::GetString(L"ServiceRestarted") :
                 res::FormatString(L"ServiceRestartFailedFormat", winrt::hstring{ restart.ErrorMessage }));
 
@@ -350,7 +357,7 @@ namespace winrt::miditroubleshooter::implementation
         {
             m_openDialog = nullptr;
 
-            MIDI_TSHOOT_LOG_GENERAL_EXCEPTION(L"Unable to restart the service after a driver change.");
+            MIDI_TSHOOT_LOG_GENERAL_EXCEPTION(L"Unable to offer a restart of the service.");
         }
     }
 

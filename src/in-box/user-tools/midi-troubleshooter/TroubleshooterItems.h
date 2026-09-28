@@ -122,58 +122,105 @@ namespace winrt::miditroubleshooter::implementation
     {
         TransportItem() = default;
 
-        winrt::hstring TransportId() const noexcept { return m_transportId; }
-        winrt::hstring Name() const noexcept { return m_name; }
-        winrt::hstring CodeText() const noexcept { return m_codeText; }
-        winrt::hstring Description() const noexcept { return m_description; }
-        winrt::hstring DetailText() const noexcept { return m_detailText; }
-        winrt::hstring ModuleText() const noexcept { return m_moduleText; }
-        winrt::hstring StatusText() const noexcept { return m_statusText; }
-
-        xaml::Visibility OkVisibility() const noexcept { return m_okVisibility; }
-        xaml::Visibility WarningVisibility() const noexcept { return m_warningVisibility; }
-        xaml::Visibility ErrorVisibility() const noexcept { return m_errorVisibility; }
-
-        xaml::Visibility DescriptionVisibility() const noexcept
-        {
-            return m_description.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
-        }
-
-        xaml::Visibility ModuleVisibility() const noexcept
-        {
-            return m_moduleText.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
-        }
-
+        // which pill is shown: green, amber, red or gray
         enum class Severity
         {
             Ok = 0,
             Warning,
-            Error
+            Error,
+            Neutral
         };
 
-        void Update(
-            winrt::hstring const& transportId,
-            winrt::hstring const& name,
-            winrt::hstring const& codeText,
-            winrt::hstring const& description,
-            winrt::hstring const& detailText,
-            winrt::hstring const& moduleText,
-            winrt::hstring const& statusText,
-            Severity severity) noexcept;
+        // Everything one refresh knows about a transport. The strings arrive already formatted.
+        struct Values
+        {
+            winrt::hstring TransportId{};
+            winrt::hstring Name{};
+            winrt::hstring Code{};
+            winrt::hstring Description{};
+            winrt::hstring Detail{};
+            winrt::hstring Module{};
+            winrt::hstring State{};
+            winrt::hstring Reason{};
+            winrt::hstring RowAccessibleName{};
+            winrt::hstring ToggleText{};
+            winrt::hstring ToggleAccessibleName{};
+
+            Severity StateSeverity{ Severity::Ok };
+
+            // the subkey under Transport Plugins, empty when the transport cannot be switched off
+            winrt::hstring RegistryKeyName{};
+
+            bool Enabled{ true };
+            bool Loaded{ false };
+        };
+
+        winrt::hstring TransportId() const noexcept { return m_values.TransportId; }
+        winrt::hstring Name() const noexcept { return m_values.Name; }
+        winrt::hstring CodeText() const noexcept { return m_values.Code; }
+        winrt::hstring Description() const noexcept { return m_values.Description; }
+        winrt::hstring DetailText() const noexcept { return m_values.Detail; }
+        winrt::hstring ModuleText() const noexcept { return m_values.Module; }
+        winrt::hstring StateText() const noexcept { return m_values.State; }
+        winrt::hstring ReasonText() const noexcept { return m_values.Reason; }
+        winrt::hstring RowAccessibleName() const noexcept { return m_values.RowAccessibleName; }
+        winrt::hstring ToggleText() const noexcept { return m_values.ToggleText; }
+        winrt::hstring ToggleAccessibleName() const noexcept { return m_values.ToggleAccessibleName; }
+
+        bool CanToggle() const noexcept { return !m_values.RegistryKeyName.empty() && !m_isBusy; }
+
+        bool IsBusy() const noexcept { return m_isBusy; }
+
+        void IsBusy(_In_ bool value) noexcept
+        {
+            if (UpdateField(m_isBusy, value, L"IsBusy"))
+            {
+                RaisePropertyChanged(L"CanToggle");
+            }
+        }
+
+        xaml::Visibility SuccessVisibility() const noexcept { return PillVisibility(Severity::Ok); }
+        xaml::Visibility CautionVisibility() const noexcept { return PillVisibility(Severity::Warning); }
+        xaml::Visibility CriticalVisibility() const noexcept { return PillVisibility(Severity::Error); }
+        xaml::Visibility NeutralVisibility() const noexcept { return PillVisibility(Severity::Neutral); }
+
+        xaml::Visibility DescriptionVisibility() const noexcept
+        {
+            return m_values.Description.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
+        }
+
+        xaml::Visibility ModuleVisibility() const noexcept
+        {
+            return m_values.Module.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
+        }
+
+        xaml::Visibility ReasonVisibility() const noexcept
+        {
+            return m_values.Reason.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
+        }
+
+        xaml::Visibility ToggleVisibility() const noexcept
+        {
+            return m_values.RegistryKeyName.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
+        }
+
+        // not projected: what the Enable and Disable button acts on
+        winrt::hstring RegistryKeyName() const noexcept { return m_values.RegistryKeyName; }
+        bool TransportEnabled() const noexcept { return m_values.Enabled; }
+        bool TransportLoaded() const noexcept { return m_values.Loaded; }
+
+        void Update(_In_ Values const& values) noexcept;
 
         MIDI_TSHOOT_OBSERVABLE_ITEM()
 
-        winrt::hstring m_transportId{};
-        winrt::hstring m_name{};
-        winrt::hstring m_codeText{};
-        winrt::hstring m_description{};
-        winrt::hstring m_detailText{};
-        winrt::hstring m_moduleText{};
-        winrt::hstring m_statusText{};
+        xaml::Visibility PillVisibility(_In_ Severity const severity) const noexcept
+        {
+            return m_values.StateSeverity == severity ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
+        }
 
-        xaml::Visibility m_okVisibility{ xaml::Visibility::Visible };
-        xaml::Visibility m_warningVisibility{ xaml::Visibility::Collapsed };
-        xaml::Visibility m_errorVisibility{ xaml::Visibility::Collapsed };
+        Values m_values{};
+
+        bool m_isBusy{ false };
     };
 
     struct RegistryEntryItem : RegistryEntryItemT<RegistryEntryItem>

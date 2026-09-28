@@ -45,40 +45,52 @@ namespace winrt::miditroubleshooter::implementation
     }
 
     _Use_decl_annotations_
-    void TransportItem::Update(
-        winrt::hstring const& transportId,
-        winrt::hstring const& name,
-        winrt::hstring const& codeText,
-        winrt::hstring const& description,
-        winrt::hstring const& detailText,
-        winrt::hstring const& moduleText,
-        winrt::hstring const& statusText,
-        Severity severity) noexcept
+    void TransportItem::Update(Values const& values) noexcept
     {
-        UpdateField(m_transportId, transportId, L"TransportId");
-        UpdateField(m_name, name, L"Name");
-        UpdateField(m_codeText, codeText, L"CodeText");
-        UpdateField(m_statusText, statusText, L"StatusText");
+        UpdateField(m_values.TransportId, values.TransportId, L"TransportId");
+        UpdateField(m_values.Name, values.Name, L"Name");
+        UpdateField(m_values.Code, values.Code, L"CodeText");
+        UpdateField(m_values.Detail, values.Detail, L"DetailText");
+        UpdateField(m_values.State, values.State, L"StateText");
+        UpdateField(m_values.RowAccessibleName, values.RowAccessibleName, L"RowAccessibleName");
+        UpdateField(m_values.ToggleText, values.ToggleText, L"ToggleText");
+        UpdateField(m_values.ToggleAccessibleName, values.ToggleAccessibleName, L"ToggleAccessibleName");
 
-        if (UpdateField(m_description, description, L"Description"))
+        if (UpdateField(m_values.Description, values.Description, L"Description"))
         {
             RaisePropertyChanged(L"DescriptionVisibility");
         }
 
-        UpdateField(m_detailText, detailText, L"DetailText");
-
-        if (UpdateField(m_moduleText, moduleText, L"ModuleText"))
+        if (UpdateField(m_values.Module, values.Module, L"ModuleText"))
         {
             RaisePropertyChanged(L"ModuleVisibility");
         }
 
-        auto const ok = severity == Severity::Ok ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
-        auto const warning = severity == Severity::Warning ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
-        auto const error = severity == Severity::Error ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
+        if (UpdateField(m_values.Reason, values.Reason, L"ReasonText"))
+        {
+            RaisePropertyChanged(L"ReasonVisibility");
+        }
 
-        UpdateField(m_okVisibility, ok, L"OkVisibility");
-        UpdateField(m_warningVisibility, warning, L"WarningVisibility");
-        UpdateField(m_errorVisibility, error, L"ErrorVisibility");
+        if (m_values.StateSeverity != values.StateSeverity)
+        {
+            m_values.StateSeverity = values.StateSeverity;
+
+            RaisePropertyChanged(L"SuccessVisibility");
+            RaisePropertyChanged(L"CautionVisibility");
+            RaisePropertyChanged(L"CriticalVisibility");
+            RaisePropertyChanged(L"NeutralVisibility");
+        }
+
+        if (m_values.RegistryKeyName != values.RegistryKeyName)
+        {
+            m_values.RegistryKeyName = values.RegistryKeyName;
+
+            RaisePropertyChanged(L"CanToggle");
+            RaisePropertyChanged(L"ToggleVisibility");
+        }
+
+        m_values.Enabled = values.Enabled;
+        m_values.Loaded = values.Loaded;
     }
 
     _Use_decl_annotations_

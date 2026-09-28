@@ -52,6 +52,33 @@
                 <Setter Property="ScrollViewer.VerticalScrollMode" Value="Enabled" />
             </Style>
 
+            <!-- A pill is a shape, not a Border: a Border snaps its corner radius to whole pixels
+                 along with its bounds, so at 125% scaling the arc comes out stepped. -->
+            <Style x:Key="PillShapeStyle" TargetType="Rectangle">
+                <Setter Property="RadiusX" Value="11" />
+                <Setter Property="RadiusY" Value="11" />
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="UseLayoutRounding" Value="False" />
+            </Style>
+
+            <Style x:Key="PillPanelStyle" TargetType="StackPanel">
+                <Setter Property="Orientation" Value="Horizontal" />
+                <Setter Property="Spacing" Value="6" />
+                <Setter Property="Height" Value="22" />
+                <Setter Property="Padding" Value="9,0,9,0" />
+            </Style>
+
+            <Style x:Key="PillTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="PillGlyphStyle" TargetType="FontIcon">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="AutomationProperties.AccessibilityView" Value="Raw" />
+            </Style>
+
             <!-- One glyph per state rather than a brush built in code, so the colors follow the
                  theme when the customer switches it from the appearance flyout. -->
             <DataTemplate x:Key="RegistryEntryTemplate" x:DataType="local:RegistryEntryItem">
@@ -328,7 +355,7 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItem x:Name="TransportsNavigationItem" x:Uid="TransportsNavigationItem"
-                                    Content="Enabled transports" Tag="transports">
+                                    Content="Transports" Tag="transports">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE968;" />
                     </NavigationViewItem.Icon>
@@ -689,10 +716,11 @@
                     </ListView>
                 </Grid>
 
-                <!-- =========================== Enabled transports =========================== -->
+                <!-- ================================ Transports ================================ -->
                 <Grid x:Name="TransportsPanel" Grid.Row="1" Margin="16,12,16,16" Visibility="Collapsed"
                       RowSpacing="8">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
@@ -704,9 +732,13 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0" Spacing="2">
-                            <TextBlock x:Uid="TransportsPageTitle" Text="Enabled transports"
+                            <TextBlock x:Uid="TransportsPageTitle" Text="Transports"
                                        AutomationProperties.HeadingLevel="Level1"
                                        Style="{ThemeResource SubtitleTextBlockStyle}" />
+                            <TextBlock x:Uid="TransportsPageDescription"
+                                       Text="Transports connect the MIDI service to each kind of device."
+                                       Style="{StaticResource PropertyLabelStyle}"
+                                       TextWrapping="Wrap" />
                             <TextBlock x:Name="TransportsStatusText"
                                        Style="{StaticResource PropertyLabelStyle}"
                                        TextWrapping="Wrap" />
@@ -720,7 +752,34 @@
                                 Content="Refresh" VerticalAlignment="Top" Click="OnRefreshServiceHealthClick" />
                     </Grid>
 
-                    <ListView x:Name="TransportsListView" x:Uid="TransportsListView" Grid.Row="1"
+                    <!-- The last change and how it went. Kept out of the status line above, which
+                         every refresh rewrites. -->
+                    <StackPanel Grid.Row="1" Spacing="8">
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock x:Name="TransportsActionText" Grid.Column="0"
+                                       VerticalAlignment="Center" TextWrapping="Wrap" />
+                            <ProgressRing x:Name="TransportsProgressRing" Grid.Column="1"
+                                          Width="20" Height="20" IsActive="False" VerticalAlignment="Center" />
+                        </Grid>
+
+                        <!-- open while a change is waiting for the service to restart -->
+                        <InfoBar x:Name="TransportsRestartInfoBar" x:Uid="TransportsRestartInfoBar"
+                                 Severity="Warning" IsOpen="False" IsClosable="False"
+                                 Title="Restart the MIDI service to finish"
+                                 Message="The MIDI service checks which transports are enabled only when it starts.">
+                            <InfoBar.ActionButton>
+                                <Button x:Name="TransportsRestartServiceButton" x:Uid="TransportsRestartServiceButton"
+                                        Content="Restart the service" Click="OnRestartServiceForTransportsClick" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
+                    </StackPanel>
+
+                    <ListView x:Name="TransportsListView" x:Uid="TransportsListView" Grid.Row="2"
                               SelectionMode="None"
                               ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListView.ItemContainerStyle>
@@ -733,29 +792,15 @@
                             <DataTemplate x:DataType="local:TransportItem">
                                 <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                                        AutomationProperties.Name="{x:Bind Name, Mode=OneWay}"
+                                        AutomationProperties.Name="{x:Bind RowAccessibleName, Mode=OneWay}"
                                         BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,4">
                                     <Grid ColumnSpacing="12">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
 
-                                        <FontIcon Grid.Column="0" Glyph="&#xE73E;" FontSize="16"
-                                                  VerticalAlignment="Top" Margin="0,2,0,0"
-                                                  Visibility="{x:Bind OkVisibility, Mode=OneWay}"
-                                                  Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
-                                        <FontIcon Grid.Column="0" Glyph="&#xE7BA;" FontSize="16"
-                                                  VerticalAlignment="Top" Margin="0,2,0,0"
-                                                  Visibility="{x:Bind WarningVisibility, Mode=OneWay}"
-                                                  Foreground="{ThemeResource SystemFillColorCautionBrush}" />
-                                        <FontIcon Grid.Column="0" Glyph="&#xEA39;" FontSize="16"
-                                                  VerticalAlignment="Top" Margin="0,2,0,0"
-                                                  Visibility="{x:Bind ErrorVisibility, Mode=OneWay}"
-                                                  Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
-
-                                        <StackPanel Grid.Column="1" Spacing="2">
+                                        <StackPanel Grid.Column="0" Spacing="2">
                                             <TextBlock Text="{x:Bind Name, Mode=OneWay}"
                                                        Style="{ThemeResource BodyStrongTextBlockStyle}"
                                                        TextWrapping="Wrap" />
@@ -764,6 +809,10 @@
                                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                                        TextWrapping="Wrap"
                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <TextBlock Text="{x:Bind ReasonText, Mode=OneWay}"
+                                                       Visibility="{x:Bind ReasonVisibility, Mode=OneWay}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       TextWrapping="Wrap" />
                                             <TextBlock Text="{x:Bind DetailText, Mode=OneWay}"
                                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                                        TextWrapping="Wrap"
@@ -776,14 +825,83 @@
                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Top">
-                                            <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
-                                                       Style="{ThemeResource CaptionTextBlockStyle}"
-                                                       HorizontalAlignment="Right" />
+                                        <!-- which pill is visible carries the meaning, so the color
+                                             is never the only thing saying it -->
+                                        <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Top">
+                                            <Grid HorizontalAlignment="Right">
+                                                <Grid Visibility="{x:Bind SuccessVisibility, Mode=OneWay}">
+                                                    <Rectangle Style="{StaticResource PillShapeStyle}"
+                                                               Fill="{ThemeResource SystemFillColorSuccessBackgroundBrush}"
+                                                               Stroke="{ThemeResource SystemFillColorSuccessBrush}" />
+                                                    <StackPanel Style="{StaticResource PillPanelStyle}">
+                                                        <FontIcon Glyph="&#xE73E;"
+                                                                  Style="{StaticResource PillGlyphStyle}"
+                                                                  Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
+                                                        <TextBlock Text="{x:Bind StateText, Mode=OneWay}"
+                                                                   Style="{StaticResource PillTextStyle}"
+                                                                   Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <Grid Visibility="{x:Bind CautionVisibility, Mode=OneWay}">
+                                                    <Rectangle Style="{StaticResource PillShapeStyle}"
+                                                               Fill="{ThemeResource SystemFillColorCautionBackgroundBrush}"
+                                                               Stroke="{ThemeResource SystemFillColorCautionBrush}" />
+                                                    <StackPanel Style="{StaticResource PillPanelStyle}">
+                                                        <FontIcon Glyph="&#xE7BA;"
+                                                                  Style="{StaticResource PillGlyphStyle}"
+                                                                  Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                                                        <TextBlock Text="{x:Bind StateText, Mode=OneWay}"
+                                                                   Style="{StaticResource PillTextStyle}"
+                                                                   Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <Grid Visibility="{x:Bind CriticalVisibility, Mode=OneWay}">
+                                                    <Rectangle Style="{StaticResource PillShapeStyle}"
+                                                               Fill="{ThemeResource SystemFillColorCriticalBackgroundBrush}"
+                                                               Stroke="{ThemeResource SystemFillColorCriticalBrush}" />
+                                                    <StackPanel Style="{StaticResource PillPanelStyle}">
+                                                        <FontIcon Glyph="&#xEA39;"
+                                                                  Style="{StaticResource PillGlyphStyle}"
+                                                                  Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                                                        <TextBlock Text="{x:Bind StateText, Mode=OneWay}"
+                                                                   Style="{StaticResource PillTextStyle}"
+                                                                   Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <Grid Visibility="{x:Bind NeutralVisibility, Mode=OneWay}">
+                                                    <Rectangle Style="{StaticResource PillShapeStyle}"
+                                                               Fill="{ThemeResource SystemFillColorNeutralBackgroundBrush}"
+                                                               Stroke="{ThemeResource SystemFillColorNeutralBrush}" />
+                                                    <StackPanel Style="{StaticResource PillPanelStyle}">
+                                                        <FontIcon Glyph="&#xE7E8;"
+                                                                  Style="{StaticResource PillGlyphStyle}"
+                                                                  Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                        <TextBlock Text="{x:Bind StateText, Mode=OneWay}"
+                                                                   Style="{StaticResource PillTextStyle}"
+                                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Grid>
+
                                             <TextBlock Text="{x:Bind CodeText, Mode=OneWay}"
                                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                                        HorizontalAlignment="Right"
                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right"
+                                                        Visibility="{x:Bind ToggleVisibility, Mode=OneWay}">
+                                                <ProgressRing IsActive="{x:Bind IsBusy, Mode=OneWay}"
+                                                              Width="20"
+                                                              Height="20" />
+                                                <Button Content="{x:Bind ToggleText, Mode=OneWay}"
+                                                        AutomationProperties.Name="{x:Bind ToggleAccessibleName, Mode=OneWay}"
+                                                        IsEnabled="{x:Bind CanToggle, Mode=OneWay}"
+                                                        MinWidth="88"
+                                                        Click="OnToggleTransportClick" />
+                                            </StackPanel>
                                         </StackPanel>
                                     </Grid>
                                 </Border>

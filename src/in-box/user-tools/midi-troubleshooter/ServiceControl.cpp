@@ -204,6 +204,23 @@ namespace miditroubleshooter
                 status.State = StateFromWin32(statusProcess.dwCurrentState);
                 status.ProcessId = statusProcess.dwProcessId;
                 status.QuerySucceeded = true;
+
+                if (statusProcess.dwCurrentState == SERVICE_RUNNING && statusProcess.dwProcessId != 0)
+                {
+                    wil::unique_handle process{
+                        ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, statusProcess.dwProcessId) };
+
+                    FILETIME created{};
+                    FILETIME exited{};
+                    FILETIME kernel{};
+                    FILETIME user{};
+
+                    if (process && ::GetProcessTimes(process.get(), &created, &exited, &kernel, &user))
+                    {
+                        status.ProcessStartTime =
+                            (static_cast<uint64_t>(created.dwHighDateTime) << 32) | created.dwLowDateTime;
+                    }
+                }
             }
             else
             {

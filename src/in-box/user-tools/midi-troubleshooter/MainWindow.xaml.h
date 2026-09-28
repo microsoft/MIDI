@@ -62,6 +62,10 @@ namespace winrt::miditroubleshooter::implementation
         winrt::fire_and_forget OnSetAutomaticStartClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnSetManualStartClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        // Transports
+        winrt::fire_and_forget OnToggleTransportClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnRestartServiceForTransportsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
         // Registry
         winrt::fire_and_forget OnRefreshRegistryClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnRepairRegistryClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -140,7 +144,12 @@ namespace winrt::miditroubleshooter::implementation
         // from wherever the customer did it.
         void OnMidiServiceRestarted() noexcept;
 
-        foundation::IAsyncAction OfferServiceRestartAsync();
+        // Asks first, listing the applications that would lose their connections, and reports the
+        // outcome in the page's own status line.
+        foundation::IAsyncAction OfferServiceRestartAsync(
+            _In_ winrt::hstring const message,
+            _In_ controls::TextBlock const statusText,
+            _In_ controls::ProgressRing const progressRing);
 
         // False when the action needs administrator rights the app does not have. It has
         // already told the customer by the time it returns.
@@ -217,6 +226,25 @@ namespace winrt::miditroubleshooter::implementation
         ::miditroubleshooter::ReproCapture m_capture{};
         std::vector<::miditroubleshooter::DriverPackageInfo> m_korgUsbPackages{};
         std::vector<::miditroubleshooter::DriverPackageInfo> m_korgBlePackages{};
+
+        // Whether each transport switched from this page was loaded when the running service
+        // started. The registry stops saying so the moment it changes, and the service only
+        // reads it at startup. Keyed by transport id; cleared when the service process changes.
+        std::unordered_map<std::wstring, bool> m_transportLoadedAtServiceStart{};
+        uint32_t m_transportRecordProcessId{ 0 };
+        uint64_t m_transportRecordStartTime{ 0 };
+
+        // The service describes only the transports that are enabled, so a transport switched
+        // off keeps the name and description it was last reported with.
+        struct TransportDescription
+        {
+            winrt::hstring Name{};
+            winrt::hstring Code{};
+            winrt::hstring Description{};
+            winrt::hstring Detail{};
+        };
+
+        std::unordered_map<std::wstring, TransportDescription> m_transportDescriptions{};
 
         winrt::hstring m_midiDiagOutput{};
         winrt::hstring m_midiKsInfoOutput{};

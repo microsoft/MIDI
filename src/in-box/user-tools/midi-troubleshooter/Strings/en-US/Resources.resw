@@ -175,7 +175,7 @@
     <value>Active sessions</value>
   </data>
   <data name="TransportsNavigationItem.Content" xml:space="preserve">
-    <value>Enabled transports</value>
+    <value>Transports</value>
   </data>
   <data name="ServiceNavigationItem.Content" xml:space="preserve">
     <value>MIDI service</value>
@@ -529,7 +529,10 @@
 
   <!-- Transports page -->
   <data name="TransportsPageTitle.Text" xml:space="preserve">
-    <value>Enabled transports</value>
+    <value>Transports</value>
+  </data>
+  <data name="TransportsPageDescription.Text" xml:space="preserve">
+    <value>Transports connect the MIDI service to each kind of device: USB, Bluetooth, the network, and app-to-app MIDI. You can disable the ones you do not use. The MIDI service then stops looking for those devices and stops opening network ports it does not need. This needs administrator rights, and takes effect when the MIDI service restarts.</value>
   </data>
   <data name="TransportsLearnMoreLink.Content" xml:space="preserve">
     <value>Why a transport may not load</value>
@@ -537,23 +540,38 @@
   <data name="RefreshTransportsButton.Content" xml:space="preserve">
     <value>Refresh</value>
   </data>
-  <data name="TransportStatusLoaded" xml:space="preserve">
-    <value>Loaded</value>
+  <data name="TransportStateEnabledLoaded" xml:space="preserve">
+    <value>Enabled and loaded</value>
   </data>
-  <data name="TransportStatusDisabled" xml:space="preserve">
-    <value>Disabled</value>
+  <data name="TransportStateEnabledNotLoaded" xml:space="preserve">
+    <value>Enabled but not loaded</value>
   </data>
-  <data name="TransportStatusNotLoaded" xml:space="preserve">
-    <value>Did not load</value>
+  <data name="TransportStateDisabledLoaded" xml:space="preserve">
+    <value>Disabled but still loaded until restart</value>
   </data>
-  <data name="TransportStatusNotRegistered" xml:space="preserve">
-    <value>Not registered</value>
+  <data name="TransportStateDisabledNotLoaded" xml:space="preserve">
+    <value>Disabled and not loaded</value>
   </data>
-  <data name="TransportStatusFileMissing" xml:space="preserve">
-    <value>File missing</value>
+  <data name="TransportReasonBuiltIn" xml:space="preserve">
+    <value>Built into the MIDI service, so it cannot be disabled.</value>
   </data>
-  <data name="TransportStatusServiceNotRunning" xml:space="preserve">
-    <value>Service not running</value>
+  <data name="TransportReasonNotRegistered" xml:space="preserve">
+    <value>It is not registered with Windows, so the MIDI service cannot load it. Reinstalling it usually fixes this.</value>
+  </data>
+  <data name="TransportReasonFileMissing" xml:space="preserve">
+    <value>Its file is not on this PC, so the MIDI service cannot load it. Reinstalling it usually fixes this.</value>
+  </data>
+  <data name="TransportReasonServiceNotRunning" xml:space="preserve">
+    <value>The MIDI service is not running. It loads when the service starts.</value>
+  </data>
+  <data name="TransportReasonLoadsAfterRestart" xml:space="preserve">
+    <value>It was enabled after the MIDI service started. It loads when the service restarts.</value>
+  </data>
+  <data name="TransportReasonNotLoaded" xml:space="preserve">
+    <value>The MIDI service did not load it. It may not be signed while developer mode is off, or it may have failed to start.</value>
+  </data>
+  <data name="TransportReasonUnloadsAfterRestart" xml:space="preserve">
+    <value>It was disabled after the MIDI service started. The service keeps using it until it restarts.</value>
   </data>
   <data name="TransportStatusClientComponent" xml:space="preserve">
     <value>Registered</value>
@@ -575,6 +593,84 @@
   </data>
   <data name="TransportsProblemFormat" xml:space="preserve">
     <value>{0} transport(s), {1} not loaded or disabled.</value>
+  </data>
+  <data name="TransportRowAccessibleNameFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>{0} is the transport name, {1} is its state, for example "Enabled and loaded"</comment>
+  </data>
+  <data name="TransportEnableButtonText" xml:space="preserve">
+    <value>Enable</value>
+  </data>
+  <data name="TransportDisableButtonText" xml:space="preserve">
+    <value>Disable</value>
+  </data>
+  <data name="TransportEnableButtonAccessibleNameFormat" xml:space="preserve">
+    <value>Enable {0}</value>
+    <comment>{0} is the transport name</comment>
+  </data>
+  <data name="TransportDisableButtonAccessibleNameFormat" xml:space="preserve">
+    <value>Disable {0}</value>
+    <comment>{0} is the transport name</comment>
+  </data>
+  <data name="TransportDisableConfirmTitleFormat" xml:space="preserve">
+    <value>Disable {0}?</value>
+    <comment>{0} is the transport name</comment>
+  </data>
+  <data name="TransportDisableWarningKsa" xml:space="preserve">
+    <value>This will remove access to all USB MIDI 1.0 devices using the older MIDI 1.0 class driver or a vendor driver. This also includes many third-party virtual device and loopback drivers. Are you sure?</value>
+  </data>
+  <data name="TransportDisableWarningKs" xml:space="preserve">
+    <value>This will remove access to all USB MIDI 1.0 and MIDI 2.0 devices using the new MIDI class driver. Are you sure?</value>
+  </data>
+  <data name="TransportDisableWarningLoopback" xml:space="preserve">
+    <value>This will remove all loopback endpoint pairs, including the default app loopback and any you created in Windows MIDI Loopback Setup. Applications that use them to send MIDI to each other will lose that connection. Are you sure?</value>
+  </data>
+  <data name="TransportDisableWarningBasicLoopback" xml:space="preserve">
+    <value>This will remove all basic loopback endpoints, including the default basic app loopback and any you created in Windows MIDI Loopback Setup. Applications that use them to send MIDI to each other will lose that connection. Are you sure?</value>
+  </data>
+  <data name="TransportDisableWarningRtpMidi" xml:space="preserve">
+    <value>This will remove all RTP-MIDI network sessions, both the ones this PC hosts and the ones it connects to on other devices. The MIDI service will also stop opening network ports for RTP-MIDI. Are you sure?</value>
+  </data>
+  <data name="TransportDisableWarningNetwork" xml:space="preserve">
+    <value>This will remove all Network MIDI 2.0 hosts and connections, including the ones you set up in Windows MIDI Network Setup. The MIDI service will also stop opening network ports for Network MIDI 2.0. Are you sure?</value>
+  </data>
+  <data name="TransportDisableWarningBluetooth" xml:space="preserve">
+    <value>This will remove access to all Bluetooth LE MIDI devices, including the ones you set up in Windows MIDI Bluetooth Setup. The MIDI service will also stop looking for Bluetooth MIDI devices and connecting to them. Are you sure?</value>
+  </data>
+  <data name="TransportDisableWarningVirtual" xml:space="preserve">
+    <value>This will turn off app-to-app MIDI. Applications will no longer be able to create virtual MIDI devices that other applications can connect to, which some software instruments and MIDI utilities rely on. Are you sure?</value>
+  </data>
+  <data name="TransportDisableWarningSynth" xml:space="preserve">
+    <value>This will remove the built-in General MIDI synthesizer. Applications that play MIDI through it will need a different synthesizer or MIDI device. Are you sure?</value>
+  </data>
+  <data name="TransportDisableWarningOtherFormat" xml:space="preserve">
+    <value>This will remove access to every device and endpoint that {0} provides. Are you sure?</value>
+    <comment>{0} is the transport name</comment>
+  </data>
+  <data name="TransportEnabledFormat" xml:space="preserve">
+    <value>{0} is enabled. It loads the next time the MIDI service starts.</value>
+    <comment>{0} is the transport name</comment>
+  </data>
+  <data name="TransportDisabledFormat" xml:space="preserve">
+    <value>{0} is disabled. The MIDI service stops using it the next time it starts.</value>
+    <comment>{0} is the transport name</comment>
+  </data>
+  <data name="TransportChangeFailed" xml:space="preserve">
+    <value>The change could not be saved. Check that this tool is running as administrator.</value>
+  </data>
+  <data name="TransportsRestartInfoBar.Title" xml:space="preserve">
+    <value>Restart the MIDI service to finish</value>
+  </data>
+  <data name="TransportsRestartInfoBar.Message" xml:space="preserve">
+    <value>The MIDI service checks which transports are enabled only when it starts. Restarting it disconnects every application using MIDI.</value>
+  </data>
+  <data name="TransportsRestartServiceButton.Content" xml:space="preserve">
+    <value>Restart the service</value>
+  </data>
+  <data name="TransportsServiceRestartMessage" xml:space="preserve">
+    <value>The MIDI service checks which transports are enabled only when it starts, so it has to restart before your change takes effect. No restart of Windows is needed.
+
+Every application using MIDI loses its connections when the service restarts, so close them and save your work first.</value>
   </data>
 
   <!-- Service page -->

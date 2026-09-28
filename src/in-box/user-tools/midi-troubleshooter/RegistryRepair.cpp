@@ -38,6 +38,7 @@ namespace miditroubleshooter
 
         constexpr wchar_t ValueUseLegacyMidi[] = L"UseLegacyMidi";
         constexpr wchar_t ValueMidisrvTransferComplete[] = L"MidisrvTransferComplete";
+        constexpr wchar_t ValueTransportEnabled[] = L"Enabled";
 
         constexpr wchar_t RequiredMidiDriver[] = L"wdmaud.drv";
         constexpr wchar_t RequiredMidi1Driver[] = L"wdmaud2.drv";
@@ -373,6 +374,7 @@ namespace miditroubleshooter
                 {
                     TransportRegistrationInfo info{};
                     info.Name = keyData.name;
+                    info.KeyName = keyData.name;
 
                     wil::unique_hkey transportKey{};
 
@@ -388,12 +390,30 @@ namespace miditroubleshooter
                             info.ClassId = classId.value();
                         }
 
-                        auto const enabled = wil::reg::try_get_value_dword(transportKey.get(), L"Enabled");
+                        try
+                        {
+                            auto const enabled = wil::reg::try_get_value_dword(transportKey.get(), ValueTransportEnabled);
 
-                        info.EnabledValuePresent = enabled.has_value();
+                            info.EnabledValuePresent = enabled.has_value();
 
-                        // absent means enabled, which is how the service reads it
-                        info.Enabled = !enabled.has_value() || enabled.value() > 0;
+                            // absent means enabled, which is how the service reads it
+                            info.Enabled = !enabled.has_value() || enabled.value() > 0;
+                        }
+                        catch (...)
+                        {
+                            // the service reads a value of the wrong type as enabled too
+                            info.EnabledValuePresent = true;
+                            info.Enabled = true;
+                        }
+
+                        FILETIME lastWrite{};
+
+                        if (::RegQueryInfoKeyW(transportKey.get(), nullptr, nullptr, nullptr, nullptr, nullptr,
+                            nullptr, nullptr, nullptr, nullptr, nullptr, &lastWrite) == ERROR_SUCCESS)
+                        {
+                            info.KeyLastWriteTime =
+                                (static_cast<uint64_t>(lastWrite.dwHighDateTime) << 32) | lastWrite.dwLowDateTime;
+                        }
                     }
 
                     ResolveComServer(info);
@@ -484,6 +504,36 @@ namespace miditroubleshooter
         ScanTransports(transports);
 
         return transports;
+    }
+
+    _Use_decl_annotations_
+    bool TrySetTransportEnabled(std::wstring const& keyName, bool const enabled) noexcept
+    {
+        try
+        {
+            // names come from enumerating the key, so a separator here would point somewhere else
+            if (keyName.empty() || keyName.find(L'\\') != std::wstring::npos)
+            {
+                return false;
+            }
+
+            auto const path = std::wstring{ TransportPluginsKey } + L"\\" + keyName;
+
+            // opened, never created, so a transport uninstalled since the scan cannot come back as
+            // a key with no class id
+            wil::unique_hkey key{};
+
+            if (::RegOpenKeyExW(HKEY_LOCAL_MACHINE, path.c_str(), 0, KEY_SET_VALUE, key.put()) != ERROR_SUCCESS)
+            {
+                return false;
+            }
+
+            return SUCCEEDED(wil::reg::set_value_dword_nothrow(
+                key.get(), ValueTransportEnabled, enabled ? 1u : 0u));
+        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to change whether a transport is enabled.")
+
+        return false;
     }
 
     RegistryScan ScanRegistry() noexcept
