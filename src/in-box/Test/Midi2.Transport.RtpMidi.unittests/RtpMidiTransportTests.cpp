@@ -317,6 +317,10 @@ void RtpMidiTransportTests::TestRemoteInvitesHost()
 
     VERIFY_IS_TRUE(WaitFor([&]() { return !remote.Ended().empty(); }, 3000), L"the remote is told the connection ended");
     VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints()[baseline].Removed; }, 3000), L"the endpoint is removed");
+
+    auto const again = Send(Command(L"disconnectRemoteClient",
+        { { L"entryIdentifier", m_hostId }, { L"connectionId", std::to_wstring(connectionId) } }));
+    VERIFY_IS_TRUE(!IsSuccess(again) && ErrorCode(again) == 17u, L"an ended connection cannot be disconnected again");
 }
 
 void RtpMidiTransportTests::TestClientConnectsToRemoteHost()

@@ -1183,6 +1183,9 @@ CMidi2RtpMidiEndpointManager::DisconnectConnection(GUID const& entryId, uint32_t
     RtpMidi::Participant participant{};
     RETURN_HR_IF(E_NOTFOUND, !node->TrySnapshot(connectionId, participant));
 
+    // an ended connection is kept briefly by the engine, but is gone as far as a caller can tell
+    RETURN_HR_IF(E_NOTFOUND, participant.State == RtpMidi::ParticipantState::Ended);
+
     RETURN_IF_FAILED(node->EndConnection(connectionId));
 
     return S_OK;
