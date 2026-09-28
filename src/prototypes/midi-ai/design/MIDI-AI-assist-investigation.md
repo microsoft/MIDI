@@ -136,7 +136,7 @@ These are in the comps. None of it is built.
 Tested on Pete's PC on September 27, 2026, with the MIDI service running:
 
 - The server builds for x64 and ARM64 (Release, warnings treated as errors).
-- The test script passes all 91 checks against the x64 build. It covers both spec versions, bad requests, every tool, the files the tools write, and feedback loops, including loops that go through a patch that's already saved.
+- The test script passes all 94 checks against the x64 build. It covers both spec versions, bad requests, every tool, the files the tools write, and feedback loops, including loops that go through a patch that's already saved.
 - Patch drafts were run through Patchbay's own filter and transform code: 12 checks, such as "a low note goes up an octave at 80% velocity", "a note above the split is dropped" and "clock is dropped".
 - Layout drafts were read back and drawn by `midiglass.exe` itself.
 - Two drafts made through the server's own tools, with Pete's real devices, were opened in the real apps. Patchbay listed the patch draft and showed it as "Not routing", with a "Route this patch" button. Glass showed the layout draft in its library with its picture and "1 device ready".
@@ -154,7 +154,7 @@ Not tested:
 ## Gaps in the spike
 
 - It covers the common Patchbay filters and transforms: channels, message kinds, note ranges, transpose, channel, note, controller and program maps, and velocity. Not all of them.
-- Glass controls can send control changes, notes, pitch bend and channel pressure. No SysEx, sequences or MIDI 2.0 messages.
+- Glass controls can send control changes, notes, pitch bend, channel pressure, RPN and NRPN. No SysEx, sequences or other MIDI 2.0 messages.
 - There's no way to change an existing patch or layout. That needs a "get" tool and a way to save a changed copy as a draft.
 - Glass previews don't draw labels, so the preview text lists them.
 - Tool text is in the code, not in resource files.

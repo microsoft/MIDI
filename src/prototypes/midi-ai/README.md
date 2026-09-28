@@ -32,7 +32,7 @@ pwsh -File mcp\test\patch-oracle\build-oracle.ps1
 pwsh -File mcp\test\Invoke-McpHarness.ps1
 ```
 
-The MIDI service has to be running. The test writes only to temporary folders. If `midiglass.exe` is in this repository's build output, the test also uses it to draw a layout and to read back a saved draft. Last run: 91 passed, 0 failed.
+The MIDI service has to be running. The test writes only to temporary folders. If `midiglass.exe` is in this repository's build output, the test also uses it to draw a layout and to read back a saved draft. Last run: 94 passed, 0 failed.
 
 ## Try it with an assistant
 

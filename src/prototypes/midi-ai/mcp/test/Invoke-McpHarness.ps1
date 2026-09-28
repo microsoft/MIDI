@@ -387,9 +387,33 @@ if ($layoutFile) {
 $layouts = Invoke-Tool $server 'list_glass_layouts' @{}
 Check 'list_glass_layouts reads it back through the app reader' ((Text-Of $layouts) -match 'Eight channel mixer" \[draft')
 
+$parameters = [ordered]@{
+    name     = 'Synth parameters'
+    devices  = @(@{ name = 'Synth'; endpoint = $bloop.name })
+    controls = @(
+        [ordered]@{ kind = 'knob'; label = 'Cutoff'; sends = @(@{ kind = 'nrpn'; msb = 3; lsb = 17 }) },
+        [ordered]@{ kind = 'fader'; label = 'Bend range'; sends = @(@{ kind = 'rpn'; number = 0 }) }
+    )
+}
+$parameterPreview = Invoke-Tool $server 'preview_layout' $parameters
+Check 'preview_layout names an NRPN and an RPN the way a manual does' ((Text-Of $parameterPreview) -match 'NRPN 3:17 on channel 1 to Synth' -and (Text-Of $parameterPreview) -match 'RPN 0:0 on channel 1 to Synth') (Text-Of $parameterPreview)
+
+$parameterSaved = Invoke-Tool $server 'save_layout_draft' $parameters
+$parameterFile = Get-ChildItem $layoutFolder -Filter 'Synth parameters*.midilayout' | Select-Object -First 1
+if ($parameterFile) {
+    $sent = (Get-Content $parameterFile.FullName -Raw | ConvertFrom-Json -Depth 60).pages[0].controls | ForEach-Object { $_.messages[0] }
+    Check 'the saved draft carries the app''s RPN and NRPN kinds and numbers' ($sent[0].kind -eq 'assignedController' -and $sent[0].number -eq 401 -and $sent[1].kind -eq 'registeredController' -and $sent[1].number -eq 0)
+}
+else {
+    Check 'the saved draft carries the app''s RPN and NRPN kinds and numbers' $false (Text-Of $parameterSaved)
+}
+
+$badParameter = Invoke-Tool $server 'preview_layout' ([ordered]@{ name = 'Bad NRPN'; devices = @(@{ endpoint = $bloop.name }); controls = @(@{ kind = 'knob'; sends = @(@{ kind = 'nrpn'; number = 20000 }) }) })
+Check 'an NRPN number past 16383 is refused' ((Text-Of $badParameter) -match '0 to 16383')
+
 if ($layoutFile) {
     Copy-Item $layoutFile.FullName (Join-Path $layoutFolder 'Old build.midilayout.json')
-    Check 'list_glass_layouts still reads the old .midilayout.json extension' ((Text-Of (Invoke-Tool $server 'list_glass_layouts' @{})) -match '^2 saved layouts')
+    Check 'list_glass_layouts still reads the old .midilayout.json extension' ((Text-Of (Invoke-Tool $server 'list_glass_layouts' @{})) -match '^3 saved layouts')
 }
 
 # ------------------------------------------------------------------------------------------------
