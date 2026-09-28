@@ -70,13 +70,22 @@ Every application currently connected to the MIDI service, with the process it b
 
 This page is purely informational; there is nothing to change here. It's for answering the question "what has that device open?" when something reports a device as busy or in use.
 
-## Enabled transports
+## Transports
 
 Transports are the pieces of the MIDI service that talk to a particular kind of device: USB, Network MIDI 2.0, Bluetooth LE, the loopbacks and so on.
 
-This page lists everything registered on the PC, and marks each one as loaded, disabled or failed. A transport that is registered but didn't load is the reason a whole class of device can go missing at once, and it's shown with a clear icon rather than simply being absent from the list.
+This page lists everything registered on the PC. Each transport has a pill that shows its state:
+
+- **Enabled and loaded**: the MIDI service is using it.
+- **Enabled but not loaded**: it should be running, but it isn't. The line under its name says why. A transport that is registered but didn't load is the reason a whole class of device can go missing at once.
+- **Disabled but still loaded until restart**: you disabled it, but the MIDI service keeps using it until the service restarts.
+- **Disabled and not loaded**: it's off.
 
 ![Every registered transport and whether it loaded]({{ site.baseurl }}/assets/images/miditroubleshooter-transports.png)
+
+You can also turn transports on and off here. If you only use USB devices, for example, you can disable Bluetooth and the network transports, so the MIDI service stops looking for Bluetooth devices and stops opening network ports. Select **Disable** or **Enable** on a transport. Disabling one tells you what you'll lose and asks you to confirm first.
+
+This needs administrator rights, and the change takes effect when the MIDI service restarts. The page offers to restart it for you. Restarting the service disconnects every application using MIDI, so close them first. The diagnostics transport is built into the service and can't be disabled.
 
 If something here is not loading, see [Why a service plugin may not load correctly]({{ site.baseurl }}/kb/service-plugin-not-loaded/). The usual cause for a third-party transport is that it isn't signed and Developer Mode is off.
 
