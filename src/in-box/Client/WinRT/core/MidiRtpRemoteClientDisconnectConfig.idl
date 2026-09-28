@@ -1,0 +1,33 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // Ends one connection to a host on this PC. Nothing is recorded, so the remote may connect
+    // again; denying it is what refuses it in future. Named by connection id rather than by name,
+    // because two remotes can send the same name.
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpRemoteClientDisconnectConfig", UUID_IMidiRtpRemoteClientDisconnectConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpRemoteClientDisconnectConfigFactory", UUID_IMidiRtpRemoteClientDisconnectConfigFactory)]
+    runtimeclass MidiRtpRemoteClientDisconnectConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiRtpRemoteClientDisconnectConfig();
+        MidiRtpRemoteClientDisconnectConfig(Guid hostId, UInt32 connectionId);
+
+        [noexcept] Guid HostId{ get; set; };
+
+        // from MidiRtpConnection.ConnectionId
+        [noexcept] UInt32 ConnectionId{ get; set; };
+    }
+}

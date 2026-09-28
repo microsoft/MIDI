@@ -40,7 +40,7 @@ public:
 
     json::JsonArray BuildHostsStatusJson();
     json::JsonArray BuildClientsStatusJson();
-    json::JsonArray BuildAdvertisedPeersJson();
+    json::JsonArray BuildAdvertisedHostsJson();
 
     // RtpMidiNode::IListener
     void OnConnectionUp(_In_ std::shared_ptr<RtpMidiConnection> const& connection) override;

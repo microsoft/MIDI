@@ -730,7 +730,7 @@ CMidi2RtpMidiConfigurationManager::ProcessCommand(json::JsonObject const& sectio
     }
     else if (verb == MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_ENUMERATE_ADVERTISED)
     {
-        responseObject.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ADVERTISED_PEERS_KEY, endpointManager->BuildAdvertisedPeersJson());
+        responseObject.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ADVERTISED_HOSTS_KEY, endpointManager->BuildAdvertisedHostsJson());
         internal::SetConfigurationResponseObjectSuccess(responseObject);
     }
     else if (verb == MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_START_HOST || verb == MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_STOP_HOST)
@@ -812,9 +812,18 @@ CMidi2RtpMidiConfigurationManager::ProcessCommand(json::JsonObject const& sectio
             return;
         }
 
-        if (FAILED(endpointManager->DisconnectConnection(entryId, connectionId)))
+        RtpMidiHostDefinition host{};
+        RtpMidiClientDefinition client{};
+
+        if (!TransportState::Current().TryGetHostDefinition(entryId, host) && !TransportState::Current().TryGetClientDefinition(entryId, client))
         {
             Fail(responseObject, RTP_MIDI_ERROR_CODE_ENTRY_NOT_FOUND, IDS_RTP_ERROR_ENTRY_NOT_FOUND);
+            return;
+        }
+
+        if (FAILED(endpointManager->DisconnectConnection(entryId, connectionId)))
+        {
+            Fail(responseObject, RTP_MIDI_ERROR_CODE_CONNECTION_NOT_FOUND, IDS_RTP_ERROR_CONNECTION_NOT_FOUND);
             return;
         }
 

@@ -1,0 +1,30 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // A remote a host has already decided about. RTP-MIDI carries nothing else that stays the same
+    // from one connection to the next, so a remote is known by the name it sends, ignoring case.
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpKnownRemoteClient", UUID_IMidiRtpKnownRemoteClient)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpKnownRemoteClientFactory", UUID_IMidiRtpKnownRemoteClientFactory)]
+    runtimeclass MidiRtpKnownRemoteClient
+    {
+        MidiRtpKnownRemoteClient();
+        MidiRtpKnownRemoteClient(String remoteClientName, Boolean isAllowed);
+
+        [noexcept] String RemoteClientName{ get; set; };
+
+        // true to let this remote connect without asking again, false to turn it away
+        [noexcept] Boolean IsAllowed{ get; set; };
+    }
+}

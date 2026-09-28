@@ -1,0 +1,64 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiRtpConnection.idl";
+import "MidiRtpKnownRemoteClient.idl";
+import "MidiRtpRemoteClientPolicyEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // This PC, offered on the network for remote devices to connect to
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpConfiguredHost", UUID_IMidiRtpConfiguredHost)]
+    runtimeclass MidiRtpConfiguredHost
+    {
+        [noexcept] Guid HostId{ get; };
+
+        // what remote devices show in their lists
+        [noexcept] String Name{ get; };
+
+        [noexcept] String ServiceInstanceName{ get; };
+
+        // The name actually on the network. The DNS client renames a name another device already
+        // uses rather than refusing it.
+        [noexcept] String ActualServiceInstanceName{ get; };
+        [noexcept] Boolean ServiceInstanceNameWasChanged{ get; };
+
+        [noexcept] Boolean IsEnabled{ get; };
+        [noexcept] Boolean HasStarted{ get; };
+        [noexcept] Boolean Advertise{ get; };
+
+        // what the host was configured to use, or "auto"
+        [noexcept] String ConfiguredPort{ get; };
+
+        // zero until the host has started
+        [noexcept] UInt16 ActualPort{ get; };
+
+        [noexcept] Boolean AllowPortFallback{ get; };
+
+        // true when the configured port was taken and the host started on another one
+        [noexcept] Boolean UsedPortFallback{ get; };
+
+        [noexcept] Boolean SendRecoveryJournal{ get; };
+
+        [noexcept] MidiRtpRemoteClientPolicy RemoteClientPolicy{ get; };
+
+        // The decisions the service remembers for this host across a restart. Save these through
+        // MidiRtpHostKnownClientsConfig to keep them in the configuration file.
+        [noexcept] Windows.Foundation.Collections.IVectorView<MidiRtpKnownRemoteClient> KnownRemoteClients{ get; };
+
+        // the HRESULT of the last attempt to start or advertise the host, or 0
+        [noexcept] Int32 LastErrorCode{ get; };
+
+        [noexcept] Windows.Foundation.Collections.IVectorView<MidiRtpConnection> Connections{ get; };
+    }
+}

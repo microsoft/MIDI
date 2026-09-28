@@ -1,0 +1,28 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+#include "..\..\..\Transport\RtpMidiTransport\rtp_transport_error_codes.h"
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+    enum MidiRtpClientDisconnectErrorCode
+    {
+        NoErrorInformationAvailable =           RTP_MIDI_ERROR_CODE_UNKNOWN_ERROR,
+        UnrecognizedCommand =                   RTP_MIDI_ERROR_CODE_UNRECOGNIZED_COMMAND,
+        InvalidOrMissingEntryIdentifier =       RTP_MIDI_ERROR_CODE_MISSING_ENTRY_IDENTIFIER,
+        MalformedEntryIdentifier =              RTP_MIDI_ERROR_CODE_INVALID_ENTRY_IDENTIFIER,
+        ClientNotFound =                        RTP_MIDI_ERROR_CODE_ENTRY_NOT_FOUND,
+        TransportNotReady =                     RTP_MIDI_ERROR_CODE_NOT_READY,
+        ServiceUnavailable =                    RTP_MIDI_ERROR_CODE_CLIENT_API_SERVICE_UNAVAILABLE,
+        InvalidArgument =                       RTP_MIDI_ERROR_CODE_CLIENT_API_INVALID_ARGUMENT,
+        ClientApiException =                    RTP_MIDI_ERROR_CODE_CLIENT_API_EXCEPTION,
+    };
+}

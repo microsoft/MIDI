@@ -1,0 +1,39 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+#include "..\..\..\Transport\RtpMidiTransport\rtp_transport_error_codes.h"
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+    enum MidiRtpHostCreationErrorCode
+    {
+        NoErrorInformationAvailable =           RTP_MIDI_ERROR_CODE_UNKNOWN_ERROR,
+        InvalidJson =                           RTP_MIDI_ERROR_CODE_INVALID_JSON,
+        MalformedEntryIdentifier =              RTP_MIDI_ERROR_CODE_INVALID_ENTRY_IDENTIFIER,
+        InvalidEntry =                          RTP_MIDI_ERROR_CODE_INVALID_ENTRY,
+
+        // a name is at most 63 bytes in UTF-8
+        NameTooLong =                           RTP_MIDI_ERROR_CODE_NAME_TOO_LONG,
+        InvalidPort =                           RTP_MIDI_ERROR_CODE_INVALID_PORT,
+
+        // an advertised name cannot contain a period
+        InvalidName =                           RTP_MIDI_ERROR_CODE_INVALID_NAME,
+
+        // the request never reached the transport
+        ServiceUnavailable =                    RTP_MIDI_ERROR_CODE_CLIENT_API_SERVICE_UNAVAILABLE,
+
+        // the service accepted the definition, but the host did not come up in time
+        TimedOutWaitingForHostToStart =         RTP_MIDI_ERROR_CODE_CLIENT_API_TIMEOUT,
+
+        InvalidArgument =                       RTP_MIDI_ERROR_CODE_CLIENT_API_INVALID_ARGUMENT,
+        ClientApiException =                    RTP_MIDI_ERROR_CODE_CLIENT_API_EXCEPTION,
+    };
+}

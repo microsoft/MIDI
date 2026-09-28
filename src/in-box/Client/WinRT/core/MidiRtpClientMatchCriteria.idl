@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // Which remote a client connects to. Set either the advertised name, or the address and port.
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpClientMatchCriteria", UUID_IMidiRtpClientMatchCriteria)]
+    runtimeclass MidiRtpClientMatchCriteria
+    {
+        MidiRtpClientMatchCriteria();
+
+        // from MidiRtpAdvertisedHost.ServiceInstanceName. Found again when its address changes.
+        [noexcept] String ServiceInstanceName;
+
+        // an address, or a host name to look up each time the client connects
+        [noexcept] String DirectHostNameOrIPAddress;
+
+        // the remote's control port. RTP-MIDI also uses the port after it.
+        [noexcept] UInt16 DirectPort;
+    }
+}

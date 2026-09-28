@@ -1,0 +1,36 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+#include "..\..\..\Transport\RtpMidiTransport\rtp_transport_error_codes.h"
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+    enum MidiRtpRemoteClientApprovalErrorCode
+    {
+        NoErrorInformationAvailable =           RTP_MIDI_ERROR_CODE_UNKNOWN_ERROR,
+        UnrecognizedCommand =                   RTP_MIDI_ERROR_CODE_UNRECOGNIZED_COMMAND,
+        InvalidOrMissingEntryIdentifier =       RTP_MIDI_ERROR_CODE_MISSING_ENTRY_IDENTIFIER,
+        MalformedEntryIdentifier =              RTP_MIDI_ERROR_CODE_INVALID_ENTRY_IDENTIFIER,
+        HostNotFound =                          RTP_MIDI_ERROR_CODE_ENTRY_NOT_FOUND,
+        TransportNotReady =                     RTP_MIDI_ERROR_CODE_NOT_READY,
+        InvalidOrMissingRemoteClientName =      RTP_MIDI_ERROR_CODE_MISSING_REMOTE_CLIENT_NAME,
+        RemoteClientNameTooLong =               RTP_MIDI_ERROR_CODE_NAME_TOO_LONG,
+
+        // An approval for this request only needs a remote which is still waiting. Most often it
+        // stopped asking before the decision was made. Approving without that scope still works.
+        PendingRemoteClientNotFound =           RTP_MIDI_ERROR_CODE_PENDING_REMOTE_CLIENT_NOT_FOUND,
+
+        TooManyRemoteClientDecisions =          RTP_MIDI_ERROR_CODE_TOO_MANY_REMOTE_CLIENT_DECISIONS,
+        ServiceUnavailable =                    RTP_MIDI_ERROR_CODE_CLIENT_API_SERVICE_UNAVAILABLE,
+        InvalidArgument =                       RTP_MIDI_ERROR_CODE_CLIENT_API_INVALID_ARGUMENT,
+        ClientApiException =                    RTP_MIDI_ERROR_CODE_CLIENT_API_EXCEPTION,
+    };
+}

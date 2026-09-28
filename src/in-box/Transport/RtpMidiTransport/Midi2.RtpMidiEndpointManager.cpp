@@ -1463,7 +1463,7 @@ CMidi2RtpMidiEndpointManager::BuildClientsStatusJson()
 
 
 json::JsonArray
-CMidi2RtpMidiEndpointManager::BuildAdvertisedPeersJson()
+CMidi2RtpMidiEndpointManager::BuildAdvertisedHostsJson()
 {
     json::JsonArray peers;
 

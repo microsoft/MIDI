@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
-// PROTOTYPE. Drives the RTP-MIDI transport in the running MIDI service through the RTP-MIDI SDK,
-// until a settings app has a page for it.
+// PROTOTYPE. Drives the RTP-MIDI transport in the running MIDI service through the Windows MIDI
+// Services SDK, until a settings app has a page for it.
 //
 //   rtpmidi-spike service status
 //   rtpmidi-spike service host <name> [--port P] [--service-name LABEL] [--no-advertise] [--no-journal]
@@ -40,7 +40,6 @@ namespace enumeration = winrt::Windows::Devices::Midi2::Enumeration;
 using Spike::Print;
 using Spike::ToUtf8;
 
-bool SdkCheckStart(std::wstring const& dllPath);
 std::wstring SdkLoadMidi2Runtime();
 
 namespace
@@ -132,7 +131,7 @@ namespace
         switch (state)
         {
         case rtp::MidiRtpClientEntryState::Active: return "connected";
-        case rtp::MidiRtpClientEntryState::Failed: return "not connected, retrying";
+        case rtp::MidiRtpClientEntryState::Retrying: return "not connected, retrying";
         case rtp::MidiRtpClientEntryState::Unavailable: return "stopped";
         default: return "connecting";
         }
@@ -193,7 +192,7 @@ namespace
 
         if (host.HasStarted())
         {
-            Print("      started on port %s%s%s", Text(host.ActualPort()).c_str(),
+            Print("      started on port %u%s%s", host.ActualPort(),
                 host.UsedPortFallback() ? " (the configured port was taken)" : "",
                 host.IsEnabled() ? "" : ", stopped");
 
@@ -236,7 +235,7 @@ namespace
     {
         auto const hosts = rtp::MidiRtpTransportManager::GetConfiguredHosts();
         auto const clients = rtp::MidiRtpTransportManager::GetConfiguredClients();
-        auto const peers = rtp::MidiRtpTransportManager::GetAdvertisedPeers();
+        auto const peers = rtp::MidiRtpTransportManager::GetAdvertisedHosts();
 
         Print("Hosts on this PC (%u)", hosts.Size());
         for (auto const& host : hosts) PrintHost(host);
@@ -281,7 +280,7 @@ namespace
             return 1;
         }
 
-        rtp::MidiRtpHostConfig config;
+        rtp::MidiRtpHostCreationConfig config;
         config.Name(arguments.Positional[1]);
         config.ServiceInstanceName(arguments.Get(L"--service-name"));
         config.Advertise(!arguments.Has(L"--no-advertise"));
@@ -297,13 +296,13 @@ namespace
                 return 1;
             }
 
-            config.UseAutomaticPort(false);
-            config.Port(port);
+            config.UseAutomaticPortAllocation(false);
+            config.ManuallyAssignedPort(port);
         }
 
         Print("Starting host \"%s\"...", ToUtf8(arguments.Positional[1]).c_str());
 
-        auto const response = rtp::MidiRtpTransportManager::CreateHostAsync(config).get();
+        auto const response = rtp::MidiRtpTransportManager::CreateRtpHostAsync(config).get();
 
         if (!response.Success())
         {
@@ -327,15 +326,15 @@ namespace
 
     // An advertised name as the service sees it, from what was typed. Exact matches win, then a
     // name which contains what was typed, as long as only one does.
-    bool TryMatchPeer(std::wstring const& typed, rtp::MidiRtpAdvertisedPeer& match, bool& ambiguous)
+    bool TryMatchPeer(std::wstring const& typed, rtp::MidiRtpAdvertisedHost& match, bool& ambiguous)
     {
         match = nullptr;
         ambiguous = false;
 
         auto const wanted = Fold(typed);
-        std::vector<rtp::MidiRtpAdvertisedPeer> partial;
+        std::vector<rtp::MidiRtpAdvertisedHost> partial;
 
-        for (auto const& peer : rtp::MidiRtpTransportManager::GetAdvertisedPeers())
+        for (auto const& peer : rtp::MidiRtpTransportManager::GetAdvertisedHosts())
         {
             auto const name = Fold(std::wstring{ peer.ServiceInstanceName() });
 
@@ -406,29 +405,32 @@ namespace
             ourName = computerName;
         }
 
-        rtp::MidiRtpClientConfig config;
+        rtp::MidiRtpClientConnectConfig config;
         config.Name(ourName);
         config.CustomEndpointName(arguments.Get(L"--endpoint-name"));
         config.AutoReconnect(!arguments.Has(L"--no-reconnect"));
         config.SendRecoveryJournal(!arguments.Has(L"--no-journal"));
+
+        rtp::MidiRtpClientMatchCriteria match;
+        config.MatchCriteria(match);
 
         std::wstring address;
         uint16_t port{ 0 };
 
         if (TrySplitAddress(target, address, port))
         {
-            config.RemoteAddress(address);
-            config.RemotePort(port);
+            match.DirectHostNameOrIPAddress(address);
+            match.DirectPort(port);
             Print("Connecting to %s port %u as \"%s\"...", ToUtf8(address).c_str(), port, ToUtf8(ourName).c_str());
         }
         else
         {
-            rtp::MidiRtpAdvertisedPeer peer{ nullptr };
+            rtp::MidiRtpAdvertisedHost peer{ nullptr };
             bool ambiguous{ false };
 
             if (TryMatchPeer(target, peer, ambiguous))
             {
-                config.RemoteServiceInstanceName(peer.ServiceInstanceName());
+                match.ServiceInstanceName(peer.ServiceInstanceName());
                 Print("Connecting to \"%s\" as \"%s\"...%s", Text(peer.ServiceInstanceName()).c_str(), ToUtf8(ourName).c_str(),
                     peer.IsThisPc() ? " (a host on this PC)" : "");
             }
@@ -439,12 +441,12 @@ namespace
             }
             else
             {
-                config.RemoteServiceInstanceName(target);
+                match.ServiceInstanceName(target);
                 Print("\"%s\" is not advertised right now. The service connects when it appears.", ToUtf8(target).c_str());
             }
         }
 
-        auto const response = rtp::MidiRtpTransportManager::ConnectClientAsync(config).get();
+        auto const response = rtp::MidiRtpTransportManager::ConnectRtpClientAsync(config).get();
 
         if (!response.Success())
         {
@@ -539,17 +541,29 @@ namespace
 
         for (auto const& match : matches)
         {
-            auto const response = match.IsHost ?
-                rtp::MidiRtpTransportManager::RemoveHostAsync(match.Id).get() :
-                rtp::MidiRtpTransportManager::RemoveClientAsync(match.Id).get();
+            bool succeeded{ false };
+            winrt::hstring message;
 
-            if (response.Success())
+            if (match.IsHost)
+            {
+                auto const response = rtp::MidiRtpTransportManager::RemoveRtpHostAsync(rtp::MidiRtpHostRemovalConfig(match.Id)).get();
+                succeeded = response.Success();
+                message = response.ErrorMessage();
+            }
+            else
+            {
+                auto const response = rtp::MidiRtpTransportManager::DisconnectRtpClientAsync(rtp::MidiRtpClientDisconnectConfig(match.Id)).get();
+                succeeded = response.Success();
+                message = response.ErrorMessage();
+            }
+
+            if (succeeded)
             {
                 Print("Removed %s \"%s\"", match.IsHost ? "host" : "connection", match.Name.c_str());
             }
             else
             {
-                Print("Could not remove \"%s\": %s", match.Name.c_str(), Text(response.ErrorMessage()).c_str());
+                Print("Could not remove \"%s\": %s", match.Name.c_str(), Text(message).c_str());
                 result = 2;
             }
         }
@@ -1161,19 +1175,7 @@ int RunServiceCommand(std::vector<std::wstring> const& raw)
     {
         winrt::init_apartment(winrt::apartment_type::multi_threaded);
 
-        wchar_t exePath[MAX_PATH]{};
-        GetModuleFileNameW(nullptr, exePath, ARRAYSIZE(exePath));
-
-        std::wstring sdkDll{ exePath };
-        sdkDll = sdkDll.substr(0, sdkDll.find_last_of(L'\\') + 1) + L"sdk\\Windows.Devices.Midi2.Transports.Rtp.dll";
-
-        if (!SdkCheckStart(sdkDll))
-        {
-            Print("Could not load %s. Build rtp-midi.sln first.", ToUtf8(sdkDll).c_str());
-            return 3;
-        }
-
-        // Registered on some PCs, app-local on others, so a missing copy is not fatal yet
+        // The RTP-MIDI classes are only in a local SDK build, so this has to find one
         auto const midi2Runtime = SdkLoadMidi2Runtime();
         if (arguments.Has(L"--verbose")) Print("Windows MIDI Services SDK: %s", midi2Runtime.empty() ? "registered copy" : ToUtf8(midi2Runtime).c_str());
 

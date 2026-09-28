@@ -1,0 +1,54 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+import "MidiRtpRemoteClientPolicyEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // Send with MidiRtpTransportManager.CreateRtpHostAsync, and save with
+    // MidiServiceTransportPluginConfigManager.SaveUpdate to keep it after a restart
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpHostCreationConfig", UUID_IMidiRtpHostCreationConfig)]
+    runtimeclass MidiRtpHostCreationConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        // with a new HostId
+        MidiRtpHostCreationConfig();
+
+        [noexcept] Guid HostId{ get; };
+
+        // What remote devices show for this PC. Empty for this PC's name. At most 63 bytes in UTF-8.
+        [noexcept] String Name;
+
+        // the name advertised on the network, when it should differ from Name. No periods.
+        [noexcept] String ServiceInstanceName;
+
+        // The host tries 5004, the port other RTP-MIDI software looks at first, and takes a free
+        // one if that is taken
+        [noexcept] Boolean UseAutomaticPortAllocation;
+
+        // 1024 to 65534. RTP-MIDI also uses the port after it.
+        [noexcept] UInt16 ManuallyAssignedPort;
+
+        // Only meaningful with a specific port: the host starts on another one instead of failing,
+        // and reports it through MidiRtpConfiguredHost.UsedPortFallback
+        [noexcept] Boolean AllowPortFallback;
+
+        [noexcept] Boolean Advertise;
+
+        // what the host does when a remote which is on neither of its lists asks to connect
+        [noexcept] MidiRtpRemoteClientPolicy RemoteClientPolicy;
+
+        // So a remote can repair a lost Note Off. Only turn off for a device which cannot parse it.
+        [noexcept] Boolean SendRecoveryJournal;
+    }
+}

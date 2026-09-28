@@ -1,0 +1,62 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // One connection with a remote device. RTP-MIDI is the same in both directions once
+    // connected, so hosts and clients report their connections with this one type.
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpConnection", UUID_IMidiRtpConnection)]
+    runtimeclass MidiRtpConnection
+    {
+        // unique within its host or client entry, for DisconnectRemoteClientAsync
+        [noexcept] UInt32 ConnectionId{ get; };
+
+        // the name the remote sent, which the endpoint is named after
+        [noexcept] String RemoteName{ get; };
+
+        // the live socket address, which changes between reconnects. Display only, never for matching.
+        [noexcept] String RemoteAddress{ get; };
+        [noexcept] UInt16 RemotePort{ get; };
+        [noexcept] UInt16 LocalPort{ get; };
+
+        // The remote's DNS host name, such as "Studio-Mac.local", from its RTP-MIDI advertisement,
+        // or empty. Compare it with MidiNetworkAdvertisedHost.HostName, ignoring case, to find the
+        // same device on Network MIDI 2.0.
+        [noexcept] String RemoteHostName{ get; };
+
+        // false while the two sides are still connecting
+        [noexcept] Boolean IsConnected{ get; };
+
+        // true when this PC sent the invitation
+        [noexcept] Boolean ThisPcInvited{ get; };
+
+        [noexcept] String EndpointDeviceId{ get; };
+
+        // Clock sync round trip in MIDI timestamp ticks: the average of the recent exchanges, and
+        // the best of them. Zero until the first exchange completes.
+        [noexcept] UInt64 CurrentLatencyTicks{ get; };
+        [noexcept] UInt64 BestLatencyTicks{ get; };
+
+        [noexcept] UInt64 TotalCountNetworkPacketsSent{ get; };
+        [noexcept] UInt64 TotalCountNetworkPacketsReceived{ get; };
+
+        // RTP-MIDI never resends. A lost packet is repaired from the recovery journal the next
+        // packet carries, and a note which cannot be repaired is ended so it does not hang.
+        [noexcept] UInt64 TotalCountPacketsLost{ get; };
+        [noexcept] UInt64 TotalCountLossesRepairedFromJournal{ get; };
+        [noexcept] UInt64 TotalCountNoteOffsRecovered{ get; };
+
+        [noexcept] UInt64 TotalCountMessagesSent{ get; };
+        [noexcept] UInt64 TotalCountMessagesReceived{ get; };
+    }
+}

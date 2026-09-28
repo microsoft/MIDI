@@ -10,6 +10,9 @@
 
 #pragma once
 
+// The transport's COM class id, which is also its key in the configuration file
+#define MIDI_RTP_TRANSPORT_ID                                           L"{54C9B2F6-C235-4000-A675-9F6958A1A4FA}"
+
 // Configuration file section, under create / remove, keyed by entry identifier (a GUID)
 #define MIDI_CONFIG_JSON_RTP_MIDI_HOSTS_KEY                             L"hosts"
 #define MIDI_CONFIG_JSON_RTP_MIDI_CLIENTS_KEY                           L"clients"
@@ -55,7 +58,7 @@
 // Commands
 #define MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_ENUMERATE_HOSTS          L"enumerateHosts"
 #define MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_ENUMERATE_CLIENTS        L"enumerateClients"
-#define MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_ENUMERATE_ADVERTISED     L"enumerateAdvertisedPeers"
+#define MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_ENUMERATE_ADVERTISED     L"enumerateAdvertisedHosts"
 #define MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_START_HOST               L"startHost"
 #define MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_STOP_HOST                L"stopHost"
 #define MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_REMOVE_HOST              L"removeHost"
@@ -83,7 +86,7 @@
 
 // Responses
 #define MIDI_CONFIG_JSON_RTP_MIDI_ENTRY_IDENTIFIER_KEY                  L"entryIdentifier"
-#define MIDI_CONFIG_JSON_RTP_MIDI_ADVERTISED_PEERS_KEY                  L"advertisedPeers"
+#define MIDI_CONFIG_JSON_RTP_MIDI_ADVERTISED_HOSTS_KEY                  L"advertisedHosts"
 
 #define MIDI_CONFIG_JSON_RTP_MIDI_HAS_STARTED_KEY                       L"hasStarted"
 #define MIDI_CONFIG_JSON_RTP_MIDI_CONFIGURED_PORT_KEY                   L"configuredPort"

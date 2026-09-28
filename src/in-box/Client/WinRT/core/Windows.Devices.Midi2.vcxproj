@@ -779,6 +779,79 @@
       <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="midi_network_defs.h" />
+    <ClInclude Include="MidiRtpSdkJson.h" />
+    <ClInclude Include="MidiRtpAdvertisedHost.h">
+      <DependentUpon>MidiRtpAdvertisedHost.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpClientConnectConfig.h">
+      <DependentUpon>MidiRtpClientConnectConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpClientConnectResponse.h">
+      <DependentUpon>MidiRtpClientConnectResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpClientDisconnectConfig.h">
+      <DependentUpon>MidiRtpClientDisconnectConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpClientDisconnectResponse.h">
+      <DependentUpon>MidiRtpClientDisconnectResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpClientMatchCriteria.h">
+      <DependentUpon>MidiRtpClientMatchCriteria.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpConfiguredClient.h">
+      <DependentUpon>MidiRtpConfiguredClient.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpConfiguredHost.h">
+      <DependentUpon>MidiRtpConfiguredHost.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpConnection.h">
+      <DependentUpon>MidiRtpConnection.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpHostCreationConfig.h">
+      <DependentUpon>MidiRtpHostCreationConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpHostCreationResponse.h">
+      <DependentUpon>MidiRtpHostCreationResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpHostKnownClientsConfig.h">
+      <DependentUpon>MidiRtpHostKnownClientsConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpHostRemovalConfig.h">
+      <DependentUpon>MidiRtpHostRemovalConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpHostRemovalResponse.h">
+      <DependentUpon>MidiRtpHostRemovalResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpHostUpdateResponse.h">
+      <DependentUpon>MidiRtpHostUpdateResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpKnownRemoteClient.h">
+      <DependentUpon>MidiRtpKnownRemoteClient.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpPendingRemoteClient.h">
+      <DependentUpon>MidiRtpPendingRemoteClient.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpRemoteClientApprovalConfig.h">
+      <DependentUpon>MidiRtpRemoteClientApprovalConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpRemoteClientApprovalResponse.h">
+      <DependentUpon>MidiRtpRemoteClientApprovalResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpRemoteClientDisconnectConfig.h">
+      <DependentUpon>MidiRtpRemoteClientDisconnectConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpRemoteClientDisconnectResponse.h">
+      <DependentUpon>MidiRtpRemoteClientDisconnectResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpRemoteClientForgetConfig.h">
+      <DependentUpon>MidiRtpRemoteClientForgetConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpRemoteClientForgetResponse.h">
+      <DependentUpon>MidiRtpRemoteClientForgetResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpTransportManager.h">
+      <DependentUpon>MidiRtpTransportManager.idl</DependentUpon>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -1302,6 +1375,78 @@
     <ClCompile Include="MidiNetworkRemoteClientForgetResponse.cpp">
       <DependentUpon>MidiNetworkRemoteClientForgetResponse.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiRtpAdvertisedHost.cpp">
+      <DependentUpon>MidiRtpAdvertisedHost.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpClientConnectConfig.cpp">
+      <DependentUpon>MidiRtpClientConnectConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpClientConnectResponse.cpp">
+      <DependentUpon>MidiRtpClientConnectResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpClientDisconnectConfig.cpp">
+      <DependentUpon>MidiRtpClientDisconnectConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpClientDisconnectResponse.cpp">
+      <DependentUpon>MidiRtpClientDisconnectResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpClientMatchCriteria.cpp">
+      <DependentUpon>MidiRtpClientMatchCriteria.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpConfiguredClient.cpp">
+      <DependentUpon>MidiRtpConfiguredClient.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpConfiguredHost.cpp">
+      <DependentUpon>MidiRtpConfiguredHost.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpConnection.cpp">
+      <DependentUpon>MidiRtpConnection.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpHostCreationConfig.cpp">
+      <DependentUpon>MidiRtpHostCreationConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpHostCreationResponse.cpp">
+      <DependentUpon>MidiRtpHostCreationResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpHostKnownClientsConfig.cpp">
+      <DependentUpon>MidiRtpHostKnownClientsConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpHostRemovalConfig.cpp">
+      <DependentUpon>MidiRtpHostRemovalConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpHostRemovalResponse.cpp">
+      <DependentUpon>MidiRtpHostRemovalResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpHostUpdateResponse.cpp">
+      <DependentUpon>MidiRtpHostUpdateResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpKnownRemoteClient.cpp">
+      <DependentUpon>MidiRtpKnownRemoteClient.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpPendingRemoteClient.cpp">
+      <DependentUpon>MidiRtpPendingRemoteClient.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpRemoteClientApprovalConfig.cpp">
+      <DependentUpon>MidiRtpRemoteClientApprovalConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpRemoteClientApprovalResponse.cpp">
+      <DependentUpon>MidiRtpRemoteClientApprovalResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpRemoteClientDisconnectConfig.cpp">
+      <DependentUpon>MidiRtpRemoteClientDisconnectConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpRemoteClientDisconnectResponse.cpp">
+      <DependentUpon>MidiRtpRemoteClientDisconnectResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpRemoteClientForgetConfig.cpp">
+      <DependentUpon>MidiRtpRemoteClientForgetConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpRemoteClientForgetResponse.cpp">
+      <DependentUpon>MidiRtpRemoteClientForgetResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpTransportManager.cpp">
+      <DependentUpon>MidiRtpTransportManager.idl</DependentUpon>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl" />
@@ -1553,6 +1698,40 @@
     <Midl Include="MidiNetworkHostUpdateConfig.idl" />
     <Midl Include="MidiNetworkClientUpdateConfig.idl" />
     <Midl Include="MidiNetworkHostRemovalResponse.idl" />
+    <Midl Include="MidiRtpClientConnectErrorCodeEnum.idl" />
+    <Midl Include="MidiRtpClientDisconnectErrorCodeEnum.idl" />
+    <Midl Include="MidiRtpClientEntryStateEnum.idl" />
+    <Midl Include="MidiRtpHostCreationErrorCodeEnum.idl" />
+    <Midl Include="MidiRtpHostRemovalErrorCodeEnum.idl" />
+    <Midl Include="MidiRtpHostUpdateErrorCodeEnum.idl" />
+    <Midl Include="MidiRtpRemoteClientApprovalErrorCodeEnum.idl" />
+    <Midl Include="MidiRtpRemoteClientDisconnectErrorCodeEnum.idl" />
+    <Midl Include="MidiRtpRemoteClientForgetErrorCodeEnum.idl" />
+    <Midl Include="MidiRtpRemoteClientPolicyEnum.idl" />
+    <Midl Include="MidiRtpAdvertisedHost.idl" />
+    <Midl Include="MidiRtpClientConnectConfig.idl" />
+    <Midl Include="MidiRtpClientConnectResponse.idl" />
+    <Midl Include="MidiRtpClientDisconnectConfig.idl" />
+    <Midl Include="MidiRtpClientDisconnectResponse.idl" />
+    <Midl Include="MidiRtpClientMatchCriteria.idl" />
+    <Midl Include="MidiRtpConfiguredClient.idl" />
+    <Midl Include="MidiRtpConfiguredHost.idl" />
+    <Midl Include="MidiRtpConnection.idl" />
+    <Midl Include="MidiRtpHostCreationConfig.idl" />
+    <Midl Include="MidiRtpHostCreationResponse.idl" />
+    <Midl Include="MidiRtpHostKnownClientsConfig.idl" />
+    <Midl Include="MidiRtpHostRemovalConfig.idl" />
+    <Midl Include="MidiRtpHostRemovalResponse.idl" />
+    <Midl Include="MidiRtpHostUpdateResponse.idl" />
+    <Midl Include="MidiRtpKnownRemoteClient.idl" />
+    <Midl Include="MidiRtpPendingRemoteClient.idl" />
+    <Midl Include="MidiRtpRemoteClientApprovalConfig.idl" />
+    <Midl Include="MidiRtpRemoteClientApprovalResponse.idl" />
+    <Midl Include="MidiRtpRemoteClientDisconnectConfig.idl" />
+    <Midl Include="MidiRtpRemoteClientDisconnectResponse.idl" />
+    <Midl Include="MidiRtpRemoteClientForgetConfig.idl" />
+    <Midl Include="MidiRtpRemoteClientForgetResponse.idl" />
+    <Midl Include="MidiRtpTransportManager.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />

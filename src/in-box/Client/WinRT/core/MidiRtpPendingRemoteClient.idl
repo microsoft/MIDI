@@ -1,0 +1,36 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // A remote which asked to connect to a host that requires approval. It gets no answer while it
+    // waits, and stops asking after about twelve seconds. A decision made later still applies the
+    // next time it asks, for as long as it stays in this list.
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpPendingRemoteClient", UUID_IMidiRtpPendingRemoteClient)]
+    runtimeclass MidiRtpPendingRemoteClient
+    {
+        [noexcept] Guid HostId{ get; };
+        [noexcept] String HostServiceInstanceName{ get; };
+
+        [noexcept] String RemoteClientName{ get; };
+
+        // where the last ask came from. Display only: it changes between asks.
+        [noexcept] String RemoteAddress{ get; };
+
+        // when it first asked
+        [noexcept] Windows.Foundation.DateTime RequestTime{ get; };
+
+        // Approved for one connection, and waiting for the remote to ask again
+        [noexcept] Boolean IsApproved{ get; };
+    }
+}

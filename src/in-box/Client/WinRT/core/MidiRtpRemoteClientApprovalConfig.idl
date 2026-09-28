@@ -1,0 +1,43 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // A decision about a remote which asked to connect to a host, applied at once by
+    // ApproveOrDenyRemoteClientConnectRequestAsync. A decision which is not for this request only
+    // lasts as long as the service runs; save a MidiRtpHostKnownClientsConfig to keep it.
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpRemoteClientApprovalConfig", UUID_IMidiRtpRemoteClientApprovalConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpRemoteClientApprovalConfigFactory", UUID_IMidiRtpRemoteClientApprovalConfigFactory)]
+    runtimeclass MidiRtpRemoteClientApprovalConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiRtpRemoteClientApprovalConfig();
+        MidiRtpRemoteClientApprovalConfig(
+            Guid hostId,
+            String remoteClientName,
+            Boolean approve,
+            Boolean restrictScopeToThisRequestOnly);
+
+        [noexcept] Guid HostId{ get; set; };
+
+        // exactly as MidiRtpPendingRemoteClient reports it
+        [noexcept] String RemoteClientName{ get; set; };
+
+        [noexcept] Boolean Approve{ get; set; };
+
+        // Only the request which is waiting now. Denying this way still refuses the remote's next
+        // ask, so it stops asking.
+        [noexcept] Boolean ScopeIsThisRequestOnly{ get; set; };
+    }
+}

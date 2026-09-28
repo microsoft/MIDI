@@ -463,6 +463,8 @@ void RtpMidiTransportTests::TestHostileConfigurationIsRejected()
         { L"{\"transportCommand\":{\"commandName\":\"startHost\",\"commandArguments\":{\"entryIdentifier\":\"zzz\"}}}", 4, L"command with a bad entry id" },
         { L"{\"transportCommand\":{\"commandName\":\"startHost\"}}", 3, L"command with no entry id" },
         { L"{\"transportCommand\":{\"commandName\":\"disconnectRemoteClient\",\"commandArguments\":{\"entryIdentifier\":\"" + m_hostId + L"\",\"connectionId\":\"-1\"}}}", 11, L"negative connection id" },
+        { L"{\"transportCommand\":{\"commandName\":\"disconnectRemoteClient\",\"commandArguments\":{\"entryIdentifier\":\"" + m_hostId + L"\",\"connectionId\":\"999999\"}}}", 17, L"connection id with no connection" },
+        { L"{\"transportCommand\":{\"commandName\":\"disconnectRemoteClient\",\"commandArguments\":{\"entryIdentifier\":\"" + badId + L"\",\"connectionId\":\"5\"}}}", 5, L"disconnect on an entry which does not exist" },
         { L"{\"update\":[1,\"x\",{\"match\":7}]}", 0, L"customization array of junk" },
     };
 
