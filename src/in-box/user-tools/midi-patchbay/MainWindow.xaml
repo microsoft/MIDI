@@ -300,6 +300,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
@@ -337,16 +338,24 @@
                         </StackPanel>
                     </ToggleButton>
 
+                    <ToggleSwitch x:Name="AutoStartSwitch"
+                                  x:Uid="AutoStartSwitch"
+                                  Grid.Column="3"
+                                  VerticalAlignment="Center"
+                                  OnContent="Start automatically"
+                                  OffContent="Start automatically"
+                                  Toggled="OnAutoStartToggled" />
+
                     <Button x:Name="SavePatchButton"
                             x:Uid="SavePatchButton"
-                            Grid.Column="3"
+                            Grid.Column="4"
                             Content="Save"
                             VerticalAlignment="Center"
                             Click="OnSavePatchClick" />
 
                     <Button x:Name="PatchMenuButton"
                             x:Uid="PatchMenuButton"
-                            Grid.Column="4"
+                            Grid.Column="5"
                             Width="36"
                             VerticalAlignment="Center"
                             Click="OnPatchMenuClick">
@@ -372,6 +381,15 @@
                                     Click="OnNotRoutingStartClick" />
                         </InfoBar.ActionButton>
                     </InfoBar>
+
+                    <!-- A patch routing today looks set up for good, and after a restart it is not. -->
+                    <InfoBar x:Name="AutoStartBar"
+                             x:Uid="AutoStartBar"
+                             Severity="Warning"
+                             IsOpen="False"
+                             IsClosable="True"
+                             Title="This patch doesn't automatically start with the Patchbay app"
+                             CloseButtonClick="OnAutoStartBarCloseClick" />
 
                     <InfoBar x:Name="ServiceBar"
                              x:Uid="ServiceBar"

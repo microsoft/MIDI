@@ -1014,6 +1014,18 @@ namespace glass
         UnknownFields Unknown{ nullptr };
     };
 
+    // An RPN or NRPN is named by a bank and an index, 0 to 127 each: in MIDI 1.0, the values of
+    // CC 101 and 100 or of CC 99 and 98. ControlMessage::Number holds both as bank * 128 + index.
+    constexpr uint32_t MaximumControllerNumber = 16383;
+
+    bool HasBankAndIndex(_In_ MessageKind kind) noexcept;
+    uint32_t ControllerBank(_In_ uint32_t number) noexcept;
+    uint32_t ControllerIndex(_In_ uint32_t number) noexcept;
+    uint32_t ControllerNumber(_In_ uint32_t bank, _In_ uint32_t index) noexcept;
+
+    // The number the way a device manual prints it: "3:17" for an RPN or NRPN, "74" otherwise.
+    std::wstring FormatMessageNumber(_In_ MessageKind kind, _In_ uint32_t number);
+
     // What a control listens for, so a fader can follow the DAW rather than only lead it.
     struct FeedbackBinding
     {

@@ -163,6 +163,18 @@
   <data name="RoutingToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Route this patch</value>
   </data>
+  <data name="AutoStartSwitch.OnContent" xml:space="preserve">
+    <value>Start automatically</value>
+  </data>
+  <data name="AutoStartSwitch.OffContent" xml:space="preserve">
+    <value>Start automatically</value>
+  </data>
+  <data name="AutoStartSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Start this patch automatically</value>
+  </data>
+  <data name="AutoStartSwitch.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Start routing this patch every time Patchbay starts. A temporary patch has to be saved first.</value>
+  </data>
   <data name="MenuRouteThisPatch" xml:space="preserve">
     <value>Route this patch</value>
   </data>
@@ -332,6 +344,16 @@
   </data>
   <data name="NotRoutingStartButton.Content" xml:space="preserve">
     <value>Start routing</value>
+  </data>
+  <data name="AutoStartBar.Title" xml:space="preserve">
+    <value>This patch doesn't automatically start with the Patchbay app</value>
+  </data>
+  <data name="AutoStartBarMessage" xml:space="preserve">
+    <value>You will need to manually start it each time.</value>
+  </data>
+  <data name="AutoStartBarSettingOffMessageFormat" xml:space="preserve">
+    <value>"{0}" is turned off in the settings, so you will need to manually start it each time.</value>
+    <comment>{0} is the name of the setting, SettingActivateAtStartup</comment>
   </data>
   <data name="LoopShowButton.Content" xml:space="preserve">
     <value>Show me the loop</value>

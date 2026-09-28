@@ -676,7 +676,15 @@ namespace winrt::midipatchbay::implementation
                 resources::GetString(L"SettingActivateAtStartup"),
                 {},
                 patchbay::AppSettings::Current().ActivateSavedPatchesAtStartup(),
-                [](bool value) { patchbay::AppSettings::Current().ActivateSavedPatchesAtStartup(value); });
+                [weak](bool value)
+                {
+                    patchbay::AppSettings::Current().ActivateSavedPatchesAtStartup(value);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->UpdatePatchHeader();
+                    }
+                });
 
             addToggle(
                 resources::GetString(L"SettingWarnAboutLoops"),

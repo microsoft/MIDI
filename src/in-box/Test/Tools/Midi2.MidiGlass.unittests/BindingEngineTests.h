@@ -27,6 +27,7 @@ public:
     TEST_METHOD(BuildsAMidi2ControlChangeAtFullResolution);
     TEST_METHOD(BuildsANoteAtSixteenBitVelocity);
     TEST_METHOD(SendsRegisteredControllersForTheServiceToExpand);
+    TEST_METHOD(SendsAnNrpnAsOneAssignableControllerMessage);
     TEST_METHOD(NeverScalesAProgramNumber);
 
     // ---- exact values, for data that is a code rather than a position ----

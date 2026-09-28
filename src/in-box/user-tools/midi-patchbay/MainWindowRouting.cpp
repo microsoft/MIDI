@@ -31,11 +31,13 @@ namespace winrt::midipatchbay::implementation
                 PatchDescriptionText().Visibility(xaml::Visibility::Collapsed);
                 StateChip().Visibility(xaml::Visibility::Collapsed);
                 RoutingToggle().IsEnabled(false);
+                AutoStartSwitch().IsEnabled(false);
                 SavePatchButton().IsEnabled(false);
                 PatchMenuButton().IsEnabled(false);
                 AddEndpointButton().IsEnabled(false);
                 CreateLoopbackButton().IsEnabled(false);
                 NotRoutingBar().IsOpen(false);
+                AutoStartBar().IsOpen(false);
                 return;
             }
 
@@ -60,6 +62,27 @@ namespace winrt::midipatchbay::implementation
                 : resources::GetString(L"ChipNotRouting"));
 
             NotRoutingBar().IsOpen(!routing);
+
+            // Only a patch on disk can come back by itself when the app starts.
+            auto const saved = !patch->FilePath.empty();
+            auto const savedPatchesStart = patchbay::AppSettings::Current().ActivateSavedPatchesAtStartup();
+
+            AutoStartSwitch().IsEnabled(true);
+            AutoStartSwitch().IsOn(saved && patch->ActivateAtStartup);
+
+            if (saved && !(patch->ActivateAtStartup && savedPatchesStart) &&
+                m_autoStartNoticeDismissedKeys.count(PatchKey(*patch)) == 0)
+            {
+                AutoStartBar().Message(savedPatchesStart
+                    ? resources::GetString(L"AutoStartBarMessage")
+                    : resources::FormatString(L"AutoStartBarSettingOffMessageFormat",
+                        std::wstring{ resources::GetString(L"SettingActivateAtStartup") }));
+                AutoStartBar().IsOpen(true);
+            }
+            else
+            {
+                AutoStartBar().IsOpen(false);
+            }
 
             SavePatchButton().IsEnabled(true);
             PatchMenuButton().IsEnabled(true);
@@ -106,6 +129,58 @@ namespace winrt::midipatchbay::implementation
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to start routing the patch.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAutoStartToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            auto* patch = CurrentPatch();
+
+            if (patch == nullptr)
+            {
+                return;
+            }
+
+            auto const on = AutoStartSwitch().IsOn();
+            auto const saved = !patch->FilePath.empty();
+
+            // UpdatePatchHeader setting the switch raises this too.
+            if (on == (saved && patch->ActivateAtStartup))
+            {
+                return;
+            }
+
+            if (!saved)
+            {
+                ShowSavePatchDialogAsync(true);
+                return;
+            }
+
+            patch->ActivateAtStartup = on;
+            MarkDirty();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to change whether the patch starts automatically.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAutoStartBarCloseClick(controls::InfoBar const& sender, foundation::IInspectable const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            if (auto const* patch = CurrentPatch())
+            {
+                m_autoStartNoticeDismissedKeys.insert(PatchKey(*patch));
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to close the automatic start notice.")
     }
 
     void MainWindow::MarkDirty() noexcept

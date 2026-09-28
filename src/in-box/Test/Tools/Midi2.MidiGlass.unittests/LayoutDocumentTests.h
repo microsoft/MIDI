@@ -80,4 +80,8 @@ public:
     TEST_METHOD(SomethingThatIsNotHexIsRefusedWhole);
     TEST_METHOD(HexIsBounded);
     TEST_METHOD(HexWordsRoundTrip);
+
+    // ---- RPN and NRPN ----
+    TEST_METHOD(AnRpnOrNrpnNumberIsABankAndAnIndex);
+    TEST_METHOD(AnNrpnAbove127SurvivesARoundTrip);
 };

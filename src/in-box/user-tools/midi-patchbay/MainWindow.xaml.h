@@ -46,6 +46,8 @@ namespace winrt::midipatchbay::implementation
         void OnSavePatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnPatchMenuClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRoutingToggleClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAutoStartToggled(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnAutoStartBarCloseClick(_In_ controls::InfoBar const& sender, _In_ foundation::IInspectable const& args);
 
         void OnAddEndpointClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCreateLoopbackClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -203,7 +205,8 @@ namespace winrt::midipatchbay::implementation
         winrt::hstring ConnectionActivityText(_In_ std::wstring const& connectionId) const noexcept;
 
         // ---- dialogs and menus, in MainWindowDialogs.cpp ----
-        winrt::fire_and_forget ShowSavePatchDialogAsync();
+        // True ticks the dialog's startup box, for the Start automatically switch on a temporary patch.
+        winrt::fire_and_forget ShowSavePatchDialogAsync(_In_ bool startAutomatically = false);
         winrt::fire_and_forget ShowCreateLoopbackDialogAsync();
         winrt::fire_and_forget ShowQuickPatchDialogAsync();
         winrt::fire_and_forget ShowDeletePatchDialogAsync();
@@ -251,6 +254,9 @@ namespace winrt::midipatchbay::implementation
         // Patches whose routes are live. A patch can be open without routing, and routing
         // without being open, which is why this is a set rather than a flag on the document.
         std::unordered_set<std::wstring> m_routingPatchKeys{};
+
+        // Patches whose "doesn't start automatically" bar was closed, until the app closes.
+        std::unordered_set<std::wstring> m_autoStartNoticeDismissedKeys{};
 
         ::midipatchbay::PatchAnalysis m_analysis{};
         std::vector<::midipatchbay::LiveEndpoint> m_liveEndpoints{};

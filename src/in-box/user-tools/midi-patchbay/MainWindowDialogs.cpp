@@ -87,7 +87,8 @@ namespace winrt::midipatchbay::implementation
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to validate the patch name.")
     }
 
-    winrt::fire_and_forget MainWindow::ShowSavePatchDialogAsync()
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::ShowSavePatchDialogAsync(bool startAutomatically)
     {
         auto strong = get_strong();
 
@@ -106,7 +107,7 @@ namespace winrt::midipatchbay::implementation
             SavePatchDescriptionBox().Text(winrt::hstring{ patch->Description });
             SavePatchKeepRadio().IsChecked(!patch->IsTemporary || patch->FilePath.empty());
             SavePatchTemporaryRadio().IsChecked(false);
-            SavePatchStartupCheck().IsChecked(patch->ActivateAtStartup);
+            SavePatchStartupCheck().IsChecked(startAutomatically || patch->ActivateAtStartup);
             SavePatchDialog().IsPrimaryButtonEnabled(!patch->Name.empty());
             SavePatchDialog().XamlRoot(Content().XamlRoot());
 
@@ -114,6 +115,8 @@ namespace winrt::midipatchbay::implementation
 
             if (result != controls::ContentDialogResult::Primary)
             {
+                // Turns the Start automatically switch back off if it opened this dialog.
+                UpdatePatchHeader();
                 co_return;
             }
 
