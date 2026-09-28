@@ -78,7 +78,7 @@ CMidi2RtpMidiBidi::Shutdown()
         // before the callback goes, so the connection stops handing messages to this endpoint
         if (connection != nullptr)
         {
-            LOG_IF_FAILED(connection->DisconnectMidiCallback());
+            LOG_IF_FAILED(connection->DisconnectMidiCallbackIfCurrent(this));
         }
 
         wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
