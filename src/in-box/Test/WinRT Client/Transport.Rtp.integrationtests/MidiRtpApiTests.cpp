@@ -558,7 +558,7 @@ void MidiRtpApiTests::TestApproveOnceThenDisconnectTheRemote()
     VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]() { return remote.ConnectedCount() == 1; }, RemoteAskWaitMilliseconds), L"its next ask gets in");
 
     MidiRtpConnection connection{ nullptr };
-    VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]() { connection = FindConnection(hostId, remoteName); return connection != nullptr && connection.IsConnected(); }, ServiceWaitMilliseconds), L"the host lists the connection");
+    VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]() { connection = FindConnection(hostId, remoteName); return connection != nullptr && connection.IsConnected() && !connection.EndpointDeviceId().empty(); }, ServiceWaitMilliseconds), L"the host lists the connection and its endpoint");
 
     VERIFY_IS_TRUE(connection.ConnectionId() != 0);
     VERIFY_IS_FALSE(connection.ThisPcInvited(), L"the remote asked, this PC did not");

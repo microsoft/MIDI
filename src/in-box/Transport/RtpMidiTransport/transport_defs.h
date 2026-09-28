@@ -48,6 +48,13 @@
 #define MIDI_RTP_MAX_REMOTE_CLIENT_DECISIONS_PER_HOST           256
 #define MIDI_RTP_REMOTE_CLIENT_NAME_MAX_CHARS                   255
 
+// The configuration file is written by customers and tools, so text that only this PC uses, like a
+// custom endpoint name or a remote's host name, is bounded as well. DNS host names stop at 253.
+#define MIDI_RTP_CONFIG_TEXT_MAX_CHARS                          255
+
+// How long the worker waits for a remote's host name to resolve before trying again later
+#define MIDI_RTP_NAME_RESOLUTION_TIMEOUT_SECONDS                5
+
 // How often the worker looks at hosts and clients that are not running as configured.
 #define MIDI_RTP_WORKER_INTERVAL_MS                             1000
 

@@ -1579,6 +1579,8 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2PortNumberCache.h"
 #include "Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock.h"
 #include "Feature_Servicing_MIDI2USBSystemRealTimeUmpSize.h"
+#include "Feature_Servicing_MIDI2USBSystemRealTimeCin.h"
+#include "Feature_Servicing_MIDI2USBCableMaskDirection.h"
 #include "Feature_Servicing_MIDI2BsToUMPConvDisallowNOOPs.h"
 #include "Feature_Servicing_MIDI2XProcSendWaitTimeouts.h"
 #include "Feature_Servicing_MIDI2ConfigJsonSizeLimit.h"
@@ -1644,6 +1646,8 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSAWatcherHardening::IsEnabled(),                  L"MIDI2KSAWatcherHardening (fix for MONTAGE M / MODX usb port move)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2PortNumberCache::IsEnabled(),                      L"MIDI2PortNumberCache (greatly speeds up service startup)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBSystemRealTimeUmpSize::IsEnabled(),             L"MIDI2USBSystemRealTimeUmpSize (fix timing clock coming in as NOOP on MIDI2 driver)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBSystemRealTimeCin::IsEnabled(),                 L"MIDI2USBSystemRealTimeCin (fix timing clock, start and stop not recognized by some USB MIDI 1.0 devices on MIDI2 driver)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBCableMaskDirection::IsEnabled(),                L"MIDI2USBCableMaskDirection (fix missing ports on USB MIDI 1.0 devices with different numbers of inputs and outputs on MIDI2 driver)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2BsToUMPConvDisallowNOOPs::IsEnabled(),             L"MIDI2BsToUMPConvDisallowNOOPs (ensure over-stated MIDI 1 packet size doesn't result in trailing NOOPs)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock::IsEnabled(),         L"MIDI2VirtualDeviceRemovalDeadlock (fix service hang when a virtual device is shut down)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2XProcSendWaitTimeouts::IsEnabled(),                L"MIDI2XProcSendWaitTimeouts (stop aborting sends to devices that are slow to accept data)");

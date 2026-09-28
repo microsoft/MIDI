@@ -54,8 +54,9 @@ public:
         _In_ uint16_t const preferredControlPort,
         _In_ std::vector<std::pair<uint16_t, uint16_t>> const& fallbackRanges);
 
-    // Host only. Blocks while the DNS client probes the name, which takes most of a second.
-    HRESULT Advertise(_In_ std::wstring const& instanceLabel);
+    // Host only. Blocks while the DNS client probes the name, which takes most of a second, and
+    // gives up early when stopToken is signaled.
+    HRESULT Advertise(_In_ std::wstring const& instanceLabel, _In_ std::stop_token const& stopToken);
 
     // Says goodbye to every participant, then stops the threads and withdraws the advertisement.
     // Never call from a listener callback.

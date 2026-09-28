@@ -48,6 +48,8 @@ Environment:
 #include "Device.tmh"
 
 #include "Feature_Servicing_MIDI2USBSystemRealTimeUmpSize.h"
+#include "Feature_Servicing_MIDI2USBSystemRealTimeCin.h"
+#include "Feature_Servicing_MIDI2USBCableMaskDirection.h"
 
 UNICODE_STRING g_RegistryPath = {0};      // This is used to store the registry settings path for the driver
 
@@ -2213,7 +2215,18 @@ Return Value:
                 UINT8 cbl_num = (pBuffer[0] & 0xf0) >> 4;
 
                 // No need to process further if invalid Cable ID
-                if (!(pDeviceContext->UsbInMask & (0x0001 << cbl_num)))
+                bool invalidCable;
+                if (Feature_Servicing_MIDI2USBCableMaskDirection_IsEnabled())
+                {
+                    // Data from the device uses the Embedded OUT jack cables, which UsbOutMask holds.
+                    invalidCable = !(pDeviceContext->UsbOutMask & (0x0001 << cbl_num));
+                }
+                else
+                {
+                    invalidCable = !(pDeviceContext->UsbInMask & (0x0001 << cbl_num));
+                }
+
+                if (invalidCable)
                 {
                     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Invalid Data, Received invalid cable number %lu", pReceivedWords[receivedIndex]);
                     receivedIndex++;    // drop the data
@@ -2568,6 +2581,15 @@ Return Value:Amy
                 case UMP_SYSTEM_UNDEFINED_FD:
                 case UMP_SYSTEM_UNDEFINED_F9:
                     umpWritePacket.umpData.umpBytes[0] = (cbl_num << 4) | MIDI_CIN_SYSEX_END_1BYTE;
+
+                    if (Feature_Servicing_MIDI2USBSystemRealTimeCin_IsEnabled())
+                    {
+                        // System Real-Time (F8 to FF) uses CIN 0xF. Some devices ignore it sent as CIN 0x5.
+                        if (umpPacket.umpData.umpBytes[1] >= UMP_SYSTEM_TIMING_CLK)
+                        {
+                            umpWritePacket.umpData.umpBytes[0] = (cbl_num << 4) | MIDI_CIN_1BYTE_DATA;
+                        }
+                    }
                     break;
 
                 case UMP_SYSTEM_MTC:
@@ -2753,7 +2775,18 @@ Return Value:Amy
             }
 
             // If there is data to manage plus a valid cable number
-            if (umpWritePacket.wordCount && (pDeviceContext->UsbOutMask & 0x0001 << cbl_num))
+            bool sendToUsb;
+            if (Feature_Servicing_MIDI2USBCableMaskDirection_IsEnabled())
+            {
+                // The cable was checked against UsbInMask above. UsbOutMask is for data from the device.
+                sendToUsb = (umpWritePacket.wordCount != 0);
+            }
+            else
+            {
+                sendToUsb = (umpWritePacket.wordCount && (pDeviceContext->UsbOutMask & 0x0001 << cbl_num));
+            }
+
+            if (sendToUsb)
             {
                 // Move data into buffer to send on USB
                 for (int count = 0; count < umpWritePacket.wordCount; count++)

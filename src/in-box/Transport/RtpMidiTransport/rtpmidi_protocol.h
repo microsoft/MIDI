@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include <sal.h>
+
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -28,27 +30,27 @@ namespace RtpMidi
     class Reader
     {
     public:
-        Reader(uint8_t const* data, size_t size) : m_data(data), m_size(size) {}
+        Reader(_In_reads_(size) uint8_t const* data, _In_ size_t size) : m_data(data), m_size(size) {}
 
         size_t Position() const { return m_position; }
         size_t Remaining() const { return m_size - m_position; }
         uint8_t const* Current() const { return m_data + m_position; }
 
-        bool Skip(size_t count)
+        bool Skip(_In_ size_t count)
         {
             if (count > Remaining()) return false;
             m_position += count;
             return true;
         }
 
-        bool U8(uint8_t& value)
+        bool U8(_Inout_ uint8_t& value)
         {
             if (Remaining() < 1) return false;
             value = m_data[m_position++];
             return true;
         }
 
-        bool U16(uint16_t& value)
+        bool U16(_Inout_ uint16_t& value)
         {
             if (Remaining() < 2) return false;
             value = static_cast<uint16_t>((m_data[m_position] << 8) | m_data[m_position + 1]);
@@ -56,7 +58,7 @@ namespace RtpMidi
             return true;
         }
 
-        bool U32(uint32_t& value)
+        bool U32(_Inout_ uint32_t& value)
         {
             if (Remaining() < 4) return false;
             value = (static_cast<uint32_t>(m_data[m_position]) << 24) |
@@ -67,7 +69,7 @@ namespace RtpMidi
             return true;
         }
 
-        bool U64(uint64_t& value)
+        bool U64(_Inout_ uint64_t& value)
         {
             uint32_t high{ 0 };
             uint32_t low{ 0 };
@@ -82,15 +84,15 @@ namespace RtpMidi
         size_t m_position{ 0 };
     };
 
-    inline void PutU8(std::vector<uint8_t>& out, uint8_t value) { out.push_back(value); }
+    inline void PutU8(_Inout_ std::vector<uint8_t>& out, _In_ uint8_t value) { out.push_back(value); }
 
-    inline void PutU16(std::vector<uint8_t>& out, uint16_t value)
+    inline void PutU16(_Inout_ std::vector<uint8_t>& out, _In_ uint16_t value)
     {
         out.push_back(static_cast<uint8_t>(value >> 8));
         out.push_back(static_cast<uint8_t>(value));
     }
 
-    inline void PutU32(std::vector<uint8_t>& out, uint32_t value)
+    inline void PutU32(_Inout_ std::vector<uint8_t>& out, _In_ uint32_t value)
     {
         out.push_back(static_cast<uint8_t>(value >> 24));
         out.push_back(static_cast<uint8_t>(value >> 16));
@@ -98,7 +100,7 @@ namespace RtpMidi
         out.push_back(static_cast<uint8_t>(value));
     }
 
-    inline void PutU64(std::vector<uint8_t>& out, uint64_t value)
+    inline void PutU64(_Inout_ std::vector<uint8_t>& out, _In_ uint64_t value)
     {
         PutU32(out, static_cast<uint32_t>(value >> 32));
         PutU32(out, static_cast<uint32_t>(value));
@@ -111,7 +113,7 @@ namespace RtpMidi
 
     // Keeps well-formed UTF-8 and drops control characters. A remote name ends up in endpoint
     // names, port names and log lines, so it is never passed through raw.
-    inline std::string SanitizeUtf8Name(std::string const& input, size_t maxBytes)
+    inline std::string SanitizeUtf8Name(_In_ std::string const& input, _In_ size_t maxBytes)
     {
         std::string output;
         output.reserve((std::min)(input.size(), maxBytes));
@@ -193,7 +195,7 @@ namespace RtpMidi
         BitrateReceiveLimit = 0x524C,   // RL
     };
 
-    inline char const* AppleMidiCommandName(AppleMidiCommand command)
+    inline char const* AppleMidiCommandName(_In_ AppleMidiCommand command)
     {
         switch (command)
         {
@@ -240,7 +242,7 @@ namespace RtpMidi
         uint32_t BitsPerSecond{ 0 };
     };
 
-    inline bool TryGetAppleMidiCommand(uint8_t const* data, size_t size, AppleMidiCommand& command)
+    inline bool TryGetAppleMidiCommand(_In_reads_opt_(size) uint8_t const* data, _In_ size_t size, _Inout_ AppleMidiCommand& command)
     {
         if (data == nullptr || size < 4) return false;
         if (data[0] != 0xFF || data[1] != 0xFF) return false;
@@ -262,7 +264,7 @@ namespace RtpMidi
         }
     }
 
-    inline std::optional<AppleMidiInvitation> ParseInvitation(uint8_t const* data, size_t size)
+    inline std::optional<AppleMidiInvitation> ParseInvitation(_In_reads_opt_(size) uint8_t const* data, _In_ size_t size)
     {
         AppleMidiCommand command{};
         if (!TryGetAppleMidiCommand(data, size, command)) return std::nullopt;
@@ -301,7 +303,7 @@ namespace RtpMidi
         return message;
     }
 
-    inline std::optional<AppleMidiSynchronization> ParseSynchronization(uint8_t const* data, size_t size)
+    inline std::optional<AppleMidiSynchronization> ParseSynchronization(_In_reads_opt_(size) uint8_t const* data, _In_ size_t size)
     {
         AppleMidiCommand command{};
         if (!TryGetAppleMidiCommand(data, size, command) || command != AppleMidiCommand::Synchronization) return std::nullopt;
@@ -322,7 +324,7 @@ namespace RtpMidi
         return message;
     }
 
-    inline std::optional<AppleMidiReceiverFeedback> ParseReceiverFeedback(uint8_t const* data, size_t size)
+    inline std::optional<AppleMidiReceiverFeedback> ParseReceiverFeedback(_In_reads_opt_(size) uint8_t const* data, _In_ size_t size)
     {
         AppleMidiCommand command{};
         if (!TryGetAppleMidiCommand(data, size, command) || command != AppleMidiCommand::ReceiverFeedback) return std::nullopt;
@@ -336,7 +338,7 @@ namespace RtpMidi
         return message;
     }
 
-    inline std::optional<AppleMidiBitrateLimit> ParseBitrateLimit(uint8_t const* data, size_t size)
+    inline std::optional<AppleMidiBitrateLimit> ParseBitrateLimit(_In_reads_opt_(size) uint8_t const* data, _In_ size_t size)
     {
         AppleMidiCommand command{};
         if (!TryGetAppleMidiCommand(data, size, command) || command != AppleMidiCommand::BitrateReceiveLimit) return std::nullopt;
@@ -350,7 +352,7 @@ namespace RtpMidi
         return message;
     }
 
-    inline std::vector<uint8_t> BuildInvitation(AppleMidiCommand command, uint32_t initiatorToken, uint32_t ssrc, std::string const& name)
+    inline std::vector<uint8_t> BuildInvitation(_In_ AppleMidiCommand command, _In_ uint32_t initiatorToken, _In_ uint32_t ssrc, _In_ std::string const& name)
     {
         std::vector<uint8_t> out;
         out.reserve(16 + name.size() + 1);
@@ -372,7 +374,7 @@ namespace RtpMidi
         return out;
     }
 
-    inline std::vector<uint8_t> BuildSynchronization(uint32_t ssrc, uint8_t count, std::array<uint64_t, 3> const& timestamps)
+    inline std::vector<uint8_t> BuildSynchronization(_In_ uint32_t ssrc, _In_ uint8_t count, _In_ std::array<uint64_t, 3> const& timestamps)
     {
         std::vector<uint8_t> out;
         out.reserve(36);
@@ -390,7 +392,7 @@ namespace RtpMidi
         return out;
     }
 
-    inline std::vector<uint8_t> BuildReceiverFeedback(uint32_t ssrc, uint32_t sequenceField)
+    inline std::vector<uint8_t> BuildReceiverFeedback(_In_ uint32_t ssrc, _In_ uint32_t sequenceField)
     {
         std::vector<uint8_t> out;
         out.reserve(12);
@@ -423,7 +425,7 @@ namespace RtpMidi
         size_t PayloadSize{ 0 };
     };
 
-    inline bool ParseRtpHeader(uint8_t const* data, size_t size, RtpHeader& header)
+    inline bool ParseRtpHeader(_In_reads_opt_(size) uint8_t const* data, _In_ size_t size, _Inout_ RtpHeader& header)
     {
         if (data == nullptr || size < RtpFixedHeaderSize) return false;
 
@@ -470,7 +472,7 @@ namespace RtpMidi
 
     // The marker bit is deliberately left clear. RFC 6295 says to set it when the MIDI list is
     // not empty, but macOS and rtpMIDI for Windows both ignore the MIDI in packets that do.
-    inline void WriteRtpHeader(std::vector<uint8_t>& out, uint16_t sequence, uint32_t timestamp, uint32_t ssrc)
+    inline void WriteRtpHeader(_Inout_ std::vector<uint8_t>& out, _In_ uint16_t sequence, _In_ uint32_t timestamp, _In_ uint32_t ssrc)
     {
         PutU8(out, 0x80);
         PutU8(out, RtpMidiPayloadType);
@@ -488,7 +490,7 @@ namespace RtpMidi
     constexpr int UndefinedSystemCommon = -2;
 
     // Data bytes after a status byte, or a negative marker for commands scanned to a terminator.
-    inline int DataByteCount(uint8_t status)
+    inline int DataByteCount(_In_ uint8_t status)
     {
         switch (status & 0xF0)
         {
@@ -507,7 +509,7 @@ namespace RtpMidi
         }
     }
 
-    inline bool IsRealTime(uint8_t byte) { return byte >= 0xF8; }
+    inline bool IsRealTime(_In_ uint8_t byte) { return byte >= 0xF8; }
 
 
     // ------------------------------------------------------------------------------------------
@@ -550,7 +552,7 @@ namespace RtpMidi
     };
 
     // 1 to 4 octets, 7 bits each, high bit set on all but the last (RFC 6295 figure 4).
-    inline bool ReadDeltaTime(uint8_t const* data, size_t end, size_t& position, uint32_t& delta)
+    inline bool ReadDeltaTime(_In_reads_(end) uint8_t const* data, _In_ size_t end, _Inout_ size_t& position, _Out_ uint32_t& delta)
     {
         delta = 0;
 
@@ -577,7 +579,7 @@ namespace RtpMidi
 
         // A lost packet can take the middle of a SysEx with it. Closing it here keeps the stream
         // well formed; the receiving app sees a short SysEx instead of two joined ones.
-        bool CloseOpenSysEx(std::vector<uint8_t>& out)
+        bool CloseOpenSysEx(_Inout_ std::vector<uint8_t>& out)
         {
             if (!m_sysExOpen) return false;
             out.push_back(0xF7);
@@ -585,7 +587,7 @@ namespace RtpMidi
             return true;
         }
 
-        DecodeStatus Decode(uint8_t const* datagram, size_t size, DecodedPacket& packet)
+        DecodeStatus Decode(_In_reads_opt_(size) uint8_t const* datagram, _In_ size_t size, _Out_ DecodedPacket& packet)
         {
             packet = DecodedPacket{};
 
@@ -625,7 +627,7 @@ namespace RtpMidi
         }
 
     private:
-        void Emit(DecodedPacket& packet, uint32_t timestamp, uint8_t const* bytes, size_t count)
+        void Emit(_Inout_ DecodedPacket& packet, _In_ uint32_t timestamp, _In_reads_(count) uint8_t const* bytes, _In_ size_t count)
         {
             MidiEvent event{};
             event.Timestamp = timestamp;
@@ -633,7 +635,7 @@ namespace RtpMidi
             packet.Events.push_back(std::move(event));
         }
 
-        void EmitSysEx(DecodedPacket& packet, uint32_t timestamp, uint8_t head, uint8_t const* body, size_t bodyLength, uint8_t tail)
+        void EmitSysEx(_Inout_ DecodedPacket& packet, _In_ uint32_t timestamp, _In_ uint8_t head, _In_reads_(bodyLength) uint8_t const* body, _In_ size_t bodyLength, _In_ uint8_t tail)
         {
             MidiEvent event{};
             event.Timestamp = timestamp;
@@ -697,7 +699,7 @@ namespace RtpMidi
             if (!event.Bytes.empty()) packet.Events.push_back(std::move(event));
         }
 
-        void DecodeList(uint8_t const* list, size_t length, bool firstHasDelta, DecodedPacket& packet)
+        void DecodeList(_In_reads_(length) uint8_t const* list, _In_ size_t length, _In_ bool firstHasDelta, _Inout_ DecodedPacket& packet)
         {
             size_t position = 0;
             uint32_t timestamp = packet.Header.Timestamp;
@@ -818,7 +820,7 @@ namespace RtpMidi
     {
     public:
         // Room for the MIDI list alone. Kept well under an Ethernet MTU with IPv6 headers.
-        explicit CommandSectionEncoder(size_t maxListBytes = 1000) : m_maxListBytes(maxListBytes) {}
+        explicit CommandSectionEncoder(_In_ size_t maxListBytes = 1000) : m_maxListBytes(maxListBytes) {}
 
         void Reset()
         {
@@ -833,7 +835,7 @@ namespace RtpMidi
 
         bool SysExOpen() const { return m_inSysEx; }
 
-        void Append(uint8_t const* bytes, size_t count)
+        void Append(_In_reads_(count) uint8_t const* bytes, _In_ size_t count)
         {
             for (size_t i = 0; i < count; i++) AppendByte(bytes[i]);
         }
@@ -869,10 +871,10 @@ namespace RtpMidi
         }
 
     private:
-        void Queue(std::vector<uint8_t>&& command) { m_commands.push_back(std::move(command)); }
+        void Queue(_In_ std::vector<uint8_t>&& command) { m_commands.push_back(std::move(command)); }
 
         // Every segment but the last must carry at least one data byte.
-        void CloseSegment(bool isLast)
+        void CloseSegment(_In_ bool isLast)
         {
             std::vector<uint8_t> segment;
             segment.reserve(m_sysExBuffer.size() + 2);
@@ -893,7 +895,7 @@ namespace RtpMidi
             }
         }
 
-        void AppendByte(uint8_t byte)
+        void AppendByte(_In_ uint8_t byte)
         {
             if (IsRealTime(byte))
             {
@@ -988,11 +990,11 @@ namespace RtpMidi
 
     // RTP header, command section header, MIDI list, and an optional journal section.
     inline std::vector<uint8_t> BuildRtpMidiPacket(
-        uint16_t sequence,
-        uint32_t timestamp,
-        uint32_t ssrc,
-        std::vector<uint8_t> const& list,
-        std::vector<uint8_t> const* journal = nullptr)
+        _In_ uint16_t sequence,
+        _In_ uint32_t timestamp,
+        _In_ uint32_t ssrc,
+        _In_ std::vector<uint8_t> const& list,
+        _In_opt_ std::vector<uint8_t> const* journal = nullptr)
     {
         std::vector<uint8_t> out;
         out.reserve(RtpFixedHeaderSize + 2 + list.size() + (journal ? journal->size() : 0));
@@ -1030,14 +1032,14 @@ namespace RtpMidi
 
     // Remote clock minus local clock, from one CK exchange, as seen by the side that sent CK0.
     // CK0 left at t0 (local), the peer stamped t1 (remote), CK1 came back at t2 (local).
-    inline int64_t ClockOffsetFromInitiatorSide(uint64_t t0, uint64_t t1, uint64_t t2)
+    inline int64_t ClockOffsetFromInitiatorSide(_In_ uint64_t t0, _In_ uint64_t t1, _In_ uint64_t t2)
     {
         auto const midpoint = static_cast<int64_t>(t0) + (static_cast<int64_t>(t2) - static_cast<int64_t>(t0)) / 2;
         return static_cast<int64_t>(t1) - midpoint;
     }
 
     // The same exchange from the side that answered: t0 and t2 are the remote's, t1 is ours.
-    inline int64_t ClockOffsetFromResponderSide(uint64_t t0, uint64_t t1, uint64_t t2)
+    inline int64_t ClockOffsetFromResponderSide(_In_ uint64_t t0, _In_ uint64_t t1, _In_ uint64_t t2)
     {
         auto const midpoint = static_cast<int64_t>(t0) + (static_cast<int64_t>(t2) - static_cast<int64_t>(t0)) / 2;
         return midpoint - static_cast<int64_t>(t1);
@@ -1045,7 +1047,7 @@ namespace RtpMidi
 
     // Rebuilds a 64-bit tick count from the low 32 bits in an RTP header, choosing the value
     // nearest an estimate of the sender's clock so a wrap every ~5 days is handled.
-    inline uint64_t UnwrapTimestamp(uint32_t low32, uint64_t senderClockEstimate)
+    inline uint64_t UnwrapTimestamp(_In_ uint32_t low32, _In_ uint64_t senderClockEstimate)
     {
         uint64_t candidate = (senderClockEstimate & 0xFFFFFFFF00000000ull) | low32;
 

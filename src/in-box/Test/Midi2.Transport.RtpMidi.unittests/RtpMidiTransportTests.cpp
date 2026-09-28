@@ -317,6 +317,10 @@ void RtpMidiTransportTests::TestRemoteInvitesHost()
 
     VERIFY_IS_TRUE(WaitFor([&]() { return !remote.Ended().empty(); }, 3000), L"the remote is told the connection ended");
     VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints()[baseline].Removed; }, 3000), L"the endpoint is removed");
+
+    auto const again = Send(Command(L"disconnectRemoteClient",
+        { { L"entryIdentifier", m_hostId }, { L"connectionId", std::to_wstring(connectionId) } }));
+    VERIFY_IS_TRUE(!IsSuccess(again) && ErrorCode(again) == 17u, L"an ended connection cannot be disconnected again");
 }
 
 void RtpMidiTransportTests::TestClientConnectsToRemoteHost()
@@ -444,6 +448,7 @@ void RtpMidiTransportTests::TestHostileConfigurationIsRejected()
 
     auto const badId = NewGuidText();
     std::wstring const longName(64, L'n');
+    std::wstring const longText(256, L't');
 
     std::vector<Case> const cases =
     {
@@ -455,10 +460,15 @@ void RtpMidiTransportTests::TestHostileConfigurationIsRejected()
         { L"{\"create\":{\"hosts\":{\"" + badId + L"\":{\"name\":123}}}}", 12, L"name is a number" },
         { L"{\"create\":{\"hosts\":{\"" + badId + L"\":{\"name\":\"" + longName + L"\"}}}}", 9, L"name longer than 63 bytes" },
         { L"{\"create\":{\"hosts\":{\"" + badId + L"\":{\"name\":\"a.b\"}}}}", 12, L"advertised name with a period" },
+        { L"{\"create\":{\"hosts\":{\"" + badId + L"\":{\"name\":\"x\",\"advertise\":false,\"serviceInstanceName\":\"a.b\"}}}}", 12, L"service instance name with a period on a host not advertised yet" },
+        { L"{\"create\":{\"hosts\":{\"" + badId + L"\":{\"name\":\"x\",\"advertise\":false,\"serviceInstanceName\":\"" + longName + L"\"}}}}", 9, L"service instance name longer than 63 bytes on a host not advertised yet" },
         { L"{\"create\":{\"hosts\":{\"" + badId + L"\":{\"name\":\"x\",\"port\":\"99999\"}}}}", 10, L"port out of range" },
         { L"{\"create\":{\"hosts\":{\"" + badId + L"\":{\"name\":\"x\",\"port\":true}}}}", 10, L"port is a boolean" },
         { L"{\"create\":{\"clients\":{\"" + badId + L"\":{\"name\":\"x\"}}}}", 8, L"client with no remote" },
         { L"{\"create\":{\"clients\":{\"" + badId + L"\":{\"name\":\"x\",\"remoteAddress\":\"::1\",\"serviceInstanceName\":\"y\"}}}}", 8, L"client with two remotes" },
+        { L"{\"create\":{\"clients\":{\"" + badId + L"\":{\"name\":\"x\",\"serviceInstanceName\":\"" + longName + L"\"}}}}", 9, L"remote advertised name longer than 63 bytes" },
+        { L"{\"create\":{\"clients\":{\"" + badId + L"\":{\"name\":\"x\",\"remoteAddress\":\"" + longText + L"\"}}}}", 9, L"remote address longer than 255 characters" },
+        { L"{\"create\":{\"clients\":{\"" + badId + L"\":{\"name\":\"x\",\"remoteAddress\":\"::1\",\"customEndpointName\":\"" + longText + L"\"}}}}", 9, L"custom endpoint name longer than 255 characters" },
         { L"{\"transportCommand\":{\"commandName\":123}}", 2, L"command name is a number" },
         { L"{\"transportCommand\":{\"commandName\":\"startHost\",\"commandArguments\":{\"entryIdentifier\":\"zzz\"}}}", 4, L"command with a bad entry id" },
         { L"{\"transportCommand\":{\"commandName\":\"startHost\"}}", 3, L"command with no entry id" },
