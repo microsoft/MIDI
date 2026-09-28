@@ -86,15 +86,15 @@ private:
 
     void WorkerLoop(_In_ std::stop_token stopToken);
     void ProcessEndpointWork();
-    void ReconcileHosts();
-    void ReconcileClients();
+    void ReconcileHosts(_In_ std::stop_token const& stopToken);
+    void ReconcileClients(_In_ std::stop_token const& stopToken);
     void RefreshCalculatedLatency();
 
     HRESULT CreateEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
     HRESULT RemoveEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
     bool IsInstanceIdInUse(_In_ std::wstring const& instanceId);
 
-    bool TryResolveClientTarget(_In_ RtpMidiClientDefinition const& definition, _Out_ RtpMidi::PeerAddress& target);
+    bool TryResolveClientTarget(_In_ RtpMidiClientDefinition const& definition, _In_ std::stop_token const& stopToken, _Out_ RtpMidi::PeerAddress& target);
 
     std::vector<std::shared_ptr<RtpMidiNode>> RunningNodes();
     json::JsonArray BuildConnectionsJson(_In_ std::shared_ptr<RtpMidiNode> const& node);

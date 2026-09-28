@@ -78,7 +78,7 @@ namespace RtpMidi
         std::vector<ChannelJournal> Channels;
     };
 
-    inline bool ParseChannelChapters(uint8_t const* data, size_t size, ChannelJournal& channel)
+    inline bool ParseChannelChapters(_In_reads_(size) uint8_t const* data, _In_ size_t size, _Inout_ ChannelJournal& channel)
     {
         Reader reader{ data, size };
         auto const toc = channel.Toc;
@@ -220,7 +220,7 @@ namespace RtpMidi
         return true;
     }
 
-    inline bool ParseRecoveryJournal(uint8_t const* data, size_t size, RecoveryJournal& journal)
+    inline bool ParseRecoveryJournal(_In_reads_opt_(size) uint8_t const* data, _In_ size_t size, _Out_ RecoveryJournal& journal)
     {
         journal = RecoveryJournal{};
 
@@ -279,7 +279,7 @@ namespace RtpMidi
     // Writes chapters P, C (value tool only), W and N. An S bit is cleared on anything that came
     // from the packet just before this one, and on every level above it, because a receiver that
     // lost exactly one packet looks only at S = 0 elements (RFC 6295 appendix A.1).
-    inline std::vector<uint8_t> BuildRecoveryJournal(uint16_t checkpointSequence, std::vector<ChannelJournal> const& channels)
+    inline std::vector<uint8_t> BuildRecoveryJournal(_In_ uint16_t checkpointSequence, _In_ std::vector<ChannelJournal> const& channels)
     {
         std::vector<uint8_t> out;
 

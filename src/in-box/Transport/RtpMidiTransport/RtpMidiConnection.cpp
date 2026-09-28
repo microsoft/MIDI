@@ -198,6 +198,7 @@ RtpMidiConnection::SendUmpWordsToCallback(uint32_t const* const words, size_t co
 _Use_decl_annotations_
 HRESULT
 RtpMidiConnection::SendToNetwork(PVOID const data, UINT const length)
+try
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, data);
     RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
@@ -252,3 +253,4 @@ RtpMidiConnection::SendToNetwork(PVOID const data, UINT const length)
 
     return S_OK;
 }
+CATCH_RETURN();

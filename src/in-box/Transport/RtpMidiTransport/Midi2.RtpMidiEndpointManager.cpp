@@ -311,8 +311,8 @@ CMidi2RtpMidiEndpointManager::WorkerLoop(std::stop_token stopToken)
         try
         {
             ProcessEndpointWork();
-            ReconcileHosts();
-            ReconcileClients();
+            ReconcileHosts(stopToken);
+            ReconcileClients(stopToken);
             ProcessEndpointWork();
 
             auto const now = GetTickCount64();
@@ -366,8 +366,9 @@ CMidi2RtpMidiEndpointManager::ProcessEndpointWork()
 }
 
 
+_Use_decl_annotations_
 void
-CMidi2RtpMidiEndpointManager::ReconcileHosts()
+CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
 {
     auto const definitions = TransportState::Current().GetHostDefinitions();
     auto const now = GetTickCount64();
@@ -424,6 +425,9 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts()
 
     for (auto const& definition : toStart)
     {
+        // a stopping service should not wait for hosts it is about to stop again
+        if (stopToken.stop_requested()) break;
+
         auto node = std::make_shared<RtpMidiNode>(
             RtpMidiNode::Role::Host, definition.EntryId, definition.Name, definition.SendRecoveryJournal, this);
 
@@ -449,7 +453,7 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts()
         HRESULT advertiseHr{ S_OK };
         if (SUCCEEDED(startHr) && definition.Advertise)
         {
-            advertiseHr = node->Advertise(definition.EffectiveServiceInstanceName());
+            advertiseHr = node->Advertise(definition.EffectiveServiceInstanceName(), stopToken);
             LOG_IF_FAILED(advertiseHr);
 
             // added even if the host is not kept below, because its registration still flushed the others
@@ -498,8 +502,9 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts()
 }
 
 
+_Use_decl_annotations_
 void
-CMidi2RtpMidiEndpointManager::ReconcileClients()
+CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
 {
     auto const definitions = TransportState::Current().GetClientDefinitions();
     auto const now = GetTickCount64();
@@ -556,9 +561,11 @@ CMidi2RtpMidiEndpointManager::ReconcileClients()
 
     for (auto const& definition : toAttempt)
     {
+        if (stopToken.stop_requested()) break;
+
         RtpMidi::PeerAddress target{};
 
-        if (!TryResolveClientTarget(definition, target))
+        if (!TryResolveClientTarget(definition, stopToken, target))
         {
             auto lock = std::scoped_lock{ m_runtimeLock };
 
@@ -673,7 +680,7 @@ CMidi2RtpMidiEndpointManager::ReconcileClients()
 
 _Use_decl_annotations_
 bool
-CMidi2RtpMidiEndpointManager::TryResolveClientTarget(RtpMidiClientDefinition const& definition, RtpMidi::PeerAddress& target)
+CMidi2RtpMidiEndpointManager::TryResolveClientTarget(RtpMidiClientDefinition const& definition, std::stop_token const& stopToken, RtpMidi::PeerAddress& target)
 {
     target = RtpMidi::PeerAddress{};
 
@@ -683,19 +690,53 @@ CMidi2RtpMidiEndpointManager::TryResolveClientTarget(RtpMidiClientDefinition con
         {
             if (RtpMidiNet::TryParseAddress(definition.RemoteAddress, definition.RemotePort, target)) return true;
 
-            // A host name, which may be a .local name answered over multicast DNS. Blocks this
-            // worker for as long as resolution takes, which is acceptable for a prototype.
-            ADDRINFOW hints{};
+            // A host name, which may be a .local name answered over multicast DNS. The lookup has
+            // a time limit and a service stop cancels it, so a slow or missing DNS server cannot
+            // hold up shutdown.
+            wil::unique_event_nothrow resolved;
+            wil::unique_event_nothrow stopped;
+
+            if (!resolved.try_create(wil::EventOptions::ManualReset, nullptr) ||
+                !stopped.try_create(wil::EventOptions::ManualReset, nullptr))
+            {
+                return false;
+            }
+
+            std::stop_callback const onStop{ stopToken, [&]() noexcept { stopped.SetEvent(); } };
+
+            ADDRINFOEXW hints{};
             hints.ai_family = AF_UNSPEC;
             hints.ai_socktype = SOCK_DGRAM;
             hints.ai_protocol = IPPROTO_UDP;
 
-            PADDRINFOW results{ nullptr };
+            PADDRINFOEXW results{ nullptr };
+            OVERLAPPED overlapped{};
+            overlapped.hEvent = resolved.get();
+            HANDLE cancel{ nullptr };
+            timeval timeout{ MIDI_RTP_NAME_RESOLUTION_TIMEOUT_SECONDS, 0 };
+
             auto const service = std::to_wstring(definition.RemotePort);
 
-            if (GetAddrInfoW(definition.RemoteAddress.c_str(), service.c_str(), &hints, &results) != 0 || results == nullptr) return false;
+            auto status = GetAddrInfoExW(definition.RemoteAddress.c_str(), service.c_str(), NS_ALL, nullptr, &hints, &results,
+                &timeout, &overlapped, nullptr, &cancel);
 
-            auto freeResults = wil::scope_exit([&]() { FreeAddrInfoW(results); });
+            if (status == WSA_IO_PENDING)
+            {
+                HANDLE const handles[]{ resolved.get(), stopped.get() };
+
+                if (WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE) != WAIT_OBJECT_0)
+                {
+                    // canceled or not, the lookup has to finish before the buffers it writes go away
+                    GetAddrInfoExCancel(&cancel);
+                    WaitForSingleObject(resolved.get(), INFINITE);
+                }
+
+                status = GetAddrInfoExOverlappedResult(&overlapped);
+            }
+
+            auto freeResults = wil::scope_exit([&]() { if (results != nullptr) FreeAddrInfoExW(results); });
+
+            if (status != NO_ERROR || results == nullptr) return false;
 
             RtpMidi::PeerAddress firstV6{};
             bool haveV6{ false };

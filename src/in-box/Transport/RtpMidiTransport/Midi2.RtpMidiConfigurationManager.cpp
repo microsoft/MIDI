@@ -174,6 +174,9 @@ namespace
 
         if (!TryReadName(entry, definition.Name, errorCode, messageId)) return false;
         if (!IsValidName(definition.Name, false, errorCode, messageId)) return false;
+
+        // checked even when the host is not advertised, because advertising it later uses this name
+        if (!definition.ServiceInstanceName.empty() && !IsValidName(definition.ServiceInstanceName, true, errorCode, messageId)) return false;
         if (definition.Advertise && !IsValidName(definition.EffectiveServiceInstanceName(), true, errorCode, messageId)) return false;
 
         uint16_t port{ 0 };
@@ -210,6 +213,23 @@ namespace
 
         if (!TryReadName(entry, definition.Name, errorCode, messageId)) return false;
         if (!IsValidName(definition.Name, false, errorCode, messageId)) return false;
+
+        // only this PC uses these, but they come from a file anyone can edit
+        if (definition.CustomEndpointName.size() > MIDI_RTP_CONFIG_TEXT_MAX_CHARS ||
+            definition.RemoteAddress.size() > MIDI_RTP_CONFIG_TEXT_MAX_CHARS)
+        {
+            errorCode = RTP_MIDI_ERROR_CODE_NAME_TOO_LONG;
+            messageId = IDS_RTP_ERROR_TEXT_TOO_LONG;
+            return false;
+        }
+
+        // longer than a DNS-SD label, so it could never match anything on the network
+        if (RtpMidiText::Utf8ByteCount(definition.RemoteServiceInstanceName) > MIDI_RTP_NAME_MAX_UTF8_BYTES)
+        {
+            errorCode = RTP_MIDI_ERROR_CODE_NAME_TOO_LONG;
+            messageId = IDS_RTP_ERROR_NAME_TOO_LONG;
+            return false;
+        }
 
         // exactly one way of finding the remote
         if (definition.RemoteServiceInstanceName.empty() == definition.RemoteAddress.empty())
@@ -292,7 +312,7 @@ namespace
 
         if (found->second.size() > MIDI_RTP_REMOTE_CLIENT_NAME_MAX_CHARS)
         {
-            Fail(responseObject, RTP_MIDI_ERROR_CODE_NAME_TOO_LONG, IDS_RTP_ERROR_NAME_TOO_LONG);
+            Fail(responseObject, RTP_MIDI_ERROR_CODE_NAME_TOO_LONG, IDS_RTP_ERROR_TEXT_TOO_LONG);
             return false;
         }
 

@@ -160,13 +160,14 @@ RtpMidiNode::Start(
 
 _Use_decl_annotations_
 HRESULT
-RtpMidiNode::Advertise(std::wstring const& instanceLabel)
+RtpMidiNode::Advertise(std::wstring const& instanceLabel, std::stop_token const& stopToken)
+try
 {
     RETURN_HR_IF(E_ILLEGAL_METHOD_CALL, m_role != Role::Host);
     RETURN_HR_IF(E_ILLEGAL_STATE_CHANGE, !m_running.load());
     RETURN_HR_IF(E_INVALIDARG, instanceLabel.empty());
 
-    RETURN_IF_FAILED(m_advertiser.Register(instanceLabel, m_ports.Control().Port(), 10000));
+    RETURN_IF_FAILED(m_advertiser.Register(instanceLabel, m_ports.Control().Port(), 10000, stopToken));
 
     m_advertised = true;
 
@@ -183,6 +184,7 @@ RtpMidiNode::Advertise(std::wstring const& instanceLabel)
 
     return S_OK;
 }
+CATCH_RETURN();
 
 
 void
@@ -230,6 +232,7 @@ RtpMidiNode::Stop()
 _Use_decl_annotations_
 HRESULT
 RtpMidiNode::Invite(RtpMidi::PeerAddress const& remoteControl)
+try
 {
     RETURN_HR_IF(E_ILLEGAL_STATE_CHANGE, !m_running.load());
 
@@ -244,11 +247,13 @@ RtpMidiNode::Invite(RtpMidi::PeerAddress const& remoteControl)
 
     return S_OK;
 }
+CATCH_RETURN();
 
 
 _Use_decl_annotations_
 HRESULT
 RtpMidiNode::EndConnection(uint32_t const participantId)
+try
 {
     {
         auto lock = std::scoped_lock{ m_engineLock };
@@ -261,6 +266,7 @@ RtpMidiNode::EndConnection(uint32_t const participantId)
 
     return S_OK;
 }
+CATCH_RETURN();
 
 
 _Use_decl_annotations_
@@ -451,8 +457,12 @@ RtpMidiNode::OnMidi(RtpMidi::Participant const& participant, uint64_t localTimes
     event.IsMidi = true;
     event.ParticipantId = participant.Id;
 
-    // never later than arrival: a sender may stamp ahead, and the clock mapping has error
-    event.LocalTicks = senderLeadTicks > 0 ? localTimestamp - static_cast<uint64_t>(senderLeadTicks) : localTimestamp;
+    // Never later than arrival, because a sender may stamp ahead and the clock mapping has error.
+    // Never before this PC started either: a sender's timestamp can map to a time before the
+    // clock began, which as an unsigned value is far in the future. Arrival is local minus lead
+    // in unsigned arithmetic, which holds even when local went below zero.
+    auto const arrival = localTimestamp - static_cast<uint64_t>(senderLeadTicks);
+    event.LocalTicks = (std::min)(localTimestamp, arrival);
     event.Bytes = bytes;
 
     m_pending.push_back(std::move(event));

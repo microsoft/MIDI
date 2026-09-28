@@ -75,8 +75,10 @@ namespace MidiRtpSdkJson
             auto const value = Find(parent, key, json::JsonValueType::Number);
             if (value == nullptr) return T{ 0 };
 
+            // Compared against the maximum plus one, which a double holds exactly. The 64 bit maximum
+            // itself rounds up to 2^64, and converting 2^64 back is undefined.
             auto const number = value.GetNumber();
-            if (!(number >= 0) || number > static_cast<double>((std::numeric_limits<T>::max)())) return T{ 0 };
+            if (!(number >= 0) || !(number < static_cast<double>((std::numeric_limits<T>::max)()) + 1.0)) return T{ 0 };
 
             return static_cast<T>(number);
         }

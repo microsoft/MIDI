@@ -30,14 +30,14 @@ namespace RtpMidi
 
         bool IsSet() const { return Family != 0; }
 
-        bool SameHost(PeerAddress const& other) const
+        bool SameHost(_In_ PeerAddress const& other) const
         {
             return Family == other.Family && Bytes == other.Bytes && ScopeId == other.ScopeId;
         }
 
         bool operator==(PeerAddress const& other) const { return SameHost(other) && Port == other.Port; }
 
-        PeerAddress WithPort(uint16_t port) const
+        PeerAddress WithPort(_In_ uint16_t port) const
         {
             auto copy = *this;
             copy.Port = port;
@@ -124,7 +124,7 @@ namespace RtpMidi
         Replaced,
     };
 
-    inline char const* ParticipantStateName(ParticipantState state)
+    inline char const* ParticipantStateName(_In_ ParticipantState state)
     {
         switch (state)
         {
@@ -138,7 +138,7 @@ namespace RtpMidi
         }
     }
 
-    inline char const* EndReasonName(EndReason reason)
+    inline char const* EndReasonName(_In_ EndReason reason)
     {
         switch (reason)
         {
@@ -257,15 +257,15 @@ namespace RtpMidi
     public:
         virtual ~ISessionHost() = default;
 
-        virtual void SendControl(PeerAddress const& to, std::vector<uint8_t> const& datagram) = 0;
-        virtual void SendData(PeerAddress const& to, std::vector<uint8_t> const& datagram) = 0;
+        virtual void SendControl(_In_ PeerAddress const& to, _In_ std::vector<uint8_t> const& datagram) = 0;
+        virtual void SendData(_In_ PeerAddress const& to, _In_ std::vector<uint8_t> const& datagram) = 0;
 
         // senderLeadTicks is the mapped sender time minus arrival: negative is transit delay, positive
         // means the sender scheduled the message ahead. recovered marks synthesized repair messages.
-        virtual void OnMidi(Participant const& participant, uint64_t localTimestamp, int64_t senderLeadTicks, bool recovered, std::vector<uint8_t> const& bytes) = 0;
+        virtual void OnMidi(_In_ Participant const& participant, _In_ uint64_t localTimestamp, _In_ int64_t senderLeadTicks, _In_ bool recovered, _In_ std::vector<uint8_t> const& bytes) = 0;
 
-        virtual void OnParticipantChanged(Participant const& participant) = 0;
-        virtual void Log(std::string const& message) = 0;
+        virtual void OnParticipantChanged(_In_ Participant const& participant) = 0;
+        virtual void Log(_In_ std::string const& message) = 0;
 
         // diagnostics only: every RTP-MIDI packet accepted from a participant, after decoding
         virtual void OnRtpPacket(Participant const& /*participant*/, DecodedPacket const& /*packet*/, uint8_t const* /*datagram*/, size_t /*size*/) {}
@@ -314,7 +314,7 @@ namespace RtpMidi
     class Session
     {
     public:
-        Session(SessionConfig config, ISessionHost& host, uint64_t randomSeed) :
+        Session(_In_ SessionConfig config, _In_ ISessionHost& host, _In_ uint64_t randomSeed) :
             m_config(std::move(config)),
             m_host(host),
             m_random(randomSeed == 0 ? 0x9E3779B97F4A7C15ull : randomSeed),
@@ -325,7 +325,7 @@ namespace RtpMidi
         SessionConfig const& Config() const { return m_config; }
         SessionStats const& Stats() const { return m_stats; }
 
-        uint32_t Invite(PeerAddress const& remoteControl, uint64_t now)
+        uint32_t Invite(_In_ PeerAddress const& remoteControl, _In_ uint64_t now)
         {
             auto participant = std::make_unique<Participant>();
             participant->Id = ++m_nextId;
@@ -347,7 +347,7 @@ namespace RtpMidi
             return added.Id;
         }
 
-        void OnDatagram(bool isControlPort, PeerAddress const& from, uint8_t const* data, size_t size, uint64_t now)
+        void OnDatagram(_In_ bool isControlPort, _In_ PeerAddress const& from, _In_reads_(size) uint8_t const* data, _In_ size_t size, _In_ uint64_t now)
         {
             AppleMidiCommand command{};
 
@@ -365,7 +365,7 @@ namespace RtpMidi
             }
         }
 
-        void Tick(uint64_t now)
+        void Tick(_In_ uint64_t now)
         {
             auto const& timings = m_config.Timings;
 
@@ -452,7 +452,7 @@ namespace RtpMidi
         }
 
         // A MIDI 1.0 byte stream in any size of piece. Sent to every participant ready for data.
-        void SendMidi(uint8_t const* bytes, size_t count, uint64_t now)
+        void SendMidi(_In_reads_(count) uint8_t const* bytes, _In_ size_t count, _In_ uint64_t now)
         {
             m_encoder.Append(bytes, count);
 
@@ -466,7 +466,7 @@ namespace RtpMidi
         }
 
         // A MIDI 1.0 byte stream for one participant. False when it is not ready for data.
-        bool SendMidiTo(uint32_t participantId, uint8_t const* bytes, size_t count, uint64_t now)
+        bool SendMidiTo(_In_ uint32_t participantId, _In_reads_(count) uint8_t const* bytes, _In_ size_t count, _In_ uint64_t now)
         {
             auto participant = FindById(participantId);
             if (participant == nullptr || !IsReadyForData(*participant)) return false;
@@ -479,7 +479,7 @@ namespace RtpMidi
             return true;
         }
 
-        bool TrySnapshot(uint32_t participantId, Participant& snapshot) const
+        bool TrySnapshot(_In_ uint32_t participantId, _Inout_ Participant& snapshot) const
         {
             for (auto const& entry : m_participants)
             {
@@ -493,12 +493,12 @@ namespace RtpMidi
         }
 
     private:
-        static bool IsReadyForData(Participant const& participant)
+        static bool IsReadyForData(_In_ Participant const& participant)
         {
             return participant.State == ParticipantState::Connected || participant.State == ParticipantState::Synchronizing;
         }
 
-        Participant* FindById(uint32_t id)
+        Participant* FindById(_In_ uint32_t id)
         {
             for (auto& entry : m_participants)
             {
@@ -508,7 +508,7 @@ namespace RtpMidi
             return nullptr;
         }
 
-        void SendLists(Participant& participant, std::vector<std::vector<uint8_t>> const& lists, uint64_t now)
+        void SendLists(_Inout_ Participant& participant, _In_ std::vector<std::vector<uint8_t>> const& lists, _In_ uint64_t now)
         {
             auto const timestamp = static_cast<uint32_t>(now);
 
@@ -544,7 +544,7 @@ namespace RtpMidi
 
     public:
 
-        void EndParticipant(uint32_t id, uint64_t now)
+        void EndParticipant(_In_ uint32_t id, _In_ uint64_t now)
         {
             for (auto& entry : m_participants)
             {
@@ -552,7 +552,7 @@ namespace RtpMidi
             }
         }
 
-        void EndAll(uint64_t now)
+        void EndAll(_In_ uint64_t now)
         {
             for (auto& entry : m_participants) EndParticipant(*entry, EndReason::LocalRequest, true, now);
         }
@@ -581,7 +581,7 @@ namespace RtpMidi
             return static_cast<uint32_t>((m_random * 0x2545F4914F6CDD1Dull) >> 32);
         }
 
-        uint64_t SyncInterval(Participant const& participant) const
+        uint64_t SyncInterval(_In_ Participant const& participant) const
         {
             auto const& timings = m_config.Timings;
 
@@ -596,7 +596,7 @@ namespace RtpMidi
             return interval;
         }
 
-        void AddClockSample(Participant& participant, int64_t offset, uint64_t roundTrip, uint64_t now)
+        void AddClockSample(_Inout_ Participant& participant, _In_ int64_t offset, _In_ uint64_t roundTrip, _In_ uint64_t now)
         {
             auto const& timings = m_config.Timings;
             auto& stats = participant.Stats;
@@ -636,7 +636,7 @@ namespace RtpMidi
             stats.SyncExchanges++;
         }
 
-        Participant* FindBySsrc(uint32_t ssrc, PeerAddress const& from)
+        Participant* FindBySsrc(_In_ uint32_t ssrc, _In_ PeerAddress const& from)
         {
             for (auto& entry : m_participants)
             {
@@ -647,7 +647,7 @@ namespace RtpMidi
             return nullptr;
         }
 
-        Participant* FindOurInvitation(uint32_t token, PeerAddress const& from)
+        Participant* FindOurInvitation(_In_ uint32_t token, _In_ PeerAddress const& from)
         {
             for (auto& entry : m_participants)
             {
@@ -665,14 +665,14 @@ namespace RtpMidi
             return count;
         }
 
-        void Reply(bool isControlPort, PeerAddress const& to, std::vector<uint8_t> const& datagram)
+        void Reply(_In_ bool isControlPort, _In_ PeerAddress const& to, _In_ std::vector<uint8_t> const& datagram)
         {
             if (isControlPort) m_host.SendControl(to, datagram);
             else m_host.SendData(to, datagram);
         }
 
         // A refusal is the only thing a stranger can make us send, so it is rate limited.
-        void Reject(bool isControlPort, PeerAddress const& to, uint32_t token, uint64_t now, char const* why)
+        void Reject(_In_ bool isControlPort, _In_ PeerAddress const& to, _In_ uint32_t token, _In_ uint64_t now, _In_z_ char const* why)
         {
             if (now - m_rejectWindowStart >= SessionClockTicksPerSecond)
             {
@@ -693,7 +693,7 @@ namespace RtpMidi
             m_host.Log(std::string{ "rejected invitation from " } + to.ToString() + ": " + why);
         }
 
-        void SendInvitation(Participant& participant, bool toControlPort, uint64_t now)
+        void SendInvitation(_Inout_ Participant& participant, _In_ bool toControlPort, _In_ uint64_t now)
         {
             auto const datagram = BuildInvitation(AppleMidiCommand::Invitation, participant.InitiatorToken, m_config.Ssrc, m_config.LocalName);
 
@@ -704,7 +704,7 @@ namespace RtpMidi
             participant.InvitationAttempts++;
         }
 
-        void SendSync0(Participant& participant, uint64_t now)
+        void SendSync0(_Inout_ Participant& participant, _In_ uint64_t now)
         {
             m_host.SendData(participant.RemoteData, BuildSynchronization(m_config.Ssrc, 0, { now, 0, 0 }));
 
@@ -712,7 +712,7 @@ namespace RtpMidi
             participant.AwaitingSyncReply = true;
         }
 
-        void SendFeedback(Participant& participant, uint64_t now)
+        void SendFeedback(_Inout_ Participant& participant, _In_ uint64_t now)
         {
             uint32_t const field = m_config.FeedbackSequenceInHighBits ?
                 (static_cast<uint32_t>(participant.HighestSequence) << 16) :
@@ -724,14 +724,14 @@ namespace RtpMidi
             participant.FeedbackDue = false;
         }
 
-        void Deliver(Participant& participant, uint64_t localTimestamp, int64_t lead, bool recovered, std::vector<uint8_t> const& bytes)
+        void Deliver(_Inout_ Participant& participant, _In_ uint64_t localTimestamp, _In_ int64_t lead, _In_ bool recovered, _In_ std::vector<uint8_t> const& bytes)
         {
             TrackNotes(participant, bytes);
             participant.Stats.MessagesReceived++;
             m_host.OnMidi(participant, localTimestamp, lead, recovered, bytes);
         }
 
-        void SilenceActiveNotes(Participant& participant, uint64_t when, int64_t lead)
+        void SilenceActiveNotes(_Inout_ Participant& participant, _In_ uint64_t when, _In_ int64_t lead)
         {
             for (uint8_t channel = 0; channel < 16; channel++)
             {
@@ -745,7 +745,7 @@ namespace RtpMidi
             }
         }
 
-        void EndParticipant(Participant& participant, EndReason reason, bool sendEndSession, uint64_t now)
+        void EndParticipant(_Inout_ Participant& participant, _In_ EndReason reason, _In_ bool sendEndSession, _In_ uint64_t now)
         {
             if (participant.State == ParticipantState::Ended) return;
 
@@ -766,7 +766,7 @@ namespace RtpMidi
             m_host.OnParticipantChanged(participant);
         }
 
-        void HandleCommand(bool isControlPort, PeerAddress const& from, AppleMidiCommand command, uint8_t const* data, size_t size, uint64_t now)
+        void HandleCommand(_In_ bool isControlPort, _In_ PeerAddress const& from, _In_ AppleMidiCommand command, _In_reads_(size) uint8_t const* data, _In_ size_t size, _In_ uint64_t now)
         {
             switch (command)
             {
@@ -833,7 +833,7 @@ namespace RtpMidi
             }
         }
 
-        void OnInvitation(bool isControlPort, PeerAddress const& from, AppleMidiInvitation const& message, uint64_t now)
+        void OnInvitation(_In_ bool isControlPort, _In_ PeerAddress const& from, _In_ AppleMidiInvitation const& message, _In_ uint64_t now)
         {
             if (message.ProtocolVersion != AppleMidiProtocolVersion)
             {
@@ -939,7 +939,7 @@ namespace RtpMidi
             m_host.OnParticipantChanged(added);
         }
 
-        void OnAccepted(bool isControlPort, PeerAddress const& from, AppleMidiInvitation const& message, uint64_t now)
+        void OnAccepted(_In_ bool isControlPort, _In_ PeerAddress const& from, _In_ AppleMidiInvitation const& message, _In_ uint64_t now)
         {
             auto participant = FindOurInvitation(message.InitiatorToken, from);
             if (participant == nullptr) return;
@@ -965,7 +965,7 @@ namespace RtpMidi
             }
         }
 
-        void OnSynchronization(bool isControlPort, PeerAddress const& from, AppleMidiSynchronization const& message, uint64_t now)
+        void OnSynchronization(_In_ bool isControlPort, _In_ PeerAddress const& from, _In_ AppleMidiSynchronization const& message, _In_ uint64_t now)
         {
             auto participant = FindBySsrc(message.Ssrc, from);
             if (participant == nullptr) return;
@@ -1023,7 +1023,7 @@ namespace RtpMidi
             }
         }
 
-        std::pair<uint64_t, int64_t> MapTimestamp(Participant const& participant, uint32_t rtpTimestamp, uint64_t now) const
+        std::pair<uint64_t, int64_t> MapTimestamp(_In_ Participant const& participant, _In_ uint32_t rtpTimestamp, _In_ uint64_t now) const
         {
             if (!participant.HaveClockOffset) return { now, 0 };
 
@@ -1034,7 +1034,7 @@ namespace RtpMidi
             return { static_cast<uint64_t>(local), local - static_cast<int64_t>(now) };
         }
 
-        static void TrackNoteState(std::array<std::array<bool, 128>, 16>& notes, std::vector<uint8_t> const& bytes)
+        static void TrackNoteState(_Inout_ std::array<std::array<bool, 128>, 16>& notes, _In_ std::vector<uint8_t> const& bytes)
         {
             if (bytes.size() < 3) return;
 
@@ -1058,12 +1058,12 @@ namespace RtpMidi
             }
         }
 
-        static void TrackNotes(Participant& participant, std::vector<uint8_t> const& bytes)
+        static void TrackNotes(_Inout_ Participant& participant, _In_ std::vector<uint8_t> const& bytes)
         {
             TrackNoteState(participant.ActiveNotes, bytes);
         }
 
-        void RepairFromJournal(Participant& participant, DecodedPacket const& packet, uint8_t const* datagram, uint16_t previousHighest, uint64_t when, int64_t lead)
+        void RepairFromJournal(_Inout_ Participant& participant, _In_ DecodedPacket const& packet, _In_ uint8_t const* datagram, _In_ uint16_t previousHighest, _In_ uint64_t when, _In_ int64_t lead)
         {
             participant.Stats.LossEvents++;
 
@@ -1107,7 +1107,7 @@ namespace RtpMidi
             if (!covered) SilenceActiveNotes(participant, when, lead);
         }
 
-        void HandleRtp(PeerAddress const& from, uint8_t const* data, size_t size, uint64_t now)
+        void HandleRtp(_In_ PeerAddress const& from, _In_reads_(size) uint8_t const* data, _In_ size_t size, _In_ uint64_t now)
         {
             RtpHeader header{};
 
@@ -1211,7 +1211,7 @@ namespace RtpMidi
         }
 
         // Closed loop: the journal covers everything since the last packet the peer confirmed.
-        std::vector<uint8_t> BuildOutgoingJournal(Participant const& participant, uint16_t sequence) const
+        std::vector<uint8_t> BuildOutgoingJournal(_In_ Participant const& participant, _In_ uint16_t sequence) const
         {
             auto const previous = static_cast<uint16_t>(sequence - 1);
 
@@ -1246,7 +1246,7 @@ namespace RtpMidi
             return BuildRecoveryJournal(participant.JournalCheckpoint, channels);
         }
 
-        void RecordSentNotes(Participant& participant, std::vector<uint8_t> const& list, uint16_t sequence)
+        void RecordSentNotes(_Inout_ Participant& participant, _In_ std::vector<uint8_t> const& list, _In_ uint16_t sequence)
         {
             // walk the list we just built: status bytes are always present, deltas are single zeros
             size_t position = 0;
@@ -1298,7 +1298,7 @@ namespace RtpMidi
 
         // RS confirms receipt through a sequence number. Its layout differs between peers, so the
         // half that falls inside the window of packets actually sent is the one believed.
-        void OnFeedback(Participant& participant, uint32_t field)
+        void OnFeedback(_Inout_ Participant& participant, _In_ uint32_t field)
         {
             if (!participant.HaveSentRtp) return;
 

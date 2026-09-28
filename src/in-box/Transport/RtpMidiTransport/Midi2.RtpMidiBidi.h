@@ -19,6 +19,8 @@ public:
     STDMETHOD(Shutdown)();
 
 private:
+    // The service can close the endpoint on one thread while a message arrives on another
+    std::mutex m_lock;
     wil::com_ptr_nothrow<IMidiCallback> m_callback{ nullptr };
     std::weak_ptr<RtpMidiConnection> m_connection;
 };

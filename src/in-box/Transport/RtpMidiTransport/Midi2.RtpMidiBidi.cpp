@@ -39,8 +39,12 @@ CMidi2RtpMidiBidi::Initialize(
         auto connection = endpointManager->FindConnectionByEndpointDeviceInterfaceId(endpointDeviceInterfaceId);
         RETURN_HR_IF_NULL(E_NOTFOUND, connection);
 
-        m_callback = callback;
-        m_connection = connection;
+        {
+            auto lock = std::scoped_lock{ m_lock };
+
+            m_callback = callback;
+            m_connection = connection;
+        }
 
         RETURN_IF_FAILED(connection->ConnectMidiCallback(this, context));
 
@@ -62,15 +66,36 @@ CMidi2RtpMidiBidi::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    if (auto connection = m_connection.lock())
+    try
     {
-        LOG_IF_FAILED(connection->DisconnectMidiCallback());
+        std::shared_ptr<RtpMidiConnection> connection{ nullptr };
+
+        {
+            auto lock = std::scoped_lock{ m_lock };
+            connection = m_connection.lock();
+        }
+
+        // before the callback goes, so the connection stops handing messages to this endpoint
+        if (connection != nullptr)
+        {
+            LOG_IF_FAILED(connection->DisconnectMidiCallback());
+        }
+
+        wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
+
+        {
+            auto lock = std::scoped_lock{ m_lock };
+
+            m_connection.reset();
+            callback = std::move(m_callback);
+        }
+
+        // released outside the lock, and a message already on its way holds its own reference
+        callback.reset();
+
+        return S_OK;
     }
-
-    m_connection.reset();
-    m_callback = nullptr;
-
-    return S_OK;
+    CATCH_RETURN();
 }
 
 
@@ -82,13 +107,23 @@ CMidi2RtpMidiBidi::SendMidiMessage(
     UINT length,
     LONGLONG)
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, data);
-    RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
+    try
+    {
+        RETURN_HR_IF_NULL(E_INVALIDARG, data);
+        RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
 
-    auto connection = m_connection.lock();
-    RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), connection);
+        std::shared_ptr<RtpMidiConnection> connection{ nullptr };
 
-    return connection->SendToNetwork(data, length);
+        {
+            auto lock = std::scoped_lock{ m_lock };
+            connection = m_connection.lock();
+        }
+
+        RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), connection);
+
+        return connection->SendToNetwork(data, length);
+    }
+    CATCH_RETURN();
 }
 
 
@@ -101,8 +136,21 @@ CMidi2RtpMidiBidi::Callback(
     LONGLONG timestamp,
     LONGLONG context)
 {
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_callback);
-    RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
+    try
+    {
+        RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
 
-    return m_callback->Callback(optionFlags, data, length, timestamp, context);
+        wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
+
+        {
+            auto lock = std::scoped_lock{ m_lock };
+            callback = m_callback;
+        }
+
+        // the endpoint was closed while this message was on its way
+        if (callback == nullptr) return S_FALSE;
+
+        return callback->Callback(optionFlags, data, length, timestamp, context);
+    }
+    CATCH_RETURN();
 }
