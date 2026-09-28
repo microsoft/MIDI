@@ -50,9 +50,9 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include <resource_util.h>
 
 // the transport's own key names, error codes and defaults, so the two cannot drift apart
-#include "..\transport\transport_defs.h"
-#include "..\transport\rtp_json_defs.h"
-#include "..\transport\rtp_transport_error_codes.h"
+#include "..\..\..\in-box\Transport\RtpMidiTransport\transport_defs.h"
+#include "..\..\..\in-box\Transport\RtpMidiTransport\rtp_json_defs.h"
+#include "..\..\..\in-box\Transport\RtpMidiTransport\rtp_transport_error_codes.h"
 
 #include "resource.h"
 #include "RtpSdkDefs.h"

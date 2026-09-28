@@ -5,11 +5,8 @@ VisualStudioVersion = 18.0.0.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rtpmidi-spike", "spike\rtpmidi-spike.vcxproj", "{7C3E9B52-1D84-4F6A-A0B7-3E5C2D9F8141}"
 	ProjectSection(ProjectDependencies) = postProject
-		{5E7A2C41-93B8-4D0F-B6E2-8A4C1F3D7E95} = {5E7A2C41-93B8-4D0F-B6E2-8A4C1F3D7E95}
 		{B3D1F6A8-2C47-4E95-8A0B-6F3E9D2C5A17} = {B3D1F6A8-2C47-4E95-8A0B-6F3E9D2C5A17}
 	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.RtpMidiTransport", "transport\Midi2.RtpMidiTransport.vcxproj", "{5E7A2C41-93B8-4D0F-B6E2-8A4C1F3D7E95}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Windows.Devices.Midi2.Transports.Rtp", "sdk\Windows.Devices.Midi2.Transports.Rtp.vcxproj", "{B3D1F6A8-2C47-4E95-8A0B-6F3E9D2C5A17}"
 EndProject
@@ -23,10 +20,6 @@ Global
 		{7C3E9B52-1D84-4F6A-A0B7-3E5C2D9F8141}.Release|ARM64.Build.0 = Release|ARM64
 		{7C3E9B52-1D84-4F6A-A0B7-3E5C2D9F8141}.Release|x64.ActiveCfg = Release|x64
 		{7C3E9B52-1D84-4F6A-A0B7-3E5C2D9F8141}.Release|x64.Build.0 = Release|x64
-		{5E7A2C41-93B8-4D0F-B6E2-8A4C1F3D7E95}.Release|ARM64.ActiveCfg = Release|ARM64
-		{5E7A2C41-93B8-4D0F-B6E2-8A4C1F3D7E95}.Release|ARM64.Build.0 = Release|ARM64
-		{5E7A2C41-93B8-4D0F-B6E2-8A4C1F3D7E95}.Release|x64.ActiveCfg = Release|x64
-		{5E7A2C41-93B8-4D0F-B6E2-8A4C1F3D7E95}.Release|x64.Build.0 = Release|x64
 		{B3D1F6A8-2C47-4E95-8A0B-6F3E9D2C5A17}.Release|ARM64.ActiveCfg = Release|ARM64
 		{B3D1F6A8-2C47-4E95-8A0B-6F3E9D2C5A17}.Release|ARM64.Build.0 = Release|ARM64
 		{B3D1F6A8-2C47-4E95-8A0B-6F3E9D2C5A17}.Release|x64.ActiveCfg = Release|x64

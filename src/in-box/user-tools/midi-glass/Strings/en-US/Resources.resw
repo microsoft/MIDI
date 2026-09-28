@@ -2448,6 +2448,12 @@
   <data name="MessageAssignedController" xml:space="preserve">
     <value>NRPN (assignable controller)</value>
   </data>
+  <data name="MessageRowRegisteredController" xml:space="preserve">
+    <value>RPN</value>
+  </data>
+  <data name="MessageRowAssignedController" xml:space="preserve">
+    <value>NRPN</value>
+  </data>
   <data name="MessageSystemExclusive" xml:space="preserve">
     <value>System exclusive</value>
   </data>

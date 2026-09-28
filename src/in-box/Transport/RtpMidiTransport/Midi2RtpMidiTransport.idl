@@ -1,0 +1,25 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// rtpMIDI transport COM class.
+// ============================================================================
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+import "WindowsMidiServices.idl";
+
+[
+    uuid(81a635a5-2573-436c-ae92-21a270672417),
+    version(0.1),
+]
+library Midi2RtpMidiTransportLib
+{
+    importlib("stdole2.tlb");
+
+    [uuid(54c9b2f6-c235-4000-a675-9f6958a1a4fa), version(0.1)]
+    coclass Midi2RtpMidiTransport
+    {
+        [default] interface IMidiTransport;
+    }
+};

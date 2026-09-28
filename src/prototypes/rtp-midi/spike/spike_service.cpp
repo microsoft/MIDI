@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
-// PROTOTYPE. Drives the rtpMIDI transport in the running MIDI service through the rtpMIDI SDK,
+// PROTOTYPE. Drives the RTP-MIDI transport in the running MIDI service through the RTP-MIDI SDK,
 // until a settings app has a page for it.
 //
 //   rtpmidi-spike service status
@@ -246,7 +246,7 @@ namespace
         for (auto const& client : clients) PrintClient(client);
 
         Print("");
-        Print("rtpMIDI devices advertised on the network (%u)", peers.Size());
+        Print("RTP-MIDI devices advertised on the network (%u)", peers.Size());
 
         for (auto const& peer : peers)
         {
@@ -1185,7 +1185,7 @@ int RunServiceCommand(std::vector<std::wstring> const& raw)
 
         if (!rtp::MidiRtpTransportManager::IsTransportAvailable())
         {
-            Print("The rtpMIDI transport is not installed in the MIDI service. Run register-dev-transport.cmd as administrator.");
+            Print("The RTP-MIDI transport is not installed in the MIDI service. Run register-dev-transport.cmd as administrator.");
             return 3;
         }
 

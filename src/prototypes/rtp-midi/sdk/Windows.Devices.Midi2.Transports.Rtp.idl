@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
-// PROTOTYPE. Windows MIDI Services rtpMIDI transport API.
+// PROTOTYPE. Windows MIDI Services RTP-MIDI transport API.
 //
-// rtpMIDI (RTP-MIDI with Apple's connection protocol) is what macOS, iOS and many network MIDI
+// RTP-MIDI (IETF RFC 6295, with Apple's session protocol) is what macOS, iOS and many network MIDI
 // interfaces use. Each connection with a remote device gets its own MIDI endpoint.
 //
 // Shaped after Windows.Devices.Midi2.Transports.Network so one settings app can present both.
@@ -70,7 +70,7 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         [noexcept] UInt16 RemotePort{ get; };
         [noexcept] UInt16 LocalPort{ get; };
 
-        // The remote's DNS host name, such as "Studio-Mac.local", from its rtpMIDI advertisement,
+        // The remote's DNS host name, such as "Studio-Mac.local", from its RTP-MIDI advertisement,
         // or empty. For matching: compare it with MidiNetworkAdvertisedHost.HostName, ignoring
         // case, to find the same device on Network MIDI 2.0.
         [noexcept] String RemoteHostName{ get; };
@@ -91,7 +91,7 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         [noexcept] UInt64 TotalCountNetworkPacketsSent{ get; };
         [noexcept] UInt64 TotalCountNetworkPacketsReceived{ get; };
 
-        // rtpMIDI never resends. A lost packet is repaired from the recovery journal the next
+        // RTP-MIDI never resends. A lost packet is repaired from the recovery journal the next
         // packet carries, and a note that cannot be repaired is ended so it does not hang.
         [noexcept] UInt64 TotalCountPacketsLost{ get; };
         [noexcept] UInt64 TotalCountLossesRepairedFromJournal{ get; };
@@ -167,7 +167,7 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         [noexcept] MidiRtpConnection Connection{ get; };
     };
 
-    // An rtpMIDI device advertising itself on the local network
+    // An RTP-MIDI device advertising itself on the local network
     [contract(MidiTransportsRtpApiContract, 1)]
     runtimeclass MidiRtpAdvertisedPeer
     {
@@ -200,11 +200,11 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         // the name advertised on the network, when it should differ from Name. No periods.
         [noexcept] String ServiceInstanceName;
 
-        // When true the host tries 5004, the port other rtpMIDI software looks at first, and
+        // When true the host tries 5004, the port other RTP-MIDI software looks at first, and
         // takes a free one if that is taken
         [noexcept] Boolean UseAutomaticPort;
 
-        // 1024 to 65534. rtpMIDI also uses the port after it.
+        // 1024 to 65534. RTP-MIDI also uses the port after it.
         [noexcept] UInt16 Port;
 
         [noexcept] Boolean AllowPortFallback;
@@ -264,11 +264,11 @@ namespace Windows.Devices.Midi2.Transports.Rtp
     [contract(MidiTransportsRtpApiContract, 1)]
     static runtimeclass MidiRtpTransportManager
     {
-        // true when the rtpMIDI transport is installed in the service
+        // true when the RTP-MIDI transport is installed in the service
         [noexcept] static Boolean IsTransportAvailable{ get; };
         [noexcept] static Guid TransportId{ get; };
 
-        // "_apple-midi._udp", the DNS-SD service type rtpMIDI devices advertise
+        // "_apple-midi._udp", the DNS-SD service type RTP-MIDI devices advertise
         [noexcept] static String DnsSdServiceType{ get; };
         [noexcept] static UInt16 DefaultHostPort{ get; };
 
@@ -300,7 +300,7 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         [noexcept] static Windows.Foundation.Collections.IVectorView<MidiRtpConfiguredHost> GetConfiguredHosts();
         [noexcept] static Windows.Foundation.Collections.IVectorView<MidiRtpConfiguredClient> GetConfiguredClients();
 
-        // the rtpMIDI devices the service can see advertised on the local network right now
+        // the RTP-MIDI devices the service can see advertised on the local network right now
         [noexcept] static Windows.Foundation.Collections.IVectorView<MidiRtpAdvertisedPeer> GetAdvertisedPeers();
     };
 }

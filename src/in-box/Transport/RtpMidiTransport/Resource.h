@@ -1,0 +1,40 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+
+#define IDS_PROJNAME                                100
+#define IDR_MIDI2RTPMIDITRANSPORT                   101
+
+#define IDS_PLUGIN_METADATA_VERSION                 500
+#define IDS_PLUGIN_METADATA_NAME                    501
+#define IDS_PLUGIN_METADATA_DESCRIPTION             502
+#define IDS_PLUGIN_METADATA_AUTHOR                  503
+
+#define IDS_RTP_PARENT_DEVICE_NAME                  600
+#define IDS_RTP_ENDPOINT_DESCRIPTION_HOST           601
+#define IDS_RTP_ENDPOINT_DESCRIPTION_CLIENT         602
+
+#define IDS_RTP_ERROR_INVALID_JSON                  700
+#define IDS_RTP_ERROR_UNRECOGNIZED_COMMAND          701
+#define IDS_RTP_ERROR_MISSING_ENTRY_IDENTIFIER      702
+#define IDS_RTP_ERROR_INVALID_ENTRY_IDENTIFIER      703
+#define IDS_RTP_ERROR_ENTRY_NOT_FOUND               704
+#define IDS_RTP_ERROR_INVALID_ENTRY                 705
+#define IDS_RTP_ERROR_NOT_READY                     706
+#define IDS_RTP_ERROR_MISSING_REMOTE                707
+#define IDS_RTP_ERROR_NAME_TOO_LONG                 708
+#define IDS_RTP_ERROR_INVALID_PORT                  709
+#define IDS_RTP_ERROR_MISSING_CONNECTION_ID         710
+#define IDS_RTP_ERROR_INVALID_NAME                  711
+#define IDS_RTP_ERROR_MISSING_REMOTE_CLIENT_NAME    712
+#define IDS_RTP_ERROR_PENDING_REMOTE_CLIENT_NOT_FOUND 713
+#define IDS_RTP_ERROR_INVALID_APPROVAL_SCOPE        714
+#define IDS_RTP_ERROR_TOO_MANY_REMOTE_CLIENT_DECISIONS 715
+
+
+#ifdef APSTUDIO_INVOKED
+#ifndef APSTUDIO_READONLY_SYMBOLS
+#define _APS_NEXT_RESOURCE_VALUE        201
+#define _APS_NEXT_COMMAND_VALUE         32768
+#define _APS_NEXT_CONTROL_VALUE         201
+#define _APS_NEXT_SYMED_VALUE           106
+#endif
+#endif

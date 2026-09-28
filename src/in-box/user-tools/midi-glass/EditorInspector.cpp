@@ -765,10 +765,17 @@ namespace winrt::midiglass::implementation
             {
                 auto const& message = control->Messages[index];
 
+                // The list is narrow, so an RPN or NRPN row uses the short name the monitor prints.
+                auto const kindName = message.Kind == glass::MessageKind::RegisteredController
+                    ? resources::GetString(L"MessageRowRegisteredController")
+                    : message.Kind == glass::MessageKind::AssignedController
+                        ? resources::GetString(L"MessageRowAssignedController")
+                        : resources::GetString(MessageKindResourceKeys[IndexOf(MessageKindOrder, message.Kind)]);
+
                 auto text = resources::FormatString(
                     L"MessageRowFormat",
                     resources::GetString(TriggerResourceKeys[IndexOf(TriggerOrder, message.Trigger)]),
-                    resources::GetString(MessageKindResourceKeys[IndexOf(MessageKindOrder, message.Kind)]),
+                    kindName,
                     glass::FormatMessageNumber(message.Kind, message.Number),
                     message.DeviceName.empty()
                         ? std::wstring{ resources::GetString(L"MessageNoDevice") }
