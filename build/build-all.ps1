@@ -247,6 +247,14 @@ $ToolsDirectoryId = 'TOOLSROOT_INSTALLFOLDER'
 # generated GUIDs agreeing. Never change it: every shared file would get a new GUID.
 $ToolsComponentGuidNamespace = [guid]'ef756d1b-877d-48c9-830a-02f7cb471a69'
 
+# The GUIDs WiX generated for these two when only the Tools installer put them in this folder
+# (through SDK Dev Preview 10). Keeping them makes an older Tools install count as an owner too,
+# so uninstalling it cannot delete the SDK from under the other installers' apps.
+$ToolsComponentGuidOverrides = @{
+    'windows.devices.midi2.dll' = '49839909-91e7-51dc-86bc-fe09f392f246'
+    'windows.devices.midi2.pri' = 'a6448708-c0b1-5e9c-b651-c6aa09d686c3'
+}
+
 # The installers that put apps into the Tools folder, and which apps each one carries. Staged to
 # build/staging/<Name>/<platform>.
 $ToolsFolderPayloads = @(
@@ -625,6 +633,9 @@ function New-NameBasedGuid {
 
 function Get-ToolsComponentGuid {
     param([Parameter(Mandatory)] [string] $RelativePath)
+
+    $key = $RelativePath.ToLowerInvariant()
+    if ($ToolsComponentGuidOverrides.ContainsKey($key)) { return $ToolsComponentGuidOverrides[$key] }
 
     $installPath = ('ProgramFiles64Folder\Windows MIDI Services\Tools\' + $RelativePath).ToLowerInvariant()
     (New-NameBasedGuid -Namespace $ToolsComponentGuidNamespace -Name $installPath).ToString()
@@ -1645,7 +1656,9 @@ function Publish-DotNetApp {
             'VersionPrefix'        = $Version.MajorMinorPatch
             'AssemblyVersion'      = $Version.NumericVersion
             'FileVersion'          = $Version.NumericVersion
-            # Publishing builds the referenced SDK project again, and it must not pack the package.
+            # The Sdk target already built the SDK and its projection. Building them again here
+            # could relink the SDK after Pack, and it collides with any other build of the SDK.
+            'BuildProjectReferences' = 'false'
             'GeneratePackageOnBuild' = 'false'
         }
 
