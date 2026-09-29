@@ -7,7 +7,7 @@
     <?include $(StagingVersionIncludeFile) ?>
 
     <!-- Shared by the preview transport and any in-box version, which is what makes the
-         uninstall behaviour below matter. -->
+         uninstall behavior below matter. -->
     <?define BluetoothTransportClsid={5dc87270-f318-4838-a4f9-6aadc63e925f} ?>
     <?define BluetoothTransportPluginKeyName=Midi2BluetoothMidiTransport ?>
 

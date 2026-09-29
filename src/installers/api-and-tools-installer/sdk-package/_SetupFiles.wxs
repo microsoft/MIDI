@@ -89,10 +89,10 @@
       <Component Id="cC3B9F05F868A44A8" Guid="fd4dbc41-9c56-5d3d-82d1-420de2145ea1" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- miditroubleshooter.pri -->
         <File Id="fC3B9F05F868A44A8" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\miditroubleshooter.pri" Vital="true" />
       </Component>
-      <Component Id="c38CA73CD63545219" Guid="5cad1805-029f-5553-9075-9e6d6b82e1ac" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.dll -->
+      <Component Id="c38CA73CD63545219" Guid="49839909-91e7-51dc-86bc-fe09f392f246" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.dll -->
         <File Id="f38CA73CD63545219" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Windows.Devices.Midi2.dll" Vital="true" />
       </Component>
-      <Component Id="c55E6AEEDCA92FA88" Guid="3f046d5d-81af-580f-beb3-47b4acc5d929" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.pri -->
+      <Component Id="c55E6AEEDCA92FA88" Guid="a6448708-c0b1-5e9c-b651-c6aa09d686c3" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.pri -->
         <File Id="f55E6AEEDCA92FA88" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Windows.Devices.Midi2.pri" Vital="true" />
       </Component>
 
