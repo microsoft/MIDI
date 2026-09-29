@@ -108,36 +108,6 @@ namespace
         return *status;
     }
 
-    // The same 12 hex digit form the transport reports, or empty for anything that is not a whole
-    // address, which the service skips too
-    winrt::hstring NormalizedBluetoothDeviceId(_In_ winrt::hstring const& value) noexcept
-    {
-        wchar_t digits[13]{};
-        size_t count{ 0 };
-
-        for (auto const ch : value)
-        {
-            if (ch == L':' || ch == L'-' || ch == L' ')
-            {
-                continue;
-            }
-
-            auto const isHexDigit =
-                (ch >= L'0' && ch <= L'9') ||
-                (ch >= L'A' && ch <= L'F') ||
-                (ch >= L'a' && ch <= L'f');
-
-            if (!isHexDigit || count == 12)
-            {
-                return {};
-            }
-
-            digits[count++] = (ch >= L'a' && ch <= L'f') ? static_cast<wchar_t>(ch - (L'a' - L'A')) : ch;
-        }
-
-        return count == 12 ? winrt::hstring{ digits } : winrt::hstring{};
-    }
-
     winrt::hstring StringValueOrEmpty(
         _In_ json::JsonObject const& jsonObject,
         _In_ winrt::hstring const& key) noexcept
@@ -156,23 +126,27 @@ namespace
         return {};
     }
 
-    // Matches the service, which treats a missing or unreadable flag as enabled
-    bool BooleanValueOrTrue(
+    // Matches the service: an entry without a true or false flag only holds settings, and connects nothing
+    bool TryGetBooleanValue(
         _In_ json::JsonObject const& jsonObject,
-        _In_ winrt::hstring const& key) noexcept
+        _In_ winrt::hstring const& key,
+        _Out_ bool& result) noexcept
     {
+        result = false;
+
         try
         {
             if (auto const value = jsonObject.TryLookup(key); value != nullptr && value.ValueType() == json::JsonValueType::Boolean)
             {
-                return value.GetBoolean();
+                result = value.GetBoolean();
+                return true;
             }
         }
         catch (...)
         {
         }
 
-        return true;
+        return false;
     }
 }
 
@@ -258,10 +232,17 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
 
                 auto const deviceObject = entry.GetObject();
 
-                auto const deviceId = NormalizedBluetoothDeviceId(
+                auto const deviceId = btinternal::NormalizedBluetoothDeviceId(
                     StringValueOrEmpty(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ID_KEY));
 
                 if (deviceId.empty())
+                {
+                    continue;
+                }
+
+                bool isEnabled{ false };
+
+                if (!TryGetBooleanValue(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY, isEnabled))
                 {
                     continue;
                 }
@@ -271,7 +252,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
                 device->InternalInitialize(
                     deviceId,
                     StringValueOrEmpty(deviceObject, MIDI_CONFIG_JSON_COMMON_COMMENT_KEY),
-                    BooleanValueOrTrue(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY));
+                    isEnabled);
 
                 devices.Append(*device);
             }
@@ -333,15 +314,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
     {
         try
         {
-            if (internal::TrimmedHStringCopy(bluetoothDeviceId).empty())
+            auto const wantedId = btinternal::NormalizedBluetoothDeviceId(bluetoothDeviceId);
+
+            if (wantedId.empty())
             {
                 return nullptr;
             }
 
             for (auto const& device : GetAvailableDevices())
             {
-                if (internal::ToUpperTrimmedWStringCopy(std::wstring{ device.BluetoothDeviceId() }) ==
-                    internal::ToUpperTrimmedWStringCopy(std::wstring{ bluetoothDeviceId }))
+                if (btinternal::NormalizedBluetoothDeviceId(device.BluetoothDeviceId()) == wantedId)
                 {
                     return device;
                 }

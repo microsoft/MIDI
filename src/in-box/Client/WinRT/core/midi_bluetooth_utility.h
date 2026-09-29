@@ -156,6 +156,45 @@ namespace Windows::Devices::Midi2::Transports::Bluetooth::Internal
         }
     }
 
+    // The same 12 hex digit form the transport reports, or empty for anything that is not a whole
+    // address, which the service rejects too
+    inline winrt::hstring NormalizedBluetoothDeviceId(_In_ winrt::hstring const& value) noexcept
+    {
+        wchar_t digits[13]{};
+        size_t count{ 0 };
+
+        for (auto const ch : value)
+        {
+            if (ch == L':' || ch == L'-' || ch == L' ')
+            {
+                continue;
+            }
+
+            auto const isHexDigit =
+                (ch >= L'0' && ch <= L'9') ||
+                (ch >= L'A' && ch <= L'F') ||
+                (ch >= L'a' && ch <= L'f');
+
+            if (!isHexDigit || count == 12)
+            {
+                return {};
+            }
+
+            digits[count++] = (ch >= L'a' && ch <= L'f') ? static_cast<wchar_t>(ch - (L'a' - L'A')) : ch;
+        }
+
+        return count == 12 ? winrt::hstring{ digits } : winrt::hstring{};
+    }
+
+    // Saved entries are merged by comparing ids as text, so every configuration object writes the
+    // same form. A malformed id is written as given, for the service to reject.
+    inline winrt::hstring BluetoothDeviceIdForConfig(_In_ winrt::hstring const& value) noexcept
+    {
+        auto const normalized = NormalizedBluetoothDeviceId(value);
+
+        return normalized.empty() ? value : normalized;
+    }
+
     inline bluetooth::MidiBluetoothAddressType AddressTypeFromJsonString(_In_ winrt::hstring const& value) noexcept
     {
         auto const upper = internal::ToUpperTrimmedWStringCopy(std::wstring{ value });

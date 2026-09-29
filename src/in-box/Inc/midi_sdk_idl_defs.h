@@ -497,6 +497,8 @@
 #define UUID_IMidiBluetoothOfflineRetentionConfig               8087b303-0519-c0de-31d1-dd00F050F000
 #define UUID_IMidiBluetoothOfflineRetentionConfigFactory        8087b303-0519-c0de-31d1-ff00F050F000
 
+#define UUID_IMidiBluetoothConfiguredDevice                     8087b303-0519-c0de-31d1-dd00F0510000
+
 
 // ============================================================================
 // Windows.Devices.Midi2.Transports.Synth : Interface number 00F06

@@ -74,6 +74,14 @@ public:
         _In_ uint16_t const connectionIntervalUnits);
 
 private:
+    // Why an attempt is being queued, which decides how soon it may run and where it goes in line.
+    enum class ConnectTrigger
+    {
+        DeviceHeard,    // an advertisement, so the device is awake right now
+        Requested,      // asked for, or newly known to the system
+        Retry           // the periodic sweep, with no sign the device is around
+    };
+
     HRESULT CreateParentDevice();
 
     void OnAdvertisementReceived(
@@ -123,7 +131,7 @@ private:
         _In_ winrt::hstring const& detail,
         _In_ uint32_t const errorCode);
 
-    void QueueConnectIfWanted(_In_ winrt::hstring const& deviceId);
+    void QueueConnectIfWanted(_In_ winrt::hstring const& deviceId, _In_ ConnectTrigger const trigger);
     void QueueNameResolutionIfNeeded(_In_ winrt::hstring const& deviceId);
 
     // Retries every remembered device which is not connected, so a device that is not advertising
@@ -193,6 +201,10 @@ private:
     // Connecting opens a GATT session and creates a device node, so it never runs on a caller's
     // thread or on a watcher callback. The worker drains these instead.
     std::deque<winrt::hstring> m_pendingConnectRequests;
+
+    // Sweep retries wait behind everything else, so a device which is switched off cannot hold up
+    // one which is awake.
+    std::deque<winrt::hstring> m_pendingRetryRequests;
     std::deque<winrt::hstring> m_pendingDisconnectRequests;
     std::deque<std::wstring> m_pendingNegotiations;
 
@@ -218,6 +230,9 @@ private:
     // kept and retried every time the device advertises.
     std::set<winrt::hstring> m_desiredConnections;
     std::map<winrt::hstring, uint64_t> m_lastConnectAttemptTimestamp;
+
+    // Failed attempts in a row, which stretch the gap before the sweep retries a device.
+    std::map<winrt::hstring, uint32_t> m_consecutiveConnectFailures;
 
     // Devices the worker is inside a connect attempt for right now, which is the only way to tell
     // one being worked on from one merely waiting for its next retry.

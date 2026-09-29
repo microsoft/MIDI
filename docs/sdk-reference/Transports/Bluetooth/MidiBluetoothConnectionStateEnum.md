@@ -17,8 +17,8 @@ Disconnecting a device in any state other than `NotConnected` cancels the reques
 | Value | Numeric Value | Description |
 | ----- | ------------- | ----------- |
 | `NotConnected` | `0` | Not connected, and the service isn't trying. A device that needs pairing also reports this, because the service stops trying until it's paired |
-| `WaitingForDevice` | `1` | Someone asked to connect, but the device hasn't been reachable yet. The service keeps trying until the request is canceled |
-| `Connecting` | `2` | The service is trying to connect right now |
-| `Connected` | `3` | Connected |
+| `WaitingForDevice` | `1` | Someone asked to connect, but the device hasn't been reachable yet. The service keeps trying until the request is canceled. It tries less often the longer the device stays silent, and tries again right away when it hears the device |
+| `Connecting` | `2` | The service is trying to connect right now, or will as soon as the attempt ahead of it finishes. The device may already be linked while its MIDI endpoint is being created |
+| `Connected` | `3` | Connected, and its MIDI endpoint is ready to open |
 
 An app with a connect button should usually hide or turn off that button for anything other than `NotConnected`, and offer disconnect instead. That way, people can't pile up connection requests while one is already in progress.

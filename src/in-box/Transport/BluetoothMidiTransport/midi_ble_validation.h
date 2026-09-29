@@ -595,6 +595,20 @@ namespace MidiBleUtilities
         return digitCount == 12;
     }
 
+    // Every list this transport keeps is keyed by the form FormatBluetoothAddress produces, so an
+    // id accepted in any other form has to be converted or it matches nothing. Empty when malformed.
+    inline winrt::hstring CanonicalBluetoothDeviceId(_In_ std::wstring const& value)
+    {
+        uint64_t address{ 0 };
+
+        if (!IsWellFormedBluetoothDeviceId(value) || !TryParseBluetoothAddress(value, address))
+        {
+            return {};
+        }
+
+        return FormatBluetoothAddress(address);
+    }
+
     inline winrt::hstring PeripheralClientPolicyToJsonString(
         _In_ MidiBleProtocol::PeripheralClientPolicy const policy)
     {
@@ -772,6 +786,23 @@ namespace MidiBleUtilities
             evaluation.EarlyDropCount >= dropsBeforePairingAssumed;
 
         return evaluation;
+    }
+
+    // The wait before retrying a device which has failed this many attempts in a row: the base
+    // interval, doubled for each failure after the first, and never more than the maximum.
+    inline uint64_t ConnectRetryIntervalMilliseconds(
+        _In_ uint32_t const consecutiveFailures,
+        _In_ uint64_t const baseIntervalMilliseconds,
+        _In_ uint64_t const maxIntervalMilliseconds) noexcept
+    {
+        auto interval = baseIntervalMilliseconds;
+
+        for (uint32_t failure = 1; failure < consecutiveFailures && interval < maxIntervalMilliseconds; failure++)
+        {
+            interval *= 2;
+        }
+
+        return interval < maxIntervalMilliseconds ? interval : maxIntervalMilliseconds;
     }
 }
 

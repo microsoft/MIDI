@@ -38,3 +38,5 @@ MidiServiceTransportPluginConfigManager::SaveUpdate(config);
 ```
 
 A device's entry is matched in the configuration by its Bluetooth device id. So setting one device leaves every other device alone, along with whether it's turned on.
+
+Setting a device's retention doesn't connect it, and saving it doesn't make the service connect it when it starts. You can set it for a device that isn't connected, and it takes effect when that device connects.

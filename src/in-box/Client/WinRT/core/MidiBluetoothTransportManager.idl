@@ -39,8 +39,10 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
 
         [noexcept] static Guid TransportId{ get; };
 
-        // Every Bluetooth MIDI device this PC has seen advertising, and every device it has been
-        // asked to connect, whether or not it is connected
+        // Every Bluetooth MIDI device this PC has found, by hearing it advertise or because it is
+        // paired, whether or not it is connected. A device the service is still trying to connect
+        // stays listed while it is switched off. One asked for by an address this PC has never
+        // found is not listed until it is.
         [noexcept] static IVectorView<MidiBluetoothDeviceInformation> GetAvailableDevices();
 
         // Null when no device with that address has been discovered

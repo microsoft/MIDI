@@ -489,6 +489,21 @@ namespace MidiBleUtilities
 
     // The ATT errors which all mean "authenticate the link first". A BLE advertisement carries no
     // pairing requirement, so a rejected operation is the only signal a device needs one.
+    inline bool IsPairingRequiredAttError(_In_ uint8_t const attError) noexcept
+    {
+        try
+        {
+            return attError == GattProtocolError::InsufficientAuthentication() ||
+                attError == GattProtocolError::InsufficientEncryption() ||
+                attError == GattProtocolError::InsufficientAuthorization() ||
+                attError == GattProtocolError::InsufficientEncryptionKeySize();
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
     inline bool IsPairingRequiredProtocolError(
         _In_ ::winrt::Windows::Foundation::IReference<uint8_t> const& protocolError) noexcept
     {
@@ -499,12 +514,85 @@ namespace MidiBleUtilities
                 return false;
             }
 
-            auto const value = protocolError.Value();
+            return IsPairingRequiredAttError(protocolError.Value());
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
 
-            return value == GattProtocolError::InsufficientAuthentication() ||
-                value == GattProtocolError::InsufficientEncryption() ||
-                value == GattProtocolError::InsufficientAuthorization() ||
-                value == GattProtocolError::InsufficientEncryptionKeySize();
+    // What one GATT query did. Kept per query, because a fallback runs after a failed query and
+    // the trace needs to show both.
+    struct BleGattQueryOutcome
+    {
+        bool Attempted{ false };
+
+        // False when nothing came back at all, so Status is a placeholder rather than an answer
+        bool StatusKnown{ false };
+        GattCommunicationStatus Status{ GattCommunicationStatus::Unreachable };
+
+        bool TimedOut{ false };
+        bool Failed{ false };
+        HRESULT ErrorCode{ S_OK };
+
+        bool HasProtocolError{ false };
+        uint8_t ProtocolError{ 0 };
+
+        uint32_t ResultCount{ 0 };
+
+        bool Succeeded() const noexcept
+        {
+            return StatusKnown && Status == GattCommunicationStatus::Success;
+        }
+
+        bool RequiresPairing() const noexcept
+        {
+            return HasProtocolError && IsPairingRequiredAttError(ProtocolError);
+        }
+
+        // The two outcomes a list of everything can overturn. A timeout, a status or an ATT error
+        // already says what went wrong.
+        bool FailedOrFoundNothing() const noexcept
+        {
+            return Failed || (Succeeded() && ResultCount == 0);
+        }
+    };
+
+    template<typename TResult>
+    inline BleGattQueryOutcome MakeGattQueryOutcome(
+        _In_ AwaitOutcome const& awaitOutcome,
+        _In_ TResult const& result)
+    {
+        BleGattQueryOutcome outcome{};
+
+        outcome.Attempted = true;
+        outcome.TimedOut = awaitOutcome.TimedOut;
+        outcome.Failed = awaitOutcome.Failed;
+        outcome.ErrorCode = awaitOutcome.ErrorCode;
+
+        if (result != nullptr)
+        {
+            outcome.Status = result.Status();
+            outcome.StatusKnown = true;
+
+            auto const protocolError = result.ProtocolError();
+
+            if (protocolError != nullptr)
+            {
+                outcome.HasProtocolError = true;
+                outcome.ProtocolError = protocolError.Value();
+            }
+        }
+
+        return outcome;
+    }
+
+    inline bool IsLinkConnected(_In_ BluetoothLEDevice const& bleDevice) noexcept
+    {
+        try
+        {
+            return bleDevice != nullptr && bleDevice.ConnectionStatus() == BluetoothConnectionStatus::Connected;
         }
         catch (...)
         {
@@ -536,6 +624,13 @@ namespace MidiBleUtilities
 
         bool HasProtocolError{ false };
         uint8_t ProtocolError{ 0 };
+
+        // The fields above describe whichever query produced the answer. These keep each one.
+        BleGattQueryOutcome ByUuid{ };
+        BleGattQueryOutcome ServiceList{ };
+
+        // Recovered by listing every service, for devices where the query by UUID fails
+        bool OpenedFromServiceList{ false };
     };
 
     // Pairing state at the moment of a connection attempt. Read for the log, because whether a
@@ -592,7 +687,9 @@ namespace MidiBleUtilities
         _Inout_ BleMidiServiceLookup& lookup,
         _In_ winrt::hstring const& gattServiceDeviceId)
     {
-        if (lookup.Service != nullptr || gattServiceDeviceId.empty())
+        // The node opens even for a device which is switched off, so after an Unreachable answer it
+        // would only move the wait on to the characteristic queries.
+        if (lookup.Service != nullptr || gattServiceDeviceId.empty() || !lookup.ByUuid.FailedOrFoundNothing())
         {
             return lookup;
         }
@@ -621,6 +718,91 @@ namespace MidiBleUtilities
         return lookup;
     }
 
+    // Copies one query's outcome into the fields the connect path reports from
+    inline void ApplyQueryOutcome(
+        _In_ BleGattQueryOutcome const& outcome,
+        _Inout_ BleMidiServiceLookup& lookup) noexcept
+    {
+        lookup.StatusKnown = outcome.StatusKnown;
+        lookup.Status = outcome.Status;
+        lookup.TimedOut = outcome.TimedOut;
+        lookup.Failed = outcome.Failed;
+        lookup.ErrorCode = outcome.ErrorCode;
+        lookup.HasProtocolError = outcome.HasProtocolError;
+        lookup.ProtocolError = outcome.ProtocolError;
+        lookup.RequiresPairing = outcome.RequiresPairing();
+    }
+
+    // Some devices answer the query by UUID and the call still fails, so listing every service is
+    // the fallback. Only tried while the link is up.
+    inline BleMidiServiceLookup& OpenFromServiceListIfNeeded(
+        _Inout_ BleMidiServiceLookup& lookup,
+        _In_ BluetoothLEDevice const& bleDevice)
+    {
+        if (lookup.Service != nullptr ||
+            !lookup.ByUuid.FailedOrFoundNothing() ||
+            IsShuttingDown() ||
+            !IsLinkConnected(bleDevice))
+        {
+            return lookup;
+        }
+
+        try
+        {
+            AwaitOutcome outcome{ };
+
+            auto const result = AwaitWithTimeout(
+                bleDevice.GetGattServicesAsync(BluetoothCacheMode::Uncached),
+                BleConnectOperationTimeoutMilliseconds,
+                GattDeviceServicesResult{ nullptr },
+                outcome);
+
+            lookup.ServiceList = MakeGattQueryOutcome(outcome, result);
+
+            if (lookup.ServiceList.Succeeded())
+            {
+                winrt::guid const midiServiceUuid{ MidiBleProtocol::MidiServiceUuid };
+
+                auto const services = result.Services();
+
+                lookup.ServiceList.ResultCount = services.Size();
+
+                for (auto const& candidate : services)
+                {
+                    if (lookup.Service == nullptr && candidate.Uuid() == midiServiceUuid)
+                    {
+                        lookup.Service = candidate;
+                    }
+                    else
+                    {
+                        // Each service handed back holds the device open until it is closed
+                        CloseIfOpen(candidate);
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            CloseIfOpen(lookup.Service);
+            lookup.Service = nullptr;
+
+            lookup.ServiceList = BleGattQueryOutcome{ };
+            lookup.ServiceList.Attempted = true;
+            lookup.ServiceList.Failed = true;
+            lookup.ServiceList.ErrorCode = wil::ResultFromCaughtException();
+        }
+
+        // A complete list is the authority on what the device has. A failed one proves nothing,
+        // so the answer to the query by UUID stands.
+        if (lookup.ServiceList.Succeeded())
+        {
+            ApplyQueryOutcome(lookup.ServiceList, lookup);
+            lookup.OpenedFromServiceList = lookup.Service != nullptr;
+        }
+
+        return lookup;
+    }
+
     inline BleMidiServiceLookup LookupBleMidiService(
         _In_ BluetoothLEDevice const& bleDevice,
         _In_ winrt::hstring const& gattServiceDeviceId)
@@ -642,31 +824,13 @@ namespace MidiBleUtilities
             GattDeviceServicesResult{ nullptr },
             outcome);
 
-        lookup.TimedOut = outcome.TimedOut;
-        lookup.Failed = outcome.Failed;
-        lookup.ErrorCode = outcome.ErrorCode;
+        lookup.ByUuid = MakeGattQueryOutcome(outcome, gattServicesResult);
 
-        if (gattServicesResult == nullptr)
-        {
-            return OpenServiceNodeIfNeeded(lookup, gattServiceDeviceId);
-        }
-
-        lookup.Status = gattServicesResult.Status();
-        lookup.StatusKnown = true;
-
-        auto const protocolError = gattServicesResult.ProtocolError();
-
-        if (protocolError != nullptr)
-        {
-            lookup.HasProtocolError = true;
-            lookup.ProtocolError = protocolError.Value();
-        }
-
-        lookup.RequiresPairing = IsPairingRequiredProtocolError(protocolError);
-
-        if (lookup.Status == GattCommunicationStatus::Success)
+        if (lookup.ByUuid.Succeeded())
         {
             auto const services = gattServicesResult.Services();
+
+            lookup.ByUuid.ResultCount = services.Size();
 
             for (uint32_t serviceIndex = 0; serviceIndex < services.Size(); serviceIndex++)
             {
@@ -682,7 +846,12 @@ namespace MidiBleUtilities
             }
         }
 
-        return OpenServiceNodeIfNeeded(lookup, gattServiceDeviceId);
+        ApplyQueryOutcome(lookup.ByUuid, lookup);
+
+        // The service node goes first because it is the route bonded devices have always taken
+        OpenServiceNodeIfNeeded(lookup, gattServiceDeviceId);
+
+        return OpenFromServiceListIfNeeded(lookup, bleDevice);
     }
 
     // BLE MIDI 1.0 carries a single MIDI 1.0 byte stream with no notion of groups, so the

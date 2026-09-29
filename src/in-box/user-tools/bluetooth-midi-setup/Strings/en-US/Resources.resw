@@ -96,7 +96,7 @@
     <value>Bluetooth MIDI devices</value>
   </data>
   <data name="DevicesDescription.Text" xml:space="preserve">
-    <value>Devices are found by listening for advertisements, so a device which is switched off, asleep, or already connected to another host will not be listed.</value>
+    <value>Devices are found by listening for advertisements, so a device which is switched off, asleep, or already connected to another host is not listed unless you have asked to connect it.</value>
   </data>
   <data name="NoDevicesText.Text" xml:space="preserve">
     <value>No Bluetooth MIDI devices have been discovered yet. Wake a device so it advertises, then wait a moment.</value>

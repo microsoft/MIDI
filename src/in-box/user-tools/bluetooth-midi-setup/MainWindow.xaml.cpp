@@ -23,10 +23,6 @@ namespace winrt::midibluetoothsetup::implementation
         // Long enough to read, short enough that it is gone before it becomes untrue.
         constexpr std::chrono::seconds StatusMessageLifetime{ 8 };
 
-        // A configuration file larger than this is not one this app wrote, and reading it whole
-        // is only worth doing for a file of a sane size.
-        constexpr int64_t MaximumConfigFileBytes = 16 * 1024 * 1024;
-
         winrt::hstring Lowered(_In_ winrt::hstring const& value) noexcept
         {
             try
@@ -41,79 +37,6 @@ namespace winrt::midibluetoothsetup::implementation
             catch (...)
             {
                 return value;
-            }
-        }
-
-        // The configuration file is UTF-8. It is read through the Win32 calls rather than a
-        // wide stream, because a wide stream converts through the CRT locale and turns every
-        // non-ASCII character in a device name into mojibake.
-        std::wstring ReadUtf8TextFile(_In_ std::wstring const& path) noexcept
-        {
-            try
-            {
-                wil::unique_hfile file{ ::CreateFileW(
-                    path.c_str(),
-                    GENERIC_READ,
-                    FILE_SHARE_READ | FILE_SHARE_WRITE,
-                    nullptr,
-                    OPEN_EXISTING,
-                    FILE_ATTRIBUTE_NORMAL,
-                    nullptr) };
-
-                if (!file)
-                {
-                    return {};
-                }
-
-                LARGE_INTEGER size{};
-
-                if (!::GetFileSizeEx(file.get(), &size) || size.QuadPart <= 0 || size.QuadPart > MaximumConfigFileBytes)
-                {
-                    return {};
-                }
-
-                std::string bytes(static_cast<size_t>(size.QuadPart), '\0');
-
-                DWORD read{ 0 };
-
-                if (!::ReadFile(file.get(), bytes.data(), static_cast<DWORD>(bytes.size()), &read, nullptr))
-                {
-                    return {};
-                }
-
-                bytes.resize(read);
-
-                if (bytes.size() >= 3 &&
-                    static_cast<unsigned char>(bytes[0]) == 0xEF &&
-                    static_cast<unsigned char>(bytes[1]) == 0xBB &&
-                    static_cast<unsigned char>(bytes[2]) == 0xBF)
-                {
-                    bytes.erase(0, 3);
-                }
-
-                if (bytes.empty())
-                {
-                    return {};
-                }
-
-                auto const required = ::MultiByteToWideChar(
-                    CP_UTF8, 0, bytes.data(), static_cast<int>(bytes.size()), nullptr, 0);
-
-                if (required <= 0)
-                {
-                    return {};
-                }
-
-                std::wstring text(static_cast<size_t>(required), L'\0');
-
-                ::MultiByteToWideChar(
-                    CP_UTF8, 0, bytes.data(), static_cast<int>(bytes.size()), text.data(), required);
-
-                return text;
-            }
-            catch (...)
-            {
-                return {};
             }
         }
 
@@ -658,112 +581,10 @@ namespace winrt::midibluetoothsetup::implementation
             snapshot.PendingClients = midi2bt::MidiBluetoothTransportManager::GetPendingPeripheralClients();
             snapshot.Radio = midi2bt::MidiBluetoothTransportManager::GetRadioInformation();
 
-            // ================================================================================
-            // IN-BOX MICROSOFT TOOL ONLY - DO NOT COPY THIS APPROACH
-            //
-            // The block below reads the Windows MIDI Services configuration file directly. That
-            // is supported only for the MIDI tools that ship in Windows, of which this is one.
-            // The file name, the folder it lives in, the registry value that selects it and the
-            // JSON schema inside it are all implementation details and can change in any release
-            // without notice.
-            //
-            // Applications and third-party tools must never open, parse, edit, merge, back up or
-            // restore that file, for any reason. Use the Windows MIDI Services API
-            // (Windows.Devices.Midi2.ServiceConfig) instead. Every change this app makes goes
-            // through that API; only this read does not, because the service does not report
-            // which devices are configured to come back on their own.
-            // ================================================================================
-            //
-            // The configuration file is this app's record of which devices are meant to come
-            // back on their own, and the service does not report that separately.
-            try
+            // The saved devices are the ones Forget is offered for
+            for (auto const& configured : midi2bt::MidiBluetoothTransportManager::GetConfiguredDevices())
             {
-                auto const path = midi2svc::MidiServiceTransportPluginConfigManager::ConfigFilePath();
-
-                if (!path.empty())
-                {
-                    auto const text = ReadUtf8TextFile(std::wstring{ path });
-
-                    if (!text.empty())
-                    {
-                        json::JsonObject root{ nullptr };
-
-                        if (json::JsonObject::TryParse(winrt::hstring{ text }, root))
-                        {
-                            auto const transportKey = winrt::hstring{ std::format(
-                                L"{{{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}}}",
-                                midi2bt::MidiBluetoothTransportManager::TransportId().Data1,
-                                midi2bt::MidiBluetoothTransportManager::TransportId().Data2,
-                                midi2bt::MidiBluetoothTransportManager::TransportId().Data3,
-                                midi2bt::MidiBluetoothTransportManager::TransportId().Data4[0],
-                                midi2bt::MidiBluetoothTransportManager::TransportId().Data4[1],
-                                midi2bt::MidiBluetoothTransportManager::TransportId().Data4[2],
-                                midi2bt::MidiBluetoothTransportManager::TransportId().Data4[3],
-                                midi2bt::MidiBluetoothTransportManager::TransportId().Data4[4],
-                                midi2bt::MidiBluetoothTransportManager::TransportId().Data4[5],
-                                midi2bt::MidiBluetoothTransportManager::TransportId().Data4[6],
-                                midi2bt::MidiBluetoothTransportManager::TransportId().Data4[7]) };
-
-                            auto const settings = root.GetNamedObject(L"endpointTransportPluginSettings", nullptr);
-
-                            if (settings != nullptr)
-                            {
-                                for (auto const& pair : settings)
-                                {
-                                    if (Lowered(pair.Key()) != Lowered(transportKey))
-                                    {
-                                        continue;
-                                    }
-
-                                    // Iterating a JsonObject yields IJsonValue, which does not
-                                    // cast to JsonObject. It has to be asked for its object.
-                                    if (pair.Value() == nullptr ||
-                                        pair.Value().ValueType() != json::JsonValueType::Object)
-                                    {
-                                        break;
-                                    }
-
-                                    auto const section = pair.Value().GetObject();
-
-                                    if (section == nullptr || !section.HasKey(L"devices"))
-                                    {
-                                        break;
-                                    }
-
-                                    auto const devices = section.GetNamedArray(L"devices", nullptr);
-
-                                    if (devices == nullptr)
-                                    {
-                                        break;
-                                    }
-
-                                    for (uint32_t i = 0; i < devices.Size(); i++)
-                                    {
-                                        auto const entry = devices.GetObjectAt(i);
-
-                                        if (entry == nullptr)
-                                        {
-                                            continue;
-                                        }
-
-                                        auto const id = entry.GetNamedString(L"deviceId", L"");
-
-                                        if (!id.empty())
-                                        {
-                                            snapshot.RememberedDeviceIds.push_back(std::wstring{ Lowered(id) });
-                                        }
-                                    }
-
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (...)
-            {
-                // a configuration file which cannot be read only costs the Forget button
+                snapshot.RememberedDeviceIds.push_back(std::wstring{ Lowered(configured.BluetoothDeviceId()) });
             }
 
             snapshot.Gathered = true;

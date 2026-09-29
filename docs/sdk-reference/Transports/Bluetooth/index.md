@@ -11,4 +11,4 @@ One namespace covers both Bluetooth Low Energy MIDI 1.0 and the draft MIDI 2.0 t
 
 In Bluetooth terms, the *central* is the device that looks for others and connects to them, and the *peripheral* is the one that advertises and waits. Usually this PC is the central and your MIDI device is the peripheral. When you publish this PC as a peripheral, it's the other way around: a phone or tablet is the central, and it connects to this PC.
 
-Devices are identified by `BluetoothDeviceId`, which is the device's Bluetooth address as twelve hex digits. It isn't a Windows device interface id.
+Devices are identified by `BluetoothDeviceId`, which is the device's Bluetooth address as twelve hex digits. It isn't a Windows device interface id. You can pass the address in other common forms too, such as lowercase or with colons or dashes between the pairs of digits. The API always reports it as twelve uppercase hex digits.

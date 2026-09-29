@@ -64,7 +64,9 @@ Because of that, `connectDevice` returns before the connection has been attempte
 
 The worker resolves the address to a `BluetoothLEDevice`, opens the MIDI Service, selects a Characteristic, takes a `GattSession` with `MaintainConnection(true)`, subscribes to notifications, then activates the endpoint.
 
-Each of those steps is a blocking Bluetooth call with its own timeout, and establishing a link is much slower than talking over one which already exists: the radio may wait several advertising intervals, and a device which demands pairing adds a whole security exchange. The connect path therefore allows considerably longer than the data path. Because service shutdown joins the worker, and a connect attempt makes six of these calls back to back, the waits are abandoned early once shutdown begins rather than each running to its full timeout.
+Some devices answer when Windows asks for the MIDI Service by its UUID, and the request still fails. When that happens, the transport tries two other ways in: the MIDI Service's own device node, which Windows only creates for a paired device, and then, if the link is still up, a list of every service on the device. It does the same for the Characteristics. It only does this when the first request failed outright or found nothing. A timeout, an error status or an ATT error already says what went wrong, and a device that's switched off would only make each extra step wait out the same timeout.
+
+Each of those steps is a blocking Bluetooth call with its own timeout, and establishing a link is much slower than talking over one which already exists: the radio may wait several advertising intervals, and a device which demands pairing adds a whole security exchange. The connect path therefore allows considerably longer than the data path. Because service shutdown joins the worker, and a connect attempt makes several of these calls back to back, the waits are abandoned early once shutdown begins rather than each running to its full timeout.
 
 Because a connect attempt takes seconds and a wanted device is retried until it appears, "not connected" alone cannot distinguish an attempt under way from a device which is switched off. `connectionState` reports `notConnected`, `waitingForDevice`, `connecting` or `connected` so a caller can say which, and can stop a user queueing attempt after attempt while one is in flight. A device marked as requiring pairing reports `notConnected` rather than `waitingForDevice`, because the sweep has deliberately stopped retrying it.
 
@@ -76,9 +78,13 @@ Because of that, a single connection attempt is nearly useless: at service start
 
 A device stays in the wanted set until it is explicitly disconnected, and a connection is attempted again every time that device advertises or Windows enumerates its GATT service, rate limited per device. A device only advertises when it is awake and unconnected, which makes an advertisement the exact moment it becomes connectable. In practice this means a user can ask for a device that is switched off, turn it on later, and have it connect on its own.
 
+A device that isn't advertising is also retried on a timer, in case it's awake but not being heard. Each of those tries costs a full Bluetooth timeout, and one worker makes every connection, so the timer backs off: 10 seconds after the first failure, doubling up to once a minute. Hearing the device, or being asked to connect it, starts the wait over. The worker also makes one connection at a time and serves devices it has just heard, or has just been asked for, before timer retries. Without that, two remembered devices that were switched off were measured keeping the worker busy all the time, and a device sitting on the desk waited about 30 seconds to connect.
+
+A remembered device stays in the device list while it's being retried, even when it's switched off, so the customer can see it and disconnect it.
+
 Nothing connects without being asked first. Pairing alone is not treated as consent, because a paired device is frequently one the user intends to use with a different host.
 
-The intent itself is held in memory, so it does not survive a service restart. The durable form is a `devices` array in the transport's section of the configuration file, which the service reads but never writes. `midi bluetooth connect` writes that entry, and `disconnect` removes it, so a connection made once is re-established on every subsequent service start.
+The intent itself is held in memory, so it does not survive a service restart. The durable form is a `devices` array in the transport's section of the configuration file, which the service reads but never writes. `midi bluetooth connect` writes that entry, and `disconnect` removes it, so a connection made once is re-established on every subsequent service start. Saving a setting for a device, such as how long its endpoint stays after it goes offline, does not make it a device to reconnect.
 
 Because a request is remembered rather than performed, `connectDevice` reports whether the device is actually present. A request for a device which is switched off succeeds and is honored later, and saying "connecting" in that case would be untrue.
 
@@ -224,7 +230,9 @@ When this transport ships in-box, the BLE portion of the WinRT MIDI 1.0 stack ne
 
 A device can demand authentication in two ways, and only one of them reaches this transport as an error.
 
-The visible route is a GATT operation failing with an insufficient-authentication protocol error, which the CCCD write and the Characteristic read both check for.
+The visible route is a GATT operation failing with an insufficient-authentication protocol error, which the MIDI Service and Characteristic lookups, the CCCD write and the Characteristic read all check for.
+
+A request that fails with no protocol error is not treated as a pairing request. It's reported with its error number instead, because nothing about it says the device wants pairing.
 
 The invisible route is an SMP Security Request. The device accepts the connection, asks the Central to start encryption out of band, and drops the link when that does not happen. Nothing in the GATT path fails, so no error is ever raised: all this transport sees is a link which keeps going away moments after it comes up. Windows may raise its own pairing notification in this case, and may not; both have been observed on devices from the same vendor.
 

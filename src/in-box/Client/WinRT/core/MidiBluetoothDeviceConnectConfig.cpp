@@ -22,7 +22,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
 
             deviceJson.SetNamedValue(
                 MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ID_KEY,
-                json::JsonValue::CreateStringValue(m_bluetoothDeviceId));
+                json::JsonValue::CreateStringValue(
+                    ::Windows::Devices::Midi2::Transports::Bluetooth::Internal::BluetoothDeviceIdForConfig(m_bluetoothDeviceId)));
 
             deviceJson.SetNamedValue(
                 MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY,

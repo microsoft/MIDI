@@ -57,9 +57,16 @@
 // stops advertising, so presence for those comes from the link instead.
 #define MIDI_BLE_DEVICE_PRESENT_WITHIN_MS                               15000
 
-// Minimum gap between connection attempts for one remembered device. A failed attempt against a
-// sleeping device costs a GATT timeout, so retries are deliberately unhurried.
+// Minimum gap between the end of one connection attempt and the start of the next for one
+// remembered device. A failed attempt against a sleeping device costs a GATT timeout, so retries
+// are deliberately unhurried.
 #define MIDI_BLE_CONNECT_RETRY_INTERVAL_MS                              10000
+
+// The longest a remembered device which is not being heard waits between retries. The gap starts
+// at the interval above and doubles with each failure in a row, because every attempt at a device
+// which is switched off holds up the one thread that connects all of them. Hearing the device
+// advertise, or a request to connect it, starts the gap over.
+#define MIDI_BLE_CONNECT_RETRY_MAX_INTERVAL_MS                          60000
 
 // A link which comes up and goes away again this quickly did not fail for range or power reasons.
 // Devices which demand security over SMP rather than through a GATT error look exactly like this.
@@ -88,13 +95,7 @@
 #define MIDI_BLE_NAME_RESOLUTION_RETRY_INTERVAL_MS                      2000
 #define MIDI_BLE_NAME_RESOLUTION_MAX_ATTEMPTS                           3
 
-// TODO: Names should be moved to .rc for localization
-
 #define TRANSPORT_PARENT_ID                                             L"MIDIU_BLEMIDI_TRANSPORT"
-#define TRANSPORT_PARENT_DEVICE_NAME                                    L"Bluetooth Low Energy MIDI Endpoints"
-
-#define MIDI_BLE_MIDI1_ENDPOINT_DESCRIPTION                             L"Bluetooth Low Energy MIDI 1.0 endpoint"
-#define MIDI_BLE_MIDI2_ENDPOINT_DESCRIPTION                             L"Bluetooth Low Energy MIDI 2.0 endpoint (Universal MIDI Packet)"
 
 // A remote Central connected to this PC while it is published as a BLE MIDI Peripheral. The
 // endpoint represents the remote device, the same way a Network MIDI 2.0 host endpoint does, so
@@ -107,9 +108,9 @@
 // address would mint a new endpoint every rotation. All unpaired devices therefore share one
 // reusable node, which caps the clutter at a single entry.
 #define MIDI_BLE_PERIPHERAL_UNPAIRED_ENDPOINT_INSTANCE_ID               MIDI_BLE_PERIPHERAL_ENDPOINT_INSTANCE_ID_PREFIX L"UNPAIRED"
-#define MIDI_BLE_PERIPHERAL_UNKNOWN_CLIENT_NAME                         L"Bluetooth MIDI Client"
-#define MIDI_BLE_PERIPHERAL_MIDI1_ENDPOINT_DESCRIPTION                  L"Bluetooth Low Energy MIDI 1.0 device connected to this PC"
-#define MIDI_BLE_PERIPHERAL_MIDI2_ENDPOINT_DESCRIPTION                  L"Bluetooth Low Energy MIDI 2.0 device (Universal MIDI Packet) connected to this PC"
+
+// Only ever part of an instance id, never shown, so it stays the same in every language
+#define MIDI_BLE_PERIPHERAL_UNKNOWN_CLIENT_INSTANCE_NAME                L"Bluetooth MIDI Client"
 
 #define LOOPBACK_PARENT_ROOT                                            L"HTREE\\ROOT\\0"
 #define TRANSPORT_ENUMERATOR                                            L"MIDISRV"
