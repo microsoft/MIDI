@@ -32,7 +32,7 @@ Finds and connects Bluetooth MIDI devices, and publishes this PC as a Bluetooth 
 | `ForgetPeripheralClientAsync(bluetoothAddress)` | Forgets a remembered allow or deny, so the device is asked about again next time. Returns a `MidiBluetoothPeripheralClientDecisionResponse` |
 | `GetRadioInformation()` | Returns what this PC's Bluetooth radio can do, as `MidiBluetoothRadioInformation`, or null with a service that's too old to report it |
 | `GetDefaultOfflineRetentionSeconds()` | Returns the transport-wide value that every device set to `UseTransportDefault` uses. It's never `UseTransportDefault` itself |
-| `GetConfiguredDevices()` | Returns a `MidiBluetoothConfiguredDevice` for every device saved in the service configuration, including ones saved as switched off. It reads what's saved, so it works even when the service isn't running |
+| `GetSavedDevices()` | Returns a `MidiBluetoothSavedDevice` for every device saved in the configuration file, including ones saved as switched off. It reads what's saved, so it works even when the service isn't running |
 
 One manager covers both Bluetooth Low Energy MIDI 1.0 and 2.0. The transport picks which protocol to use with each device, and prefers MIDI 2.0 whenever a device offers it.
 
@@ -62,7 +62,7 @@ if (response.Success())
 
 It works the other way too. Saving a `MidiBluetoothDeviceDisconnectConfig` stops the device from connecting on its own. If you create it with `removeFromConfiguration` set to true, saving removes the entry completely.
 
-`GetConfiguredDevices` shows what's saved. Use it to show devices that will connect when the service starts, including ones this PC hasn't found yet.
+`GetSavedDevices` shows what's saved. Use it to show devices that will connect when the service starts, including ones this PC hasn't found yet.
 
 ## Devices that aren't present
 

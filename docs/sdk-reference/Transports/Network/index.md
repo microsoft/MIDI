@@ -73,6 +73,8 @@ Hosts and clients created with this API are temporary, and go away when the serv
 
 To keep a host's allow and deny decisions after a restart, save a [MidiNetworkHostKnownClientsConfig]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkHostKnownClientsConfig/) the same way. The service reads those lists when it starts, but it never saves them itself.
 
+To see what's saved, call `GetSavedHosts` and `GetSavedClients`. They read the configuration file, so they work even when the service isn't running. [MidiNetworkTransportManager]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkTransportManager/) lists which configuration object to save for each change, including removing a saved host or client.
+
 ## Current limitations
 
 - Authentication isn't built yet. A host set up to require it is rejected when it's configured, instead of quietly accepting connections that aren't authenticated. See [issue 733](https://github.com/microsoft/MIDI/issues/733)
