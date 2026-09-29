@@ -66,15 +66,8 @@ struct MidiNetworkHostDefinition
     // protocol
     MidiNetworkHostProtocol NetworkProtocol{ MidiNetworkHostProtocol::ProtocolDefault };
 
-    // authentication
+    // Anything other than none is refused by configuration validation. See MidiNetworkCredentials.h.
     MidiNetworkHostAuthentication Authentication{ MidiNetworkHostAuthentication::NoAuthentication };
-
-    // Names the secret in whatever store we settle on. Never the secret itself, and never
-    // logged as anything other than an opaque identifier. See MidiNetworkCredentials.h.
-    winrt::hstring AuthenticationCredentialIdentifier;
-
-    // auth lookup key
-
 
     // generated properties
     winrt::hstring ServiceInstanceName;     // instance name for the PTR record
@@ -87,8 +80,9 @@ struct MidiNetworkHostDefinition
 class MidiNetworkHost : public std::enable_shared_from_this<MidiNetworkHost>
 {
 public:
-    HRESULT Initialize(_In_ MidiNetworkHostDefinition& hostDefinition);
-    
+    HRESULT Initialize(_In_ MidiNetworkHostDefinition const& hostDefinition);
+
+    // Does nothing when the host is already running
     HRESULT Start();
     HRESULT Stop();
 
@@ -109,11 +103,22 @@ public:
 
     bool IsEnabled() { return m_enabled; }
 
-    MidiNetworkHostDefinition GetDefinition() { return m_hostDefinition; }
+    // Fixed once the host is initialized, so it is safe to read without copying the definition
+    winrt::guid EntryIdentifier() const noexcept { return m_entryIdentifier; }
+
+    MidiNetworkHostDefinition GetDefinition()
+    {
+        auto lock = m_remoteClientListsLock.lock();
+
+        return m_hostDefinition;
+    }
 
     // Used for the next remote client which connects to this host. The ones already connected are
     // updated in place by the configuration manager.
     void SetFallbackMidi1PortCount(_In_ uint8_t const value) noexcept { m_fallbackMidi1PortCount = value; }
+
+    // Used for the next remote client which connects. An endpoint already up keeps what it has.
+    void SetCreateMidi1Ports(_In_ bool const value) noexcept { m_createUmpEndpointsOnly = !value; }
 
     winrt::hstring ActualPort() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().LocalPort() : L""; }
     winrt::hstring ActualAddress() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().LocalAddress().DisplayName() : L""; }
@@ -133,13 +138,13 @@ public:
     HRESULT ForgetRemoteClient(_In_ MidiNetworkRemoteClientIdentity const& identity);
 
 private:
-//    winrt::hstring m_configIdentifier{};
-
     bool m_enabled{ true };
-    bool m_portFallbackUsed{ false };
+    std::atomic<bool> m_portFallbackUsed{ false };
     std::atomic<bool> m_started{ false };
-    bool m_createUmpEndpointsOnly{ true };
-    uint8_t m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
+    std::atomic<bool> m_createUmpEndpointsOnly{ true };
+    std::atomic<uint8_t> m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
+
+    winrt::guid m_entryIdentifier{ };
 
     std::wstring m_hostEndpointName{ };
     std::wstring m_hostProductInstanceId{ };
@@ -152,10 +157,47 @@ private:
         _In_ DatagramSocket const& sender,
         _In_ DatagramSocketMessageReceivedEventArgs const& args);
 
+    // The first datagram from a remote with no connection. Returns the connection to hand it to,
+    // or nullptr when the remote was refused or ignored.
+    std::shared_ptr<MidiNetworkConnection> AdmitNewRemote(
+        _In_ DatagramSocketMessageReceivedEventArgs const& args,
+        _In_ MidiNetworkCommandPacketHeader const& firstCommandHeader);
+
+    // A remote reconnects from a new ephemeral port, so a finished session's entry is released
+    // straight away rather than holding a connection slot until the idle reaper notices.
+    void ReleaseConnectionIfSessionFinished(
+        _In_ std::shared_ptr<MidiNetworkConnection> const& connection,
+        _In_ DatagramSocketMessageReceivedEventArgs const& args);
+
     MidiNetworkHostDefinition m_hostDefinition{};
 
+    // Start, Stop and Shutdown arrive from the endpoint creator worker and from configuration
+    // calls, which the service does not serialize.
+    wil::critical_section m_lifecycleLock;
+
+    // Replaced only under m_lifecycleLock. Readers take a copy, because enumerateHosts polls it
+    // while a user starts and stops the host.
+    wil::critical_section m_advertiserLock;
     std::shared_ptr<MidiNetworkAdvertiser> m_advertiser{ nullptr };
 
+    std::shared_ptr<MidiNetworkAdvertiser> GetAdvertiser()
+    {
+        auto lock = m_advertiserLock.lock();
+
+        return m_advertiser;
+    }
+
+    // The label on the wire for this advertiser, or the configured one when it has none.
+    winrt::hstring ActualServiceInstanceName(_In_ std::shared_ptr<MidiNetworkAdvertiser> const& advertiser);
+
+    // Binds the configured port, or an automatic one when the configuration allows falling back.
+    HRESULT BindSocket(_In_ DatagramSocket const& socket, _Out_ uint16_t& boundPort);
+
+    // Registers the host with DNS-SD and publishes the advertiser only once that succeeded.
+    HRESULT StartAdvertising(
+        _In_ DatagramSocket const& socket,
+        _In_ HostName const& hostName,
+        _In_ uint16_t const boundPort);
 
     DatagramSocket m_socket{ nullptr };
 
@@ -190,7 +232,8 @@ private:
     MidiNetworkReplyRateLimiter m_refusalRateLimiter;
 
     // Guards the allow and deny lists, which a user can change at any time through the
-    // configuration manager while the receive path is reading them.
+    // configuration manager while the receive path is reading them, and every copy of the
+    // definition, which includes them.
     wil::critical_section m_remoteClientListsLock;
 
 };

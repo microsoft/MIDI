@@ -921,6 +921,22 @@ CMidi2RtpMidiEndpointManager::CreateEndpoint(std::shared_ptr<RtpMidiConnection> 
 
         wil::unique_cotaskmem_string newDeviceInterfaceId;
 
+        {
+            auto lock = std::scoped_lock{ m_createdEndpointsLock };
+
+            m_endpointBeingCreated = connection;
+            m_endpointBeingCreatedInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(instanceId);
+        }
+
+        // Closed after the record below is added, so an early open always finds one or the other
+        auto closeCreationWindow = wil::scope_exit([this]()
+            {
+                auto lock = std::scoped_lock{ m_createdEndpointsLock };
+
+                m_endpointBeingCreated.reset();
+                m_endpointBeingCreatedInstanceId.clear();
+            });
+
         auto const activateHR = m_midiDeviceManager->ActivateEndpoint(
             m_parentDeviceId.c_str(),
             false,                                          // when false, WinMM MIDI 1.0 ports are created as well
@@ -1274,6 +1290,13 @@ CMidi2RtpMidiEndpointManager::FindConnectionByEndpointDeviceInterfaceId(std::wst
     for (auto const& record : m_createdEndpoints)
     {
         if (std::wstring_view{ record.InterfaceId } == normalized) return record.Connection.lock();
+    }
+
+    // An interface id carries its instance id as one whole segment: \\?\swd#midisrv#<instance id>#{...}
+    if (m_endpointBeingCreated != nullptr &&
+        internal::EndpointInterfaceIdContainsString(normalized, L"#" + m_endpointBeingCreatedInstanceId + L"#"))
+    {
+        return m_endpointBeingCreated;
     }
 
     return nullptr;

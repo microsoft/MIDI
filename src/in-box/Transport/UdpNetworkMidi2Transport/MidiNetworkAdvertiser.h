@@ -14,6 +14,8 @@ using namespace winrt::Windows::Networking::Sockets;
 
 
 
+// One host's DNS-SD registration. Why it uses the WinRT registration, and why the transport
+// repeats the announcements the DNS client makes for it, is at the top of MidiNetworkAdvertiser.cpp.
 class MidiNetworkAdvertiser
 {
 public:

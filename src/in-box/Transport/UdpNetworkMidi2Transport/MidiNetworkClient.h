@@ -67,7 +67,7 @@ class MidiNetworkClient : public std::enable_shared_from_this<MidiNetworkClient>
 public:
     // will need some different versions of Initialize for the different ways of connecting
     HRESULT Initialize(
-        _In_ MidiNetworkClientDefinition& clientDefinition
+        _In_ MidiNetworkClientDefinition const& clientDefinition
     );
 
     HRESULT Start(
@@ -82,6 +82,9 @@ public:
     HRESULT DisconnectByUser();
 
     MidiNetworkClientDefinition GetDefinition() { return m_clientDefinition; }
+
+    // Fixed once the client is initialized, so it is safe to read without copying the definition
+    winrt::guid EntryIdentifier() const noexcept { return m_configIdentifier; }
 
     // Used the next time this client builds a connection. An endpoint already up is updated in
     // place by the configuration manager.

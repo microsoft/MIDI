@@ -33,19 +33,12 @@ public:
     HRESULT WriteCommandRetransmitRequest(_In_ MidiSequenceNumber sequenceNumber, _In_ uint16_t numberOfUmpCommands);
     HRESULT WriteCommandRetransmitError(_In_ MidiSequenceNumber sequenceNumber, _In_ MidiNetworkCommandRetransmitErrorReason errorReason);
 
-    // todo: change the capabilities to a bitmap enum
     HRESULT WriteCommandInvitation(_In_ MidiNetworkCommandInvitationCapabilities capabilities, _In_ std::wstring clientUmpEndpointName, _In_ std::wstring clientProductInstanceId);
-    HRESULT WriteCommandInvitationWithAuthentication(_In_ std::string cryptoNonce, _In_ std::string sharedSecret);
-    HRESULT WriteCommandInvitationWithUserAuthentication(_In_ std::string cryptoNonce, _In_ std::string userName, _In_ std::string password);
 
     HRESULT WriteCommandInvitationReplyAccepted(_In_ std::wstring hostUmpEndpointName, _In_ std::wstring hostProductInstanceId);
     HRESULT WriteCommandInvitationReplyPending(_In_ std::wstring hostUmpEndpointName, _In_ std::wstring hostProductInstanceId);
 
-    // todo: change authenticationState to an enum (see spec page 31)
-    HRESULT WriteCommandInvitationReplyAuthenticationRequired(_In_ std::string cryptoNonce, _In_ byte authenticationState, _In_ std::wstring hostUmpEndpointName, _In_ std::wstring hostProductInstanceId);
-
-    // todo: change authenticationState to an enum (different from other enum) See page 33
-    HRESULT WriteCommandInvitationReplyUserAuthenticationRequired(_In_ std::string cryptoNonce, _In_ byte authenticationState, _In_ std::wstring hostUmpEndpointName, _In_ std::wstring hostProductInstanceId);
+    // The four authentication commands would be written here. See MidiNetworkCredentials.h.
 
     HRESULT WriteCommandUmpMessages(_In_ MidiSequenceNumber sequenceNumber, _In_ std::vector<uint32_t> words);
 

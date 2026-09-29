@@ -610,3 +610,201 @@ void MidiRtpApiTests::TestDenyAlwaysIsAKnownClientUntilForgotten()
 
     remote.Stop();
 }
+
+
+// ------------------------------------------------------------------------------------
+// What is saved in the configuration file. Saved only, never sent, so the running service
+// does not see any of these entries.
+// ------------------------------------------------------------------------------------
+
+namespace
+{
+    namespace svc = winrt::Windows::Devices::Midi2::ServiceConfig;
+
+    bool ConfigFileRegisteredOrSkip()
+    {
+        if (svc::MidiServiceTransportPluginConfigManager::ConfigFilePath().empty())
+        {
+            Log::Result(TestResults::Skipped, L"No configuration file is registered on this PC, so nothing can be saved.");
+            return false;
+        }
+
+        return true;
+    }
+
+    MidiRtpSavedHost FindSavedHost(_In_ winrt::guid const& hostId)
+    {
+        for (auto const& host : MidiRtpTransportManager::GetSavedHosts())
+        {
+            if (host != nullptr && host.HostId() == hostId) return host;
+        }
+
+        return nullptr;
+    }
+
+    MidiRtpSavedClient FindSavedClient(_In_ winrt::guid const& clientId)
+    {
+        for (auto const& client : MidiRtpTransportManager::GetSavedClients())
+        {
+            if (client != nullptr && client.ClientId() == clientId) return client;
+        }
+
+        return nullptr;
+    }
+
+    void VerifySaved(_In_ svc::MidiServiceConfigSaveResponse const& response, _In_ PCWSTR description)
+    {
+        VERIFY_IS_TRUE(response != nullptr);
+
+        if (!response.Success())
+        {
+            Log::Comment(String().Format(L"Save failed: result=%d '%s'", static_cast<int>(response.Result()), response.ErrorMessage().c_str()));
+        }
+
+        VERIFY_IS_TRUE(response.Success(), description);
+    }
+
+    // for cleanup, so these never throw
+    void RemoveSavedHost(_In_ winrt::guid const& hostId) noexcept
+    {
+        try
+        {
+            svc::MidiServiceTransportPluginConfigManager::SaveUpdate(MidiRtpHostRemovalConfig(hostId));
+        }
+        catch (...)
+        {
+        }
+    }
+
+    void RemoveSavedClient(_In_ winrt::guid const& clientId) noexcept
+    {
+        try
+        {
+            svc::MidiServiceTransportPluginConfigManager::SaveUpdate(MidiRtpClientDisconnectConfig(clientId));
+        }
+        catch (...)
+        {
+        }
+    }
+}
+
+
+void MidiRtpApiTests::TestSavedHostFollowsSavedChanges()
+{
+    if (!ConfigFileRegisteredOrSkip()) return;
+
+    MidiRtpHostCreationConfig config;
+    config.Name(winrt::hstring{ std::wstring{ TestHostNamePrefix } + L"Saved" });
+    config.ServiceInstanceName(L"MidiApiTest Saved Host");
+    config.UseAutomaticPortAllocation(false);
+    config.ManuallyAssignedPort(5510);
+    config.AllowPortFallback(false);
+    config.Advertise(false);
+    config.RemoteClientPolicy(MidiRtpRemoteClientPolicy::RequireApproval);
+    config.SendRecoveryJournal(false);
+
+    auto const hostId = config.HostId();
+
+    VERIFY_IS_TRUE(FindSavedHost(hostId) == nullptr, L"not saved to begin with");
+
+    auto removeEntry = wil::scope_exit([&] { RemoveSavedHost(hostId); });
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config), L"saving the host works");
+
+    auto saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr, L"it is listed once saved");
+    VERIFY_IS_TRUE(saved.Name() == config.Name(), L"with its name");
+    VERIFY_IS_TRUE(saved.ServiceInstanceName() == config.ServiceInstanceName(), L"its service instance name");
+    VERIFY_IS_TRUE(saved.IsEnabled());
+    VERIFY_IS_FALSE(saved.UseAutomaticPortAllocation());
+    VERIFY_ARE_EQUAL(saved.ManuallyAssignedPort(), (uint16_t)5510);
+    VERIFY_IS_FALSE(saved.AllowPortFallback());
+    VERIFY_IS_FALSE(saved.Advertise());
+    VERIFY_IS_TRUE(saved.RemoteClientPolicy() == MidiRtpRemoteClientPolicy::RequireApproval, L"its policy");
+    VERIFY_IS_FALSE(saved.SendRecoveryJournal());
+    VERIFY_ARE_EQUAL(saved.KnownRemoteClients().Size(), 0u);
+
+    MidiRtpHostKnownClientsConfig knownClients(hostId);
+    knownClients.KnownClients().Append(MidiRtpKnownRemoteClient(L"MidiApiTest Allowed", true));
+    knownClients.KnownClients().Append(MidiRtpKnownRemoteClient(L"MidiApiTest Denied", false));
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(knownClients), L"saving the host's decisions works");
+
+    saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_ARE_EQUAL(saved.KnownRemoteClients().Size(), 2u);
+
+    for (auto const& client : saved.KnownRemoteClients())
+    {
+        VERIFY_IS_TRUE(client.IsAllowed() == (std::wstring{ client.RemoteClientName() } == L"MidiApiTest Allowed"), L"each decision is saved as made");
+    }
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(MidiRtpHostRemovalConfig(hostId)), L"removing it works");
+
+    VERIFY_IS_TRUE(FindSavedHost(hostId) == nullptr, L"a removed host is no longer listed");
+}
+
+
+// The decisions only mean something while their host is saved
+void MidiRtpApiTests::TestSavingKnownClientsForUnsavedHostIsRefused()
+{
+    if (!ConfigFileRegisteredOrSkip()) return;
+
+    auto const hostId = foundation::GuidHelper::CreateNewGuid();
+
+    auto removeEntry = wil::scope_exit([&] { RemoveSavedHost(hostId); });
+
+    MidiRtpHostKnownClientsConfig knownClients(hostId);
+    knownClients.KnownClients().Append(MidiRtpKnownRemoteClient(L"MidiApiTest Allowed", true));
+
+    auto const response = svc::MidiServiceTransportPluginConfigManager::SaveUpdate(knownClients);
+
+    VERIFY_IS_TRUE(response != nullptr);
+    VERIFY_IS_FALSE(response.Success(), L"decisions for a host which is not saved are not saved");
+    VERIFY_IS_TRUE(response.Result() == svc::MidiServiceConfigSaveResult::ErrorEntryNotSaved, L"and it says why");
+}
+
+
+void MidiRtpApiTests::TestSavedClientFollowsSavedChanges()
+{
+    if (!ConfigFileRegisteredOrSkip()) return;
+
+    MidiRtpClientMatchCriteria match;
+    match.DirectHostNameOrIPAddress(L"192.0.2.20");
+    match.DirectPort(5520);
+
+    MidiRtpClientConnectConfig connect;
+    connect.Comment(L"MidiApiTest saved client");
+    connect.Name(L"MidiApiTest Local");
+    connect.CustomEndpointName(L"MidiApiTest Custom");
+    connect.MatchCriteria(match);
+    connect.AutoReconnect(false);
+    connect.SendRecoveryJournal(false);
+
+    auto const clientId = connect.ClientId();
+
+    VERIFY_IS_TRUE(FindSavedClient(clientId) == nullptr, L"not saved to begin with");
+
+    auto removeEntry = wil::scope_exit([&] { RemoveSavedClient(clientId); });
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(connect), L"saving the client works");
+
+    auto const saved = FindSavedClient(clientId);
+
+    VERIFY_IS_TRUE(saved != nullptr, L"it is listed once saved");
+    VERIFY_IS_TRUE(saved.Comment() == connect.Comment(), L"with its comment");
+    VERIFY_IS_TRUE(saved.Name() == connect.Name(), L"the name this PC gives");
+    VERIFY_IS_TRUE(saved.CustomEndpointName() == connect.CustomEndpointName(), L"its custom endpoint name");
+    VERIFY_IS_TRUE(saved.MatchCriteria().DirectHostNameOrIPAddress() == match.DirectHostNameOrIPAddress(), L"its address");
+    VERIFY_ARE_EQUAL(saved.MatchCriteria().DirectPort(), (uint16_t)5520);
+    VERIFY_IS_TRUE(saved.MatchCriteria().ServiceInstanceName().empty());
+    VERIFY_IS_FALSE(saved.AutoReconnect());
+    VERIFY_IS_FALSE(saved.SendRecoveryJournal());
+    VERIFY_IS_TRUE(saved.IsEnabled());
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(MidiRtpClientDisconnectConfig(clientId)), L"saving a disconnect works");
+
+    VERIFY_IS_TRUE(FindSavedClient(clientId) == nullptr, L"and forgets the saved client");
+}

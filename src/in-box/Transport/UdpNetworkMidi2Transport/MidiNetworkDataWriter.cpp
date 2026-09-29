@@ -396,48 +396,6 @@ MidiNetworkDataWriter::WriteCommandInvitation(
 
 _Use_decl_annotations_
 HRESULT
-MidiNetworkDataWriter::WriteCommandInvitationWithAuthentication(
-    std::string cryptoNonce, 
-    std::string sharedSecret
-)
-{
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
-
-    UNREFERENCED_PARAMETER(cryptoNonce);
-    UNREFERENCED_PARAMETER(sharedSecret);
-
-    auto lock = m_dataWriterLock.lock();
-
-    // todo: we should NAK this for now
-
-    return E_NOTIMPL;
-}
-
-_Use_decl_annotations_
-HRESULT
-MidiNetworkDataWriter::WriteCommandInvitationWithUserAuthentication(
-    std::string cryptoNonce, 
-    std::string userName, 
-    std::string password
-)
-{
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
-
-    UNREFERENCED_PARAMETER(cryptoNonce);
-    UNREFERENCED_PARAMETER(userName);
-    UNREFERENCED_PARAMETER(password);
-
-    auto lock = m_dataWriterLock.lock();
-
-    // TODO: we should NAK this for now
-
-    return E_NOTIMPL;
-}
-
-_Use_decl_annotations_
-HRESULT
 MidiNetworkDataWriter::WriteCommandInvitationReplyAccepted(
     std::wstring hostUmpEndpointName, 
     std::wstring hostProductInstanceId
@@ -502,56 +460,6 @@ MidiNetworkDataWriter::WriteCommandInvitationReplyPending(
     WritePaddedString(productInstanceIdUtf8, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT);
 
     return S_OK;
-}
-
-// todo: change authenticationState to an enum (see spec page 31)
-_Use_decl_annotations_
-HRESULT 
-MidiNetworkDataWriter::WriteCommandInvitationReplyAuthenticationRequired(
-    std::string cryptoNonce, 
-    byte authenticationState, 
-    std::wstring hostUmpEndpointName, 
-    std::wstring hostProductInstanceId
-)
-{
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
-
-    UNREFERENCED_PARAMETER(cryptoNonce);
-    UNREFERENCED_PARAMETER(authenticationState);
-    UNREFERENCED_PARAMETER(hostUmpEndpointName);
-    UNREFERENCED_PARAMETER(hostProductInstanceId);
-
-    auto lock = m_dataWriterLock.lock();
-
-    // TODO
-
-    return E_NOTIMPL;
-}
-
-// todo: change authenticationState to an enum (different from other enum) See page 33
-_Use_decl_annotations_
-HRESULT 
-MidiNetworkDataWriter::WriteCommandInvitationReplyUserAuthenticationRequired(
-    std::string cryptoNonce, 
-    byte authenticationState, 
-    std::wstring hostUmpEndpointName, 
-    std::wstring hostProductInstanceId
-)
-{
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
-
-    UNREFERENCED_PARAMETER(cryptoNonce);
-    UNREFERENCED_PARAMETER(authenticationState);
-    UNREFERENCED_PARAMETER(hostUmpEndpointName);
-    UNREFERENCED_PARAMETER(hostProductInstanceId);
-
-    auto lock = m_dataWriterLock.lock();
-
-    // TODO
-
-    return E_NOTIMPL;
 }
 
 // can send multiple UMP messages. If more than the max

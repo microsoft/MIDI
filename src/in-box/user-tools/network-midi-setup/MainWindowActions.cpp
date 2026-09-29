@@ -242,12 +242,160 @@ namespace winrt::midinetworksetup::implementation
             }
         }
 
-        // for a change the service has already made, but the configuration file did not take
+        // for a change the service has already made, but the configuration did not take
         winrt::hstring NotSavedMessage(_In_ midi2svc::MidiServiceConfigSaveResponse const& response) noexcept
         {
             return res::FormatString(
-                L"RtpChangeNotSavedFormat",
+                L"ChangeNotSavedFormat",
                 response == nullptr ? winrt::hstring{} : response.ErrorMessage());
+        }
+
+        // The saved Network MIDI 2.0 client with this entry identifier, or nullptr when there is none
+        midi2net::MidiNetworkSavedClient FindSavedClient(_In_ winrt::hstring const& clientKey) noexcept
+        {
+            winrt::guid clientId{};
+
+            if (!TryParseKey(clientKey, clientId))
+            {
+                return nullptr;
+            }
+
+            try
+            {
+                for (auto const& saved : midi2net::MidiNetworkTransportManager::GetSavedClients())
+                {
+                    if (saved != nullptr && saved.ClientId() == clientId)
+                    {
+                        return saved;
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return nullptr;
+        }
+
+        // The service keys a remote client on its name and product instance id together, compared
+        // without case, so the saved lists are matched the same way.
+        bool IsSameRemoteClient(
+            _In_ midi2net::MidiNetworkKnownRemoteClient const& known,
+            _In_ winrt::hstring const& name,
+            _In_ winrt::hstring const& productInstanceId) noexcept
+        {
+            auto const same = [](winrt::hstring const& left, winrt::hstring const& right) noexcept
+                {
+                    auto const trimmed = [](std::wstring_view const value) noexcept
+                        {
+                            auto const first = value.find_first_not_of(L" \t\r\n");
+
+                            return first == std::wstring_view::npos ?
+                                std::wstring_view{} :
+                                value.substr(first, value.find_last_not_of(L" \t\r\n") - first + 1);
+                        };
+
+                    auto const a = trimmed(left);
+                    auto const b = trimmed(right);
+
+                    return a.size() == b.size() &&
+                        (a.empty() || ::CompareStringOrdinal(
+                            a.data(), static_cast<int>(a.size()),
+                            b.data(), static_cast<int>(b.size()),
+                            TRUE) == CSTR_EQUAL);
+                };
+
+            return
+                same(known.RemoteClientName(), name) &&
+                same(known.RemoteClientProductInstanceId(), productInstanceId);
+        }
+
+        // Saves the allow or deny decision about one remote client of a Network MIDI 2.0 host, or
+        // forgets it when there is no decision. A save replaces the host's lists whole, so they are
+        // rebuilt from what is saved with only this client changed. On failure, errorMessage is
+        // the reason the save gave, which can be empty.
+        bool SaveNetworkRemoteClientDecision(
+            _In_ winrt::guid const& hostId,
+            _In_ winrt::hstring const& name,
+            _In_ winrt::hstring const& productInstanceId,
+            _In_ std::optional<bool> const allowed,
+            _Out_ winrt::hstring& errorMessage) noexcept
+        {
+            errorMessage = winrt::hstring{};
+
+            try
+            {
+                midi2net::MidiNetworkSavedHost savedHost{ nullptr };
+
+                for (auto const& host : midi2net::MidiNetworkTransportManager::GetSavedHosts())
+                {
+                    if (host != nullptr && host.HostId() == hostId)
+                    {
+                        savedHost = host;
+                        break;
+                    }
+                }
+
+                // A host which is not saved has no decisions to forget, and nowhere to keep a new
+                // one. This is also what stops a host which could not be read from being saved
+                // with every other decision missing.
+                if (savedHost == nullptr)
+                {
+                    return !allowed.has_value();
+                }
+
+                midi2net::MidiNetworkHostKnownClientsConfig config{ hostId };
+
+                bool found{ false };
+
+                if (auto const known = savedHost.KnownRemoteClients())
+                {
+                    for (auto const& client : known)
+                    {
+                        if (client == nullptr)
+                        {
+                            continue;
+                        }
+
+                        // a client is on one list or the other, so its old entry is dropped
+                        if (IsSameRemoteClient(client, name, productInstanceId))
+                        {
+                            found = true;
+                            continue;
+                        }
+
+                        config.KnownClients().Append(client);
+                    }
+                }
+
+                if (allowed.has_value())
+                {
+                    config.KnownClients().Append(
+                        midi2net::MidiNetworkKnownRemoteClient{ name, productInstanceId, *allowed });
+                }
+                else if (!found)
+                {
+                    // nothing is saved about this client, so there is nothing to forget
+                    return true;
+                }
+
+                auto const response = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                if (response != nullptr && response.Success())
+                {
+                    return true;
+                }
+
+                if (response != nullptr)
+                {
+                    errorMessage = response.ErrorMessage();
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return false;
         }
     }
 
@@ -538,8 +686,8 @@ namespace winrt::midinetworksetup::implementation
 
         // What the customer actually chose, which may be nothing. Using the row's display name
         // here would pin a name the service had only derived from the device.
-        auto const savedCustomName =
-            native::NetworkConfigFile::Current().GetClientCustomEndpointName(item.ClientId());
+        auto const savedClient = FindSavedClient(item.ClientId());
+        auto const savedCustomName = savedClient != nullptr ? savedClient.CustomEndpointName() : winrt::hstring{};
 
         auto target = std::make_shared<midinetworksetup::RemoteHostItem>(nullptr);
 
@@ -552,8 +700,6 @@ namespace winrt::midinetworksetup::implementation
         auto queue = DispatcherQueue();
 
         item.IsBusy(true);
-
-        auto const oldKey = item.ClientId();
 
         co_await winrt::resume_background();
 
@@ -573,7 +719,10 @@ namespace winrt::midinetworksetup::implementation
 
             if (removed)
             {
-                removed = native::NetworkConfigFile::Current().RemoveClient(oldKey);
+                // saved, the same config removes the saved entry
+                auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                removed = saved != nullptr && saved.Success();
             }
         }
         catch (...)
@@ -675,14 +824,11 @@ namespace winrt::midinetworksetup::implementation
 
             if (response != nullptr && response.Success())
             {
-                if (!native::NetworkConfigFile::Current().MergeSection(config.ConfigJson()))
-                {
-                    message = native::NetworkConfigFile::Current().LastErrorMessage();
-                }
-                else
-                {
-                    message = res::FormatString(L"ConnectRequestedFormat", displayName);
-                }
+                auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                message = saved != nullptr && saved.Success() ?
+                    res::FormatString(L"ConnectRequestedFormat", displayName) :
+                    NotSavedMessage(saved);
             }
             else
             {
@@ -736,14 +882,15 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring currentDescription{};
         winrt::hstring currentImage{};
 
-        // Only the configuration file records these two, so they are read before the endpoint
+        // Only the saved configuration records these two, so they are read before the endpoint
         // lookup rather than from the endpoint's properties.
-        bool const currentCreateMidi1Ports = isRtpMidi ||
-            native::NetworkConfigFile::Current().GetClientCreateMidi1Ports(clientKey);
+        auto const savedClient = isRtpMidi ? midi2net::MidiNetworkSavedClient{ nullptr } : FindSavedClient(clientKey);
 
-        auto const currentFallbackMidi1PortCount = isRtpMidi ?
+        bool const currentCreateMidi1Ports = savedClient == nullptr || !savedClient.CreateOnlyUmpEndpoints();
+
+        auto const currentFallbackMidi1PortCount = savedClient == nullptr ?
             static_cast<uint8_t>(MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT) :
-            native::NetworkConfigFile::Current().GetClientFallbackMidi1PortCount(clientKey);
+            savedClient.FallbackMidi1PortCount();
 
         try
         {
@@ -1118,9 +1265,13 @@ namespace winrt::midinetworksetup::implementation
 
             if (response != nullptr && response.Success())
             {
-                if (!native::NetworkConfigFile::Current().RemoveClient(clientKey))
+                // saved, the same config removes the saved entry, so the service does not
+                // connect it again when it starts
+                auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                if (saved == nullptr || !saved.Success())
                 {
-                    message = native::NetworkConfigFile::Current().LastErrorMessage();
+                    message = NotSavedMessage(saved);
                 }
                 else
                 {
@@ -1551,14 +1702,11 @@ namespace winrt::midinetworksetup::implementation
 
             if (response != nullptr && response.Success())
             {
-                if (!native::NetworkConfigFile::Current().MergeSection(config.ConfigJson()))
-                {
-                    message = native::NetworkConfigFile::Current().LastErrorMessage();
-                }
-                else
-                {
-                    message = res::FormatString(L"ConnectRequestedFormat", name);
-                }
+                auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                message = saved != nullptr && saved.Success() ?
+                    res::FormatString(L"ConnectRequestedFormat", name) :
+                    NotSavedMessage(saved);
             }
             else
             {
@@ -1647,7 +1795,7 @@ namespace winrt::midinetworksetup::implementation
                 }
                 else if (!SaveRtpKnownClients(hostId, saveError))
                 {
-                    message = res::FormatString(L"RtpDecisionNotSavedFormat", name, saveError);
+                    message = res::FormatString(L"DecisionNotSavedFormat", name, saveError);
                 }
                 else
                 {
@@ -1663,6 +1811,8 @@ namespace winrt::midinetworksetup::implementation
 
                 auto const response = co_await midi2net::MidiNetworkTransportManager::ApproveOrDenyRemoteClientConnectRequestAsync(config);
 
+                winrt::hstring saveError{};
+
                 if (response != nullptr && response.Success())
                 {
                     if (thisRequestOnly)
@@ -1671,9 +1821,9 @@ namespace winrt::midinetworksetup::implementation
                             res::FormatString(L"InvitationAllowedOnceFormat", name) :
                             res::FormatString(L"InvitationDeniedOnceFormat", name);
                     }
-                    else if (!native::NetworkConfigFile::Current().SetRemoteClientDecision(hostId, name, productInstanceId, approve))
+                    else if (!SaveNetworkRemoteClientDecision(hostId, name, productInstanceId, approve, saveError))
                     {
-                        message = native::NetworkConfigFile::Current().LastErrorMessage();
+                        message = res::FormatString(L"DecisionNotSavedFormat", name, saveError);
                     }
                     else
                     {
@@ -1989,14 +2139,11 @@ namespace winrt::midinetworksetup::implementation
 
             if (response != nullptr && response.Success())
             {
-                if (!native::NetworkConfigFile::Current().MergeSection(config.ConfigJson()))
-                {
-                    message = native::NetworkConfigFile::Current().LastErrorMessage();
-                }
-                else
-                {
-                    message = res::FormatString(L"HostCreatedFormat", hostName);
-                }
+                auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                message = saved != nullptr && saved.Success() ?
+                    res::FormatString(L"HostCreatedFormat", hostName) :
+                    NotSavedMessage(saved);
             }
             else
             {
@@ -2137,14 +2284,11 @@ namespace winrt::midinetworksetup::implementation
 
             if (response != nullptr && response.Success())
             {
-                if (!native::NetworkConfigFile::Current().RemoveHost(hostId))
-                {
-                    message = native::NetworkConfigFile::Current().LastErrorMessage();
-                }
-                else
-                {
-                    message = res::FormatString(L"HostDeletedFormat", displayName);
-                }
+                auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                message = saved != nullptr && saved.Success() ?
+                    res::FormatString(L"HostDeletedFormat", displayName) :
+                    NotSavedMessage(saved);
             }
             else
             {
@@ -2218,15 +2362,17 @@ namespace winrt::midinetworksetup::implementation
 
             auto const response = co_await midi2net::MidiNetworkTransportManager::ApproveOrDenyRemoteClientConnectRequestAsync(config);
 
+            winrt::hstring saveError{};
+
             if (response != nullptr && response.Success())
             {
                 if (thisRequestOnly)
                 {
                     message = res::FormatString(L"RemoteClientDisconnectedFormat", name);
                 }
-                else if (!native::NetworkConfigFile::Current().SetRemoteClientDecision(hostId, name, productInstanceId, approve))
+                else if (!SaveNetworkRemoteClientDecision(hostId, name, productInstanceId, approve, saveError))
                 {
-                    message = native::NetworkConfigFile::Current().LastErrorMessage();
+                    message = res::FormatString(L"DecisionNotSavedFormat", name, saveError);
                 }
                 else
                 {
@@ -2399,14 +2545,16 @@ namespace winrt::midinetworksetup::implementation
 
         try
         {
-            if (!native::NetworkConfigFile::Current().ForgetRemoteClient(hostId, name, productInstanceId))
+            winrt::hstring saveError{};
+
+            if (!SaveNetworkRemoteClientDecision(hostId, name, productInstanceId, std::nullopt, saveError))
             {
-                message = native::NetworkConfigFile::Current().LastErrorMessage();
+                message = saveError.empty() ? res::GetString(L"KnownClientForgetFailedGeneral") : saveError;
             }
             else
             {
-                // Removing it from the file only decides what the next service start reads. The
-                // running service holds its own copy of the lists, so it has to be told as well.
+                // Removing it from the saved lists only decides what the next service start reads.
+                // The running service holds its own copy of the lists, so it has to be told as well.
                 midi2net::MidiNetworkRemoteClientForgetConfig config{ hostId, name, productInstanceId };
 
                 auto const response = co_await midi2net::MidiNetworkTransportManager::ForgetRemoteClientAsync(config);
@@ -3444,7 +3592,7 @@ namespace winrt::midinetworksetup::implementation
             }
             else if (!SaveRtpKnownClients(hostId, saveError))
             {
-                message = res::FormatString(L"RtpDecisionNotSavedFormat", remoteName, saveError);
+                message = res::FormatString(L"DecisionNotSavedFormat", remoteName, saveError);
             }
             else
             {
@@ -3506,7 +3654,7 @@ namespace winrt::midinetworksetup::implementation
             }
             else if (!SaveRtpKnownClients(hostId, saveError))
             {
-                message = res::FormatString(L"RtpChangeNotSavedFormat", saveError);
+                message = res::FormatString(L"ChangeNotSavedFormat", saveError);
             }
             else
             {

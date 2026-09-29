@@ -13,7 +13,7 @@
 _Use_decl_annotations_
 HRESULT 
 MidiNetworkHost::Initialize(
-    MidiNetworkHostDefinition& hostDefinition
+    MidiNetworkHostDefinition const& hostDefinition
 )
 {
     TraceLoggingWrite(
@@ -49,8 +49,6 @@ MidiNetworkHost::Initialize(
     RETURN_HR_IF(E_INVALIDARG, hostDefinition.ProductInstanceId.empty());
     RETURN_HR_IF(E_INVALIDARG, hostDefinition.ProductInstanceId.size() > MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT);
 
-    //m_configIdentifier = hostDefinition.EntryIdentifier;
-
     m_started = false;
 
     m_createUmpEndpointsOnly = !hostDefinition.CreateMidi1Ports;
@@ -64,7 +62,12 @@ MidiNetworkHost::Initialize(
         RETURN_HR_IF(E_INVALIDARG, hostDefinition.Port.empty());
     }
 
-    m_hostDefinition = hostDefinition;
+    m_entryIdentifier = hostDefinition.EntryIdentifier;
+
+    {
+        auto lock = m_remoteClientListsLock.lock();
+        m_hostDefinition = hostDefinition;
+    }
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -246,21 +249,6 @@ MidiNetworkHost::ForgetRemoteClient(MidiNetworkRemoteClientIdentity const& ident
     return S_OK;
 }
 
-static MidiNetworkAuthenticationKind AuthenticationKindFromHostAuthentication(_In_ MidiNetworkHostAuthentication const authentication)
-{
-    switch (authentication)
-    {
-    case MidiNetworkHostAuthentication::PasswordAuthentication:
-        return MidiNetworkAuthenticationKind::SharedSecret;
-
-    case MidiNetworkHostAuthentication::UserAuthentication:
-        return MidiNetworkAuthenticationKind::UserCredential;
-
-    default:
-        return MidiNetworkAuthenticationKind::None;
-    }
-}
-
 _Use_decl_annotations_
 HRESULT
 MidiNetworkHost::CreateNetworkConnection(
@@ -290,7 +278,7 @@ MidiNetworkHost::CreateNetworkConnection(
         RETURN_IF_NULL_ALLOC(conn);
 
         RETURN_IF_FAILED(conn->Initialize(
-            m_hostDefinition.EntryIdentifier,
+            m_entryIdentifier,
             m_parentDeviceInstanceId,
             socket,
             remoteHostName,
@@ -300,9 +288,7 @@ MidiNetworkHost::CreateNetworkConnection(
             TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount,
             TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount,
             m_createUmpEndpointsOnly,
-            m_fallbackMidi1PortCount,
-            AuthenticationKindFromHostAuthentication(m_hostDefinition.Authentication),
-            MidiNetworkCredentialIdentifier{ std::wstring{ m_hostDefinition.AuthenticationCredentialIdentifier } }
+            m_fallbackMidi1PortCount
         ));
 
         // Another thread pool thread may have created one for this same remote while we were
@@ -333,15 +319,24 @@ MidiNetworkHost::CreateNetworkConnection(
 bool
 MidiNetworkHost::ServiceInstanceNameWasChanged()
 {
-    return m_advertiser != nullptr && m_advertiser->InstanceNameWasChanged();
+    auto advertiser = GetAdvertiser();
+
+    return advertiser != nullptr && advertiser->InstanceNameWasChanged();
 }
 
 winrt::hstring
 MidiNetworkHost::ActualServiceInstanceName()
 {
-    if (m_advertiser == nullptr) return m_hostDefinition.ServiceInstanceName;
+    return ActualServiceInstanceName(GetAdvertiser());
+}
 
-    auto const actual = m_advertiser->ActualInstanceNameWithoutSuffix();
+_Use_decl_annotations_
+winrt::hstring
+MidiNetworkHost::ActualServiceInstanceName(std::shared_ptr<MidiNetworkAdvertiser> const& advertiser)
+{
+    if (advertiser == nullptr) return m_hostDefinition.ServiceInstanceName;
+
+    auto const actual = advertiser->ActualInstanceNameWithoutSuffix();
 
     return actual.empty() ? m_hostDefinition.ServiceInstanceName : actual;
 }
@@ -358,22 +353,31 @@ MidiNetworkHost::Stop()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    auto lifecycleLock = m_lifecycleLock.lock();
+
     // First step: stop advertising so no one is encouraged to bug us
-    if (m_advertiser)
+    std::shared_ptr<MidiNetworkAdvertiser> advertiser{ nullptr };
+
     {
-        // before the goodbye, so no repeat of the announcement can follow it
+        auto lock = m_advertiserLock.lock();
+        std::swap(advertiser, m_advertiser);
+    }
+
+    if (advertiser != nullptr)
+    {
+        // Before the goodbye. A repeat sent after it would put this host back in other devices'
+        // lists for the record's 75 minute lifetime.
         if (auto endpointManager = TransportState::Current().GetEndpointManager())
         {
-            endpointManager->OnHostRegistrationEnding(ActualServiceInstanceName());
+            endpointManager->OnHostRegistrationEnding(ActualServiceInstanceName(advertiser));
         }
 
-        RETURN_IF_FAILED(m_advertiser->Shutdown());
-        m_advertiser.reset();
+        LOG_IF_FAILED(advertiser->Shutdown());
     }
 
     // Two phases. Every remote is told first, because a Bye held up behind another connection's
     // endpoint teardown is a Bye the remote may never see before its own timeout.
-    auto connections = TransportState::Current().GetAllNetworkConnectionsForHost(m_hostDefinition.EntryIdentifier);
+    auto connections = TransportState::Current().GetAllNetworkConnectionsForHost(m_entryIdentifier);
 
     for (auto& connection : connections)
     {
@@ -386,7 +390,7 @@ MidiNetworkHost::Stop()
     }
 
     // now remove all those connections
-    RETURN_IF_FAILED(TransportState::Current().RemoveAllNetworkConnectionsForHost(m_hostDefinition.EntryIdentifier));
+    RETURN_IF_FAILED(TransportState::Current().RemoveAllNetworkConnectionsForHost(m_entryIdentifier));
 
 
     // unbind the port
@@ -411,8 +415,8 @@ MidiNetworkHost::Stop()
     // lifetime of the transport, the same as the one shared by client endpoints. Deactivating it
     // here made a restarted host unusable: the instance id survives deactivation, so Start could
     // not activate it again, and every endpoint the host went on to create was parented to a
-    // device which no longer existed. The child endpoints are already gone by this point, removed
-    // one at a time by the connection shutdown above.
+    // device which no longer existed. The connection shutdowns above have already queued the
+    // removal of the child endpoints.
 
     m_started = false;
 
@@ -422,6 +426,7 @@ MidiNetworkHost::Stop()
 
 HRESULT
 MidiNetworkHost::Start()
+try
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -432,29 +437,23 @@ MidiNetworkHost::Start()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    // Started again while running, the host replaces its socket and its registration below.
-    // Withdrawn first, so no repeat of the old announcement can follow the old one's goodbye.
-    if (m_advertiser != nullptr)
+    auto lifecycleLock = m_lifecycleLock.lock();
+
+    // Starting a running host again used to put a second socket and a second DNS-SD registration
+    // underneath it, and the first socket stayed bound.
+    if (m_started)
     {
-        if (auto runningEndpointManager = TransportState::Current().GetEndpointManager())
-        {
-            runningEndpointManager->OnHostRegistrationEnding(ActualServiceInstanceName());
-        }
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Host is already running. Nothing to start.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        return S_OK;
     }
-
-    {
-        DatagramSocket socket;
-        socket.Control().DontFragment(true);
-        //socket.Control().InboundBufferSizeInBytes(10000);
-        socket.Control().QualityOfService(SocketQualityOfService::LowLatency);
-
-        auto lock = m_socketLock.lock();
-        m_socket = socket;
-    }
-
-
-    auto socket = GetSocket();
-    RETURN_HR_IF_NULL(E_UNEXPECTED, socket);
 
     auto endpointManager = TransportState::Current().GetEndpointManager();
     RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
@@ -504,7 +503,13 @@ MidiNetworkHost::Start()
         }
     }
 
-    // wire up to handle incoming events
+    DatagramSocket socket;
+    socket.Control().DontFragment(true);
+    socket.Control().QualityOfService(SocketQualityOfService::LowLatency);
+
+    // Every remote client shares this one socket, so their bursts land in the same buffer.
+    socket.Control().InboundBufferSizeInBytes(MIDI_NETWORK_SOCKET_RECEIVE_BUFFER_BYTES);
+
     // The delegate holds a weak reference, not a raw this. Revoking the token does not drain
     // handlers already dispatched, so the object has to be able to outlive the revoke.
     std::weak_ptr<MidiNetworkHost> weakThis{ weak_from_this() };
@@ -521,8 +526,59 @@ MidiNetworkHost::Start()
 
     m_messageReceivedEventToken = socket.MessageReceived(messageReceivedHandler);
 
+    {
+        auto lock = m_socketLock.lock();
+        m_socket = socket;
+    }
+
+    // a failure from here on must not leave a socket bound, or a handler registered, behind it
+    auto unbindOnFailure = wil::scope_exit([&]()
+        {
+            {
+                auto lock = m_socketLock.lock();
+                m_socket = nullptr;
+            }
+
+            try
+            {
+                socket.MessageReceived(m_messageReceivedEventToken);
+                socket.Close();
+            }
+            CATCH_LOG();
+        });
+
     uint16_t boundPort{ 0 };
 
+    RETURN_IF_FAILED(BindSocket(socket, boundPort));
+
+    if (m_hostDefinition.Advertise)
+    {
+        RETURN_IF_FAILED(StartAdvertising(socket, hostName, boundPort));
+    }
+
+    unbindOnFailure.release();
+
+    m_started = true;
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt16(boundPort, "bound port")
+    );
+
+    return S_OK;
+}
+CATCH_RETURN()
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkHost::BindSocket(DatagramSocket const& socket, uint16_t& boundPort)
+{
+    boundPort = 0;
     m_portFallbackUsed = false;
 
     try
@@ -530,6 +586,8 @@ MidiNetworkHost::Start()
         socket.BindServiceNameAsync(winrt::to_hstring(m_hostDefinition.Port)).get();
 
         boundPort = static_cast<uint16_t>(std::stoi(winrt::to_string(socket.Information().LocalPort())));
+
+        return S_OK;
     }
     catch (...)
     {
@@ -549,8 +607,6 @@ MidiNetworkHost::Start()
         // A configured port can be taken by something else which started first, and after a
         // reboot that is entirely outside the user's control. Falling back keeps MIDI working;
         // the host reports that it did so, so the settings app can offer a new port.
-        bool recovered{ false };
-
         if (!m_hostDefinition.UseAutomaticPortAllocation && m_hostDefinition.AllowPortFallback)
         {
             try
@@ -560,7 +616,6 @@ MidiNetworkHost::Start()
                 boundPort = static_cast<uint16_t>(std::stoi(winrt::to_string(socket.Information().LocalPort())));
 
                 m_portFallbackUsed = true;
-                recovered = true;
 
                 TraceLoggingWrite(
                     MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -572,73 +627,60 @@ MidiNetworkHost::Start()
                     TraceLoggingWideString(m_hostDefinition.Port.c_str(), "configured port"),
                     TraceLoggingUInt16(boundPort, "bound port")
                 );
+
+                return S_OK;
             }
             CATCH_LOG();
         }
 
-        if (!recovered)
-        {
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Host not started.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(m_hostDefinition.Port.c_str(), "port")
-            );
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Host not started.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_hostDefinition.Port.c_str(), "port")
+        );
 
-            try
-            {
-                socket.MessageReceived(m_messageReceivedEventToken);
-                socket.Close();
-            }
-            CATCH_LOG();
-
-            {
-                auto lock = m_socketLock.lock();
-                m_socket = nullptr;
-            }
-
-            RETURN_IF_FAILED(hr);
-        }
+        RETURN_IF_FAILED(hr);
     }
 
-    // advertise
-    if (m_hostDefinition.Advertise)
+    return E_UNEXPECTED;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkHost::StartAdvertising(DatagramSocket const& socket, HostName const& hostName, uint16_t const boundPort)
+{
+    auto advertiser = std::make_shared<MidiNetworkAdvertiser>();
+
+    RETURN_IF_FAILED(advertiser->Initialize());
+
+    RETURN_IF_FAILED(advertiser->Advertise(
+        m_hostDefinition.ServiceInstanceName,
+        hostName,
+        socket,
+        boundPort,
+        m_hostDefinition.UmpEndpointName,
+        m_hostDefinition.ProductInstanceId
+    ));
+
     {
-        m_advertiser = std::make_shared<MidiNetworkAdvertiser>();
-        RETURN_IF_NULL_ALLOC(m_advertiser);
-        RETURN_IF_FAILED(m_advertiser->Initialize());
+        auto lock = m_advertiserLock.lock();
+        m_advertiser = advertiser;
+    }
 
-        RETURN_IF_FAILED(m_advertiser->Advertise(
-            m_hostDefinition.ServiceInstanceName,
-            hostName,
-            socket,
-            boundPort,
-            m_hostDefinition.UmpEndpointName,
-            m_hostDefinition.ProductInstanceId
-        ));
-
-        // The DNS client announces a new registration once, and wrongly, so the transport repeats
-        // it. See midi_dnssd_announcer.h.
+    // The DNS client announces a new registration only once and marks it wrongly, so the
+    // transport repeats the announcement. The reasons are in MidiNetworkAdvertiser.cpp.
+    if (auto endpointManager = TransportState::Current().GetEndpointManager())
+    {
         try
         {
-            endpointManager->OnHostRegistered(ActualServiceInstanceName());
+            endpointManager->OnHostRegistered(ActualServiceInstanceName(advertiser));
         }
         CATCH_LOG();
     }
-
-    m_started = true;
-
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
 
     return S_OK;
 }
@@ -697,135 +739,14 @@ void MidiNetworkHost::OnMessageReceived(
 
         if (conn == nullptr)
         {
-            // Spec 6.4: a client with no session must open with an invitation. Anything else
-            // gets at most a rate-limited refusal, never a connection object or a thread.
-            if (!IsSessionOpeningCommand(firstCommandHeader.HeaderData.CommandCode))
-            {
-                bool refused{ false };
-
-                if (WarrantsSessionNotEstablishedBye(firstCommandHeader.HeaderData.CommandCode) &&
-                    args.RemoteAddress() != nullptr)
-                {
-                    // Rate limited because an unsolicited reply to an unverified source address
-                    // is a reflection vector. See MidiNetworkRateLimiter.h.
-                    auto key = MidiNetworkReplyRateLimiter::MakeRemoteKey(
-                        std::wstring{ args.RemoteAddress().CanonicalName() },
-                        std::wstring{ args.RemotePort() });
-
-                    if (m_refusalRateLimiter.ShouldSend(key))
-                    {
-                        LOG_IF_FAILED(SendUnconnectedBye(
-                            args.RemoteAddress(),
-                            args.RemotePort(),
-                            MidiNetworkCommandByeReason::CommandByeReasonCommon_SessionNotEstablished,
-                            internal::ResourceGetWString(IDS_MESSAGE_NO_SESSION_ESTABLISHED)));
-
-                        refused = true;
-                    }
-                }
-
-                TraceLoggingWrite(
-                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_WARNING,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"First command from an unknown remote was not an invitation.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingBool(refused, "refused with Bye"),
-                    TraceLoggingUInt8(firstCommandHeader.HeaderData.CommandCode, "Command Code"),
-                    TraceLoggingWideString(args.RemoteAddress() != nullptr ? args.RemoteAddress().CanonicalName().c_str() : L"", "remote address")
-                );
-
-                return;
-            }
-
-            // Reclaim connections abandoned by earlier sessions before we add another. Remotes
-            // reconnect from a new ephemeral port, so this is where growth would otherwise happen.
-            LOG_IF_FAILED(TransportState::Current().ReapIdleNetworkConnections(m_hostDefinition.EntryIdentifier));
-
-            if (TransportState::Current().CountNetworkConnectionsForConfigIdentifier(m_hostDefinition.EntryIdentifier) >= TransportState::Current().TransportSettings.MaxHostConnections)
-            {
-                // The spec has a reason code for precisely this. Staying silent leaves the
-                // client unable to tell a full host from a dead one.
-                //
-                // The limiter can still suppress this refusal, in which case the invitation goes
-                // unanswered and we are outside 6.4. That is the accepted trade documented on
-                // MidiNetworkReplyRateLimiter: an unconditional reply is an amplification vector.
-                if (args.RemoteAddress() != nullptr)
-                {
-                    auto key = MidiNetworkReplyRateLimiter::MakeRemoteKey(
-                        std::wstring{ args.RemoteAddress().CanonicalName() },
-                        std::wstring{ args.RemotePort() });
-
-                    if (m_refusalRateLimiter.ShouldSend(key))
-                    {
-                        LOG_IF_FAILED(SendUnconnectedBye(
-                            args.RemoteAddress(),
-                            args.RemotePort(),
-                            MidiNetworkCommandByeReason::CommandByeReasonHostToClient_TooManyOpenSessions,
-                            internal::ResourceGetWString(IDS_MESSAGE_MAX_SESSIONS_REACHED)));
-                    }
-                }
-
-                TraceLoggingWrite(
-                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_WARNING,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Host is at its connection limit. Invitation refused.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(args.RemoteAddress() != nullptr ? args.RemoteAddress().CanonicalName().c_str() : L"", "remote address")
-                );
-
-                return;
-            }
-
-            LOG_IF_FAILED(CreateNetworkConnection(args.RemoteAddress(), args.RemotePort(), conn));
+            conn = AdmitNewRemote(args, firstCommandHeader);
         }
 
-        if (conn)
+        if (conn != nullptr)
         {
             LOG_IF_FAILED(conn->ProcessIncomingMessage(reader, firstCommandHeaderWord));
 
-            // Release as soon as the session is over. A remote reconnects from a new ephemeral
-            // port, so holding the old entry would consume a connection slot and two threads
-            // until the idle reaper eventually noticed. Safe to remove the entry we are
-            // executing on: the local shared_ptr keeps the object alive until this returns.
-            if (conn->IsSessionFinished())
-            {
-                TraceLoggingWrite(
-                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Session ended. Releasing the connection.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(args.RemoteAddress() != nullptr ? args.RemoteAddress().CanonicalName().c_str() : L"", "remote address")
-                );
-
-                auto released = TransportState::Current().DetachNetworkConnection(args.RemoteAddress(), args.RemotePort());
-
-                if (released != nullptr)
-                {
-                    auto endpointManager = TransportState::Current().GetEndpointManager();
-
-                    if (endpointManager != nullptr)
-                    {
-                        LOG_IF_FAILED(endpointManager->QueueConnectionShutdown(released));
-                    }
-                }
-            }
-        }
-        else
-        {
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Message received from remote client, but no connection could be created", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
+            ReleaseConnectionIfSessionFinished(conn, args);
         }
     }
     CATCH_LOG();
@@ -839,6 +760,153 @@ void MidiNetworkHost::OnMessageReceived(
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+}
+
+_Use_decl_annotations_
+std::shared_ptr<MidiNetworkConnection>
+MidiNetworkHost::AdmitNewRemote(
+    DatagramSocketMessageReceivedEventArgs const& args,
+    MidiNetworkCommandPacketHeader const& firstCommandHeader)
+{
+    // Spec 6.4: a client with no session must open with an invitation. Anything else gets at
+    // most a rate-limited refusal, never a connection object or a thread.
+    if (!IsSessionOpeningCommand(firstCommandHeader.HeaderData.CommandCode))
+    {
+        bool refused{ false };
+
+        if (WarrantsSessionNotEstablishedBye(firstCommandHeader.HeaderData.CommandCode) &&
+            args.RemoteAddress() != nullptr)
+        {
+            // Rate limited because an unsolicited reply to an unverified source address is a
+            // reflection vector. See MidiNetworkRateLimiter.h.
+            auto key = MidiNetworkReplyRateLimiter::MakeRemoteKey(
+                std::wstring{ args.RemoteAddress().CanonicalName() },
+                std::wstring{ args.RemotePort() });
+
+            if (m_refusalRateLimiter.ShouldSend(key))
+            {
+                LOG_IF_FAILED(SendUnconnectedBye(
+                    args.RemoteAddress(),
+                    args.RemotePort(),
+                    MidiNetworkCommandByeReason::CommandByeReasonCommon_SessionNotEstablished,
+                    internal::ResourceGetWString(IDS_MESSAGE_NO_SESSION_ESTABLISHED)));
+
+                refused = true;
+            }
+        }
+
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"First command from an unknown remote was not an invitation.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingBool(refused, "refused with Bye"),
+            TraceLoggingUInt8(firstCommandHeader.HeaderData.CommandCode, "Command Code"),
+            TraceLoggingWideString(args.RemoteAddress() != nullptr ? args.RemoteAddress().CanonicalName().c_str() : L"", "remote address")
+        );
+
+        return nullptr;
+    }
+
+    // Reclaim connections abandoned by earlier sessions before we add another. Remotes reconnect
+    // from a new ephemeral port, so this is where growth would otherwise happen.
+    LOG_IF_FAILED(TransportState::Current().ReapIdleNetworkConnections(m_entryIdentifier));
+
+    if (TransportState::Current().CountNetworkConnectionsForConfigIdentifier(m_entryIdentifier) >= TransportState::Current().TransportSettings.MaxHostConnections)
+    {
+        // The spec has a reason code for precisely this. Staying silent leaves the client unable
+        // to tell a full host from a dead one.
+        //
+        // The limiter can still suppress this refusal, in which case the invitation goes
+        // unanswered and we are outside 6.4. That is the accepted trade documented on
+        // MidiNetworkReplyRateLimiter: an unconditional reply is an amplification vector.
+        if (args.RemoteAddress() != nullptr)
+        {
+            auto key = MidiNetworkReplyRateLimiter::MakeRemoteKey(
+                std::wstring{ args.RemoteAddress().CanonicalName() },
+                std::wstring{ args.RemotePort() });
+
+            if (m_refusalRateLimiter.ShouldSend(key))
+            {
+                LOG_IF_FAILED(SendUnconnectedBye(
+                    args.RemoteAddress(),
+                    args.RemotePort(),
+                    MidiNetworkCommandByeReason::CommandByeReasonHostToClient_TooManyOpenSessions,
+                    internal::ResourceGetWString(IDS_MESSAGE_MAX_SESSIONS_REACHED)));
+            }
+        }
+
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Host is at its connection limit. Invitation refused.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(args.RemoteAddress() != nullptr ? args.RemoteAddress().CanonicalName().c_str() : L"", "remote address")
+        );
+
+        return nullptr;
+    }
+
+    std::shared_ptr<MidiNetworkConnection> connection{ nullptr };
+
+    auto hr = CreateNetworkConnection(args.RemoteAddress(), args.RemotePort(), connection);
+
+    if (FAILED(hr) || connection == nullptr)
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Message received from remote client, but no connection could be created", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
+
+        return nullptr;
+    }
+
+    return connection;
+}
+
+_Use_decl_annotations_
+void
+MidiNetworkHost::ReleaseConnectionIfSessionFinished(
+    std::shared_ptr<MidiNetworkConnection> const& connection,
+    DatagramSocketMessageReceivedEventArgs const& args)
+{
+    // Safe to remove the entry we are executing on: the caller's shared_ptr keeps the object
+    // alive until the receive callback returns.
+    if (!connection->IsSessionFinished())
+    {
+        return;
+    }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Session ended. Releasing the connection.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(args.RemoteAddress() != nullptr ? args.RemoteAddress().CanonicalName().c_str() : L"", "remote address")
+    );
+
+    auto released = TransportState::Current().DetachNetworkConnection(args.RemoteAddress(), args.RemotePort());
+
+    if (released != nullptr)
+    {
+        auto endpointManager = TransportState::Current().GetEndpointManager();
+
+        if (endpointManager != nullptr)
+        {
+            LOG_IF_FAILED(endpointManager->QueueConnectionShutdown(released));
+        }
+    }
 }
 
 
@@ -855,14 +923,6 @@ MidiNetworkHost::Shutdown()
     );
 
     LOG_IF_FAILED(Stop());
-
-    //while (m_connections.size() > 0)
-    //{
-    //    auto conn = m_connections.begin();
-    //    LOG_IF_FAILED(conn->second->Shutdown());
-
-    //    m_connections.erase(conn);
-    //}
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),

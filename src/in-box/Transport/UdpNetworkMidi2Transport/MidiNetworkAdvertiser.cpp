@@ -8,6 +8,27 @@
 
 #include "pch.h"
 
+// DNS-SD registration, and the workaround that goes with it. Measured on the wire, Sep 2026.
+//
+// Registration uses the Windows DNS client through WinRT on purpose. Discovery stopped using
+// Windows.Devices.Enumeration because its watcher never reports a host leaving, but registration
+// has no such fault: the DNS client probes, renames a colliding label, answers queries correctly
+// and sends a goodbye when the registration ends. The Win32 DnsServiceRegister API goes through
+// the same DNS client and behaves the same on the wire, so switching to it would fix nothing.
+//
+// What the DNS client gets wrong is the announcement of a new registration. It sends one, where
+// RFC 6762 section 8.3 asks for at least two, and it sets the cache-flush bit on the shared PTR
+// record, which section 10.2 forbids. A device which misses that one packet doesn't list the host
+// until it asks again, and a Mac can go a long time without asking. The flush bit also makes
+// every device which hears it drop the other hosts it knew of, including this PC's own.
+//
+// So after each registration the endpoint manager repeats every host's PTR record without the
+// flush bit, at 1.5 and 4.5 seconds (midi_dnssd_announcer.h). A host is withdrawn from those
+// repeats before its registration ends, because a repeat sent after the goodbye would put it
+// back in other devices' lists for the record's 75 minute lifetime.
+//
+// Remove the repeats once the DNS client is fixed.
+
 HRESULT 
 MidiNetworkAdvertiser::Initialize()
 {

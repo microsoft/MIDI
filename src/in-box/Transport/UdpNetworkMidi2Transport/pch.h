@@ -155,7 +155,8 @@ struct MidiNetworkHostDefinition;
 // DNS-SD watcher never reports a service going away. See the header for the measurements.
 #include "midi_dnssd_browser.h"
 
-// Repeats the DNS client's announcements of this PC's hosts, which it gets wrong
+// Repeats the DNS client's announcements of this PC's hosts, which it gets wrong. The reasons are
+// in MidiNetworkAdvertiser.cpp.
 #include "midi_dnssd_announcer.h"
 
 

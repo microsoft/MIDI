@@ -51,8 +51,8 @@ TransportState::ShutdownHostsClientsAndConnections()
         hosts.swap(m_hosts);
         clients.swap(m_clients);
 
-        m_pendingHostDefinitions.clear();
-        m_pendingClientDefinitions.clear();
+        m_hostDefinitions.clear();
+        m_clientDefinitions.clear();
     }
 
     // Shutdown blocks on the network and re-enters this class, so it happens after the lock
@@ -204,12 +204,50 @@ TransportState::GetHosts()
     return m_hosts;
 }
 
-std::vector<std::shared_ptr<MidiNetworkHostDefinition>>
-TransportState::GetPendingHostDefinitions()
+std::vector<MidiNetworkHostDefinition>
+TransportState::GetHostDefinitions()
 {
     auto lock = m_stateLock.lock_shared();
 
-    return m_pendingHostDefinitions;
+    return m_hostDefinitions;
+}
+
+_Use_decl_annotations_
+std::optional<MidiNetworkHostDefinition>
+TransportState::GetHostDefinition(winrt::guid const& hostEntryIdentifier)
+{
+    auto lock = m_stateLock.lock_shared();
+
+    for (auto const& definition : m_hostDefinitions)
+    {
+        if (definition.EntryIdentifier == hostEntryIdentifier)
+        {
+            return definition;
+        }
+    }
+
+    return std::nullopt;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::UpdateHostDefinition(
+    winrt::guid const& hostEntryIdentifier,
+    std::function<void(MidiNetworkHostDefinition&)> const& update)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_hostDefinitions)
+    {
+        if (definition.EntryIdentifier == hostEntryIdentifier)
+        {
+            update(definition);
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
 }
 
 std::vector<std::shared_ptr<MidiNetworkClient>>
@@ -220,12 +258,50 @@ TransportState::GetClients()
     return m_clients;
 }
 
-std::vector<std::shared_ptr<MidiNetworkClientDefinition>>
-TransportState::GetPendingClientDefinitions()
+std::vector<MidiNetworkClientDefinition>
+TransportState::GetClientDefinitions()
 {
     auto lock = m_stateLock.lock_shared();
 
-    return m_pendingClientDefinitions;
+    return m_clientDefinitions;
+}
+
+_Use_decl_annotations_
+std::optional<MidiNetworkClientDefinition>
+TransportState::GetClientDefinition(winrt::guid const& clientEntryIdentifier)
+{
+    auto lock = m_stateLock.lock_shared();
+
+    for (auto const& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientEntryIdentifier)
+        {
+            return definition;
+        }
+    }
+
+    return std::nullopt;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::UpdateClientDefinition(
+    winrt::guid const& clientEntryIdentifier,
+    std::function<void(MidiNetworkClientDefinition&)> const& update)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientEntryIdentifier)
+        {
+            update(definition);
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
 }
 
 
@@ -237,7 +313,7 @@ TransportState::GetHost(winrt::guid const& hostEntryIdentifier)
 
     for (auto& host : m_hosts)
     {
-        if (host->GetDefinition().EntryIdentifier == hostEntryIdentifier)
+        if (host->EntryIdentifier() == hostEntryIdentifier)
         {
             return host;
         }
@@ -256,7 +332,7 @@ TransportState::RemoveHost(winrt::guid const& hostEntryIdentifier, bool& removed
 
     for (auto it = m_hosts.begin(); it != m_hosts.end(); it++)
     {
-        if (*it != nullptr && (*it)->GetDefinition().EntryIdentifier == hostEntryIdentifier)
+        if (*it != nullptr && (*it)->EntryIdentifier() == hostEntryIdentifier)
         {
             removed = *it;
             m_hosts.erase(it);
@@ -264,31 +340,28 @@ TransportState::RemoveHost(winrt::guid const& hostEntryIdentifier, bool& removed
         }
     }
 
-    // A host which was created but never instantiated exists only as a pending definition, and
-    // it holds the service instance name just as a live host does. Erasing it here is also what
-    // stops the endpoint creator thread from registering a host for a definition which has been
-    // taken away while that host was being built.
-    auto const before = m_pendingHostDefinitions.size();
+    // A host which was created but never instantiated exists only as a definition, and it holds
+    // the service instance name just as a live host does. Erasing it here is also what stops the
+    // endpoint creator thread from registering a host for a definition which has been taken away
+    // while that host was being built.
+    auto const before = m_hostDefinitions.size();
 
-    m_pendingHostDefinitions.erase(
-        std::remove_if(
-            m_pendingHostDefinitions.begin(),
-            m_pendingHostDefinitions.end(),
-            [&hostEntryIdentifier](auto const& definition)
-            {
-                return definition != nullptr && definition->EntryIdentifier == hostEntryIdentifier;
-            }),
-        m_pendingHostDefinitions.end());
+    std::erase_if(
+        m_hostDefinitions,
+        [&hostEntryIdentifier](auto const& definition)
+        {
+            return definition.EntryIdentifier == hostEntryIdentifier;
+        });
 
-    removedPendingDefinition = m_pendingHostDefinitions.size() != before;
+    removedPendingDefinition = m_hostDefinitions.size() != before;
 
     return removed;
 }
 
-// Registers a host only if its definition is still pending. Both this and RemoveHost take the
-// state lock exclusively, so a host can no longer be added after the entry it belongs to has
-// been removed. Returns false when that happened, and the caller must then shut the host down
-// rather than leaving its socket bound and its service instance name claimed.
+// Registers a host only if its definition is still there. Both this and RemoveHost take the state
+// lock exclusively, so a host can no longer be added after the entry it belongs to has been
+// removed. Returns false when that happened, and the caller must then shut the host down rather
+// than leaving its socket bound and its service instance name claimed.
 _Use_decl_annotations_
 bool
 TransportState::AddHostIfStillPending(std::shared_ptr<MidiNetworkHost> host, winrt::guid const& hostEntryIdentifier)
@@ -301,11 +374,11 @@ TransportState::AddHostIfStillPending(std::shared_ptr<MidiNetworkHost> host, win
     auto lock = m_stateLock.lock_exclusive();
 
     auto const stillPending = std::any_of(
-        m_pendingHostDefinitions.begin(),
-        m_pendingHostDefinitions.end(),
+        m_hostDefinitions.begin(),
+        m_hostDefinitions.end(),
         [&hostEntryIdentifier](auto const& definition)
         {
-            return definition != nullptr && definition->EntryIdentifier == hostEntryIdentifier;
+            return definition.EntryIdentifier == hostEntryIdentifier;
         });
 
     if (!stillPending)
@@ -355,19 +428,14 @@ TransportState::IsHostServiceInstanceNameInUse(
 
     // Definitions which have been accepted but not yet started count too, otherwise two entries
     // in the same configuration update would both be admitted.
-    for (auto const& definition : GetPendingHostDefinitions())
+    for (auto const& definition : GetHostDefinitions())
     {
-        if (definition == nullptr)
+        if (definition.EntryIdentifier == excludingEntryIdentifier)
         {
             continue;
         }
 
-        if (definition->EntryIdentifier == excludingEntryIdentifier)
-        {
-            continue;
-        }
-
-        if (internal::ToLowerTrimmedWStringCopy(std::wstring{ definition->ServiceInstanceName }) == wanted)
+        if (internal::ToLowerTrimmedWStringCopy(std::wstring{ definition.ServiceInstanceName }) == wanted)
         {
             return true;
         }
@@ -414,7 +482,7 @@ TransportState::IsHostPortInUse(
             continue;
         }
 
-        if (host->GetDefinition().EntryIdentifier == excludingEntryIdentifier)
+        if (host->EntryIdentifier() == excludingEntryIdentifier)
         {
             continue;
         }
@@ -429,19 +497,19 @@ TransportState::IsHostPortInUse(
 
     // Entries which have been accepted but not started yet. Only a manual port can be compared;
     // one waiting for an automatic port has no number to conflict with.
-    for (auto const& definition : GetPendingHostDefinitions())
+    for (auto const& definition : GetHostDefinitions())
     {
-        if (definition == nullptr || definition->UseAutomaticPortAllocation)
+        if (definition.UseAutomaticPortAllocation)
         {
             continue;
         }
 
-        if (definition->EntryIdentifier == excludingEntryIdentifier)
+        if (definition.EntryIdentifier == excludingEntryIdentifier)
         {
             continue;
         }
 
-        if (parsePort(std::wstring{ definition->Port }) == wanted)
+        if (parsePort(std::wstring{ definition.Port }) == wanted)
         {
             return true;
         }
@@ -458,7 +526,7 @@ TransportState::GetClient(winrt::guid const& clientEntryIdentifier)
 
     for (auto& client : m_clients)
     {
-        if (client->GetDefinition().EntryIdentifier == clientEntryIdentifier)
+        if (client->EntryIdentifier() == clientEntryIdentifier)
         {
             return client;
         }
@@ -471,14 +539,12 @@ TransportState::GetClient(winrt::guid const& clientEntryIdentifier)
 
 _Use_decl_annotations_
 HRESULT
-TransportState::AddPendingHostDefinition(
-    std::shared_ptr<MidiNetworkHostDefinition> hostDefinition)
+TransportState::AddHostDefinition(
+    MidiNetworkHostDefinition const& hostDefinition)
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, hostDefinition);
-
     auto lock = m_stateLock.lock_exclusive();
 
-    m_pendingHostDefinitions.push_back(hostDefinition);
+    m_hostDefinitions.push_back(hostDefinition);
 
     return S_OK;
 }
@@ -513,11 +579,11 @@ TransportState::AddClientIfStillPending(
     auto lock = m_stateLock.lock_exclusive();
 
     auto const stillPending = std::any_of(
-        m_pendingClientDefinitions.begin(),
-        m_pendingClientDefinitions.end(),
+        m_clientDefinitions.begin(),
+        m_clientDefinitions.end(),
         [&clientEntryIdentifier](auto const& definition)
         {
-            return definition != nullptr && definition->EntryIdentifier == clientEntryIdentifier;
+            return definition.EntryIdentifier == clientEntryIdentifier;
         });
 
     if (!stillPending)
@@ -542,7 +608,7 @@ TransportState::RemoveClient(winrt::guid const& clientConfigEntryIdentifier, boo
 
     for (auto it = m_clients.begin(); it != m_clients.end(); it++)
     {
-        if ((*it)->GetDefinition().EntryIdentifier == clientConfigEntryIdentifier)
+        if ((*it)->EntryIdentifier() == clientConfigEntryIdentifier)
         {
             m_clients.erase(it);
 
@@ -554,19 +620,16 @@ TransportState::RemoveClient(winrt::guid const& clientConfigEntryIdentifier, boo
 
     // The definition is what enumerateClients walks, and it is also what the endpoint creator
     // thread would use to build the client again on its next pass.
-    auto const before = m_pendingClientDefinitions.size();
+    auto const before = m_clientDefinitions.size();
 
-    m_pendingClientDefinitions.erase(
-        std::remove_if(
-            m_pendingClientDefinitions.begin(),
-            m_pendingClientDefinitions.end(),
-            [&clientConfigEntryIdentifier](auto const& definition)
-            {
-                return definition != nullptr && definition->EntryIdentifier == clientConfigEntryIdentifier;
-            }),
-        m_pendingClientDefinitions.end());
+    std::erase_if(
+        m_clientDefinitions,
+        [&clientConfigEntryIdentifier](auto const& definition)
+        {
+            return definition.EntryIdentifier == clientConfigEntryIdentifier;
+        });
 
-    removedPendingDefinition = m_pendingClientDefinitions.size() != before;
+    removedPendingDefinition = m_clientDefinitions.size() != before;
 
     return (removedLiveClient || removedPendingDefinition) ? S_OK : E_NOTFOUND;
 }
@@ -578,7 +641,7 @@ TransportState::RemoveLiveClient(winrt::guid const& clientConfigEntryIdentifier)
 
     for (auto it = m_clients.begin(); it != m_clients.end(); it++)
     {
-        if ((*it)->GetDefinition().EntryIdentifier == clientConfigEntryIdentifier)
+        if ((*it)->EntryIdentifier() == clientConfigEntryIdentifier)
         {
             m_clients.erase(it);
 
@@ -592,14 +655,12 @@ TransportState::RemoveLiveClient(winrt::guid const& clientConfigEntryIdentifier)
 
 _Use_decl_annotations_
 HRESULT
-TransportState::AddPendingClientDefinition(
-    std::shared_ptr<MidiNetworkClientDefinition> clientDefinition)
+TransportState::AddClientDefinition(
+    MidiNetworkClientDefinition const& clientDefinition)
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, clientDefinition);
-
     auto lock = m_stateLock.lock_exclusive();
 
-    m_pendingClientDefinitions.push_back(clientDefinition);
+    m_clientDefinitions.push_back(clientDefinition);
 
     return S_OK;
 }
@@ -610,16 +671,16 @@ TransportState::MarkClientDefinitionForReconnect(winrt::guid const& clientConfig
 {
     auto lock = m_stateLock.lock_exclusive();
 
-    for (auto const& definition : m_pendingClientDefinitions)
+    for (auto& definition : m_clientDefinitions)
     {
-        if (definition != nullptr && definition->EntryIdentifier == clientConfigEntryIdentifier)
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
         {
-            if (!definition->Enabled)
+            if (!definition.Enabled)
             {
                 return S_FALSE;
             }
 
-            definition->State = MidiNetworkEntryState::Pending;
+            definition.State = MidiNetworkEntryState::Pending;
 
             return S_OK;
         }
@@ -634,23 +695,23 @@ TransportState::MarkClientDefinitionUnavailableOrRetry(winrt::guid const& client
 {
     auto lock = m_stateLock.lock_exclusive();
 
-    for (auto const& definition : m_pendingClientDefinitions)
+    for (auto& definition : m_clientDefinitions)
     {
-        if (definition != nullptr && definition->EntryIdentifier == clientConfigEntryIdentifier)
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
         {
-            if (!definition->Enabled)
+            if (!definition.Enabled)
             {
                 return S_FALSE;
             }
 
-            if (definition->IsDirectConnection())
+            if (definition.IsDirectConnection())
             {
-                definition->State = MidiNetworkEntryState::Unavailable;
+                definition.State = MidiNetworkEntryState::Unavailable;
 
                 return S_FALSE;
             }
 
-            definition->State = MidiNetworkEntryState::Pending;
+            definition.State = MidiNetworkEntryState::Pending;
 
             return S_OK;
         }
@@ -665,12 +726,12 @@ TransportState::RearmClientDefinition(winrt::guid const& clientConfigEntryIdenti
 {
     auto lock = m_stateLock.lock_exclusive();
 
-    for (auto const& definition : m_pendingClientDefinitions)
+    for (auto& definition : m_clientDefinitions)
     {
-        if (definition != nullptr && definition->EntryIdentifier == clientConfigEntryIdentifier)
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
         {
-            definition->State = MidiNetworkEntryState::Pending;
-            definition->Enabled = true;
+            definition.State = MidiNetworkEntryState::Pending;
+            definition.Enabled = true;
 
             return S_OK;
         }
@@ -685,11 +746,11 @@ TransportState::MarkClientDefinitionLive(winrt::guid const& clientConfigEntryIde
 {
     auto lock = m_stateLock.lock_exclusive();
 
-    for (auto const& definition : m_pendingClientDefinitions)
+    for (auto& definition : m_clientDefinitions)
     {
-        if (definition != nullptr && definition->EntryIdentifier == clientConfigEntryIdentifier)
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
         {
-            definition->State = MidiNetworkEntryState::Live;
+            definition.State = MidiNetworkEntryState::Live;
 
             return S_OK;
         }
@@ -704,11 +765,11 @@ TransportState::MarkHostDefinitionLive(winrt::guid const& hostConfigEntryIdentif
 {
     auto lock = m_stateLock.lock_exclusive();
 
-    for (auto const& definition : m_pendingHostDefinitions)
+    for (auto& definition : m_hostDefinitions)
     {
-        if (definition != nullptr && definition->EntryIdentifier == hostConfigEntryIdentifier)
+        if (definition.EntryIdentifier == hostConfigEntryIdentifier)
         {
-            definition->State = MidiNetworkEntryState::Live;
+            definition.State = MidiNetworkEntryState::Live;
 
             return S_OK;
         }
@@ -723,11 +784,11 @@ TransportState::MarkHostDefinitionFailed(winrt::guid const& hostConfigEntryIdent
 {
     auto lock = m_stateLock.lock_exclusive();
 
-    for (auto const& definition : m_pendingHostDefinitions)
+    for (auto& definition : m_hostDefinitions)
     {
-        if (definition != nullptr && definition->EntryIdentifier == hostConfigEntryIdentifier)
+        if (definition.EntryIdentifier == hostConfigEntryIdentifier)
         {
-            definition->State = MidiNetworkEntryState::Failed;
+            definition.State = MidiNetworkEntryState::Failed;
 
             return S_OK;
         }
@@ -794,7 +855,55 @@ TransportState::GetSessionConnection(_In_ std::wstring endpointDeviceInterfaceId
         return entry->second;
     }
 
+    // An interface id carries its instance id as one whole segment: \\?\swd#midisrv#<instance id>#{...}
+    for (auto const& [instanceId, connection] : m_endpointsBeingCreated)
+    {
+        if (internal::EndpointInterfaceIdContainsString(cleanId, L"#" + instanceId + L"#"))
+        {
+            return connection;
+        }
+    }
+
     return nullptr;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::RegisterEndpointBeingCreated(
+    std::wstring const& deviceInstanceId,
+    std::shared_ptr<MidiNetworkConnection> const& connection)
+{
+    RETURN_HR_IF_NULL(E_INVALIDARG, connection);
+
+    auto cleanId = internal::NormalizeDeviceInstanceIdWStringCopy(deviceInstanceId);
+    RETURN_HR_IF(E_INVALIDARG, cleanId.empty());
+
+    auto lock = m_stateLock.lock_exclusive();
+
+    m_endpointsBeingCreated.insert_or_assign(std::move(cleanId), connection);
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+void
+TransportState::UnregisterEndpointBeingCreated(
+    std::wstring const& deviceInstanceId,
+    MidiNetworkConnection const* connection) noexcept
+{
+    try
+    {
+        auto cleanId = internal::NormalizeDeviceInstanceIdWStringCopy(deviceInstanceId);
+
+        auto lock = m_stateLock.lock_exclusive();
+
+        if (auto entry = m_endpointsBeingCreated.find(cleanId);
+            entry != m_endpointsBeingCreated.end() && entry->second.get() == connection)
+        {
+            m_endpointsBeingCreated.erase(entry);
+        }
+    }
+    CATCH_LOG();
 }
 
 
@@ -835,36 +944,6 @@ TransportState::DetachNetworkConnection(
     }
 
     return nullptr;
-}
-
-_Use_decl_annotations_
-HRESULT 
-TransportState::RemoveNetworkConnection(
-    winrt::Windows::Networking::HostName const& remoteHostName, 
-    winrt::hstring const& remotePort)
-{
-    auto key = CreateNetworkConnectionMapKey(remoteHostName, remotePort);
-
-    std::shared_ptr<MidiNetworkConnection> connection{ nullptr };
-
-    {
-        auto lock = m_stateLock.lock_exclusive();
-
-        if (auto entry = m_networkConnections.find(key); entry != m_networkConnections.end())
-        {
-            connection = entry->second;
-
-            m_networkConnections.erase(entry);
-        }
-    }
-
-    // shutdown blocks and re-enters this class, so it happens outside the lock
-    if (connection != nullptr)
-    {
-        LOG_IF_FAILED(connection->Shutdown());
-    }
-
-    return S_OK;
 }
 
 _Use_decl_annotations_

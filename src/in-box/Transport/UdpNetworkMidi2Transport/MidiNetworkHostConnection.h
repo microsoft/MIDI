@@ -25,9 +25,7 @@ public:
         _In_ uint16_t const retransmitBufferMaxCommandPacketCount,
         _In_ uint8_t const maxForwardErrorCorrectionCommandPacketCount,
         _In_ bool createUmpEndpointsOnly,
-        _In_ uint8_t const fallbackMidi1PortCount,
-        _In_ MidiNetworkAuthenticationKind const authenticationKind,
-        _In_ MidiNetworkCredentialIdentifier const& credentialIdentifier
+        _In_ uint8_t const fallbackMidi1PortCount
     );
 
     // Called by the endpoint creation worker once the MIDI endpoint exists, to finish accepting
@@ -57,6 +55,15 @@ public:
     // The remote has been answered with an Invitation Reply Pending and is waiting on a user
     // decision.
     bool IsAwaitingUserApproval() { return m_awaitingUserApproval; }
+
+    // Not while it answers a new invitation. A remote whose session timed out can invite again
+    // from the same address and port, and releasing the connection then strands that invitation.
+    bool IsSessionFinished() override
+    {
+        return MidiNetworkConnection::IsSessionFinished() &&
+            !m_hostEndpointCreationPending &&
+            !m_awaitingUserApproval;
+    }
 
     // FILETIME, UTC, of the first invitation which put this remote into the pending state. Zero
     // when it has never been pending. The client re-invites on a timer while it waits, so this
@@ -93,8 +100,7 @@ protected:
         _In_ std::wstring const& clientProductInstanceId) override;
 
     HRESULT HandleIncomingInvitationWithAuthentication(
-        _In_ MidiNetworkCommandPacketHeader const& header,
-        _In_ MidiNetworkAuthenticationKind const kind) override;
+        _In_ MidiNetworkCommandPacketHeader const& header) override;
 
     // Spec 6.4: a host declining. A client withdrawing its own invitation uses 0x80 instead.
     MidiNetworkCommandByeReason ByeReasonForDeviceAlreadyAttached() const noexcept override
@@ -108,6 +114,16 @@ protected:
     void OnSessionEndedBeforeEndpointCreated() noexcept override;
 
 private:
+    // What happens to an invitation once the remote's identity has been judged
+    HRESULT RefuseDeniedInvitation(_In_ MidiNetworkRemoteClientIdentity const& identity);
+    HRESULT AwaitUserApproval(_In_ MidiNetworkRemoteClientIdentity const& identity);
+    HRESULT AcceptInvitation(_In_ MidiNetworkRemoteClientIdentity const& identity);
+
+    // Spec 6.6: permission is still being sought
+    HRESULT SendInvitationReplyPending();
+
+    HRESULT SendInvitationReplyAccepted();
+
     // Identity the remote supplied in its invitation. This is what the user approves and what
     // the allow and deny lists match on. Written on the socket receive thread and read by the
     // configuration manager, so it is guarded.
@@ -129,7 +145,4 @@ private:
 
     // Set when a Bye arrives for a connection whose endpoint has not been created yet.
     std::atomic<bool> m_hostEndpointCreationAbandoned{ false };
-
-    MidiNetworkAuthenticationKind m_authenticationKind{ MidiNetworkAuthenticationKind::None };
-    MidiNetworkCredentialIdentifier m_credentialIdentifier{ };
 };

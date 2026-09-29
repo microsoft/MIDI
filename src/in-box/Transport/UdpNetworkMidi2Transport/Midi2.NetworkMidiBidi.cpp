@@ -17,9 +17,10 @@ CMidi2NetworkMidiBidi::Initialize(
     PTRANSPORTCREATIONPARAMS,
     DWORD *,
     IMidiCallback * callback,
-    LONGLONG context,
+    LONGLONG,
     GUID sessionId
 )
+try
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -32,33 +33,30 @@ CMidi2NetworkMidiBidi::Initialize(
         TraceLoggingGuid(sessionId, "Session")
     );
 
+    RETURN_HR_IF_NULL(E_INVALIDARG, endpointDeviceInterfaceId);
     RETURN_HR_IF_NULL(E_INVALIDARG, callback);
-
-    m_callback = callback;
-    m_context = context;
 
     m_endpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
 
+    auto connection = TransportState::Current().GetSessionConnection(m_endpointDeviceInterfaceId);
+    RETURN_HR_IF_NULL(E_INVALIDARG, connection);
 
-    // look up the endpointDeviceInterfaceId in our list of endpoints, and connect to it
-
-    m_connection = TransportState::Current().GetSessionConnection(m_endpointDeviceInterfaceId);
-
-    if (auto conn = m_connection.lock())
     {
-        RETURN_IF_FAILED(conn->ConnectMidiCallback(this));
-    }
-    else
-    {
-        RETURN_IF_FAILED(E_INVALIDARG);
+        auto lock = m_lock.lock();
+
+        m_callback = callback;
+        m_connection = connection;
     }
 
+    RETURN_IF_FAILED(connection->ConnectMidiCallback(this));
 
     return S_OK;
 }
+CATCH_RETURN()
 
 HRESULT
 CMidi2NetworkMidiBidi::Shutdown()
+try
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -69,21 +67,38 @@ CMidi2NetworkMidiBidi::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    // The connection holds a reference on us. Dropping it via DisconnectMidiCallback can be the
-    // last one, so we hold ourselves alive until this call returns.
+    // The connection holds a reference on us, and dropping it can be the last one
     Microsoft::WRL::ComPtr<IMidiBidirectional> keepAlive(this);
 
-    if (auto ptr = m_connection.lock())
+    std::shared_ptr<MidiNetworkConnection> connection{ nullptr };
+
     {
-        LOG_IF_FAILED(ptr->DisconnectMidiCallback());
+        auto lock = m_lock.lock();
+        connection = m_connection.lock();
     }
 
-    m_connection.reset();
-    m_callback = nullptr;
-    m_context = 0;
+    // The service can shut an old instance down after a new one for the same endpoint has
+    // connected, so only this instance's own callback is taken away.
+    if (connection != nullptr)
+    {
+        LOG_IF_FAILED(connection->DisconnectMidiCallbackIfCurrent(this));
+    }
+
+    wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
+
+    {
+        auto lock = m_lock.lock();
+
+        m_connection.reset();
+        callback = std::move(m_callback);
+    }
+
+    // released outside the lock, and a message already on its way holds its own reference
+    callback.reset();
 
     return S_OK;
 }
+CATCH_RETURN()
 
 _Use_decl_annotations_
 HRESULT
@@ -93,6 +108,7 @@ CMidi2NetworkMidiBidi::SendMidiMessage(
     UINT length,
     LONGLONG position
 )
+try
 {
 #ifdef _DEBUG
     TraceLoggingWrite(
@@ -124,13 +140,21 @@ CMidi2NetworkMidiBidi::SendMidiMessage(
     RETURN_HR_IF_NULL(E_INVALIDARG, data);
     RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
 
-    if (auto conn = m_connection.lock())
+    std::shared_ptr<MidiNetworkConnection> connection{ nullptr };
+
     {
-        RETURN_IF_FAILED(conn->QueueMidiMessagesToSendToNetwork(data, length));
+        auto lock = m_lock.lock();
+        connection = m_connection.lock();
+    }
+
+    if (connection != nullptr)
+    {
+        RETURN_IF_FAILED(connection->QueueMidiMessagesToSendToNetwork(data, length));
     }
 
     return S_OK;
 }
+CATCH_RETURN()
 
 _Use_decl_annotations_
 HRESULT
@@ -141,6 +165,7 @@ CMidi2NetworkMidiBidi::Callback(
     LONGLONG timestamp,
     LONGLONG context
 )
+try
 {
 #ifdef _DEBUG
     TraceLoggingWrite(
@@ -169,11 +194,18 @@ CMidi2NetworkMidiBidi::Callback(
     RETURN_HR_IF_NULL(E_INVALIDARG, data);
     RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
 
-    auto callback = m_callback;
+    wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
+
+    {
+        auto lock = m_lock.lock();
+        callback = m_callback;
+    }
+
     RETURN_HR_IF_NULL(E_UNEXPECTED, callback);
 
     RETURN_IF_FAILED(callback->Callback(optionFlags, data, length, timestamp, context));
 
     return S_OK;
 }
+CATCH_RETURN()
 

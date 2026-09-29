@@ -531,8 +531,33 @@
     <ClInclude Include="MidiBluetoothRememberedClient.h">
       <DependentUpon>MidiBluetoothRememberedClient.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiBluetoothConfiguredDevice.h">
-      <DependentUpon>MidiBluetoothConfiguredDevice.idl</DependentUpon>
+    <ClInclude Include="MidiBluetoothSavedDevice.h">
+      <DependentUpon>MidiBluetoothSavedDevice.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="midi_saved_config_json.h" />
+    <ClInclude Include="MidiLoopbackSavedEntry.h">
+      <DependentUpon>MidiLoopbackSavedEntry.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackUpdateConfig.h">
+      <DependentUpon>MidiLoopbackUpdateConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackSavedEntry.h">
+      <DependentUpon>MidiBasicLoopbackSavedEntry.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackUpdateConfig.h">
+      <DependentUpon>MidiBasicLoopbackUpdateConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkSavedHost.h">
+      <DependentUpon>MidiNetworkSavedHost.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkSavedClient.h">
+      <DependentUpon>MidiNetworkSavedClient.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpSavedHost.h">
+      <DependentUpon>MidiRtpSavedHost.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpSavedClient.h">
+      <DependentUpon>MidiRtpSavedClient.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiBluetoothOfflineRetentionConfig.h">
       <DependentUpon>MidiBluetoothOfflineRetentionConfig.idl</DependentUpon>
@@ -1138,8 +1163,32 @@
     <ClCompile Include="MidiBluetoothRememberedClient.cpp">
       <DependentUpon>MidiBluetoothRememberedClient.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiBluetoothConfiguredDevice.cpp">
-      <DependentUpon>MidiBluetoothConfiguredDevice.idl</DependentUpon>
+    <ClCompile Include="MidiBluetoothSavedDevice.cpp">
+      <DependentUpon>MidiBluetoothSavedDevice.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackSavedEntry.cpp">
+      <DependentUpon>MidiLoopbackSavedEntry.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackUpdateConfig.cpp">
+      <DependentUpon>MidiLoopbackUpdateConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackSavedEntry.cpp">
+      <DependentUpon>MidiBasicLoopbackSavedEntry.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackUpdateConfig.cpp">
+      <DependentUpon>MidiBasicLoopbackUpdateConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkSavedHost.cpp">
+      <DependentUpon>MidiNetworkSavedHost.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkSavedClient.cpp">
+      <DependentUpon>MidiNetworkSavedClient.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpSavedHost.cpp">
+      <DependentUpon>MidiRtpSavedHost.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpSavedClient.cpp">
+      <DependentUpon>MidiRtpSavedClient.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiBluetoothOfflineRetentionConfig.cpp">
       <DependentUpon>MidiBluetoothOfflineRetentionConfig.idl</DependentUpon>
@@ -1593,7 +1642,15 @@
     <Midl Include="MidiBluetoothPeripheralErrorCodeEnum.idl" />
     <Midl Include="MidiBluetoothPeripheralClientDecisionResponse.idl" />
     <Midl Include="MidiBluetoothRememberedClient.idl" />
-    <Midl Include="MidiBluetoothConfiguredDevice.idl" />
+    <Midl Include="MidiBluetoothSavedDevice.idl" />
+    <Midl Include="MidiLoopbackSavedEntry.idl" />
+    <Midl Include="MidiLoopbackUpdateConfig.idl" />
+    <Midl Include="MidiBasicLoopbackSavedEntry.idl" />
+    <Midl Include="MidiBasicLoopbackUpdateConfig.idl" />
+    <Midl Include="MidiNetworkSavedHost.idl" />
+    <Midl Include="MidiNetworkSavedClient.idl" />
+    <Midl Include="MidiRtpSavedHost.idl" />
+    <Midl Include="MidiRtpSavedClient.idl" />
     <Midl Include="MidiBluetoothOfflineRetentionConfig.idl" />
     <Midl Include="MidiBluetoothOfflineRetentionEnum.idl" />
     <Midl Include="MidiSynthRenderModeEnum.idl" />

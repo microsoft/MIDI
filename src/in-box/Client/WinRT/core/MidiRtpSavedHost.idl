@@ -1,0 +1,50 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiRtpKnownRemoteClient.idl";
+import "MidiRtpRemoteClientPolicyEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // A host saved in the configuration file, which the service starts when it starts. This is
+    // what is saved, not what is running now. GetConfiguredHosts reports that.
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpSavedHost", UUID_IMidiRtpSavedHost)]
+    runtimeclass MidiRtpSavedHost
+    {
+        [noexcept] Guid HostId{ get; };
+
+        // Empty for this PC's name
+        [noexcept] String Name{ get; };
+
+        [noexcept] String ServiceInstanceName{ get; };
+
+        [noexcept] Boolean IsEnabled{ get; };
+
+        [noexcept] Boolean UseAutomaticPortAllocation{ get; };
+
+        // Zero when UseAutomaticPortAllocation is true
+        [noexcept] UInt16 ManuallyAssignedPort{ get; };
+
+        [noexcept] Boolean AllowPortFallback{ get; };
+
+        [noexcept] Boolean Advertise{ get; };
+
+        [noexcept] MidiRtpRemoteClientPolicy RemoteClientPolicy{ get; };
+
+        [noexcept] Boolean SendRecoveryJournal{ get; };
+
+        // Every saved allow and deny decision. To change one, save a MidiRtpHostKnownClientsConfig
+        // holding this whole list with the change made.
+        [noexcept] Windows.Foundation.Collections.IVectorView<MidiRtpKnownRemoteClient> KnownRemoteClients{ get; };
+    }
+}

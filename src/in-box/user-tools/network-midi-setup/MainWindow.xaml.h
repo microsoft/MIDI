@@ -11,7 +11,6 @@
 
 #include "AppSettings.h"
 #include "NetworkItems.h"
-#include "ConfigFile.h"
 
 namespace winrt::midinetworksetup::implementation
 {
@@ -117,13 +116,11 @@ namespace winrt::midinetworksetup::implementation
             collections::IVectorView<midi2net::MidiNetworkConfiguredHost> ConfiguredHosts{ nullptr };
             collections::IVectorView<midi2net::MidiNetworkPendingRemoteClient> PendingRemoteClients{ nullptr };
 
-            std::unordered_map<std::wstring, winrt::hstring> ClientDisplayNames{};
+            // the clients saved in the configuration, keyed by the entry identifier
+            std::unordered_map<std::wstring, midi2net::MidiNetworkSavedClient> SavedClients{};
 
-            // lowercased entry identifiers of the clients the configuration file has
-            std::vector<std::wstring> ConfiguredClientIds{};
-
-            // allow and deny list entries, keyed by the host entry identifier
-            std::unordered_map<std::wstring, std::vector<::midinetworksetup::KnownClientEntry>> KnownClients{};
+            // saved allow and deny decisions, keyed by the host entry identifier
+            std::unordered_map<std::wstring, std::vector<midi2net::MidiNetworkKnownRemoteClient>> KnownClients{};
 
             // RTP-MIDI keeps everything, remembered decisions included, in the service, so none of
             // it is read from the configuration file

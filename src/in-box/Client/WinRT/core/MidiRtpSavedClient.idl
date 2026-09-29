@@ -1,0 +1,43 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiRtpClientMatchCriteria.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // A client saved in the configuration file, which the service connects when it starts. This
+    // is what is saved, not what is connected now. GetConfiguredClients reports that.
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpSavedClient", UUID_IMidiRtpSavedClient)]
+    runtimeclass MidiRtpSavedClient
+    {
+        [noexcept] Guid ClientId{ get; };
+
+        // the comment saved with the entry, often the device's name
+        [noexcept] String Comment{ get; };
+
+        // What the remote shows for this PC. Empty for this PC's name.
+        [noexcept] String Name{ get; };
+
+        // Empty when the endpoint uses the name the remote sends
+        [noexcept] String CustomEndpointName{ get; };
+
+        // A new copy each time, so changing it changes nothing
+        [noexcept] MidiRtpClientMatchCriteria MatchCriteria{ get; };
+
+        [noexcept] Boolean AutoReconnect{ get; };
+
+        [noexcept] Boolean SendRecoveryJournal{ get; };
+
+        [noexcept] Boolean IsEnabled{ get; };
+    }
+}

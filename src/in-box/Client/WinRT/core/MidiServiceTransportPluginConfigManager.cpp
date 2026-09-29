@@ -19,9 +19,47 @@
 #include "MidiReporting.h"
 #include "MidiConfigFile.h"
 
+#include "MidiLoopbackManager.h"
+#include "MidiBasicLoopbackManager.h"
+
+#include <winrt/Windows.Devices.Midi2.Transports.Network.h>
+#include <winrt/Windows.Devices.Midi2.Transports.Rtp.h>
+
+#include "..\..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
+#include "..\..\..\Transport\RtpMidiTransport\rtp_json_defs.h"
+
 
 namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 {
+    namespace
+    {
+        svc::MidiServiceConfigResponse ResponseFromLoopbackUpdate(
+            _In_ bool const success,
+            _In_ uint32_t const errorCode,
+            _In_ winrt::hstring const& errorMessage) noexcept
+        {
+            try
+            {
+                auto response = winrt::make_self<MidiServiceConfigResponse>();
+
+                if (success)
+                {
+                    response->InternalSetServiceSuccess(json::JsonObject{});
+                }
+                else
+                {
+                    response->InternalSetServiceError(errorCode, errorMessage, json::JsonObject{});
+                }
+
+                return *response;
+            }
+            catch (...)
+            {
+                return nullptr;
+            }
+        }
+    }
+
     _Use_decl_annotations_
     json::JsonObject MidiServiceTransportPluginConfigManager::InternalEnsureTransportWrapper(
         winrt::guid const& transportId,
@@ -123,6 +161,15 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         winrt::guid const& transportId,
         json::JsonObject const& fullConfigObject) noexcept
     {
+        return InternalSaveUpdate(transportId, fullConfigObject, {});
+    }
+
+    _Use_decl_annotations_
+    svc::MidiServiceConfigSaveResponse MidiServiceTransportPluginConfigManager::InternalSaveUpdate(
+        winrt::guid const& transportId,
+        json::JsonObject const& fullConfigObject,
+        std::vector<std::vector<std::wstring>> const& requiredEntryPaths) noexcept
+    {
         auto response = winrt::make_self<MidiServiceConfigSaveResponse>();
 
         if (response == nullptr)
@@ -169,7 +216,7 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                 }
             }
 
-            auto const outcome = MidiConfigFile::SaveTransportSection(transportId, section);
+            auto const outcome = MidiConfigFile::SaveTransportSection(transportId, section, requiredEntryPaths);
 
             response->InternalSetResult(outcome.Result);
             response->InternalSetConfigFilePath(outcome.ConfigFilePath);
@@ -225,7 +272,57 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             return *response;
         }
 
-        return SaveUpdate(configUpdate.TransportId(), configUpdate.ConfigJson());
+        std::vector<std::vector<std::wstring>> requiredEntryPaths{};
+
+        try
+        {
+            // These change an entry rather than describe one. Saved for an entry which is not
+            // saved, they would leave a fragment in the file which the service cannot use.
+            if (auto const loopbackUpdate = configUpdate.try_as<loop::MidiLoopbackUpdateConfig>())
+            {
+                requiredEntryPaths.push_back({
+                    MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
+                    internal::GuidToString(loopbackUpdate.AssociationId()) });
+            }
+            else if (auto const basicLoopbackUpdate = configUpdate.try_as<bloop::MidiBasicLoopbackUpdateConfig>())
+            {
+                requiredEntryPaths.push_back({
+                    MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
+                    internal::GuidToString(basicLoopbackUpdate.AssociationId()),
+                    MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_ENDPOINT_KEY });
+            }
+            else if (auto const networkKnownClients = configUpdate.try_as<network::MidiNetworkHostKnownClientsConfig>())
+            {
+                requiredEntryPaths.push_back({
+                    MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY,
+                    internal::GuidToString(networkKnownClients.HostId()) });
+            }
+            else if (auto const rtpKnownClients = configUpdate.try_as<rtp::MidiRtpHostKnownClientsConfig>())
+            {
+                // saved beside the host rather than inside it, and only used while it is saved
+                requiredEntryPaths.push_back({
+                    MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
+                    MIDI_CONFIG_JSON_RTP_MIDI_HOSTS_KEY,
+                    internal::GuidToString(rtpKnownClients.HostId()) });
+            }
+
+            return InternalSaveUpdate(configUpdate.TransportId(), configUpdate.ConfigJson(), requiredEntryPaths);
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception saving transport configuration.");
+
+            auto response = winrt::make_self<MidiServiceConfigSaveResponse>();
+
+            if (response == nullptr)
+            {
+                return nullptr;
+            }
+
+            response->InternalSetResult(svc::MidiServiceConfigSaveResult::ErrorUnexpected);
+            return *response;
+        }
     }
 
 #ifdef _DEBUG
@@ -509,6 +606,38 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             );
 
             response->InternalSetStatus(svc::MidiServiceConfigResponseStatus::ErrorConfigJsonNullOrEmpty);
+            return *response;
+        }
+
+        try
+        {
+            // A loopback update changes a saved entry. Sent as it is, the running transport would
+            // read it as a request to create the loopback, so the manager applies it instead.
+            if (auto const loopbackUpdate = configUpdate.try_as<loop::MidiLoopbackUpdateConfig>())
+            {
+                auto const result = loop::implementation::MidiLoopbackManager::UpdateLoopback(loopbackUpdate);
+
+                return ResponseFromLoopbackUpdate(
+                    result != nullptr && result.Success(),
+                    result == nullptr ? 0 : static_cast<uint32_t>(result.ErrorCode()),
+                    result == nullptr ? winrt::hstring{} : result.ErrorMessage());
+            }
+
+            if (auto const basicLoopbackUpdate = configUpdate.try_as<bloop::MidiBasicLoopbackUpdateConfig>())
+            {
+                auto const result = bloop::implementation::MidiBasicLoopbackManager::UpdateLoopback(basicLoopbackUpdate);
+
+                return ResponseFromLoopbackUpdate(
+                    result != nullptr && result.Success(),
+                    result == nullptr ? 0 : static_cast<uint32_t>(result.ErrorCode()),
+                    result == nullptr ? winrt::hstring{} : result.ErrorMessage());
+            }
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception applying a loopback update.");
+
+            response->InternalSetStatus(svc::MidiServiceConfigResponseStatus::ErrorProcessingConfigJson);
             return *response;
         }
 

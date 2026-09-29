@@ -29,6 +29,20 @@ public:
 
     HRESULT SendInvitation();
 
+    // Called by the endpoint worker. The session went active when the host accepted, so all that
+    // is left is the endpoint and the negotiation which follows it.
+    HRESULT CreateClientEndpointForAcceptedInvitation(
+        _In_ std::wstring const& remoteHostUmpEndpointName,
+        _In_ std::wstring const& remoteHostProductInstanceId,
+        _Out_ std::wstring& newDeviceInstanceId,
+        _Out_ std::wstring& newEndpointDeviceInterfaceId);
+
+    HRESULT CompleteClientSessionAfterEndpointCreated(
+        _In_ std::wstring const& newDeviceInstanceId,
+        _In_ std::wstring const& newEndpointDeviceInterfaceId);
+
+    HRESULT FailClientSessionEndpointCreation(_In_ HRESULT const failure);
+
     // An invitation in flight keeps the connection alive even though no session exists yet.
     bool IsSessionFinished() override
     {
@@ -44,8 +58,7 @@ protected:
     HRESULT HandleIncomingInvitationReplyPending() override;
 
     HRESULT HandleIncomingInvitationReplyAuthenticationRequired(
-        _In_ MidiNetworkCommandPacketHeader const& header,
-        _In_ MidiNetworkAuthenticationKind const kind) override;
+        _In_ MidiNetworkCommandPacketHeader const& header) override;
 
     // Spec 6.4: a client withdrawing its own invitation.
     MidiNetworkCommandByeReason ByeReasonForDeviceAlreadyAttached() const noexcept override

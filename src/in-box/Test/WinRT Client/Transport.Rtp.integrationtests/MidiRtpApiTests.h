@@ -48,6 +48,11 @@ public:
     TEST_METHOD(TestApproveOnceThenDisconnectTheRemote);
     TEST_METHOD(TestDenyAlwaysIsAKnownClientUntilForgotten);
 
+    // What is saved in the configuration file. Saved only, never sent to the service.
+    TEST_METHOD(TestSavedHostFollowsSavedChanges);
+    TEST_METHOD(TestSavingKnownClientsForUnsavedHostIsRefused);
+    TEST_METHOD(TestSavedClientFollowsSavedChanges);
+
 private:
     MidiTest::DeviceNodeTracker m_deviceNodeTracker{};
     std::vector<winrt::guid> m_createdHosts{};

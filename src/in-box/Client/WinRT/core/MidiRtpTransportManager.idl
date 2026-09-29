@@ -26,6 +26,8 @@ import "MidiRtpRemoteClientForgetConfig.idl";
 import "MidiRtpRemoteClientForgetResponse.idl";
 import "MidiRtpConfiguredHost.idl";
 import "MidiRtpConfiguredClient.idl";
+import "MidiRtpSavedHost.idl";
+import "MidiRtpSavedClient.idl";
 import "MidiRtpPendingRemoteClient.idl";
 import "MidiRtpAdvertisedHost.idl";
 
@@ -94,5 +96,11 @@ namespace Windows.Devices.Midi2.Transports.Rtp
 
         // 5004, where other RTP-MIDI software looks first. Data uses the port after it.
         [noexcept] static UInt16 DefaultHostPort{ get; };
+
+        // What is saved in the configuration file, which is what the service creates when it
+        // starts. GetConfiguredHosts and GetConfiguredClients report what is running now. These
+        // work when the service is not running.
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiRtpSavedHost> GetSavedHosts();
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiRtpSavedClient> GetSavedClients();
     }
 }

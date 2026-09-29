@@ -130,7 +130,6 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="CommandLineOptions.h" />
-    <ClInclude Include="ConfigFile.h" />
     <ClInclude Include="NetworkItems.h">
       <DependentUpon>NetworkItems.idl</DependentUpon>
     </ClInclude>
@@ -163,7 +162,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
-    <ClCompile Include="ConfigFile.cpp" />
     <ClCompile Include="NetworkItems.cpp">
       <DependentUpon>NetworkItems.idl</DependentUpon>
     </ClCompile>

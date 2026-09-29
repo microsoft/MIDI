@@ -501,28 +501,12 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
             }
         }
 
-        // validate user authentication
+        // Refused rather than silently downgraded. Accepting unauthenticated invitations on a
+        // host the user asked to protect would be worse than refusing to start it. What adding
+        // authentication would take is in MidiNetworkCredentials.h.
+        // https://github.com/microsoft/MIDI/issues/733
         if (definition.Authentication != MidiNetworkHostAuthentication::NoAuthentication)
         {
-            if (definition.AuthenticationCredentialIdentifier.empty())
-            {
-                errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_CREDENTIAL_IDENTIFIER);
-                errorCode = NETWORK_ERROR_CODE_MISSING_CREDENTIAL_IDENTIFIER;
-                return E_INVALIDARG;
-            }
-
-            MidiNetworkCredentialIdentifier identifier{ std::wstring{ definition.AuthenticationCredentialIdentifier } };
-
-            if (!identifier.IsWellFormed())
-            {
-                errorMessage = internal::ResourceGetHString(IDS_ERROR_INVALID_CREDENTIAL_IDENTIFIER);
-                errorCode = NETWORK_ERROR_CODE_INVALID_CREDENTIAL_IDENTIFIER;
-                return E_INVALIDARG;
-            }
-
-            // Refused rather than silently downgraded. Accepting unauthenticated invitations on a
-            // host the user asked to protect would be worse than refusing to start it.
-            // https://github.com/microsoft/MIDI/issues/733
             errorMessage = internal::ResourceGetHString(IDS_ERROR_AUTHENTICATION_NOT_IMPLEMENTED);
             errorCode = NETWORK_ERROR_CODE_AUTHENTICATION_NOT_IMPLEMENTED;
             return E_NOTIMPL;
@@ -718,16 +702,11 @@ try
     }
 
     // do some validation of the remote port
-    uint16_t remotePortNumeric{0};
     auto num = wcstol(remotePort.c_str(), NULL, 10);
     if (num > WORD_MAX || num < 1)
     {
         internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_INVALID_REMOTE_PORT, internal::ResourceGetWString(IDS_ERROR_INVALID_REMOTE_PORT));
         return S_OK;
-    }
-    else
-    {
-        remotePortNumeric = static_cast<uint16_t>(num);
     }
 
     // this happens all in real-time, unlike the stuff that is done via the config file
@@ -747,24 +726,23 @@ try
         return S_OK;
     }
 
-    auto clientDefinition = std::make_shared<MidiNetworkClientDefinition>();
+    MidiNetworkClientDefinition clientDefinition{ };
 
-    clientDefinition->CreateMidi1Ports = createMidi1Ports;
-    clientDefinition->FallbackMidi1PortCount = fallbackMidi1PortCount;
-    clientDefinition->EntryIdentifier = configEntryId;
-    clientDefinition->MatchDirectHostNameOrIPAddress = remoteAddress;
-    clientDefinition->MatchDirectPort = remotePort;
-    clientDefinition->LocalEndpointName = umpEndpointName;
-    clientDefinition->CustomEndpointName = customEndpointName;
+    clientDefinition.CreateMidi1Ports = createMidi1Ports;
+    clientDefinition.FallbackMidi1PortCount = fallbackMidi1PortCount;
+    clientDefinition.EntryIdentifier = configEntryId;
+    clientDefinition.MatchDirectHostNameOrIPAddress = remoteAddress;
+    clientDefinition.MatchDirectPort = remotePort;
+    clientDefinition.LocalEndpointName = umpEndpointName;
+    clientDefinition.CustomEndpointName = customEndpointName;
 
     // Registered before it is started, or nothing can retry it, revive it, or report it in
     // enumerateClients.
-    LOG_IF_FAILED(TransportState::Current().AddPendingClientDefinition(clientDefinition));
+    LOG_IF_FAILED(TransportState::Current().AddClientDefinition(clientDefinition));
 
-    endpointManager->StartNewClient(
-        clientDefinition,
-        remoteAddress,
-        remotePortNumeric);
+    // Started by the creator worker, not here. Starting it here too raced the worker into
+    // building the same client twice, and held this call for up to the connect timeout.
+    LOG_IF_FAILED(endpointManager->WakeupBackgroundEndpointCreatorThread());
 
     internal::SetConfigurationResponseObjectSuccess(responseObject);
 
@@ -820,16 +798,16 @@ try
         return S_OK;
     }
 
-    auto clientDefinition = std::make_shared<MidiNetworkClientDefinition>();
+    MidiNetworkClientDefinition clientDefinition{ };
 
-    clientDefinition->CreateMidi1Ports = createMidi1Ports;
-    clientDefinition->FallbackMidi1PortCount = fallbackMidi1PortCount;
-    clientDefinition->EntryIdentifier = configEntryId;
-    clientDefinition->MatchId = matchId;
-    clientDefinition->LocalEndpointName = umpEndpointName;
-    clientDefinition->CustomEndpointName = customEndpointName;
+    clientDefinition.CreateMidi1Ports = createMidi1Ports;
+    clientDefinition.FallbackMidi1PortCount = fallbackMidi1PortCount;
+    clientDefinition.EntryIdentifier = configEntryId;
+    clientDefinition.MatchId = matchId;
+    clientDefinition.LocalEndpointName = umpEndpointName;
+    clientDefinition.CustomEndpointName = customEndpointName;
 
-    LOG_IF_FAILED(TransportState::Current().AddPendingClientDefinition(clientDefinition));
+    LOG_IF_FAILED(TransportState::Current().AddClientDefinition(clientDefinition));
 
     // Unlike a direct connection there is nothing to start here. The endpoint creator thread
     // owns the match: it connects as soon as the advertised host is present, and again whenever
@@ -1163,6 +1141,103 @@ catch (...)
 }
 
 
+namespace
+{
+    // Calls visit with each well-formed element of an endpoint customization array and the
+    // match it carries. One malformed element costs only itself.
+    template <typename TVisit>
+    void ForEachEndpointCustomizationEntry(
+        _In_ json::JsonArray const& entries,
+        _In_ TVisit&& visit)
+    {
+        // Indexed rather than ranged, because windows.h renames IJsonValue::GetObject and
+        // JsonArray::GetObjectAt is unaffected.
+        for (uint32_t i = 0; i < entries.Size(); i++)
+        {
+            auto element = entries.GetAt(i);
+
+            if (element == nullptr || element.ValueType() != json::JsonValueType::Object)
+            {
+                continue;
+            }
+
+            auto entryObject = entries.GetObjectAt(i);
+
+            if (entryObject == nullptr)
+            {
+                continue;
+            }
+
+            auto matchObject = SafeGetNamedObject(
+                entryObject, WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey);
+
+            if (matchObject == nullptr)
+            {
+                // nothing to tie this entry to
+                continue;
+            }
+
+            auto matchCriteria = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(matchObject);
+
+            if (matchCriteria == nullptr)
+            {
+                continue;
+            }
+
+            visit(entryObject, matchCriteria);
+        }
+    }
+}
+
+_Use_decl_annotations_
+void
+CMidi2NetworkMidiConfigurationManager::CacheAndApplyEndpointCustomization(
+    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria> const& matchCriteria,
+    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> const& customProperties)
+{
+    // Cached whether or not the endpoint exists yet. A network endpoint is created only
+    // when the remote answers, which is normally after this arrives, and the creation
+    // path reads this cache before it activates the device node.
+    LOG_HR_IF(E_FAIL, !m_customPropertiesCache->Add(matchCriteria, customProperties));
+
+    // An endpoint which is already live is updated in place, so a rename after the fact
+    // still works without recreating the connection.
+    auto endpointManager = TransportState::Current().GetEndpointManager();
+
+    if (endpointManager == nullptr)
+    {
+        return;
+    }
+
+    auto existingEndpointDeviceId = endpointManager->FindMatchingInstantiatedEndpoint(*matchCriteria);
+
+    if (existingEndpointDeviceId.empty())
+    {
+        return;
+    }
+
+    std::vector<DEVPROPERTY> endpointDevProperties{};
+
+    if (customProperties->WriteAllProperties(endpointDevProperties) && endpointDevProperties.size() > 0)
+    {
+        LOG_IF_FAILED(m_midiDeviceManager->UpdateEndpointProperties(
+            existingEndpointDeviceId.c_str(),
+            static_cast<ULONG>(endpointDevProperties.size()),
+            endpointDevProperties.data()));
+
+        // The name above is the endpoint's. The MIDI 1.0 ports take their names from a
+        // separate table, which nothing here has rewritten, so without this a renamed
+        // device keeps its old port names. The name has to be handed over rather than
+        // read back, because the endpoint does not report it yet. An empty name puts back
+        // the one the remote supplied. Zero keeps the port count as it is, because a rename
+        // is not a reason to change it.
+        LOG_IF_FAILED(endpointManager->RefreshMidi1PortsForEndpoint(
+            std::wstring{ existingEndpointDeviceId },
+            0,
+            std::wstring{ customProperties->Name }));
+    }
+}
+
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
@@ -1182,116 +1257,51 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
         // only customizations reaches none of the places which say so.
         bool anyCustomizationAccepted{ false };
 
-        // Indexed rather than ranged, because windows.h renames IJsonValue::GetObject and
-        // JsonArray::GetObjectAt is unaffected.
-        for (uint32_t i = 0; i < updateArray.Size(); i++)
-        {
-            auto element = updateArray.GetAt(i);
-
-            // one malformed element should cost its own customization, not every one after it
-            if (element == nullptr || element.ValueType() != json::JsonValueType::Object)
+        ForEachEndpointCustomizationEntry(
+            updateArray,
+            [&](json::JsonObject const& updateObject, auto const& matchCriteria)
             {
-                continue;
-            }
+                auto customPropertiesObject = SafeGetNamedObject(
+                    updateObject, WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey);
 
-            auto updateObject = updateArray.GetObjectAt(i);
+                if (customPropertiesObject == nullptr)
+                {
+                    return;
+                }
 
-            if (updateObject == nullptr)
-            {
-                continue;
-            }
+                std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
 
-            auto matchObject = SafeGetNamedObject(
-                updateObject, WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey);
+                if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
+                {
+                    customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJsonRejectingImagePath(
+                        customPropertiesObject);
+                }
+                else
+                {
+                    customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJson(
+                        customPropertiesObject);
+                }
 
-            if (matchObject == nullptr)
-            {
-                // nothing to tie this customization to
-                continue;
-            }
+                if (customProperties == nullptr)
+                {
+                    return;
+                }
 
-            auto customPropertiesObject = SafeGetNamedObject(
-                updateObject, WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey);
+                CacheAndApplyEndpointCustomization(matchCriteria, customProperties);
 
-            if (customPropertiesObject == nullptr)
-            {
-                continue;
-            }
+                anyCustomizationAccepted = true;
 
-            auto matchCriteria = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(matchObject);
-
-            std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
-
-            if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
-            {
-                customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJsonRejectingImagePath(
-                    customPropertiesObject);
-            }
-            else
-            {
-                customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJson(
-                    customPropertiesObject);
-            }
-
-            if (matchCriteria == nullptr || customProperties == nullptr)
-            {
-                continue;
-            }
-
-            // Cached whether or not the endpoint exists yet. A network endpoint is created only
-            // when the remote answers, which is normally after this arrives, and the creation
-            // path reads this cache before it activates the device node.
-            LOG_HR_IF(E_FAIL, !m_customPropertiesCache->Add(matchCriteria, customProperties));
-
-            anyCustomizationAccepted = true;
-
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Cached endpoint customization", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(customProperties->Name.c_str(), "custom name"),
-                TraceLoggingWideString(matchCriteria->DeviceProductInstanceId.c_str(), "product instance id")
-            );
-
-            // An endpoint which is already live is updated in place, so a rename after the fact
-            // still works without recreating the connection.
-            auto endpointManager = TransportState::Current().GetEndpointManager();
-
-            if (endpointManager == nullptr)
-            {
-                continue;
-            }
-
-            auto existingEndpointDeviceId = endpointManager->FindMatchingInstantiatedEndpoint(*matchCriteria);
-
-            if (existingEndpointDeviceId.empty())
-            {
-                continue;
-            }
-
-            std::vector<DEVPROPERTY> endpointDevProperties{};
-
-            if (customProperties->WriteAllProperties(endpointDevProperties) && endpointDevProperties.size() > 0)
-            {
-                LOG_IF_FAILED(m_midiDeviceManager->UpdateEndpointProperties(
-                    existingEndpointDeviceId.c_str(),
-                    static_cast<ULONG>(endpointDevProperties.size()),
-                    endpointDevProperties.data()));
-
-                // The name above is the endpoint's. The MIDI 1.0 ports take their names from a
-                // separate table, which nothing here has rewritten, so without this a renamed
-                // device keeps its old port names. The name has to be handed over rather than
-                // read back, because the endpoint does not report it yet. Zero keeps the port
-                // count as it is, because a rename is not a reason to change it.
-                LOG_IF_FAILED(endpointManager->RefreshMidi1PortsForEndpoint(
-                    std::wstring{ existingEndpointDeviceId },
-                    0,
-                    std::wstring{ customProperties->Name }));
-            }
-        }
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Cached endpoint customization", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(customProperties->Name.c_str(), "custom name"),
+                    TraceLoggingWideString(matchCriteria->DeviceProductInstanceId.c_str(), "product instance id")
+                );
+            });
 
         if (anyCustomizationAccepted)
         {
@@ -1325,99 +1335,31 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizationRemovals(
 
         bool anyRemovalAccepted{ false };
 
-        // Indexed for the same reason as the customization loop: windows.h renames
-        // IJsonValue::GetObject, and JsonArray::GetObjectAt is unaffected.
-        for (uint32_t i = 0; i < removeArray.Size(); i++)
-        {
-            auto element = removeArray.GetAt(i);
-
-            // one malformed element should cost its own removal, not every one after it
-            if (element == nullptr || element.ValueType() != json::JsonValueType::Object)
+        ForEachEndpointCustomizationEntry(
+            removeArray,
+            [&](json::JsonObject const&, auto const& matchCriteria)
             {
-                continue;
-            }
+                // Every member defaults to the uncustomized value, and writing them sends
+                // DEVPROP_TYPE_EMPTY for each string, which deletes it. The cache replaces the
+                // entry that matches, so this both withdraws the cached customization and undoes
+                // the applied one.
+                CacheAndApplyEndpointCustomization(
+                    matchCriteria,
+                    std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties>());
 
-            auto entryObject = removeArray.GetObjectAt(i);
+                anyRemovalAccepted = true;
 
-            if (entryObject == nullptr)
-            {
-                continue;
-            }
-
-            auto matchObject = SafeGetNamedObject(
-                entryObject, WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey);
-
-            if (matchObject == nullptr)
-            {
-                // nothing to tie this removal to
-                continue;
-            }
-
-            auto matchCriteria = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(matchObject);
-
-            if (matchCriteria == nullptr)
-            {
-                continue;
-            }
-
-            // Every member defaults to the uncustomized value, and writing them sends
-            // DEVPROP_TYPE_EMPTY for each string, which deletes it. Add replaces the entry that
-            // matches, so this both withdraws the cached customization and undoes the applied one.
-            auto clearedProperties =
-                std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties>();
-
-            if (clearedProperties == nullptr)
-            {
-                continue;
-            }
-
-            LOG_HR_IF(E_FAIL, !m_customPropertiesCache->Add(matchCriteria, clearedProperties));
-
-            anyRemovalAccepted = true;
-
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Removed endpoint customization", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(matchCriteria->TransportSuppliedEndpointName.c_str(), "transport supplied name"),
-                TraceLoggingWideString(matchCriteria->DeviceProductInstanceId.c_str(), "product instance id")
-            );
-
-            auto endpointManager = TransportState::Current().GetEndpointManager();
-
-            if (endpointManager == nullptr)
-            {
-                continue;
-            }
-
-            auto existingEndpointDeviceId = endpointManager->FindMatchingInstantiatedEndpoint(*matchCriteria);
-
-            if (existingEndpointDeviceId.empty())
-            {
-                // nothing live to revert, but the cache no longer carries it
-                continue;
-            }
-
-            std::vector<DEVPROPERTY> endpointDevProperties{};
-
-            if (clearedProperties->WriteAllProperties(endpointDevProperties) && endpointDevProperties.size() > 0)
-            {
-                LOG_IF_FAILED(m_midiDeviceManager->UpdateEndpointProperties(
-                    existingEndpointDeviceId.c_str(),
-                    static_cast<ULONG>(endpointDevProperties.size()),
-                    endpointDevProperties.data()));
-
-                // An empty name here means the ports go back to the one the remote supplied,
-                // which the endpoint manager still has on record.
-                LOG_IF_FAILED(endpointManager->RefreshMidi1PortsForEndpoint(
-                    std::wstring{ existingEndpointDeviceId },
-                    0,
-                    std::wstring{ }));
-            }
-        }
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Removed endpoint customization", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(matchCriteria->TransportSuppliedEndpointName.c_str(), "transport supplied name"),
+                    TraceLoggingWideString(matchCriteria->DeviceProductInstanceId.c_str(), "product instance id")
+                );
+            });
 
         if (anyRemovalAccepted)
         {
@@ -1432,6 +1374,104 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizationRemovals(
     return S_OK;
 }
 
+
+namespace
+{
+    // One entry of the enumerateClients response: what was configured, and what the running
+    // client reports when there is one.
+    json::JsonObject BuildEnumeratedClientObject(
+        _In_ MidiNetworkClientDefinition const& definition,
+        _In_ std::shared_ptr<MidiNetworkClient> const& client)
+    {
+        json::JsonObject clientObject;
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CONFIG_ID_KEY,
+            json::JsonValue::CreateStringValue(winrt::hstring{ internal::GuidToString(definition.EntryIdentifier) }));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_MDNS_MATCH_ID_KEY,
+            json::JsonValue::CreateStringValue(definition.MatchId));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_DIRECT_KEY,
+            json::JsonValue::CreateBooleanValue(definition.IsDirectConnection()));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_ADDRESS_KEY,
+            json::JsonValue::CreateStringValue(definition.MatchDirectHostNameOrIPAddress));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_PORT_KEY,
+            json::JsonValue::CreateStringValue(definition.MatchDirectPort));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_ENTRY_STATE_KEY,
+            json::JsonValue::CreateStringValue(EntryStateToString(definition.State)));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,
+            json::JsonValue::CreateBooleanValue(definition.CreateMidi1Ports));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_FALLBACK_MIDI1_PORT_COUNT_KEY,
+            json::JsonValue::CreateNumberValue(definition.FallbackMidi1PortCount));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY,
+            json::JsonValue::CreateBooleanValue(client != nullptr && client->IsSessionActive()));
+
+        if (client == nullptr)
+        {
+            return clientObject;
+        }
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_ADDRESS_KEY,
+            json::JsonValue::CreateStringValue(client->RemoteAddress()));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_PORT_KEY,
+            json::JsonValue::CreateStringValue(client->RemotePort()));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LOCAL_ADDRESS_KEY,
+            json::JsonValue::CreateStringValue(client->LocalAddress()));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LOCAL_PORT_KEY,
+            json::JsonValue::CreateStringValue(client->LocalPort()));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_UMP_ENDPOINT_ID_KEY,
+            json::JsonValue::CreateStringValue(client->GetEndpointDeviceId()));
+
+        // TODO: possibly move this to a different command to make the payload smaller
+        auto latency = client->GetAndResetAverageLatencyTicks();
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CURRENT_LATENCY_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(latency))); // in theory, this could overflow, but no one has latency that high
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_NETWORK_PACKETS_SENT_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(client->GetTotalNetworkPacketsSent())));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_NETWORK_PACKETS_RECEIVED_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(client->GetTotalNetworkPacketsReceived())));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_COUNT_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(client->GetRetransmitCount())));    // need to ensure we don't overflow here with uint32_t
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(client->GetRetransmitRequestCount())));     // need to ensure we don't overflow here with uint32_t
+
+        return clientObject;
+    }
+}
 
 //
 // Response Object Payload
@@ -1465,108 +1505,11 @@ try
     // Driven by the configured definitions rather than the live clients, so an entry which is
     // not currently connected still appears. A direct connection which gave up would otherwise
     // vanish from the list entirely.
-    for (auto const& def : TransportState::Current().GetPendingClientDefinitions())
+    for (auto const& definition : TransportState::Current().GetClientDefinitions())
     {
-        if (def == nullptr)
-        {
-            continue;
-        }
-
-        json::JsonObject clientObject;
-
-        auto client = TransportState::Current().GetClient(def->EntryIdentifier);
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CONFIG_ID_KEY,
-            json::JsonValue::CreateStringValue(winrt::hstring{ internal::GuidToString(def->EntryIdentifier) }));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_MDNS_MATCH_ID_KEY,
-            json::JsonValue::CreateStringValue(def->MatchId));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_DIRECT_KEY,
-            json::JsonValue::CreateBooleanValue(def->IsDirectConnection()));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_ADDRESS_KEY,
-            json::JsonValue::CreateStringValue(def->MatchDirectHostNameOrIPAddress));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_PORT_KEY,
-            json::JsonValue::CreateStringValue(def->MatchDirectPort));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_ENTRY_STATE_KEY,
-            json::JsonValue::CreateStringValue(EntryStateToString(def->State)));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,
-            json::JsonValue::CreateBooleanValue(def->CreateMidi1Ports));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_FALLBACK_MIDI1_PORT_COUNT_KEY,
-            json::JsonValue::CreateNumberValue(def->FallbackMidi1PortCount));
-
-        if (client == nullptr)
-        {
-            clientObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY,
-                json::JsonValue::CreateBooleanValue(false));
-
-            clientsArray.Append(clientObject);
-
-            continue;
-        }
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY,
-            json::JsonValue::CreateBooleanValue(client->IsSessionActive()));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_ADDRESS_KEY,
-            json::JsonValue::CreateStringValue(client->RemoteAddress()));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_PORT_KEY,
-            json::JsonValue::CreateStringValue(client->RemotePort()));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LOCAL_ADDRESS_KEY,
-            json::JsonValue::CreateStringValue(client->LocalAddress()));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LOCAL_PORT_KEY,
-            json::JsonValue::CreateStringValue(client->LocalPort()));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_UMP_ENDPOINT_ID_KEY,
-            json::JsonValue::CreateStringValue(client->GetEndpointDeviceId()));
-
-        // TODO: possibly move this to a different command to make the payload smaller
-        auto latency = client->GetAndResetAverageLatencyTicks();
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CURRENT_LATENCY_KEY,
-            json::JsonValue::CreateNumberValue(static_cast<double>(latency))); // in theory, this could overflow, but no one has latency that high
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_NETWORK_PACKETS_SENT_KEY,
-            json::JsonValue::CreateNumberValue(static_cast<double>(client->GetTotalNetworkPacketsSent()))); 
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_NETWORK_PACKETS_RECEIVED_KEY,
-            json::JsonValue::CreateNumberValue(static_cast<double>(client->GetTotalNetworkPacketsReceived())));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_COUNT_KEY,
-            json::JsonValue::CreateNumberValue(static_cast<double>(client->GetRetransmitCount())));    // need to ensure we don't overflow here with uint32_t
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY,
-            json::JsonValue::CreateNumberValue(static_cast<double>(client->GetRetransmitRequestCount())));     // need to ensure we don't overflow here with uint32_t
-
-        clientsArray.Append(clientObject);
+        clientsArray.Append(BuildEnumeratedClientObject(
+            definition,
+            TransportState::Current().GetClient(definition.EntryIdentifier)));
     }
 
 
@@ -1674,23 +1617,79 @@ catch (...)
 }
 
 
-_Use_decl_annotations_
-HRESULT 
-CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateHosts(
-    json::JsonObject& responseObject) noexcept
-try
+namespace
 {
-    json::JsonArray hostsArray;
+    // One remote client of a host, for enumerateHosts
+    json::JsonObject BuildEnumeratedHostConnectionObject(
+        _In_ std::shared_ptr<MidiNetworkHostConnection> const& connection,
+        _In_ MidiNetworkRemoteClientIdentity const& identity)
+    {
+        json::JsonObject connectionObject;
 
-    for (auto const host : TransportState::Current().GetHosts())
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
+            json::JsonValue::CreateStringValue(identity.UmpEndpointName));
+
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY,
+            json::JsonValue::CreateStringValue(identity.ProductInstanceId));
+
+        auto remoteHostName = connection->GetRemoteHostName();
+
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY,
+            json::JsonValue::CreateStringValue(remoteHostName != nullptr ? remoteHostName.CanonicalName() : L""));
+
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_PORT_KEY,
+            json::JsonValue::CreateStringValue(connection->GetRemotePort()));
+
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_SESSION_ACTIVE_KEY,
+            json::JsonValue::CreateBooleanValue(connection->IsSessionActive()));
+
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_PENDING_APPROVAL_KEY,
+            json::JsonValue::CreateBooleanValue(connection->IsAwaitingUserApproval()));
+
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_UMP_ENDPOINT_ID_KEY,
+            json::JsonValue::CreateStringValue(connection->GetEndpointDeviceId()));
+
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_CURRENT_LATENCY_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(connection->GetAndResetAverageLatencyTicks())));
+
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_NETWORK_PACKETS_SENT_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(connection->GetTotalNetworkPacketsSent())));
+
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_NETWORK_PACKETS_RECEIVED_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(connection->GetTotalNetworkPacketsReceived())));
+
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_RETRANSMIT_COUNT_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(connection->GetRetransmitCount())));
+
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(connection->GetRetransmitRequestCount())));
+
+        return connectionObject;
+    }
+
+    // One host, for enumerateHosts: what was configured, what the running host reports, and the
+    // remote clients reaching it.
+    json::JsonObject BuildEnumeratedHostObject(
+        _In_ std::shared_ptr<MidiNetworkHost> const& host,
+        _In_ MidiNetworkHostDefinition const& definition)
     {
         json::JsonObject hostObject;
 
-        auto def = host->GetDefinition();
-
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIG_ID_KEY,
-            json::JsonValue::CreateStringValue(winrt::hstring{ internal::GuidToString(def.EntryIdentifier) }));
+            json::JsonValue::CreateStringValue(winrt::hstring{ internal::GuidToString(definition.EntryIdentifier) }));
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_IS_ENABLED_KEY,
@@ -1707,11 +1706,11 @@ try
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIGURED_PORT_KEY,
             json::JsonValue::CreateStringValue(
-                def.UseAutomaticPortAllocation ? MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO : def.Port));
+                definition.UseAutomaticPortAllocation ? MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO : definition.Port));
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ALLOW_PORT_FALLBACK_KEY,
-            json::JsonValue::CreateBooleanValue(def.AllowPortFallback));
+            json::JsonValue::CreateBooleanValue(definition.AllowPortFallback));
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PORT_FALLBACK_USED_KEY,
@@ -1723,23 +1722,23 @@ try
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NAME_KEY,
-            json::JsonValue::CreateStringValue(def.UmpEndpointName));
+            json::JsonValue::CreateStringValue(definition.UmpEndpointName));
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PRODUCT_INSTANCE_ID_KEY,
-            json::JsonValue::CreateStringValue(def.ProductInstanceId));
+            json::JsonValue::CreateStringValue(definition.ProductInstanceId));
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,
-            json::JsonValue::CreateBooleanValue(def.CreateMidi1Ports));
+            json::JsonValue::CreateBooleanValue(definition.CreateMidi1Ports));
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_FALLBACK_MIDI1_PORT_COUNT_KEY,
-            json::JsonValue::CreateNumberValue(def.FallbackMidi1PortCount));
+            json::JsonValue::CreateNumberValue(definition.FallbackMidi1PortCount));
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY,
-            json::JsonValue::CreateStringValue(def.ServiceInstanceName));
+            json::JsonValue::CreateStringValue(definition.ServiceInstanceName));
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_SERVICE_INSTANCE_NAME_KEY,
@@ -1752,7 +1751,7 @@ try
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_REMOTE_CLIENT_POLICY_KEY,
             json::JsonValue::CreateStringValue(
-                def.RemoteClientPolicy == MidiNetworkRemoteClientPolicy::PolicyRequireApproval ?
+                definition.RemoteClientPolicy == MidiNetworkRemoteClientPolicy::PolicyRequireApproval ?
                 MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_REQUIRE_APPROVAL :
                 MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_ALLOW_ANY));
 
@@ -1761,14 +1760,12 @@ try
         // list is how a caller learns a client went away; nothing tracks departures separately.
         json::JsonArray connectionsArray;
 
-        for (auto const& connection : TransportState::Current().GetHostConnectionsForHost(def.EntryIdentifier))
+        for (auto const& connection : TransportState::Current().GetHostConnectionsForHost(definition.EntryIdentifier))
         {
             if (connection == nullptr)
             {
                 continue;
             }
-
-            json::JsonObject connectionObject;
 
             auto identity = connection->GetRemoteClientIdentity();
 
@@ -1782,62 +1779,37 @@ try
                 continue;
             }
 
-            connectionObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
-                json::JsonValue::CreateStringValue(identity.UmpEndpointName));
-
-            connectionObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY,
-                json::JsonValue::CreateStringValue(identity.ProductInstanceId));
-
-            auto remoteHostName = connection->GetRemoteHostName();
-
-            connectionObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY,
-                json::JsonValue::CreateStringValue(remoteHostName != nullptr ? remoteHostName.CanonicalName() : L""));
-
-            connectionObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_PORT_KEY,
-                json::JsonValue::CreateStringValue(connection->GetRemotePort()));
-
-            connectionObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_SESSION_ACTIVE_KEY,
-                json::JsonValue::CreateBooleanValue(connection->IsSessionActive()));
-
-            connectionObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_PENDING_APPROVAL_KEY,
-                json::JsonValue::CreateBooleanValue(connection->IsAwaitingUserApproval()));
-
-            connectionObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_UMP_ENDPOINT_ID_KEY,
-                json::JsonValue::CreateStringValue(connection->GetEndpointDeviceId()));
-
-            connectionObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_CURRENT_LATENCY_KEY,
-                json::JsonValue::CreateNumberValue(static_cast<double>(connection->GetAndResetAverageLatencyTicks())));
-
-            connectionObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_NETWORK_PACKETS_SENT_KEY,
-                json::JsonValue::CreateNumberValue(static_cast<double>(connection->GetTotalNetworkPacketsSent())));
-
-            connectionObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_NETWORK_PACKETS_RECEIVED_KEY,
-                json::JsonValue::CreateNumberValue(static_cast<double>(connection->GetTotalNetworkPacketsReceived())));
-
-            connectionObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_RETRANSMIT_COUNT_KEY,
-                json::JsonValue::CreateNumberValue(static_cast<double>(connection->GetRetransmitCount())));
-
-            connectionObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY,
-                json::JsonValue::CreateNumberValue(static_cast<double>(connection->GetRetransmitRequestCount())));
-
-            connectionsArray.Append(connectionObject);
+            connectionsArray.Append(BuildEnumeratedHostConnectionObject(connection, identity));
         }
 
         hostObject.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONNECTIONS_ARRAY_KEY, connectionsArray);
 
-        hostsArray.Append(hostObject);
+        return hostObject;
+    }
+}
+
+_Use_decl_annotations_
+HRESULT 
+CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateHosts(
+    json::JsonObject& responseObject) noexcept
+try
+{
+    json::JsonArray hostsArray;
+
+    for (auto const& host : TransportState::Current().GetHosts())
+    {
+        if (host == nullptr)
+        {
+            continue;
+        }
+
+        // The stored definition is the one configuration updates change. The host keeps the
+        // copy it started with, and only falls back to it if the entry has just been removed.
+        auto definition = TransportState::Current().GetHostDefinition(host->EntryIdentifier());
+
+        hostsArray.Append(BuildEnumeratedHostObject(
+            host,
+            definition.has_value() ? *definition : host->GetDefinition()));
     }
 
 
@@ -2070,22 +2042,47 @@ catch (...)
 }
 
 
-_Use_decl_annotations_
-HRESULT
-CMidi2NetworkMidiConfigurationManager::ProcessCommand(
-    json::JsonObject const& transportObject,
-    json::JsonObject& responseObject) noexcept
-try
+namespace
 {
-    auto commandHelper = internal::MidiTransportCommandHelper::ParseCommand(transportObject);
-
-    if (commandHelper.Command().empty())
+    // Only for an argument the command table has already required, so it is known to be there
+    std::wstring const& RequiredCommandArgument(
+        _In_ internal::MidiTransportCommandHelper& commandHelper,
+        _In_ std::wstring const& key)
     {
-        internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_MISSING_COMMAND, internal::ResourceGetWString(IDS_ERROR_MISSING_COMMAND));
-
-        // we S_OK this because the response object is valid and should be read
+        return commandHelper.Arguments()->at(key);
     }
-    else if (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_QUERY_CAPABILITIES)
+
+    // An entry identifier which is not a GUID doesn't fail the command. It is reported in the
+    // response, which the caller still reads, and false tells the command to stop there.
+    bool TryReadEntryIdentifierArgument(
+        _In_ internal::MidiTransportCommandHelper& commandHelper,
+        _In_ std::wstring const& key,
+        _Inout_ json::JsonObject& responseObject,
+        _Out_ winrt::guid& entryIdentifier)
+    {
+        if (TryParseEntryIdentifier(winrt::hstring{ RequiredCommandArgument(commandHelper, key) }, entryIdentifier))
+        {
+            return true;
+        }
+
+        internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER, internal::ResourceGetWString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER));
+
+        return false;
+    }
+
+    // Which remote client an approval, denial, disconnect or forget is about
+    MidiNetworkRemoteClientIdentity RemoteClientIdentityArgument(
+        _In_ internal::MidiTransportCommandHelper& commandHelper)
+    {
+        MidiNetworkRemoteClientIdentity identity{};
+
+        identity.UmpEndpointName = internal::TrimmedWStringCopy(RequiredCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY));
+        identity.ProductInstanceId = internal::TrimmedWStringCopy(RequiredCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY));
+
+        return identity;
+    }
+
+    std::map<std::wstring, bool> NetworkTransportCapabilities()
     {
         std::map<std::wstring, bool> capabilities{};
 
@@ -2121,295 +2118,307 @@ try
 
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_CAPABILITY_CUSTOM_ENDPOINT_NAME_ON_CREATE, true);
 
+        return capabilities;
+    }
+}
 
-        internal::SetConfigurationResponseObjectSuccess(responseObject);
-        internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
-    }
-    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_CLIENTS)
-    {
-        RETURN_IF_FAILED(RunCommandEnumerateClients(responseObject));
-    }
-    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_PENDING_REMOTE_CLIENTS)
-    {
-        RETURN_IF_FAILED(RunCommandGetPendingRemoteClients(responseObject));
-    }
-    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_HOSTS)
-    {
-        RETURN_IF_FAILED(RunCommandEnumerateHosts(responseObject));
-    }
-    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_TRANSPORT_SETTINGS)
-    {
-        RETURN_IF_FAILED(RunCommandGetTransportSettings(responseObject));
-    }
-    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_START_HOST)
-    {
-        auto arg = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER);
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiConfigurationManager::ProcessCommand(
+    json::JsonObject const& transportObject,
+    json::JsonObject& responseObject) noexcept
+try
+{
+    using CommandHelper = internal::MidiTransportCommandHelper;
+    using Self = CMidi2NetworkMidiConfigurationManager;
 
-        if (arg != commandHelper.Arguments()->end())
+    struct NetworkCommand
+    {
+        std::wstring_view Verb;
+
+        // A command missing any of these fails with E_INVALIDARG
+        std::vector<std::wstring_view> RequiredArguments;
+
+        HRESULT(*Run)(Self& self, CommandHelper& commandHelper, json::JsonObject& responseObject);
+    };
+
+    static auto const runHostCommand = [](
+        CommandHelper& commandHelper,
+        json::JsonObject& responseObject,
+        auto&& run) -> HRESULT
         {
             winrt::guid hostEntryIdentifier{};
 
-            if (!TryParseEntryIdentifier(winrt::hstring{ arg->second }, hostEntryIdentifier))
+            if (!TryReadEntryIdentifierArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER, responseObject, hostEntryIdentifier))
             {
-                internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER, internal::ResourceGetWString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER));
                 return S_OK;
             }
 
-            RETURN_IF_FAILED(RunCommandStartHost(hostEntryIdentifier, responseObject));
-        }
-        else
+            return run(hostEntryIdentifier);
+        };
+
+    static auto const runRemoteClientDecision = [](
+        Self& self,
+        CommandHelper& commandHelper,
+        json::JsonObject& responseObject,
+        bool const approve) -> HRESULT
         {
-            RETURN_IF_FAILED(E_INVALIDARG);
-        }
-    }
-    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_STOP_HOST)
-    {
-        auto arg = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER);
-
-        if (arg != commandHelper.Arguments()->end())
-        {
-            winrt::guid hostEntryIdentifier{};
-
-            if (!TryParseEntryIdentifier(winrt::hstring{ arg->second }, hostEntryIdentifier))
-            {
-                internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER, internal::ResourceGetWString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER));
-                return S_OK;
-            }
-
-            RETURN_IF_FAILED(RunCommandStopHost(hostEntryIdentifier, responseObject));
-        }
-        else
-        {
-            RETURN_IF_FAILED(E_INVALIDARG);
-        }
-    }
-    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_REMOVE_HOST)
-    {
-        auto arg = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER);
-
-        if (arg != commandHelper.Arguments()->end())
-        {
-            winrt::guid hostEntryIdentifier{};
-
-            if (!TryParseEntryIdentifier(winrt::hstring{ arg->second }, hostEntryIdentifier))
-            {
-                internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER, internal::ResourceGetWString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER));
-                return S_OK;
-            }
-
-            RETURN_IF_FAILED(RunCommandRemoveHost(hostEntryIdentifier, responseObject));
-        }
-        else
-        {
-            RETURN_IF_FAILED(E_INVALIDARG);
-        }
-    }
-    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT)
-    {
-        auto entryId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER);
-        auto addr = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_ADDRESS);
-        auto port = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_PORT);
-        auto name = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME);
-
-        if (entryId != commandHelper.Arguments()->end() &&
-            addr != commandHelper.Arguments()->end() &&
-            port != commandHelper.Arguments()->end() &&
-            name != commandHelper.Arguments()->end())
-        {
-            winrt::guid clientEntryIdentifier{};
-
-            if (!TryParseEntryIdentifier(winrt::hstring{ entryId->second }, clientEntryIdentifier))
-            {
-                internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER, internal::ResourceGetWString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER));
-                return S_OK;
-            }
-
-            RETURN_IF_FAILED(RunCommandConnectDirect(
-                clientEntryIdentifier,
-                addr->second.c_str(), 
-                port->second.c_str(), 
-                name->second.c_str(),
-                OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY),
-                OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT),
-                OptionalCommandArgumentByte(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM),
-                responseObject));
-        }
-        else
-        {
-            RETURN_IF_FAILED(E_INVALIDARG);
-        }
-    }
-    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_MDNS)
-    {
-        auto entryId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER);
-        auto matchId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_MATCH_ID);
-        auto name = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME);
-
-        if (entryId != commandHelper.Arguments()->end() &&
-            matchId != commandHelper.Arguments()->end() &&
-            name != commandHelper.Arguments()->end())
-        {
-            winrt::guid clientEntryIdentifier{};
-
-            if (!TryParseEntryIdentifier(winrt::hstring{ entryId->second }, clientEntryIdentifier))
-            {
-                internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER, internal::ResourceGetWString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER));
-                return S_OK;
-            }
-
-            RETURN_IF_FAILED(RunCommandConnectMdns(
-                clientEntryIdentifier,
-                winrt::hstring{ internal::TrimmedWStringCopy(matchId->second) },
-                name->second.c_str(),
-                OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY),
-                OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT),
-                OptionalCommandArgumentByte(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM),
-                responseObject));
-        }
-        else
-        {
-            RETURN_IF_FAILED(E_INVALIDARG);
-        }
-    }
-    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT)
-    {
-        auto entryId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER);
-
-        if (entryId != commandHelper.Arguments()->end())
-        {
-            winrt::guid clientEntryIdentifier{};
-
-            if (!TryParseEntryIdentifier(winrt::hstring{ entryId->second }, clientEntryIdentifier))
-            {
-                internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER, internal::ResourceGetWString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER));
-                return S_OK;
-            }
-
-            RETURN_IF_FAILED(RunCommandDisconnectClient(
-                clientEntryIdentifier,
-                responseObject));
-        }
-        else
-        {
-            RETURN_IF_FAILED(E_INVALIDARG);
-        }
-    }
-    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT ||
-             commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DENY_REMOTE_CLIENT)
-    {
-        bool const approve = (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT);
-
-        auto hostEntryId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER);
-        auto name = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY);
-        auto productInstanceId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY);
-        auto scope = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_APPROVAL_SCOPE);
-
-        if (hostEntryId != commandHelper.Arguments()->end() &&
-            name != commandHelper.Arguments()->end() &&
-            productInstanceId != commandHelper.Arguments()->end() &&
-            scope != commandHelper.Arguments()->end())
-        {
-            auto scopeValue = internal::ToLowerTrimmedWStringCopy(scope->second);
+            auto const scope = internal::ToLowerTrimmedWStringCopy(
+                RequiredCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_APPROVAL_SCOPE));
 
             // Only "always" is written down. "once" authorizes the waiting connection and
             // nothing else, and "untilRestart" is a memory-only denial by definition.
-            bool const persist = (scopeValue == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_APPROVAL_SCOPE_ALWAYS);
+            bool const persist = (scope == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_APPROVAL_SCOPE_ALWAYS);
 
-            MidiNetworkRemoteClientIdentity identity{};
+            auto const identity = RemoteClientIdentityArgument(commandHelper);
 
-            identity.UmpEndpointName = internal::TrimmedWStringCopy(name->second);
-            identity.ProductInstanceId = internal::TrimmedWStringCopy(productInstanceId->second);
+            return runHostCommand(commandHelper, responseObject, [&](winrt::guid const& hostEntryIdentifier)
+                {
+                    return self.RunCommandRemoteClientDecision(hostEntryIdentifier, identity, approve, persist, responseObject);
+                });
+        };
 
-            winrt::guid hostEntryIdentifier{};
-
-            if (!TryParseEntryIdentifier(winrt::hstring{ hostEntryId->second }, hostEntryIdentifier))
-            {
-                internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER, internal::ResourceGetWString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER));
-                return S_OK;
-            }
-
-            RETURN_IF_FAILED(RunCommandRemoteClientDecision(
-                hostEntryIdentifier,
-                identity,
-                approve,
-                persist,
-                responseObject));
-        }
-        else
-        {
-            RETURN_IF_FAILED(E_INVALIDARG);
-        }
-    }
-    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_REMOTE_CLIENT)
+    static std::vector<NetworkCommand> const commands
     {
-        auto hostEntryId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER);
-        auto name = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY);
-        auto productInstanceId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY);
-
-        if (hostEntryId != commandHelper.Arguments()->end() &&
-            name != commandHelper.Arguments()->end() &&
-            productInstanceId != commandHelper.Arguments()->end())
         {
-            MidiNetworkRemoteClientIdentity identity{};
-
-            identity.UmpEndpointName = internal::TrimmedWStringCopy(name->second);
-            identity.ProductInstanceId = internal::TrimmedWStringCopy(productInstanceId->second);
-
-            winrt::guid hostEntryIdentifier{};
-
-            if (!TryParseEntryIdentifier(winrt::hstring{ hostEntryId->second }, hostEntryIdentifier))
+            MIDI_CONFIG_JSON_TRANSPORT_COMMAND_QUERY_CAPABILITIES, { },
+            [](Self&, CommandHelper&, json::JsonObject& responseObject) -> HRESULT
             {
-                internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER, internal::ResourceGetWString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER));
+                auto capabilities = NetworkTransportCapabilities();
+
+                internal::SetConfigurationResponseObjectSuccess(responseObject);
+                internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
+
                 return S_OK;
             }
-
-            RETURN_IF_FAILED(RunCommandDisconnectRemoteClient(
-                hostEntryIdentifier,
-                identity,
-                responseObject));
-        }
-        else
+        },
         {
-            RETURN_IF_FAILED(E_INVALIDARG);
-        }
-    }
-    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_FORGET_REMOTE_CLIENT)
+            MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_CLIENTS, { },
+            [](Self& self, CommandHelper&, json::JsonObject& responseObject) -> HRESULT
+            {
+                return self.RunCommandEnumerateClients(responseObject);
+            }
+        },
+        {
+            MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_PENDING_REMOTE_CLIENTS, { },
+            [](Self& self, CommandHelper&, json::JsonObject& responseObject) -> HRESULT
+            {
+                return self.RunCommandGetPendingRemoteClients(responseObject);
+            }
+        },
+        {
+            MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_HOSTS, { },
+            [](Self& self, CommandHelper&, json::JsonObject& responseObject) -> HRESULT
+            {
+                return self.RunCommandEnumerateHosts(responseObject);
+            }
+        },
+        {
+            MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_TRANSPORT_SETTINGS, { },
+            [](Self& self, CommandHelper&, json::JsonObject& responseObject) -> HRESULT
+            {
+                return self.RunCommandGetTransportSettings(responseObject);
+            }
+        },
+        {
+            MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_START_HOST,
+            { MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER },
+            [](Self& self, CommandHelper& commandHelper, json::JsonObject& responseObject) -> HRESULT
+            {
+                return runHostCommand(commandHelper, responseObject, [&](winrt::guid const& hostEntryIdentifier)
+                    {
+                        return self.RunCommandStartHost(hostEntryIdentifier, responseObject);
+                    });
+            }
+        },
+        {
+            MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_STOP_HOST,
+            { MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER },
+            [](Self& self, CommandHelper& commandHelper, json::JsonObject& responseObject) -> HRESULT
+            {
+                return runHostCommand(commandHelper, responseObject, [&](winrt::guid const& hostEntryIdentifier)
+                    {
+                        return self.RunCommandStopHost(hostEntryIdentifier, responseObject);
+                    });
+            }
+        },
+        {
+            MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_REMOVE_HOST,
+            { MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER },
+            [](Self& self, CommandHelper& commandHelper, json::JsonObject& responseObject) -> HRESULT
+            {
+                return runHostCommand(commandHelper, responseObject, [&](winrt::guid const& hostEntryIdentifier)
+                    {
+                        return self.RunCommandRemoveHost(hostEntryIdentifier, responseObject);
+                    });
+            }
+        },
+        {
+            MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT,
+            {
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_ADDRESS,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_PORT,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME
+            },
+            [](Self& self, CommandHelper& commandHelper, json::JsonObject& responseObject) -> HRESULT
+            {
+                winrt::guid clientEntryIdentifier{};
+
+                if (!TryReadEntryIdentifierArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, responseObject, clientEntryIdentifier))
+                {
+                    return S_OK;
+                }
+
+                return self.RunCommandConnectDirect(
+                    clientEntryIdentifier,
+                    RequiredCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_ADDRESS).c_str(),
+                    RequiredCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_PORT).c_str(),
+                    RequiredCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME).c_str(),
+                    OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY),
+                    OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT),
+                    OptionalCommandArgumentByte(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM),
+                    responseObject);
+            }
+        },
+        {
+            MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_MDNS,
+            {
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_MATCH_ID,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME
+            },
+            [](Self& self, CommandHelper& commandHelper, json::JsonObject& responseObject) -> HRESULT
+            {
+                winrt::guid clientEntryIdentifier{};
+
+                if (!TryReadEntryIdentifierArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, responseObject, clientEntryIdentifier))
+                {
+                    return S_OK;
+                }
+
+                return self.RunCommandConnectMdns(
+                    clientEntryIdentifier,
+                    winrt::hstring{ internal::TrimmedWStringCopy(RequiredCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_MATCH_ID)) },
+                    RequiredCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME).c_str(),
+                    OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY),
+                    OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT),
+                    OptionalCommandArgumentByte(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM),
+                    responseObject);
+            }
+        },
+        {
+            MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT,
+            { MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER },
+            [](Self& self, CommandHelper& commandHelper, json::JsonObject& responseObject) -> HRESULT
+            {
+                winrt::guid clientEntryIdentifier{};
+
+                if (!TryReadEntryIdentifierArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, responseObject, clientEntryIdentifier))
+                {
+                    return S_OK;
+                }
+
+                return self.RunCommandDisconnectClient(clientEntryIdentifier, responseObject);
+            }
+        },
+        {
+            MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT,
+            {
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_APPROVAL_SCOPE
+            },
+            [](Self& self, CommandHelper& commandHelper, json::JsonObject& responseObject) -> HRESULT
+            {
+                return runRemoteClientDecision(self, commandHelper, responseObject, true);
+            }
+        },
+        {
+            MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DENY_REMOTE_CLIENT,
+            {
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_APPROVAL_SCOPE
+            },
+            [](Self& self, CommandHelper& commandHelper, json::JsonObject& responseObject) -> HRESULT
+            {
+                return runRemoteClientDecision(self, commandHelper, responseObject, false);
+            }
+        },
+        {
+            MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_REMOTE_CLIENT,
+            {
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY
+            },
+            [](Self& self, CommandHelper& commandHelper, json::JsonObject& responseObject) -> HRESULT
+            {
+                auto const identity = RemoteClientIdentityArgument(commandHelper);
+
+                return runHostCommand(commandHelper, responseObject, [&](winrt::guid const& hostEntryIdentifier)
+                    {
+                        return self.RunCommandDisconnectRemoteClient(hostEntryIdentifier, identity, responseObject);
+                    });
+            }
+        },
+        {
+            MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_FORGET_REMOTE_CLIENT,
+            {
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY
+            },
+            [](Self& self, CommandHelper& commandHelper, json::JsonObject& responseObject) -> HRESULT
+            {
+                auto const identity = RemoteClientIdentityArgument(commandHelper);
+
+                return runHostCommand(commandHelper, responseObject, [&](winrt::guid const& hostEntryIdentifier)
+                    {
+                        return self.RunCommandForgetRemoteClient(hostEntryIdentifier, identity, responseObject);
+                    });
+            }
+        },
+    };
+
+    auto commandHelper = CommandHelper::ParseCommand(transportObject);
+    auto const verb = commandHelper.Command();
+
+    if (verb.empty())
     {
-        auto hostEntryId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER);
-        auto name = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY);
-        auto productInstanceId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY);
+        internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_MISSING_COMMAND, internal::ResourceGetWString(IDS_ERROR_MISSING_COMMAND));
 
-        if (hostEntryId != commandHelper.Arguments()->end() &&
-            name != commandHelper.Arguments()->end() &&
-            productInstanceId != commandHelper.Arguments()->end())
-        {
-            MidiNetworkRemoteClientIdentity identity{};
-
-            identity.UmpEndpointName = internal::TrimmedWStringCopy(name->second);
-            identity.ProductInstanceId = internal::TrimmedWStringCopy(productInstanceId->second);
-
-            winrt::guid hostEntryIdentifier{};
-
-            if (!TryParseEntryIdentifier(winrt::hstring{ hostEntryId->second }, hostEntryIdentifier))
-            {
-                internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER, internal::ResourceGetWString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER));
-                return S_OK;
-            }
-
-            RETURN_IF_FAILED(RunCommandForgetRemoteClient(
-                hostEntryIdentifier,
-                identity,
-                responseObject));
-        }
-        else
-        {
-            RETURN_IF_FAILED(E_INVALIDARG);
-        }
+        // we S_OK this because the response object is valid and should be read
+        return S_OK;
     }
-    else
+
+    auto const command = std::find_if(
+        commands.begin(),
+        commands.end(),
+        [&verb](NetworkCommand const& candidate)
+        {
+            return candidate.Verb == verb;
+        });
+
+    if (command == commands.end())
     {
         internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_UNRECOGNIZED_COMMAND, internal::ResourceGetWString(IDS_ERROR_UNRECOGNIZED_COMMAND));
+
+        return S_OK;
     }
+
+    for (auto const& requiredArgument : command->RequiredArguments)
+    {
+        if (commandHelper.Arguments()->find(std::wstring{ requiredArgument }) == commandHelper.Arguments()->end())
+        {
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
+    }
+
+    RETURN_IF_FAILED(command->Run(*this, commandHelper, responseObject));
 
     // we return S_OK no matter what, so the response object will be parsed
     return S_OK;
@@ -2631,16 +2640,27 @@ try
                 }
             }
 
-            for (auto const& definition : TransportState::Current().GetPendingHostDefinitions())
-            {
-                if (definition == nullptr || definition->EntryIdentifier != entryIdentifier) continue;
+            auto definition = TransportState::Current().GetHostDefinition(entryIdentifier);
 
-                applyToDefinition(entry, *definition, endpointDeviceIds);
+            if (!definition.has_value()) continue;
 
-                if (auto host = TransportState::Current().GetHost(entryIdentifier); host != nullptr)
+            // Changed on a copy and written back, so no other thread reads a half-applied update
+            applyToDefinition(entry, *definition, endpointDeviceIds);
+
+            LOG_IF_FAILED(TransportState::Current().UpdateHostDefinition(
+                entryIdentifier,
+                [&definition](MidiNetworkHostDefinition& stored)
                 {
-                    host->SetFallbackMidi1PortCount(definition->FallbackMidi1PortCount);
-                }
+                    stored.CustomEndpointName = definition->CustomEndpointName;
+                    stored.CreateMidi1Ports = definition->CreateMidi1Ports;
+                    stored.FallbackMidi1PortCount = definition->FallbackMidi1PortCount;
+                }));
+
+            // A running host has its own copy, taken when it started
+            if (auto host = TransportState::Current().GetHost(entryIdentifier); host != nullptr)
+            {
+                host->SetFallbackMidi1PortCount(definition->FallbackMidi1PortCount);
+                host->SetCreateMidi1Ports(definition->CreateMidi1Ports);
             }
         }
     }
@@ -2669,18 +2689,26 @@ try
                 }
             }
 
-            // The pending definitions are what the endpoint creator builds from, and what survives
-            // a reconnect, so they are updated whether or not a connection is up right now.
-            for (auto const& definition : TransportState::Current().GetPendingClientDefinitions())
-            {
-                if (definition == nullptr || definition->EntryIdentifier != entryIdentifier) continue;
+            // The definitions are what the endpoint creator builds from, and what survives a
+            // reconnect, so they are updated whether or not a connection is up right now.
+            auto definition = TransportState::Current().GetClientDefinition(entryIdentifier);
 
-                applyToDefinition(entry, *definition, endpointDeviceIds);
+            if (!definition.has_value()) continue;
 
-                if (auto client = TransportState::Current().GetClient(entryIdentifier); client != nullptr)
+            applyToDefinition(entry, *definition, endpointDeviceIds);
+
+            LOG_IF_FAILED(TransportState::Current().UpdateClientDefinition(
+                entryIdentifier,
+                [&definition](MidiNetworkClientDefinition& stored)
                 {
-                    client->SetFallbackMidi1PortCount(definition->FallbackMidi1PortCount);
-                }
+                    stored.CustomEndpointName = definition->CustomEndpointName;
+                    stored.CreateMidi1Ports = definition->CreateMidi1Ports;
+                    stored.FallbackMidi1PortCount = definition->FallbackMidi1PortCount;
+                }));
+
+            if (auto client = TransportState::Current().GetClient(entryIdentifier); client != nullptr)
+            {
+                client->SetFallbackMidi1PortCount(definition->FallbackMidi1PortCount);
             }
         }
     }
@@ -2699,6 +2727,291 @@ catch (...)
     );
 
     return E_FAIL;
+}
+
+
+_Use_decl_annotations_
+void
+CMidi2NetworkMidiConfigurationManager::ApplyTransportSettings(
+    json::JsonObject const& transportSettingsSection)
+{
+    bool anySettingAdjusted{ false };
+
+    auto const fecPackets = ReadClampedTransportSetting(
+        transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_FEC_PACKETS_KEY,
+        MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT,
+        MIDI_NETWORK_FEC_PACKET_COUNT_LOWER_BOUND, MIDI_NETWORK_FEC_PACKET_COUNT_UPPER_BOUND,
+        anySettingAdjusted);
+
+    auto const retransmitBuffer = ReadClampedTransportSetting(
+        transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_RETRANSMIT_BUFFER_SIZE_KEY,
+        MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT,
+        MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_LOWER_BOUND, MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_UPPER_BOUND,
+        anySettingAdjusted);
+
+    auto const outboundPingInterval = ReadClampedTransportSetting(
+        transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_OUTBOUND_PING_INTERVAL_KEY,
+        MIDI_NETWORK_OUTBOUND_PING_INTERVAL_DEFAULT,
+        MIDI_NETWORK_OUTBOUND_PING_INTERVAL_LOWER_BOUND, MIDI_NETWORK_OUTBOUND_PING_INTERVAL_UPPER_BOUND,
+        anySettingAdjusted);
+
+    auto const maxHostConnections = ReadClampedTransportSetting(
+        transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_HOST_CONNECTIONS_KEY,
+        MIDI_NETWORK_HOST_MAX_CONNECTIONS_DEFAULT,
+        MIDI_NETWORK_HOST_MAX_CONNECTIONS_LOWER_BOUND, MIDI_NETWORK_HOST_MAX_CONNECTIONS_ABSOLUTE_MAX,
+        anySettingAdjusted);
+
+    auto const invitationPendingTimeout = ReadClampedTransportSetting(
+        transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_INVITATION_PENDING_TIMEOUT_KEY,
+        MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_DEFAULT,
+        MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_LOWER_BOUND, MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_UPPER_BOUND,
+        anySettingAdjusted);
+
+    auto const directConnectionScanInterval = ReadClampedTransportSetting(
+        transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_DIRECT_CONNECTION_SCAN_INTERVAL_KEY,
+        MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT,
+        MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_LOWER_BOUND, MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_UPPER_BOUND,
+        anySettingAdjusted);
+
+    // A bad value is corrected rather than rejected: refusing the whole command would take
+    // the user's hosts and clients down with it over a mistyped number.
+    if (anySettingAdjusted)
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"One or more transport settings were missing, the wrong type, or out of range, and have been corrected", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(fecPackets, "fec packets"),
+            TraceLoggingUInt32(retransmitBuffer, "retransmit buffer"),
+            TraceLoggingUInt32(outboundPingInterval, "ping interval"),
+            TraceLoggingUInt32(maxHostConnections, "max host connections"),
+            TraceLoggingUInt32(invitationPendingTimeout, "invitation pending timeout"),
+            TraceLoggingUInt32(directConnectionScanInterval, "direct connection scan interval")
+        );
+    }
+
+    TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount = static_cast<uint8_t>(fecPackets);
+    TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount = static_cast<uint16_t>(retransmitBuffer);
+    TransportState::Current().TransportSettings.OutboundPingInterval = outboundPingInterval;
+    TransportState::Current().TransportSettings.MaxHostConnections = static_cast<uint16_t>(maxHostConnections);
+    TransportState::Current().TransportSettings.InvitationPendingTimeout = invitationPendingTimeout;
+    TransportState::Current().TransportSettings.DirectConnectionScanInterval = directConnectionScanInterval;
+}
+
+// GetComputerName reports the length without the terminator, and the buffer is longer than that.
+// Resized to fit, or the name carries trailing nulls into every place it is used.
+static winrt::hstring GetComputerNameOrEmpty()
+{
+    std::wstring buffer{};
+    DWORD bufferSize = MAX_COMPUTERNAME_LENGTH + 1;
+    buffer.resize(bufferSize);
+
+    if (!GetComputerName(buffer.data(), &bufferSize))
+    {
+        return winrt::hstring{ };
+    }
+
+    buffer.resize(bufferSize);
+
+    return winrt::hstring{ buffer };
+}
+
+_Use_decl_annotations_
+bool
+CMidi2NetworkMidiConfigurationManager::TryReadHostDefinition(
+    winrt::hstring const& entryKey,
+    json::JsonObject const& hostEntry,
+    MidiNetworkHostDefinition& definition,
+    winrt::hstring& errorMessage,
+    uint32_t& errorCode)
+{
+    definition = MidiNetworkHostDefinition{ };
+    errorMessage = winrt::hstring{ };
+    errorCode = NETWORK_ERROR_CODE_UNKNOWN_ERROR;
+
+    if (hostEntry == nullptr)
+    {
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_PARSING_JSON);
+        errorCode = NETWORK_ERROR_CODE_INVALID_JSON;
+        return false;
+    }
+
+    // currently, UDP is the only allowed protocol
+    auto protocol = internal::ToLowerTrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP));
+
+    if (protocol != MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
+    {
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_INVALID_NETWORK_PROTOCOL);
+        errorCode = NETWORK_ERROR_CODE_INVALID_NETWORK_PROTOCOL;
+        return false;
+    }
+
+    if (!TryParseEntryIdentifier(internal::TrimmedHStringCopy(entryKey), definition.EntryIdentifier))
+    {
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER);
+        errorCode = NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER;
+        return false;
+    }
+
+    definition.IsEnabled = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
+    definition.Advertise = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY, true);
+
+    // The settings which can also be changed later are read the one way both paths
+    // read them. The definition is new, so an absent key takes its default.
+    ApplyEntrySettings(hostEntry, definition);
+
+    definition.UmpEndpointName = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
+    definition.ProductInstanceId = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
+
+    if (definition.ProductInstanceId.empty())
+    {
+        definition.ProductInstanceId = winrt::hstring{ TransportState::Current().GetEffectiveProductInstanceId() };
+    }
+
+    definition.Port = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO));
+    definition.AllowPortFallback = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_PORT_FALLBACK_KEY, true);
+
+    definition.Authentication = MidiNetworkHostAuthenticationFromJsonString(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE));
+    definition.RemoteClientPolicy = MidiNetworkRemoteClientPolicyFromJsonString(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_ALLOW_ANY));
+
+    ReadRemoteClientIdentityList(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY, definition.AllowedClientKeys);
+    ReadRemoteClientIdentityList(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY, definition.DeniedClientKeys);
+
+    // An empty service instance name defaults to the machine name
+    definition.ServiceInstanceName = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY, L""));
+
+    if (definition.ServiceInstanceName.empty())
+    {
+        definition.ServiceInstanceName = GetComputerNameOrEmpty();
+    }
+
+    // The name becomes the DNS-SD instance and the virtual parent device id, so a
+    // second host claiming it cannot work. This used to be an unimplemented TODO, and
+    // the collision surfaced much later as a host which started but could never
+    // create an endpoint.
+    if (TransportState::Current().IsHostServiceInstanceNameInUse(
+            std::wstring{ definition.ServiceInstanceName },
+            definition.EntryIdentifier))
+    {
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_SERVICE_INSTANCE_NAME_IN_USE);
+        errorCode = NETWORK_ERROR_CODE_SERVICE_INSTANCE_NAME_IN_USE;
+        return false;
+    }
+
+    // TODO: User should be able to specify the adapter, host name, etc.
+    for (auto const& host : winrt::Windows::Networking::Connectivity::NetworkInformation::GetHostNames())
+    {
+        if ((host.Type() == HostNameType::DomainName) &&
+            (host.RawName().ends_with(L".local")))
+        {
+            definition.HostName = host.RawName();
+            break;
+        }
+    }
+
+    if (definition.Port == MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO ||
+        definition.Port == L"" ||
+        definition.Port == L"0")
+    {
+        // this will cause us to use an auto-generated free port
+        definition.Port = L"";
+        definition.UseAutomaticPortAllocation = true;
+    }
+    else
+    {
+        definition.UseAutomaticPortAllocation = false;
+    }
+
+    // Two hosts cannot share a port. Checked against what each started host is
+    // actually bound to, so this also catches a manual port colliding with one the
+    // system handed out automatically. A host waiting for an automatic port has no
+    // number yet and cannot conflict.
+    if (!definition.UseAutomaticPortAllocation &&
+        TransportState::Current().IsHostPortInUse(
+            std::wstring{ definition.Port },
+            definition.EntryIdentifier))
+    {
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_HOST_PORT_IN_USE);
+        errorCode = NETWORK_ERROR_CODE_HOST_PORT_IN_USE;
+        return false;
+    }
+
+    return SUCCEEDED(ValidateHostDefinition(definition, errorMessage, errorCode));
+}
+
+_Use_decl_annotations_
+bool
+CMidi2NetworkMidiConfigurationManager::TryReadClientDefinition(
+    winrt::hstring const& entryKey,
+    json::JsonObject const& clientEntry,
+    MidiNetworkClientDefinition& definition,
+    winrt::hstring& errorMessage,
+    uint32_t& errorCode)
+{
+    definition = MidiNetworkClientDefinition{ };
+    errorMessage = winrt::hstring{ };
+    errorCode = NETWORK_ERROR_CODE_UNKNOWN_ERROR;
+
+    if (clientEntry == nullptr)
+    {
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_PARSING_JSON);
+        errorCode = NETWORK_ERROR_CODE_INVALID_JSON;
+        return false;
+    }
+
+    // currently, UDP is the only allowed protocol
+    auto protocol = internal::ToLowerTrimmedHStringCopy(SafeGetNamedString(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP));
+
+    if (protocol != MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
+    {
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_INVALID_NETWORK_PROTOCOL);
+        errorCode = NETWORK_ERROR_CODE_INVALID_NETWORK_PROTOCOL;
+        return false;
+    }
+
+    if (!TryParseEntryIdentifier(internal::TrimmedHStringCopy(entryKey), definition.EntryIdentifier))
+    {
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER);
+        errorCode = NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER;
+        return false;
+    }
+
+    definition.Enabled = SafeGetNamedBoolean(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
+
+    // The settings which can also be changed later are read the one way both
+    // paths read them. The definition is new, so an absent key takes its default.
+    ApplyEntrySettings(clientEntry, definition);
+
+    // TODO: Add ability for config file to specify the localEndpointName and localProductInstanceId
+    definition.LocalEndpointName = GetComputerNameOrEmpty();
+
+    // TODO: we may want to provide the local product instance id as a system-wide setting. Same with name
+    definition.LocalProductInstanceId = winrt::hstring{ TransportState::Current().GetEffectiveProductInstanceId() };
+
+    auto matchSection = SafeGetNamedObject(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_OBJECT_KEY);
+
+    if (!matchSection)
+    {
+        // we have no way to match against endpoints, so this is a failure
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_MATCH_ENTRY);
+        errorCode = NETWORK_ERROR_CODE_MISSING_MATCH_ENTRY;
+        return false;
+    }
+
+    // for the moment, we only match on the actual device id, so must be mdns-advertised
+    definition.MatchId = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_ID_KEY, L""));
+
+    // direct connection properties
+    definition.MatchDirectHostNameOrIPAddress = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_HOST_NAME_OR_IP_ADDRESS_KEY, L""));
+    definition.MatchDirectPort = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_PORT_KEY, L""));
+
+    definition.MatchProductInstanceId = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_PID_KEY, L""));
+    definition.MatchUmpEndpointName = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_NAME_KEY, L""));
+
+    return true;
 }
 
 
@@ -2789,70 +3102,7 @@ try
 
     if (transportSettingsSection != nullptr && transportSettingsSection.Size() > 0)
     {
-        bool anySettingAdjusted{ false };
-
-        auto const fecPackets = ReadClampedTransportSetting(
-            transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_FEC_PACKETS_KEY,
-            MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT,
-            MIDI_NETWORK_FEC_PACKET_COUNT_LOWER_BOUND, MIDI_NETWORK_FEC_PACKET_COUNT_UPPER_BOUND,
-            anySettingAdjusted);
-
-        auto const retransmitBuffer = ReadClampedTransportSetting(
-            transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_RETRANSMIT_BUFFER_SIZE_KEY,
-            MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT,
-            MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_LOWER_BOUND, MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_UPPER_BOUND,
-            anySettingAdjusted);
-
-        auto const outboundPingInterval = ReadClampedTransportSetting(
-            transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_OUTBOUND_PING_INTERVAL_KEY,
-            MIDI_NETWORK_OUTBOUND_PING_INTERVAL_DEFAULT,
-            MIDI_NETWORK_OUTBOUND_PING_INTERVAL_LOWER_BOUND, MIDI_NETWORK_OUTBOUND_PING_INTERVAL_UPPER_BOUND,
-            anySettingAdjusted);
-
-        auto const maxHostConnections = ReadClampedTransportSetting(
-            transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_HOST_CONNECTIONS_KEY,
-            MIDI_NETWORK_HOST_MAX_CONNECTIONS_DEFAULT,
-            MIDI_NETWORK_HOST_MAX_CONNECTIONS_LOWER_BOUND, MIDI_NETWORK_HOST_MAX_CONNECTIONS_ABSOLUTE_MAX,
-            anySettingAdjusted);
-
-        auto const invitationPendingTimeout = ReadClampedTransportSetting(
-            transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_INVITATION_PENDING_TIMEOUT_KEY,
-            MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_DEFAULT,
-            MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_LOWER_BOUND, MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_UPPER_BOUND,
-            anySettingAdjusted);
-
-        auto const directConnectionScanInterval = ReadClampedTransportSetting(
-            transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_DIRECT_CONNECTION_SCAN_INTERVAL_KEY,
-            MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT,
-            MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_LOWER_BOUND, MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_UPPER_BOUND,
-            anySettingAdjusted);
-
-        // A bad value is corrected rather than rejected: refusing the whole command would take
-        // the user's hosts and clients down with it over a mistyped number.
-        if (anySettingAdjusted)
-        {
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_WARNING,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"One or more transport settings were missing, the wrong type, or out of range, and have been corrected", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingUInt32(fecPackets, "fec packets"),
-                TraceLoggingUInt32(retransmitBuffer, "retransmit buffer"),
-                TraceLoggingUInt32(outboundPingInterval, "ping interval"),
-                TraceLoggingUInt32(maxHostConnections, "max host connections"),
-                TraceLoggingUInt32(invitationPendingTimeout, "invitation pending timeout"),
-                TraceLoggingUInt32(directConnectionScanInterval, "direct connection scan interval")
-            );
-        }
-
-        TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount = static_cast<uint8_t>(fecPackets);
-        TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount = static_cast<uint16_t>(retransmitBuffer);
-        TransportState::Current().TransportSettings.OutboundPingInterval = outboundPingInterval;
-        TransportState::Current().TransportSettings.MaxHostConnections = static_cast<uint16_t>(maxHostConnections);
-        TransportState::Current().TransportSettings.InvitationPendingTimeout = invitationPendingTimeout;
-        TransportState::Current().TransportSettings.DirectConnectionScanInterval = directConnectionScanInterval;
+        ApplyTransportSettings(transportSettingsSection);
 
         // A settings-only update has now done everything it was asked to do. Without this the
         // response still says failure, because success is otherwise only set while creating.
@@ -2901,197 +3151,38 @@ try
         {
             for (auto const& it = hostsSection.First(); it.HasCurrent(); it.MoveNext())
             {
-                auto hostEntry = SafeGetNamedObject(hostsSection, it.Current().Key());
+                MidiNetworkHostDefinition definition{ };
+                winrt::hstring errorMessage{ };
+                uint32_t errorCode{ NETWORK_ERROR_CODE_UNKNOWN_ERROR };
 
-                if (hostEntry == nullptr)
-                {
-                    reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_PARSING_JSON), NETWORK_ERROR_CODE_INVALID_JSON);
-                    continue;
-                }
-
-                auto definition = std::make_shared<MidiNetworkHostDefinition>();
-                RETURN_IF_NULL_ALLOC(definition);
-
-                winrt::hstring validationErrorMessage{ };
-                uint32_t validationErrorCode{ NETWORK_ERROR_CODE_UNKNOWN_ERROR };
-
-                // currently, UDP is the only allowed protocol
-                auto protocol = internal::ToLowerTrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP));
-
-                if (protocol != MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
-                {
-                    reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_INVALID_NETWORK_PROTOCOL), NETWORK_ERROR_CODE_INVALID_NETWORK_PROTOCOL);
-                    continue;
-                }
-
-                definition->EntryIdentifier = winrt::guid{};
-
-                if (!TryParseEntryIdentifier(internal::TrimmedHStringCopy(it.Current().Key()), definition->EntryIdentifier))
-                {
-                    reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER), NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER);
-                    continue;
-                }
-
-                definition->IsEnabled = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
-                definition->Advertise = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY, true);
-
-                // The settings which can also be changed later are read the one way both paths
-                // read them. The definition is new, so an absent key takes its default.
-                ApplyEntrySettings(hostEntry, *definition);
-
-                definition->UmpEndpointName = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
-                definition->ProductInstanceId = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
-
-                if (definition->ProductInstanceId.empty())
-                {
-                    definition->ProductInstanceId = winrt::hstring{ TransportState::Current().GetEffectiveProductInstanceId() };
-                }
-
-                definition->Port = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO));
-                definition->AllowPortFallback = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_PORT_FALLBACK_KEY, true);
-
-                definition->Authentication = MidiNetworkHostAuthenticationFromJsonString(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE));
-                definition->RemoteClientPolicy = MidiNetworkRemoteClientPolicyFromJsonString(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_ALLOW_ANY));
-
-                ReadRemoteClientIdentityList(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY, definition->AllowedClientKeys);
-                ReadRemoteClientIdentityList(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY, definition->DeniedClientKeys);
-
-                // read authentication information
-                if (definition->Authentication != MidiNetworkHostAuthentication::NoAuthentication)
-                {
-                    // Only the identifier ever reaches the service. The secret itself is stored
-                    // by the Settings app. See MidiNetworkCredentials.h for the open questions
-                    // on where that store lives and how the service reads it.
-                    if (definition->Authentication == MidiNetworkHostAuthentication::PasswordAuthentication)
-                    {
-                        definition->AuthenticationCredentialIdentifier = internal::TrimmedHStringCopy(
-                            SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_GLOBAL_PASSWORD_KEY, L""));
-                    }
-                    else if (definition->Authentication == MidiNetworkHostAuthentication::UserAuthentication)
-                    {
-                        definition->AuthenticationCredentialIdentifier = internal::TrimmedHStringCopy(
-                            SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_USER_AUTH_KEY, L""));
-                    }
-                }
-
-
-                // generate host name and other info
-
-                auto serviceInstanceNamePrefix = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY, L""));
-
-                // if the provided service instance name is empty, default to 
-                // machine name. If that name is already in use, add an additional
-                // disambiguation value
-                if (serviceInstanceNamePrefix.empty())
-                {
-                    std::wstring buffer{};
-                    DWORD bufferSize = MAX_COMPUTERNAME_LENGTH + 1;
-                    buffer.resize(bufferSize);
-
-                    bool validName = GetComputerName(buffer.data(), &bufferSize);
-                    if (validName)
-                    {
-                        serviceInstanceNamePrefix = buffer;
-                    }
-                }
-
-                definition->ServiceInstanceName = serviceInstanceNamePrefix;
-
-                // The name becomes the DNS-SD instance and the virtual parent device id, so a
-                // second host claiming it cannot work. This used to be an unimplemented TODO, and
-                // the collision surfaced much later as a host which started but could never
-                // create an endpoint.
-                if (TransportState::Current().IsHostServiceInstanceNameInUse(
-                        std::wstring{ definition->ServiceInstanceName },
-                        definition->EntryIdentifier))
-                {
-                    reportEntryFailure(
+                if (!TryReadHostDefinition(
                         it.Current().Key(),
-                        internal::ResourceGetHString(IDS_ERROR_SERVICE_INSTANCE_NAME_IN_USE),
-                        NETWORK_ERROR_CODE_SERVICE_INSTANCE_NAME_IN_USE);
-
+                        SafeGetNamedObject(hostsSection, it.Current().Key()),
+                        definition,
+                        errorMessage,
+                        errorCode))
+                {
+                    reportEntryFailure(it.Current().Key(), errorMessage, errorCode);
                     continue;
                 }
 
-                //definition.HostName = definition.ServiceInstanceName + L"._midi2._udp.local";
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Host definition validated. Creating host", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                );
 
-                // TODO: User should be able to specify the adapter, host name, etc.
+                LOG_IF_FAILED(TransportState::Current().AddHostDefinition(definition));
 
-                // TODO: This should be pulled out of the loop
-                auto hostNames = winrt::Windows::Networking::Connectivity::NetworkInformation::GetHostNames();
+                anyEntryAdded = true;
 
-                for (auto const& host : hostNames)
-                {
-                    if ((host.Type() == HostNameType::DomainName) &&
-                        (host.RawName().ends_with(L".local")))
-                    {
-                        definition->HostName = host.RawName();
-                        break;
-                    }
-                }
-
-
-                if (definition->Port == MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO ||
-                    definition->Port == L"" ||
-                    definition->Port == L"0")
-                {
-                    // this will cause us to use an auto-generated free port
-                    definition->Port = L"";
-                    definition->UseAutomaticPortAllocation = true;
-                }
-                else
-                {
-                    definition->UseAutomaticPortAllocation = false;
-                }
-
-                // Two hosts cannot share a port. Checked against what each started host is
-                // actually bound to, so this also catches a manual port colliding with one the
-                // system handed out automatically. A host waiting for an automatic port has no
-                // number yet and cannot conflict.
-                if (!definition->UseAutomaticPortAllocation &&
-                    TransportState::Current().IsHostPortInUse(
-                        std::wstring{ definition->Port },
-                        definition->EntryIdentifier))
-                {
-                    reportEntryFailure(
-                        it.Current().Key(),
-                        internal::ResourceGetHString(IDS_ERROR_HOST_PORT_IN_USE),
-                        NETWORK_ERROR_CODE_HOST_PORT_IN_USE);
-
-                    continue;
-                }
-
-
-                // validate the entry
-
-                if (SUCCEEDED(ValidateHostDefinition(*definition, validationErrorMessage, validationErrorCode)))
-                {
-                    TraceLoggingWrite(
-                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Host definition validated. Creating host", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    // create the host definition
-
-                    // add to our collection of hosts
-                    TransportState::Current().AddPendingHostDefinition(definition);
-
-                    anyEntryAdded = true;
-
-                    responseObject.SetNamedValue(
-                        MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
-                        jsonTrue);
-                }
-                else
-                {
-                    reportEntryFailure(it.Current().Key(), validationErrorMessage, validationErrorCode);
-                }
+                responseObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
+                    jsonTrue);
             }
-
         }
 
         // clients are connections to external devices made by the service. Each
@@ -3101,94 +3192,28 @@ try
         {
             for (auto const& it = clientsSection.First(); it.HasCurrent(); it.MoveNext())
             {
-                auto clientEntry = SafeGetNamedObject(clientsSection, it.Current().Key());
+                MidiNetworkClientDefinition definition{ };
+                winrt::hstring errorMessage{ };
+                uint32_t errorCode{ NETWORK_ERROR_CODE_UNKNOWN_ERROR };
 
-                if (clientEntry == nullptr)
+                if (!TryReadClientDefinition(
+                        it.Current().Key(),
+                        SafeGetNamedObject(clientsSection, it.Current().Key()),
+                        definition,
+                        errorMessage,
+                        errorCode))
                 {
-                    reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_PARSING_JSON), NETWORK_ERROR_CODE_INVALID_JSON);
+                    reportEntryFailure(it.Current().Key(), errorMessage, errorCode);
                     continue;
                 }
 
-                auto definition = std::make_shared<MidiNetworkClientDefinition>();
-                RETURN_IF_NULL_ALLOC(definition);
+                LOG_IF_FAILED(TransportState::Current().AddClientDefinition(definition));
 
-                // currently, UDP is the only allowed protocol
-                    auto protocol = internal::ToLowerTrimmedHStringCopy(SafeGetNamedString(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP));
+                anyEntryAdded = true;
 
-                if (protocol != MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
-                {
-                    reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_INVALID_NETWORK_PROTOCOL), NETWORK_ERROR_CODE_INVALID_NETWORK_PROTOCOL);
-                }
-                else
-                {
-                    if (!TryParseEntryIdentifier(internal::TrimmedHStringCopy(it.Current().Key()), definition->EntryIdentifier))
-                    {
-                        reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER), NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER);
-                        continue;
-                    }
-
-                    definition->Enabled = SafeGetNamedBoolean(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
-
-                    // The settings which can also be changed later are read the one way both
-                    // paths read them. The definition is new, so an absent key takes its default.
-                    ApplyEntrySettings(clientEntry, *definition);
-
-                    winrt::hstring localEndpointName{ };
-                    winrt::hstring localProductInstanceId{ };
-
-                    // TODO: Add ability for config file to specify the localEndpointName and localProductInstanceId
-                    if (localEndpointName.empty())
-                    {
-                        std::wstring buffer{};
-                        DWORD bufferSize = MAX_COMPUTERNAME_LENGTH + 1;
-                        buffer.resize(bufferSize);
-
-                        bool validName = GetComputerName(buffer.data(), &bufferSize);
-                        if (validName)
-                        {
-                            localEndpointName = buffer;
-                        }
-                    }
-
-                    // TODO: we may want to provide the local product instance id as a system-wide setting. Same with name
-                    if (localProductInstanceId.empty())
-                    {
-                        localProductInstanceId = winrt::hstring{ TransportState::Current().GetEffectiveProductInstanceId() };
-                    }
-
-                    definition->LocalEndpointName = localEndpointName;
-                    definition->LocalProductInstanceId = localProductInstanceId;
-
-                    auto matchSection = SafeGetNamedObject(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_OBJECT_KEY);
-
-                    if (matchSection)
-                    {
-                        // for the moment, we only match on the actual device id, so must be mdns-advertised
-                        definition->MatchId = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_ID_KEY, L""));
-
-                        // direct connection properties
-                        definition->MatchDirectHostNameOrIPAddress = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_HOST_NAME_OR_IP_ADDRESS_KEY, L""));
-                        definition->MatchDirectPort = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_PORT_KEY, L""));
-
-                        definition->MatchProductInstanceId = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_PID_KEY, L""));
-                        definition->MatchUmpEndpointName = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_NAME_KEY, L""));
-
-
-                        TransportState::Current().AddPendingClientDefinition(definition);
-
-                        anyEntryAdded = true;
-
-                        responseObject.SetNamedValue(
-                            MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
-                            jsonTrue);
-                    }
-                    else
-                    {
-                        // we have no way to match against endpoints, so this is a failure
-                        reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_MISSING_MATCH_ENTRY), NETWORK_ERROR_CODE_MISSING_MATCH_ENTRY);
-                    }
-                }
-
+                responseObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
+                    jsonTrue);
             }
         }
 

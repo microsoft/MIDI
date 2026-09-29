@@ -20,6 +20,10 @@ namespace Windows.Devices.Midi2.ServiceConfig
         // transport command or a configuration which only has meaning for the calling process
         ErrorNotPersistable =               100,
 
+        // the change is to an entry which is not saved in the configuration file, so there is
+        // nothing to apply it to. Save the entry itself first.
+        ErrorEntryNotSaved =                101,
+
         ErrorConfigJsonNullOrEmpty =        600,
         ErrorProcessingConfigJson =         601,
 

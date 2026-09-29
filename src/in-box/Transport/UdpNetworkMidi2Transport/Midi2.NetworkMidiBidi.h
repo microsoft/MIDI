@@ -22,12 +22,12 @@ public:
     STDMETHOD(Shutdown)();
 
 private:
+    // The service can close the endpoint on one thread while a message arrives on another
+    wil::critical_section m_lock;
     wil::com_ptr_nothrow<IMidiCallback> m_callback{ nullptr };
-    LONGLONG m_context{ 0 };
+    std::weak_ptr<MidiNetworkConnection> m_connection;
 
     std::wstring m_endpointDeviceInterfaceId{ };
-
-    std::weak_ptr<MidiNetworkConnection> m_connection;
 };
 
 
