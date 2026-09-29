@@ -55,9 +55,9 @@ One rule holds these together: **a control uses one color, and that color shows 
 
 The light themes add a second idea: **what you press is raised, what shows a value is sunk into the surface, and what does nothing is flat.** A fader cap stands up off its slot, an XY pad's field is cut in, and a control whose device is missing is dimmed.
 
-Several shipping themes bend these rules on purpose. Jove's buttons are solid color at rest, and Airy System keeps every knob lit. Each theme that bends a rule says what it costs in the theme gallery, so you can decide before you take it on stage.
+Several shipping themes bend these rules on purpose. Jove's buttons are solid color at rest, Airy System keeps every knob lit, Groovy draws every outline at full strength, and Off-world Colonies puts rain and stains on the page. Each theme that bends a rule says what it costs in the theme gallery, so you can decide before you take it on stage.
 
-![The same page of controls in all sixteen shipping themes]({{ site.baseurl }}/assets/images/midiglass-themes-gallery.jpg)
+![The same page of controls in all twenty-one shipping themes]({{ site.baseurl }}/assets/images/midiglass-themes-gallery.jpg)
 
 ## Colors: six slots and a neutral
 
@@ -76,7 +76,7 @@ If you're designing a theme for layouts that already exist, keep each slot's job
 
 ### The built-in themes
 
-Sixteen themes come with MIDI Glass. They're part of the app rather than files on disk, so nothing can delete or change them. When you edit one in the app, you're editing a copy.
+Twenty-one themes come with MIDI Glass. They're part of the app rather than files on disk, so nothing can delete or change them. When you edit one in the app, you're editing a copy.
 
 ### Your own theme files
 
@@ -88,7 +88,7 @@ Documents\MIDI Layouts\Themes
 
 - MIDI Glass creates the folder the first time it needs it. You can also create it yourself.
 - **The Documents folder isn't always `C:\Users\<name>\Documents`.** On many PCs it has been moved into OneDrive. Open File Explorer, select **Documents**, and look for **MIDI Layouts** there.
-- Every theme in the folder shows up in the gallery for every layout on that PC, after the sixteen built-in ones.
+- Every theme in the folder shows up in the gallery for every layout on that PC, after the twenty-one built-in ones.
 - The file name doesn't have to match the theme's name. When MIDI Glass saves a theme, it names the file after the theme and swaps any character Windows doesn't allow in a file name (`\ / : * ? " < > |`) for an underscore.
 - MIDI Glass reads the folder each time it shows the gallery. If you add a file while the app is open, open the layout's **Appearance** settings again to see it.
 - Older versions of MIDI Glass named theme files `.miditheme.json`. The app still reads those, and renames them to `.miditheme` the next time it starts.
@@ -181,42 +181,49 @@ This section follows the order the app draws in: the deck, the layers over it, a
 
 ### The deck
 
-The deck is the page itself: one color, or a gradient that's lit from above.
+The deck is the page itself: one color, a gradient that's lit from above, or a picture.
 
 ```json
-"deck": { "kind": "gradient", "color": "#1D1E21", "gradientEndColor": "#07080A", "image": "" }
+"deck": { "kind": "gradient", "color": "#1D1E21", "gradientEndColor": "#07080A", "image": "", "imageRepeats": false }
 ```
 
 - `kind` is `"solidColor"`, `"gradient"`, or `"image"`.
 - A gradient is brightest at the top middle, in `color`, and falls away to `gradientEndColor` at the bottom and the lower corners.
 - **A flat color over a whole page reads as a hole rather than a surface.** That's why most themes use a gradient. Studio Dark's deck runs from `#1D1E21` to `#07080A`.
-- A painted metal panel isn't lit the way glass is, so Jove and Supersaw use a solid color.
+- A painted metal panel isn't lit the way glass is, so Jove and Supersaw use a solid color. So do Groovy and Groovy Dark, whose whole look is flat color.
 - Bone's deck runs from `#F4EFE4` down to `#E3DAC9` and never darker, because the whole point of Bone is that the space around the controls is bone colored.
-- `"image"` is accepted, but this version doesn't draw a picture for it. The deck shows its color instead. To put a picture behind a layout, use the layout's own background picture, which belongs to the layout rather than to the theme.
+- `"image"` draws a picture. `image` is the picture's file name: a `.png` or `.jpg` file in the Themes folder, next to the theme files. It has to be a plain file name, never a path. The theme editor's **Choose…** button copies a picture into the folder for you. When the picture is missing, the deck shows its color.
+- `imageRepeats` says how the picture covers the page. Off, one copy fills the page and is cut to fit. On, the picture repeats at its own size from the top left, over the deck's two colors, which are lit from above the way a gradient is. **A pattern stretched to fill a page turns into a blur,** so a texture should repeat. A repeating picture grows and shrinks with the page, and it should be mostly see-through so the deck's colors show between its marks. Off-world Colonies repeats a wall of cast concrete blocks, stained where the rain has run down it, 512 pixels square, over `#1D2625` to `#15130F`.
+- Off-world Colonies' two pictures are built into the app. A theme file that names `Off-world Colonies wall.png` or `Off-world Colonies stains.png` gets the app's own copy, unless the Themes folder has a file with that name.
 
 > **For agents:** If you write a `deck` block, always include `kind`. A deck block without one is a flat color, not a gradient. A deck block without `gradientEndColor` uses `color` for both ends.
 
 > **For agents:** The shipped dark themes work out both ends of the deck from one base color, and you can do the same. For each of red, green, and blue, the top is `base + (255 - base) * 0.07` and the floor is `base * (1 - f)`, where `f = 0.06 + 0.35 * (1 - brightness)` and `brightness = (0.299 * R + 0.587 * G + 0.114 * B) / 255` of the base. Their slot track is `top * 0.45`, and their glass is `base + max(6, (255 - base) * 0.045)`. A theme file doesn't work any of this out for you, so write the results in.
 
-### Over the deck: grain, scan lines, corners, and reflections
+### Over the deck: grain, rain, scan lines, corners, and reflections
 
-These four are laid over the whole page once, so they cost the same with four controls or four hundred. They're all off unless a theme turns them on, and they all live in one `deckOverlay` block.
+These are laid over the whole page once, so they cost the same with four controls or four hundred. They're all off unless a theme turns them on, and they all live in one `deckOverlay` block.
 
 ```json
 "deckOverlay": {
-  "grainPercent": 34, "grainColor": "#8496B4", "grainStreak": 1,
+  "grainPercent": 34, "grainColor": "#8496B4", "grainStreak": 1, "grainStyle": "speckle",
+  "rainPercent": 0, "rainColor": "#00000000", "rainSpeed": 0,
   "scanLinePitch": 0, "scanLineStrength": 0, "scanLineColor": "#000000",
   "vignettePercent": 0, "vignetteColor": "#00000000",
   "faceplateSheenPercent": 0, "faceplateSheenColor": "#00000000"
 }
 ```
 
-- **Grain** is texture in the panel. It's drawn under the controls, so it never touches them. `grainPercent` is how strong it is: at full it's sandpaper, and at a quarter it's only a warmth. `grainStreak` is how long each speck is. At 1 you get fine specks, like Supersaw's bead-blasted blue panel (34 percent of `#8496B4`). At 40 or more you get streaks running across the page, like Airy System's brushed metal (32 percent of `#FFFFFF`, streak 48). Brushed grain is always lighter than the deck, the way light catches the ridges. An unset grain color is the deck's own color, lifted a little.
+- **Grain** is texture in the panel. It's drawn under the controls, so it never touches them. `grainPercent` is how strong it is: at full it's sandpaper, and at a quarter it's only a warmth. `grainStyle` says what kind of texture it is:
+  - `"speckle"` is specks a few pixels across, some lighter and some darker than the deck, like Supersaw's bead-blasted blue panel (34 percent of `#8496B4`). An unset grain color is the deck's own color, lifted a little.
+  - `"brushed"` is long streaks running across the page, like Airy System's brushed metal (32 percent of `#FFFFFF`). `grainStreak` is how long each streak is, and only brushed grain uses it: Airy System uses 48, and 1 means the usual 12. Brushed grain is always lighter than the deck, the way light catches the ridges.
+  - `"fine"` is a noise in every screen pixel, like stippled plastic or poster paper. Each percent moves a pixel about a tenth of a brightness level lighter or darker, so 50 is about five levels either way, and the page's average stays where it was. Soft Sector uses 36, Hard Sector 24, and Groovy Dark 50. Fine grain stays sharp at every zoom. An unset grain color lightens toward white.
+- **Rain** (`rainPercent`) is fine streaks falling nine degrees off the vertical, under the controls. `rainColor` is what they're made of, and a cool white, `#C6E4EE`, when it isn't set. `rainSpeed` is how fast they fall, in page pixels a second, up to 600. The rain holds still in the editor, in thumbnails, and whenever Windows animation effects are turned off. Off-world Colonies uses 35 percent, falling at 300.
 - **Scan lines** are the raster of a picture tube: one dark line every few pixels, drawn over everything, controls included. `scanLinePitch` is the distance between lines. It's measured in screen pixels rather than page pixels, so the lines stay the same distance apart and stay sharp at every zoom. `scanLineStrength` is how dark each line is. Cathode, Terminal Amber, and Terminal Green use a pitch of 3 at about 45 percent.
-- **Corner fall-off** (`vignettePercent`) darkens the corners, the way a tube is brightest in the middle. It's drawn over the controls. The tube themes use 60. An unset `vignetteColor` is the deck's floor color, taken further down.
+- **Corner fall-off** (`vignettePercent`) darkens the corners, the way a tube is brightest in the middle. It's drawn over the controls. The tube themes use 60, and Off-world Colonies uses 30 so its corners fall into the dark. An unset `vignetteColor` is the deck's floor color, taken further down.
 - **Faceplate reflection** (`faceplateSheenPercent`) is a soft diagonal light across the upper left: the room, reflected in the glass. It's in every photograph of a real terminal, and it's what makes glass look like glass instead of paint. Terminal Green uses 5 percent of `#BEE1F0`, which is also what an unset color means. It's meant to be faint: at 5 percent, the top left of the page is only a little lighter than the top right, so you won't see it in a close-up.
 
-From the bottom up, the order is: grain, the controls, the corner fall-off, the scan lines, and the reflection.
+From the bottom up, the order is: a repeating deck picture, grain, rain, the controls, the corner fall-off, the scan lines, and the reflection.
 
 ![Fine grain on Supersaw and brushed grain on Airy System, enlarged three times, and scan lines with corner fall-off in the bottom right corner of Cathode]({{ site.baseurl }}/assets/images/midiglass-theme-decks.png)
 
@@ -260,12 +267,13 @@ A picture tube has no thickness, so the tube themes use no shadow at all.
 - `rim` says where the outline's color comes from: `"controlHue"` (each control's own color), `"neutralEdge"` (one color for every control, from `neutralRimColor`), or `"none"`.
 - `rimStrengthPercent` is how strong a colored rim is at rest. 0 means no rim.
 - `switchRimStrengthPercent` does the same for everything you press or read rather than turn or slide: buttons, toggles, pads, page tabs, lamps, meters, readouts, and the like. `-1` means "the same as `rimStrengthPercent`."
+- `rimThickness` is how heavy the rim is, from 1 to 6 pixels: on plates, knob faces, and sections, and the lit rim on a switch. The outer edge stays on the control's own corner at any weight.
 
 Under a finger, the rim rises to nearly full strength. When a switch turns on, its rim lights in the control's color, or on a theme that uses lamps, in a faint line of the lamp's color.
 
 A quarter strength keeps a busy page calm, and Studio Dark uses 28. **On a light plate a faint hairline disappears,** and the control's color goes with it: six faders on six different slots all look the same. Bone runs its rim at 85 for that reason, and the app's accessibility check asks for at least 50 on a light plate. The tube themes use 40 to 55.
 
-Bigwig uses a neutral edge, `#1A1A1A`, so that color only ever means the value. Jove and Supersaw have no rim at all, because on real hardware the control is simply the thing you touch. Airy System lights its knob and fader rims at 85 but sets the switch rim to 0, so its buttons stay black until they're on.
+Bigwig uses a neutral edge, `#1A1A1A`, so that color only ever means the value. Jove and Supersaw have no rim at all, because on real hardware the control is simply the thing you touch. Airy System lights its knob and fader rims at 85 but sets the switch rim to 0, so its buttons stay black until they're on. Groovy and Groovy Dark run their rims at 100 and 3 pixels thick, which breaks the quarter-strength rule on purpose: a cream plate on Groovy's goldenrod page is only 1.41 : 1, so the line is what makes each control.
 
 ### Light: the glow, the resting glow, and touch
 
@@ -273,7 +281,9 @@ Bigwig uses a neutral edge, `#1A1A1A`, so that color only ever means the value. 
 - `bloomColor` is the color of the glow. When it isn't set, each control glows in its own color.
 - `restingGlowPercent` is a floor under the glow, so a control spills a little light all the time. It's a share of `glowStrength`, so it does nothing when the glow is 0. `switchRestingGlowPercent` sets a different floor for everything you press or read, and `-1` means the same.
 - `persistenceMilliseconds` is how long the glow takes to fade after a touch. 0 means the normal 220 milliseconds. A control that listens for MIDI has its own "stays lit for" time, 120 milliseconds unless the layout changes it, and that's what MIDI arriving for it uses. The theme's time applies there only when the control's own time is 0.
-- `touchFillPercent` washes the plate with the control's color while a finger is on it. On a flat theme with no glow, it's the only thing that shows a control is being held. Switches never take it, because a switch shows it's held by being on.
+- `touchFillPercent` washes the plate with the control's color while a finger is on it. On a flat theme with no glow, it's the only thing that shows a control is being held. Switches never take it, because a switch shows it's held by being on, or on a theme with key travel, by going down.
+- `glowFallPixels` moves a control's glow down by this many pixels, so the light reaches further below a control than above it, the way it runs down a wet wall. Off-world Colonies uses 8. A name in neon takes it too.
+- `flarePercent` makes a lit light throw a lens flare. A lit switch's value strip gets a streak along it that runs past both ends and a short ray across it. An XY pad's puck gets a long streak, a ring that fringes red at its edge, and a faint four-point star, all following the puck. `flareColor` is the flare's warm heart, and the light's own color when it isn't set. Off-world Colonies uses 100 with `#FFF1DC`. A flare is only decoration: the light coming on is still what shows the state.
 
 The glow also drives the halos: the light around a fader's fill, around an XY pad's puck, around a knob's arc on a theme that asks for it, and around a lit round lamp. A theme with no glow has no halos.
 
@@ -281,7 +291,7 @@ When Windows animation effects are turned off, the glow switches on and off inst
 
 **The tube themes are where these settings matter most.** A box drawn on a picture tube is barely brighter than the glass around it, 1.11 : 1 to 1.22 : 1, so the light it spills all the time is what makes it an object. Cathode, Terminal Amber, and Terminal Green each keep a resting glow (13, 16, and 9 percent), and each glows in its phosphor's color rather than in the control's. Cathode's black and white tube glows blue white, `#CFE0F3`. Terminal Amber glows `#FF6010`, redder than the amber itself, because that phosphor fades through red, and that's what people recognize as an amber screen. Terminal Green glows yellower than its green, `#86F260`. Terminal Amber also holds its glow for 400 milliseconds, the way that phosphor does. On a theme with a resting glow, the theme editor reminds you that at zero the controls would dissolve into the deck.
 
-`lightSource` is an older setting. When `bloomColor` isn't set, `"white"` makes every glow white. It's how Bone lights up: its plates are already near white, so the only room left to say "this one just did something" is to take them the rest of the way. New themes should use `bloomColor` instead.
+Bone glows white (`bloomColor` `#FFFFFF`). Its plates are already near white, so the only room left to say "this one just did something" is to take them the rest of the way.
 
 ![Resting glow, and a glow in each phosphor's own color, on Cathode, Terminal Amber, and Terminal Green]({{ site.baseurl }}/assets/images/midiglass-theme-light.png)
 
@@ -294,11 +304,15 @@ The value is the light that shows where a control is set.
 - `arcTrackColor` is the empty part of a knob's arc. The arc sits outside the plate on the bare deck, where on a dark theme there's nothing left to be darker than, so it usually has to be a faint light instead. Jove and Supersaw use white at 10 percent, `#1AFFFFFF`. When it isn't set, it's the same as `trackColor`. Without a visible arc track, a knob shows where it's set but never how far it can go.
 - `arcTrackHuePercent` makes the empty part of the arc the control's own color at this strength instead. Airy System uses 30, so a green knob sits in a dim green ring.
 - `arcGlow` gives a knob's arc the same halo a fader's fill has. Airy System turns it on.
+- `arcThickness` is how heavy a knob's arc is, in pixels, and 0 means the usual 4. When it's set, the gap between the arc and the face grows to half of it, the pointer becomes two thirds of it, and a fader's slot is at least the arc plus 4 pixels, so everything reads as one weight. Groovy and Groovy Dark use 6.
+- `arcRoundEnds` rounds both ends of a knob's arc, the way a pen draws a line, and makes a fader's cap a pill. A knob at zero shows no value arc at all, so a round end never leaves a dot. Groovy and Groovy Dark turn it on.
+- `valueCorePercent` draws a lighter line down the middle of every lit value, this far toward white: a knob's arc, a fader's fill, and a switch's value strip. An XY pad's puck gets a white heart. It's the white hot middle of a neon tube. Off-world Colonies uses 65.
 - `pipeFalloff` is how bright the far end of a fader's fill is, from 0 to 1, so the fill is brightest at the value and fades away behind it. 1 is a flat bar. Studio Dark uses 0.35.
 - `valueFadesToLight` runs the far end of the fill into the glow color instead. It's what makes an amber fader look like fire on Terminal Amber.
 - `valueStrip` puts a thin line along the `"bottom"` or the `"top"` of buttons, toggles, pads, page tabs, lamps, and readouts, or `"none"` for no line. The line is dim where it's empty and lit up to the control's value, so a switch that's on lights all of it.
 - `valueIndicator` draws a knob's arc as a `"solidArc"` or as a `"segmentedLamps"` ring. `lampCount` is how many lamps, and a knob smaller than `minimumLampRingSize` pixels falls back to the solid arc, because below that the lamps run together.
 - `meterSlots` picks the slots for a meter's three zones: the first 70 percent of its travel, the next 20, and the top 10. Choose three that are also a rising brightness, and the meter still reads for someone with no color vision. The tube themes use the widest three brightnesses they have.
+- `meterUnlitColor` is the color of a meter's lights while they're out. When it isn't set, each zone's lights are their own color at about a sixth of its strength. Most dark themes use a faint white, like the comps; the tonal themes and Bone use their track color.
 
 > **For agents:** `meterSlots` counts from 0, unlike the slot numbers the app shows. The default, `[1, 2, 5]`, is slots 2, 3, and 6. If your sixth slot isn't a warning color, set `meterSlots` so the top zone lands on your red.
 
@@ -310,15 +324,29 @@ At rest:
 
 - `switchFillAtRest` is a tonal fill for switches only, from 0 to 1, and `-1` means the same as `fillAtRest`. Jove sets it to 1, so every tab is solid color at rest while its knobs stay black.
 - `padFillAtRest` does the same for pads only. Airy System uses 0.34, so its pads are dim colored plastic while the buttons beside them are black.
+- `restTintOnPlate` mixes that resting color into the plate instead of into the page. Groovy's pads use it, so a pad at rest is a pale shade of the same cream as every other control rather than a mustard shade of the goldenrod page.
 
 When on:
 
 - `fillWhenOnPercent` is how much of the control's color the plate takes when it's on. The default is 34. At 100 the plate becomes the color from top to bottom, which is what Bigwig and Bone do. **At 0 the plate doesn't change at all, and the switch lights a lamp instead,** which is what Supersaw and Five-iSH do. A rack of identical black switches with one lamp lit is easier to read across a room than a rack of colored blocks, because the eye only has to find the bright thing. `padFillWhenOnPercent` sets this for pads only.
 - `onLiftPercent` moves a lit plate toward white (above 0) or toward black (below 0). Jove uses 36, so a lit tab goes paler, like colored plastic with a lamp behind it. Bone uses `-16`, so a lit button on its light page gets deeper and its white name still reads.
+- `onInkColor` is the color of a switch's name while the switch is on. It's used only where it reads at 4.5 : 1 or better; otherwise the name takes the ink, or failing that whichever of a light or dark ink reads. Groovy prints a cream name, `#FFF7E6`, on every lit color, and the tube themes print a name the color of their dark glass, the way a terminal's inverse video does.
 - `lampColor` is the lamp's color when `fillWhenOnPercent` is 0. When it isn't set, a lamp is its control's own color. A lit lamp puts a faint line of its light around the switch, and a named lamp color also colors the switch's glow. Supersaw lights every switch with one red lamp, `#FF523A`.
 - `lampShape` is `"bar"`, a short bar across the top of the switch, or `"dot"`, a round lens. An unlit lamp is still drawn, dimly, so you know where to look for it.
+- `lampPosition` puts a round lamp at the `"topCenter"` of a switch or in its `"topRight"` corner, the way a keyboard's LED sits clear of the name printed at the top left. Soft Sector and Hard Sector use the corner.
+- `lampHolderColor` sets a round lamp into a holder: a dark ring round the lens, with the light catching its lower edge. Unlit, the lens is only a hint of its color. Soft Sector's holder is `#2B2723` and Hard Sector's `#0C0C0C`.
+- `lampGlowPercent` is how strongly a lit round lamp glows, apart from `glowStrength`. `-1` means the same as `glowStrength`. It lets an LED light the key round it on a theme where nothing else glows: both Sector themes use 100 with a glow of 0.
 - `namesInsideSwitches` puts a switch's name in its middle, whatever `labels` says for everything else, the way a hardware panel prints names above its knobs but on its buttons. The name changes ink when the switch lights, so it can still be read on a bright fill.
+- `switchNames` says where that name sits: `"center"`, or `"topLeft"`, one line at the top left the way a keyboard prints the legend on a key. A layout can also put one control's name there with the **Inside, at the top left** label placement.
 - `neutralCaps` makes a switch or fader on the neutral slot wear the neutral color as its cap. It's how a hardware panel marks one row of controls as belonging together without giving it a color. Five-iSH uses it for one row of cream caps. The theme needs a `neutralColor` for this to do anything.
+
+Keys:
+
+- `switchShape` is `"plate"`, or `"keycap"` for a key: a skirt in the plate's two colors with a dished top set into it, a thin dark line along the foot of the skirt, and a line of light along the top of the dish. It needs a `plateColor`. A lamp on its own stays a lamp.
+- `keycapTopColor` and `keycapTopEndColor` are the dished top, from the back to the front. A dish is darker at the back than at the front. When they aren't set, they're worked out from the plate. A key held down gets a few levels darker.
+- On the neutral slot, with `neutralCaps`, a key is the other plastic: all four of its colors are the first key's, scaled to the neutral color. Soft Sector's second key is `#A29C8F`, and Hard Sector's is near black.
+- `pressTravelPixels` is how far a switch goes down under a finger, from 0 to 8 pixels. A toggle that's on, and the page tab you're on, stay half as far down. A pad or button lit only by MIDI doesn't move, because nobody pressed it. While a key is down, its shadow shrinks. Both Sector themes use 2, because a glow alone was too faint to show a press on their keys.
+- On a theme whose switches are keys, a fader's cap is a small key too, with a short painted line a little above its middle.
 
 **The on state paints the plate.** On a theme with no plate at all, like High contrast, a switch shows it's on through its value strip.
 
@@ -333,6 +361,7 @@ A knob's plate is only its face. The value arc hangs just outside the face, 2 pi
 - `pointerColor` is the line that shows which way a knob points. When it isn't set, the pointer is the control's color, or the ink on a theme with a neutral rim. On a real panel every pointer is the same color whatever the knob does, and that's what Jove (`#E8601C`), Supersaw (`#E9ECF2`), and Bigwig (`#E6E6E6`) do.
 - `pointerOnCap` prints the pointer on the cap, from its edge toward the middle, the way Five-iSH's white line is printed on its black cap. Without it, the pointer comes out from under the cap.
 - `knobTickCount` prints a ring of marks around every knob, outside its arc, in the ink. Supersaw prints 9 and Five-iSH 11.
+- `knobKnurlCount` cuts ridges round the side of the face, from 0 to 120, alternating the face's two colors, lit along the top and shaded along the bottom. It's the grip on a molded knob. Both Sector themes use 36, with a flat cap in the middle.
 
 **A knob keeps its own marks.** A new knob shows five marks of its own. On a theme with `knobTickCount`, those five are printed in the ink, and the theme's count is used on knobs whose own marks are turned off. Knobs smaller than 36 pixels have no room for marks.
 
@@ -354,7 +383,7 @@ An encoder is drawn exactly like a knob.
 
 A cap is 80 percent of the fader's width, a little over half that tall, and never more than about a third of the travel. A fader narrower than 34 pixels has no cap and shows its fill alone. A fader drawn wider than it is tall is a horizontal fader.
 
-A meter is drawn like a fader without a cap. Its bar takes its colors from the three zones in `meterSlots`, and the zones belong to the slot rather than to the bar, so a rising bar uncovers more of the ramp, like a row of lights.
+A meter is a row of lights: segments 4 pixels long and 2 apart, packed from its quiet end, the bottom of a tall meter or the left of a wide one. The first 70 percent of the segments are the signal zone, the next 20 the warning zone, and the rest the top. A lit segment is its zone's color from `meterSlots`, and an unlit one is `meterUnlitColor`, so every light is there when it's out, the way a real meter's are.
 
 ![Faders with a full plate on Studio Dark, a strip on Supersaw, no plate on Jove, a lit frame on Airy System, a printed scale on Five-iSH, and a fill that fades to the glow on Terminal Amber]({{ site.baseurl }}/assets/images/midiglass-theme-faders.png)
 
@@ -362,6 +391,9 @@ A meter is drawn like a fader without a cap. Its bar takes its colors from the t
 
 - `wellColor` sinks the field of anything that shows you something into its plate: the XY pad's field, the LFO's wave, and the ribbon's strip. When it isn't set, there's no well.
 - `recessShadePercent` shades the inside of a well as well as a slot.
+- `recessLipColor` draws a thin light line along the lower edge of anything cut into the surface: a fader slot, a well, a window, a lamp holder, and a section pressed into the case. It's the light catching the edge of a cut. Soft Sector's is white at 55 percent, and Hard Sector's white at 10.
+- `wellFillsControl` makes every display a dark window the size of the whole control, with no plate or rim round it: XY pads, LFOs, step sequencers, meters, readouts, beat clocks, and stopwatches. Inside a window a light keeps its own color, even on a theme whose `valueColor` prints every other value in one ink. Both Sector themes do this, so their LEDs glow in green, amber, and red behind smoked plastic while their knobs point in the ink.
+- `wellGlossPercent` lays a hard-edged reflection across the upper left of every window, in white at this strength, the way a room shows in smoked plastic. Soft Sector uses 7 and Hard Sector 6.
 
 This is the "sunk" part of raised, sunk, and flat. Bigwig's wells are `#161616`, darker than every gray around them. Bone's is `#EDE6D8`, with a warm shade along the top.
 
@@ -372,6 +404,7 @@ This is the "sunk" part of raised, sunk, and flat. Bigwig's wells are `#161616`,
 - `labels` says where a control's name goes: `"above"`, `"below"`, `"inside"` (along the bottom, inside the control), or `"none"`. Hardware panels print names above their controls, which is why Jove, Supersaw, and Five-iSH use `"above"`. A layout can still move any one control's label.
 - `inkColor` is the color of labels, tick marks, and printed scales. When it isn't set, the app looks at what's behind each label and picks a light or a dark ink that reads on it. A tube theme names its ink because its ink is its phosphor: a plain white label on amber glass looks like a fault.
 - `sectionInkColor` is the ink for anything printed on a filled section. Anything on the deck or on an inner section keeps `inkColor`. Use it when no one ink reads on both. Five-iSH's white print measures only 1.5 : 1 on its tan sections, so the sections are printed in black, `#1D1D1A`.
+- `neonLetters` makes a section's name and the words on a Text control glow like neon: the letters are their tube's color most of the way to white, in a soft light of that color, with a longer glow falling below them. A layout's own label color turns it off for that label. Off-world Colonies uses it.
 
 Which ink a label gets depends on where the words land, not where the control is. A name above a knob can sit on the deck while the knob sits on a section.
 
@@ -383,7 +416,7 @@ Labels are Segoe UI Variable Text at 12 pixels unless the layout sets something 
 
 A **Group** control draws a frame around controls that belong together. It sends nothing, and taps go through it to whatever is underneath. The theme calls it a section.
 
-**A Group you add in the editor starts with the Outline style,** so it's only a frame in the rim color, whatever the theme says. Give it the **Plate** style in the inspector and it follows the theme's section settings below: its fill, its outline color, and the inner-section color. The section header settings apply either way.
+**A Group you add in the editor follows the theme,** so the section settings below decide its fill, its outline color, and the inner-section color. Give it the **Outline** style in the inspector and it's only a frame in the rim color, whatever the theme says. The section header settings apply either way.
 
 - `panelFill` is `"plate"` (the same plate a control gets), `"color"` (`panelColor`, fading to `panelEndColor` from top to bottom), or `"none"` (an outline only).
 - `panelOutlineColor` is the frame's line. When it isn't set, it's the rim.
@@ -391,11 +424,14 @@ A **Group** control draws a frame around controls that belong together. It sends
 - `sectionHeader` says how a section shows its name:
   - `"caption"` puts the name at the top left, inside the frame.
   - `"filledBar"` fills a bar across the top in the section's color, and prints the name in whichever of a dark or a light ink reads on it. Jove's orange banners.
-  - `"notched"` sets the name in a gap cut into the top line of the frame. Supersaw.
+  - `"notched"` sets the name in a gap cut into the top line of the frame. Supersaw, Groovy, and Groovy Dark. The gap is cut out of the frame, so the page shows through it, grain and all.
   - `"centered"` centers the name across the top, inside the frame. Five-iSH and Airy System.
 - `sectionNameInHue` prints the name in the section's color instead of the ink. Bigwig, Supersaw, and Airy System.
 - `insetPanelColor` and `insetPanelEndColor` give an **inner section** its own color. A filled section whose middle sits on another filled section is an inner section, and it's printed flat, with no shadow, like a second layer of ink. Five-iSH's green blocks inside its tan sections work this way.
 - On a theme with a resting glow, a section drawn as an outline glows along its line. Airy System's sections do this.
+- `stripeColors` frames every section in up to four bands of flat color instead of one outline, from the outside in, each `stripeWidth` pixels wide. The list ends at the first color left empty. The outer corner grows by the width of the stripes, so the innermost stripe turns the same curve as a control. A notched name sits across the middle of the band, clear of the corner. Groovy uses brown, burnt orange, and orange at 4 pixels; Groovy Dark red, orange, gold, and cream at 3. Make the outermost stripe the one that stands out against the page.
+- `panelRecessPercent` presses a section into the surface like a molded tray, with a shadow along its top inside edge in the shadow color. A tray has no sheen and no shade of its own. Soft Sector uses 20 and Hard Sector 50.
+- `sectionTexture` lays a picture over every section in black, through the picture's own see-through parts, at `sectionTexturePercent` strength. It only ever darkens, so it's for dirt and stains. Like a deck picture, it's a plain file name in the Themes folder. Off-world Colonies lays its wall's stains over every module at 55 percent.
 
 A section's color is the value color when the theme sets one, and otherwise the color of the section's own slot. That's why every banner on Jove is orange, whatever slot its section uses.
 
@@ -403,6 +439,7 @@ A **Line** control is a printed rule, like the lines between groups of sections 
 
 - `ruleColor` is its color. When it isn't set, it's the ink at a sixth of its strength.
 - `ruleFades` fades the line out at both ends instead of stopping it square. Each line in a layout can also set its own color and ends.
+- On a theme with stripes, a line with no color of its own is split into the stripes: its thickness shared out between them, the first on top or on the left, cut square at the ends.
 
 ![Sections on Studio Dark, Bigwig, Jove, Supersaw, Five-iSH, and Airy System]({{ site.baseurl }}/assets/images/midiglass-theme-sections.png)
 
@@ -416,50 +453,50 @@ A tube has no white and no black, so Cathode draws its keys in its phosphor and 
 
 The names here are the ones in the MIDI Glass palette. Everything a control draws comes from the settings above; this section says which ones matter for each control, and why the control is drawn the way it is.
 
-A layout can also give one control its own **style**, which the editor shows as four choices. **Plate** follows the theme, and it's what almost every control uses. **Outline** drops the plate, **Solid** fills the plate with the control's own color, and **Bare** drops both the plate and the rim, leaving only the value and the label. Two controls arrive with a style other than Plate: a new Group is an Outline, and new Text is Bare. Apart from those, a style other than Plate is for the odd control that has to stand apart, like a panic button.
+A layout can also give one control its own **style**, which the editor shows as five choices. **Theme** and **Plate** both follow the theme, and Theme is what almost every control uses. **Outline** drops the plate, **Solid** fills the plate with the control's own color, and **Bare** drops both the plate and the rim, leaving only the value and the label. New Text arrives Bare. Apart from that, a style other than Theme is for the odd control that has to stand apart, like a panic button.
 
 ### Knob and Encoder
 
 You turn a knob to a value, so its value is light running around it, and the knob itself can look like the hardware it stands in for.
 
-- **Drawn:** the face (the plate, or a turned face), a cap or a center dot, the pointer, the empty arc, the value arc, marks, the rim around the face, the shadow, and the glow. While you're touching it, its value appears as a number under it.
-- **Settings that matter:** `knobFaceColor`, `knobCapColor`, `knobCapSizePercent`, `pointerColor`, `pointerOnCap`, `knobTickCount`, `arcTrackColor`, `arcTrackHuePercent`, `arcGlow`, `valueColor`, and `valueIndicator`.
+- **Drawn:** the face (the plate, a turned face, or a ridged one), a cap or a center dot, the pointer, the empty arc, the value arc and its hot core, marks, the rim around the face, the shadow, and the glow. While you're touching it, its value appears as a number under it.
+- **Settings that matter:** `knobFaceColor`, `knobCapColor`, `knobCapSizePercent`, `knobKnurlCount`, `pointerColor`, `pointerOnCap`, `knobTickCount`, `arcTrackColor`, `arcTrackHuePercent`, `arcGlow`, `arcThickness`, `arcRoundEnds`, `valueCorePercent`, `valueColor`, and `valueIndicator`.
 
 ### Fader and Meter
 
 A fader shows its value by how far the light climbs its slot, and its cap is the thing you grab. So the slot is sunk and the cap stands up.
 
-- **Drawn:** the plate (the whole control, a strip, a frame, or none), the slot, the shade inside it, marks or a printed scale, the fill and its halo, and the cap with its line and its shadow. While you're touching it, its value appears as a number.
-- **Settings that matter:** `faderPlate`, `faderFillPercent`, `faderScalePercent`, `thumb`, `thumbColor`, `thumbEndColor`, `capLineColor`, `capLineWide`, `thumbShadowPercent`, `recessShadePercent`, `trackColor`, `pipeFalloff`, `valueFadesToLight`, and `neutralCaps`.
-- **A meter** only shows a value it receives. It has the same slot and fill, no cap, and colors from `meterSlots`.
+- **Drawn:** the plate (the whole control, a strip, a frame, or none), the slot, the shade inside it and the lip under it, marks or a printed scale, the fill with its halo and its hot core, and the cap with its line and its shadow. While you're touching it, its value appears as a number.
+- **Settings that matter:** `faderPlate`, `faderFillPercent`, `faderScalePercent`, `thumb`, `thumbColor`, `thumbEndColor`, `capLineColor`, `capLineWide`, `thumbShadowPercent`, `recessShadePercent`, `recessLipColor`, `trackColor`, `pipeFalloff`, `valueFadesToLight`, `valueCorePercent`, `arcThickness`, `arcRoundEnds`, and `neutralCaps`.
+- **A meter** only shows a value it receives. It's a row of lights with no cap: colors from `meterSlots`, unlit ones in `meterUnlitColor`, and a window round it on a theme with `wellFillsControl`.
 
 ### Button, Toggle, Pad, and Page tab
 
 These are switches: on or off. The plate carries the state, and it's the one place a theme is allowed to fill a whole area with color, which is why "on" reads across a room on a page of two hundred controls.
 
-- **Drawn:** the plate, with the switch or pad fill at rest; the rim; the value strip; and the name, inside the switch when the theme asks. When on: the lit plate or the lamp, a rim in the control's color or a line of the lamp's light, and the glow, held at a little over half.
-- **Settings that matter:** `switchFillAtRest`, `fillWhenOnPercent`, `onLiftPercent`, `lampColor`, `lampShape`, `namesInsideSwitches`, `switchRimStrengthPercent`, `switchRestingGlowPercent`, `valueStrip`, and `neutralCaps`. For pads, also `padFillAtRest` and `padFillWhenOnPercent`.
+- **Drawn:** the plate, with the switch or pad fill at rest, or a key with its dished top; the rim; the value strip; and the name, inside the switch when the theme asks. When on: the lit plate or the lamp, a rim in the control's color or a line of the lamp's light, the glow, held at a little over half, and a flare along the strip on a theme with one. On a theme with key travel, the key goes down under a finger and stays half down while it's latched on.
+- **Settings that matter:** `switchFillAtRest`, `fillWhenOnPercent`, `onLiftPercent`, `onInkColor`, `lampColor`, `lampShape`, `lampPosition`, `lampHolderColor`, `lampGlowPercent`, `namesInsideSwitches`, `switchNames`, `switchShape`, `keycapTopColor`, `keycapTopEndColor`, `pressTravelPixels`, `switchRimStrengthPercent`, `switchRestingGlowPercent`, `valueStrip`, `flarePercent`, and `neutralCaps`. For pads, also `padFillAtRest`, `padFillWhenOnPercent`, and `restTintOnPlate`.
 - A button and a pad are on while you hold them, and a toggle stays on until you press it again. None of them take the touch wash.
 
 ### Lamp
 
 A lamp is a light that MIDI turns on, like an LED on a piece of hardware.
 
-- On a theme that fills its switches, a lamp's plate lights up the same way a switch's does.
-- On a theme that says "on" with a lamp (`fillWhenOnPercent` 0), the lamp is a lamp: a bar at the top of its plate or, with round lamps, the whole control becomes a round lens in a dark bezel that throws a halo when it's lit.
-- **Settings that matter:** `lampShape`, `lampColor`, `fillWhenOnPercent`, and `glowStrength`.
+- On a theme that fills its switches, a lamp's plate lights up the same way a switch's does. With round lamps (`lampShape` `"dot"`), that plate is round: a ring of its color at rest and a disc of it when it's lit.
+- On a theme that says "on" with a lamp (`fillWhenOnPercent` 0), the lamp is a lamp: a bar at the top of its plate or, with round lamps, the whole control becomes a round lens in a dark bezel that throws a halo when it's lit. A lamp holder color becomes the bezel. A round lens has no top left corner, so on a theme that prints key legends there (`switchNames` `"topLeft"`), a lamp's name goes where the theme puts every other name instead.
+- **Settings that matter:** `lampShape`, `lampColor`, `lampHolderColor`, `lampGlowPercent`, `fillWhenOnPercent`, and `glowStrength`.
 
 ### Readout, Text, and Image
 
-- A **Readout** shows a value it receives as a strip along one edge of its plate. It uses `valueStrip`.
-- **Text** arrives with the **Bare** style: just its words, in the label ink, with no plate or rim. Give it the **Plate** style in the editor and it gets the theme's plate and rim like any other control.
+- A **Readout** shows a value it receives as a strip along one edge of its plate. It uses `valueStrip`. On a theme with `wellFillsControl` it's a dark window the size of the control.
+- **Text** arrives with the **Bare** style: just its words, in the label ink, with no plate or rim. Give it the **Plate** style in the editor and it gets the theme's plate and rim like any other control. On a theme with `neonLetters`, its words glow in the color of its slot.
 - An **Image** shows a picture or a video on its plate.
 
 ### XY pad, Joystick, and Ribbon
 
 These show their value inside a field rather than along a track.
 
-- An **XY pad**'s field is sunk in a well, with a grid of its own marks, a faint crosshair, and a puck of light with a halo.
+- An **XY pad**'s field is sunk in a well, with a grid of its own marks, a faint crosshair, and a puck of light with a halo. On a theme with a hot core the puck is white in the middle, and on a theme with a flare it throws one. On a theme with `wellFillsControl` the field is a window the size of the control, and its grid, crosshair, and puck keep the control's own color.
 - A **Joystick** has two rings, and the outer one is drawn in the rim color when the stick springs back to the middle, because that ring is the only thing that tells you it will. Its puck is a small cap in the fader cap colors, with a dot of the value color in it. With `thumb` set to `"none"`, only the dot shows.
 - A **Ribbon** is a strip sunk in a well, with a soft band of light that follows your finger. At rest the band is dim, and it comes right up under a finger.
 - **Settings that matter:** `wellColor`, `recessShadePercent`, `valueColor`, `glowStrength`, the rim, and, for the joystick, `thumbColor` and `thumbEndColor`.
@@ -471,6 +508,7 @@ These show something that's running rather than a position.
 - An **LFO** has a well, a line across its middle, one cycle of its wave in the value color, and a bead that's dim until it runs. An LFO is never filled like a switch, because a wave the same color as the plate under it can't be seen.
 - A **Beat clock** has a ring in the track color, a sweep in the value color that goes around once a bar, a disc that flashes on each beat, and four dots for the beats.
 - A **Stopwatch** is its plate and the time, in the value color.
+- On a theme with `wellFillsControl`, all three are windows the size of the control, and what lights up inside keeps the control's own color.
 
 ### Turntable
 
@@ -506,17 +544,22 @@ Studio Dark comes first in the gallery because it's the default and the one that
 | **Bigwig** | A ladder of grays with one lead orange. Color only ever means the value, the state, or which section this is. | A neutral edge instead of colored rims, named plates, sections in their own gray with names in their color, names on switches, a full fill when on, turned knob faces, dark wells. | Red is for light, not words: it's too dark to read as a name. |
 | **Blueprint** | Six blues on a navy deck. | A one-color family on Studio Dark's glass. | Its closest two slots, 2 and 4, are only about 11 apart in color, so pair color with position and names. |
 | **Bone** | A warm light theme in two colors, bone and a warm brown. The shadow is what separates a control from the page. | A warm shadow (elevation 45, spread 9), rims at 85, a white glow, lit buttons that deepen (-16), sunk slots and wells, cap shadows. | In a dark room it's a lamp pointed at the performer. Best at a desk or in a lit room. |
-| **Cathode** | An old black and white TV: olive glass, a blue-white phosphor, soft edges, and no pure black or white anywhere. | Scan lines, corner fall-off, a named plate gradient, a resting glow, a glow color, an ink that is the phosphor, and a fill that fades to the glow. | Its six slots are six brightnesses of one phosphor, so nothing can be grouped by color. Controls are known by where they are and what they're called. |
+| **Cathode** | An old black and white TV: olive glass, a blue-white phosphor, soft edges, and no pure black or white anywhere. | Scan lines, corner fall-off, a named plate gradient, a resting glow, a glow color, an ink that is the phosphor, a fill that fades to the glow, and inverse video: a lit switch is the phosphor with a dark name. | Its six slots are six brightnesses of one phosphor, so nothing can be grouped by color. Controls are known by where they are and what they're called. |
 | **Daylight** | The light version of the original set: a near-white deck with dark, saturated colors. | A named light track, glass at 92, a softer glow (35), a white cap. | Like any light theme, it's bright in a dark room. |
 | **Five-iSH** | Black metal with the panel printed on it twice, after the Roland SH-7: tan sections named in black, green blocks named in white, silver knobs with black caps. | Inner sections, a section ink, centered names, pointers on caps, printed scales, round lamps, cream caps on the neutral slot, every value in the print white. | Color is only a lamp, so knobs and faders can't be grouped by color. Put controls on the green or the black, not the tan. |
+| **Groovy** | The seventies: a flat goldenrod page, earthy colors, cream controls, and heavy lines with no shading and no shadow. Sections are framed in brown, burnt orange, and orange stripes. | Stripes 4 pixels wide, rims at 100 and 3 pixels thick, knob arcs 6 pixels thick with round ends, a cream name on a lit switch, pads tinted on the plate. | A bright page, made for a lit room. The six colors are close in brightness, so they're told apart by color alone. |
+| **Groovy Dark** | Groovy on a brown page, with espresso controls cut into it, a paper grain, and four stripes of red, orange, gold, and cream. | Fine grain at 50, a plate darker than its page, a dark name on a lit switch. | Made for a dark room. A switch that's on is a solid block of color, and with red-green color blindness red and avocado look alike. |
+| **Hard Sector** | Soft Sector in charcoal plastic: gray keys, black keys on the neutral slot, and the same LEDs. | The same as Soft Sector, with a black shadow and a finer grain (24). | Red, amber, and green are the hardest three to tell apart with red-green color blindness. A key that's on also stays down, so the state isn't color alone. |
 | **High contrast** | Hard edges, no glow, no rounding, and no plate. Touching a knob or a fader fills it hard. | What to turn off for someone who can't resolve a blur. | Offered, never forced. If Windows switches to high contrast during a set, the running layout is left alone until it's next opened. |
 | **Jove** | Matte black steel, orange pointers, and a row of solid colored tabs, after the Roland Jupiter-8. | Switch fill at rest of 1 with bare knobs, tabs that go paler when lit, filled section banners, labels above, no rims, fader slots cut straight into the panel, one value color. | The tabs are full color all the time. That's lovely on a few dozen switches and a wall of color on a few hundred. |
 | **Neon Booth** | Saturated neon on a near-black purple deck. | Studio Dark's machinery with louder colors. | Nothing the app warns about. |
+| **Off-world Colonies** | A city where it never stops raining, after the film Blade Runner: a wall of cast concrete blocks with the rain running down it, equipment of dark worn metal, and neon. | A repeating deck picture, rain, a picture of stains laid over every section in black, neon names, a white hot core in every lit value, glows that run down the wall, lens flares, corner fall-off. | A busy wall, made for a dark room. Keep names on the sections rather than on the bare wall. |
+| **Soft Sector** | A home computer of the early eighties in putty plastic: keys with dished tops and the name at the top left, an LED in the corner of each key, ridged knobs, and every display a smoked window. | Keys, key travel, LEDs in holders that glow on a theme with no glow, ridged knobs, windows with a reflection, trays pressed into the case, lips under every cut, a fine grain (36). | A light theme, so it's bright on a dark stage. Red, amber, and green are the hardest three to tell apart with red-green color blindness, though a key that's on also stays down. |
 | **Supersaw** | A matte blue panel with a fine grain, shiny black molding, and one small red lamp per switch, after the Roland JP-8000. | Fine grain, lamps instead of fills, knob caps and printed mark rings, strip faders, names set in a notch in the section frame. | A switch that's on looks just like one that's off apart from its lamp, so the state is one small light. |
-| **Terminal Amber** | An amber terminal: warm maroon glass, a glow redder than the amber, and colors that run like heat from ember to white hot. | A heat ramp that's also a rising brightness, a 400 millisecond glow, a fill that fades to the glow. | A lamp in a dark room. The deepest ember is light rather than letters: give it a rim, a value, or a fill, never a label. |
-| **Terminal Green** | A green terminal. The glass isn't green: it's a cool blue slate, with the room reflected across its upper left. | A faceplate reflection, a glow yellower than the green. | The deepest green is too dark to carry a name on a lit control. |
-| **Tonal Dark** | Flat, rounded, and friendly, with each control washed in its own color at rest, on a dark deck. | Fill at rest (0.18), a touch fill, colored caps, no glass and no glow. | A busy page is colorful even when nothing is happening, so activity has less room to stand out. |
-| **Tonal Light** | The same idea on a near-white deck, with darker colors so a thin rim still reads. | Fill at rest (0.14), a light track, round corners (14). | The same as Tonal Dark. |
+| **Terminal Amber** | An amber terminal: warm maroon glass, a glow redder than the amber, and colors that run like heat from ember to white hot. | A heat ramp that's also a rising brightness, a 400 millisecond glow, a fill that fades to the glow, inverse video. | A lamp in a dark room. The deepest ember is light rather than letters: give it a rim, a value, or a fill, never a label. |
+| **Terminal Green** | A green terminal. The glass isn't green: it's a cool blue slate, with the room reflected across its upper left. | A faceplate reflection, a glow yellower than the green, inverse video. | The deepest green is too dark to carry a name on a lit control. |
+| **Tonal Dark** | Flat, rounded, and friendly, with each control washed in its own color at rest, on a dark deck. | Fill at rest (0.18), a touch fill, colored caps, a lit switch that's its color outright with a dark name, no glass and no glow. | A busy page is colorful even when nothing is happening, so activity has less room to stand out. |
+| **Tonal Light** | The same idea on a near-white deck, with darker colors so a thin rim still reads. | Fill at rest (0.14), a light track, round corners (14), a lit switch that's its color outright with a white name. | The same as Tonal Dark. |
 
 ## Designing a theme for someone else
 
@@ -545,6 +588,9 @@ This part is for anyone building a theme for someone else, and it's written with
 | Black knobs, lamps, and a textured panel | Supersaw |
 | A printed panel with sections | Five-iSH |
 | Everything lit up, for a dark room | Airy System |
+| Flat seventies color with heavy lines | Groovy, or Groovy Dark for a dark room |
+| A home computer or a keyboard with LEDs in its keys | Soft Sector, or Hard Sector for dark plastic |
+| A textured wall, rain, and neon | Off-world Colonies |
 | The easiest possible reading | High contrast |
 
 Borrow the settings the table above lists for that theme, then change the colors and the deck. The [complete file](#a-complete-theme-file) at the end of this article has every key at Studio Dark's values, so it's a safe place to start typing.
@@ -596,6 +642,9 @@ Most of a theme's character comes from these choices. Pick one for each kind of 
 | Solid tabs at rest, bare knobs | `switchFillAtRest` 1, `fillAtRest` 0, a named `plateColor` for the knobs |
 | Knobs and faders lit all the time, buttons dark | `rimStrengthPercent` high, `restingGlowPercent` above 0, `switchRimStrengthPercent` 0, `switchRestingGlowPercent` 0 |
 | Pads as their own family | `padFillAtRest` and `padFillWhenOnPercent`, independent of the buttons |
+| Keys that go down | `switchShape` `"keycap"`, `pressTravelPixels` 2, `fillWhenOnPercent` 0, and round lamps in the corner (`lampShape` `"dot"`, `lampPosition` `"topRight"`) with `lampHolderColor` and `lampGlowPercent` |
+| Heavy flat lines | `rimThickness`, `rimStrengthPercent` 100, `arcThickness`, `stripeColors`, and no glow, sheen, or shadow |
+| Neon on a dark wall | `valueCorePercent`, `neonLetters`, `glowFallPixels`, and `flarePercent` |
 
 ### Write and install the file
 
@@ -643,17 +692,20 @@ The layout's **Accessibility check** page in the editor measures the slots again
 > - Any number out of range is ignored, not clamped. `"shadowSpread": 100` is Studio Dark's 3.
 > - A number or a `true` is written in quotes.
 > - A `deck` block has no `kind`, so the gradient is flat.
-> - The deck uses `"image"`, which draws only the deck color.
+> - A deck or section picture is written as a path. Only a plain file name in the Themes folder is used.
+> - A repeating deck picture has no see-through parts, so the deck's own colors never show.
+> - A stripe color is left empty in the middle of `stripeColors`. The list ends there, so the stripes after it are ignored.
 > - The theme is named after a built-in theme, or after Pigment Light, Pigment Dark, or Amber Console, so it's hidden.
 > - Two theme files have the same `name`, so one is hidden.
 > - A setting is left out on purpose, forgetting that it then takes Studio Dark's value rather than "nothing."
 > - `plateEndColor` is set without `plateColor`, or `knobFaceColor` on a theme with no plate. Neither does anything.
 > - `restingGlowPercent` is set with `glowStrength` at 0. A resting glow is a share of the glow, so there's none.
-> - `lampColor` is set while `fillWhenOnPercent` is above 0. Lamps only light when the fill is 0.
+> - `lampColor` is set while `fillWhenOnPercent` is above 0. Lamps only light when the fill is 0. The same goes for `lampPosition`, `lampHolderColor`, and `lampGlowPercent`.
+> - `switchShape` is `"keycap"` on a theme with no `plateColor`, so the switches stay plates.
 > - `panelColor` is set while `panelFill` isn't `"color"`, or `insetPanelColor` is set while sections aren't filled.
-> - The customer's Groups still have the **Outline** style they arrive with, so none of the section settings show. Ask them to set their Groups to **Plate**.
+> - The customer's Groups have the **Outline** style, so none of the section settings show. Groups added in earlier versions of MIDI Glass arrived that way. Ask them to set their Groups to **Theme**.
 > - `meterSlots` counted from 1 instead of 0.
-> - The theme is expected to set fonts, sizes, positions, a background picture, or one control's color. A theme can't do any of those.
+> - The theme is expected to set fonts, sizes, positions, or one control's color. A theme can't do any of those.
 
 ## Every key in a theme file
 
@@ -665,10 +717,11 @@ Keys are in the order MIDI Glass writes them. **If left out** is the value the a
 | `fileVersion` | 1 | 1 | | The file format version. Write 1. A file with a higher number still loads. |
 | `name` | text | required | (the name you save under) | The theme's name in the gallery. It can't be a built-in theme's name, or Pigment Light, Pigment Dark, or Amber Console. |
 | `hueSlots` | six colors | `#4FC3F7`, `#81C784`, `#FFC247`, `#FF7043`, `#BA68C8`, `#4DD0E1` | Colors | Slots 1 to 6. A missing or unreadable entry keeps Studio Dark's color for that slot. |
-| `deck.kind` | `solidColor`, `gradient`, `image` | `gradient` with no `deck` block; `solidColor` in a block without it | Background | A flat deck, a deck lit from above, or a picture. A picture isn't drawn in this version; the deck color is used. |
+| `deck.kind` | `solidColor`, `gradient`, `image` | `gradient` with no `deck` block; `solidColor` in a block without it | Background | A flat deck, a deck lit from above, or a picture. |
 | `deck.color` | color | `#1D1E21` | Lit top | The deck color, or the top of the gradient. |
 | `deck.gradientEndColor` | color | `#07080A`; `deck.color` in a block without it | Shaded floor | The bottom and lower corners of a gradient. |
-| `deck.image` | file name | empty | | Not used in this version. Only a plain file name is accepted. |
+| `deck.image` | file name | empty | Picture | A `.png` or `.jpg` file in the Themes folder, for a picture deck. Only a plain file name is accepted. |
+| `deck.imageRepeats` | `true`, `false` | `false` | Repeat the picture | The picture repeats at its own size over the deck's colors instead of filling the page. |
 | `cornerRadius` | 0 to 128 pixels (0 to 32) | 7 | Corner rounding | How round plates, sections, and note pads are. Never more than half a control's shorter side. |
 | `glassTintPercent` | 0 to 100 | 86 | Glass tint | How solid a glass plate is. 0 is no plate at all. Only used when there's no `plateColor` and no fill at rest. |
 | `glowStrength` | 0 to 100 | 60 | Glow | How bright a control glows when touched, when MIDI arrives, or while a switch is on. Also drives every halo. |
@@ -688,7 +741,6 @@ Keys are in the order MIDI Glass writes them. **If left out** is the value the a
 | `plateElevation` | 0 to 100 | 55 | Raised | How dark the shadow under a plate is. |
 | `shadowSpread` | 0 to 64 pixels (0 to 32) | 3 | Shadow reach | How far the shadow reaches. It also drops by a third of this. |
 | `shadowColor` | color | `#000000` | Shadow color | The color of every shadow and shade: under plates and caps, in slots, and at the bottom of plates. |
-| `lightSource` | `controlHue`, `white` | `controlHue` | | Older. With `white`, glows are white when `bloomColor` isn't set. |
 | `rimStrengthPercent` | 0 to 100 | 28 | Rim strength | How strong a colored rim is at rest. 0 is no rim. |
 | `pipeFalloff` | 0 to 1 (the app shows a percentage) | 0.35 | Value fade | How bright the far end of a fader's fill is. 1 is a flat bar. |
 | `thumb` | `none`, `neutral`, `hue` | `neutral` | Fader cap | No cap, a neutral cap with a line, or a cap in the control's color. |
@@ -701,7 +753,7 @@ Keys are in the order MIDI Glass writes them. **If left out** is the value the a
 | `plateSheenColor` | color | `#00000000`: white | Sheen color | What the sheen and the top-edge line are made of. |
 | `plateEndColor` | color | `#00000000`: a flat plate | Plate bottom | The bottom of a named plate. Needs `plateColor`. |
 | `arcTrackColor` | color | `#00000000`: `trackColor` | Knob arc track | The empty part of a knob's arc. |
-| `valueFadesToLight` | `true`, `false` | `false` | Fade to the light | The far end of a fader's fill runs into the glow color. Needs a glow color: `bloomColor` or a white `lightSource`. |
+| `valueFadesToLight` | `true`, `false` | `false` | Fade to the light | The far end of a fader's fill runs into the glow color. Needs a `bloomColor`. |
 | `switchFillAtRest` | `-1`, or 0 to 1 (the app shows a percentage) | `-1`: `fillAtRest` | Switch fill at rest | The fill at rest for buttons, toggles, pads, page tabs, and lamps. |
 | `fillWhenOnPercent` | 0 to 100 | 34 | Fill when on | How much of its color a switch's plate takes when on. 0 lights a lamp instead. |
 | `pointerColor` | color | `#00000000`: the control's color, or the ink with a neutral rim | Knob pointer | Every knob's pointer. |
@@ -740,7 +792,7 @@ Keys are in the order MIDI Glass writes them. **If left out** is the value the a
 | `pointerOnCap` | `true`, `false` | `false` | Pointer on the cap | The pointer is printed on the knob cap. Needs a cap. |
 | `arcGlow` | `true`, `false` | `false` | Knob value glows | A halo around a knob's value arc. |
 | `arcTrackHuePercent` | 0 to 100 | 0: `arcTrackColor` | Knob ring in its color | The empty part of a knob's arc in the knob's own color at this strength. |
-| `lampShape` | `bar`, `dot` | `bar` | Lamp shape | A bar lamp or a round lens. |
+| `lampShape` | `bar`, `dot` | `bar` | Lamp shape | A bar lamp or a round lens. With `dot`, a lamp control is round. |
 | `switchRimStrengthPercent` | `-1`, or 0 to 100 | `-1`: `rimStrengthPercent` | Switch rim strength | The rim at rest on everything you press or read. |
 | `switchRestingGlowPercent` | `-1`, or 0 to 100 | `-1`: `restingGlowPercent` | Switch resting glow | The resting glow on everything you press or read. |
 | `padFillAtRest` | `-1`, or 0 to 1 (the app shows a percentage) | `-1`: like other switches | Pad fill at rest | The fill at rest for pads only. |
@@ -749,6 +801,34 @@ Keys are in the order MIDI Glass writes them. **If left out** is the value the a
 | `faderScalePercent` | 0 to 100 | 0 | Fader scale | Fader marks printed in the ink at this strength. |
 | `ruleColor` | color | `#00000000`: the ink at a sixth | Line color | The color of Line controls. |
 | `ruleFades` | `true`, `false` | `true` | Lines fade at the ends | Lines fade out at both ends instead of stopping square. |
+| `stripeColors` | up to four colors | empty: a plain outline | Stripe 1 to Stripe 4 | Bands of flat color that frame every section, outside in, and split a line with no color of its own, top down. The list ends at the first empty color. |
+| `stripeWidth` | 1 to 16 pixels | 4 | Stripe width | How wide each stripe is. |
+| `rimThickness` | 1 to 6 pixels | 1 | Rim weight | How heavy the rim is on plates, knob faces, and sections. |
+| `arcThickness` | 0 to 12 pixels | 0: 4 pixels | Knob ring weight | How heavy a knob's arc is. Set, it also grows the pointer and a fader's slot. |
+| `arcRoundEnds` | `true`, `false` | `false` | Round ends | Round ends on a knob's arc, and a fader cap shaped like a pill. |
+| `switchShape` | `plate`, `keycap` | `plate` | Switch shape | A switch as a plate, or as a key with a dished top. A key needs `plateColor`. |
+| `keycapTopColor` | color | `#00000000`: from the plate | Key top, back | The back of a key's dished top. |
+| `keycapTopEndColor` | color | `#00000000`: from the plate | Key top, front | The front of a key's dished top. |
+| `switchNames` | `center`, `topLeft` | `center` | Where a switch's name sits | Where a name inside a switch goes. |
+| `pressTravelPixels` | 0 to 8 | 0 | Key travel | How far a switch goes down under a finger. Half as far while it's latched on. |
+| `lampPosition` | `topCenter`, `topRight` | `topCenter` | Where a round lamp sits | A round lamp at the top middle of a switch or in its corner. |
+| `lampHolderColor` | color | `#00000000`: a thin dark ring | Lamp holder | The holder a round lamp is set into. |
+| `lampGlowPercent` | `-1`, or 0 to 100 | `-1`: `glowStrength` | Lamp glow | How strongly a lit round lamp glows. |
+| `knobKnurlCount` | 0 to 120 | 0 | Knob ridges | Ridges round the side of a knob's face, in its two colors. |
+| `panelRecessPercent` | 0 to 100 | 0 | Sections pressed in | A section as a tray, shaded along its top inside edge. |
+| `recessLipColor` | color | `#00000000`: none | Lip under cutouts | A thin light line under anything cut into the surface. |
+| `wellFillsControl` | `true`, `false` | `false` | Displays are windows | Every display is a dark window the size of the control, and lights inside keep their own color. |
+| `wellGlossPercent` | 0 to 100 | 0 | Window reflection | A hard-edged reflection across the upper left of every window. |
+| `neonLetters` | `true`, `false` | `false` | Neon names | Section names and Text glow in their own color. |
+| `valueCorePercent` | 0 to 100 | 0 | Hot core | A lighter line down the middle of every lit value, this far toward white. |
+| `glowFallPixels` | 0 to 32 | 0 | Glow runs down | How much further a glow reaches below a control than above it. |
+| `flarePercent` | 0 to 100 | 0 | Lens flare | A streak and a star thrown by a lit light. |
+| `flareColor` | color | `#00000000`: the light's own color | Flare color | The heart of a flare. |
+| `sectionTexture` | file name | empty | Section picture | A picture in the Themes folder, laid over every section in black. |
+| `sectionTexturePercent` | 0 to 100 | 0 | Section picture strength | How strongly the section picture shows. |
+| `meterUnlitColor` | color | `#00000000`: each zone's color, turned down | Unlit segment | A meter's lights while they're out. |
+| `onInkColor` | color | `#00000000`: the ink | Name on a lit switch | A switch's name while it's on, where it reads. |
+| `restTintOnPlate` | `true`, `false` | `false` | Resting color on the plate | A resting tint mixed into the plate instead of into the page. |
 | `meterSlots` | three slots, 0 to 5 | `[1, 2, 5]` | Signal, Warning, Too loud | The slots for a meter's three zones, counted from 0. |
 | `deckOverlay.scanLinePitch` | 0 to 64 screen pixels (0 to 12) | 0 | Scan lines | Distance between scan lines. 0 is off. |
 | `deckOverlay.scanLineStrength` | 0 to 100 | 0 | Scan strength | How dark each scan line is. |
@@ -759,7 +839,11 @@ Keys are in the order MIDI Glass writes them. **If left out** is the value the a
 | `deckOverlay.faceplateSheenColor` | color | `#00000000`: `#BEE1F0` | Faceplate color | What the reflection is made of. |
 | `deckOverlay.grainPercent` | 0 to 100 | 0 | Grain | How strong the panel's texture is. |
 | `deckOverlay.grainColor` | color | `#00000000`: the deck color, lifted | Grain color | What the grain is made of. |
-| `deckOverlay.grainStreak` | 1 to 64 | 1 | Grain length | 1 is fine specks. Longer is brushed streaks. |
+| `deckOverlay.grainStreak` | 1 to 64 | 1 | Grain length | How long a brushed streak is. 1 is the usual 12. Only brushed grain uses it. |
+| `deckOverlay.grainStyle` | `speckle`, `brushed`, `fine` | `speckle` | Grain style | Specks, brushed streaks, or a fine noise in every pixel. |
+| `deckOverlay.rainPercent` | 0 to 100 | 0 | Rain | How strong the rain under the controls is. |
+| `deckOverlay.rainColor` | color | `#00000000`: `#C6E4EE` | Rain color | What the rain is made of. |
+| `deckOverlay.rainSpeed` | 0 to 600 page pixels a second | 0 | Rain speed | How fast the rain falls. 0 holds it still. |
 
 ### A complete theme file
 
@@ -782,7 +866,8 @@ This is Studio Dark written out in full, under a new name so it can sit in the T
     "kind": "gradient",
     "color": "#1D1E21",
     "gradientEndColor": "#07080A",
-    "image": ""
+    "image": "",
+    "imageRepeats": false
   },
   "cornerRadius": 7,
   "glassTintPercent": 86,
@@ -803,7 +888,6 @@ This is Studio Dark written out in full, under a new name so it can sit in the T
   "plateElevation": 55,
   "shadowSpread": 3,
   "shadowColor": "#000000",
-  "lightSource": "controlHue",
   "rimStrengthPercent": 28,
   "pipeFalloff": 0.35,
   "thumb": "neutral",
@@ -864,6 +948,35 @@ This is Studio Dark written out in full, under a new name so it can sit in the T
   "faderScalePercent": 0,
   "ruleColor": "#00000000",
   "ruleFades": true,
+  "stripeColors": [
+  ],
+  "stripeWidth": 4,
+  "rimThickness": 1,
+  "arcThickness": 0,
+  "arcRoundEnds": false,
+  "switchShape": "plate",
+  "keycapTopColor": "#00000000",
+  "keycapTopEndColor": "#00000000",
+  "switchNames": "center",
+  "pressTravelPixels": 0,
+  "lampPosition": "topCenter",
+  "lampHolderColor": "#00000000",
+  "lampGlowPercent": -1,
+  "knobKnurlCount": 0,
+  "panelRecessPercent": 0,
+  "recessLipColor": "#00000000",
+  "wellFillsControl": false,
+  "wellGlossPercent": 0,
+  "neonLetters": false,
+  "valueCorePercent": 0,
+  "glowFallPixels": 0,
+  "flarePercent": 0,
+  "flareColor": "#00000000",
+  "sectionTexture": "",
+  "sectionTexturePercent": 0,
+  "meterUnlitColor": "#12FFFFFF",
+  "onInkColor": "#00000000",
+  "restTintOnPlate": false,
   "meterSlots": [
     1,
     2,
@@ -879,7 +992,11 @@ This is Studio Dark written out in full, under a new name so it can sit in the T
     "faceplateSheenColor": "#00000000",
     "grainPercent": 0,
     "grainColor": "#00000000",
-    "grainStreak": 1
+    "grainStreak": 1,
+    "grainStyle": "speckle",
+    "rainPercent": 0,
+    "rainColor": "#00000000",
+    "rainSpeed": 0
   }
 }
 ```
