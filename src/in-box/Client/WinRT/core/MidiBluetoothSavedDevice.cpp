@@ -7,5 +7,5 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiBluetoothConfiguredDevice.h"
-#include "Transports.Bluetooth.MidiBluetoothConfiguredDevice.g.cpp"
+#include "MidiBluetoothSavedDevice.h"
+#include "Transports.Bluetooth.MidiBluetoothSavedDevice.g.cpp"

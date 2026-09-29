@@ -19,7 +19,7 @@
 #include "MidiBluetoothPeripheralClient.h"
 #include "MidiBluetoothPeripheralClientDecisionResponse.h"
 #include "MidiBluetoothRadioInformation.h"
-#include "MidiBluetoothConfiguredDevice.h"
+#include "MidiBluetoothSavedDevice.h"
 
 #include "MidiConfigFile.h"
 #include "MidiReporting.h"
@@ -201,9 +201,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         return static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::KeepAlways);
     }
 
-    collections::IVectorView<bluetooth::MidiBluetoothConfiguredDevice> MidiBluetoothTransportManager::GetConfiguredDevices() noexcept
+    collections::IVectorView<bluetooth::MidiBluetoothSavedDevice> MidiBluetoothTransportManager::GetSavedDevices() noexcept
     {
-        auto devices = winrt::single_threaded_vector<bluetooth::MidiBluetoothConfiguredDevice>();
+        auto devices = winrt::single_threaded_vector<bluetooth::MidiBluetoothSavedDevice>();
 
         try
         {
@@ -247,19 +247,24 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
                     continue;
                 }
 
-                auto device = winrt::make_self<implementation::MidiBluetoothConfiguredDevice>();
+                auto device = winrt::make_self<implementation::MidiBluetoothSavedDevice>();
+
+                auto const retention = StringValueOrEmpty(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY);
 
                 device->InternalInitialize(
                     deviceId,
                     StringValueOrEmpty(deviceObject, MIDI_CONFIG_JSON_COMMON_COMMENT_KEY),
-                    isEnabled);
+                    isEnabled,
+                    retention.empty() ?
+                        static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::UseTransportDefault) :
+                        btinternal::OfflineRetentionFromJsonString(retention));
 
                 devices.Append(*device);
             }
         }
         catch (...)
         {
-            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception reading the configured Bluetooth MIDI devices.");
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception reading the saved Bluetooth MIDI devices.");
         }
 
         return devices.GetView();

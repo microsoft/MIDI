@@ -53,7 +53,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         static bluetooth::MidiBluetoothRadioInformation GetRadioInformation() noexcept;
         static int32_t GetDefaultOfflineRetentionSeconds() noexcept;
 
-        static collections::IVectorView<bluetooth::MidiBluetoothConfiguredDevice> GetConfiguredDevices() noexcept;
+        static collections::IVectorView<bluetooth::MidiBluetoothSavedDevice> GetSavedDevices() noexcept;
 
     private:
         static bluetooth::MidiBluetoothPeripheralClientDecisionResponse SendClientDecision(

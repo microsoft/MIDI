@@ -46,7 +46,7 @@ public:
     TEST_METHOD(TestRadioCanConnectToDevices);
     TEST_METHOD(TestMalformedDeviceIdsAreRejected);
     TEST_METHOD(TestUnknownDeviceIdIsAcceptedAndCanBeCanceled);
-    TEST_METHOD(TestConfiguredDevicesFollowSavedChanges);
+    TEST_METHOD(TestSavedDevicesFollowSavedChanges);
     TEST_METHOD(TestSavingOfflineRetentionDoesNotSaveTheDevice);
     TEST_METHOD(TestPeripheralStartsAndStops);
 

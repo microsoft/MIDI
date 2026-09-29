@@ -354,11 +354,11 @@ namespace
         VERIFY_IS_TRUE(IsFullyDisconnected(device), L"a disconnected device is not reconnected by itself");
     }
 
-    std::vector<MidiBluetoothConfiguredDevice> FindConfiguredDevices(_In_ std::wstring const& deviceId)
+    std::vector<MidiBluetoothSavedDevice> FindSavedDevices(_In_ std::wstring const& deviceId)
     {
-        std::vector<MidiBluetoothConfiguredDevice> found{};
+        std::vector<MidiBluetoothSavedDevice> found{};
 
-        for (auto const& device : MidiBluetoothTransportManager::GetConfiguredDevices())
+        for (auto const& device : MidiBluetoothTransportManager::GetSavedDevices())
         {
             if (std::wstring{ device.BluetoothDeviceId() } == deviceId)
             {
@@ -584,7 +584,7 @@ void MidiBluetoothHardwareTests::TestUnknownDeviceIdIsAcceptedAndCanBeCanceled()
     VERIFY_IS_TRUE(disconnect.Success(), L"and the request can be canceled");
 }
 
-void MidiBluetoothHardwareTests::TestConfiguredDevicesFollowSavedChanges()
+void MidiBluetoothHardwareTests::TestSavedDevicesFollowSavedChanges()
 {
     SKIP_IF_NO_BLUETOOTH_TRANSPORT();
 
@@ -596,7 +596,7 @@ void MidiBluetoothHardwareTests::TestConfiguredDevicesFollowSavedChanges()
 
     // Only there if an earlier run could not clean up
     RemoveSavedTestEntry();
-    VERIFY_IS_TRUE(FindConfiguredDevices(UnknownDeviceId).empty(), L"the test address is not saved to begin with");
+    VERIFY_IS_TRUE(FindSavedDevices(UnknownDeviceId).empty(), L"the test address is not saved to begin with");
 
     auto removeEntry = wil::scope_exit([] { RemoveSavedTestEntry(); });
 
@@ -606,17 +606,20 @@ void MidiBluetoothHardwareTests::TestConfiguredDevicesFollowSavedChanges()
 
     VerifySaved(MidiServiceTransportPluginConfigManager::SaveUpdate(connect), L"saving a device to connect works");
 
-    auto entries = FindConfiguredDevices(UnknownDeviceId);
+    auto entries = FindSavedDevices(UnknownDeviceId);
 
     VERIFY_IS_TRUE(entries.size() == 1, L"the saved device is listed once, in the form the API reports");
     VERIFY_IS_TRUE(entries[0].Comment() == SavedEntryComment, L"with its comment");
     VERIFY_IS_TRUE(entries[0].IsEnabled(), L"and set to connect");
+    VERIFY_IS_TRUE(
+        entries[0].OfflineRetentionSeconds() == static_cast<int32_t>(MidiBluetoothOfflineRetention::UseTransportDefault),
+        L"with no offline retention of its own");
 
     VerifySaved(
         MidiServiceTransportPluginConfigManager::SaveUpdate(MidiBluetoothDeviceDisconnectConfig(UnknownDeviceId, false)),
         L"saving it switched off works");
 
-    entries = FindConfiguredDevices(UnknownDeviceId);
+    entries = FindSavedDevices(UnknownDeviceId);
 
     VERIFY_IS_TRUE(entries.size() == 1, L"a device switched off is still listed, still once");
     VERIFY_IS_FALSE(entries[0].IsEnabled(), L"as switched off");
@@ -626,7 +629,7 @@ void MidiBluetoothHardwareTests::TestConfiguredDevicesFollowSavedChanges()
         MidiServiceTransportPluginConfigManager::SaveUpdate(MidiBluetoothDeviceDisconnectConfig(UnknownDeviceIdOtherForm, true)),
         L"removing it works");
 
-    VERIFY_IS_TRUE(FindConfiguredDevices(UnknownDeviceId).empty(), L"a removed device is no longer listed");
+    VERIFY_IS_TRUE(FindSavedDevices(UnknownDeviceId).empty(), L"a removed device is no longer listed");
 }
 
 void MidiBluetoothHardwareTests::TestSavingOfflineRetentionDoesNotSaveTheDevice()
@@ -640,7 +643,7 @@ void MidiBluetoothHardwareTests::TestSavingOfflineRetentionDoesNotSaveTheDevice(
     }
 
     RemoveSavedTestEntry();
-    VERIFY_IS_TRUE(FindConfiguredDevices(UnknownDeviceId).empty(), L"the test address is not saved to begin with");
+    VERIFY_IS_TRUE(FindSavedDevices(UnknownDeviceId).empty(), L"the test address is not saved to begin with");
 
     auto removeEntry = wil::scope_exit([] { RemoveSavedTestEntry(); });
 
@@ -648,17 +651,18 @@ void MidiBluetoothHardwareTests::TestSavingOfflineRetentionDoesNotSaveTheDevice(
         MidiServiceTransportPluginConfigManager::SaveUpdate(MidiBluetoothOfflineRetentionConfig(UnknownDeviceId, 30)),
         L"saving a device's offline retention works");
 
-    VERIFY_IS_TRUE(FindConfiguredDevices(UnknownDeviceId).empty(), L"and does not save it as a device to connect");
+    VERIFY_IS_TRUE(FindSavedDevices(UnknownDeviceId).empty(), L"and does not save it as a device to connect");
 
     MidiBluetoothDeviceConnectConfig connect{ UnknownDeviceId };
     connect.Comment(SavedEntryComment);
 
     VerifySaved(MidiServiceTransportPluginConfigManager::SaveUpdate(connect), L"saving it to connect afterwards works");
 
-    auto const entries = FindConfiguredDevices(UnknownDeviceId);
+    auto const entries = FindSavedDevices(UnknownDeviceId);
 
     VERIFY_IS_TRUE(entries.size() == 1, L"after which it is listed once");
     VERIFY_IS_TRUE(entries[0].IsEnabled(), L"set to connect");
+    VERIFY_IS_TRUE(entries[0].OfflineRetentionSeconds() == 30, L"and still has the retention saved before");
 }
 
 void MidiBluetoothHardwareTests::TestPeripheralStartsAndStops()

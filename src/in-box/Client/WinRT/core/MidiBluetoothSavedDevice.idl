@@ -13,10 +13,11 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
 {
     [contract(MidiTransportsBluetoothApiContract, 1)]
 
-    // A device saved in the service configuration. Passing a MidiBluetoothDeviceConnectConfig to
-    // MidiServiceTransportPluginConfigManager.SaveUpdate is what puts one here.
-    [interface_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothConfiguredDevice", UUID_IMidiBluetoothConfiguredDevice)]
-    runtimeclass MidiBluetoothConfiguredDevice
+    // A device saved in the configuration file, which the service reads when it starts. Passing a
+    // MidiBluetoothDeviceConnectConfig to MidiServiceTransportPluginConfigManager.SaveUpdate is
+    // what puts one here.
+    [interface_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothSavedDevice", UUID_IMidiBluetoothSavedDevice)]
+    runtimeclass MidiBluetoothSavedDevice
     {
         // The 12 hex digit Bluetooth address, in the same form MidiBluetoothDeviceInformation uses
         [noexcept] String BluetoothDeviceId{ get; };
@@ -28,5 +29,9 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         // False when the entry was kept but switched off with a MidiBluetoothDeviceDisconnectConfig,
         // so the service does not connect the device when it starts
         [noexcept] Boolean IsEnabled{ get; };
+
+        // The saved MidiBluetoothOfflineRetention value or number of seconds for this device.
+        // UseTransportDefault when none is saved.
+        [noexcept] Int32 OfflineRetentionSeconds{ get; };
     }
 }

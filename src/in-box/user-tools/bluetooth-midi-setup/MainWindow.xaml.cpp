@@ -582,7 +582,7 @@ namespace winrt::midibluetoothsetup::implementation
             snapshot.Radio = midi2bt::MidiBluetoothTransportManager::GetRadioInformation();
 
             // The saved devices are the ones Forget is offered for
-            for (auto const& configured : midi2bt::MidiBluetoothTransportManager::GetConfiguredDevices())
+            for (auto const& configured : midi2bt::MidiBluetoothTransportManager::GetSavedDevices())
             {
                 snapshot.RememberedDeviceIds.push_back(std::wstring{ Lowered(configured.BluetoothDeviceId()) });
             }
