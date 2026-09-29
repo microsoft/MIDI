@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - Good Form theme</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="32-good-form.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .chiprow { position: absolute; left: 14px; top: 13px; display: flex; gap: 6px; align-items: center; }
+    .tchip {
+        height: 26px; padding: 0 11px; border-radius: 13px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: var(--text3);
+        background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .tchip i { width: 11px; height: 11px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    .tchip.new { color: #2B2B2A; font-weight: 600; background: #E6E4DF; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+    .tchip.new i { border-radius: 50%; background: #C24A12; box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+
+    .deck {
+        position: absolute; left: 14px; top: 54px; width: 972px; height: 510px;
+        border-radius: 8px; overflow: hidden;
+    }
+    .decktag { position: absolute; left: 14px; top: 576px; font-size: 11px; color: var(--text3); }
+    .decktag b { color: var(--text2); font-weight: 600; }
+
+    .rhead { position: absolute; font-size: 11px; font-weight: 700; letter-spacing: .14em; color: #2B2B2A; }
+    .kcap { position: absolute; text-align: center; font-size: 10.5px; line-height: 1.45; color: #5A5955; }
+    .kcap b { display: block; color: #2B2B2A; font-weight: 700; font-size: 11px; margin-bottom: 2px; }
+    .state { position: absolute; font-size: 9px; font-weight: 700; letter-spacing: .14em; color: #5A5955; text-align: center; }
+    .measure { position: absolute; font-size: 11.5px; line-height: 1.6; color: #45443F; }
+    .measure b { color: #2B2B2A; font-weight: 700; }
+    .measure .num { font-family: "Cascadia Mono","Consolas",monospace; color: #2B2B2A; font-weight: 700; white-space: nowrap; }
+
+    .swatches { display: flex; gap: 0; width: 1000px; border-radius: 7px; overflow: hidden; margin-top: 14px; }
+    .swatches div {
+        flex: 1; height: 58px; display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 6px 6px; font-size: 9px; font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .swatches div span { display: block; font-family: "Segoe UI Variable Text","Segoe UI",sans-serif; font-size: 10px; opacity: .78; }
+
+    .costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; width: 1000px; margin-top: 12px; }
+    .cost {
+        border-radius: 7px; padding: 12px 14px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 11.5px; color: var(--text3); line-height: 1.55;
+    }
+    .cost h4 { margin: 0 0 7px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .cost b { color: var(--text2); font-weight: 600; }
+    .cost .yes { color: var(--success); font-weight: 600; }
+    .cost .no { color: var(--caution); font-weight: 600; }
+    .cost .mono { color: var(--accent); }
+
+    .asks { width: 1000px; margin-top: 11px; border-radius: 7px; padding: 12px 14px 6px 14px; box-sizing: border-box;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke); }
+    .asks h4 { margin: 0 0 8px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .asks table { width: 100%; border-collapse: collapse; font-size: 11.5px; line-height: 1.5; color: var(--text3); }
+    .asks th { text-align: left; font-weight: 600; color: var(--text2); padding: 0 10px 6px 0; border-bottom: 1px solid var(--divider); font-size: 11px; }
+    .asks td { vertical-align: top; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--divider); }
+    .asks tr:last-child td { border-bottom: none; }
+    .asks td.n { width: 18px; color: var(--caution); font-weight: 600; }
+    .asks td.ask { width: 290px; }
+    .asks td.ask b { color: var(--text); font-weight: 600; }
+    .asks td.without { width: 220px; }
+    .asks .mono { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 32 &mdash; <b>Good Form</b>, after the rational industrial design of the sixties and the small instruments that took it up again. A warm light gray panel with a fine bead-blasted grain, <b>light keys that stand on it</b>, <b>knobs whose caps are their color</b>, slim dark fader slots, and small black windows for anything that moves. Words are printed above the controls, the way a panel is printed. <b>A key is light gray until it is on, and then it is its color.</b> It asks for almost nothing new: two of its three asks are the same ones Insert Coin makes.</p>
+
+<!-- ============================================================= DECK -->
+<div class="board" style="height:600px;">
+
+    <div class="chiprow">
+        <div class="tchip"><i style="background:#D8D1C0; box-shadow: inset 0 0 0 2px #2A2723"></i>Soft Sector</div>
+        <div class="tchip"><i style="background:radial-gradient(circle at 40% 35%, #FF8A8C, #E3262B 60%, #7A1215)"></i>Insert Coin</div>
+        <div class="tchip"><i style="background:#008080; border-radius:0; box-shadow: 0 0 0 1px #000"></i>Chicago</div>
+        <div class="tchip"><i style="background:linear-gradient(180deg, #FFD23F, #FF7B39 55%, #FF3FA4); border-radius:50%"></i>Night Drive</div>
+        <div class="tchip"><i style="background:none; border-radius:50%; box-shadow: inset 0 0 0 1.5px #4ED6FF"></i>Visor</div>
+        <div class="tchip new"><i></i>Good Form</div>
+        <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
+    </div>
+
+    <div class="deck surf tonal goodform">
+
+        <div class="surftext h1" style="left:22px; top:12px; font-size:28px;">Good Form</div>
+        <div class="surftext small" style="left:24px; top:52px;">sampler &middot; sequencer &middot; mixer</div>
+
+        <div class="ctl win" style="left:300px; top:14px; width:372px; height:126px;">
+            <svg viewBox="0 0 372 126">
+                <rect x="64" y="48" width="180" height="72" fill="#1E8586" opacity=".20"/>
+                <line x1="14" y1="88" x2="358" y2="88" stroke="#3A3A38" stroke-width="1"/>
+                <path d="M14 88 Q19 32 24 88 Q29 140 34 88 Q39 40 44 88 Q49 133 54 88 Q59 46 64 88 Q69 127 74 88 Q79 52 84 88 Q89 121 94 88 Q99 57 104 88 Q109 117 114 88 Q119 61 124 88 Q129 113 134 88 Q139 65 144 88 Q149 109 154 88 Q159 68 164 88 Q169 106 174 88 Q179 71 184 88 Q189 103 194 88 Q199 74 204 88 Q209 101 214 88 Q219 76 224 88 Q229 99 234 88 Q239 78 244 88 Q249 97 254 88 Q259 80 264 88 Q269 96 274 88 Q279 81 284 88 Q289 94 294 88 Q299 82 304 88 Q309 93 314 88 Q319 83 324 88 Q329 92 334 88 Q339 84 344 88 Q349 92 354 88" fill="none" stroke="#C24A12" stroke-width="2" stroke-linejoin="round"/>
+                <line x1="150" y1="50" x2="150" y2="122" stroke="#2BB3B4" stroke-width="1.5"/>
+                <path d="M145 48 L155 48 L150 54 Z" fill="#2BB3B4"/>
+            </svg>
+            <span class="fig" style="left:14px; top:9px; font-size:20px;">a&middot;03</span>
+            <span class="wcap" style="left:15px; top:36px;">KICK 02 &middot; LOOP</span>
+            <span class="fig" style="right:44px; top:9px; font-size:20px;">120.0</span>
+            <span class="wcap" style="right:14px; top:18px;">BPM</span>
+        </div>
+
+        <div class="pagetabs" style="right:20px; top:14px; gap:8px;">
+            <div class="tab sel">play</div>
+            <div class="tab">edit</div>
+            <div class="tab">song</div>
+        </div>
+
+        <div class="rule" style="left:14px; top:154px; width:944px; height:1px;"></div>
+        <div class="rule" style="left:322px; top:168px; width:1px; height:326px;"></div>
+        <div class="rule" style="left:650px; top:168px; width:1px; height:326px;"></div>
+
+        <!-- ======================================== SOUND -->
+        <div class="ctlpanel" style="left:24px; top:166px; width:290px; height:20px;"><div class="ptitle">SOUND</div></div>
+
+        <div class="lbl" style="left:30px; top:190px; width:108px;">filter</div>
+        <div class="lbl" style="left:170px; top:190px; width:108px;">resonance</div>
+        <div class="ctl knob gk hue1" style="left:50px; top:210px; width:68px; height:68px;"><svg class="ticks" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" pathLength="360" stroke-dasharray="2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 360" transform="rotate(135 50 50)"/></svg><div class="garc" style="--pct:.51turn"></div><div class="gcap"></div><div class="ptr" style="transform:rotate(49.5deg)"></div></div>
+        <div class="ctl knob gk neutral" style="left:190px; top:210px; width:68px; height:68px;"><svg class="ticks" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" pathLength="360" stroke-dasharray="2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 360" transform="rotate(135 50 50)"/></svg><div class="garc" style="--pct:.255turn"></div><div class="gcap"></div><div class="ptr" style="transform:rotate(-43deg)"></div></div>
+
+        <div class="lbl" style="left:30px; top:300px; width:108px;">attack</div>
+        <div class="lbl" style="left:170px; top:300px; width:108px;">release</div>
+        <div class="ctl knob gk hue6 held" style="left:50px; top:320px; width:68px; height:68px;"><svg class="ticks" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" pathLength="360" stroke-dasharray="2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 360" transform="rotate(135 50 50)"/></svg><div class="garc" style="--pct:.135turn"></div><div class="gcap"></div><div class="ptr" style="transform:rotate(-86.4deg)"></div><div class="kval">0.18</div></div>
+        <div class="ctl knob gk hue4" style="left:190px; top:320px; width:68px; height:68px;"><svg class="ticks" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" pathLength="360" stroke-dasharray="2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 360" transform="rotate(135 50 50)"/></svg><div class="garc" style="--pct:.45turn"></div><div class="gcap"></div><div class="ptr" style="transform:rotate(27deg)"></div></div>
+
+        <div class="lbl" style="left:40px; top:418px; width:240px;">glide</div>
+        <div class="ctl fader horiz hue5" style="left:40px; top:440px; width:240px; height:28px;"><div class="slot"><div class="capbar" style="left:calc(34% - 9px);"></div></div><div class="gscale"></div></div>
+
+        <!-- ======================================== PADS -->
+        <div class="ctlpanel" style="left:340px; top:166px; width:290px; height:20px;"><div class="ptitle">PADS</div></div>
+
+        <div class="ctl btn-ctl hue1 on" style="left:342px; top:196px; width:68px; height:56px;"><span class="name">kick</span></div>
+        <div class="ctl btn-ctl hue1" style="left:416px; top:196px; width:68px; height:56px;"><span class="name">snare</span></div>
+        <div class="ctl btn-ctl hue3" style="left:490px; top:196px; width:68px; height:56px;"><span class="name">clap</span></div>
+        <div class="ctl btn-ctl hue6 on" style="left:564px; top:196px; width:68px; height:56px;"><span class="name">hat</span></div>
+        <div class="ctl btn-ctl hue5" style="left:342px; top:260px; width:68px; height:56px;"><span class="name">low tom</span></div>
+        <div class="ctl btn-ctl hue5 held" style="left:416px; top:260px; width:68px; height:56px;"><span class="name">high tom</span></div>
+        <div class="ctl btn-ctl hue3" style="left:490px; top:260px; width:68px; height:56px;"><span class="name">rim</span></div>
+        <div class="ctl btn-ctl hue6" style="left:564px; top:260px; width:68px; height:56px;"><span class="name">open</span></div>
+        <div class="ctl btn-ctl hue2 dim" style="left:342px; top:324px; width:68px; height:56px;"><span class="name">shaker</span></div>
+        <div class="ctl btn-ctl hue2 offline" style="left:416px; top:324px; width:68px; height:56px;"><span class="name">perc</span></div>
+        <div class="ctl btn-ctl hue4" style="left:490px; top:324px; width:68px; height:56px;"><span class="name">crash</span></div>
+        <div class="ctl btn-ctl hue4" style="left:564px; top:324px; width:68px; height:56px;"><span class="name">ride</span></div>
+
+        <div class="lbl" style="left:346px; top:404px; width:64px;">rec</div>
+        <div class="lbl" style="left:420px; top:404px; width:64px;">play</div>
+        <div class="lbl" style="left:494px; top:404px; width:64px;">stop</div>
+        <div class="lbl" style="left:568px; top:404px; width:64px;">loop</div>
+        <div class="ctl btn-ctl round hue4" style="left:356px; top:424px; width:44px; height:44px;"></div>
+        <div class="ctl btn-ctl round hue2 on" style="left:430px; top:424px; width:44px; height:44px;"></div>
+        <div class="ctl btn-ctl round neutral" style="left:504px; top:424px; width:44px; height:44px;"></div>
+        <div class="ctl btn-ctl round hue3 on" style="left:578px; top:424px; width:44px; height:44px;"></div>
+
+        <!-- ======================================== MIX -->
+        <div class="ctlpanel" style="left:668px; top:166px; width:290px; height:20px;"><div class="ptitle">MIX</div></div>
+
+        <div class="lbl" style="left:666px; top:190px; width:60px;">synth</div>
+        <div class="lbl" style="left:732px; top:190px; width:60px;">drums</div>
+        <div class="lbl" style="left:798px; top:190px; width:60px;">bass</div>
+        <div class="lbl" style="left:864px; top:190px; width:60px;">keys</div>
+        <div class="ctl fader hue1" style="left:678px; top:210px; width:36px; height:136px;"><div class="slot"><div class="capbar" style="bottom:calc(72% - 9px);"></div></div><div class="gscale"></div></div>
+        <div class="ctl fader hue6" style="left:744px; top:210px; width:36px; height:136px;"><div class="slot"><div class="capbar" style="bottom:calc(58% - 9px);"></div></div><div class="gscale"></div></div>
+        <div class="ctl fader hue3" style="left:810px; top:210px; width:36px; height:136px;"><div class="slot"><div class="capbar" style="bottom:calc(80% - 9px);"></div></div><div class="gscale"></div></div>
+        <div class="ctl fader hue5" style="left:876px; top:210px; width:36px; height:136px;"><div class="slot"><div class="capbar" style="bottom:calc(45% - 9px);"></div></div><div class="gscale"></div></div>
+
+        <div class="ctl gled hue1 on" style="left:691px; top:360px; width:10px; height:10px;"></div>
+        <div class="ctl gled hue6 on" style="left:757px; top:360px; width:10px; height:10px;"></div>
+        <div class="ctl gled hue3" style="left:823px; top:360px; width:10px; height:10px;"></div>
+        <div class="ctl gled hue5 on" style="left:889px; top:360px; width:10px; height:10px;"></div>
+
+        <div class="ctl win" style="left:674px; top:386px; width:272px; height:104px;">
+            <svg viewBox="0 0 272 104">
+                <rect x="15" y="30" width="14" height="62" fill="#262624"/>
+                <rect x="81" y="30" width="14" height="62" fill="#262624"/>
+                <rect x="147" y="30" width="14" height="62" fill="#262624"/>
+                <rect x="213" y="30" width="14" height="62" fill="#262624"/>
+                <rect x="15" y="55" width="14" height="37" fill="#C24A12"/>
+                <rect x="81" y="62" width="14" height="30" fill="#1E8586"/>
+                <rect x="147" y="47" width="14" height="45" fill="#7A7410"/>
+                <rect x="213" y="70" width="14" height="22" fill="#2F63B0"/>
+                <line x1="8" y1="92.5" x2="264" y2="92.5" stroke="#3A3A38"/>
+            </svg>
+            <span class="wcap" style="left:10px; top:7px;">LEVEL</span>
+            <span class="fig" style="left:34px; top:40px; font-size:11px;">&minus;4</span>
+            <span class="fig" style="left:100px; top:47px; font-size:11px;">&minus;9</span>
+            <span class="fig" style="left:166px; top:32px; font-size:11px;">&minus;2</span>
+            <span class="fig" style="left:232px; top:55px; font-size:11px;">&minus;12</span>
+        </div>
+
+    </div>
+    <div class="decktag"><b>Good Form</b> &mdash; a warm light gray panel, light keys that stand on it and take their color when on, knobs whose caps are their color, slim dark slots, and black windows with light figures</div>
+
+</div>
+
+<!-- ============================================= A KEY IS GRAY UNTIL IT IS ON -->
+<div class="board" style="height:388px; margin-top:13px;">
+
+    <div class="surf tonal goodform" style="position:absolute; inset:0;">
+
+        <div class="rhead" style="left:30px; top:16px;">A KEY IS LIGHT GRAY UNTIL IT IS ON. THEN IT IS ITS COLOR.</div>
+
+        <div class="state" style="left:30px; top:46px; width:84px;">AT REST</div>
+        <div class="ctl btn-ctl hue1" style="left:30px; top:62px; width:84px; height:56px;"><span class="name">kick</span></div>
+        <div class="state" style="left:128px; top:46px; width:84px;">ON</div>
+        <div class="ctl btn-ctl hue1 on" style="left:128px; top:62px; width:84px; height:56px;"><span class="name">kick</span></div>
+        <div class="state" style="left:226px; top:46px; width:84px;">HELD</div>
+        <div class="ctl btn-ctl hue1 held" style="left:226px; top:62px; width:84px; height:56px;"><span class="name">kick</span></div>
+        <div class="state" style="left:324px; top:46px; width:84px;">DISABLED</div>
+        <div class="ctl btn-ctl hue1 dim" style="left:324px; top:62px; width:84px; height:56px;"><span class="name">kick</span></div>
+        <div class="state" style="left:422px; top:46px; width:84px;">NO DEVICE</div>
+        <div class="ctl btn-ctl hue1 offline" style="left:422px; top:62px; width:84px; height:56px;"><span class="name">kick</span></div>
+
+        <div class="state" style="left:556px; top:46px; width:60px;">AT REST</div>
+        <div class="ctl btn-ctl round hue2" style="left:560px; top:64px; width:52px; height:52px;"></div>
+        <div class="state" style="left:630px; top:46px; width:60px;">ON</div>
+        <div class="ctl btn-ctl round hue2 on" style="left:634px; top:64px; width:52px; height:52px;"></div>
+        <div class="state" style="left:704px; top:46px; width:60px;">HELD</div>
+        <div class="ctl btn-ctl round hue2 held" style="left:708px; top:64px; width:52px; height:52px;"></div>
+        <div class="state" style="left:778px; top:46px; width:60px;">GRAY, ON</div>
+        <div class="ctl btn-ctl round neutral on" style="left:782px; top:64px; width:52px; height:52px;"></div>
+
+        <div class="ctl btn-ctl hue1 on" style="left:30px; top:150px; width:62px; height:40px;"><span class="name">orange</span></div>
+        <div class="ctl btn-ctl hue2 on" style="left:100px; top:150px; width:62px; height:40px;"><span class="name">green</span></div>
+        <div class="ctl btn-ctl hue3 on" style="left:170px; top:150px; width:62px; height:40px;"><span class="name">mustard</span></div>
+        <div class="ctl btn-ctl hue4 on" style="left:240px; top:150px; width:62px; height:40px;"><span class="name">crimson</span></div>
+        <div class="ctl btn-ctl hue5 on" style="left:310px; top:150px; width:62px; height:40px;"><span class="name">blue</span></div>
+        <div class="ctl btn-ctl hue6 on" style="left:380px; top:150px; width:62px; height:40px;"><span class="name">teal</span></div>
+        <div class="ctl btn-ctl neutral on" style="left:450px; top:150px; width:62px; height:40px;"><span class="name">gray</span></div>
+
+        <div class="ctl knob gk hue1" style="left:560px; top:146px; width:54px; height:54px;"><svg class="ticks" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" pathLength="360" stroke-dasharray="2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 360" transform="rotate(135 50 50)"/></svg><div class="garc" style="--pct:.45turn"></div><div class="gcap"></div><div class="ptr" style="transform:rotate(27deg)"></div></div>
+        <div class="ctl knob gk hue2" style="left:620px; top:146px; width:54px; height:54px;"><svg class="ticks" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" pathLength="360" stroke-dasharray="2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 360" transform="rotate(135 50 50)"/></svg><div class="garc" style="--pct:.45turn"></div><div class="gcap"></div><div class="ptr" style="transform:rotate(27deg)"></div></div>
+        <div class="ctl knob gk hue3" style="left:680px; top:146px; width:54px; height:54px;"><svg class="ticks" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" pathLength="360" stroke-dasharray="2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 360" transform="rotate(135 50 50)"/></svg><div class="garc" style="--pct:.45turn"></div><div class="gcap"></div><div class="ptr" style="transform:rotate(27deg)"></div></div>
+        <div class="ctl knob gk hue4" style="left:740px; top:146px; width:54px; height:54px;"><svg class="ticks" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" pathLength="360" stroke-dasharray="2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 360" transform="rotate(135 50 50)"/></svg><div class="garc" style="--pct:.45turn"></div><div class="gcap"></div><div class="ptr" style="transform:rotate(27deg)"></div></div>
+        <div class="ctl knob gk hue5" style="left:800px; top:146px; width:54px; height:54px;"><svg class="ticks" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" pathLength="360" stroke-dasharray="2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 360" transform="rotate(135 50 50)"/></svg><div class="garc" style="--pct:.45turn"></div><div class="gcap"></div><div class="ptr" style="transform:rotate(27deg)"></div></div>
+        <div class="ctl knob gk hue6" style="left:860px; top:146px; width:54px; height:54px;"><svg class="ticks" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" pathLength="360" stroke-dasharray="2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 360" transform="rotate(135 50 50)"/></svg><div class="garc" style="--pct:.45turn"></div><div class="gcap"></div><div class="ptr" style="transform:rotate(27deg)"></div></div>
+        <div class="ctl knob gk neutral" style="left:920px; top:146px; width:54px; height:54px;"><svg class="ticks" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" pathLength="360" stroke-dasharray="2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 25 2 360" transform="rotate(135 50 50)"/></svg><div class="garc" style="--pct:.45turn"></div><div class="gcap"></div><div class="ptr" style="transform:rotate(27deg)"></div></div>
+
+        <div class="kcap" style="left:30px; top:218px; width:482px;"><b>Pad, key</b>the light gray of a key at rest, held apart from the panel by its shadow; on, its color a shade deeper, so a white name reads; held, a pixel down</div>
+        <div class="kcap" style="left:556px; top:218px; width:420px;"><b>Knob</b>the cap is the color, with a white line on it and a thin arc of the same color round it; the gray one has a charcoal line</div>
+
+        <div class="measure" style="left:30px; top:278px; width:940px;">
+            <b>Why the six colors are all mid-dark.</b> The panel is light, so every color had to be dark enough to read on it: a cap or a lit key measures <span class="num">3.48 to 4.84 : 1</span> against the panel, and <span class="num">4.29 to 5.81</span> once it goes a shade deeper when on, which is also what lets a white name read on it (<span class="num">5.45 to 7.39</span>). That puts all six at about the same lightness, so the closest pair for a color-blind player is orange and mustard: delta E <span class="num">8.3</span> for a green-blind (deutan) player and <span class="num">8.7</span> for a red-blind (protan) one. A key at rest is only <span class="num">1.11 : 1</span> against the panel; its soft shadow is what separates it, as on Bone.
+        </div>
+    </div>
+</div>
+
+<div class="swatches">
+    <div style="background:#E6E4DF; color:#2B2B2A">#E6E4DF <span>Panel</span></div>
+    <div style="background:#DEDCD6; color:#2B2B2A">#DEDCD6 <span>Panel floor</span></div>
+    <div style="background:#F1F0EC; color:#2B2B2A">#F1F0EC <span>Key</span></div>
+    <div style="background:#E1DFD9; color:#2B2B2A">#E1DFD9 <span>Key foot</span></div>
+    <div style="background:#2B2B2A; color:#F1F0EC">#2B2B2A <span>Print</span></div>
+    <div style="background:#5A5955; color:#F1F0EC">#5A5955 <span>Dim print</span></div>
+    <div style="background:#131313; color:#F1F0EC">#131313 <span>Window</span></div>
+    <div style="background:#C24A12; color:#FFFFFF">#C24A12 <span>Orange</span></div>
+    <div style="background:#3F8434; color:#FFFFFF">#3F8434 <span>Green</span></div>
+    <div style="background:#7A7410; color:#FFFFFF">#7A7410 <span>Mustard</span></div>
+    <div style="background:#B8254F; color:#FFFFFF">#B8254F <span>Crimson</span></div>
+    <div style="background:#2F63B0; color:#FFFFFF">#2F63B0 <span>Blue</span></div>
+    <div style="background:#1E8586; color:#FFFFFF">#1E8586 <span>Teal</span></div>
+</div>
+
+<div class="costgrid">
+    <div class="cost">
+        <h4><span class="yes">Built</span> &mdash; what the engine already does for this panel</h4>
+        A warm light panel with a <b>fine bead-blasted grain</b> (<span class="mono">deck</span> gradient, <span class="mono">grain</span> speckle). <b>Light keys held apart by a soft warm shadow</b> (<span class="mono">shadowColor</span>, <span class="mono">shadowSpread</span>), as on Bone. <b>Words printed above</b> knobs and faders (<span class="mono">labels</span> above) and inside pads (<span class="mono">namesInsideSwitches</span>). <b>On is the color outright, a shade deeper</b> so a white name reads (<span class="mono">fillWhenOnPercent</span> 100, <span class="mono">onLiftPercent</span> &minus;12). A thin arc (<span class="mono">arcThickness</span>) and printed marks round every knob (<span class="mono">knobTickCount</span> 11), a white line on the cap (<span class="mono">pointerOnCap</span>, <span class="mono">pointerColor</span>). <b>Slim dark slots</b> with no fill and a light cap with a wide line of its color (<span class="mono">faderPlate</span> none, <span class="mono">faderFillPercent</span> 0, <span class="mono">capLineWide</span>), and a printed scale (<span class="mono">faderScalePercent</span>). A gray slot for gray keys (<span class="mono">neutralColor</span>). Charcoal rules between groups (<span class="mono">ruleColor</span>, <span class="mono">ruleFades</span> off), captions with no panel (<span class="mono">panelFill</span> none). <b>Black windows</b> (<span class="mono">wellColor</span>, <span class="mono">wellFillsControl</span>), and LEDs in dark holders (<span class="mono">lampShape</span> dot, <span class="mono">lampHolderColor</span>).
+    </div>
+    <div class="cost">
+        <h4><span class="no">Needs</span> &mdash; two shared asks and one small one</h4>
+        <b>A knob's cap is one color for the whole theme</b>; here it is the knob's own color. <b>Every key is a rounded rectangle</b>; the transport keys here are round. Insert Coin, screen 28, asks for both, so building them once serves both themes. <b>Numbers in a window take the control's color</b>, and in a black window those six colors are 3.02 to 4.21 : 1, fine for a line and too faint for small numbers. Here the numbers are light.
+    </div>
+    <div class="cost">
+        <h4>What it costs</h4>
+        <b>It is a light theme</b>, which is bright in a dark room and on a dark stage. <b>A key at rest is the panel's color</b> (1.11 : 1), and only its shadow holds it apart, so a theme editor must never let that shadow go flat. <b>Pads have no color until they are on</b>: a layout that finds its drums by color at rest wants Insert Coin instead. <b>Orange and mustard are the closest pair</b>: delta E 8.3 for a green-blind (deutan) player and 8.7 for a red-blind (protan) one, so never use those two for opposite jobs. Print reads at 11.15 : 1, dim print at 5.52, light figures in a window at 16.29.
+    </div>
+</div>
+
+<div class="asks">
+    <h4>Three asks. The first two are the same ones Insert Coin makes, so building them once serves both themes.</h4>
+    <table>
+        <tr><th></th><th>Ask</th><th>Why Good Form needs it</th><th>Without it</th></tr>
+        <tr>
+            <td class="n">1</td>
+            <td class="ask"><b>Knob caps in the control's color</b> (Insert Coin's ask 1). The cap takes the control's own color, and the line on it picks white or charcoal, whichever reads: white on every color here (4.42 to 6.15 : 1), charcoal on the gray cap (12.43).</td>
+            <td>On the small instruments this theme nods to, a knob's color is its cap, and a row of colored caps is the first thing anybody notices.</td>
+            <td class="without">Every cap one color. The knob's color shows only in its thin arc.</td>
+        </tr>
+        <tr>
+            <td class="n">2</td>
+            <td class="ask"><b>Round keys</b> (Insert Coin's ask 3). Here with no ring round the key and no color at rest (<span class="mono">switchFillAtRest</span> 0): a light round key standing on the panel, its color when on, a pixel down when held.</td>
+            <td>Round transport keys standing on a flat panel are the other half of the look.</td>
+            <td class="without">Rounded square keys, which this theme already uses for pads.</td>
+        </tr>
+        <tr>
+            <td class="n">3</td>
+            <td class="ask"><b>Figures in a window in their own ink.</b> Numbers inside a dark window drawn in an ink the theme names, while lines and bars there keep the control's color.</td>
+            <td>Six mid-dark colors that read on a light panel are too dark for small numbers on black: 3.02 to 4.21 : 1. Light figures measure 16.29.</td>
+            <td class="without">Numbers in the control's color, under 4.5 : 1 in the window. The engine draws them that way on purpose today.</td>
+        </tr>
+    </table>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>What I left out on purpose.</b> A speaker grille, screws, and any maker's layout. Players of those instruments will recognize the family: the light panel, the colored caps, the black window, the lowercase words. But there is no copied arrangement here. The four colored encoders in a row that one famous synthesizer has are not on this page; the colored caps are two by two, in other colors. No names or logos. <b>Where I was honest rather than faithful:</b> those instruments print almost nothing, and here every control is named, because a layout is often played by somebody who did not build it. The type is Segoe UI Variable, light for the title; that is the layout's choice, and the theme sets no typeface. Every color was measured.
+</p>
+
+</div>
+</body>
+</html>

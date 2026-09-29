@@ -1,0 +1,197 @@
+/* =========================================================================
+   "GOOD FORM" - screen 32. After the rational industrial design of the
+   sixties and the small instruments that took it up again: a warm light gray
+   panel with a fine bead-blasted grain, light keys that stand on it, knobs
+   whose caps are their color, slim dark fader slots, and small black
+   windows. Printed words sit above the controls, as they do on a panel.
+
+   Loaded after mock.css by 32-good-form.html. Every selector carries
+   .goodform, so the block can move to the end of mock.css unchanged.
+
+   Three ideas carry it:
+
+   1. A KEY IS LIGHT GRAY UNTIL IT IS ON. Then it is its color, a shade
+      deeper so a white name reads (5.45 to 7.39). At rest a key is 1.11 : 1
+      against the panel: its soft shadow is what separates it, as on Bone.
+
+   2. THE CAP IS THE COLOR. A knob is a colored cap with a white line on it
+      and a thin arc of the same color round it (ask 1, shared with Insert
+      Coin). Round transport keys are the other shared ask (ask 2).
+
+   3. BLACK WINDOWS FOR WHAT MOVES. Lines and bars in their colors (3.02 to
+      4.21 : 1, fine for a line) and figures in light ink (16.29, ask 3).
+
+   Measured in g:\midi-scratch\round6-comps-contrast.ps1: a cap or a lit key
+   3.48 to 4.84 against the panel, 4.29 to 5.81 once deeper; print 11.15, dim
+   print 5.52. All six colors sit at L* 41 to 50, so orange and mustard are the
+   closest pair for color-blind players: delta E 8.3 (deutan), 8.7 (protan).
+   ========================================================================= */
+
+.surf.goodform {
+    --deck:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .36 0 0 0 0 .35 0 0 0 0 .32 0 0 0 .14 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0 / 160px 160px,
+        linear-gradient(180deg, #E9E7E2 0%, #E6E4DF 55%, #DEDCD6 100%);
+    --plate: #F1F0EC;
+    --track: #CFCDC7;
+    --on-hue: #FFFFFF;
+    --deck-ink: #2B2B2A;
+    --deck-ink2: #5A5955;
+    --grid1: rgba(43, 43, 42, .14);
+    --grid2: rgba(43, 43, 42, .05);
+    --tonal-rest: 0;
+    --tonal-held: 0;
+    --rim-rest: 0;
+    --tonal-radius: 12px;
+    --cap-shadow: none;
+
+    --key: radial-gradient(ellipse 85% 75% at 45% 28%, #FBFAF8 0%, #F1F0EC 55%, #E4E2DC 100%);
+    --keyshadow: inset 0 1px 0 rgba(255, 255, 255, .95), 0 1px 1px rgba(70, 62, 50, .20), 0 3px 6px rgba(70, 62, 50, .20), 0 9px 14px -7px rgba(70, 62, 50, .30);
+    --keyshadow-down: inset 0 1px 0 rgba(255, 255, 255, .6), 0 1px 1px rgba(70, 62, 50, .24), 0 1px 3px rgba(70, 62, 50, .18);
+    --window: #131313;
+    --wink: #F1F0EC;
+    --wdim: #8C8A85;
+    --deeper: 88%;                 /* on: the color a shade deeper (the engine's on lift, -12) */
+
+    --neutral: 241, 240, 236;
+    --h1: 194,  74,  18;   /* #C24A12 orange - the default */
+    --h2:  63, 132,  52;   /* #3F8434 green */
+    --h3: 122, 116,  16;   /* #7A7410 mustard */
+    --h4: 184,  37,  79;   /* #B8254F crimson */
+    --h5:  47,  99, 176;   /* #2F63B0 blue */
+    --h6:  30, 133, 134;   /* #1E8586 teal */
+
+    font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+}
+.surf.goodform .neutral { --hue: var(--neutral); }
+
+/* ---------------------------------------------------------------- keys */
+.surf.goodform .ctl {
+    border-radius: 12px;
+    background: var(--key);
+    box-shadow: var(--keyshadow);
+    color: var(--deck-ink);
+}
+.surf.goodform .ctl.btn-ctl .name { font-size: 11px; font-weight: 600; letter-spacing: .03em; color: var(--deck-ink); }
+/* on: the key is its color, a shade deeper, with a white name */
+.surf.goodform .ctl.on,
+.surf.goodform .ctl.held {
+    background:
+        radial-gradient(ellipse 85% 75% at 45% 28%, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, 0) 60%),
+        color-mix(in srgb, rgb(var(--hue)) var(--deeper), black);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .30), 0 1px 1px rgba(70, 62, 50, .25), 0 3px 6px rgba(70, 62, 50, .22), 0 9px 14px -7px rgba(70, 62, 50, .30);
+}
+.surf.goodform .ctl.on .name,
+.surf.goodform .ctl.held .name { color: #FFFFFF; }
+/* the gray key lit is charcoal, the way the current tab is */
+.surf.goodform .ctl.neutral.on,
+.surf.goodform .ctl.neutral.held { background: radial-gradient(ellipse 85% 75% at 45% 28%, #4A4947 0%, #2B2B2A 70%); }
+.surf.goodform .ctl.neutral.on .name,
+.surf.goodform .ctl.neutral.held .name { color: var(--wink); }
+/* held: down a pixel, and the shadow closes up under it */
+.surf.goodform .ctl.held { transform: translateY(1px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 1px 1px rgba(70, 62, 50, .30), 0 1px 3px rgba(70, 62, 50, .20); }
+/* disabled: a flat key with no shadow and a faint name */
+.surf.goodform .ctl.dim { opacity: 1; background: #EAE8E3; box-shadow: inset 0 0 0 1px #D8D6D0; }
+.surf.goodform .ctl.dim .name { color: #8F8D88; }
+/* no device: the key with the engine's hatch across it */
+.surf.goodform .ctl.offline {
+    background: repeating-linear-gradient(135deg, rgba(43, 43, 42, .13) 0 1px, transparent 1px 6px), var(--key);
+    box-shadow: var(--keyshadow);
+}
+
+/* ask 2 (shared with Insert Coin): a round key, the largest circle that fits, with no ring */
+.surf.goodform .ctl.round { border-radius: 50%; }
+
+/* --------------------------------------------------------------- knobs */
+/* ask 1 (shared with Insert Coin): the cap is the knob's color, with a white line on it */
+.surf.goodform .knob.gk,
+.surf.goodform .knob.gk.held { background: none; box-shadow: none; transform: none; }
+.surf.goodform .gk .ticks { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.surf.goodform .gk .ticks circle { fill: none; stroke: rgba(43, 43, 42, .70); stroke-width: 5; }
+.surf.goodform .gk .garc {
+    position: absolute; inset: 9%; border-radius: 50%;
+    background: conic-gradient(from 225deg,
+        rgb(var(--hue)) 0turn var(--pct, .35turn),
+        #CFCDC7 var(--pct, .35turn) .75turn,
+        transparent .75turn 1turn);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+}
+.surf.goodform .gk.neutral .garc { background: conic-gradient(from 225deg, #2B2B2A 0turn var(--pct, .35turn), #CFCDC7 var(--pct, .35turn) .75turn, transparent .75turn 1turn); }
+.surf.goodform .gk .gcap {
+    position: absolute; inset: 20%; border-radius: 50%;
+    background:
+        radial-gradient(ellipse 70% 55% at 40% 28%, rgba(255, 255, 255, .30) 0%, rgba(255, 255, 255, 0) 70%),
+        rgb(var(--hue));
+    box-shadow: inset 0 -2px 3px rgba(0, 0, 0, .18), 0 1px 1px rgba(70, 62, 50, .30), 0 4px 8px rgba(70, 62, 50, .28);
+}
+.surf.goodform .gk.neutral .gcap { background: var(--key); }
+.surf.goodform .gk .ptr {
+    position: absolute; left: 50%; top: 22%; width: 3px; height: 15%; margin-left: -1.5px;
+    border-radius: 1.5px; background: #FFFFFF; box-shadow: none;
+    transform-origin: 50% 187%;
+}
+.surf.goodform .gk.neutral .ptr { background: #2B2B2A; }
+.surf.goodform .gk.held .gcap { box-shadow: inset 0 -2px 3px rgba(0, 0, 0, .18), 0 0 0 3px rgba(var(--hue), .28), 0 4px 8px rgba(70, 62, 50, .28); }
+.surf.goodform .gk .kval {
+    top: auto; bottom: -18px; transform: none;
+    font-family: "Cascadia Mono", "Consolas", monospace; font-size: 11px; font-weight: 600; color: var(--deck-ink);
+}
+
+/* -------------------------------------------------------------- faders */
+/* a slim dark slot with no fill, a light key for a cap, and a wide line of its color on it */
+.surf.goodform .fader { background: none; box-shadow: none; padding: 9px 0 9px 0; }
+.surf.goodform .fader .slot { width: 4px; border-radius: 2px; background: #2B2B2A; box-shadow: inset 0 1px 1px rgba(0, 0, 0, .45), 0 1px 0 rgba(255, 255, 255, .7); }
+.surf.goodform .fader .capbar {
+    left: -14px; right: -14px; height: 18px; border-radius: 5px;
+    background: var(--key);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), 0 1px 1px rgba(70, 62, 50, .28), 0 3px 6px rgba(70, 62, 50, .24);
+}
+.surf.goodform .fader .capbar::after { left: 4px; right: 4px; height: 3px; margin-top: -1.5px; border-radius: 1.5px; background: rgb(var(--hue)); box-shadow: none; opacity: 1; }
+.surf.goodform .fader .gscale { position: absolute; right: -2px; top: 9px; bottom: 9px; width: 5px; background: linear-gradient(to top, rgba(43, 43, 42, .65) 0 1px, transparent 1px) bottom / 100% 10% repeat-y; }
+.surf.goodform .fader.horiz { padding: 0 9px; }
+.surf.goodform .fader.horiz .slot { width: auto; height: 4px; }
+.surf.goodform .fader.horiz .capbar { top: -14px; bottom: -14px; width: 18px; height: auto; }
+.surf.goodform .fader.horiz .capbar::after { left: 50%; right: auto; top: 4px; bottom: 4px; width: 3px; height: auto; margin: 0 0 0 -1.5px; }
+.surf.goodform .fader.horiz .gscale { left: 9px; right: 9px; top: auto; bottom: -2px; width: auto; height: 5px; background: linear-gradient(to right, rgba(43, 43, 42, .65) 0 1px, transparent 1px) left / 10% 100% repeat-x; }
+
+/* ------------------------------------------------------ windows, lamps */
+/* a small black window set into the panel, with a light lip under it */
+.surf.goodform .ctl.win {
+    border-radius: 8px;
+    background: var(--window);
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, .75), 0 1px 0 rgba(255, 255, 255, .80), 0 -1px 0 rgba(70, 62, 50, .25);
+    overflow: hidden;
+}
+.surf.goodform .win svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.surf.goodform .win .fig { position: absolute; font-family: "Cascadia Mono", "Consolas", monospace; color: var(--wink); font-weight: 600; white-space: nowrap; }
+.surf.goodform .win .wcap { position: absolute; font-size: 9px; font-weight: 600; letter-spacing: .14em; color: var(--wdim); white-space: nowrap; }
+
+/* a lamp is a small LED in a dark holder */
+.surf.goodform .ctl.gled { border-radius: 50%; background: #4A4945; box-shadow: 0 0 0 2px #2B2B2A, 0 1px 0 2px rgba(255, 255, 255, .7); }
+.surf.goodform .ctl.gled.on { background: radial-gradient(circle at 40% 35%, color-mix(in srgb, rgb(var(--hue)) 55%, white) 0%, rgb(var(--hue)) 70%); box-shadow: 0 0 0 2px #2B2B2A, 0 1px 0 2px rgba(255, 255, 255, .7), 0 0 8px rgba(var(--hue), .55); }
+
+/* ---------------------------------------------- sections and printing */
+/* a section is only a printed caption; thin charcoal rules divide the groups */
+.surf.goodform .ctlpanel { background: none; box-shadow: none; border-radius: 0; }
+.surf.goodform .ctlpanel > .ptitle {
+    top: 0; left: 0; padding: 0; background: none;
+    font-size: 10px; font-weight: 700; letter-spacing: .22em; color: var(--deck-ink);
+}
+.surf.goodform .rule { position: absolute; background: rgba(43, 43, 42, .40); }
+.surf.goodform .lbl { position: absolute; font-size: 10.5px; font-weight: 600; letter-spacing: .04em; color: var(--deck-ink); text-align: center; white-space: nowrap; }
+.surf.goodform .lbl.dimlbl { color: var(--deck-ink2); font-weight: 400; }
+.surf.goodform .surftext.h1 { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 300; letter-spacing: -.01em; color: var(--deck-ink); }
+.surf.goodform .surftext.small { color: var(--deck-ink2); font-size: 11px; letter-spacing: .04em; }
+
+/* page tabs are small keys; the current page is the charcoal one */
+.surf.goodform .pagetabs .tab {
+    height: 26px; padding: 0 14px; border-radius: 7px;
+    background: var(--key);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), 0 1px 1px rgba(70, 62, 50, .22), 0 3px 5px rgba(70, 62, 50, .18);
+    color: var(--deck-ink); font-size: 11px; font-weight: 600;
+}
+.surf.goodform .pagetabs .tab.sel {
+    background: radial-gradient(ellipse 85% 75% at 45% 28%, #4A4947 0%, #2B2B2A 70%);
+    color: var(--wink);
+    box-shadow: 0 1px 1px rgba(70, 62, 50, .30), 0 1px 3px rgba(70, 62, 50, .20);
+}

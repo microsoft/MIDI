@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - Chicago theme</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="29-chicago.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .chiprow { position: absolute; left: 14px; top: 13px; display: flex; gap: 6px; align-items: center; }
+    .tchip {
+        height: 26px; padding: 0 11px; border-radius: 13px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: var(--text3);
+        background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .tchip i { width: 11px; height: 11px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    .tchip.new {
+        border-radius: 0; color: #000000; font-weight: 700;
+        font-family: "Microsoft Sans Serif", "Segoe UI", sans-serif;
+        background: #C0C0C0;
+        box-shadow: inset -1px -1px 0 #000000, inset 1px 1px 0 #FFFFFF, inset -2px -2px 0 #808080, inset 2px 2px 0 #DFDFDF;
+    }
+    .tchip.new i { border-radius: 0; background: #008080; box-shadow: 0 0 0 1px #000000; }
+
+    .deck {
+        position: absolute; left: 14px; top: 54px; width: 972px; height: 510px;
+        border-radius: 8px; overflow: hidden;
+    }
+    .decktag { position: absolute; left: 14px; top: 576px; font-size: 11px; color: var(--text3); }
+    .decktag b { color: var(--text2); font-weight: 600; }
+
+    .state { position: absolute; font-size: 10px; font-weight: 700; color: #000000; text-align: center; }
+    .kcap { position: absolute; text-align: center; font-size: 11px; line-height: 1.45; color: #000000; }
+    .kcap b { display: block; font-weight: 700; margin-bottom: 1px; }
+    .measure { position: absolute; font-size: 11.5px; line-height: 1.6; color: #000000; }
+    .measure .num { font-weight: 700; white-space: nowrap; }
+
+    .swatches { display: flex; gap: 0; width: 1000px; border-radius: 7px; overflow: hidden; margin-top: 14px; }
+    .swatches div {
+        flex: 1; height: 58px; display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 6px 7px; font-size: 9.5px; font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .swatches div span { display: block; font-family: "Segoe UI Variable Text","Segoe UI",sans-serif; font-size: 10px; opacity: .78; }
+
+    .costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; width: 1000px; margin-top: 12px; }
+    .cost {
+        border-radius: 7px; padding: 12px 14px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 11.5px; color: var(--text3); line-height: 1.55;
+    }
+    .cost h4 { margin: 0 0 7px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .cost b { color: var(--text2); font-weight: 600; }
+    .cost .yes { color: var(--success); font-weight: 600; }
+    .cost .no { color: var(--caution); font-weight: 600; }
+    .cost .mono { color: var(--accent); }
+
+    .asks { width: 1000px; margin-top: 11px; border-radius: 7px; padding: 12px 14px 6px 14px; box-sizing: border-box;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke); }
+    .asks h4 { margin: 0 0 8px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .asks table { width: 100%; border-collapse: collapse; font-size: 11.5px; line-height: 1.5; color: var(--text3); }
+    .asks th { text-align: left; font-weight: 600; color: var(--text2); padding: 0 10px 6px 0; border-bottom: 1px solid var(--divider); font-size: 11px; }
+    .asks td { vertical-align: top; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--divider); }
+    .asks tr:last-child td { border-bottom: none; }
+    .asks td.n { width: 18px; color: var(--caution); font-weight: 600; }
+    .asks td.ask { width: 290px; }
+    .asks td.ask b { color: var(--text); font-weight: 600; }
+    .asks td.without { width: 220px; }
+    .asks .mono { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 29 &mdash; <b>Chicago</b>, the code name of Windows 95. A teal desktop, gray windows with title bars in color, and <b>two pixel bevels on everything</b>: raised is something you can press, pressed is something that is down, and sunken is a white field that holds a value. <b>On is said by the bevel, not by color</b>: a latched switch stays pressed and fills with a fine checkerboard, and a pad fills with its color only while its note sounds. <b>Every value sits in a white field</b>, because on the gray face half of this palette is too faint to read a value by.</p>
+
+<!-- ============================================================= DECK -->
+<div class="board" style="height:600px;">
+
+    <div class="chiprow">
+        <div class="tchip"><i style="background:#4CE0FF"></i>Studio Dark</div>
+        <div class="tchip"><i style="background:#E8601C"></i>Jove</div>
+        <div class="tchip"><i style="background:#131414; box-shadow: inset 0 0 0 2px #35EE7A"></i>Airy System</div>
+        <div class="tchip"><i style="background:#D8D1C0; box-shadow: inset 0 0 0 2px #2A2723"></i>Soft Sector</div>
+        <div class="tchip"><i style="background:radial-gradient(circle at 40% 35%, #FF8A8C, #E3262B 60%, #7A1215)"></i>Insert Coin</div>
+        <div class="tchip new"><i></i>Chicago</div>
+        <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
+    </div>
+
+    <div class="deck surf tonal chicago">
+
+        <div class="surftext h1" style="left:16px; top:9px; font-size:22px;">Chicago</div>
+        <div class="surftext small" style="left:112px; top:18px;">the studio on a desktop</div>
+
+        <div class="pagetabs" style="right:16px; top:11px; gap:4px;">
+            <div class="tab sel">Mix</div>
+            <div class="tab">Beats</div>
+            <div class="tab">Sounds</div>
+        </div>
+
+        <!-- ======================================== MIXER: four strips and a master group -->
+        <div class="ctlpanel hue1" style="left:12px; top:44px; width:380px; height:454px;"><div class="ptitle">Mixer</div></div>
+
+        <div class="ctl trk hue4" style="left:28px; top:78px; width:44px; height:196px;"><div class="chan"><div class="fill" style="height:127px"></div></div><div class="scale"><i style="top:10px"></i><i style="top:28px"></i><i style="top:45px"></i><i style="top:63px"></i><i style="top:80px"></i><i style="top:98px"></i><i style="top:116px"></i><i style="top:133px"></i><i style="top:151px"></i><i style="top:168px"></i><i style="top:186px"></i></div><svg class="thumb" viewBox="0 0 30 15" style="top:52px"><path d="M0 0H22L29.5 7.5L22 15H0Z" fill="#C0C0C0"/><path d="M0.5 14V0.5H21.8L28.8 7.5" fill="none" stroke="#FFFFFF"/><path d="M28.8 7.5L21.8 14.5H0" fill="none" stroke="#000000"/><path d="M1.5 13.5H21.4L27.4 7.5" fill="none" stroke="#808080"/><path d="M1.5 13V1.5H21.4" fill="none" stroke="#DFDFDF"/></svg></div>
+        <div class="ctl meterc" style="left:78px; top:78px; width:16px; height:196px;"><i></i><i></i><i></i><i></i><i></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+
+        <div class="ctl trk hue1" style="left:118px; top:78px; width:44px; height:196px;"><div class="chan"><div class="fill" style="height:102px"></div></div><div class="scale"><i style="top:10px"></i><i style="top:28px"></i><i style="top:45px"></i><i style="top:63px"></i><i style="top:80px"></i><i style="top:98px"></i><i style="top:116px"></i><i style="top:133px"></i><i style="top:151px"></i><i style="top:168px"></i><i style="top:186px"></i></div><svg class="thumb" viewBox="0 0 30 15" style="top:76px"><path d="M0 0H22L29.5 7.5L22 15H0Z" fill="#C0C0C0"/><path d="M0.5 14V0.5H21.8L28.8 7.5" fill="none" stroke="#FFFFFF"/><path d="M28.8 7.5L21.8 14.5H0" fill="none" stroke="#000000"/><path d="M1.5 13.5H21.4L27.4 7.5" fill="none" stroke="#808080"/><path d="M1.5 13V1.5H21.4" fill="none" stroke="#DFDFDF"/></svg></div>
+        <div class="ctl meterc" style="left:168px; top:78px; width:16px; height:196px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+
+        <div class="ctl trk hue5" style="left:208px; top:78px; width:44px; height:196px;"><div class="chan"><div class="fill" style="height:141px"></div></div><div class="scale"><i style="top:10px"></i><i style="top:28px"></i><i style="top:45px"></i><i style="top:63px"></i><i style="top:80px"></i><i style="top:98px"></i><i style="top:116px"></i><i style="top:133px"></i><i style="top:151px"></i><i style="top:168px"></i><i style="top:186px"></i></div><svg class="thumb" viewBox="0 0 30 15" style="top:38px"><path d="M0 0H22L29.5 7.5L22 15H0Z" fill="#C0C0C0"/><path d="M0.5 14V0.5H21.8L28.8 7.5" fill="none" stroke="#FFFFFF"/><path d="M28.8 7.5L21.8 14.5H0" fill="none" stroke="#000000"/><path d="M1.5 13.5H21.4L27.4 7.5" fill="none" stroke="#808080"/><path d="M1.5 13V1.5H21.4" fill="none" stroke="#DFDFDF"/></svg></div>
+        <div class="ctl meterc" style="left:258px; top:78px; width:16px; height:196px;"><i></i><i></i><i class="lit hot"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+
+        <div class="ctl trk hue6" style="left:298px; top:78px; width:44px; height:196px;"><div class="chan"><div class="fill" style="height:70px"></div></div><div class="scale"><i style="top:10px"></i><i style="top:28px"></i><i style="top:45px"></i><i style="top:63px"></i><i style="top:80px"></i><i style="top:98px"></i><i style="top:116px"></i><i style="top:133px"></i><i style="top:151px"></i><i style="top:168px"></i><i style="top:186px"></i></div><svg class="thumb" viewBox="0 0 30 15" style="top:108px"><path d="M0 0H22L29.5 7.5L22 15H0Z" fill="#C0C0C0"/><path d="M0.5 14V0.5H21.8L28.8 7.5" fill="none" stroke="#FFFFFF"/><path d="M28.8 7.5L21.8 14.5H0" fill="none" stroke="#000000"/><path d="M1.5 13.5H21.4L27.4 7.5" fill="none" stroke="#808080"/><path d="M1.5 13V1.5H21.4" fill="none" stroke="#DFDFDF"/></svg></div>
+        <div class="ctl meterc" style="left:348px; top:78px; width:16px; height:196px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+
+        <div class="lbl" style="left:24px; top:281px; width:74px;">Drums</div>
+        <div class="lbl" style="left:114px; top:281px; width:74px;">Bass</div>
+        <div class="lbl" style="left:204px; top:281px; width:74px;">Keys</div>
+        <div class="lbl" style="left:294px; top:281px; width:74px;">Voice</div>
+
+        <div class="ctl btn-ctl hue4 on" style="left:26px; top:302px; width:70px; height:24px;"><i class="tag"></i><span class="name">Mute</span></div>
+        <div class="ctl btn-ctl hue3" style="left:26px; top:332px; width:70px; height:24px;"><i class="tag"></i><span class="name">Solo</span></div>
+        <div class="ctl btn-ctl hue4" style="left:116px; top:302px; width:70px; height:24px;"><i class="tag"></i><span class="name">Mute</span></div>
+        <div class="ctl btn-ctl hue3 on" style="left:116px; top:332px; width:70px; height:24px;"><i class="tag"></i><span class="name">Solo</span></div>
+        <div class="ctl btn-ctl hue4 held" style="left:206px; top:302px; width:70px; height:24px;"><i class="tag"></i><span class="name">Mute</span></div>
+        <div class="ctl btn-ctl hue3" style="left:206px; top:332px; width:70px; height:24px;"><i class="tag"></i><span class="name">Solo</span></div>
+        <div class="ctl btn-ctl hue4 offline" style="left:296px; top:302px; width:70px; height:24px;"><i class="tag"></i><span class="name">Mute</span></div>
+        <div class="ctl btn-ctl hue3 dim" style="left:296px; top:332px; width:70px; height:24px;"><i class="tag"></i><span class="name">Solo</span></div>
+
+        <div class="ctlpanel group" style="left:26px; top:378px; width:352px; height:108px;"><div class="ptitle">Master</div></div>
+        <div class="ctl trk horiz hue1" style="left:36px; top:396px; width:240px; height:36px;"><div class="chan"><div class="fill" style="width:145px"></div></div><div class="scale"><i style="left:10px"></i><i style="left:32px"></i><i style="left:54px"></i><i style="left:76px"></i><i style="left:98px"></i><i style="left:120px"></i><i style="left:142px"></i><i style="left:164px"></i><i style="left:186px"></i><i style="left:208px"></i><i style="left:230px"></i></div><svg class="thumb" viewBox="0 0 15 30" style="left:148px"><path d="M0 0H15V22L7.5 29.5L0 22Z" fill="#C0C0C0"/><path d="M0.5 22V0.5H14" fill="none" stroke="#FFFFFF"/><path d="M0.5 22L7.5 28.8" fill="none" stroke="#FFFFFF"/><path d="M14.5 0V22.2L7.5 28.8" fill="none" stroke="#000000"/><path d="M13.5 1.5V21.8L7.5 27.4" fill="none" stroke="#808080"/><path d="M1.5 21.5V1.5H13" fill="none" stroke="#DFDFDF"/></svg></div>
+        <div class="lbl" style="left:36px; top:440px; width:240px;">Volume</div>
+        <div class="ctl field" style="left:290px; top:401px; width:76px; height:22px;">&minus;3.0 dB</div>
+        <div class="ctl radio hue1 on" style="left:292px; top:436px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:310px; top:435px;">Stereo</div>
+        <div class="ctl radio hue1" style="left:292px; top:458px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:310px; top:457px;">Mono</div>
+
+        <!-- ======================================== DRUM MACHINE: eight pads, sixteen steps -->
+        <div class="ctlpanel hue4" style="left:404px; top:44px; width:556px; height:216px;"><div class="ptitle">Drum Machine</div></div>
+
+        <div class="ctl btn-ctl pad hue4 on" style="left:418px; top:76px; width:60px; height:44px;"><i class="tag"></i><span class="name">Kick</span></div>
+        <div class="ctl btn-ctl pad hue4" style="left:484px; top:76px; width:60px; height:44px;"><i class="tag"></i><span class="name">Snare</span></div>
+        <div class="ctl btn-ctl pad hue3" style="left:550px; top:76px; width:60px; height:44px;"><i class="tag"></i><span class="name">Clap</span></div>
+        <div class="ctl btn-ctl pad hue2 on" style="left:616px; top:76px; width:60px; height:44px;"><i class="tag"></i><span class="name">Closed</span></div>
+        <div class="ctl btn-ctl pad hue2" style="left:682px; top:76px; width:60px; height:44px;"><i class="tag"></i><span class="name">Open</span></div>
+        <div class="ctl btn-ctl pad hue5 held" style="left:748px; top:76px; width:60px; height:44px;"><i class="tag"></i><span class="name">Tom</span></div>
+        <div class="ctl btn-ctl pad hue6" style="left:814px; top:76px; width:60px; height:44px;"><i class="tag"></i><span class="name">Rim</span></div>
+        <div class="ctl btn-ctl pad hue6" style="left:880px; top:76px; width:60px; height:44px;"><i class="tag"></i><span class="name">Shaker</span></div>
+
+        <div class="lbl left" style="left:418px; top:130px;">Kick, bar 1</div>
+        <div class="ctl chk hue4 on" style="left:418px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4" style="left:450px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4" style="left:482px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4 on" style="left:514px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4" style="left:554px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4" style="left:586px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4 on cur" style="left:618px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4" style="left:650px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4 on" style="left:690px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4" style="left:722px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4" style="left:754px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4 on" style="left:786px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4 on" style="left:826px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4" style="left:858px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4 on" style="left:890px; top:150px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue4" style="left:922px; top:150px; width:15px; height:15px;"></div>
+        <div class="lbl" style="left:418px; top:171px; width:15px;">1</div>
+        <div class="lbl" style="left:554px; top:171px; width:15px;">2</div>
+        <div class="lbl" style="left:690px; top:171px; width:15px;">3</div>
+        <div class="lbl" style="left:826px; top:171px; width:15px;">4</div>
+
+        <div class="surfrule" style="left:418px; top:196px; width:522px;"></div>
+
+        <div class="ctl btn-ctl hue2 on" style="left:418px; top:210px; width:70px; height:26px;"><i class="tag"></i><span class="name">Play</span></div>
+        <div class="ctl btn-ctl hue4" style="left:494px; top:210px; width:70px; height:26px;"><i class="tag"></i><span class="name">Stop</span></div>
+        <div class="lbl left" style="left:590px; top:216px;">Tempo</div>
+        <div class="ctl field" style="left:630px; top:212px; width:64px; height:22px;">120.0</div>
+        <div class="ctl radio hue1 on" style="left:720px; top:217px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:738px; top:216px;">Internal</div>
+        <div class="ctl radio hue1" style="left:810px; top:217px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:828px; top:216px;">External</div>
+
+        <!-- ======================================== FILTER: an XY field, four knobs, a group -->
+        <div class="ctlpanel hue5" style="left:404px; top:272px; width:556px; height:226px;"><div class="ptitle">Filter</div></div>
+
+        <div class="ctl xyc hue5" style="left:418px; top:304px; width:156px; height:146px;">
+            <div class="gv" style="left:25%"></div><div class="gv" style="left:50%"></div><div class="gv" style="left:75%"></div>
+            <div class="gh" style="top:25%"></div><div class="gh" style="top:50%"></div><div class="gh" style="top:75%"></div>
+            <div class="trail" style="left:46%; top:56%"></div><div class="trail" style="left:54%; top:47%"></div>
+            <div class="cross h" style="top:38%"></div><div class="cross v" style="left:62%"></div>
+            <div class="puck" style="left:62%; top:38%"></div>
+        </div>
+        <div class="lbl" style="left:418px; top:458px; width:156px;">Cutoff / Resonance</div>
+
+        <div class="ctl knob hue1" style="left:598px; top:306px; width:58px; height:58px;"><div class="ring"></div><div class="varc" style="--pct:.465turn"></div><div class="kcap"></div><div class="ptr" style="transform:rotate(32.4deg)"></div></div>
+        <div class="ctl knob hue4 held" style="left:686px; top:306px; width:58px; height:58px;"><div class="ring"></div><div class="varc" style="--pct:.2625turn"></div><div class="kcap"></div><div class="ptr" style="transform:rotate(-40.5deg)"></div><div class="kval">0.35</div></div>
+        <div class="ctl knob hue3" style="left:774px; top:306px; width:58px; height:58px;"><div class="ring"></div><div class="varc" style="--pct:.15turn"></div><div class="kcap"></div><div class="ptr" style="transform:rotate(-81deg)"></div></div>
+        <div class="ctl knob hue6" style="left:862px; top:306px; width:58px; height:58px;"><div class="ring"></div><div class="varc" style="--pct:.6turn"></div><div class="kcap"></div><div class="ptr" style="transform:rotate(81deg)"></div></div>
+        <div class="lbl" style="left:583px; top:371px; width:88px;">Cutoff</div>
+        <div class="lbl" style="left:671px; top:371px; width:88px;">Resonance</div>
+        <div class="lbl" style="left:759px; top:371px; width:88px;">Drive</div>
+        <div class="lbl" style="left:847px; top:371px; width:88px;">Mix</div>
+
+        <div class="ctlpanel group" style="left:598px; top:412px; width:348px; height:76px;"><div class="ptitle">Type</div></div>
+        <div class="ctl radio hue5 on" style="left:612px; top:428px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:630px; top:427px;">Low pass</div>
+        <div class="ctl radio hue5" style="left:714px; top:428px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:732px; top:427px;">Band pass</div>
+        <div class="ctl radio hue5" style="left:816px; top:428px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:834px; top:427px;">High pass</div>
+        <div class="ctl btn-ctl hue5 dim" style="left:612px; top:454px; width:84px; height:24px;"><i class="tag"></i><span class="name">Bypass</span></div>
+        <div class="ctl btn-ctl hue5 offline" style="left:704px; top:454px; width:84px; height:24px;"><i class="tag"></i><span class="name">Reset</span></div>
+        <div class="ctl btn-ctl hue6" style="left:796px; top:454px; width:96px; height:24px;"><i class="tag"></i><span class="name">Tracking</span></div>
+
+    </div>
+    <div class="decktag"><b>Chicago</b> &mdash; a teal desktop, gray windows with title bars in their color, two pixel bevels, values in white fields, and a checkerboard for a switch that is latched on</div>
+
+</div>
+
+<!-- ============================================= ONE LANGUAGE: RAISED, PRESSED, SUNKEN -->
+<div class="board" style="height:434px; margin-top:13px;">
+
+    <div class="surf tonal chicago" style="position:absolute; inset:0;">
+
+        <div class="ctlpanel hue1" style="left:12px; top:12px; width:976px; height:410px;"><div class="ptitle">Raised is something to press. Pressed is down. Sunken holds a value.</div></div>
+
+        <!-- a switch, five ways, and three pads -->
+        <div class="state" style="left:32px; top:46px; width:100px;">AT REST</div>
+        <div class="ctl btn-ctl hue4" style="left:32px; top:62px; width:100px; height:28px;"><i class="tag"></i><span class="name">Mute</span></div>
+        <div class="state" style="left:146px; top:46px; width:100px;">HELD</div>
+        <div class="ctl btn-ctl hue4 held" style="left:146px; top:62px; width:100px; height:28px;"><i class="tag"></i><span class="name">Mute</span></div>
+        <div class="state" style="left:260px; top:46px; width:100px;">LATCHED ON</div>
+        <div class="ctl btn-ctl hue4 on" style="left:260px; top:62px; width:100px; height:28px;"><i class="tag"></i><span class="name">Mute</span></div>
+        <div class="state" style="left:374px; top:46px; width:100px;">DISABLED</div>
+        <div class="ctl btn-ctl hue4 dim" style="left:374px; top:62px; width:100px; height:28px;"><i class="tag"></i><span class="name">Mute</span></div>
+        <div class="state" style="left:488px; top:46px; width:100px;">NO DEVICE</div>
+        <div class="ctl btn-ctl hue4 offline" style="left:488px; top:62px; width:100px; height:28px;"><i class="tag"></i><span class="name">Mute</span></div>
+
+        <div class="state" style="left:632px; top:46px; width:100px;">PAD, SOUNDING</div>
+        <div class="ctl btn-ctl pad hue2 on" style="left:632px; top:62px; width:100px; height:28px;"><i class="tag"></i><span class="name">Snare</span></div>
+        <div class="state" style="left:746px; top:46px; width:100px;">PAD, HELD</div>
+        <div class="ctl btn-ctl pad hue5 held" style="left:746px; top:62px; width:100px; height:28px;"><i class="tag"></i><span class="name">Tom</span></div>
+        <div class="state" style="left:860px; top:46px; width:100px;">PAD ON OLIVE</div>
+        <div class="ctl btn-ctl pad hue3 on" style="left:860px; top:62px; width:100px; height:28px;"><i class="tag"></i><span class="name">Clap</span></div>
+
+        <div class="kcap" style="left:32px; top:98px; width:556px;"><b>Switch</b>raised at rest, with its color as a tag before the name. Held, it is pressed and the name moves a pixel. Latched on, it stays pressed and fills with a checkerboard.</div>
+        <div class="kcap" style="left:632px; top:98px; width:328px;"><b>Pad</b>fills with its color while its note sounds</div>
+
+        <!-- the six title bars -->
+        <div class="ctlpanel hue1" style="left:32px; top:148px; width:142px; height:24px; box-shadow:none; background:none;"><div class="ptitle" style="top:0; left:0; right:0;">Navy</div></div>
+        <div class="ctlpanel hue2" style="left:186px; top:148px; width:142px; height:24px; box-shadow:none; background:none;"><div class="ptitle" style="top:0; left:0; right:0;">Green</div></div>
+        <div class="ctlpanel hue3" style="left:340px; top:148px; width:142px; height:24px; box-shadow:none; background:none;"><div class="ptitle" style="top:0; left:0; right:0;">Olive</div></div>
+        <div class="ctlpanel hue4" style="left:494px; top:148px; width:142px; height:24px; box-shadow:none; background:none;"><div class="ptitle" style="top:0; left:0; right:0;">Maroon</div></div>
+        <div class="ctlpanel hue5" style="left:648px; top:148px; width:142px; height:24px; box-shadow:none; background:none;"><div class="ptitle" style="top:0; left:0; right:0;">Purple</div></div>
+        <div class="ctlpanel hue6" style="left:802px; top:148px; width:142px; height:24px; box-shadow:none; background:none;"><div class="ptitle" style="top:0; left:0; right:0;">Teal</div></div>
+        <div class="kcap" style="left:32px; top:172px; width:912px;"><b>Title bar</b>white on every color but olive, which takes black: 5.01 : 1 there, against 4.20 for white</div>
+
+        <!-- values, all in white fields -->
+        <div class="ctl knob hue1" style="left:40px; top:224px; width:64px; height:64px;"><div class="ring"></div><div class="varc" style="--pct:.465turn"></div><div class="kcap"></div><div class="ptr" style="transform:rotate(32.4deg)"></div></div>
+        <div class="ctl trk hue2" style="left:128px; top:214px; width:44px; height:130px;"><div class="chan"><div class="fill" style="height:55px"></div></div><div class="scale"><i style="top:10px"></i><i style="top:21px"></i><i style="top:32px"></i><i style="top:43px"></i><i style="top:54px"></i><i style="top:65px"></i><i style="top:76px"></i><i style="top:87px"></i><i style="top:98px"></i><i style="top:109px"></i><i style="top:120px"></i></div><svg class="thumb" viewBox="0 0 30 15" style="top:58px"><path d="M0 0H22L29.5 7.5L22 15H0Z" fill="#C0C0C0"/><path d="M0.5 14V0.5H21.8L28.8 7.5" fill="none" stroke="#FFFFFF"/><path d="M28.8 7.5L21.8 14.5H0" fill="none" stroke="#000000"/><path d="M1.5 13.5H21.4L27.4 7.5" fill="none" stroke="#808080"/><path d="M1.5 13V1.5H21.4" fill="none" stroke="#DFDFDF"/></svg></div>
+        <div class="ctl meterc" style="left:180px; top:214px; width:16px; height:130px;"><i></i><i></i><i></i><i class="lit hot"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+
+        <div class="ctl xyc hue4" style="left:226px; top:218px; width:140px; height:118px;">
+            <div class="gv" style="left:25%"></div><div class="gv" style="left:50%"></div><div class="gv" style="left:75%"></div>
+            <div class="gh" style="top:25%"></div><div class="gh" style="top:50%"></div><div class="gh" style="top:75%"></div>
+            <div class="trail" style="left:30%; top:66%"></div><div class="trail" style="left:36%; top:58%"></div>
+            <div class="cross h" style="top:50%"></div><div class="cross v" style="left:42%"></div>
+            <div class="puck" style="left:42%; top:50%"></div>
+        </div>
+
+        <div class="ctl radio hue5 on" style="left:394px; top:232px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:412px; top:231px;">Low pass</div>
+        <div class="ctl radio hue5" style="left:394px; top:256px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:412px; top:255px;">Band pass</div>
+        <div class="ctl radio hue2 on" style="left:394px; top:280px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:412px; top:279px;">Sync</div>
+
+        <div class="ctl chk hue1 on" style="left:524px; top:230px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue1" style="left:548px; top:230px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue1" style="left:572px; top:230px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue1 on" style="left:596px; top:230px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue1 on cur" style="left:628px; top:230px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue1" style="left:652px; top:230px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue1 on" style="left:676px; top:230px; width:15px; height:15px;"></div>
+        <div class="ctl chk hue1" style="left:700px; top:230px; width:15px; height:15px;"></div>
+        <div class="ctl field" style="left:524px; top:268px; width:76px; height:22px;">120.0</div>
+        <div class="ctl field" style="left:610px; top:268px; width:106px; height:22px;">Bar 3, beat 2</div>
+
+        <div class="ctl trk horiz hue6" style="left:746px; top:226px; width:210px; height:36px;"><div class="chan"><div class="fill" style="width:62px"></div></div><div class="scale"><i style="left:10px"></i><i style="left:29px"></i><i style="left:48px"></i><i style="left:67px"></i><i style="left:86px"></i><i style="left:105px"></i><i style="left:124px"></i><i style="left:143px"></i><i style="left:162px"></i><i style="left:181px"></i><i style="left:200px"></i></div><svg class="thumb" viewBox="0 0 15 30" style="left:64px"><path d="M0 0H15V22L7.5 29.5L0 22Z" fill="#C0C0C0"/><path d="M0.5 22V0.5H14" fill="none" stroke="#FFFFFF"/><path d="M0.5 22L7.5 28.8" fill="none" stroke="#FFFFFF"/><path d="M14.5 0V22.2L7.5 28.8" fill="none" stroke="#000000"/><path d="M13.5 1.5V21.8L7.5 27.4" fill="none" stroke="#808080"/><path d="M1.5 21.5V1.5H13" fill="none" stroke="#DFDFDF"/></svg></div>
+        <div class="ctlpanel group" style="left:746px; top:288px; width:210px; height:50px;"><div class="ptitle">Group</div></div>
+        <div class="lbl" style="left:746px; top:307px; width:210px;">an etched line, gray over white</div>
+
+        <div class="kcap" style="left:24px; top:352px; width:190px;"><b>Knob, fader, meter</b>a raised cap in a sunken white ring; a white slot and a cap that points at its scale</div>
+        <div class="kcap" style="left:222px; top:352px; width:150px;"><b>XY field</b>a white canvas; the puck is a selection handle</div>
+        <div class="kcap" style="left:380px; top:352px; width:120px;"><b>Lamp</b>a radio button, lit in its color</div>
+        <div class="kcap" style="left:510px; top:352px; width:220px;"><b>Steps and readouts</b>check boxes, with a dotted line round the step that is playing; text boxes</div>
+        <div class="kcap" style="left:746px; top:352px; width:210px;"><b>Across</b>the cap points down at its scale</div>
+    </div>
+</div>
+
+<div class="swatches">
+    <div style="background:#008080; color:#FFFFFF">#008080 <span>Desktop, teal</span></div>
+    <div style="background:#C0C0C0; color:#000000">#C0C0C0 <span>Face</span></div>
+    <div style="background:#DFDFDF; color:#000000">#DFDFDF <span>Light</span></div>
+    <div style="background:#808080; color:#FFFFFF">#808080 <span>Shadow</span></div>
+    <div style="background:#000000; color:#FFFFFF">#000000 <span>Dark, ink</span></div>
+    <div style="background:#FFFFFF; color:#000000">#FFFFFF <span>Field, highlight</span></div>
+    <div style="background:#000080; color:#FFFFFF">#000080 <span>Navy</span></div>
+    <div style="background:#008000; color:#FFFFFF">#008000 <span>Green</span></div>
+    <div style="background:#808000; color:#000000">#808000 <span>Olive</span></div>
+    <div style="background:#800000; color:#FFFFFF">#800000 <span>Maroon</span></div>
+    <div style="background:#800080; color:#FFFFFF">#800080 <span>Purple</span></div>
+</div>
+
+<div class="costgrid">
+    <div class="cost">
+        <h4><span class="yes">Built</span> &mdash; what the engine already does for this desktop</h4>
+        A flat teal deck with <b>white ink on it and black ink in the windows</b> (<span class="mono">sectionInkColor</span>). Windows filled with the gray face (<span class="mono">panelFill</span> color) and <b>title bars in their color</b> with the ink picked for each (<span class="mono">sectionHeader</span> filledBar). <b>Square corners, no glow, no shadow</b> (<span class="mono">cornerRadius</span> 0, <span class="mono">glowStrength</span> 0, <span class="mono">plateElevation</span> 0). <b>White fields</b> for the XY field and readouts (<span class="mono">wellColor</span>, <span class="mono">wellFillsControl</span>). A black pointer on the knob's cap (<span class="mono">pointerOnCap</span>, <span class="mono">pointerColor</span>), a printed scale beside every fader (<span class="mono">faderScalePercent</span>), meter zones in green, olive and maroon (<span class="mono">meterSlots</span>). Pads that fill with their color and switches that do not (<span class="mono">padFillWhenOnPercent</span> 100, <span class="mono">fillWhenOnPercent</span> 0). One pixel of travel (<span class="mono">pressTravelPixels</span>). The etched line: two one pixel stripes, gray over white (<span class="mono">stripeColors</span>, <span class="mono">stripeWidth</span> 1).
+    </div>
+    <div class="cost">
+        <h4><span class="no">Needs</span> &mdash; bevels, a pointed cap, a checkerboard, a tag</h4>
+        <b>There is no two color edge today.</b> A rim is one color, so a raised button and a sunken field look the same. Here the bevel is the whole language, and it has to land on whole screen pixels to look right. <b>A fader cap is a bar</b>; here it points at its scale. <b>On is a fill or a lamp</b>; here a latched switch is pressed in and checkered, and the playing step has a dotted line round it. <b>A gray button has nowhere to show its color</b>, so it gets a small tag before its name.
+    </div>
+    <div class="cost">
+        <h4>What it costs</h4>
+        <b>It is gray.</b> Most of the page is one mid gray, and the color lives in small places: title bars, tags and values. That is calm, and it is not a theme for a dark stage. <b>The teal is loud</b>, and a page of small windows shows a lot of it. <b>Every edge is drawn twice</b>, so a dense page is a busy one. <b>The palette is small and dark</b>: on the gray face, green, olive and teal measure 2.82, 2.31 and 2.62 : 1, which is why every value sits in a white field, where all six clear 4.20. <b>Green and olive are the closest pair</b>: delta E 11.8 for a green-blind (deutan) player and 4.1 for a red-blind (protan) one, so never use those two for opposite jobs. Black on the gray reads at 11.54 : 1.
+    </div>
+</div>
+
+<div class="asks">
+    <h4>Four asks. The first is the theme; the other three are small, and each is independent.</h4>
+    <table>
+        <tr><th></th><th>Ask</th><th>Why Chicago needs it</th><th>Without it</th></tr>
+        <tr>
+            <td class="n">1</td>
+            <td class="ask"><b>Bevels.</b> A two pixel edge in four named grays, drawn three ways: raised for a switch at rest, a window's frame and a knob's cap; pressed for a switch that is held or latched; sunken for anything that holds a value &mdash; a fader's slot, a knob's ring, a meter, a readout, the XY field, a lamp. It lands on whole screen pixels at every zoom, so it stays two crisp lines rather than a blur.</td>
+            <td>The bevel is how this whole look says what a thing is. Raised means press me, pressed means I am down, sunken means read me. Without it, a button and a text box are the same gray rectangle.</td>
+            <td class="without">Flat gray boxes with a one color outline. It reads as a gray theme, not as Windows 95.</td>
+        </tr>
+        <tr>
+            <td class="n">2</td>
+            <td class="ask"><b>A pointed fader cap.</b> The cap drawn as a five sided pointer aimed at the printed scale, with the raised bevel: pointing right on an upright fader, down on one that runs across.</td>
+            <td>It is the one control shape everybody remembers from that era, and the point tells you which mark the fader is on.</td>
+            <td class="without">A plain raised bar for a cap.</td>
+        </tr>
+        <tr>
+            <td class="n">3</td>
+            <td class="ask"><b>Two pixel patterns.</b> A switch that is latched on is filled with a one pixel checkerboard of white and the face, and the step that is playing gets a dotted line one pixel wide round it. Both are drawn in screen pixels, two by two at 200 percent, so they stay a fine texture.</td>
+            <td>Pressed and checkered is how a latched toggle and the current taskbar button looked, and it says on without any color at all. The dotted line is the focus line, and it is the plainest way to say "this one, now".</td>
+            <td class="without">Latched is just pressed. The playing step gets the engine's usual outline.</td>
+        </tr>
+        <tr>
+            <td class="n">4</td>
+            <td class="ask"><b>A color tag before the name.</b> A small square of the control's own color, with a one pixel dark edge, in front of the name on a switch, at rest and when on.</td>
+            <td>The buttons are gray with black names, so the control's color needs somewhere to live, and a tag is what that era used to show a color.</td>
+            <td class="without">A gray button shows no color until it is on.</td>
+        </tr>
+    </table>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>Why this one is safe.</b> It is Microsoft's own look, from its own product. Even so, there is no logo, no Start button and no title bar buttons: a close box that does not close would be a lie on a surface where everything else does something. <b>About the name:</b> Chicago was also the classic Macintosh system font. Nothing here uses it, and if the name causes confusion, Ninety-Five would do as well. The type is Microsoft Sans Serif, which still ships with Windows; that is the layout's choice, and the theme sets no typeface. <b>Where I was honest rather than faithful:</b> the real thing had no knobs. These are a raised cap in a sunken white ring, which is how that era drew anything round you could turn. Every color was measured.
+</p>
+
+</div>
+</body>
+</html>

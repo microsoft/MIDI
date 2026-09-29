@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - Insert Coin theme</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="28-insert-coin.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .chiprow { position: absolute; left: 14px; top: 13px; display: flex; gap: 6px; align-items: center; }
+    .tchip {
+        height: 26px; padding: 0 11px; border-radius: 13px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: var(--text3);
+        background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .tchip i { width: 11px; height: 11px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    .tchip.new { color: #EDEDEA; font-weight: 600; background: #16171A; box-shadow: inset 0 0 0 2px #E3262B; }
+    .tchip.new i { border-radius: 50%; }
+
+    .deck {
+        position: absolute; left: 14px; top: 54px; width: 972px; height: 510px;
+        border-radius: 8px; overflow: hidden;
+    }
+    .decktag { position: absolute; left: 14px; top: 576px; font-size: 11px; color: var(--text3); }
+    .decktag b { color: var(--text2); font-weight: 600; }
+
+    /* the layout's own type: Bahnschrift ships with Windows, and its condensed caps read
+       like a cabinet's printing. A layout's choice, never the theme's */
+    .surftext.titlecoin { font-family: "Bahnschrift", "Segoe UI", sans-serif; font-weight: 700; letter-spacing: .04em; }
+    .silk {
+        position: absolute; font-family: "Bahnschrift", "Segoe UI", sans-serif;
+        font-size: 9px; font-weight: 600; letter-spacing: .10em;
+        color: #9A9BA1; text-align: center; white-space: nowrap;
+    }
+
+    .rhead { position: absolute; font-size: 11px; font-weight: 600; letter-spacing: .10em; color: #EDEDEA; }
+    .kcap { position: absolute; text-align: center; font-size: 10.5px; line-height: 1.45; color: rgba(237,237,234,.72); }
+    .kcap b { display: block; color: #EDEDEA; font-weight: 700; font-size: 11px; margin-bottom: 2px; }
+    .measure { position: absolute; font-size: 11.5px; line-height: 1.6; color: rgba(237,237,234,.78); }
+    .measure b { color: #EDEDEA; font-weight: 700; }
+    .measure .num { font-family: "Cascadia Mono","Consolas",monospace; color: #EDEDEA; font-weight: 700; white-space: nowrap; }
+    .state { position: absolute; font-family: "Bahnschrift", "Segoe UI", sans-serif; font-size: 9px; font-weight: 700; letter-spacing: .10em; color: #9A9BA1; text-align: center; }
+
+    .swatches { display: flex; gap: 0; width: 1000px; border-radius: 7px; overflow: hidden; margin-top: 14px; }
+    .swatches div {
+        flex: 1; height: 58px; display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 6px 7px; font-size: 9.5px; font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .swatches div span { display: block; font-family: "Segoe UI Variable Text","Segoe UI",sans-serif; font-size: 10px; opacity: .78; }
+
+    .costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; width: 1000px; margin-top: 12px; }
+    .cost {
+        border-radius: 7px; padding: 12px 14px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 11.5px; color: var(--text3); line-height: 1.55;
+    }
+    .cost h4 { margin: 0 0 7px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .cost b { color: var(--text2); font-weight: 600; }
+    .cost .yes { color: var(--success); font-weight: 600; }
+    .cost .no { color: var(--caution); font-weight: 600; }
+    .cost .mono { color: var(--accent); }
+
+    .asks { width: 1000px; margin-top: 11px; border-radius: 7px; padding: 12px 14px 6px 14px; box-sizing: border-box;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke); }
+    .asks h4 { margin: 0 0 8px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .asks table { width: 100%; border-collapse: collapse; font-size: 11.5px; line-height: 1.5; color: var(--text3); }
+    .asks th { text-align: left; font-weight: 600; color: var(--text2); padding: 0 10px 6px 0; border-bottom: 1px solid var(--divider); font-size: 11px; }
+    .asks td { vertical-align: top; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--divider); }
+    .asks tr:last-child td { border-bottom: none; }
+    .asks td.n { width: 18px; color: var(--caution); font-weight: 600; }
+    .asks td.ask { width: 290px; }
+    .asks td.ask b { color: var(--text); font-weight: 600; }
+    .asks td.without { width: 220px; }
+    .asks .mono { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 28 &mdash; <b>Insert Coin</b>, after arcade control panels and the finger drumming controllers built from their buttons. A black panel under a sheet of clear plastic, <b>round domed buttons set into black rings</b>, knobs with caps in their color inside a ring of lights, fader caps in color, and a joystick with a ball on top. <b>A button is colored plastic whether it is lit or not</b>: at rest it shows its color with no light behind it, lit it is the color outright with a hot center, and held it is lit and two pixels down. So on is said by light and by travel, and neither depends on telling one color from another.</p>
+
+<!-- ============================================================= DECK -->
+<div class="board" style="height:600px;">
+
+    <div class="chiprow">
+        <div class="tchip"><i style="background:#4CE0FF"></i>Studio Dark</div>
+        <div class="tchip"><i style="background:#E8601C"></i>Jove</div>
+        <div class="tchip"><i style="background:#131414; box-shadow: inset 0 0 0 2px #35EE7A"></i>Airy System</div>
+        <div class="tchip"><i style="background:#ECC864; box-shadow: inset 0 0 0 2px #5A3D2B"></i>Groovy</div>
+        <div class="tchip"><i style="background:#D8D1C0; box-shadow: inset 0 0 0 2px #2A2723"></i>Soft Sector</div>
+        <div class="tchip new"><i style="background:radial-gradient(circle at 40% 35%, #FF8A8C, #E3262B 60%, #7A1215); box-shadow: 0 0 0 2px #070708"></i>Insert Coin</div>
+        <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
+    </div>
+
+    <div class="deck surf tonal insertcoin">
+
+        <div class="surftext h1 titlecoin" style="left:20px; top:7px; font-size:26px;">INSERT COIN</div>
+        <div class="surftext small" style="left:188px; top:18px; font-weight:600;">finger drums &middot; fx &middot; mix</div>
+
+        <div class="silk" style="left:506px; top:19px; width:48px;">TEMPO</div>
+        <div class="ctl display hue4" style="left:556px; top:8px; width:90px; height:30px;"><span class="digits">124.0</span></div>
+
+        <div class="pagetabs" style="right:22px; top:11px; gap:10px;">
+            <div class="tab sel">KIT 1</div>
+            <div class="tab">KIT 2</div>
+            <div class="tab">SONG</div>
+        </div>
+
+        <!-- ======================================== DRUMS: sixteen buttons, colored by family -->
+        <div class="ctlpanel hue4" style="left:12px; top:50px; width:344px; height:448px;"><div class="ptitle">DRUMS</div></div>
+
+        <div class="ctl btn-ctl dome hue4 on" style="left:36px; top:82px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue4" style="left:116px; top:82px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue4" style="left:196px; top:82px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue4 on" style="left:276px; top:82px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="silk" style="left:26px; top:147px; width:80px;">KICK</div>
+        <div class="silk" style="left:106px; top:147px; width:80px;">KICK 2</div>
+        <div class="silk" style="left:186px; top:147px; width:80px;">BASS</div>
+        <div class="silk" style="left:266px; top:147px; width:80px;">SUB</div>
+
+        <div class="ctl btn-ctl dome hue3" style="left:36px; top:182px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue3 held" style="left:116px; top:182px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue3" style="left:196px; top:182px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue3" style="left:276px; top:182px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="silk" style="left:26px; top:247px; width:80px;">SNARE</div>
+        <div class="silk" style="left:106px; top:247px; width:80px;">CLAP</div>
+        <div class="silk" style="left:186px; top:247px; width:80px;">RIM</div>
+        <div class="silk" style="left:266px; top:247px; width:80px;">SNAP</div>
+
+        <div class="ctl btn-ctl dome hue2 on" style="left:36px; top:282px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue2" style="left:116px; top:282px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue2" style="left:196px; top:282px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue2" style="left:276px; top:282px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="silk" style="left:26px; top:347px; width:80px;">HAT</div>
+        <div class="silk" style="left:106px; top:347px; width:80px;">OPEN HAT</div>
+        <div class="silk" style="left:186px; top:347px; width:80px;">RIDE</div>
+        <div class="silk" style="left:266px; top:347px; width:80px;">CRASH</div>
+
+        <div class="ctl btn-ctl dome hue1" style="left:36px; top:382px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue5 on" style="left:116px; top:382px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue6" style="left:196px; top:382px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome neutral" style="left:276px; top:382px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="silk" style="left:26px; top:447px; width:80px;">CONGA</div>
+        <div class="silk" style="left:106px; top:447px; width:80px;">TOM</div>
+        <div class="silk" style="left:186px; top:447px; width:80px;">COWBELL</div>
+        <div class="silk" style="left:266px; top:447px; width:80px;">FILL</div>
+
+        <!-- ======================================== FX: four knobs, two switches, two lamps -->
+        <div class="ctlpanel hue1" style="left:368px; top:50px; width:300px; height:190px;"><div class="ptitle">FX</div></div>
+
+        <div class="ctl knob hue1" style="left:386px; top:80px; width:60px; height:60px;"><svg class="leds" viewBox="0 0 100 100"><circle class="off" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 360" transform="rotate(135 50 50)"/><circle class="lit" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 360" transform="rotate(135 50 50)"/></svg><div class="body"></div><div class="kcap"></div><div class="ptr" style="transform:rotate(54deg)"></div></div>
+        <div class="ctl knob hue5 held" style="left:456px; top:80px; width:60px; height:60px;"><svg class="leds" viewBox="0 0 100 100"><circle class="off" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 360" transform="rotate(135 50 50)"/><circle class="lit" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="0 27 0 27 0 27 0 27 0 27 0 27 0 360" transform="rotate(135 50 50)"/></svg><div class="body"></div><div class="kcap"></div><div class="ptr" style="transform:rotate(32.4deg)"></div><div class="kval">0.62</div></div>
+        <div class="ctl knob hue2" style="left:526px; top:80px; width:60px; height:60px;"><svg class="leds" viewBox="0 0 100 100"><circle class="off" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 360" transform="rotate(135 50 50)"/><circle class="lit" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="0 27 0 27 0 27 0 27 0 360" transform="rotate(135 50 50)"/></svg><div class="body"></div><div class="kcap"></div><div class="ptr" style="transform:rotate(-40.5deg)"></div></div>
+        <div class="ctl knob hue6" style="left:596px; top:80px; width:60px; height:60px;"><svg class="leds" viewBox="0 0 100 100"><circle class="off" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 360" transform="rotate(135 50 50)"/><circle class="lit" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="0 27 0 27 0 360" transform="rotate(135 50 50)"/></svg><div class="body"></div><div class="kcap"></div><div class="ptr" style="transform:rotate(-94.5deg)"></div></div>
+        <div class="silk" style="left:376px; top:144px; width:80px;">FILTER</div>
+        <div class="silk" style="left:446px; top:158px; width:80px;">DELAY</div>
+        <div class="silk" style="left:516px; top:144px; width:80px;">REVERB</div>
+        <div class="silk" style="left:586px; top:144px; width:80px;">CRUSH</div>
+
+        <div class="ctl btn-ctl dome hue3 on" style="left:396px; top:176px; width:42px; height:42px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue1" style="left:470px; top:176px; width:42px; height:42px;"><i class="cap"></i></div>
+        <div class="silk" style="left:377px; top:222px; width:80px;">HOLD</div>
+        <div class="silk" style="left:451px; top:222px; width:80px;">LOOP</div>
+        <div class="ctl led hue2 on" style="left:560px; top:186px; width:16px; height:16px;"></div>
+        <div class="ctl led hue4" style="left:620px; top:186px; width:16px; height:16px;"></div>
+        <div class="silk" style="left:538px; top:208px; width:60px;">SYNC</div>
+        <div class="silk" style="left:598px; top:208px; width:60px;">REC</div>
+
+        <!-- ======================================== STICK: a joystick with a ball, a small XY field -->
+        <div class="ctlpanel hue6" style="left:368px; top:252px; width:300px; height:246px;"><div class="ptitle">STICK</div></div>
+        <div class="ctl stick hue4" style="left:384px; top:284px; width:132px; height:132px;"><div class="washer"></div><div class="gate"></div><div class="shaft" style="transform:rotate(-135deg)"></div><div class="ball" style="left:64%; top:36%"></div></div>
+        <div class="silk" style="left:390px; top:422px; width:120px;">FILTER X / Y</div>
+
+        <div class="ctl xy hue5" style="left:532px; top:284px; width:118px; height:92px;">
+            <div class="field2"></div>
+            <div class="trail" style="left:34%; top:64%"></div>
+            <div class="trail" style="left:44%; top:56%"></div>
+            <div class="cross h" style="top:46%"></div><div class="cross v" style="left:56%"></div>
+            <div class="puck" style="left:56%; top:46%"></div>
+        </div>
+        <div class="silk" style="left:531px; top:380px; width:120px;">PAN / SPREAD</div>
+        <div class="ctl btn-ctl dome hue6 on" style="left:538px; top:404px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome neutral" style="left:604px; top:404px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="silk" style="left:518px; top:448px; width:80px;">LATCH</div>
+        <div class="silk" style="left:584px; top:448px; width:80px;">RESET</div>
+
+        <!-- ======================================== MIX: three strips and a crossfader -->
+        <div class="ctlpanel hue2" style="left:680px; top:50px; width:280px; height:448px;"><div class="ptitle">MIX</div></div>
+
+        <div class="ctl fader hue4" style="left:698px; top:80px; width:34px; height:182px;"><div class="slot"><div class="fill" style="height:70%"></div><div class="capbar" style="bottom:calc(70% - 9px);"></div></div></div>
+        <div class="ctl meter" style="left:738px; top:80px; width:14px; height:182px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl fader hue1" style="left:778px; top:80px; width:34px; height:182px;"><div class="slot"><div class="fill" style="height:55%"></div><div class="capbar" style="bottom:calc(55% - 9px);"></div></div></div>
+        <div class="ctl meter" style="left:818px; top:80px; width:14px; height:182px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl fader hue5" style="left:858px; top:80px; width:34px; height:182px;"><div class="slot"><div class="fill" style="height:82%"></div><div class="capbar" style="bottom:calc(82% - 9px);"></div></div></div>
+        <div class="ctl meter" style="left:898px; top:80px; width:14px; height:182px;"><i></i><i class="lit hot"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="silk" style="left:690px; top:270px; width:70px;">DRUMS</div>
+        <div class="silk" style="left:770px; top:270px; width:70px;">BASS</div>
+        <div class="silk" style="left:850px; top:270px; width:70px;">SYNTH</div>
+
+        <div class="ctl btn-ctl dome hue4" style="left:694px; top:296px; width:32px; height:32px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue3 on" style="left:732px; top:296px; width:32px; height:32px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue4 on" style="left:774px; top:296px; width:32px; height:32px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue3 dim" style="left:812px; top:296px; width:32px; height:32px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue4" style="left:854px; top:296px; width:32px; height:32px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue3 offline" style="left:892px; top:296px; width:32px; height:32px;"><i class="cap"></i></div>
+        <div class="silk" style="left:690px; top:332px; width:40px;">MUTE</div>
+        <div class="silk" style="left:728px; top:332px; width:40px;">SOLO</div>
+        <div class="silk" style="left:770px; top:332px; width:40px;">MUTE</div>
+        <div class="silk" style="left:808px; top:332px; width:40px;">SOLO</div>
+        <div class="silk" style="left:850px; top:332px; width:40px;">MUTE</div>
+        <div class="silk" style="left:888px; top:332px; width:40px;">SOLO</div>
+
+        <div class="surfrule" style="left:696px; top:358px; width:248px;"></div>
+
+        <div class="ctl knob hue2" style="left:700px; top:374px; width:52px; height:52px;"><svg class="leds" viewBox="0 0 100 100"><circle class="off" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 360" transform="rotate(135 50 50)"/><circle class="lit" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="0 27 0 27 0 27 0 27 0 27 0 360" transform="rotate(135 50 50)"/></svg><div class="body"></div><div class="kcap"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        <div class="silk" style="left:686px; top:430px; width:80px;">MASTER</div>
+        <div class="ctl fader horiz neutral" style="left:778px; top:382px; width:166px; height:34px;"><div class="slot"><div class="fill" style="width:46%"></div><div class="capbar" style="left:calc(46% - 9px);"></div></div></div>
+        <div class="silk" style="left:778px; top:422px; width:20px; text-align:left;">A</div>
+        <div class="silk" style="left:821px; top:422px; width:80px;">CROSSFADE</div>
+        <div class="silk" style="left:924px; top:422px; width:20px; text-align:right;">B</div>
+        <div class="ctl led hue4 on" style="left:708px; top:460px; width:14px; height:14px;"></div>
+        <div class="silk" style="left:728px; top:462px; width:60px; text-align:left;">CLIP</div>
+        <div class="ctl led hue2 on" style="left:800px; top:460px; width:14px; height:14px;"></div>
+        <div class="silk" style="left:820px; top:462px; width:60px; text-align:left;">POWER</div>
+
+    </div>
+    <div class="decktag"><b>Insert Coin</b> &mdash; a black panel under clear plastic, round buttons in black rings, colored plastic at rest and lit when on, knob caps in their colors, and sections named on bars of their color</div>
+
+</div>
+
+<!-- ============================================= WHAT THE PANEL DOES -->
+<div class="board" style="height:392px; margin-top:13px;">
+
+    <div class="surf tonal insertcoin" style="position:absolute; inset:0;">
+
+        <div class="rhead" style="left:20px; top:14px;">A BUTTON IS COLORED PLASTIC. LIT, IT GLOWS FROM INSIDE. HELD, IT ALSO GOES DOWN.</div>
+
+        <!-- one button, five ways -->
+        <div class="state" style="left:22px; top:48px; width:72px;">AT REST</div>
+        <div class="ctl btn-ctl dome hue4" style="left:28px; top:62px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="state" style="left:102px; top:48px; width:72px;">LIT</div>
+        <div class="ctl btn-ctl dome hue4 on" style="left:108px; top:62px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="state" style="left:182px; top:48px; width:72px;">HELD</div>
+        <div class="ctl btn-ctl dome hue4 held" style="left:188px; top:62px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="state" style="left:262px; top:48px; width:72px;">DISABLED</div>
+        <div class="ctl btn-ctl dome hue4 dim" style="left:268px; top:62px; width:60px; height:60px;"><i class="cap"></i></div>
+        <div class="state" style="left:342px; top:48px; width:72px;">NO DEVICE</div>
+        <div class="ctl btn-ctl dome hue4 offline" style="left:348px; top:62px; width:60px; height:60px;"><i class="cap"></i></div>
+
+        <!-- the six colors, lit and not -->
+        <div class="ctl btn-ctl dome hue1" style="left:34px; top:150px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue2" style="left:84px; top:150px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue3" style="left:134px; top:150px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue4" style="left:184px; top:150px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue5" style="left:234px; top:150px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue6" style="left:284px; top:150px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome neutral" style="left:334px; top:150px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue1 on" style="left:34px; top:198px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue2 on" style="left:84px; top:198px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue3 on" style="left:134px; top:198px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue4 on" style="left:184px; top:198px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue5 on" style="left:234px; top:198px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome hue6 on" style="left:284px; top:198px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="ctl btn-ctl dome neutral on" style="left:334px; top:198px; width:40px; height:40px;"><i class="cap"></i></div>
+        <div class="state" style="left:380px; top:165px; width:40px; text-align:left;">AT REST</div>
+        <div class="state" style="left:380px; top:213px; width:40px; text-align:left;">LIT</div>
+        <div class="kcap" style="left:16px; top:250px; width:410px;"><b>Button, pad, toggle</b>colored plastic in a black ring, the largest circle that fits; the name is printed on the panel under it</div>
+
+        <!-- a knob at rest and under a finger -->
+        <div class="state" style="left:452px; top:48px; width:84px;">AT REST</div>
+        <div class="ctl knob hue1" style="left:456px; top:66px; width:76px; height:76px;"><svg class="leds" viewBox="0 0 100 100"><circle class="off" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 360" transform="rotate(135 50 50)"/><circle class="lit" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="0 27 0 27 0 27 0 27 0 27 0 27 0 360" transform="rotate(135 50 50)"/></svg><div class="body"></div><div class="kcap"></div><div class="ptr" style="transform:rotate(27deg)"></div></div>
+        <div class="state" style="left:546px; top:48px; width:84px;">UNDER A FINGER</div>
+        <div class="ctl knob hue3 held" style="left:550px; top:66px; width:76px; height:76px;"><svg class="leds" viewBox="0 0 100 100"><circle class="off" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 27 0 360" transform="rotate(135 50 50)"/><circle class="lit" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="0 27 0 27 0 27 0 360" transform="rotate(135 50 50)"/></svg><div class="body"></div><div class="kcap"></div><div class="ptr" style="transform:rotate(-54deg)"></div><div class="kval">0.30</div></div>
+        <div class="kcap" style="left:444px; top:250px; width:196px;"><b>Knob</b>a black knob with a cap in its color, inside a ring of eleven lights that is the value</div>
+
+        <!-- a fader with its cap in color -->
+        <div class="ctl fader hue6" style="left:672px; top:52px; width:36px; height:176px;"><div class="slot"><div class="fill" style="height:64%"></div><div class="capbar" style="bottom:calc(64% - 9px);"></div></div></div>
+        <div class="kcap" style="left:640px; top:250px; width:100px;"><b>Fader</b>a dark slot, a cap in its color</div>
+
+        <!-- the joystick -->
+        <div class="ctl stick hue4" style="left:772px; top:56px; width:140px; height:140px;"><div class="washer"></div><div class="gate"></div><div class="shaft" style="transform:rotate(145deg)"></div><div class="ball" style="left:40%; top:36%"></div></div>
+        <div class="kcap" style="left:756px; top:250px; width:172px;"><b>Joystick</b>a ball in its color on a short shaft; its shadow falls down and to the right</div>
+
+        <div class="measure" style="left:40px; top:310px; width:912px;">
+            <b>Why the buttons carry their color at rest.</b>
+            An arcade button is colored plastic, lit or not, and a player finds the snare by its color long before reading a name. So at rest each button shows its color with no light behind it: <span class="num">1.86 to 4.83 : 1</span> against the panel, enough to find, too dark to mistake for lit. Lit, it measures <span class="num">1.93 to 2.56 : 1</span> brighter than the same button unlit, and it throws a halo. Held, it is also two pixels down. A player with no color vision still sees which buttons are on, because on is brighter and deeper, not only redder.
+        </div>
+    </div>
+</div>
+
+<div class="swatches">
+    <div style="background:#16171A; color:#EDEDEA">#16171A <span>Panel</span></div>
+    <div style="background:#1C1D21; color:#EDEDEA">#1C1D21 <span>Section</span></div>
+    <div style="background:#08090A; color:#EDEDEA">#08090A <span>Window</span></div>
+    <div style="background:#EDEDEA; color:#111111">#EDEDEA <span>Print, white button</span></div>
+    <div style="background:#9A9BA1; color:#111111">#9A9BA1 <span>Dim print</span></div>
+    <div style="background:#1F6AE0; color:#FFFFFF">#1F6AE0 <span>Blue</span></div>
+    <div style="background:#22B04B; color:#111111">#22B04B <span>Green</span></div>
+    <div style="background:#FFD21F; color:#111111">#FFD21F <span>Yellow</span></div>
+    <div style="background:#E3262B; color:#FFFFFF">#E3262B <span>Red</span></div>
+    <div style="background:#9A48DC; color:#FFFFFF">#9A48DC <span>Purple</span></div>
+    <div style="background:#FF7A1A; color:#111111">#FF7A1A <span>Orange</span></div>
+</div>
+
+<div class="costgrid">
+    <div class="cost">
+        <h4><span class="yes">Built</span> &mdash; what the engine already does for this panel</h4>
+        A black panel with <b>a reflection across it</b>, the sheet of clear plastic (<span class="mono">faceplateSheenPercent</span>). <b>Colored plastic at rest</b>: a switch's color mixed into a near-black plate (<span class="mono">switchFillAtRest</span> 0.62), and <b>the color outright when on</b> (<span class="mono">fillWhenOnPercent</span> 100) with a glow (<span class="mono">glowStrength</span>). <b>Held means down</b>: two pixels of travel (<span class="mono">pressTravelPixels</span> 2). A <b>ring of eleven lights</b> round every knob (<span class="mono">valueIndicator</span> segmentedLamps, <span class="mono">lampCount</span> 11). <b>Fader caps in their color</b> (<span class="mono">thumb</span> hue). Names printed below (<span class="mono">labels</span> below). <b>Sections named on a bar of their color</b> in whichever ink reads (<span class="mono">sectionHeader</span> filledBar). Meters, readouts and the XY field as dark windows (<span class="mono">wellFillsControl</span>), LEDs in black holders (<span class="mono">lampShape</span> dot, <span class="mono">lampHolderColor</span>), and green, yellow and red on the meter (<span class="mono">meterSlots</span>).
+    </div>
+    <div class="cost">
+        <h4><span class="no">Needs</span> &mdash; round buttons, a cap and a ball</h4>
+        <b>Every switch is a rounded rectangle today.</b> Here a button is a circle in a ring, the largest that fits, domed, with a hard highlight, and only the button moves when it is pressed. <b>A knob's cap is one color for the whole theme</b>; here it is the control's own color, with a pointer that stays readable on a yellow cap. <b>The joystick's puck is flat</b>; here it is a ball on a shaft. Good Form, screen 32, asks for the same round button and the same colored cap, so building them once pays twice.
+    </div>
+    <div class="cost">
+        <h4>What it costs</h4>
+        <b>This page is colorful when nothing is happening.</b> Every button carries its color all the time. That is right for a page of pads and a lot for a page of two hundred switches. <b>Round buttons want square controls</b>: a wide button is a circle in the middle of its box, with the sides left empty. <b>Blue and purple are the closest pair</b>: delta E 38 for most people, 11.5 for a green-blind (deutan) player and 5.4 for a red-blind (protan) one, so do not use those two for opposite jobs. <b>A state never depends on color</b>: lit is brighter and held is also down. Every lit color clears 3.58 : 1 on the panel, and the print 15.28.
+    </div>
+</div>
+
+<div class="asks">
+    <h4>Three asks, smallest first. Each is independent, and the page above uses all three.</h4>
+    <table>
+        <tr><th></th><th>Ask</th><th>Why Insert Coin needs it</th><th>Without it</th></tr>
+        <tr>
+            <td class="n">1</td>
+            <td class="ask"><b>Knob caps in the control's color.</b> A theme can ask for each knob's cap to take the control's own color, instead of one cap color for every knob. The pointer printed on the cap picks white or near-black, whichever reads on that cap, the way a switch's name does.</td>
+            <td>On the controllers this is based on, and on the colored caps players fit to them, a knob's color is its cap. Here the cap says which knob it is from across the room, and the ring of lights says where it is set.</td>
+            <td class="without">Every cap one color. The knob's color shows only in its ring of lights.</td>
+        </tr>
+        <tr>
+            <td class="n">2</td>
+            <td class="ask"><b>A ball on the joystick.</b> The joystick's puck drawn as a glossy ball in the control's color on a short shaft, over a dark washer, with its shadow falling down and to the right.</td>
+            <td>A stick you push should look like one you can grab. The ball is the part of an arcade cabinet everybody recognizes, and it shows where the stick is pushed by where it sits over the washer.</td>
+            <td class="without">The usual flat puck, a small cap with a dot of color.</td>
+        </tr>
+        <tr>
+            <td class="n">3</td>
+            <td class="ask"><b>Round buttons.</b> A button, toggle, pad or lamp drawn as the largest circle that fits its control, centered, in a ring of a color the theme names, and domed, with a hard highlight at the upper left. At rest it shows the switch fill at rest; on, the color outright with a lighter center; held, it also moves down by the press travel the engine already has, and the ring stays put.</td>
+            <td>The round button is the whole idea. A rounded rectangle in these colors reads as a toy keyboard; a circle in a ring reads as a cabinet, and the ring is what holds a dark button apart from a black panel.</td>
+            <td class="without">Colored rounded rectangles. It still works; it just stops looking like an arcade.</td>
+        </tr>
+    </table>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>What I left out on purpose.</b> The artwork printed on a cabinet's panel belongs to a layout, and a layout can already put a picture behind a page. The rings of light on these controllers often pulse and chase in patterns; a pulsing light carries no information here and is a hazard for some players, so a light is on or off. The type is Bahnschrift, which ships with Windows and has the condensed capitals a cabinet prints in; that is the layout's choice, and the theme sets no typeface. <b>Where I was honest rather than faithful:</b> real arcade buttons have no names, and here every button's name is printed under it, because a layout is often played by somebody who did not build it. The blue is a step lighter than a stock arcade blue so it clears 3.58 : 1 on the black, and white print on it 5.00. Every color was measured.
+</p>
+
+</div>
+</body>
+</html>

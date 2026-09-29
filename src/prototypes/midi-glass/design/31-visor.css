@@ -1,0 +1,308 @@
+/* =========================================================================
+   "VISOR" - screen 31, first proposed as "Telemetry". A head-up display:
+   thin light on a dark field. Controls are four corner brackets rather than
+   boxes, knobs are rings of fine marks with a chevron riding the value, and
+   the XY field has a reticle for a puck. Nothing is filled until it is on.
+
+   Loaded after mock.css by 31-visor.html. Every selector carries .visor, so
+   the block can move to the end of mock.css unchanged.
+
+   Three ideas carry it:
+
+   1. FOUR CORNERS, NOT A BOX. At rest a control is its corners, in its color
+      at 60 %. On, the corners close into a full frame with a 16 % wash of the
+      color inside, and the name keeps the print color. Only what is on is
+      closed, so it stands out on a page of forty (ask 1).
+
+   2. A SCALE YOU CAN READ. Marks round every knob and beside every fader,
+      with longer ones at an interval (ask 2).
+
+   3. POINT, DON'T COVER. A chevron rides the knob's arc, two chevrons pinch
+      the fader's rail, and a reticle marks the XY position, so nothing hides
+      the scale (ask 3).
+
+   Measured in g:\midi-scratch\round6-comps-contrast.ps1: a resting corner
+   3.42 to 6.75 : 1 on the deck and 3.27 on its lit middle; a lit line 7.86 to
+   18.16; print 16.82, dim print 7.91; the name on an ON wash 11.34 to 13.66.
+   ========================================================================= */
+
+.surf.visor {
+    /* a dot grid (a repeating deck picture) over a deck lit in the middle */
+    --deck:
+        radial-gradient(circle at center, rgba(134, 168, 190, .20) 0 1px, transparent 1.5px) 0 0 / 16px 16px,
+        radial-gradient(ellipse 72% 66% at 50% 44%, #08182A 0%, #040A10 62%, #010306 100%);
+    --plate: transparent;
+    --track: rgba(134, 168, 190, .18);
+    --on-hue: #D2F1FF;
+    --deck-ink: #D2F1FF;
+    --deck-ink2: #86A8BE;
+    --grid1: rgba(134, 168, 190, .18);
+    --grid2: rgba(134, 168, 190, .07);
+    --tonal-rest: 0;
+    --tonal-held: 0;
+    --rim-rest: 0;
+    --tonal-radius: 0;
+    --cap-shadow: none;
+
+    --h1:  78, 214, 255;   /* #4ED6FF cyan - the default */
+    --h2:  92, 245, 168;   /* #5CF5A8 green */
+    --h3: 255, 200,  87;   /* #FFC857 amber */
+    --h4: 255, 128,  95;   /* #FF805F red */
+    --h5: 169, 147, 255;   /* #A993FF violet */
+    --h6: 232, 247, 255;   /* #E8F7FF ice */
+
+    font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+}
+
+/* ---------------------------------------------------------- the corners */
+/* ask 1. Eight short bars, one pair to a corner, in the control's color */
+.surf.visor .ctl {
+    --c: rgba(var(--hue), .60);
+    --arm: 9px;
+    --w: 1.5px;
+    /* resolved on each control, so every state below can restate it: mock.css's tonal
+       state rules set the background shorthand, which would otherwise wipe the corners */
+    --brk:
+        linear-gradient(var(--c), var(--c)) top left / var(--arm) var(--w) no-repeat,
+        linear-gradient(var(--c), var(--c)) top left / var(--w) var(--arm) no-repeat,
+        linear-gradient(var(--c), var(--c)) top right / var(--arm) var(--w) no-repeat,
+        linear-gradient(var(--c), var(--c)) top right / var(--w) var(--arm) no-repeat,
+        linear-gradient(var(--c), var(--c)) bottom left / var(--arm) var(--w) no-repeat,
+        linear-gradient(var(--c), var(--c)) bottom left / var(--w) var(--arm) no-repeat,
+        linear-gradient(var(--c), var(--c)) bottom right / var(--arm) var(--w) no-repeat,
+        linear-gradient(var(--c), var(--c)) bottom right / var(--w) var(--arm) no-repeat;
+    border-radius: 0;
+    background: var(--brk);
+    box-shadow: none;
+    color: var(--deck-ink);
+}
+.surf.visor .ctl.btn-ctl .name { font-size: 10px; font-weight: 600; letter-spacing: .16em; color: var(--deck-ink); }
+/* on: the corners close into a frame with a wash inside; the name keeps the print color */
+.surf.visor .ctl.on,
+.surf.visor .ctl.btn-ctl.on {
+    --c: rgb(var(--hue));
+    --w: 2px;
+    background: var(--brk);
+    background-color: rgba(var(--hue), .16);
+    box-shadow: inset 0 0 0 1px rgba(var(--hue), .85), 0 0 10px rgba(var(--hue), .30);
+    color: var(--deck-ink);
+}
+/* held: the same, brighter, with longer corners and a glow */
+.surf.visor .ctl.held,
+.surf.visor .ctl.btn-ctl.held {
+    --c: rgb(var(--hue));
+    --w: 2.5px;
+    --arm: 12px;
+    background: var(--brk);
+    background-color: rgba(var(--hue), .24);
+    box-shadow: inset 0 0 0 1px rgb(var(--hue)), 0 0 16px rgba(var(--hue), .55), inset 0 0 12px rgba(var(--hue), .25);
+    color: #FFFFFF;
+}
+.surf.visor .ctl.dim { --c: rgba(134, 168, 190, .35); opacity: 1; background: var(--brk); box-shadow: none; }
+.surf.visor .ctl.dim .name { color: rgba(134, 168, 190, .60); }
+.surf.visor .ctl.offline {
+    --c: rgba(134, 168, 190, .45);
+    background: var(--brk);
+    box-shadow: none;
+}
+.surf.visor .ctl.offline::after {
+    content: ""; position: absolute; inset: 4px;
+    background: repeating-linear-gradient(135deg, rgba(134, 168, 190, .16) 0 1px, transparent 1px 6px);
+}
+.surf.visor .ctl.offline .name { color: var(--deck-ink2); }
+
+/* -------------------------------------------------------------- knobs */
+/* a ring of marks (ask 2), a thin arc inside it, a chevron riding the value (ask 3) */
+.surf.visor .knob.vk { --arm: 10px; background: none; }
+.surf.visor .knob.vk.held {
+    --c: rgb(var(--hue)); --w: 1.5px; --arm: 12px;
+    background: var(--brk);
+    box-shadow: none;
+}
+.surf.visor .vk .ticks { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.surf.visor .vk .ticks circle { fill: none; }
+.surf.visor .vk .ticks .minor { stroke: rgba(134, 168, 190, .55); stroke-width: 4; }
+.surf.visor .vk .ticks .major { stroke: rgba(210, 241, 255, .80); stroke-width: 9; }
+.surf.visor .vk .varc {
+    position: absolute; inset: 16%; border-radius: 50%;
+    background: conic-gradient(from 225deg,
+        rgb(var(--hue)) 0turn var(--pct, .35turn),
+        rgba(var(--hue), .18) var(--pct, .35turn) .75turn,
+        transparent .75turn 1turn);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+    filter: drop-shadow(0 0 3px rgba(var(--hue), .9));
+}
+.surf.visor .vk .chev { position: absolute; inset: 16%; }
+.surf.visor .vk .chev i {
+    position: absolute; left: 50%; top: -9px; margin-left: -5px;
+    width: 0; height: 0;
+    border-left: 5px solid transparent; border-right: 5px solid transparent;
+    border-bottom: 7px solid rgb(var(--hue));
+    filter: drop-shadow(0 0 3px rgba(var(--hue), .9));
+}
+.surf.visor .vk .hub { position: absolute; left: 50%; top: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; }
+.surf.visor .vk .hub::before,
+.surf.visor .vk .hub::after { content: ""; position: absolute; background: rgba(134, 168, 190, .55); }
+.surf.visor .vk .hub::before { left: 5px; top: 0; width: 1px; height: 11px; }
+.surf.visor .vk .hub::after { left: 0; top: 5px; width: 11px; height: 1px; }
+.surf.visor .vk .kval {
+    top: 50%; transform: translateY(-50%);
+    font-size: 13px; font-weight: 700; color: var(--deck-ink);
+    text-shadow: 0 0 6px rgba(var(--hue), .8);
+}
+
+/* ------------------------------------------------------------- faders */
+/* a rail with a scale on both sides (ask 2), a lit segment, and a cap made of two
+   chevrons pinching the rail at the value (ask 3) */
+.surf.visor .ctl.vf { background: none; }
+.surf.visor .vf .rail { position: absolute; left: 50%; top: 4px; bottom: 4px; width: 1px; margin-left: -.5px; background: rgba(var(--hue), .45); }
+.surf.visor .vf .scale { position: absolute; top: 4px; bottom: 3px; width: 5px; }
+.surf.visor .vf .scale.l { left: 3px; }
+.surf.visor .vf .scale.r { right: 3px; }
+.surf.visor .vf .scale::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(134, 168, 190, .60) 0 1px, transparent 1px) bottom / 100% 10% repeat-y;
+}
+.surf.visor .vf .scale::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 9px;
+    background: linear-gradient(to top, rgba(210, 241, 255, .85) 0 1px, transparent 1px) bottom / 100% 50% repeat-y;
+}
+.surf.visor .vf .scale.l::after { left: -3px; }
+.surf.visor .vf .scale.r::after { right: -3px; }
+.surf.visor .vf .val {
+    position: absolute; left: 50%; bottom: 4px; width: 3px; margin-left: -1.5px;
+    background: rgb(var(--hue));
+    box-shadow: 0 0 6px rgba(var(--hue), .9), 0 0 14px rgba(var(--hue), .4);
+}
+.surf.visor .vf .cap { position: absolute; left: 0; right: 0; height: 0; overflow: visible; }
+.surf.visor .vf .cap::before {
+    content: ""; position: absolute; left: 7px; right: 7px; top: -.5px; height: 1px;
+    background: rgba(var(--hue), .9);
+}
+.surf.visor .vf .cap i {
+    position: absolute; top: -5px; width: 0; height: 0;
+    border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+    filter: drop-shadow(0 0 3px rgba(var(--hue), .9));
+}
+.surf.visor .vf .cap i.l { left: 1px; border-left: 7px solid rgb(var(--hue)); }
+.surf.visor .vf .cap i.r { right: 1px; border-right: 7px solid rgb(var(--hue)); }
+.surf.visor .vf.horiz .rail { left: 4px; right: 4px; top: 50%; bottom: auto; width: auto; height: 1px; margin: -.5px 0 0 0; }
+.surf.visor .vf.horiz .val { left: 4px; top: 50%; bottom: auto; width: auto; height: 3px; margin: -1.5px 0 0 0; }
+.surf.visor .vf.horiz .scale { left: 4px; right: 3px; top: auto; bottom: auto; width: auto; height: 5px; }
+.surf.visor .vf.horiz .scale.l { top: 3px; }
+.surf.visor .vf.horiz .scale.r { bottom: 3px; }
+.surf.visor .vf.horiz .scale::before { background: linear-gradient(to right, rgba(134, 168, 190, .60) 0 1px, transparent 1px) left / 10% 100% repeat-x; }
+.surf.visor .vf.horiz .scale::after { left: 0; right: 0; width: auto; height: 9px; background: linear-gradient(to right, rgba(210, 241, 255, .85) 0 1px, transparent 1px) left / 50% 100% repeat-x; }
+.surf.visor .vf.horiz .scale.l::after { top: -3px; bottom: auto; }
+.surf.visor .vf.horiz .scale.r::after { bottom: -3px; top: auto; }
+.surf.visor .vf.horiz .cap { top: 0; bottom: 0; width: 0; height: auto; }
+.surf.visor .vf.horiz .cap::before { left: -.5px; right: auto; top: 7px; bottom: 7px; width: 1px; height: auto; }
+.surf.visor .vf.horiz .cap i { left: -5px; top: auto; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 0; border-bottom: 0; }
+.surf.visor .vf.horiz .cap i.l { top: 1px; border-top: 7px solid rgb(var(--hue)); }
+.surf.visor .vf.horiz .cap i.r { bottom: 1px; right: auto; border-bottom: 7px solid rgb(var(--hue)); }
+
+/* a meter is a stack of thin bars, green, amber, red */
+.surf.visor .ctl.vm {
+    background: repeating-linear-gradient(to top, rgba(134, 168, 190, .16) 0 2px, transparent 2px 4px);
+    box-shadow: none;
+}
+.surf.visor .vm .lvl {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to top, rgb(var(--h2)) 0 70%, rgb(var(--h3)) 70% 88%, rgb(var(--h4)) 88% 100%) bottom / 100% var(--mh, 150px) no-repeat;
+    -webkit-mask: repeating-linear-gradient(to top, #000 0 2px, transparent 2px 4px);
+    mask: repeating-linear-gradient(to top, #000 0 2px, transparent 2px 4px);
+    filter: drop-shadow(0 0 3px rgba(var(--h2), .55));
+}
+
+/* ------------------------------------------------ XY, steps, readouts */
+.surf.visor .ctl.vxy { --arm: 14px; }
+.surf.visor .vxy .grid {
+    position: absolute; inset: 6px;
+    background:
+        linear-gradient(rgba(134, 168, 190, .10) 1px, transparent 1px) 0 0 / 12.5% 16.66%,
+        linear-gradient(90deg, rgba(134, 168, 190, .10) 1px, transparent 1px) 0 0 / 12.5% 16.66%;
+}
+.surf.visor .vxy .cross { position: absolute; background: rgba(var(--hue), .55); }
+.surf.visor .vxy .cross.h { left: 6px; right: 6px; height: 1px; }
+.surf.visor .vxy .cross.v { top: 6px; bottom: 6px; width: 1px; }
+/* ask 3: a reticle, a ring with four ticks and nothing in the middle to hide the point */
+.surf.visor .vxy .ret {
+    position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px;
+    border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgb(var(--hue)), 0 0 8px rgba(var(--hue), .6);
+    background:
+        linear-gradient(rgb(var(--hue)), rgb(var(--hue))) 50% 0 / 1.5px 7px no-repeat,
+        linear-gradient(rgb(var(--hue)), rgb(var(--hue))) 50% 100% / 1.5px 7px no-repeat,
+        linear-gradient(rgb(var(--hue)), rgb(var(--hue))) 0 50% / 7px 1.5px no-repeat,
+        linear-gradient(rgb(var(--hue)), rgb(var(--hue))) 100% 50% / 7px 1.5px no-repeat;
+}
+.surf.visor .vxy .ret::after { content: ""; position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px; border-radius: 50%; background: #FFFFFF; }
+.surf.visor .vxy .trail { position: absolute; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: rgba(var(--hue), .45); }
+.surf.visor .vxy .coords {
+    position: absolute; left: 12px; bottom: 9px;
+    font-family: "Cascadia Mono", "Consolas", monospace; font-size: 9.5px; letter-spacing: .06em; color: var(--deck-ink2);
+}
+
+.surf.visor .ctl.steps { padding: 8px 8px; }
+.surf.visor .steps .row i { border-radius: 0; background: transparent; box-shadow: inset 0 0 0 1px rgba(var(--hue), .60); }
+.surf.visor .steps .row i.on { background: rgb(var(--hue)); box-shadow: 0 0 6px rgba(var(--hue), .6); }
+.surf.visor .steps .row i.cur { box-shadow: inset 0 0 0 1px rgba(var(--hue), .60); outline: 1.5px solid var(--deck-ink); outline-offset: 2px; }
+.surf.visor .steps .row i.on.cur { box-shadow: 0 0 6px rgba(var(--hue), .6); }
+
+.surf.visor .ctl.vr { --arm: 8px; padding: 5px 10px; justify-content: center; }
+.surf.visor .vr .cap2 { font-size: 8.5px; font-weight: 600; letter-spacing: .20em; color: var(--deck-ink2); }
+.surf.visor .vr .digits {
+    font-family: "Cascadia Mono", "Consolas", monospace; font-size: 20px; font-weight: 600; letter-spacing: .04em;
+    color: rgb(var(--hue)); text-shadow: 0 0 8px rgba(var(--hue), .65);
+}
+
+/* a lamp is a ring with a dot that lights */
+.surf.visor .ctl.lamp { border-radius: 50%; background: none; box-shadow: inset 0 0 0 1px rgba(var(--hue), .55); }
+.surf.visor .ctl.lamp::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: rgba(var(--hue), .12); }
+.surf.visor .ctl.lamp.on { box-shadow: inset 0 0 0 1px rgb(var(--hue)); background: none; }
+.surf.visor .ctl.lamp.on::after { background: rgb(var(--hue)); box-shadow: 0 0 8px rgba(var(--hue), .95); }
+
+/* --------------------------------------------------- sections and words */
+/* a section is larger corners, with its name in its color and a short rule after it */
+.surf.visor .ctlpanel {
+    --c: rgba(var(--hue), .55); --arm: 18px; --w: 1.5px;
+    border-radius: 0;
+    background:
+        linear-gradient(var(--c), var(--c)) top left / var(--arm) var(--w) no-repeat,
+        linear-gradient(var(--c), var(--c)) top left / var(--w) var(--arm) no-repeat,
+        linear-gradient(var(--c), var(--c)) top right / var(--arm) var(--w) no-repeat,
+        linear-gradient(var(--c), var(--c)) top right / var(--w) var(--arm) no-repeat,
+        linear-gradient(var(--c), var(--c)) bottom left / var(--arm) var(--w) no-repeat,
+        linear-gradient(var(--c), var(--c)) bottom left / var(--w) var(--arm) no-repeat,
+        linear-gradient(var(--c), var(--c)) bottom right / var(--arm) var(--w) no-repeat,
+        linear-gradient(var(--c), var(--c)) bottom right / var(--w) var(--arm) no-repeat;
+    box-shadow: none;
+}
+.surf.visor .ctlpanel > .ptitle {
+    top: 8px; left: 26px; padding: 0; background: none;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 10px; font-weight: 700; letter-spacing: .24em;
+    color: rgb(var(--hue));
+}
+.surf.visor .ctlpanel > .ptitle::after { content: ""; width: 40px; height: 1px; background: rgba(var(--hue), .55); }
+
+.surf.visor .lbl {
+    position: absolute; font-size: 9px; font-weight: 600; letter-spacing: .18em;
+    color: var(--deck-ink2); text-align: center; white-space: nowrap;
+}
+.surf.visor .lbl.left { text-align: left; }
+.surf.visor .surftext.h1 { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 300; letter-spacing: .46em; color: var(--deck-ink); }
+.surf.visor .surftext.small { color: var(--deck-ink2); font-size: 9.5px; font-weight: 600; letter-spacing: .20em; }
+.surf.visor .surfrule { height: 1px; background: linear-gradient(90deg, rgba(134, 168, 190, 0), rgba(134, 168, 190, .45) 12%, rgba(134, 168, 190, .45) 88%, rgba(134, 168, 190, 0)); }
+
+/* page tabs are words; the current page is underlined in light */
+.surf.visor .pagetabs .tab {
+    height: 24px; padding: 0 4px; border-radius: 0;
+    background: none; box-shadow: none;
+    font-size: 10px; font-weight: 600; letter-spacing: .20em;
+    color: var(--deck-ink2);
+}
+.surf.visor .pagetabs .tab.sel {
+    background: none; color: var(--deck-ink);
+    box-shadow: inset 0 -2px 0 rgb(var(--h1)), 0 6px 8px -6px rgba(var(--h1), .9);
+}

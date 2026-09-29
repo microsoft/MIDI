@@ -1,0 +1,259 @@
+/* =========================================================================
+   "CHICAGO" - screen 29. Windows 95, whose code name this was: a teal
+   desktop, gray windows with navy title bars, and two pixel bevels on
+   everything. Raised is something you can press, pressed is something that
+   is down, and sunken is a white field that holds a value.
+
+   Loaded after mock.css by 29-chicago.html. Every selector carries .chicago,
+   so the block can move to the end of mock.css unchanged.
+
+   Three ideas carry it:
+
+   1. THE BEVEL IS THE LANGUAGE. Four grays, two pixels. A switch at rest is
+      raised; held, it is pressed and its name moves a pixel; latched, it
+      stays pressed and fills with a checkerboard. None of that is color.
+
+   2. A VALUE LIVES IN A WHITE FIELD. The sixteen color palette is small and
+      dark, and on the gray face its green, olive and teal measure 2.82, 2.31
+      and 2.62 : 1. In white every one of them clears 4.20. So an arc, a fill,
+      a meter and a puck always sit in a sunken white field, the way a text
+      box does.
+
+   3. INK BY SURFACE. Black inside a window (11.54 on the gray), white on the
+      desktop (4.77 on the teal; black there is 4.40). Title bars take
+      whichever ink reads on their color: white, except black on olive.
+
+   Measured in g:\midi-scratch\round6-comps-contrast.ps1.
+   ========================================================================= */
+
+.surf.chicago {
+    --deck: #008080;
+    --plate: #C0C0C0;
+    --track: #DFDFDF;
+    --on-hue: #FFFFFF;
+    --deck-ink: #FFFFFF;
+    --deck-ink2: #FFFFFF;
+    --grid1: rgba(255, 255, 255, .20);
+    --grid2: rgba(255, 255, 255, .07);
+    --tonal-rest: 0;
+    --tonal-held: 0;
+    --rim-rest: 0;
+    --tonal-radius: 0;
+    --cap-shadow: none;
+
+    --face: #C0C0C0;
+    --light: #DFDFDF;
+    --hilite: #FFFFFF;
+    --shade: #808080;
+    --dark: #000000;
+    --field: #FFFFFF;
+    --ink: #000000;
+
+    /* ask 1: the four bevels, two pixels each, and the etched line */
+    --raised:  inset -1px -1px 0 #000000, inset 1px 1px 0 #FFFFFF, inset -2px -2px 0 #808080, inset 2px 2px 0 #DFDFDF;
+    --pressed: inset 1px 1px 0 #000000, inset -1px -1px 0 #FFFFFF, inset 2px 2px 0 #808080, inset -2px -2px 0 #DFDFDF;
+    --sunken:  inset 1px 1px 0 #808080, inset -1px -1px 0 #FFFFFF, inset 2px 2px 0 #000000, inset -2px -2px 0 #DFDFDF;
+    --window:  inset -1px -1px 0 #000000, inset 1px 1px 0 #DFDFDF, inset -2px -2px 0 #808080, inset 2px 2px 0 #FFFFFF;
+    /* ask 3: one pixel of white, one of the face, the latched look */
+    --checker: repeating-conic-gradient(#FFFFFF 0 25%, #C0C0C0 0 50%) 0 0 / 2px 2px;
+
+    --h1:   0,   0, 128;   /* #000080 navy - the default, and every title bar that names none */
+    --h2:   0, 128,   0;   /* #008000 green */
+    --h3: 128, 128,   0;   /* #808000 olive */
+    --h4: 128,   0,   0;   /* #800000 maroon */
+    --h5: 128,   0, 128;   /* #800080 purple */
+    --h6:   0, 128, 128;   /* #008080 teal */
+
+    font-family: "Microsoft Sans Serif", "MS Sans Serif", "Segoe UI", sans-serif;
+}
+
+/* ----------------------------------------------------------- windows */
+/* a section is a window: a raised frame, the gray face, and a title bar in its color */
+.surf.chicago .ctlpanel {
+    border-radius: 0;
+    background: var(--face);
+    box-shadow: var(--window);
+}
+.surf.chicago .ctlpanel > .ptitle {
+    top: 3px; left: 3px; right: 3px; height: 18px; padding: 0 5px;
+    display: flex; align-items: center;
+    background: rgb(var(--hue));
+    color: #FFFFFF;
+    font-size: 11px; font-weight: 700; letter-spacing: 0;
+}
+.surf.chicago .ctlpanel.hue3 > .ptitle { color: #000000; }
+
+/* a group inside a window: an etched line with its name cut into the top (the engine's
+   notched header, and its stripes, gray over white, one pixel each) */
+.surf.chicago .ctlpanel.group {
+    background: none;
+    box-shadow: inset 1px 1px 0 #FFFFFF, 1px 1px 0 #FFFFFF;
+    border: 1px solid #808080;
+    box-sizing: border-box;
+}
+.surf.chicago .ctlpanel.group > .ptitle {
+    top: -8px; left: 8px; right: auto; height: 14px; padding: 0 3px;
+    background: var(--face); color: var(--ink);
+    font-weight: 400;
+}
+
+/* the words: white on the desktop, black in a window */
+.surf.chicago .surftext.h1 { font-family: inherit; color: var(--deck-ink); font-weight: 700; letter-spacing: 0; }
+.surf.chicago .surftext.small { color: var(--deck-ink); font-size: 11px; }
+.surf.chicago .lbl { position: absolute; font-size: 11px; color: var(--ink); text-align: center; white-space: nowrap; }
+.surf.chicago .lbl.left { text-align: left; }
+.surf.chicago .surfrule { height: 1px; background: #808080; box-shadow: 0 1px 0 #FFFFFF; }
+
+/* ----------------------------------------------------------- switches */
+/* at rest: raised, black name, the control's color as a tag before it (ask 4) */
+.surf.chicago .ctl {
+    border-radius: 0;
+    background: var(--face);
+    box-shadow: var(--raised);
+    color: var(--ink);
+    font-size: 11px;
+}
+.surf.chicago .ctl.btn-ctl { flex-direction: row; gap: 6px; }
+.surf.chicago .ctl.btn-ctl .name { font-size: 11px; font-weight: 400; letter-spacing: 0; color: var(--ink); }
+.surf.chicago .ctl.btn-ctl .tag {
+    width: 8px; height: 8px; flex: none;
+    background: rgb(var(--hue));
+    box-shadow: 0 0 0 1px #000000;
+}
+/* held: pressed, and everything on it moves one pixel down and to the right */
+.surf.chicago .ctl.btn-ctl.held { background: var(--face); box-shadow: var(--pressed); }
+.surf.chicago .ctl.btn-ctl.held > *,
+.surf.chicago .ctl.btn-ctl.on > * { transform: translate(1px, 1px); }
+/* latched: stays pressed, filled with the checkerboard (ask 3). Color plays no part */
+.surf.chicago .ctl.btn-ctl.on { background: var(--checker); box-shadow: var(--pressed); color: var(--ink); }
+/* a pad is lit rather than latched: its face fills with its color while the note sounds,
+   and the name turns white, or stays black on olive (pad fill when on, which the engine has) */
+.surf.chicago .ctl.btn-ctl.pad.on { background: rgb(var(--hue)); box-shadow: var(--raised); }
+.surf.chicago .ctl.btn-ctl.pad.on > * { transform: none; }
+.surf.chicago .ctl.btn-ctl.pad.held { background: rgb(var(--hue)); box-shadow: var(--pressed); }
+.surf.chicago .ctl.btn-ctl.pad.on .name,
+.surf.chicago .ctl.btn-ctl.pad.held .name { color: #FFFFFF; }
+.surf.chicago .ctl.btn-ctl.pad.hue3.on .name,
+.surf.chicago .ctl.btn-ctl.pad.hue3.held .name { color: #000000; }
+.surf.chicago .ctl.btn-ctl.pad.on .tag,
+.surf.chicago .ctl.btn-ctl.pad.held .tag { box-shadow: 0 0 0 1px #FFFFFF; }
+/* disabled: the name embossed in gray, and the tag gray with it */
+.surf.chicago .ctl.dim { opacity: 1; background: var(--face); box-shadow: var(--raised); }
+.surf.chicago .ctl.btn-ctl.dim .name { color: #808080; text-shadow: 1px 1px 0 #FFFFFF; }
+.surf.chicago .ctl.btn-ctl.dim .tag { background: #808080; box-shadow: 0 0 0 1px #808080, 1px 1px 0 1px #FFFFFF; }
+/* no device: the engine's hatch, in the shadow gray */
+.surf.chicago .ctl.offline {
+    background: repeating-linear-gradient(135deg, #808080 0 1px, transparent 1px 5px), var(--face);
+    box-shadow: var(--raised);
+}
+
+/* -------------------------------------------------------------- knobs */
+/* a raised gray cap with a black pointer, inside a sunken white ring that holds the value */
+.surf.chicago .knob,
+.surf.chicago .knob.held { background: none; box-shadow: none; }
+.surf.chicago .knob .ring {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: var(--field);
+    box-shadow: var(--sunken);
+}
+.surf.chicago .knob .varc {
+    position: absolute; inset: 4px; border-radius: 50%;
+    background: conic-gradient(from 225deg,
+        rgb(var(--hue)) 0turn var(--pct, .35turn),
+        #DFDFDF var(--pct, .35turn) .75turn,
+        transparent .75turn 1turn);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 7px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 7px));
+}
+.surf.chicago .knob .kcap {
+    position: absolute; inset: 24%; border-radius: 50%;
+    background: var(--face);
+    box-shadow: var(--raised);
+}
+.surf.chicago .knob .ptr {
+    position: absolute; left: 50%; top: 25%; width: 2px; height: 17%; margin-left: -1px;
+    border-radius: 0; background: #000000; box-shadow: none;
+    transform-origin: 50% 147%;
+}
+/* under a finger: the dotted focus line goes round it, and the value shows below */
+.surf.chicago .knob.held .ring { outline: 1px dotted #000000; outline-offset: 3px; }
+.surf.chicago .knob .kval {
+    top: auto; bottom: -33px; transform: none;
+    font-family: inherit; font-size: 11px; color: var(--ink);
+}
+
+/* ------------------------------------------------------------ faders */
+/* a sunken white slot, a printed scale, and a raised cap pointing at it (ask 2) */
+.surf.chicago .ctl.trk { background: none; box-shadow: none; }
+.surf.chicago .trk .chan {
+    position: absolute; left: 12px; top: 8px; bottom: 8px; width: 10px;
+    background: var(--field); box-shadow: var(--sunken);
+}
+.surf.chicago .trk .chan .fill { position: absolute; left: 2px; right: 2px; bottom: 2px; background: rgb(var(--hue)); }
+.surf.chicago .trk .scale i { position: absolute; left: 36px; width: 7px; height: 1px; background: #000000; }
+.surf.chicago .trk .thumb { position: absolute; left: 2px; width: 30px; height: 15px; overflow: visible; }
+
+.surf.chicago .trk.horiz .chan { left: 8px; right: 8px; top: 8px; bottom: auto; width: auto; height: 10px; }
+.surf.chicago .trk.horiz .chan .fill { left: 2px; top: 2px; bottom: 2px; right: auto; }
+.surf.chicago .trk.horiz .scale i { left: auto; top: 27px; width: 1px; height: 6px; }
+.surf.chicago .trk.horiz .thumb { top: -2px; left: auto; width: 15px; height: 30px; }
+
+/* ------------------------------------------------ fields, meters, lamps */
+/* a meter is a sunken white field of blocks, green, then olive, then maroon */
+.surf.chicago .ctl.meterc {
+    background: var(--field); box-shadow: var(--sunken);
+    padding: 4px 4px 4px 4px; gap: 2px; justify-content: flex-end;
+}
+.surf.chicago .meterc i { display: block; height: 6px; background: transparent; }
+.surf.chicago .meterc i.lit { background: rgb(var(--h2)); }
+.surf.chicago .meterc i.lit.warn { background: rgb(var(--h3)); }
+.surf.chicago .meterc i.lit.hot { background: rgb(var(--h4)); }
+
+/* the XY field is a white canvas with a dotted grid, a crosshair in its color and a
+   selection handle for a puck */
+.surf.chicago .ctl.xyc { background: var(--field); box-shadow: var(--sunken); overflow: hidden; }
+.surf.chicago .xyc .gv { position: absolute; top: 2px; bottom: 2px; width: 0; border-left: 1px dotted #808080; }
+.surf.chicago .xyc .gh { position: absolute; left: 2px; right: 2px; height: 0; border-top: 1px dotted #808080; }
+.surf.chicago .xyc .cross { position: absolute; background: rgb(var(--hue)); }
+.surf.chicago .xyc .cross.h { left: 2px; right: 2px; height: 1px; }
+.surf.chicago .xyc .cross.v { top: 2px; bottom: 2px; width: 1px; }
+.surf.chicago .xyc .trail { position: absolute; width: 5px; height: 5px; margin: -2px 0 0 -2px; background: rgba(var(--hue), .35); }
+.surf.chicago .xyc .puck {
+    position: absolute; width: 9px; height: 9px; margin: -5px 0 0 -5px;
+    background: rgb(var(--hue)); box-shadow: 0 0 0 1px #000000;
+}
+
+/* a readout is a text box: sunken white, black figures on the right */
+.surf.chicago .ctl.field {
+    background: var(--field); box-shadow: var(--sunken);
+    align-items: flex-end; justify-content: center; padding: 0 7px;
+    font-size: 12px; color: var(--ink);
+}
+
+/* a lamp is a radio button: a sunken white circle, with a dot in its color when lit */
+.surf.chicago .ctl.radio { border-radius: 50%; background: var(--field); box-shadow: var(--sunken); }
+.surf.chicago .ctl.radio.on::after {
+    content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px;
+    border-radius: 50%; background: rgb(var(--hue));
+}
+
+/* a step is a check box; the playing step has the dotted focus line round it (ask 3) */
+.surf.chicago .ctl.chk { background: var(--field); box-shadow: var(--sunken); }
+.surf.chicago .ctl.chk.on::after {
+    content: ""; position: absolute; left: 5px; top: 1px; width: 4px; height: 9px;
+    border: solid rgb(var(--hue)); border-width: 0 2px 2px 0;
+    transform: rotate(40deg);
+}
+.surf.chicago .ctl.chk.cur { outline: 1px dotted #000000; outline-offset: 2px; }
+
+/* page tabs are buttons; the current page is pressed in and checkered, like the task you are in */
+.surf.chicago .pagetabs .tab {
+    height: 24px; padding: 0 14px; border-radius: 0;
+    font-size: 11px; color: var(--ink);
+    background: var(--face); box-shadow: var(--raised);
+}
+.surf.chicago .pagetabs .tab.sel {
+    background: var(--checker); box-shadow: var(--pressed);
+    color: var(--ink); font-weight: 700;
+    padding: 1px 13px 0 15px;
+}
