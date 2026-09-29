@@ -19,32 +19,28 @@
         
         <StandardDirectory Id="ProgramFiles64Folder">
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
-                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
-                    <Directory Id="CONSOLEAPP_INSTALLFOLDER" Name="Console" />
-                </Directory>
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools" />
             </Directory>
         </StandardDirectory>
 
         <!--
-            The console app payload is in the generated _SetupFiles.wxs
-            (ComponentGroup ConsoleAppFiles), produced from the dotnet publish output so the
-            dependency closure never has to be hand-maintained here.
+            The console app payload is in the generated _SetupFiles.wxs (ComponentGroup
+            ConsoleAppFiles). It installs beside the other tools and shares their copy of the SDK
+            runtime, which is why build\build-all.ps1 gives every file in the Tools folder the same
+            component GUID in every installer.
         -->
 
+        <!-- No PATH entry of its own: the Tools folder is already added by the SDK package, and
+             two components owning one PATH entry would each remove it on uninstall. -->
         <Component Id="ConsoleAppRegistration"
                    Bitness="always64"
-                   Directory="CONSOLEAPP_INSTALLFOLDER"
+                   Directory="TOOLSROOT_INSTALLFOLDER"
                    Guid="8fbfa42a-554c-481a-93e3-0999d2abf3ab">
-
-            <!-- Add folder to path -->
-            <Environment Id="AddConsoleAppToSystemPath"
-                            Name="PATH" Action="set" Part="last" System="yes"
-                            Value="[CONSOLEAPP_INSTALLFOLDER]" Permanent="no"/>
 
           <RegistryKey Root="HKLM"
                        Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
 
-            <RegistryValue Type="string" Name="MidiConsole" Value="[CONSOLEAPP_INSTALLFOLDER]midi.exe" KeyPath="yes" />
+            <RegistryValue Type="string" Name="MidiConsole" Value="[TOOLSROOT_INSTALLFOLDER]midi.exe" KeyPath="yes" />
 
           </RegistryKey>
         </Component>

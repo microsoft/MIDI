@@ -256,6 +256,9 @@ namespace glass
         // Wherever the customer dragged the label's own handles to. Set by the canvas rather
         // than chosen from the list, and paired with the box in LabelStyle.
         Custom = 10,
+
+        // Inside, at the top left, the way a keyboard prints the legend on a key.
+        InsideTopLeft = 11,
     };
 
     enum class ShowValueOverride

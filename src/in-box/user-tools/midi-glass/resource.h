@@ -12,6 +12,10 @@
 #define IDS_FRIENDLY_APP_NAME           102
 #define IDS_APP_DESCRIPTION             103
 
+// Pictures the shipped themes lay over the page, kept inside the exe like the themes themselves.
+#define IDR_THEME_OFFWORLD_WALL         201
+#define IDR_THEME_OFFWORLD_STAINS       202
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

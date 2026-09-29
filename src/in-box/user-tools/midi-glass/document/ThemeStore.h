@@ -66,8 +66,10 @@ namespace glass
 
     std::wstring ThemesFolder() noexcept;
 
-    // A deck picture is a bare file name in the themes folder, beside the theme files. Empty when
-    // the name is a path, the file is not a png or jpg, or it is not there.
+    // A picture a theme names is a bare file name in the themes folder, beside the theme files.
+    // Empty when the name is a path, the file is not a png or jpg, or it is not there.
+    std::wstring ThemePicturePath(_In_ std::wstring const& fileName) noexcept;
+
     std::wstring DeckImagePath(_In_ ThemeDeck const& deck) noexcept;
 
     // Copies a picture into the themes folder for a deck. The file name to store, or empty.

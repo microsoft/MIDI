@@ -64,6 +64,41 @@ namespace glass
 
             return line;
         }
+
+        ThemeColor Opaque(_In_ ThemeColor color) noexcept
+        {
+            color.A = 255;
+
+            return color;
+        }
+
+        // A color scaled channel by channel, which is how the second key on a keyboard is the
+        // first one in a darker plastic.
+        ThemeColor Scaled(_In_ ThemeColor const& color, _In_ std::array<double, 3> const& ratio) noexcept
+        {
+            auto const scale = [](uint8_t channel, double by) noexcept
+                {
+                    return static_cast<uint8_t>(std::clamp(std::lround(channel * by), 0L, 255L));
+                };
+
+            return { scale(color.R, ratio[0]), scale(color.G, ratio[1]), scale(color.B, ratio[2]), 255 };
+        }
+
+        ThemeColor Darker(_In_ ThemeColor const& color, _In_ int32_t levels) noexcept
+        {
+            auto const drop = [levels](uint8_t channel) noexcept
+                {
+                    return static_cast<uint8_t>(std::clamp(static_cast<int32_t>(channel) - levels, 0, 255));
+                };
+
+            return { drop(color.R), drop(color.G), drop(color.B), color.A };
+        }
+
+        // How much darker a key's top gets when it is held down, further from the light.
+        constexpr int32_t KeycapHeldLevels = 8;
+
+        // An unlit meter segment is its zone's own color turned right down.
+        constexpr double MeterUnlitStrength = 0.16;
     }
 
     _Use_decl_annotations_
@@ -198,6 +233,26 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    ThemeColor InkOn(ThemeColor const& preferred, ThemeColor const& fallback, ThemeColor const& background) noexcept
+    {
+        if (preferred.A != 0 && ContrastRatio(preferred, background) >= 4.5)
+        {
+            return preferred;
+        }
+
+        return InkOn(fallback, background);
+    }
+
+    _Use_decl_annotations_
+    bool IsKeycap(Theme const& theme, ControlKind kind) noexcept
+    {
+        return theme.SwitchShape == SwitchShapeStyle::Keycap &&
+            theme.PlateColor.A != 0 &&
+            FillsLikeASwitch(kind) &&
+            kind != ControlKind::Lamp;
+    }
+
+    _Use_decl_annotations_
     ControlColors ResolveControlColors(Control const& control, Theme const& theme) noexcept
     {
         ControlColors colors{};
@@ -250,8 +305,14 @@ namespace glass
         else if (fillAtRest > 0.0)
         {
             // Tonal: the plate is the deck tinted with the control's own hue. That is why the
-            // tonal themes cost no extra rendering layer - a tint is a background color.
-            colors.Plate = BlendOver(theme.Deck.Color, hue, fillAtRest);
+            // tonal themes cost no extra rendering layer - a tint is a background color. A theme
+            // can ask for the tint over its plate instead, so a pad is its color on the same
+            // cream as everything around it rather than on the page.
+            auto const under = theme.RestTintOnPlate && theme.PlateColor.A != 0
+                ? Opaque(theme.PlateColor)
+                : theme.Deck.Color;
+
+            colors.Plate = BlendOver(under, hue, fillAtRest);
             colors.Plate.A = 255;
         }
         else
@@ -278,6 +339,78 @@ namespace glass
         {
             colors.Plate = NeutralCapTop(theme.NeutralColor);
             colors.PlateEnd = NeutralCapBottom(theme.NeutralColor);
+        }
+
+        // A key: its skirt is the plate, and its dished top is set into it. The key on the
+        // neutral slot is the other key on the keyboard, the same shape in a second plastic,
+        // so all four of its colors are the first key's scaled to the neutral.
+        auto const keycap = IsKeycap(theme, control.Kind);
+        auto const keycapFader = theme.SwitchShape == SwitchShapeStyle::Keycap &&
+            theme.PlateColor.A != 0 &&
+            control.Kind == ControlKind::Fader;
+
+        if (keycap || keycapFader)
+        {
+            auto skirtTop = Opaque(keycapFader ? theme.ThumbColor : theme.PlateColor);
+            auto skirtEnd = Opaque(keycapFader
+                ? theme.ThumbEndColor
+                : (theme.PlateEndColor.A != 0 ? theme.PlateEndColor : theme.PlateColor));
+
+            constexpr ThemeColor white{ 255, 255, 255, 255 };
+
+            auto faceTop = theme.KeycapTopColor.A != 0
+                ? Opaque(theme.KeycapTopColor)
+                : Opaque(BlendOver(Opaque(theme.PlateColor), white, 0.08));
+
+            auto faceEnd = theme.KeycapTopEndColor.A != 0
+                ? Opaque(theme.KeycapTopEndColor)
+                : Opaque(BlendOver(Opaque(theme.PlateColor), white, 0.45));
+
+            auto sheen = theme.PlateHighlightPercent / 100.0;
+            auto outlineShare = 0.65;
+
+            if (neutralCap)
+            {
+                auto const middle = BlendOver(skirtTop, skirtEnd, 0.4);
+
+                auto const ratio = [](uint8_t to, uint8_t from) noexcept
+                    {
+                        return from == 0 ? 1.0 : static_cast<double>(to) / from;
+                    };
+
+                std::array<double, 3> const by
+                {
+                    ratio(theme.NeutralColor.R, middle.R),
+                    ratio(theme.NeutralColor.G, middle.G),
+                    ratio(theme.NeutralColor.B, middle.B),
+                };
+
+                skirtTop = Scaled(skirtTop, by);
+                skirtEnd = Scaled(skirtEnd, by);
+                faceTop = Scaled(faceTop, by);
+                faceEnd = Scaled(faceEnd, by);
+
+                // A darker plastic catches less of the light and shows more of its edge.
+                sheen *= 0.5;
+                outlineShare = 0.85;
+            }
+
+            if (keycap)
+            {
+                colors.Plate = skirtTop;
+                colors.PlateEnd = skirtEnd;
+            }
+
+            colors.KeycapTop = faceTop;
+            colors.KeycapTopEnd = faceEnd;
+            colors.KeycapTopHeld = Darker(faceTop, KeycapHeldLevels);
+            colors.KeycapTopHeldEnd = Darker(faceEnd, KeycapHeldLevels);
+
+            auto const edge = theme.NeutralRimColor;
+
+            colors.KeycapOutline = AtStrength(edge, outlineShare);
+            colors.KeycapSheen = AtStrength(EffectivePlateSheenColor(theme), sheen);
+            colors.KeycapFoot = AtStrength(theme.ShadowColor, theme.PlateShadePercent / 100.0);
         }
 
         // What the resting plate actually comes out as once it is over the deck. The touch and
@@ -423,11 +556,32 @@ namespace glass
             break;
         }
 
-        if (neutralCap && theme.Thumb != ThumbStyle::None)
+        if (neutralCap && theme.Thumb != ThumbStyle::None && !keycapFader)
         {
             colors.Thumb = NeutralCapTop(theme.NeutralColor);
             colors.ThumbEnd = NeutralCapBottom(theme.NeutralColor);
             colors.ThumbLine = NeutralCapLine(theme.NeutralColor);
+        }
+
+        // A fader's cap is a small key: the neutral one is the other plastic, like a switch.
+        if (keycapFader && theme.Thumb != ThumbStyle::None && neutralCap)
+        {
+            auto const middle = BlendOver(Opaque(theme.ThumbColor), Opaque(theme.ThumbEndColor), 0.4);
+
+            auto const ratio = [](uint8_t to, uint8_t from) noexcept
+                {
+                    return from == 0 ? 1.0 : static_cast<double>(to) / from;
+                };
+
+            std::array<double, 3> const by
+            {
+                ratio(theme.NeutralColor.R, middle.R),
+                ratio(theme.NeutralColor.G, middle.G),
+                ratio(theme.NeutralColor.B, middle.B),
+            };
+
+            colors.Thumb = Scaled(Opaque(theme.ThumbColor), by);
+            colors.ThumbEnd = Scaled(Opaque(theme.ThumbEndColor), by);
         }
 
         // On is the plate itself carrying the hue, top brighter than bottom. The same two
@@ -518,13 +672,14 @@ namespace glass
         colors.Marks.A = MarkAlpha;
 
         // A name inside a switch sits on the plate, and a lit plate can be a different color
-        // altogether, so it is measured against both.
+        // altogether, so it is measured against both. At rest the theme's ink comes first; lit,
+        // the ink the theme names for a lit switch does.
         auto const restingMiddle = BlendOver(restingTop, restingBottom, 0.5);
 
-        colors.SwitchInk = InkOn(theme.InkColor, restingMiddle);
+        colors.SwitchInk = InkOn(theme.InkColor, theme.OnInkColor, restingMiddle);
         colors.SwitchInkOn = colors.OnPlate.A == 0
             ? colors.SwitchInk
-            : InkOn(theme.InkColor, BlendOver(colors.OnPlate, colors.OnPlateEnd, 0.5));
+            : InkOn(theme.OnInkColor, theme.InkColor, BlendOver(colors.OnPlate, colors.OnPlateEnd, 0.5));
 
         // A knob's face is the plate unless the theme turned one of its own.
         if (theme.KnobFaceColor.A != 0)
@@ -606,6 +761,36 @@ namespace glass
 
         colors.KeyWhite = EffectiveKeyWhiteColor(theme);
         colors.KeyBlack = EffectiveKeyBlackColor(theme);
+
+        colors.LampHolder = theme.LampHolderColor;
+        colors.RecessLip = theme.RecessLipColor;
+
+        // Every segment is there when it is out, so a meter reads as a row of lights.
+        auto const unlit = [&theme](ThemeColor const& zone) noexcept
+            {
+                return theme.MeterUnlitColor.A != 0
+                    ? theme.MeterUnlitColor
+                    : AtStrength(zone, MeterUnlitStrength);
+            };
+
+        colors.MeterLitOff = unlit(colors.MeterLit);
+        colors.MeterWarnOff = unlit(colors.MeterWarn);
+        colors.MeterHotOff = unlit(colors.MeterHot);
+
+        // Behind smoked plastic a light keeps its own color, even on a theme that prints every
+        // other value in one ink.
+        colors.WellValue = theme.WellFillsControl && theme.ValueColor.A != 0 ? hue : value;
+
+        if (theme.ValueCorePercent > 0)
+        {
+            colors.ValueCore = Opaque(BlendOver(
+                Opaque(value), ThemeColor{ 255, 255, 255, 255 }, std::clamp(theme.ValueCorePercent, 0, 100) / 100.0));
+        }
+
+        if (theme.FlarePercent > 0)
+        {
+            colors.Flare = theme.FlareColor.A != 0 ? Opaque(theme.FlareColor) : Opaque(value);
+        }
 
         return colors;
     }

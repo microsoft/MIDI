@@ -28,6 +28,9 @@
 
 IDI_APPICON ICON "Assets\\AppIcon.ico"
 
+IDR_THEME_OFFWORLD_WALL     RCDATA "Assets\\Themes\\offworld-wall.png"
+IDR_THEME_OFFWORLD_STAINS   RCDATA "Assets\\Themes\\offworld-stains.png"
+
 STRINGTABLE
 BEGIN
     IDS_LAYOUT_FILE_TYPE    "MIDI Glass layout"

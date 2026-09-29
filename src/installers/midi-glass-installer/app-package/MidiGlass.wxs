@@ -19,13 +19,12 @@
             AllowSameVersionUpgrades="yes"
             DowngradeErrorMessage="A newer version of MIDI Glass is already installed. Uninstall it first to install this version." />
 
-        <!-- The same folder MIDI Glass has always installed to. MIDI Settings launches the tools
-             by this path, so the name under Tools is a contract. -->
+        <!-- Beside the other tools, the way they are laid out in Windows itself. Files that other
+             installers also put in this folder, like the SDK runtime, carry the same component
+             GUID in each of them, so uninstalling one leaves them in place for the rest. -->
         <StandardDirectory Id="ProgramFiles64Folder">
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
-                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
-                    <Directory Id="TOOL_GLASS_FOLDER" Name="Glass" />
-                </Directory>
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools" />
             </Directory>
         </StandardDirectory>
 
@@ -33,9 +32,10 @@
             <Directory Id="MIDI_PROGRAMS_FOLDER" Name="Windows MIDI (Preview)" />
         </StandardDirectory>
 
-        <!-- The app itself, with its own copy of the API. The list is generated from the staged
-             build output by build\build-midi-glass.ps1, so the .xbf files keep their folders
-             (Themes\Generic.xbf holds the templates the surface's controls are drawn with). -->
+        <!-- The app itself, with the files it shares with the other tools. The list is generated
+             from the staged build output by build\build-all.ps1. The XAML is compiled into the
+             app's own midiglass.pri, so no .xbf file is installed that another app could
+             overwrite. -->
 
         <Component Id="MidiGlassShortcut"
                    Bitness="always64"
@@ -45,7 +45,7 @@
             <Shortcut Id="Shortcut_midiglass"
                       Name="MIDI Glass"
                       Target="[#midiglassExe]"
-                      WorkingDirectory="TOOL_GLASS_FOLDER" />
+                      WorkingDirectory="TOOLSROOT_INSTALLFOLDER" />
 
             <!-- Only removes the folder if no other Windows MIDI Services installer still has
                  shortcuts in it -->
@@ -75,7 +75,7 @@
         -->
         <Component Id="MidiGlassLayoutFileAssociation"
                    Bitness="always64"
-                   Directory="TOOL_GLASS_FOLDER"
+                   Directory="TOOLSROOT_INSTALLFOLDER"
                    Guid="fede6a6b-7ae8-404b-aea1-d870fa45e08f">
 
             <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\WindowsMidiServices.MidiLayout" ForceDeleteOnUninstall="yes">

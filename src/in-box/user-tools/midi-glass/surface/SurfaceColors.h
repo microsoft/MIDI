@@ -156,6 +156,37 @@ namespace glass
         // A piano keyboard's natural keys and its sharps and flats.
         ThemeColor KeyWhite{};
         ThemeColor KeyBlack{};
+
+        // A key's dished top, a few levels darker when it is held down, the thin line round it
+        // and the light along its top edge, and the dark line along the foot of its skirt. All
+        // transparent where the theme's switches are plates.
+        ThemeColor KeycapTop{ 0, 0, 0, 0 };
+        ThemeColor KeycapTopEnd{ 0, 0, 0, 0 };
+        ThemeColor KeycapTopHeld{ 0, 0, 0, 0 };
+        ThemeColor KeycapTopHeldEnd{ 0, 0, 0, 0 };
+        ThemeColor KeycapOutline{ 0, 0, 0, 0 };
+        ThemeColor KeycapSheen{ 0, 0, 0, 0 };
+        ThemeColor KeycapFoot{ 0, 0, 0, 0 };
+
+        // What a round lamp is set into. Transparent means a thin dark ring.
+        ThemeColor LampHolder{ 0, 0, 0, 0 };
+
+        // A meter's segments while they are unlit, one per zone.
+        ThemeColor MeterLitOff{};
+        ThemeColor MeterWarnOff{};
+        ThemeColor MeterHotOff{};
+
+        // A value drawn inside a well: the control's own hue on a theme whose windows keep it,
+        // and the value color everywhere else.
+        ThemeColor WellValue{};
+
+        // The lighter line down the middle of a lit value, and the heart of a flare.
+        // Transparent on a theme that asks for neither.
+        ThemeColor ValueCore{ 0, 0, 0, 0 };
+        ThemeColor Flare{ 0, 0, 0, 0 };
+
+        // The light catching the lower edge of anything cut into the surface.
+        ThemeColor RecessLip{ 0, 0, 0, 0 };
     };
 
     // The control's own hue. A slot unless the control asked for a literal color and gave one
@@ -185,6 +216,15 @@ namespace glass
     // The theme's own ink where it is readable on this background, and a measured one where it
     // is not. Type needs 4.5 : 1, and a named ink is a preference rather than a promise.
     ThemeColor InkOn(_In_ ThemeColor const& themeInk, _In_ ThemeColor const& background) noexcept;
+
+    // The first of two inks that reads on this background, or a measured one where neither does.
+    ThemeColor InkOn(
+        _In_ ThemeColor const& preferred,
+        _In_ ThemeColor const& fallback,
+        _In_ ThemeColor const& background) noexcept;
+
+    // Whether a switch of this kind is drawn as a key on this theme.
+    bool IsKeycap(_In_ Theme const& theme, _In_ ControlKind kind) noexcept;
 
     ControlColors ResolveControlColors(_In_ Control const& control, _In_ Theme const& theme) noexcept;
 

@@ -217,12 +217,17 @@ namespace glass
                     auto studio = MakeDarkTheme(L"Studio Dark", 0x0C0D10,
                         { 0x4FC3F7, 0x81C784, 0xFFC247, 0xFF7043, 0xBA68C8, 0x4DD0E1 });
 
+                    // Every segment of a meter is there when it is out, the comp's faint white.
+                    studio.MeterUnlitColor = { 255, 255, 255, 18 };
+
                     list.push_back(studio);
                 }
 
                 {
                     auto neon = MakeDarkTheme(L"Neon Booth", 0x08040F,
                         { 0x00E5FF, 0x76FF03, 0xFFEA00, 0xFF1744, 0xD500F9, 0x1DE9B6 });
+
+                    neon.MeterUnlitColor = { 255, 255, 255, 18 };
 
                     list.push_back(neon);
                 }
@@ -300,6 +305,12 @@ namespace glass
                     // survives with no color vision because it is also a rising brightness.
                     amber.MeterSlots = { 0, 2, 5 };
 
+                    // Inverse video, and the terminals really did this: a lit switch is the
+                    // phosphor outright and its name goes tube dark.
+                    amber.FillWhenOnPercent = 100;
+                    amber.OnInkColor = Rgb(0x1A0E05);
+                    amber.MeterUnlitColor = { 0xFF, 0xB0, 0x2E, 26 };
+
                     amber.CautionResourceKey = L"ThemeCautionAmberConsole";
 
                     list.push_back(amber);
@@ -308,6 +319,8 @@ namespace glass
                 {
                     auto blueprint = MakeDarkTheme(L"Blueprint", 0x0A1929,
                         { 0x90CAF9, 0x64B5F6, 0xE3F2FD, 0x42A5F5, 0xB3E5FC, 0x1E88E5 });
+
+                    blueprint.MeterUnlitColor = { 255, 255, 255, 18 };
 
                     list.push_back(blueprint);
                 }
@@ -337,6 +350,8 @@ namespace glass
                     contrast.Thumb = ThumbStyle::Hue;
                     contrast.TouchFillPercent = 55;
 
+                    contrast.MeterUnlitColor = { 255, 255, 255, 18 };
+
                     contrast.CautionResourceKey = L"ThemeCautionHighContrast";
 
                     list.push_back(contrast);
@@ -357,6 +372,12 @@ namespace glass
                     tonal.GlowStrength = 0;
                     tonal.FillAtRest = 0.14;
                     tonal.TouchFillPercent = 27;
+
+                    // A lit switch is its color outright, with a white name, and a meter's
+                    // segments are the track when they are out.
+                    tonal.FillWhenOnPercent = 100;
+                    tonal.OnInkColor = Rgb(0xFFFFFF);
+                    tonal.MeterUnlitColor = Rgb(0xE3DFD9);
                     tonal.TrackColor = Rgb(0xE3DFD9);
                     tonal.CornerRadius = 14;
 
@@ -380,6 +401,11 @@ namespace glass
                     tonal.GlowStrength = 0;
                     tonal.FillAtRest = 0.18;
                     tonal.TouchFillPercent = 32;
+
+                    tonal.FillWhenOnPercent = 100;
+                    tonal.OnInkColor = Rgb(0x191A20);
+                    tonal.MeterUnlitColor = tonal.TrackColor;
+                    tonal.MeterUnlitColor.A = 255;
                     tonal.CornerRadius = 14;
 
                     tonal.PlateSheenPercent = 0;
@@ -464,6 +490,9 @@ namespace glass
                     // Green, yellow and red like the desk it is a play on.
                     bigwig.MeterSlots = { 4, 2, 5 };
 
+                    // A lit switch is its color outright, so its name goes dark.
+                    bigwig.OnInkColor = Rgb(0x141414);
+
                     bigwig.CautionResourceKey = L"ThemeCautionBigwig";
 
                     list.push_back(bigwig);
@@ -510,7 +539,7 @@ namespace glass
                     bone.ShadowColor = Rgb(0x5E5139);
 
                     bone.GlowStrength = 55;
-                    bone.Light = LightSource::White;
+                    bone.BloomColor = Rgb(0xFFFFFF);
 
                     // A white cap with a hairline of the control's color through it, and a flat
                     // value bar - a fade would be one more thing competing with the shadow.
@@ -542,6 +571,12 @@ namespace glass
                     bone.KeyBlackColor = Rgb(0x8A795D);
 
                     bone.MeterSlots = { 1, 2, 5 };
+
+                    // A warm white name on a lit button, rather than a cool one, and a meter's
+                    // segments are the track when they are out.
+                    bone.OnInkColor = Rgb(0xFFFDF7);
+                    bone.MeterUnlitColor = bone.TrackColor;
+                    bone.MeterUnlitColor.A = 255;
 
                     list.push_back(bone);
                 }
@@ -592,6 +627,11 @@ namespace glass
                     // eye is far better at ordering two levels side by side than at naming one.
                     cathode.MeterSlots = { 3, 0, 5 };
 
+                    // Inverse video: a lit switch is the phosphor and its label goes tube dark.
+                    cathode.FillWhenOnPercent = 100;
+                    cathode.OnInkColor = Rgb(0x121A16);
+                    cathode.MeterUnlitColor = { 0xCF, 0xE0, 0xF3, 23 };
+
                     cathode.CautionResourceKey = L"ThemeCautionCathode";
 
                     list.push_back(cathode);
@@ -638,6 +678,10 @@ namespace glass
                     green.KeyBlackColor = Rgb(0x161E24);
 
                     green.MeterSlots = { 0, 2, 5 };
+
+                    green.FillWhenOnPercent = 100;
+                    green.OnInkColor = Rgb(0x071009);
+                    green.MeterUnlitColor = { 0xA6, 0xDC, 0xB0, 26 };
 
                     green.CautionResourceKey = L"ThemeCautionTerminalGreen";
 
@@ -740,6 +784,9 @@ namespace glass
 
                     jove.MeterSlots = { 3, 2, 0 };
 
+                    jove.OnInkColor = Rgb(0x170F04);
+                    jove.MeterUnlitColor = { 255, 255, 255, 20 };
+
                     jove.CautionResourceKey = L"ThemeCautionJove";
 
                     list.push_back(jove);
@@ -832,6 +879,8 @@ namespace glass
                     saw.KeyBlackColor = Rgb(0x141820);
 
                     saw.MeterSlots = { 2, 4, 1 };
+
+                    saw.MeterUnlitColor = { 255, 255, 255, 20 };
 
                     saw.CautionResourceKey = L"ThemeCautionSupersaw";
 
@@ -943,6 +992,8 @@ namespace glass
 
                     five.MeterSlots = { 3, 2, 0 };
 
+                    five.MeterUnlitColor = { 255, 255, 255, 18 };
+
                     five.CautionResourceKey = L"ThemeCautionFiveIsh";
 
                     list.push_back(five);
@@ -968,6 +1019,7 @@ namespace glass
                     airy.Overlay.GrainPercent = 32;
                     airy.Overlay.GrainColor = Rgb(0xFFFFFF);
                     airy.Overlay.GrainStreak = 48;
+                    airy.Overlay.Grain = GrainStyle::Brushed;
 
                     // The white steps on the drum machine: the absence of a color.
                     airy.NeutralColor = Rgb(0xE8ECEA);
@@ -1050,9 +1102,434 @@ namespace glass
 
                     airy.MeterSlots = { 0, 3, 1 };
 
+                    airy.OnInkColor = Rgb(0x0B0C0C);
+                    airy.MeterUnlitColor = { 255, 255, 255, 15 };
+
                     airy.CautionResourceKey = L"ThemeCautionAirySystem";
 
                     list.push_back(airy);
+                }
+
+                // ---- Off-world Colonies ----
+                // A city where it never stops raining. Cast concrete blocks in relief, stained
+                // where the water has run down them, fine rain falling in front, and equipment of
+                // dark worn metal bolted to the wall. Neon is the value and the state: a knob's
+                // ring is a tube, a lit button lights its tube, and a light flares.
+                //
+                // The wall is a picture that repeats at its own size. The dirt on the modules is
+                // the same stains again, in black. Measured on the comp: on bare wall 95 pixels in
+                // 100 are within 1.36 : 1 of its middle, so the wall never competes with a control.
+
+                {
+                    auto wall = MakeDarkTheme(L"Off-world Colonies", 0x1D2625,
+                        { 0x3DD5FF, 0xFF4FA3, 0xFFB341, 0xFF4A36, 0x4BEA8E, 0x9483FF });
+
+                    wall.Deck.Kind = DeckKind::Image;
+                    wall.Deck.ImageFileName = L"Off-world Colonies wall.png";
+                    wall.Deck.ImageRepeats = true;
+                    wall.Deck.Color = Rgb(0x1D2625);
+                    wall.Deck.GradientEndColor = Rgb(0x15130F);
+
+                    // White neon: the absence of a color.
+                    wall.NeutralColor = Rgb(0xE9F4FF);
+
+                    // Worn dark metal, lit from the top left like the blocks.
+                    wall.PlateColor = Rgb(0x262B2A);
+                    wall.PlateEndColor = Rgb(0x121514);
+                    wall.GlassTintPercent = 0;
+                    wall.PlateSheenPercent = 4;
+                    wall.PlateSheenColor = Rgb(0xD6E8E2);
+                    wall.PlateHighlightPercent = 10;
+                    wall.PlateElevation = 60;
+                    wall.ShadowSpread = 5;
+                    wall.CornerRadius = 3;
+
+                    // A worn black edge rather than a colored one: the color is the tube.
+                    wall.Rim = RimSource::NeutralEdge;
+                    wall.NeutralRimColor = { 0, 0, 0, 158 };
+
+                    wall.FillAtRest = 0.0;
+                    wall.TouchFillPercent = 16;
+                    wall.GlowStrength = 45;
+                    wall.PipeFalloff = 1.0;
+
+                    // A lit button washes its plate with a sixth of its color: at a tenth the red
+                    // one moved only 1.11 : 1 from rest. A pad is its color outright when lit.
+                    wall.FillWhenOnPercent = 16;
+                    wall.PadFillAtRest = 0.22;
+                    wall.PadFillWhenOnPercent = 100;
+                    wall.OnInkColor = Rgb(0x081010);
+                    wall.NamesInsideSwitches = true;
+
+                    // A gunmetal cap in a ring of neon, the ring unlit at a sixth of its color.
+                    wall.KnobFaceColor = Rgb(0x3B413F);
+                    wall.KnobFaceEndColor = Rgb(0x101312);
+                    wall.PointerColor = Rgb(0xD8E4E1);
+                    wall.ArcTrackHuePercent = 16;
+                    wall.ArcGlow = true;
+
+                    // A slot cut into the plate, a tube in it, and a gunmetal cap with a lit line.
+                    wall.Thumb = ThumbStyle::Neutral;
+                    wall.ThumbColor = Rgb(0x3B413F);
+                    wall.ThumbEndColor = Rgb(0x121514);
+                    wall.CapLineWide = true;
+                    wall.ThumbShadowPercent = 80;
+                    wall.RecessShadePercent = 90;
+                    wall.TrackColor = Rgb(0x070A0A);
+                    wall.WellColor = Rgb(0x070A0A);
+
+                    // Neon: a white hot core down every lit value, light that runs down the wet
+                    // wall, and a flare warm white at its heart whatever the tube.
+                    wall.ValueCorePercent = 65;
+                    wall.GlowFallPixels = 8;
+                    wall.FlarePercent = 100;
+                    wall.FlareColor = Rgb(0xFFF1DC);
+                    wall.NeonLetters = true;
+
+                    // A module of the same metal, a step lighter than the wall, as dirty as it.
+                    wall.PanelFill = PanelFillStyle::Color;
+                    wall.PanelColor = Rgb(0x1E2322);
+                    wall.PanelEndColor = Rgb(0x131615);
+                    wall.SectionTexture = L"Off-world Colonies stains.png";
+                    wall.SectionTexturePercent = 55;
+
+                    // The dim print is 74 per cent of the print, not 60: at 60 it failed on a
+                    // rain streak (2.84), in a lit pad's glow (3.67) and under a flare (3.96).
+                    wall.InkColor = Rgb(0xD8E4E1);
+
+                    // It is still raining, and the corners fall into the dark.
+                    wall.Overlay.RainPercent = 35;
+                    wall.Overlay.RainSpeed = 300;
+                    wall.Overlay.VignettePercent = 30;
+                    wall.Overlay.VignetteColor = Rgb(0x08090A);
+
+                    wall.MeterSlots = { 0, 2, 3 };
+                    wall.MeterUnlitColor = { 214, 232, 226, 18 };
+
+                    wall.KeyWhiteColor = Rgb(0xD8E4E1);
+                    wall.KeyBlackColor = Rgb(0x121514);
+
+                    wall.CautionResourceKey = L"ThemeCautionOffworld";
+
+                    list.push_back(wall);
+                }
+
+                // ---- Groovy and Groovy Dark ----
+                // The seventies: a goldenrod page, earthy colors, and heavy flat lines with no
+                // gradient and no shadow anywhere. A section is framed in stripes, the way a
+                // poster of the time is, and a lit switch is its color outright.
+                //
+                // The dark one is the same rules on a brown page, with the plate darker than the
+                // page so a lane reads as cut in, and a fine paper grain.
+
+                auto const groovy = [](std::wstring name, uint32_t page, std::array<uint32_t, ThemeHueSlotCount> const& slots)
+                    {
+                        auto theme = MakeDarkTheme(std::move(name), page, slots);
+
+                        theme.Deck.Kind = DeckKind::SolidColor;
+                        theme.Deck.Color = Rgb(page);
+                        theme.Deck.GradientEndColor = Rgb(page);
+
+                        // Nothing glows and nothing casts a shadow.
+                        theme.GlassTintPercent = 0;
+                        theme.GlowStrength = 0;
+                        theme.RestingGlowPercent = 0;
+                        theme.PlateSheenPercent = 0;
+                        theme.PlateElevation = 0;
+                        theme.CornerRadius = 10;
+
+                        // The line IS the structure: a plate is barely apart from the page.
+                        theme.Rim = RimSource::ControlHue;
+                        theme.RimStrengthPercent = 100;
+                        theme.RimThickness = 3;
+                        theme.ArcThickness = 6;
+                        theme.ArcRoundEnds = true;
+
+                        theme.FillAtRest = 0.0;
+                        theme.FillWhenOnPercent = 100;
+                        theme.PadFillAtRest = 0.30;
+                        theme.RestTintOnPlate = true;
+                        theme.TouchFillPercent = 18;
+
+                        theme.NamesInsideSwitches = true;
+                        theme.Labels = LabelPlacement::Below;
+
+                        theme.ValueStrip = ValueStripPlacement::None;
+                        theme.PipeFalloff = 1.0;
+
+                        theme.FaderPlate = FaderPlateStyle::None;
+                        theme.FaderFillPercent = 100;
+                        theme.FaderScalePercent = 100;
+                        theme.Thumb = ThumbStyle::Neutral;
+                        theme.CapLineWide = true;
+
+                        // A section is a frame of stripes with its name cut into the top.
+                        theme.PanelFill = PanelFillStyle::None;
+                        theme.PanelElevation = 0;
+                        theme.SectionHeader = SectionHeaderStyle::Notched;
+                        theme.RuleFades = false;
+
+                        theme.MeterSlots = { 1, 3, 5 };
+
+                        return theme;
+                    };
+
+                {
+                    auto light = groovy(L"Groovy", 0xECC864,
+                        { 0xB34A1A, 0x66711F, 0x1E6E73, 0x8F6512, 0x34587A, 0xA62A30 });
+
+                    // Cream plates, brown print, and a cream name on a lit switch rather than
+                    // the cool white a measured ink would pick.
+                    light.PlateColor = Rgb(0xFBEFD3);
+                    light.TrackColor = Rgb(0xFBEFD3);
+                    light.KnobFaceColor = Rgb(0xFBEFD3);
+                    light.WellColor = Rgb(0xFBEFD3);
+                    light.InkColor = Rgb(0x3B2819);
+                    light.OnInkColor = Rgb(0xFFF7E6);
+                    light.PointerColor = Rgb(0x5A3D2B);
+                    light.ThumbColor = Rgb(0x5A3D2B);
+                    light.ThumbEndColor = Rgb(0x5A3D2B);
+                    light.CapLineColor = Rgb(0xFBEFD3);
+                    light.NeutralColor = Rgb(0x5A3D2B);
+                    light.PanelOutlineColor = Rgb(0x5A3D2B);
+                    light.RuleColor = Rgb(0x5A3D2B);
+
+                    // Brown, burnt orange and orange, from the outside in. The brown carries the
+                    // edge at 6.09 : 1; the orange, at 1.86 : 1 on the page, is only the look.
+                    light.StripeColors = { Rgb(0x5A3D2B), Rgb(0xB34A1A), Rgb(0xE5771E), ThemeColor{ 0, 0, 0, 0 } };
+                    light.StripeWidth = 4;
+
+                    light.MeterUnlitColor = { 90, 61, 43, 41 };
+
+                    light.KeyWhiteColor = Rgb(0xFBEFD3);
+                    light.KeyBlackColor = Rgb(0x5A3D2B);
+
+                    light.CautionResourceKey = L"ThemeCautionGroovy";
+
+                    list.push_back(light);
+                }
+
+                {
+                    auto dark = groovy(L"Groovy Dark", 0x3B2419,
+                        { 0xF37A26, 0xA3AE4C, 0x22A7A2, 0xF2A81C, 0x7FA6D2, 0xEC5046 });
+
+                    // An espresso plate darker than the page, so lanes read as cut in and lit
+                    // colors pop, and a dark name on a lit switch.
+                    dark.PlateColor = Rgb(0x2A1911);
+                    dark.TrackColor = Rgb(0x2A1911);
+                    dark.KnobFaceColor = Rgb(0x2A1911);
+                    dark.WellColor = Rgb(0x2A1911);
+                    dark.InkColor = Rgb(0xF4E4C4);
+                    dark.OnInkColor = Rgb(0x2A1911);
+                    dark.PointerColor = Rgb(0xFDDCA9);
+                    dark.ThumbColor = Rgb(0xFDDCA9);
+                    dark.ThumbEndColor = Rgb(0xFDDCA9);
+                    dark.CapLineColor = Rgb(0x2A1911);
+                    dark.NeutralColor = Rgb(0xFDDCA9);
+                    dark.PanelOutlineColor = Rgb(0xFDDCA9);
+                    dark.RuleColor = Rgb(0xFDDCA9);
+
+                    // Four stripes of three, the same band as Groovy's three of four.
+                    dark.StripeColors = { Rgb(0xE23D2D), Rgb(0xE76219), Rgb(0xFEA712), Rgb(0xFDDCA9) };
+                    dark.StripeWidth = 3;
+
+                    // Paper grain, like a poster: measured on the comp, about five levels either
+                    // way in every pixel, with the page's own middle unchanged.
+                    dark.Overlay.Grain = GrainStyle::Fine;
+                    dark.Overlay.GrainPercent = 50;
+
+                    dark.MeterUnlitColor = { 253, 220, 169, 41 };
+
+                    dark.KeyWhiteColor = Rgb(0xFDDCA9);
+                    dark.KeyBlackColor = Rgb(0x2A1911);
+
+                    dark.CautionResourceKey = L"ThemeCautionGroovyDark";
+
+                    list.push_back(dark);
+                }
+
+                // ---- Soft Sector and Hard Sector ----
+                // A home computer of the early eighties: a molded case with a fine stipple,
+                // keys with dished tops and the legend at their top left, an LED in the corner of
+                // a key, ridged knobs, and every display a smoked window. The two are one set of
+                // rules in two plastics, putty and charcoal, with the same LEDs in both.
+                //
+                // A key moves under a finger and stays half down while it is on, because a glow
+                // alone measured 1.13 : 1 on the putty key and 1.69 on the charcoal one.
+
+                auto const sector = [](std::wstring name, uint32_t caseTop, uint32_t caseFloor)
+                    {
+                        auto theme = MakeDarkTheme(std::move(name), caseTop,
+                            { 0x8FE33C, 0xFFAE2A, 0xFF4631, 0xF6DE3A, 0xFF7C22, 0x46D66C });
+
+                        theme.Deck.Kind = DeckKind::Gradient;
+                        theme.Deck.Color = Rgb(caseTop);
+                        theme.Deck.GradientEndColor = Rgb(caseFloor);
+
+                        theme.CornerRadius = 4;
+                        theme.GlassTintPercent = 0;
+                        theme.GlowStrength = 0;
+                        theme.RestingGlowPercent = 0;
+                        theme.FillAtRest = 0.0;
+                        theme.TouchFillPercent = 0;
+                        theme.PipeFalloff = 1.0;
+                        theme.PlateSheenPercent = 0;
+                        theme.ShadowSpread = 5;
+
+                        theme.Rim = RimSource::NeutralEdge;
+
+                        // A key says "on" with its LED, in the corner, and by staying down.
+                        theme.FillWhenOnPercent = 0;
+                        theme.LampShape = LampStyle::Dot;
+                        theme.LampPosition = LampPlacement::TopRight;
+                        theme.LampGlowPercent = 100;
+                        theme.SwitchShape = SwitchShapeStyle::Keycap;
+                        theme.SwitchNames = SwitchNamePlacement::TopLeft;
+                        theme.PressTravelPixels = 2;
+                        theme.ValueStrip = ValueStripPlacement::None;
+                        theme.NamesInsideSwitches = true;
+                        theme.NeutralCaps = true;
+                        theme.Labels = LabelPlacement::Above;
+
+                        // A ridged knob with a flat cap, and the pointer printed on the cap.
+                        theme.KnobKnurlCount = 36;
+                        theme.PointerOnCap = true;
+                        theme.KnobTickCount = 11;
+                        theme.KnobCapSizePercent = 72;
+
+                        // A slot cut straight into the case, a scale printed beside it, and a
+                        // cap that is a small key.
+                        theme.FaderPlate = FaderPlateStyle::None;
+                        theme.FaderFillPercent = 0;
+                        theme.FaderScalePercent = 55;
+                        theme.Thumb = ThumbStyle::Neutral;
+                        theme.CapLineWide = true;
+
+                        // Every display is a smoked window, and a section is a tray pressed in.
+                        theme.WellFillsControl = true;
+                        theme.PanelFill = PanelFillStyle::Color;
+                        theme.PanelElevation = 0;
+                        theme.SectionHeader = SectionHeaderStyle::Caption;
+                        theme.RuleFades = false;
+
+                        // A fine stipple in the plastic.
+                        theme.Overlay.Grain = GrainStyle::Fine;
+                        theme.Overlay.GrainStreak = 1;
+
+                        theme.MeterSlots = { 0, 1, 2 };
+
+                        return theme;
+                    };
+
+                {
+                    auto soft = sector(L"Soft Sector", 0xD8D1C0, 0xCBC3B1);
+
+                    soft.Overlay.GrainPercent = 36;
+
+                    soft.InkColor = Rgb(0x2A2723);
+                    soft.ValueColor = Rgb(0x2A2723);
+                    soft.PointerColor = Rgb(0x2A2723);
+                    soft.CapLineColor = Rgb(0x2A2723);
+
+                    soft.PlateColor = Rgb(0xE6E2D7);
+                    soft.PlateEndColor = Rgb(0xC9C3B4);
+                    soft.KeycapTopColor = Rgb(0xE8E4D9);
+                    soft.KeycapTopEndColor = Rgb(0xF4F2EC);
+                    soft.NeutralColor = Rgb(0xA29C8F);
+                    soft.PlateHighlightPercent = 75;
+                    soft.PlateShadePercent = 18;
+                    soft.NeutralRimColor = { 74, 62, 44, 92 };
+
+                    // A warm shadow: a black one on putty comes out a dirty gray.
+                    soft.ShadowColor = Rgb(0x4A3E2C);
+                    soft.PlateElevation = 35;
+
+                    soft.ThumbColor = Rgb(0xE6E2D7);
+                    soft.ThumbEndColor = Rgb(0xC9C3B4);
+                    soft.ThumbShadowPercent = 35;
+                    soft.RecessShadePercent = 55;
+
+                    soft.KnobFaceColor = Rgb(0xEEEAE1);
+                    soft.KnobFaceEndColor = Rgb(0xB7B0A0);
+                    soft.KnobCapColor = Rgb(0xF8F6F1);
+                    soft.KnobCapEndColor = Rgb(0xE1DBCF);
+                    soft.ArcTrackColor = { 42, 39, 35, 56 };
+
+                    soft.TrackColor = Rgb(0x2E2A25);
+                    soft.WellColor = Rgb(0x221F1C);
+                    soft.WellGlossPercent = 7;
+
+                    soft.PanelColor = { 84, 70, 48, 18 };
+                    soft.PanelOutlineColor = { 74, 62, 44, 36 };
+                    soft.PanelRecessPercent = 20;
+                    soft.InsetPanelColor = Rgb(0x3D3A35);
+                    soft.InsetPanelEndColor = Rgb(0x2C2925);
+                    soft.RuleColor = { 42, 39, 35, 71 };
+                    soft.RecessLipColor = { 255, 255, 255, 140 };
+
+                    soft.LampHolderColor = Rgb(0x2B2723);
+
+                    soft.KeyWhiteColor = Rgb(0xF1EEE6);
+                    soft.KeyBlackColor = Rgb(0x2A2723);
+
+                    soft.CautionResourceKey = L"ThemeCautionSoftSector";
+
+                    list.push_back(soft);
+                }
+
+                {
+                    auto hard = sector(L"Hard Sector", 0x2F2E2D, 0x252423);
+
+                    hard.Overlay.GrainPercent = 24;
+
+                    hard.InkColor = Rgb(0xE4E3DF);
+                    hard.ValueColor = Rgb(0xE4E3DF);
+                    hard.PointerColor = Rgb(0xE4E3DF);
+                    hard.CapLineColor = Rgb(0xE4E3DF);
+
+                    hard.PlateColor = Rgb(0x69696C);
+                    hard.PlateEndColor = Rgb(0x4B4B4E);
+                    hard.KeycapTopColor = Rgb(0x5F5F62);
+                    hard.KeycapTopEndColor = Rgb(0x676769);
+                    hard.NeutralColor = Rgb(0x353537);
+                    hard.PlateHighlightPercent = 16;
+                    hard.PlateShadePercent = 35;
+                    hard.NeutralRimColor = { 0, 0, 0, 140 };
+
+                    hard.ShadowColor = Rgb(0x000000);
+                    hard.PlateElevation = 55;
+
+                    hard.ThumbColor = Rgb(0x69696C);
+                    hard.ThumbEndColor = Rgb(0x4B4B4E);
+                    hard.ThumbShadowPercent = 55;
+                    hard.RecessShadePercent = 80;
+
+                    hard.KnobFaceColor = Rgb(0x7A7A7D);
+                    hard.KnobFaceEndColor = Rgb(0x3A3A3D);
+                    hard.KnobCapColor = Rgb(0x737376);
+                    hard.KnobCapEndColor = Rgb(0x56565A);
+                    hard.ArcTrackColor = { 228, 227, 223, 56 };
+
+                    hard.TrackColor = Rgb(0x0B0B0B);
+                    hard.WellColor = Rgb(0x121212);
+                    hard.WellGlossPercent = 6;
+
+                    hard.PanelColor = { 0, 0, 0, 41 };
+                    hard.PanelOutlineColor = { 0, 0, 0, 77 };
+                    hard.PanelRecessPercent = 50;
+                    hard.InsetPanelColor = Rgb(0x19191A);
+                    hard.InsetPanelEndColor = Rgb(0x0E0E0F);
+                    hard.RuleColor = { 228, 227, 223, 71 };
+                    hard.RecessLipColor = { 255, 255, 255, 26 };
+
+                    hard.LampHolderColor = Rgb(0x0C0C0C);
+
+                    hard.KeyWhiteColor = Rgb(0xE4E3DF);
+                    hard.KeyBlackColor = Rgb(0x1B1A19);
+
+                    hard.CautionResourceKey = L"ThemeCautionHardSector";
+
+                    list.push_back(hard);
                 }
 
                 // Studio Dark stays first as the default; the rest are alphabetical, so a family
@@ -1234,21 +1711,64 @@ namespace glass
     _Use_decl_annotations_
     bool HasNamedBloomColor(Theme const& theme) noexcept
     {
-        return theme.BloomColor.A != 0 || theme.Light == LightSource::White;
+        return theme.BloomColor.A != 0;
     }
 
     _Use_decl_annotations_
     ThemeColor NamedBloomColor(Theme const& theme) noexcept
     {
-        if (theme.BloomColor.A != 0)
-        {
-            auto named = theme.BloomColor;
-            named.A = 255;
+        auto named = theme.BloomColor;
+        named.A = 255;
 
-            return named;
+        return named;
+    }
+
+    _Use_decl_annotations_
+    int32_t StripeCount(Theme const& theme) noexcept
+    {
+        int32_t count{ 0 };
+
+        while (count < MaximumStripeCount && theme.StripeColors[static_cast<size_t>(count)].A != 0)
+        {
+            ++count;
         }
 
-        return { 255, 255, 255, 255 };
+        return count;
+    }
+
+    _Use_decl_annotations_
+    ThemeColor EffectiveRainColor(Theme const& theme) noexcept
+    {
+        return theme.Overlay.RainColor.A != 0 ? theme.Overlay.RainColor : ThemeColor{ 0xC6, 0xE4, 0xEE, 255 };
+    }
+
+    _Use_decl_annotations_
+    int32_t EffectiveLampGlowPercent(Theme const& theme) noexcept
+    {
+        return std::clamp(theme.LampGlowPercent >= 0 ? theme.LampGlowPercent : theme.GlowStrength, 0, 100);
+    }
+
+    _Use_decl_annotations_
+    float EffectiveArcThickness(Theme const& theme) noexcept
+    {
+        return theme.ArcThickness > 0 ? static_cast<float>(std::min(theme.ArcThickness, 12)) : 4.0f;
+    }
+
+    _Use_decl_annotations_
+    ThemeColor SlotBackdrop(Theme const& theme) noexcept
+    {
+        // Every value is printed in one color and every lit thing sits in a window, so a slot
+        // is only ever seen in the window.
+        if (theme.WellFillsControl && theme.WellColor.A != 0 && theme.ValueColor.A != 0 &&
+            theme.FillWhenOnPercent <= 0)
+        {
+            auto well = theme.WellColor;
+            well.A = 255;
+
+            return well;
+        }
+
+        return theme.Deck.Color;
     }
 
     _Use_decl_annotations_
@@ -1284,12 +1804,14 @@ namespace glass
         std::vector<SlotContrast> results{};
         results.reserve(ThemeHueSlotCount);
 
+        auto const backdrop = SlotBackdrop(theme);
+
         for (int32_t i = 0; i < ThemeHueSlotCount; ++i)
         {
             SlotContrast slot{};
 
             slot.SlotIndex = i;
-            slot.Ratio = ContrastRatio(theme.HueSlots[static_cast<size_t>(i)], theme.Deck.Color);
+            slot.Ratio = ContrastRatio(theme.HueSlots[static_cast<size_t>(i)], backdrop);
             slot.MeetsMinimum = slot.Ratio >= MinimumSlotContrast;
 
             results.push_back(slot);

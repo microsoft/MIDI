@@ -214,9 +214,15 @@ namespace winrt::midiglass::implementation
 
             SurfaceScroll().Background(media::SolidColorBrush(ToColor(surround)));
 
+            // The border carries the page at its scaled size, so its width over the page's is
+            // the scale a repeating picture and the rain are drawn at.
+            auto const pageScale = m_document.PageWidth > 0
+                ? SurfaceDeck().Width() / static_cast<double>(m_document.PageWidth)
+                : 1.0;
+
             glass::ApplyDeckOverlay(
                 SurfaceGrain(), m_theme, SurfaceDeck().Width(), SurfaceDeck().Height(), 1.0,
-                glass::DeckOverlayLayer::BeneathControls);
+                glass::DeckOverlayLayer::BeneathControls, std::isnan(pageScale) ? 1.0 : pageScale, true);
 
             glass::ApplyDeckOverlay(
                 SurfaceDeck(), m_theme, SurfaceDeck().Width(), SurfaceDeck().Height(), 1.0,
@@ -405,7 +411,7 @@ namespace winrt::midiglass::implementation
             // pitch is screen pixels at every zoom instead of a beat pattern at most of them.
             glass::ApplyDeckOverlay(
                 SurfaceGrain(), m_theme, viewport.ContentWidth, viewport.ContentHeight, 1.0,
-                glass::DeckOverlayLayer::BeneathControls);
+                glass::DeckOverlayLayer::BeneathControls, viewport.Scale, true);
 
             glass::ApplyDeckOverlay(
                 SurfaceDeck(), m_theme, viewport.ContentWidth, viewport.ContentHeight, 1.0,

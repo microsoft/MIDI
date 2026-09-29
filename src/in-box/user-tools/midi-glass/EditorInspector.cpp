@@ -121,6 +121,7 @@ namespace winrt::midiglass::implementation
             glass::LabelPlacementOverride::Above,
             glass::LabelPlacementOverride::Below,
             glass::LabelPlacementOverride::InsideTop,
+            glass::LabelPlacementOverride::InsideTopLeft,
             glass::LabelPlacementOverride::InsideCenter,
             glass::LabelPlacementOverride::InsideBottom,
             glass::LabelPlacementOverride::VerticalLeft,
@@ -132,7 +133,7 @@ namespace winrt::midiglass::implementation
         constexpr wchar_t const* LabelPlacedResourceKeys[]
         {
             L"LabelPlacedTheme", L"LabelPlacedAbove", L"LabelPlacedBelow",
-            L"LabelPlacedInsideTop", L"LabelPlacedInsideCenter", L"LabelPlacedInsideBottom",
+            L"LabelPlacedInsideTop", L"LabelPlacedInsideTopLeft", L"LabelPlacedInsideCenter", L"LabelPlacedInsideBottom",
             L"LabelPlacedVerticalLeft", L"LabelPlacedVerticalRight",
             L"LabelPlacedCustom", L"LabelPlacedNone",
         };

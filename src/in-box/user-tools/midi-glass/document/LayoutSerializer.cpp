@@ -419,6 +419,7 @@ namespace glass
             { LabelPlacementOverride::VerticalLeft, L"verticalLeft" },
             { LabelPlacementOverride::VerticalRight, L"verticalRight" },
             { LabelPlacementOverride::Custom, L"custom" },
+            { LabelPlacementOverride::InsideTopLeft, L"insideTopLeft" },
         };
 
         constexpr EnumName<ShowValueOverride> ShowValueNames[]

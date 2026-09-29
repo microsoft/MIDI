@@ -10,8 +10,8 @@
 // How another Windows MIDI Services tool asks the MIDI Settings app to open one of its dialogs,
 // shared by MIDI Settings, which answers, and the tools which ask.
 
-// %ProgramFiles%\Windows MIDI Services\Tools\<folder>\<exe>. Both are a contract with the
-// installer, so they must match build\build-sdk.ps1 $GuiTools.
+// %ProgramFiles%\Windows MIDI Services\Tools\<folder>\<exe>, where earlier previews installed it.
+// The installers now put every tool in Tools itself, which the sibling lookup finds.
 #define MIDI_SETTINGS_EXECUTABLE_NAME       L"midisettings.exe"
 #define MIDI_SETTINGS_INSTALLED_FOLDER      L"Settings"
 

@@ -189,6 +189,7 @@
     <ClInclude Include="surface\SurfaceAutomationPeer.h" />
     <ClInclude Include="surface\SurfaceColors.h" />
     <ClInclude Include="surface\SurfaceRenderer.h" />
+    <ClInclude Include="surface\SurfaceTextures.h" />
     <ClInclude Include="runtime\ClockGenerator.h" />
     <ClInclude Include="runtime\LfoGenerator.h" />
     <ClInclude Include="runtime\StepSequencer.h" />
@@ -379,6 +380,7 @@
     <ClCompile Include="surface\SurfaceControls.cpp" />
     <ClCompile Include="surface\SurfacePads.cpp" />
     <ClCompile Include="surface\SurfaceRenderer.cpp" />
+    <ClCompile Include="surface\SurfaceTextures.cpp" />
     <ClCompile Include="surface\SurfaceVideo.cpp" />
     <ClCompile Include="thumbnail\ThumbnailRenderer.cpp" />
     <ClCompile Include="thumbnail\SurfaceThumbnail.cpp" />

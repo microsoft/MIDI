@@ -329,6 +329,7 @@ namespace custom_actions
                 @"CLSID\{ac9b5417-3fe0-4e62-960f-034ee4235a1a}",  // Diagnostics Transport
                 @"CLSID\{5dc87270-f318-4838-a4f9-6aadc63e925f}",  // Bluetooth MIDI Transport
                 @"CLSID\{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}",  // Network MIDI 2.0 Transport
+                @"CLSID\{54c9b2f6-c235-4000-a675-9f6958a1a4fa}",  // RTP-MIDI Transport
                 @"CLSID\{10088473-9478-4E62-850B-3D2315E135B8}",  // Basic Loopback MIDI Transport
 
                 @"CLSID\{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}",  // Main Midisrv Transport

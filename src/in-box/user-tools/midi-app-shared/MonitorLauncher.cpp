@@ -18,8 +18,8 @@ namespace midiapp
     {
         constexpr wchar_t MonitorExecutableName[] = L"midi2monitor.exe";
 
-        // %ProgramFiles%\Windows MIDI Services\Tools\Monitor. The folder name is a contract with
-        // the installers, so it must match build\build-sdk.ps1 $GuiTools.
+        // %ProgramFiles%\Windows MIDI Services\Tools\Monitor, where earlier previews installed it.
+        // The installers now put every tool in Tools itself, which the sibling lookup finds.
         constexpr wchar_t MonitorInstalledFolder[] = L"Monitor";
 
         bool FileExists(std::wstring const& path) noexcept

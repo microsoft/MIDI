@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "SurfaceRenderer.h"
+#include "SurfaceTextures.h"
 #include "InputRules.h"
 #include "LayoutStore.h"
 #include "GlassControl.h"
@@ -190,6 +191,160 @@ namespace glass
         // in cap radii from the middle.
         constexpr float CapPointerStart = 0.96f;
         constexpr float CapPointerEnd = 0.19f;
+
+        // A key's dished top, set into its skirt: this far in from each edge, measured off the
+        // comp's 40 px key and grown with a bigger one, up to half again.
+        constexpr float KeycapFaceLeft = 4.0f;
+        constexpr float KeycapFaceRight = 4.0f;
+        constexpr float KeycapFaceTop = 2.0f;
+        constexpr float KeycapFaceBottom = 6.0f;
+        constexpr float KeycapFaceCorner = 3.0f;
+        constexpr float KeycapReferenceSize = 40.0f;
+        constexpr float KeycapMaximumScale = 1.5f;
+
+        // A fader cap drawn as a small key: its top inset, and the line across it, five pixels
+        // short of each end and a pixel and a half above the middle.
+        constexpr float CapFaceSide = 3.0f;
+        constexpr float CapFaceTop = 1.0f;
+        constexpr float CapFaceBottom = 4.0f;
+        constexpr float CapKeyLineThickness = 2.0f;
+        constexpr float CapKeyLineEnds = 5.0f;
+        constexpr float CapKeyLineRise = 1.5f;
+
+        // A lamp in the corner of a key, the way a keyboard's LED sits: a share of the key's
+        // short side, clear of a name printed at the top left.
+        constexpr float CornerLampFraction = 0.115f;
+        constexpr float CornerLampMinimum = 5.0f;
+        constexpr float CornerLampMaximum = 8.0f;
+        constexpr float CornerLampRight = 7.0f;
+        constexpr float CornerLampTop = 5.0f;
+
+        // A lamp whose glow the theme names reaches at least this far past its lens.
+        constexpr float NamedLampGlowReach = 9.0f;
+
+        // A meter as a row of lights: four pixel segments two pixels apart, the way every comp
+        // draws it, packed from the quiet end.
+        constexpr float MeterSegmentLength = 4.0f;
+        constexpr float MeterSegmentGap = 2.0f;
+        constexpr float MeterEndPadding = 5.0f;
+        constexpr float MeterSideShare = 0.25f;
+        constexpr float MeterSideMinimum = 2.0f;
+        constexpr float MeterSideMaximum = 6.0f;
+
+        // Where a meter's zones start. The comp's eight segment meter: five of signal, two of
+        // warning, one that says it is already too late.
+        constexpr float MeterWarnAt = 0.70f;
+        constexpr float MeterHotAt = 0.90f;
+
+        // A name printed at the top left of a switch.
+        constexpr float TopLeftNameInset = 7.0f;
+        constexpr float TopLeftNameDrop = 4.0f;
+
+        // A section's name cut into a striped frame sits this far past the frame's corner, with
+        // this much air either side of it. A plain frame keeps the gap it always had.
+        constexpr float StripedNotchPastCorner = 2.0f;
+        constexpr float StripedNotchAir = 8.0f;
+        constexpr float PlainNotchStart = 10.0f;
+        constexpr float PlainNotchAir = 4.0f;
+
+        // A lit value's white hot line, as a share of the value's own width.
+        constexpr float ArcCoreShare = 0.30f;
+
+        // A strip with a core is a little heavier, so the core has a pixel of color either side.
+        constexpr float CoredStripThickness = 3.0f;
+
+        // A well that is the whole control: the corner, and the dark line round its edge.
+        constexpr float WindowCorner = 3.0f;
+        constexpr uint8_t WindowEdgeAlpha = 140;
+
+        // The reflection across a window: a hard edge at this share of the way down a line
+        // eight degrees off the vertical.
+        constexpr float GlossAngleDegrees = 172.0f;
+        constexpr float GlossEdge = 0.36f;
+
+        // A knurled knob: the light along its top and the shade along its bottom.
+        constexpr double KnurlLightFloor = 0.12;
+        constexpr double KnurlLightShare = 0.24;
+        constexpr double KnurlShadeFloor = 0.24;
+        constexpr double KnurlShadeShare = 0.65;
+        constexpr double KnurlOutlineShare = 1.2;
+        constexpr float KnurlLightEnds = 0.45f;
+
+        // A key held down casts a third of its shadow, and one latched down half.
+        constexpr float HeldShadowShare = 1.0f / 3.0f;
+        constexpr float LatchedShadowShare = 0.5f;
+
+        // A light's flare: the streak runs this far past the light each way, and the ray across
+        // it this far each side.
+        constexpr float FlareStreakShare = 1.6f;
+        constexpr float FlareStreakThickness = 5.0f;
+        constexpr float FlareRayReach = 6.0f;
+        constexpr float PuckFlareReachShare = 8.0f;
+        constexpr float PuckFlareMinimumReach = 40.0f;
+        constexpr float PuckFlareMaximumReach = 120.0f;
+        constexpr float PuckFlareThickness = 6.0f;
+        constexpr float PuckFlareRing = 60.0f;
+        constexpr float PuckFlareStar = 44.0f;
+
+        // The glow behind a name in neon: three blurred copies of the letters, the last one
+        // fallen down the wall.
+        constexpr float NeonNearBlur = 6.0f;
+        constexpr float NeonFarBlur = 16.0f;
+        constexpr float NeonRunBlur = 18.0f;
+        constexpr float NeonRunDrop = 8.0f;
+        constexpr float NeonNearOpacity = 0.75f;
+        constexpr float NeonFarOpacity = 0.42f;
+        constexpr float NeonRunOpacity = 0.26f;
+
+        // A name in neon is its tube's color most of the way to white.
+        constexpr double NeonLetterWhite = 0.30;
+
+        // Room round a name for its glow.
+        constexpr float NeonMargin = 24.0f;
+
+        bool IsWindowKind(_In_ ControlKind kind) noexcept
+        {
+            switch (kind)
+            {
+            case ControlKind::XYPad:
+            case ControlKind::Lfo:
+            case ControlKind::Steps:
+            case ControlKind::Meter:
+            case ControlKind::Readout:
+            case ControlKind::BeatClock:
+            case ControlKind::TimeDisplay:
+                return true;
+
+            default:
+                return false;
+            }
+        }
+
+        // Whether a kind lays its own well, which a window then takes over.
+        bool LaysItsOwnWell(_In_ ControlKind kind) noexcept
+        {
+            return kind == ControlKind::XYPad || kind == ControlKind::Lfo || kind == ControlKind::Steps;
+        }
+
+        // How much bigger than the comp's key this one is, for the parts of a key drawn in
+        // pixels.
+        float KeyScale(_In_ float width, _In_ float height) noexcept
+        {
+            return std::clamp(std::min(width, height) / KeycapReferenceSize, 1.0f, KeycapMaximumScale);
+        }
+
+        // Which zone a meter segment is in, counted from the quiet end.
+        int32_t MeterZoneOf(_In_ size_t segment, _In_ size_t count) noexcept
+        {
+            auto const reach = static_cast<float>(segment + 1) / static_cast<float>(std::max<size_t>(count, 1));
+
+            if (reach <= MeterWarnAt + 0.001f)
+            {
+                return 0;
+            }
+
+            return reach <= MeterHotAt + 0.001f ? 1 : 2;
+        }
 
         winrt::Windows::UI::Color ToColor(_In_ ThemeColor const& color) noexcept
         {
@@ -756,6 +911,8 @@ namespace glass
             ? theme.PersistenceMilliseconds
             : BloomDecayMilliseconds;
 
+        m_switchesTravel = theme.PressTravelPixels > 0;
+
         // Kept so a control's own picture resolves against the same folder the background does.
         m_layoutFilePath = document.FilePath;
 
@@ -1020,6 +1177,7 @@ namespace glass
         m_labelBoxHeights.push_back(0.0);
         m_labelRestInks.push_back(nullptr);
         m_labelOnInks.push_back(nullptr);
+        m_labelGlows.push_back(nullptr);
         m_values.push_back(control.DefaultValue);
         m_valuesY.push_back(control.DefaultValueY);
         m_litUntil.push_back(0);
@@ -1283,6 +1441,16 @@ namespace glass
             {
                 m_labels[itemIndex].Foreground(on ? m_labelOnInks[itemIndex] : m_labelRestInks[itemIndex]);
             }
+
+            if (visual.FlareFollowsOn && visual.Flare != nullptr)
+            {
+                visual.Flare.IsVisible(on);
+            }
+
+            if (visual.TravelPixels > 0.0f || visual.KeycapFace != nullptr)
+            {
+                ApplyTravel(itemIndex, on);
+            }
         }
         catch (...)
         {
@@ -1324,6 +1492,23 @@ namespace glass
         visual.TouchOverlay = nullptr;
         visual.TouchOverlayBrush = nullptr;
         visual.NotchShape = nullptr;
+        visual.KeycapFace = nullptr;
+        visual.KeycapRestBrush = nullptr;
+        visual.KeycapHeldBrush = nullptr;
+        visual.TravelPixels = 0.0f;
+        visual.TravelLatches = false;
+        visual.CoreGeometry = nullptr;
+        visual.CoreInset = 0.0f;
+        visual.ArcThickness = 0.0f;
+        visual.ArcRoundEnds = false;
+        visual.ArcCore = nullptr;
+        visual.FlareFollowsOn = false;
+        visual.MeterSegments.clear();
+        visual.MeterLitBrushes.clear();
+        visual.MeterOffBrushes.clear();
+        visual.Windowed = false;
+        visual.FrameBand = 0.0f;
+        visual.FrameNotchStart = 0.0f;
 
         visual.PadShapes.clear();
         visual.PadRestFills.clear();
@@ -1402,7 +1587,32 @@ namespace glass
                 visual.PadShadow = nullptr;
                 visual.PadShadowSource = nullptr;
             }
+
+            for (auto const& part : visual.FrameParts)
+            {
+                visual.Root.Children().Remove(part);
+            }
+
+            if (visual.Flare != nullptr)
+            {
+                visual.Root.Children().Remove(visual.Flare);
+            }
+
+            if (visual.Texture != nullptr)
+            {
+                visual.Root.Children().Remove(visual.Texture);
+            }
+
+            // A key that was held down when it was rebuilt starts again from where it rests.
+            visual.Shape.Offset(float3{ 0.0f, 0.0f, 0.0f });
+            visual.ValueShape.Offset(float3{ 0.0f, 0.0f, 0.0f });
+            visual.Unavailable.Offset(float3{ 0.0f, 0.0f, 0.0f });
+            visual.Elevation.Opacity(1.0f);
         }
+
+        visual.FrameParts.clear();
+        visual.Flare = nullptr;
+        visual.Texture = nullptr;
 
         visual.Root.Size(float2{ width, height });
         visual.Shape.Size(float2{ width, height });
@@ -1454,7 +1664,28 @@ namespace glass
 
         // A strip of molding around a fader's slot, or the lit frame cut into the panel around it.
         auto const framed = isFader && themed && theme.FaderPlate == FaderPlateStyle::Frame;
-        auto const stripWidth = std::min(vertical ? width : height, SlotWidthFor(width, height) + FaderStripMargin * 2.0f);
+
+        // How heavy the lines are. One pixel and four are what every theme drew before a theme
+        // could say otherwise, and a heavier arc takes the fader's slot up with it.
+        auto const rimThickness = static_cast<float>(std::clamp(theme.RimThickness, 1, 6));
+        auto const arcThickness = EffectiveArcThickness(theme);
+        auto const namedArc = theme.ArcThickness > 0;
+        auto const slotWidth = namedArc && isFader
+            ? std::max(SlotWidthFor(width, height), arcThickness + 4.0f)
+            : SlotWidthFor(width, height);
+
+        auto const stripWidth = std::min(vertical ? width : height, slotWidth + FaderStripMargin * 2.0f);
+
+        // A display that is a dark window the size of the control, with no plate round it.
+        auto const windowed = theme.WellFillsControl && themed && colors.Well.A != 0 && IsWindowKind(control.Kind);
+
+        // A switch drawn as a key: a skirt with a dished top set into it.
+        auto const keycap = themed && IsKeycap(theme, control.Kind) && !(control.Kind == ControlKind::Lamp);
+
+        // A section framed in stripes, or with its name cut into its frame.
+        auto const stripes = isPanel && themed ? StripeCount(theme) : 0;
+        auto const notchedFrame = isPanel && themed && theme.SectionHeader == SectionHeaderStyle::Notched;
+        auto const cutFrame = stripes > 0 || notchedFrame;
 
         // A panel lying on another panel is its inset: a second layer printed on the first.
         auto const isInset = isPanel && surface != PrintSurface::Deck;
@@ -1482,9 +1713,10 @@ namespace glass
         }
 
         auto const markReserve = knobMarks > 1 ? KnobMarkGap + DetentTickLength : 0.0f;
+        auto const arcGap = namedArc ? arcThickness * 0.5f : KnobArcGap;
         auto const arcOuter = knobSize * 0.5f - markReserve;
-        auto const arcRadius = arcOuter - KnobArcThickness * 0.5f;
-        auto const faceRadius = std::max(knobSize * 0.2f, arcOuter - KnobArcThickness - KnobArcGap);
+        auto const arcRadius = arcOuter - arcThickness * 0.5f;
+        auto const faceRadius = std::max(knobSize * 0.2f, arcOuter - arcThickness - arcGap);
 
         auto plateX = 0.0f;
         auto plateY = 0.0f;
@@ -1564,6 +1796,29 @@ namespace glass
             rimColor.A = 0;
         }
 
+        // A window has no plate round it: the window is the control.
+        if (windowed)
+        {
+            plateColor.A = 0;
+            plateEndColor.A = 0;
+            rimColor.A = 0;
+        }
+
+        visual.Windowed = windowed;
+
+        // A striped frame turns a control's curve on its innermost edge, so its outer corner is
+        // the control's corner plus every stripe.
+        auto frameCorner = plateCorner;
+
+        if (stripes > 0)
+        {
+            frameCorner = std::min(
+                static_cast<float>(theme.CornerRadius) + stripes * static_cast<float>(std::clamp(theme.StripeWidth, 1, 16)),
+                std::min(width, height) * 0.5f);
+
+            plateCorner = frameCorner;
+        }
+
         // ---- the elevation shadow, cast through a mask so it is the shape of the control ----
 
         // A printed section is ink, and an inset is ink on ink, so neither lifts off the deck. A
@@ -1609,7 +1864,7 @@ namespace glass
 
         if (isFader && plateColor.A == 0)
         {
-            auto const slot = SlotWidthFor(width, height);
+            auto const slot = slotWidth;
 
             bloomX = vertical ? (width - slot) * 0.5f : PipeInset;
             bloomY = vertical ? PipeInset : (height - slot) * 0.5f;
@@ -1624,6 +1879,7 @@ namespace glass
         auto const glows = colors.Bloom.A > 0 &&
             !isLine &&
             !isPadGrid &&
+            !windowed &&
             !(isPanel && (plateColor.A == 0 || printedInset));
 
         if (glows)
@@ -1638,7 +1894,9 @@ namespace glass
             light.A = 255;
 
             visual.BloomShadow.BlurRadius(GlowBlurRadius);
-            visual.BloomShadow.Offset(float3{ 0.0f, 0.0f, 0.0f });
+
+            // Light on a wet wall runs further down it than up.
+            visual.BloomShadow.Offset(float3{ 0.0f, static_cast<float>(std::clamp(theme.GlowFallPixels, 0, 32)), 0.0f });
             visual.BloomShadow.Color(ToColor(light));
             visual.BloomShadow.Opacity(static_cast<float>(colors.Bloom.A) / 255.0f);
             visual.BloomShadow.Mask(ShadowMaskFor(compositor, bloomW, bloomH, bloomCorner, round || lensLamp));
@@ -1666,10 +1924,14 @@ namespace glass
 
         // ---- the plate, its sheen and its rim ----
 
+        // A stroke straddles its path, so the path is inset by half the rim and its corner by
+        // the same, which keeps the outer edge on the control's own corner at any weight.
         auto plateGeometry = compositor.CreateRoundedRectangleGeometry();
-        plateGeometry.Size(float2{ std::max(plateW - 1.0f, 1.0f), std::max(plateH - 1.0f, 1.0f) });
-        plateGeometry.Offset(float2{ plateX + 0.5f, plateY + 0.5f });
-        plateGeometry.CornerRadius(float2{ plateCorner, plateCorner });
+        plateGeometry.Size(float2{ std::max(plateW - rimThickness, 1.0f), std::max(plateH - rimThickness, 1.0f) });
+        plateGeometry.Offset(float2{ plateX + rimThickness * 0.5f, plateY + rimThickness * 0.5f });
+
+        auto const plateStrokeCorner = std::max(0.0f, plateCorner - (rimThickness - 1.0f) * 0.5f);
+        plateGeometry.CornerRadius(float2{ plateStrokeCorner, plateStrokeCorner });
 
         // A flat fill unless the theme named a second end for the plate, in which case it is
         // lifted at the top the way a raster box is brighter where the beam started.
@@ -1682,17 +1944,27 @@ namespace glass
         // sticker rather than as something to turn.
         auto const hasFace = dial && themed && plateColor.A > 0 && theme.KnobFaceColor.A != 0;
 
+        // Ridges round the side of the face, where the theme cuts them: the face's ground is the
+        // darker of its two colors and the ridges are laid over it in the lighter.
+        auto const knurled = hasFace && theme.KnobKnurlCount > 0;
+
         if (hasFace)
         {
-            plateBrush = DomeBrush(compositor, colors.KnobFace, colors.KnobFaceEnd);
+            plateBrush = knurled
+                ? BrushFor(compositor, colors.KnobFaceEnd).as<CompositionBrush>()
+                : DomeBrush(compositor, colors.KnobFace, colors.KnobFaceEnd).as<CompositionBrush>();
         }
+
+        // A section pressed into the surface is a tray: it has no sheen of its own and no shade
+        // along its foot, because it is not raised.
+        auto const recessedPanel = isPanel && themed && theme.PanelRecessPercent > 0;
 
         visual.PlateShape = compositor.CreateSpriteShape(plateGeometry);
         visual.PlateShape.FillBrush(plateBrush);
 
         visual.IsSwitch = IsSwitchKind(control.Kind);
         visual.PlateOffBrush = plateBrush;
-        visual.RimOffBrush = rimColor.A != 0 ? BrushFor(compositor, rimColor).as<CompositionBrush>() : nullptr;
+        visual.RimOffBrush = rimColor.A != 0 && !cutFrame ? BrushFor(compositor, rimColor).as<CompositionBrush>() : nullptr;
 
         // What the plate becomes under a finger, where the theme says so. The resting plate may
         // be transparent - High contrast has no plate at all until it is touched - so this does
@@ -1736,7 +2008,7 @@ namespace glass
 
             visual.RimOnBrush = BrushFor(compositor, colors.OnRim);
         }
-        else if (lampMode && plateColor.A > 0 && colors.LampRim.A > 0)
+        else if (lampMode && plateColor.A > 0 && colors.LampRim.A > 0 && !keycap)
         {
             // A lit lamp puts a faint line of its own light round the switch, the way the light
             // behind a real one leaks round the edge of the cap.
@@ -1758,9 +2030,9 @@ namespace glass
 
         // Always a thickness, even with nothing to stroke yet: a switch that gains a lit line
         // only has to be given a brush.
-        visual.PlateShape.StrokeThickness(1.0f);
+        visual.PlateShape.StrokeThickness(rimThickness);
 
-        if (rimColor.A != 0)
+        if (rimColor.A != 0 && !cutFrame)
         {
             visual.PlateShape.StrokeBrush(BrushFor(compositor, rimColor));
         }
@@ -1769,8 +2041,9 @@ namespace glass
 
         // A wash of light down the top of the plate, fading out before the middle. It is the
         // one thing that makes a plate read as a raised piece of glass rather than a filled
-        // rectangle, and it costs one shape. A turned knob face already carries its own light.
-        if (colors.Sheen.A > 0 && plateColor.A > 0 && !hasFace && !framed)
+        // rectangle, and it costs one shape. A turned knob face already carries its own light,
+        // and a key carries its light on its top rather than on its skirt.
+        if (colors.Sheen.A > 0 && plateColor.A > 0 && !hasFace && !framed && !keycap && !recessedPanel)
         {
             // The plate's own geometry, not a rectangle laid over it: a round control's sheen
             // has to follow its edge, and a rectangle spills out of a circle at the corners.
@@ -1782,7 +2055,7 @@ namespace glass
 
         // The other half of a glossy plate: darker toward the bottom. A round face shades
         // itself, so this is for the flat ones.
-        if (colors.PlateShade.A > 0 && plateColor.A > 0 && !round)
+        if (colors.PlateShade.A > 0 && plateColor.A > 0 && !round && !keycap && !recessedPanel)
         {
             auto shadeShape = compositor.CreateSpriteShape(plateGeometry);
             shadeShape.FillBrush(ShadeBrush(compositor, colors.PlateShade));
@@ -1791,7 +2064,8 @@ namespace glass
         }
 
         // A one pixel light line just inside the top edge, between the two rounded corners.
-        if (colors.PlateHighlight.A > 0 && plateColor.A > 0 && !round && !framed && plateW > plateCorner * 2.0f + 2.0f)
+        if (colors.PlateHighlight.A > 0 && plateColor.A > 0 && !round && !framed && !keycap && !recessedPanel &&
+            plateW > plateCorner * 2.0f + 2.0f)
         {
             auto lipGeometry = compositor.CreateRoundedRectangleGeometry();
             lipGeometry.Size(float2{ plateW - plateCorner * 2.0f, 1.0f });
@@ -1801,6 +2075,128 @@ namespace glass
             lipShape.FillBrush(BrushFor(compositor, colors.PlateHighlight));
 
             visual.Shape.Shapes().Append(lipShape);
+        }
+
+        // ---- a key's dished top ----
+
+        if (keycap && plateColor.A > 0)
+        {
+            LayoutKeycap(compositor, visual, colors, width, height, corner);
+        }
+
+        // ---- a ridged knob: ridges round the face, lit along the top and shaded underneath ----
+
+        if (knurled)
+        {
+            auto const capShare = colors.KnobCap.A != 0
+                ? static_cast<float>(std::clamp(theme.KnobCapSizePercent, 5, 100)) / 100.0f
+                : 0.0f;
+
+            auto const capRadius = faceRadius * capShare;
+            auto const ringWidth = std::max(1.0f, faceRadius - capRadius);
+            auto const ringRadius = capRadius + ringWidth * 0.5f;
+
+            auto ringGeometry = compositor.CreateEllipseGeometry();
+            ringGeometry.Radius(float2{ ringRadius, ringRadius });
+            ringGeometry.Center(center);
+
+            auto ridges = compositor.CreateSpriteShape(ringGeometry);
+            ridges.StrokeBrush(BrushFor(compositor, colors.KnobFace));
+            ridges.StrokeThickness(ringWidth);
+
+            // A dash and a gap per ridge, in units of the stroke's own thickness.
+            auto const count = static_cast<float>(std::clamp(theme.KnobKnurlCount, 1, 120));
+            auto const ridge = std::max(0.05f, 2.0f * 3.14159265f * ringRadius / (2.0f * count) / ringWidth);
+
+            ridges.StrokeDashArray().Append(ridge);
+            ridges.StrokeDashArray().Append(ridge);
+            ridges.StrokeDashCap(CompositionStrokeCap::Flat);
+
+            visual.Shape.Shapes().Append(ridges);
+
+            auto const lightAlpha = KnurlLightFloor + KnurlLightShare * std::clamp(theme.PlateHighlightPercent, 0, 100) / 100.0;
+            auto const shadeAlpha = std::max(KnurlShadeFloor, std::clamp(theme.PlateElevation, 0, 100) / 100.0 * KnurlShadeShare);
+
+            auto const light = ThemeColor{ 255, 255, 255, static_cast<uint8_t>(std::lround(255.0 * std::clamp(lightAlpha, 0.0, 1.0))) };
+
+            auto shade = theme.ShadowColor;
+            shade.A = static_cast<uint8_t>(std::lround(255.0 * std::clamp(shadeAlpha, 0.0, 1.0)));
+
+            auto overlay = compositor.CreateLinearGradientBrush();
+            overlay.StartPoint(float2{ 0.5f, 0.0f });
+            overlay.EndPoint(float2{ 0.5f, 1.0f });
+
+            auto clearLight = light;
+            clearLight.A = 0;
+
+            auto clearShade = shade;
+            clearShade.A = 0;
+
+            for (auto const& [offset, stopColor] : {
+                std::pair{ 0.0f, light },
+                std::pair{ KnurlLightEnds, clearLight },
+                std::pair{ 1.0f - KnurlLightEnds, clearShade },
+                std::pair{ 1.0f, shade } })
+            {
+                auto stop = compositor.CreateColorGradientStop();
+                stop.Offset(offset);
+                stop.Color(ToColor(stopColor));
+
+                overlay.ColorStops().Append(stop);
+            }
+
+            auto overlayShape = compositor.CreateSpriteShape(plateGeometry);
+            overlayShape.FillBrush(overlay);
+
+            visual.Shape.Shapes().Append(overlayShape);
+        }
+
+        // ---- a section pressed into the surface: a shade along its top inside edge and the light
+        // catching its lower edge ----
+
+        if (recessedPanel && plateColor.A > 0)
+        {
+            auto recess = theme.ShadowColor;
+            recess.A = static_cast<uint8_t>(std::lround(255.0 * std::clamp(theme.PanelRecessPercent, 0, 100) / 100.0));
+
+            auto recessShape = compositor.CreateSpriteShape(plateGeometry);
+            recessShape.FillBrush(RecessBrush(compositor, recess, RecessFadePixels / std::max(plateH, 1.0f)));
+
+            visual.Shape.Shapes().Append(recessShape);
+        }
+
+        if (recessedPanel && colors.RecessLip.A != 0 && plateW > plateCorner * 2.0f + 2.0f)
+        {
+            auto lipGeometry = compositor.CreateRectangleGeometry();
+            lipGeometry.Size(float2{ plateW - plateCorner * 2.0f, 1.0f });
+            lipGeometry.Offset(float2{ plateX + plateCorner, plateY + plateH - 2.0f });
+
+            auto lipShape = compositor.CreateSpriteShape(lipGeometry);
+            lipShape.FillBrush(BrushFor(compositor, colors.RecessLip));
+
+            visual.Shape.Shapes().Append(lipShape);
+        }
+
+        // ---- a display that is a window the size of the control ----
+
+        if (windowed && !LaysItsOwnWell(control.Kind))
+        {
+            AppendWell(compositor, visual, colors, 0.0f, 0.0f, width, height);
+        }
+
+        // ---- a section's frame, cut for its name or drawn in stripes ----
+
+        if (cutFrame)
+        {
+            BuildFrameParts(compositor, visual, theme, rimColor, width, height, frameCorner);
+        }
+
+        // ---- the dirt on a section ----
+
+        if (isPanel && themed && !printedInset && plateColor.A > 0 &&
+            !theme.SectionTexture.empty() && theme.SectionTexturePercent > 0)
+        {
+            LayoutSectionTexture(compositor, visual, theme, plateGeometry, width, height);
         }
 
         // A knob held under a finger: the wash over the face rather than in place of it. Nothing
@@ -1818,26 +2214,91 @@ namespace glass
 
         if (lampMode && width > 8.0f && height > 8.0f && theme.LampShape == LampStyle::Dot)
         {
-            // A round lens. On a switch it sits at the top of the cap; a lamp on its own is the
-            // lens, with its plate as the dark bezel round it.
+            // A round lens. On a switch it sits at the top of the cap, or in its corner the way
+            // a keyboard's LED does; a lamp on its own is the lens, with its plate as the dark
+            // bezel round it.
             auto const shortest = std::min(width, height);
+            auto const cornerLamp = !lensLamp && theme.LampPosition == LampPlacement::TopRight;
 
             auto const radius = lensLamp
                 ? std::max(2.0f, shortest * 0.5f - LampBezel)
-                : std::clamp(shortest * LampDotFraction, LampDotMinimum, LampDotMaximum) * 0.5f;
+                : (cornerLamp
+                    ? std::clamp(std::round(shortest * CornerLampFraction), CornerLampMinimum, CornerLampMaximum) * 0.5f
+                    : std::clamp(shortest * LampDotFraction, LampDotMinimum, LampDotMaximum) * 0.5f);
+
+            auto const keyScale = KeyScale(width, height);
 
             auto const lensCenter = lensLamp
                 ? center
-                : float2{ width * 0.5f, std::min(LampTop, height * 0.25f) + radius };
+                : (cornerLamp
+                    ? float2{ width - CornerLampRight * keyScale - radius, CornerLampTop * keyScale + radius }
+                    : float2{ width * 0.5f, std::min(LampTop, height * 0.25f) + radius });
 
             auto lensGeometry = compositor.CreateEllipseGeometry();
             lensGeometry.Radius(float2{ radius, radius });
             lensGeometry.Center(lensCenter);
 
+            // Set into a holder where the theme names one: a dark ring round the lens, with the
+            // light catching its lower edge, and the lens a hint of its color when it is out.
+            auto const holder = colors.LampHolder;
+            auto const held = holder.A != 0;
+
+            if (held && !lensLamp)
+            {
+                auto holderGeometry = compositor.CreateEllipseGeometry();
+                holderGeometry.Radius(float2{ radius + 1.0f, radius + 1.0f });
+                holderGeometry.Center(lensCenter);
+
+                auto holderShape = compositor.CreateSpriteShape(holderGeometry);
+                holderShape.FillBrush(BrushFor(compositor, holder));
+
+                visual.Shape.Shapes().Append(holderShape);
+            }
+
+            if (held && lensLamp && plateColor.A > 0)
+            {
+                auto const bezel = BrushFor(compositor, holder);
+
+                visual.PlateShape.FillBrush(bezel);
+                visual.PlateOffBrush = bezel;
+                visual.Elevation.Shadow(nullptr);
+                visual.Elevation.IsVisible(false);
+            }
+
+            if (held && colors.RecessLip.A != 0)
+            {
+                auto lipGeometry = compositor.CreateEllipseGeometry();
+                lipGeometry.Radius(float2{ radius + 1.5f, radius + 1.5f });
+                lipGeometry.Center(lensCenter);
+
+                // The bottom quarter, from half past four round to half past seven.
+                lipGeometry.TrimOffset(0.375f);
+                lipGeometry.TrimStart(0.0f);
+                lipGeometry.TrimEnd(0.25f);
+
+                auto lipShape = compositor.CreateSpriteShape(lipGeometry);
+                lipShape.StrokeBrush(BrushFor(compositor, colors.RecessLip));
+                lipShape.StrokeThickness(1.0f);
+
+                visual.Shape.Shapes().Append(lipShape);
+            }
+
             // Unlit is the same lens with the light off, so there is always somewhere to look.
             // Lit, it is white hot in the middle and its own color out to the edge.
-            auto const offCenter = ThemeColor{ colors.Lamp.R, colors.Lamp.G, colors.Lamp.B, 84 };
-            auto const offEdge = ThemeColor{ colors.Lamp.R, colors.Lamp.G, colors.Lamp.B, 31 };
+            auto offCenter = ThemeColor{ colors.Lamp.R, colors.Lamp.G, colors.Lamp.B, 84 };
+            auto offEdge = ThemeColor{ colors.Lamp.R, colors.Lamp.G, colors.Lamp.B, 31 };
+
+            if (held)
+            {
+                auto lamp = colors.Lamp;
+                lamp.A = 255;
+
+                offCenter = BlendOver(BlendOver(holder, lamp, 0.30), ThemeColor{ 255, 255, 255, 255 }, 0.06);
+                offCenter.A = 255;
+
+                offEdge = BlendOver(holder, lamp, 0.16);
+                offEdge.A = 255;
+            }
 
             auto onCenter = BlendOver(colors.Lamp, ThemeColor{ 255, 255, 255, 255 }, 0.55);
             onCenter.A = 255;
@@ -1849,18 +2310,31 @@ namespace glass
 
             visual.LampShape = compositor.CreateSpriteShape(lensGeometry);
             visual.LampShape.FillBrush(visual.LampOffBrush);
-            visual.LampShape.StrokeBrush(BrushFor(compositor, ThemeColor{ 0, 0, 0, 140 }));
-            visual.LampShape.StrokeThickness(1.0f);
+
+            // A lens in a holder has the holder for a rim.
+            if (!held)
+            {
+                visual.LampShape.StrokeBrush(BrushFor(compositor, ThemeColor{ 0, 0, 0, 140 }));
+                visual.LampShape.StrokeThickness(1.0f);
+            }
 
             visual.Shape.Shapes().Append(visual.LampShape);
 
-            // The light it throws, shown only while it is lit.
-            if (colors.Bloom.A > 0)
+            // The light it throws, shown only while it is lit. A theme can name how strongly it
+            // glows apart from how strongly the plate blooms, so an LED can light the key round
+            // it on a theme where nothing else glows at all.
+            auto const namedGlow = theme.LampGlowPercent >= 0;
+            auto const glowPercent = EffectiveLampGlowPercent(theme);
+
+            if (namedGlow ? glowPercent > 0 : colors.Bloom.A > 0)
             {
                 auto light = colors.Lamp;
                 light.A = 255;
 
-                AppendHalo(compositor, visual, lensGeometry, light, 0.0f, radius * LampGlowReach, LampGlowPeak, false);
+                auto const reach = namedGlow ? std::max(radius * LampGlowReach, NamedLampGlowReach) : radius * LampGlowReach;
+                auto const peak = namedGlow ? LampGlowPeak * glowPercent / 100.0 : LampGlowPeak;
+
+                AppendHalo(compositor, visual, lensGeometry, light, 0.0f, reach, peak, false);
 
                 if (visual.Halo != nullptr)
                 {
@@ -1957,6 +2431,16 @@ namespace glass
             }
         }
 
+        // ---- how far a switch goes down under a finger ----
+
+        if (themed && FillsLikeASwitch(control.Kind) && theme.PressTravelPixels > 0)
+        {
+            visual.TravelPixels = static_cast<float>(std::clamp(theme.PressTravelPixels, 0, 8));
+
+            // A toggle that is on, and the page you are on, stay half way down.
+            visual.TravelLatches = control.Kind == ControlKind::Toggle || control.Kind == ControlKind::PageTab;
+        }
+
         if (DrawsItsOwnValue(control.Kind))
         {
             switch (control.Kind)
@@ -2008,6 +2492,7 @@ namespace glass
                     compositor,
                     visual,
                     control,
+                    theme,
                     surface == PrintSurface::Section ? colors.SectionRule : colors.Rule,
                     control.Line.Ends == LineEnds::UseTheme ? theme.RuleFades : control.Line.Ends == LineEnds::Faded,
                     width,
@@ -2016,6 +2501,11 @@ namespace glass
 
             default:
                 break;
+            }
+
+            if (windowed)
+            {
+                FinishWindow(compositor, visual, colors, theme);
             }
 
             return;
@@ -2038,7 +2528,7 @@ namespace glass
 
                 auto trackShape = compositor.CreateSpriteShape(trackGeometry);
                 trackShape.StrokeBrush(BrushFor(compositor, colors.ArcTrack));
-                trackShape.StrokeThickness(KnobArcThickness);
+                trackShape.StrokeThickness(arcThickness);
 
                 visual.ArcGeometry = compositor.CreateEllipseGeometry();
                 visual.ArcGeometry.Radius(float2{ radius, radius });
@@ -2049,7 +2539,21 @@ namespace glass
 
                 visual.PipeShape = compositor.CreateSpriteShape(visual.ArcGeometry);
                 visual.PipeShape.StrokeBrush(BrushFor(compositor, colors.Pipe));
-                visual.PipeShape.StrokeThickness(KnobArcThickness);
+                visual.PipeShape.StrokeThickness(arcThickness);
+
+                visual.ArcThickness = arcThickness;
+                visual.ArcRoundEnds = theme.ArcRoundEnds && !UsesLampRing(theme, control.Width, control.Height);
+
+                // Round ends overhang each end of the sweep by half the band, the way a pen
+                // draws it.
+                if (visual.ArcRoundEnds)
+                {
+                    for (auto const& shape : { trackShape, visual.PipeShape })
+                    {
+                        shape.StrokeStartCap(CompositionStrokeCap::Round);
+                        shape.StrokeEndCap(CompositionStrokeCap::Round);
+                    }
+                }
 
                 // Bigwig's ring of lamps is the same arc with a repeating gap laid over it, so a
                 // ringed knob is still one shape rather than thirty. Below the theme's own floor
@@ -2058,7 +2562,7 @@ namespace glass
                 {
                     auto const circumference = 2.0f * 3.14159265f * radius * (KnobSweepDegrees / 360.0f);
                     auto const lamps = static_cast<float>(std::max(2, theme.LampCount));
-                    auto const period = circumference / lamps / KnobArcThickness;
+                    auto const period = circumference / lamps / arcThickness;
 
                     auto const dash = std::max(0.2f, period * LampDutyCycle);
                     auto const gap = std::max(0.1f, period - dash);
@@ -2074,6 +2578,24 @@ namespace glass
                 visual.Shape.Shapes().Append(trackShape);
                 visual.ValueShape.Shapes().Append(visual.PipeShape);
 
+                // A white hot line down the middle of the lit arc, the way a neon tube is
+                // brightest at its heart. It shares the arc's geometry, so it follows the value.
+                if (colors.ValueCore.A != 0)
+                {
+                    auto coreShape = compositor.CreateSpriteShape(visual.ArcGeometry);
+                    coreShape.StrokeBrush(BrushFor(compositor, colors.ValueCore));
+                    coreShape.StrokeThickness(std::max(1.0f, arcThickness * ArcCoreShare));
+
+                    if (visual.ArcRoundEnds)
+                    {
+                        coreShape.StrokeStartCap(CompositionStrokeCap::Round);
+                        coreShape.StrokeEndCap(CompositionStrokeCap::Round);
+                    }
+
+                    visual.ValueShape.Shapes().Append(coreShape);
+                    visual.ArcCore = coreShape;
+                }
+
                 // On a theme whose ring is the light source, the value glows the way a fader's
                 // fill does. It shares the arc's geometry, so it follows the value for free.
                 if (theme.ArcGlow && colors.Bloom.A > 0)
@@ -2081,8 +2603,8 @@ namespace glass
                     auto light = colors.Pipe;
                     light.A = 255;
 
-                    AppendHalo(compositor, visual, visual.ArcGeometry, light, KnobArcThickness,
-                        KnobArcThickness * ArcGlowReach, GlowPeakAlpha * theme.GlowStrength / 100.0, true);
+                    AppendHalo(compositor, visual, visual.ArcGeometry, light, arcThickness,
+                        arcThickness * ArcGlowReach, GlowPeakAlpha * theme.GlowStrength / 100.0, true);
                 }
 
                 // ---- the pointer, the cap and the marks ----
@@ -2098,7 +2620,10 @@ namespace glass
                 // Printed on the cap, the part that turns, rather than coming out from under it.
                 auto const onCap = hasCap && theme.PointerOnCap;
 
-                auto const pointerWidth = std::max(2.0f, faceDiameter * PointerWidthFraction);
+                // Two thirds of a heavy arc, so the pointer and the band read as one weight.
+                auto const pointerWidth = namedArc
+                    ? arcThickness * (2.0f / 3.0f)
+                    : std::max(2.0f, faceDiameter * PointerWidthFraction);
                 auto const pointerLength = onCap
                     ? capRadius * (CapPointerStart - CapPointerEnd)
                     : faceDiameter * PointerLengthFraction;
@@ -2211,12 +2736,17 @@ namespace glass
 
                 if (strip && theme.ValueStrip == ValueStripPlacement::None)
                 {
+                    if (windowed)
+                    {
+                        FinishWindow(compositor, visual, colors, theme);
+                    }
+
                     return;
                 }
 
                 auto const slot = travels
-                    ? SlotWidthFor(width, height)
-                    : StripThickness;
+                    ? slotWidth
+                    : (colors.ValueCore.A != 0 ? CoredStripThickness : StripThickness);
 
                 auto const stripTop = theme.ValueStrip == ValueStripPlacement::Top;
 
@@ -2234,6 +2764,25 @@ namespace glass
                 trackGeometry.Size(float2{ std::max(trackW, 1.0f), std::max(trackH, 1.0f) });
                 trackGeometry.Offset(float2{ trackX, trackY });
                 trackGeometry.CornerRadius(float2{ slot * 0.5f, slot * 0.5f });
+
+                // A meter is a row of lights, each of them there when it is out, so it has no
+                // slot for a bar to grow in.
+                auto const meter = control.Kind == ControlKind::Meter;
+
+                // The light catching the lower edge of a slot: the same slot a pixel lower,
+                // under it.
+                if (travels && !meter && colors.RecessLip.A != 0)
+                {
+                    auto lipGeometry = compositor.CreateRoundedRectangleGeometry();
+                    lipGeometry.Size(float2{ std::max(trackW, 1.0f), std::max(trackH, 1.0f) });
+                    lipGeometry.Offset(float2{ trackX, trackY + 1.0f });
+                    lipGeometry.CornerRadius(float2{ slot * 0.5f, slot * 0.5f });
+
+                    auto lipShape = compositor.CreateSpriteShape(lipGeometry);
+                    lipShape.FillBrush(BrushFor(compositor, colors.RecessLip));
+
+                    visual.Shape.Shapes().Append(lipShape);
+                }
 
                 auto trackShape = compositor.CreateSpriteShape(trackGeometry);
 
@@ -2256,11 +2805,14 @@ namespace glass
                     trackShape.StrokeThickness(1.0f);
                 }
 
-                visual.Shape.Shapes().Append(trackShape);
+                if (!meter)
+                {
+                    visual.Shape.Shapes().Append(trackShape);
+                }
 
                 // The shadow inside the groove, strongest along its top edge. What holds a value
                 // is sunk, and on a panel theme this is most of what says so.
-                if (travels && colors.Recess.A > 0)
+                if (travels && !meter && colors.Recess.A > 0)
                 {
                     auto recessShape = compositor.CreateSpriteShape(trackGeometry);
                     recessShape.FillBrush(RecessBrush(
@@ -2397,30 +2949,15 @@ namespace glass
 
                 visual.PipeShape = compositor.CreateSpriteShape(visual.PipeGeometry);
 
-                if (control.Kind == ControlKind::Meter)
-                {
-                    // The zones belong to the TRACK, not to the bar. Mapped in absolute
-                    // coordinates so the ramp stays where the marks are and a growing bar
-                    // uncovers more of it, which is what a row of LED segments looks like. A
-                    // gradient relative to the bar's own box would put the red end on a quiet
-                    // meter about a centimetre off the floor.
-                    visual.PipeShape.FillBrush(MeterBrush(
-                        compositor,
-                        colors,
-                        vertical ? trackY : trackX,
-                        vertical ? trackH : trackW,
-                        vertical));
-                }
-                else
+                // A switch that lights as its color outright would hide a strip in its own
+                // hue, so there the lit strip is drawn in the ink its name uses instead.
+                auto const onOwnColor = strip && visual.IsSwitch && fillWhenOn >= 100;
+
+                if (!meter)
                 {
                     // Brightest where the value is, falling away behind it. On a vertical fader
                     // the value is at the top of the fill, so the gradient runs the other way.
                     // A fader's fill is at the theme's own strength; a button's strip is not.
-                    //
-                    // A switch that lights as its color outright would hide a strip in its own
-                    // hue, so there the lit strip is drawn in the ink its name uses instead.
-                    auto const onOwnColor = strip && visual.IsSwitch && fillWhenOn >= 100;
-
                     auto const top = isFader ? colors.Fill : (onOwnColor ? colors.SwitchInkOn : colors.Pipe);
                     auto const end = isFader ? colors.FillEnd : (onOwnColor ? colors.SwitchInkOn : colors.PipeEnd);
 
@@ -2431,14 +2968,55 @@ namespace glass
                             vertical ? top : end,
                             vertical ? end : top,
                             !vertical).as<CompositionBrush>());
-                }
 
-                visual.ValueShape.Shapes().Append(visual.PipeShape);
+                    visual.ValueShape.Shapes().Append(visual.PipeShape);
+                }
 
                 visual.TrackOrigin = vertical ? trackY : trackX;
                 visual.TrackLength = vertical ? trackH : trackW;
                 visual.PipeThickness = vertical ? trackW : trackH;
                 visual.PipeCrossOffset = vertical ? trackX : trackY;
+
+                // A meter's value is its lights. The bar is kept only for the light round it.
+                if (meter)
+                {
+                    LayoutMeterSegments(compositor, visual, colors, theme, width, height, vertical);
+                }
+
+                // A white hot line down the middle of a lit fill or strip, the way a neon tube
+                // is brightest at its heart. Moved with the fill.
+                if (!meter && !onOwnColor && colors.ValueCore.A != 0)
+                {
+                    visual.CoreInset = strip ? std::max(0.5f, (slot - 1.0f) * 0.5f) : slot * 0.25f;
+
+                    auto const coreSlot = std::max(slot - visual.CoreInset * 2.0f, 0.5f);
+
+                    visual.CoreGeometry = compositor.CreateRoundedRectangleGeometry();
+                    visual.CoreGeometry.CornerRadius(float2{ coreSlot * 0.5f, coreSlot * 0.5f });
+                    visual.CoreGeometry.Size(float2{ 0.0f, 0.0f });
+
+                    auto coreShape = compositor.CreateSpriteShape(visual.CoreGeometry);
+                    coreShape.FillBrush(BrushFor(compositor, colors.ValueCore));
+
+                    visual.ValueShape.Shapes().Append(coreShape);
+                }
+
+                // A lit strip throws a flare: a streak along it running past both ends, and a
+                // short ray across it. Only while the switch is on.
+                if (strip && visual.IsSwitch && colors.Flare.A != 0 && theme.FlarePercent > 0)
+                {
+                    visual.Flare = BuildFlare(compositor, colors, theme, trackW, false);
+
+                    if (visual.Flare != nullptr)
+                    {
+                        visual.Flare.Offset(float3{ trackX + trackW * 0.5f, trackY + trackH * 0.5f, 0.0f });
+                        visual.Flare.IsVisible(false);
+                        visual.FlareFollowsOn = true;
+
+                        visual.Root.Children().InsertAbove(visual.Flare, visual.ValueShape);
+                    }
+                }
+
                 // ---- the cap ----
 
                 if (travels && theme.Thumb != ThumbStyle::None && std::min(width, height) >= MinimumThumbSize)
@@ -2462,10 +3040,21 @@ namespace glass
                         ? std::min(WideCapLineThickness, thumbThickness * 0.4f)
                         : std::max(1.0f, thumbThickness * ThumbLineAspect);
 
-                    auto const thumbCorner = thumbThickness * ThumbCornerFraction;
+                    // A pill where the theme draws round ends.
+                    auto const thumbCorner = theme.ArcRoundEnds
+                        ? thumbThickness * 0.5f
+                        : thumbThickness * ThumbCornerFraction;
 
                     auto const capWidth = vertical ? thumbSpan : thumbThickness;
                     auto const capHeight = vertical ? thumbThickness : thumbSpan;
+
+                    // A cap drawn as a small key, on a theme whose switches are keys: the same
+                    // dished top set into the same skirt.
+                    auto const keyCap = themed &&
+                        theme.SwitchShape == SwitchShapeStyle::Keycap &&
+                        colors.KeycapTop.A != 0 &&
+                        capWidth > CapFaceSide * 2.0f + 2.0f &&
+                        capHeight > CapFaceTop + CapFaceBottom + 2.0f;
 
                     // The cap is its own visual, moved as one piece by the value. It sits over
                     // the fill rather than inside it, so its shadow falls on the slot.
@@ -2505,9 +3094,49 @@ namespace glass
 
                     capShapes.Shapes().Append(thumbShape);
 
+                    if (keyCap)
+                    {
+                        auto faceGeometry = compositor.CreateRoundedRectangleGeometry();
+                        faceGeometry.Size(float2{ capWidth - CapFaceSide * 2.0f, capHeight - CapFaceTop - CapFaceBottom });
+                        faceGeometry.Offset(float2{ CapFaceSide, CapFaceTop });
+
+                        auto const faceCorner = std::min(thumbCorner, KeycapFaceCorner);
+                        faceGeometry.CornerRadius(float2{ faceCorner, faceCorner });
+
+                        auto faceShape = compositor.CreateSpriteShape(faceGeometry);
+                        faceShape.FillBrush(colors.KeycapTop == colors.KeycapTopEnd
+                            ? BrushFor(compositor, colors.KeycapTop).as<CompositionBrush>()
+                            : VerticalBrush(compositor, colors.KeycapTop, colors.KeycapTopEnd, false).as<CompositionBrush>());
+
+                        if (colors.KeycapOutline.A != 0)
+                        {
+                            faceShape.StrokeBrush(BrushFor(compositor, colors.KeycapOutline));
+                            faceShape.StrokeThickness(0.5f);
+                        }
+
+                        capShapes.Shapes().Append(faceShape);
+
+                        if (colors.KeycapSheen.A != 0 && capWidth > CapFaceSide * 2.0f + faceCorner * 2.0f + 2.0f)
+                        {
+                            auto sheenGeometry = compositor.CreateRectangleGeometry();
+                            sheenGeometry.Size(float2{ capWidth - CapFaceSide * 2.0f - faceCorner * 2.0f, 1.0f });
+                            sheenGeometry.Offset(float2{ CapFaceSide + faceCorner, CapFaceTop });
+
+                            auto sheenShape = compositor.CreateSpriteShape(sheenGeometry);
+                            sheenShape.FillBrush(BrushFor(compositor, colors.KeycapSheen));
+
+                            capShapes.Shapes().Append(sheenShape);
+                        }
+
+                        // The line across a key cap is a short painted bar a little above the
+                        // middle, clear of both ends.
+                        visual.ThumbLineLength = std::max(2.0f, thumbSpan - CapKeyLineEnds * 2.0f);
+                        visual.ThumbLineThickness = CapKeyLineThickness;
+                    }
+
                     // The same light line along the top a plate gets, which is what makes a cap
-                    // read as molded rather than as a flat bar.
-                    if (colors.PlateHighlight.A > 0 && capWidth > thumbCorner * 2.0f + 2.0f)
+                    // read as molded rather than as a flat bar. A key carries its own on its top.
+                    if (!keyCap && colors.PlateHighlight.A > 0 && capWidth > thumbCorner * 2.0f + 2.0f)
                     {
                         auto lipGeometry = compositor.CreateRoundedRectangleGeometry();
                         lipGeometry.Size(float2{ capWidth - thumbCorner * 2.0f, 1.0f });
@@ -2525,7 +3154,8 @@ namespace glass
                     {
                         auto const lineCorner = theme.CapLineWide ? 0.0f : visual.ThumbLineThickness * 0.5f;
                         auto const lineAcross = (thumbSpan - visual.ThumbLineLength) * 0.5f;
-                        auto const lineAlong = (thumbThickness - visual.ThumbLineThickness) * 0.5f;
+                        auto const lineAlong = (thumbThickness - visual.ThumbLineThickness) * 0.5f -
+                            (keyCap && vertical ? CapKeyLineRise : 0.0f);
 
                         visual.ThumbLineGeometry = compositor.CreateRoundedRectangleGeometry();
                         visual.ThumbLineGeometry.CornerRadius(float2{ lineCorner, lineCorner });
@@ -2546,6 +3176,11 @@ namespace glass
                     visual.Root.Children().InsertAbove(visual.Cap, visual.ValueShape);
                 }
             }
+        }
+
+        if (windowed)
+        {
+            FinishWindow(compositor, visual, colors, theme);
         }
     }
 
@@ -2574,10 +3209,12 @@ namespace glass
                 : LabelPlacementOverride::None;
 
             // A panel whose knobs are named above or below still prints each button's name on
-            // the button, in the middle of it.
+            // the button, in the middle of it, or at its top left the way a key's legend is.
             if (theme.NamesInsideSwitches && FillsLikeASwitch(control.Kind))
             {
-                placed = LabelPlacementOverride::InsideCenter;
+                placed = theme.SwitchNames == SwitchNamePlacement::TopLeft
+                    ? LabelPlacementOverride::InsideTopLeft
+                    : LabelPlacementOverride::InsideCenter;
             }
         }
 
@@ -2600,6 +3237,8 @@ namespace glass
 
                 m_labels[itemIndex] = nullptr;
             }
+
+            LayoutLabelGlow(itemIndex, controls::TextBlock{ nullptr }, ThemeColor{}, theme, 0.0, 0.0);
 
             return;
         }
@@ -2668,12 +3307,26 @@ namespace glass
         auto const insideSwitch = FillsLikeASwitch(control.Kind) &&
             (placed == LabelPlacementOverride::Inside ||
              placed == LabelPlacementOverride::InsideTop ||
+             placed == LabelPlacementOverride::InsideTopLeft ||
              placed == LabelPlacementOverride::InsideCenter ||
              placed == LabelPlacementOverride::InsideBottom);
+
+        // A section's name and the words of a Text control glow in their own color, on a theme
+        // with neon letters: the tube's color most of the way to white, in its own light.
+        auto const neon = theme.NeonLetters && !banner && (isPanel || control.Kind == ControlKind::Label);
+        auto const neonHue = ResolveHue(control, theme);
 
         if (banner)
         {
             ink = ReadableInk(colors.Pipe);
+        }
+        else if (neon)
+        {
+            auto tube = neonHue;
+            tube.A = 255;
+
+            ink = BlendOver(tube, ThemeColor{ 255, 255, 255, 255 }, NeonLetterWhite);
+            ink.A = 255;
         }
         else if (isPanel && theme.SectionNameInHue)
         {
@@ -2727,7 +3380,20 @@ namespace glass
         auto const along = vertical ? height : width;
         auto const boxLength = std::max(along * std::clamp(look.WidthPercent, 10.0, 400.0) / 100.0, 4.0);
 
-        label.Width(custom ? look.BoxWidth : (isPanel ? std::max(width - 16.0, 4.0) : boxLength));
+        // A key's legend at its top left, a little in from the corner of its dished top: one
+        // line, left aligned, cut short rather than wrapped.
+        auto const topLeft = !custom && placed == LabelPlacementOverride::InsideTopLeft;
+        auto const legendScale = static_cast<double>(KeyScale(static_cast<float>(width), static_cast<float>(height)));
+        auto const legendInset = TopLeftNameInset * legendScale;
+
+        label.Width(custom ? look.BoxWidth
+            : (isPanel ? std::max(width - 16.0, 4.0)
+                : (topLeft ? std::max(width - legendInset * 2.0, 4.0) : boxLength)));
+
+        if (topLeft)
+        {
+            label.TextWrapping(xaml::TextWrapping::NoWrap);
+        }
 
         // A name in a notch is only as wide as itself, because the gap cut for it is.
         auto notchWidth = 0.0;
@@ -2745,7 +3411,7 @@ namespace glass
             label.MaxWidth(std::numeric_limits<double>::infinity());
         }
 
-        label.TextAlignment(isPanel && !banner && !centered
+        label.TextAlignment((isPanel && !banner && !centered) || topLeft
             ? xaml::TextAlignment::Left
             : xaml::TextAlignment::Center);
 
@@ -2774,14 +3440,22 @@ namespace glass
             label.Height(std::numeric_limits<double>::quiet_NaN());
             label.MaxLines(notched ? 1 : 0);
 
-            offsetX = notched ? 10.0 : 8.0;
+            // A frame that can be cut knows where its name starts. A striped one puts the name
+            // across the middle of its band rather than on its outer line.
+            auto const& frame = m_visuals[itemIndex];
+            auto const cut = notched && !frame.FrameParts.empty();
+            auto const striped = cut && StripeCount(theme) > 0;
+
+            offsetX = notched ? (cut ? static_cast<double>(frame.FrameNotchStart) : 10.0) : 8.0;
 
             // Centered in the banner rather than sitting just inside the frame's corner, or
             // centered ON the frame's top edge where the name sits in a notch.
             offsetY = banner
                 ? std::max((std::min(static_cast<double>(SectionBarHeight),
                     height * SectionBarMaximumFraction) - lineHeight) * 0.5, 0.0)
-                : (notched ? -lineHeight * 0.5 : 5.0);
+                : (notched
+                    ? (striped ? (frame.FrameBand - lineHeight) * 0.5 : -lineHeight * 0.5)
+                    : 5.0);
         }
         else if (vertical)
         {
@@ -2823,6 +3497,11 @@ namespace glass
 
             case LabelPlacementOverride::InsideTop:
                 offsetY = 4.0;
+                break;
+
+            case LabelPlacementOverride::InsideTopLeft:
+                offsetX = legendInset;
+                offsetY = TopLeftNameDrop * legendScale;
                 break;
 
             case LabelPlacementOverride::InsideCenter:
@@ -2889,9 +3568,31 @@ namespace glass
         controls::Canvas::SetLeft(label, control.X + offsetX);
         controls::Canvas::SetTop(label, control.Y + offsetY);
 
-        // The gap in the frame, filled with whatever the deck is at that height so the line
-        // looks cut rather than painted over. Four pixels of air either side of the name.
-        if (notched && notchWidth > 0.0 && itemIndex < m_visuals.size())
+        // A name in neon glows in its tube's light, behind the letters. A customer's own color
+        // is print, and print does not glow.
+        LayoutLabelGlow(
+            itemIndex,
+            neon && !namedColor ? label : controls::TextBlock{ nullptr },
+            neonHue,
+            theme,
+            control.X + offsetX,
+            control.Y + offsetY);
+
+        // The gap for the name is cut out of the frame, so whatever is under the frame shows
+        // through it: the deck, its grain, or a picture.
+        if (notched && notchWidth > 0.0 && itemIndex < m_visuals.size() && !m_visuals[itemIndex].FrameParts.empty())
+        {
+            auto const air = StripeCount(theme) > 0 ? StripedNotchAir : PlainNotchAir;
+
+            CutFrame(
+                m_visuals[itemIndex],
+                static_cast<float>(offsetX) - air,
+                static_cast<float>(offsetX + notchWidth) + air);
+        }
+        // A frame that could not be cut - a section whose own style overrides the theme's - has
+        // the gap painted in the deck's color at that height instead. Four pixels of air either
+        // side of the name.
+        else if (notched && notchWidth > 0.0 && itemIndex < m_visuals.size())
         {
             auto& visual = m_visuals[itemIndex];
 
@@ -3088,6 +3789,7 @@ namespace glass
         m_labelBoxHeights.clear();
         m_labelRestInks.clear();
         m_labelOnInks.clear();
+        m_labelGlows.clear();
         m_background = nullptr;
         m_values.clear();
         m_valuesY.clear();
@@ -3103,6 +3805,7 @@ namespace glass
         m_domes.clear();
         m_shadowMasks.clear();
         m_maskSources.clear();
+        m_textures.clear();
         m_panels.clear();
         m_host = nullptr;
     }
@@ -3188,10 +3891,736 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    void SurfaceRenderer::LayoutKeycap(
+        Compositor const& compositor,
+        SurfaceVisual& visual,
+        ControlColors const& colors,
+        float width,
+        float height,
+        float corner)
+    {
+        auto const scale = KeyScale(width, height);
+
+        auto const left = KeycapFaceLeft * scale;
+        auto const right = KeycapFaceRight * scale;
+        auto const top = KeycapFaceTop * scale;
+        auto const bottom = KeycapFaceBottom * scale;
+
+        auto const faceW = width - left - right;
+        auto const faceH = height - top - bottom;
+
+        // The dark line along the foot of the skirt, a pixel inside its bottom edge.
+        if (colors.KeycapFoot.A != 0 && width > corner * 2.0f + 2.0f)
+        {
+            auto footGeometry = compositor.CreateRectangleGeometry();
+            footGeometry.Size(float2{ width - corner * 2.0f, 1.0f });
+            footGeometry.Offset(float2{ corner, height - 2.0f });
+
+            auto footShape = compositor.CreateSpriteShape(footGeometry);
+            footShape.FillBrush(BrushFor(compositor, colors.KeycapFoot));
+
+            visual.Shape.Shapes().Append(footShape);
+        }
+
+        if (faceW < 4.0f || faceH < 4.0f)
+        {
+            return;
+        }
+
+        auto const faceCorner = std::min(KeycapFaceCorner * scale, std::min(faceW, faceH) * 0.5f);
+
+        auto faceGeometry = compositor.CreateRoundedRectangleGeometry();
+        faceGeometry.Size(float2{ faceW, faceH });
+        faceGeometry.Offset(float2{ left, top });
+        faceGeometry.CornerRadius(float2{ faceCorner, faceCorner });
+
+        // Dished: darker at the back, where the dish falls away from the light, and lighter at
+        // the front. A few levels darker again while a finger holds it down.
+        visual.KeycapRestBrush = colors.KeycapTop == colors.KeycapTopEnd
+            ? BrushFor(compositor, colors.KeycapTop).as<CompositionBrush>()
+            : VerticalBrush(compositor, colors.KeycapTop, colors.KeycapTopEnd, false).as<CompositionBrush>();
+
+        visual.KeycapHeldBrush = colors.KeycapTopHeld == colors.KeycapTopHeldEnd
+            ? BrushFor(compositor, colors.KeycapTopHeld).as<CompositionBrush>()
+            : VerticalBrush(compositor, colors.KeycapTopHeld, colors.KeycapTopHeldEnd, false).as<CompositionBrush>();
+
+        visual.KeycapFace = compositor.CreateSpriteShape(faceGeometry);
+        visual.KeycapFace.FillBrush(visual.KeycapRestBrush);
+
+        if (colors.KeycapOutline.A != 0)
+        {
+            visual.KeycapFace.StrokeBrush(BrushFor(compositor, colors.KeycapOutline));
+            visual.KeycapFace.StrokeThickness(0.5f);
+        }
+
+        visual.Shape.Shapes().Append(visual.KeycapFace);
+
+        // The light catching the top edge of the dish.
+        if (colors.KeycapSheen.A != 0 && faceW > faceCorner * 2.0f + 2.0f)
+        {
+            auto sheenGeometry = compositor.CreateRectangleGeometry();
+            sheenGeometry.Size(float2{ faceW - faceCorner * 2.0f, 1.0f });
+            sheenGeometry.Offset(float2{ left + faceCorner, top });
+
+            auto sheenShape = compositor.CreateSpriteShape(sheenGeometry);
+            sheenShape.FillBrush(BrushFor(compositor, colors.KeycapSheen));
+
+            visual.Shape.Shapes().Append(sheenShape);
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::LayoutMeterSegments(
+        Compositor const& compositor,
+        SurfaceVisual& visual,
+        ControlColors const& colors,
+        Theme const& theme,
+        float width,
+        float height,
+        bool vertical)
+    {
+        UNREFERENCED_PARAMETER(theme);
+
+        visual.MeterSegments.clear();
+        visual.MeterLitBrushes.clear();
+        visual.MeterOffBrushes.clear();
+
+        auto const cross = vertical ? width : height;
+        auto const run = vertical ? height : width;
+
+        auto const side = std::clamp(std::round(cross * MeterSideShare), MeterSideMinimum, MeterSideMaximum);
+        auto const across = cross - side * 2.0f;
+        auto const available = run - MeterEndPadding * 2.0f;
+
+        if (across < 1.0f || available < MeterSegmentLength)
+        {
+            return;
+        }
+
+        auto const count = static_cast<size_t>(std::max(1.0f,
+            std::floor((available + MeterSegmentGap) / (MeterSegmentLength + MeterSegmentGap))));
+
+        auto const used = static_cast<float>(count) * MeterSegmentLength +
+            static_cast<float>(count - 1) * MeterSegmentGap;
+
+        // The light round the meter follows its lights rather than a slot, packed from the
+        // quiet end: the bottom of a tall meter, the left of a wide one.
+        visual.PipeCrossOffset = side;
+        visual.PipeThickness = across;
+        visual.TrackOrigin = vertical ? height - MeterEndPadding - used : MeterEndPadding;
+        visual.TrackLength = used;
+
+        CompositionBrush const lit[]
+        {
+            BrushFor(compositor, colors.MeterLit),
+            BrushFor(compositor, colors.MeterWarn),
+            BrushFor(compositor, colors.MeterHot),
+        };
+
+        CompositionBrush const off[]
+        {
+            BrushFor(compositor, colors.MeterLitOff),
+            BrushFor(compositor, colors.MeterWarnOff),
+            BrushFor(compositor, colors.MeterHotOff),
+        };
+
+        for (size_t segment = 0; segment < count; ++segment)
+        {
+            auto const step = static_cast<float>(segment) * (MeterSegmentLength + MeterSegmentGap);
+
+            auto const along = vertical
+                ? height - MeterEndPadding - MeterSegmentLength - step
+                : MeterEndPadding + step;
+
+            auto geometry = compositor.CreateRoundedRectangleGeometry();
+            geometry.Size(vertical ? float2{ across, MeterSegmentLength } : float2{ MeterSegmentLength, across });
+            geometry.Offset(vertical ? float2{ side, along } : float2{ along, side });
+            geometry.CornerRadius(float2{ 1.0f, 1.0f });
+
+            auto const zone = MeterZoneOf(segment, count);
+
+            auto shape = compositor.CreateSpriteShape(geometry);
+            shape.FillBrush(off[zone]);
+
+            visual.ValueShape.Shapes().Append(shape);
+
+            visual.MeterSegments.push_back(shape);
+            visual.MeterLitBrushes.push_back(lit[zone]);
+            visual.MeterOffBrushes.push_back(off[zone]);
+        }
+    }
+
+    _Use_decl_annotations_
+    ContainerVisual SurfaceRenderer::BuildFlare(
+        Compositor const& compositor,
+        ControlColors const& colors,
+        Theme const& theme,
+        float length,
+        bool withRing)
+    {
+        auto const strength = static_cast<double>(std::clamp(theme.FlarePercent, 0, 100)) / 100.0;
+
+        if (strength <= 0.0 || colors.Flare.A == 0 || length <= 0.0f)
+        {
+            return nullptr;
+        }
+
+        auto root = compositor.CreateContainerVisual();
+
+        auto hue = colors.Pipe;
+        hue.A = 255;
+
+        auto const flare = colors.Flare;
+
+        auto const at = [strength](ThemeColor color, double alpha) noexcept
+            {
+                color.A = static_cast<uint8_t>(std::lround(255.0 * std::clamp(alpha * strength, 0.0, 1.0)));
+
+                return color;
+            };
+
+        auto const radial = [&](std::initializer_list<std::pair<float, ThemeColor>> stops)
+            {
+                auto brush = compositor.CreateRadialGradientBrush();
+                brush.EllipseCenter(float2{ 0.5f, 0.5f });
+                brush.EllipseRadius(float2{ 0.5f, 0.5f });
+
+                for (auto const& [offset, color] : stops)
+                {
+                    auto stop = compositor.CreateColorGradientStop();
+                    stop.Offset(offset);
+                    stop.Color(ToColor(color));
+
+                    brush.ColorStops().Append(stop);
+                }
+
+                return brush;
+            };
+
+        auto const along = [&](std::initializer_list<std::pair<float, ThemeColor>> stops, bool down)
+            {
+                auto brush = compositor.CreateLinearGradientBrush();
+                brush.StartPoint(down ? float2{ 0.5f, 0.0f } : float2{ 0.0f, 0.5f });
+                brush.EndPoint(down ? float2{ 0.5f, 1.0f } : float2{ 1.0f, 0.5f });
+
+                for (auto const& [offset, color] : stops)
+                {
+                    auto stop = compositor.CreateColorGradientStop();
+                    stop.Offset(offset);
+                    stop.Color(ToColor(color));
+
+                    brush.ColorStops().Append(stop);
+                }
+
+                return brush;
+            };
+
+        // Centered on the container's own origin, so placing the flare is one offset.
+        auto const sprite = [&](float spriteWidth, float spriteHeight, CompositionBrush const& brush)
+            {
+                auto visual = compositor.CreateSpriteVisual();
+                visual.Size(float2{ spriteWidth, spriteHeight });
+                visual.Offset(float3{ -spriteWidth * 0.5f, -spriteHeight * 0.5f, 0.0f });
+                visual.Brush(brush);
+
+                root.Children().InsertAtTop(visual);
+
+                return visual;
+            };
+
+        if (!withRing)
+        {
+            // A streak along the light, running past both ends, and a short ray across it.
+            sprite(length * FlareStreakShare, FlareStreakThickness, radial({
+                { 0.0f, at(flare, 0.75) },
+                { 0.45f, at(hue, 0.24) },
+                { 1.0f, at(hue, 0.0) } }));
+
+            sprite(1.0f, FlareRayReach * 2.0f, along({
+                { 0.0f, at(flare, 0.0) },
+                { 0.5f, at(flare, 0.55) },
+                { 1.0f, at(flare, 0.0) } }, true));
+
+            return root;
+        }
+
+        // The whole flare, for the one light big enough to throw it: a long streak, a ring that
+        // fringes red at its edge, and a faint four point star.
+        auto const reach = std::clamp(length * PuckFlareReachShare, PuckFlareMinimumReach, PuckFlareMaximumReach);
+
+        sprite(reach * 2.0f, PuckFlareThickness, radial({
+            { 0.0f, at(flare, 0.80) },
+            { 0.30f, at(hue, 0.34) },
+            { 0.62f, at(hue, 0.10) },
+            { 1.0f, at(hue, 0.0) } }));
+
+        ThemeColor const fringe{ 255, 110, 70, 255 };
+
+        sprite(PuckFlareRing, PuckFlareRing, radial({
+            { 0.0f, at(fringe, 0.0) },
+            { 0.76f, at(fringe, 0.0) },
+            { 0.84f, at(fringe, 0.16) },
+            { 0.91f, at(hue, 0.12) },
+            { 1.0f, at(hue, 0.0) } }));
+
+        for (auto const& [angle, alpha] : { std::pair{ 0.0f, 0.60 }, std::pair{ 90.0f, 0.60 }, std::pair{ 45.0f, 0.30 }, std::pair{ -45.0f, 0.30 } })
+        {
+            auto line = sprite(PuckFlareStar, 1.0f, along({
+                { 0.0f, at(flare, 0.0) },
+                { 0.30f, at(flare, alpha * 0.40) },
+                { 0.5f, at(flare, alpha) },
+                { 0.70f, at(flare, alpha * 0.40) },
+                { 1.0f, at(flare, 0.0) } }, false));
+
+            line.CenterPoint(float3{ PuckFlareStar * 0.5f, 0.5f, 0.0f });
+            line.RotationAngleInDegrees(angle);
+        }
+
+        return root;
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::LayoutSectionTexture(
+        Compositor const& compositor,
+        SurfaceVisual& visual,
+        Theme const& theme,
+        CompositionGeometry const& shape,
+        float width,
+        float height)
+    {
+        try
+        {
+            auto const pixels = LoadThemePicture(theme.SectionTexture);
+
+            if (pixels == nullptr)
+            {
+                return;
+            }
+
+            auto found = m_textures.find(theme.SectionTexture);
+
+            if (found == m_textures.end())
+            {
+                // In black, through the picture's own transparency: dirt only ever darkens.
+                auto mask = compositor.CreateMaskBrush();
+                mask.Source(compositor.CreateColorBrush(winrt::Windows::UI::Colors::Black()));
+                mask.Mask(MakeTextureBrush(compositor, *pixels));
+
+                found = m_textures.emplace(theme.SectionTexture, mask).first;
+            }
+
+            visual.Texture = BuildTiles(
+                compositor,
+                found->second,
+                static_cast<float>(pixels->Width),
+                static_cast<float>(pixels->Height),
+                width,
+                height);
+
+            visual.Texture.Clip(compositor.CreateGeometricClip(shape));
+            visual.Texture.Opacity(static_cast<float>(std::clamp(theme.SectionTexturePercent, 0, 100)) / 100.0f);
+
+            visual.Root.Children().InsertAbove(visual.Texture, visual.Shape);
+        }
+        catch (...)
+        {
+            visual.Texture = nullptr;
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::ApplyTravel(size_t itemIndex, bool on) noexcept
+    {
+        if (itemIndex >= m_visuals.size())
+        {
+            return;
+        }
+
+        auto const& visual = m_visuals[itemIndex];
+
+        try
+        {
+            auto const held = itemIndex < m_touched.size() && m_touched[itemIndex];
+            auto const latched = !held && on && visual.TravelLatches;
+
+            if (visual.KeycapFace != nullptr && visual.KeycapHeldBrush != nullptr)
+            {
+                visual.KeycapFace.FillBrush(held ? visual.KeycapHeldBrush : visual.KeycapRestBrush);
+            }
+
+            if (visual.TravelPixels <= 0.0f)
+            {
+                return;
+            }
+
+            // Down under a finger, half way down while it is latched on. A pad lit only by what
+            // arrived from a device does not move: nobody pressed it.
+            auto const down = held ? visual.TravelPixels : (latched ? visual.TravelPixels * 0.5f : 0.0f);
+            auto const at = float3{ 0.0f, down, 0.0f };
+
+            visual.Shape.Offset(at);
+            visual.ValueShape.Offset(at);
+            visual.Unavailable.Offset(at);
+
+            if (visual.Halo != nullptr)
+            {
+                visual.Halo.Offset(float3{ -HaloMargin, -HaloMargin + down, 0.0f });
+            }
+
+            // A key pressed toward the surface casts less of a shadow on it.
+            visual.Elevation.Opacity(held ? HeldShadowShare : (latched ? LatchedShadowShare : 1.0f));
+
+            if (itemIndex < m_labels.size() && m_labels[itemIndex] != nullptr)
+            {
+                m_labels[itemIndex].Translation(at);
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::BuildFrameParts(
+        Compositor const& compositor,
+        SurfaceVisual& visual,
+        Theme const& theme,
+        ThemeColor const& outline,
+        float width,
+        float height,
+        float corner)
+    {
+        auto const stripes = StripeCount(theme);
+        auto const stripeWidth = static_cast<float>(std::clamp(theme.StripeWidth, 1, 16));
+        auto const rim = static_cast<float>(std::clamp(theme.RimThickness, 1, 6));
+
+        if (stripes == 0 && outline.A == 0)
+        {
+            return;
+        }
+
+        visual.FrameBand = stripes > 0 ? static_cast<float>(stripes) * stripeWidth : rim;
+
+        // Where the name starts: past a striped frame's corner with room either side, or where
+        // a plain frame always put it.
+        visual.FrameNotchStart = stripes > 0
+            ? corner + StripedNotchPastCorner + StripedNotchAir
+            : PlainNotchStart;
+
+        // Three copies of the frame, so a name can be cut out of it later: whole at first, and
+        // split into the part left of the name, right of it and under it once the name is
+        // measured.
+        for (int32_t part = 0; part < 3; ++part)
+        {
+            auto frame = compositor.CreateShapeVisual();
+            frame.Size(float2{ width, height });
+
+            if (stripes > 0)
+            {
+                for (int32_t stripe = 0; stripe < stripes; ++stripe)
+                {
+                    // A stroke straddles its path, so each stripe's path is half a stripe in
+                    // from its outer edge, and its corner shrinks by the same.
+                    auto const inset = static_cast<float>(stripe) * stripeWidth + stripeWidth * 0.5f;
+
+                    auto geometry = compositor.CreateRoundedRectangleGeometry();
+                    geometry.Size(float2{ std::max(width - inset * 2.0f, 1.0f), std::max(height - inset * 2.0f, 1.0f) });
+                    geometry.Offset(float2{ inset, inset });
+
+                    auto const stripeCorner = std::max(0.0f, corner - inset);
+                    geometry.CornerRadius(float2{ stripeCorner, stripeCorner });
+
+                    auto shape = compositor.CreateSpriteShape(geometry);
+                    shape.StrokeBrush(BrushFor(compositor, theme.StripeColors[static_cast<size_t>(stripe)]));
+                    shape.StrokeThickness(stripeWidth);
+
+                    frame.Shapes().Append(shape);
+                }
+            }
+            else
+            {
+                auto const inset = rim * 0.5f;
+
+                auto geometry = compositor.CreateRoundedRectangleGeometry();
+                geometry.Size(float2{ std::max(width - rim, 1.0f), std::max(height - rim, 1.0f) });
+                geometry.Offset(float2{ inset, inset });
+
+                auto const lineCorner = std::max(0.0f, corner - (rim - 1.0f) * 0.5f);
+                geometry.CornerRadius(float2{ lineCorner, lineCorner });
+
+                auto shape = compositor.CreateSpriteShape(geometry);
+                shape.StrokeBrush(BrushFor(compositor, outline));
+                shape.StrokeThickness(rim);
+
+                frame.Shapes().Append(shape);
+            }
+
+            frame.IsVisible(part == 0);
+
+            visual.Root.Children().InsertAbove(frame, visual.Shape);
+            visual.FrameParts.push_back(frame);
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::CutFrame(SurfaceVisual& visual, float start, float end) noexcept
+    {
+        if (visual.FrameParts.size() < 3 || end <= start)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const compositor = visual.FrameParts[0].Compositor();
+            auto const width = visual.Width;
+
+            auto leftOfName = compositor.CreateInsetClip();
+            leftOfName.RightInset(std::max(0.0f, width - start));
+
+            auto rightOfName = compositor.CreateInsetClip();
+            rightOfName.LeftInset(std::max(0.0f, end));
+
+            // Under the name, the frame carries on below the band it was cut from.
+            auto underName = compositor.CreateInsetClip();
+            underName.LeftInset(std::max(0.0f, start));
+            underName.RightInset(std::max(0.0f, width - end));
+            underName.TopInset(visual.FrameBand + 1.0f);
+
+            visual.FrameParts[0].Clip(leftOfName);
+            visual.FrameParts[1].Clip(rightOfName);
+            visual.FrameParts[2].Clip(underName);
+
+            visual.FrameParts[1].IsVisible(true);
+            visual.FrameParts[2].IsVisible(true);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::FinishWindow(
+        Compositor const& compositor,
+        SurfaceVisual& visual,
+        ControlColors const& colors,
+        Theme const& theme)
+    {
+        if (!visual.Windowed)
+        {
+            return;
+        }
+
+        auto const width = visual.Width;
+        auto const height = visual.Height;
+
+        // The light catching the edge below the window: the window again, a pixel lower, under
+        // everything.
+        if (colors.RecessLip.A != 0)
+        {
+            auto lipGeometry = compositor.CreateRoundedRectangleGeometry();
+            lipGeometry.Size(float2{ width, height });
+            lipGeometry.Offset(float2{ 0.0f, 1.0f });
+            lipGeometry.CornerRadius(float2{ WindowCorner, WindowCorner });
+
+            auto lipShape = compositor.CreateSpriteShape(lipGeometry);
+            lipShape.FillBrush(BrushFor(compositor, colors.RecessLip));
+
+            visual.Shape.Shapes().InsertAt(0, lipShape);
+        }
+
+        // A dark line round the edge of the window, over what it shows.
+        auto edgeGeometry = compositor.CreateRoundedRectangleGeometry();
+        edgeGeometry.Size(float2{ std::max(width - 1.0f, 1.0f), std::max(height - 1.0f, 1.0f) });
+        edgeGeometry.Offset(float2{ 0.5f, 0.5f });
+        edgeGeometry.CornerRadius(float2{ WindowCorner - 0.5f, WindowCorner - 0.5f });
+
+        auto edgeShape = compositor.CreateSpriteShape(edgeGeometry);
+        edgeShape.StrokeBrush(BrushFor(compositor, ThemeColor{ 0, 0, 0, WindowEdgeAlpha }));
+        edgeShape.StrokeThickness(1.0f);
+
+        visual.ValueShape.Shapes().Append(edgeShape);
+
+        // The room reflected in the smoked plastic: a hard edged sheet of light across the
+        // upper left, over everything the window shows.
+        if (theme.WellGlossPercent > 0)
+        {
+            auto const angle = GlossAngleDegrees * 3.14159265f / 180.0f;
+
+            // The way the light runs, with zero degrees pointing up the page.
+            auto const direction = float2{ std::sin(angle), -std::cos(angle) };
+            auto const run = std::abs(width * direction.x) + std::abs(height * direction.y);
+
+            auto const start = float2{
+                width * 0.5f - direction.x * run * 0.5f,
+                height * 0.5f - direction.y * run * 0.5f };
+
+            auto const gloss = ThemeColor{ 255, 255, 255,
+                static_cast<uint8_t>(std::lround(255.0 * std::clamp(theme.WellGlossPercent, 0, 100) / 100.0)) };
+
+            auto clear = gloss;
+            clear.A = 0;
+
+            auto brush = compositor.CreateLinearGradientBrush();
+            brush.MappingMode(CompositionMappingMode::Absolute);
+            brush.StartPoint(start);
+            brush.EndPoint(float2{ start.x + direction.x * run, start.y + direction.y * run });
+
+            for (auto const& [offset, stopColor] : {
+                std::pair{ 0.0f, gloss },
+                std::pair{ GlossEdge, gloss },
+                std::pair{ GlossEdge + 0.005f, clear },
+                std::pair{ 1.0f, clear } })
+            {
+                auto stop = compositor.CreateColorGradientStop();
+                stop.Offset(offset);
+                stop.Color(ToColor(stopColor));
+
+                brush.ColorStops().Append(stop);
+            }
+
+            auto glossGeometry = compositor.CreateRoundedRectangleGeometry();
+            glossGeometry.Size(float2{ width, height });
+            glossGeometry.CornerRadius(float2{ WindowCorner, WindowCorner });
+
+            auto glossShape = compositor.CreateSpriteShape(glossGeometry);
+            glossShape.FillBrush(brush);
+
+            visual.ValueShape.Shapes().Append(glossShape);
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::LayoutLabelGlow(
+        size_t itemIndex,
+        controls::TextBlock const& label,
+        ThemeColor const& hue,
+        Theme const& theme,
+        double x,
+        double y)
+    {
+        if (itemIndex >= m_labelGlows.size() || m_host == nullptr)
+        {
+            return;
+        }
+
+        try
+        {
+            if (m_labelGlows[itemIndex] != nullptr)
+            {
+                uint32_t index{ 0 };
+
+                if (m_host.Children().IndexOf(m_labelGlows[itemIndex], index))
+                {
+                    m_host.Children().RemoveAt(index);
+                }
+
+                m_labelGlows[itemIndex] = nullptr;
+            }
+
+            if (label == nullptr)
+            {
+                return;
+            }
+
+            auto const setWidth = label.Width();
+
+            label.Measure(foundation::Size{
+                std::isnan(setWidth) ? std::numeric_limits<float>::infinity() : static_cast<float>(setWidth),
+                std::numeric_limits<float>::infinity() });
+
+            auto const desired = label.DesiredSize();
+            auto const textWidth = std::isnan(setWidth) ? desired.Width : static_cast<float>(setWidth);
+            auto const textHeight = desired.Height;
+
+            if (textWidth <= 0.0f || textHeight <= 0.0f)
+            {
+                return;
+            }
+
+            controls::Canvas glow{};
+
+            glow.Width(textWidth + NeonMargin * 2.0f);
+            glow.Height(textHeight + NeonMargin * 2.0f);
+            glow.IsHitTestVisible(false);
+
+            xaml::Automation::AutomationProperties::SetAccessibilityView(
+                glow, xaml::Automation::Peers::AccessibilityView::Raw);
+
+            auto const compositor = ElementCompositionPreview::GetElementVisual(m_host).Compositor();
+            auto const mask = label.GetAlphaMask();
+
+            auto light = hue;
+            light.A = 255;
+
+            auto container = compositor.CreateContainerVisual();
+            container.Size(float2{ textWidth + NeonMargin * 2.0f, textHeight + NeonMargin * 2.0f });
+
+            auto const fall = static_cast<float>(std::clamp(theme.GlowFallPixels, 0, 32));
+
+            struct Layer
+            {
+                float Blur;
+                float Drop;
+                float Opacity;
+            };
+
+            Layer const layers[]
+            {
+                { NeonNearBlur, 0.0f, NeonNearOpacity },
+                { NeonFarBlur, 0.0f, NeonFarOpacity },
+                { NeonRunBlur, NeonRunDrop + fall, NeonRunOpacity },
+            };
+
+            for (auto const& layer : layers)
+            {
+                auto shadow = compositor.CreateDropShadow();
+
+                shadow.BlurRadius(layer.Blur);
+                shadow.Offset(float3{ 0.0f, layer.Drop, 0.0f });
+                shadow.Color(ToColor(light));
+                shadow.Opacity(layer.Opacity);
+                shadow.Mask(mask);
+
+                // Casts the glow and paints nothing itself, shaped by the letters.
+                auto caster = compositor.CreateSpriteVisual();
+                caster.Size(float2{ textWidth, textHeight });
+                caster.Offset(float3{ NeonMargin, NeonMargin, 0.0f });
+                caster.Shadow(shadow);
+
+                container.Children().InsertAtTop(caster);
+            }
+
+            ElementCompositionPreview::SetElementChildVisual(glow, container);
+
+            // Behind the name, so the letters stay crisp over their own light.
+            uint32_t labelIndex{ 0 };
+
+            if (m_host.Children().IndexOf(label, labelIndex))
+            {
+                m_host.Children().InsertAt(labelIndex, glow);
+            }
+            else
+            {
+                m_host.Children().Append(glow);
+            }
+
+            controls::Canvas::SetLeft(glow, x - NeonMargin);
+            controls::Canvas::SetTop(glow, y - NeonMargin);
+
+            m_labelGlows[itemIndex] = glow;
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
     void SurfaceRenderer::LayoutLine(
         Compositor const& compositor,
         SurfaceVisual& visual,
         Control const& control,
+        Theme const& theme,
         ThemeColor const& ruleColor,
         bool fades,
         float width,
@@ -3219,6 +4648,32 @@ namespace glass
         // On a whole pixel, so a one pixel rule at actual size is one pixel rather than two at
         // half strength.
         auto const offset = std::floor((cross - thickness) * 0.5f);
+
+        // A theme drawn in stripes prints its rules in them too: the rule's own thickness split
+        // into hard edged bands, the first on top or on the left, cut square at the ends. A
+        // customer's own color is one line.
+        auto const stripes = control.Line.Color.empty() ? StripeCount(theme) : 0;
+
+        if (stripes > 0)
+        {
+            auto const band = thickness / static_cast<float>(stripes);
+
+            for (int32_t stripe = 0; stripe < stripes; ++stripe)
+            {
+                auto const at = offset + band * static_cast<float>(stripe);
+
+                auto bandGeometry = compositor.CreateRectangleGeometry();
+                bandGeometry.Size(across ? float2{ run, band } : float2{ band, run });
+                bandGeometry.Offset(across ? float2{ 0.0f, at } : float2{ at, 0.0f });
+
+                auto bandShape = compositor.CreateSpriteShape(bandGeometry);
+                bandShape.FillBrush(BrushFor(compositor, theme.StripeColors[static_cast<size_t>(stripe)]));
+
+                visual.Shape.Shapes().Append(bandShape);
+            }
+
+            return;
+        }
 
         auto geometry = compositor.CreateRectangleGeometry();
         geometry.Size(across ? float2{ run, thickness } : float2{ thickness, run });
@@ -3348,6 +4803,13 @@ namespace glass
         {
             controls::Canvas::SetLeft(m_labels[itemIndex], x + m_labelInsets[itemIndex]);
             controls::Canvas::SetTop(m_labels[itemIndex], y + m_labelOffsets[itemIndex]);
+        }
+
+        // The glow sits a margin up and to the left of its name, so it has room to spread.
+        if (itemIndex < m_labelGlows.size() && m_labelGlows[itemIndex] != nullptr)
+        {
+            controls::Canvas::SetLeft(m_labelGlows[itemIndex], x + m_labelInsets[itemIndex] - NeonMargin);
+            controls::Canvas::SetTop(m_labelGlows[itemIndex], y + m_labelOffsets[itemIndex] - NeonMargin);
         }
 
         if (itemIndex < m_valueTexts.size() && m_valueTexts[itemIndex] != nullptr)
@@ -3493,6 +4955,22 @@ namespace glass
             {
                 visual.ArcGeometry.TrimEnd(clamped * (KnobSweepDegrees / 360.0f));
 
+                // A round end on a sweep of nothing would draw a dot where there is no value.
+                if (visual.ArcRoundEnds)
+                {
+                    auto const shown = clamped > 0.0f;
+
+                    if (visual.PipeShape != nullptr)
+                    {
+                        visual.PipeShape.StrokeThickness(shown ? visual.ArcThickness : 0.0f);
+                    }
+
+                    if (visual.ArcCore != nullptr)
+                    {
+                        visual.ArcCore.StrokeThickness(shown ? std::max(1.0f, visual.ArcThickness * ArcCoreShare) : 0.0f);
+                    }
+                }
+
                 if (visual.PointerShape != nullptr)
                 {
                     visual.PointerShape.RotationAngleInDegrees(
@@ -3522,6 +5000,34 @@ namespace glass
 
                 visual.PipeGeometry.Size(float2{ fillW, fillH });
                 visual.PipeGeometry.Offset(float2{ fillX, fillY });
+
+                if (visual.CoreGeometry != nullptr)
+                {
+                    auto const inset = visual.CoreInset;
+
+                    visual.CoreGeometry.Size(vertical
+                        ? float2{ std::max(fillW - inset * 2.0f, 0.0f), fillH }
+                        : float2{ fillW, std::max(fillH - inset * 2.0f, 0.0f) });
+
+                    visual.CoreGeometry.Offset(vertical
+                        ? float2{ fillX + inset, fillY }
+                        : float2{ fillX, fillY + inset });
+                }
+
+                // A meter lights as many of its segments as the value reaches, from the quiet
+                // end.
+                if (!visual.MeterSegments.empty())
+                {
+                    auto const count = visual.MeterSegments.size();
+                    auto const lit = static_cast<size_t>(std::lround(clamped * static_cast<float>(count)));
+
+                    for (size_t segment = 0; segment < count; ++segment)
+                    {
+                        visual.MeterSegments[segment].FillBrush(segment < lit
+                            ? visual.MeterLitBrushes[segment]
+                            : visual.MeterOffBrushes[segment]);
+                    }
+                }
 
                 // The cap rides the top of the fill, clamped inside the slot at both ends so it
                 // never hangs off the control. It is one visual, so this is one offset.

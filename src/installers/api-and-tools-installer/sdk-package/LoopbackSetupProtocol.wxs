@@ -11,7 +11,7 @@
   <Fragment>
     <Component Id="LoopbackSetupProtocol"
                Bitness="always64"
-               Directory="TOOL_LOOPSETUP_FOLDER"
+               Directory="TOOLSROOT_INSTALLFOLDER"
                Guid="fa7723a9-9f2a-4a73-9de5-c4730029a183">
 
       <RegistryKey Root="HKCR" Key="ms-midi-loopback-setup">
