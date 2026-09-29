@@ -3448,3 +3448,510 @@ html, body {
     box-shadow: inset 0 0 0 1.5px rgba(var(--h1), .95), 0 0 10px rgba(var(--h1), .45);
     color: var(--deck-ink);
 }
+
+
+/* =========================================================================
+   "OFF-WORLD COLONIES" - a city where it never stops raining. After the look
+   of the film Blade Runner: cast concrete walls, equipment that has been used
+   hard for years, and neon.
+
+   What it is made of, from the back:
+
+   1. THE WALL IS CAST BLOCKS IN RELIEF, repeated at their own size and lit
+      from the top left. The motif is drawn for this comp; it is not a copy of
+      any real block. 23-offworld-blocks.svg.
+   2. THE RAIN HAS BEEN AT IT. Water has run down the wall and left dark
+      streaks and grime, and in places it is still running.
+      23-offworld-stains.svg.
+   3. IT IS STILL RAINING: fine streaks, nine degrees off the vertical.
+      23-offworld-rain.svg.
+   4. THE LIGHT IN THE ROOM: teal from the window above, warm from the lamps
+      down low, light through the blinds, and corners that fall into the dark.
+   5. THE EQUIPMENT IS DARK WORN METAL bolted to the wall. At rest a control's
+      color is only a hint: its neon tube is there, unlit.
+   6. NEON IS THE VALUE AND THE STATE. What a knob or a fader holds is a lit
+      tube with a white-hot core, and a button that is on lights its tube.
+   7. A LIGHT FLARES: a streak along the light and a faint star, and the
+      biggest light also throws a ring. The flare is decoration. The tube
+      going from dark to lit is the state, so somebody who cannot see a flare
+      still sees the light come on.
+   8. LIGHT RUNS DOWN THE WET WALL. A lit thing's glow reaches further below
+      it than above it.
+
+   Measured in g:\midi-scratch\offworld-contrast.ps1 (the palette) and
+   offworld-measure.ps1 (the render). On bare wall 95 pixels in 100 are within
+   1.36 : 1 of its middle, and the brightest, where a rain streak crosses a lit
+   edge in the light from the blinds, is 1.9 : 1, so the wall never competes
+   with a control. Print on the wall is 13.3 : 1. The dim print is 74 per cent
+   of the print, not 60: at 60 it failed on a rain streak (2.84), in a lit
+   pad's run-down glow (3.67) and under the tail of a flare (3.96). Every slot
+   clears 4.77 on a module. A flare has to be down to .12 where it reaches
+   print. A lit button washes its plate with 16 per cent of its color, because
+   at 10 the red one moved only 1.11 : 1 from rest, under the 1.15 every
+   shipped theme passes.
+   ========================================================================= */
+
+.surf.offworld {
+    --deck:
+        url("23-offworld-blocks.svg") 0 0 / 128px 128px repeat,
+        radial-gradient(80% 55% at 64% -6%, rgba(88, 146, 146, .12) 0%, rgba(88, 146, 146, 0) 70%),
+        radial-gradient(60% 45% at 8% 106%, rgba(255, 164, 84, .07) 0%, rgba(255, 164, 84, 0) 70%),
+        linear-gradient(180deg, #1D2625 0%, #181B1A 46%, #15130F 100%);
+    --module: linear-gradient(180deg, #1E2322 0%, #131615 100%);
+    --plate: linear-gradient(180deg, #262B2A 0%, #1B1F1E 48%, #121514 100%);
+    --well: #070A0A;
+    --track: #070A0A;
+    --on-hue: #081010;
+    --deck-ink: #D8E4E1;
+    --deck-ink2: #A6B0AD;               /* 74 per cent of the print, measured over the wall */
+    --grid1: rgba(214, 232, 226, .14);
+    --grid2: rgba(214, 232, 226, .05);
+    --tonal-rest: 0;
+    --tonal-held: .16;
+    --rim-rest: 0;
+    --tonal-radius: 3px;
+    --cap-shadow: 1px 3px 4px rgba(0, 0, 0, .80);
+
+    /* lit from the top left, like the blocks: a pale lip on the top and left edges,
+       a worn black edge, and a shadow thrown down and to the right */
+    --lip: inset 0 1px 0 rgba(214, 232, 226, .10), inset 1px 0 0 rgba(214, 232, 226, .04);
+    --edge: inset 0 0 0 1px rgba(0, 0, 0, .62);
+    --drop: 1px 2px 0 rgba(0, 0, 0, .42), 2px 4px 7px rgba(0, 0, 0, .48);
+    --gunmetal: radial-gradient(circle at 36% 30%, #3B413F 0%, #232827 46%, #101312 100%);
+
+    --tube-off: .20;                    /* an unlit tube: a fifth of its color */
+    --ring-off: .16;                    /* a knob's unlit ring */
+    --wash-on: .16;                     /* a lit button's plate: 16 per cent of its color */
+    --pad-rest: .22;                    /* a pad's plastic at rest */
+    --flare: 255, 241, 220;             /* a flare is warm white at its heart, whatever the tube */
+
+    --h1:  61, 213, 255;   /* #3DD5FF cyan   - the default, and the color of the city */
+    --h2: 255,  79, 163;   /* #FF4FA3 pink   */
+    --h3: 255, 179,  65;   /* #FFB341 amber  - tungsten, and every readout */
+    --h4: 255,  74,  54;   /* #FF4A36 red    */
+    --h5:  75, 234, 142;   /* #4BEA8E green  */
+    --h6: 148, 131, 255;   /* #9483FF violet */
+    --neutral: 233, 244, 255;           /* #E9F4FF white neon: the absence of a color */
+    --hue: var(--h1);
+}
+
+/* The stains and the rain, under the controls, where the engine lays its grain.
+   Each tile carries its own strength, so both go on at full opacity. */
+.surf.offworld::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+        url("23-offworld-rain.svg") 0 0 / 240px 240px repeat,
+        url("23-offworld-stains.svg") 0 0 / 512px 512px repeat;
+    pointer-events: none;
+}
+
+/* The corners fall into the dark, over everything, the way Cathode's glass does.
+   `.surf.tonal::after` switches the glass sheen off, hence the third class. */
+.surf.tonal.offworld::after {
+    display: block;
+    background: radial-gradient(125% 100% at 50% 40%,
+        rgba(8, 9, 10, 0) 48%, rgba(8, 9, 10, .16) 76%, rgba(8, 9, 10, .30) 100%);
+}
+.surf.tonal.offworld.explain::after { display: none; }
+
+/* light through the blinds, from a window off to the right. Soft edged, because
+   the slats are a long way from the wall */
+.surf.offworld .blinds {
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(155deg,
+        rgba(206, 228, 236, 0) 0, rgba(206, 228, 236, .065) 3px 8px, rgba(206, 228, 236, 0) 11px 22px);
+    -webkit-mask: radial-gradient(52% 68% at 97% 60%, #000 0%, rgba(0, 0, 0, .55) 42%, transparent 74%);
+    mask: radial-gradient(52% 68% at 97% 60%, #000 0%, rgba(0, 0, 0, .55) 42%, transparent 74%);
+    pointer-events: none;
+}
+
+/* neon letters: a white-hot core in the tube's color, its glow, and the glow
+   running down the wet wall under it */
+.surf.offworld .neon {
+    color: color-mix(in srgb, rgb(var(--hue)) 70%, #FFFFFF);
+    text-shadow:
+        0 0 1px rgba(var(--hue), .90),
+        0 0 6px rgba(var(--hue), .75),
+        0 0 16px rgba(var(--hue), .42),
+        0 8px 18px rgba(var(--hue), .26);
+}
+
+/* a control is a plate of worn dark metal */
+.surf.offworld .ctl {
+    border-radius: var(--tonal-radius);
+    background:
+        radial-gradient(120% 90% at 0% 0%, rgba(214, 232, 226, .05) 0%, rgba(214, 232, 226, 0) 60%),
+        var(--plate);
+    box-shadow: var(--lip), var(--edge), var(--drop);
+    color: var(--deck-ink);
+}
+.surf.offworld .ctl .cap,
+.surf.offworld .ctl.btn-ctl .name,
+.surf.offworld .ctl.btn-ctl .glyph { color: var(--deck-ink); }
+/* the name sits in the space above the tube */
+.surf.offworld .ctl.btn-ctl { padding-bottom: 6px; }
+
+/* on: the tube lights, the plate takes a little of its color, and the light
+   spills round the plate and runs down the wall under it */
+.surf.offworld .ctl.on {
+    background:
+        linear-gradient(0deg, rgba(var(--hue), var(--wash-on)), rgba(var(--hue), var(--wash-on))),
+        var(--plate);
+    box-shadow:
+        var(--lip),
+        inset 0 0 0 1px rgba(var(--hue), .38),
+        inset 0 -7px 10px -5px rgba(var(--hue), .26),
+        0 0 10px rgba(var(--hue), .26),
+        0 9px 16px -3px rgba(var(--hue), .16),
+        var(--drop);
+    color: var(--deck-ink);
+}
+.surf.offworld .ctl.on .cap,
+.surf.offworld .ctl.on .name,
+.surf.offworld .ctl.on .glyph,
+.surf.offworld .ctl.btn-ctl.on .glyph { color: var(--deck-ink); }
+
+.surf.offworld .ctl.held {
+    box-shadow:
+        var(--lip),
+        inset 0 0 0 1.5px rgba(var(--hue), .80),
+        inset 0 2px 6px rgba(0, 0, 0, .70),
+        0 0 14px rgba(var(--hue), .34),
+        var(--drop);
+}
+.surf.offworld .ctl.dim {
+    opacity: 1;
+    background: linear-gradient(180deg, #1C201F 0%, #141716 100%);
+    box-shadow: var(--edge);
+    color: rgba(216, 228, 225, .36);
+}
+.surf.offworld .ctl.offline {
+    background:
+        repeating-linear-gradient(135deg, rgba(216, 228, 225, .06) 0 6px, transparent 6px 12px),
+        #151817;
+    box-shadow: inset 0 0 0 1px rgba(216, 228, 225, .10), var(--drop);
+}
+
+/* the tube: a neon line along the foot of a switch. Unlit it is a fifth of its
+   color, so there is always somewhere to look for it */
+.surf.offworld .pipe {
+    left: 8px; right: 8px; bottom: 4px; height: 3px;
+    border-radius: 2px;
+    background: rgba(var(--hue), var(--tube-off));
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .35);
+}
+.surf.offworld .pipe.lit,
+.surf.offworld .ctl.on .pipe.lit {
+    background: linear-gradient(180deg,
+        rgb(var(--hue)) 0 1px, color-mix(in srgb, rgb(var(--hue)) 35%, #FFFFFF) 1px 2px, rgb(var(--hue)) 2px 3px);
+    box-shadow: 0 0 4px rgba(var(--hue), .95), 0 0 11px rgba(var(--hue), .50);
+    opacity: 1;
+}
+/* its flare: a streak along the tube, running past both ends, and a short ray
+   across it. Read off the render, the streak is down to about .10 by the edge of
+   its own plate */
+.surf.offworld .pipe.lit::before {
+    content: "";
+    position: absolute; left: -30%; right: -30%; top: 50%; height: 5px; margin-top: -2.5px;
+    background: radial-gradient(closest-side,
+        rgba(var(--flare), .75) 0%, rgba(var(--hue), .24) 45%, rgba(var(--hue), 0) 100%);
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+.surf.offworld .pipe.lit::after {
+    content: "";
+    position: absolute; left: 50%; top: -6px; bottom: -6px; width: 1px; margin-left: -.5px;
+    background: linear-gradient(180deg,
+        rgba(var(--flare), 0) 0%, rgba(var(--flare), .55) 50%, rgba(var(--flare), 0) 100%);
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+/* the whole flare, for the one light big enough to throw it: the XY puck. A
+   streak, a faint four-point star, and a ring that fringes red at its edge */
+.surf.offworld .flare { position: absolute; width: 0; height: 0; pointer-events: none; }
+.surf.offworld .flare::before {
+    content: "";
+    position: absolute;
+    left: calc(var(--reach, 90px) * -1); width: calc(var(--reach, 90px) * 2);
+    top: -3px; height: 6px;
+    background: radial-gradient(closest-side,
+        rgba(var(--flare), .80) 0%, rgba(var(--hue), .34) 30%, rgba(var(--hue), .10) 62%, rgba(var(--hue), 0) 100%);
+    mix-blend-mode: screen;
+}
+.surf.offworld .flare::after {
+    content: "";
+    position: absolute; left: -30px; top: -30px; width: 60px; height: 60px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side,
+        rgba(255, 110, 70, 0) 76%, rgba(255, 110, 70, .16) 84%, rgba(var(--hue), .12) 91%, rgba(var(--hue), 0) 100%);
+    mix-blend-mode: screen;
+}
+.surf.offworld .flare i {
+    position: absolute; left: -22px; top: -22px; width: 44px; height: 44px;
+    background:
+        linear-gradient(90deg, transparent calc(50% - .5px), rgba(var(--flare), .60) calc(50% - .5px) calc(50% + .5px), transparent calc(50% + .5px)),
+        linear-gradient(45deg, transparent calc(50% - .5px), rgba(var(--flare), .30) calc(50% - .5px) calc(50% + .5px), transparent calc(50% + .5px)),
+        linear-gradient(-45deg, transparent calc(50% - .5px), rgba(var(--flare), .30) calc(50% - .5px) calc(50% + .5px), transparent calc(50% + .5px));
+    -webkit-mask: radial-gradient(closest-side, #000 0%, rgba(0, 0, 0, .40) 40%, transparent 100%);
+    mask: radial-gradient(closest-side, #000 0%, rgba(0, 0, 0, .40) 40%, transparent 100%);
+    mix-blend-mode: screen;
+}
+
+/* a pad is dark plastic with its color in it and a lamp behind. Lit, the plastic
+   is its color outright, brightest in the middle, and the name goes dark */
+.surf.offworld .ctl.pad {
+    padding-bottom: 0;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .07) 0%, rgba(255, 255, 255, 0) 38%),
+        linear-gradient(0deg, rgba(var(--hue), var(--pad-rest)), rgba(var(--hue), var(--pad-rest))),
+        #141817;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), var(--edge), var(--drop);
+    color: var(--deck-ink);
+}
+.surf.offworld .ctl.pad.on {
+    background:
+        radial-gradient(circle at 50% 42%, rgba(255, 255, 255, .42) 0%, rgba(255, 255, 255, 0) 62%),
+        rgb(var(--hue));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .45),
+        inset 0 0 0 1px rgba(0, 0, 0, .30),
+        0 0 12px rgba(var(--hue), .55),
+        0 0 30px rgba(var(--hue), .20),
+        0 12px 20px -4px rgba(var(--hue), .22);
+    color: var(--on-hue);
+}
+.surf.offworld .ctl.pad.on .name,
+.surf.offworld .ctl.pad.on .cap { color: var(--on-hue); }
+.surf.offworld .neutral { --hue: var(--neutral); }
+
+/* ------------------------------------------------------------ knobs */
+/* A gunmetal cap in a ring of neon. The unlit ring is the same tube dark, the
+   value is the tube lit, with a white-hot line down its middle. The glow is on a
+   wrapper because a mask is applied after a filter. */
+.surf.offworld .knob { background: none; box-shadow: none; }
+.surf.offworld .knob .dial { background: none; box-shadow: none; }
+.surf.offworld .knob .halo {
+    position: absolute; inset: 0;
+    filter: drop-shadow(0 0 2px rgba(var(--hue), .85)) drop-shadow(0 0 7px rgba(var(--hue), .38));
+}
+.surf.offworld .knob .arc {
+    inset: 0;
+    background: conic-gradient(from 225deg,
+        rgb(var(--hue)) 0turn var(--pct, .35turn),
+        rgba(var(--hue), var(--ring-off)) var(--pct, .35turn) .75turn,
+        transparent .75turn 1turn);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+    filter: none;
+}
+.surf.offworld .knob .core {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(from 225deg,
+        color-mix(in srgb, rgb(var(--hue)) 35%, #FFFFFF) 0turn var(--pct, .35turn),
+        transparent var(--pct, .35turn) 1turn);
+    -webkit-mask: radial-gradient(farthest-side,
+        transparent calc(100% - 2.6px), #000 calc(100% - 2.6px), #000 calc(100% - 1.4px), transparent calc(100% - 1.4px));
+    mask: radial-gradient(farthest-side,
+        transparent calc(100% - 2.6px), #000 calc(100% - 2.6px), #000 calc(100% - 1.4px), transparent calc(100% - 1.4px));
+}
+.surf.offworld .knob .knobcap {
+    position: absolute; inset: 7px; border-radius: 50%;
+    background: var(--gunmetal);
+    box-shadow:
+        inset 0 1px 0 rgba(214, 232, 226, .14),
+        inset 0 0 0 1px rgba(0, 0, 0, .55),
+        1px 3px 5px rgba(0, 0, 0, .75);
+}
+/* the line is on the cap, from just inside its edge to a quarter of the way in */
+.surf.offworld .knob .ptr {
+    left: 50%; top: 0; width: 2px; height: 50%; margin-left: -1px;
+    border-radius: 1px;
+    background: linear-gradient(180deg,
+        transparent 0, transparent 10px,
+        var(--deck-ink) 10px, var(--deck-ink) 76%,
+        transparent 76%);
+    box-shadow: none;
+    transform-origin: 50% 100%;
+}
+.surf.offworld .knob.detent .dial::after { top: -8px; background: var(--deck-ink2); }
+.surf.offworld .knob .kval { color: var(--deck-ink); }
+
+/* ------------------------------------------------------------ faders */
+/* a slot cut into the plate, a neon tube in the slot for the value, and a
+   gunmetal cap with a lit line across it */
+.surf.offworld .fader { padding: 9px 0; }
+.surf.offworld .fader .slot {
+    width: 6px; border-radius: 3px;
+    background: var(--well);
+    box-shadow: inset 1px 2px 3px rgba(0, 0, 0, .95), 0 1px 0 rgba(214, 232, 226, .07);
+}
+.surf.offworld .fader .fill {
+    left: 1px; right: 1px; border-radius: 2px;
+    background: linear-gradient(90deg,
+        rgb(var(--hue)) 0 1px, color-mix(in srgb, rgb(var(--hue)) 35%, #FFFFFF) 1px 3px, rgb(var(--hue)) 3px 4px);
+    box-shadow: 0 0 5px rgba(var(--hue), .85), 0 0 13px rgba(var(--hue), .38);
+}
+.surf.offworld .fader .capbar {
+    left: -9px; right: -9px; height: 14px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #3B413F 0%, #242928 42%, #121514 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(214, 232, 226, .20),
+        inset 0 0 0 1px rgba(0, 0, 0, .60),
+        1px 3px 4px rgba(0, 0, 0, .80);
+}
+.surf.offworld .fader .capbar::after {
+    left: 3px; right: 3px; height: 2px; margin-top: -1px;
+    border-radius: 1px;
+    background: rgb(var(--hue));
+    box-shadow: 0 0 5px rgba(var(--hue), .90);
+    opacity: 1;
+}
+.surf.offworld .fader .ticks i { background: rgba(214, 232, 226, .10); }
+
+/* ------------------------------------------------- two axis controls */
+/* a dark screen with a faint grid in the control's color, and the puck is a light */
+.surf.offworld .xy .field2 {
+    inset: 3px; border-radius: 2px;
+    background: radial-gradient(90% 90% at 50% 45%, #0C1414 0%, var(--well) 100%);
+    box-shadow: inset 1px 2px 4px rgba(0, 0, 0, .90);
+}
+.surf.offworld .xy .field2::before {
+    background-image:
+        linear-gradient(rgba(var(--hue), .10) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--hue), .10) 1px, transparent 1px);
+    background-size: 12.5% 25%, 12.5% 25%;
+}
+.surf.offworld .xy .cross { background: rgba(var(--hue), .45); box-shadow: 0 0 5px rgba(var(--hue), .50); }
+.surf.offworld .xy .trail { background: rgba(var(--hue), .22); box-shadow: 0 0 6px rgba(var(--hue), .35); }
+.surf.offworld .xy .puck {
+    background: radial-gradient(circle,
+        #FFFFFF 0 28%, color-mix(in srgb, rgb(var(--hue)) 35%, #FFFFFF) 46%, rgb(var(--hue)) 72%, rgba(var(--hue), .60) 100%);
+    box-shadow: 0 0 8px rgba(var(--hue), .95), 0 0 22px rgba(var(--hue), .50), 0 0 46px rgba(var(--hue), .20);
+}
+
+/* ------------------------------------------------------------ meters */
+/* a well with neon segments. `.surf.offworld .meter i` outranks the base
+   `.meter i.lit`, so the three lit zones are named again */
+.surf.offworld .ctl.meter {
+    background: var(--well);
+    box-shadow: inset 1px 2px 3px rgba(0, 0, 0, .90), 0 1px 0 rgba(214, 232, 226, .06);
+}
+.surf.offworld .meter i { background: rgba(214, 232, 226, .07); }
+.surf.offworld .meter i.lit { background: rgb(var(--h1)); box-shadow: 0 0 5px rgba(var(--h1), .75); }
+.surf.offworld .meter i.lit.warn { background: rgb(var(--h3)); box-shadow: 0 0 5px rgba(var(--h3), .75); }
+.surf.offworld .meter i.lit.hot { background: rgb(var(--h4)); box-shadow: 0 0 5px rgba(var(--h4), .75); }
+
+/* --------------------------------------------- text, sections, tabs */
+.surf.offworld .surftext.h1 { font-weight: 400; letter-spacing: .16em; }
+.surf.offworld .surftext.readout {
+    color: rgb(var(--h3));
+    text-shadow: 0 0 6px rgba(var(--h3), .70), 0 0 16px rgba(var(--h3), .30);
+}
+
+/* a section is a module of the same metal bolted to the wall, a step lighter
+   than the wall and throwing a shadow on it, with its name in neon */
+.surf.offworld .ctlpanel {
+    border-radius: 3px;
+    background:
+        radial-gradient(120% 80% at 0% 0%, rgba(214, 232, 226, .035) 0%, rgba(214, 232, 226, 0) 55%),
+        var(--module);
+    box-shadow:
+        inset 0 1px 0 rgba(214, 232, 226, .09),
+        inset 1px 0 0 rgba(214, 232, 226, .04),
+        inset 0 0 0 1px rgba(0, 0, 0, .55),
+        2px 3px 0 rgba(0, 0, 0, .38),
+        4px 8px 14px rgba(0, 0, 0, .50);
+}
+/* the modules are as dirty as the wall: the same stains, dark only, under the controls */
+.surf.offworld .ctlpanel::before {
+    content: "";
+    position: absolute; inset: 0;
+    border-radius: inherit;
+    background: url("23-offworld-stains.svg") 0 0 / 512px 512px repeat;
+    filter: brightness(0);
+    opacity: .55;
+    pointer-events: none;
+}
+.surf.offworld .ctlpanel > .ptitle {
+    top: 7px; left: 11px; padding: 0;
+    background: none;
+    font-size: 10px; font-weight: 600; letter-spacing: .22em;
+    color: color-mix(in srgb, rgb(var(--hue)) 70%, #FFFFFF);
+    text-shadow:
+        0 0 1px rgba(var(--hue), .90),
+        0 0 5px rgba(var(--hue), .75),
+        0 0 13px rgba(var(--hue), .40),
+        0 6px 14px rgba(var(--hue), .24);
+}
+
+/* a page tab is a switch like the rest: a plate with a tube, lit for the page you are on */
+.surf.offworld .pagetabs .tab {
+    position: relative;
+    border-radius: 3px;
+    background: var(--plate);
+    box-shadow: var(--lip), var(--edge), var(--drop);
+    color: var(--deck-ink2);
+}
+.surf.offworld .pagetabs .tab::after {
+    content: "";
+    position: absolute; left: 7px; right: 7px; bottom: 3px; height: 2px;
+    border-radius: 1px;
+    background: rgba(var(--h1), var(--tube-off));
+}
+.surf.offworld .pagetabs .tab.sel {
+    background:
+        linear-gradient(0deg, rgba(var(--h1), var(--wash-on)), rgba(var(--h1), var(--wash-on))),
+        var(--plate);
+    box-shadow: var(--lip), inset 0 0 0 1px rgba(var(--h1), .38), 0 0 10px rgba(var(--h1), .24), var(--drop);
+    color: var(--deck-ink);
+}
+.surf.offworld .pagetabs .tab.sel::after {
+    background: color-mix(in srgb, rgb(var(--h1)) 35%, #FFFFFF);
+    box-shadow: 0 0 3px rgba(var(--h1), .95), 0 0 9px rgba(var(--h1), .50);
+}
+
+/* the explanation board shows each layer of the wall on its own, laid three times over */
+.surf.offworld .wallpart {
+    position: absolute; overflow: hidden;
+    border-radius: 3px;
+    background: #181B1A;
+    box-shadow: inset 0 0 0 1px rgba(214, 232, 226, .12), var(--drop);
+}
+.surf.offworld .wallpart.blocks {
+    background:
+        url("23-offworld-blocks.svg") 0 0 / 128px 128px repeat,
+        url("23-offworld-blocks.svg") 0 0 / 128px 128px repeat,
+        url("23-offworld-blocks.svg") 0 0 / 128px 128px repeat,
+        #181B1A;
+}
+.surf.offworld .wallpart.stains {
+    background:
+        url("23-offworld-stains.svg") 0 0 / 512px 512px repeat,
+        url("23-offworld-stains.svg") 0 0 / 512px 512px repeat,
+        url("23-offworld-stains.svg") 0 0 / 512px 512px repeat,
+        #181B1A;
+}
+.surf.offworld .wallpart.rain {
+    background:
+        url("23-offworld-rain.svg") 0 0 / 240px 240px repeat,
+        url("23-offworld-rain.svg") 0 0 / 240px 240px repeat,
+        url("23-offworld-rain.svg") 0 0 / 240px 240px repeat,
+        #181B1A;
+}
+.surf.offworld .wallpart.light {
+    background:
+        repeating-linear-gradient(155deg,
+            rgba(206, 228, 236, 0) 0, rgba(206, 228, 236, .195) 3px 8px, rgba(206, 228, 236, 0) 11px 22px),
+        radial-gradient(80% 55% at 64% -6%, rgba(88, 146, 146, .36) 0%, rgba(88, 146, 146, 0) 70%),
+        radial-gradient(60% 45% at 8% 106%, rgba(255, 164, 84, .21) 0%, rgba(255, 164, 84, 0) 70%),
+        #181B1A;
+}
+.surf.offworld .wallpart.light::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(125% 100% at 50% 40%,
+        rgba(8, 9, 10, 0) 48%, rgba(8, 9, 10, .16) 76%, rgba(8, 9, 10, .30) 100%);
+}

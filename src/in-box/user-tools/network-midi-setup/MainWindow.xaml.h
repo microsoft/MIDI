@@ -82,6 +82,29 @@ namespace winrt::midinetworksetup::implementation
         winrt::fire_and_forget OnBlockRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnForgetKnownClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        // RTP-MIDI pages
+        winrt::fire_and_forget OnConnectRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnRetryRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnDisconnectRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnCustomizeRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCopyRtpEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnMonitorRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnMonitorRtpHostConnectionClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        void OnRtpManualConnectFieldChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
+        void OnRtpManualConnectPortChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        winrt::fire_and_forget OnRtpManualConnectClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        winrt::fire_and_forget OnCreateRtpHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCreateRtpHostFieldChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
+        void OnCreateRtpHostPortModeChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnStartStopRtpHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnDeleteRtpHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        winrt::fire_and_forget OnDisconnectRtpRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnBlockRtpRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnForgetRtpKnownClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
     private:
         // everything the service knows, gathered off the UI thread in one pass
         struct ServiceSnapshot
@@ -101,6 +124,15 @@ namespace winrt::midinetworksetup::implementation
 
             // allow and deny list entries, keyed by the host entry identifier
             std::unordered_map<std::wstring, std::vector<::midinetworksetup::KnownClientEntry>> KnownClients{};
+
+            // RTP-MIDI keeps everything, remembered decisions included, in the service, so none of
+            // it is read from the configuration file
+            bool RtpAvailable{ false };
+            bool RtpGathered{ false };
+            collections::IVectorView<midi2rtp::MidiRtpAdvertisedHost> RtpAdvertisedHosts{ nullptr };
+            collections::IVectorView<midi2rtp::MidiRtpConfiguredClient> RtpConfiguredClients{ nullptr };
+            collections::IVectorView<midi2rtp::MidiRtpConfiguredHost> RtpConfiguredHosts{ nullptr };
+            collections::IVectorView<midi2rtp::MidiRtpPendingRemoteClient> RtpPendingRemoteClients{ nullptr };
         };
 
         void StartWatcher() noexcept;
@@ -110,12 +142,23 @@ namespace winrt::midinetworksetup::implementation
         void StopRefreshTimer() noexcept;
 
         winrt::fire_and_forget RequestRefreshAsync() noexcept;
-        static ServiceSnapshot GatherSnapshot() noexcept;
+        static ServiceSnapshot GatherSnapshot(_In_ bool const includeNetworkMidi2, _In_ bool const includeRtp) noexcept;
 
         void ApplySnapshot(ServiceSnapshot const& snapshot) noexcept;
         void ApplyPendingInvitations(ServiceSnapshot const& snapshot) noexcept;
         void ApplyRemoteHosts(ServiceSnapshot const& snapshot) noexcept;
         void ApplyLocalHosts(ServiceSnapshot const& snapshot) noexcept;
+        void ApplyRtpRemoteHosts(ServiceSnapshot const& snapshot) noexcept;
+        void ApplyRtpLocalHosts(ServiceSnapshot const& snapshot) noexcept;
+
+        // Lowercased host names and addresses of every Network MIDI 2.0 device in the snapshot. An
+        // RTP-MIDI session on one of those machines is flagged, because Network MIDI 2.0 is the
+        // better way to reach it.
+        static std::vector<std::wstring> CollectNetworkMidi2Identities(_In_ ServiceSnapshot const& snapshot) noexcept;
+        bool IsNetworkMidi2Machine(
+            _In_ winrt::hstring const& hostName,
+            _In_ collections::IVectorView<winrt::hstring> const& addresses) const noexcept;
+        bool IsNetworkMidi2Machine(_In_ winrt::hstring const& hostNameOrAddress) const noexcept;
 
         // Whether anything is watching for connection requests while this window is closed. Only
         // reports: the notifications app is started by the customer, never by this app.
@@ -142,9 +185,13 @@ namespace winrt::midinetworksetup::implementation
 
         void UpdateManualConnectButton() noexcept;
         void UpdateCreateHostButtonState() noexcept;
+        void UpdateRtpManualConnectButton() noexcept;
+        void UpdateCreateRtpHostButtonState() noexcept;
 
         void SetRemoteStatus(winrt::hstring const& text) noexcept;
         void SetLocalStatus(winrt::hstring const& text) noexcept;
+        void SetRtpRemoteStatus(winrt::hstring const& text) noexcept;
+        void SetRtpLocalStatus(winrt::hstring const& text) noexcept;
 
         // A status line describes something that just happened, so it stops being true within
         // seconds. Shows the text, then fades it away rather than leaving a stale claim on screen.
@@ -153,9 +200,15 @@ namespace winrt::midinetworksetup::implementation
             winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer& timer,
             winrt::hstring const& text) noexcept;
 
-        // False when the transport is missing or older than the verbs this app needs. It has
-        // already shown the customer why by the time it returns.
+        // False when neither transport is usable. Network MIDI 2.0 has to be installed and new
+        // enough for the verbs this app needs; RTP-MIDI pages are only offered when it is
+        // installed at all. It has already shown the customer why by the time it returns.
         bool VerifyTransportIsUsable() noexcept;
+
+        // Network MIDI 2.0 checks the capabilities it needs, so an older transport is reported
+        // rather than failing one operation at a time.
+        static bool IsNetworkMidi2TransportUsable() noexcept;
+        static bool IsRtpTransportUsable() noexcept;
 
         // yes / cancel confirmation, used before anything destructive
         foundation::IAsyncOperation<bool> ConfirmAsync(winrt::hstring const& title, winrt::hstring const& message);
@@ -191,10 +244,28 @@ namespace winrt::midinetworksetup::implementation
 
         // Shows the customization for an endpoint which already exists and saves the result. The
         // MIDI 1.0 ports choice is handled separately, because it is decided when the endpoint is
-        // built rather than written to it.
+        // built rather than written to it. RTP-MIDI endpoints always have their one MIDI 1.0 port,
+        // so for them that part of the dialog is hidden.
         foundation::IAsyncOperation<bool> ShowCustomizeDialogAsync(
-            midinetworksetup::RemoteHostItem const item,
+            winrt::hstring const endpointDeviceId,
+            winrt::hstring const clientKey,
+            bool const isRtpMidi,
             std::shared_ptr<winrt::hstring> errorMessage);
+
+        winrt::fire_and_forget ConnectRtpRemoteHostAsync(
+            midinetworksetup::RtpRemoteHostItem const item,
+            winrt::hstring const customEndpointName);
+
+        // Network MIDI 2.0 is the better choice when a machine offers both, so connecting over
+        // RTP-MIDI to one of those asks first. It never refuses: the customer decides.
+        foundation::IAsyncOperation<bool> ConfirmRtpAlongsideNetworkMidi2Async(winrt::hstring const deviceName);
+
+        // The service keeps an always or never decision only until it restarts. This writes the
+        // host's lasting decisions, as the service now holds them, to the configuration file.
+        static bool SaveRtpKnownClients(_In_ winrt::guid const& hostId, _Out_ winrt::hstring& errorMessage) noexcept;
+
+        // Which RTP-MIDI error an entry last hit, as something a person can act on
+        static winrt::hstring DescribeRtpClientProblem(_In_ int32_t const lastErrorCode) noexcept;
 
         static winrt::hstring DescribeLatency(uint64_t const ticks) noexcept;
         static winrt::hstring JoinAddresses(collections::IVectorView<winrt::hstring> const& addresses) noexcept;
@@ -216,6 +287,8 @@ namespace winrt::midinetworksetup::implementation
         winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_refreshTimer{ nullptr };
         winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_remoteStatusTimer{ nullptr };
         winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_localStatusTimer{ nullptr };
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_rtpRemoteStatusTimer{ nullptr };
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_rtpLocalStatusTimer{ nullptr };
 
         // Holding a NumberBox spinner raises ValueChanged on every step, and each one would
         // otherwise be a round trip to the service and a rewrite of the configuration file.
@@ -229,6 +302,20 @@ namespace winrt::midinetworksetup::implementation
 
         collections::IObservableVector<midinetworksetup::LocalHostItem> m_localHosts{
             winrt::single_threaded_observable_vector<midinetworksetup::LocalHostItem>() };
+
+        collections::IObservableVector<midinetworksetup::RtpRemoteHostItem> m_rtpRemoteHosts{
+            winrt::single_threaded_observable_vector<midinetworksetup::RtpRemoteHostItem>() };
+
+        collections::IObservableVector<midinetworksetup::LocalHostItem> m_rtpLocalHosts{
+            winrt::single_threaded_observable_vector<midinetworksetup::LocalHostItem>() };
+
+        // decided once at startup, so the pages on offer do not change under the customer
+        bool m_networkMidi2Usable{ false };
+        bool m_rtpUsable{ false };
+        bool m_rtpMissingReported{ false };
+
+        // refreshed with every snapshot, from the UI thread only
+        std::vector<std::wstring> m_networkMidi2Identities{};
 
         std::atomic<bool> m_refreshInProgress{ false };
 

@@ -40,6 +40,9 @@ namespace winrt::midiglass::implementation
     {
         namespace automation = ::winrt::Microsoft::UI::Xaml::Automation;
 
+        // The name column of every row.
+        constexpr double RowLabelWidth = 150.0;
+
         media::SolidColorBrush ThemeBrush(_In_ wchar_t const* key)
         {
             return xaml::Application::Current().Resources()
@@ -52,7 +55,7 @@ namespace winrt::midiglass::implementation
 
             text.Text(resources::GetString(key));
             text.FontSize(12.0);
-            text.Width(118.0);
+            text.Width(RowLabelWidth);
             text.TextWrapping(xaml::TextWrapping::Wrap);
             text.VerticalAlignment(xaml::VerticalAlignment::Center);
             text.Foreground(ThemeBrush(L"TextFillColorSecondaryBrush"));
@@ -68,7 +71,7 @@ namespace winrt::midiglass::implementation
             row.Margin({ 0, 0, 0, 7 });
 
             controls::ColumnDefinition labelColumn{};
-            labelColumn.Width(xaml::GridLengthHelper::FromValueAndType(118.0, xaml::GridUnitType::Pixel));
+            labelColumn.Width(xaml::GridLengthHelper::FromValueAndType(RowLabelWidth, xaml::GridUnitType::Pixel));
 
             controls::ColumnDefinition fieldColumn{};
             fieldColumn.Width(xaml::GridLengthHelper::FromValueAndType(1.0, xaml::GridUnitType::Star));
@@ -551,6 +554,14 @@ namespace winrt::midiglass::implementation
 
         AddThemeNote(L"ThemeDeckPictureNote");
 
+        AddThemeSwitchRow(L"ThemeRowDeckRepeats", m_theme.Deck.ImageRepeats,
+            [edit](bool on)
+            {
+                edit([on](glass::Theme& theme) { theme.Deck.ImageRepeats = on; });
+            });
+
+        AddThemeNote(L"ThemeDeckRepeatsNote");
+
         AddThemeColorRow(L"ThemeRowDeckTop", m_theme.Deck.Color, false,
             [edit, color](std::wstring const& code)
             {
@@ -675,6 +686,15 @@ namespace winrt::midiglass::implementation
                 edit([on](glass::Theme& theme) { theme.NamesInsideSwitches = on; });
             });
 
+        AddThemeComboRow(L"ThemeRowSwitchNames",
+            { L"ThemeSwitchNamesCenter", L"ThemeSwitchNamesTopLeft" },
+            static_cast<int32_t>(m_theme.SwitchNames),
+            [edit](int32_t index)
+            {
+                edit([index](glass::Theme& theme)
+                    { theme.SwitchNames = static_cast<glass::SwitchNamePlacement>(index); });
+            });
+
         AddThemeColorRow(L"ThemeRowNeutralColor", m_theme.NeutralColor, true,
             [edit, color](std::wstring const& code)
             {
@@ -690,6 +710,22 @@ namespace winrt::midiglass::implementation
             });
 
         AddThemeNote(L"ThemeInkNote");
+
+        AddThemeColorRow(L"ThemeRowOnInk", m_theme.OnInkColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.OnInkColor, true); });
+            });
+
+        AddThemeNote(L"ThemeOnInkNote");
+
+        AddThemeSwitchRow(L"ThemeRowRestTintOnPlate", m_theme.RestTintOnPlate,
+            [edit](bool on)
+            {
+                edit([on](glass::Theme& theme) { theme.RestTintOnPlate = on; });
+            });
+
+        AddThemeNote(L"ThemeRestTintOnPlateNote");
 
         // ---- the plate ----
 
@@ -797,6 +833,13 @@ namespace winrt::midiglass::implementation
                 edit([code, color](glass::Theme& theme) { color(code, theme.NeutralRimColor, false); });
             });
 
+        AddThemeSliderRow(L"ThemeRowRimThickness", L"ThemeUnitPixels", 1, 6, m_theme.RimThickness,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.RimThickness = static_cast<int32_t>(std::lround(value)); });
+            });
+
         // ---- the value ----
 
         AddThemeGroupHeading(L"ThemeGroupValue", false);
@@ -829,6 +872,30 @@ namespace winrt::midiglass::implementation
             {
                 edit([on](glass::Theme& theme) { theme.ArcGlow = on; });
             });
+
+        AddThemeSliderRow(L"ThemeRowArcThickness", L"ThemeUnitPixels", 0, 12, m_theme.ArcThickness,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.ArcThickness = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeNote(L"ThemeArcThicknessNote");
+
+        AddThemeSwitchRow(L"ThemeRowArcRoundEnds", m_theme.ArcRoundEnds,
+            [edit](bool on)
+            {
+                edit([on](glass::Theme& theme) { theme.ArcRoundEnds = on; });
+            });
+
+        AddThemeSliderRow(L"ThemeRowValueCore", L"ThemeUnitPercent", 0, 100, m_theme.ValueCorePercent,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.ValueCorePercent = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeNote(L"ThemeValueCoreNote");
 
         AddThemeComboRow(L"ThemeRowValueStrip",
             { L"ThemeStripBottom", L"ThemeStripTop", L"ThemeStripNone" },
@@ -963,6 +1030,14 @@ namespace winrt::midiglass::implementation
                     { theme.RecessShadePercent = static_cast<int32_t>(std::lround(value)); });
             });
 
+        AddThemeColorRow(L"ThemeRowRecessLip", m_theme.RecessLipColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.RecessLipColor, true); });
+            });
+
+        AddThemeNote(L"ThemeRecessLipNote");
+
         AddThemeColorRow(L"ThemeRowWellColor", m_theme.WellColor, true,
             [edit, color](std::wstring const& code)
             {
@@ -970,6 +1045,21 @@ namespace winrt::midiglass::implementation
             });
 
         AddThemeNote(L"ThemeWellNote");
+
+        AddThemeSwitchRow(L"ThemeRowWellFillsControl", m_theme.WellFillsControl,
+            [edit](bool on)
+            {
+                edit([on](glass::Theme& theme) { theme.WellFillsControl = on; });
+            });
+
+        AddThemeNote(L"ThemeWellFillsControlNote");
+
+        AddThemeSliderRow(L"ThemeRowWellGloss", L"ThemeUnitPercent", 0, 100, m_theme.WellGlossPercent,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.WellGlossPercent = static_cast<int32_t>(std::lround(value)); });
+            });
 
         // ---- knobs ----
 
@@ -1021,6 +1111,15 @@ namespace winrt::midiglass::implementation
                     { theme.KnobTickCount = static_cast<int32_t>(std::lround(value)); });
             });
 
+        AddThemeSliderRow(L"ThemeRowKnobKnurl", nullptr, 0, 120, m_theme.KnobKnurlCount,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.KnobKnurlCount = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeNote(L"ThemeKnobKnurlNote");
+
         // ---- switches ----
 
         AddThemeGroupHeading(L"ThemeGroupSwitches", false);
@@ -1048,6 +1147,62 @@ namespace winrt::midiglass::implementation
                 edit([index](glass::Theme& theme)
                     { theme.LampShape = static_cast<glass::LampStyle>(index); });
             });
+
+        AddThemeComboRow(L"ThemeRowLampPosition",
+            { L"ThemeLampTopCenter", L"ThemeLampTopRight" },
+            static_cast<int32_t>(m_theme.LampPosition),
+            [edit](int32_t index)
+            {
+                edit([index](glass::Theme& theme)
+                    { theme.LampPosition = static_cast<glass::LampPlacement>(index); });
+            });
+
+        AddThemeColorRow(L"ThemeRowLampHolder", m_theme.LampHolderColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.LampHolderColor, true); });
+            });
+
+        AddThemeSliderRow(L"ThemeRowLampGlow", L"ThemeUnitPercentOrFollow", -1, 100, m_theme.LampGlowPercent,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.LampGlowPercent = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeNote(L"ThemeLampGlowNote");
+
+        AddThemeComboRow(L"ThemeRowSwitchShape",
+            { L"ThemeSwitchShapePlate", L"ThemeSwitchShapeKeycap" },
+            static_cast<int32_t>(m_theme.SwitchShape),
+            [edit](int32_t index)
+            {
+                edit([index](glass::Theme& theme)
+                    { theme.SwitchShape = static_cast<glass::SwitchShapeStyle>(index); });
+            });
+
+        AddThemeColorRow(L"ThemeRowKeycapTop", m_theme.KeycapTopColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.KeycapTopColor, true); });
+            });
+
+        AddThemeColorRow(L"ThemeRowKeycapTopEnd", m_theme.KeycapTopEndColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.KeycapTopEndColor, true); });
+            });
+
+        AddThemeNote(L"ThemeKeycapNote");
+
+        AddThemeSliderRow(L"ThemeRowPressTravel", L"ThemeUnitPixels", 0, 8, m_theme.PressTravelPixels,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.PressTravelPixels = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeNote(L"ThemePressTravelNote");
 
         AddThemeSwitchRow(L"ThemeRowNeutralCaps", m_theme.NeutralCaps,
             [edit](bool on)
@@ -1131,6 +1286,156 @@ namespace winrt::midiglass::implementation
                 edit([on](glass::Theme& theme) { theme.RuleFades = on; });
             });
 
+        AddThemeSliderRow(L"ThemeRowPanelRecess", L"ThemeUnitPercent", 0, 100, m_theme.PanelRecessPercent,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.PanelRecessPercent = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeNote(L"ThemePanelRecessNote");
+
+        {
+            wchar_t const* const stripeKeys[]
+            {
+                L"ThemeRowStripeOne", L"ThemeRowStripeTwo", L"ThemeRowStripeThree", L"ThemeRowStripeFour",
+            };
+
+            static_assert(std::size(stripeKeys) == glass::MaximumStripeCount);
+
+            for (size_t stripe = 0; stripe < std::size(stripeKeys); ++stripe)
+            {
+                AddThemeColorRow(stripeKeys[stripe], m_theme.StripeColors[stripe], true,
+                    [edit, color, stripe](std::wstring const& code)
+                    {
+                        edit([code, color, stripe](glass::Theme& theme) { color(code, theme.StripeColors[stripe], true); });
+                    });
+            }
+        }
+
+        AddThemeSliderRow(L"ThemeRowStripeWidth", L"ThemeUnitPixels", 1, 16, m_theme.StripeWidth,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.StripeWidth = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeNote(L"ThemeStripesNote");
+
+        // The picture laid over every section, in black. The same chooser the deck's picture
+        // uses, and the same folder.
+        {
+            auto row = RowHost();
+
+            auto label = RowLabel(L"ThemeRowSectionTexture");
+            controls::Grid::SetColumn(label, 0);
+            row.Children().Append(label);
+
+            controls::TextBlock name{};
+            name.Text(m_theme.SectionTexture.empty()
+                ? resources::GetString(L"ThemeDeckPictureNone")
+                : winrt::hstring{ m_theme.SectionTexture });
+            name.FontSize(12.0);
+            name.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
+            name.VerticalAlignment(xaml::VerticalAlignment::Center);
+            controls::Grid::SetColumn(name, 1);
+            row.Children().Append(name);
+
+            auto const rebuildSoon = [](winrt::weak_ref<EditorWindow> const& weak)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->DispatcherQueue().TryEnqueue([weak]()
+                            {
+                                if (auto again = weak.get())
+                                {
+                                    again->RebuildThemeProperties();
+                                }
+                            });
+                    }
+                };
+
+            controls::Button choose{};
+            choose.Content(box_value(resources::GetString(L"ThemeDeckPictureChoose")));
+            choose.FontSize(12.0);
+            automation::AutomationProperties::SetName(choose, resources::GetString(L"ThemeSectionTextureChooseName"));
+
+            choose.Click([weak = get_weak(), rebuildSoon](auto&&, auto&&)
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr)
+                    {
+                        return;
+                    }
+
+                    auto const picked = strong->PickBackgroundImageFile(true);
+
+                    if (picked.empty())
+                    {
+                        return;
+                    }
+
+                    auto const stored = glass::CopyDeckImageToThemes(picked);
+
+                    if (stored.empty())
+                    {
+                        return;
+                    }
+
+                    strong->EditTheme([stored](glass::Theme& theme) { theme.SectionTexture = stored; });
+
+                    rebuildSoon(weak);
+                });
+
+            controls::Button remove{};
+            remove.Content(box_value(resources::GetString(L"ThemeDeckPictureRemove")));
+            remove.FontSize(12.0);
+            remove.IsEnabled(!m_theme.SectionTexture.empty());
+            automation::AutomationProperties::SetName(remove, resources::GetString(L"ThemeSectionTextureRemoveName"));
+
+            remove.Click([weak = get_weak(), rebuildSoon](auto&&, auto&&)
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr)
+                    {
+                        return;
+                    }
+
+                    strong->EditTheme([](glass::Theme& theme) { theme.SectionTexture.clear(); });
+
+                    rebuildSoon(weak);
+                });
+
+            controls::StackPanel buttons{};
+            buttons.Orientation(controls::Orientation::Horizontal);
+            buttons.Spacing(6.0);
+            buttons.Children().Append(choose);
+            buttons.Children().Append(remove);
+            controls::Grid::SetColumn(buttons, 2);
+            row.Children().Append(buttons);
+
+            ThemePropertyPanel().Children().Append(row);
+        }
+
+        AddThemeSliderRow(L"ThemeRowSectionTextureStrength", L"ThemeUnitPercent", 0, 100, m_theme.SectionTexturePercent,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.SectionTexturePercent = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeNote(L"ThemeSectionTextureNote");
+
+        AddThemeSwitchRow(L"ThemeRowNeonLetters", m_theme.NeonLetters,
+            [edit](bool on)
+            {
+                edit([on](glass::Theme& theme) { theme.NeonLetters = on; });
+            });
+
+        AddThemeNote(L"ThemeNeonLettersNote");
+
         // ---- the piano keyboard ----
 
         AddThemeGroupHeading(L"ThemeGroupKeyboard", false);
@@ -1185,6 +1490,30 @@ namespace winrt::midiglass::implementation
                 edit([value](glass::Theme& theme)
                     { theme.PersistenceMilliseconds = static_cast<int32_t>(std::lround(value / 10.0) * 10); });
             });
+
+        AddThemeSliderRow(L"ThemeRowGlowFall", L"ThemeUnitPixels", 0, 32, m_theme.GlowFallPixels,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.GlowFallPixels = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeNote(L"ThemeGlowFallNote");
+
+        AddThemeSliderRow(L"ThemeRowFlare", L"ThemeUnitPercent", 0, 100, m_theme.FlarePercent,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.FlarePercent = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeColorRow(L"ThemeRowFlareColor", m_theme.FlareColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.FlareColor, true); });
+            });
+
+        AddThemeNote(L"ThemeFlareNote");
 
         // ---- the glass over the whole page ----
 
@@ -1252,6 +1581,15 @@ namespace winrt::midiglass::implementation
 
         AddThemeNote(L"ThemeGrainNote");
 
+        AddThemeComboRow(L"ThemeRowGrainStyle",
+            { L"ThemeGrainSpeckle", L"ThemeGrainBrushed", L"ThemeGrainFine" },
+            static_cast<int32_t>(m_theme.Overlay.Grain),
+            [edit](int32_t index)
+            {
+                edit([index](glass::Theme& theme)
+                    { theme.Overlay.Grain = static_cast<glass::GrainStyle>(index); });
+            });
+
         AddThemeSliderRow(L"ThemeRowGrainStreak", nullptr, 1, 64, m_theme.Overlay.GrainStreak,
             [edit](double value)
             {
@@ -1260,6 +1598,28 @@ namespace winrt::midiglass::implementation
             });
 
         AddThemeNote(L"ThemeGrainStreakNote");
+
+        AddThemeSliderRow(L"ThemeRowRain", L"ThemeUnitPercent", 0, 100, m_theme.Overlay.RainPercent,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.Overlay.RainPercent = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeColorRow(L"ThemeRowRainColor", m_theme.Overlay.RainColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.Overlay.RainColor, true); });
+            });
+
+        AddThemeSliderRow(L"ThemeRowRainSpeed", L"ThemeUnitPixelsPerSecond", 0, 600, m_theme.Overlay.RainSpeed,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.Overlay.RainSpeed = static_cast<int32_t>(std::lround(value / 10.0) * 10); });
+            });
+
+        AddThemeNote(L"ThemeRainNote");
 
         // ---- the meter's three zones ----
 
@@ -1287,6 +1647,14 @@ namespace winrt::midiglass::implementation
                         { theme.MeterSlots[static_cast<size_t>(zone)] = index; });
                 });
         }
+
+        AddThemeColorRow(L"ThemeRowMeterUnlit", m_theme.MeterUnlitColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.MeterUnlitColor, true); });
+            });
+
+        AddThemeNote(L"ThemeMeterUnlitNote");
 
         m_updatingSettings = false;
     }

@@ -40,6 +40,12 @@ namespace miditroubleshooter
         std::wstring ModulePath{};
         std::wstring ModuleVersion{};
 
+        // the subkey under Transport Plugins. Empty for the built-in entries, which have none.
+        std::wstring KeyName{};
+
+        // FILETIME of the last write to the subkey, or zero when it could not be read
+        uint64_t KeyLastWriteTime{ 0 };
+
         bool Enabled{ true };
         bool EnabledValuePresent{ false };
         bool ModuleRegistered{ false };
@@ -107,6 +113,9 @@ namespace miditroubleshooter
 
     // Just the transports, for the service health page.
     std::vector<TransportRegistrationInfo> ScanRegisteredTransports() noexcept;
+
+    // Needs administrator rights. The service reads this only when it starts.
+    bool TrySetTransportEnabled(_In_ std::wstring const& keyName, _In_ bool const enabled) noexcept;
 
     RepairResult ApplyRegistryRepair(RegistryRepairPlan const& plan) noexcept;
 

@@ -421,6 +421,16 @@ void RuntimeSurfaceTests::NothingIsSaturatedAtRest()
             continue;
         }
 
+        // The one exception, and it is deliberate: the Groovy pair are drawn in heavy flat
+        // lines, and a plate there is only 1.41 : 1 from its page, so the line in the control's
+        // own color IS the structure. Nothing else on them glows or fills at rest.
+        if (theme.Name == L"Groovy" || theme.Name == L"Groovy Dark")
+        {
+            VERIFY_ARE_EQUAL(0, theme.GlowStrength);
+            VERIFY_ARE_EQUAL(0.0, theme.FillAtRest);
+            continue;
+        }
+
         auto const control = MakeControl(glass::ControlKind::Fader, 0);
         auto const colors = glass::ResolveControlColors(control, theme);
 

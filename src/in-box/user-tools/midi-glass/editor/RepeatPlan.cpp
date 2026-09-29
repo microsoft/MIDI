@@ -256,7 +256,10 @@ namespace glass
             }
 
             // A repeated channel strip is a strip of its own, not one more member of the first.
-            RegroupCopies(set);
+            for (auto& regrouped : RegroupCopies(set))
+            {
+                result.Regrouped.push_back(std::move(regrouped));
+            }
 
             for (auto& control : set)
             {

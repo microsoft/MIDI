@@ -69,7 +69,7 @@ Use [MidiNetworkConfiguredClient]({{ site.baseurl }}/sdk-reference/Transports/Ne
 
 ## Persistence
 
-Hosts and clients created with this API are temporary, and go away when the service restarts. To keep one, also pass the same configuration object to `MidiServiceTransportPluginConfigManager.SaveUpdate`. MIDI Settings and Network MIDI 2.0 Setup do this for you.
+Hosts and clients created with this API are temporary, and go away when the service restarts. To keep one, also pass the same configuration object to `MidiServiceTransportPluginConfigManager.SaveUpdate`. MIDI Settings and Network MIDI Setup do this for you.
 
 To keep a host's allow and deny decisions after a restart, save a [MidiNetworkHostKnownClientsConfig]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkHostKnownClientsConfig/) the same way. The service reads those lists when it starts, but it never saves them itself.
 

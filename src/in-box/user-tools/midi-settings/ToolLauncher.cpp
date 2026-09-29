@@ -19,9 +19,9 @@ namespace midisettings
             wchar_t const* ExecutableName;
         };
 
-        // %ProgramFiles%\Windows MIDI Services\Tools\<folder>\<exe>. The folder names are a
-        // contract with the installers, so they must match build\build-sdk.ps1 $GuiTools and
-        // the transport packages that carry their own setup app.
+        // %ProgramFiles%\Windows MIDI Services\Tools\<folder>\<exe> is where earlier previews
+        // installed each tool. The installers now put every tool in Tools itself, which the
+        // sibling lookup below finds.
         constexpr ToolDefinition ToolDefinitions[] =
         {
             { MidiTool::LoopbackSetup,  L"LoopSetup",       L"midiloopbacksetup.exe" },

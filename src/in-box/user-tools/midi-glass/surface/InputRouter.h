@@ -121,11 +121,14 @@ namespace glass
             double Value{ 0.0 };
             double ValueY{ 0.0 };
 
-            // A platter: where the hand is on its face, and how far it has pushed it round
-            // since it landed.
+            // A platter, or a knob turned round and round: where the finger is on its face, and
+            // how far it has pushed it round since it landed.
             double StartAngle{ 0.0 };
             double TurnedDegrees{ 0.0 };
             double TurnDegreesForFullRange{ 180.0 };
+
+            // False while the finger is too near a knob's middle for its angle to mean anything.
+            bool TurnAnchored{ false };
 
             // A switch: how many slices its face is cut into.
             int32_t SwitchPositions{ 0 };

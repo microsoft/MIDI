@@ -462,10 +462,10 @@
     <value>A compatible version of Network MIDI 2.0 is either not installed or not enabled on this PC.</value>
   </data>
   <data name="TransportUnavailableBar.Title" xml:space="preserve">
-    <value>Network MIDI 2.0 is not available</value>
+    <value>Network MIDI is not available</value>
   </data>
   <data name="TransportUnavailableBar.Message" xml:space="preserve">
-    <value>A compatible version of Network MIDI 2.0 is either not installed or not enabled on this PC.</value>
+    <value>A compatible version of Network MIDI 2.0 or RTP-MIDI is either not installed or not enabled on this PC.</value>
   </data>
   <data name="ManualConnectButton.Content" xml:space="preserve">
     <value>Connect</value>
@@ -836,5 +836,185 @@
   </data>
   <data name="HostDetailsPolicyLabel.Text" xml:space="preserve">
     <value>New connections</value>
+  </data>
+  <data name="RemoteHostsNavigationItem.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Network devices, Network MIDI 2.0</value>
+    <comment>Starts with the visible label. The two transports each have a Network devices page.</comment>
+  </data>
+  <data name="LocalHostsNavigationItem.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>This PC, Network MIDI 2.0</value>
+  </data>
+  <data name="SettingsNavigationItem.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Transport settings, Network MIDI 2.0</value>
+  </data>
+  <data name="NetworkMidi2NavigationHeader.Content" xml:space="preserve">
+    <value>Network MIDI 2.0</value>
+    <comment>Product name. Do not translate.</comment>
+  </data>
+  <data name="RtpNavigationHeader.Content" xml:space="preserve">
+    <value>RTP-MIDI</value>
+    <comment>Protocol name. Do not translate.</comment>
+  </data>
+  <data name="RtpRemoteHostsNavigationItem.Content" xml:space="preserve">
+    <value>Network devices</value>
+  </data>
+  <data name="RtpRemoteHostsNavigationItem.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Network devices, RTP-MIDI</value>
+  </data>
+  <data name="RtpLocalHostsNavigationItem.Content" xml:space="preserve">
+    <value>This PC</value>
+  </data>
+  <data name="RtpLocalHostsNavigationItem.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>This PC, RTP-MIDI</value>
+  </data>
+  <data name="RtpTransportUnavailableError" xml:space="preserve">
+    <value>The RTP-MIDI transport is not available. Check that Windows MIDI Services is installed and running.</value>
+  </data>
+  <data name="RtpRemoteHostsHeader.Text" xml:space="preserve">
+    <value>RTP-MIDI devices</value>
+  </data>
+  <data name="RtpRemoteHostsDescription.Text" xml:space="preserve">
+    <value>RTP-MIDI sessions found on your network, and the ones this PC is connected to. Apple devices and many network MIDI interfaces use RTP-MIDI.</value>
+  </data>
+  <data name="RtpRemoteHostsListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>RTP-MIDI devices</value>
+  </data>
+  <data name="NoRtpRemoteHostsText.Text" xml:space="preserve">
+    <value>Looking for RTP-MIDI devices...</value>
+  </data>
+  <data name="RtpAlsoNetworkMidi2Text.Text" xml:space="preserve">
+    <value>This device also offers Network MIDI 2.0, which is the better choice when a device supports both.</value>
+  </data>
+  <data name="RtpHostNameLabel.Text" xml:space="preserve">
+    <value>Host name</value>
+  </data>
+  <data name="RtpManualNameTextBox.Header" xml:space="preserve">
+    <value>Name that device will see</value>
+  </data>
+  <data name="RtpManualNameTextBox.PlaceholderText" xml:space="preserve">
+    <value>This PC's name</value>
+  </data>
+  <data name="RtpRemoteHostNotFound" xml:space="preserve">
+    <value>The device could not be found on the network.</value>
+  </data>
+  <data name="RtpRemoteHostNoAnswer" xml:space="preserve">
+    <value>The device did not answer.</value>
+  </data>
+  <data name="RtpRemoteHostRefused" xml:space="preserve">
+    <value>The device turned down the connection.</value>
+  </data>
+  <data name="RtpRemoteHostEnded" xml:space="preserve">
+    <value>The device ended the connection.</value>
+  </data>
+  <data name="RtpRemoteHostLost" xml:space="preserve">
+    <value>The connection to the device was lost.</value>
+  </data>
+  <data name="RtpRemoteHostRetryingFormat" xml:space="preserve">
+    <value>{0} Windows will keep trying.</value>
+    <comment>{0} is a sentence saying what went wrong.</comment>
+  </data>
+  <data name="RtpRemoteHostStoppedFormat" xml:space="preserve">
+    <value>{0} Select Try again to connect.</value>
+    <comment>{0} is a sentence saying what went wrong. "Try again" is the label of the button beside it.</comment>
+  </data>
+  <data name="RtpStatisticsFormat" xml:space="preserve">
+    <value>{0} · {1} packets sent · {2} received · {3} lost · {4} repaired</value>
+    <comment>{0} is the round trip time. {3} counts packets which never arrived, and {4} how many of those were rebuilt from the recovery data the next packet carried.</comment>
+  </data>
+  <data name="RtpConnectAnywayTitle" xml:space="preserve">
+    <value>Connect with RTP-MIDI anyway?</value>
+  </data>
+  <data name="RtpConnectAnywayMessageFormat" xml:space="preserve">
+    <value>{0} also offers Network MIDI 2.0, which is the better choice when a device supports both. Connecting both ways gives you two sets of endpoints for the same device. Connect with RTP-MIDI anyway?</value>
+    <comment>{0} is the device name or address.</comment>
+  </data>
+  <data name="RtpPendingInvitationDetailFormat" xml:space="preserve">
+    <value>From {0}, using RTP-MIDI.</value>
+    <comment>{0} is the address the request came from.</comment>
+  </data>
+  <data name="RtpChangeNotSavedFormat" xml:space="preserve">
+    <value>The change was made, but Windows could not save it, so it lasts only until the MIDI service restarts. {0}</value>
+    <comment>{0} is the reason the save failed, and may be empty.</comment>
+  </data>
+  <data name="RtpDecisionNotSavedFormat" xml:space="preserve">
+    <value>Your decision about {0} is in effect, but Windows could not save it, so it lasts only until the MIDI service restarts. {1}</value>
+    <comment>{0} is the device name. {1} is the reason the save failed, and may be empty.</comment>
+  </data>
+  <data name="RtpBlockUnnamedNotPossible" xml:space="preserve">
+    <value>This device did not send a name, so Windows cannot tell it apart from other devices to block it. You can still disconnect it.</value>
+  </data>
+  <data name="RtpLocalHostsHeader.Text" xml:space="preserve">
+    <value>RTP-MIDI hosts on this PC</value>
+  </data>
+  <data name="RtpLocalHostsDescription.Text" xml:space="preserve">
+    <value>A host lets Apple devices and other RTP-MIDI software on your network connect to this PC. Most people need only one.</value>
+  </data>
+  <data name="CreateRtpHostButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Create an RTP-MIDI host</value>
+  </data>
+  <data name="RtpLocalHostsListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>RTP-MIDI hosts on this PC</value>
+  </data>
+  <data name="NoRtpLocalHostsText.Text" xml:space="preserve">
+    <value>This PC does not have an RTP-MIDI host yet. Create one so Apple devices and other RTP-MIDI software can connect to it.</value>
+  </data>
+  <data name="RtpAdvertisedNameLabel.Text" xml:space="preserve">
+    <value>Name advertised on the network</value>
+  </data>
+  <data name="RtpHostDefaultName" xml:space="preserve">
+    <value>RTP-MIDI host</value>
+    <comment>Used for a host which has no name of its own yet.</comment>
+  </data>
+  <data name="RtpHostStarting" xml:space="preserve">
+    <value>Starting...</value>
+  </data>
+  <data name="RtpHostNotStartedFormat" xml:space="preserve">
+    <value>Not started yet (error {0}). Windows keeps trying.</value>
+    <comment>{0} is an error code such as 0x80072740.</comment>
+  </data>
+  <data name="RtpHostNotAdvertised" xml:space="preserve">
+    <value>Not advertised</value>
+  </data>
+  <data name="RtpConnectionConnectingFormat" xml:space="preserve">
+    <value>Connecting from {0}, port {1}...</value>
+  </data>
+  <data name="RtpHostCreatedNotStartedFormat" xml:space="preserve">
+    <value>{0} was created, but has not started yet. Windows keeps trying, and the host shows why.</value>
+  </data>
+  <data name="CreateRtpHostDialog.Title" xml:space="preserve">
+    <value>Create an RTP-MIDI host</value>
+  </data>
+  <data name="CreateRtpHostDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="CreateRtpHostDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="RtpHostNameHelp.Text" xml:space="preserve">
+    <value>Leave this empty to use this PC's name.</value>
+  </data>
+  <data name="RtpHostServiceInstanceNameTextBox.Header" xml:space="preserve">
+    <value>Name advertised on the network</value>
+  </data>
+  <data name="RtpHostServiceInstanceNameHelp.Text" xml:space="preserve">
+    <value>Leave this empty to advertise the name above. Periods are removed. If another device on your network already uses the name, Windows picks a slightly different one.</value>
+  </data>
+  <data name="RtpHostNameTooLong" xml:space="preserve">
+    <value>A name can be at most 63 bytes long. Most letters and numbers take one byte, but accented letters and many other characters take two or more.</value>
+  </data>
+  <data name="RtpHostAutomaticPortCheckBox.Content" xml:space="preserve">
+    <value>Let Windows choose the port</value>
+  </data>
+  <data name="RtpHostAutomaticPortHelp.Text" xml:space="preserve">
+    <value>Windows tries port 5004 first, which is where other RTP-MIDI software looks, and takes another one if that is in use.</value>
+  </data>
+  <data name="RtpHostPortHelp.Text" xml:space="preserve">
+    <value>RTP-MIDI also uses the next port up. Keeping one port makes it easier for other devices to find this PC again after a restart.</value>
+  </data>
+  <data name="RtpHostSendRecoveryJournalCheckBox.Content" xml:space="preserve">
+    <value>Help other devices recover notes lost on the network</value>
+  </data>
+  <data name="RtpHostSendRecoveryJournalHelp.Text" xml:space="preserve">
+    <value>Each packet carries a short summary of recent notes, so a device which misses a packet can still end a note that would otherwise hang. Turn this off only for a device which cannot handle it.</value>
   </data>
 </root>

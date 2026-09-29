@@ -76,6 +76,13 @@ namespace glass
         constexpr float WellCornerRadius = 2.0f;
         constexpr float WellShadePixels = 5.0f;
 
+        // A display that is a window the size of the control.
+        constexpr float WindowCornerRadius = 3.0f;
+
+        // Inside a window, a value keeps its own color: the grid faint, the crosshair at half.
+        constexpr double WindowGridStrength = 0.12;
+        constexpr double WindowCrossStrength = 0.50;
+
         // Which semitones in an octave are black, counting from C.
         constexpr bool BlackInOctave[12]
         {
@@ -235,10 +242,37 @@ namespace glass
             return;
         }
 
+        // On a theme whose displays are windows, the window is the whole control, whatever part
+        // of it the control asked for.
+        auto corner = WellCornerRadius;
+
+        if (visual.Windowed)
+        {
+            x = 0.0f;
+            y = 0.0f;
+            width = visual.Width;
+            height = visual.Height;
+            corner = WindowCornerRadius;
+        }
+        else if (colors.RecessLip.A != 0)
+        {
+            // The light catching the lower edge of the well: the well again, a pixel lower,
+            // under it. A window does this for itself once whatever it shows is drawn.
+            auto lipGeometry = compositor.CreateRoundedRectangleGeometry();
+            lipGeometry.Size(float2{ width, height });
+            lipGeometry.Offset(float2{ x, y + 1.0f });
+            lipGeometry.CornerRadius(float2{ corner, corner });
+
+            auto lipShape = compositor.CreateSpriteShape(lipGeometry);
+            lipShape.FillBrush(BrushFor(compositor, colors.RecessLip));
+
+            visual.Shape.Shapes().Append(lipShape);
+        }
+
         auto geometry = compositor.CreateRoundedRectangleGeometry();
         geometry.Size(float2{ width, height });
         geometry.Offset(float2{ x, y });
-        geometry.CornerRadius(float2{ WellCornerRadius, WellCornerRadius });
+        geometry.CornerRadius(float2{ corner, corner });
 
         auto well = compositor.CreateSpriteShape(geometry);
         well.FillBrush(BrushFor(compositor, colors.Well));
@@ -310,7 +344,7 @@ namespace glass
 
         // The wave itself. Composition has no polyline, so it is a run of line segments with
         // round joins, which at these sizes is indistinguishable from one path.
-        auto waveColor = colors.Pipe;
+        auto waveColor = visual.Windowed ? colors.WellValue : colors.Pipe;
         waveColor.A = static_cast<uint8_t>(std::lround(waveColor.A * 0.85));
 
         auto const waveBrush = BrushFor(compositor, waveColor);
@@ -340,7 +374,7 @@ namespace glass
         visual.PuckGeometry.Center(points.empty() ? float2{ fieldX, fieldY } : place(points.front()));
 
         auto beadShape = compositor.CreateSpriteShape(visual.PuckGeometry);
-        beadShape.FillBrush(BrushFor(compositor, colors.Pipe));
+        beadShape.FillBrush(BrushFor(compositor, visual.Windowed ? colors.WellValue : colors.Pipe));
 
         visual.ValueShape.Shapes().Append(beadShape);
 
@@ -720,12 +754,14 @@ namespace glass
         auto beat = colors.Marks;
         beat.A = static_cast<uint8_t>(std::min<int>(beat.A, 62));
 
-        auto litSlot = colors.Pipe;
+        auto const stepValue = visual.Windowed ? colors.WellValue : colors.Pipe;
+
+        auto litSlot = stepValue;
         litSlot.A = static_cast<uint8_t>(std::lround(litSlot.A * 0.45));
 
         // Dimmer at rest than the pipe on other controls, so the step being played stands out
         // from across a room.
-        auto restBar = colors.Pipe;
+        auto restBar = stepValue;
         restBar.A = static_cast<uint8_t>(std::lround(restBar.A * 0.40));
 
         auto const slotBrush = BrushFor(compositor, slot);
@@ -733,7 +769,7 @@ namespace glass
 
         visual.StepSlotLitFill = BrushFor(compositor, litSlot);
         visual.StepBarRestFill = BrushFor(compositor, restBar);
-        visual.StepBarLitFill = BrushFor(compositor, colors.Pipe);
+        visual.StepBarLitFill = BrushFor(compositor, stepValue);
 
         // Triplets count in threes; anything slower than a step a beat puts every step on one.
         auto const perBeat = std::max(1, static_cast<int32_t>(std::lround(control.Steps.StepsPerBeat)));
@@ -925,6 +961,17 @@ namespace glass
     {
         auto const joystick = control.Kind == ControlKind::Joystick;
 
+        // Inside a window a value keeps its own color, even on a theme that draws every other
+        // value in one.
+        auto const lit = visual.Windowed ? colors.WellValue : colors.Pipe;
+
+        auto const withStrength = [](ThemeColor color, double strength) noexcept
+            {
+                color.A = static_cast<uint8_t>(std::lround(255.0 * std::clamp(strength, 0.0, 1.0)));
+
+                return color;
+            };
+
         auto const fieldX = FieldInset;
         auto const fieldY = FieldInset;
         auto const fieldW = std::max(width - FieldInset * 2.0f, 1.0f);
@@ -1015,7 +1062,7 @@ namespace glass
                         : float2{ fieldX + fieldW * fraction, fieldY });
 
                     auto shape = compositor.CreateSpriteShape(geometry);
-                    shape.FillBrush(BrushFor(compositor, colors.Marks));
+                    shape.FillBrush(BrushFor(compositor, visual.Windowed ? withStrength(lit, WindowGridStrength) : colors.Marks));
 
                     visual.Grid.Shapes().Append(shape);
                 }
@@ -1028,8 +1075,10 @@ namespace glass
         // room; a joystick's rings already do that job, so it goes without.
         if (!joystick)
         {
-            auto crossColor = colors.Pipe;
-            crossColor.A = static_cast<uint8_t>(std::lround(crossColor.A * 0.38));
+            auto crossColor = lit;
+            crossColor.A = visual.Windowed
+                ? static_cast<uint8_t>(std::lround(255.0 * WindowCrossStrength))
+                : static_cast<uint8_t>(std::lround(crossColor.A * 0.38));
 
             visual.CrossAcross = compositor.CreateRoundedRectangleGeometry();
             visual.CrossAcross.Size(float2{ fieldW, CrossThickness });
@@ -1082,7 +1131,37 @@ namespace glass
         }
         else
         {
-            puckShape.FillBrush(BrushFor(compositor, colors.Pipe));
+            // On a theme whose lights have a white hot heart, the puck is white in the middle
+            // and its own color at the edge, like a lamp seen head on.
+            if (colors.ValueCore.A != 0)
+            {
+                auto hot = compositor.CreateRadialGradientBrush();
+                hot.EllipseCenter(float2{ 0.5f, 0.5f });
+                hot.EllipseRadius(float2{ 0.5f, 0.5f });
+
+                auto rim = lit;
+                rim.A = static_cast<uint8_t>(std::lround(lit.A * 0.60));
+
+                for (auto const& [offset, color] : {
+                    std::pair{ 0.0f, ThemeColor{ 255, 255, 255, 255 } },
+                    std::pair{ 0.28f, ThemeColor{ 255, 255, 255, 255 } },
+                    std::pair{ 0.46f, colors.ValueCore },
+                    std::pair{ 0.72f, lit },
+                    std::pair{ 1.0f, rim } })
+                {
+                    auto stop = compositor.CreateColorGradientStop();
+                    stop.Offset(offset);
+                    stop.Color(ToWindowsColor(color));
+
+                    hot.ColorStops().Append(stop);
+                }
+
+                puckShape.FillBrush(hot);
+            }
+            else
+            {
+                puckShape.FillBrush(BrushFor(compositor, lit));
+            }
 
             // The halo, the same way a value bar gets one: rings of the puck's own geometry,
             // widest and faintest first.
@@ -1103,7 +1182,7 @@ namespace glass
                         continue;
                     }
 
-                    auto glow = colors.Pipe;
+                    auto glow = lit;
                     glow.A = static_cast<uint8_t>(std::clamp(std::lround(255.0 * step), 0L, 255L));
 
                     auto glowShape = compositor.CreateSpriteShape(visual.PuckGeometry);
@@ -1115,6 +1194,19 @@ namespace glass
             }
 
             visual.ValueShape.Shapes().Append(puckShape);
+
+            // The puck is the biggest light on a page, so it throws the whole flare: a streak,
+            // a ring and a faint star, riding with it.
+            if (colors.Flare.A != 0 && theme.FlarePercent > 0)
+            {
+                visual.Flare = BuildFlare(compositor, colors, theme, visual.PuckRadius, true);
+
+                if (visual.Flare != nullptr)
+                {
+                    visual.Flare.Offset(float3{ visual.FieldX, visual.FieldY, 0.0f });
+                    visual.Root.Children().InsertAbove(visual.Flare, visual.ValueShape);
+                }
+            }
         }
     }
 
@@ -1373,8 +1465,10 @@ namespace glass
         visual.SweepGeometry.TrimStart(0.0f);
         visual.SweepGeometry.TrimEnd(0.0f);
 
+        auto const clockValue = visual.Windowed ? colors.WellValue : colors.Pipe;
+
         auto sweepShape = compositor.CreateSpriteShape(visual.SweepGeometry);
-        sweepShape.StrokeBrush(BrushFor(compositor, colors.Pipe));
+        sweepShape.StrokeBrush(BrushFor(compositor, clockValue));
         sweepShape.StrokeThickness(ClockRingThickness);
 
         visual.ValueShape.Shapes().Append(sweepShape);
@@ -1388,10 +1482,10 @@ namespace glass
         beatGeometry.Radius(float2{ beatRadius, beatRadius });
         beatGeometry.Center(center);
 
-        auto beatDim = colors.Pipe;
+        auto beatDim = clockValue;
         beatDim.A = static_cast<uint8_t>(std::lround(beatDim.A * 0.07));
 
-        auto beatLit = colors.Pipe;
+        auto beatLit = clockValue;
         beatLit.A = static_cast<uint8_t>(std::lround(beatLit.A * 0.55));
 
         visual.BeatOffBrush = BrushFor(compositor, beatDim).as<CompositionBrush>();
@@ -1405,7 +1499,7 @@ namespace glass
         visual.ValueShape.Shapes().Append(visual.BeatShape);
 
         // Four pips under it, one per beat in the bar.
-        auto pipLit = colors.Pipe;
+        auto pipLit = clockValue;
 
         auto pipDim = ReadableInk(DeckColor());
         pipDim.A = 36;
@@ -1476,6 +1570,11 @@ namespace glass
                 visual.FieldY + visual.FieldHeight * y };
 
             visual.PuckGeometry.Center(at);
+
+            if (visual.Flare != nullptr)
+            {
+                visual.Flare.Offset(float3{ at.x, at.y, 0.0f });
+            }
 
             // The joystick's dot of hue rides inside its cap.
             if (visual.SweepGeometry != nullptr && visual.Kind == ControlKind::Joystick)
@@ -1762,12 +1861,15 @@ namespace glass
 
             auto const colors = ResolveControlColors(control, theme);
 
+            // In a window the time is the window's own light, not an ink meant for the page.
+            auto const windowed = itemIndex < m_visuals.size() && m_visuals[itemIndex].Windowed;
+
             controls::TextBlock text{};
 
             // Monospace, or every tenth of a second shuffles the digits sideways.
             text.FontFamily(media::FontFamily{ L"Cascadia Mono, Consolas" });
             text.FontSize(std::clamp(height * 0.42, 11.0, 48.0));
-            text.Foreground(media::SolidColorBrush{ ToWindowsColor(colors.Pipe) });
+            text.Foreground(media::SolidColorBrush{ ToWindowsColor(windowed ? colors.WellValue : colors.Pipe) });
             text.IsHitTestVisible(false);
             text.TextAlignment(xaml::TextAlignment::Center);
             text.Width(width);
@@ -1968,12 +2070,16 @@ namespace glass
 
             auto const usable = std::max(height - ClockPipStripHeight, 8.0);
 
+            // Printed on the page, or lit inside a window where the theme makes one.
+            auto const windowed = itemIndex < m_visuals.size() && m_visuals[itemIndex].Windowed;
+            auto const behind = windowed ? theme.WellColor : DeckColor();
+
             controls::TextBlock text{};
 
             // Monospace, so the number does not shuffle sideways every beat.
             text.FontFamily(media::FontFamily{ L"Cascadia Mono, Consolas" });
             text.FontSize(std::clamp(std::min(width, usable) * 0.18, 9.0, 20.0));
-            text.Foreground(media::SolidColorBrush{ ToWindowsColor(ReadableInk(DeckColor())) });
+            text.Foreground(media::SolidColorBrush{ ToWindowsColor(ReadableInk(behind)) });
             text.IsHitTestVisible(false);
             text.TextAlignment(xaml::TextAlignment::Center);
             text.Width(width);
@@ -1981,8 +2087,6 @@ namespace glass
 
             xaml::Automation::AutomationProperties::SetAccessibilityView(
                 text, xaml::Automation::Peers::AccessibilityView::Raw);
-
-            UNREFERENCED_PARAMETER(theme);
 
             text.Measure(winrt::Windows::Foundation::Size{
                 static_cast<float>(width), std::numeric_limits<float>::infinity() });
@@ -2003,7 +2107,7 @@ namespace glass
 
             tempo.FontFamily(media::FontFamily{ L"Cascadia Mono, Consolas" });
             tempo.FontSize(std::clamp(width * 0.10, 8.0, 12.0));
-            tempo.Foreground(media::SolidColorBrush{ ToWindowsColor(ReadableInk(DeckColor())) });
+            tempo.Foreground(media::SolidColorBrush{ ToWindowsColor(ReadableInk(behind)) });
             tempo.Opacity(0.7);
             tempo.IsHitTestVisible(false);
             tempo.TextAlignment(xaml::TextAlignment::Center);

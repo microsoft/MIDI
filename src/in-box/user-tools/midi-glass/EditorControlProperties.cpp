@@ -79,11 +79,12 @@ namespace winrt::midiglass::implementation
         {
             glass::DragAxis::Vertical,
             glass::DragAxis::Horizontal,
+            glass::DragAxis::Circular,
         };
 
         constexpr wchar_t const* DragAxisKeys[]
         {
-            L"DragAxisVertical", L"DragAxisHorizontal",
+            L"DragAxisVertical", L"DragAxisHorizontal", L"DragAxisCircular",
         };
 
         static_assert(std::size(DragAxisOrder) == std::size(DragAxisKeys));
@@ -256,7 +257,7 @@ namespace winrt::midiglass::implementation
             return kind == glass::ControlKind::Image || kind == glass::ControlKind::Panel;
         }
 
-        bool IsDraggedInALine(_In_ glass::ControlKind kind) noexcept
+        bool ChoosesHowItIsDragged(_In_ glass::ControlKind kind) noexcept
         {
             return kind == glass::ControlKind::Knob || kind == glass::ControlKind::Encoder;
         }
@@ -575,7 +576,7 @@ namespace winrt::midiglass::implementation
 
             // ---- how it is dragged ----
 
-            auto const dragged = IsDraggedInALine(control.Kind);
+            auto const dragged = ChoosesHowItIsDragged(control.Kind);
 
             show(DragAxisPanel(), dragged);
 

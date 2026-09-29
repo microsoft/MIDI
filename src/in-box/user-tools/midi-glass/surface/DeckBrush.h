@@ -46,6 +46,10 @@ namespace glass
     // measured in page units at 87 per cent zoom is a beat pattern across the screen rather than
     // a row of scan lines, so the pitch is divided back out by it.
     //
+    // `pageScale` is how many of the element's own units one page unit is. A deck's repeating
+    // picture and its rain are part of the page, so they grow and shrink with it. `animate` lets
+    // the rain fall; the designer holds it still, the way it holds a stopwatch at zero.
+    //
     // A theme with no overlay clears whatever was there, so switching away from a tube theme
     // takes its glass with it.
     void ApplyDeckOverlay(
@@ -54,5 +58,7 @@ namespace glass
         _In_ double width,
         _In_ double height,
         _In_ double scale,
-        _In_ DeckOverlayLayer layer = DeckOverlayLayer::All);
+        _In_ DeckOverlayLayer layer = DeckOverlayLayer::All,
+        _In_ double pageScale = 1.0,
+        _In_ bool animate = false);
 }

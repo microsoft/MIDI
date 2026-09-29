@@ -48,6 +48,10 @@ namespace miditroubleshooter
 
         uint32_t ProcessId{ 0 };
 
+        // FILETIME the running service process started. Zero when it is not running, and also
+        // without administrator rights, which the query needs.
+        uint64_t ProcessStartTime{ 0 };
+
         // set when the query itself failed, for example because the service control manager
         // could not be opened
         std::wstring ErrorMessage{};

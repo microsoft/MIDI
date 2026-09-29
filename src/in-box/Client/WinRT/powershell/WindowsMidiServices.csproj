@@ -36,7 +36,7 @@
 
       <!-- Referenced projects bring their .pdb along by default. That drags the ~90 MB native SDK
            symbol file into the module folder, where nothing reads it. Release symbols are gathered
-           separately by build\build-sdk.ps1. -->
+           separately by build\build-all.ps1. -->
       <AllowedReferenceRelatedFileExtensions>.xml</AllowedReferenceRelatedFileExtensions>
 
   </PropertyGroup>

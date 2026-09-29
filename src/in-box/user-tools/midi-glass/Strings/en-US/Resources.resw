@@ -604,6 +604,33 @@
   <data name="CanvasMenuUngroup.KeyboardAcceleratorTextOverride" xml:space="preserve">
     <value>Ctrl+Shift+G</value>
   </data>
+  <data name="OutlineMenuGroup.Text" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="OutlineMenuGroup.KeyboardAcceleratorTextOverride" xml:space="preserve">
+    <value>Ctrl+G</value>
+  </data>
+  <data name="OutlineMenuUngroup.Text" xml:space="preserve">
+    <value>Ungroup</value>
+  </data>
+  <data name="OutlineMenuUngroup.KeyboardAcceleratorTextOverride" xml:space="preserve">
+    <value>Ctrl+Shift+G</value>
+  </data>
+  <data name="OutlineMenuRename.Text" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="OutlineMenuRename.KeyboardAcceleratorTextOverride" xml:space="preserve">
+    <value>F2</value>
+  </data>
+  <data name="OutlineGroupFormat" xml:space="preserve">
+    <value>Group {0}</value>
+  </data>
+  <data name="OutlineGroupAccessibleFormat" xml:space="preserve">
+    <value>{0}, {1} controls</value>
+  </data>
+  <data name="OutlineMemberAccessibleFormat" xml:space="preserve">
+    <value>{0}, in {1}</value>
+  </data>
   <data name="EditorLockButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Lock — not built yet</value>
   </data>
@@ -904,6 +931,12 @@
   <data name="CanvasMenuDelete.KeyboardAcceleratorTextOverride" xml:space="preserve">
     <value>Del</value>
   </data>
+  <data name="CanvasMenuRename.Text" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="CanvasMenuRename.KeyboardAcceleratorTextOverride" xml:space="preserve">
+    <value>F2</value>
+  </data>
   <data name="CanvasMenuToFront.Text" xml:space="preserve">
     <value>Bring to front</value>
   </data>
@@ -982,6 +1015,9 @@
   <data name="LabelPlacedInsideTop" xml:space="preserve">
     <value>Inside, at the top</value>
   </data>
+  <data name="LabelPlacedInsideTopLeft" xml:space="preserve">
+    <value>Inside, at the top left</value>
+  </data>
   <data name="LabelPlacedInsideCenter" xml:space="preserve">
     <value>Inside, in the middle</value>
   </data>
@@ -1014,6 +1050,12 @@
   </data>
   <data name="InspectorTitleText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>What this control is called</value>
+  </data>
+  <data name="InspectorTitleControlAccessibleName" xml:space="preserve">
+    <value>What this control is called</value>
+  </data>
+  <data name="InspectorTitleGroupAccessibleName" xml:space="preserve">
+    <value>What this group is called</value>
   </data>
   <data name="FontDialogTitle" xml:space="preserve">
     <value>Label font</value>
@@ -1740,8 +1782,11 @@
   <data name="DragAxisHorizontal" xml:space="preserve">
     <value>Left and right</value>
   </data>
+  <data name="DragAxisCircular" xml:space="preserve">
+    <value>Round and round</value>
+  </data>
   <data name="DragAxisCaption.Text" xml:space="preserve">
-    <value>A circle is hard to trace on glass, so a knob is dragged in a straight line instead. Up is more, or right is more for a row of knobs in a narrow strip.</value>
+    <value>Up is more, or right is more for a row of knobs in a narrow strip. Round and round turns it like a real knob: clockwise is more, and it turns from where it is instead of jumping to your finger. It works best on a big knob.</value>
   </data>
   <data name="SpringTargetCombo.Header" xml:space="preserve">
     <value>Springs back to</value>
@@ -2297,6 +2342,69 @@
   </data>
   <data name="InspectorManySelected" xml:space="preserve">
     <value>Several controls</value>
+  </data>
+  <data name="InspectorGroupSelectedFormat" xml:space="preserve">
+    <value>A group of {0} controls</value>
+  </data>
+  <data name="ManySendHeading.Text" xml:space="preserve">
+    <value>Where they send</value>
+  </data>
+  <data name="ManySendDeviceLabel.Text" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="ManySendGroupLabel.Text" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="ManySendChannelLabel.Text" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="ManySendDeviceCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Where all of their messages go</value>
+  </data>
+  <data name="ManySendGroupCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Group for all of their messages</value>
+  </data>
+  <data name="ManySendChannelCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Channel for all of their messages</value>
+  </data>
+  <data name="ManySendDevicesLink.Content" xml:space="preserve">
+    <value>Set up devices…</value>
+  </data>
+  <data name="ManySendCaptionOne" xml:space="preserve">
+    <value>Changes where their one message goes.</value>
+  </data>
+  <data name="ManySendCaptionFormat" xml:space="preserve">
+    <value>Changes where all {0} of their messages go. A blank box means they don't all agree yet. Pick a setting to give it to every one of them.</value>
+  </data>
+  <data name="ManyListenHeading.Text" xml:space="preserve">
+    <value>Where they listen</value>
+  </data>
+  <data name="ManyListenDeviceLabel.Text" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="ManyListenGroupLabel.Text" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="ManyListenChannelLabel.Text" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="ManyListenDeviceCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Device they all listen to</value>
+  </data>
+  <data name="ManyListenGroupCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Group they all listen on</value>
+  </data>
+  <data name="ManyListenChannelCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Channel they all listen on</value>
+  </data>
+  <data name="ManyListenCaptionOne" xml:space="preserve">
+    <value>Changes the one control here that follows what arrives.</value>
+  </data>
+  <data name="ManyListenCaptionFormat" xml:space="preserve">
+    <value>Changes the {0} controls here that follow what arrives. A blank box means they don't all agree yet. Pick a setting to give it to every one of them.</value>
+  </data>
+  <data name="ManyListenNothing" xml:space="preserve">
+    <value>None of these controls follow what arrives. Turn that on for each one on its own Listens tab.</value>
   </data>
   <data name="InspectorUnnamedControl" xml:space="preserve">
     <value>Unnamed</value>
@@ -3351,6 +3459,10 @@
   <data name="ThemePreviewHeading.Text" xml:space="preserve">
     <value>Live preview</value>
   </data>
+  <data name="ThemePreviewGroupName" xml:space="preserve">
+    <value>Mix</value>
+    <comment>The name on the group of faders in the theme editor's live preview. Keep it short.</comment>
+  </data>
   <data name="ThemeTravelsNote.Text" xml:space="preserve">
     <value>The theme travels inside the layout file, so a layout you send to somebody looks the way you built it even if they have never seen your theme.</value>
   </data>
@@ -3883,7 +3995,7 @@
     <value>Grain length</value>
   </data>
   <data name="ThemeGrainStreakNote" xml:space="preserve">
-    <value>At 1 the grain is fine specks. Longer, it turns into streaks running across the page, like brushed metal.</value>
+    <value>How long each streak of brushed grain runs across the page. Only brushed grain uses it.</value>
   </data>
   <data name="ThemeRowMeterSignal" xml:space="preserve">
     <value>Signal</value>
@@ -4232,5 +4344,221 @@
   </data>
   <data name="ImportThemeFailedDetail" xml:space="preserve">
     <value>That file is not a MIDI Glass theme.</value>
+  </data>
+  <data name="ThemeRowDeckRepeats" xml:space="preserve">
+    <value>Repeat the picture</value>
+  </data>
+  <data name="ThemeDeckRepeatsNote" xml:space="preserve">
+    <value>On, the picture is laid across the page at its own size, over and over, on top of the two colors below. Off, one copy fills the page. A pattern stretched to fill a page turns into a blur.</value>
+  </data>
+  <data name="ThemeRowSwitchNames" xml:space="preserve">
+    <value>Where a switch's name sits</value>
+  </data>
+  <data name="ThemeSwitchNamesCenter" xml:space="preserve">
+    <value>In the middle</value>
+  </data>
+  <data name="ThemeSwitchNamesTopLeft" xml:space="preserve">
+    <value>At the top left</value>
+  </data>
+  <data name="ThemeRowOnInk" xml:space="preserve">
+    <value>Name on a lit switch</value>
+  </data>
+  <data name="ThemeOnInkNote" xml:space="preserve">
+    <value>The color of a switch's name while the switch is on. Leave it empty to use the ink. If it can't be read on the lit color, the ink is used instead, and then whichever of a light or dark ink reads.</value>
+  </data>
+  <data name="ThemeRowRestTintOnPlate" xml:space="preserve">
+    <value>Resting color on the plate</value>
+  </data>
+  <data name="ThemeRestTintOnPlateNote" xml:space="preserve">
+    <value>A control's resting color is mixed into its plate instead of into the page, so a pad at rest is a pale shade of the plate rather than of the background.</value>
+  </data>
+  <data name="ThemeRowRimThickness" xml:space="preserve">
+    <value>Rim weight</value>
+  </data>
+  <data name="ThemeRowArcThickness" xml:space="preserve">
+    <value>Knob ring weight</value>
+  </data>
+  <data name="ThemeArcThicknessNote" xml:space="preserve">
+    <value>0 is the usual 4 px. Set it, and a knob's pointer and a fader's slot grow to match.</value>
+  </data>
+  <data name="ThemeRowArcRoundEnds" xml:space="preserve">
+    <value>Round ends</value>
+  </data>
+  <data name="ThemeRowValueCore" xml:space="preserve">
+    <value>Hot core</value>
+  </data>
+  <data name="ThemeValueCoreNote" xml:space="preserve">
+    <value>A lighter line down the middle of every lit value, like the white hot middle of a neon tube. The number is how far toward white it goes.</value>
+  </data>
+  <data name="ThemeRowRecessLip" xml:space="preserve">
+    <value>Lip under cutouts</value>
+  </data>
+  <data name="ThemeRecessLipNote" xml:space="preserve">
+    <value>A thin light line along the lower edge of anything cut into the surface: a slot, a display, a lamp holder or a pressed-in section. Leave it empty for none.</value>
+  </data>
+  <data name="ThemeRowWellFillsControl" xml:space="preserve">
+    <value>Displays are windows</value>
+  </data>
+  <data name="ThemeWellFillsControlNote" xml:space="preserve">
+    <value>Every display is a dark window the size of the control, with no plate round it, and what lights up inside keeps its own color.</value>
+  </data>
+  <data name="ThemeRowWellGloss" xml:space="preserve">
+    <value>Window reflection</value>
+  </data>
+  <data name="ThemeRowKnobKnurl" xml:space="preserve">
+    <value>Knob ridges</value>
+  </data>
+  <data name="ThemeKnobKnurlNote" xml:space="preserve">
+    <value>Ridges round the side of a knob, in the knob face's two colors. 0 is a smooth knob.</value>
+  </data>
+  <data name="ThemeRowLampPosition" xml:space="preserve">
+    <value>Where a round lamp sits</value>
+  </data>
+  <data name="ThemeLampTopCenter" xml:space="preserve">
+    <value>Top middle</value>
+  </data>
+  <data name="ThemeLampTopRight" xml:space="preserve">
+    <value>Top right corner</value>
+  </data>
+  <data name="ThemeRowLampHolder" xml:space="preserve">
+    <value>Lamp holder</value>
+  </data>
+  <data name="ThemeRowLampGlow" xml:space="preserve">
+    <value>Lamp glow</value>
+  </data>
+  <data name="ThemeLampGlowNote" xml:space="preserve">
+    <value>How strongly a lit lamp glows, apart from the glow above, so a lamp can light up the key round it on a theme where nothing else glows. Same follows the glow.</value>
+  </data>
+  <data name="ThemeRowSwitchShape" xml:space="preserve">
+    <value>Switch shape</value>
+  </data>
+  <data name="ThemeSwitchShapePlate" xml:space="preserve">
+    <value>A flat plate</value>
+  </data>
+  <data name="ThemeSwitchShapeKeycap" xml:space="preserve">
+    <value>A key</value>
+  </data>
+  <data name="ThemeRowKeycapTop" xml:space="preserve">
+    <value>Key top, back</value>
+  </data>
+  <data name="ThemeRowKeycapTopEnd" xml:space="preserve">
+    <value>Key top, front</value>
+  </data>
+  <data name="ThemeKeycapNote" xml:space="preserve">
+    <value>A key is a skirt in the plate's colors with a dished top set into it. Leave the top empty to work it out from the plate.</value>
+  </data>
+  <data name="ThemeRowPressTravel" xml:space="preserve">
+    <value>Key travel</value>
+  </data>
+  <data name="ThemePressTravelNote" xml:space="preserve">
+    <value>How far a switch goes down under a finger. A switch that's on stays half as far down. 0 is a switch that doesn't move.</value>
+  </data>
+  <data name="ThemeRowPanelRecess" xml:space="preserve">
+    <value>Sections pressed in</value>
+  </data>
+  <data name="ThemePanelRecessNote" xml:space="preserve">
+    <value>A section is a tray pressed into the surface, with a shadow along its top inside edge.</value>
+  </data>
+  <data name="ThemeRowStripeOne" xml:space="preserve">
+    <value>Stripe 1</value>
+  </data>
+  <data name="ThemeRowStripeTwo" xml:space="preserve">
+    <value>Stripe 2</value>
+  </data>
+  <data name="ThemeRowStripeThree" xml:space="preserve">
+    <value>Stripe 3</value>
+  </data>
+  <data name="ThemeRowStripeFour" xml:space="preserve">
+    <value>Stripe 4</value>
+  </data>
+  <data name="ThemeRowStripeWidth" xml:space="preserve">
+    <value>Stripe width</value>
+  </data>
+  <data name="ThemeStripesNote" xml:space="preserve">
+    <value>Bands of flat color that take the place of a section's outline and a line's color, from the outside in and from the top down. Leave them empty for a plain outline.</value>
+  </data>
+  <data name="ThemeRowSectionTexture" xml:space="preserve">
+    <value>Section picture</value>
+  </data>
+  <data name="ThemeSectionTextureChooseName" xml:space="preserve">
+    <value>Choose a picture for every section</value>
+  </data>
+  <data name="ThemeSectionTextureRemoveName" xml:space="preserve">
+    <value>Remove the section picture</value>
+  </data>
+  <data name="ThemeRowSectionTextureStrength" xml:space="preserve">
+    <value>Section picture strength</value>
+  </data>
+  <data name="ThemeSectionTextureNote" xml:space="preserve">
+    <value>Laid over every section in black, through the picture's own see-through parts, so it only ever darkens. It's for dirt and stains.</value>
+  </data>
+  <data name="ThemeRowNeonLetters" xml:space="preserve">
+    <value>Neon names</value>
+  </data>
+  <data name="ThemeNeonLettersNote" xml:space="preserve">
+    <value>A section's name and the words on a Text control glow in their own color.</value>
+  </data>
+  <data name="ThemeRowGlowFall" xml:space="preserve">
+    <value>Glow runs down</value>
+  </data>
+  <data name="ThemeGlowFallNote" xml:space="preserve">
+    <value>How much further a glow reaches below a control than above it, like light on a wet wall.</value>
+  </data>
+  <data name="ThemeRowFlare" xml:space="preserve">
+    <value>Lens flare</value>
+  </data>
+  <data name="ThemeRowFlareColor" xml:space="preserve">
+    <value>Flare color</value>
+  </data>
+  <data name="ThemeFlareNote" xml:space="preserve">
+    <value>A lit light throws a streak and a faint star. It's only decoration: the light coming on is still what shows the state. Leave the color empty for the light's own.</value>
+  </data>
+  <data name="ThemeRowGrainStyle" xml:space="preserve">
+    <value>Grain style</value>
+  </data>
+  <data name="ThemeGrainSpeckle" xml:space="preserve">
+    <value>Specks</value>
+  </data>
+  <data name="ThemeGrainBrushed" xml:space="preserve">
+    <value>Brushed</value>
+  </data>
+  <data name="ThemeGrainFine" xml:space="preserve">
+    <value>Fine</value>
+  </data>
+  <data name="ThemeRowRain" xml:space="preserve">
+    <value>Rain</value>
+  </data>
+  <data name="ThemeRowRainColor" xml:space="preserve">
+    <value>Rain color</value>
+  </data>
+  <data name="ThemeRowRainSpeed" xml:space="preserve">
+    <value>Rain speed</value>
+  </data>
+  <data name="ThemeUnitPixelsPerSecond" xml:space="preserve">
+    <value>{0} px/s</value>
+  </data>
+  <data name="ThemeRainNote" xml:space="preserve">
+    <value>Fine streaks of rain under the controls. It holds still while you're editing, and whenever Windows is set to show fewer animations.</value>
+  </data>
+  <data name="ThemeRowMeterUnlit" xml:space="preserve">
+    <value>Unlit segment</value>
+  </data>
+  <data name="ThemeMeterUnlitNote" xml:space="preserve">
+    <value>The color of a meter's lights while they're out. Leave it empty for each zone's own color, turned right down.</value>
+  </data>
+  <data name="ThemeCautionOffworld" xml:space="preserve">
+    <value>A busy wall, made for a dark room. Rain and stains are part of the page, so keep names on the sections rather than on the bare wall. The flares are only decoration: a light coming on is still what shows the state.</value>
+  </data>
+  <data name="ThemeCautionGroovy" xml:space="preserve">
+    <value>A bright page, made for a lit room. The six colors are close in brightness, so they're told apart by color alone: name your controls and group them by where they sit.</value>
+  </data>
+  <data name="ThemeCautionGroovyDark" xml:space="preserve">
+    <value>Made for a dark room. A switch that is on is a solid block of color, so keep colored switches to the ones that matter. The six colors are close in brightness, and with red-green color blindness red and avocado look alike.</value>
+  </data>
+  <data name="ThemeCautionSoftSector" xml:space="preserve">
+    <value>A light theme, so it's bright on a dark stage. Red, amber and green are the three colors hardest to tell apart with red-green color blindness. A switch that's on also stays pressed down, so its state isn't shown by color alone.</value>
+  </data>
+  <data name="ThemeCautionHardSector" xml:space="preserve">
+    <value>Red, amber and green are the three colors hardest to tell apart with red-green color blindness. A switch that's on also stays pressed down, so its state isn't shown by color alone.</value>
   </data>
 </root>

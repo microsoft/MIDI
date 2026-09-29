@@ -39,6 +39,9 @@ namespace midinetworksetup
         static constexpr uint32_t PageIndexRemoteHosts = 0;
         static constexpr uint32_t PageIndexLocalHosts = 1;
         static constexpr uint32_t PageIndexTransportSettings = 2;
+        static constexpr uint32_t PageIndexRtpRemoteHosts = 3;
+        static constexpr uint32_t PageIndexRtpLocalHosts = 4;
+        static constexpr uint32_t LastPageIndex = PageIndexRtpLocalHosts;
 
     private:
         AppSettings() noexcept;

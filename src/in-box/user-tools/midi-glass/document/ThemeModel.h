@@ -77,6 +77,46 @@ namespace glass
         Dot = 1,
     };
 
+    // Where a round lamp sits on a switch.
+    enum class LampPlacement
+    {
+        TopCenter = 0,
+
+        // In the corner, clear of a name printed at the top left, the way a keyboard's LED sits.
+        TopRight = 1,
+    };
+
+    // Where a name printed on a switch sits.
+    enum class SwitchNamePlacement
+    {
+        Center = 0,
+
+        // Top left, the way a keyboard prints the legend on a key.
+        TopLeft = 1,
+    };
+
+    // What a switch is shaped like.
+    enum class SwitchShapeStyle
+    {
+        Plate = 0,
+
+        // A key: a skirt with a dished top set into it, deeper at the front than at the back.
+        Keycap = 1,
+    };
+
+    // The texture laid over the deck.
+    enum class GrainStyle
+    {
+        // Specks a few pixels across: bead blasted or sanded metal.
+        Speckle = 0,
+
+        // Long light streaks along the page: brushed metal.
+        Brushed = 1,
+
+        // A fine noise in every pixel: stippled plastic, or paper.
+        Fine = 2,
+    };
+
     // What fills a grouping panel.
     enum class PanelFillStyle
     {
@@ -129,18 +169,6 @@ namespace glass
         SegmentedLamps = 1,
     };
 
-    // What color activity lights up in. Bone lights up white, because on a bone deck a control
-    // is already near-white and the only room left to say "this one just did something" is to
-    // take it the rest of the way.
-    //
-    // Superseded by BloomColor, which can say any color rather than these two. Still read from
-    // theme files written before that existed, and still what an untouched theme means.
-    enum class LightSource
-    {
-        ControlHue = 0,
-        White = 1,
-    };
-
     // The cap on a fader. Studio Dark's is a neutral machined bar with a hairline of the
     // control's hue through it; the tonal themes and Bigwig make the whole cap the hue.
     enum class ThumbStyle
@@ -158,6 +186,10 @@ namespace glass
 
         // A bare file name inside the shared assets folder, never a path out of it.
         std::wstring ImageFileName{};
+
+        // The picture repeats at its own size over the deck's colors instead of being stretched
+        // to cover the page. A pattern stretched to a page is a blur.
+        bool ImageRepeats{ false };
     };
 
     // The scan lines, the corner fall-off and the faceplate reflection: everything a theme lays
@@ -206,18 +238,32 @@ namespace glass
         // Alpha 0 means light and dark speckle worked out from the deck itself.
         ThemeColor GrainColor{ 0, 0, 0, 0 };
 
-        // How long one speck is along the page, in grain cells. One is a speck, which is
-        // sandpaper; forty or more is a streak, which is brushed metal.
+        // How long one streak of brushed grain is along the page, in grain cells.
         int32_t GrainStreak{ 1 };
+
+        GrainStyle Grain{ GrainStyle::Speckle };
+
+        // Fine slanted streaks of rain, under the controls, 0 to 100. Alpha 0 on the color
+        // means a cool white.
+        int32_t RainPercent{ 0 };
+        ThemeColor RainColor{ 0, 0, 0, 0 };
+
+        // How fast the rain falls, in pixels a second. It stands still when Windows asks for
+        // fewer animations.
+        int32_t RainSpeed{ 0 };
 
         bool IsEmpty() const noexcept
         {
             return (ScanLinePitch <= 0 || ScanLineStrength <= 0) &&
                 VignettePercent <= 0 &&
                 GrainPercent <= 0 &&
-                FaceplateSheenPercent <= 0;
+                FaceplateSheenPercent <= 0 &&
+                RainPercent <= 0;
         }
     };
+
+    // How many stripes a section's frame and a line can be drawn in.
+    constexpr int32_t MaximumStripeCount = 4;
 
     // Which hue slot each of a meter's three zones is drawn in. A meter is the one control where
     // a heat ramp does real work, and the trio is not the same on every theme: Bigwig follows
@@ -284,10 +330,11 @@ namespace glass
         // from the space behind it.
         ThemeColor ShadowColor{ 0, 0, 0, 255 };
 
-        LightSource Light{ LightSource::ControlHue };
-
         // What a control's activity lights up in, when it is not simply the control's own hue.
-        // Alpha 0 means work it out from Light, so nothing written before this existed moves.
+        // Alpha 0 means the control's own hue.
+        //
+        // Bone lights up white, because its plates are already near white and the only room
+        // left to say "this one just did something" is to take them the rest of the way.
         //
         // Three themes need a color here and none of them could be expressed by an enum. A
         // cathode ray tube's phosphor is blue-white, not white. An amber tube's halo is redder
@@ -535,6 +582,101 @@ namespace glass
         // The line fades out at both ends rather than stopping square.
         bool RuleFades{ true };
 
+        // Bands of flat color that stand in for a section's outline and a line's color, outside
+        // in and top down. Alpha 0 ends the list.
+        std::array<ThemeColor, MaximumStripeCount> StripeColors{
+            ThemeColor{ 0, 0, 0, 0 }, ThemeColor{ 0, 0, 0, 0 }, ThemeColor{ 0, 0, 0, 0 }, ThemeColor{ 0, 0, 0, 0 } };
+
+        // How wide each stripe is, in pixels.
+        int32_t StripeWidth{ 4 };
+
+        // ---- line weight ----
+
+        // How heavy a control's rim is, in pixels.
+        int32_t RimThickness{ 1 };
+
+        // How heavy a knob's arc is, in pixels. Zero is the usual four. When it is set, the
+        // pointer and a fader's slot grow with it.
+        int32_t ArcThickness{ 0 };
+
+        // A knob's arc has round ends, and a fader cap is a pill.
+        bool ArcRoundEnds{ false };
+
+        // ---- keys ----
+
+        SwitchShapeStyle SwitchShape{ SwitchShapeStyle::Plate };
+
+        // The dished top of a key. Alpha 0 works it out from the plate.
+        ThemeColor KeycapTopColor{ 0, 0, 0, 0 };
+        ThemeColor KeycapTopEndColor{ 0, 0, 0, 0 };
+
+        // Where a name printed on a switch sits.
+        SwitchNamePlacement SwitchNames{ SwitchNamePlacement::Center };
+
+        // How far a switch goes down under a finger, in pixels. A switch that is on stays
+        // half as far down. Zero is a switch that does not move.
+        int32_t PressTravelPixels{ 0 };
+
+        // Where a round lamp sits, what it is set into, and how strongly it glows when lit.
+        // Alpha 0 on the holder means a thin dark ring. Below zero on the glow means the glow.
+        LampPlacement LampPosition{ LampPlacement::TopCenter };
+        ThemeColor LampHolderColor{ 0, 0, 0, 0 };
+        int32_t LampGlowPercent{ -1 };
+
+        // Ridges round the side of a knob, alternating its face's two colors.
+        int32_t KnobKnurlCount{ 0 };
+
+        // ---- things cut into the surface ----
+
+        // A section is a tray pressed into the surface, with a shadow along its top inside edge.
+        int32_t PanelRecessPercent{ 0 };
+
+        // The light catching the lower edge of anything cut into the surface. Alpha 0 is none.
+        ThemeColor RecessLipColor{ 0, 0, 0, 0 };
+
+        // Every display is a dark window the size of the control, and what lights inside it
+        // keeps its own color even where the theme draws every other value in one color.
+        bool WellFillsControl{ false };
+
+        // A hard edged reflection across the upper left of a well, 0 to 100.
+        int32_t WellGlossPercent{ 0 };
+
+        // ---- neon ----
+
+        // Section names and the words on a Text control glow in their own color.
+        bool NeonLetters{ false };
+
+        // A lighter line down the middle of every lit value, this far toward white, 0 to 100.
+        int32_t ValueCorePercent{ 0 };
+
+        // How much further a glow reaches below a control than above it, in pixels.
+        int32_t GlowFallPixels{ 0 };
+
+        // A lit light throws a streak and a faint star, 0 to 100. Alpha 0 on the color means
+        // the light's own.
+        int32_t FlarePercent{ 0 };
+        ThemeColor FlareColor{ 0, 0, 0, 0 };
+
+        // A picture laid over every section in black through its own transparency, 0 to 100.
+        // It only ever darkens: dirt and stains.
+        std::wstring SectionTexture{};
+        int32_t SectionTexturePercent{ 0 };
+
+        // ---- meters ----
+
+        // An unlit segment. Alpha 0 means each zone's own color, turned right down.
+        ThemeColor MeterUnlitColor{ 0, 0, 0, 0 };
+
+        // ---- names ----
+
+        // The name on a switch that is on. Alpha 0, or a color that does not read on the lit
+        // switch, means the ink, and then whichever of a light or dark ink reads.
+        ThemeColor OnInkColor{ 0, 0, 0, 0 };
+
+        // A resting tint of the control's color is laid over its plate rather than over the
+        // deck.
+        bool RestTintOnPlate{ false };
+
         // ---- the piano keyboard ----
 
         // The keys, where a theme names them. Alpha 0 means a plain white and black. The light
@@ -671,9 +813,24 @@ namespace glass
     // Whether this theme lights up in a color of its own rather than in each control's hue.
     bool HasNamedBloomColor(_In_ Theme const& theme) noexcept;
 
-    // The named bloom color, or the one Light asks for. The control's own hue is not a color
-    // this can return, so ResolveControlColors asks HasNamedBloomColor first.
+    // The named bloom color, opaque. Only meaningful when HasNamedBloomColor says there is one.
     ThemeColor NamedBloomColor(_In_ Theme const& theme) noexcept;
+
+    // How many stripes the theme names, from the first.
+    int32_t StripeCount(_In_ Theme const& theme) noexcept;
+
+    // The rain's color.
+    ThemeColor EffectiveRainColor(_In_ Theme const& theme) noexcept;
+
+    // How strongly a lit round lamp glows, once "the same as the glow" is worked out.
+    int32_t EffectiveLampGlowPercent(_In_ Theme const& theme) noexcept;
+
+    // How heavy a knob's arc is, in pixels, once "the usual" is worked out.
+    float EffectiveArcThickness(_In_ Theme const& theme) noexcept;
+
+    // What a hue slot is drawn on, for measuring it. The deck, except on a theme whose colors
+    // only ever light inside its windows and lamp holders.
+    ThemeColor SlotBackdrop(_In_ Theme const& theme) noexcept;
 
     // ---- contrast, measured rather than guessed ----
 
@@ -696,7 +853,7 @@ namespace glass
         bool MeetsMinimum{ false };
     };
 
-    // Every slot measured against the deck. An image deck cannot be measured, so it reports
-    // against the deck color, which is what the image is laid over.
+    // Every slot measured against what it is drawn on: SlotBackdrop. An image deck cannot be
+    // measured, so it reports against the deck color, which is what the image is laid over.
     std::vector<SlotContrast> MeasureContrast(_In_ Theme const& theme) noexcept;
 }

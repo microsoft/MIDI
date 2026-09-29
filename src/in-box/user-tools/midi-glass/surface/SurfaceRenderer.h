@@ -90,6 +90,48 @@ namespace glass
         // is the only thing that knows how wide the name came out.
         comp::CompositionSpriteShape NotchShape{ nullptr };
 
+        // A section's frame, when a name is cut into it or it is drawn in stripes: one copy,
+        // clipped round the gap, so whatever is under the frame shows through the gap rather
+        // than a patch painted to look like it. Empty on every other control.
+        std::vector<comp::ShapeVisual> FrameParts{};
+
+        // How deep the frame is at its top, and how far in the name's gap starts.
+        float FrameBand{ 0.0f };
+        float FrameNotchStart{ 0.0f };
+
+        // A key's dished top, painted darker while it is held down.
+        comp::CompositionSpriteShape KeycapFace{ nullptr };
+        comp::CompositionBrush KeycapRestBrush{ nullptr };
+        comp::CompositionBrush KeycapHeldBrush{ nullptr };
+
+        // How far a switch goes down under a finger, and whether it stays half way down while
+        // it is on. Zero on every theme whose switches do not move.
+        float TravelPixels{ 0.0f };
+        bool TravelLatches{ false };
+
+        // The lighter line down the middle of a fader's fill or a switch's strip, moved with it.
+        comp::CompositionRoundedRectangleGeometry CoreGeometry{ nullptr };
+        float CoreInset{ 0.0f };
+
+        // A knob's arc hides at zero when its ends are round, or a round end would draw a dot.
+        float ArcThickness{ 0.0f };
+        bool ArcRoundEnds{ false };
+        comp::CompositionSpriteShape ArcCore{ nullptr };
+
+        // The flare a lit light throws. A switch shows it only while it is on; an XY pad's
+        // follows its puck.
+        comp::ContainerVisual Flare{ nullptr };
+        bool FlareFollowsOn{ false };
+
+        // A meter's segments, bottom or left first, and what each is painted with lit and out.
+        std::vector<comp::CompositionSpriteShape> MeterSegments{};
+        std::vector<comp::CompositionBrush> MeterLitBrushes{};
+        std::vector<comp::CompositionBrush> MeterOffBrushes{};
+
+        // A picture laid over a section, in black, and a well drawn the size of the control.
+        comp::ContainerVisual Texture{ nullptr };
+        bool Windowed{ false };
+
         comp::CompositionSpriteShape PlateShape{ nullptr };
         comp::CompositionSpriteShape PipeShape{ nullptr };
 
@@ -564,10 +606,82 @@ namespace glass
             _In_ comp::Compositor const& compositor,
             _Inout_ SurfaceVisual& visual,
             _In_ Control const& control,
+            _In_ Theme const& theme,
             _In_ ThemeColor const& ruleColor,
             _In_ bool fades,
             _In_ float width,
             _In_ float height);
+
+        // A section's frame, drawn into three clipped copies so a name can be cut into it.
+        void BuildFrameParts(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Theme const& theme,
+            _In_ ThemeColor const& outline,
+            _In_ float width,
+            _In_ float height,
+            _In_ float corner);
+
+        // Cuts the gap for a section's name out of its frame, from `start` to `end` across.
+        static void CutFrame(_Inout_ SurfaceVisual& visual, _In_ float start, _In_ float end) noexcept;
+
+        // A key's dished top, set into its skirt.
+        void LayoutKeycap(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ ControlColors const& colors,
+            _In_ float width,
+            _In_ float height,
+            _In_ float corner);
+
+        // A meter as a row of lights.
+        void LayoutMeterSegments(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ ControlColors const& colors,
+            _In_ Theme const& theme,
+            _In_ float width,
+            _In_ float height,
+            _In_ bool vertical);
+
+        // The streak and the star a lit light throws, centered on `at`, `length` along.
+        comp::ContainerVisual BuildFlare(
+            _In_ comp::Compositor const& compositor,
+            _In_ ControlColors const& colors,
+            _In_ Theme const& theme,
+            _In_ float length,
+            _In_ bool withRing);
+
+        // A section's picture, in black, clipped to the section.
+        void LayoutSectionTexture(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Theme const& theme,
+            _In_ comp::CompositionGeometry const& shape,
+            _In_ float width,
+            _In_ float height);
+
+        // Where a switch sits for whether it is held, on, or neither.
+        void ApplyTravel(_In_ size_t itemIndex, _In_ bool on) noexcept;
+
+        // The dark line round a window, the light catching its lower edge, and the reflection
+        // across it, laid over whatever the window shows.
+        void FinishWindow(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ ControlColors const& colors,
+            _In_ Theme const& theme);
+
+        // The light behind a name that glows: a Text control or a section's name on a theme with
+        // neon letters. A sibling behind the label, because a child visual of the label would
+        // be drawn over its own words.
+        void LayoutLabelGlow(
+            _In_ size_t itemIndex,
+            _In_ controls::TextBlock const& label,
+            _In_ ThemeColor const& hue,
+            _In_ Theme const& theme,
+            _In_ double x,
+            _In_ double y);
 
         void LayoutLabel(
             _In_ size_t itemIndex,
@@ -922,6 +1036,13 @@ namespace glass
         std::vector<media::Brush> m_labelRestInks{};
         std::vector<media::Brush> m_labelOnInks{};
 
+        // The glow behind a name that has one, and where it sits against its control.
+        std::vector<xaml::FrameworkElement> m_labelGlows{};
+
+        // Whether this theme's switches move under a finger, so a touch on one is shown by
+        // where it is rather than by a glow.
+        bool m_switchesTravel{ false };
+
         // The page's background picture, behind everything, hit test invisible.
         xaml::FrameworkElement m_background{ nullptr };
 
@@ -939,6 +1060,10 @@ namespace glass
         // alive for as long as the brush does.
         std::unordered_map<uint64_t, comp::CompositionBrush> m_shadowMasks{};
         std::vector<comp::Visual> m_maskSources{};
+
+        // A picture a theme lays over its sections, in black, one brush per picture for the
+        // whole page.
+        std::unordered_map<std::wstring, comp::CompositionBrush> m_textures{};
 
         ThemeColor m_deck{};
 

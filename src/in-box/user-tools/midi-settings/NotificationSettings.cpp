@@ -120,8 +120,16 @@ namespace midisettings
             std::filesystem::path const path{ modulePath };
             std::error_code error{};
 
-            // The tools are installed as siblings, one folder each.
-            auto candidate =
+            // The tools install side by side in one folder.
+            auto candidate = path.parent_path() / L"midinotifications.exe";
+
+            if (std::filesystem::exists(candidate, error))
+            {
+                return candidate.wstring();
+            }
+
+            // Earlier previews installed each tool into a folder of its own.
+            candidate =
                 path.parent_path().parent_path() / L"Notifications" / L"midinotifications.exe";
 
             if (std::filesystem::exists(candidate, error))

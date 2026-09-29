@@ -60,7 +60,6 @@ namespace glass
         constexpr wchar_t KeyPlateElevation[] = L"plateElevation";
         constexpr wchar_t KeyShadowSpread[] = L"shadowSpread";
         constexpr wchar_t KeyShadowColor[] = L"shadowColor";
-        constexpr wchar_t KeyLightSource[] = L"lightSource";
         constexpr wchar_t KeyRimStrength[] = L"rimStrengthPercent";
         constexpr wchar_t KeyPipeFalloff[] = L"pipeFalloff";
         constexpr wchar_t KeyThumb[] = L"thumb";
@@ -132,6 +131,39 @@ namespace glass
         constexpr wchar_t KeyFaderScale[] = L"faderScalePercent";
         constexpr wchar_t KeyRuleColor[] = L"ruleColor";
         constexpr wchar_t KeyRuleFades[] = L"ruleFades";
+        constexpr wchar_t KeyImageRepeats[] = L"imageRepeats";
+        constexpr wchar_t KeyGrainStyle[] = L"grainStyle";
+        constexpr wchar_t KeyRainPercent[] = L"rainPercent";
+        constexpr wchar_t KeyRainColor[] = L"rainColor";
+        constexpr wchar_t KeyRainSpeed[] = L"rainSpeed";
+        constexpr wchar_t KeyStripeColors[] = L"stripeColors";
+        constexpr wchar_t KeyStripeWidth[] = L"stripeWidth";
+        constexpr wchar_t KeyRimThickness[] = L"rimThickness";
+        constexpr wchar_t KeyArcThickness[] = L"arcThickness";
+        constexpr wchar_t KeyArcRoundEnds[] = L"arcRoundEnds";
+        constexpr wchar_t KeySwitchShape[] = L"switchShape";
+        constexpr wchar_t KeyKeycapTop[] = L"keycapTopColor";
+        constexpr wchar_t KeyKeycapTopEnd[] = L"keycapTopEndColor";
+        constexpr wchar_t KeySwitchNames[] = L"switchNames";
+        constexpr wchar_t KeyPressTravel[] = L"pressTravelPixels";
+        constexpr wchar_t KeyLampPosition[] = L"lampPosition";
+        constexpr wchar_t KeyLampHolder[] = L"lampHolderColor";
+        constexpr wchar_t KeyLampGlow[] = L"lampGlowPercent";
+        constexpr wchar_t KeyKnobKnurls[] = L"knobKnurlCount";
+        constexpr wchar_t KeyPanelRecess[] = L"panelRecessPercent";
+        constexpr wchar_t KeyRecessLip[] = L"recessLipColor";
+        constexpr wchar_t KeyWellFillsControl[] = L"wellFillsControl";
+        constexpr wchar_t KeyWellGloss[] = L"wellGlossPercent";
+        constexpr wchar_t KeyNeonLetters[] = L"neonLetters";
+        constexpr wchar_t KeyValueCore[] = L"valueCorePercent";
+        constexpr wchar_t KeyGlowFall[] = L"glowFallPixels";
+        constexpr wchar_t KeyFlarePercent[] = L"flarePercent";
+        constexpr wchar_t KeyFlareColor[] = L"flareColor";
+        constexpr wchar_t KeySectionTexture[] = L"sectionTexture";
+        constexpr wchar_t KeySectionTexturePercent[] = L"sectionTexturePercent";
+        constexpr wchar_t KeyMeterUnlit[] = L"meterUnlitColor";
+        constexpr wchar_t KeyOnInk[] = L"onInkColor";
+        constexpr wchar_t KeyRestTintOnPlate[] = L"restTintOnPlate";
 
         template <typename TEnum>
         struct EnumName
@@ -167,6 +199,31 @@ namespace glass
         {
             { LampStyle::Bar, L"bar" },
             { LampStyle::Dot, L"dot" },
+        };
+
+        constexpr EnumName<LampPlacement> LampPlacementNames[]
+        {
+            { LampPlacement::TopCenter, L"topCenter" },
+            { LampPlacement::TopRight, L"topRight" },
+        };
+
+        constexpr EnumName<SwitchNamePlacement> SwitchNameNames[]
+        {
+            { SwitchNamePlacement::Center, L"center" },
+            { SwitchNamePlacement::TopLeft, L"topLeft" },
+        };
+
+        constexpr EnumName<SwitchShapeStyle> SwitchShapeNames[]
+        {
+            { SwitchShapeStyle::Plate, L"plate" },
+            { SwitchShapeStyle::Keycap, L"keycap" },
+        };
+
+        constexpr EnumName<GrainStyle> GrainStyleNames[]
+        {
+            { GrainStyle::Speckle, L"speckle" },
+            { GrainStyle::Brushed, L"brushed" },
+            { GrainStyle::Fine, L"fine" },
         };
 
         constexpr EnumName<PanelFillStyle> PanelFillNames[]
@@ -211,11 +268,15 @@ namespace glass
             { ThumbStyle::Hue, L"hue" },
         };
 
-        constexpr EnumName<LightSource> LightNames[]
+        // A bare file name, never a path. A theme from a stranger naming
+        // "..\..\Windows\System32\something" is the whole reason a picture is not a path.
+        bool IsBareFileName(_In_ std::wstring const& name) noexcept
         {
-            { LightSource::ControlHue, L"controlHue" },
-            { LightSource::White, L"white" },
-        };
+            return name.find(L'\\') == std::wstring::npos &&
+                name.find(L'/') == std::wstring::npos &&
+                name.find(L':') == std::wstring::npos &&
+                name != L"..";
+        }
 
         template <typename TEnum, size_t N>
         std::wstring_view NameOf(_In_ EnumName<TEnum> const (&table)[N], _In_ TEnum value) noexcept
@@ -521,18 +582,15 @@ namespace glass
                 theme.Deck.Color = ReadColor(deck, KeyColor, base.Deck.Color);
                 theme.Deck.GradientEndColor = ReadColor(deck, KeyGradientEnd, theme.Deck.Color);
 
-                // A bare file name inside the shared assets folder, never a path out of it. A
-                // theme from a stranger naming "..\..\Windows\System32\something" is the whole
-                // reason this is not a path.
+                // A bare file name inside the shared assets folder, never a path out of it.
                 auto const image = ReadString(deck, KeyImage);
 
-                if (image.find(L'\\') == std::wstring::npos &&
-                    image.find(L'/') == std::wstring::npos &&
-                    image.find(L':') == std::wstring::npos &&
-                    image != L".." )
+                if (IsBareFileName(image))
                 {
                     theme.Deck.ImageFileName = image;
                 }
+
+                theme.Deck.ImageRepeats = ReadBoolean(deck, KeyImageRepeats, false);
             }
 
             theme.CornerRadius = static_cast<int32_t>(ReadNumber(root, KeyCornerRadius, base.CornerRadius, 0, 128));
@@ -560,7 +618,6 @@ namespace glass
             theme.ShadowSpread = static_cast<int32_t>(
                 ReadNumber(root, KeyShadowSpread, base.ShadowSpread, 0, 64));
             theme.ShadowColor = ReadColor(root, KeyShadowColor, base.ShadowColor);
-            theme.Light = ValueOf(LightNames, ReadString(root, KeyLightSource), base.Light);
             theme.RimStrengthPercent = static_cast<int32_t>(
                 ReadNumber(root, KeyRimStrength, base.RimStrengthPercent, 0, 100));
             theme.PipeFalloff = ReadNumber(root, KeyPipeFalloff, base.PipeFalloff, 0.0, 1.0);
@@ -650,6 +707,79 @@ namespace glass
             theme.RuleColor = ReadColor(root, KeyRuleColor, base.RuleColor);
             theme.RuleFades = ReadBoolean(root, KeyRuleFades, base.RuleFades);
 
+            // What the five comps of the fifth round asked for.
+            theme.StripeColors = base.StripeColors;
+
+            if (auto const stripes = [&root]() -> mjson::JsonArray
+                {
+                    winrt::hstring const name{ KeyStripeColors };
+
+                    if (!root.HasKey(name))
+                    {
+                        return nullptr;
+                    }
+
+                    auto const value = root.Lookup(name);
+
+                    return (value != nullptr && value.ValueType() == mjson::JsonValueType::Array)
+                        ? value.GetArray()
+                        : nullptr;
+                }())
+            {
+                theme.StripeColors.fill(ThemeColor{ 0, 0, 0, 0 });
+
+                for (uint32_t i = 0; i < stripes.Size() && i < static_cast<uint32_t>(MaximumStripeCount); ++i)
+                {
+                    auto const value = stripes.GetAt(i);
+                    ThemeColor parsed{};
+
+                    // A stripe that is not a color ends the list, the way alpha 0 does.
+                    if (value == nullptr || value.ValueType() != mjson::JsonValueType::String ||
+                        !TryParseColor(std::wstring{ value.GetString() }, parsed))
+                    {
+                        break;
+                    }
+
+                    theme.StripeColors[i] = parsed;
+                }
+            }
+
+            theme.StripeWidth = static_cast<int32_t>(ReadNumber(root, KeyStripeWidth, base.StripeWidth, 1, 16));
+            theme.RimThickness = static_cast<int32_t>(ReadNumber(root, KeyRimThickness, base.RimThickness, 1, 6));
+            theme.ArcThickness = static_cast<int32_t>(ReadNumber(root, KeyArcThickness, base.ArcThickness, 0, 12));
+            theme.ArcRoundEnds = ReadBoolean(root, KeyArcRoundEnds, base.ArcRoundEnds);
+            theme.SwitchShape = ValueOf(SwitchShapeNames, ReadString(root, KeySwitchShape), base.SwitchShape);
+            theme.KeycapTopColor = ReadColor(root, KeyKeycapTop, base.KeycapTopColor);
+            theme.KeycapTopEndColor = ReadColor(root, KeyKeycapTopEnd, base.KeycapTopEndColor);
+            theme.SwitchNames = ValueOf(SwitchNameNames, ReadString(root, KeySwitchNames), base.SwitchNames);
+            theme.PressTravelPixels = static_cast<int32_t>(
+                ReadNumber(root, KeyPressTravel, base.PressTravelPixels, 0, 8));
+            theme.LampPosition = ValueOf(LampPlacementNames, ReadString(root, KeyLampPosition), base.LampPosition);
+            theme.LampHolderColor = ReadColor(root, KeyLampHolder, base.LampHolderColor);
+            theme.LampGlowPercent = static_cast<int32_t>(ReadNumber(root, KeyLampGlow, base.LampGlowPercent, -1, 100));
+            theme.KnobKnurlCount = static_cast<int32_t>(ReadNumber(root, KeyKnobKnurls, base.KnobKnurlCount, 0, 120));
+            theme.PanelRecessPercent = static_cast<int32_t>(
+                ReadNumber(root, KeyPanelRecess, base.PanelRecessPercent, 0, 100));
+            theme.RecessLipColor = ReadColor(root, KeyRecessLip, base.RecessLipColor);
+            theme.WellFillsControl = ReadBoolean(root, KeyWellFillsControl, base.WellFillsControl);
+            theme.WellGlossPercent = static_cast<int32_t>(ReadNumber(root, KeyWellGloss, base.WellGlossPercent, 0, 100));
+            theme.NeonLetters = ReadBoolean(root, KeyNeonLetters, base.NeonLetters);
+            theme.ValueCorePercent = static_cast<int32_t>(ReadNumber(root, KeyValueCore, base.ValueCorePercent, 0, 100));
+            theme.GlowFallPixels = static_cast<int32_t>(ReadNumber(root, KeyGlowFall, base.GlowFallPixels, 0, 32));
+            theme.FlarePercent = static_cast<int32_t>(ReadNumber(root, KeyFlarePercent, base.FlarePercent, 0, 100));
+            theme.FlareColor = ReadColor(root, KeyFlareColor, base.FlareColor);
+
+            if (auto const texture = ReadString(root, KeySectionTexture); IsBareFileName(texture))
+            {
+                theme.SectionTexture = texture;
+            }
+
+            theme.SectionTexturePercent = static_cast<int32_t>(
+                ReadNumber(root, KeySectionTexturePercent, base.SectionTexturePercent, 0, 100));
+            theme.MeterUnlitColor = ReadColor(root, KeyMeterUnlit, base.MeterUnlitColor);
+            theme.OnInkColor = ReadColor(root, KeyOnInk, base.OnInkColor);
+            theme.RestTintOnPlate = ReadBoolean(root, KeyRestTintOnPlate, base.RestTintOnPlate);
+
             // A resource key rather than a sentence, so it is translated like everything else. A
             // theme from a stranger has no business naming one of ours, so it is dropped.
             theme.CautionResourceKey.clear();
@@ -714,6 +844,13 @@ namespace glass
                     ReadColor(overlay, KeyGrainColor, base.Overlay.GrainColor);
                 theme.Overlay.GrainStreak = static_cast<int32_t>(
                     ReadNumber(overlay, KeyGrainStreak, base.Overlay.GrainStreak, 1, 64));
+                theme.Overlay.Grain = ValueOf(
+                    GrainStyleNames, ReadString(overlay, KeyGrainStyle), base.Overlay.Grain);
+                theme.Overlay.RainPercent = static_cast<int32_t>(
+                    ReadNumber(overlay, KeyRainPercent, base.Overlay.RainPercent, 0, 100));
+                theme.Overlay.RainColor = ReadColor(overlay, KeyRainColor, base.Overlay.RainColor);
+                theme.Overlay.RainSpeed = static_cast<int32_t>(
+                    ReadNumber(overlay, KeyRainSpeed, base.Overlay.RainSpeed, 0, 600));
             }
         }
         catch (...)
@@ -788,6 +925,7 @@ namespace glass
             writer.Write(KeyColor, ColorToText(theme.Deck.Color));
             writer.Write(KeyGradientEnd, ColorToText(theme.Deck.GradientEndColor));
             writer.Write(KeyImage, theme.Deck.ImageFileName);
+            writer.Write(KeyImageRepeats, theme.Deck.ImageRepeats);
             writer.EndObject();
 
             writer.Write(KeyCornerRadius, static_cast<int64_t>(theme.CornerRadius));
@@ -809,7 +947,6 @@ namespace glass
             writer.Write(KeyPlateElevation, static_cast<int64_t>(theme.PlateElevation));
             writer.Write(KeyShadowSpread, static_cast<int64_t>(theme.ShadowSpread));
             writer.Write(KeyShadowColor, ColorToText(theme.ShadowColor));
-            writer.Write(KeyLightSource, NameOf(LightNames, theme.Light));
             writer.Write(KeyRimStrength, static_cast<int64_t>(theme.RimStrengthPercent));
             writer.Write(KeyPipeFalloff, theme.PipeFalloff);
             writer.Write(KeyThumb, NameOf(ThumbNames, theme.Thumb));
@@ -871,6 +1008,43 @@ namespace glass
             writer.Write(KeyRuleColor, ColorToText(theme.RuleColor));
             writer.Write(KeyRuleFades, theme.RuleFades);
 
+            writer.BeginArray(KeyStripeColors);
+
+            for (int32_t stripe = 0; stripe < StripeCount(theme); ++stripe)
+            {
+                writer.WriteArrayString(ColorToText(theme.StripeColors[static_cast<size_t>(stripe)]));
+            }
+
+            writer.EndArray();
+
+            writer.Write(KeyStripeWidth, static_cast<int64_t>(theme.StripeWidth));
+            writer.Write(KeyRimThickness, static_cast<int64_t>(theme.RimThickness));
+            writer.Write(KeyArcThickness, static_cast<int64_t>(theme.ArcThickness));
+            writer.Write(KeyArcRoundEnds, theme.ArcRoundEnds);
+            writer.Write(KeySwitchShape, NameOf(SwitchShapeNames, theme.SwitchShape));
+            writer.Write(KeyKeycapTop, ColorToText(theme.KeycapTopColor));
+            writer.Write(KeyKeycapTopEnd, ColorToText(theme.KeycapTopEndColor));
+            writer.Write(KeySwitchNames, NameOf(SwitchNameNames, theme.SwitchNames));
+            writer.Write(KeyPressTravel, static_cast<int64_t>(theme.PressTravelPixels));
+            writer.Write(KeyLampPosition, NameOf(LampPlacementNames, theme.LampPosition));
+            writer.Write(KeyLampHolder, ColorToText(theme.LampHolderColor));
+            writer.Write(KeyLampGlow, static_cast<int64_t>(theme.LampGlowPercent));
+            writer.Write(KeyKnobKnurls, static_cast<int64_t>(theme.KnobKnurlCount));
+            writer.Write(KeyPanelRecess, static_cast<int64_t>(theme.PanelRecessPercent));
+            writer.Write(KeyRecessLip, ColorToText(theme.RecessLipColor));
+            writer.Write(KeyWellFillsControl, theme.WellFillsControl);
+            writer.Write(KeyWellGloss, static_cast<int64_t>(theme.WellGlossPercent));
+            writer.Write(KeyNeonLetters, theme.NeonLetters);
+            writer.Write(KeyValueCore, static_cast<int64_t>(theme.ValueCorePercent));
+            writer.Write(KeyGlowFall, static_cast<int64_t>(theme.GlowFallPixels));
+            writer.Write(KeyFlarePercent, static_cast<int64_t>(theme.FlarePercent));
+            writer.Write(KeyFlareColor, ColorToText(theme.FlareColor));
+            writer.Write(KeySectionTexture, theme.SectionTexture);
+            writer.Write(KeySectionTexturePercent, static_cast<int64_t>(theme.SectionTexturePercent));
+            writer.Write(KeyMeterUnlit, ColorToText(theme.MeterUnlitColor));
+            writer.Write(KeyOnInk, ColorToText(theme.OnInkColor));
+            writer.Write(KeyRestTintOnPlate, theme.RestTintOnPlate);
+
             writer.BeginArray(KeyMeterSlots);
 
             for (auto const slot : theme.MeterSlots)
@@ -891,6 +1065,10 @@ namespace glass
             writer.Write(KeyGrainPercent, static_cast<int64_t>(theme.Overlay.GrainPercent));
             writer.Write(KeyGrainColor, ColorToText(theme.Overlay.GrainColor));
             writer.Write(KeyGrainStreak, static_cast<int64_t>(theme.Overlay.GrainStreak));
+            writer.Write(KeyGrainStyle, NameOf(GrainStyleNames, theme.Overlay.Grain));
+            writer.Write(KeyRainPercent, static_cast<int64_t>(theme.Overlay.RainPercent));
+            writer.Write(KeyRainColor, ColorToText(theme.Overlay.RainColor));
+            writer.Write(KeyRainSpeed, static_cast<int64_t>(theme.Overlay.RainSpeed));
             writer.EndObject();
         }
         catch (...)
@@ -907,7 +1085,9 @@ namespace glass
 
             writer.BeginObject();
 
-            writer.Write(KeyComment, CommentText);
+            // Spelled out as a view: a bare array of wchar_t converts to bool before it converts
+            // to a string view, and every theme file used to say "_comment": true.
+            writer.Write(KeyComment, std::wstring_view{ CommentText });
             writer.Write(KeyFileVersion, static_cast<int64_t>(ThemeFileVersion));
 
             WriteThemeBody(writer, theme);
@@ -948,16 +1128,16 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    std::wstring DeckImagePath(ThemeDeck const& deck) noexcept
+    std::wstring ThemePicturePath(std::wstring const& fileName) noexcept
     {
         try
         {
-            if (deck.ImageFileName.empty())
+            if (fileName.empty())
             {
                 return {};
             }
 
-            std::filesystem::path const name{ deck.ImageFileName };
+            std::filesystem::path const name{ fileName };
 
             if (name.has_parent_path() || name.has_root_name() || !name.has_filename())
             {
@@ -990,6 +1170,12 @@ namespace glass
         {
             return {};
         }
+    }
+
+    _Use_decl_annotations_
+    std::wstring DeckImagePath(ThemeDeck const& deck) noexcept
+    {
+        return ThemePicturePath(deck.ImageFileName);
     }
 
     _Use_decl_annotations_

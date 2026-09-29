@@ -2,7 +2,7 @@
   "$comment": [
     "Single source of truth for the Windows MIDI Services SERVICE PLUGINS version.",
     "This is a SEPARATE release train from the App SDK (build/version.json), and uses the",
-    "same scheme. build-plugins.ps1 stamps this into build/staging/version/BundleInfo.wxi,",
+    "same scheme. build-all.ps1 stamps this into build/staging/version/BundleInfo.wxi,",
     "the version include used by the oob-setup-* installers.",
     "",
     "channel:       devpreview | preview | rc | stable",
@@ -24,7 +24,7 @@
 
   "major": 1,
   "minor": 0,
-  "patch": 32,
+  "patch": 33,
 
   "channel": "preview",
   "channelNumber": 8,

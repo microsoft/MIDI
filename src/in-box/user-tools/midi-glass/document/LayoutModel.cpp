@@ -18,6 +18,24 @@
 namespace glass
 {
     _Use_decl_annotations_
+    ControlGroup* Page::FindGroup(std::wstring const& id) noexcept
+    {
+        auto it = std::find_if(Groups.begin(), Groups.end(),
+            [&id](ControlGroup const& group) { return group.Id == id; });
+
+        return it == Groups.end() ? nullptr : &(*it);
+    }
+
+    _Use_decl_annotations_
+    ControlGroup const* Page::FindGroup(std::wstring const& id) const noexcept
+    {
+        auto it = std::find_if(Groups.begin(), Groups.end(),
+            [&id](ControlGroup const& group) { return group.Id == id; });
+
+        return it == Groups.end() ? nullptr : &(*it);
+    }
+
+    _Use_decl_annotations_
     Page* LayoutDocument::FindPage(std::wstring const& id) noexcept
     {
         auto it = std::find_if(Pages.begin(), Pages.end(),
@@ -368,6 +386,34 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool SendsToADevice(MessageKind kind) noexcept
+    {
+        return kind != MessageKind::Sequence &&
+            kind != MessageKind::GoToPage &&
+            kind != MessageKind::HoldLayer;
+    }
+
+    _Use_decl_annotations_
+    bool CarriesAChannel(MessageKind kind) noexcept
+    {
+        switch (kind)
+        {
+        case MessageKind::Note:
+        case MessageKind::ControlChange:
+        case MessageKind::ProgramChange:
+        case MessageKind::PitchBend:
+        case MessageKind::ChannelPressure:
+        case MessageKind::PerNoteController:
+        case MessageKind::RegisteredController:
+        case MessageKind::AssignedController:
+            return true;
+
+        default:
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
     int32_t DetentStopCount(Control const& control) noexcept
     {
         int32_t highest{ 0 };
@@ -642,7 +688,7 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    void RegroupCopies(std::vector<Control>& copies)
+    std::vector<std::pair<std::wstring, std::wstring>> RegroupCopies(std::vector<Control>& copies)
     {
         std::vector<std::pair<std::wstring, std::wstring>> renamed{};
 
@@ -675,6 +721,105 @@ namespace glass
                 copy.GroupId.clear();
             }
         }
+
+        std::erase_if(renamed, [&copies](auto const& pair)
+            {
+                return std::none_of(copies.begin(), copies.end(),
+                    [&pair](Control const& copy) { return copy.GroupId == pair.second; });
+            });
+
+        return renamed;
+    }
+
+    _Use_decl_annotations_
+    std::wstring NameForCopiedGroup(std::wstring const& name, Page const& page)
+    {
+        auto const taken = [&page](std::wstring const& candidate)
+            {
+                return std::any_of(page.Groups.begin(), page.Groups.end(),
+                    [&candidate](ControlGroup const& group) { return group.Name == candidate; });
+            };
+
+        if (name.empty() || !taken(name))
+        {
+            return name;
+        }
+
+        auto digits = name.size();
+
+        while (digits > 0 && name[digits - 1] >= L'0' && name[digits - 1] <= L'9')
+        {
+            --digits;
+        }
+
+        std::wstring base{ name };
+        uint64_t number{ 1 };
+
+        // Nine digits is more than anybody numbers a bank with, and cannot overflow.
+        if (digits < name.size() && name.size() - digits <= 9)
+        {
+            base = name.substr(0, digits);
+            number = 0;
+
+            for (auto index = digits; index < name.size(); ++index)
+            {
+                number = number * 10 + static_cast<uint64_t>(name[index] - L'0');
+            }
+        }
+        else
+        {
+            base += L' ';
+        }
+
+        // A page holds fewer groups than this, so one of these is always free.
+        for (uint64_t next = number + 1; next <= number + MaximumControlsPerPage + 1; ++next)
+        {
+            auto candidate = base + std::to_wstring(next);
+
+            if (candidate.size() > MaximumStringLength)
+            {
+                break;
+            }
+
+            if (!taken(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return name;
+    }
+
+    _Use_decl_annotations_
+    void NameCopiedGroups(
+        Page& page,
+        std::vector<ControlGroup> originals,
+        std::vector<std::pair<std::wstring, std::wstring>> const& regrouped)
+    {
+        for (auto const& [from, to] : regrouped)
+        {
+            auto const original = std::find_if(originals.begin(), originals.end(),
+                [&from](ControlGroup const& group) { return group.Id == from; });
+
+            if (original == originals.end() || page.FindGroup(to) != nullptr)
+            {
+                continue;
+            }
+
+            page.Groups.push_back({ to, NameForCopiedGroup(original->Name, page), original->Unknown });
+        }
+    }
+
+    _Use_decl_annotations_
+    void PruneControlGroups(Page& page) noexcept
+    {
+        std::erase_if(page.Groups, [&page](ControlGroup const& group)
+            {
+                return group.Id.empty() ||
+                    (group.Name.empty() && group.Unknown == nullptr) ||
+                    std::none_of(page.Controls.begin(), page.Controls.end(),
+                        [&group](Control const& control) { return control.GroupId == group.Id; });
+            });
     }
 
     namespace

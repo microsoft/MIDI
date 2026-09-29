@@ -57,6 +57,7 @@ namespace winrt::miditroubleshooter::implementation
             midiapp::MakeLiveStatusRegion(CaptureStatusText());
             midiapp::MakeLiveStatusRegion(SessionsStatusText());
             midiapp::MakeLiveStatusRegion(TransportsStatusText());
+            midiapp::MakeLiveStatusRegion(TransportsActionText());
             midiapp::MakeLiveStatusRegion(ServiceStatusText());
             midiapp::MakeLiveStatusRegion(RegistryStatusText());
             midiapp::MakeLiveStatusRegion(DriversStatusText());

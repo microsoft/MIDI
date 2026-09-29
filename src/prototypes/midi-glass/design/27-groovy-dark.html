@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - Groovy Dark theme</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="24-groovy.css">
+<link rel="stylesheet" href="27-groovy-dark.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .chiprow { position: absolute; left: 14px; top: 13px; display: flex; gap: 6px; align-items: center; }
+    .tchip {
+        height: 26px; padding: 0 11px; border-radius: 13px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: var(--text3);
+        background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .tchip i { width: 11px; height: 11px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    .tchip.new { color: #F4E4C4; font-weight: 600; background: #3B2419; box-shadow: inset 0 0 0 2px #FDDCA9; }
+
+    .deck {
+        position: absolute; left: 14px; top: 54px; width: 972px; height: 510px;
+        border-radius: 8px; overflow: hidden;
+    }
+    .decktag { position: absolute; left: 14px; top: 576px; font-size: 11px; color: var(--text3); }
+    .decktag b { color: var(--text2); font-weight: 600; }
+
+    /* the layout's own type: the title face is the layout's choice, never the theme's */
+    .surftext.title70 { font-family: "Cooper Black", "Segoe UI Black", serif; font-weight: 400; letter-spacing: 0; }
+
+    /* the print under a control: tan, small, spaced */
+    .silk {
+        position: absolute; font-size: 8.5px; font-weight: 700; letter-spacing: .10em;
+        color: #D9BE8E; text-align: center; white-space: nowrap;
+    }
+
+    /* a channel's name on a cream tag. In the app this is a label with a solid style on the
+       neutral slot, which it can already draw one label at a time */
+    .tag {
+        position: absolute; height: 15px; border-radius: 8px;
+        background: #FDDCA9; color: #2A1911;
+        font-size: 8.5px; font-weight: 700; letter-spacing: .12em;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .rd { font-family: "Cascadia Mono","Consolas",monospace; font-size: 15px; font-weight: 600; letter-spacing: .04em; color: #F4E4C4; }
+
+    /* the second board is printed on the brown too, so its captions are cream */
+    .rhead { position: absolute; font-size: 11px; font-weight: 600; letter-spacing: .10em; color: #D9BE8E; }
+    .kcap { position: absolute; text-align: center; font-size: 10.5px; line-height: 1.45; color: rgba(244,228,196,.80); }
+    .kcap b { display: block; color: #F4E4C4; font-weight: 700; font-size: 11px; margin-bottom: 2px; }
+    .measure { position: absolute; font-size: 11.5px; line-height: 1.6; color: rgba(244,228,196,.86); }
+    .measure b { color: #F4E4C4; font-weight: 700; }
+    .measure .num { font-family: "Cascadia Mono","Consolas",monospace; color: #F4E4C4; font-weight: 700; white-space: nowrap; }
+    .state { position: absolute; font-size: 8.5px; font-weight: 700; letter-spacing: .08em; color: #D9BE8E; text-align: center; }
+
+    /* the paper grain on its own, as drawn and four times the size */
+    .patch { position: absolute; width: 58px; height: 58px; border-radius: 6px; overflow: hidden; background: #3B2419; box-shadow: inset 0 0 0 2px #FDDCA9; }
+    .patch::before {
+        content: ""; position: absolute; inset: 2px;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192'><filter id='t' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='3' seed='7' stitchTiles='stitch'/><feColorMatrix type='matrix' values='.66 .66 .66 0 -.5 .66 .66 .66 0 -.5 .66 .66 .66 0 -.5 0 0 0 0 1'/></filter><rect width='192' height='192' filter='url(%23t)'/></svg>");
+        background-size: 192px 192px;
+        opacity: .48; mix-blend-mode: overlay;
+    }
+    .patch.zoom::before { background-size: 768px 768px; }
+
+    .swatches { display: flex; gap: 0; width: 1000px; border-radius: 7px; overflow: hidden; margin-top: 14px; }
+    .swatches div {
+        flex: 1; height: 58px; display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 6px 7px; font-size: 9.5px; font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .swatches div span { display: block; font-family: "Segoe UI Variable Text","Segoe UI",sans-serif; font-size: 10px; opacity: .78; }
+
+    .costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; width: 1000px; margin-top: 12px; }
+    .cost {
+        border-radius: 7px; padding: 12px 14px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 11.5px; color: var(--text3); line-height: 1.55;
+    }
+    .cost h4 { margin: 0 0 7px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .cost b { color: var(--text2); font-weight: 600; }
+    .cost .yes { color: var(--success); font-weight: 600; }
+    .cost .no { color: var(--caution); font-weight: 600; }
+    .cost .mono { color: var(--accent); }
+
+    .asks { width: 1000px; margin-top: 11px; border-radius: 7px; padding: 12px 14px 6px 14px; box-sizing: border-box;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke); }
+    .asks h4 { margin: 0 0 8px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .asks table { width: 100%; border-collapse: collapse; font-size: 11.5px; line-height: 1.5; color: var(--text3); }
+    .asks th { text-align: left; font-weight: 600; color: var(--text2); padding: 0 10px 6px 0; border-bottom: 1px solid var(--divider); font-size: 11px; }
+    .asks td { vertical-align: top; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--divider); }
+    .asks tr:last-child td { border-bottom: none; }
+    .asks td.n { width: 18px; color: var(--caution); font-weight: 600; }
+    .asks td.ask { width: 250px; }
+    .asks td.ask b { color: var(--text); font-weight: 600; }
+    .asks td.light { width: 250px; }
+    .asks .mono { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 27 &mdash; <b>Groovy Dark</b>, screen 24 on a brown page, for a dark room. The same heavy lines, bands and shapes, with the colors turned over: espresso controls ringed in their own colors, cream print, and a switch that is on becomes its color with a dark name on it. Sections are framed in four stripes of red, orange, gold and cream from the palettes you sent, and the page carries a fine paper grain like the 1976 poster. <b>Nothing new is asked of the engine</b>: it is Groovy's five asks with different values, and the grain is already built.</p>
+
+<!-- ============================================================= DECK -->
+<div class="board" style="height:600px;">
+
+    <div class="chiprow">
+        <div class="tchip"><i style="background:#4CE0FF"></i>Studio Dark</div>
+        <div class="tchip"><i style="background:#E3DAC9"></i>Bone</div>
+        <div class="tchip"><i style="background:#E8601C"></i>Jove</div>
+        <div class="tchip"><i style="background:#131414; box-shadow: inset 0 0 0 2px #35EE7A"></i>Airy System</div>
+        <div class="tchip"><i style="background:#ECC864; box-shadow: inset 0 0 0 2px #5A3D2B, inset 0 0 0 4px #B34A1A"></i>Groovy</div>
+        <div class="tchip new"><i style="background:#3B2419; box-shadow: inset 0 0 0 2px #E23D2D, inset 0 0 0 4px #FEA712"></i>Groovy Dark</div>
+        <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
+    </div>
+
+    <div class="deck surf tonal groovy groovydark">
+
+        <div class="surftext h1 title70" style="left:20px; top:5px; font-size:29px;">Groovy Dark</div>
+        <div class="surftext small" style="left:236px; top:18px; font-weight:600;">strings &middot; rhythm &middot; mix</div>
+
+        <div class="silk" style="left:552px; top:18px; width:46px;">TEMPO</div>
+        <div class="ctl neutral" style="left:602px; top:8px; width:80px; height:30px; align-items:center; justify-content:center;"><span class="rd">112.0</span></div>
+
+        <div class="pagetabs" style="right:20px; top:10px; gap:6px;">
+            <div class="tab" style="height:26px; padding:0 14px; font-size:11px">Strings</div>
+            <div class="tab sel" style="height:26px; padding:0 14px; font-size:11px">Rhythm</div>
+            <div class="tab" style="height:26px; padding:0 14px; font-size:11px">Mix</div>
+        </div>
+
+        <!-- ======================================== band A: the effects rack -->
+
+        <!-- STRINGS: four voices and four knobs, all burnt orange -->
+        <div class="ctlpanel" style="left:12px; top:50px; width:318px; height:146px;"><div class="ptitle">STRINGS</div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:32px; top:72px; width:62px; height:24px;"><div class="name" style="font-size:8.5px">VIOLIN</div></div>
+        <div class="ctl btn-ctl hue1" style="left:102px; top:72px; width:62px; height:24px;"><div class="name" style="font-size:8.5px">VIOLA</div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:172px; top:72px; width:62px; height:24px;"><div class="name" style="font-size:8.5px">CELLO</div></div>
+        <div class="ctl btn-ctl hue1" style="left:242px; top:72px; width:62px; height:24px;"><div class="name" style="font-size:8.5px">BASS</div></div>
+
+        <div class="ctl knob hue1" style="left:39px; top:106px; width:48px; height:48px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="22.5 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(-54deg)"></div></div>
+        <div class="ctl knob hue1" style="left:109px; top:106px; width:48px; height:48px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="46.5 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(32.4deg)"></div></div>
+        <div class="ctl knob hue1" style="left:179px; top:106px; width:48px; height:48px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="33.75 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(-13.5deg)"></div></div>
+        <div class="ctl knob hue1" style="left:249px; top:106px; width:48px; height:48px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="56.25 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(67.5deg)"></div></div>
+        <div class="silk" style="left:28px; top:160px; width:70px;">ATTACK</div>
+        <div class="silk" style="left:98px; top:160px; width:70px;">RELEASE</div>
+        <div class="silk" style="left:168px; top:160px; width:70px;">TONE</div>
+        <div class="silk" style="left:238px; top:160px; width:70px;">LEVEL</div>
+
+        <!-- PHASER: teal -->
+        <div class="ctlpanel" style="left:342px; top:50px; width:200px; height:146px;"><div class="ptitle">PHASER</div></div>
+        <div class="ctl knob hue3" style="left:364px; top:72px; width:72px; height:72px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="41.25 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(13.5deg)"></div></div>
+        <div class="silk" style="left:364px; top:152px; width:72px;">RATE</div>
+        <div class="ctl knob hue3" style="left:468px; top:70px; width:44px; height:44px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="30 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(-27deg)"></div></div>
+        <div class="silk" style="left:460px; top:120px; width:60px;">DEPTH</div>
+        <div class="ctl btn-ctl hue3 on" style="left:454px; top:142px; width:72px; height:26px;"><div class="name" style="font-size:8.5px">COLOR</div></div>
+
+        <!-- WAH: avocado -->
+        <div class="ctlpanel" style="left:554px; top:50px; width:112px; height:146px;"><div class="ptitle">WAH</div></div>
+        <div class="ctl fader hue2" style="left:574px; top:66px; width:28px; height:100px;"><div class="slot"><div class="fill" style="height:70%"></div><div class="capbar" style="bottom:calc(70% - 6px);"></div></div></div>
+        <div class="silk" style="left:558px; top:170px; width:60px;">PEDAL</div>
+        <div class="ctl btn-ctl hue2" style="left:610px; top:70px; width:44px; height:24px;"><div class="name" style="font-size:8.5px">AUTO</div></div>
+        <div class="ctl knob hue2" style="left:612px; top:108px; width:40px; height:40px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="26.25 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(-40.5deg)"></div></div>
+        <div class="silk" style="left:602px; top:154px; width:60px;">SPEED</div>
+
+        <!-- ECHO: denim, a tape echo with four heads -->
+        <div class="ctlpanel" style="left:678px; top:50px; width:282px; height:146px;"><div class="ptitle">ECHO</div></div>
+        <div class="ctl knob hue5" style="left:698px; top:72px; width:48px; height:48px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="43.5 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(21.6deg)"></div></div>
+        <div class="ctl knob hue5" style="left:766px; top:72px; width:48px; height:48px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="30 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(-27deg)"></div></div>
+        <div class="ctl knob hue5 detent" style="left:834px; top:72px; width:48px; height:48px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="37.5 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        <div class="silk" style="left:687px; top:126px; width:70px;">REPEAT</div>
+        <div class="silk" style="left:755px; top:126px; width:70px;">INTENSITY</div>
+        <div class="silk" style="left:823px; top:126px; width:70px;">MIX</div>
+        <div class="ctl btn-ctl hue5" style="left:698px; top:146px; width:28px; height:24px;"><div class="name" style="font-size:8.5px">1</div></div>
+        <div class="ctl btn-ctl hue5" style="left:730px; top:146px; width:28px; height:24px;"><div class="name" style="font-size:8.5px">2</div></div>
+        <div class="ctl btn-ctl hue5 on" style="left:762px; top:146px; width:28px; height:24px;"><div class="name" style="font-size:8.5px">3</div></div>
+        <div class="ctl btn-ctl hue5" style="left:794px; top:146px; width:28px; height:24px;"><div class="name" style="font-size:8.5px">4</div></div>
+        <div class="ctl btn-ctl hue5" style="left:836px; top:146px; width:62px; height:24px;"><div class="name" style="font-size:8.5px">HOLD</div></div>
+        <div class="ctl led hue6 on" style="left:914px; top:80px; width:18px; height:18px;"></div>
+        <div class="silk" style="left:901px; top:104px; width:44px;">TAPE</div>
+
+        <!-- ======================================== band B: the rhythm box -->
+
+        <!-- eight voices, colored by family, and sixteen steps in fours that alternate two colors,
+             the way the minicomputer panel grouped its switches in threes -->
+        <div class="ctlpanel" style="left:12px; top:208px; width:640px; height:146px;"><div class="ptitle">RHYTHM</div></div>
+        <div class="ctl btn-ctl pad hue6 on" style="left:30px; top:232px; width:66px; height:40px;"><div class="name" style="font-size:8.5px">KICK</div></div>
+        <div class="ctl btn-ctl pad hue6" style="left:106px; top:232px; width:66px; height:40px;"><div class="name" style="font-size:8.5px">SNARE</div></div>
+        <div class="ctl btn-ctl pad hue1 on" style="left:182px; top:232px; width:66px; height:40px;"><div class="name" style="font-size:8.5px">CONGA</div></div>
+        <div class="ctl btn-ctl pad hue1" style="left:258px; top:232px; width:66px; height:40px;"><div class="name" style="font-size:8.5px">BONGO</div></div>
+        <div class="ctl btn-ctl pad hue4" style="left:334px; top:232px; width:66px; height:40px;"><div class="name" style="font-size:8.5px">COWBELL</div></div>
+        <div class="ctl btn-ctl pad hue4 on" style="left:410px; top:232px; width:66px; height:40px;"><div class="name" style="font-size:8.5px">CLAVE</div></div>
+        <div class="ctl btn-ctl pad hue2" style="left:486px; top:232px; width:66px; height:40px;"><div class="name" style="font-size:8.5px">GUIRO</div></div>
+        <div class="ctl btn-ctl pad hue2" style="left:562px; top:232px; width:66px; height:40px;"><div class="name" style="font-size:8.5px">SHAKER</div></div>
+
+        <div class="ctl btn-ctl neutral on" style="left:30px; top:292px; width:62px; height:36px;"><div class="name" style="font-size:8.5px">START</div></div>
+        <div class="ctl btn-ctl pad hue1 on" style="left:104px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">1</div></div>
+        <div class="ctl btn-ctl pad hue1" style="left:136px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">2</div></div>
+        <div class="ctl btn-ctl pad hue1" style="left:168px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">3</div></div>
+        <div class="ctl btn-ctl pad hue1 on" style="left:200px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">4</div></div>
+        <div class="ctl btn-ctl pad hue4" style="left:238px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">5</div></div>
+        <div class="ctl btn-ctl pad hue4" style="left:270px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">6</div></div>
+        <div class="ctl btn-ctl pad hue4 on" style="left:302px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">7</div></div>
+        <div class="ctl btn-ctl pad hue4" style="left:334px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">8</div></div>
+        <div class="ctl btn-ctl pad hue1 on" style="left:372px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">9</div></div>
+        <div class="ctl btn-ctl pad hue1" style="left:404px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">10</div></div>
+        <div class="ctl btn-ctl pad hue1 on" style="left:436px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">11</div></div>
+        <div class="ctl btn-ctl pad hue1 on" style="left:468px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">12</div></div>
+        <div class="ctl btn-ctl pad hue4" style="left:506px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">13</div></div>
+        <div class="ctl btn-ctl pad hue4" style="left:538px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">14</div></div>
+        <div class="ctl btn-ctl pad hue4 on" style="left:570px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">15</div></div>
+        <div class="ctl btn-ctl pad hue4" style="left:602px; top:292px; width:28px; height:36px;"><div class="name" style="font-size:8.5px">16</div></div>
+
+        <!-- FILTER: ochre, an envelope filter on a pad -->
+        <div class="ctlpanel" style="left:664px; top:208px; width:296px; height:146px;"><div class="ptitle">FILTER</div></div>
+        <div class="ctl xy hue4" style="left:684px; top:228px; width:150px; height:104px;">
+            <div class="field2"></div>
+            <div class="trail" style="left:48%; top:52%"></div>
+            <div class="trail" style="left:54%; top:45%"></div>
+            <div class="cross h" style="top:38%"></div><div class="cross v" style="left:60%"></div>
+            <div class="puck" style="left:60%; top:38%"></div>
+        </div>
+        <div class="ctl btn-ctl hue4" style="left:848px; top:228px; width:64px; height:24px;"><div class="name" style="font-size:8.5px">LOW</div></div>
+        <div class="ctl btn-ctl hue4 on" style="left:848px; top:258px; width:64px; height:24px;"><div class="name" style="font-size:8.5px">BAND</div></div>
+        <div class="ctl btn-ctl hue4" style="left:848px; top:288px; width:64px; height:24px;"><div class="name" style="font-size:8.5px">HIGH</div></div>
+        <div class="ctl led hue4 on" style="left:922px; top:232px; width:18px; height:18px;"></div>
+        <div class="silk" style="left:911px; top:256px; width:40px;">ENV</div>
+        <div class="ctl led hue4" style="left:922px; top:274px; width:18px; height:18px;"></div>
+        <div class="silk" style="left:911px; top:298px; width:40px;">PEAK</div>
+
+        <!-- ======================================== band C: the mixer -->
+        <!-- every strip: a fader in the channel's color, a meter, a send, and one color to a job:
+             mute is red, solo is ochre, the sends are teal -->
+        <div class="surfrule" style="left:12px; top:364px; width:948px; height:12px;"></div>
+
+        <div class="ctl fader hue1" style="left:22px; top:382px; width:26px; height:96px;"><div class="slot"><div class="fill" style="height:70%"></div><div class="capbar" style="bottom:calc(70% - 6px);"></div></div></div>
+        <div class="ctl meter neutral" style="left:54px; top:382px; width:18px; height:96px;"><i></i><i></i><i></i><i></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl knob hue3" style="left:90px; top:382px; width:40px; height:40px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="22.5 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(-54deg)"></div></div>
+        <div class="silk" style="left:80px; top:425px; width:60px;">SEND</div>
+        <div class="ctl btn-ctl hue6" style="left:79px; top:438px; width:62px; height:20px;"><div class="name" style="font-size:8px">MUTE</div></div>
+        <div class="ctl btn-ctl hue4" style="left:79px; top:462px; width:62px; height:20px;"><div class="name" style="font-size:8px">SOLO</div></div>
+        <div class="tag" style="left:22px; top:488px; width:122px;">STRINGS</div>
+
+        <div class="ctl fader hue4" style="left:157px; top:382px; width:26px; height:96px;"><div class="slot"><div class="fill" style="height:55%"></div><div class="capbar" style="bottom:calc(55% - 6px);"></div></div></div>
+        <div class="ctl meter neutral" style="left:189px; top:382px; width:18px; height:96px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="ctl knob hue3" style="left:225px; top:382px; width:40px; height:40px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="41.25 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(13.5deg)"></div></div>
+        <div class="silk" style="left:215px; top:425px; width:60px;">SEND</div>
+        <div class="ctl btn-ctl hue6 on" style="left:214px; top:438px; width:62px; height:20px;"><div class="name" style="font-size:8px">MUTE</div></div>
+        <div class="ctl btn-ctl hue4" style="left:214px; top:462px; width:62px; height:20px;"><div class="name" style="font-size:8px">SOLO</div></div>
+        <div class="tag" style="left:157px; top:488px; width:122px;">CLAV</div>
+
+        <div class="ctl fader hue5" style="left:292px; top:382px; width:26px; height:96px;"><div class="slot"><div class="fill" style="height:80%"></div><div class="capbar" style="bottom:calc(80% - 6px);"></div></div></div>
+        <div class="ctl meter neutral" style="left:324px; top:382px; width:18px; height:96px;"><i></i><i></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl knob hue3" style="left:360px; top:382px; width:40px; height:40px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="15 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(-81deg)"></div></div>
+        <div class="silk" style="left:350px; top:425px; width:60px;">SEND</div>
+        <div class="ctl btn-ctl hue6" style="left:349px; top:438px; width:62px; height:20px;"><div class="name" style="font-size:8px">MUTE</div></div>
+        <div class="ctl btn-ctl hue4" style="left:349px; top:462px; width:62px; height:20px;"><div class="name" style="font-size:8px">SOLO</div></div>
+        <div class="tag" style="left:292px; top:488px; width:122px;">BASS</div>
+
+        <div class="ctl fader hue6" style="left:427px; top:382px; width:26px; height:96px;"><div class="slot"><div class="fill" style="height:75%"></div><div class="capbar" style="bottom:calc(75% - 6px);"></div></div></div>
+        <div class="ctl meter neutral" style="left:459px; top:382px; width:18px; height:96px;"><i></i><i class="lit hot"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl knob hue3 held" style="left:495px; top:382px; width:40px; height:40px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="30 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(-27deg)"></div></div>
+        <div class="silk" style="left:485px; top:425px; width:60px;">SEND</div>
+        <div class="ctl btn-ctl hue6" style="left:484px; top:438px; width:62px; height:20px;"><div class="name" style="font-size:8px">MUTE</div></div>
+        <div class="ctl btn-ctl hue4" style="left:484px; top:462px; width:62px; height:20px;"><div class="name" style="font-size:8px">SOLO</div></div>
+        <div class="tag" style="left:427px; top:488px; width:122px;">DRUMS</div>
+
+        <div class="ctl fader hue2" style="left:562px; top:382px; width:26px; height:96px;"><div class="slot"><div class="fill" style="height:45%"></div><div class="capbar" style="bottom:calc(45% - 6px);"></div></div></div>
+        <div class="ctl meter neutral" style="left:594px; top:382px; width:18px; height:96px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl knob hue3" style="left:630px; top:382px; width:40px; height:40px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="48.75 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(40.5deg)"></div></div>
+        <div class="silk" style="left:620px; top:425px; width:60px;">SEND</div>
+        <div class="ctl btn-ctl hue6 offline" style="left:619px; top:438px; width:62px; height:20px;"><div class="name" style="font-size:8px">MUTE</div></div>
+        <div class="ctl btn-ctl hue4 dim" style="left:619px; top:462px; width:62px; height:20px;"><div class="name" style="font-size:8px">SOLO</div></div>
+        <div class="tag" style="left:562px; top:488px; width:122px;">PERC</div>
+
+        <div class="ctl fader hue3" style="left:697px; top:382px; width:26px; height:96px;"><div class="slot"><div class="fill" style="height:60%"></div><div class="capbar" style="bottom:calc(60% - 6px);"></div></div></div>
+        <div class="ctl meter neutral" style="left:729px; top:382px; width:18px; height:96px;"><i></i><i></i><i></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl knob hue3" style="left:765px; top:382px; width:40px; height:40px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="37.5 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        <div class="silk" style="left:755px; top:425px; width:60px;">SEND</div>
+        <div class="ctl btn-ctl hue6" style="left:754px; top:438px; width:62px; height:20px;"><div class="name" style="font-size:8px">MUTE</div></div>
+        <div class="ctl btn-ctl hue4 on" style="left:754px; top:462px; width:62px; height:20px;"><div class="name" style="font-size:8px">SOLO</div></div>
+        <div class="tag" style="left:697px; top:488px; width:122px;">HORNS</div>
+
+        <div class="ctl fader neutral" style="left:832px; top:382px; width:26px; height:96px;"><div class="slot"><div class="fill" style="height:85%"></div><div class="capbar" style="bottom:calc(85% - 6px);"></div></div></div>
+        <div class="ctl meter neutral" style="left:864px; top:382px; width:18px; height:96px;"><i></i><i class="lit hot"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl knob neutral detent" style="left:900px; top:382px; width:40px; height:40px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="37.5 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        <div class="silk" style="left:890px; top:425px; width:60px;">BALANCE</div>
+        <div class="ctl btn-ctl hue5" style="left:889px; top:438px; width:62px; height:20px;"><div class="name" style="font-size:8px">MONO</div></div>
+        <div class="ctl btn-ctl hue6 on" style="left:889px; top:462px; width:62px; height:20px;"><div class="name" style="font-size:8px">REC</div></div>
+        <div class="tag" style="left:832px; top:488px; width:122px;">MASTER</div>
+
+    </div>
+    <div class="decktag"><b>Groovy Dark</b> &mdash; a brown page with a paper grain, espresso controls in heavy lines of their own color, cream print, and sections framed in four stripes. Nothing glows and nothing casts a shadow</div>
+
+</div>
+
+<!-- ============================================= WHAT THE PANEL DOES -->
+<div class="board" style="height:388px; margin-top:13px;">
+
+    <div class="surf tonal groovy groovydark" style="position:absolute; inset:0;">
+
+        <div class="rhead" style="left:20px; top:14px;">THE SAME LINES AS GROOVY, TURNED OVER FOR A DARK ROOM.</div>
+
+        <!-- knobs -->
+        <div class="ctl knob hue1" style="left:34px; top:56px; width:96px; height:96px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="43.5 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(21.6deg)"></div></div>
+        <div class="ctl knob hue3 held" style="left:144px; top:108px; width:44px; height:44px;"><svg class="band"><circle class="lane" pathLength="100" stroke-dasharray="75 100"/><circle class="value" pathLength="100" stroke-dasharray="22.5 100"/></svg><div class="face"></div><div class="ptr" style="transform:rotate(-54deg)"></div></div>
+        <div class="state" style="left:121px; top:160px; width:90px;">UNDER A FINGER</div>
+        <div class="kcap" style="left:16px; top:236px; width:184px;"><b>Knob</b>an espresso face ringed in its color, inside a band that is the value</div>
+
+        <!-- a fader with its scale printed beside the lane -->
+        <div class="ctl fader hue2" style="left:236px; top:48px; width:34px; height:168px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:0%"></i><i style="top:25%"></i><i style="top:50%"></i><i style="top:75%"></i><i style="top:100%"></i></div>
+                <div class="fill" style="height:62%"></div><div class="capbar" style="bottom:calc(62% - 6px);"></div>
+            </div>
+        </div>
+        <div class="kcap" style="left:204px; top:236px; width:104px;"><b>Fader</b>an espresso lane, the value in color, a cream cap</div>
+
+        <!-- a button, four ways -->
+        <div class="state" style="left:318px; top:44px; width:70px;">AT REST</div>
+        <div class="ctl btn-ctl hue1" style="left:318px; top:56px; width:70px; height:34px;"><div class="name" style="font-size:9.5px">SYNC</div></div>
+        <div class="state" style="left:400px; top:44px; width:70px;">ON</div>
+        <div class="ctl btn-ctl hue1 on" style="left:400px; top:56px; width:70px; height:34px;"><div class="name" style="font-size:9.5px">SYNC</div></div>
+        <div class="state" style="left:318px; top:112px; width:70px;">DISABLED</div>
+        <div class="ctl btn-ctl hue1 dim" style="left:318px; top:124px; width:70px; height:34px;"><div class="name" style="font-size:9.5px">SYNC</div></div>
+        <div class="state" style="left:400px; top:112px; width:70px;">NO DEVICE</div>
+        <div class="ctl btn-ctl hue1 offline" style="left:400px; top:124px; width:70px; height:34px;"><div class="name" style="font-size:9.5px">SYNC</div></div>
+        <div class="kcap" style="left:312px; top:236px; width:170px;"><b>Button</b>an espresso plate in a line of its color; on fills it, and the name goes dark</div>
+
+        <!-- pads, at rest and lit -->
+        <div class="state" style="left:498px; top:44px; width:156px;">AT REST</div>
+        <div class="ctl btn-ctl pad hue6" style="left:498px; top:56px; width:34px; height:34px;"><div class="name" style="font-size:9px">1</div></div>
+        <div class="ctl btn-ctl pad hue1" style="left:538px; top:56px; width:34px; height:34px;"><div class="name" style="font-size:9px">2</div></div>
+        <div class="ctl btn-ctl pad hue4" style="left:578px; top:56px; width:34px; height:34px;"><div class="name" style="font-size:9px">3</div></div>
+        <div class="ctl btn-ctl pad hue2" style="left:618px; top:56px; width:34px; height:34px;"><div class="name" style="font-size:9px">4</div></div>
+        <div class="state" style="left:498px; top:112px; width:156px;">LIT</div>
+        <div class="ctl btn-ctl pad hue6 on" style="left:498px; top:124px; width:34px; height:34px;"><div class="name" style="font-size:9px">1</div></div>
+        <div class="ctl btn-ctl pad hue1 on" style="left:538px; top:124px; width:34px; height:34px;"><div class="name" style="font-size:9px">2</div></div>
+        <div class="ctl btn-ctl pad hue4 on" style="left:578px; top:124px; width:34px; height:34px;"><div class="name" style="font-size:9px">3</div></div>
+        <div class="ctl btn-ctl pad hue2 on" style="left:618px; top:124px; width:34px; height:34px;"><div class="name" style="font-size:9px">4</div></div>
+        <div class="ctl led hue6" style="left:548px; top:192px; width:18px; height:18px;"></div>
+        <div class="ctl led hue6 on" style="left:586px; top:192px; width:18px; height:18px;"></div>
+        <div class="kcap" style="left:486px; top:236px; width:180px;"><b>Pad and lamp</b>a pad holds a third of its color at rest and a lamp none; lit, each is all of it</div>
+
+        <!-- the stripe -->
+        <div class="ctlpanel" style="left:684px; top:46px; width:150px; height:118px;"><div class="ptitle">SECTION</div></div>
+        <div class="surfrule" style="left:684px; top:182px; width:150px; height:12px;"></div>
+        <div class="kcap" style="left:672px; top:236px; width:170px;"><b>The stripe</b>four flat stripes that turn their corners; a rule is the same band, straight</div>
+
+        <!-- the texture -->
+        <div class="patch" style="left:858px; top:60px;"></div>
+        <div class="state" style="left:852px; top:126px; width:70px;">AS DRAWN</div>
+        <div class="patch zoom" style="left:922px; top:60px;"></div>
+        <div class="state" style="left:916px; top:126px; width:70px;">4 TIMES<br>THE SIZE</div>
+        <div class="kcap" style="left:846px; top:236px; width:140px;"><b>The texture</b>a fine paper grain on the page, under every control</div>
+
+        <div class="measure" style="left:40px; top:306px; width:912px;">
+            <b>Why every color is bright.</b>
+            A switch that is on becomes its color outright with a dark name on it, so all six colors have to be light enough to carry that name at <span class="num">4.5 : 1</span>. The deep reds in your palettes can't: <span class="num">#C21717</span> is only <span class="num">2.36 : 1</span> against this page. So the red slot is lifted to <span class="num">#EC5046</span>, which carries the name at <span class="num">4.66 : 1</span>, and the outer stripe is the lighter red from your first palette, <span class="num">#E23D2D</span>, which clears the <span class="num">3 : 1</span> an edge needs. The four stripes are your colors as they are.
+        </div>
+    </div>
+</div>
+
+<div class="swatches">
+    <div style="background:#3B2419; color:#F4E4C4">#3B2419 <span>Brown</span></div>
+    <div style="background:#2A1911; color:#F4E4C4">#2A1911 <span>Espresso</span></div>
+    <div style="background:#F4E4C4; color:#2A1911">#F4E4C4 <span>Ink</span></div>
+    <div style="background:#FDDCA9; color:#2A1911">#FDDCA9 <span>Cream</span></div>
+    <div style="background:#F37A26; color:#2A1911">#F37A26 <span>Orange</span></div>
+    <div style="background:#A3AE4C; color:#2A1911">#A3AE4C <span>Avocado</span></div>
+    <div style="background:#22A7A2; color:#2A1911">#22A7A2 <span>Teal</span></div>
+    <div style="background:#F2A81C; color:#2A1911">#F2A81C <span>Gold</span></div>
+    <div style="background:#7FA6D2; color:#2A1911">#7FA6D2 <span>Denim</span></div>
+    <div style="background:#EC5046; color:#2A1911">#EC5046 <span>Red</span></div>
+    <div style="background:#E23D2D; color:#2A1911">#E23D2D <span>Stripe red</span></div>
+    <div style="background:#E76219; color:#2A1911">#E76219 <span>Stripe orange</span></div>
+    <div style="background:#FEA712; color:#2A1911">#FEA712 <span>Stripe gold</span></div>
+</div>
+
+<div class="costgrid">
+    <div class="cost">
+        <h4><span class="yes">Built</span> &mdash; what the engine already does for this panel</h4>
+        Everything Groovy's card lists, with the colors turned over: an espresso plate and knob face (<span class="mono">PlateColor</span>, <span class="mono">KnobFaceColor</span>), espresso lanes, bands and fields (<span class="mono">TrackColor</span>, <span class="mono">WellColor</span>), a cream pointer and a cream fader cap with an espresso line (<span class="mono">PointerColor</span>, <span class="mono">ThumbColor</span>, <span class="mono">CapLineColor</span>), cream as the neutral (<span class="mono">NeutralColor</span>), and cream print (<span class="mono">InkColor</span>). Plus <b>the paper grain</b>: fine specks on the page, under the controls (<span class="mono">GrainPercent</span>, <span class="mono">GrainStreak</span> 1, <span class="mono">GrainColor</span> unset, so the specks come from the page itself).
+    </div>
+    <div class="cost">
+        <h4><span class="no">Needs</span> &mdash; Groovy's five asks, and nothing else</h4>
+        The ink for a lit switch is a dark one here: the name on a lit switch is espresso, <span class="mono">#2A1911</span>, where today the engine would pick its own near-black, <span class="mono">#101114</span>. Pads tint the espresso plate, the knob's band has round ends, the lines are three and six pixels, and the band is <b>four stripes of three pixels</b> instead of three of four. The same code draws both themes; only the values differ.
+    </div>
+    <div class="cost">
+        <h4>What it costs</h4>
+        <b>A dark theme, for a dark room.</b> At rest the page is quiet, but a switch that is on is a solid block of color, so a page with many switches on gets loud: keep the colored switches to the ones that matter. <b>Color is what tells the slots apart</b>: all six sit within 1.79 : 1 of each other in brightness. With red-green color blindness, red and avocado are only delta E 8.1 apart and orange and gold 12, so don't use either pair for two switches that mean opposite things. Every slot clears 4.0 on the page and 4.66 as type on the plate.
+    </div>
+</div>
+
+<div class="asks">
+    <h4>The same five asks as Groovy, with this theme's values. Nothing is new, and the grain is built.</h4>
+    <table>
+        <tr><th></th><th>Ask</th><th>Groovy Dark</th><th>Groovy</th></tr>
+        <tr>
+            <td class="n">1</td>
+            <td class="ask"><b>An ink for a lit switch.</b> A second ink for the name on a switch that is on. Groovy calls it the light ink.</td>
+            <td>Espresso <span class="mono">#2A1911</span>, a dark name on a bright fill: 4.66 : 1 on red, the lowest.</td>
+            <td class="light">Cream <span class="mono">#FFF7E6</span>, a light name on a deep fill.</td>
+        </tr>
+        <tr>
+            <td class="n">2</td>
+            <td class="ask"><b>A pad's resting color on the plate.</b></td>
+            <td>A third of each color over espresso: rust, olive, deep teal, amber, slate and wine.</td>
+            <td class="light">A third over cream: peach, pink and sage.</td>
+        </tr>
+        <tr>
+            <td class="n">3</td>
+            <td class="ask"><b>Round ends</b> on a knob's band, and a pill of a fader cap.</td>
+            <td>The same.</td>
+            <td class="light">The same.</td>
+        </tr>
+        <tr>
+            <td class="n">4</td>
+            <td class="ask"><b>Heavier lines.</b> A rim of three pixels, a knob's band of six.</td>
+            <td>The same.</td>
+            <td class="light">The same.</td>
+        </tr>
+        <tr>
+            <td class="n">5</td>
+            <td class="ask"><b>Stripes</b> on a section's frame and a rule.</td>
+            <td>Four of three pixels: red <span class="mono">#E23D2D</span>, orange <span class="mono">#E76219</span>, gold <span class="mono">#FEA712</span>, cream <span class="mono">#FDDCA9</span>. The notch for a section's name is cut out of the band, so the page's grain runs through it.</td>
+            <td class="light">Three of four pixels: brown, burnt orange, orange.</td>
+        </tr>
+        <tr>
+            <td class="n"></td>
+            <td class="ask"><b>Grain</b>, already built.</td>
+            <td>Fine specks from the page's own color. Measured on this render: the page varies by about 5 levels (one standard deviation) and its average does not move.</td>
+            <td class="light">None: flat, as you asked for Groovy.</td>
+        </tr>
+    </table>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>What I left out on purpose.</b> The grunge and halftone dots of your second picture are heavier than paper, and a fine speck is what the engine's grain draws. The grain sits on the page and under the controls, the way the engine lays it; the poster's grain covers the stripes as well, which would need a new feature. The big shapes &mdash; the S bend, the sunburst, the diagonal &mdash; belong to a layout, which can already put a picture behind a page. <b>Where I was honest rather than faithful:</b> mint and sage from your palettes aren't among the six, so each slot stays in the same family as Groovy's &mdash; orange, avocado, teal, gold, denim and red &mdash; and a layout switched between the two themes keeps its meaning. Denim isn't in your palettes; it is Groovy's blue, lifted for a dark page. Every color was measured.
+</p>
+
+</div>
+</body>
+</html>

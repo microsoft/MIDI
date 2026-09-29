@@ -28,8 +28,9 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <!-- PackageReference is used here, so the legacy UAP NuGet asset resolver must stay out -->
     <ResolveNuGetPackages>false</ResolveNuGetPackages>
-    <!-- unpackaged MRT Core looks for resources.pri next to the executable -->
-    <ProjectPriFileName>resources.pri</ProjectPriFileName>
+    <!-- Named after the exe, which unpackaged MRT Core also finds, so the tools can share one
+         install folder. A resources.pri beside the exe would be picked instead of this. -->
+    <ProjectPriFileName>$(TargetName).pri</ProjectPriFileName>
     <!-- unpackaged app: the Windows App SDK bootstrapper is auto-initialized -->
     <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
     <WindowsAppSdkBootstrapInitialize>true</WindowsAppSdkBootstrapInitialize>
@@ -188,6 +189,7 @@
     <ClInclude Include="surface\SurfaceAutomationPeer.h" />
     <ClInclude Include="surface\SurfaceColors.h" />
     <ClInclude Include="surface\SurfaceRenderer.h" />
+    <ClInclude Include="surface\SurfaceTextures.h" />
     <ClInclude Include="runtime\ClockGenerator.h" />
     <ClInclude Include="runtime\LfoGenerator.h" />
     <ClInclude Include="runtime\StepSequencer.h" />
@@ -378,6 +380,7 @@
     <ClCompile Include="surface\SurfaceControls.cpp" />
     <ClCompile Include="surface\SurfacePads.cpp" />
     <ClCompile Include="surface\SurfaceRenderer.cpp" />
+    <ClCompile Include="surface\SurfaceTextures.cpp" />
     <ClCompile Include="surface\SurfaceVideo.cpp" />
     <ClCompile Include="thumbnail\ThumbnailRenderer.cpp" />
     <ClCompile Include="thumbnail\SurfaceThumbnail.cpp" />

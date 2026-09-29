@@ -410,6 +410,27 @@ namespace glass
         binding.StartY = point.Position().Y;
         binding.StartX = point.Position().X;
 
+        // A knob turned round and round is measured from where the finger landed, so it turns
+        // from where it is rather than jumping to the finger.
+        if (binding.Drag == DragAxis::Circular)
+        {
+            binding.TurnedDegrees = 0.0;
+            binding.TurnAnchored = IsFarEnoughToTurn(
+                binding.Element.ActualWidth(),
+                binding.Element.ActualHeight(),
+                point.Position().X,
+                point.Position().Y);
+
+            if (binding.TurnAnchored)
+            {
+                binding.StartAngle = AngleAtPosition(
+                    binding.Element.ActualWidth(),
+                    binding.Element.ActualHeight(),
+                    point.Position().X,
+                    point.Position().Y);
+            }
+        }
+
         if (IsTurnedByHand(binding.Kind))
         {
             // Where the hand landed on the platter. Everything after this is measured from
@@ -582,9 +603,45 @@ namespace glass
             return;
         }
 
+        // Round and round: the knob follows how far the finger goes round its middle, clockwise
+        // for more.
+        if (binding.Drag == DragAxis::Circular)
+        {
+            auto const width = binding.Element.ActualWidth();
+            auto const height = binding.Element.ActualHeight();
+            auto const x = point.Position().X;
+            auto const y = point.Position().Y;
+
+            if (!IsFarEnoughToTurn(width, height, x, y))
+            {
+                binding.TurnAnchored = false;
+                return;
+            }
+
+            auto const angle = AngleAtPosition(width, height, x, y);
+
+            // Back out of the middle, the turn carries on from here rather than from wherever
+            // the finger went in.
+            if (!binding.TurnAnchored)
+            {
+                binding.StartAngle = angle;
+                binding.TurnAnchored = true;
+                return;
+            }
+
+            binding.TurnedDegrees = ClampKnobTurn(
+                binding.StartValue,
+                binding.TurnedDegrees + AngleDelta(binding.StartAngle, angle));
+
+            binding.StartAngle = angle;
+
+            Publish(binding, binding.StartValue + binding.TurnedDegrees / KnobTurnDegrees, false);
+            return;
+        }
+
         // A knob has no travel under the finger, so it is nudged rather than set. Up is more,
-        // which is what every plug-in does, and a circle is hard to trace on glass. A row of
-        // knobs in a narrow strip can be set to drag sideways instead.
+        // which is what every plug-in does, and a circle is hard to trace on a small knob. A row
+        // of knobs in a narrow strip can be set to drag sideways instead.
         auto const delta = binding.Drag == DragAxis::Horizontal
             ? (point.Position().X - binding.StartX) / KnobDragPixels
             : (binding.StartY - point.Position().Y) / KnobDragPixels;

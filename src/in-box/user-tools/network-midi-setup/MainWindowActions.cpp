@@ -215,6 +215,40 @@ namespace winrt::midinetworksetup::implementation
                 return false;
             }
         }
+
+        // RTP-MIDI names travel as DNS-SD labels, which hold 63 bytes of UTF-8
+        constexpr int RtpNameMaxUtf8Bytes{ 63 };
+
+        bool IsRtpNameTooLong(_In_ winrt::hstring const& value) noexcept
+        {
+            return !value.empty() &&
+                ::WideCharToMultiByte(CP_UTF8, 0, value.c_str(), static_cast<int>(value.size()), nullptr, 0, nullptr, nullptr) > RtpNameMaxUtf8Bytes;
+        }
+
+        // an advertised RTP-MIDI name is a single DNS label
+        winrt::hstring WithoutPeriods(_In_ winrt::hstring const& value) noexcept
+        {
+            try
+            {
+                std::wstring copy{ value };
+
+                std::erase(copy, L'.');
+
+                return winrt::hstring{ copy };
+            }
+            catch (...)
+            {
+                return value;
+            }
+        }
+
+        // for a change the service has already made, but the configuration file did not take
+        winrt::hstring NotSavedMessage(_In_ midi2svc::MidiServiceConfigSaveResponse const& response) noexcept
+        {
+            return res::FormatString(
+                L"RtpChangeNotSavedFormat",
+                response == nullptr ? winrt::hstring{} : response.ErrorMessage());
+        }
     }
 
 
@@ -681,10 +715,12 @@ namespace winrt::midinetworksetup::implementation
 
     _Use_decl_annotations_
     foundation::IAsyncOperation<bool> MainWindow::ShowCustomizeDialogAsync(
-        midinetworksetup::RemoteHostItem const item,
+        winrt::hstring const endpointDeviceId,
+        winrt::hstring const clientKey,
+        bool const isRtpMidi,
         std::shared_ptr<winrt::hstring> errorMessage)
     {
-        if (m_openDialog != nullptr || item == nullptr || item.EndpointDeviceId().empty())
+        if (m_openDialog != nullptr || endpointDeviceId.empty())
         {
             co_return false;
         }
@@ -702,16 +738,17 @@ namespace winrt::midinetworksetup::implementation
 
         // Only the configuration file records these two, so they are read before the endpoint
         // lookup rather than from the endpoint's properties.
-        bool const currentCreateMidi1Ports =
-            native::NetworkConfigFile::Current().GetClientCreateMidi1Ports(item.ClientId());
+        bool const currentCreateMidi1Ports = isRtpMidi ||
+            native::NetworkConfigFile::Current().GetClientCreateMidi1Ports(clientKey);
 
-        auto const currentFallbackMidi1PortCount =
-            native::NetworkConfigFile::Current().GetClientFallbackMidi1PortCount(item.ClientId());
+        auto const currentFallbackMidi1PortCount = isRtpMidi ?
+            static_cast<uint8_t>(MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT) :
+            native::NetworkConfigFile::Current().GetClientFallbackMidi1PortCount(clientKey);
 
         try
         {
             auto const info = midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(
-                item.EndpointDeviceId());
+                endpointDeviceId);
 
             if (info == nullptr)
             {
@@ -755,6 +792,7 @@ namespace winrt::midinetworksetup::implementation
             CustomizeImageBox().Text(currentImage);
             CustomizeCreateMidi1PortsCheckBox().IsChecked(currentCreateMidi1Ports);
             CustomizeFallbackMidi1PortCountBox().Value(static_cast<double>(currentFallbackMidi1PortCount));
+            CustomizeMidi1PortsPanel().Visibility(isRtpMidi ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
 
             CustomizeDialog().XamlRoot(Content().XamlRoot());
 
@@ -784,7 +822,14 @@ namespace winrt::midinetworksetup::implementation
 
         if (!image.empty() && !IsBareFileName(image))
         {
-            SetRemoteStatus(res::GetString(L"StatusImageMustBeFileName"));
+            if (isRtpMidi)
+            {
+                SetRtpRemoteStatus(res::GetString(L"StatusImageMustBeFileName"));
+            }
+            else
+            {
+                SetRemoteStatus(res::GetString(L"StatusImageMustBeFileName"));
+            }
 
             co_return false;
         }
@@ -802,7 +847,9 @@ namespace winrt::midinetworksetup::implementation
             currentFallbackMidi1PortCount :
             FallbackMidi1PortCountFrom(CustomizeFallbackMidi1PortCountBox());
 
-        auto const clientKey = item.ClientId();
+        auto const transportId = isRtpMidi ?
+            midi2rtp::MidiRtpTransportManager::TransportId() :
+            midi2net::MidiNetworkTransportManager::TransportId();
 
         co_await winrt::resume_background();
 
@@ -814,8 +861,7 @@ namespace winrt::midinetworksetup::implementation
             midi2svc::MidiServiceConfigEndpointMatchCriteria match{};
             match.DeviceInstanceId(deviceInstanceId);
 
-            midi2svc::MidiServiceEndpointCustomizationConfig config{
-                midi2net::MidiNetworkTransportManager::TransportId() };
+            midi2svc::MidiServiceEndpointCustomizationConfig config{ transportId };
 
             config.MatchCriteria(match);
             config.Name(name);
@@ -835,8 +881,7 @@ namespace winrt::midinetworksetup::implementation
                 {
                     // Saving three empty values would leave a stored entry which says nothing,
                     // so the entry comes out of the file instead.
-                    midi2svc::MidiServiceEndpointCustomizationRemovalConfig removal{
-                        midi2net::MidiNetworkTransportManager::TransportId(), match };
+                    midi2svc::MidiServiceEndpointCustomizationRemovalConfig removal{ transportId, match };
 
                     auto const saveResponse = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(removal);
 
@@ -867,7 +912,7 @@ namespace winrt::midinetworksetup::implementation
             // The port count reaches the running endpoint; the create flag is recorded for the
             // next connection, because whether an endpoint has MIDI 1.0 ports at all is settled
             // when the endpoint is built.
-            if (succeeded && !clientKey.empty() &&
+            if (succeeded && !isRtpMidi && !clientKey.empty() &&
                 (createMidi1Ports != currentCreateMidi1Ports ||
                  fallbackMidi1PortCount != currentFallbackMidi1PortCount))
             {
@@ -935,7 +980,7 @@ namespace winrt::midinetworksetup::implementation
 
         auto errorMessage = std::make_shared<winrt::hstring>();
 
-        auto const succeeded = co_await ShowCustomizeDialogAsync(item, errorMessage);
+        auto const succeeded = co_await ShowCustomizeDialogAsync(item.EndpointDeviceId(), item.ClientId(), false, errorMessage);
 
         try
         {
@@ -992,7 +1037,15 @@ namespace winrt::midinetworksetup::implementation
 
             if (importedName.empty())
             {
-                SetRemoteStatus(res::GetString(L"StatusImageCopyFailed"));
+                // the dialog belongs to whichever page is showing
+                if (RtpRemoteHostsPanel().Visibility() == xaml::Visibility::Visible)
+                {
+                    SetRtpRemoteStatus(res::GetString(L"StatusImageCopyFailed"));
+                }
+                else
+                {
+                    SetRemoteStatus(res::GetString(L"StatusImageCopyFailed"));
+                }
 
                 co_return;
             }
@@ -1555,6 +1608,7 @@ namespace winrt::midinetworksetup::implementation
         auto const hostKey = item.HostId();
         auto const name = item.RemoteName();
         auto const productInstanceId = item.RemoteProductInstanceId();
+        auto const isRtpMidi = item.IsRtpMidi();
 
         winrt::guid hostId{};
 
@@ -1571,22 +1625,29 @@ namespace winrt::midinetworksetup::implementation
 
         try
         {
-            midi2net::MidiNetworkRemoteClientApprovalConfig config{
-                hostId, name, productInstanceId, approve, thisRequestOnly };
-
-            auto const response = co_await midi2net::MidiNetworkTransportManager::ApproveOrDenyRemoteClientConnectRequestAsync(config);
-
-            if (response != nullptr && response.Success())
+            if (isRtpMidi)
             {
-                if (thisRequestOnly)
+                midi2rtp::MidiRtpRemoteClientApprovalConfig config{ hostId, name, approve, thisRequestOnly };
+
+                auto const response = co_await midi2rtp::MidiRtpTransportManager::ApproveOrDenyRemoteClientConnectRequestAsync(config);
+
+                winrt::hstring saveError{};
+
+                if (response == nullptr || !response.Success())
+                {
+                    message = response == nullptr ?
+                        res::GetString(L"InvitationAnswerFailedGeneral") :
+                        res::FormatString(L"InvitationAnswerFailedFormat", response.ErrorMessage());
+                }
+                else if (thisRequestOnly)
                 {
                     message = approve ?
                         res::FormatString(L"InvitationAllowedOnceFormat", name) :
                         res::FormatString(L"InvitationDeniedOnceFormat", name);
                 }
-                else if (!native::NetworkConfigFile::Current().SetRemoteClientDecision(hostId, name, productInstanceId, approve))
+                else if (!SaveRtpKnownClients(hostId, saveError))
                 {
-                    message = native::NetworkConfigFile::Current().LastErrorMessage();
+                    message = res::FormatString(L"RtpDecisionNotSavedFormat", name, saveError);
                 }
                 else
                 {
@@ -1597,9 +1658,36 @@ namespace winrt::midinetworksetup::implementation
             }
             else
             {
-                message = response == nullptr ?
-                    res::GetString(L"InvitationAnswerFailedGeneral") :
-                    res::FormatString(L"InvitationAnswerFailedFormat", response.ErrorMessage());
+                midi2net::MidiNetworkRemoteClientApprovalConfig config{
+                    hostId, name, productInstanceId, approve, thisRequestOnly };
+
+                auto const response = co_await midi2net::MidiNetworkTransportManager::ApproveOrDenyRemoteClientConnectRequestAsync(config);
+
+                if (response != nullptr && response.Success())
+                {
+                    if (thisRequestOnly)
+                    {
+                        message = approve ?
+                            res::FormatString(L"InvitationAllowedOnceFormat", name) :
+                            res::FormatString(L"InvitationDeniedOnceFormat", name);
+                    }
+                    else if (!native::NetworkConfigFile::Current().SetRemoteClientDecision(hostId, name, productInstanceId, approve))
+                    {
+                        message = native::NetworkConfigFile::Current().LastErrorMessage();
+                    }
+                    else
+                    {
+                        message = approve ?
+                            res::FormatString(L"InvitationAllowedAlwaysFormat", name) :
+                            res::FormatString(L"InvitationBlockedFormat", name);
+                    }
+                }
+                else
+                {
+                    message = response == nullptr ?
+                        res::GetString(L"InvitationAnswerFailedGeneral") :
+                        res::FormatString(L"InvitationAnswerFailedFormat", response.ErrorMessage());
+                }
             }
         }
         catch (...)
@@ -1615,8 +1703,11 @@ namespace winrt::midinetworksetup::implementation
 
                     if (auto strong = weak.get())
                     {
+                        // the bar sits above every page, so the answer is reported on each
                         strong->SetRemoteStatus(message);
                         strong->SetLocalStatus(message);
+                        strong->SetRtpRemoteStatus(message);
+                        strong->SetRtpLocalStatus(message);
                         strong->RequestRefreshAsync();
                     }
                 });
@@ -2337,6 +2428,1103 @@ namespace winrt::midinetworksetup::implementation
                     if (auto strong = weak.get())
                     {
                         strong->SetLocalStatus(message);
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
+    }
+
+
+    // ------------------------------------------------------------------------------------
+    // RTP-MIDI: connecting to remote devices
+    // ------------------------------------------------------------------------------------
+
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<bool> MainWindow::ConfirmRtpAlongsideNetworkMidi2Async(winrt::hstring const deviceName)
+    {
+        co_return co_await ConfirmAsync(
+            res::GetString(L"RtpConnectAnywayTitle"),
+            res::FormatString(L"RtpConnectAnywayMessageFormat", deviceName));
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnConnectRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto strongThis = get_strong();
+
+        try
+        {
+            auto item = ItemOf<midinetworksetup::RtpRemoteHostItem>(sender);
+
+            if (item == nullptr || item.ServiceInstanceName().empty())
+            {
+                co_return;
+            }
+
+            if (item.AlsoOffersNetworkMidi2() && !co_await ConfirmRtpAlongsideNetworkMidi2Async(item.DisplayName()))
+            {
+                co_return;
+            }
+
+            auto customName = std::make_shared<winrt::hstring>();
+
+            if (!co_await PromptForConnectNameAsync(item.DisplayName(), customName))
+            {
+                co_return;
+            }
+
+            ConnectRtpRemoteHostAsync(item, *customName);
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to start connecting to an RTP-MIDI device.")
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::ConnectRtpRemoteHostAsync(
+        midinetworksetup::RtpRemoteHostItem const item,
+        winrt::hstring const customEndpointName)
+    {
+        if (item == nullptr)
+        {
+            co_return;
+        }
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        auto const displayName = item.DisplayName();
+        auto const serviceInstanceName = item.ServiceInstanceName();
+
+        item.IsBusy(true);
+        SetRtpRemoteStatus(res::FormatString(L"ConnectingToDeviceFormat", displayName));
+
+        co_await winrt::resume_background();
+
+        winrt::hstring message{};
+
+        try
+        {
+            // matched on the advertised name, so the service finds the device again at a new address
+            midi2rtp::MidiRtpClientMatchCriteria criteria{};
+            criteria.ServiceInstanceName(serviceInstanceName);
+
+            midi2rtp::MidiRtpClientConnectConfig config{};
+            config.CustomEndpointName(customEndpointName);
+            config.MatchCriteria(criteria);
+
+            auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(config);
+
+            if (response != nullptr && response.Success())
+            {
+                auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                message = saved != nullptr && saved.Success() ?
+                    res::FormatString(L"ConnectRequestedFormat", displayName) :
+                    NotSavedMessage(saved);
+            }
+            else
+            {
+                message = response == nullptr ?
+                    res::GetString(L"ConnectFailedGeneral") :
+                    res::FormatString(L"ConnectFailedFormat", response.ErrorMessage());
+            }
+        }
+        catch (...)
+        {
+            message = res::GetString(L"ConnectFailedGeneral");
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, item, message]()
+                {
+                    item.IsBusy(false);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetRtpRemoteStatus(message);
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnRetryRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto item = ItemOf<midinetworksetup::RtpRemoteHostItem>(sender);
+
+        winrt::guid clientId{};
+
+        if (item == nullptr || !TryParseKey(item.ClientId(), clientId))
+        {
+            co_return;
+        }
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        auto const displayName = item.DisplayName();
+
+        item.IsBusy(true);
+        SetRtpRemoteStatus(res::FormatString(L"ConnectingToDeviceFormat", displayName));
+
+        co_await winrt::resume_background();
+
+        winrt::hstring message{};
+
+        try
+        {
+            auto const response = co_await midi2rtp::MidiRtpTransportManager::ReconnectRtpClientAsync(clientId);
+
+            if (response != nullptr && response.Success())
+            {
+                message = res::FormatString(L"ConnectRequestedFormat", displayName);
+            }
+            else
+            {
+                message = response == nullptr ?
+                    res::GetString(L"ConnectFailedGeneral") :
+                    res::FormatString(L"ConnectFailedFormat", response.ErrorMessage());
+            }
+        }
+        catch (...)
+        {
+            message = res::GetString(L"ConnectFailedGeneral");
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, item, message]()
+                {
+                    item.IsBusy(false);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetRtpRemoteStatus(message);
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnDisconnectRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto item = ItemOf<midinetworksetup::RtpRemoteHostItem>(sender);
+
+        winrt::guid clientId{};
+
+        if (item == nullptr || !TryParseKey(item.ClientId(), clientId))
+        {
+            co_return;
+        }
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        auto const displayName = item.DisplayName();
+        auto const wasConnected = item.IsConnected();
+
+        if (!co_await ConfirmAsync(
+            wasConnected ?
+                res::GetString(L"DisconnectConfirmTitle") :
+                res::GetString(L"ForgetConfirmTitle"),
+            wasConnected ?
+                res::FormatString(L"DisconnectConfirmMessageFormat", displayName) :
+                res::FormatString(L"ForgetConfirmMessageFormat", displayName)))
+        {
+            co_return;
+        }
+
+        item.IsBusy(true);
+
+        co_await winrt::resume_background();
+
+        winrt::hstring message{};
+
+        try
+        {
+            midi2rtp::MidiRtpClientDisconnectConfig config{ clientId };
+
+            auto const response = co_await midi2rtp::MidiRtpTransportManager::DisconnectRtpClientAsync(config);
+
+            if (response != nullptr && response.Success())
+            {
+                auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                if (saved != nullptr && saved.Success())
+                {
+                    message = wasConnected ?
+                        res::FormatString(L"DisconnectedFormat", displayName) :
+                        res::FormatString(L"ForgottenFormat", displayName);
+                }
+                else
+                {
+                    message = NotSavedMessage(saved);
+                }
+            }
+            else
+            {
+                message = response == nullptr ?
+                    res::GetString(L"DisconnectFailedGeneral") :
+                    res::FormatString(L"DisconnectFailedFormat", response.ErrorMessage());
+            }
+        }
+        catch (...)
+        {
+            message = res::GetString(L"DisconnectFailedGeneral");
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, item, message]()
+                {
+                    item.IsBusy(false);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetRtpRemoteStatus(message);
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnCustomizeRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto item = ItemOf<midinetworksetup::RtpRemoteHostItem>(sender);
+
+        if (item == nullptr)
+        {
+            co_return;
+        }
+
+        auto strongThis = get_strong();
+
+        auto errorMessage = std::make_shared<winrt::hstring>();
+
+        auto const succeeded = co_await ShowCustomizeDialogAsync(item.EndpointDeviceId(), item.ClientId(), true, errorMessage);
+
+        try
+        {
+            if (succeeded)
+            {
+                SetRtpRemoteStatus(res::GetString(L"StatusCustomizationSaved"));
+            }
+            else
+            {
+                SetRtpRemoteStatus(errorMessage->empty() ?
+                    res::GetString(L"StatusCustomizationNotSaved") :
+                    *errorMessage);
+            }
+
+            RequestRefreshAsync();
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to report the result of customizing an RTP-MIDI device.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnCopyRtpEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto item = ItemOf<midinetworksetup::RtpRemoteHostItem>(sender);
+
+        if (item == nullptr || item.EndpointDeviceId().empty())
+        {
+            return;
+        }
+
+        try
+        {
+            winrt::Windows::ApplicationModel::DataTransfer::DataPackage package{};
+
+            package.RequestedOperation(
+                winrt::Windows::ApplicationModel::DataTransfer::DataPackageOperation::Copy);
+            package.SetText(item.EndpointDeviceId());
+
+            winrt::Windows::ApplicationModel::DataTransfer::Clipboard::SetContent(package);
+
+            SetRtpRemoteStatus(res::GetString(L"EndpointDeviceIdCopied"));
+        }
+        catch (...)
+        {
+            SetRtpRemoteStatus(res::GetString(L"EndpointDeviceIdCopyFailed"));
+        }
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnMonitorRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto item = ItemOf<midinetworksetup::RtpRemoteHostItem>(sender);
+
+            if (item == nullptr || item.EndpointDeviceId().empty())
+            {
+                return;
+            }
+
+            if (!midiapp::LaunchMonitorForEndpoint(item.EndpointDeviceId()))
+            {
+                SetRtpRemoteStatus(res::GetString(L"StatusMonitorNotAvailable"));
+            }
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to open the MIDI monitor for an RTP-MIDI device.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnMonitorRtpHostConnectionClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto item = ItemOf<midinetworksetup::HostConnectionItem>(sender);
+
+            if (item == nullptr || item.EndpointDeviceId().empty())
+            {
+                return;
+            }
+
+            if (!midiapp::LaunchMonitorForEndpoint(item.EndpointDeviceId()))
+            {
+                SetRtpLocalStatus(res::GetString(L"StatusMonitorNotAvailable"));
+            }
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to open the MIDI monitor for a connected RTP-MIDI device.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnRtpManualConnectFieldChanged(foundation::IInspectable const&, controls::TextChangedEventArgs const&)
+    {
+        UpdateRtpManualConnectButton();
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnRtpManualConnectPortChanged(controls::NumberBox const&, controls::NumberBoxValueChangedEventArgs const&)
+    {
+        UpdateRtpManualConnectButton();
+    }
+
+    void MainWindow::UpdateRtpManualConnectButton() noexcept
+    {
+        try
+        {
+            if (!m_loaded)
+            {
+                return;
+            }
+
+            RtpManualConnectButton().IsEnabled(
+                !TextOf(RtpManualAddressTextBox()).empty() && PortFrom(RtpManualPortNumberBox()) != 0);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnRtpManualConnectClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        auto strongThis = get_strong();
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        auto const address = TextOf(RtpManualAddressTextBox());
+        auto const port = PortFrom(RtpManualPortNumberBox());
+
+        if (address.empty() || port == 0)
+        {
+            co_return;
+        }
+
+        // empty means this PC's name
+        auto const name = TextOf(RtpManualNameTextBox());
+        auto const customName = TextOf(RtpManualCustomNameTextBox());
+
+        if (IsNetworkMidi2Machine(address) && !co_await ConfirmRtpAlongsideNetworkMidi2Async(address))
+        {
+            co_return;
+        }
+
+        RtpManualConnectButton().IsEnabled(false);
+        SetRtpRemoteStatus(res::FormatString(L"ConnectingToDeviceFormat", address));
+
+        co_await winrt::resume_background();
+
+        winrt::hstring message{};
+
+        try
+        {
+            midi2rtp::MidiRtpClientMatchCriteria criteria{};
+            criteria.DirectHostNameOrIPAddress(address);
+            criteria.DirectPort(port);
+
+            midi2rtp::MidiRtpClientConnectConfig config{};
+            config.Name(name);
+            config.CustomEndpointName(customName);
+            config.MatchCriteria(criteria);
+
+            auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(config);
+
+            if (response != nullptr && response.Success())
+            {
+                auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                message = saved != nullptr && saved.Success() ?
+                    res::FormatString(L"ConnectRequestedFormat", address) :
+                    NotSavedMessage(saved);
+            }
+            else
+            {
+                message = response == nullptr ?
+                    res::GetString(L"ConnectFailedGeneral") :
+                    res::FormatString(L"ConnectFailedFormat", response.ErrorMessage());
+            }
+        }
+        catch (...)
+        {
+            message = res::GetString(L"ConnectFailedGeneral");
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, message]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetRtpRemoteStatus(message);
+                        strong->UpdateRtpManualConnectButton();
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
+    }
+
+
+    // ------------------------------------------------------------------------------------
+    // RTP-MIDI: hosts on this PC
+    // ------------------------------------------------------------------------------------
+
+    _Use_decl_annotations_
+    void MainWindow::OnCreateRtpHostFieldChanged(foundation::IInspectable const&, controls::TextChangedEventArgs const&)
+    {
+        UpdateCreateRtpHostButtonState();
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnCreateRtpHostPortModeChanged(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        // XAML raises Checked while it is still applying the markup, when the rest of the
+        // dialog's fields do not exist yet
+        if (!m_loaded)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const automatic = IsCheckBoxChecked(RtpHostAutomaticPortCheckBox());
+
+            RtpHostPortNumberBox().IsEnabled(!automatic);
+            RtpHostAllowPortFallbackCheckBox().IsEnabled(!automatic);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    // The service refuses a long name outright, and 63 bytes is fewer characters than it looks
+    // outside of ASCII, so this says so while there is still something to fix.
+    void MainWindow::UpdateCreateRtpHostButtonState() noexcept
+    {
+        if (!m_loaded)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const tooLong =
+                IsRtpNameTooLong(TextOf(RtpHostNameTextBox())) ||
+                IsRtpNameTooLong(TextOf(RtpHostServiceInstanceNameTextBox()));
+
+            CreateRtpHostDialog().IsPrimaryButtonEnabled(!tooLong);
+
+            RtpCreateHostStatusText().Text(tooLong ? res::GetString(L"RtpHostNameTooLong") : winrt::hstring{});
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnCreateRtpHostClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        if (m_openDialog != nullptr)
+        {
+            co_return;
+        }
+
+        auto strongThis = get_strong();
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        try
+        {
+            RtpHostNameTextBox().Text(L"");
+            RtpHostServiceInstanceNameTextBox().Text(L"");
+            RtpHostPolicyAskRadio().IsChecked(true);
+            RtpHostAdvertiseCheckBox().IsChecked(true);
+            RtpHostAutomaticPortCheckBox().IsChecked(true);
+            RtpHostPortNumberBox().Value(static_cast<double>(midi2rtp::MidiRtpTransportManager::DefaultHostPort()));
+            RtpHostPortNumberBox().IsEnabled(false);
+            RtpHostAllowPortFallbackCheckBox().IsChecked(true);
+            RtpHostAllowPortFallbackCheckBox().IsEnabled(false);
+            RtpHostSendRecoveryJournalCheckBox().IsChecked(true);
+            RtpCreateHostStatusText().Text(L"");
+
+            UpdateCreateRtpHostButtonState();
+
+            CreateRtpHostDialog().XamlRoot(Content().XamlRoot());
+        }
+        catch (...)
+        {
+            SetRtpLocalStatus(res::GetString(L"CreateHostFailedGeneral"));
+
+            co_return;
+        }
+
+        m_openDialog = CreateRtpHostDialog();
+
+        auto const result = co_await CreateRtpHostDialog().ShowAsync();
+
+        m_openDialog = nullptr;
+
+        if (result != controls::ContentDialogResult::Primary)
+        {
+            co_return;
+        }
+
+        midi2rtp::MidiRtpHostCreationConfig config{};
+        winrt::hstring hostName{};
+
+        try
+        {
+            auto const name = TextOf(RtpHostNameTextBox());
+            auto serviceInstanceName = TextOf(RtpHostServiceInstanceNameTextBox());
+
+            // the name is advertised when there is no separate one, so it has to follow the same rule
+            if (serviceInstanceName.empty() && std::wstring_view{ name }.find(L'.') != std::wstring_view::npos)
+            {
+                serviceInstanceName = name;
+            }
+
+            config.Name(name);
+            config.ServiceInstanceName(WithoutPeriods(serviceInstanceName));
+            config.Advertise(IsCheckBoxChecked(RtpHostAdvertiseCheckBox()));
+
+            auto const automaticPort = IsCheckBoxChecked(RtpHostAutomaticPortCheckBox());
+
+            config.UseAutomaticPortAllocation(automaticPort);
+
+            if (!automaticPort)
+            {
+                if (auto const port = PortFrom(RtpHostPortNumberBox()); port != 0)
+                {
+                    config.ManuallyAssignedPort(port);
+                }
+
+                config.AllowPortFallback(IsCheckBoxChecked(RtpHostAllowPortFallbackCheckBox()));
+            }
+
+            config.SendRecoveryJournal(IsCheckBoxChecked(RtpHostSendRecoveryJournalCheckBox()));
+
+            auto const askFirst = RtpHostPolicyAskRadio().IsChecked();
+
+            config.RemoteClientPolicy(
+                askFirst != nullptr && askFirst.Value() ?
+                midi2rtp::MidiRtpRemoteClientPolicy::RequireApproval :
+                midi2rtp::MidiRtpRemoteClientPolicy::AllowAny);
+
+            hostName = !name.empty() ? name :
+                (!config.ServiceInstanceName().empty() ? config.ServiceInstanceName() : res::GetString(L"RtpHostDefaultName"));
+        }
+        catch (...)
+        {
+            SetRtpLocalStatus(res::GetString(L"CreateHostFailedGeneral"));
+
+            co_return;
+        }
+
+        SetRtpLocalStatus(res::FormatString(L"CreatingHostFormat", hostName));
+
+        co_await winrt::resume_background();
+
+        winrt::hstring message{};
+
+        try
+        {
+            auto const response = co_await midi2rtp::MidiRtpTransportManager::CreateRtpHostAsync(config);
+
+            // A host which is slow to start is still created, and the service keeps trying, so it
+            // is saved like any other and its row says why it has not started.
+            auto const created = response != nullptr &&
+                (response.Success() ||
+                 response.ErrorCode() == midi2rtp::MidiRtpHostCreationErrorCode::TimedOutWaitingForHostToStart);
+
+            if (created)
+            {
+                auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                if (saved == nullptr || !saved.Success())
+                {
+                    message = NotSavedMessage(saved);
+                }
+                else
+                {
+                    message = response.Success() ?
+                        res::FormatString(L"HostCreatedFormat", hostName) :
+                        res::FormatString(L"RtpHostCreatedNotStartedFormat", hostName);
+                }
+            }
+            else
+            {
+                message = response == nullptr ?
+                    res::GetString(L"CreateHostFailedGeneral") :
+                    res::FormatString(L"CreateHostFailedFormat", response.ErrorMessage());
+            }
+        }
+        catch (...)
+        {
+            message = res::GetString(L"CreateHostFailedGeneral");
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, message]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetRtpLocalStatus(message);
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnStartStopRtpHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto item = ItemOf<midinetworksetup::LocalHostItem>(sender);
+
+        winrt::guid hostId{};
+
+        if (item == nullptr || !TryParseKey(item.HostId(), hostId))
+        {
+            co_return;
+        }
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        // an RTP-MIDI row reports whether the host is switched on here, not whether it is running
+        auto const start = !item.HasStarted();
+        auto const displayName = item.DisplayName();
+
+        item.IsBusy(true);
+
+        co_await winrt::resume_background();
+
+        winrt::hstring message{};
+
+        try
+        {
+            auto const response = start ?
+                co_await midi2rtp::MidiRtpTransportManager::StartRtpHostAsync(hostId) :
+                co_await midi2rtp::MidiRtpTransportManager::StopRtpHostAsync(hostId);
+
+            if (response != nullptr && response.Success())
+            {
+                message = start ?
+                    res::FormatString(L"HostStartedMessageFormat", displayName) :
+                    res::FormatString(L"HostStoppedMessageFormat", displayName);
+            }
+            else
+            {
+                message = response == nullptr ?
+                    res::GetString(L"HostChangeFailedGeneral") :
+                    res::FormatString(L"HostChangeFailedFormat", response.ErrorMessage());
+            }
+        }
+        catch (...)
+        {
+            message = res::GetString(L"HostChangeFailedGeneral");
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, item, message]()
+                {
+                    item.IsBusy(false);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetRtpLocalStatus(message);
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnDeleteRtpHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto item = ItemOf<midinetworksetup::LocalHostItem>(sender);
+
+        winrt::guid hostId{};
+
+        if (item == nullptr || !TryParseKey(item.HostId(), hostId))
+        {
+            co_return;
+        }
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        auto const displayName = item.DisplayName();
+
+        if (!co_await ConfirmAsync(
+            res::GetString(L"DeleteHostConfirmTitle"),
+            res::FormatString(L"DeleteHostConfirmMessageFormat", displayName)))
+        {
+            co_return;
+        }
+
+        item.IsBusy(true);
+
+        co_await winrt::resume_background();
+
+        winrt::hstring message{};
+
+        try
+        {
+            midi2rtp::MidiRtpHostRemovalConfig config{ hostId };
+
+            auto const response = co_await midi2rtp::MidiRtpTransportManager::RemoveRtpHostAsync(config);
+
+            if (response != nullptr && response.Success())
+            {
+                // this takes the host's remembered decisions out of the file as well
+                auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                message = saved != nullptr && saved.Success() ?
+                    res::FormatString(L"HostDeletedFormat", displayName) :
+                    NotSavedMessage(saved);
+            }
+            else
+            {
+                message = response == nullptr ?
+                    res::GetString(L"HostChangeFailedGeneral") :
+                    res::FormatString(L"HostChangeFailedFormat", response.ErrorMessage());
+            }
+        }
+        catch (...)
+        {
+            message = res::GetString(L"HostChangeFailedGeneral");
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, item, message]()
+                {
+                    item.IsBusy(false);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetRtpLocalStatus(message);
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
+    }
+
+
+    // ------------------------------------------------------------------------------------
+    // RTP-MIDI: remotes connected to a host on this PC
+    // ------------------------------------------------------------------------------------
+
+    _Use_decl_annotations_
+    bool MainWindow::SaveRtpKnownClients(winrt::guid const& hostId, winrt::hstring& errorMessage) noexcept
+    {
+        errorMessage = winrt::hstring{};
+
+        try
+        {
+            midi2rtp::MidiRtpHostKnownClientsConfig config{ hostId };
+
+            auto const hosts = midi2rtp::MidiRtpTransportManager::GetConfiguredHosts();
+
+            bool found{ false };
+
+            if (hosts != nullptr)
+            {
+                for (auto const& host : hosts)
+                {
+                    if (host == nullptr || host.HostId() != hostId)
+                    {
+                        continue;
+                    }
+
+                    found = true;
+
+                    if (auto const known = host.KnownRemoteClients())
+                    {
+                        for (auto const& client : known)
+                        {
+                            if (client != nullptr)
+                            {
+                                config.KnownClients().Append(client);
+                            }
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            // The save replaces the host's lists outright, so a host which could not be read must
+            // not be written as one with no decisions at all.
+            if (!found)
+            {
+                return false;
+            }
+
+            auto const response = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+            if (response != nullptr && response.Success())
+            {
+                return true;
+            }
+
+            if (response != nullptr)
+            {
+                errorMessage = response.ErrorMessage();
+            }
+
+            return false;
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnDisconnectRtpRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto item = ItemOf<midinetworksetup::HostConnectionItem>(sender);
+
+        winrt::guid hostId{};
+
+        if (item == nullptr || item.ConnectionId() == 0 || !TryParseKey(item.HostId(), hostId))
+        {
+            co_return;
+        }
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        auto const displayName = item.DisplayName();
+        auto const connectionId = item.ConnectionId();
+
+        if (!co_await ConfirmAsync(
+            res::GetString(L"DisconnectRemoteClientConfirmTitle"),
+            res::FormatString(L"DisconnectRemoteClientConfirmMessageFormat", displayName)))
+        {
+            co_return;
+        }
+
+        item.IsBusy(true);
+
+        co_await winrt::resume_background();
+
+        winrt::hstring message{};
+
+        try
+        {
+            // Ends the session and records nothing, so the device can connect again. Refusing it
+            // is a different answer and belongs to the Block button.
+            midi2rtp::MidiRtpRemoteClientDisconnectConfig config{ hostId, connectionId };
+
+            auto const response = co_await midi2rtp::MidiRtpTransportManager::DisconnectRemoteClientAsync(config);
+
+            if (response != nullptr && response.Success())
+            {
+                message = res::FormatString(L"RemoteClientDisconnectedFormat", displayName);
+            }
+            else
+            {
+                message = response == nullptr ?
+                    res::GetString(L"DisconnectFailedGeneral") :
+                    res::FormatString(L"DisconnectFailedFormat", response.ErrorMessage());
+            }
+        }
+        catch (...)
+        {
+            message = res::GetString(L"DisconnectFailedGeneral");
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, item, message]()
+                {
+                    item.IsBusy(false);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetRtpLocalStatus(message);
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnBlockRtpRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto item = ItemOf<midinetworksetup::HostConnectionItem>(sender);
+
+        winrt::guid hostId{};
+
+        if (item == nullptr || !TryParseKey(item.HostId(), hostId))
+        {
+            co_return;
+        }
+
+        auto strongThis = get_strong();
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        // a remote is known by the name it sends, so one which sent none cannot be told apart
+        auto const remoteName = winrt::get_self<HostConnectionItem>(item)->RemoteName();
+
+        if (remoteName.empty())
+        {
+            SetRtpLocalStatus(res::GetString(L"RtpBlockUnnamedNotPossible"));
+
+            co_return;
+        }
+
+        if (!co_await ConfirmAsync(
+            res::GetString(L"BlockRemoteClientConfirmTitle"),
+            res::FormatString(L"BlockRemoteClientConfirmMessageFormat", remoteName)))
+        {
+            co_return;
+        }
+
+        item.IsBusy(true);
+
+        co_await winrt::resume_background();
+
+        winrt::hstring message{};
+
+        try
+        {
+            // Refusing a remote also ends the connection it has now
+            midi2rtp::MidiRtpRemoteClientApprovalConfig config{ hostId, remoteName, false, false };
+
+            auto const response = co_await midi2rtp::MidiRtpTransportManager::ApproveOrDenyRemoteClientConnectRequestAsync(config);
+
+            winrt::hstring saveError{};
+
+            if (response == nullptr || !response.Success())
+            {
+                message = response == nullptr ?
+                    res::GetString(L"InvitationAnswerFailedGeneral") :
+                    res::FormatString(L"InvitationAnswerFailedFormat", response.ErrorMessage());
+            }
+            else if (!SaveRtpKnownClients(hostId, saveError))
+            {
+                message = res::FormatString(L"RtpDecisionNotSavedFormat", remoteName, saveError);
+            }
+            else
+            {
+                message = res::FormatString(L"RemoteClientBlockedFormat", remoteName);
+            }
+        }
+        catch (...)
+        {
+            message = res::GetString(L"InvitationAnswerFailedGeneral");
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, item, message]()
+                {
+                    item.IsBusy(false);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetRtpLocalStatus(message);
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnForgetRtpKnownClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto item = ItemOf<midinetworksetup::KnownClientItem>(sender);
+
+        winrt::guid hostId{};
+
+        if (item == nullptr || !TryParseKey(item.HostId(), hostId))
+        {
+            co_return;
+        }
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        auto const name = item.DisplayName();
+
+        co_await winrt::resume_background();
+
+        winrt::hstring message{};
+
+        try
+        {
+            midi2rtp::MidiRtpRemoteClientForgetConfig config{ hostId, name };
+
+            auto const response = co_await midi2rtp::MidiRtpTransportManager::ForgetRemoteClientAsync(config);
+
+            winrt::hstring saveError{};
+
+            if (response == nullptr || !response.Success())
+            {
+                message = res::GetString(L"KnownClientForgetFailedGeneral");
+            }
+            else if (!SaveRtpKnownClients(hostId, saveError))
+            {
+                message = res::FormatString(L"RtpChangeNotSavedFormat", saveError);
+            }
+            else
+            {
+                message = res::FormatString(L"KnownClientForgottenFormat", name);
+            }
+        }
+        catch (...)
+        {
+            message = res::GetString(L"KnownClientForgetFailedGeneral");
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, message]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetRtpLocalStatus(message);
                         strong->RequestRefreshAsync();
                     }
                 });

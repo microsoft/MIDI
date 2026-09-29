@@ -18,25 +18,12 @@
 
         <StandardDirectory Id="ProgramFiles64Folder">
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
-                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
-                    <!-- One folder per GUI tool, each with its own copy of the SDK runtime.
-                         These names are a contract with ToolLauncher.cpp in midi-settings, which
-                         resolves the other tools by convention path.
-                         NetworkSetup and BluetoothSetup are not here: those apps ship in the
-                         installer that carries their transport. Glass is not here either: MIDI
-                         Glass has an installer of its own. -->
-                    <Directory Id="TOOL_SETTINGS_FOLDER" Name="Settings" />
-                    <Directory Id="TOOL_LOOPSETUP_FOLDER" Name="LoopSetup" />
-                    <Directory Id="TOOL_SCRATCHPAD_FOLDER" Name="ScratchPad" />
-                    <Directory Id="TOOL_KEYBOARD_FOLDER" Name="Keyboard" />
-                    <Directory Id="TOOL_PLAYER_FOLDER" Name="Player" />
-                    <Directory Id="TOOL_CLOCK_FOLDER" Name="Clock" />
-                    <Directory Id="TOOL_SYSEX_FOLDER" Name="SysEx" />
-                    <Directory Id="TOOL_MONITOR_FOLDER" Name="Monitor" />
-                    <Directory Id="TOOL_PATCHBAY_FOLDER" Name="Patchbay" />
-                    <Directory Id="TOOL_TROUBLESHOOTER_FOLDER" Name="Troubleshooter" />
-                    <Directory Id="TOOL_NOTIFICATIONS_FOLDER" Name="Notifications" />
-                </Directory>
+                <!-- Every tool installs into this one folder, the way they are laid out in
+                     Windows itself, and they share one copy of the SDK runtime. The Console,
+                     MIDI Glass, Bluetooth and Network installers put their apps here too, so any
+                     file two installers both carry must be the same file with the same component
+                     GUID. build\build-all.ps1 checks the first and generates the second. -->
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools" />
                 <Directory Id="COLLECTMIDILOGS_INSTALLFOLDER" Name="Collect MIDI Logs">
                 </Directory>
             </Directory>
@@ -59,8 +46,8 @@
             The SDK runtime, the in-box console tools and the in-box GUI tools are all listed in
             the generated _SetupFiles.wxs (ComponentGroup SdkRedistFiles). Start Menu shortcuts for
             the GUI tools are in the generated _StartMenu.wxs (ComponentGroup ToolAppShortcuts).
-            build\build-sdk.ps1 writes both from $ConsoleTools/$GuiTools, so adding a tool is a
-            one-line change there plus a Directory entry above.
+            build\build-all.ps1 writes both from $ConsoleTools/$GuiTools, so adding a tool is a
+            one-line change there.
         -->
 
         <Component Id="WindowsMidiServicesToolsRegistration"
@@ -111,7 +98,7 @@
     <Component Id="WindowsMidiServicesMidiFileAssociation"
                Permanent="no"
                Bitness="always64"
-               Directory="TOOL_PLAYER_FOLDER"
+               Directory="TOOLSROOT_INSTALLFOLDER"
                Guid="2c8b4f6a-1d93-4e55-8a70-5b31c9e0d742">
 
       <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\WindowsMidiServices.MidiFile" ForceDeleteOnUninstall="yes">

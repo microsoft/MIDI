@@ -351,6 +351,18 @@ namespace glass
             return false;
         }
 
+        // A named group taken in whole keeps its name, so adding one more control to Drums still
+        // leaves a group called Drums.
+        std::wstring name{};
+
+        for (auto const* const control : selected)
+        {
+            if (name.empty() && !control->GroupId.empty() && IsWholeGroupSelected(control->GroupId))
+            {
+                name = GroupName(control->GroupId);
+            }
+        }
+
         auto const group = LayoutDocument::NewId();
 
         for (auto const* const control : selected)
@@ -358,6 +370,16 @@ namespace glass
             if (auto* const member = MutableControl(control->Id))
             {
                 member->GroupId = group;
+            }
+        }
+
+        if (auto* const page = MutablePage())
+        {
+            PruneControlGroups(*page);
+
+            if (!name.empty())
+            {
+                page->Groups.push_back({ group, name, nullptr });
             }
         }
 
@@ -381,6 +403,11 @@ namespace glass
 
         if (changed)
         {
+            if (auto* const page = MutablePage())
+            {
+                PruneControlGroups(*page);
+            }
+
             Commit(EditNames::Ungroup);
         }
 
@@ -431,6 +458,77 @@ namespace glass
         }
 
         return false;
+    }
+
+    std::wstring EditorController::SelectedGroupId() const
+    {
+        if (!SelectionIsOneGroup())
+        {
+            return {};
+        }
+
+        return SelectedControls().front()->GroupId;
+    }
+
+    _Use_decl_annotations_
+    std::wstring EditorController::GroupName(std::wstring const& groupId) const
+    {
+        auto const* const page = CurrentPage();
+
+        if (page == nullptr || groupId.empty())
+        {
+            return {};
+        }
+
+        auto const* const group = page->FindGroup(groupId);
+
+        return group != nullptr ? group->Name : std::wstring{};
+    }
+
+    _Use_decl_annotations_
+    int32_t EditorController::GroupNumber(std::wstring const& groupId) const
+    {
+        for (auto const& row : OutlineRows())
+        {
+            if (row.IsGroupHeading && row.Id == groupId)
+            {
+                return row.GroupNumber;
+            }
+        }
+
+        return 0;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetGroupName(std::wstring const& groupId, std::wstring const& name)
+    {
+        auto* const page = MutablePage();
+
+        if (page == nullptr ||
+            groupId.empty() ||
+            name.size() > MaximumStringLength ||
+            GroupName(groupId) == name ||
+            std::none_of(page->Controls.begin(), page->Controls.end(),
+                [&groupId](Control const& control) { return control.GroupId == groupId; }))
+        {
+            return false;
+        }
+
+        if (auto* const group = page->FindGroup(groupId))
+        {
+            group->Name = name;
+        }
+        else
+        {
+            page->Groups.push_back({ groupId, name, nullptr });
+        }
+
+        // A name cleared back to nothing leaves nothing to keep.
+        PruneControlGroups(*page);
+
+        CommitCoalesced(EditNames::RenameGroup, L"group:" + groupId);
+
+        return true;
     }
 
     _Use_decl_annotations_
@@ -510,6 +608,129 @@ namespace glass
                 AddToSelection(control.Id);
             }
         }
+    }
+
+    _Use_decl_annotations_
+    void EditorController::AddGroupToSelection(std::wstring const& groupId)
+    {
+        auto const* const page = CurrentPage();
+
+        if (page == nullptr || groupId.empty())
+        {
+            return;
+        }
+
+        for (auto const& control : page->Controls)
+        {
+            if (control.GroupId == groupId)
+            {
+                AddToSelection(control.Id);
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::IsWholeGroupSelected(std::wstring const& groupId) const
+    {
+        auto const* const page = CurrentPage();
+
+        if (page == nullptr || groupId.empty())
+        {
+            return false;
+        }
+
+        size_t members{ 0 };
+
+        for (auto const& control : page->Controls)
+        {
+            if (control.GroupId != groupId)
+            {
+                continue;
+            }
+
+            if (!IsSelected(control.Id))
+            {
+                return false;
+            }
+
+            ++members;
+        }
+
+        return members > 0;
+    }
+
+    std::vector<OutlineRow> EditorController::OutlineRows() const
+    {
+        std::vector<OutlineRow> rows{};
+
+        auto const* const page = CurrentPage();
+
+        if (page == nullptr)
+        {
+            return rows;
+        }
+
+        std::vector<Control const*> ordered{};
+        ordered.reserve(page->Controls.size());
+
+        for (auto const& control : page->Controls)
+        {
+            ordered.push_back(&control);
+        }
+
+        std::stable_sort(
+            ordered.begin(),
+            ordered.end(),
+            [](Control const* left, Control const* right)
+            {
+                return left->KeyboardOrder < right->KeyboardOrder;
+            });
+
+        std::vector<std::wstring> listed{};
+        int32_t groupNumber{ 0 };
+
+        for (auto const* const control : ordered)
+        {
+            if (!control->GroupId.empty())
+            {
+                // Already listed under its heading.
+                if (std::find(listed.begin(), listed.end(), control->GroupId) != listed.end())
+                {
+                    continue;
+                }
+
+                std::vector<Control const*> members{};
+
+                for (auto const* const candidate : ordered)
+                {
+                    if (candidate->GroupId == control->GroupId)
+                    {
+                        members.push_back(candidate);
+                    }
+                }
+
+                if (members.size() > 1)
+                {
+                    listed.push_back(control->GroupId);
+                    ++groupNumber;
+
+                    auto const name = GroupName(control->GroupId);
+
+                    rows.push_back({ control->GroupId, true, 0, groupNumber, members.size(), name });
+
+                    for (auto const* const member : members)
+                    {
+                        rows.push_back({ member->Id, false, 1, groupNumber, 0, name });
+                    }
+
+                    continue;
+                }
+            }
+
+            rows.push_back({ control->Id, false, 0, 0, 0 });
+        }
+
+        return rows;
     }
 
     _Use_decl_annotations_
@@ -847,6 +1068,8 @@ namespace glass
             return false;
         }
 
+        PruneControlGroups(*page);
+
         m_selection.clear();
         Commit(EditNames::Delete);
 
@@ -896,12 +1119,14 @@ namespace glass
             copies.push_back(std::move(copy));
         }
 
-        RegroupCopies(copies);
+        auto const regrouped = RegroupCopies(copies);
 
         for (auto& copy : copies)
         {
             page->Controls.push_back(std::move(copy));
         }
+
+        NameCopiedGroups(*page, page->Groups, regrouped);
 
         m_selection = std::move(newSelection);
         Commit(EditNames::Duplicate);
@@ -1424,6 +1649,8 @@ namespace glass
             newSelection.push_back(copy.Id);
             page->Controls.push_back(std::move(copy));
         }
+
+        NameCopiedGroups(*page, page->Groups, plan.Regrouped);
 
         m_selection = std::move(newSelection);
         Commit(EditNames::Repeat);

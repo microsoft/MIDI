@@ -138,6 +138,12 @@
                         PaneDisplayMode="Left"
                         SelectionChanged="OnNavigationSelectionChanged">
             <NavigationView.MenuItems>
+                <!-- The headers and the RTP-MIDI items are shown in code, and only when the
+                     RTP-MIDI transport is installed. Without it the list reads as it always has. -->
+                <NavigationViewItemHeader x:Name="NetworkMidi2NavigationHeader"
+                                          x:Uid="NetworkMidi2NavigationHeader"
+                                          Content="Network MIDI 2.0"
+                                          Visibility="Collapsed" />
                 <NavigationViewItem x:Name="RemoteHostsNavigationItem"
                                     x:Uid="RemoteHostsNavigationItem"
                                     Content="Network devices"
@@ -160,6 +166,28 @@
                                     Tag="settings">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE713;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItemHeader x:Name="RtpNavigationHeader"
+                                          x:Uid="RtpNavigationHeader"
+                                          Content="RTP-MIDI"
+                                          Visibility="Collapsed" />
+                <NavigationViewItem x:Name="RtpRemoteHostsNavigationItem"
+                                    x:Uid="RtpRemoteHostsNavigationItem"
+                                    Content="Network devices"
+                                    Tag="rtp-remote"
+                                    Visibility="Collapsed">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE968;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="RtpLocalHostsNavigationItem"
+                                    x:Uid="RtpLocalHostsNavigationItem"
+                                    Content="This PC"
+                                    Tag="rtp-local"
+                                    Visibility="Collapsed">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE977;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
@@ -249,7 +277,7 @@
                 </InfoBar>
 
                 <Grid Grid.Row="2">
-                <!-- Shown instead of everything else when the transport is missing or too old -->
+                <!-- Shown instead of everything else when neither transport is usable -->
                 <InfoBar x:Name="TransportUnavailableBar"
                          x:Uid="TransportUnavailableBar"
                          VerticalAlignment="Top"
@@ -258,8 +286,8 @@
                          Severity="Error"
                          IsOpen="False"
                          IsClosable="False"
-                         Title="Network MIDI 2.0 is not available"
-                         Message="A compatible version of Network MIDI 2.0 is either not installed or not enabled on this PC." />
+                         Title="Network MIDI is not available"
+                         Message="A compatible version of Network MIDI 2.0 or RTP-MIDI is either not installed or not enabled on this PC." />
 
                 <!-- ========================== Page 1: network devices ========================== -->
                 <Grid x:Name="RemoteHostsPanel" Margin="16,8,16,12">
@@ -1174,6 +1202,674 @@
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
+
+                <!-- ====================== Page 4: RTP-MIDI network devices ====================== -->
+                <Grid x:Name="RtpRemoteHostsPanel" Margin="16,8,16,12" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Margin="0,0,0,8">
+                        <TextBlock x:Uid="RtpRemoteHostsHeader"
+                                   Text="RTP-MIDI devices"
+                                   Style="{StaticResource SectionHeaderTextStyle}" />
+                        <TextBlock x:Uid="RtpRemoteHostsDescription"
+                                   Text="RTP-MIDI sessions found on your network, and the ones this PC is connected to. Apple devices and many network MIDI interfaces use RTP-MIDI."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <ListView x:Name="RtpRemoteHostsListView"
+                              x:Uid="RtpRemoteHostsListView"
+                              Grid.Row="1"
+                              SelectionMode="None"
+                              IsItemClickEnabled="False"
+                              ScrollViewer.HorizontalScrollMode="Disabled"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0,4,0,4" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="local:RtpRemoteHostItem">
+                                <Border Style="{StaticResource CardBorderStyle}"
+                                        AutomationProperties.Name="{x:Bind DisplayName, Mode=OneWay}">
+                                    <StackPanel Spacing="6">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" MinWidth="140" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Grid Grid.Column="0" VerticalAlignment="Center">
+                                                <FontIcon Glyph="&#xE968;"
+                                                          FontSize="20" />
+                                                <FontIcon Glyph="&#xF386;"
+                                                          FontSize="20"
+                                                          Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                                                          Visibility="{x:Bind ConnectedBadgeVisibility, Mode=OneWay}" />
+                                            </Grid>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
+                                                           TextWrapping="NoWrap"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                <TextBlock Text="{x:Bind SubtitleText, Mode=OneWay}"
+                                                           TextWrapping="NoWrap"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                <TextBlock x:Uid="RtpAlsoNetworkMidi2Text"
+                                                           Text="This device also offers Network MIDI 2.0, which is the better choice when a device supports both."
+                                                           TextWrapping="Wrap"
+                                                           Visibility="{x:Bind NetworkMidi2Visibility, Mode=OneWay}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+
+                                            <!-- The geometry is generated against a fixed 360x44 box in
+                                                 RtpRemoteHostItem, so this size must match. -->
+                                            <StackPanel Grid.Column="2"
+                                                        VerticalAlignment="Center"
+                                                        HorizontalAlignment="Center"
+                                                        Spacing="2"
+                                                        Visibility="{x:Bind LatencyGraphVisibility, Mode=OneWay}">
+                                                <TextBlock Text="{x:Bind LatencyPeakText, Mode=OneWay}"
+                                                           HorizontalAlignment="Right"
+                                                           Margin="0,0,2,0"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                                <Border Width="360"
+                                                        Height="44"
+                                                        HorizontalAlignment="Center"
+                                                        CornerRadius="4"
+                                                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                                        BorderThickness="1"
+                                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                                    <Grid>
+                                                        <Polygon Points="{x:Bind LatencyFillPoints, Mode=OneWay}"
+                                                                 Fill="{ThemeResource AccentFillColorTertiaryBrush}"
+                                                                 Opacity="0.45" />
+                                                        <Polyline Points="{x:Bind LatencyLinePoints, Mode=OneWay}"
+                                                                  Stroke="{ThemeResource AccentFillColorDefaultBrush}"
+                                                                  StrokeThickness="1.5"
+                                                                  StrokeLineJoin="Round" />
+                                                    </Grid>
+                                                </Border>
+
+                                                <TextBlock Text="{x:Bind StatisticsText, Mode=OneWay}"
+                                                           HorizontalAlignment="Center"
+                                                           TextWrapping="NoWrap"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="4"
+                                                        Orientation="Horizontal"
+                                                        Spacing="8"
+                                                        VerticalAlignment="Center">
+                                                <Button x:Uid="ConnectButton"
+                                                        Content="Connect"
+                                                        Style="{ThemeResource AccentButtonStyle}"
+                                                        Visibility="{x:Bind ConnectVisibility, Mode=OneWay}"
+                                                        Click="OnConnectRtpRemoteHostClick" />
+                                                <Button x:Uid="RetryButton"
+                                                        Content="Try again"
+                                                        Visibility="{x:Bind RetryVisibility, Mode=OneWay}"
+                                                        Click="OnRetryRtpRemoteHostClick" />
+                                                <Button Content="{x:Bind DisconnectLabel, Mode=OneWay}"
+                                                        Visibility="{x:Bind DisconnectVisibility, Mode=OneWay}"
+                                                        Click="OnDisconnectRtpRemoteHostClick" />
+                                                <ProgressRing IsActive="{x:Bind IsBusy, Mode=OneWay}"
+                                                              Width="20"
+                                                              Height="20" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Expander x:Uid="RemoteHostDetailsExpander"
+                                                  Header="Details"
+                                                  HorizontalAlignment="Stretch"
+                                                  HorizontalContentAlignment="Stretch"
+                                                  Background="Transparent"
+                                                  BorderThickness="0">
+                                            <Grid ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <Border Grid.Column="0"
+                                                        Width="72"
+                                                        Height="72"
+                                                        VerticalAlignment="Top"
+                                                        Margin="0,4,0,0"
+                                                        CornerRadius="4"
+                                                        Visibility="{x:Bind ImageVisibility, Mode=OneWay}">
+                                                    <Image Source="{x:Bind ImageSource, Mode=OneWay}"
+                                                           Stretch="Uniform" />
+                                                </Border>
+
+                                                <Grid Grid.Column="1"
+                                                      Margin="0,4,0,4"
+                                                      ColumnSpacing="12"
+                                                      RowSpacing="4">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" MinWidth="120" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
+
+                                                    <TextBlock x:Uid="RtpHostNameLabel"
+                                                               Grid.Row="0" Grid.Column="0"
+                                                               Text="Host name"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <TextBlock Grid.Row="0" Grid.Column="1"
+                                                               Text="{x:Bind HostName, Mode=OneWay}"
+                                                               IsTextSelectionEnabled="True"
+                                                               TextWrapping="Wrap"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                    <TextBlock x:Uid="AddressesLabel"
+                                                               Grid.Row="1" Grid.Column="0"
+                                                               Text="Addresses"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <TextBlock Grid.Row="1" Grid.Column="1"
+                                                               Text="{x:Bind AddressesText, Mode=OneWay}"
+                                                               IsTextSelectionEnabled="True"
+                                                               TextWrapping="Wrap"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                    <TextBlock x:Uid="EndpointDeviceIdLabel"
+                                                               Grid.Row="2" Grid.Column="0"
+                                                               Text="MIDI Endpoint"
+                                                               Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <TextBlock Grid.Row="2" Grid.Column="1"
+                                                               Text="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                                               IsTextSelectionEnabled="True"
+                                                               TextWrapping="Wrap"
+                                                               Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                    <StackPanel Grid.Row="2" Grid.Column="2"
+                                                                Orientation="Horizontal"
+                                                                Spacing="4"
+                                                                VerticalAlignment="Top"
+                                                                Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}">
+                                                        <Button x:Uid="CopyEndpointDeviceIdButton"
+                                                                Padding="6,2,6,2"
+                                                                Background="Transparent"
+                                                                BorderThickness="0"
+                                                                Click="OnCopyRtpEndpointDeviceIdClick">
+                                                            <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                                                        </Button>
+                                                        <Button x:Uid="MonitorEndpointButton"
+                                                                Padding="6,2,6,2"
+                                                                Background="Transparent"
+                                                                BorderThickness="0"
+                                                                Click="OnMonitorRtpRemoteHostClick">
+                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                <FontIcon Glyph="&#xE9D9;" FontSize="14" />
+                                                                <TextBlock x:Uid="MonitorEndpointButtonText" Text="Monitor" />
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </StackPanel>
+
+                                                    <TextBlock x:Uid="RemoteHostNotAdvertisedText"
+                                                               Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
+                                                               Text="This device is no longer being advertised on the network."
+                                                               TextWrapping="Wrap"
+                                                               Visibility="{x:Bind NotAdvertisedVisibility, Mode=OneWay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                                    <Button x:Uid="CustomizeButton"
+                                                            Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
+                                                            Margin="0,8,0,0"
+                                                            HorizontalAlignment="Left"
+                                                            Content="Customize..."
+                                                            Visibility="{x:Bind CustomizeVisibility, Mode=OneWay}"
+                                                            Click="OnCustomizeRtpRemoteHostClick" />
+                                                </Grid>
+                                            </Grid>
+                                        </Expander>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <TextBlock x:Name="NoRtpRemoteHostsText"
+                               x:Uid="NoRtpRemoteHostsText"
+                               Grid.Row="1"
+                               Text="Looking for RTP-MIDI devices..."
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <Expander x:Name="RtpManualConnectExpander"
+                              x:Uid="ManualConnectExpander"
+                              Grid.Row="2"
+                              Header="Connect to a device by address"
+                              Margin="0,12,0,0"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="8" Margin="0,4,0,4">
+                            <TextBlock x:Uid="ManualConnectDescription"
+                                       Text="Use this when a device is not advertised on your network. Windows will keep the entry and try again later if the device is not answering now."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                            <Grid ColumnSpacing="12" RowSpacing="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*" MinWidth="160" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="2*" MinWidth="140" />
+                                    <ColumnDefinition Width="2*" MinWidth="140" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBox x:Name="RtpManualAddressTextBox"
+                                         x:Uid="ManualAddressTextBox"
+                                         Grid.Column="0"
+                                         Header="Host name or IP address"
+                                         PlaceholderText="192.168.1.100"
+                                         TextChanged="OnRtpManualConnectFieldChanged" />
+
+                                <!-- RTP-MIDI also uses the port after this one, so 65535 cannot be one -->
+                                <NumberBox x:Name="RtpManualPortNumberBox"
+                                           x:Uid="ManualPortNumberBox"
+                                           Grid.Column="1"
+                                           Header="Port"
+                                           Width="120"
+                                           Minimum="1024"
+                                           Maximum="65534"
+                                           Value="5004"
+                                           SpinButtonPlacementMode="Compact"
+                                           ValueChanged="OnRtpManualConnectPortChanged" />
+
+                                <TextBox x:Name="RtpManualNameTextBox"
+                                         x:Uid="RtpManualNameTextBox"
+                                         Grid.Column="2"
+                                         Header="Name that device will see"
+                                         PlaceholderText="This PC's name" />
+
+                                <TextBox x:Name="RtpManualCustomNameTextBox"
+                                         x:Uid="ManualCustomNameTextBox"
+                                         Grid.Column="3"
+                                         Header="Name to show in Windows"
+                                         PlaceholderText="Optional" />
+
+                                <Button x:Name="RtpManualConnectButton"
+                                        x:Uid="ManualConnectButton"
+                                        Grid.Column="4"
+                                        Content="Connect"
+                                        VerticalAlignment="Bottom"
+                                        Style="{ThemeResource AccentButtonStyle}"
+                                        IsEnabled="False"
+                                        Click="OnRtpManualConnectClick" />
+                            </Grid>
+                        </StackPanel>
+                    </Expander>
+
+                    <TextBlock x:Name="RtpRemoteStatusText"
+                               Grid.Row="3"
+                               Margin="0,8,0,0"
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Grid>
+
+                <!-- ======================== Page 5: RTP-MIDI hosts on this PC ======================= -->
+                <Grid x:Name="RtpLocalHostsPanel" Margin="16,8,16,12" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,8" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock x:Uid="RtpLocalHostsHeader"
+                                       Text="RTP-MIDI hosts on this PC"
+                                       Style="{StaticResource SectionHeaderTextStyle}" />
+                            <TextBlock x:Uid="RtpLocalHostsDescription"
+                                       Text="A host lets Apple devices and other RTP-MIDI software on your network connect to this PC. Most people need only one."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <Button x:Name="CreateRtpHostButton"
+                                x:Uid="CreateRtpHostButton"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                Click="OnCreateRtpHostClick">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE710;" FontSize="14" />
+                                <TextBlock x:Uid="CreateHostButtonText" Text="Create host" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <ListView x:Name="RtpLocalHostsListView"
+                              x:Uid="RtpLocalHostsListView"
+                              Grid.Row="1"
+                              SelectionMode="None"
+                              IsItemClickEnabled="False"
+                              ScrollViewer.HorizontalScrollMode="Disabled"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0,4,0,4" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="local:LocalHostItem">
+                                <Border Style="{StaticResource CardBorderStyle}"
+                                        AutomationProperties.Name="{x:Bind DisplayName, Mode=OneWay}">
+                                    <StackPanel Spacing="8">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" MinWidth="140" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <FontIcon Grid.Column="0"
+                                                      Glyph="&#xE977;"
+                                                      FontSize="20"
+                                                      VerticalAlignment="Center" />
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
+                                                           TextWrapping="NoWrap"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                <TextBlock Text="{x:Bind ConnectionCountText, Mode=OneWay}"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2"
+                                                        Orientation="Horizontal"
+                                                        Spacing="8"
+                                                        VerticalAlignment="Center">
+                                                <Button Content="{x:Bind StartStopLabel, Mode=OneWay}"
+                                                        Click="OnStartStopRtpHostClick" />
+                                                <Button x:Uid="DeleteHostButton"
+                                                        Content="Delete"
+                                                        Click="OnDeleteRtpHostClick" />
+                                                <ProgressRing IsActive="{x:Bind IsBusy, Mode=OneWay}"
+                                                              Width="20"
+                                                              Height="20" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <StackPanel Spacing="4">
+                                            <TextBlock x:Uid="NoConnectedDevicesText"
+                                                       Text="No devices are connected to this host."
+                                                       Visibility="{x:Bind NoConnectionsVisibility, Mode=OneWay}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                            <ItemsControl ItemsSource="{x:Bind Connections, Mode=OneWay}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="local:HostConnectionItem">
+                                                        <Border Margin="0,0,0,6"
+                                                                AutomationProperties.Name="{x:Bind DisplayName, Mode=OneWay}"
+                                                                Padding="10,6,10,6"
+                                                                CornerRadius="4"
+                                                                Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                                                BorderThickness="1"
+                                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                                            <Grid ColumnSpacing="12">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="*" MinWidth="120" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <Grid Grid.Column="0" VerticalAlignment="Center">
+                                                                    <FontIcon Glyph="&#xE968;"
+                                                                              FontSize="18" />
+                                                                    <FontIcon Glyph="&#xF386;"
+                                                                              FontSize="18"
+                                                                              Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                                                                              Visibility="{x:Bind ConnectedBadgeVisibility, Mode=OneWay}" />
+                                                                </Grid>
+
+                                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
+                                                                               TextWrapping="NoWrap"
+                                                                               TextTrimming="CharacterEllipsis" />
+                                                                    <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
+                                                                               TextWrapping="Wrap"
+                                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                </StackPanel>
+
+                                                                <!-- The geometry is generated against a fixed 240x32 box in
+                                                                     HostConnectionItem, so this must match. -->
+                                                                <StackPanel Grid.Column="2"
+                                                                            VerticalAlignment="Center"
+                                                                            HorizontalAlignment="Center"
+                                                                            Spacing="2"
+                                                                            Visibility="{x:Bind LatencyGraphVisibility, Mode=OneWay}">
+                                                                    <TextBlock Text="{x:Bind LatencyPeakText, Mode=OneWay}"
+                                                                               HorizontalAlignment="Right"
+                                                                               Margin="0,0,2,0"
+                                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                                                    <Border Width="240"
+                                                                            Height="32"
+                                                                            HorizontalAlignment="Center"
+                                                                            CornerRadius="4"
+                                                                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                                                            BorderThickness="1"
+                                                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                                                        <Grid>
+                                                                            <Polygon Points="{x:Bind LatencyFillPoints, Mode=OneWay}"
+                                                                                     Fill="{ThemeResource AccentFillColorTertiaryBrush}"
+                                                                                     Opacity="0.45" />
+                                                                            <Polyline Points="{x:Bind LatencyLinePoints, Mode=OneWay}"
+                                                                                      Stroke="{ThemeResource AccentFillColorDefaultBrush}"
+                                                                                      StrokeThickness="1.5"
+                                                                                      StrokeLineJoin="Round" />
+                                                                        </Grid>
+                                                                    </Border>
+
+                                                                    <TextBlock Text="{x:Bind StatisticsText, Mode=OneWay}"
+                                                                               HorizontalAlignment="Center"
+                                                                               TextWrapping="NoWrap"
+                                                                               TextTrimming="CharacterEllipsis"
+                                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                </StackPanel>
+
+                                                                <StackPanel Grid.Column="4"
+                                                                            Orientation="Horizontal"
+                                                                            Spacing="8"
+                                                                            VerticalAlignment="Center">
+                                                                    <Button x:Uid="MonitorEndpointButton"
+                                                                            Background="Transparent"
+                                                                            BorderThickness="0"
+                                                                            Visibility="{x:Bind MonitorVisibility, Mode=OneWay}"
+                                                                            Click="OnMonitorRtpHostConnectionClick">
+                                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                            <FontIcon Glyph="&#xE9D9;" FontSize="14" />
+                                                                            <TextBlock x:Uid="MonitorEndpointButtonText" Text="Monitor" />
+                                                                        </StackPanel>
+                                                                    </Button>
+                                                                    <Button x:Uid="DisconnectRemoteClientButton"
+                                                                            Content="Disconnect"
+                                                                            Click="OnDisconnectRtpRemoteClientClick" />
+                                                                    <Button x:Uid="BlockRemoteClientButton"
+                                                                            Content="Block"
+                                                                            Click="OnBlockRtpRemoteClientClick" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+
+                                        <Expander x:Uid="RememberedDevicesExpander"
+                                                  Header="Remembered decisions"
+                                                  HorizontalAlignment="Stretch"
+                                                  HorizontalContentAlignment="Stretch"
+                                                  Visibility="{x:Bind KnownClientsVisibility, Mode=OneWay}"
+                                                  Background="Transparent"
+                                                  BorderThickness="0">
+                                            <StackPanel Spacing="4" Margin="0,4,0,4">
+                                                <ItemsControl ItemsSource="{x:Bind KnownClients, Mode=OneWay}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="local:KnownClientItem">
+                                                            <Grid ColumnSpacing="12" Margin="0,4,0,4"
+                                                                  AutomationProperties.Name="{x:Bind DisplayName, Mode=OneWay}">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" MinWidth="120" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{x:Bind DisplayName}"
+                                                                               TextWrapping="NoWrap"
+                                                                               TextTrimming="CharacterEllipsis" />
+                                                                    <TextBlock Text="{x:Bind DecisionText}"
+                                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                </StackPanel>
+
+                                                                <Button Grid.Column="1"
+                                                                        x:Uid="ForgetClientButton"
+                                                                        Content="Forget"
+                                                                        VerticalAlignment="Center"
+                                                                        Click="OnForgetRtpKnownClientClick" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Expander>
+
+                                        <Expander x:Uid="HostDetailsExpander"
+                                                  Header="Details"
+                                                  HorizontalAlignment="Stretch"
+                                                  HorizontalContentAlignment="Stretch"
+                                                  Background="Transparent"
+                                                  BorderThickness="0">
+                                            <Grid Margin="0,4,0,4"
+                                                  ColumnSpacing="12"
+                                                  RowSpacing="4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" MinWidth="120" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock x:Uid="RtpAdvertisedNameLabel"
+                                                           Grid.Row="0" Grid.Column="0"
+                                                           Text="Name advertised on the network"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Grid.Row="0" Grid.Column="1"
+                                                           Text="{x:Bind ServiceInstanceName, Mode=OneWay}"
+                                                           IsTextSelectionEnabled="True"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                <TextBlock x:Uid="HostAddressLabel"
+                                                           Grid.Row="1" Grid.Column="0"
+                                                           Text="Address"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Grid.Row="1" Grid.Column="1"
+                                                           Text="{x:Bind AddressText, Mode=OneWay}"
+                                                           IsTextSelectionEnabled="True"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                <TextBlock x:Uid="HostDetailsPolicyLabel"
+                                                           Grid.Row="2" Grid.Column="0"
+                                                           Text="New connections"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Grid.Row="2" Grid.Column="1"
+                                                           Text="{x:Bind PolicyText, Mode=OneWay}"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                                            </Grid>
+                                        </Expander>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <TextBlock x:Name="NoRtpLocalHostsText"
+                               x:Uid="NoRtpLocalHostsText"
+                               Grid.Row="1"
+                               Text="This PC does not have an RTP-MIDI host yet. Create one so Apple devices and other RTP-MIDI software can connect to it."
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               MaxWidth="420"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <TextBlock x:Name="RtpLocalStatusText"
+                               Grid.Row="2"
+                               Margin="0,8,0,0"
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Grid>
                 </Grid>
             </Grid>
         </NavigationView>
@@ -1308,6 +2004,129 @@
             </ScrollViewer>
         </ContentDialog>
 
+        <ContentDialog x:Name="CreateRtpHostDialog"
+                       x:Uid="CreateRtpHostDialog"
+                       Title="Create an RTP-MIDI host"
+                       PrimaryButtonText="Create"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="460">
+                <StackPanel Spacing="12" Width="440" Margin="0,4,4,4">
+                    <StackPanel Spacing="4">
+                        <TextBox x:Name="RtpHostNameTextBox"
+                                 x:Uid="HostNameTextBox"
+                                 Header="Name other devices will see"
+                                 TextChanged="OnCreateRtpHostFieldChanged" />
+                        <TextBlock x:Uid="RtpHostNameHelp"
+                                   Text="Leave this empty to use this PC's name."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBox x:Name="RtpHostServiceInstanceNameTextBox"
+                                 x:Uid="RtpHostServiceInstanceNameTextBox"
+                                 Header="Name advertised on the network"
+                                 TextChanged="OnCreateRtpHostFieldChanged" />
+                        <TextBlock x:Uid="RtpHostServiceInstanceNameHelp"
+                                   Text="Leave this empty to advertise the name above. Periods are removed. If another device on your network already uses the name, Windows picks a slightly different one."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock x:Uid="HostPolicyLabel"
+                                   Text="When a device asks to connect"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <RadioButton x:Name="RtpHostPolicyAskRadio"
+                                     x:Uid="HostPolicyAskRadio"
+                                     Content="Ask me first"
+                                     GroupName="RtpHostPolicy"
+                                     IsChecked="True" />
+                        <RadioButton x:Name="RtpHostPolicyAllowAnyRadio"
+                                     x:Uid="HostPolicyAllowAnyRadio"
+                                     Content="Let any device connect"
+                                     GroupName="RtpHostPolicy" />
+                    </StackPanel>
+
+                    <CheckBox x:Name="RtpHostAdvertiseCheckBox"
+                              x:Uid="HostAdvertiseCheckBox"
+                              Content="Advertise this host on the network"
+                              IsChecked="True" />
+
+                    <Expander x:Uid="HostAdvancedExpander"
+                              Header="Advanced"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="12" Margin="0,4,0,4">
+                            <StackPanel Spacing="4">
+                                <CheckBox x:Name="RtpHostAutomaticPortCheckBox"
+                                          x:Uid="RtpHostAutomaticPortCheckBox"
+                                          Content="Let Windows choose the port"
+                                          IsChecked="True"
+                                          Checked="OnCreateRtpHostPortModeChanged"
+                                          Unchecked="OnCreateRtpHostPortModeChanged" />
+                                <TextBlock x:Uid="RtpHostAutomaticPortHelp"
+                                           Text="Windows tries port 5004 first, which is where other RTP-MIDI software looks, and takes another one if that is in use."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+
+                            <!-- RTP-MIDI also uses the port after this one, so 65535 cannot be one -->
+                            <NumberBox x:Name="RtpHostPortNumberBox"
+                                       x:Uid="HostPortNumberBox"
+                                       Header="Port"
+                                       Width="140"
+                                       HorizontalAlignment="Left"
+                                       Minimum="1024"
+                                       Maximum="65534"
+                                       Value="5004"
+                                       IsEnabled="False"
+                                       SpinButtonPlacementMode="Compact" />
+
+                            <TextBlock x:Uid="RtpHostPortHelp"
+                                       Text="RTP-MIDI also uses the next port up. Keeping one port makes it easier for other devices to find this PC again after a restart."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                            <CheckBox x:Name="RtpHostAllowPortFallbackCheckBox"
+                                      x:Uid="HostAllowPortFallbackCheckBox"
+                                      Content="If this port is unavailable, use another one"
+                                      IsChecked="True"
+                                      IsEnabled="False" />
+
+                            <TextBlock x:Uid="HostAllowPortFallbackHelp"
+                                       Text="Something else on this PC could claim the port first. Windows will still start this host, and tell you the port changed."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                            <StackPanel Spacing="4">
+                                <CheckBox x:Name="RtpHostSendRecoveryJournalCheckBox"
+                                          x:Uid="RtpHostSendRecoveryJournalCheckBox"
+                                          Content="Help other devices recover notes lost on the network"
+                                          IsChecked="True" />
+                                <TextBlock x:Uid="RtpHostSendRecoveryJournalHelp"
+                                           Text="Each packet carries a short summary of recent notes, so a device which misses a packet can still end a note that would otherwise hang. Turn this off only for a device which cannot handle it."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander>
+
+                    <TextBlock x:Name="RtpCreateHostStatusText"
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                </StackPanel>
+            </ScrollViewer>
+        </ContentDialog>
+
         <ContentDialog x:Name="ConfirmDialog"
                        x:Uid="ConfirmDialog"
                        PrimaryButtonText="Yes"
@@ -1427,30 +2246,33 @@
                            Style="{ThemeResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
-                <CheckBox x:Name="CustomizeCreateMidi1PortsCheckBox"
-                          x:Uid="CustomizeCreateMidi1PortsCheckBox"
-                          Content="Create MIDI 1.0 ports for this device" />
+                <!-- Network MIDI 2.0 only. An RTP-MIDI endpoint always has its one MIDI 1.0 port. -->
+                <StackPanel x:Name="CustomizeMidi1PortsPanel" Spacing="12">
+                    <CheckBox x:Name="CustomizeCreateMidi1PortsCheckBox"
+                              x:Uid="CustomizeCreateMidi1PortsCheckBox"
+                              Content="Create MIDI 1.0 ports for this device" />
 
-                <TextBlock x:Uid="CustomizeCreateMidi1PortsHint"
-                           Text="Turning this on or off takes effect the next time this device connects. The number of ports below applies right away."
-                           TextWrapping="Wrap"
-                           Style="{ThemeResource CaptionTextBlockStyle}"
-                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-
-                <StackPanel Spacing="4" Margin="28,0,0,0">
-                    <NumberBox x:Name="CustomizeFallbackMidi1PortCountBox"
-                               x:Uid="CustomizeFallbackMidi1PortCountBox"
-                               Header="MIDI 1.0 ports to create if this device does not describe itself"
-                               Minimum="1"
-                               Maximum="16"
-                               MinWidth="160"
-                               HorizontalAlignment="Left"
-                               SpinButtonPlacementMode="Compact" />
-                    <TextBlock x:Uid="CustomizeFallbackMidi1PortCountHint"
-                               Text="Most devices say how many ports they have, and this is not used for them. It is only for a device that never tells us."
+                    <TextBlock x:Uid="CustomizeCreateMidi1PortsHint"
+                               Text="Turning this on or off takes effect the next time this device connects. The number of ports below applies right away."
                                TextWrapping="Wrap"
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                    <StackPanel Spacing="4" Margin="28,0,0,0">
+                        <NumberBox x:Name="CustomizeFallbackMidi1PortCountBox"
+                                   x:Uid="CustomizeFallbackMidi1PortCountBox"
+                                   Header="MIDI 1.0 ports to create if this device does not describe itself"
+                                   Minimum="1"
+                                   Maximum="16"
+                                   MinWidth="160"
+                                   HorizontalAlignment="Left"
+                                   SpinButtonPlacementMode="Compact" />
+                        <TextBlock x:Uid="CustomizeFallbackMidi1PortCountHint"
+                                   Text="Most devices say how many ports they have, and this is not used for them. It is only for a device that never tells us."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </StackPanel>
                 </StackPanel>
             </StackPanel>
         </ContentDialog>

@@ -1,8 +1,8 @@
 ---
 layout: tools_page
-title: Network MIDI 2.0 Setup
+title: Network MIDI Setup
 tool: midinetworksetup
-description: Connect this PC to Network MIDI 2.0 devices over your local network
+description: Connect this PC to MIDI devices over your local network
 icon: /assets/images/midinetworksetup.png
 categories:
   - Device/Transport Configuration Tools
@@ -10,16 +10,22 @@ categories:
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
 
-Network MIDI 2.0 Setup connects this PC to MIDI devices over your local network, with no traditional MIDI cables between them. If you have an interface, a synth, or another computer that speaks Network MIDI 2.0 over Ethernet or WiFi, this is where you set up the connection.
+Network MIDI Setup connects this PC to MIDI devices over your local network, with no traditional MIDI cables between them. If you have an interface, a synth, or another computer that speaks Network MIDI 2.0 over Ethernet or WiFi, this is where you set up the connection.
 
 Once a connection is made, the device appears in Windows like any other MIDI device, so your DAW and other MIDI software can use it straight away.
 
-![The Network MIDI 2.0 Setup main window]({{ site.baseurl }}/assets/images/midinetworksetup.png)
+![The Network MIDI Setup main window]({{ site.baseurl }}/assets/images/midinetworksetup.png)
 
 There are two pages, each with a different but related function:
 
 - **Network devices** is for connecting *this PC to something else*, such as an interface or a synth. The remote device is a "host", and this PC is a "client". The connection is initiated from this PC.
 - **This PC** is for letting *other devices connect to this PC*, such as a laptop or a phone or external device that wants to communicate over MIDI. In this case, this PC is the "host" and the remote device is the "client". The connection is initiated by the remote device.
+
+## RTP-MIDI
+
+RTP-MIDI is the older network MIDI protocol that Apple devices and many network MIDI interfaces use. When the RTP-MIDI transport is installed, the app has a second **Network devices** page and a second **This PC** page for it, under an **RTP-MIDI** heading. They work the same way as the Network MIDI 2.0 pages. Without that transport, you won't see them.
+
+Some devices offer both. When they do, use Network MIDI 2.0. The RTP-MIDI page tells you when a device also offers Network MIDI 2.0, and asks you before it connects to that device over RTP-MIDI. Connecting both ways gives you two sets of endpoints for the same device, which is confusing in a DAW.
 
 ## You don't need to keep this app running
 
@@ -31,7 +37,7 @@ The one part that benefits from something running is approvals, and only if you'
 
 ### MIDI Notifications
 
-That's what MIDI Notifications is for. It's a small app that sits in the notification area, watches for devices waiting on your permission, and tells you when there is one. Select the notification and Network MIDI 2.0 Setup opens on the waiting device, so you can allow or deny it.
+That's what MIDI Notifications is for. It's a small app that sits in the notification area, watches for devices waiting on your permission, and tells you when there is one. Select the notification and Network MIDI Setup opens on the waiting device, so you can allow or deny it.
 
 It doesn't carry any MIDI data either, and it isn't required. Turn it on or off, and choose whether it starts with Windows, on the **Notifications** page of the [MIDI Settings]({{ site.baseurl }}/tools/settings/) app. Without it nothing is broken: a device that asks to connect waits, and you answer it the next time you open this app. And if your hosts are set to **Let any device connect**, there's nothing to approve and nothing to be notified about.
 

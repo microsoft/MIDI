@@ -19,7 +19,7 @@ Windows can work in either direction, and both at once:
 - **As a client**, this PC connects out to a synth, an interface, or another computer.
 - **As a host**, this PC accepts connections from other devices.
 
-To set any of this up, use the Network MIDI 2.0 Setup app. This page does not repeat what that app does; see [Network MIDI 2.0 Setup]({{ site.baseurl }}/tools/midinetworksetup/) for the walkthrough.
+To set any of this up, use the Network MIDI Setup app. This page does not repeat what that app does; see [Network MIDI Setup]({{ site.baseurl }}/tools/midinetworksetup/) for the walkthrough.
 
 ## What you need
 
@@ -257,7 +257,7 @@ A device left pending is dropped after `invitationPendingTimeout`, which default
 
 ## See also
 
-- [Network MIDI 2.0 Setup]({{ site.baseurl }}/tools/midinetworksetup/)
+- [Network MIDI Setup]({{ site.baseurl }}/tools/midinetworksetup/)
 - [Adding Network MIDI 2 to your firewall]({{ site.baseurl }}/kb/network-midi-firewall/)
 - [MidiNetworkTransportManager]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkTransportManager)
 - [MidiNetworkTransportSettings]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkTransportSettings)

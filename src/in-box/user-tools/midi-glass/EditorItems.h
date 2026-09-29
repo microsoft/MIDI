@@ -18,12 +18,14 @@ namespace midiglass
     {
         std::wstring Key{};
         std::wstring DisplayName{};
+        std::wstring AccessibleName{};
         std::wstring Detail{};
         std::wstring Glyph{};
         std::wstring Badge{};
 
         double IndentPixels{ 0.0 };
         bool IsOutsidePage{ false };
+        bool IsGroup{ false };
     };
 }
 
@@ -37,6 +39,8 @@ namespace winrt::midiglass::implementation
 
         hstring Key() const noexcept { return m_key; }
         hstring DisplayName() const noexcept { return m_displayName; }
+        hstring AccessibleName() const noexcept { return m_accessibleName; }
+        bool IsGroup() const noexcept { return m_isGroup; }
         hstring Detail() const noexcept { return m_detail; }
         hstring Glyph() const noexcept { return m_glyph; }
         hstring Badge() const noexcept { return m_badge; }
@@ -51,9 +55,11 @@ namespace winrt::midiglass::implementation
             return m_detail.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
         }
 
+        // A group's heading has no number, but keeps the room for one so its mark lines up
+        // with the controls listed around it.
         xaml::Visibility BadgeVisibility() const noexcept
         {
-            return m_badge.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
+            return m_badge.empty() && !m_isGroup ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
         }
 
         bool IsOutsidePage() const noexcept { return m_isOutsidePage; }
@@ -66,6 +72,7 @@ namespace winrt::midiglass::implementation
     private:
         hstring m_key{};
         hstring m_displayName{};
+        hstring m_accessibleName{};
         hstring m_detail{};
         hstring m_glyph{};
         hstring m_badge{};
@@ -74,6 +81,7 @@ namespace winrt::midiglass::implementation
 
         xaml::Thickness m_indent{ 0, 0, 0, 0 };
         bool m_isOutsidePage{ false };
+        bool m_isGroup{ false };
     };
 
     struct MonitorItem : MonitorItemT<MonitorItem>

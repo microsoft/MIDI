@@ -49,13 +49,28 @@ namespace miditroubleshooter
         String Description{ get; };
         String DetailText{ get; };
         String ModuleText{ get; };
-        String StatusText{ get; };
 
-        Microsoft.UI.Xaml.Visibility OkVisibility{ get; };
-        Microsoft.UI.Xaml.Visibility WarningVisibility{ get; };
-        Microsoft.UI.Xaml.Visibility ErrorVisibility{ get; };
+        // the pill, and why the transport is in that state when it is not obvious
+        String StateText{ get; };
+        String ReasonText{ get; };
+        String RowAccessibleName{ get; };
+
+        // the Enable or Disable button, which the built-in transports do not have
+        String ToggleText{ get; };
+        String ToggleAccessibleName{ get; };
+        Boolean CanToggle{ get; };
+        Boolean IsBusy;
+
+        // exactly one pill is visible
+        Microsoft.UI.Xaml.Visibility SuccessVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility CautionVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility CriticalVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility NeutralVisibility{ get; };
+
         Microsoft.UI.Xaml.Visibility DescriptionVisibility{ get; };
         Microsoft.UI.Xaml.Visibility ModuleVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility ReasonVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility ToggleVisibility{ get; };
     }
 
     // One value read out of the registry, with the reason it is or is not correct.

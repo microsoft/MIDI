@@ -143,11 +143,20 @@ namespace winrt::midiglass::implementation
         void OnUngroupAccelerator(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
         void ApplyGrouping(_In_ bool group);
 
+        // A control or a whole group is renamed in the inspector heading. F2 and Rename in either
+        // menu put the cursor there.
+        bool CanRename();
+        void BeginRename();
+        void OnRenameMenuClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnRenameAccelerator(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
+
         // ---- palette and outline ----
 
         void OnPaletteSearchChanged(controls::AutoSuggestBox const& sender, controls::AutoSuggestBoxTextChangedEventArgs const& args);
         void OnAddToPageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnOutlineSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnOutlineContextRequested(_In_ xaml::UIElement const& sender, _In_ xaml::Input::ContextRequestedEventArgs const& args);
+        void OnOutlineMenuOpening(_In_ foundation::IInspectable const& sender, _In_ foundation::IInspectable const& args);
         void OnOutlineMoveUp(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnOutlineMoveDown(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
@@ -208,6 +217,10 @@ namespace winrt::midiglass::implementation
         void OnMessageFieldChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnMessageNumberChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnMessageParameterChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+
+        // Several controls picked: where all of them send, and where the ones that listen do.
+        void OnManySendChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnManyListenChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
 
         void OnSysExChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSysExFromFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -468,6 +481,12 @@ namespace winrt::midiglass::implementation
         // that goes nowhere. m_groupChoices maps a combo index back to a group number.
         void RefreshGroupChoices(_In_ std::wstring const& deviceName, _In_ int32_t selectedGroup);
 
+        // Which groups to offer for a device: the ones it declares, or all of them when it
+        // declares none, is not here, or the customer asked to see all of them.
+        std::array<bool, glass::MaximumGroupCount> OfferedGroups(
+            _In_ std::wstring const& deviceName,
+            _Out_ bool& declared) const;
+
         // Reads the selected message, hands it to the caller to change, and writes it back if
         // the caller says something changed. One path, so every payload field is saved the same
         // way and none of them can forget to mark the layout dirty.
@@ -547,6 +566,9 @@ namespace winrt::midiglass::implementation
         // Several controls picked: the Look tab shows what they share and edits all of them.
         void RefreshCommonProperties();
         void SetManyEditMode(_In_ bool many);
+
+        // The same for where they send and listen, on the Sends and Listens tabs.
+        void RefreshManyDestinations();
 
         // ---- saving ----
 
@@ -822,6 +844,10 @@ namespace winrt::midiglass::implementation
 
         std::vector<int32_t> m_groupChoices{};
         bool m_showAllGroups{ false };
+
+        // Combo index to group, and to device name, for the panels that edit several controls.
+        std::vector<int32_t> m_manySendGroupChoices{};
+        std::vector<std::wstring> m_manyListenDeviceNames{};
 
         // The ids clicked so far while the keyboard order mode is up, in click order.
         bool m_keyboardOrderMode{ false };

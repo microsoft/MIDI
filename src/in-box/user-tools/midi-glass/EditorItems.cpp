@@ -17,6 +17,8 @@ namespace winrt::midiglass::implementation
     {
         m_key = hstring{ data.Key };
         m_displayName = hstring{ data.DisplayName };
+        m_accessibleName = hstring{ data.AccessibleName.empty() ? data.DisplayName : data.AccessibleName };
+        m_isGroup = data.IsGroup;
         m_detail = hstring{ data.Detail };
         m_glyph = hstring{ data.Glyph };
         m_badge = hstring{ data.Badge };

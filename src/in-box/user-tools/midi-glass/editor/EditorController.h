@@ -12,6 +12,7 @@
 
 #include <sal.h>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -49,6 +50,7 @@ namespace glass
         inline constexpr wchar_t Cut[]{ L"EditCutControls" };
         inline constexpr wchar_t Group[]{ L"EditGroupControls" };
         inline constexpr wchar_t Ungroup[]{ L"EditUngroupControls" };
+        inline constexpr wchar_t RenameGroup[]{ L"EditRenameGroup" };
     }
 
     // The page size is changing. What the grow and shrink dialogs hand back.
@@ -58,6 +60,47 @@ namespace glass
         int32_t NewHeight{ 0 };
         CanvasAnchor Anchor{ CanvasAnchor::TopLeft };
         bool ScaleContents{ false };
+    };
+
+    // One line of the outline. A group is a heading with its members after it, one step in, so
+    // the list shows what moves together.
+    struct OutlineRow
+    {
+        // A control's id, or a group's id for its heading.
+        std::wstring Id{};
+        bool IsGroupHeading{ false };
+
+        // One for a member of a group, zero for everything else.
+        int32_t Depth{ 0 };
+
+        // Counted from one in the order the groups are listed, so two groups can be told apart
+        // by name. Zero for a control on its own.
+        int32_t GroupNumber{ 0 };
+
+        // How many controls a heading stands for.
+        size_t MemberCount{ 0 };
+
+        // What the group is called, on its heading and on each member. Empty when nobody named
+        // it, and the window shows the number instead.
+        std::wstring GroupName{};
+    };
+
+    // A device, a group and a channel, for several controls at once. A field is empty where the
+    // controls disagree, or where an edit leaves it alone.
+    struct DestinationFields
+    {
+        std::optional<std::wstring> DeviceName{};
+        std::optional<int32_t> GroupIndex{};
+        std::optional<int32_t> ChannelIndex{};
+    };
+
+    // What several controls agree on, and how many rows the answer was worked out from: the ones
+    // that go to a device, and the ones among them that carry a channel.
+    struct SharedDestination
+    {
+        DestinationFields Fields{};
+        size_t DeviceRows{ 0 };
+        size_t ChannelRows{ 0 };
     };
 
     // One editing session. Holds the document, what is selected, what the snapping is set to,
@@ -131,11 +174,34 @@ namespace glass
         bool SelectionIsOneGroup() const;
         bool SelectionHasGroup() const;
 
+        // The group the selection is, or empty when it is not exactly one whole group.
+        std::wstring SelectedGroupId() const;
+
+        // What somebody called a group on the current page. Empty when nobody named it.
+        std::wstring GroupName(_In_ std::wstring const& groupId) const;
+
+        // Where a group falls in the outline, counted from one: the number it goes by until
+        // somebody names it. Zero when this page lists no such group.
+        int32_t GroupNumber(_In_ std::wstring const& groupId) const;
+
+        // Typing arrives a character at a time, so a run of it is one undo entry. An empty name
+        // takes the group back to its number.
+        bool SetGroupName(_In_ std::wstring const& groupId, _In_ std::wstring const& name);
+
         // A click on the canvas picks the whole group a control is in. The outline, and a second
         // click on a group that is already selected, pick the one member.
         void SelectGroupOf(_In_ std::wstring const& id);
         void ToggleGroupOf(_In_ std::wstring const& id);
         void ExpandSelectionToGroups();
+
+        // A group's heading in the outline picks every member.
+        void AddGroupToSelection(_In_ std::wstring const& groupId);
+        bool IsWholeGroupSelected(_In_ std::wstring const& groupId) const;
+
+        // The current page as the outline lists it. Reading order is the keyboard order, and a
+        // group sits where its first member falls in it. A group with one member left is listed
+        // as a control on its own, because nothing moves with it.
+        std::vector<OutlineRow> OutlineRows() const;
 
         // ------------------------------------------------------------------ several at once
 
@@ -344,6 +410,17 @@ namespace glass
         bool RemoveMessage(_In_ std::wstring const& id, _In_ size_t index);
         bool SetMessage(_In_ std::wstring const& id, _In_ size_t index, _In_ ControlMessage const& message);
         bool SetFeedback(_In_ std::wstring const& id, _In_ FeedbackBinding const& feedback);
+
+        // Where several controls send, read and set in one go. Every row that goes to a device
+        // takes the device and group, and every row that carries a channel takes the channel.
+        // A page change or a sequence goes nowhere, so it is left alone. One undo entry.
+        SharedDestination SharedSendDestination(_In_ std::vector<std::wstring> const& ids) const;
+        bool SetSendDestination(_In_ std::vector<std::wstring> const& ids, _In_ DestinationFields const& change);
+
+        // The same for where they listen. Only a control that follows what arrives counts, and
+        // an empty device name means any device.
+        SharedDestination SharedListenDestination(_In_ std::vector<std::wstring> const& ids) const;
+        bool SetListenDestination(_In_ std::vector<std::wstring> const& ids, _In_ DestinationFields const& change);
 
         // ------------------------------------------------------------------ keyboard order
 

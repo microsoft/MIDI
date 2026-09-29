@@ -1,0 +1,279 @@
+/* =========================================================================
+   "GROOVY" - screen 24. Goldenrod, cream and brown, after 1970s graphic
+   design: the posters with their bands of stripes, the harvest gold and
+   avocado of the kitchens, and the colored switch groups of a minicomputer
+   front panel.
+
+   Loaded after mock.css by 24-groovy.html. It is the Groovy block of that
+   file, kept in its own file for now; move it to the end of mock.css as is.
+
+   The idea: NOTHING GLOWS AND NOTHING CASTS A SHADOW. Every color is flat.
+   So the one thing left to separate a control from the page is its line,
+   and the lines are heavy: a three pixel rim in the control's color around a
+   cream plate, a six pixel band around a knob, and sections and rules drawn
+   as bands of brown, burnt orange and orange that turn their corners the
+   way the posters do.
+
+   Why goldenrod rather than beige: the cream plate measures delta E 41
+   against the gold and 6 against beige. On beige every plate, lane and knob
+   face would need its outline to be seen at all.
+
+   Measured in g:\midi-scratch\groovy-contrast.ps1: every slot clears 3.0
+   against the page and 4.5 as type on the cream; a cream name clears 4.8 on
+   every slot filled; the closest two slots, burnt orange and red, are
+   delta E 23.3 apart. All six sit within 1.43 : 1 of each other in
+   brightness, so without color vision they are one brown.
+   ========================================================================= */
+
+.surf.groovy {
+    --deck: #ECC864;                    /* flat: no gradient, grain or falloff */
+    --plate: #FBEFD3;                   /* cream: every plate, lane and knob face */
+    --track: #FBEFD3;                   /* the empty part of a lane or a band */
+    --line: #5A3D2B;                    /* brown: pointers, fader caps, the outer stripe */
+    --on-hue: #FFF7E6;                  /* ask 1: the name on a switch that is on */
+    --deck-ink: #3B2819;
+    --deck-ink2: #5A3D2B;               /* the print under a control */
+    --ink-rgb: 59, 40, 25;              /* the ink and the print again, for anything drawn at a strength */
+    --print-rgb: 90, 61, 43;
+    --grid1: rgba(59, 40, 25, .22);
+    --grid2: rgba(59, 40, 25, .08);
+    --tonal-rest: 0;
+    --tonal-held: .18;
+    --rim-rest: 1;
+    --tonal-radius: 10px;
+    --cap-shadow: none;
+
+    --rim-w: 3px;                       /* ask 4: today's rim is one pixel */
+    --band-w: 6px;                      /* ask 4: today's knob arc is four */
+    --ptr-w: 4px;
+    --pad-rest: .30;                    /* ask 2: mixed into the cream, not the page */
+
+    --stripe-1: #5A3D2B;                /* ask 5: the band, outside in */
+    --stripe-2: #B34A1A;
+    --stripe-3: #E5771E;
+    --stripe-w: 4px;
+
+    --neutral: 90, 61, 43;              /* brown: the absence of a color */
+
+    --h1: 179,  74,  26;   /* #B34A1A burnt orange - the default */
+    --h2: 102, 113,  31;   /* #66711F avocado */
+    --h3:  30, 110, 115;   /* #1E6E73 teal */
+    --h4: 143, 101,  18;   /* #8F6512 ochre */
+    --h5:  52,  88, 122;   /* #34587A denim */
+    --h6: 166,  42,  48;   /* #A62A30 red */
+}
+
+.surf.groovy .neutral { --hue: var(--neutral); }
+
+/* a cream plate in a heavy line of its own color */
+.surf.groovy .ctl {
+    border-radius: var(--tonal-radius);
+    background: var(--plate);
+    box-shadow: inset 0 0 0 var(--rim-w) rgb(var(--hue));
+    color: var(--deck-ink);
+}
+.surf.groovy .ctl .cap { color: var(--deck-ink2); }
+.surf.groovy .ctl.btn-ctl .name { font-weight: 700; letter-spacing: .06em; }
+.surf.groovy .ctl.btn-ctl .glyph { color: rgb(var(--hue)); }
+
+/* on fills it, and the name turns cream */
+.surf.groovy .ctl.on {
+    background: rgb(var(--hue));
+    box-shadow: inset 0 0 0 var(--rim-w) rgb(var(--hue));
+    color: var(--on-hue);
+}
+.surf.groovy .ctl.on .cap,
+.surf.groovy .ctl.btn-ctl.on .glyph { color: var(--on-hue); }
+
+/* disabled is flush with the page: the plate goes and the line drops to a third */
+.surf.groovy .ctl.dim {
+    opacity: 1;
+    background: transparent;
+    box-shadow: inset 0 0 0 var(--rim-w) rgba(var(--print-rgb), .34);
+    color: rgba(var(--ink-rgb), .55);
+}
+.surf.groovy .ctl.offline {
+    background:
+        repeating-linear-gradient(135deg, rgba(var(--print-rgb), .16) 0 5px, transparent 5px 10px),
+        var(--plate);
+    box-shadow: inset 0 0 0 var(--rim-w) rgba(var(--print-rgb), .45);
+    color: var(--deck-ink2);
+}
+
+/* no value strip: the fill is the whole of "on" */
+.surf.groovy .pipe { display: none; }
+
+/* a pad carries its color at rest, a third of the way, and lit it is the color outright */
+.surf.groovy .ctl.pad {
+    background:
+        linear-gradient(0deg, rgba(var(--hue), var(--pad-rest)), rgba(var(--hue), var(--pad-rest))),
+        var(--plate);
+}
+.surf.groovy .ctl.pad.on { background: rgb(var(--hue)); color: var(--on-hue); }
+
+/* a lamp is a switch: cream when out, all of its color when lit */
+.surf.groovy .ctl.led { border-radius: 50%; }
+.surf.groovy .ctl.led.on { background: rgb(var(--hue)); }
+
+/* ------------------------------------------------------------ knobs */
+/* A band around the outside: cream where it is empty, the control's color up to
+   the value, with round ends. Inside it, a gap of page, then a cream face in a
+   line of the same color, and a brown pointer. Drawn with an SVG circle because
+   a CSS arc cannot have round ends. */
+.surf.groovy .knob { background: none; box-shadow: none; }
+.surf.groovy .knob .band {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    overflow: visible;
+}
+.surf.groovy .knob .band circle {
+    cx: 50%; cy: 50%; r: calc(50% - 3px);
+    fill: none;
+    stroke-width: var(--band-w);
+    stroke-linecap: round;
+    transform: rotate(135deg); transform-origin: 50% 50%;
+}
+.surf.groovy .knob .band .lane { stroke: var(--track); }
+.surf.groovy .knob .band .value { stroke: rgb(var(--hue)); }
+.surf.groovy .knob .face {
+    position: absolute; inset: 9px; border-radius: 50%;
+    background: var(--plate);
+    box-shadow: inset 0 0 0 var(--rim-w) rgb(var(--hue));
+}
+/* under a finger the face takes a fifth of its color. A switch never does: it turns on */
+.surf.groovy .knob.held { background: none; box-shadow: none; }
+.surf.groovy .knob.held .face {
+    background:
+        linear-gradient(0deg, rgba(var(--hue), var(--tonal-held)), rgba(var(--hue), var(--tonal-held))),
+        var(--plate);
+}
+/* turns about the middle; the stroke runs from the inside of the face's line nearly to the center */
+.surf.groovy .knob .ptr {
+    left: 50%; top: 0; width: var(--ptr-w); height: 50%; margin-left: -2px;
+    border-radius: 0;
+    background: none; box-shadow: none;
+    transform-origin: 50% 100%;
+}
+.surf.groovy .knob .ptr::after {
+    content: "";
+    position: absolute; left: 0; right: 0; top: 12px; bottom: 8%;
+    border-radius: 2px;
+    background: var(--line);
+}
+.surf.groovy .knob.detent::before {
+    content: "";
+    position: absolute; left: 50%; top: -10px;
+    width: 4px; height: 6px; margin-left: -2px;
+    border-radius: 2px;
+    background: var(--line);
+}
+
+/* ------------------------------------------------------------ faders */
+/* no plate: a cream lane with round ends on the page, the value in color, and a
+   brown cap with a cream line across it */
+.surf.groovy .fader { background: none; box-shadow: none; padding: 6px 0; }
+.surf.groovy .fader .slot {
+    width: 10px; border-radius: 5px;
+    background: var(--track);
+    box-shadow: none;
+}
+.surf.groovy .fader .fill { border-radius: 5px; background: rgb(var(--hue)); box-shadow: none; }
+.surf.groovy .fader .capbar {
+    left: -9px; right: -9px; height: 12px;
+    border-radius: 6px;
+    background: var(--line);
+    box-shadow: none;
+}
+.surf.groovy .fader .capbar::after {
+    left: 4px; right: 4px; height: 3px; margin-top: -1.5px;
+    border-radius: 1.5px;
+    background: var(--plate);
+    box-shadow: none;
+    opacity: 1;
+}
+.surf.groovy .fader.horiz .slot { width: auto; height: 10px; }
+.surf.groovy .fader.horiz .capbar { top: -9px; bottom: -9px; width: 12px; height: auto; }
+.surf.groovy .fader.horiz .capbar::after {
+    top: 4px; bottom: 4px; left: 50%; right: auto;
+    width: 3px; height: auto; margin: 0 0 0 -1.5px;
+}
+/* a scale printed either side of the lane, never across it */
+.surf.groovy .fader .ticks i {
+    width: 28px; margin-left: -14px; height: 2px;
+    background: linear-gradient(90deg, var(--line) 0 20%, transparent 20% 80%, var(--line) 80% 100%);
+}
+
+/* ------------------------------------------------- two axis controls */
+.surf.groovy .xy .field2 { inset: 3px; border-radius: 7px; }
+.surf.groovy .xy .field2::before {
+    background-image:
+        linear-gradient(rgba(var(--print-rgb), .16) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(var(--print-rgb), .16) 2px, transparent 2px);
+}
+.surf.groovy .xy .cross { background: rgb(var(--hue)); box-shadow: none; }
+.surf.groovy .xy .cross.h { height: 2px; }
+.surf.groovy .xy .cross.v { width: 2px; }
+.surf.groovy .xy .puck {
+    width: 18px; height: 18px; margin: -9px 0 0 -9px;
+    background: rgb(var(--hue));
+    box-shadow: inset 0 0 0 3px var(--line);
+}
+.surf.groovy .xy .trail { background: rgba(var(--hue), .30); }
+
+/* ------------------------------------------------------------ meters */
+/* named again: `.surf.groovy .meter i` outranks the base `.meter i.lit` */
+.surf.groovy .ctl.meter { padding: 6px 5px; gap: 2px; }
+.surf.groovy .meter i { height: 5px; border-radius: 1px; background: rgba(var(--print-rgb), .16); }
+.surf.groovy .meter i.lit { background: rgb(var(--h2)); box-shadow: none; }
+.surf.groovy .meter i.lit.warn { background: rgb(var(--h4)); box-shadow: none; }
+.surf.groovy .meter i.lit.hot { background: rgb(var(--h6)); box-shadow: none; }
+
+/* --------------------------------------------- text, sections, rules */
+.surf.groovy .surftext.h1 { color: var(--deck-ink); }
+.surf.groovy .surftext.h2 { color: var(--deck-ink); font-size: 10px; font-weight: 700; letter-spacing: .16em; }
+.surf.groovy .surftext.small { color: var(--deck-ink2); }
+.surf.groovy .surftext.readout { color: var(--deck-ink); text-shadow: none; }
+
+/* a section is a band of three stripes that turns its corners, with its name cut
+   into the top. Inset shadows with no blur: each one is a flat ring, and each
+   ring's corner is concentric with the one outside it */
+.surf.groovy .ctlpanel {
+    /* the innermost stripe turns the same curve as a control */
+    border-radius: calc(var(--tonal-radius) + var(--stripe-w) * 3);
+    background: none;
+    box-shadow:
+        inset 0 0 0 var(--stripe-w) var(--stripe-1),
+        inset 0 0 0 calc(var(--stripe-w) * 2) var(--stripe-2),
+        inset 0 0 0 calc(var(--stripe-w) * 3) var(--stripe-3);
+}
+.surf.groovy .ctlpanel > .ptitle {
+    top: 0; left: 24px; height: calc(var(--stripe-w) * 3); padding: 0 8px;
+    display: flex; align-items: center;
+    background: var(--deck);
+    color: var(--deck-ink);
+    font-size: 10px; font-weight: 700; letter-spacing: .16em;
+}
+
+/* a rule is the same band, straight. Hard stops, so three flat stripes and no blend */
+.surf.groovy .surfrule {
+    background: linear-gradient(180deg,
+        var(--stripe-1) 0 33.34%, var(--stripe-2) 33.34% 66.67%, var(--stripe-3) 66.67% 100%);
+}
+.surf.groovy .surfrule.vert {
+    background: linear-gradient(90deg,
+        var(--stripe-1) 0 33.34%, var(--stripe-2) 33.34% 66.67%, var(--stripe-3) 66.67% 100%);
+}
+
+/* a page tab is a switch on the neutral slot: cream, and brown when it is the page */
+.surf.groovy .pagetabs .tab {
+    border-radius: var(--tonal-radius);
+    background: var(--plate);
+    box-shadow: inset 0 0 0 var(--rim-w) var(--line);
+    color: var(--deck-ink);
+    font-weight: 700;
+}
+.surf.groovy .pagetabs .tab.sel {
+    background: var(--line);
+    box-shadow: inset 0 0 0 var(--rim-w) var(--line);
+    color: var(--on-hue);
+}

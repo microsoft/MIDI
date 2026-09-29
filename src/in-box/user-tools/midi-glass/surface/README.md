@@ -35,7 +35,7 @@ From a finger touching glass to a message leaving there is one frame of budget a
 | Kind | What a touch does |
 |---|---|
 | Fader, XY pad | Jumps to where it was touched, and follows |
-| Knob, encoder | Nudged, not set. A knob has no travel under the finger, so jumping would make every touch a wild move |
+| Knob, encoder | Nudged, not set. A knob has no travel under the finger, so jumping would make every touch a wild move. Dragged up and down, left and right, or round and round, whichever the control says. Round and round ignores the middle of the knob, where a tiny move swings the angle a long way |
 | Pad, button, page tab | Momentary: sends on press and again on release |
 | Note pads, hex pads | Every finger plays its own pad, so chords work. A finger that slides onto another pad does what the control's glide setting says: plays the new note, glides to it with portamento, or bends the note it started on. Only the pads light; the grid they sit on never reacts |
 | Toggle | Flips on press |

@@ -48,6 +48,7 @@ namespace winrt::midiglass::implementation
         {
             glass::DragAxis::Vertical,
             glass::DragAxis::Horizontal,
+            glass::DragAxis::Circular,
         };
 
         constexpr glass::MessageKind FeedbackKindOrder[]

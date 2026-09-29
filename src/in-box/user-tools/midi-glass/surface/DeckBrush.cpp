@@ -8,9 +8,13 @@
 #include "pch.h"
 #include "DeckBrush.h"
 #include "SurfaceColors.h"
+#include "SurfaceTextures.h"
 #include "ThemeStore.h"
 
+#include <winrt/Windows.UI.ViewManagement.h>
+
 #include <algorithm>
+#include <cmath>
 #include <vector>
 
 using namespace winrt::Windows::Foundation::Numerics;
@@ -67,6 +71,18 @@ namespace glass
         constexpr int32_t BrushedShadeCount = 7;
         constexpr double BrushedShadeStep = 0.09;
 
+        // A brushed grain with no run length of its own named streaks this many cells long.
+        constexpr int32_t DefaultBrushedStreak = 12;
+
+        // The rain: a tile of fine streaks nine degrees off the vertical, repeated. It falls one
+        // tile across and six down per loop, which is that same nine degrees, so the loop meets
+        // itself without a seam.
+        constexpr float RainTileSize = 240.0f;
+        constexpr int32_t RainStreakCount = 54;
+        constexpr double RainSlantDegrees = 9.0;
+        constexpr int32_t RainTilesPerLoop = 6;
+        constexpr uint64_t RainSeed = 20190101ull;
+
         // Deterministic, so a re-render is the same grain rather than a shimmer. A real random
         // source here would make every resize look like the panel was re-manufactured.
         uint32_t NextGrainNoise(_Inout_ uint32_t& state) noexcept
@@ -76,6 +92,201 @@ namespace glass
             state ^= state << 5;
 
             return state;
+        }
+
+        // The rain's own generator, so a tile is the same streaks every time it is drawn.
+        double NextRainUnit(_Inout_ uint64_t& state) noexcept
+        {
+            state = (state * 1103515245ull + 12345ull) % 2147483648ull;
+
+            return static_cast<double>(state) / 2147483648.0;
+        }
+
+        // A picture repeated at its own size from the top left of the page, at the page's scale.
+        Visual BuildRepeatingPicture(
+            _In_ Compositor const& compositor,
+            _In_ Theme const& theme,
+            _In_ float width,
+            _In_ float height,
+            _In_ double pageScale)
+        {
+            auto const pixels = LoadThemePicture(theme.Deck.ImageFileName);
+
+            if (pixels == nullptr)
+            {
+                return nullptr;
+            }
+
+            auto const scale = static_cast<float>(std::max(pageScale, 0.05));
+
+            auto tiles = BuildTiles(
+                compositor,
+                MakeTextureBrush(compositor, *pixels),
+                static_cast<float>(pixels->Width) * scale,
+                static_cast<float>(pixels->Height) * scale,
+                width,
+                height);
+
+            tiles.Clip(compositor.CreateInsetClip());
+
+            return tiles;
+        }
+
+        // A fine noise in every screen pixel, whatever the page's zoom.
+        Visual BuildFineGrain(
+            _In_ Compositor const& compositor,
+            _In_ Theme const& theme,
+            _In_ float width,
+            _In_ float height,
+            _In_ double scale)
+        {
+            auto const pixels = FineGrainImage(theme);
+
+            if (pixels == nullptr)
+            {
+                return nullptr;
+            }
+
+            auto const unitsPerPixel = static_cast<float>(1.0 / std::max(scale, 0.05));
+
+            auto tiles = BuildTiles(
+                compositor,
+                MakeTextureBrush(compositor, *pixels),
+                static_cast<float>(pixels->Width) * unitsPerPixel,
+                static_cast<float>(pixels->Height) * unitsPerPixel,
+                width,
+                height);
+
+            tiles.Clip(compositor.CreateInsetClip());
+
+            return tiles;
+        }
+
+        // Rain, falling where the page's animations are allowed to move.
+        Visual BuildRain(
+            _In_ Compositor const& compositor,
+            _In_ Theme const& theme,
+            _In_ float width,
+            _In_ float height,
+            _In_ double pageScale,
+            _In_ bool animate)
+        {
+            auto const scale = static_cast<float>(std::max(pageScale, 0.05));
+            auto const tileSize = RainTileSize * scale;
+            auto const strength = std::clamp(theme.Overlay.RainPercent, 0, 100) / 100.0;
+
+            auto color = EffectiveRainColor(theme);
+
+            auto tile = compositor.CreateShapeVisual();
+            tile.Size(float2{ tileSize, tileSize });
+
+            auto const slant = std::tan(RainSlantDegrees * 3.14159265358979 / 180.0);
+
+            uint64_t state = RainSeed;
+
+            for (int32_t streak = 0; streak < RainStreakCount; ++streak)
+            {
+                auto const x = NextRainUnit(state) * RainTileSize;
+                auto const y = NextRainUnit(state) * RainTileSize;
+                auto const length = 12.0 + NextRainUnit(state) * 26.0;
+                auto const alpha = (0.20 + NextRainUnit(state) * 0.34) * strength;
+                auto const thickness = NextRainUnit(state) < 0.25 ? 1.3 : 0.9;
+
+                auto const x2 = x + length * slant;
+                auto const y2 = y + length;
+
+                color.A = static_cast<uint8_t>(std::clamp(std::lround(255.0 * alpha), 0L, 255L));
+
+                auto const brush = compositor.CreateColorBrush(ToColor(color));
+
+                // A streak that crosses the edge of the tile is drawn again on the far side, so
+                // the tile repeats without a seam.
+                for (auto const dx : { -RainTileSize, 0.0f, RainTileSize })
+                {
+                    for (auto const dy : { -RainTileSize, 0.0f, RainTileSize })
+                    {
+                        auto const ax = x + dx;
+                        auto const ay = y + dy;
+                        auto const bx = x2 + dx;
+                        auto const by = y2 + dy;
+
+                        if (std::max(ax, bx) < 0.0 || std::min(ax, bx) > RainTileSize ||
+                            std::max(ay, by) < 0.0 || std::min(ay, by) > RainTileSize)
+                        {
+                            continue;
+                        }
+
+                        auto line = compositor.CreateLineGeometry();
+                        line.Start(float2{ static_cast<float>(ax) * scale, static_cast<float>(ay) * scale });
+                        line.End(float2{ static_cast<float>(bx) * scale, static_cast<float>(by) * scale });
+
+                        auto shape = compositor.CreateSpriteShape(line);
+                        shape.StrokeBrush(brush);
+                        shape.StrokeThickness(static_cast<float>(thickness) * scale);
+                        shape.StrokeStartCap(CompositionStrokeCap::Round);
+                        shape.StrokeEndCap(CompositionStrokeCap::Round);
+
+                        tile.Shapes().Append(shape);
+                    }
+                }
+            }
+
+            tile.Clip(compositor.CreateInsetClip());
+
+            auto surface = compositor.CreateVisualSurface();
+            surface.SourceVisual(tile);
+            surface.SourceSize(float2{ tileSize, tileSize });
+
+            auto const brush = compositor.CreateSurfaceBrush(surface);
+
+            // Tiles enough to cover the page from one loop's start to its end.
+            auto const loopAcross = tileSize;
+            auto const loopDown = tileSize * static_cast<float>(RainTilesPerLoop);
+
+            auto field = BuildTiles(compositor, brush, tileSize, tileSize, width + loopAcross, height + loopDown);
+
+            // The offscreen is only rendered while the visual it reads from is alive, so the
+            // tile goes along with the field, hidden.
+            tile.IsVisible(false);
+            field.Children().InsertAtBottom(tile);
+
+            field.Offset(float3{ -loopAcross, -loopDown, 0.0f });
+
+            auto root = compositor.CreateContainerVisual();
+            root.Size(float2{ width, height });
+            root.Clip(compositor.CreateInsetClip());
+            root.Children().InsertAtTop(field);
+
+            auto const speed = std::clamp(theme.Overlay.RainSpeed, 0, 4000);
+
+            auto moves = animate && speed > 0;
+
+            if (moves)
+            {
+                try
+                {
+                    moves = winrt::Windows::UI::ViewManagement::UISettings{}.AnimationsEnabled();
+                }
+                catch (...)
+                {
+                    moves = false;
+                }
+            }
+
+            if (moves)
+            {
+                auto const seconds = (RainTileSize * RainTilesPerLoop) / static_cast<float>(speed);
+
+                auto fall = compositor.CreateVector3KeyFrameAnimation();
+                fall.InsertKeyFrame(0.0f, float3{ -loopAcross, -loopDown, 0.0f }, compositor.CreateLinearEasingFunction());
+                fall.InsertKeyFrame(1.0f, float3{ 0.0f, 0.0f, 0.0f }, compositor.CreateLinearEasingFunction());
+                fall.Duration(std::chrono::milliseconds{ static_cast<int64_t>(seconds * 1000.0f) });
+                fall.IterationBehavior(AnimationIterationBehavior::Forever);
+
+                field.StartAnimation(L"Offset", fall);
+            }
+
+            return root;
         }
 
         Visual BuildGrain(
@@ -111,7 +322,7 @@ namespace glass
 
             uint32_t state = 0x9E3779B9u;
 
-            if (theme.Overlay.GrainStreak > 1)
+            if (theme.Overlay.Grain == GrainStyle::Brushed)
             {
                 // Brushed rather than sanded: one pixel rows, each a shade of the grain color,
                 // in runs about as long as the theme asks. Always lighter, never darker, the way
@@ -132,7 +343,8 @@ namespace glass
                     shades.push_back(compositor.CreateColorBrush(ToColor(streak)));
                 }
 
-                auto const typicalRun = static_cast<float>(theme.Overlay.GrainStreak) * GrainCellSize;
+                auto const cellsPerStreak = theme.Overlay.GrainStreak > 1 ? theme.Overlay.GrainStreak : DefaultBrushedStreak;
+                auto const typicalRun = static_cast<float>(cellsPerStreak) * GrainCellSize;
                 auto const rows = static_cast<int32_t>(GrainTileSize);
 
                 for (int32_t row = 0; row < rows; ++row)
@@ -373,7 +585,9 @@ namespace glass
     _Use_decl_annotations_
     media::Brush MakeDeckBrush(ThemeDeck const& deck)
     {
-        if (deck.Kind == DeckKind::Image)
+        // A picture that repeats is laid over the deck's colors by the overlay, a tile at a time;
+        // one stretched to the page is the whole deck.
+        if (deck.Kind == DeckKind::Image && !deck.ImageRepeats)
         {
             // A missing or unreadable picture leaves the deck its color, never a hole.
             if (auto const path = DeckImagePath(deck); !path.empty())
@@ -391,7 +605,12 @@ namespace glass
             }
         }
 
-        if (deck.Kind != DeckKind::Gradient)
+        // Under a repeating picture, the deck is lit the way a gradient deck is when its two
+        // colors differ.
+        auto const lit = deck.Kind == DeckKind::Gradient ||
+            (deck.Kind == DeckKind::Image && deck.ImageRepeats && !(deck.GradientEndColor == deck.Color));
+
+        if (!lit)
         {
             return media::SolidColorBrush(ToColor(deck.Color));
         }
@@ -434,7 +653,9 @@ namespace glass
         double width,
         double height,
         double scale,
-        DeckOverlayLayer layer)
+        DeckOverlayLayer layer,
+        double pageScale,
+        bool animate)
     {
         if (element == nullptr)
         {
@@ -443,8 +664,16 @@ namespace glass
 
         try
         {
-            auto const wantsGrain = layer != DeckOverlayLayer::AboveControls &&
-                theme.Overlay.GrainPercent > 0;
+            auto const beneath = layer != DeckOverlayLayer::AboveControls;
+
+            auto const wantsPicture = beneath &&
+                theme.Deck.Kind == DeckKind::Image &&
+                theme.Deck.ImageRepeats &&
+                !theme.Deck.ImageFileName.empty();
+
+            auto const wantsGrain = beneath && theme.Overlay.GrainPercent > 0;
+
+            auto const wantsRain = beneath && theme.Overlay.RainPercent > 0;
 
             auto const wantsGlass = layer != DeckOverlayLayer::BeneathControls;
 
@@ -455,7 +684,7 @@ namespace glass
 
             auto const wantsFaceplate = wantsGlass && theme.Overlay.FaceplateSheenPercent > 0;
 
-            if ((!wantsGrain && !wantsVignette && !wantsScanLines && !wantsFaceplate) ||
+            if ((!wantsPicture && !wantsGrain && !wantsRain && !wantsVignette && !wantsScanLines && !wantsFaceplate) ||
                 width < 1.0 || height < 1.0)
             {
                 ElementCompositionPreview::SetElementChildVisual(element, nullptr);
@@ -470,12 +699,35 @@ namespace glass
             auto root = compositor.CreateContainerVisual();
             root.Size(float2{ pixelWidth, pixelHeight });
 
-            // Bottom to top, and this order is the design's: the panel has its texture, the
-            // glass falls off at the corners, the raster is drawn on it, and the room is
-            // reflected in front of all three.
+            // Bottom to top, and this order is the design's: the wall's picture, the panel's
+            // texture, the rain running down it, then the glass falls off at the corners, the
+            // raster is drawn on it, and the room is reflected in front of all of it.
+            if (wantsPicture)
+            {
+                if (auto picture = BuildRepeatingPicture(compositor, theme, pixelWidth, pixelHeight, pageScale); picture != nullptr)
+                {
+                    root.Children().InsertAtTop(picture);
+                }
+            }
+
             if (wantsGrain)
             {
-                root.Children().InsertAtTop(BuildGrain(compositor, theme, pixelWidth, pixelHeight));
+                if (theme.Overlay.Grain == GrainStyle::Fine)
+                {
+                    if (auto fine = BuildFineGrain(compositor, theme, pixelWidth, pixelHeight, scale); fine != nullptr)
+                    {
+                        root.Children().InsertAtTop(fine);
+                    }
+                }
+                else
+                {
+                    root.Children().InsertAtTop(BuildGrain(compositor, theme, pixelWidth, pixelHeight));
+                }
+            }
+
+            if (wantsRain)
+            {
+                root.Children().InsertAtTop(BuildRain(compositor, theme, pixelWidth, pixelHeight, pageScale, animate));
             }
 
             if (wantsVignette)

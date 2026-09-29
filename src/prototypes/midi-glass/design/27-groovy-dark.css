@@ -1,0 +1,88 @@
+/* =========================================================================
+   "GROOVY DARK" - screen 27. Groovy on a brown page, for a dark room.
+
+   Loaded after mock.css and 24-groovy.css by 27-groovy-dark.html, on a deck
+   that carries both classes: every rule is Groovy's, and only its values
+   change here. The one exception is the band, four stripes of three pixels
+   instead of three of four, the same twelve pixels either way. So this theme
+   asks the engine for nothing beyond Groovy's five asks and the grain it
+   already draws.
+
+   Turned over: an espresso plate in a heavy line of its own color, cream
+   print, and on is the color outright with a dark name. Every color has to
+   be light enough to carry that name, which is why the deep reds in the
+   palettes are lifted: #C21717 is 2.36 : 1 on this page.
+
+   Measured in g:\midi-scratch\groovy-dark-contrast.ps1: every slot clears
+   4.0 on the page and 4.66 as type on the plate, the dark name clears 4.66
+   on every lit slot, and the closest two slots, orange and gold, are delta E
+   28.5 apart. With deuteranopia red and avocado are only delta E 8.1 apart.
+   ========================================================================= */
+
+.surf.groovy.groovydark {
+    --deck: #3B2419;                    /* brown, with a paper grain over it */
+    --plate: #2A1911;                   /* espresso: every plate, lane and knob face */
+    --track: #2A1911;
+    --line: #FDDCA9;                    /* cream: pointers, fader caps, page tabs */
+    --on-hue: #2A1911;                  /* ask 1: a dark name on a switch that is on */
+    --deck-ink: #F4E4C4;
+    --deck-ink2: #D9BE8E;               /* the print under a control */
+    --ink-rgb: 244, 228, 196;
+    --print-rgb: 253, 220, 169;
+    --grid1: rgba(244, 228, 196, .18);
+    --grid2: rgba(244, 228, 196, .06);
+
+    --stripe-1: #E23D2D;                /* ask 5: four stripes, outside in */
+    --stripe-2: #E76219;
+    --stripe-3: #FEA712;
+    --stripe-4: #FDDCA9;
+    --stripe-w: 3px;
+
+    --neutral: 253, 220, 169;           /* cream: the absence of a color */
+
+    --h1: 243, 122,  38;   /* #F37A26 orange - the default */
+    --h2: 163, 174,  76;   /* #A3AE4C avocado */
+    --h3:  34, 167, 162;   /* #22A7A2 teal */
+    --h4: 242, 168,  28;   /* #F2A81C gold */
+    --h5: 127, 166, 210;   /* #7FA6D2 denim */
+    --h6: 236,  80,  70;   /* #EC5046 red */
+}
+
+/* four stripes of three pixels: the same twelve pixel band as Groovy's three of four */
+.surf.groovy.groovydark .ctlpanel {
+    border-radius: calc(var(--tonal-radius) + var(--stripe-w) * 4);
+    box-shadow:
+        inset 0 0 0 var(--stripe-w) var(--stripe-1),
+        inset 0 0 0 calc(var(--stripe-w) * 2) var(--stripe-2),
+        inset 0 0 0 calc(var(--stripe-w) * 3) var(--stripe-3),
+        inset 0 0 0 calc(var(--stripe-w) * 4) var(--stripe-4);
+}
+.surf.groovy.groovydark .ctlpanel > .ptitle {
+    height: calc(var(--stripe-w) * 4);
+    /* the notch is cut out of the band, so the grain runs through it rather than stopping at a flat patch */
+    background:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192'><filter id='t' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='3' seed='7' stitchTiles='stitch'/><feColorMatrix type='matrix' values='.66 .66 .66 0 -.5 .66 .66 .66 0 -.5 .66 .66 .66 0 -.5 0 0 0 0 .48'/></filter><rect width='192' height='192' filter='url(%23t)'/></svg>") 0 0 / 192px 192px,
+        var(--deck);
+    background-blend-mode: overlay;
+}
+.surf.groovy.groovydark .surfrule {
+    background: linear-gradient(180deg,
+        var(--stripe-1) 0 25%, var(--stripe-2) 25% 50%, var(--stripe-3) 50% 75%, var(--stripe-4) 75% 100%);
+}
+.surf.groovy.groovydark .surfrule.vert {
+    background: linear-gradient(90deg,
+        var(--stripe-1) 0 25%, var(--stripe-2) 25% 50%, var(--stripe-3) 50% 75%, var(--stripe-4) 75% 100%);
+}
+
+/* The paper grain: fine noise with its contrast doubled, laid on with overlay so the
+   page's mean does not move. On ::before so it sits under the controls, where the
+   engine lays its grain. */
+.surf.groovy.groovydark::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192'><filter id='t' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='3' seed='7' stitchTiles='stitch'/><feColorMatrix type='matrix' values='.66 .66 .66 0 -.5 .66 .66 .66 0 -.5 .66 .66 .66 0 -.5 0 0 0 0 1'/></filter><rect width='192' height='192' filter='url(%23t)'/></svg>");
+    background-size: 192px 192px;
+    opacity: .48;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+}

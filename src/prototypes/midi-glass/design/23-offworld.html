@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - Off-world Colonies theme</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .chiprow { position: absolute; left: 14px; top: 13px; display: flex; gap: 6px; align-items: center; }
+    .tchip {
+        height: 26px; padding: 0 11px; border-radius: 13px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: var(--text3);
+        background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .tchip i { width: 11px; height: 11px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    .tchip.new { color: #FF9CCB; background: rgba(255,79,163,.10); box-shadow: inset 0 0 0 1px rgba(255,79,163,.55); }
+
+    .deck {
+        position: absolute; left: 14px; top: 54px; width: 972px; height: 486px;
+        border-radius: 8px; overflow: hidden;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    }
+    .decktag { position: absolute; left: 14px; top: 552px; font-size: 11px; color: var(--text3); }
+    .decktag b { color: var(--text2); font-weight: 600; }
+
+    /* the print: small, spaced, under what it names */
+    .silk {
+        position: absolute; font-size: 7.5px; font-weight: 600; letter-spacing: .12em;
+        color: #D8E4E1; text-align: center; white-space: nowrap;
+    }
+    .silk.dim { color: #A6B0AD; }
+
+    .rhead { position: absolute; font-size: 11px; letter-spacing: .10em; color: #A6B0AD; }
+    .kcap { position: absolute; text-align: center; font-size: 10.5px; line-height: 1.4; color: #A6B0AD; }
+    .kcap b { display: block; color: #D8E4E1; font-weight: 600; font-size: 11px; margin-bottom: 2px; }
+    .measure { position: absolute; font-size: 11.5px; line-height: 1.6; color: #C4CFCC; }
+    .measure b { color: #FFFFFF; font-weight: 600; }
+    .measure .num { font-family: "Cascadia Mono","Consolas",monospace; color: #FFCA7A; font-weight: 600; }
+    .state { position: absolute; font-size: 8.5px; letter-spacing: .08em; color: #A6B0AD; text-align: center; }
+
+    .swatches { display: flex; gap: 0; width: 1000px; border-radius: 7px; overflow: hidden; margin-top: 14px; }
+    .swatches div {
+        flex: 1; height: 58px; display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 6px 7px; font-size: 9.5px; font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .swatches div span { display: block; font-family: "Segoe UI Variable Text","Segoe UI",sans-serif; font-size: 10px; opacity: .78; }
+
+    .costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; width: 1000px; margin-top: 12px; }
+    .cost {
+        border-radius: 7px; padding: 12px 14px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 11.5px; color: var(--text3); line-height: 1.55;
+    }
+    .cost h4 { margin: 0 0 7px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .cost b { color: var(--text2); font-weight: 600; }
+    .cost .yes { color: var(--success); font-weight: 600; }
+    .cost .no { color: var(--caution); font-weight: 600; }
+    .cost .mono { color: var(--accent); }
+
+    .asks { width: 1000px; margin-top: 11px; border-radius: 7px; padding: 12px 14px 6px 14px; box-sizing: border-box;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke); }
+    .asks h4 { margin: 0 0 8px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .asks table { width: 100%; border-collapse: collapse; font-size: 11.5px; line-height: 1.5; color: var(--text3); }
+    .asks th { text-align: left; font-weight: 600; color: var(--text2); padding: 0 10px 6px 0; border-bottom: 1px solid var(--divider); font-size: 11px; }
+    .asks td { vertical-align: top; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--divider); }
+    .asks tr:last-child td { border-bottom: none; }
+    .asks td.n { width: 18px; color: var(--caution); font-weight: 600; }
+    .asks td.ask { width: 290px; }
+    .asks td.ask b { color: var(--text); font-weight: 600; }
+    .asks td.without { width: 220px; }
+    .asks .mono { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 23 &mdash; <b>Off-world Colonies</b>, after the look of the film Blade Runner: a city where it never stops raining. A wall of cast concrete blocks, stained by years of water and still wet, with dark worn equipment bolted to it and neon for light. <b>The first theme where the wall is the point.</b> Every theme so far has a deck that is a color, a gradient or a grain. This one is a pattern, repeated at its own size, with rain over it. And its lights flare.</p>
+
+<!-- ============================================================= DECK -->
+<div class="board" style="height:576px;">
+
+    <div class="chiprow">
+        <div class="tchip"><i style="background:#4CE0FF"></i>Studio Dark</div>
+        <div class="tchip"><i style="background:#39465F"></i>Supersaw</div>
+        <div class="tchip"><i style="background:#566D55; box-shadow: inset 0 0 0 2px #CAC5AC"></i>Five-iSH</div>
+        <div class="tchip"><i style="background:#131414; box-shadow: inset 0 0 0 2px #35EE7A, 0 0 5px rgba(53,238,122,.7)"></i>Airy System</div>
+        <div class="tchip new"><i style="background:#181B1A; box-shadow: inset 0 0 0 2px #FF4FA3, 0 0 5px rgba(255,79,163,.7)"></i>Off-world Colonies</div>
+        <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
+    </div>
+
+    <div class="deck surf tonal offworld">
+
+        <div class="blinds"></div>
+
+        <!-- the page's name is a label in neon, on the bare wall -->
+        <div class="surftext h1 neon hue2" style="left:22px; top:9px; font-size:20px;">OFF-WORLD</div>
+        <div class="surftext small" style="left:196px; top:17px;">synth &middot; scenes &middot; mix</div>
+
+        <div class="silk dim" style="left:560px; top:19px; width:40px;">TEMPO</div>
+        <div class="ctl" style="left:604px; top:9px; width:84px; height:27px;"></div>
+        <div class="surftext readout" style="left:614px; top:10px; font-size:19px; letter-spacing:.04em;">124.0</div>
+
+        <div class="pagetabs" style="right:18px; top:11px; gap:5px;">
+            <div class="tab sel" style="height:22px; padding:0 11px; font-size:10px">Synth</div>
+            <div class="tab" style="height:22px; padding:0 11px; font-size:10px">Scenes</div>
+            <div class="tab" style="height:22px; padding:0 11px; font-size:10px">Mix</div>
+        </div>
+
+        <!-- ======================================== band A: four modules on the wall -->
+
+        <!-- OSC -->
+        <div class="ctlpanel hue1" style="left:14px; top:52px; width:228px; height:140px;"><div class="ptitle">OSC</div></div>
+        <div class="ctl knob hue1 detent" style="left:36px; top:78px; width:44px; height:44px;">
+            <div class="dial" style="--pct:.375turn"><div class="halo"><div class="arc"></div><div class="core"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:104px; top:78px; width:44px; height:44px;">
+            <div class="dial" style="--pct:.58turn"><div class="halo"><div class="arc"></div><div class="core"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(73.8deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:172px; top:78px; width:44px; height:44px;">
+            <div class="dial" style="--pct:.22turn"><div class="halo"><div class="arc"></div><div class="core"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-55.8deg)"></div></div>
+        </div>
+        <div class="silk" style="left:28px; top:128px; width:60px;">PITCH</div>
+        <div class="silk" style="left:96px; top:128px; width:60px;">SHAPE</div>
+        <div class="silk" style="left:164px; top:128px; width:60px;">DETUNE</div>
+        <div class="ctl btn-ctl hue1 on" style="left:30px; top:150px; width:56px; height:24px;"><div class="name" style="font-size:8px">SAW</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:98px; top:150px; width:56px; height:24px;"><div class="name" style="font-size:8px">SQR</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:166px; top:150px; width:56px; height:24px;"><div class="name" style="font-size:8px">SYNC</div><div class="pipe"></div></div>
+
+        <!-- FILTER -->
+        <div class="ctlpanel hue2" style="left:258px; top:52px; width:226px; height:140px;"><div class="ptitle">FILTER</div></div>
+        <div class="ctl knob hue2" style="left:276px; top:72px; width:60px; height:60px;">
+            <div class="dial" style="--pct:.62turn"><div class="halo"><div class="arc"></div><div class="core"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(88.2deg)"></div></div>
+        </div>
+        <div class="ctl knob hue2" style="left:356px; top:80px; width:40px; height:40px;">
+            <div class="dial" style="--pct:.34turn"><div class="halo"><div class="arc"></div><div class="core"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-12.6deg)"></div></div>
+        </div>
+        <div class="ctl knob hue2" style="left:420px; top:80px; width:40px; height:40px;">
+            <div class="dial" style="--pct:.46turn"><div class="halo"><div class="arc"></div><div class="core"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(30.6deg)"></div></div>
+        </div>
+        <div class="silk" style="left:276px; top:137px; width:60px;">CUTOFF</div>
+        <div class="silk" style="left:346px; top:126px; width:60px;">RESO</div>
+        <div class="silk" style="left:410px; top:126px; width:60px;">ENV</div>
+        <div class="ctl btn-ctl hue2 on" style="left:280px; top:150px; width:52px; height:24px;"><div class="name" style="font-size:8px">LP</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue2" style="left:350px; top:150px; width:52px; height:24px;"><div class="name" style="font-size:8px">HP</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue2" style="left:414px; top:150px; width:52px; height:24px;"><div class="name" style="font-size:8px">KEY</div><div class="pipe"></div></div>
+
+        <!-- ENVELOPE -->
+        <div class="ctlpanel hue3" style="left:500px; top:52px; width:168px; height:140px;"><div class="ptitle">ENVELOPE</div></div>
+        <div class="ctl fader hue3" style="left:516px; top:74px; width:26px; height:96px;"><div class="slot"><div class="fill" style="height:18%"></div><div class="capbar" style="bottom:calc(18% - 7px);"></div></div></div>
+        <div class="ctl fader hue3" style="left:554px; top:74px; width:26px; height:96px;"><div class="slot"><div class="fill" style="height:46%"></div><div class="capbar" style="bottom:calc(46% - 7px);"></div></div></div>
+        <div class="ctl fader hue3" style="left:592px; top:74px; width:26px; height:96px;"><div class="slot"><div class="fill" style="height:64%"></div><div class="capbar" style="bottom:calc(64% - 7px);"></div></div></div>
+        <div class="ctl fader hue3" style="left:630px; top:74px; width:26px; height:96px;"><div class="slot"><div class="fill" style="height:34%"></div><div class="capbar" style="bottom:calc(34% - 7px);"></div></div></div>
+        <div class="silk" style="left:516px; top:175px; width:26px;">A</div>
+        <div class="silk" style="left:554px; top:175px; width:26px;">D</div>
+        <div class="silk" style="left:592px; top:175px; width:26px;">S</div>
+        <div class="silk" style="left:630px; top:175px; width:26px;">R</div>
+
+        <!-- FX -->
+        <div class="ctlpanel hue6" style="left:684px; top:52px; width:274px; height:140px;"><div class="ptitle">DELAY</div></div>
+        <div class="ctl knob hue6" style="left:702px; top:78px; width:44px; height:44px;">
+            <div class="dial" style="--pct:.50turn"><div class="halo"><div class="arc"></div><div class="core"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(45deg)"></div></div>
+        </div>
+        <div class="ctl knob hue6" style="left:766px; top:78px; width:44px; height:44px;">
+            <div class="dial" style="--pct:.28turn"><div class="halo"><div class="arc"></div><div class="core"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-34.2deg)"></div></div>
+        </div>
+        <div class="ctl knob hue6" style="left:830px; top:78px; width:44px; height:44px;">
+            <div class="dial" style="--pct:.40turn"><div class="halo"><div class="arc"></div><div class="core"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(9deg)"></div></div>
+        </div>
+        <div class="silk" style="left:694px; top:128px; width:60px;">TIME</div>
+        <div class="silk" style="left:758px; top:128px; width:60px;">FEEDBACK</div>
+        <div class="silk" style="left:822px; top:128px; width:60px;">MIX</div>
+        <div class="silk dim" style="left:888px; top:82px; width:56px;">DIVISION</div>
+        <div class="surftext readout" style="left:894px; top:94px; font-size:18px;">1/8D</div>
+        <div class="ctl btn-ctl hue6 on" style="left:698px; top:150px; width:56px; height:24px;"><div class="name" style="font-size:8px">PING</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue6" style="left:762px; top:150px; width:56px; height:24px;"><div class="name" style="font-size:8px">TAPE</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue6" style="left:826px; top:150px; width:56px; height:24px;"><div class="name" style="font-size:8px">FREEZE</div><div class="pipe"></div></div>
+
+        <!-- ======================================== band B: pads, the XY, and bare wall -->
+
+        <!-- SCENES: sixteen pads in fours -->
+        <div class="ctlpanel hue2" style="left:14px; top:208px; width:412px; height:128px;"><div class="ptitle">SCENES</div></div>
+        <div class="ctl btn-ctl pad hue2 on" style="left:30px; top:230px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">A1</div></div>
+        <div class="ctl btn-ctl pad hue2" style="left:78px; top:230px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">A2</div></div>
+        <div class="ctl btn-ctl pad hue2" style="left:126px; top:230px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">A3</div></div>
+        <div class="ctl btn-ctl pad hue2" style="left:174px; top:230px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">A4</div></div>
+        <div class="ctl btn-ctl pad hue1" style="left:222px; top:230px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">A5</div></div>
+        <div class="ctl btn-ctl pad hue1 on" style="left:270px; top:230px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">A6</div></div>
+        <div class="ctl btn-ctl pad hue1" style="left:318px; top:230px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">A7</div></div>
+        <div class="ctl btn-ctl pad hue1" style="left:366px; top:230px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">A8</div></div>
+        <div class="ctl btn-ctl pad hue3" style="left:30px; top:280px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">B1</div></div>
+        <div class="ctl btn-ctl pad hue3" style="left:78px; top:280px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">B2</div></div>
+        <div class="ctl btn-ctl pad hue3 on" style="left:126px; top:280px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">B3</div></div>
+        <div class="ctl btn-ctl pad hue3" style="left:174px; top:280px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">B4</div></div>
+        <div class="ctl btn-ctl pad hue5" style="left:222px; top:280px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">B5</div></div>
+        <div class="ctl btn-ctl pad hue5" style="left:270px; top:280px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">B6</div></div>
+        <div class="ctl btn-ctl pad hue5" style="left:318px; top:280px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">B7</div></div>
+        <div class="ctl btn-ctl pad neutral on" style="left:366px; top:280px; width:44px; height:44px;"><div class="name" style="font-size:8.5px">B8</div></div>
+
+        <!-- SPACE: an XY, and its puck is the brightest light on the page -->
+        <div class="ctlpanel hue1" style="left:442px; top:208px; width:214px; height:128px;"><div class="ptitle">SPACE</div></div>
+        <div class="ctl xy hue1" style="left:456px; top:230px; width:186px; height:94px;">
+            <div class="field2">
+                <div class="trail" style="left:38%; top:66%"></div>
+                <div class="trail" style="left:46%; top:57%"></div>
+                <div class="trail" style="left:54%; top:48%"></div>
+                <div class="trail" style="left:60%; top:42%"></div>
+                <div class="cross h" style="top:38%"></div>
+                <div class="cross v" style="left:64%"></div>
+                <div class="puck" style="left:64%; top:38%; width:12px; height:12px; margin:-6px 0 0 -6px"></div>
+            </div>
+            <div class="flare" style="left:118px; top:36px; --reach:96px;"><i></i></div>
+        </div>
+
+        <!-- straight on the wall: two big knobs and two buttons, under the light from the blinds -->
+        <div class="surftext neon hue5" style="left:700px; top:214px; font-size:11px; font-weight:600; letter-spacing:.24em;">MACRO</div>
+        <div class="ctl knob hue5" style="left:704px; top:238px; width:64px; height:64px;">
+            <div class="dial" style="--pct:.66turn"><div class="halo"><div class="arc"></div><div class="core"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(102.6deg)"></div></div>
+        </div>
+        <div class="ctl knob hue4" style="left:792px; top:238px; width:64px; height:64px;">
+            <div class="dial" style="--pct:.30turn"><div class="halo"><div class="arc"></div><div class="core"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-27deg)"></div></div>
+        </div>
+        <div class="silk" style="left:706px; top:309px; width:60px;">BLOOM</div>
+        <div class="silk" style="left:794px; top:309px; width:60px;">GRIT</div>
+        <div class="ctl btn-ctl hue3" style="left:884px; top:242px; width:60px; height:26px;"><div class="name" style="font-size:8px">HOLD</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue4 on" style="left:884px; top:278px; width:60px; height:26px;"><div class="name" style="font-size:8px">REC</div><div class="pipe lit"></div></div>
+
+        <!-- ======================================== band C: the mixer, and the master on the wall -->
+
+        <div class="ctlpanel hue5" style="left:14px; top:350px; width:642px; height:126px;"><div class="ptitle">MIX</div></div>
+
+        <!-- a strip: a fader, a meter, mute and solo, and its name -->
+        <div class="ctl fader hue5" style="left:30px; top:372px; width:24px; height:92px;"><div class="slot"><div class="fill" style="height:72%"></div><div class="capbar" style="bottom:calc(72% - 7px);"></div></div></div>
+        <div class="ctl meter" style="left:66px; top:372px; width:8px; height:92px; padding:4px 1px;"><i></i><i></i><i></i><i></i><i></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl btn-ctl hue4" style="left:82px; top:374px; width:42px; height:22px;"><div class="name" style="font-size:7px">MUTE</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue3" style="left:82px; top:400px; width:42px; height:22px;"><div class="name" style="font-size:7px">SOLO</div><div class="pipe"></div></div>
+        <div class="silk" style="left:82px; top:434px; width:42px;">CH 1</div>
+
+        <div class="ctl fader hue5" style="left:134px; top:372px; width:24px; height:92px;"><div class="slot"><div class="fill" style="height:40%"></div><div class="capbar" style="bottom:calc(40% - 7px);"></div></div></div>
+        <div class="ctl meter" style="left:170px; top:372px; width:8px; height:92px; padding:4px 1px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="ctl btn-ctl hue4 on" style="left:186px; top:374px; width:42px; height:22px;"><div class="name" style="font-size:7px">MUTE</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue3" style="left:186px; top:400px; width:42px; height:22px;"><div class="name" style="font-size:7px">SOLO</div><div class="pipe"></div></div>
+        <div class="silk" style="left:186px; top:434px; width:42px;">CH 2</div>
+
+        <div class="ctl fader hue5" style="left:238px; top:372px; width:24px; height:92px;"><div class="slot"><div class="fill" style="height:64%"></div><div class="capbar" style="bottom:calc(64% - 7px);"></div></div></div>
+        <div class="ctl meter" style="left:274px; top:372px; width:8px; height:92px; padding:4px 1px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl btn-ctl hue4" style="left:290px; top:374px; width:42px; height:22px;"><div class="name" style="font-size:7px">MUTE</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue3 on" style="left:290px; top:400px; width:42px; height:22px;"><div class="name" style="font-size:7px">SOLO</div><div class="pipe lit"></div></div>
+        <div class="silk" style="left:290px; top:434px; width:42px;">CH 3</div>
+
+        <div class="ctl fader hue5" style="left:342px; top:372px; width:24px; height:92px;"><div class="slot"><div class="fill" style="height:22%"></div><div class="capbar" style="bottom:calc(22% - 7px);"></div></div></div>
+        <div class="ctl meter" style="left:378px; top:372px; width:8px; height:92px; padding:4px 1px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl btn-ctl hue4 offline" style="left:394px; top:374px; width:42px; height:22px;"><div class="name" style="font-size:7px; color:rgba(216,228,225,.42)">MUTE</div></div>
+        <div class="ctl btn-ctl hue3 dim" style="left:394px; top:400px; width:42px; height:22px;"><div class="name" style="font-size:7px; color:rgba(216,228,225,.36)">SOLO</div></div>
+        <div class="silk" style="left:394px; top:434px; width:42px;">CH 4</div>
+
+        <div class="ctl fader hue5" style="left:446px; top:372px; width:24px; height:92px;"><div class="slot"><div class="fill" style="height:56%"></div><div class="capbar" style="bottom:calc(56% - 7px);"></div></div></div>
+        <div class="ctl meter" style="left:482px; top:372px; width:8px; height:92px; padding:4px 1px;"><i></i><i></i><i class="lit hot"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl btn-ctl hue4 on" style="left:498px; top:374px; width:42px; height:22px;"><div class="name" style="font-size:7px">MUTE</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue3" style="left:498px; top:400px; width:42px; height:22px;"><div class="name" style="font-size:7px">SOLO</div><div class="pipe"></div></div>
+        <div class="silk" style="left:498px; top:434px; width:42px;">CH 5</div>
+
+        <div class="ctl fader hue5" style="left:550px; top:372px; width:24px; height:92px;"><div class="slot"><div class="fill" style="height:80%"></div><div class="capbar" style="bottom:calc(80% - 7px);"></div></div></div>
+        <div class="ctl meter" style="left:586px; top:372px; width:8px; height:92px; padding:4px 1px;"><i></i><i></i><i></i><i></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl btn-ctl hue4" style="left:602px; top:374px; width:42px; height:22px;"><div class="name" style="font-size:7px">MUTE</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue3 held" style="left:602px; top:400px; width:42px; height:22px;"><div class="name" style="font-size:7px">SOLO</div><div class="pipe"></div></div>
+        <div class="silk" style="left:602px; top:434px; width:42px;">CH 6</div>
+
+        <!-- the master, on the wall -->
+        <div class="ctl meter" style="left:700px; top:362px; width:8px; height:100px; padding:3px 1px;"><i></i><i></i><i></i><i></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl meter" style="left:712px; top:362px; width:8px; height:100px; padding:3px 1px;"><i></i><i></i><i></i><i></i><i></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl fader hue1" style="left:734px; top:362px; width:26px; height:100px;"><div class="slot"><div class="fill" style="height:70%"></div><div class="capbar" style="bottom:calc(70% - 7px);"></div></div></div>
+        <div class="silk" style="left:696px; top:468px; width:68px;">MASTER</div>
+        <div class="ctl btn-ctl hue1 on" style="left:790px; top:368px; width:60px; height:26px;"><div class="name" style="font-size:8px">SYNC</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:790px; top:402px; width:60px; height:26px;"><div class="name" style="font-size:8px">TAP</div><div class="pipe"></div></div>
+
+    </div>
+    <div class="decktag"><b>Off-world Colonies</b> &mdash; cast blocks, grime and rain, dark worn metal bolted to the wall, and neon: a lit tube is the value, and a light flares</div>
+
+</div>
+
+<!-- ============================================= WHAT IT IS MADE OF -->
+<div class="board" style="height:510px; margin-top:13px;">
+
+    <div class="surf tonal offworld explain" style="position:absolute; inset:0;">
+
+        <div class="rhead" style="left:20px; top:14px;">THE WALL IS FOUR LAYERS, EACH SHOWN HERE ON ITS OWN AT THREE TIMES ITS STRENGTH. THIS BOARD STANDS ON ALL FOUR.</div>
+
+        <div class="wallpart blocks" style="left:20px; top:40px; width:140px; height:140px;"></div>
+        <div class="wallpart stains" style="left:174px; top:40px; width:140px; height:140px;"></div>
+        <div class="wallpart rain" style="left:328px; top:40px; width:140px; height:140px;"></div>
+        <div class="wallpart light" style="left:482px; top:40px; width:140px; height:140px;"></div>
+        <div class="kcap" style="left:14px; top:188px; width:152px;"><b>1. Cast blocks</b>four to a tile, mirrored, lit from the top left</div>
+        <div class="kcap" style="left:168px; top:188px; width:152px;"><b>2. What the rain did</b>grime, and dark runs where the water went</div>
+        <div class="kcap" style="left:322px; top:188px; width:152px;"><b>3. The rain</b>fine streaks, nine degrees off the vertical</div>
+        <div class="kcap" style="left:476px; top:188px; width:152px;"><b>4. The light</b>teal from above, warm from below, and the blinds</div>
+
+        <!-- the flare, larger, on the screen of an XY -->
+        <div class="ctl xy hue1" style="left:650px; top:40px; width:310px; height:140px;">
+            <div class="field2">
+                <div class="puck" style="left:50%; top:50%; width:14px; height:14px; margin:-7px 0 0 -7px"></div>
+            </div>
+            <div class="flare" style="left:155px; top:70px; --reach:104px; transform:scale(1.3);"><i></i></div>
+        </div>
+        <div class="state" style="left:872px; top:120px; width:70px;">STREAK</div>
+        <div class="state" style="left:832px; top:56px; width:40px;">RING</div>
+        <div class="state" style="left:750px; top:60px; width:40px;">STAR</div>
+        <div class="state" style="left:785px; top:138px; width:40px;">CORE</div>
+        <div class="kcap" style="left:650px; top:188px; width:310px;"><b>The flare</b>a white core, a streak along the light and a faint star. The biggest light also throws a ring.</div>
+
+        <div class="rhead" style="left:20px; top:244px;">AT REST, AND LIT.</div>
+
+        <!-- a knob and a fader -->
+        <div class="ctl knob hue1" style="left:34px; top:280px; width:60px; height:60px;">
+            <div class="dial" style="--pct:.58turn"><div class="halo"><div class="arc"></div><div class="core"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(73.8deg)"></div></div>
+        </div>
+        <div class="kcap" style="left:6px; top:356px; width:116px;"><b>Knob</b>a ring of neon; the value is the lit part</div>
+
+        <div class="ctl fader hue3" style="left:134px; top:264px; width:28px; height:86px;"><div class="slot"><div class="fill" style="height:62%"></div><div class="capbar" style="bottom:calc(62% - 7px);"></div></div></div>
+        <div class="kcap" style="left:118px; top:356px; width:60px;"><b>Fader</b>a tube in a slot</div>
+
+        <!-- a button, at rest and on -->
+        <div class="state" style="left:196px; top:264px; width:80px;">AT REST</div>
+        <div class="ctl btn-ctl hue4" style="left:196px; top:276px; width:80px; height:28px;"><div class="name" style="font-size:9px">REC</div><div class="pipe"></div></div>
+        <div class="state" style="left:196px; top:310px; width:80px;">ON</div>
+        <div class="ctl btn-ctl hue4 on" style="left:196px; top:322px; width:80px; height:28px;"><div class="name" style="font-size:9px">REC</div><div class="pipe lit"></div></div>
+        <div class="kcap" style="left:184px; top:356px; width:104px;"><b>Button</b>dark, then lit; the light flares</div>
+
+        <!-- pads, at rest and lit -->
+        <div class="state" style="left:310px; top:274px; width:44px;">REST</div>
+        <div class="state" style="left:360px; top:274px; width:44px;">LIT</div>
+        <div class="state" style="left:420px; top:274px; width:44px;">REST</div>
+        <div class="state" style="left:470px; top:274px; width:44px;">LIT</div>
+        <div class="ctl btn-ctl pad hue2" style="left:310px; top:288px; width:44px; height:44px;"><div class="name" style="font-size:9px">A1</div></div>
+        <div class="ctl btn-ctl pad hue2 on" style="left:360px; top:288px; width:44px; height:44px;"><div class="name" style="font-size:9px">A1</div></div>
+        <div class="ctl btn-ctl pad neutral" style="left:420px; top:288px; width:44px; height:44px;"><div class="name" style="font-size:9px">B8</div></div>
+        <div class="ctl btn-ctl pad neutral on" style="left:470px; top:288px; width:44px; height:44px;"><div class="name" style="font-size:9px">B8</div></div>
+        <div class="kcap" style="left:300px; top:356px; width:224px;"><b>Pad</b>dark plastic with its color in it; lit, the color outright and a dark name</div>
+
+        <!-- a section -->
+        <div class="ctlpanel hue6" style="left:548px; top:264px; width:168px; height:86px;"><div class="ptitle">DELAY</div></div>
+        <div class="ctl knob hue6" style="left:566px; top:294px; width:40px; height:40px;">
+            <div class="dial" style="--pct:.44turn"><div class="halo"><div class="arc"></div><div class="core"></div></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(23.4deg)"></div></div>
+        </div>
+        <div class="ctl btn-ctl hue6 on" style="left:626px; top:302px; width:74px; height:26px;"><div class="name" style="font-size:8px">PING</div><div class="pipe lit"></div></div>
+        <div class="kcap" style="left:540px; top:356px; width:184px;"><b>Section</b>a module bolted to the wall, with its name in neon</div>
+
+        <!-- a meter and a readout -->
+        <div class="ctl meter" style="left:748px; top:264px; width:10px; height:86px; padding:3px 1px;"><i></i><i></i><i class="lit hot"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="kcap" style="left:724px; top:356px; width:58px;"><b>Meter</b>cyan, amber, red</div>
+
+        <div class="ctl" style="left:800px; top:280px; width:150px; height:46px;"></div>
+        <div class="surftext readout" style="left:818px; top:285px; font-size:28px; letter-spacing:.04em;">124.0</div>
+        <div class="kcap" style="left:796px; top:356px; width:158px;"><b>Readout</b>amber, the color of every display on the page</div>
+
+        <!-- the numbers, on a module of their own, because a paragraph on a wet wall is hard to read -->
+        <div class="ctlpanel hue3" style="left:14px; top:408px; width:970px; height:90px;"><div class="ptitle">WHY THE WALL STAYS BEHIND</div></div>
+        <div class="measure" style="left:30px; top:430px; width:936px;">
+            Read off the render: on bare wall, 95 pixels in 100 are within <span class="num">1.36 : 1</span> of its middle, and the brightest, where a rain streak crosses a lit edge in the light from the blinds, is <span class="num">1.9 : 1</span>. A module is <span class="num">1.09 : 1</span>. So the wall can be seen but never competes with a control, which says its state at 3 : 1 or better. <b>The dim print is 74 per cent of the print, not the usual 60.</b> At 60 it failed three ways: on the brightest rain streak (<span class="num">2.84 : 1</span>), inside a lit pad's glow running down the wall (<span class="num">3.67</span>), and under the tail of a flare (<span class="num">3.96</span>). At 74 the worst of those is <span class="num">4.70</span>, and the rain is drawn at the strength that allows it.
+        </div>
+    </div>
+</div>
+
+<div class="swatches">
+    <div style="background:#181B1A; color:#D8E4E1">#181B1A <span>Wall</span></div>
+    <div style="background:#1E2322; color:#D8E4E1">#1E2322 <span>Module</span></div>
+    <div style="background:#262B2A; color:#D8E4E1">#262B2A <span>Plate</span></div>
+    <div style="background:#3DD5FF; color:#081010">#3DD5FF <span>Cyan</span></div>
+    <div style="background:#FF4FA3; color:#081010">#FF4FA3 <span>Pink</span></div>
+    <div style="background:#FFB341; color:#081010">#FFB341 <span>Amber</span></div>
+    <div style="background:#FF4A36; color:#081010">#FF4A36 <span>Red</span></div>
+    <div style="background:#4BEA8E; color:#081010">#4BEA8E <span>Green</span></div>
+    <div style="background:#9483FF; color:#081010">#9483FF <span>Violet</span></div>
+    <div style="background:#E9F4FF; color:#081010">#E9F4FF <span>White neon</span></div>
+    <div style="background:#D8E4E1; color:#081010">#D8E4E1 <span>Print</span></div>
+</div>
+
+<div class="costgrid">
+    <div class="cost">
+        <h4><span class="yes">Built</span> &mdash; what the engine already does for this wall</h4>
+        A plate of dark metal (<span class="mono">PlateColor</span>, <span class="mono">PlateEndColor</span>) with a light line along its top (<span class="mono">PlateHighlightPercent</span>) and a shadow under it (<span class="mono">PlateElevation</span>). A button that is on takes <b>16 per cent</b> of its color (<span class="mono">FillWhenOnPercent</span>) and lights the strip along its foot (<span class="mono">ValueStrip</span>). A knob is a gunmetal face (<span class="mono">KnobFaceColor</span>) with its line on it (<span class="mono">PointerOnCap</span>, <span class="mono">PointerColor</span>), in a ring of its own color (<span class="mono">ArcTrackHuePercent</span> 16) that glows (<span class="mono">ArcGlow</span>). A fader's cap is gunmetal (<span class="mono">ThumbColor</span>). Pads are their own family (<span class="mono">PadFillAtRest</span>, <span class="mono">PadFillWhenOnPercent</span>). Sections are modules (<span class="mono">PanelFill</span>, <span class="mono">PanelColor</span>, <span class="mono">PanelElevation</span>) named in their color (<span class="mono">SectionNameInHue</span>). The corners fall away (<span class="mono">VignettePercent</span>), and the meter runs cyan, amber, red (<span class="mono">MeterSlots</span>).
+    </div>
+    <div class="cost">
+        <h4><span class="no">Needs</span> &mdash; the wall, the rain and the flare</h4>
+        <b>The wall is the theme</b>, and the engine cannot draw it yet. A deck picture is stretched to cover the page, which turns a 128 px tile into a blur; this needs one that <b>repeats at its own size</b>, with the same grime on the modules. Then <b>rain</b> over it. The lights need a <b>white-hot core</b> down the middle of a lit tube and a <b>lens flare</b>, and their glow needs to <b>run down</b> the wall. The names need to <b>glow</b>, because they are the neon signs. Everything else on the page is a setting that exists today.
+    </div>
+    <div class="cost">
+        <h4>What it costs</h4>
+        <b>This is a busy wall on purpose.</b> Its brightest pixel is 1.9 : 1 against the wall around it, so it always sits behind the controls, but a dense page on a textured wall is slower to scan than one on a plain one. It is for a dark room, and the picker should say so. <b>A flare never carries a state</b>: a lit strip goes from a fifth of its color to all of it, 3.9 : 1 or better on every slot, so somebody who cannot see a flare still sees the light come on. The rain stands still when Windows is set to show fewer animations, and <b>nothing flickers</b>. The closest two colors are the cyan and the white neon, delta E 38.4 apart.
+    </div>
+</div>
+
+<div class="asks">
+    <h4>Seven asks, smallest first. Each is independent, and the page above uses all seven.</h4>
+    <table>
+        <tr><th></th><th>Ask</th><th>Why Off-world Colonies needs it</th><th>Without it</th></tr>
+        <tr>
+            <td class="n">1</td>
+            <td class="ask"><b>Neon letters.</b> A section's name, or a label that asks for it, glows in its own color around a core a third of the way to white.</td>
+            <td>The section names and the page's name are the neon signs on the wall. A section can already say its name in its color (<span class="mono">SectionNameInHue</span>); this adds the light.</td>
+            <td class="without">Names in flat color.</td>
+        </tr>
+        <tr>
+            <td class="n">2</td>
+            <td class="ask"><b>A white-hot core.</b> The lit part of a knob's arc, a fader's fill and a switch's strip gets a thinner, lighter line down its middle.</td>
+            <td>That line is the difference between neon and paint. The strip is 2.5 px today, and its core needs 3.</td>
+            <td class="without">Color with a glow, which is Airy System.</td>
+        </tr>
+        <tr>
+            <td class="n">3</td>
+            <td class="ask"><b>The glow runs down.</b> The light round a lit control reaches further below it than above: one offset on the glow that is there today.</td>
+            <td>It is what makes the wall read as wet. Measured with print under it, a pad's glow has to be down to .12 where it reaches a name.</td>
+            <td class="without">A dry wall.</td>
+        </tr>
+        <tr>
+            <td class="n">4</td>
+            <td class="ask"><b>A lens flare.</b> A lit light throws a streak along its length and a faint four-point star, in a flare color (alpha 0 means the light's own). The XY puck, the biggest light, also throws a ring. Only while it is lit.</td>
+            <td>Every light in the film flares, and it is the first thing anyone remembers about how it looks. It has to be down to .12 where it reaches print, so the streak runs only a little past its own control.</td>
+            <td class="without">Lights that glow and do not flare.</td>
+        </tr>
+        <tr>
+            <td class="n">5</td>
+            <td class="ask"><b>Rain.</b> One tiled layer of fine slanted streaks, under the controls, with a strength and a color. It can fall at a steady speed, and stands still when Windows asks for fewer animations.</td>
+            <td>It is always raining. Drawn at .35, because that is the strongest it can be with dim print on top of it.</td>
+            <td class="without">A dry city.</td>
+        </tr>
+        <tr>
+            <td class="n">6</td>
+            <td class="ask"><b>A deck picture that repeats.</b> Tiled at its own size instead of stretched to cover the page, with the theme's tile shipped in the app. The stains can be drawn into the same tile: 512 px is eight blocks across, too far apart for the eye to find the repeat. A section can lay the stains over itself too, dark only, so the modules are as dirty as the wall.</td>
+            <td>The wall is the theme. The deck's picture today is stretched to the page, which is right for a photograph and turns a pattern into a blur. Dark only on a module, because a pale streak under print would take away from it; a dark one only adds.</td>
+            <td class="without">A plain wall. <b>The theme does not work without this one.</b></td>
+        </tr>
+        <tr>
+            <td class="n">7</td>
+            <td class="ask"><b>Light in the room</b> <i>(can be dropped)</i>. A pool of light from above and soft bands of light through blinds, on the wall only.</td>
+            <td>It is the light in every room in the film. On this page, the blinds fall on the bare wall at the right.</td>
+            <td class="without">The deck's gradient alone. Nothing else changes.</td>
+        </tr>
+    </table>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>What I left out on purpose.</b> <b>Flicker</b>: a neon sign that stutters is the most recognizable light in the film, and a flashing light on a performance surface is both a distraction and a hazard for people with photosensitive epilepsy. <b>Screws and bolts</b> on the modules: they would sell the idea, and the engine has nothing to draw them with that would not follow every section into every other theme. <b>The giant moving billboards</b>, the searchlights sweeping past, and any kind of lettering the film used. <b>Where I was honest rather than faithful:</b> the blocks are a motif drawn for this comp in the spirit of the textile-block walls in the film, not a copy of any real block. The colors were picked by eye from your stills and then every one was measured; the stills themselves are not in the repository.
+</p>
+
+</div>
+</body>
+</html>
