@@ -37,7 +37,7 @@
 
 .EXAMPLE
     $env:MIDI_SIGNING_METADATA = 'C:\signing\metadata.json'
-    .\build-sdk.ps1 -Sign
+    .\build-all.ps1 -Sign
 
 .NOTES
     Set up once per machine:

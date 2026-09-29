@@ -2,7 +2,7 @@
   "$comment": [
     "Single source of truth for the MIDI Glass installer version.",
     "MIDI Glass is its own release train, separate from the App SDK (build/version.json) and",
-    "the service plugins (build/version-plugins.json). build-midi-glass.ps1 stamps this into",
+    "the service plugins (build/version-plugins.json). build-all.ps1 stamps this into",
     "build/staging/version/MidiGlassVersion.wxi, which only the MIDI Glass installer reads.",
     "",
     "channel:       devpreview | preview | rc | stable",
