@@ -23,13 +23,14 @@ void ThemeTests::ShipsTheThemesTheDesignNames()
 {
     auto const& themes = glass::BuiltInThemes();
 
-    VERIFY_ARE_EQUAL(size_t{ 16 }, themes.size());
+    VERIFY_ARE_EQUAL(size_t{ 21 }, themes.size());
 
     wchar_t const* expected[]
     {
         L"Studio Dark", L"Neon Booth", L"Daylight", L"Terminal Amber", L"Blueprint",
         L"High contrast", L"Tonal Light", L"Tonal Dark", L"Bigwig", L"Bone",
         L"Cathode", L"Terminal Green", L"Jove", L"Supersaw", L"Five-iSH", L"Airy System",
+        L"Off-world Colonies", L"Groovy", L"Groovy Dark", L"Soft Sector", L"Hard Sector",
     };
 
     for (auto const* name : expected)
