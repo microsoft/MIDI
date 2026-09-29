@@ -12,6 +12,7 @@
 #include "HostConnectionItem.g.h"
 #include "KnownClientItem.g.h"
 #include "LocalHostItem.g.h"
+#include "RtpRemoteHostItem.g.h"
 
 #include "AppSettings.h"
 
@@ -65,6 +66,44 @@
 
 namespace winrt::midinetworksetup::implementation
 {
+    // The stored value is a file path, which will not bind to Image.Source. Null when it cannot
+    // be loaded.
+    inline winrt::Microsoft::UI::Xaml::Media::ImageSource EndpointImageSourceFromPath(_In_ winrt::hstring const& imagePath) noexcept
+    {
+        if (imagePath.empty())
+        {
+            return nullptr;
+        }
+
+        try
+        {
+            winrt::Windows::Foundation::Uri const uri{ L"file:///" + imagePath };
+
+            std::wstring const path{ imagePath };
+
+            // BitmapImage cannot render SVG, and the shipped endpoint art is SVG
+            if (path.size() > 4 && _wcsicmp(path.c_str() + path.size() - 4, L".svg") == 0)
+            {
+                winrt::Microsoft::UI::Xaml::Media::Imaging::SvgImageSource svg{};
+
+                svg.UriSource(uri);
+
+                return svg;
+            }
+
+            winrt::Microsoft::UI::Xaml::Media::Imaging::BitmapImage bitmap{};
+
+            bitmap.DecodePixelHeight(72);
+            bitmap.UriSource(uri);
+
+            return bitmap;
+        }
+        catch (...)
+        {
+            return nullptr;
+        }
+    }
+
     // Round trip latency over a rolling window, rendered as a filled sparkline. Shared by the
     // remote host rows and by the per-connection rows on the This PC page.
     //
@@ -222,6 +261,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring HostId() const noexcept { return m_hostId; }
         winrt::hstring RemoteName() const noexcept { return m_remoteName; }
         winrt::hstring RemoteProductInstanceId() const noexcept { return m_remoteProductInstanceId; }
+        bool IsRtpMidi() const noexcept { return m_isRtpMidi; }
 
         winrt::hstring Headline() const noexcept { return m_headline; }
         winrt::hstring Detail() const noexcept { return m_detail; }
@@ -232,11 +272,13 @@ namespace winrt::midinetworksetup::implementation
         void InternalInitialize(
             _In_ winrt::hstring const& hostId,
             _In_ winrt::hstring const& remoteName,
-            _In_ winrt::hstring const& remoteProductInstanceId) noexcept
+            _In_ winrt::hstring const& remoteProductInstanceId,
+            _In_ bool const isRtpMidi = false) noexcept
         {
             m_hostId = hostId;
             m_remoteName = remoteName;
             m_remoteProductInstanceId = remoteProductInstanceId;
+            m_isRtpMidi = isRtpMidi;
         }
 
         void InternalUpdateText(
@@ -253,6 +295,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring m_remoteProductInstanceId{};
         winrt::hstring m_headline{};
         winrt::hstring m_detail{};
+        bool m_isRtpMidi{ false };
         bool m_isBusy{ false };
 
         MIDI_NETSETUP_OBSERVABLE_ITEM()
@@ -281,36 +324,9 @@ namespace winrt::midinetworksetup::implementation
         // built on first use: the stored value is a file path, which will not bind to Image.Source
         winrt::Microsoft::UI::Xaml::Media::ImageSource ImageSource() const noexcept
         {
-            if (m_imageSource == nullptr && !m_imagePath.empty())
+            if (m_imageSource == nullptr)
             {
-                try
-                {
-                    winrt::Windows::Foundation::Uri const uri{ L"file:///" + m_imagePath };
-
-                    std::wstring const path{ m_imagePath };
-
-                    // BitmapImage cannot render SVG, and the shipped endpoint art is SVG
-                    if (path.size() > 4 && _wcsicmp(path.c_str() + path.size() - 4, L".svg") == 0)
-                    {
-                        winrt::Microsoft::UI::Xaml::Media::Imaging::SvgImageSource svg{};
-
-                        svg.UriSource(uri);
-
-                        m_imageSource = svg;
-                    }
-                    else
-                    {
-                        winrt::Microsoft::UI::Xaml::Media::Imaging::BitmapImage bitmap{};
-
-                        bitmap.DecodePixelHeight(72);
-                        bitmap.UriSource(uri);
-
-                        m_imageSource = bitmap;
-                    }
-                }
-                catch (...)
-                {
-                }
+                m_imageSource = EndpointImageSourceFromPath(m_imagePath);
             }
 
             return m_imageSource;
@@ -559,6 +575,10 @@ namespace winrt::midinetworksetup::implementation
 
         winrt::hstring MatchKey() const noexcept { return m_matchKey; }
         winrt::hstring HostId() const noexcept { return m_hostId; }
+        uint32_t ConnectionId() const noexcept { return m_connectionId; }
+
+        // RTP-MIDI only: the name the remote sent, which may be empty where DisplayName is not
+        winrt::hstring RemoteName() const noexcept { return m_remoteName; }
 
         winrt::hstring DisplayName() const noexcept { return m_displayName; }
         winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
@@ -610,11 +630,15 @@ namespace winrt::midinetworksetup::implementation
         void InternalInitialize(
             _In_ winrt::hstring const& matchKey,
             _In_ winrt::hstring const& hostId,
-            _In_ winrt::hstring const& productInstanceId) noexcept
+            _In_ winrt::hstring const& productInstanceId,
+            _In_ uint32_t const connectionId = 0,
+            _In_ winrt::hstring const& remoteName = {}) noexcept
         {
             m_matchKey = matchKey;
             m_hostId = hostId;
             m_productInstanceId = productInstanceId;
+            m_connectionId = connectionId;
+            m_remoteName = remoteName;
         }
 
         void InternalUpdate(
@@ -659,6 +683,8 @@ namespace winrt::midinetworksetup::implementation
 
         winrt::hstring m_matchKey{};
         winrt::hstring m_hostId{};
+        uint32_t m_connectionId{ 0 };
+        winrt::hstring m_remoteName{};
         winrt::hstring m_displayName{};
         winrt::hstring m_productInstanceId{};
         winrt::hstring m_addressText{};
@@ -833,6 +859,238 @@ namespace winrt::midinetworksetup::implementation
 
         MIDI_NETSETUP_OBSERVABLE_ITEM()
     };
+
+
+    struct RtpRemoteHostItem : RtpRemoteHostItemT<RtpRemoteHostItem>
+    {
+        RtpRemoteHostItem() = default;
+
+        winrt::hstring MatchKey() const noexcept { return m_matchKey; }
+
+        winrt::hstring DisplayName() const noexcept { return m_displayName; }
+        winrt::hstring SubtitleText() const noexcept { return m_subtitleText; }
+        winrt::hstring HostName() const noexcept { return m_hostName; }
+        winrt::hstring AddressesText() const noexcept { return m_addressesText; }
+        winrt::hstring ServiceInstanceName() const noexcept { return m_serviceInstanceName; }
+        winrt::hstring ConnectAddress() const noexcept { return m_connectAddress; }
+        uint16_t ConnectPort() const noexcept { return m_connectPort; }
+        winrt::hstring StatusText() const noexcept { return m_statusText; }
+        winrt::hstring StatisticsText() const noexcept { return m_statisticsText; }
+        winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
+        winrt::hstring ImagePath() const noexcept { return m_imagePath; }
+
+        winrt::Microsoft::UI::Xaml::Media::ImageSource ImageSource() const noexcept
+        {
+            if (m_imageSource == nullptr)
+            {
+                m_imageSource = EndpointImageSourceFromPath(m_imagePath);
+            }
+
+            return m_imageSource;
+        }
+
+        winrt::hstring ClientId() const noexcept { return m_clientId; }
+
+        bool IsConnected() const noexcept { return m_isConnected; }
+        bool IsConfigured() const noexcept { return m_isConfigured; }
+        bool IsAdvertised() const noexcept { return m_isAdvertised; }
+        bool AlsoOffersNetworkMidi2() const noexcept { return m_alsoOffersNetworkMidi2; }
+        winrt::hstring DisconnectLabel() const noexcept { return m_disconnectLabel; }
+
+        bool IsBusy() const noexcept { return m_isBusy; }
+        void IsBusy(bool const value) noexcept
+        {
+            if (UpdateField(m_isBusy, value, L"IsBusy"))
+            {
+                RaiseButtonVisibilities();
+            }
+        }
+
+        winrt::Microsoft::UI::Xaml::Visibility ConnectVisibility() const noexcept
+        {
+            return VisibleIf(!m_isConfigured && !m_isBusy);
+        }
+
+        // Reconnects the saved entry. It also covers an entry which is still retrying on its own,
+        // so a device which has just been switched back on does not have to wait for the retry.
+        winrt::Microsoft::UI::Xaml::Visibility RetryVisibility() const noexcept
+        {
+            return VisibleIf(m_isConfigured && !m_isConnected && !m_isBusy);
+        }
+
+        winrt::Microsoft::UI::Xaml::Visibility DisconnectVisibility() const noexcept
+        {
+            return VisibleIf(m_isConfigured && !m_isBusy);
+        }
+
+        winrt::Microsoft::UI::Xaml::Visibility NotAdvertisedVisibility() const noexcept
+        {
+            return VisibleIf(!m_isAdvertised);
+        }
+
+        winrt::Microsoft::UI::Xaml::Visibility NetworkMidi2Visibility() const noexcept
+        {
+            return VisibleIf(m_alsoOffersNetworkMidi2);
+        }
+
+        winrt::Microsoft::UI::Xaml::Visibility ConnectedBadgeVisibility() const noexcept
+        {
+            return VisibleIf(m_isConnected);
+        }
+
+        winrt::Microsoft::UI::Xaml::Visibility EndpointDeviceIdVisibility() const noexcept
+        {
+            return VisibleIf(!m_endpointDeviceId.empty());
+        }
+
+        winrt::Microsoft::UI::Xaml::Visibility ImageVisibility() const noexcept
+        {
+            return VisibleIf(!m_imagePath.empty());
+        }
+
+        winrt::Microsoft::UI::Xaml::Visibility CustomizeVisibility() const noexcept
+        {
+            return VisibleIf(!m_endpointDeviceId.empty() && !m_isBusy);
+        }
+
+        winrt::Microsoft::UI::Xaml::Visibility LatencyGraphVisibility() const noexcept
+        {
+            return VisibleIf(m_latency.HasSamples());
+        }
+
+        winrt::Microsoft::UI::Xaml::Media::PointCollection LatencyLinePoints() const noexcept { return m_latency.LinePoints; }
+        winrt::Microsoft::UI::Xaml::Media::PointCollection LatencyFillPoints() const noexcept { return m_latency.FillPoints; }
+        winrt::hstring LatencyPeakText() const noexcept { return m_latency.PeakText; }
+
+        void InternalInitialize(_In_ winrt::hstring const& matchKey) noexcept
+        {
+            m_matchKey = matchKey;
+        }
+
+        void InternalUpdate(
+            _In_ winrt::hstring const& displayName,
+            _In_ winrt::hstring const& subtitleText,
+            _In_ winrt::hstring const& hostName,
+            _In_ winrt::hstring const& addressesText,
+            _In_ winrt::hstring const& serviceInstanceName,
+            _In_ winrt::hstring const& connectAddress,
+            _In_ uint16_t const connectPort,
+            _In_ winrt::hstring const& statusText,
+            _In_ winrt::hstring const& statisticsText,
+            _In_ winrt::hstring const& endpointDeviceId,
+            _In_ winrt::hstring const& imagePath,
+            _In_ winrt::hstring const& clientId,
+            _In_ uint64_t const latencyTicks,
+            _In_ bool const isConnected,
+            _In_ bool const isConfigured,
+            _In_ bool const isAdvertised,
+            _In_ bool const alsoOffersNetworkMidi2,
+            _In_ winrt::hstring const& disconnectLabel) noexcept
+        {
+            UpdateField(m_displayName, displayName, L"DisplayName");
+            UpdateField(m_subtitleText, subtitleText, L"SubtitleText");
+            UpdateField(m_hostName, hostName, L"HostName");
+            UpdateField(m_addressesText, addressesText, L"AddressesText");
+            UpdateField(m_serviceInstanceName, serviceInstanceName, L"ServiceInstanceName");
+            UpdateField(m_connectAddress, connectAddress, L"ConnectAddress");
+            UpdateField(m_connectPort, connectPort, L"ConnectPort");
+            UpdateField(m_statusText, statusText, L"StatusText");
+            UpdateField(m_statisticsText, statisticsText, L"StatisticsText");
+
+            if (UpdateField(m_endpointDeviceId, endpointDeviceId, L"EndpointDeviceId"))
+            {
+                RaisePropertyChanged(L"EndpointDeviceIdVisibility");
+                RaisePropertyChanged(L"CustomizeVisibility");
+            }
+
+            if (UpdateField(m_imagePath, imagePath, L"ImagePath"))
+            {
+                m_imageSource = nullptr;
+
+                RaisePropertyChanged(L"ImageSource");
+                RaisePropertyChanged(L"ImageVisibility");
+            }
+
+            UpdateField(m_clientId, clientId, L"ClientId");
+            UpdateField(m_disconnectLabel, disconnectLabel, L"DisconnectLabel");
+
+            auto const connectedChanged = UpdateField(m_isConnected, isConnected, L"IsConnected");
+            auto const configuredChanged = UpdateField(m_isConfigured, isConfigured, L"IsConfigured");
+
+            if (UpdateField(m_isAdvertised, isAdvertised, L"IsAdvertised"))
+            {
+                RaisePropertyChanged(L"NotAdvertisedVisibility");
+            }
+
+            if (UpdateField(m_alsoOffersNetworkMidi2, alsoOffersNetworkMidi2, L"AlsoOffersNetworkMidi2"))
+            {
+                RaisePropertyChanged(L"NetworkMidi2Visibility");
+            }
+
+            if (connectedChanged)
+            {
+                RaisePropertyChanged(L"ConnectedBadgeVisibility");
+            }
+
+            m_latency.Record(latencyTicks, isConnected, LatencyGraphWidth, LatencyGraphHeight);
+
+            RaisePropertyChanged(L"LatencyLinePoints");
+            RaisePropertyChanged(L"LatencyFillPoints");
+            RaisePropertyChanged(L"LatencyPeakText");
+            RaisePropertyChanged(L"LatencyGraphVisibility");
+
+            if (connectedChanged || configuredChanged)
+            {
+                RaiseButtonVisibilities();
+            }
+        }
+
+    private:
+        // must match the sparkline's size in the RTP-MIDI device template
+        static constexpr double LatencyGraphWidth = 360.0;
+        static constexpr double LatencyGraphHeight = 44.0;
+
+        static winrt::Microsoft::UI::Xaml::Visibility VisibleIf(_In_ bool const visible) noexcept
+        {
+            return visible ?
+                winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
+
+        void RaiseButtonVisibilities() noexcept
+        {
+            RaisePropertyChanged(L"ConnectVisibility");
+            RaisePropertyChanged(L"RetryVisibility");
+            RaisePropertyChanged(L"DisconnectVisibility");
+            RaisePropertyChanged(L"CustomizeVisibility");
+        }
+
+        winrt::hstring m_matchKey{};
+        winrt::hstring m_displayName{};
+        winrt::hstring m_subtitleText{};
+        winrt::hstring m_hostName{};
+        winrt::hstring m_addressesText{};
+        winrt::hstring m_serviceInstanceName{};
+        winrt::hstring m_connectAddress{};
+        uint16_t m_connectPort{ 0 };
+        winrt::hstring m_statusText{};
+        winrt::hstring m_statisticsText{};
+        winrt::hstring m_endpointDeviceId{};
+        winrt::hstring m_imagePath{};
+        mutable winrt::Microsoft::UI::Xaml::Media::ImageSource m_imageSource{ nullptr };
+        winrt::hstring m_clientId{};
+        winrt::hstring m_disconnectLabel{};
+
+        LatencyHistory m_latency{};
+
+        bool m_isConnected{ false };
+        bool m_isConfigured{ false };
+        bool m_isAdvertised{ false };
+        bool m_alsoOffersNetworkMidi2{ false };
+        bool m_isBusy{ false };
+
+        MIDI_NETSETUP_OBSERVABLE_ITEM()
+    };
 }
 
 namespace winrt::midinetworksetup::factory_implementation
@@ -842,4 +1100,5 @@ namespace winrt::midinetworksetup::factory_implementation
     struct HostConnectionItem : HostConnectionItemT<HostConnectionItem, implementation::HostConnectionItem> {};
     struct KnownClientItem : KnownClientItemT<KnownClientItem, implementation::KnownClientItem> {};
     struct LocalHostItem : LocalHostItemT<LocalHostItem, implementation::LocalHostItem> {};
+    struct RtpRemoteHostItem : RtpRemoteHostItemT<RtpRemoteHostItem, implementation::RtpRemoteHostItem> {};
 }

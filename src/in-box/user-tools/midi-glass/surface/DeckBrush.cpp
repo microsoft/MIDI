@@ -140,7 +140,7 @@ namespace glass
             _In_ float height,
             _In_ double scale)
         {
-            auto const pixels = FineGrainPixels(theme);
+            auto const pixels = FineGrainImage(theme);
 
             if (pixels == nullptr)
             {

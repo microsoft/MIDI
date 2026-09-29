@@ -16,6 +16,7 @@
 // Capability key names, so the app can tell a compatible transport from an older one. Pure
 // preprocessor defines; the SDK includes the same header.
 #include "..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
+#include "..\..\Transport\RtpMidiTransport\rtp_json_defs.h"
 
 #include <winrt/Microsoft.UI.Xaml.Media.Animation.h>
 
@@ -207,6 +208,9 @@ namespace winrt::midinetworksetup::implementation
             midiapp::MakeLiveStatusRegion(LocalStatusText());
             midiapp::MakeLiveStatusRegion(SettingsStatusText());
             midiapp::MakeLiveStatusRegion(CreateHostStatusText());
+            midiapp::MakeLiveStatusRegion(RtpRemoteStatusText());
+            midiapp::MakeLiveStatusRegion(RtpLocalStatusText());
+            midiapp::MakeLiveStatusRegion(RtpCreateHostStatusText());
 
             midiapp::WindowChromeElements elements{};
 
@@ -236,6 +240,8 @@ namespace winrt::midinetworksetup::implementation
             PendingInvitationsList().ItemsSource(m_pendingInvitations);
             RemoteHostsListView().ItemsSource(m_remoteHosts);
             LocalHostsListView().ItemsSource(m_localHosts);
+            RtpRemoteHostsListView().ItemsSource(m_rtpRemoteHosts);
+            RtpLocalHostsListView().ItemsSource(m_rtpLocalHosts);
 
             // the startup options were parsed before the window existed
             auto const& options = App::StartupOptions();
@@ -245,16 +251,39 @@ namespace winrt::midinetworksetup::implementation
                 native::NetworkConfigFile::Current().OverridePath(options.ConfigFilePath);
             }
 
-            // The pending invitations bar sits above both pages, so a notification does not need
-            // to navigate anywhere to show it. Landing on this PC is context: it is this PC's
-            // hosts the remote is asking to join.
-            auto const startupPage = options.ShowPendingApprovals ?
-                native::AppSettings::PageIndexLocalHosts :
-                native::AppSettings::Current().SelectedPageIndex();
+            // The network transports ship out of band today, and older builds are in the wild.
+            // This also decides which pages are offered, so it comes before choosing one.
+            auto const transportUsable = VerifyTransportIsUsable();
 
-            ShowPage(startupPage);
+            if (transportUsable)
+            {
+                // The pending invitations bar sits above every page, so a notification does not
+                // need to navigate anywhere to show it. Landing on this PC is context: it is this
+                // PC's hosts the remote is asking to join.
+                auto startupPage = options.ShowPendingApprovals ?
+                    native::AppSettings::PageIndexLocalHosts :
+                    native::AppSettings::Current().SelectedPageIndex();
 
-            MainNavigation().SelectedItem(NavigationItemForPage(startupPage));
+                auto const isRtpPage =
+                    startupPage == native::AppSettings::PageIndexRtpRemoteHosts ||
+                    startupPage == native::AppSettings::PageIndexRtpLocalHosts;
+
+                // the page saved last time may belong to a transport which is not here now
+                if (isRtpPage && !m_rtpUsable)
+                {
+                    startupPage = native::AppSettings::PageIndexRemoteHosts;
+                }
+                else if (!isRtpPage && !m_networkMidi2Usable)
+                {
+                    startupPage = startupPage == native::AppSettings::PageIndexLocalHosts ?
+                        native::AppSettings::PageIndexRtpLocalHosts :
+                        native::AppSettings::PageIndexRtpRemoteHosts;
+                }
+
+                ShowPage(startupPage);
+
+                MainNavigation().SelectedItem(NavigationItemForPage(startupPage));
+            }
 
             Closed([weak = get_weak()](auto&&, auto&&)
                 {
@@ -273,22 +302,36 @@ namespace winrt::midinetworksetup::implementation
 
             m_loaded = true;
 
-            // The network transport ships out of band today, and older builds are in the wild.
-            // Nothing here works against one which is missing or too old, so the app says so and
-            // stops rather than failing one operation at a time.
-            if (!VerifyTransportIsUsable())
+            // Nothing here works without a usable transport, so the app says so and stops rather
+            // than failing one operation at a time.
+            if (!transportUsable)
             {
                 return;
             }
 
             if (native::NetworkConfigFile::Current().IsOverridden())
             {
-                SetRemoteStatus(res::FormatString(
+                auto const notice = res::FormatString(
                     L"ConfigFileOverrideNotice",
-                    native::NetworkConfigFile::Current().Path()));
+                    native::NetworkConfigFile::Current().Path());
+
+                if (m_networkMidi2Usable)
+                {
+                    SetRemoteStatus(notice);
+                }
+                else
+                {
+                    SetRtpRemoteStatus(notice);
+                }
             }
 
-            StartWatcher();
+            // RTP-MIDI has no watcher: the service browses all the time, and every refresh asks
+            // it what it has found
+            if (m_networkMidi2Usable)
+            {
+                StartWatcher();
+            }
+
             StartRefreshTimer();
 
             RefreshNotificationsBanner();
@@ -298,74 +341,155 @@ namespace winrt::midinetworksetup::implementation
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to finish loading the window.")
     }
 
-    // The network transport is an out-of-band install today and older builds are still in use, so
-    // presence alone is not enough: the verbs this app relies on have to be there too. Anything
-    // missing means nothing on either page would work, and one clear message beats a series of
-    // individual failures.
+    // A transport which is missing or too old means none of its pages would work, and hiding them
+    // beats a series of individual failures. With neither, one clear message is all there is.
     bool MainWindow::VerifyTransportIsUsable() noexcept
     {
-        bool usable{ false };
+        m_networkMidi2Usable = IsNetworkMidi2TransportUsable();
+        m_rtpUsable = IsRtpTransportUsable();
 
         try
         {
-            if (midi2net::MidiNetworkTransportManager::IsTransportAvailable())
+            auto const noTransport = !m_networkMidi2Usable && !m_rtpUsable;
+
+            // With neither, the Network MIDI 2.0 pages stay listed, disabled, under the message.
+            auto const networkMidi2Visibility = m_networkMidi2Usable || noTransport ?
+                xaml::Visibility::Visible : xaml::Visibility::Collapsed;
+
+            auto const rtpVisibility = m_rtpUsable ?
+                xaml::Visibility::Visible : xaml::Visibility::Collapsed;
+
+            // "This PC" means nothing on its own once there are two of them
+            NetworkMidi2NavigationHeader().Visibility(m_networkMidi2Usable && m_rtpUsable ?
+                xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            RemoteHostsNavigationItem().Visibility(networkMidi2Visibility);
+            LocalHostsNavigationItem().Visibility(networkMidi2Visibility);
+            SettingsNavigationItem().Visibility(networkMidi2Visibility);
+
+            RtpNavigationHeader().Visibility(rtpVisibility);
+            RtpRemoteHostsNavigationItem().Visibility(rtpVisibility);
+            RtpLocalHostsNavigationItem().Visibility(rtpVisibility);
+
+            if (noTransport)
             {
-                auto const transportId = midi2net::MidiNetworkTransportManager::TransportId();
+                TransportUnavailableBar().IsOpen(true);
 
-                static wchar_t const* const requiredCapabilities[]
-                {
-                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_HOSTS,
-                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_CLIENTS,
-                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_START_HOST,
-                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_STOP_HOST,
-                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_REMOVE_HOST,
-                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT,
-                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_MDNS,
-                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT,
-                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT,
-                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DENY_REMOTE_CLIENT,
-                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_REMOTE_CLIENT,
-                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_PENDING_REMOTE_CLIENTS,
-                    MIDI_CONFIG_JSON_NETWORK_MIDI_CAPABILITY_CUSTOM_ENDPOINT_NAME_ON_CREATE,
-                };
+                RemoteHostsPanel().Visibility(xaml::Visibility::Collapsed);
+                LocalHostsPanel().Visibility(xaml::Visibility::Collapsed);
+                SettingsPanel().Visibility(xaml::Visibility::Collapsed);
+                RtpRemoteHostsPanel().Visibility(xaml::Visibility::Collapsed);
+                RtpLocalHostsPanel().Visibility(xaml::Visibility::Collapsed);
+                MainNavigation().IsEnabled(false);
 
-                usable = true;
-
-                for (auto const& capability : requiredCapabilities)
-                {
-                    if (!winrt::Windows::Devices::Midi2::ServiceConfig::MidiServiceTransportPluginConfigManager::QueryCapability(transportId, capability))
-                    {
-                        TraceLoggingWrite(
-                            MidiNetworkSetupTelemetryProvider::Provider(),
-                            MIDI_NETSETUP_TRACE_EVENT_WARNING,
-                            TraceLoggingString(__FUNCTION__, MIDI_NETSETUP_TRACE_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                            TraceLoggingWideString(L"Required network transport capability is missing.", MIDI_NETSETUP_TRACE_MESSAGE_FIELD),
-                            TraceLoggingWideString(capability, "capability")
-                        );
-
-                        usable = false;
-                        break;
-                    }
-                }
+                return false;
             }
+
+            return true;
         }
         catch (...)
         {
-            usable = false;
+            return false;
         }
+    }
 
-        if (!usable)
+    // Presence alone is not enough: older builds are still in use, and the verbs this app relies
+    // on have to be there too.
+    bool MainWindow::IsNetworkMidi2TransportUsable() noexcept
+    {
+        try
         {
-            TransportUnavailableBar().IsOpen(true);
+            if (!midi2net::MidiNetworkTransportManager::IsTransportAvailable())
+            {
+                return false;
+            }
 
-            RemoteHostsPanel().Visibility(xaml::Visibility::Collapsed);
-            LocalHostsPanel().Visibility(xaml::Visibility::Collapsed);
-            SettingsPanel().Visibility(xaml::Visibility::Collapsed);
-            MainNavigation().IsEnabled(false);
+            auto const transportId = midi2net::MidiNetworkTransportManager::TransportId();
+
+            static wchar_t const* const requiredCapabilities[]
+            {
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_HOSTS,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_CLIENTS,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_START_HOST,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_STOP_HOST,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_REMOVE_HOST,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_MDNS,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DENY_REMOTE_CLIENT,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_REMOTE_CLIENT,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_PENDING_REMOTE_CLIENTS,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CAPABILITY_CUSTOM_ENDPOINT_NAME_ON_CREATE,
+            };
+
+            for (auto const& capability : requiredCapabilities)
+            {
+                if (!midi2svc::MidiServiceTransportPluginConfigManager::QueryCapability(transportId, capability))
+                {
+                    TraceLoggingWrite(
+                        MidiNetworkSetupTelemetryProvider::Provider(),
+                        MIDI_NETSETUP_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_NETSETUP_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingWideString(L"Required network transport capability is missing.", MIDI_NETSETUP_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(capability, "capability")
+                    );
+
+                    return false;
+                }
+            }
+
+            return true;
         }
+        catch (...)
+        {
+            return false;
+        }
+    }
 
-        return usable;
+    bool MainWindow::IsRtpTransportUsable() noexcept
+    {
+        try
+        {
+            if (!midi2rtp::MidiRtpTransportManager::IsTransportAvailable())
+            {
+                return false;
+            }
+
+            auto const transportId = midi2rtp::MidiRtpTransportManager::TransportId();
+
+            static wchar_t const* const requiredCapabilities[]
+            {
+                MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_ENUMERATE_HOSTS,
+                MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_ENUMERATE_CLIENTS,
+                MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_ENUMERATE_ADVERTISED,
+                MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_GET_PENDING_REMOTE_CLIENTS,
+            };
+
+            for (auto const& capability : requiredCapabilities)
+            {
+                if (!midi2svc::MidiServiceTransportPluginConfigManager::QueryCapability(transportId, capability))
+                {
+                    TraceLoggingWrite(
+                        MidiNetworkSetupTelemetryProvider::Provider(),
+                        MIDI_NETSETUP_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_NETSETUP_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingWideString(L"Required RTP-MIDI transport capability is missing.", MIDI_NETSETUP_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(capability, "capability")
+                    );
+
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        catch (...)
+        {
+            return false;
+        }
     }
 
     _Use_decl_annotations_
@@ -560,6 +684,8 @@ namespace winrt::midinetworksetup::implementation
             auto const pageIndex =
                 tag == L"local" ? native::AppSettings::PageIndexLocalHosts :
                 tag == L"settings" ? native::AppSettings::PageIndexTransportSettings :
+                tag == L"rtp-remote" ? native::AppSettings::PageIndexRtpRemoteHosts :
+                tag == L"rtp-local" ? native::AppSettings::PageIndexRtpLocalHosts :
                 native::AppSettings::PageIndexRemoteHosts;
 
             // Leaving the page with a debounced write still waiting would quietly discard the
@@ -599,6 +725,16 @@ namespace winrt::midinetworksetup::implementation
                 return SettingsNavigationItem().as<foundation::IInspectable>();
             }
 
+            if (pageIndex == native::AppSettings::PageIndexRtpRemoteHosts)
+            {
+                return RtpRemoteHostsNavigationItem().as<foundation::IInspectable>();
+            }
+
+            if (pageIndex == native::AppSettings::PageIndexRtpLocalHosts)
+            {
+                return RtpLocalHostsNavigationItem().as<foundation::IInspectable>();
+            }
+
             return RemoteHostsNavigationItem().as<foundation::IInspectable>();
         }
         catch (...)
@@ -619,6 +755,12 @@ namespace winrt::midinetworksetup::implementation
 
             SettingsPanel().Visibility(
                 pageIndex == native::AppSettings::PageIndexTransportSettings ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            RtpRemoteHostsPanel().Visibility(
+                pageIndex == native::AppSettings::PageIndexRtpRemoteHosts ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            RtpLocalHostsPanel().Visibility(
+                pageIndex == native::AppSettings::PageIndexRtpLocalHosts ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
         }
         catch (...)
         {
@@ -731,6 +873,16 @@ namespace winrt::midinetworksetup::implementation
     void MainWindow::SetLocalStatus(winrt::hstring const& text) noexcept
     {
         ShowTransientStatus(LocalStatusText(), m_localStatusTimer, text);
+    }
+
+    void MainWindow::SetRtpRemoteStatus(winrt::hstring const& text) noexcept
+    {
+        ShowTransientStatus(RtpRemoteStatusText(), m_rtpRemoteStatusTimer, text);
+    }
+
+    void MainWindow::SetRtpLocalStatus(winrt::hstring const& text) noexcept
+    {
+        ShowTransientStatus(RtpLocalStatusText(), m_rtpLocalStatusTimer, text);
     }
 
 
@@ -854,50 +1006,73 @@ namespace winrt::midinetworksetup::implementation
         }
     }
 
-    MainWindow::ServiceSnapshot MainWindow::GatherSnapshot() noexcept
+    _Use_decl_annotations_
+    MainWindow::ServiceSnapshot MainWindow::GatherSnapshot(bool const includeNetworkMidi2, bool const includeRtp) noexcept
     {
         ServiceSnapshot snapshot{};
 
-        try
+        // Both pages of a transport are gathered even when only one is visible. The latency graphs
+        // plot against elapsed time, so a page which stopped sampling while hidden would come back
+        // with a flat segment across the gap and read as a bug.
+        if (includeNetworkMidi2)
         {
-            snapshot.TransportAvailable = midi2net::MidiNetworkTransportManager::IsTransportAvailable();
-
-            if (!snapshot.TransportAvailable)
+            try
             {
-                return snapshot;
-            }
+                snapshot.TransportAvailable = midi2net::MidiNetworkTransportManager::IsTransportAvailable();
 
-            // Both pages are gathered even when only one is visible. The latency graphs plot
-            // against elapsed time, so a page which stopped sampling while hidden would come back
-            // with a flat segment across the gap and read as a bug.
-            snapshot.ConfiguredHosts = midi2net::MidiNetworkTransportManager::GetConfiguredHosts();
-            snapshot.ConfiguredClients = midi2net::MidiNetworkTransportManager::GetConfiguredClients();
-            snapshot.PendingRemoteClients = midi2net::MidiNetworkTransportManager::GetPendingRemoteClients();
-
-            snapshot.ClientDisplayNames = native::NetworkConfigFile::Current().GetClientDisplayNames();
-            snapshot.ConfiguredClientIds = native::NetworkConfigFile::Current().GetClientEntryIds();
-
-            if (snapshot.ConfiguredHosts != nullptr)
-            {
-                for (auto const& host : snapshot.ConfiguredHosts)
+                if (snapshot.TransportAvailable)
                 {
-                    if (host == nullptr)
+                    snapshot.ConfiguredHosts = midi2net::MidiNetworkTransportManager::GetConfiguredHosts();
+                    snapshot.ConfiguredClients = midi2net::MidiNetworkTransportManager::GetConfiguredClients();
+                    snapshot.PendingRemoteClients = midi2net::MidiNetworkTransportManager::GetPendingRemoteClients();
+
+                    snapshot.ClientDisplayNames = native::NetworkConfigFile::Current().GetClientDisplayNames();
+                    snapshot.ConfiguredClientIds = native::NetworkConfigFile::Current().GetClientEntryIds();
+
+                    if (snapshot.ConfiguredHosts != nullptr)
                     {
-                        continue;
+                        for (auto const& host : snapshot.ConfiguredHosts)
+                        {
+                            if (host == nullptr)
+                            {
+                                continue;
+                            }
+
+                            auto const key = EntryKey(host.HostId());
+
+                            snapshot.KnownClients.insert_or_assign(
+                                std::wstring{ key },
+                                native::NetworkConfigFile::Current().GetKnownClients(key));
+                        }
                     }
 
-                    auto const key = EntryKey(host.HostId());
-
-                    snapshot.KnownClients.insert_or_assign(
-                        std::wstring{ key },
-                        native::NetworkConfigFile::Current().GetKnownClients(key));
+                    snapshot.Gathered = true;
                 }
             }
-
-            snapshot.Gathered = true;
+            catch (...)
+            {
+            }
         }
-        catch (...)
+
+        if (includeRtp)
         {
+            try
+            {
+                snapshot.RtpAvailable = midi2rtp::MidiRtpTransportManager::IsTransportAvailable();
+
+                if (snapshot.RtpAvailable)
+                {
+                    snapshot.RtpConfiguredHosts = midi2rtp::MidiRtpTransportManager::GetConfiguredHosts();
+                    snapshot.RtpConfiguredClients = midi2rtp::MidiRtpTransportManager::GetConfiguredClients();
+                    snapshot.RtpPendingRemoteClients = midi2rtp::MidiRtpTransportManager::GetPendingRemoteClients();
+                    snapshot.RtpAdvertisedHosts = midi2rtp::MidiRtpTransportManager::GetAdvertisedHosts();
+
+                    snapshot.RtpGathered = true;
+                }
+            }
+            catch (...)
+            {
+            }
         }
 
         return snapshot;
@@ -916,6 +1091,9 @@ namespace winrt::midinetworksetup::implementation
 
         auto weak = get_weak();
         auto queue = DispatcherQueue();
+
+        auto const includeNetworkMidi2 = m_networkMidi2Usable;
+        auto const includeRtp = m_rtpUsable;
 
         // read on the UI thread, because the watcher's map is what the pages fold together
         std::vector<midi2net::MidiNetworkAdvertisedHost> advertised{};
@@ -940,7 +1118,7 @@ namespace winrt::midinetworksetup::implementation
         // every one of the calls below blocks on the service, so none of them may run here
         co_await winrt::resume_background();
 
-        auto snapshot = GatherSnapshot();
+        auto snapshot = GatherSnapshot(includeNetworkMidi2, includeRtp);
         snapshot.AdvertisedHosts = std::move(advertised);
 
         if (queue == nullptr)
@@ -977,26 +1155,53 @@ namespace winrt::midinetworksetup::implementation
     {
         try
         {
-            if (!snapshot.TransportAvailable)
-            {
-                if (!m_transportMissingReported)
-                {
-                    m_transportMissingReported = true;
-
-                    SetRemoteStatus(res::GetString(L"TransportUnavailableError"));
-                    SetLocalStatus(res::GetString(L"TransportUnavailableError"));
-                }
-
-                return;
-            }
-
-            m_transportMissingReported = false;
-
             RefreshNotificationsBanner();
 
+            m_networkMidi2Identities = CollectNetworkMidi2Identities(snapshot);
+
+            if (m_networkMidi2Usable)
+            {
+                if (!snapshot.TransportAvailable)
+                {
+                    if (!m_transportMissingReported)
+                    {
+                        m_transportMissingReported = true;
+
+                        SetRemoteStatus(res::GetString(L"TransportUnavailableError"));
+                        SetLocalStatus(res::GetString(L"TransportUnavailableError"));
+                    }
+                }
+                else
+                {
+                    m_transportMissingReported = false;
+
+                    ApplyLocalHosts(snapshot);
+                    ApplyRemoteHosts(snapshot);
+                }
+            }
+
+            if (m_rtpUsable)
+            {
+                if (!snapshot.RtpAvailable)
+                {
+                    if (!m_rtpMissingReported)
+                    {
+                        m_rtpMissingReported = true;
+
+                        SetRtpRemoteStatus(res::GetString(L"RtpTransportUnavailableError"));
+                        SetRtpLocalStatus(res::GetString(L"RtpTransportUnavailableError"));
+                    }
+                }
+                else
+                {
+                    m_rtpMissingReported = false;
+
+                    ApplyRtpLocalHosts(snapshot);
+                    ApplyRtpRemoteHosts(snapshot);
+                }
+            }
+
             ApplyPendingInvitations(snapshot);
-            ApplyLocalHosts(snapshot);
-            ApplyRemoteHosts(snapshot);
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to show the current network state.")
     }
@@ -1010,7 +1215,51 @@ namespace winrt::midinetworksetup::implementation
     {
         try
         {
+            // RTP-MIDI remotes have no product instance id, and a name is unique only per transport
+            auto const keyFor = [](
+                bool const isRtpMidi,
+                winrt::hstring const& hostKey,
+                winrt::hstring const& productInstanceId,
+                winrt::hstring const& name)
+                {
+                    return Lowered(winrt::hstring{
+                        std::wstring{ isRtpMidi ? L"rtp|" : L"" } +
+                        std::wstring{ hostKey } + L"|" + std::wstring{ productInstanceId } + L"|" + std::wstring{ name } });
+                };
+
             std::vector<winrt::hstring> seen{};
+
+            // an existing row is kept, so an answer in progress keeps its busy state
+            auto const rowFor = [&](
+                bool const isRtpMidi,
+                winrt::hstring const& hostKey,
+                winrt::hstring const& productInstanceId,
+                winrt::hstring const& name)
+                {
+                    auto const matchKey = keyFor(isRtpMidi, hostKey, productInstanceId, name);
+
+                    seen.push_back(matchKey);
+
+                    for (auto const& existing : m_pendingInvitations)
+                    {
+                        auto const self = winrt::get_self<PendingInvitationItem>(existing);
+
+                        if (self != nullptr &&
+                            keyFor(self->IsRtpMidi(), self->HostId(), self->RemoteProductInstanceId(), self->RemoteName()) == matchKey)
+                        {
+                            return existing;
+                        }
+                    }
+
+                    auto created = winrt::make_self<PendingInvitationItem>();
+                    created->InternalInitialize(hostKey, name, productInstanceId, isRtpMidi);
+
+                    midinetworksetup::PendingInvitationItem item = *created;
+
+                    m_pendingInvitations.Append(item);
+
+                    return item;
+                };
 
             if (snapshot.PendingRemoteClients != nullptr)
             {
@@ -1021,42 +1270,10 @@ namespace winrt::midinetworksetup::implementation
                         continue;
                     }
 
-                    auto const hostKey = EntryKey(pending.HostId());
-
                     auto const name = pending.UmpEndpointName();
                     auto const productInstanceId = pending.ProductInstanceId();
 
-                    auto const matchKey = Lowered(winrt::hstring{
-                        std::wstring{ hostKey } + L"|" + std::wstring{ productInstanceId } + L"|" + std::wstring{ name } });
-
-                    seen.push_back(matchKey);
-
-                    midinetworksetup::PendingInvitationItem item{ nullptr };
-
-                    for (auto const& existing : m_pendingInvitations)
-                    {
-                        auto const self = winrt::get_self<PendingInvitationItem>(existing);
-
-                        if (self != nullptr &&
-                            Lowered(winrt::hstring{
-                                std::wstring{ self->HostId() } + L"|" +
-                                std::wstring{ self->RemoteProductInstanceId() } + L"|" +
-                                std::wstring{ self->RemoteName() } }) == matchKey)
-                        {
-                            item = existing;
-                            break;
-                        }
-                    }
-
-                    if (item == nullptr)
-                    {
-                        auto created = winrt::make_self<PendingInvitationItem>();
-                        created->InternalInitialize(hostKey, name, productInstanceId);
-
-                        item = *created;
-
-                        m_pendingInvitations.Append(item);
-                    }
+                    auto const item = rowFor(false, EntryKey(pending.HostId()), productInstanceId, name);
 
                     auto const hostName = pending.HostUmpEndpointName().empty() ?
                         pending.HostServiceInstanceName() : pending.HostUmpEndpointName();
@@ -1069,7 +1286,47 @@ namespace winrt::midinetworksetup::implementation
                 }
             }
 
-            // anything the service no longer reports has been answered, here or elsewhere
+            if (snapshot.RtpPendingRemoteClients != nullptr)
+            {
+                for (auto const& pending : snapshot.RtpPendingRemoteClients)
+                {
+                    // An approved remote is only waiting to ask again, and offering the same
+                    // question a second time would be confusing
+                    if (pending == nullptr || pending.IsApproved())
+                    {
+                        continue;
+                    }
+
+                    auto const name = pending.RemoteClientName();
+
+                    auto const item = rowFor(true, EntryKey(pending.HostId()), winrt::hstring{}, name);
+
+                    // a host which is not advertised may have no advertised name to show
+                    auto hostName = pending.HostServiceInstanceName();
+
+                    if (snapshot.RtpConfiguredHosts != nullptr)
+                    {
+                        for (auto const& host : snapshot.RtpConfiguredHosts)
+                        {
+                            if (host != nullptr && host.HostId() == pending.HostId() && !host.Name().empty())
+                            {
+                                hostName = host.Name();
+                                break;
+                            }
+                        }
+                    }
+
+                    winrt::get_self<PendingInvitationItem>(item)->InternalUpdateText(
+                        res::FormatString(
+                            L"PendingInvitationHeadlineFormat",
+                            name.empty() ? res::GetString(L"UnnamedDevice") : name,
+                            hostName),
+                        res::FormatString(L"RtpPendingInvitationDetailFormat", pending.RemoteAddress()));
+                }
+            }
+
+            // Anything the service no longer reports has been answered, here or elsewhere. A
+            // transport which could not be read this time keeps its rows until it can.
             for (int32_t i = static_cast<int32_t>(m_pendingInvitations.Size()) - 1; i >= 0; i--)
             {
                 auto const existing = m_pendingInvitations.GetAt(static_cast<uint32_t>(i));
@@ -1081,10 +1338,12 @@ namespace winrt::midinetworksetup::implementation
                     continue;
                 }
 
-                auto const key = Lowered(winrt::hstring{
-                    std::wstring{ self->HostId() } + L"|" +
-                    std::wstring{ self->RemoteProductInstanceId() } + L"|" +
-                    std::wstring{ self->RemoteName() } });
+                if (!(self->IsRtpMidi() ? snapshot.RtpGathered : snapshot.Gathered))
+                {
+                    continue;
+                }
+
+                auto const key = keyFor(self->IsRtpMidi(), self->HostId(), self->RemoteProductInstanceId(), self->RemoteName());
 
                 if (std::find(seen.begin(), seen.end(), key) == seen.end())
                 {
@@ -1865,5 +2124,825 @@ namespace winrt::midinetworksetup::implementation
                 m_localHosts.Size() == 0 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to show this PC's hosts.")
+    }
+
+
+    // ------------------------------------------------------------------------------------
+    // RTP-MIDI
+    // ------------------------------------------------------------------------------------
+
+    namespace
+    {
+        // Some answers end a host name with a dot and some do not, and a link local IPv6 address
+        // may carry an interface after a percent sign. Neither says anything about the machine.
+        std::wstring MachineIdentity(_In_ winrt::hstring const& hostNameOrAddress) noexcept
+        {
+            try
+            {
+                std::wstring value{ Lowered(TrimmedText(hostNameOrAddress)) };
+
+                if (auto const scope = value.find(L'%'); scope != std::wstring::npos)
+                {
+                    value.resize(scope);
+                }
+
+                while (!value.empty() && value.back() == L'.')
+                {
+                    value.pop_back();
+                }
+
+                return value;
+            }
+            catch (...)
+            {
+                return {};
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    std::vector<std::wstring> MainWindow::CollectNetworkMidi2Identities(ServiceSnapshot const& snapshot) noexcept
+    {
+        std::vector<std::wstring> identities{};
+
+        try
+        {
+            auto const add = [&identities](winrt::hstring const& value)
+                {
+                    auto identity = MachineIdentity(value);
+
+                    if (!identity.empty() &&
+                        std::find(identities.begin(), identities.end(), identity) == identities.end())
+                    {
+                        identities.push_back(std::move(identity));
+                    }
+                };
+
+            for (auto const& host : snapshot.AdvertisedHosts)
+            {
+                if (host == nullptr)
+                {
+                    continue;
+                }
+
+                add(host.HostName());
+
+                if (auto const addresses = host.IPAddresses())
+                {
+                    for (auto const& address : addresses)
+                    {
+                        add(address);
+                    }
+                }
+            }
+
+            // a device reached by address may not advertise at all
+            if (snapshot.ConfiguredClients != nullptr)
+            {
+                for (auto const& client : snapshot.ConfiguredClients)
+                {
+                    if (client != nullptr)
+                    {
+                        add(client.ConfiguredDirectAddress());
+                        add(client.ConnectedRemoteAddress());
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return identities;
+    }
+
+    _Use_decl_annotations_
+    bool MainWindow::IsNetworkMidi2Machine(winrt::hstring const& hostNameOrAddress) const noexcept
+    {
+        auto const identity = MachineIdentity(hostNameOrAddress);
+
+        return !identity.empty() &&
+            std::find(m_networkMidi2Identities.begin(), m_networkMidi2Identities.end(), identity) != m_networkMidi2Identities.end();
+    }
+
+    _Use_decl_annotations_
+    bool MainWindow::IsNetworkMidi2Machine(
+        winrt::hstring const& hostName,
+        collections::IVectorView<winrt::hstring> const& addresses) const noexcept
+    {
+        if (IsNetworkMidi2Machine(hostName))
+        {
+            return true;
+        }
+
+        try
+        {
+            if (addresses != nullptr)
+            {
+                for (auto const& address : addresses)
+                {
+                    if (IsNetworkMidi2Machine(address))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return false;
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring MainWindow::DescribeRtpClientProblem(int32_t const lastErrorCode) noexcept
+    {
+        auto const hr = static_cast<HRESULT>(lastErrorCode);
+
+        if (hr == S_OK)
+        {
+            return {};
+        }
+
+        if (hr == HRESULT_FROM_WIN32(ERROR_HOST_UNREACHABLE))
+        {
+            return res::GetString(L"RtpRemoteHostNotFound");
+        }
+
+        if (hr == HRESULT_FROM_WIN32(ERROR_TIMEOUT))
+        {
+            return res::GetString(L"RtpRemoteHostNoAnswer");
+        }
+
+        if (hr == E_ACCESSDENIED)
+        {
+            return res::GetString(L"RtpRemoteHostRefused");
+        }
+
+        if (hr == HRESULT_FROM_WIN32(ERROR_GRACEFUL_DISCONNECT))
+        {
+            return res::GetString(L"RtpRemoteHostEnded");
+        }
+
+        if (hr == HRESULT_FROM_WIN32(ERROR_CONNECTION_ABORTED))
+        {
+            return res::GetString(L"RtpRemoteHostLost");
+        }
+
+        return res::GetString(L"RemoteHostFailed");
+    }
+
+    void MainWindow::ApplyRtpRemoteHosts(ServiceSnapshot const& snapshot) noexcept
+    {
+        try
+        {
+            struct RowData
+            {
+                winrt::hstring Key{};
+                winrt::hstring DisplayName{};
+                winrt::hstring Subtitle{};
+                winrt::hstring HostName{};
+                winrt::hstring Addresses{};
+                winrt::hstring ServiceInstanceName{};
+                winrt::hstring ConnectAddress{};
+                uint16_t ConnectPort{ 0 };
+                winrt::hstring Status{};
+                winrt::hstring Statistics{};
+                winrt::hstring EndpointDeviceId{};
+                winrt::hstring ImagePath{};
+                winrt::hstring ClientId{};
+                uint64_t LatencyTicks{ 0 };
+                bool Connected{ false };
+                bool Configured{ false };
+                bool Advertised{ false };
+                bool AlsoNetworkMidi2{ false };
+            };
+
+            std::vector<RowData> rows{};
+
+            // address and port of every advertised session, so an entry made by address still
+            // lands on the row for that session
+            std::unordered_map<std::wstring, winrt::hstring> addressToKey{};
+
+            auto const findRow = [&rows](winrt::hstring const& key) -> RowData*
+                {
+                    for (auto& row : rows)
+                    {
+                        if (row.Key == key)
+                        {
+                            return &row;
+                        }
+                    }
+
+                    return nullptr;
+                };
+
+            if (snapshot.RtpAdvertisedHosts != nullptr)
+            {
+                for (auto const& host : snapshot.RtpAdvertisedHosts)
+                {
+                    // offering to connect to yourself is only confusing
+                    if (host == nullptr || host.IsThisPc() || host.ServiceInstanceName().empty())
+                    {
+                        continue;
+                    }
+
+                    auto const key = Lowered(winrt::hstring{ L"s:" + std::wstring{ host.ServiceInstanceName() } });
+
+                    if (findRow(key) != nullptr)
+                    {
+                        continue;
+                    }
+
+                    auto const addresses = host.IPAddresses();
+
+                    auto const where = !host.HostName().empty() ?
+                        host.HostName() :
+                        (addresses != nullptr && addresses.Size() > 0 ? addresses.GetAt(0) : winrt::hstring{});
+
+                    RowData row{};
+
+                    row.Key = key;
+                    row.DisplayName = host.ServiceInstanceName();
+                    row.ServiceInstanceName = host.ServiceInstanceName();
+                    row.HostName = host.HostName();
+                    row.Addresses = JoinAddresses(addresses);
+                    row.Subtitle = where.empty() ?
+                        winrt::hstring{} :
+                        res::FormatString(L"RemoteHostSubtitleFormat", where, host.Port());
+                    row.Status = res::GetString(L"RemoteHostAvailable");
+                    row.ConnectAddress = where;
+                    row.ConnectPort = host.Port();
+                    row.Advertised = true;
+                    row.AlsoNetworkMidi2 = IsNetworkMidi2Machine(host.HostName(), addresses);
+
+                    auto const portSuffix = L"|" + std::to_wstring(host.Port());
+
+                    if (addresses != nullptr)
+                    {
+                        for (auto const& address : addresses)
+                        {
+                            addressToKey.insert_or_assign(MachineIdentity(address) + portSuffix, row.Key);
+                        }
+                    }
+
+                    if (!host.HostName().empty())
+                    {
+                        addressToKey.insert_or_assign(MachineIdentity(host.HostName()) + portSuffix, row.Key);
+                    }
+
+                    rows.push_back(row);
+                }
+            }
+
+            if (snapshot.RtpConfiguredClients != nullptr)
+            {
+                for (auto const& client : snapshot.RtpConfiguredClients)
+                {
+                    if (client == nullptr)
+                    {
+                        continue;
+                    }
+
+                    auto const clientKey = EntryKey(client.ClientId());
+                    auto const ownKey = Lowered(winrt::hstring{ L"c:" + std::wstring{ clientKey } });
+
+                    auto const connection = client.Connection();
+                    auto const isConnected = connection != nullptr && connection.IsConnected();
+
+                    winrt::hstring matchKey{ ownKey };
+
+                    if (!client.IsDirectConnection() && !client.RemoteServiceInstanceName().empty())
+                    {
+                        matchKey = Lowered(winrt::hstring{ L"s:" + std::wstring{ client.RemoteServiceInstanceName() } });
+                    }
+                    else
+                    {
+                        auto const configured = addressToKey.find(
+                            MachineIdentity(client.ConfiguredDirectAddress()) + L"|" + std::to_wstring(client.ConfiguredDirectPort()));
+
+                        if (configured != addressToKey.end())
+                        {
+                            matchKey = configured->second;
+                        }
+                    }
+
+                    auto row = findRow(matchKey);
+
+                    // a second saved entry for the same device keeps a row of its own, so it can
+                    // still be seen and forgotten
+                    if (row != nullptr && row->Configured)
+                    {
+                        matchKey = ownKey;
+                        row = nullptr;
+                    }
+
+                    if (row == nullptr)
+                    {
+                        RowData created{};
+
+                        created.Key = matchKey;
+                        created.ServiceInstanceName = client.RemoteServiceInstanceName();
+                        created.DisplayName = client.RemoteServiceInstanceName().empty() ?
+                            client.ConfiguredDirectAddress() :
+                            client.RemoteServiceInstanceName();
+                        created.Subtitle = client.IsDirectConnection() ?
+                            res::FormatString(
+                                L"RemoteHostDirectSubtitleFormat",
+                                client.ConfiguredDirectAddress(),
+                                client.ConfiguredDirectPort()) :
+                            res::GetString(L"RemoteHostNotFound");
+                        created.Addresses = client.ConfiguredDirectAddress();
+                        created.ConnectAddress = client.ConfiguredDirectAddress();
+                        created.ConnectPort = client.ConfiguredDirectPort();
+                        created.AlsoNetworkMidi2 = IsNetworkMidi2Machine(client.ConfiguredDirectAddress());
+
+                        rows.push_back(created);
+
+                        row = &rows.back();
+                    }
+
+                    row->Configured = true;
+                    row->ClientId = clientKey;
+                    row->Connected = isConnected;
+
+                    // As on the Network MIDI 2.0 page, an advertised device keeps its advertised
+                    // name. Anything else shows the best name there is.
+                    if (!row->Advertised)
+                    {
+                        if (!client.CustomEndpointName().empty())
+                        {
+                            row->DisplayName = client.CustomEndpointName();
+                        }
+                        else if (connection != nullptr && !connection.RemoteName().empty())
+                        {
+                            row->DisplayName = connection.RemoteName();
+                        }
+                    }
+
+                    if (row->DisplayName.empty())
+                    {
+                        row->DisplayName = res::GetString(L"UnnamedDevice");
+                    }
+
+                    if (connection != nullptr)
+                    {
+                        row->EndpointDeviceId = connection.EndpointDeviceId();
+
+                        // an address typed in says nothing about the machine, but its connection does
+                        row->AlsoNetworkMidi2 = row->AlsoNetworkMidi2 ||
+                            IsNetworkMidi2Machine(connection.RemoteHostName()) ||
+                            IsNetworkMidi2Machine(connection.RemoteAddress());
+                    }
+
+                    // Resolved here rather than in the row type, because it is a file system
+                    // lookup and the rows are rebuilt on every poll.
+                    if (!row->EndpointDeviceId.empty())
+                    {
+                        try
+                        {
+                            auto const info = midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(
+                                row->EndpointDeviceId);
+
+                            if (info != nullptr)
+                            {
+                                if (auto const userInfo = info.GetUserSuppliedInfo())
+                                {
+                                    row->ImagePath = midiapp::ResolveEndpointImagePath(userInfo.ImageFileName());
+                                }
+                            }
+                        }
+                        catch (...)
+                        {
+                            row->ImagePath = winrt::hstring{};
+                        }
+                    }
+
+                    auto const problem = DescribeRtpClientProblem(client.LastErrorCode());
+
+                    switch (client.EntryState())
+                    {
+                    case midi2rtp::MidiRtpClientEntryState::Active:
+                        row->Status = isConnected ?
+                            res::GetString(L"RemoteHostConnected") :
+                            res::GetString(L"RemoteHostTryingToConnect");
+                        break;
+
+                    case midi2rtp::MidiRtpClientEntryState::Retrying:
+                        row->Status = problem.empty() ?
+                            res::GetString(L"RemoteHostTryingToConnect") :
+                            res::FormatString(L"RtpRemoteHostRetryingFormat", problem);
+                        break;
+
+                    case midi2rtp::MidiRtpClientEntryState::Unavailable:
+                        row->Status = problem.empty() ?
+                            res::GetString(L"RemoteHostUnavailable") :
+                            res::FormatString(L"RtpRemoteHostStoppedFormat", problem);
+                        break;
+
+                    default:
+                        // Nothing is attempted for a device which cannot be seen, so somebody
+                        // looking at one which is switched off is told that instead.
+                        if (row->Advertised)
+                        {
+                            row->Status = res::GetString(L"RemoteHostTryingToConnect");
+                        }
+                        else if (!client.IsDirectConnection())
+                        {
+                            row->Status = res::GetString(L"RemoteHostWaitingToAppear");
+                        }
+                        else
+                        {
+                            row->Status = problem.empty() ?
+                                res::GetString(L"RemoteHostWaitingToAnswer") :
+                                res::FormatString(L"RtpRemoteHostRetryingFormat", problem);
+                        }
+                        break;
+                    }
+
+                    if (isConnected)
+                    {
+                        row->LatencyTicks = connection.CurrentLatencyTicks();
+
+                        row->Statistics = res::FormatString(
+                            L"RtpStatisticsFormat",
+                            DescribeLatency(connection.CurrentLatencyTicks()),
+                            FormatCount(connection.TotalCountNetworkPacketsSent()),
+                            FormatCount(connection.TotalCountNetworkPacketsReceived()),
+                            FormatCount(connection.TotalCountPacketsLost()),
+                            FormatCount(connection.TotalCountLossesRepairedFromJournal()));
+
+                        if (!connection.RemoteAddress().empty())
+                        {
+                            row->Subtitle = res::FormatString(
+                                L"RemoteHostDirectSubtitleFormat",
+                                connection.RemoteAddress(),
+                                connection.RemotePort());
+                        }
+                    }
+                    else
+                    {
+                        row->Statistics = winrt::hstring{};
+                    }
+                }
+            }
+
+            // discovery reports sessions in whatever order they answered, so without this the
+            // rows shuffle on every refresh
+            std::sort(rows.begin(), rows.end(), [](RowData const& left, RowData const& right)
+                {
+                    auto const leftName = std::wstring{ Lowered(left.DisplayName) };
+                    auto const rightName = std::wstring{ Lowered(right.DisplayName) };
+
+                    if (leftName != rightName)
+                    {
+                        return leftName < rightName;
+                    }
+
+                    return std::wstring{ left.Key } < std::wstring{ right.Key };
+                });
+
+            // reconcile against what is on screen, so rows are updated rather than replaced
+            for (auto const& row : rows)
+            {
+                midinetworksetup::RtpRemoteHostItem item{ nullptr };
+
+                for (auto const& existing : m_rtpRemoteHosts)
+                {
+                    if (existing != nullptr && existing.MatchKey() == row.Key)
+                    {
+                        item = existing;
+                        break;
+                    }
+                }
+
+                if (item == nullptr)
+                {
+                    auto created = winrt::make_self<RtpRemoteHostItem>();
+                    created->InternalInitialize(row.Key);
+
+                    item = *created;
+
+                    m_rtpRemoteHosts.Append(item);
+                }
+
+                winrt::get_self<RtpRemoteHostItem>(item)->InternalUpdate(
+                    row.DisplayName,
+                    row.Subtitle,
+                    row.HostName,
+                    row.Addresses,
+                    row.ServiceInstanceName,
+                    row.ConnectAddress,
+                    row.ConnectPort,
+                    row.Status,
+                    row.Statistics,
+                    row.EndpointDeviceId,
+                    row.ImagePath,
+                    row.ClientId,
+                    row.LatencyTicks,
+                    row.Connected,
+                    row.Configured,
+                    row.Advertised,
+                    row.AlsoNetworkMidi2,
+                    row.Connected ?
+                        res::GetString(L"RemoteHostDisconnectAndForgetLabel") :
+                        res::GetString(L"RemoteHostForgetLabel"));
+            }
+
+            for (int32_t i = static_cast<int32_t>(m_rtpRemoteHosts.Size()) - 1; i >= 0; i--)
+            {
+                auto const existing = m_rtpRemoteHosts.GetAt(static_cast<uint32_t>(i));
+
+                auto const stillThere = existing != nullptr && std::any_of(
+                    rows.begin(),
+                    rows.end(),
+                    [&existing](RowData const& row) { return row.Key == existing.MatchKey(); });
+
+                if (!stillThere)
+                {
+                    m_rtpRemoteHosts.RemoveAt(static_cast<uint32_t>(i));
+                }
+            }
+
+            // put the rows into the sorted order without rebuilding the collection
+            for (uint32_t target = 0; target < rows.size() && target < m_rtpRemoteHosts.Size(); target++)
+            {
+                if (m_rtpRemoteHosts.GetAt(target).MatchKey() == rows[target].Key)
+                {
+                    continue;
+                }
+
+                for (uint32_t search = target + 1; search < m_rtpRemoteHosts.Size(); search++)
+                {
+                    if (m_rtpRemoteHosts.GetAt(search).MatchKey() == rows[target].Key)
+                    {
+                        auto const moved = m_rtpRemoteHosts.GetAt(search);
+
+                        m_rtpRemoteHosts.RemoveAt(search);
+                        m_rtpRemoteHosts.InsertAt(target, moved);
+
+                        break;
+                    }
+                }
+            }
+
+            NoRtpRemoteHostsText().Visibility(
+                m_rtpRemoteHosts.Size() == 0 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to show the RTP-MIDI devices.")
+    }
+
+    void MainWindow::ApplyRtpLocalHosts(ServiceSnapshot const& snapshot) noexcept
+    {
+        try
+        {
+            std::vector<winrt::hstring> seen{};
+
+            if (snapshot.RtpConfiguredHosts != nullptr)
+            {
+                for (auto const& host : snapshot.RtpConfiguredHosts)
+                {
+                    if (host == nullptr)
+                    {
+                        continue;
+                    }
+
+                    auto const hostKey = EntryKey(host.HostId());
+
+                    seen.push_back(hostKey);
+
+                    midinetworksetup::LocalHostItem item{ nullptr };
+
+                    for (auto const& existing : m_rtpLocalHosts)
+                    {
+                        if (existing != nullptr && existing.HostId() == hostKey)
+                        {
+                            item = existing;
+                            break;
+                        }
+                    }
+
+                    if (item == nullptr)
+                    {
+                        auto created = winrt::make_self<LocalHostItem>();
+                        created->InternalInitialize(hostKey);
+
+                        item = *created;
+
+                        m_rtpLocalHosts.Append(item);
+                    }
+
+                    auto const self = winrt::get_self<LocalHostItem>(item);
+
+                    auto const connections = host.Connections();
+                    auto const connectionCount = connections == nullptr ? 0u : connections.Size();
+
+                    // what other devices actually see, which is not the configured name if a
+                    // collision made the responder rename it
+                    auto const advertisedName = host.ActualServiceInstanceName().empty() ?
+                        host.ServiceInstanceName() :
+                        host.ActualServiceInstanceName();
+
+                    auto displayName = host.Name();
+
+                    if (displayName.empty())
+                    {
+                        displayName = advertisedName.empty() ? res::GetString(L"RtpHostDefaultName") : advertisedName;
+                    }
+
+                    winrt::hstring status{};
+
+                    if (!host.IsEnabled())
+                    {
+                        status = res::GetString(L"HostStopped");
+                    }
+                    else if (host.HasStarted())
+                    {
+                        status = host.UsedPortFallback() ?
+                            res::FormatString(L"HostStartedPortFallbackFormat", host.ActualPort(), host.ConfiguredPort()) :
+                            res::FormatString(L"HostStartedFormat", host.ActualPort());
+                    }
+                    else if (host.LastErrorCode() != 0)
+                    {
+                        status = res::FormatString(
+                            L"RtpHostNotStartedFormat",
+                            std::format(L"0x{:08X}", static_cast<uint32_t>(host.LastErrorCode())));
+                    }
+                    else
+                    {
+                        status = res::GetString(L"RtpHostStarting");
+                    }
+
+                    auto const address = DisplayAddressForLocalHost(winrt::hstring{});
+
+                    self->InternalUpdate(
+                        displayName,
+                        !host.Advertise() ?
+                            res::GetString(L"RtpHostNotAdvertised") :
+                            (host.ServiceInstanceNameWasChanged() ?
+                                res::FormatString(L"HostServiceInstanceNameChangedFormat",
+                                    host.ActualServiceInstanceName(), host.ServiceInstanceName()) :
+                                advertisedName),
+                        winrt::hstring{},
+                        host.ActualPort() == 0 ?
+                            address :
+                            res::FormatString(L"HostAddressValueFormat", address, host.ActualPort()),
+                        FormatCount(host.ActualPort()),
+                        status,
+                        host.RemoteClientPolicy() == midi2rtp::MidiRtpRemoteClientPolicy::RequireApproval ?
+                            res::GetString(L"HostPolicyRequireApproval") :
+                            res::GetString(L"HostPolicyAllowAny"),
+                        connectionCount == 0 ?
+                            res::GetString(L"HostNoConnections") :
+                            res::FormatString(L"HostConnectionCountFormat", connectionCount),
+                        // An enabled host which has not started is still being tried, so it
+                        // offers Stop, and the start and stop handler reads this as its state.
+                        host.IsEnabled() ? res::GetString(L"StopHostButton") : res::GetString(L"StartHostButton"),
+                        host.IsEnabled(),
+                        true);
+
+                    std::vector<winrt::hstring> connectionKeys{};
+
+                    if (connections != nullptr)
+                    {
+                        for (auto const& connection : connections)
+                        {
+                            if (connection == nullptr)
+                            {
+                                continue;
+                            }
+
+                            // two remotes can send the same name, so the service's id tells them apart
+                            auto const connectionKey = winrt::hstring{ L"rtp|" + std::to_wstring(connection.ConnectionId()) };
+
+                            connectionKeys.push_back(connectionKey);
+
+                            midinetworksetup::HostConnectionItem connectionItem{ nullptr };
+
+                            for (auto const& existing : self->Connections())
+                            {
+                                if (existing != nullptr && existing.MatchKey() == connectionKey)
+                                {
+                                    connectionItem = existing;
+                                    break;
+                                }
+                            }
+
+                            if (connectionItem == nullptr)
+                            {
+                                auto created = winrt::make_self<HostConnectionItem>();
+                                created->InternalInitialize(
+                                    connectionKey, hostKey, winrt::hstring{}, connection.ConnectionId(), connection.RemoteName());
+
+                                connectionItem = *created;
+
+                                self->Connections().Append(connectionItem);
+                            }
+
+                            winrt::get_self<HostConnectionItem>(connectionItem)->InternalUpdate(
+                                connection.RemoteName().empty() ?
+                                    res::GetString(L"UnnamedDevice") : connection.RemoteName(),
+                                res::FormatString(L"AddressesFormat", connection.RemoteAddress()),
+                                connection.IsConnected() ?
+                                    res::FormatString(L"ConnectionActiveFormat", connection.RemoteAddress(), connection.RemotePort()) :
+                                    res::FormatString(L"RtpConnectionConnectingFormat", connection.RemoteAddress(), connection.RemotePort()),
+                                connection.IsConnected() ?
+                                    res::FormatString(
+                                        L"RtpStatisticsFormat",
+                                        DescribeLatency(connection.CurrentLatencyTicks()),
+                                        FormatCount(connection.TotalCountNetworkPacketsSent()),
+                                        FormatCount(connection.TotalCountNetworkPacketsReceived()),
+                                        FormatCount(connection.TotalCountPacketsLost()),
+                                        FormatCount(connection.TotalCountLossesRepairedFromJournal())) :
+                                    winrt::hstring{},
+                                connection.EndpointDeviceId(),
+                                connection.CurrentLatencyTicks(),
+                                connection.IsConnected(),
+                                false);
+                        }
+                    }
+
+                    for (int32_t i = static_cast<int32_t>(self->Connections().Size()) - 1; i >= 0; i--)
+                    {
+                        auto const existing = self->Connections().GetAt(static_cast<uint32_t>(i));
+
+                        if (existing == nullptr ||
+                            std::find(connectionKeys.begin(), connectionKeys.end(), existing.MatchKey()) == connectionKeys.end())
+                        {
+                            self->Connections().RemoveAt(static_cast<uint32_t>(i));
+                        }
+                    }
+
+                    // remembered allow and deny decisions. These change rarely, so the list is
+                    // only rebuilt when its contents actually differ.
+                    std::vector<std::pair<winrt::hstring, bool>> knownEntries{};
+
+                    if (auto const known = host.KnownRemoteClients())
+                    {
+                        for (auto const& entry : known)
+                        {
+                            if (entry != nullptr && !entry.RemoteClientName().empty())
+                            {
+                                knownEntries.emplace_back(entry.RemoteClientName(), entry.IsAllowed());
+                            }
+                        }
+                    }
+
+                    bool knownChanged = knownEntries.size() != self->KnownClients().Size();
+
+                    if (!knownChanged)
+                    {
+                        for (uint32_t i = 0; i < self->KnownClients().Size(); i++)
+                        {
+                            auto const existing = self->KnownClients().GetAt(i);
+
+                            if (existing == nullptr ||
+                                existing.DisplayName() != knownEntries[i].first ||
+                                existing.IsAllowed() != knownEntries[i].second)
+                            {
+                                knownChanged = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (knownChanged)
+                    {
+                        self->KnownClients().Clear();
+
+                        for (auto const& [name, allowed] : knownEntries)
+                        {
+                            auto created = winrt::make_self<KnownClientItem>();
+
+                            created->InternalInitialize(
+                                Lowered(winrt::hstring{ L"rtp|" + std::wstring{ name } }),
+                                hostKey,
+                                name,
+                                winrt::hstring{},
+                                allowed ? res::GetString(L"KnownClientAllowed") : res::GetString(L"KnownClientBlocked"),
+                                allowed);
+
+                            self->KnownClients().Append(*created);
+                        }
+                    }
+                }
+            }
+
+            for (int32_t i = static_cast<int32_t>(m_rtpLocalHosts.Size()) - 1; i >= 0; i--)
+            {
+                auto const existing = m_rtpLocalHosts.GetAt(static_cast<uint32_t>(i));
+
+                if (existing == nullptr ||
+                    std::find(seen.begin(), seen.end(), existing.HostId()) == seen.end())
+                {
+                    m_rtpLocalHosts.RemoveAt(static_cast<uint32_t>(i));
+                }
+            }
+
+            NoRtpLocalHostsText().Visibility(
+                m_rtpLocalHosts.Size() == 0 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to show this PC's RTP-MIDI hosts.")
     }
 }

@@ -932,14 +932,15 @@ void EditorControllerTests::AGroupPanelSendsNothing()
     VERIFY_IS_FALSE(glass::IsInteractive(glass::ControlKind::Panel));
 }
 
-void EditorControllerTests::AGroupPanelArrivesAsAnOutline()
+void EditorControllerTests::AGroupPanelArrivesInTheThemesStyle()
 {
     auto controller = LoadedController();
 
     auto const panel = controller.AddControl(glass::ControlKind::Panel, 80, 80);
     auto const* const control = controller.Document().FindControl(panel);
 
-    VERIFY_IS_TRUE(control->Style == glass::ControlStyleOverride::Outline);
+    // An outline skips every section setting a theme has, so a new group has to follow the theme.
+    VERIFY_IS_TRUE(control->Style == glass::ControlStyleOverride::UseTheme);
     VERIFY_IS_TRUE(control->LabelPlaced == glass::LabelPlacementOverride::Inside);
 }
 

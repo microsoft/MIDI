@@ -40,9 +40,9 @@ namespace winrt::midiglass::implementation
     {
         namespace automation = ::winrt::Microsoft::UI::Xaml::Automation;
 
-        // The gallery: four cards across, 9 px apart, each one a 62 px painted miniature of its
-        // own deck with its name under it.
-        constexpr int32_t GalleryColumns = 4;
+        // The gallery: five cards across at most, 9 px apart, each one a 62 px painted miniature
+        // of its own deck with its name under it.
+        constexpr int32_t GalleryColumns = 5;
         constexpr double GalleryCardWidth = 152.0;
         constexpr double GalleryGap = 9.0;
         constexpr double GalleryPreviewHeight = 62.0;
@@ -50,10 +50,10 @@ namespace winrt::midiglass::implementation
         // The swatch at the head of a slot row.
         constexpr double SlotSwatchSize = 26.0;
 
-        // The live preview page. Its own tiny layout, drawn by the same renderer the surface
-        // uses, so what it shows is what the page will do rather than an illustration of it.
-        constexpr int32_t PreviewPageWidth = 284;
-        constexpr int32_t PreviewPageHeight = 236;
+        // The live preview page, 16:9. Its own tiny layout, drawn by the same renderer the
+        // surface uses, so what it shows is what the page will do rather than an illustration.
+        constexpr int32_t PreviewPageWidth = 403;
+        constexpr int32_t PreviewPageHeight = 227;
 
         media::SolidColorBrush BrushFromKey(_In_ wchar_t const* key)
         {
@@ -333,28 +333,9 @@ namespace winrt::midiglass::implementation
     void EditorWindow::RebuildThemeGallery()
     {
         ThemeGallery().Children().Clear();
-        ThemeGallery().ColumnDefinitions().Clear();
-        ThemeGallery().RowDefinitions().Clear();
+        ThemeGallery().MaximumRowsOrColumns(GalleryColumns);
 
         m_galleryThemes = glass::AllThemes();
-
-        for (int32_t column = 0; column < GalleryColumns; ++column)
-        {
-            controls::ColumnDefinition definition{};
-            definition.Width(xaml::GridLengthHelper::FromValueAndType(GalleryCardWidth, xaml::GridUnitType::Pixel));
-
-            ThemeGallery().ColumnDefinitions().Append(definition);
-        }
-
-        auto const rows = (static_cast<int32_t>(m_galleryThemes.size()) + GalleryColumns - 1) / GalleryColumns;
-
-        for (int32_t row = 0; row < rows; ++row)
-        {
-            controls::RowDefinition definition{};
-            definition.Height(xaml::GridLengthHelper::Auto());
-
-            ThemeGallery().RowDefinitions().Append(definition);
-        }
 
         // The selected card is the one the layout is actually drawn with, which is the theme it
         // names only while it has not been edited. An edited layout carries its own.
@@ -371,11 +352,8 @@ namespace winrt::midiglass::implementation
             card.Style(xaml::Application::Current().Resources()
                 .Lookup(box_value(L"ThemeCardStyle")).as<xaml::Style>());
 
-            card.Margin({
-                0,
-                0,
-                (index % GalleryColumns) == GalleryColumns - 1 ? 0.0 : GalleryGap,
-                GalleryGap });
+            card.Width(GalleryCardWidth);
+            card.Margin({ 0, 0, GalleryGap, GalleryGap });
 
             card.IsChecked(selected);
             card.Tag(box_value(winrt::hstring{ theme.Name }));
@@ -477,9 +455,6 @@ namespace winrt::midiglass::implementation
                         strong->m_updatingSettings = false;
                     }
                 });
-
-            controls::Grid::SetColumn(card, static_cast<int32_t>(index % GalleryColumns));
-            controls::Grid::SetRow(card, static_cast<int32_t>(index / GalleryColumns));
 
             ThemeGallery().Children().Append(card);
         }
@@ -919,18 +894,21 @@ namespace winrt::midiglass::implementation
                 wchar_t const* Label;
             };
 
+            // Knobs and switches over an XY pad and a pad and readout, and a group of faders on
+            // the right, so the section settings have something to show on too.
             Item const items[]
             {
-                { glass::ControlKind::Knob,    14,  44,  46, 46, 0, 0.52, L"" },
-                { glass::ControlKind::Knob,    72,  44,  46, 46, 4, 0.30, L"" },
-                { glass::ControlKind::Fader,  140,  40,  30, 94, 1, 0.66, L"" },
-                { glass::ControlKind::Fader,  178,  40,  30, 94, 1, 0.41, L"" },
-                { glass::ControlKind::Meter,  216,  40,  16, 94, 1, 0.74, L"" },
-                { glass::ControlKind::Toggle,  14, 108,  50, 30, 2, 1.00, L"On" },
-                { glass::ControlKind::Button,  70, 108,  50, 30, 2, 0.00, L"Off" },
-                { glass::ControlKind::XYPad,   14, 150, 106, 72, 3, 0.60, L"" },
-                { glass::ControlKind::Pad,    140, 150,  60, 32, 5, 1.00, L"" },
-                { glass::ControlKind::Readout, 206, 150, 62, 32, 0, 0.00, L"128.0" },
+                { glass::ControlKind::Panel,  276,   8, 119, 211, 0, 0.00, L"" },
+                { glass::ControlKind::Knob,    12,  14,  58,  58, 0, 0.52, L"" },
+                { glass::ControlKind::Knob,    80,  14,  58,  58, 4, 0.30, L"" },
+                { glass::ControlKind::Toggle, 150,  26,  54,  34, 2, 1.00, L"On" },
+                { glass::ControlKind::Button, 210,  26,  54,  34, 2, 0.00, L"Off" },
+                { glass::ControlKind::XYPad,   12,  84, 126, 129, 3, 0.60, L"" },
+                { glass::ControlKind::Pad,    150,  84, 114,  64, 5, 1.00, L"" },
+                { glass::ControlKind::Readout, 150, 160, 114, 53, 0, 0.00, L"128.0" },
+                { glass::ControlKind::Fader,  290,  38,  30, 167, 1, 0.66, L"" },
+                { glass::ControlKind::Fader,  330,  38,  30, 167, 1, 0.41, L"" },
+                { glass::ControlKind::Meter,  370,  38,  14, 167, 1, 0.74, L"" },
             };
 
             for (auto const& item : items)
@@ -947,6 +925,14 @@ namespace winrt::midiglass::implementation
                 control.DefaultValue = item.Value;
                 control.Label = item.Label;
                 control.LabelPlaced = glass::LabelPlacementOverride::None;
+
+                // A group's name is part of how a theme draws a section: in a notch, on a
+                // banner, in neon.
+                if (item.Kind == glass::ControlKind::Panel)
+                {
+                    control.Label = std::wstring{ resources::GetString(L"ThemePreviewGroupName") };
+                    control.LabelPlaced = glass::LabelPlacementOverride::Inside;
+                }
 
                 page.Controls.push_back(control);
             }

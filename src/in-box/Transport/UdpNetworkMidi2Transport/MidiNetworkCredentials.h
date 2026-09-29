@@ -34,7 +34,7 @@
 //    LocalSystem. Whatever retrieves a secret has to work within that.
 //  - The service cannot prompt. There is no interactive desktop and no user to answer, so a
 //    secret can never be collected at connection time. It must already be stored.
-//  - The Network MIDI 2.0 Setup app, running as the user, is what collects and stores the
+//  - The Network MIDI Setup app, running as the user, is what collects and stores the
 //    secret. The service never writes a credential, only reads one, and is only ever handed an
 //    *identifier* through configuration JSON, never the secret itself.
 //  - Therefore the identifier arrives from a lower-trust source and is attacker-influenced in

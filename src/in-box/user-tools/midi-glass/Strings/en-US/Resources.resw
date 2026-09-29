@@ -3459,6 +3459,10 @@
   <data name="ThemePreviewHeading.Text" xml:space="preserve">
     <value>Live preview</value>
   </data>
+  <data name="ThemePreviewGroupName" xml:space="preserve">
+    <value>Mix</value>
+    <comment>The name on the group of faders in the theme editor's live preview. Keep it short.</comment>
+  </data>
   <data name="ThemeTravelsNote.Text" xml:space="preserve">
     <value>The theme travels inside the layout file, so a layout you send to somebody looks the way you built it even if they have never seen your theme.</value>
   </data>

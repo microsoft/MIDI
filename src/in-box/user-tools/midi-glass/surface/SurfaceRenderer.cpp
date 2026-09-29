@@ -13,6 +13,9 @@
 #include "GlassControl.h"
 #include "StringResources.h"
 
+#include <winrt/Microsoft.Graphics.Canvas.h>
+#include <winrt/Microsoft.Graphics.Canvas.Geometry.h>
+
 using namespace winrt;
 using namespace winrt::Windows::Foundation::Numerics;
 using namespace winrt::Microsoft::UI::Composition;
@@ -1264,7 +1267,11 @@ namespace glass
                 theme.Labels == LabelPlacement::Inside);
 
         text.Width(width);
-        text.Foreground(media::SolidColorBrush(ToColor(colors.Pipe)));
+
+        // In a window the number is the window's own light, not an ink meant for the page.
+        auto const windowed = itemIndex < m_visuals.size() && m_visuals[itemIndex].Windowed;
+
+        text.Foreground(media::SolidColorBrush(ToColor(windowed ? colors.WellValue : colors.Pipe)));
 
         // A two axis control shows both of its values, one to a line. One value under a
         // joystick says nothing about where the stick is.
@@ -1525,7 +1532,10 @@ namespace glass
             theme.LampShape == LampStyle::Dot &&
             fillWhenOn <= 0;
 
-        auto const corner = round || lensLamp
+        // On a theme whose lamps are round, a lamp that fills with its color is round too.
+        auto const roundLamp = control.Kind == ControlKind::Lamp && theme.LampShape == LampStyle::Dot;
+
+        auto const corner = round || roundLamp
             ? std::min(width, height) * 0.5f
             : static_cast<float>(std::min(
                 static_cast<double>(theme.CornerRadius), std::min(width, height) / 2.0));
@@ -2829,7 +2839,7 @@ namespace glass
                 // wants to see six, not five evenly spaced ones that do not line up with them.
                 auto const tickCount = detents > 1 ? detents : TickCountFor(control);
 
-                if (travels && tickCount > 1)
+                if (travels && !meter && tickCount > 1)
                 {
                     // A printed scale keeps a little air either side of the slot, the way the
                     // scale beside a slider on a panel does.
@@ -3209,12 +3219,22 @@ namespace glass
                 : LabelPlacementOverride::None;
 
             // A panel whose knobs are named above or below still prints each button's name on
-            // the button, in the middle of it, or at its top left the way a key's legend is.
+            // the button, in the middle of it, or at its top left the way a key's legend is. A
+            // lamp that is only a round lens has no top left, so its name goes where the rest do.
             if (theme.NamesInsideSwitches && FillsLikeASwitch(control.Kind))
             {
-                placed = theme.SwitchNames == SwitchNamePlacement::TopLeft
-                    ? LabelPlacementOverride::InsideTopLeft
-                    : LabelPlacementOverride::InsideCenter;
+                auto const lensLamp = control.Kind == ControlKind::Lamp &&
+                    theme.LampShape == LampStyle::Dot &&
+                    FillWhenOnFor(theme, control.Kind) <= 0;
+
+                if (theme.SwitchNames != SwitchNamePlacement::TopLeft)
+                {
+                    placed = LabelPlacementOverride::InsideCenter;
+                }
+                else if (!lensLamp)
+                {
+                    placed = LabelPlacementOverride::InsideTopLeft;
+                }
             }
         }
 
@@ -3239,6 +3259,18 @@ namespace glass
             }
 
             LayoutLabelGlow(itemIndex, controls::TextBlock{ nullptr }, ThemeColor{}, theme, 0.0, 0.0);
+
+            // A section that lost its name gets its whole frame back.
+            if (itemIndex < m_visuals.size() && !m_visuals[itemIndex].FrameParts.empty())
+            {
+                try
+                {
+                    m_visuals[itemIndex].FrameParts[0].Clip(nullptr);
+                }
+                catch (...)
+                {
+                }
+            }
 
             return;
         }
@@ -4307,92 +4339,97 @@ namespace glass
             ? corner + StripedNotchPastCorner + StripedNotchAir
             : PlainNotchStart;
 
-        // Three copies of the frame, so a name can be cut out of it later: whole at first, and
-        // split into the part left of the name, right of it and under it once the name is
-        // measured.
-        for (int32_t part = 0; part < 3; ++part)
+        // One frame, drawn whole. The gap for the name is cut out of it later with a clip, once
+        // the name is measured.
+        auto frame = compositor.CreateShapeVisual();
+        frame.Size(float2{ width, height });
+
+        if (stripes > 0)
         {
-            auto frame = compositor.CreateShapeVisual();
-            frame.Size(float2{ width, height });
-
-            if (stripes > 0)
+            for (int32_t stripe = 0; stripe < stripes; ++stripe)
             {
-                for (int32_t stripe = 0; stripe < stripes; ++stripe)
-                {
-                    // A stroke straddles its path, so each stripe's path is half a stripe in
-                    // from its outer edge, and its corner shrinks by the same.
-                    auto const inset = static_cast<float>(stripe) * stripeWidth + stripeWidth * 0.5f;
-
-                    auto geometry = compositor.CreateRoundedRectangleGeometry();
-                    geometry.Size(float2{ std::max(width - inset * 2.0f, 1.0f), std::max(height - inset * 2.0f, 1.0f) });
-                    geometry.Offset(float2{ inset, inset });
-
-                    auto const stripeCorner = std::max(0.0f, corner - inset);
-                    geometry.CornerRadius(float2{ stripeCorner, stripeCorner });
-
-                    auto shape = compositor.CreateSpriteShape(geometry);
-                    shape.StrokeBrush(BrushFor(compositor, theme.StripeColors[static_cast<size_t>(stripe)]));
-                    shape.StrokeThickness(stripeWidth);
-
-                    frame.Shapes().Append(shape);
-                }
-            }
-            else
-            {
-                auto const inset = rim * 0.5f;
+                // A stroke straddles its path, so each stripe's path is half a stripe in
+                // from its outer edge, and its corner shrinks by the same.
+                auto const inset = static_cast<float>(stripe) * stripeWidth + stripeWidth * 0.5f;
 
                 auto geometry = compositor.CreateRoundedRectangleGeometry();
-                geometry.Size(float2{ std::max(width - rim, 1.0f), std::max(height - rim, 1.0f) });
+                geometry.Size(float2{ std::max(width - inset * 2.0f, 1.0f), std::max(height - inset * 2.0f, 1.0f) });
                 geometry.Offset(float2{ inset, inset });
 
-                auto const lineCorner = std::max(0.0f, corner - (rim - 1.0f) * 0.5f);
-                geometry.CornerRadius(float2{ lineCorner, lineCorner });
+                auto const stripeCorner = std::max(0.0f, corner - inset);
+                geometry.CornerRadius(float2{ stripeCorner, stripeCorner });
 
                 auto shape = compositor.CreateSpriteShape(geometry);
-                shape.StrokeBrush(BrushFor(compositor, outline));
-                shape.StrokeThickness(rim);
+                shape.StrokeBrush(BrushFor(compositor, theme.StripeColors[static_cast<size_t>(stripe)]));
+                shape.StrokeThickness(stripeWidth);
 
                 frame.Shapes().Append(shape);
             }
-
-            frame.IsVisible(part == 0);
-
-            visual.Root.Children().InsertAbove(frame, visual.Shape);
-            visual.FrameParts.push_back(frame);
         }
+        else
+        {
+            auto const inset = rim * 0.5f;
+
+            auto geometry = compositor.CreateRoundedRectangleGeometry();
+            geometry.Size(float2{ std::max(width - rim, 1.0f), std::max(height - rim, 1.0f) });
+            geometry.Offset(float2{ inset, inset });
+
+            auto const lineCorner = std::max(0.0f, corner - (rim - 1.0f) * 0.5f);
+            geometry.CornerRadius(float2{ lineCorner, lineCorner });
+
+            auto shape = compositor.CreateSpriteShape(geometry);
+            shape.StrokeBrush(BrushFor(compositor, outline));
+            shape.StrokeThickness(rim);
+
+            frame.Shapes().Append(shape);
+        }
+
+        visual.Root.Children().InsertAbove(frame, visual.Shape);
+        visual.FrameParts.push_back(frame);
     }
 
     _Use_decl_annotations_
     void SurfaceRenderer::CutFrame(SurfaceVisual& visual, float start, float end) noexcept
     {
-        if (visual.FrameParts.size() < 3 || end <= start)
+        if (visual.FrameParts.empty() || end <= start)
         {
             return;
         }
 
         try
         {
+            namespace canvas = ::winrt::Microsoft::Graphics::Canvas;
+            namespace canvasGeometry = ::winrt::Microsoft::Graphics::Canvas::Geometry;
+
             auto const compositor = visual.FrameParts[0].Compositor();
-            auto const width = visual.Width;
 
-            auto leftOfName = compositor.CreateInsetClip();
-            leftOfName.RightInset(std::max(0.0f, width - start));
+            // Everything but the gap, as one clip. Copies of the frame clipped to either side of
+            // the gap and under it showed a hairline wherever two of them met.
+            constexpr float margin = 4.0f;
 
-            auto rightOfName = compositor.CreateInsetClip();
-            rightOfName.LeftInset(std::max(0.0f, end));
+            auto const right = visual.Width + margin;
+            auto const bottom = visual.Height + margin;
+            auto const gapBottom = visual.FrameBand + 1.0f;
 
-            // Under the name, the frame carries on below the band it was cut from.
-            auto underName = compositor.CreateInsetClip();
-            underName.LeftInset(std::max(0.0f, start));
-            underName.RightInset(std::max(0.0f, width - end));
-            underName.TopInset(visual.FrameBand + 1.0f);
+            canvasGeometry::CanvasPathBuilder builder{ canvas::CanvasDevice::GetSharedDevice() };
+            builder.SetFilledRegionDetermination(canvasGeometry::CanvasFilledRegionDetermination::Alternate);
 
-            visual.FrameParts[0].Clip(leftOfName);
-            visual.FrameParts[1].Clip(rightOfName);
-            visual.FrameParts[2].Clip(underName);
+            builder.BeginFigure(-margin, -margin);
+            builder.AddLine(right, -margin);
+            builder.AddLine(right, bottom);
+            builder.AddLine(-margin, bottom);
+            builder.EndFigure(canvasGeometry::CanvasFigureLoop::Closed);
 
-            visual.FrameParts[1].IsVisible(true);
-            visual.FrameParts[2].IsVisible(true);
+            builder.BeginFigure(start, -margin);
+            builder.AddLine(end, -margin);
+            builder.AddLine(end, gapBottom);
+            builder.AddLine(start, gapBottom);
+            builder.EndFigure(canvasGeometry::CanvasFigureLoop::Closed);
+
+            auto const outline = compositor.CreatePathGeometry(
+                CompositionPath{ canvasGeometry::CanvasGeometry::CreatePath(builder) });
+
+            visual.FrameParts[0].Clip(compositor.CreateGeometricClip(outline));
         }
         catch (...)
         {

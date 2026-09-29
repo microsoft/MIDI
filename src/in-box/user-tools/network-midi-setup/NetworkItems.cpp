@@ -13,6 +13,7 @@
 #include "HostConnectionItem.g.cpp"
 #include "KnownClientItem.g.cpp"
 #include "LocalHostItem.g.cpp"
+#include "RtpRemoteHostItem.g.cpp"
 
 namespace winrt::midinetworksetup::implementation
 {

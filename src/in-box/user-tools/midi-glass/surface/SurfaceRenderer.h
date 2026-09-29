@@ -90,9 +90,9 @@ namespace glass
         // is the only thing that knows how wide the name came out.
         comp::CompositionSpriteShape NotchShape{ nullptr };
 
-        // A section's frame, when a name is cut into it or it is drawn in stripes: three copies,
-        // each clipped to one side of the gap, so whatever is under the frame shows through the
-        // gap rather than a patch painted to look like it. Empty on every other control.
+        // A section's frame, when a name is cut into it or it is drawn in stripes: one copy,
+        // clipped round the gap, so whatever is under the frame shows through the gap rather
+        // than a patch painted to look like it. Empty on every other control.
         std::vector<comp::ShapeVisual> FrameParts{};
 
         // How deep the frame is at its top, and how far in the name's gap starts.

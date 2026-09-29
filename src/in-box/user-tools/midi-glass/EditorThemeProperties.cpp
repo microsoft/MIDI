@@ -40,6 +40,9 @@ namespace winrt::midiglass::implementation
     {
         namespace automation = ::winrt::Microsoft::UI::Xaml::Automation;
 
+        // The name column of every row.
+        constexpr double RowLabelWidth = 150.0;
+
         media::SolidColorBrush ThemeBrush(_In_ wchar_t const* key)
         {
             return xaml::Application::Current().Resources()
@@ -52,7 +55,7 @@ namespace winrt::midiglass::implementation
 
             text.Text(resources::GetString(key));
             text.FontSize(12.0);
-            text.Width(118.0);
+            text.Width(RowLabelWidth);
             text.TextWrapping(xaml::TextWrapping::Wrap);
             text.VerticalAlignment(xaml::VerticalAlignment::Center);
             text.Foreground(ThemeBrush(L"TextFillColorSecondaryBrush"));
@@ -68,7 +71,7 @@ namespace winrt::midiglass::implementation
             row.Margin({ 0, 0, 0, 7 });
 
             controls::ColumnDefinition labelColumn{};
-            labelColumn.Width(xaml::GridLengthHelper::FromValueAndType(118.0, xaml::GridUnitType::Pixel));
+            labelColumn.Width(xaml::GridLengthHelper::FromValueAndType(RowLabelWidth, xaml::GridUnitType::Pixel));
 
             controls::ColumnDefinition fieldColumn{};
             fieldColumn.Width(xaml::GridLengthHelper::FromValueAndType(1.0, xaml::GridUnitType::Star));
@@ -1609,7 +1612,7 @@ namespace winrt::midiglass::implementation
                 edit([code, color](glass::Theme& theme) { color(code, theme.Overlay.RainColor, true); });
             });
 
-        AddThemeSliderRow(L"ThemeRowRainSpeed", L"ThemeUnitPixelsPerSecond", 0, 2000, m_theme.Overlay.RainSpeed,
+        AddThemeSliderRow(L"ThemeRowRainSpeed", L"ThemeUnitPixelsPerSecond", 0, 600, m_theme.Overlay.RainSpeed,
             [edit](double value)
             {
                 edit([value](glass::Theme& theme)

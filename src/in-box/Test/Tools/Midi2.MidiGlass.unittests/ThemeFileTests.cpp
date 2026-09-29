@@ -161,6 +161,48 @@ void ThemeFileTests::EveryShippedThemeSurvivesARoundTrip()
         VERIFY_ARE_EQUAL(theme.Overlay.GrainStreak, read.Value.Overlay.GrainStreak);
         VERIFY_IS_TRUE(theme.NeutralColor == read.Value.NeutralColor);
 
+        // Everything Off-world Colonies, Groovy, Groovy Dark and the two Sector themes added.
+        VERIFY_IS_TRUE(theme.Deck.Kind == read.Value.Deck.Kind);
+        VERIFY_ARE_EQUAL(theme.Deck.ImageFileName, read.Value.Deck.ImageFileName);
+        VERIFY_ARE_EQUAL(theme.Deck.ImageRepeats, read.Value.Deck.ImageRepeats);
+        VERIFY_IS_TRUE(theme.Overlay.Grain == read.Value.Overlay.Grain);
+        VERIFY_ARE_EQUAL(theme.Overlay.RainPercent, read.Value.Overlay.RainPercent);
+        VERIFY_IS_TRUE(theme.Overlay.RainColor == read.Value.Overlay.RainColor);
+        VERIFY_ARE_EQUAL(theme.Overlay.RainSpeed, read.Value.Overlay.RainSpeed);
+
+        for (size_t stripe = 0; stripe < glass::MaximumStripeCount; ++stripe)
+        {
+            VERIFY_IS_TRUE(theme.StripeColors[stripe] == read.Value.StripeColors[stripe]);
+        }
+
+        VERIFY_ARE_EQUAL(theme.StripeWidth, read.Value.StripeWidth);
+        VERIFY_ARE_EQUAL(theme.RimThickness, read.Value.RimThickness);
+        VERIFY_ARE_EQUAL(theme.ArcThickness, read.Value.ArcThickness);
+        VERIFY_ARE_EQUAL(theme.ArcRoundEnds, read.Value.ArcRoundEnds);
+        VERIFY_IS_TRUE(theme.SwitchShape == read.Value.SwitchShape);
+        VERIFY_IS_TRUE(theme.KeycapTopColor == read.Value.KeycapTopColor);
+        VERIFY_IS_TRUE(theme.KeycapTopEndColor == read.Value.KeycapTopEndColor);
+        VERIFY_IS_TRUE(theme.SwitchNames == read.Value.SwitchNames);
+        VERIFY_ARE_EQUAL(theme.PressTravelPixels, read.Value.PressTravelPixels);
+        VERIFY_IS_TRUE(theme.LampPosition == read.Value.LampPosition);
+        VERIFY_IS_TRUE(theme.LampHolderColor == read.Value.LampHolderColor);
+        VERIFY_ARE_EQUAL(theme.LampGlowPercent, read.Value.LampGlowPercent);
+        VERIFY_ARE_EQUAL(theme.KnobKnurlCount, read.Value.KnobKnurlCount);
+        VERIFY_ARE_EQUAL(theme.PanelRecessPercent, read.Value.PanelRecessPercent);
+        VERIFY_IS_TRUE(theme.RecessLipColor == read.Value.RecessLipColor);
+        VERIFY_ARE_EQUAL(theme.WellFillsControl, read.Value.WellFillsControl);
+        VERIFY_ARE_EQUAL(theme.WellGlossPercent, read.Value.WellGlossPercent);
+        VERIFY_ARE_EQUAL(theme.NeonLetters, read.Value.NeonLetters);
+        VERIFY_ARE_EQUAL(theme.ValueCorePercent, read.Value.ValueCorePercent);
+        VERIFY_ARE_EQUAL(theme.GlowFallPixels, read.Value.GlowFallPixels);
+        VERIFY_ARE_EQUAL(theme.FlarePercent, read.Value.FlarePercent);
+        VERIFY_IS_TRUE(theme.FlareColor == read.Value.FlareColor);
+        VERIFY_ARE_EQUAL(theme.SectionTexture, read.Value.SectionTexture);
+        VERIFY_ARE_EQUAL(theme.SectionTexturePercent, read.Value.SectionTexturePercent);
+        VERIFY_IS_TRUE(theme.MeterUnlitColor == read.Value.MeterUnlitColor);
+        VERIFY_IS_TRUE(theme.OnInkColor == read.Value.OnInkColor);
+        VERIFY_ARE_EQUAL(theme.RestTintOnPlate, read.Value.RestTintOnPlate);
+
         for (int32_t zone = 0; zone < glass::MeterZoneCount; ++zone)
         {
             VERIFY_ARE_EQUAL(
@@ -177,6 +219,20 @@ void ThemeFileTests::EveryShippedThemeSurvivesARoundTrip()
 
 void ThemeFileTests::WritingTheSameThemeTwiceProducesTheSameBytes()
 {
+    // A file says what it is in words. A bare wide string once picked the Boolean overload of
+    // the writer, so every theme and layout file said "_comment": true.
+    {
+        auto const themeText = glass::WriteThemeToJson(*glass::FindBuiltInTheme(L"Studio Dark"));
+        VERIFY_IS_TRUE(themeText.find(L"\"_comment\": \"Windows MIDI Glass") != std::wstring::npos);
+
+        glass::LayoutDocument layout{};
+        layout.Name = L"Comment";
+
+        auto const layoutText = glass::WriteLayoutToJson(layout);
+        VERIFY_IS_TRUE(layoutText.find(L"\"_comment\": \"") != std::wstring::npos);
+        VERIFY_IS_TRUE(layoutText.find(L"\"_comment\": true") == std::wstring::npos);
+    }
+
     auto const& theme = *glass::FindBuiltInTheme(L"Bigwig");
 
     auto const first = glass::WriteThemeToJson(theme);

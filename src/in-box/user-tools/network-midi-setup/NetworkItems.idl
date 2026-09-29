@@ -22,6 +22,9 @@ namespace midinetworksetup
         String RemoteName{ get; };
         String RemoteProductInstanceId{ get; };
 
+        // which transport's approval command answers it
+        Boolean IsRtpMidi{ get; };
+
         String Headline{ get; };
         String Detail{ get; };
 
@@ -110,6 +113,9 @@ namespace midinetworksetup
         String MatchKey{ get; };
         String HostId{ get; };
 
+        // RTP-MIDI only: what the disconnect command names the connection by
+        UInt32 ConnectionId{ get; };
+
         String DisplayName{ get; };
         String ProductInstanceId{ get; };
         String AddressText{ get; };
@@ -176,5 +182,60 @@ namespace midinetworksetup
 
         Windows.Foundation.Collections.IObservableVector<HostConnectionItem> Connections{ get; };
         Windows.Foundation.Collections.IObservableVector<KnownClientItem> KnownClients{ get; };
+    }
+
+    // One remote RTP-MIDI session. Folded together with this PC's client entry for it, the same
+    // way RemoteHostItem does for Network MIDI 2.0.
+    [default_interface]
+    runtimeclass RtpRemoteHostItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        RtpRemoteHostItem();
+
+        String MatchKey{ get; };
+
+        String DisplayName{ get; };
+        String SubtitleText{ get; };
+        String HostName{ get; };
+        String AddressesText{ get; };
+
+        // how a new client entry finds the session: by its advertised name when it has one,
+        // otherwise by address and port
+        String ServiceInstanceName{ get; };
+        String ConnectAddress{ get; };
+        UInt16 ConnectPort{ get; };
+
+        String StatusText{ get; };
+        String StatisticsText{ get; };
+        String EndpointDeviceId{ get; };
+        String ImagePath{ get; };
+        Microsoft.UI.Xaml.Media.ImageSource ImageSource{ get; };
+
+        // empty when this PC has no client entry for the session
+        String ClientId{ get; };
+
+        Boolean IsConnected{ get; };
+        Boolean IsConfigured{ get; };
+        Boolean IsAdvertised{ get; };
+
+        // the same machine also offers Network MIDI 2.0, which is the better choice
+        Boolean AlsoOffersNetworkMidi2{ get; };
+
+        String DisconnectLabel{ get; };
+        Boolean IsBusy;
+
+        Microsoft.UI.Xaml.Visibility ConnectVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility RetryVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility DisconnectVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility NotAdvertisedVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility NetworkMidi2Visibility{ get; };
+        Microsoft.UI.Xaml.Visibility ConnectedBadgeVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility EndpointDeviceIdVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility ImageVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility CustomizeVisibility{ get; };
+
+        Microsoft.UI.Xaml.Visibility LatencyGraphVisibility{ get; };
+        Microsoft.UI.Xaml.Media.PointCollection LatencyLinePoints{ get; };
+        Microsoft.UI.Xaml.Media.PointCollection LatencyFillPoints{ get; };
+        String LatencyPeakText{ get; };
     }
 }

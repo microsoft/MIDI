@@ -3169,7 +3169,7 @@
                         </Grid.ColumnDefinitions>
 
                         <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Padding="18,14,18,18">
-                            <StackPanel Spacing="0" MaxWidth="620" HorizontalAlignment="Left">
+                            <StackPanel Spacing="0" MaxWidth="820" HorizontalAlignment="Left">
                                 <TextBlock x:Uid="ThemeHeading"
                                            Text="Theme"
                                            Style="{StaticResource SettingsHeadingStyle}" />
@@ -3180,8 +3180,12 @@
                                            Margin="0,0,0,9" />
 
                                 <!-- Filled in code: a theme card is a painted miniature of its own
-                                     deck, because a row of swatches cannot say what a theme is. -->
-                                <Grid x:Name="ThemeGallery" HorizontalAlignment="Left" />
+                                     deck, because a row of swatches cannot say what a theme is.
+                                     Five across, fewer on a narrow window. The width above leaves
+                                     room for five at any display scale. -->
+                                <VariableSizedWrapGrid x:Name="ThemeGallery"
+                                                       Orientation="Horizontal"
+                                                       HorizontalAlignment="Left" />
 
                                 <TextBlock x:Uid="ThemeColorsHeading"
                                            Text="Colors"
@@ -3275,45 +3279,61 @@
                             </StackPanel>
                         </ScrollViewer>
 
-                        <!-- The preview and every number the theme is made of. -->
+                        <!-- The preview and every number the theme is made of. Only the numbers
+                             scroll, so the preview is in view whenever one of them changes. -->
                         <Border Grid.Column="1"
-                                Width="316"
+                                Width="436"
                                 BorderThickness="1,0,0,0"
                                 BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,14,16,18">
-                                <StackPanel Spacing="0">
-                                    <TextBlock x:Uid="ThemePreviewHeading"
-                                               Text="Live preview"
-                                               Style="{StaticResource SettingsHeadingStyle}"
-                                               Margin="0,0,0,7" />
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
 
-                                    <Grid x:Name="ThemePreviewHost"
-                                          Height="236"
-                                          CornerRadius="8">
-                                        <Rectangle x:Name="ThemePreviewDeck" RadiusX="8" RadiusY="8" />
-                                        <Canvas x:Name="ThemePreviewCanvas" IsHitTestVisible="False" />
-                                        <Rectangle RadiusX="8" RadiusY="8" StrokeThickness="1"
-                                                   UseLayoutRounding="False"
-                                                   IsHitTestVisible="False"
-                                                   Stroke="{ThemeResource CardStrokeColorDefaultBrush}" />
-                                    </Grid>
+                                <Border Grid.Row="0"
+                                        BorderThickness="0,0,0,1"
+                                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                                    <StackPanel Padding="16,14,16,12">
+                                        <TextBlock x:Uid="ThemePreviewHeading"
+                                                   Text="Live preview"
+                                                   Style="{StaticResource SettingsHeadingStyle}"
+                                                   Margin="0,0,0,7" />
 
-                                    <TextBlock x:Name="ThemeCautionText"
-                                               Visibility="Collapsed"
-                                               FontSize="11"
-                                               LineHeight="16"
-                                               TextWrapping="Wrap"
-                                               Margin="0,8,0,0"
-                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                        <Grid x:Name="ThemePreviewHost"
+                                              Height="227"
+                                              CornerRadius="8">
+                                            <Rectangle x:Name="ThemePreviewDeck" RadiusX="8" RadiusY="8" />
+                                            <Canvas x:Name="ThemePreviewCanvas" IsHitTestVisible="False" />
+                                            <Rectangle RadiusX="8" RadiusY="8" StrokeThickness="1"
+                                                       UseLayoutRounding="False"
+                                                       IsHitTestVisible="False"
+                                                       Stroke="{ThemeResource CardStrokeColorDefaultBrush}" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
 
-                                    <!-- Every property the theme has, grouped the way somebody
-                                         changing one would look for it. Built in code: the list
-                                         is long, the rows are all the same four shapes, and a
-                                         theme property that had no row here would be a property
-                                         nobody could reach. -->
-                                    <StackPanel x:Name="ThemePropertyPanel" Spacing="0" Margin="0,14,0,0" />
-                                </StackPanel>
-                            </ScrollViewer>
+                                <ScrollViewer Grid.Row="1"
+                                              VerticalScrollBarVisibility="Auto"
+                                              Padding="16,12,16,18">
+                                    <StackPanel Spacing="0">
+                                        <TextBlock x:Name="ThemeCautionText"
+                                                   Visibility="Collapsed"
+                                                   FontSize="11"
+                                                   LineHeight="16"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,0,0,14"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <!-- Every property the theme has, grouped the way somebody
+                                             changing one would look for it. Built in code: the list
+                                             is long, the rows are all the same four shapes, and a
+                                             theme property that had no row here would be a property
+                                             nobody could reach. -->
+                                        <StackPanel x:Name="ThemePropertyPanel" Spacing="0" />
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
                         </Border>
                     </Grid>
 

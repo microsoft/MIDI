@@ -2022,7 +2022,9 @@ namespace glass
 
             writer.BeginObject();
 
-            writer.Write(KeyComment, CommentText);
+            // Spelled out as a view: a bare array of wchar_t converts to bool before it converts
+            // to a string view, and every layout file used to say "_comment": true.
+            writer.Write(KeyComment, std::wstring_view{ CommentText });
             writer.Write(KeyFileVersion, static_cast<int64_t>(document.FileVersion));
             writer.Write(KeyName, document.Name);
             writer.Write(KeyDescription, document.Description);

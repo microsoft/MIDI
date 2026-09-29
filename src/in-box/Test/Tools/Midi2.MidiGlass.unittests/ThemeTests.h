@@ -70,6 +70,7 @@ public:
     // ---- Five-iSH and Airy System, and what they added to the engine ----
 
     TEST_METHOD(FiveIshPrintsTwoInksOnTwoSurfaces);
+    TEST_METHOD(EveryThemesInkReadsOnItsInsetPanel);
     TEST_METHOD(FiveIshShowsColorOnlyInItsLamps);
     TEST_METHOD(ANeutralCapIsTheNeutralOnlyWhereTheThemeAsks);
     TEST_METHOD(AirySwitchesRestDarkWhileKnobsAndFadersStayLit);
@@ -84,6 +85,21 @@ public:
     TEST_METHOD(APadColorTypedInWinsAndABadOneFallsBack);
     TEST_METHOD(ATypedPadColorIsTheColorOfThePadOnEveryTheme);
     TEST_METHOD(PadsAreRimmedTheWayTheThemeRimsItsControls);
+
+    // ---- Off-world Colonies, Groovy, Groovy Dark and the Sector pair ----
+
+    TEST_METHOD(StripesAreCountedFromTheFirstUpToTheFirstGap);
+    TEST_METHOD(AnArcAndALampGlowFollowTheirOldValuesUntilNamed);
+    TEST_METHOD(ASlotIsMeasuredAgainstWhatItIsDrawnOn);
+    TEST_METHOD(ALitNameTakesTheOnInkOnlyWhereItReads);
+    TEST_METHOD(ARestingTintCanSitOnThePlate);
+    TEST_METHOD(AKeyIsASkirtWithADishedTopAndTheOtherKeyIsTheNeutral);
+    TEST_METHOD(AKeyThemeShowsOnWithItsLampAndItsTravel);
+    TEST_METHOD(AnUnlitMeterSegmentIsItsZoneTurnedDown);
+    TEST_METHOD(AValueInAWindowKeepsItsOwnColor);
+    TEST_METHOD(ANeonThemeHasAHotCoreAndAFlare);
+    TEST_METHOD(GroovyIsDrawnInHeavyFlatLines);
+    TEST_METHOD(OffWorldRepeatsItsWallAndDirtiesItsSections);
 };
 
 

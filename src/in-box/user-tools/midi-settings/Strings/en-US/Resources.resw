@@ -136,10 +136,10 @@
     <value>Bluetooth Setup</value>
   </data>
   <data name="NetworkSetupButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Network MIDI 2.0 Setup</value>
+    <value>Network MIDI Setup</value>
   </data>
   <data name="NetworkSetupButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Network MIDI 2.0 Setup</value>
+    <value>Network MIDI Setup</value>
   </data>
   <data name="NetworkSetupButtonText.Text" xml:space="preserve">
     <value>Network Setup</value>

@@ -227,12 +227,9 @@ namespace glass
         control.KeyboardOrder = NextKeyboardOrder(page);
         control.AspectLocked = IsSquareByNature(kind);
 
-        // A frame, not a filled box. A grouping panel that arrives as a solid plate competes
-        // with the controls it is there to group; Plate and Solid are one click away in the
-        // inspector for somebody who wants them.
+        // A group follows the theme like everything else; its name shows even where a theme hides names.
         if (kind == ControlKind::Panel)
         {
-            control.Style = ControlStyleOverride::Outline;
             control.LabelPlaced = LabelPlacementOverride::Inside;
         }
 

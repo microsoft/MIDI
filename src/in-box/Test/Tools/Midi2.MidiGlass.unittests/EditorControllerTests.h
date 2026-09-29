@@ -84,7 +84,7 @@ public:
 
     TEST_METHOD(ADroppedGroupPanelGoesToTheBack);
     TEST_METHOD(AGroupPanelSendsNothing);
-    TEST_METHOD(AGroupPanelArrivesAsAnOutline);
+    TEST_METHOD(AGroupPanelArrivesInTheThemesStyle);
 
     // ---- repeat ----
 

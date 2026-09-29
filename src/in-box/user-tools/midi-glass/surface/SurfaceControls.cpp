@@ -1861,12 +1861,15 @@ namespace glass
 
             auto const colors = ResolveControlColors(control, theme);
 
+            // In a window the time is the window's own light, not an ink meant for the page.
+            auto const windowed = itemIndex < m_visuals.size() && m_visuals[itemIndex].Windowed;
+
             controls::TextBlock text{};
 
             // Monospace, or every tenth of a second shuffles the digits sideways.
             text.FontFamily(media::FontFamily{ L"Cascadia Mono, Consolas" });
             text.FontSize(std::clamp(height * 0.42, 11.0, 48.0));
-            text.Foreground(media::SolidColorBrush{ ToWindowsColor(colors.Pipe) });
+            text.Foreground(media::SolidColorBrush{ ToWindowsColor(windowed ? colors.WellValue : colors.Pipe) });
             text.IsHitTestVisible(false);
             text.TextAlignment(xaml::TextAlignment::Center);
             text.Width(width);
@@ -2067,12 +2070,16 @@ namespace glass
 
             auto const usable = std::max(height - ClockPipStripHeight, 8.0);
 
+            // Printed on the page, or lit inside a window where the theme makes one.
+            auto const windowed = itemIndex < m_visuals.size() && m_visuals[itemIndex].Windowed;
+            auto const behind = windowed ? theme.WellColor : DeckColor();
+
             controls::TextBlock text{};
 
             // Monospace, so the number does not shuffle sideways every beat.
             text.FontFamily(media::FontFamily{ L"Cascadia Mono, Consolas" });
             text.FontSize(std::clamp(std::min(width, usable) * 0.18, 9.0, 20.0));
-            text.Foreground(media::SolidColorBrush{ ToWindowsColor(ReadableInk(DeckColor())) });
+            text.Foreground(media::SolidColorBrush{ ToWindowsColor(ReadableInk(behind)) });
             text.IsHitTestVisible(false);
             text.TextAlignment(xaml::TextAlignment::Center);
             text.Width(width);
@@ -2080,8 +2087,6 @@ namespace glass
 
             xaml::Automation::AutomationProperties::SetAccessibilityView(
                 text, xaml::Automation::Peers::AccessibilityView::Raw);
-
-            UNREFERENCED_PARAMETER(theme);
 
             text.Measure(winrt::Windows::Foundation::Size{
                 static_cast<float>(width), std::numeric_limits<float>::infinity() });
@@ -2102,7 +2107,7 @@ namespace glass
 
             tempo.FontFamily(media::FontFamily{ L"Cascadia Mono, Consolas" });
             tempo.FontSize(std::clamp(width * 0.10, 8.0, 12.0));
-            tempo.Foreground(media::SolidColorBrush{ ToWindowsColor(ReadableInk(DeckColor())) });
+            tempo.Foreground(media::SolidColorBrush{ ToWindowsColor(ReadableInk(behind)) });
             tempo.Opacity(0.7);
             tempo.IsHitTestVisible(false);
             tempo.TextAlignment(xaml::TextAlignment::Center);

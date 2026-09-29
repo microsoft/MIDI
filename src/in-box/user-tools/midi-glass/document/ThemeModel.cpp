@@ -1251,6 +1251,9 @@ namespace glass
                         theme.RestTintOnPlate = true;
                         theme.TouchFillPercent = 18;
 
+                        // A lamp is a ring of its color, and lit, a disc of it.
+                        theme.LampShape = LampStyle::Dot;
+
                         theme.NamesInsideSwitches = true;
                         theme.Labels = LabelPlacement::Below;
 
@@ -1371,7 +1374,10 @@ namespace glass
                         theme.GlowStrength = 0;
                         theme.RestingGlowPercent = 0;
                         theme.FillAtRest = 0.0;
-                        theme.TouchFillPercent = 0;
+
+                        // A key says it is held by going down. A knob or a fader has no travel,
+                        // so it takes a light wash of its LED's color under a finger instead.
+                        theme.TouchFillPercent = 14;
                         theme.PipeFalloff = 1.0;
                         theme.PlateSheenPercent = 0;
                         theme.ShadowSpread = 5;
@@ -1462,8 +1468,6 @@ namespace glass
                     soft.PanelColor = { 84, 70, 48, 18 };
                     soft.PanelOutlineColor = { 74, 62, 44, 36 };
                     soft.PanelRecessPercent = 20;
-                    soft.InsetPanelColor = Rgb(0x3D3A35);
-                    soft.InsetPanelEndColor = Rgb(0x2C2925);
                     soft.RuleColor = { 42, 39, 35, 71 };
                     soft.RecessLipColor = { 255, 255, 255, 140 };
 
