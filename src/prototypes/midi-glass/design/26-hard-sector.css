@@ -1,0 +1,463 @@
+/* =========================================================================
+   "HARD SECTOR" - Soft Sector's machine in charcoal: the black business
+   computers that came after the beige ones, with gray keys on a black case,
+   white print, and the same LEDs in the same black holders. Named for the
+   other kind of floppy disk.
+
+   THE SAME THEME IN THE DARK. Every size, offset, radius and rule here is
+   Soft Sector's, in the same order (screen 25, 25-soft-sector.css); only the
+   colors differ, and hardsector-verify.ps1 proves it by comparing the two
+   files with every color taken out. So it asks for nothing Soft Sector does
+   not: the keycap, key travel, smoked windows and the rest are the same
+   seven asks.
+
+   What the dark changes, measured in g:\midi-scratch\hardsector-contrast.ps1:
+
+   1. THE KEYS STAND OFF THE CASE BY VALUE NOW. A gray key is 2.26 : 1 from
+      the charcoal where Soft Sector's light key was 1.31 : 1 from the putty,
+      so the warm shadow that carried Soft Sector is only support here; the
+      lit back edge of the skirt does the rest.
+   2. A WINDOW IS GLOSS, NOT DARKNESS. Black acrylic in a charcoal case is
+      only 1.21 : 1, so what makes it a window is the reflection across it and
+      the lit lip under it.
+   3. AN LED WOULD READ BARE. The six measure 4.55 to 11.38 : 1 on the case
+      itself. They stay in their holders and windows anyway, because this is
+      Soft Sector's geometry and a display is still cut into the case.
+   4. THE GRAY KEY IS A TIGHT BAND. White print needs it below about #666669
+      to clear 4.5 : 1 on the dark far edge of the dish (4.96 here), and a
+      slider cap needs it above about #5D5D60 to clear 3 : 1 against its slot
+      (3.05). The key sits between the two.
+
+   Kept in its own file while other design sessions edit mock.css; every
+   selector carries .hardsector.
+   ========================================================================= */
+
+.surf.hardsector {
+    --deck: linear-gradient(180deg, #2F2E2D 0%, #2A2928 50%, #252423 100%);
+    --plate: #5E5E61;
+    --track: rgba(228, 227, 223, .22);
+    --on-hue: #E4E3DF;
+    --deck-ink: #E4E3DF;                 /* the print, on the case and on every key */
+    --deck-ink2: rgba(228, 227, 223, .72);
+    --grid1: rgba(228, 227, 223, .16);
+    --grid2: rgba(228, 227, 223, .06);
+    --tonal-rest: 0;
+    --tonal-held: 0;
+    --rim-rest: 0;
+    --tonal-radius: 4px;
+    --cap-shadow: 0 2px 3px rgba(0, 0, 0, .60);
+
+    --ink: 228, 227, 223;                /* #E4E3DF: every legend, value, scale and pointer */
+    --shade: 0, 0, 0;                    /* on charcoal a shadow can only be black */
+    --edge: rgba(0, 0, 0, .55);
+    --lift:
+        0 1px 0 rgba(0, 0, 0, .50),
+        0 2px 3px rgba(0, 0, 0, .45),
+        0 5px 9px rgba(0, 0, 0, .30);
+    --lift-low:                          /* latched: halfway down, so half the shadow */
+        0 1px 1px rgba(0, 0, 0, .50),
+        0 2px 4px rgba(0, 0, 0, .30);
+    --lift-none: 0 1px 1px rgba(0, 0, 0, .40);
+    --lip: 0 1px 0 rgba(255, 255, 255, .10);   /* the lower edge of anything cut into the case, catching what light there is */
+
+    /* the gray key: a keyboard's letters */
+    --key-skirt: linear-gradient(180deg, #69696C 0%, #5E5E61 38%, #4B4B4E 100%);
+    --key-top: linear-gradient(180deg, #5F5F62 0%, #636366 52%, #676769 100%);
+    --key-top-held: linear-gradient(180deg, #58585B 0%, #5C5C5F 52%, #606063 100%);
+    /* the black key: a keyboard's modifiers and function row, reached through the neutral slot */
+    --mod-skirt: linear-gradient(180deg, #3D3D3F 0%, #353537 38%, #28282A 100%);
+    --mod-top: linear-gradient(180deg, #303032 0%, #353537 52%, #38383A 100%);
+    --mod-top-held: linear-gradient(180deg, #2B2B2D 0%, #303032 52%, #333335 100%);
+
+    --window: linear-gradient(180deg, #121212 0%, #0B0B0B 100%);
+    --window-in: inset 0 2px 3px rgba(0, 0, 0, .70), inset 0 0 0 1px rgba(0, 0, 0, .70);
+    --gloss: linear-gradient(172deg, rgba(255, 255, 255, .06) 0 36%, rgba(255, 255, 255, 0) 36.5%);
+    --bezel: #0C0C0C;                    /* the black holder an LED sits in */
+    --slot: #0B0B0B;                     /* the inside of the case, seen through a slot */
+
+    /* the same six LEDs as Soft Sector: the parts did not change, only the plastic */
+    --h1: 143, 227,  60;   /* #8FE33C green  - the power light, and the default */
+    --h2: 255, 174,  42;   /* #FFAE2A amber  - turbo */
+    --h3: 255,  70,  49;   /* #FF4631 red    - the disk light, and the readout */
+    --h4: 246, 222,  58;   /* #F6DE3A yellow */
+    --h5: 255, 124,  34;   /* #FF7C22 orange */
+    --h6:  70, 214, 108;   /* #46D66C green  - the purer one a monitor's power switch had */
+}
+
+/* The stipple: the same noise and blend. Overlay is as symmetrical over a dark
+   case as over a light one, but the same spread reads stronger on charcoal, so
+   it is laid on at .40 rather than .55: 2.4 levels either way, not 3.2. */
+.surf.hardsector::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192'><filter id='t' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='3' seed='7' stitchTiles='stitch'/><feColorMatrix type='matrix' values='.33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 0 1'/></filter><rect width='192' height='192' filter='url(%23t)'/></svg>");
+    background-size: 192px 192px;
+    opacity: .40;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+}
+
+/* anything not drawn below is gray plastic standing on the case */
+.surf.hardsector .ctl {
+    border-radius: var(--tonal-radius);
+    background: var(--key-skirt);
+    box-shadow: inset 0 0 0 1px var(--edge), var(--lift);
+    color: var(--deck-ink);
+}
+
+/* ------------------------------------------------------------- keys */
+.surf.hardsector .ctl.btn-ctl {
+    z-index: 0;
+    align-items: flex-start; justify-content: flex-start;
+    background: var(--key-skirt);
+    box-shadow: inset 0 0 0 1px var(--edge), inset 0 -1px 0 rgba(0, 0, 0, .35), var(--lift);
+    color: var(--deck-ink);
+}
+.surf.hardsector .ctl.btn-ctl::before {
+    content: "";
+    position: absolute; z-index: -1;
+    left: 4px; right: 4px; top: 2px; bottom: 6px;
+    border-radius: 3px;
+    background: var(--key-top);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 0 0 .5px rgba(0, 0, 0, .40);
+}
+.surf.hardsector .ctl.btn-ctl .name {
+    position: absolute; left: 7px; top: 4px;
+    font-size: 9px; font-weight: 600; letter-spacing: .01em; line-height: 1.15;
+    color: var(--deck-ink); text-align: left; white-space: nowrap;
+}
+.surf.hardsector .ctl.btn-ctl .sub {
+    position: absolute; left: 7px; bottom: 8px;
+    font-size: 8px; font-weight: 500; line-height: 1;
+    color: var(--deck-ink); white-space: nowrap;
+}
+.surf.hardsector .ctl.btn-ctl .glyph { position: absolute; left: 7px; top: 4px; font-size: 10px; color: var(--deck-ink); }
+
+/* the neutral slot is the black key, and its LED lights the first slot */
+.surf.hardsector .neutral { --hue: var(--h1); }
+.surf.hardsector .ctl.btn-ctl.neutral { background: var(--mod-skirt); }
+.surf.hardsector .ctl.btn-ctl.neutral::before { background: var(--mod-top); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), 0 0 0 .5px rgba(0, 0, 0, .50); }
+
+/* the LED: the same lens in the same black holder */
+.surf.hardsector .pipe {
+    left: auto; right: 7px; top: 5px; bottom: auto;
+    width: 5px; height: 5px; border-radius: 50%;
+    background:
+        radial-gradient(circle at 38% 34%, rgba(255, 255, 255, .20) 0 18%, rgba(var(--hue), .30) 46%, rgba(var(--hue), .16) 100%),
+        var(--bezel);
+    box-shadow: 0 0 0 1px var(--bezel);
+}
+.surf.hardsector .pipe.lit,
+.surf.hardsector .ctl.on .pipe.lit {
+    background: radial-gradient(circle at 38% 34%, #FFFFFF 0 16%, rgb(var(--hue)) 52%, rgba(var(--hue), .90) 100%);
+    box-shadow: 0 0 0 1px var(--bezel), 0 0 4px 1px rgba(var(--hue), .85), 0 0 10px 3px rgba(var(--hue), .36);
+    opacity: 1;
+}
+
+/* on: latched halfway down, and the LED lights */
+.surf.hardsector .ctl.btn-ctl.on {
+    transform: translateY(1px);
+    background: var(--key-skirt);
+    box-shadow: inset 0 0 0 1px var(--edge), inset 0 -1px 0 rgba(0, 0, 0, .35), var(--lift-low);
+    color: var(--deck-ink);
+}
+.surf.hardsector .ctl.btn-ctl.neutral.on { background: var(--mod-skirt); }
+
+.surf.hardsector .ctl.btn-ctl.pad.on {
+    transform: none;
+    box-shadow: inset 0 0 0 1px var(--edge), inset 0 -1px 0 rgba(0, 0, 0, .35), var(--lift);
+}
+
+/* under a finger: all the way down, and the shadow gone */
+.surf.hardsector .ctl.btn-ctl.held {
+    transform: translateY(2px);
+    background: var(--key-skirt);
+    box-shadow: inset 0 0 0 1px var(--edge), var(--lift-none);
+}
+.surf.hardsector .ctl.btn-ctl.held::before { background: var(--key-top-held); }
+.surf.hardsector .ctl.btn-ctl.neutral.held { background: var(--mod-skirt); }
+.surf.hardsector .ctl.btn-ctl.neutral.held::before { background: var(--mod-top-held); }
+
+/* disabled: a blank, flush with the case, found by a faint light edge rather than a dark one */
+.surf.hardsector .ctl.btn-ctl.dim {
+    opacity: 1; transform: none;
+    background: linear-gradient(180deg, #2E2D2C 0%, #292827 100%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07);
+    color: rgba(228, 227, 223, .34);
+}
+.surf.hardsector .ctl.btn-ctl.dim::before { background: linear-gradient(180deg, #2C2B2A 0%, #2F2E2D 100%); box-shadow: none; }
+.surf.hardsector .ctl.btn-ctl.dim .name,
+.surf.hardsector .ctl.btn-ctl.dim .sub { color: rgba(228, 227, 223, .34); }
+.surf.hardsector .ctl.dim .pipe { background: var(--bezel); opacity: .45; }
+
+.surf.hardsector .ctl.btn-ctl.offline {
+    background:
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, .07) 0 6px, transparent 6px 12px),
+        var(--key-skirt);
+    box-shadow: inset 0 0 0 1px var(--edge), var(--lift-low);
+}
+.surf.hardsector .ctl.btn-ctl.offline::before {
+    background:
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, .06) 0 6px, transparent 6px 12px),
+        var(--key-top);
+}
+
+.surf.hardsector .ctl.btn-ctl.big::before { left: 6px; right: 6px; top: 3px; bottom: 9px; border-radius: 5px; }
+.surf.hardsector .ctl.btn-ctl.big .name { left: 12px; top: 8px; font-size: 12px; }
+.surf.hardsector .ctl.btn-ctl.big .pipe { right: 12px; top: 9px; width: 7px; height: 7px; }
+
+/* ------------------------------------------------------------- lamps */
+.surf.hardsector .ctl.led {
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 38% 34%, rgba(255, 255, 255, .20) 0 16%, rgba(var(--hue), .30) 46%, rgba(var(--hue), .16) 100%),
+        var(--bezel);
+    box-shadow: 0 0 0 2px var(--bezel), 0 1px 0 2px rgba(255, 255, 255, .10);
+}
+.surf.hardsector .ctl.led.on {
+    background: radial-gradient(circle at 38% 34%, #FFFFFF 0 14%, rgb(var(--hue)) 50%, rgba(var(--hue), .90) 100%);
+    box-shadow:
+        0 0 0 2px var(--bezel),
+        0 1px 0 2px rgba(255, 255, 255, .10),
+        0 0 7px 3px rgba(var(--hue), .70),
+        0 0 16px 6px rgba(var(--hue), .28);
+}
+
+/* ------------------------------------------------ smoked windows */
+/* black acrylic in a charcoal case: the gloss and the lip make it a window */
+.surf.hardsector .ctl.display,
+.surf.hardsector .meter,
+.surf.hardsector .steps,
+.surf.hardsector .xy {
+    border-radius: 3px;
+    background: var(--gloss), var(--window);
+    box-shadow: var(--window-in), var(--lip);
+}
+.surf.hardsector .ctl.display { align-items: flex-end; justify-content: center; padding: 0 9px; }
+.surf.hardsector .ctl.display .digits {
+    font-family: "Cascadia Mono", "Consolas", monospace;
+    font-size: 21px; letter-spacing: .04em; line-height: 1;
+    color: rgb(var(--hue));
+    text-shadow: 0 0 6px rgba(var(--hue), .70), 0 0 14px rgba(var(--hue), .30);
+}
+.surf.hardsector .ctl.display.small .digits { font-size: 16px; }
+
+/* named again, for the same specificity reason as every theme before it */
+.surf.hardsector .meter { padding: 5px 5px; gap: 2px; }
+.surf.hardsector .meter i { height: 5px; border-radius: 1px; background: rgba(var(--h1), .15); box-shadow: none; }
+.surf.hardsector .meter i.warn { background: rgba(var(--h2), .15); }
+.surf.hardsector .meter i.hot { background: rgba(var(--h3), .17); }
+.surf.hardsector .meter i.lit { background: rgb(var(--h1)); box-shadow: 0 0 5px rgba(var(--h1), .70); }
+.surf.hardsector .meter i.lit.warn { background: rgb(var(--h2)); box-shadow: 0 0 5px rgba(var(--h2), .70); }
+.surf.hardsector .meter i.lit.hot { background: rgb(var(--h3)); box-shadow: 0 0 5px rgba(var(--h3), .70); }
+
+.surf.hardsector .steps { padding: 13px 10px; }
+.surf.hardsector .steps .row { gap: 5px; }
+.surf.hardsector .steps .row i { border-radius: 2px; background: rgba(var(--hue), .18); box-shadow: none; }
+.surf.hardsector .steps .row i:nth-child(4n+1):not(:first-child) { margin-left: 6px; }
+.surf.hardsector .steps .row i.on { background: rgb(var(--hue)); box-shadow: 0 0 5px rgba(var(--hue), .75), 0 0 11px rgba(var(--hue), .30); }
+.surf.hardsector .steps .row i.cur { box-shadow: 0 0 0 1.5px rgba(var(--h2), .95), 0 0 7px rgba(var(--h2), .60); }
+
+.surf.hardsector .xy .field2 { inset: 4px; border-radius: 2px; }
+.surf.hardsector .xy .field2::before {
+    background-image:
+        linear-gradient(rgba(var(--hue), .12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--hue), .12) 1px, transparent 1px);
+}
+.surf.hardsector .xy .cross { background: rgba(var(--hue), .50); box-shadow: 0 0 5px rgba(var(--hue), .45); }
+.surf.hardsector .xy .trail { background: rgba(var(--hue), .28); }
+.surf.hardsector .xy .puck {
+    width: 12px; height: 12px; margin: -6px 0 0 -6px;
+    background: radial-gradient(circle at 38% 34%, #FFFFFF 0 14%, rgb(var(--hue)) 52%, rgba(var(--hue), .90) 100%);
+    box-shadow: 0 0 8px 2px rgba(var(--hue), .75), 0 0 20px 5px rgba(var(--hue), .30);
+}
+
+.surf.hardsector .lfo { padding: 0; background: none; box-shadow: none; }
+.surf.hardsector .lfo .lwell {
+    position: absolute; inset: 0; border-radius: 3px;
+    background: var(--gloss), var(--window);
+    box-shadow: var(--window-in), var(--lip);
+}
+.surf.hardsector .lfo svg { position: absolute; left: 8px; top: 7px; width: calc(100% - 16px); height: calc(100% - 14px); }
+
+/* ------------------------------------------------------------ knobs */
+/* the same ridged knob in gray, with the value printed round it in white */
+.surf.hardsector .knob { background: none; box-shadow: none; }
+.surf.hardsector .knob .dial { background: none; box-shadow: none; }
+.surf.hardsector .knob .dial::before {
+    content: "";
+    position: absolute; inset: -9px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(from 224.2deg,
+        rgba(var(--ink), .60) 0 1.6deg, transparent 1.6deg 27deg);
+    -webkit-mask:
+        radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 5px)),
+        conic-gradient(from 222deg, #000 0 276deg, transparent 276deg 360deg);
+    -webkit-mask-composite: source-in;
+    mask:
+        radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 5px)),
+        conic-gradient(from 222deg, #000 0 276deg, transparent 276deg 360deg);
+    mask-composite: intersect;
+    pointer-events: none;
+}
+.surf.hardsector .knob.nomarks .dial::before { display: none; }
+.surf.hardsector .knob .arc {
+    inset: 0;
+    background: conic-gradient(from 225deg,
+        rgb(var(--ink)) 0turn var(--pct, .35turn),
+        rgba(var(--ink), .22) var(--pct, .35turn) .75turn,
+        transparent .75turn 1turn);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+    filter: none;
+}
+.surf.hardsector .knob .skirt {
+    position: absolute; inset: 14%; border-radius: 50%;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, .35) 100%),
+        repeating-conic-gradient(from 0deg, #7A7A7D 0 5deg, #3A3A3D 5deg 10deg);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .65), var(--lift);
+}
+.surf.hardsector .knob .knobcap {
+    position: absolute; inset: 24%; border-radius: 50%;
+    background: radial-gradient(circle at 50% 30%, #737376 0%, #666669 50%, #56565A 100%);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .35), 0 0 0 1px rgba(255, 255, 255, .08);
+}
+.surf.hardsector .knob .ptr {
+    left: 50%; top: 27%; width: 2px; height: 15%; margin-left: -1px;
+    border-radius: 1px;
+    background: rgb(var(--ink));
+    box-shadow: none;
+    transform-origin: 50% 153.3%;
+}
+.surf.hardsector .knob.big .ptr { width: 3px; margin-left: -1.5px; }
+.surf.hardsector .knob .kval { color: var(--deck-ink); }
+
+/* ------------------------------------------------------------ sliders */
+/* the slot is barely darker than the case here; the cap and its white line carry it */
+.surf.hardsector .fader { background: none; box-shadow: none; }
+.surf.hardsector .fader .slot {
+    width: 5px; border-radius: 3px;
+    background: var(--slot);
+    box-shadow: inset 0 2px 2px rgba(0, 0, 0, .80), 0 1px 0 rgba(255, 255, 255, .10);
+}
+.surf.hardsector .fader .fill { background: none; box-shadow: none; }
+.surf.hardsector .fader .capbar {
+    left: -11px; right: -11px; height: 16px;
+    border-radius: 3px;
+    background: var(--key-skirt);
+    box-shadow: inset 0 0 0 1px var(--edge), var(--lift);
+}
+.surf.hardsector .fader .capbar::before {
+    content: "";
+    position: absolute; left: 3px; right: 3px; top: 1px; bottom: 4px;
+    border-radius: 2px;
+    background: var(--key-top);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16);
+}
+.surf.hardsector .fader .capbar::after {
+    left: 5px; right: 5px; top: 50%; height: 2px; margin-top: -2.5px;
+    border-radius: 0;
+    background: rgb(var(--ink));
+    box-shadow: none;
+    opacity: 1;
+}
+.surf.hardsector .fader.neutral .capbar { background: var(--mod-skirt); }
+.surf.hardsector .fader.neutral .capbar::before { background: var(--mod-top); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10); }
+.surf.hardsector .fader .ticks i {
+    width: 30px; margin-left: -15px;
+    background: linear-gradient(90deg,
+        rgba(var(--ink), .55) 0 24%, transparent 24% 76%, rgba(var(--ink), .55) 76% 100%);
+}
+.surf.hardsector .fader.horiz .slot { width: auto; height: 5px; }
+.surf.hardsector .fader.horiz .capbar { top: -11px; bottom: -11px; left: auto; right: auto; width: 16px; height: auto; }
+.surf.hardsector .fader.horiz .capbar::before { left: 1px; right: 4px; top: 3px; bottom: 3px; }
+.surf.hardsector .fader.horiz .capbar::after {
+    top: 5px; bottom: 5px; left: 50%; right: auto;
+    width: 2px; height: auto; margin: 0 0 0 -2.5px;
+}
+
+/* ------------------------------------------------------------ wheels */
+.surf.hardsector .wheel {
+    padding: 4px 0; border-radius: 3px;
+    background: var(--slot);
+    box-shadow: inset 0 2px 3px rgba(0, 0, 0, .80), 0 1px 0 rgba(255, 255, 255, .10);
+}
+.surf.hardsector .wheel .body {
+    margin: 0 3px; border-radius: 3px;
+    background: linear-gradient(90deg, #2E2E31 0%, #5E5E61 30%, #6F6F72 50%, #5E5E61 70%, #2E2E31 100%);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .50);
+}
+.surf.hardsector .wheel .body::after {
+    content: "";
+    position: absolute; inset: 0; border-radius: 3px;
+    background: linear-gradient(180deg,
+        rgba(0, 0, 0, .60) 0%, rgba(0, 0, 0, 0) 24%, rgba(0, 0, 0, 0) 76%, rgba(0, 0, 0, .60) 100%);
+}
+.surf.hardsector .wheel .ridges { background: repeating-linear-gradient(180deg, rgba(0, 0, 0, .45) 0 1px, transparent 1px 4px); }
+.surf.hardsector .wheel .ind { left: 2px; right: 2px; height: 2px; border-radius: 0; background: rgb(var(--ink)); box-shadow: none; }
+.surf.hardsector .wheel .center { display: none; }
+
+/* ---------------------------------------------- sections, text, tabs */
+/* a tray in charcoal: its shadow has little left to darken, so its lit lower lip shows it */
+.surf.hardsector .ctlpanel {
+    border-radius: 6px;
+    background: rgba(0, 0, 0, .16);
+    box-shadow:
+        inset 0 2px 3px rgba(0, 0, 0, .50),
+        inset 0 -1px 0 rgba(255, 255, 255, .08),
+        inset 0 0 0 1px rgba(0, 0, 0, .30);
+}
+.surf.hardsector .ctlpanel > .ptitle {
+    top: 6px; left: 10px; padding: 0;
+    background: none;
+    font-size: 8.5px; font-weight: 700; letter-spacing: .16em;
+    color: var(--deck-ink);
+}
+/* a drive's faceplate: glossy black in matte charcoal */
+.surf.hardsector .ctlpanel.inset {
+    border-radius: 2px;
+    background: linear-gradient(180deg, #19191A 0%, #121213 50%, #0E0E0F 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), inset 0 0 0 1px rgba(0, 0, 0, .70), 0 1px 1px rgba(255, 255, 255, .07);
+}
+
+.surf.hardsector .surftext.readout { color: var(--deck-ink); text-shadow: none; }
+.surf.hardsector .surfrule { background: rgba(var(--ink), .28); }
+
+/* a page tab is a function key: black, and the one you are on is latched with its LED lit */
+.surf.hardsector .pagetabs .tab {
+    position: relative; z-index: 0;
+    align-items: flex-start;
+    border-radius: 4px;
+    background: var(--mod-skirt);
+    box-shadow: inset 0 0 0 1px var(--edge), var(--lift);
+    color: var(--deck-ink);
+    font-weight: 600;
+}
+.surf.hardsector .pagetabs .tab::before {
+    content: "";
+    position: absolute; z-index: -1;
+    left: 4px; right: 4px; top: 2px; bottom: 5px;
+    border-radius: 3px;
+    background: var(--mod-top);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10);
+}
+.surf.hardsector .pagetabs .tab::after {
+    content: "";
+    position: absolute; right: 7px; top: 5px;
+    width: 5px; height: 5px; border-radius: 50%;
+    background:
+        radial-gradient(circle at 38% 34%, rgba(255, 255, 255, .20) 0 18%, rgba(var(--h1), .30) 46%, rgba(var(--h1), .16) 100%),
+        var(--bezel);
+    box-shadow: 0 0 0 1px var(--bezel);
+}
+.surf.hardsector .pagetabs .tab.sel {
+    transform: translateY(1px);
+    background: var(--mod-skirt);
+    box-shadow: inset 0 0 0 1px var(--edge), var(--lift-low);
+    color: var(--deck-ink);
+}
+.surf.hardsector .pagetabs .tab.sel::after {
+    background: radial-gradient(circle at 38% 34%, #FFFFFF 0 16%, rgb(var(--h1)) 52%, rgba(var(--h1), .90) 100%);
+    box-shadow: 0 0 0 1px var(--bezel), 0 0 4px 1px rgba(var(--h1), .85), 0 0 10px 3px rgba(var(--h1), .36);
+}
