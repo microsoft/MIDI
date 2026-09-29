@@ -25,7 +25,14 @@ At the time of this writing, we ship the following transports in the box:
 - **MIDI 2.0 Loopback (LOOP)** for simply connecting two apps using bidirectional MIDI 2.0 loopbacks
 - **MIDI 2.0 device app (APP)** for app-to-app MIDI with MIDI 2.0 discovery and protocol negotiation
 
-In the future, we have plans for BLE MIDI 1.0, Network MIDI 2.0 (demonstrated at NAMM Show 2025 and 2026), a virtual patch bay / router, and others.
+These transports are in preview, and are installed separately from Windows:
+
+- **Bluetooth MIDI (BLEMIDI)** for Bluetooth Low Energy MIDI 1.0 devices, and the draft Bluetooth MIDI 2.0
+- **Network MIDI 2.0 (NET2UDP)** for MIDI 2.0 and MIDI 1.0 over a network, with computers and devices that support it
+- **RTP-MIDI (RTPMIDI)** for network MIDI 1.0 with macOS, iOS, and the many interfaces and apps that use it
+- **General MIDI Synth (GMSYNTH)** for playing MIDI through your PC's audio, with MIDI 2.0 and MIDI-CI support
+
+In the future, we have plans for a virtual patch bay / router, and others.
 
 If Developer Mode is not turned on in Windows Settings, all service plugins must be signed with a valid certificate by an authority that is recognized on the PC. The ones shipped with Windows are signed by Microsoft
 
