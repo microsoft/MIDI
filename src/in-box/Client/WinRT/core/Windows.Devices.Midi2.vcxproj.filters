@@ -719,6 +719,9 @@
     <Midl Include="MidiBluetoothRememberedClient.idl">
       <Filter>SDK\Transports\Bluetooth</Filter>
     </Midl>
+    <Midl Include="MidiBluetoothConfiguredDevice.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
     <Midl Include="MidiBluetoothTransportManager.idl">
       <Filter>SDK\Transports\Bluetooth</Filter>
     </Midl>

@@ -139,6 +139,7 @@
     <ClInclude Include="cmd_loopback.h" />
     <ClInclude Include="cmd_synth.h" />
     <ClInclude Include="cmd_network.h" />
+    <ClInclude Include="cmd_rtp.h" />
     <ClInclude Include="cmd_sysex.h" />
     <ClInclude Include="cmd_system.h" />
     <ClInclude Include="console_output.h" />
@@ -170,6 +171,7 @@
     <ClCompile Include="cmd_loopback.cpp" />
     <ClCompile Include="cmd_synth.cpp" />
     <ClCompile Include="cmd_network.cpp" />
+    <ClCompile Include="cmd_rtp.cpp" />
     <ClCompile Include="cmd_sysex.cpp" />
     <ClCompile Include="cmd_system.cpp" />
     <ClCompile Include="..\midi-app-shared\BeatClockGenerator.cpp" />

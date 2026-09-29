@@ -19,6 +19,7 @@
 #include "cmd_loopback.h"
 #include "cmd_synth.h"
 #include "cmd_network.h"
+#include "cmd_rtp.h"
 #include "cmd_sysex.h"
 #include "cmd_system.h"
 #include "console_output.h"
@@ -617,6 +618,39 @@ int main()
     auto networkStatusCommand = networkCommand->add_subcommand("status", ResourceString(IDS_CMD_NET_STATUS));
     networkStatusCommand->add_flag("-v,--verbose", networkStatusOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
 
+    // ---------------------------------------------------------------- rtp
+
+    auto rtpCommand = app.add_subcommand("rtp", ResourceString(IDS_CMD_RTP));
+    rtpCommand->alias("rtp-midi");
+    rtpCommand->alias("rtpmidi");
+    rtpCommand->require_subcommand(1);
+
+    RtpListOptions rtpHostsOptions{};
+
+    auto rtpHostsCommand = rtpCommand->add_subcommand("list-hosts", ResourceString(IDS_CMD_RTP_HOSTS));
+    rtpHostsCommand->alias("hosts");
+    rtpHostsCommand->add_flag("-v,--verbose", rtpHostsOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
+
+    RtpListOptions rtpClientsOptions{};
+
+    auto rtpClientsCommand = rtpCommand->add_subcommand("list-clients", ResourceString(IDS_CMD_RTP_CLIENTS));
+    rtpClientsCommand->alias("clients");
+    rtpClientsCommand->add_flag("-v,--verbose", rtpClientsOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
+
+    RtpListOptions rtpBrowseOptions{};
+
+    auto rtpBrowseCommand = rtpCommand->add_subcommand("browse", ResourceString(IDS_CMD_RTP_BROWSE));
+    rtpBrowseCommand->alias("advertised");
+    rtpBrowseCommand->alias("mdns");
+    rtpBrowseCommand->add_flag("-v,--verbose", rtpBrowseOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
+
+    auto rtpPendingCommand = rtpCommand->add_subcommand("pending", ResourceString(IDS_CMD_RTP_PENDING));
+
+    RtpListOptions rtpStatusOptions{};
+
+    auto rtpStatusCommand = rtpCommand->add_subcommand("status", ResourceString(IDS_CMD_RTP_STATUS));
+    rtpStatusCommand->add_flag("-v,--verbose", rtpStatusOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
+
     // ---------------------------------------------------------------- bluetooth
 
     auto bluetoothCommand = app.add_subcommand("bluetooth", ResourceString(IDS_CMD_BLUETOOTH));
@@ -842,6 +876,12 @@ int main()
         if (networkBrowseCommand->parsed())         return RunNetworkBrowseCommand(networkBrowseOptions);
         if (networkPendingCommand->parsed())        return RunNetworkPendingCommand();
         if (networkStatusCommand->parsed())         return RunNetworkStatusCommand(networkStatusOptions);
+
+        if (rtpHostsCommand->parsed())              return RunRtpHostsCommand(rtpHostsOptions);
+        if (rtpClientsCommand->parsed())            return RunRtpClientsCommand(rtpClientsOptions);
+        if (rtpBrowseCommand->parsed())             return RunRtpBrowseCommand(rtpBrowseOptions);
+        if (rtpPendingCommand->parsed())            return RunRtpPendingCommand();
+        if (rtpStatusCommand->parsed())             return RunRtpStatusCommand(rtpStatusOptions);
 
         if (bluetoothListCommand->parsed())         return RunBluetoothListCommand();
         if (bluetoothStatusCommand->parsed())       return RunBluetoothStatusCommand();

@@ -531,6 +531,9 @@
     <ClInclude Include="MidiBluetoothRememberedClient.h">
       <DependentUpon>MidiBluetoothRememberedClient.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiBluetoothConfiguredDevice.h">
+      <DependentUpon>MidiBluetoothConfiguredDevice.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiBluetoothOfflineRetentionConfig.h">
       <DependentUpon>MidiBluetoothOfflineRetentionConfig.idl</DependentUpon>
     </ClInclude>
@@ -1135,6 +1138,9 @@
     <ClCompile Include="MidiBluetoothRememberedClient.cpp">
       <DependentUpon>MidiBluetoothRememberedClient.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiBluetoothConfiguredDevice.cpp">
+      <DependentUpon>MidiBluetoothConfiguredDevice.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiBluetoothOfflineRetentionConfig.cpp">
       <DependentUpon>MidiBluetoothOfflineRetentionConfig.idl</DependentUpon>
     </ClCompile>
@@ -1587,6 +1593,7 @@
     <Midl Include="MidiBluetoothPeripheralErrorCodeEnum.idl" />
     <Midl Include="MidiBluetoothPeripheralClientDecisionResponse.idl" />
     <Midl Include="MidiBluetoothRememberedClient.idl" />
+    <Midl Include="MidiBluetoothConfiguredDevice.idl" />
     <Midl Include="MidiBluetoothOfflineRetentionConfig.idl" />
     <Midl Include="MidiBluetoothOfflineRetentionEnum.idl" />
     <Midl Include="MidiSynthRenderModeEnum.idl" />

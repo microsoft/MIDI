@@ -42,6 +42,7 @@ public:
     TEST_METHOD(TestEightRemotesWithMidiBothWays);
     TEST_METHOD(TestConnectionChurn);
     TEST_METHOD(TestRemoveHost);
+    TEST_METHOD(TestAutomaticHostReportsMissingTheDefaultPort);
 
     // who may connect, in RtpMidiApprovalTests.cpp
     TEST_METHOD(TestInvitationIsHeldUntilApprovedOnce);

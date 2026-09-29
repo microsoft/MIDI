@@ -2759,8 +2759,13 @@ namespace winrt::midinetworksetup::implementation
                     }
                     else if (host.HasStarted())
                     {
+                        // an automatic host wanted the default port
+                        auto const wantedPort = host.ConfiguredPort() == MIDI_CONFIG_JSON_RTP_MIDI_PORT_VALUE_AUTO ?
+                            winrt::to_hstring(midi2rtp::MidiRtpTransportManager::DefaultHostPort()) :
+                            host.ConfiguredPort();
+
                         status = host.UsedPortFallback() ?
-                            res::FormatString(L"HostStartedPortFallbackFormat", host.ActualPort(), host.ConfiguredPort()) :
+                            res::FormatString(L"HostStartedPortFallbackFormat", host.ActualPort(), wantedPort) :
                             res::FormatString(L"HostStartedFormat", host.ActualPort());
                     }
                     else if (host.LastErrorCode() != 0)

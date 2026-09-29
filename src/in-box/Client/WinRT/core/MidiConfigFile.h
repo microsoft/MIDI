@@ -30,6 +30,11 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             _In_ winrt::guid const& transportId,
             _In_ json::JsonObject const& transportSection) noexcept;
 
+        // One transport's saved section, or null when there is no file, no section, or the file
+        // cannot be read. Never blocks a writer.
+        static json::JsonObject LoadTransportSection(
+            _In_ winrt::guid const& transportId) noexcept;
+
         // Empty when no configuration file is registered on this PC.
         static std::wstring ResolvePath() noexcept;
 

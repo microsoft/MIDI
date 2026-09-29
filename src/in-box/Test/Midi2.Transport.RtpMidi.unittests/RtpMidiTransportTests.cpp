@@ -81,6 +81,41 @@ namespace
             return (word >> 28) == 2 && ((word >> 20) & 0xF) != 0 && (((word >> 16) & 0xF0) == 0x90 || ((word >> 16) & 0xF0) == 0x80);
         }));
     }
+
+    // Keeps a UDP port away from a host. Held() is false when something else on the PC has it already.
+    class UdpPortHolder
+    {
+    public:
+        explicit UdpPortHolder(uint16_t const port)
+        {
+            m_socket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+            if (m_socket == INVALID_SOCKET) return;
+
+            DWORD const off{ 0 };
+            setsockopt(m_socket, IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char const*>(&off), sizeof(off));
+
+            sockaddr_in6 local{};
+            local.sin6_family = AF_INET6;
+            local.sin6_addr = in6addr_any;
+            local.sin6_port = htons(port);
+
+            m_held = bind(m_socket, reinterpret_cast<sockaddr const*>(&local), sizeof(local)) == 0;
+        }
+
+        ~UdpPortHolder()
+        {
+            if (m_socket != INVALID_SOCKET) closesocket(m_socket);
+        }
+
+        UdpPortHolder(UdpPortHolder const&) = delete;
+        UdpPortHolder& operator=(UdpPortHolder const&) = delete;
+
+        bool Held() const noexcept { return m_held; }
+
+    private:
+        SOCKET m_socket{ INVALID_SOCKET };
+        bool m_held{ false };
+    };
 }
 
 json::JsonObject RtpMidiTransportTests::Send(std::wstring const& text, HRESULT* result)
@@ -678,4 +713,21 @@ void RtpMidiTransportTests::TestRemoveHost()
     VERIFY_IS_TRUE(WaitFor([&]() { return FindHost(hostId) == nullptr; }, 3000), L"the host is gone");
     VERIFY_IS_FALSE(IsSuccess(Send(Command(L"removeHost", { { L"entryIdentifier", hostId } }))), L"removing it again fails");
     VERIFY_IS_TRUE(FindHost(m_hostId) != nullptr, L"the shared host is untouched");
+}
+
+void RtpMidiTransportTests::TestAutomaticHostReportsMissingTheDefaultPort()
+{
+    // Held by this test or by other RTP-MIDI software on the PC: either way the host cannot have it
+    UdpPortHolder const holder{ 5004 };
+    Log::Comment(holder.Held() ? L"This test holds port 5004" : L"Something else on this PC already holds port 5004");
+
+    uint16_t port{ 0 };
+    auto const hostId = CreateHost(L"\"name\":\"Port Fallback Host\"", port);
+
+    auto const host = FindHost(hostId);
+    RemoveHost(hostId);
+
+    VERIFY_ARE_NOT_EQUAL(static_cast<uint32_t>(port), 5004u, L"the host started on another port");
+    VERIFY_IS_TRUE(std::wstring{ host.GetNamedString(L"configuredPort", L"") } == L"auto", L"it was set up to choose its own port");
+    VERIFY_IS_TRUE(host.GetNamedBoolean(L"portFallbackUsed", false), L"and it says it did not get the one it wanted");
 }

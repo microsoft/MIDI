@@ -39,6 +39,9 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         constexpr uint32_t SharingRetryCount = 20;
         constexpr uint32_t SharingRetryWaitMilliseconds = 100;
 
+        // A read which lands while a save is rewriting the file sees something that does not parse
+        constexpr uint32_t ReadRetryCount = 3;
+
         std::wstring_view IdentityKeyForArray(_In_ std::wstring_view const arrayKey) noexcept
         {
             for (auto const& rule : KeyedArrayRules)
@@ -854,6 +857,38 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
         std::mutex g_pathOverrideLock{};
         std::wstring g_pathOverride{};
+
+        // Matched without regard to case, the same way a save finds the section it merges into
+        json::JsonObject FindTransportSection(
+            _In_ json::JsonObject const& config,
+            _In_ winrt::guid const& transportId)
+        {
+            if (config == nullptr || !config.HasKey(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT))
+            {
+                return nullptr;
+            }
+
+            auto const pluginSettings = config.GetNamedValue(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
+
+            if (pluginSettings == nullptr || pluginSettings.ValueType() != json::JsonValueType::Object)
+            {
+                return nullptr;
+            }
+
+            auto const transportKey = internal::ToUpperTrimmedWStringCopy(internal::GuidToString(transportId));
+
+            for (auto const& pair : pluginSettings.GetObject())
+            {
+                if (internal::ToUpperTrimmedWStringCopy(std::wstring{ pair.Key() }) == transportKey &&
+                    pair.Value() != nullptr &&
+                    pair.Value().ValueType() == json::JsonValueType::Object)
+                {
+                    return pair.Value().GetObject();
+                }
+            }
+
+            return nullptr;
+        }
     }
 
 
@@ -1252,5 +1287,67 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             outcome.Result = svc::MidiServiceConfigSaveResult::ErrorUnexpected;
             return outcome;
         }
+    }
+
+    _Use_decl_annotations_
+    json::JsonObject MidiConfigFile::LoadTransportSection(
+        winrt::guid const& transportId) noexcept
+    {
+        try
+        {
+            auto const path = ResolvePath();
+
+            if (path.empty())
+            {
+                return nullptr;
+            }
+
+            for (uint32_t attempt = 0; attempt < ReadRetryCount; attempt++)
+            {
+                // A save holds the file for writing and shares only reading, so a reader must share
+                // writing too or it cannot open the file at all while a save is under way.
+                wil::unique_hfile file{ ::CreateFileW(
+                    path.c_str(),
+                    GENERIC_READ,
+                    FILE_SHARE_READ | FILE_SHARE_WRITE,
+                    nullptr,
+                    OPEN_EXISTING,
+                    FILE_ATTRIBUTE_NORMAL,
+                    nullptr) };
+
+                if (!file)
+                {
+                    auto const error = ::GetLastError();
+
+                    if (error != ERROR_SHARING_VIOLATION && error != ERROR_LOCK_VIOLATION)
+                    {
+                        return nullptr;
+                    }
+                }
+                else
+                {
+                    std::string bytes{};
+
+                    if (!ReadWholeFile(file.get(), bytes) || bytes.empty())
+                    {
+                        return nullptr;
+                    }
+
+                    json::JsonObject config{ nullptr };
+
+                    if (json::JsonObject::TryParse(winrt::hstring{ FromUtf8(bytes) }, config) && config != nullptr)
+                    {
+                        return FindTransportSection(config, transportId);
+                    }
+                }
+
+                ::Sleep(SharingRetryWaitMilliseconds);
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return nullptr;
     }
 }

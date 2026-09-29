@@ -23,7 +23,7 @@ Returned by `MidiRtpTransportManager.GetConfiguredHosts()`.
 | `ConfiguredPort` | The port the host was set up to use, or `auto`. Compare it with `ActualPort` to see whether the host got the port that was asked for |
 | `ActualPort` | The UDP port the host is using. RTP-MIDI also uses the port after it. Zero until the host has started |
 | `AllowPortFallback` | True when the host was allowed to start on another port if the one it was set up with was in use |
-| `UsedPortFallback` | True when that happened. The host works, but not on the port that was asked for, so it's worth showing people |
+| `UsedPortFallback` | True when the host couldn't have the port it wanted, so it started on another one. For a host set to `auto`, that means port 5004 was already in use, often by other RTP-MIDI software on the same PC. The host works, but not on the port that was asked for, so it's worth showing people |
 | `SendRecoveryJournal` | True if the host sends a recovery journal with each packet |
 | `RemoteClientPolicy` | What the host does when a remote device it hasn't been told about asks to connect. See `MidiRtpRemoteClientPolicy` |
 | `KnownRemoteClients` | The remote devices this host has been told to allow or deny for good, as `MidiRtpKnownRemoteClient` entries |

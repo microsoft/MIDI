@@ -19,7 +19,9 @@
 #include "MidiBluetoothPeripheralClient.h"
 #include "MidiBluetoothPeripheralClientDecisionResponse.h"
 #include "MidiBluetoothRadioInformation.h"
+#include "MidiBluetoothConfiguredDevice.h"
 
+#include "MidiConfigFile.h"
 #include "MidiReporting.h"
 #include "MidiServiceConfigResponse.h"
 #include "MidiServiceTransportCommand.h"
@@ -105,6 +107,73 @@ namespace
 
         return *status;
     }
+
+    // The same 12 hex digit form the transport reports, or empty for anything that is not a whole
+    // address, which the service skips too
+    winrt::hstring NormalizedBluetoothDeviceId(_In_ winrt::hstring const& value) noexcept
+    {
+        wchar_t digits[13]{};
+        size_t count{ 0 };
+
+        for (auto const ch : value)
+        {
+            if (ch == L':' || ch == L'-' || ch == L' ')
+            {
+                continue;
+            }
+
+            auto const isHexDigit =
+                (ch >= L'0' && ch <= L'9') ||
+                (ch >= L'A' && ch <= L'F') ||
+                (ch >= L'a' && ch <= L'f');
+
+            if (!isHexDigit || count == 12)
+            {
+                return {};
+            }
+
+            digits[count++] = (ch >= L'a' && ch <= L'f') ? static_cast<wchar_t>(ch - (L'a' - L'A')) : ch;
+        }
+
+        return count == 12 ? winrt::hstring{ digits } : winrt::hstring{};
+    }
+
+    winrt::hstring StringValueOrEmpty(
+        _In_ json::JsonObject const& jsonObject,
+        _In_ winrt::hstring const& key) noexcept
+    {
+        try
+        {
+            if (auto const value = jsonObject.TryLookup(key); value != nullptr && value.ValueType() == json::JsonValueType::String)
+            {
+                return value.GetString();
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
+    // Matches the service, which treats a missing or unreadable flag as enabled
+    bool BooleanValueOrTrue(
+        _In_ json::JsonObject const& jsonObject,
+        _In_ winrt::hstring const& key) noexcept
+    {
+        try
+        {
+            if (auto const value = jsonObject.TryLookup(key); value != nullptr && value.ValueType() == json::JsonValueType::Boolean)
+            {
+                return value.GetBoolean();
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return true;
+    }
 }
 
 namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
@@ -156,6 +225,63 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         }
 
         return static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::KeepAlways);
+    }
+
+    collections::IVectorView<bluetooth::MidiBluetoothConfiguredDevice> MidiBluetoothTransportManager::GetConfiguredDevices() noexcept
+    {
+        auto devices = winrt::single_threaded_vector<bluetooth::MidiBluetoothConfiguredDevice>();
+
+        try
+        {
+            // The service only reads this section at start, and connecting and saving are separate
+            // steps, so what is saved is not something the running transport can report.
+            auto const section = svc::implementation::MidiConfigFile::LoadTransportSection(TransportId());
+
+            if (section == nullptr)
+            {
+                return devices.GetView();
+            }
+
+            auto const devicesValue = section.TryLookup(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICES_ARRAY_KEY);
+
+            if (devicesValue == nullptr || devicesValue.ValueType() != json::JsonValueType::Array)
+            {
+                return devices.GetView();
+            }
+
+            for (auto const& entry : devicesValue.GetArray())
+            {
+                if (entry == nullptr || entry.ValueType() != json::JsonValueType::Object)
+                {
+                    continue;
+                }
+
+                auto const deviceObject = entry.GetObject();
+
+                auto const deviceId = NormalizedBluetoothDeviceId(
+                    StringValueOrEmpty(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ID_KEY));
+
+                if (deviceId.empty())
+                {
+                    continue;
+                }
+
+                auto device = winrt::make_self<implementation::MidiBluetoothConfiguredDevice>();
+
+                device->InternalInitialize(
+                    deviceId,
+                    StringValueOrEmpty(deviceObject, MIDI_CONFIG_JSON_COMMON_COMMENT_KEY),
+                    BooleanValueOrTrue(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY));
+
+                devices.Append(*device);
+            }
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception reading the configured Bluetooth MIDI devices.");
+        }
+
+        return devices.GetView();
     }
 
     collections::IVectorView<bluetooth::MidiBluetoothDeviceInformation> MidiBluetoothTransportManager::GetAvailableDevices() noexcept

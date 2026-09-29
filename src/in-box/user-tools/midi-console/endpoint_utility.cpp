@@ -48,6 +48,7 @@ namespace midi2console
         if (transportCode == "loop")     return "\U0001F504";   // counterclockwise arrows
         if (transportCode == "bloop")    return "\U0001F517";   // link
         if (transportCode == "net2udp")  return "\U0001F310";   // globe with meridians
+        if (transportCode == "rtpmidi")  return "\U0001F30D";   // globe showing Europe-Africa
         if (transportCode == "blemidi")  return "\U0001F4F6";   // antenna bars
 
         return GetEndpointIcon(device.EndpointPurpose());

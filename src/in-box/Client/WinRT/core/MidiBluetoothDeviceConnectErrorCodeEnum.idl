@@ -65,8 +65,8 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         // drops the link partway through, as one demanding encryption does, times out instead.
         GattTimeout =                   BLUETOOTH_MIDI_ERROR_CODE_GATT_TIMEOUT,
 
-        // the call failed rather than running out of time. The device was present and answering,
-        // so it refused or dropped the request instead of ignoring it.
+        // the call failed right away rather than running out of time. ErrorHResult has the error.
+        // Some devices answer and the call still fails, so this does not mean the device refused.
         GattCallFailed =                BLUETOOTH_MIDI_ERROR_CODE_GATT_CALL_FAILED,
 
         RadioNotAvailable =             BLUETOOTH_MIDI_ERROR_CODE_RADIO_NOT_AVAILABLE,

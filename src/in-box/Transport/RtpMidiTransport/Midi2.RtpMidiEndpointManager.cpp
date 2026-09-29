@@ -1400,7 +1400,9 @@ CMidi2RtpMidiEndpointManager::BuildHostsStatusJson()
         if (running)
         {
             item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ACTUAL_PORT_KEY, JsonNumber(view.Node->ControlPort()));
-            item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_PORT_FALLBACK_USED_KEY, JsonBoolean(definition.Port != 0 && view.Node->UsedPortFallback()));
+
+            // automatic mode prefers 5004, which is where other software looks, so missing it is worth reporting too
+            item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_PORT_FALLBACK_USED_KEY, JsonBoolean(view.Node->UsedPortFallback()));
 
             if (view.Node->IsAdvertised())
             {
