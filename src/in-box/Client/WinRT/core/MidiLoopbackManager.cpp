@@ -29,6 +29,15 @@
 #include "MidiLoopbackEndpointEntry.h"
 #include "MidiLoopbackEndpointDefinition.h"
 
+#include "MidiLoopbackSavedEntry.h"
+#include "MidiLoopbackUpdateConfig.h"
+
+#include "MidiConfigFile.h"
+#include "MidiEndpointCustomProperties.h"
+#include "MidiServiceEndpointCustomizationConfig.h"
+#include "MidiServiceConfigEndpointMatchCriteria.h"
+#include "midi_saved_config_json.h"
+
 
 // copied from service loopback_transport_defs.h
 
@@ -1220,6 +1229,234 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
             MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception checking loopback B existence.");
             return false;
         }
+    }
+
+
+    // A missing endpoint object gives an empty definition rather than none, so an app can still
+    // show the entry and offer to remove it.
+    static loop::MidiLoopbackEndpointDefinition SavedEndpointDefinition(
+        _In_ json::JsonObject const& endpointObject)
+    {
+        auto definition = winrt::make_self<MidiLoopbackEndpointDefinition>();
+
+        definition->Name(MidiSavedConfigJson::String(endpointObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY));
+        definition->Description(MidiSavedConfigJson::String(endpointObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY));
+        definition->UniqueId(MidiSavedConfigJson::String(endpointObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY));
+        definition->ImageFileName(MidiSavedConfigJson::String(endpointObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY));
+        definition->CreateOnlyUmpEndpoint(MidiSavedConfigJson::Boolean(endpointObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY, false));
+
+        return *definition;
+    }
+
+    collections::IVectorView<loop::MidiLoopbackSavedEntry> MidiLoopbackManager::GetSavedLoopbackEntries() noexcept
+    {
+        auto results = winrt::single_threaded_vector<loop::MidiLoopbackSavedEntry>();
+
+        try
+        {
+            // Read from the file, because the service only reads it at start
+            auto const create = MidiSavedConfigJson::Object(
+                svc::implementation::MidiConfigFile::LoadTransportSection(TransportId()),
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY);
+
+            for (auto const& [associationId, entryObject] : MidiSavedConfigJson::Entries(create))
+            {
+                auto entry = winrt::make_self<MidiLoopbackSavedEntry>();
+
+                entry->InternalInitialize(
+                    associationId,
+                    SavedEndpointDefinition(MidiSavedConfigJson::Object(entryObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY)),
+                    SavedEndpointDefinition(MidiSavedConfigJson::Object(entryObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY)),
+                    MidiSavedConfigJson::Boolean(entryObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY, false),
+                    internal::ReadFeedbackProtectionEnabled(entryObject) ?
+                        loop::MidiLoopbackFeedbackProtection::Mute :
+                        loop::MidiLoopbackFeedbackProtection::Off);
+
+                results.Append(*entry);
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error reading saved loopback entries.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception reading saved loopback entries.");
+        }
+
+        return results.GetView();
+    }
+
+
+    _Use_decl_annotations_
+    loop::MidiLoopbackUpdateResponse MidiLoopbackManager::UpdateLoopback(
+        loop::MidiLoopbackUpdateConfig const& updateConfig) noexcept
+    {
+        auto result = winrt::make_self<MidiLoopbackUpdateResponse>();
+
+        if (result == nullptr)
+        {
+            return nullptr;
+        }
+
+        try
+        {
+            if (updateConfig == nullptr)
+            {
+                result->InternalSetFailure(
+                    loop::MidiLoopbackErrorCode::InvalidArgument,
+                    internal::ResourceGetHString(IDS_LOOPBACK_ERROR_NULL_UPDATE_CONFIG));
+
+                return *result;
+            }
+
+            auto const* const config = winrt::get_self<MidiLoopbackUpdateConfig>(updateConfig);
+            auto const associationId = config->AssociationId();
+
+            if (config->InternalChangesEndpointDetails())
+            {
+                loop::MidiLoopbackEntry active{ nullptr };
+
+                for (auto const& entry : GetActiveLoopbackEntries())
+                {
+                    if (entry != nullptr && entry.AssociationId() == associationId)
+                    {
+                        active = entry;
+                        break;
+                    }
+                }
+
+                if (active == nullptr || active.EndpointA() == nullptr || active.EndpointB() == nullptr)
+                {
+                    result->InternalSetFailure(
+                        loop::MidiLoopbackErrorCode::EndpointNotFound,
+                        internal::ResourceGetHString(IDS_LOOPBACK_ERROR_NOT_RUNNING));
+
+                    return *result;
+                }
+
+                // The service applies the whole set, so what is not changing is sent as it is now
+                auto const buildCustomization = [](
+                    loop::MidiLoopbackEndpointEntry const& endpoint,
+                    bool const hasName, winrt::hstring const& name,
+                    bool const hasDescription, winrt::hstring const& description,
+                    bool const hasImage, winrt::hstring const& image)
+                    {
+                        auto customization = winrt::make_self<svc::implementation::MidiServiceEndpointCustomizationConfig>(
+                            TransportId(),
+                            hasName ? name : endpoint.Name(),
+                            hasDescription ? description : endpoint.Description(),
+                            hasImage ? image : endpoint.ImageFileName());
+
+                        auto match = winrt::make_self<svc::implementation::MidiServiceConfigEndpointMatchCriteria>();
+                        match->EndpointDeviceId(endpoint.EndpointDeviceId());
+
+                        customization->MatchCriteria(*match);
+
+                        return customization->ConfigJson();
+                    };
+
+                auto const payload = buildCustomization(
+                    active.EndpointA(),
+                    config->InternalHasEndpointAName(), config->EndpointAName(),
+                    config->InternalHasEndpointADescription(), config->EndpointADescription(),
+                    config->InternalHasEndpointAImageFileName(), config->EndpointAImageFileName());
+
+                auto const payloadB = buildCustomization(
+                    active.EndpointB(),
+                    config->InternalHasEndpointBName(), config->EndpointBName(),
+                    config->InternalHasEndpointBDescription(), config->EndpointBDescription(),
+                    config->InternalHasEndpointBImageFileName(), config->EndpointBImageFileName());
+
+                if (payload == nullptr || payloadB == nullptr)
+                {
+                    result->InternalSetFailure(
+                        loop::MidiLoopbackErrorCode::ClientApiException,
+                        internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
+
+                    return *result;
+                }
+
+                // One payload with an entry for each side, so the transport checks both names
+                // against each other before it changes either one
+                auto const transportKey = winrt::hstring{ internal::GuidToString(TransportId()) };
+
+                auto const updates = payload
+                    .GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT)
+                    .GetNamedObject(transportKey)
+                    .GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY);
+
+                for (auto const& update : payloadB
+                    .GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT)
+                    .GetNamedObject(transportKey)
+                    .GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY))
+                {
+                    updates.Append(update);
+                }
+
+                auto const serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(TransportId(), payload);
+
+                if (serviceResponse == nullptr || serviceResponse.Status() != svc::MidiServiceConfigResponseStatus::Success)
+                {
+                    auto errorMessage = serviceResponse == nullptr ?
+                        winrt::hstring{} :
+                        internal::TrimmedHStringCopy(serviceResponse.ServiceErrorMessage());
+
+                    if (errorMessage.empty())
+                    {
+                        errorMessage = internal::ResourceGetHString(IDS_ERROR_SERVICE_CALL_FAILED_NO_MESSAGE);
+                    }
+
+                    result->InternalSetFailure(
+                        serviceResponse == nullptr ?
+                            loop::MidiLoopbackErrorCode::NoErrorInformationAvailable :
+                            static_cast<loop::MidiLoopbackErrorCode>(serviceResponse.ServiceErrorCode()),
+                        errorMessage);
+
+                    return *result;
+                }
+            }
+
+            if (config->InternalHasIsMuted())
+            {
+                auto const muteResult = config->IsMuted() ?
+                    MuteLoopback(associationId) :
+                    UnmuteLoopback(associationId);
+
+                if (muteResult == nullptr || !muteResult.Success())
+                {
+                    return muteResult;
+                }
+            }
+
+            if (config->InternalHasFeedbackProtection())
+            {
+                auto const protectionResult = SetFeedbackProtection(associationId, config->FeedbackProtection());
+
+                if (protectionResult == nullptr || !protectionResult.Success())
+                {
+                    return protectionResult;
+                }
+            }
+
+            result->InternalSetSuccess();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error updating loopback.");
+
+            result->InternalSetFailure(loop::MidiLoopbackErrorCode::ClientApiException, ex.message());
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception updating loopback.");
+
+            result->InternalSetFailure(
+                loop::MidiLoopbackErrorCode::ClientApiException,
+                internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
+        }
+
+        return *result;
     }
 
 }

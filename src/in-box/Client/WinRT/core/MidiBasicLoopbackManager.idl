@@ -16,6 +16,8 @@ import "MidiBasicLoopbackUpdateResponse.idl";
 
 import "MidiBasicLoopbackCreationConfig.idl";
 import "MidiBasicLoopbackRemovalConfig.idl";
+import "MidiBasicLoopbackUpdateConfig.idl";
+import "MidiBasicLoopbackSavedEntry.idl";
 
 import "MidiEndpointDeviceInformation.idl";
 import "MidiBasicLoopbackFeedbackProtectionEnum.idl";
@@ -54,6 +56,15 @@ namespace Windows.Devices.Midi2.Transports.BasicLoopback
         [noexcept] static MidiBasicLoopbackUpdateResponse SetFeedbackProtection(
             Guid associationId,
             MidiBasicLoopbackFeedbackProtection feedbackProtection);
+
+        // Basic loopbacks saved in the configuration file, which the service creates when it
+        // starts. Works when the service is not running.
+        [noexcept] static IVectorView<MidiBasicLoopbackSavedEntry> GetSavedLoopbackEntries();
+
+        // Changes the running loopback. Only the properties set in the config are changed, and it
+        // stops at the first change which fails. Save the same config with
+        // MidiServiceTransportPluginConfigManager.SaveUpdate to keep the change after a restart.
+        [noexcept] static MidiBasicLoopbackUpdateResponse UpdateLoopback(MidiBasicLoopbackUpdateConfig updateConfig);
 
     }
 }

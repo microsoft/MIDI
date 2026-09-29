@@ -603,24 +603,6 @@
     <value>Using the configuration file {0}</value>
     <comment>{0} is the full path of the file</comment>
   </data>
-  <data name="ConfigFileNoPathError" xml:space="preserve">
-    <value>There is no Windows MIDI Services configuration file on this PC.</value>
-  </data>
-  <data name="ConfigFileReadError" xml:space="preserve">
-    <value>The configuration file {0} could not be read.</value>
-    <comment>{0} is the full path of the file</comment>
-  </data>
-  <data name="ConfigFileParseError" xml:space="preserve">
-    <value>The configuration file {0} is not valid JSON.</value>
-    <comment>{0} is the full path of the file</comment>
-  </data>
-  <data name="ConfigFileWriteError" xml:space="preserve">
-    <value>The configuration file {0} could not be written. Error {1}.</value>
-    <comment>{0} is the full path of the file, {1} the Windows error number</comment>
-  </data>
-  <data name="ConfigFileEntryMissingError" xml:space="preserve">
-    <value>The configuration file has no entry for this loopback.</value>
-  </data>
 
   <!-- settings flyout -->
   <data name="SettingsTitle" xml:space="preserve">

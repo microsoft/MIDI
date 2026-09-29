@@ -26,9 +26,14 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         // Folds one transport's section into the configuration file. The read, merge and write all
         // happen under a single file handle, so no other writer can act on data this call has
         // already read, and the service is never blocked from reading.
+        //
+        // Each required path lists the keys, below the transport section, of an entry which must
+        // already be saved. When one is missing nothing is written and the result is
+        // ErrorEntryNotSaved. Keys are matched ignoring case and braces.
         static MidiConfigFileSaveOutcome SaveTransportSection(
             _In_ winrt::guid const& transportId,
-            _In_ json::JsonObject const& transportSection) noexcept;
+            _In_ json::JsonObject const& transportSection,
+            _In_ std::vector<std::vector<std::wstring>> const& requiredEntryPaths = {}) noexcept;
 
         // One transport's saved section, or null when there is no file, no section, or the file
         // cannot be read. Never blocks a writer.

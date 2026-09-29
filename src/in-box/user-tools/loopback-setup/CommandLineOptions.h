@@ -18,8 +18,8 @@ namespace midiloopbacksetup
         std::wstring ErrorResourceKey{};
         std::wstring ErrorArgument{};
 
-        // Redirects every configuration file read and write to another file. Intended for
-        // working against a copy rather than the machine's live configuration.
+        // Debug builds only: the SDK reads and saves this file instead of the machine's live
+        // configuration, so a copy can be worked on. Release builds accept the switch and ignore it.
         std::wstring ConfigFilePath{};
 
         // Opened from a notification about feedback, so start on the page that has the muted loopback.

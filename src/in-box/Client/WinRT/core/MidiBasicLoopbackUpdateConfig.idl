@@ -1,0 +1,42 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+import "MidiBasicLoopbackFeedbackProtectionEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.BasicLoopback
+{
+    [contract(MidiTransportsBasicLoopbackApiContract, 1)]
+
+    // Changes a basic loopback which already exists. Only the properties you set are changed.
+    // Apply it to the running loopback with MidiBasicLoopbackManager.UpdateLoopback, and save it
+    // with MidiServiceTransportPluginConfigManager.SaveUpdate. Saving it for a loopback which is
+    // not saved returns ErrorEntryNotSaved.
+    [interface_name("Windows.Devices.Midi2.Transports.BasicLoopback.IMidiBasicLoopbackUpdateConfig", UUID_IMidiBasicLoopbackUpdateConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.BasicLoopback.IMidiBasicLoopbackUpdateConfigFactory", UUID_IMidiBasicLoopbackUpdateConfigFactory)]
+    runtimeclass MidiBasicLoopbackUpdateConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiBasicLoopbackUpdateConfig(Guid associationId);
+
+        [noexcept] Guid AssociationId{ get; };
+
+        // An empty name is ignored, because every endpoint needs one
+        [noexcept] String Name;
+        [noexcept] String Description;
+
+        // Bare file name in the shared endpoint assets folder. Empty removes the picture.
+        [noexcept] String ImageFileName;
+
+        [noexcept] Boolean IsMuted;
+
+        [noexcept] MidiBasicLoopbackFeedbackProtection FeedbackProtection;
+    }
+}

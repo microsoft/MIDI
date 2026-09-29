@@ -11,7 +11,6 @@
 
 #include "AppSettings.h"
 #include "LoopbackItems.h"
-#include "ConfigFile.h"
 
 namespace winrt::midiloopbacksetup::implementation
 {
@@ -121,10 +120,9 @@ namespace winrt::midiloopbacksetup::implementation
             bool CanProtectFromFeedback{ false };
             // the well known default loopback is already on this PC, so there is nothing to offer
             bool DefaultExists{ false };
-            // association identifiers the configuration file has an entry for, lowercase and
-            // unbraced so they compare directly with what the service reports
-            std::vector<std::wstring> ConfiguredIds{};
-            std::unordered_map<std::wstring, int32_t> DisplayOrders{};
+            // association identifiers with a saved entry, lowercase and unbraced so they compare
+            // directly with what the service reports
+            std::vector<std::wstring> SavedIds{};
         };
 
         struct ServiceSnapshot
@@ -156,8 +154,7 @@ namespace winrt::midiloopbacksetup::implementation
         void ReconcileRows(
             _In_ collections::IObservableVector<midiloopbacksetup::LoopbackItem> const& rows,
             _In_ std::vector<::midiloopbacksetup::LoopbackRowData> const& incoming,
-            _In_ std::unordered_map<std::wstring, int32_t> const& fileDisplayOrders,
-            _In_ std::unordered_map<std::wstring, int32_t> const& sessionDisplayOrders,
+            _In_ std::unordered_map<std::wstring, int32_t> const& displayOrders,
             _In_ bool const canMute,
             _In_ bool const canCustomize) noexcept;
 
@@ -268,9 +265,8 @@ namespace winrt::midiloopbacksetup::implementation
         collections::IObservableVector<midiloopbacksetup::ImportDeviceItem> m_importDevices{
             winrt::single_threaded_observable_vector<midiloopbacksetup::ImportDeviceItem>() };
 
-        // Positions the customer set during this session. They take precedence over what the
-        // file says, because a loopback which was never saved has nowhere in the file to record
-        // a position and would otherwise jump back on the next poll.
+        // Positions the customer arranged, by association id. Read from this tool's settings at
+        // startup and written back whenever a row is moved.
         std::unordered_map<std::wstring, int32_t> m_loopbackOrder{};
         std::unordered_map<std::wstring, int32_t> m_basicLoopbackOrder{};
 

@@ -16,6 +16,68 @@ namespace midiloopbacksetup
 
         constexpr wchar_t ValueRefreshIntervalSeconds[] = L"RefreshIntervalSeconds";
         constexpr wchar_t ValueSelectedPageIndex[] = L"SelectedPageIndex";
+        constexpr wchar_t ValueLoopbackOrder[] = L"LoopbackOrder";
+        constexpr wchar_t ValueBasicLoopbackOrder[] = L"BasicLoopbackOrder";
+
+        // an association id never contains one, so a single string holds the whole list
+        constexpr wchar_t OrderSeparator{ L';' };
+
+        std::vector<std::wstring> SplitOrder(_In_ std::wstring const& text) noexcept
+        {
+            std::vector<std::wstring> ids{};
+
+            try
+            {
+                size_t start{ 0 };
+
+                while (start < text.size())
+                {
+                    auto end = text.find(OrderSeparator, start);
+
+                    if (end == std::wstring::npos)
+                    {
+                        end = text.size();
+                    }
+
+                    if (end > start)
+                    {
+                        ids.push_back(text.substr(start, end - start));
+                    }
+
+                    start = end + 1;
+                }
+            }
+            catch (...)
+            {
+                ids.clear();
+            }
+
+            return ids;
+        }
+
+        std::wstring JoinOrder(_In_ std::vector<std::wstring> const& ids) noexcept
+        {
+            try
+            {
+                std::wstring text{};
+
+                for (auto const& id : ids)
+                {
+                    if (!text.empty())
+                    {
+                        text += OrderSeparator;
+                    }
+
+                    text += id;
+                }
+
+                return text;
+            }
+            catch (...)
+            {
+                return {};
+            }
+        }
     }
 
     AppSettings::AppSettings() noexcept :
@@ -40,6 +102,9 @@ namespace midiloopbacksetup
 
         auto const page = ReadDword(ValueSelectedPageIndex, PageIndexBasicLoopbacks);
         m_selectedPageIndex = page > PageIndexLoopbacks ? PageIndexBasicLoopbacks : page;
+
+        m_loopbackOrder = SplitOrder(ReadString(ValueLoopbackOrder, {}));
+        m_basicLoopbackOrder = SplitOrder(ReadString(ValueBasicLoopbackOrder, {}));
     }
 
     void AppSettings::RefreshIntervalSeconds(uint32_t value) noexcept
@@ -52,5 +117,31 @@ namespace midiloopbacksetup
     {
         m_selectedPageIndex = value > PageIndexLoopbacks ? PageIndexBasicLoopbacks : value;
         WriteDword(ValueSelectedPageIndex, m_selectedPageIndex);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::LoopbackOrder(std::vector<std::wstring> const& value) noexcept
+    {
+        try
+        {
+            m_loopbackOrder = value;
+            WriteString(ValueLoopbackOrder, JoinOrder(m_loopbackOrder));
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::BasicLoopbackOrder(std::vector<std::wstring> const& value) noexcept
+    {
+        try
+        {
+            m_basicLoopbackOrder = value;
+            WriteString(ValueBasicLoopbackOrder, JoinOrder(m_basicLoopbackOrder));
+        }
+        catch (...)
+        {
+        }
     }
 }

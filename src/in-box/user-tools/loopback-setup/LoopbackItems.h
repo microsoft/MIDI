@@ -62,6 +62,20 @@
 
 namespace midiloopbacksetup
 {
+    // The two transports this tool configures.
+    enum class LoopbackKind
+    {
+        Loopback,       // LOOP - a pair of endpoints
+        BasicLoopback   // BLOOP - a single endpoint
+    };
+
+    // Identifiers of the well known default loopbacks. Apps look for these, and the shipped
+    // configuration creates them, so the tool offers to put one back only when it is missing.
+    // Both sides of the pair deliberately share one identifier; the service gives the A and B
+    // endpoints different instance id prefixes.
+    constexpr wchar_t DefaultLoopbackUniqueId[] = L"DEFAULT";
+    constexpr wchar_t DefaultBasicLoopbackUniqueId[] = L"BASIC_DEF";
+
     // Everything a row shows, gathered in one place so a refresh is a single call rather than
     // a dozen setters which each raise a change notification.
     struct LoopbackRowData
