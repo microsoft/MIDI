@@ -8,6 +8,9 @@
     <ComponentGroup Id="SdkRedistFiles">
 
       <!-- app-sdk\$(var.Platform) -->
+      <Component Id="c95D3F84EFCBD455B" Guid="15251297-ff85-5d52-bb71-3533703ef73c" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- Microsoft.Graphics.Canvas.dll -->
+        <File Id="f95D3F84EFCBD455B" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Graphics.Canvas.dll" Vital="true" />
+      </Component>
       <Component Id="c64B05B243A3344B5" Guid="f68bd66e-41b7-52c7-acfb-d647d7033ba8" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- Microsoft.Web.WebView2.Core.dll -->
         <File Id="f64B05B243A3344B5" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Web.WebView2.Core.dll" Vital="true" />
       </Component>
@@ -34,6 +37,12 @@
       </Component>
       <Component Id="c45719FF01C9186EF" Guid="b912acd5-c379-5635-9b68-f07c610e61d5" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- mididiag.exe -->
         <File Id="MidiDiagExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\mididiag.exe" Vital="true" />
+      </Component>
+      <Component Id="c5B413425AB32BD47" Guid="ad48658f-f63f-5d07-9996-9f21cdbcb61f" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midiglass.exe -->
+        <File Id="midiglassExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiglass.exe" Vital="true" />
+      </Component>
+      <Component Id="cE9A09B1483B960BB" Guid="395343ec-7b45-50b7-8f69-72f8476cae46" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midiglass.pri -->
+        <File Id="fE9A09B1483B960BB" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiglass.pri" Vital="true" />
       </Component>
       <Component Id="cD3FB7BAFC11866E3" Guid="5bba5af0-7f27-5120-8db1-a85f8fdc8e22" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midikeyboard.exe -->
         <File Id="midikeyboardExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midikeyboard.exe" Vital="true" />

@@ -54,6 +54,10 @@
                   Name="MIDI Patchbay"
                   Target="[#midipatchbayExe]"
                   WorkingDirectory="TOOLSROOT_INSTALLFOLDER" />
+        <Shortcut Id="Shortcut_midiglass"
+                  Name="MIDI Glass"
+                  Target="[#midiglassExe]"
+                  WorkingDirectory="TOOLSROOT_INSTALLFOLDER" />
         <Shortcut Id="Shortcut_miditroubleshooter"
                   Name="MIDI Troubleshooting and Repair"
                   Target="[#miditroubleshooterExe]"

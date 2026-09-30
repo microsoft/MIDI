@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Builds, stages, signs and packages everything Windows MIDI Services releases from GitHub: the
-    WinRT SDK and its NuGet package, the Tools installer, MIDI Glass, and the transport installers.
+    WinRT SDK and its NuGet package, the Tools installer, and the transport installers.
 
 .DESCRIPTION
     One pass builds each solution once per platform:
@@ -16,7 +16,6 @@
       build/version.json              the SDK, the NuGet package, the samples and the Tools installer
       build/version-plugins.json      the transport installers: Network MIDI 2.0 and RTP-MIDI,
                                       Bluetooth MIDI, Basic Loopback and General MIDI Synthesizer
-      build/version-midi-glass.json   MIDI Glass
 
     Every app installs into one folder, Program Files\Windows MIDI Services\Tools, the way they are
     laid out in Windows itself. The transport-specific setup apps still come from the installer
@@ -33,7 +32,7 @@
 
 .PARAMETER Target
     One or more of:
-      Version  Work out all three versions, write the WiX version includes and the version
+      Version  Work out both versions, write the WiX version includes and the version
                headers, and stamp the NuGet nuspec.
       Service  Build src/in-box/Midi2.sln for each platform (the transports).
       Sdk      Build src/in-box/Midi2-AppSDK.sln for each platform, plus Arm64EC for the Arm64X
@@ -50,11 +49,11 @@
       All      Version, Service, Sdk, Pack, Samples, Stage, Setup, Release.
 
 .PARAMETER BuildNumber
-    Overrides the 'build' field of all three version files without changing them. For CI, for
+    Overrides the 'build' field of both version files without changing them. For CI, for
     example -BuildNumber $env:GITHUB_RUN_NUMBER.
 
 .PARAMETER BumpBuildNumber
-    Increments and saves the 'build' field of all three version files before anything else runs.
+    Increments and saves the 'build' field of both version files before anything else runs.
 
 .PARAMETER Sign
     Authenticode-sign everything that ships: the staged binaries, the SDK binaries the NuGet
@@ -182,11 +181,9 @@ $TransportStagingRoot = Join-Path $StagingRoot 'api'
 # pick up another's version number.
 $SdkVersionFile = Join-Path $BuildRoot 'version.json'
 $PluginsVersionFile = Join-Path $BuildRoot 'version-plugins.json'
-$GlassVersionFile = Join-Path $BuildRoot 'version-midi-glass.json'
 
 $SdkVersionInclude = Join-Path $VersionStagingFolder 'AppSdkVersion.wxi'
 $PluginsVersionInclude = Join-Path $VersionStagingFolder 'BundleInfo.wxi'
-$GlassVersionInclude = Join-Path $VersionStagingFolder 'MidiGlassVersion.wxi'
 
 $SignScript = Join-Path $BuildRoot 'sign-files.ps1'
 
@@ -216,8 +213,7 @@ $ConsoleTools = @(
 # "Windows MIDI Player" showed as "Windows MIDI..." and the only part that identified the app was
 # the part that got cut. The group these all sit in is already called Windows MIDI (Preview).
 # Network MIDI 2.0 Setup and Bluetooth MIDI Setup are deliberately NOT here: each ships in the
-# installer that carries its transport, because the app is useless without it. MIDI Glass has an
-# installer of its own.
+# installer that carries its transport, because the app is useless without it.
 $GuiTools = @(
     [pscustomobject]@{ Name = 'midisettings';       Display = 'MIDI Settings' }
     [pscustomobject]@{ Name = 'midiloopbacksetup';  Display = 'MIDI Loopback Setup' }
@@ -228,6 +224,7 @@ $GuiTools = @(
     [pscustomobject]@{ Name = 'midisysextool';      Display = 'MIDI SysEx Tool' }
     [pscustomobject]@{ Name = 'midi2monitor';       Display = 'MIDI Monitor' }
     [pscustomobject]@{ Name = 'midipatchbay';       Display = 'MIDI Patchbay' }
+    [pscustomobject]@{ Name = 'midiglass';          Display = 'MIDI Glass' }
     [pscustomobject]@{ Name = 'miditroubleshooter'; Display = 'MIDI Troubleshooting and Repair' }
     # Aumid: the notification platform will not accept a toast from an unpackaged app unless the
     # identity it publishes under is on a Start Menu shortcut. RunAtLogon means the installer
@@ -271,13 +268,6 @@ $ToolsFolderPayloads = @(
         Apps           = @('midi')
         Fragment       = Join-Path $InstallersRoot 'api-and-tools-installer\console-package\_SetupFiles.wxs'
         ComponentGroup = 'ConsoleAppFiles'
-    }
-    [pscustomobject]@{
-        Name           = 'midi-glass'
-        Installer      = 'Glass'
-        Apps           = @('midiglass')
-        Fragment       = Join-Path $InstallersRoot 'midi-glass-installer\app-package\_AppFiles.wxs'
-        ComponentGroup = 'MidiGlassFiles'
     }
     [pscustomobject]@{
         Name           = 'network-app'
@@ -326,17 +316,6 @@ $Installers = @(
         Transports    = @()
     }
     [pscustomobject]@{
-        Name          = 'Glass'
-        Train         = 'Glass'
-        SolutionDir   = Join-Path $InstallersRoot 'midi-glass-installer'
-        Solution      = 'midi-glass-setup.sln'
-        BundleName    = 'WindowsMidiServicesMidiGlassSetup'
-        ReleaseName   = 'MIDI Glass'
-        ReleaseFolder = 'midi-glass-{0}'
-        Apps          = @('midiglass')
-        Transports    = @()
-    }
-    [pscustomobject]@{
         Name          = 'Network'
         Train         = 'Plugins'
         SolutionDir   = Join-Path $InstallersRoot 'oob-setup-network'
@@ -376,7 +355,7 @@ $Installers = @(
         Solution      = 'midi-services-bluetooth-midi-preview-setup.sln'
         BundleName    = 'WindowsMidiServicesBluetoothMidiSetup'
         ReleaseName   = 'Windows MIDI Services (Bluetooth MIDI Preview)'
-        ReleaseFolder = 'bluetooth-{0}'
+        ReleaseFolder = 'plugins-{0}'
         Apps          = @('midibluetoothsetup')
         Transports    = @('Midi2.BluetoothMidiTransport')
     }
@@ -842,11 +821,9 @@ function Invoke-VersionTarget {
 
     $sdk = $script:Versions.Sdk
     $plugins = $script:Versions.Plugins
-    $glass = $script:Versions.Glass
 
     Write-Detail "SDK and Tools   $($sdk.VersionName), $($sdk.SemVer), MSI $($sdk.NumericVersion)"
     Write-Detail "Transports      $($plugins.VersionName), $($plugins.SemVer), MSI $($plugins.NumericVersion)"
-    Write-Detail "MIDI Glass      $($glass.VersionName), $($glass.SemVer), MSI $($glass.NumericVersion)"
 
     # --- SDK and Tools installer ---------------------------------------------------------------
     Write-VersionFile -Path $SdkVersionInclude -Content @"
@@ -872,17 +849,6 @@ function Invoke-VersionTarget {
   <?define SetupVersionNumber="$($plugins.SemVer)" ?>
   <?define MidiSdkAndToolsVersion="$($plugins.SemVer)" ?>
   <?define MidiPluginsNumericVersion="$($plugins.NumericVersion)" ?>
-</Include>
-"@
-
-    # --- MIDI Glass ------------------------------------------------------------------------------
-    Write-VersionFile -Path $GlassVersionInclude -Content @"
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generated by build\build-all.ps1 from build\version-midi-glass.json. Do not edit. -->
-<Include>
-  <?define MidiGlassVersionName="$($glass.VersionName)" ?>
-  <?define MidiGlassSetupVersion="$($glass.SemVer)" ?>
-  <?define MidiGlassNumericVersion="$($glass.NumericVersion)" ?>
 </Include>
 "@
 
@@ -2205,7 +2171,7 @@ function Get-InstallerPath {
 function Invoke-SetupTarget {
     Write-Step 'Setup'
 
-    foreach ($include in @($SdkVersionInclude, $PluginsVersionInclude, $GlassVersionInclude)) {
+    foreach ($include in @($SdkVersionInclude, $PluginsVersionInclude)) {
         if (-not (Test-Path $include)) {
             throw "Version include not found: $include. Run the Version target first."
         }
@@ -2336,7 +2302,7 @@ function Invoke-CleanTarget {
 
     # Only what the build writes. build\staging also holds a few files that are checked in.
     $paths = @(
-        'app-sdk', 'midi-console', 'midi-powershell', 'midi-glass', 'network-app', 'bluetooth-app',
+        'app-sdk', 'midi-console', 'midi-powershell', 'network-app', 'bluetooth-app',
         'api', 'CollectMidiLogs', 'Assets', 'symbols', 'samples'
     ) | ForEach-Object { Join-Path $StagingRoot $_ }
 
@@ -2425,11 +2391,10 @@ try {
     $script:Versions = @{
         Sdk     = Get-TrainVersion -File $SdkVersionFile
         Plugins = Get-TrainVersion -File $PluginsVersionFile
-        Glass   = Get-TrainVersion -File $GlassVersionFile
     }
 
     if ($targets -notcontains 'Version') {
-        Write-Detail "Versions      SDK $($script:Versions.Sdk.SemVer), transports $($script:Versions.Plugins.SemVer), MIDI Glass $($script:Versions.Glass.SemVer)"
+        Write-Detail "Versions      SDK $($script:Versions.Sdk.SemVer), transports $($script:Versions.Plugins.SemVer)"
     }
 
     if (@($targets | Where-Object { $_ -in @('Service', 'Sdk', 'Pack', 'Samples', 'Stage', 'Setup') }).Count -gt 0) {

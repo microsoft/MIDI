@@ -27,10 +27,8 @@ Pass this to `MidiServiceTransportPluginConfigManager.SaveUpdate` so a host's al
 
 This is a saved record, not a command. To tell the service about one decision, use `MidiNetworkTransportManager.ApproveOrDenyRemoteClientConnectRequestAsync`, which acts on it right away. The service remembers a decision while it's running, but never saves the configuration. Saving one of these is what keeps a decision after a restart.
 
-`KnownClients` must hold every client for the host, not just the ones that changed. Both saved lists are replaced with what it holds. So start from `MidiNetworkSavedHost.KnownRemoteClients`, change it, and save the whole thing. Leaving a client out is how you take back a decision. The client goes back to being one the host has never been told about.
+`KnownClients` must hold every client for the host, not just the ones that changed. Both saved lists are replaced with what it holds. So read the current list first, change it, and save the whole thing. Leaving a client out is how you take back a decision. The client goes back to being one the host has never been told about.
 
 Leaving a client out only changes what's read the next time the service starts. The running service keeps its own copy of the lists, so also take the decision back there with [ForgetRemoteClientAsync]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkRemoteClientForgetConfig/). Otherwise, the old decision stays until the service restarts.
 
 Saving an empty `KnownClients` clears both lists for the host.
-
-The decisions are saved inside the host's entry. If the host isn't saved, `SaveUpdate` returns `ErrorEntryNotSaved` and writes nothing. A host that's only running can still use the decisions, until the service restarts.

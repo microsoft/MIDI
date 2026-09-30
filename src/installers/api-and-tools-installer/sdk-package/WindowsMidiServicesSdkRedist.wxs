@@ -20,9 +20,9 @@
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
                 <!-- Every tool installs into this one folder, the way they are laid out in
                      Windows itself, and they share one copy of the SDK runtime. The Console,
-                     MIDI Glass, Bluetooth and Network installers put their apps here too, so any
-                     file two installers both carry must be the same file with the same component
-                     GUID. build\build-all.ps1 checks the first and generates the second. -->
+                     Bluetooth and Network installers put their apps here too, so any file two
+                     installers both carry must be the same file with the same component GUID.
+                     build\build-all.ps1 checks the first and generates the second. -->
                 <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools" />
                 <Directory Id="COLLECTMIDILOGS_INSTALLFOLDER" Name="Collect MIDI Logs">
                 </Directory>
@@ -165,6 +165,7 @@
             <ComponentRef Id="WindowsMidiServicesCollectMidiLogsRegistration"/>
             <ComponentRef Id="WindowsMidiServicesMidiFileAssociation"/>
             <ComponentRef Id="PatchbayFileAssociation"/>
+            <ComponentRef Id="GlassFileAssociation"/>
             <ComponentRef Id="LoopbackSetupProtocol"/>
     </Feature>
 

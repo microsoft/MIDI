@@ -26,21 +26,11 @@ Creates, removes, mutes, and lists basic loopback endpoints.
 | `DoesLoopbackExist(uniqueIdentifier)` | Returns true if a basic loopback with this unique id already exists |
 | `MuteLoopback(associationId)` | Mutes the loopback with this association id, so no messages get through. Returns a `MidiBasicLoopbackUpdateResponse` |
 | `UnmuteLoopback(associationId)` | Unmutes the loopback with this association id. Returns a `MidiBasicLoopbackUpdateResponse` |
-| `SetFeedbackProtection(associationId, feedbackProtection)` | Changes what the loopback does if MIDI feeds back into it. Takes effect right away. To keep it after a restart, save a `MidiBasicLoopbackUpdateConfig` with `FeedbackProtection` set. Fails with `FeedbackProtectionNotAvailable` when `IsFeedbackProtectionAvailable` is false. Returns a `MidiBasicLoopbackUpdateResponse` |
+| `SetFeedbackProtection(associationId, feedbackProtection)` | Changes what the loopback does if MIDI feeds back into it. Takes effect right away. Save the change to the configuration to keep it after a restart. Fails with `FeedbackProtectionNotAvailable` when `IsFeedbackProtectionAvailable` is false. Returns a `MidiBasicLoopbackUpdateResponse` |
 | `GetActiveLoopbackEntries()` | Returns a `MidiBasicLoopbackEntry` for each active basic loopback |
-| `GetSavedLoopbackEntries()` | Returns a [`MidiBasicLoopbackSavedEntry`]({{ site.baseurl }}/sdk-reference/Transports/BasicLoopback/MidiBasicLoopbackSavedEntry/) for each basic loopback saved in the configuration file. These are the loopbacks the service creates when it starts. Works even when the service isn't running |
-| `UpdateLoopback(updateConfig)` | Changes a running basic loopback's name, description, picture, muted state and feedback protection. Only the properties set in the [`MidiBasicLoopbackUpdateConfig`]({{ site.baseurl }}/sdk-reference/Transports/BasicLoopback/MidiBasicLoopbackUpdateConfig/) change. Returns a `MidiBasicLoopbackUpdateResponse` |
 
 ## Remarks
 
 If your app creates endpoints so it can talk to other apps, it should usually use the virtual device support in the API. But sometimes an app needs a simpler loopback endpoint, without the protocol negotiation, MIDI 2.0 discovery, and lifetime management that virtual devices have. That's what basic loopbacks are for.
 
 Loopback endpoints that people create in the MIDI tools are saved in the configuration, so they stay after the service restarts or the PC reboots. Loopback endpoints created with this API are temporary, and go away when the service restarts. Either way, the basic loopback transport must be installed and turned on.
-
-## Saved and running loopbacks
-
-A basic loopback can be running, saved, or both. `GetActiveLoopbackEntries` lists what's running now. `GetSavedLoopbackEntries` lists what's saved. Match the two on `AssociationId`.
-
-To save a basic loopback, pass its `MidiBasicLoopbackCreationConfig` to `MidiServiceTransportPluginConfigManager.SaveUpdate`. To remove a saved one, pass a `MidiBasicLoopbackRemovalConfig` to the same method.
-
-To change a basic loopback, make a `MidiBasicLoopbackUpdateConfig`. Pass it to `UpdateLoopback` to change the running loopback, and to `SaveUpdate` to change the saved one. Do both if the loopback is running and saved.

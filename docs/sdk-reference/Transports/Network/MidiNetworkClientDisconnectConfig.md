@@ -4,10 +4,10 @@ title: MidiNetworkClientDisconnectConfig
 namespace: Windows.Devices.Midi2.Transports.Network
 type: runtimeclass
 implements: Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
-description: Disconnects a Network MIDI 2.0 client, or forgets a saved one
+description: Config sent to the service to disconnect a Network MIDI 2.0 client
 ---
 
-Pass to `MidiNetworkTransportManager.DisconnectNetworkClientAsync` to disconnect a client now. Pass to `MidiServiceTransportPluginConfigManager.SaveUpdate` to remove the saved client, so the service doesn't connect it the next time it starts.
+Pass to `MidiNetworkTransportManager.DisconnectNetworkClientAsync`.
 
 ## Constructors
 
@@ -25,5 +25,3 @@ Pass to `MidiNetworkTransportManager.DisconnectNetworkClientAsync` to disconnect
 ## Remarks
 
 A client disconnected this way stays disconnected. The service doesn't treat a disconnect someone asked for as a lost connection, so it doesn't reconnect it automatically.
-
-Disconnecting and forgetting are separate steps, like connecting and saving. To do both, call `DisconnectNetworkClientAsync` and then `SaveUpdate` with the same object.

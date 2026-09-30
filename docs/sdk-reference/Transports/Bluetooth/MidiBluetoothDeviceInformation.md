@@ -16,7 +16,7 @@ Returned by `MidiBluetoothTransportManager.GetAvailableDevices` and `MidiBluetoo
 | `BluetoothAddress` | The same address as a number, to match up with the `Windows.Devices.Bluetooth` APIs |
 | `Name` | The name the device reports. Empty until the device has been heard long enough to learn it |
 | `SelectedProtocol` | The `MidiBluetoothProtocol` in use. `Unknown` until the device is connected, because finding out means reading the device's characteristics |
-| `IsConnected` | True when the device is connected to this PC and its MIDI endpoint is ready. It stays false while a connection is still being set up |
+| `IsConnected` | True when the device is connected to this PC |
 | `ConnectionState` | A `MidiBluetoothConnectionState` that says how far along the device is. Connecting happens in the background, and a device someone asked for keeps being tried until it shows up, so this tells you more than `IsConnected` can |
 | `IsPaired` | True when the device is paired with this PC. Bluetooth MIDI doesn't require pairing |
 | `RequiresPairing` | True when the device won't provide its MIDI service until the connection is authenticated. A device's advertising never says this, so it's only known after trying to connect. While it's true, the service stops trying the device, because every try brings up another Windows pairing prompt |

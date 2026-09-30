@@ -27,7 +27,6 @@ Each Windows MIDI Services WinRT API namespace has its own API contract, and the
 | `MidiTransportsNetworkApiContract` | `Windows.Devices.Midi2.Transports.Network` |
 | `MidiTransportsBluetoothApiContract` | `Windows.Devices.Midi2.Transports.Bluetooth` |
 | `MidiTransportsSynthApiContract` | `Windows.Devices.Midi2.Transports.Synth` |
-| `MidiTransportsRtpApiContract` | `Windows.Devices.Midi2.Transports.Rtp` |
 | `MidiMessageUtilityApiContract` | `Windows.Devices.Midi2.Utilities.Messages` |
 | `MidiSysExTransferUtilityApiContract` | `Windows.Devices.Midi2.Utilities.SysExTransfer` |
 | `MidiSequencingUtilityApiContract` | `Windows.Devices.Midi2.Utilities.Sequencing` |

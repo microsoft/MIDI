@@ -46,16 +46,6 @@ Most tools send first, and save only if the send worked.
 
 `SaveUpdate` won't store something that was never meant to be kept. Transport commands are rejected with `ErrorNotPersistable`, because a command tells the service to do something now, and there's nothing in it to store. Configurations that only mean something to the app that made them, such as creating a virtual device, are never saved either. A removal, such as `MidiServiceEndpointCustomizationRemovalConfig`, deletes the entry it names and isn't stored itself.
 
-Some configurations change an entry that's already saved, instead of describing a new one. These are `MidiLoopbackUpdateConfig`, `MidiBasicLoopbackUpdateConfig`, `MidiNetworkHostKnownClientsConfig` and `MidiRtpHostKnownClientsConfig`. If the entry isn't saved, `SaveUpdate` returns `ErrorEntryNotSaved` and writes nothing, so half an entry is never left in the file.
-
-## Reading what's saved
-
-Each transport manager has methods that read what's saved, such as `MidiLoopbackManager.GetSavedLoopbackEntries` and `MidiNetworkTransportManager.GetSavedHosts`. Saved is what's in the configuration file, and what the service creates the next time it starts. That's different from what's running now, which the `GetActive` and `GetConfigured` methods report. The `GetSaved` methods work even when the service isn't running.
-
-## Sending an update config
-
-Passing a `MidiLoopbackUpdateConfig` or `MidiBasicLoopbackUpdateConfig` to `SendUpdate(configUpdate)` does the same thing as the manager's `UpdateLoopback`. The result comes back as a `MidiServiceConfigResponse`.
-
 ## Merging, not replacing
 
 A saved change is merged with what's already saved, so you only have to supply the part you changed. Changing the name in an endpoint customization leaves that endpoint's stored description and image alone.
