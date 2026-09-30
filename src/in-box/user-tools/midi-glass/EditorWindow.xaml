@@ -2255,6 +2255,7 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
 
                                         <TextBlock x:Uid="MessageWhenLabel" Grid.Row="0" Grid.Column="0" Text="When" Style="{StaticResource InspectorLabelStyle}" />
@@ -2336,6 +2337,12 @@
                                                        Minimum="0" Maximum="127" SpinButtonPlacementMode="Compact"
                                                        ValueChanged="OnMessageParameterChanged" />
                                         </Grid>
+
+                                        <TextBlock x:Name="MessageVelocityLabel" x:Uid="MessageVelocityLabel" Grid.Row="6" Grid.Column="0" Text="Velocity"
+                                                   Style="{StaticResource InspectorLabelStyle}" Visibility="Collapsed" />
+                                        <NumberBox x:Name="MessageVelocityBox" x:Uid="MessageVelocityBox" Grid.Row="6" Grid.Column="1"
+                                                   Minimum="1" Maximum="127" SpinButtonPlacementMode="Compact" Visibility="Collapsed"
+                                                   ValueChanged="OnMessageVelocityChanged" />
                                     </Grid>
 
                                     <!-- Stops, so a control does not have to be smooth. A six

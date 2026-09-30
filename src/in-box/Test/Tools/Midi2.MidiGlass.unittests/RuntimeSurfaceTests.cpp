@@ -15,7 +15,9 @@
 #include "BindingEngine.h"
 #include "ThemeModel.h"
 
+#include <algorithm>
 #include <array>
+#include <vector>
 
 using namespace WEX::Common;
 using namespace WEX::Logging;
@@ -793,4 +795,108 @@ void RuntimeSurfaceTests::TheBlankTemplateHasAPageAndADeviceAndNothingElse()
     VERIFY_ARE_EQUAL(size_t{ 1 }, document.Devices.size());
     VERIFY_ARE_EQUAL(size_t{ 0 }, document.ControlCount());
     VERIFY_ARE_EQUAL(size_t{ 0 }, glass::Validate(document).size());
+}
+
+void RuntimeSurfaceTests::EveryTemplateStartsInAShippedThemeThatIsNotTheDarkDefault()
+{
+    midiapp::EndpointMatch match{};
+
+    for (auto const& info : glass::LayoutTemplates())
+    {
+        auto const document = glass::BuildLayoutFromTemplate(
+            info.Kind, L"Template test", L"Loopback A", match,
+            midiapp::EndpointMatchMode::EndpointName);
+
+        Log::Comment(String().Format(L"template %d: %s",
+            static_cast<int32_t>(info.Kind), document.ThemeName.c_str()));
+
+        VERIFY_IS_NOT_NULL(glass::FindBuiltInTheme(document.ThemeName));
+        VERIFY_ARE_NOT_EQUAL(std::wstring{ L"Studio Dark" }, document.ThemeName);
+    }
+}
+
+void RuntimeSurfaceTests::TheFloatingTemplatesFloatWithEvenlySpacedButtons()
+{
+    struct Expected
+    {
+        glass::LayoutTemplateKind Kind;
+        int32_t Width;
+        int32_t Height;
+        size_t Buttons;
+    };
+
+    Expected const floating[]
+    {
+        { glass::LayoutTemplateKind::HorizontalToolbar, 800, 120, 8 },
+        { glass::LayoutTemplateKind::VerticalToolbar, 120, 800, 8 },
+        { glass::LayoutTemplateKind::FloatingPalette, 360, 360, 16 },
+    };
+
+    midiapp::EndpointMatch match{};
+
+    for (auto const& expected : floating)
+    {
+        auto const document = glass::BuildLayoutFromTemplate(
+            expected.Kind, L"Floating", L"Loopback A", match,
+            midiapp::EndpointMatchMode::EndpointName);
+
+        VERIFY_ARE_EQUAL(expected.Width, document.PageWidth);
+        VERIFY_ARE_EQUAL(expected.Height, document.PageHeight);
+        VERIFY_IS_TRUE(document.ToolbarWindow);
+        VERIFY_IS_TRUE(document.SeeThrough);
+        VERIFY_IS_TRUE(document.AlwaysOnTop);
+
+        auto const& controls = document.Pages[0].Controls;
+        VERIFY_ARE_EQUAL(expected.Buttons, controls.size());
+
+        // The same size, the same gap between neighbors, and the same margin on opposite edges.
+        auto left = static_cast<double>(expected.Width);
+        auto top = static_cast<double>(expected.Height);
+        double right{ 0.0 };
+        double bottom{ 0.0 };
+
+        for (auto const& control : controls)
+        {
+            VERIFY_IS_TRUE(control.Kind == glass::ControlKind::Button);
+            VERIFY_ARE_EQUAL(controls[0].Width, control.Width);
+            VERIFY_ARE_EQUAL(controls[0].Height, control.Height);
+
+            left = (std::min)(left, control.X);
+            top = (std::min)(top, control.Y);
+            right = (std::max)(right, control.X + control.Width);
+            bottom = (std::max)(bottom, control.Y + control.Height);
+        }
+
+        VERIFY_ARE_EQUAL(left, expected.Width - right);
+        VERIFY_ARE_EQUAL(top, expected.Height - bottom);
+
+        // Neighboring columns are all the same distance apart, and so are neighboring rows.
+        auto const evenlySpaced = [](std::vector<double> values)
+            {
+                std::sort(values.begin(), values.end());
+                values.erase(std::unique(values.begin(), values.end()), values.end());
+
+                for (size_t i = 2; i < values.size(); ++i)
+                {
+                    if (values[i] - values[i - 1] != values[1] - values[0])
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            };
+
+        std::vector<double> columns{};
+        std::vector<double> rows{};
+
+        for (auto const& control : controls)
+        {
+            columns.push_back(control.X);
+            rows.push_back(control.Y);
+        }
+
+        VERIFY_IS_TRUE(evenlySpaced(columns));
+        VERIFY_IS_TRUE(evenlySpaced(rows));
+    }
 }

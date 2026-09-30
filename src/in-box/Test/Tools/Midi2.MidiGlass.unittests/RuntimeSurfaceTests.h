@@ -83,4 +83,6 @@ public:
     TEST_METHOD(EveryTemplateFitsOnItsPage);
     TEST_METHOD(EveryTemplateDrivesTheOneDevice);
     TEST_METHOD(TheBlankTemplateHasAPageAndADeviceAndNothingElse);
+    TEST_METHOD(EveryTemplateStartsInAShippedThemeThatIsNotTheDarkDefault);
+    TEST_METHOD(TheFloatingTemplatesFloatWithEvenlySpacedButtons);
 };

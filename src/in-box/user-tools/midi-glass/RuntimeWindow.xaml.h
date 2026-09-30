@@ -254,8 +254,7 @@ namespace winrt::midiglass::implementation
         bool m_handlePressed{ false };
         bool m_handleDragging{ false };
         uint32_t m_handlePointerId{ 0 };
-        double m_handleStartX{ 0.0 };
-        double m_handleStartY{ 0.0 };
+        winrt::Windows::Graphics::PointInt32 m_handlePointerStart{};
         winrt::Windows::Graphics::PointInt32 m_handleWindowStart{};
     };
 }

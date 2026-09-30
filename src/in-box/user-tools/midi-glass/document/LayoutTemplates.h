@@ -26,6 +26,11 @@ namespace glass
         DjDeck = 2,
         DrumPads = 3,
         Transport = 4,
+
+        // Buttons in a see-through window that stays in front of other apps.
+        HorizontalToolbar = 5,
+        VerticalToolbar = 6,
+        FloatingPalette = 7,
     };
 
     struct LayoutTemplateInfo

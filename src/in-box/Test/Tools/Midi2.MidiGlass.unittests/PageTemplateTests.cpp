@@ -30,7 +30,7 @@ void PageTemplateTests::OffersTheTemplatesTheDesignNames()
 {
     auto const& templates = glass::PageTemplates();
 
-    VERIFY_ARE_EQUAL(size_t{ 6 }, templates.size());
+    VERIFY_ARE_EQUAL(size_t{ 9 }, templates.size());
 
     auto const has = [&templates](int32_t width, int32_t height)
         {
@@ -47,6 +47,11 @@ void PageTemplateTests::OffersTheTemplatesTheDesignNames()
 
     // portrait, which is the one an author forgets and a tablet player needs
     VERIFY_IS_TRUE(has(1080, 1920));
+
+    // a strip or a square of buttons that floats over another app
+    VERIFY_IS_TRUE(has(800, 120));
+    VERIFY_IS_TRUE(has(120, 800));
+    VERIFY_IS_TRUE(has(360, 360));
 }
 
 void PageTemplateTests::MatchesTheQuotedSizesOnTheReferencePage()

@@ -55,7 +55,7 @@ namespace winrt::midiglass::implementation
         constexpr UINT_PTR ToolbarSubclassId = 1;
 
         // Windows asks a window how small it may be, and holds a toolbar to its usual minimum
-        // unless the window answers for itself.
+        // unless the window answers for itself. It also asks where the frame goes.
         LRESULT CALLBACK ToolbarSubclassProcedure(
             _In_ HWND window,
             _In_ UINT message,
@@ -65,6 +65,12 @@ namespace winrt::midiglass::implementation
             _In_ DWORD_PTR referenceData) noexcept
         {
             UNREFERENCED_PARAMETER(referenceData);
+
+            // The whole window is the page. Left to Windows, a light frame is drawn round it.
+            if (message == WM_NCCALCSIZE)
+            {
+                return 0;
+            }
 
             if (message == WM_GETMINMAXINFO)
             {
@@ -101,6 +107,27 @@ namespace winrt::midiglass::implementation
             }
 
             return handle;
+        }
+
+        // Where the pointer is on the screen, in pixels. Measured from the window instead, it is
+        // out of date as soon as the window moves under it, and the drag jumps about.
+        bool TryGetPointerScreenPosition(_In_ xaml::Input::Pointer const& pointer, _Out_ POINT& position)
+        {
+            position = {};
+
+            // A finger or a pen has a place of its own. A mouse is wherever the cursor is.
+            if (pointer.PointerDeviceType() != winrt::Microsoft::UI::Input::PointerDeviceType::Mouse)
+            {
+                POINTER_INFO info{};
+
+                if (::GetPointerInfo(pointer.PointerId(), &info))
+                {
+                    position = info.ptPixelLocation;
+                    return true;
+                }
+            }
+
+            return ::GetCursorPos(&position) != FALSE;
         }
 
         // A window's backdrop has to be a system composition brush, which takes a system
@@ -299,6 +326,12 @@ namespace winrt::midiglass::implementation
                 if (auto const handle = HandleOf(window))
                 {
                     ::SetWindowSubclass(handle, &ToolbarSubclassProcedure, ToolbarSubclassId, 0);
+                    ::SetWindowPos(handle, nullptr, 0, 0, 0, 0,
+                        SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE);
+
+                    // Windows 11 draws a thin line round every window. Windows 10 has none, and refuses.
+                    COLORREF const noBorder{ DWMWA_COLOR_NONE };
+                    ::DwmSetWindowAttribute(handle, DWMWA_BORDER_COLOR, &noBorder, sizeof(noBorder));
                 }
             }
 
@@ -438,7 +471,11 @@ namespace winrt::midiglass::implementation
                 return;
             }
 
-            if (m_handlePressed || !ToolbarHandle().CapturePointer(args.Pointer()))
+            POINT screen{};
+
+            if (m_handlePressed ||
+                !TryGetPointerScreenPosition(args.Pointer(), screen) ||
+                !ToolbarHandle().CapturePointer(args.Pointer()))
             {
                 return;
             }
@@ -448,8 +485,7 @@ namespace winrt::midiglass::implementation
             m_handlePressed = true;
             m_handleDragging = false;
             m_handlePointerId = args.Pointer().PointerId();
-            m_handleStartX = point.Position().X;
-            m_handleStartY = point.Position().Y;
+            m_handlePointerStart = { static_cast<int32_t>(screen.x), static_cast<int32_t>(screen.y) };
             m_handleWindowStart = AppWindow().Position();
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to start moving the toolbar.")
@@ -471,26 +507,24 @@ namespace winrt::midiglass::implementation
         {
             args.Handled(true);
 
-            auto const point = args.GetCurrentPoint(nullptr);
-            auto const scale = WindowScale();
+            POINT screen{};
 
-            // Where the pointer is on the screen. The window moves under it, so the pointer's
-            // place in the window is added to where the window is now, not where it started.
-            auto const window = AppWindow().Position();
+            if (!TryGetPointerScreenPosition(args.Pointer(), screen))
+            {
+                return;
+            }
 
-            auto const deltaX = (window.X + point.Position().X * scale) - (m_handleWindowStart.X + m_handleStartX * scale);
-            auto const deltaY = (window.Y + point.Position().Y * scale) - (m_handleWindowStart.Y + m_handleStartY * scale);
+            auto const deltaX = static_cast<int32_t>(screen.x) - m_handlePointerStart.X;
+            auto const deltaY = static_cast<int32_t>(screen.y) - m_handlePointerStart.Y;
 
-            if (!m_handleDragging && std::hypot(deltaX, deltaY) < HandleDragThreshold * scale)
+            if (!m_handleDragging && std::hypot(deltaX, deltaY) < HandleDragThreshold * WindowScale())
             {
                 return;
             }
 
             m_handleDragging = true;
 
-            AppWindow().Move({
-                m_handleWindowStart.X + static_cast<int32_t>(std::lround(deltaX)),
-                m_handleWindowStart.Y + static_cast<int32_t>(std::lround(deltaY)) });
+            AppWindow().Move({ m_handleWindowStart.X + deltaX, m_handleWindowStart.Y + deltaY });
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to move the toolbar.")
     }

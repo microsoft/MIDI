@@ -222,6 +222,7 @@ namespace winrt::midiglass::implementation
         void OnRemoveMessageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnMessageFieldChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnMessageNumberChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnMessageVelocityChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
         void OnMessageParameterChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
 
         // Several controls picked: where all of them send, and where the ones that listen do.
@@ -746,6 +747,7 @@ namespace winrt::midiglass::implementation
         void AppendMonitorRow(_In_ glass::SentMessage const& message);
         void AppendMonitorItem(_In_ glass::SentMessage const& message);
         bool IsMonitoredControl(_In_ uint32_t controlIndex) const;
+        void FollowPlayedControl(_In_ size_t itemIndex);
         winrt::com_ptr<MonitorItem> MakeMonitorItem(_In_ glass::SentMessage const& message) const;
         void RebuildMonitorList();
         void UpdateMonitorEmptyText();
@@ -1038,6 +1040,10 @@ namespace winrt::midiglass::implementation
         bool m_monitorPaused{ false };
         bool m_monitorSelectedOnly{ true };
         bool m_monitorExpanded{ true };
+
+        // Playing a control in Try mode does not select it, so there the filter follows the control
+        // last pressed. -1 until one is.
+        int32_t m_monitorPlayedControl{ -1 };
 
         // What the rail goes back to when it is opened again. The comp's rail is 104 px.
         double m_monitorHeight{ 104.0 };

@@ -258,6 +258,7 @@ namespace winrt::midiglass::implementation
         try
         {
             m_tryMode = tryMode;
+            m_monitorPlayedControl = -1;
 
             // A video played from the inspector was a look at one clip. Either mode starts
             // every video over from its own rules.
@@ -434,6 +435,7 @@ namespace winrt::midiglass::implementation
                     switch (touch.Phase)
                     {
                     case glass::PadTouchPhase::Down:
+                        strong->FollowPlayedControl(itemIndex);
                         strong->m_player->PadPressed(controlIndex, touch.Touch, touch.Note, touch.Velocity, touch.Pitch);
                         break;
 
@@ -480,6 +482,7 @@ namespace winrt::midiglass::implementation
                     if (isTouched)
                     {
                         strong->m_renderer.Bloom(itemIndex);
+                        strong->FollowPlayedControl(itemIndex);
                     }
 
                     strong->m_renderer.SetTouched(itemIndex, isTouched);
@@ -520,6 +523,7 @@ namespace winrt::midiglass::implementation
                     {
                         if (auto strong = weak.get())
                         {
+                            strong->FollowPlayedControl(index);
                             strong->OnTrySwitched(index, true, 1.0);
                             strong->OnTrySwitched(index, false, 0.0);
                         }
@@ -724,8 +728,36 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
+    void EditorWindow::FollowPlayedControl(size_t itemIndex)
+    {
+        if (!m_tryMode)
+        {
+            return;
+        }
+
+        auto const controlIndex = static_cast<int32_t>(m_renderer.ControlIndexOf(itemIndex));
+
+        if (controlIndex == m_monitorPlayedControl)
+        {
+            return;
+        }
+
+        m_monitorPlayedControl = controlIndex;
+
+        if (m_monitorSelectedOnly)
+        {
+            RebuildMonitorList();
+        }
+    }
+
+    _Use_decl_annotations_
     bool EditorWindow::IsMonitoredControl(uint32_t controlIndex) const
     {
+        if (m_tryMode && m_monitorPlayedControl >= 0)
+        {
+            return static_cast<uint32_t>(m_monitorPlayedControl) == controlIndex;
+        }
+
         for (auto const& id : m_editor.Selection())
         {
             if (auto const index = m_editor.ControlIndexOf(id);
@@ -831,7 +863,7 @@ namespace winrt::midiglass::implementation
             {
                 MonitorEmptyText().Text(resources::GetString(L"MonitorEmptyNotTrying"));
             }
-            else if (m_monitorSelectedOnly && m_editor.Selection().empty())
+            else if (m_monitorSelectedOnly && m_monitorPlayedControl < 0 && m_editor.Selection().empty())
             {
                 MonitorEmptyText().Text(resources::GetString(L"MonitorEmptyNoSelection"));
             }

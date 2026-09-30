@@ -1203,6 +1203,7 @@ namespace winrt::midiglass::implementation
             GroupCombo().IsEnabled(valid);
             ChannelCombo().IsEnabled(valid);
             MessageNumberBox().IsEnabled(valid);
+            MessageVelocityBox().IsEnabled(valid);
 
             if (!valid)
             {
@@ -1264,6 +1265,7 @@ namespace winrt::midiglass::implementation
 
             ChannelCombo().SelectedIndex(std::clamp(message.ChannelIndex, 0, 15));
             MessageNumberBox().Value(message.Number);
+            MessageVelocityBox().Value(glass::NoteVelocity(message));
             ParameterBankBox().Value(glass::ControllerBank(message.Number));
             ParameterIndexBox().Value(glass::ControllerIndex(message.Number));
 
@@ -1439,6 +1441,15 @@ namespace winrt::midiglass::implementation
         show(MessageNumberBox(), isChannelVoice && !bankAndIndex);
         show(MessageParameterLabel(), bankAndIndex);
         show(ParameterPanel(), bankAndIndex);
+
+        // A note row sent when the control turns off or is let go is the note off, which has no
+        // velocity worth setting.
+        auto const playsNote = kind == glass::MessageKind::Note &&
+            message.Trigger != glass::MessageTrigger::TurnsOff &&
+            message.Trigger != glass::MessageTrigger::Released;
+
+        show(MessageVelocityLabel(), playsNote);
+        show(MessageVelocityBox(), playsNote);
 
         show(SysExPanel(), kind == glass::MessageKind::SystemExclusive);
         show(RawWordsPanel(), kind == glass::MessageKind::RawUmp);
@@ -2451,6 +2462,48 @@ namespace winrt::midiglass::implementation
         if (m_editor.SetMessage(id, index, message))
         {
             RefreshMessageList();
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnMessageVelocityChanged(
+        controls::NumberBox const& sender,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr ||
+            m_messageIndex < 0 ||
+            m_messageIndex >= static_cast<int32_t>(control->Messages.size()))
+        {
+            return;
+        }
+
+        auto const value = MessageVelocityBox().Value();
+
+        if (!std::isfinite(value))
+        {
+            return;
+        }
+
+        auto message = control->Messages[static_cast<size_t>(m_messageIndex)];
+
+        glass::SetNoteVelocity(message, static_cast<int32_t>(std::lround(value)));
+
+        auto const id = control->Id;
+        auto const index = static_cast<size_t>(m_messageIndex);
+
+        if (m_editor.SetMessage(id, index, message))
+        {
             MarkChanged();
         }
     }

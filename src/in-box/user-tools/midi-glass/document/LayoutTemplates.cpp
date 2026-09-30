@@ -96,7 +96,8 @@ namespace glass
             _In_ std::wstring const& deviceName,
             _In_ midiapp::EndpointMatch const& match,
             _In_ midiapp::EndpointMatchMode matchMode,
-            _In_ std::wstring pageName) noexcept
+            _In_ std::wstring pageName,
+            _In_ std::wstring themeName) noexcept
         {
             LayoutDocument document{};
 
@@ -105,7 +106,7 @@ namespace glass
             document.PageHeight = PageHeight;
             document.CanvasWidth = PageWidth;
             document.CanvasHeight = PageHeight;
-            document.ThemeName = L"Studio Dark";
+            document.ThemeName = std::move(themeName);
             document.Scale = ScaleMode::FitToScreen;
 
             DeviceEntry device{};
@@ -396,6 +397,61 @@ namespace glass
                 page.Controls.push_back(std::move(control));
             }
         }
+
+        // ------------------------------------------------ floating toolbars
+
+        // The window is the page, only the buttons are drawn, and it stays in front of the app
+        // it sits over.
+        void MakeFloating(_Inout_ LayoutDocument& document, _In_ int32_t width, _In_ int32_t height) noexcept
+        {
+            document.PageWidth = width;
+            document.PageHeight = height;
+            document.CanvasWidth = width;
+            document.CanvasHeight = height;
+            document.Scale = ScaleMode::ActualSize;
+            document.ToolbarWindow = true;
+            document.SeeThrough = true;
+            document.AlwaysOnTop = true;
+        }
+
+        // Square buttons, evenly spaced and centered, each playing the next note up.
+        void FillButtons(
+            _Inout_ LayoutDocument& document,
+            _In_ std::wstring const& deviceName,
+            _In_ int32_t columns,
+            _In_ int32_t rows,
+            _In_ int32_t side) noexcept
+        {
+            constexpr int32_t gap = 16;
+
+            auto& page = document.Pages[0];
+
+            auto const left = (document.PageWidth - (columns * side + (columns - 1) * gap)) / 2;
+            auto const top = (document.PageHeight - (rows * side + (rows - 1) * gap)) / 2;
+
+            int32_t order{ 0 };
+
+            for (int32_t row = 0; row < rows; ++row)
+            {
+                for (int32_t column = 0; column < columns; ++column)
+                {
+                    auto button = MakeControl(
+                        ControlKind::Button,
+                        std::format(L"{}", order + 1),
+                        left + column * (side + gap),
+                        top + row * (side + gap),
+                        side,
+                        side,
+                        order % HueSlotCount,
+                        order);
+
+                    AddNotePair(button, deviceName, StarterFirstPadNote + static_cast<uint32_t>(order), 0);
+
+                    page.Controls.push_back(std::move(button));
+                    ++order;
+                }
+            }
+        }
     }
 
     std::vector<LayoutTemplateInfo> const& LayoutTemplates() noexcept
@@ -406,6 +462,9 @@ namespace glass
             { LayoutTemplateKind::DjDeck,    L"TemplateDjDeckName",    L"TemplateDjDeckDescription",    L'\xE93C' },
             { LayoutTemplateKind::DrumPads,  L"TemplateDrumPadsName",  L"TemplateDrumPadsDescription",  L'\xE80A' },
             { LayoutTemplateKind::Transport, L"TemplateTransportName", L"TemplateTransportDescription", L'\xE768' },
+            { LayoutTemplateKind::HorizontalToolbar, L"TemplateHorizontalToolbarName", L"TemplateHorizontalToolbarDescription", L'\xE90E' },
+            { LayoutTemplateKind::VerticalToolbar, L"TemplateVerticalToolbarName", L"TemplateVerticalToolbarDescription", L'\xE90C' },
+            { LayoutTemplateKind::FloatingPalette, L"TemplateFloatingPaletteName", L"TemplateFloatingPaletteDescription", L'\xE790' },
             { LayoutTemplateKind::Blank,     L"TemplateBlankName",     L"TemplateBlankDescription",     L'\xE7C3' },
         };
 
@@ -420,39 +479,64 @@ namespace glass
         midiapp::EndpointMatch const& match,
         midiapp::EndpointMatchMode matchMode) noexcept
     {
+        // A shipped theme per starter: the nearly black default made a new page look empty.
         switch (kind)
         {
         case LayoutTemplateKind::Mixer:
         {
-            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Mixer");
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Mixer", L"Bigwig");
             FillMixer(document, deviceName);
             return document;
         }
 
         case LayoutTemplateKind::DjDeck:
         {
-            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Decks");
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Decks", L"Supersaw");
             FillDjDeck(document, deviceName);
             return document;
         }
 
         case LayoutTemplateKind::DrumPads:
         {
-            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Pads");
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Pads", L"Insert Coin");
             FillDrumPads(document, deviceName);
             return document;
         }
 
         case LayoutTemplateKind::Transport:
         {
-            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Transport");
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Transport", L"Daylight");
             FillTransport(document, deviceName);
+            return document;
+        }
+
+        case LayoutTemplateKind::HorizontalToolbar:
+        {
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Toolbar", L"Bone");
+            MakeFloating(document, ToolbarLength, ToolbarThickness);
+            FillButtons(document, deviceName, 8, 1, 80);
+            return document;
+        }
+
+        case LayoutTemplateKind::VerticalToolbar:
+        {
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Toolbar", L"Bone");
+            MakeFloating(document, ToolbarThickness, ToolbarLength);
+            FillButtons(document, deviceName, 1, 8, 80);
+            return document;
+        }
+
+        case LayoutTemplateKind::FloatingPalette:
+        {
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Palette", L"Bone");
+            MakeFloating(document, PaletteSide, PaletteSide);
+            FillButtons(document, deviceName, 4, 4, 72);
             return document;
         }
 
         case LayoutTemplateKind::Blank:
         default:
-            return MakeDocument(layoutName, deviceName, match, matchMode, L"Page 1");
+            return MakeDocument(layoutName, deviceName, match, matchMode, L"Page 1", L"Tonal Light");
         }
     }
 

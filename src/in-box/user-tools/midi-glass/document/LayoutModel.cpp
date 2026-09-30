@@ -414,6 +414,30 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    int32_t NoteVelocity(ControlMessage const& message) noexcept
+    {
+        auto const& top = message.Maximum;
+
+        if (!std::isfinite(top.Value))
+        {
+            return 127;
+        }
+
+        // An absolute value is in the note's own units: seven bits in MIDI 1.0, sixteen in 2.0.
+        auto const share = top.Scaling == ValueScaling::Absolute
+            ? top.Value / (message.UseMidi1Protocol ? 127.0 : 65535.0)
+            : top.Value;
+
+        return std::clamp(static_cast<int32_t>(std::lround(std::clamp(share, 0.0, 1.0) * 127.0)), 1, 127);
+    }
+
+    _Use_decl_annotations_
+    void SetNoteVelocity(ControlMessage& message, int32_t velocity) noexcept
+    {
+        message.Maximum = { std::clamp(velocity, 1, 127) / 127.0, ValueScaling::Fraction };
+    }
+
+    _Use_decl_annotations_
     int32_t DetentStopCount(Control const& control) noexcept
     {
         int32_t highest{ 0 };

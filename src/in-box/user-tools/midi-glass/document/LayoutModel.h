@@ -1044,6 +1044,12 @@ namespace glass
     // Whether a row carries a channel. Only the channel voice messages do.
     bool CarriesAChannel(_In_ MessageKind kind) noexcept;
 
+    // A note row's velocity on the 1 to 127 scale, read from the top of its range.
+    int32_t NoteVelocity(_In_ ControlMessage const& message) noexcept;
+
+    // Kept as a share of the range, so it means the same velocity in MIDI 1.0 and MIDI 2.0.
+    void SetNoteVelocity(_Inout_ ControlMessage& message, _In_ int32_t velocity) noexcept;
+
     // What a control listens for, so a fader can follow the DAW rather than only lead it.
     struct FeedbackBinding
     {

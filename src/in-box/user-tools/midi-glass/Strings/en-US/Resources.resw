@@ -392,6 +392,24 @@
   <data name="TemplateTransportDescription" xml:space="preserve">
     <value>Play, stop, record and loop, plus eight track faders</value>
   </data>
+  <data name="TemplateHorizontalToolbarName" xml:space="preserve">
+    <value>Horizontal toolbar</value>
+  </data>
+  <data name="TemplateHorizontalToolbarDescription" xml:space="preserve">
+    <value>Eight buttons in a see-through strip that stays in front of your other apps</value>
+  </data>
+  <data name="TemplateVerticalToolbarName" xml:space="preserve">
+    <value>Vertical toolbar</value>
+  </data>
+  <data name="TemplateVerticalToolbarDescription" xml:space="preserve">
+    <value>Eight buttons in a see-through column that stays in front of your other apps</value>
+  </data>
+  <data name="TemplateFloatingPaletteName" xml:space="preserve">
+    <value>Floating palette</value>
+  </data>
+  <data name="TemplateFloatingPaletteDescription" xml:space="preserve">
+    <value>Sixteen buttons in a see-through square that stays in front of your other apps</value>
+  </data>
   <data name="TemplateBlankName" xml:space="preserve">
     <value>Blank</value>
   </data>
@@ -695,7 +713,7 @@
     <value>Switch to Try to play the page and watch it send</value>
   </data>
   <data name="MonitorEmptyNoSelection" xml:space="preserve">
-    <value>Select a control, or clear the filter to see everything</value>
+    <value>Press a control to see what it sends, or clear the filter to see everything</value>
   </data>
   <data name="MonitorEmptyNothingYet" xml:space="preserve">
     <value>Nothing sent yet</value>
@@ -2532,6 +2550,15 @@
   <data name="MessageNumberBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Controller or note number</value>
   </data>
+  <data name="MessageVelocityLabel.Text" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="MessageVelocityBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Velocity, 1 to 127</value>
+  </data>
+  <data name="MessageVelocityBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>How hard the note is played, from 1 to 127. A pad that takes its velocity from how hard it is pressed plays up to this.</value>
+  </data>
   <data name="TriggerChanges" xml:space="preserve">
     <value>It changes</value>
   </data>
@@ -3438,6 +3465,15 @@
   </data>
   <data name="PageTemplatePortrait" xml:space="preserve">
     <value>Portrait</value>
+  </data>
+  <data name="PageTemplateHorizontalToolbar" xml:space="preserve">
+    <value>Horizontal toolbar</value>
+  </data>
+  <data name="PageTemplateVerticalToolbar" xml:space="preserve">
+    <value>Vertical toolbar</value>
+  </data>
+  <data name="PageTemplateFloatingPalette" xml:space="preserve">
+    <value>Floating palette</value>
   </data>
   <!-- ============================================ layout settings rail -->
   <data name="SettingsNavAppearance.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">

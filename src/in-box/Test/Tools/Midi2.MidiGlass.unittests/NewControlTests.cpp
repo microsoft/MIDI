@@ -359,6 +359,57 @@ void NewControlTests::ANoteOnNeverGoesOutAtVelocityZero()
     }
 }
 
+void NewControlTests::ANoteRowReadsItsVelocityFromTheTopOfItsRange()
+{
+    glass::ControlMessage message{};
+    message.Kind = glass::MessageKind::Note;
+
+    VERIFY_ARE_EQUAL(127, glass::NoteVelocity(message));
+
+    message.Maximum = { 0.5, glass::ValueScaling::Fraction };
+    VERIFY_ARE_EQUAL(64, glass::NoteVelocity(message));
+
+    // Typed into a file in the note's own units: seven bits in MIDI 1.0, sixteen in MIDI 2.0.
+    message.Maximum = { 100.0, glass::ValueScaling::Absolute };
+    message.UseMidi1Protocol = true;
+    VERIFY_ARE_EQUAL(100, glass::NoteVelocity(message));
+
+    message.Maximum = { 32768.0, glass::ValueScaling::Absolute };
+    message.UseMidi1Protocol = false;
+    VERIFY_ARE_EQUAL(64, glass::NoteVelocity(message));
+
+    // Zero would be a note off, so the field never shows it.
+    message.Maximum = { 0.0, glass::ValueScaling::Fraction };
+    VERIFY_ARE_EQUAL(1, glass::NoteVelocity(message));
+}
+
+void NewControlTests::AVelocitySetOnARowIsWhatThePressSends()
+{
+    std::array<glass::PreparedSend, glass::MaximumSendsPerEvent> sends{};
+
+    for (auto const midi1 : { true, false })
+    {
+        auto control = NoteRowControl(glass::ControlKind::Pad, midi1);
+
+        glass::SetNoteVelocity(control.Messages[0], 100);
+        VERIFY_ARE_EQUAL(100, glass::NoteVelocity(control.Messages[0]));
+
+        glass::BindingEngine engine{};
+        engine.Prepare(OneControl(control), OneDevice());
+
+        VERIFY_ARE_EQUAL(1u, engine.EvaluatePress(0, glass::MessageTrigger::Changes, true, 1.0, sends));
+        VERIFY_ARE_EQUAL(0x9u, (sends[0].Words[0] >> 20) & 0x0F);
+
+        // A MIDI 2.0 velocity folds to the same seven bits on its way to a MIDI 1.0 device.
+        auto const sent = midi1 ? (sends[0].Words[0] & 0x7F) : ((sends[0].Words[1] >> 16) >> 9);
+        VERIFY_ARE_EQUAL(100u, sent);
+
+        // The release is still a note off.
+        VERIFY_ARE_EQUAL(1u, engine.EvaluatePress(0, glass::MessageTrigger::Changes, false, 0.0, sends));
+        VERIFY_ARE_EQUAL(0x8u, (sends[0].Words[0] >> 20) & 0x0F);
+    }
+}
+
 // ------------------------------------------------------------------- the clock
 
 void NewControlTests::AClockSendsOneWordPerDestination()
