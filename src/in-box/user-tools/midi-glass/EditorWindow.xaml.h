@@ -179,6 +179,12 @@ namespace winrt::midiglass::implementation
         void OnZoomOutClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnZoomFitClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        // The zoom figure, which a double click turns into a box to type a zoom into.
+        void OnZoomPercentDoubleTapped(foundation::IInspectable const& sender, xaml::Input::DoubleTappedRoutedEventArgs const& args);
+        void OnZoomPercentKeyDown(foundation::IInspectable const& sender, xaml::Input::KeyRoutedEventArgs const& args);
+        void OnZoomPercentBoxKeyDown(foundation::IInspectable const& sender, xaml::Input::KeyRoutedEventArgs const& args);
+        void OnZoomPercentBoxLostFocus(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
         // ---- panes (EditorPanes.cpp) ----
 
         void OnSplitterPressed(foundation::IInspectable const& sender, xaml::Input::PointerRoutedEventArgs const& args);
@@ -232,6 +238,7 @@ namespace winrt::midiglass::implementation
 
         void OnSendOnStartToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnReturnsToDefaultToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnLightsFromCenterToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnDefaultValueChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
         void OnStartsOnToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSendIntervalChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
@@ -392,6 +399,8 @@ namespace winrt::midiglass::implementation
 
         void ApplyCanvasScale();
         void StepZoom(_In_ double factor);
+        void BeginZoomEdit();
+        void EndZoomEdit(_In_ bool apply);
 
         // True when the work area moved or resized, which means the grid and the overlay are
         // drawn against the wrong origin until they are redrawn.
@@ -769,6 +778,9 @@ namespace winrt::midiglass::implementation
         // Fit follows the window; a typed or stepped zoom does not, or resizing the window
         // would throw away the zoom somebody just chose.
         bool m_zoomIsFit{ true };
+
+        // Set while the zoom figure is a box being typed into.
+        bool m_editingZoom{ false };
 
         // ---- drag state ----
 

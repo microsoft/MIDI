@@ -69,5 +69,7 @@ Every request returns an `IAsyncOperation`. Each piece that arrives gives the tr
 
 ## Examples
 
-* [C++ Sample](https://github.com/microsoft/MIDI/blob/main/samples/cpp-winrt/capability-inquiry-browse/main_capability_inquiry_browse.cpp)
-* [C# Sample](https://github.com/microsoft/MIDI/blob/main/samples/csharp-net/capability-inquiry-browse/Program.cs)
+* [C++ Sample: browsing a device](https://github.com/microsoft/MIDI/blob/main/samples/cpp-winrt/capability-inquiry-browse/main_capability_inquiry_browse.cpp)
+* [C++ Sample: reading channel and program lists](https://github.com/microsoft/MIDI/blob/main/samples/cpp-winrt/capability-inquiry-program-list/main_capability_inquiry_program_list.cpp)
+* [C# Sample: browsing a device](https://github.com/microsoft/MIDI/blob/main/samples/csharp-net/capability-inquiry-browse/Program.cs)
+* [C# Sample: reading channel and program lists](https://github.com/microsoft/MIDI/blob/main/samples/csharp-net/capability-inquiry-program-list/Program.cs)

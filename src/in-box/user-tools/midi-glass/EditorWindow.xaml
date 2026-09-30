@@ -792,8 +792,38 @@
                                        FontFamily="Cascadia Mono, Consolas"
                                        FontSize="10"
                                        VerticalAlignment="Center"
-                                       Margin="0,0,4,0"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                            <!-- The zoom, which a double click turns into a box to type one into. -->
+                            <Grid VerticalAlignment="Center" Margin="0,0,4,0">
+                                <ContentControl x:Name="ZoomPercentHost"
+                                                x:Uid="ZoomPercentHost"
+                                                IsTabStop="True"
+                                                UseSystemFocusVisuals="True"
+                                                VerticalAlignment="Center"
+                                                DoubleTapped="OnZoomPercentDoubleTapped"
+                                                KeyDown="OnZoomPercentKeyDown">
+                                    <TextBlock x:Name="ZoomPercentText"
+                                               FontFamily="Cascadia Mono, Consolas"
+                                               FontSize="10"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </ContentControl>
+
+                                <TextBox x:Name="ZoomPercentBox"
+                                         x:Uid="ZoomPercentBox"
+                                         Visibility="Collapsed"
+                                         Width="54"
+                                         Height="22"
+                                         MinWidth="0"
+                                         MinHeight="0"
+                                         Padding="5,1,5,1"
+                                         MaxLength="8"
+                                         FontFamily="Cascadia Mono, Consolas"
+                                         FontSize="10"
+                                         VerticalAlignment="Center"
+                                         KeyDown="OnZoomPercentBoxKeyDown"
+                                         LostFocus="OnZoomPercentBoxLostFocus" />
+                            </Grid>
 
                             <Button x:Name="ZoomOutButton"
                                     x:Uid="ZoomOutButton"
@@ -2656,6 +2686,19 @@
                                                   Header="Starts on"
                                                   Visibility="Collapsed"
                                                   Toggled="OnStartsOnToggled" />
+
+                                    <!-- A pan control: rests in the middle and lights either way from it. -->
+                                    <StackPanel x:Name="LightsFromCenterPanel" Visibility="Collapsed" Spacing="4" Margin="0,0,0,10">
+                                        <ToggleSwitch x:Name="LightsFromCenterSwitch"
+                                                      x:Uid="LightsFromCenterSwitch"
+                                                      Header="Centered, like a pan control"
+                                                      Toggled="OnLightsFromCenterToggled" />
+                                        <TextBlock x:Uid="LightsFromCenterCaption"
+                                                   Text="Rests in the middle, and lights only the part it has moved away from the middle, to either side."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
 
                                     <ToggleSwitch x:Name="ReturnsToDefaultSwitch"
                                                   x:Uid="ReturnsToDefaultSwitch"

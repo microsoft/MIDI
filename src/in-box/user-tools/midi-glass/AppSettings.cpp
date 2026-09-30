@@ -17,6 +17,7 @@ namespace midiglass
         constexpr wchar_t ValueLibrarySort[] = L"LibrarySort";
         constexpr wchar_t ValueLibraryShowsList[] = L"LibraryShowsList";
         constexpr wchar_t ValueKeepAwake[] = L"KeepAwakeWhileRunning";
+        constexpr wchar_t ValueShowAllFonts[] = L"ShowAllFonts";
         constexpr wchar_t ValueRecentLayouts[] = L"RecentLayouts";
 
         constexpr wchar_t ValueEditorX[] = L"EditorWindowX";
@@ -67,6 +68,7 @@ namespace midiglass
 
         m_libraryShowsList = ReadDword(ValueLibraryShowsList, 0) != 0;
         m_keepAwakeWhileRunning = ReadDword(ValueKeepAwake, 0) != 0;
+        m_showAllFonts = ReadDword(ValueShowAllFonts, 0) != 0;
 
         m_editorPlacement.X = static_cast<int32_t>(ReadDword(ValueEditorX, 0));
         m_editorPlacement.Y = static_cast<int32_t>(ReadDword(ValueEditorY, 0));
@@ -139,6 +141,14 @@ namespace midiglass
         m_keepAwakeWhileRunning = value;
 
         WriteDword(ValueKeepAwake, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::ShowAllFonts(bool value) noexcept
+    {
+        m_showAllFonts = value;
+
+        WriteDword(ValueShowAllFonts, value ? 1u : 0u);
     }
 
     void AppSettings::LoadRecentLayouts() noexcept

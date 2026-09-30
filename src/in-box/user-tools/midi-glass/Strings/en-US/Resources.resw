@@ -434,11 +434,11 @@
   <data name="ScaleCustom" xml:space="preserve">
     <value>Custom size</value>
   </data>
-  <data name="ViewModeToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>View mode. The surface sends nothing while this is on</value>
+  <data name="KeepOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keep this window in front of other windows</value>
   </data>
-  <data name="ViewModeLabel.Text" xml:space="preserve">
-    <value>View</value>
+  <data name="KeepOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep in front of other windows</value>
   </data>
   <data name="FullScreenButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Full screen</value>
@@ -790,9 +790,6 @@
   <data name="PaletteKnob" xml:space="preserve">
     <value>Knob</value>
   </data>
-  <data name="PaletteEncoder" xml:space="preserve">
-    <value>Encoder</value>
-  </data>
   <data name="PaletteFader" xml:space="preserve">
     <value>Fader</value>
   </data>
@@ -813,12 +810,6 @@
   </data>
   <data name="PaletteImage" xml:space="preserve">
     <value>Image</value>
-  </data>
-  <data name="PaletteRadio" xml:space="preserve">
-    <value>Radio</value>
-  </data>
-  <data name="PaletteStepper" xml:space="preserve">
-    <value>Stepper</value>
   </data>
   <data name="PaletteWheel" xml:space="preserve">
     <value>Wheel</value>
@@ -1069,6 +1060,16 @@
   <data name="FontFamilyTheme" xml:space="preserve">
     <value>Same as the theme</value>
   </data>
+  <data name="FontShowAll" xml:space="preserve">
+    <value>Show every font on this PC</value>
+  </data>
+  <data name="FontShowAllCaption" xml:space="preserve">
+    <value>Otherwise the list has only the fonts every Windows PC has. A label set in a font another PC doesn't have is shown there in the default font.</value>
+  </data>
+  <data name="FontMissingFormat" xml:space="preserve">
+    <value>{0} (not on this PC)</value>
+    <comment>{0} is the name of a font the layout uses that is not installed on this PC</comment>
+  </data>
   <data name="FontSizeHeader" xml:space="preserve">
     <value>Size</value>
   </data>
@@ -1207,7 +1208,17 @@
     <value>{0} %</value>
   </data>
   <data name="CanvasStatusFormat" xml:space="preserve">
-    <value>Page {0} of {1}  ·  {2} × {3}  ·  {4} %</value>
+    <value>Page {0} of {1}  ·  {2} × {3}  ·</value>
+  </data>
+  <data name="ZoomPercentNameFormat" xml:space="preserve">
+    <value>Zoom, {0} percent. Double-click or press Enter to type a zoom</value>
+    <comment>{0} is the editor's zoom as a whole number</comment>
+  </data>
+  <data name="ZoomPercentHost.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Double-click to type a zoom</value>
+  </data>
+  <data name="ZoomPercentBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Zoom in percent, from 10 to 400</value>
   </data>
   <data name="ZoomInButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Zoom in</value>
@@ -2469,6 +2480,10 @@
   <data name="MessageRowFormat" xml:space="preserve">
     <value>{0}  ·  {1} {2}  ·  {3}</value>
   </data>
+  <data name="MessageRowPageFormat" xml:space="preserve">
+    <value>{0}  ·  Go to {1}</value>
+    <comment>A row in a control's Sends list that changes the page. {0} is when it happens, such as "It turns on". {1} is the page's name.</comment>
+  </data>
   <data name="MessageNoDevice" xml:space="preserve">
     <value>no device</value>
   </data>
@@ -2632,6 +2647,31 @@
     <value>Leave full screen</value>
   </data>
   <data name="CornerPanic.Text" xml:space="preserve">
+    <value>Panic</value>
+  </data>
+  <data name="ToolbarHandle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Toolbar handle. Drag it to move the window, or press Enter for the menu</value>
+  </data>
+  <data name="ToolbarHandle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Drag to move. Click for the menu.</value>
+  </data>
+  <data name="ToolbarPages.Text" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="ToolbarSize.Text" xml:space="preserve">
+    <value>Size</value>
+    <comment>A toolbar window's menu. Its choices are percentages of the size the layout was designed at.</comment>
+  </data>
+  <data name="ToolbarKeepOnTop.Text" xml:space="preserve">
+    <value>Keep in front</value>
+  </data>
+  <data name="ToolbarFullScreen.Text" xml:space="preserve">
+    <value>Full screen</value>
+  </data>
+  <data name="ToolbarClose.Text" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="ToolbarPanic.Text" xml:space="preserve">
     <value>Panic</value>
   </data>
   <data name="FullScreenToast" xml:space="preserve">
@@ -2879,6 +2919,12 @@
   </data>
   <data name="StartsOnSwitch.Header" xml:space="preserve">
     <value>Starts on</value>
+  </data>
+  <data name="LightsFromCenterSwitch.Header" xml:space="preserve">
+    <value>Centered, like a pan control</value>
+  </data>
+  <data name="LightsFromCenterCaption.Text" xml:space="preserve">
+    <value>Rests in the middle, and lights only the part it has moved away from the middle, to either side. Turning this on starts it in the middle.</value>
   </data>
   <data name="InspectorThrottleHeading.Text" xml:space="preserve">
     <value>Least time between sends</value>
@@ -4173,6 +4219,21 @@
   </data>
   <data name="SettingsCornerBottomRight" xml:space="preserve">
     <value>Bottom right</value>
+  </data>
+  <data name="BehaviorHeadingWindow" xml:space="preserve">
+    <value>The window it runs in</value>
+  </data>
+  <data name="BehaviorCaptionWindow" xml:space="preserve">
+    <value>For a strip of buttons that sits over another app, like a toolbar. A toolbar window is exactly the size of the page, with a handle at one end: drag the handle to move it, and click it for the menu. These take effect the next time the layout runs.</value>
+  </data>
+  <data name="BehaviorToolbarWindow" xml:space="preserve">
+    <value>Toolbar window, with no title bar, buttons or border</value>
+  </data>
+  <data name="BehaviorAlwaysOnTop" xml:space="preserve">
+    <value>Keep it in front of other windows</value>
+  </data>
+  <data name="BehaviorSeeThrough" xml:space="preserve">
+    <value>See-through, so only the controls are drawn</value>
   </data>
   <data name="BehaviorHeadingStartup" xml:space="preserve">
     <value>What it sends when it opens</value>

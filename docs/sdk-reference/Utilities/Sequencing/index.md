@@ -18,3 +18,8 @@ A sequence isn't a collection of message objects. It's a way to reach the data i
 * **The largest** data, the raw Universal MIDI Packets, is never handed to your app at all. The player reads it straight from the sequence.
 
 If you're drawing a piano roll, this difference decides whether your app is fast or too slow to use.
+
+## Samples
+
+* [C++/WinRT sequence-builder](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/sequence-builder) and [C# sequence-builder](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/sequence-builder) for building sequences in code and playing them
+* [C++/WinRT midi-file-player](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/midi-file-player) and [C# midi-file-player](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/midi-file-player) for reading a MIDI file and playing it, with pause, resume, and the current bar and beat on screen

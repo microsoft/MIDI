@@ -48,6 +48,13 @@ This class implements [IMidiServiceTransportPluginConfig]({{ site.baseurl }}/sdk
 
 **Some changes interrupt the sound.** The render mode, sample rate, bank select mode, and effects switch decide how the synthesizer's engine is built. Changing any of them rebuilds the engine, and that clears every channel's program, bank, volume, pan, and tuning. Volume isn't one of them. You can change it at any time without interrupting anything.
 
+## Samples
+
+These change the synthesizer's volume while a MIDI file plays. They call `SendUpdate` but not `SaveUpdate`, so restarting the service undoes the change. They also put the volume back the way they found it when they exit, because every app on the PC shares the synthesizer.
+
+* [C++/WinRT midi-file-player](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/midi-file-player)
+* [C# midi-file-player](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/midi-file-player)
+
 ## See also
 
 - [MidiSynthStatus]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthStatus/)

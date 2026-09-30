@@ -13,6 +13,7 @@
 
 #include "StringResources.h"
 #include "ControlFactory.h"
+#include "FontCatalog.h"
 #include "SurfaceColors.h"
 #include "HexText.h"
 
@@ -31,7 +32,6 @@ namespace winrt::midiglass::implementation
         constexpr glass::ControlKind KindOrder[]
         {
             glass::ControlKind::Knob,
-            glass::ControlKind::Encoder,
             glass::ControlKind::Turntable,
             glass::ControlKind::Fader,
             glass::ControlKind::Wheel,
@@ -61,7 +61,7 @@ namespace winrt::midiglass::implementation
 
         constexpr wchar_t const* KindResourceKeys[]
         {
-            L"PaletteKnob", L"PaletteEncoder", L"PaletteTurntable", L"PaletteFader", L"PaletteWheel", L"PalettePad", L"PaletteButton",
+            L"PaletteKnob", L"PaletteTurntable", L"PaletteFader", L"PaletteWheel", L"PalettePad", L"PaletteButton",
             L"PaletteToggle", L"PaletteSwitch", L"PaletteXYPad", L"PaletteJoystick", L"PaletteRibbon",
             L"PaletteKeyboard", L"PaletteNotePads", L"PaletteHexPads", L"PaletteBeatClock",
             L"PaletteLfo",
@@ -184,7 +184,12 @@ namespace winrt::midiglass::implementation
         {
             std::vector<std::wstring> parts{};
 
-            if (!style.FontFamily.empty()) { parts.push_back(style.FontFamily); }
+            if (!style.FontFamily.empty())
+            {
+                parts.push_back(::midiglass::fonts::IsInstalled(style.FontFamily)
+                    ? style.FontFamily
+                    : std::wstring{ resources::FormatString(L"FontMissingFormat", style.FontFamily) });
+            }
             if (style.FontSize > 0.0) { parts.push_back(std::to_wstring(static_cast<int32_t>(style.FontSize)) + L" px"); }
             if (style.FontWeight > 0) { parts.push_back(std::to_wstring(style.FontWeight)); }
             if (style.Italic) { parts.push_back(std::wstring{ resources::GetString(L"FontItalic") }); }
@@ -1039,6 +1044,11 @@ namespace winrt::midiglass::implementation
             SendOnStartSwitch().IsOn(control->SendsValueOnStart);
             DefaultValueSlider().Value(control->DefaultValue * 100.0);
             ReturnsToDefaultSwitch().IsOn(control->ReturnsToDefault);
+            LightsFromCenterSwitch().IsOn(control->LightsFromCenter);
+            LightsFromCenterPanel().Visibility(
+                control->Kind == glass::ControlKind::Knob || control->Kind == glass::ControlKind::Fader
+                    ? xaml::Visibility::Visible
+                    : xaml::Visibility::Collapsed);
             SendIntervalBox().Value(control->SendIntervalMilliseconds);
             KeyboardOrderBox().Value(control->KeyboardOrder);
 
@@ -1107,6 +1117,19 @@ namespace winrt::midiglass::implementation
                     message.DeviceName.empty()
                         ? std::wstring{ resources::GetString(L"MessageNoDevice") }
                         : message.DeviceName);
+
+                // A page change has no number and no device, so its row names the page instead.
+                if (message.Kind == glass::MessageKind::GoToPage)
+                {
+                    auto const* const page = m_editor.Document().FindPage(message.TargetPageId);
+
+                    text = resources::FormatString(
+                        L"MessageRowPageFormat",
+                        resources::GetString(TriggerResourceKeys[IndexOf(TriggerOrder, message.Trigger)]),
+                        page == nullptr
+                            ? std::wstring{ resources::GetString(L"StepNoPage") }
+                            : page->Name);
+                }
 
                 // Every row of a switch otherwise reads the same. The position is the difference.
                 if (control->Kind == glass::ControlKind::Switch && message.Position >= 0)
@@ -2190,8 +2213,14 @@ namespace winrt::midiglass::implementation
             m_preview.Build(PreviewCanvas(), single, m_theme, 0);
             m_preview.SetValue(0, control.DefaultValue > 0.0 ? control.DefaultValue : 0.62);
 
+            // The wall and its texture under the control, the glass over it.
             glass::ApplyDeckOverlay(
-                PreviewCanvas(), m_theme, single.PageWidth, single.PageHeight, 1.0);
+                PreviewDeck(), m_theme, single.PageWidth, single.PageHeight, 1.0,
+                glass::DeckOverlayLayer::BeneathControls);
+
+            glass::ApplyDeckOverlay(
+                PreviewCanvas(), m_theme, single.PageWidth, single.PageHeight, 1.0,
+                glass::DeckOverlayLayer::AboveControls);
 
             if (auto const element = m_preview.ElementAt(0))
             {
@@ -2517,6 +2546,30 @@ namespace winrt::midiglass::implementation
             // The surface reads this when it attaches the pointer handlers, so it has to be
             // rebuilt for the change to be felt rather than only saved.
             RebuildSurface();
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLightsFromCenterToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control != nullptr &&
+            m_editor.SetControlLightsFromCenter(control->Id, LightsFromCenterSwitch().IsOn()))
+        {
+            // Turning it on can move the starting value to the middle, so the whole inspector
+            // is read again rather than only the switch.
+            RebuildSurface();
+            RefreshInspector();
             MarkChanged();
         }
     }

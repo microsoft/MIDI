@@ -15,6 +15,7 @@ For C++, Windows MIDI Services is only being tested with C++/WinRT, not CX or WR
 | -------| ----------- |
 | [Basics](basics/) | Shows how to open a MidiSession, and connect to a MidiEndpoint to send and receive messages |
 | [Capability Inquiry Browse](capability-inquiry-browse/) | Asks a device what it can do, and reads the device info, channel list and program list it publishes. This is what a patch browser is built on |
+| [Capability Inquiry Program List](capability-inquiry-program-list/) | Reads the channel list and program lists of the General MIDI synthesizer a page at a time, groups the programs by category, and uses an entry to choose the sound on a channel |
 | [Capability Inquiry Virtual Device](capability-inquiry-virtual-device/) | Publishes device info, channels, programs and a profile from a virtual device, and lets the API answer capability inquiry for it |
 | [COM Extensions](com-extensions/) | Shows how to use the COM extensions for super fast allocation-free MIDI Message send/receive |
 | [Detect Windows MIDI Services](detect-midi-services/) | Works out at runtime whether to drive Windows MIDI Services or fall back to WinMM / WinRT MIDI 1.0, with and without a reference to the SDK. Start here if you ship a library or a plug-in |
@@ -24,9 +25,12 @@ For C++, Windows MIDI Services is only being tested with C++/WinRT, not CX or WR
 | [Loopback Basic Endpoints](loopback-basic-endpoints/) | Demonstrates how to create MIDI 1.0-style loopback endpoints at runtime |
 | [Loopback Basic Endpoints from WinMM](loopback-basic-endpoints-winmm/) | Creates loopback endpoints and then uses them from the older WinMM API |
 | [Loopback Endpoints](loopback-endpoints/) | Demonstrates how to create MIDI 2.0 bidirectional loopback endpoints at runtime |
+| [MIDI File Player](midi-file-player/) | Reads a Standard MIDI File, shows what is in it, and plays it on the General MIDI synthesizer. Also sets the synthesizer's volume while it plays |
+| [MIDI File Writer](midi-file-writer/) | Saves a sequence as a Standard MIDI File, shows which messages MIDI 1.0 cannot hold, and reads the file back |
 | [Scheduled Messages using COM Extensions](scheduled-messages-com-extensions/) | Schedules messages for future delivery using the allocation-free COM extensions |
 | [Scheduled Send Messages](scheduled-send-messages/) | Schedules messages for delivery at a future timestamp. There is no WinMM equivalent for this |
 | [Send Speed](send-speed/) | Measures message sending throughput |
+| [Sequence Builder](sequence-builder/) | Builds sequences in memory, one in musical time and one in real time, and plays them on the General MIDI synthesizer |
 | [Simple app-to-app MIDI](simple-app-to-app-midi/) | Demonstrates how to create an application endpoint, and update properties like function blocks. The C# sample is more of a real-world use-case |
 | [Static Enum Endpoints](static-enum-endpoints/) | Demonstrates how to get a one-time static list of active endpoints, with group terminal blocks, function blocks, and other properties |
 | [SysEx File Receiver](sysex-file-receiver/) | Receives a System Exclusive message and writes it to a `.syx` file |

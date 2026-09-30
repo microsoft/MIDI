@@ -280,6 +280,47 @@ namespace winrt::midiglass::implementation
                 SettingsBehaviorPanel().Children().Append(corner);
             }
 
+            // ---- the window it runs in ----
+
+            heading(L"BehaviorHeadingWindow", false);
+            caption(L"BehaviorCaptionWindow");
+
+            check(L"BehaviorToolbarWindow", document.ToolbarWindow,
+                [weak = get_weak()](bool on)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        if (strong->m_editor.SetToolbarWindow(on))
+                        {
+                            strong->MarkChanged();
+                        }
+                    }
+                });
+
+            check(L"BehaviorAlwaysOnTop", document.AlwaysOnTop,
+                [weak = get_weak()](bool on)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        if (strong->m_editor.SetAlwaysOnTop(on))
+                        {
+                            strong->MarkChanged();
+                        }
+                    }
+                });
+
+            check(L"BehaviorSeeThrough", document.SeeThrough,
+                [weak = get_weak()](bool on)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        if (strong->m_editor.SetSeeThrough(on))
+                        {
+                            strong->MarkChanged();
+                        }
+                    }
+                });
+
             // ---- what it sends when it opens ----
 
             heading(L"BehaviorHeadingStartup", false);

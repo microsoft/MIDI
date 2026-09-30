@@ -26,13 +26,11 @@ namespace glass
     // A panel's GRAIN is part of the panel, so a control sitting on it covers it. A tube's
     // raster is not: the glass and the picture are the same surface, and a scan line that
     // stopped at the edge of a control would read as a mistake. The two therefore go on
-    // different sides of the controls, which means two elements and two calls.
+    // different sides of the controls, which means two elements and two calls. There is no
+    // everything-at-once: a wall picture laid in one call ends up over the controls.
     enum class DeckOverlayLayer
     {
-        // Everything at once, which is what a preview too small to have real controls wants.
-        All = 0,
-
-        // The panel's own texture.
+        // The panel's own texture, its wall picture and its rain.
         BeneathControls = 1,
 
         // The corner fall-off, the raster and the room reflected in the glass.
@@ -58,7 +56,7 @@ namespace glass
         _In_ double width,
         _In_ double height,
         _In_ double scale,
-        _In_ DeckOverlayLayer layer = DeckOverlayLayer::All,
+        _In_ DeckOverlayLayer layer,
         _In_ double pageScale = 1.0,
         _In_ bool animate = false);
 }

@@ -45,7 +45,6 @@ namespace midimcp
             { L"button", L"Momentary: on while pressed, off when let go." },
             { L"toggle", L"Latching: each press turns it on or off." },
             { L"xyPad", L"A square field with two values, across and up. Each axis sends its own message." },
-            { L"encoder", L"An endless knob." },
             { L"meter", L"Shows a level the device sends back. Sends nothing." },
             { L"lamp", L"Lights when something arrives from the device. Sends nothing." },
             { L"readout", L"Shows a value as a number. Sends nothing." },

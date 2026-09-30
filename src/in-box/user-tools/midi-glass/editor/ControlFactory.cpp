@@ -63,30 +63,24 @@ namespace glass
                 { PaletteArtShape::Rectangle, 18, 18, 4, 0.80, 0.18 } },
             { ControlKind::PageTab, L"PalettePageTab", L"PaletteGroupButtons", L'\uE8A5',
                 { PaletteArtShape::Rectangle, 22, 14, 7, 0.80, 0.15 } },
-            { ControlKind::Knob,    L"PaletteRadio",   L"PaletteGroupButtons", L'\uECCA',
-                { PaletteArtShape::Rectangle, 22, 14, 7, 0.80, 0.00 }, true },
-            { ControlKind::Knob,    L"PaletteStepper", L"PaletteGroupButtons", L'\uE8CB',
-                { PaletteArtShape::Sample, 22, 14, 0, 0.00, 0.00, L"1" }, true },
             { ControlKind::Switch,  L"PaletteSwitch",  L"PaletteGroupButtons", L'\uE9E9',
                 { PaletteArtShape::Rectangle, 24, 8, 3, 0.80, 0.00 } },
 
             // ---- Knobs and faders ----
             { ControlKind::Knob,    L"PaletteKnob",    L"PaletteGroupKnobs",   L'\uEA3A',
-                { PaletteArtShape::Ellipse, 17, 17, 0, 0.85, 0.00 } },
-            { ControlKind::Encoder, L"PaletteEncoder", L"PaletteGroupKnobs",   L'\uE9F5',
-                { PaletteArtShape::Ellipse, 17, 17, 0, 0.45, 0.00 } },
+                { PaletteArtShape::Dial, 17, 17, 0, 0.85, 0.00 } },
             { ControlKind::Turntable, L"PaletteTurntable", L"PaletteGroupKnobs", L'\uE93C',
-                { PaletteArtShape::Ellipse, 19, 19, 0, 0.25, 0.00 } },
+                { PaletteArtShape::Platter, 19, 19, 0, 0.85, 0.00 } },
             { ControlKind::Fader,   L"PaletteFader",   L"PaletteGroupKnobs",   L'\uE9E9',
-                { PaletteArtShape::Rectangle, 5, 19, 3, 0.00, 0.70 } },
+                { PaletteArtShape::FaderCap, 12, 19, 3, 0.00, 0.50 } },
             { ControlKind::Wheel,   L"PaletteWheel",   L"PaletteGroupKnobs",   L'\uE9E9',
                 { PaletteArtShape::Rectangle, 10, 19, 3, 0.80, 0.00 } },
 
             // ---- Two axis ----
             { ControlKind::XYPad,   L"PaletteXYPad",   L"PaletteGroupTwoAxis", L'\uE80A',
-                { PaletteArtShape::Rectangle, 18, 18, 3, 0.80, 0.00 } },
+                { PaletteArtShape::CrosshairField, 18, 18, 3, 0.80, 0.00 } },
             { ControlKind::Joystick, L"PaletteJoystick", L"PaletteGroupTwoAxis", L'\uE80A',
-                { PaletteArtShape::Ellipse, 18, 18, 0, 0.80, 0.00 } },
+                { PaletteArtShape::Stick, 18, 18, 0, 0.80, 0.00 } },
             { ControlKind::Ribbon,  L"PaletteRibbon",  L"PaletteGroupTwoAxis", L'\uE80A',
                 { PaletteArtShape::Rectangle, 20, 8, 4, 0.00, 0.30 } },
 
@@ -155,7 +149,6 @@ namespace glass
         case ControlKind::Readout:
         case ControlKind::Label:
         case ControlKind::Image:
-        case ControlKind::PageTab:
         case ControlKind::Panel:
         case ControlKind::TimeDisplay:
         case ControlKind::Line:
@@ -170,7 +163,6 @@ namespace glass
     bool IsSquareByNature(ControlKind kind) noexcept
     {
         return kind == ControlKind::Knob ||
-            kind == ControlKind::Encoder ||
             kind == ControlKind::Pad ||
             kind == ControlKind::XYPad ||
             kind == ControlKind::Joystick ||
@@ -401,6 +393,19 @@ namespace glass
         {
             message.Trigger = MessageTrigger::Changes;
             message.Kind = MessageKind::RawUmp;
+
+            control.Messages.push_back(std::move(message));
+            break;
+        }
+
+        // A tab goes to a page, and it starts out going to the page it was put on, which is the
+        // tab that is lit there. Its row is where it is pointed at another.
+        case ControlKind::PageTab:
+        {
+            message.Trigger = MessageTrigger::TurnsOn;
+            message.Kind = MessageKind::GoToPage;
+            message.DeviceName.clear();
+            message.TargetPageId = page.Id;
 
             control.Messages.push_back(std::move(message));
             break;

@@ -37,6 +37,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "capability-inquiry-virtual-
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "capability-inquiry-browse-cs", "capability-inquiry-browse\capability-inquiry-browse-cs.csproj", "{8D40F2A6-4C71-4E95-B3D8-0F62A5C71E34}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "sequence-builder-cs", "sequence-builder\sequence-builder-cs.csproj", "{FD37D594-77E7-4692-9536-01A1270EA8BE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "midi-file-writer-cs", "midi-file-writer\midi-file-writer-cs.csproj", "{04AD74CB-0134-4D6D-AA10-BF3EBDDFE47E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "midi-file-player-cs", "midi-file-player\midi-file-player-cs.csproj", "{91FC4C48-4FF5-4352-908B-7DBFF3C3B347}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "capability-inquiry-program-list-cs", "capability-inquiry-program-list\capability-inquiry-program-list-cs.csproj", "{AF31CCDB-6E2B-43CF-BBCB-0B843E92F5A4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -181,6 +189,38 @@ Global
 		{8D40F2A6-4C71-4E95-B3D8-0F62A5C71E34}.Release|ARM64.Build.0 = Release|ARM64
 		{8D40F2A6-4C71-4E95-B3D8-0F62A5C71E34}.Release|x64.ActiveCfg = Release|x64
 		{8D40F2A6-4C71-4E95-B3D8-0F62A5C71E34}.Release|x64.Build.0 = Release|x64
+		{FD37D594-77E7-4692-9536-01A1270EA8BE}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{FD37D594-77E7-4692-9536-01A1270EA8BE}.Debug|ARM64.Build.0 = Debug|ARM64
+		{FD37D594-77E7-4692-9536-01A1270EA8BE}.Debug|x64.ActiveCfg = Debug|x64
+		{FD37D594-77E7-4692-9536-01A1270EA8BE}.Debug|x64.Build.0 = Debug|x64
+		{FD37D594-77E7-4692-9536-01A1270EA8BE}.Release|ARM64.ActiveCfg = Release|ARM64
+		{FD37D594-77E7-4692-9536-01A1270EA8BE}.Release|ARM64.Build.0 = Release|ARM64
+		{FD37D594-77E7-4692-9536-01A1270EA8BE}.Release|x64.ActiveCfg = Release|x64
+		{FD37D594-77E7-4692-9536-01A1270EA8BE}.Release|x64.Build.0 = Release|x64
+		{04AD74CB-0134-4D6D-AA10-BF3EBDDFE47E}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{04AD74CB-0134-4D6D-AA10-BF3EBDDFE47E}.Debug|ARM64.Build.0 = Debug|ARM64
+		{04AD74CB-0134-4D6D-AA10-BF3EBDDFE47E}.Debug|x64.ActiveCfg = Debug|x64
+		{04AD74CB-0134-4D6D-AA10-BF3EBDDFE47E}.Debug|x64.Build.0 = Debug|x64
+		{04AD74CB-0134-4D6D-AA10-BF3EBDDFE47E}.Release|ARM64.ActiveCfg = Release|ARM64
+		{04AD74CB-0134-4D6D-AA10-BF3EBDDFE47E}.Release|ARM64.Build.0 = Release|ARM64
+		{04AD74CB-0134-4D6D-AA10-BF3EBDDFE47E}.Release|x64.ActiveCfg = Release|x64
+		{04AD74CB-0134-4D6D-AA10-BF3EBDDFE47E}.Release|x64.Build.0 = Release|x64
+		{91FC4C48-4FF5-4352-908B-7DBFF3C3B347}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{91FC4C48-4FF5-4352-908B-7DBFF3C3B347}.Debug|ARM64.Build.0 = Debug|ARM64
+		{91FC4C48-4FF5-4352-908B-7DBFF3C3B347}.Debug|x64.ActiveCfg = Debug|x64
+		{91FC4C48-4FF5-4352-908B-7DBFF3C3B347}.Debug|x64.Build.0 = Debug|x64
+		{91FC4C48-4FF5-4352-908B-7DBFF3C3B347}.Release|ARM64.ActiveCfg = Release|ARM64
+		{91FC4C48-4FF5-4352-908B-7DBFF3C3B347}.Release|ARM64.Build.0 = Release|ARM64
+		{91FC4C48-4FF5-4352-908B-7DBFF3C3B347}.Release|x64.ActiveCfg = Release|x64
+		{91FC4C48-4FF5-4352-908B-7DBFF3C3B347}.Release|x64.Build.0 = Release|x64
+		{AF31CCDB-6E2B-43CF-BBCB-0B843E92F5A4}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{AF31CCDB-6E2B-43CF-BBCB-0B843E92F5A4}.Debug|ARM64.Build.0 = Debug|ARM64
+		{AF31CCDB-6E2B-43CF-BBCB-0B843E92F5A4}.Debug|x64.ActiveCfg = Debug|x64
+		{AF31CCDB-6E2B-43CF-BBCB-0B843E92F5A4}.Debug|x64.Build.0 = Debug|x64
+		{AF31CCDB-6E2B-43CF-BBCB-0B843E92F5A4}.Release|ARM64.ActiveCfg = Release|ARM64
+		{AF31CCDB-6E2B-43CF-BBCB-0B843E92F5A4}.Release|ARM64.Build.0 = Release|ARM64
+		{AF31CCDB-6E2B-43CF-BBCB-0B843E92F5A4}.Release|x64.ActiveCfg = Release|x64
+		{AF31CCDB-6E2B-43CF-BBCB-0B843E92F5A4}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

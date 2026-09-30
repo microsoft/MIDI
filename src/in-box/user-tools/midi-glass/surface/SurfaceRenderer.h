@@ -69,7 +69,7 @@ namespace glass
         // Fader, pad and meter: a rectangle that grows.
         comp::CompositionRoundedRectangleGeometry PipeGeometry{ nullptr };
 
-        // Knob and encoder: an arc that sweeps.
+        // Knob: an arc that sweeps.
         comp::CompositionEllipseGeometry ArcGeometry{ nullptr };
 
         // The cap on a fader, and the hairline of hue through it.
@@ -121,6 +121,14 @@ namespace glass
         float ArcThickness{ 0.0f };
         bool ArcRoundEnds{ false };
         comp::CompositionSpriteShape ArcCore{ nullptr };
+
+        // A ring of lamps is the arc with a repeating gap in it. Trimmed from somewhere other
+        // than its start, the gaps have to be moved along to stay lined up with the empty ring.
+        bool ArcDashed{ false };
+
+        // A pan knob or fader: it lights from the middle of its travel out to the value, and
+        // nothing at all when it sits in the middle.
+        bool LightsFromCenter{ false };
 
         // The flare a lit light throws. A switch shows it only while it is on; an XY pad's
         // follows its puck.
@@ -387,6 +395,11 @@ namespace glass
         // Moves the drawing. Does not send anything and does not touch the XAML element's value,
         // which the caller owns.
         void SetValue(_In_ size_t itemIndex, _In_ double value) noexcept;
+
+        // Lights each page tab that goes to the page showing and puts the others out, the way a
+        // row of tabs says where you are. The element's value follows, so a screen reader hears
+        // which tab is on. Sends nothing.
+        void ShowCurrentPage(_In_ LayoutDocument const& document, _In_ size_t pageIndex) noexcept;
 
         // The other axis of an XY pad or a joystick. Bottom is zero, which is the way every
         // joystick and every plug-in reads and the opposite of the way the screen counts.

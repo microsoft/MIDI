@@ -352,7 +352,6 @@ void RuntimeSurfaceTests::AKnobIsNudgedRatherThanSet()
     // A knob has no travel under the finger, so a touch must not jump it to where the finger
     // landed. Every plug-in on the planet behaves this way.
     VERIFY_IS_FALSE(glass::UsesAbsolutePosition(glass::ControlKind::Knob));
-    VERIFY_IS_FALSE(glass::UsesAbsolutePosition(glass::ControlKind::Encoder));
     VERIFY_IS_TRUE(glass::UsesAbsolutePosition(glass::ControlKind::Fader));
 }
 

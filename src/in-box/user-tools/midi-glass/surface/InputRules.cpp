@@ -113,7 +113,6 @@ namespace glass
         switch (kind)
         {
         case ControlKind::Knob:
-        case ControlKind::Encoder:
         case ControlKind::Fader:
         case ControlKind::XYPad:
         case ControlKind::Joystick:

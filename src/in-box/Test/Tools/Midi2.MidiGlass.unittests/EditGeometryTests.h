@@ -63,4 +63,10 @@ public:
 
     TEST_METHOD(TheWorkAreaSurroundsThePage);
     TEST_METHOD(TheWorkAreaGrowsToHoldAnOffPageControl);
+
+    // ---- a typed zoom ----
+
+    TEST_METHOD(ATypedZoomReadsTheWayItIsShown);
+    TEST_METHOD(ATypedZoomThatIsNotANumberIsNoZoom);
+    TEST_METHOD(ATypedZoomOutsideTheRangeIsBroughtInside);
 };

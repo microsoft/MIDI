@@ -404,8 +404,6 @@ A knob's plate is only its face. The value arc hangs just outside the face, 2 pi
 
 **A knob keeps its own marks.** A new knob shows five marks of its own. On a theme with `knobTickCount`, those five are printed in the ink, and the theme's count is used on knobs whose own marks are turned off. Knobs smaller than 36 pixels have no room for marks.
 
-An encoder is drawn exactly like a knob.
-
 ![Knobs on Studio Dark, Bigwig, Jove, Supersaw, Five-iSH, and Airy System]({{ site.baseurl }}/assets/images/midiglass-theme-knobs.png)
 
 ![Knobs with caps in their own color inside rings of lights on Insert Coin, arcs printed on a sunken white face on Chicago, chrome caps on Night Drive, chevrons riding the arc on Visor, and knobs that are only their colored caps on Good Form]({{ site.baseurl }}/assets/images/midiglass-theme-knobs-2.png)
@@ -514,7 +512,7 @@ The names here are the ones in the MIDI Glass palette. Everything a control draw
 
 A layout can also give one control its own **style**, which the editor shows as five choices. **Theme** and **Plate** both follow the theme, and Theme is what almost every control uses. **Outline** drops the plate, **Solid** fills the plate with the control's own color, and **Bare** drops both the plate and the rim, leaving only the value and the label. New Text arrives Bare. Apart from that, a style other than Theme is for the odd control that has to stand apart, like a panic button.
 
-### Knob and Encoder
+### Knob
 
 You turn a knob to a value, so its value is light running around it, and the knob itself can look like the hardware it stands in for.
 

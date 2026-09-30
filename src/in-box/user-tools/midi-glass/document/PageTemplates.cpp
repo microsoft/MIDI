@@ -22,7 +22,6 @@ namespace glass
             switch (kind)
             {
             case ControlKind::Knob:     return { 56, 56 };
-            case ControlKind::Encoder:  return { 56, 56 };
             case ControlKind::Pad:      return { 56, 56 };
             case ControlKind::Fader:    return { 40, 180 };
             case ControlKind::XYPad:    return { 240, 240 };

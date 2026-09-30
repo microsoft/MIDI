@@ -376,6 +376,244 @@ namespace winrt::midiglass::implementation
                 return canvas;
             }
 
+            case glass::PaletteArtShape::Dial:
+            {
+                // The rim, and a pointer out to eleven o'clock, so a knob reads as something that
+                // turns rather than as a lamp.
+                controls::Canvas canvas{};
+
+                canvas.Width(art.Width);
+                canvas.Height(art.Height);
+
+                shapes::Ellipse rim{};
+
+                rim.Width(art.Width);
+                rim.Height(art.Height);
+                rim.UseLayoutRounding(false);
+                rim.Stroke(AccentAt(art.StrokeOpacity));
+                rim.StrokeThickness(2.0);
+
+                auto const radius = art.Width / 2.0;
+                auto const reach = radius - 3.0;
+
+                shapes::Line pointer{};
+
+                pointer.X1(radius);
+                pointer.Y1(radius);
+                pointer.X2(radius - 0.5 * reach);
+                pointer.Y2(radius - 0.8660254037844386 * reach);
+                pointer.UseLayoutRounding(false);
+                pointer.Stroke(AccentAt(1.0));
+                pointer.StrokeThickness(1.8);
+                pointer.StrokeStartLineCap(media::PenLineCap::Round);
+                pointer.StrokeEndLineCap(media::PenLineCap::Round);
+
+                canvas.Children().Append(rim);
+                canvas.Children().Append(pointer);
+
+                return canvas;
+            }
+
+            case glass::PaletteArtShape::Platter:
+            {
+                // The edge of the record, the ring round its label and the spindle.
+                controls::Grid grid{};
+
+                grid.Width(art.Width);
+                grid.Height(art.Height);
+
+                auto const ring = [&](double diameter, double thickness, bool filled)
+                    {
+                        shapes::Ellipse shape{};
+
+                        shape.Width(diameter);
+                        shape.Height(diameter);
+                        shape.HorizontalAlignment(xaml::HorizontalAlignment::Center);
+                        shape.VerticalAlignment(xaml::VerticalAlignment::Center);
+                        shape.UseLayoutRounding(false);
+
+                        if (filled)
+                        {
+                            shape.Fill(AccentAt(1.0));
+                        }
+                        else
+                        {
+                            shape.Stroke(AccentAt(art.StrokeOpacity));
+                            shape.StrokeThickness(thickness);
+                        }
+
+                        grid.Children().Append(shape);
+                    };
+
+                ring(art.Width, 1.6, false);
+                ring(art.Width * 0.44, 1.2, false);
+                ring(2.4, 0.0, true);
+
+                return grid;
+            }
+
+            case glass::PaletteArtShape::CrosshairField:
+            {
+                // The field, and a crosshair with its dot down and to the left, the way an XY pad
+                // on the page looks once it holds a value.
+                controls::Canvas canvas{};
+
+                canvas.Width(art.Width);
+                canvas.Height(art.Height);
+
+                shapes::Rectangle field{};
+
+                field.Width(art.Width);
+                field.Height(art.Height);
+                field.RadiusX(art.CornerRadius);
+                field.RadiusY(art.CornerRadius);
+                field.UseLayoutRounding(false);
+                field.Stroke(AccentAt(art.StrokeOpacity));
+                field.StrokeThickness(1.0);
+
+                canvas.Children().Append(field);
+
+                auto const x = art.Width * 0.34;
+                auto const y = art.Height * 0.66;
+
+                auto const line = [&](double x1, double y1, double x2, double y2)
+                    {
+                        shapes::Line shape{};
+
+                        shape.X1(x1);
+                        shape.Y1(y1);
+                        shape.X2(x2);
+                        shape.Y2(y2);
+                        shape.UseLayoutRounding(false);
+                        shape.Stroke(AccentAt(0.55));
+                        shape.StrokeThickness(1.0);
+
+                        canvas.Children().Append(shape);
+                    };
+
+                line(1.5, y, art.Width - 1.5, y);
+                line(x, 1.5, x, art.Height - 1.5);
+
+                constexpr double dot = 5.0;
+
+                shapes::Ellipse puck{};
+
+                puck.Width(dot);
+                puck.Height(dot);
+                puck.UseLayoutRounding(false);
+                puck.Fill(AccentAt(1.0));
+
+                controls::Canvas::SetLeft(puck, x - dot / 2.0);
+                controls::Canvas::SetTop(puck, y - dot / 2.0);
+
+                canvas.Children().Append(puck);
+
+                return canvas;
+            }
+
+            case glass::PaletteArtShape::Stick:
+            {
+                // The round field, an arrow at each compass point for the ways it moves, and the
+                // ball in the middle it springs back to.
+                controls::Canvas canvas{};
+
+                canvas.Width(art.Width);
+                canvas.Height(art.Height);
+
+                shapes::Ellipse field{};
+
+                field.Width(art.Width);
+                field.Height(art.Height);
+                field.UseLayoutRounding(false);
+                field.Stroke(AccentAt(art.StrokeOpacity));
+                field.StrokeThickness(1.4);
+
+                canvas.Children().Append(field);
+
+                auto const center = art.Width / 2.0;
+                auto const tip = center - 2.4;
+                auto const back = tip - 2.2;
+                constexpr double halfBase = 1.6;
+
+                constexpr double directions[][2]{ { 0.0, -1.0 }, { 1.0, 0.0 }, { 0.0, 1.0 }, { -1.0, 0.0 } };
+
+                for (auto const& direction : directions)
+                {
+                    auto const dx = direction[0];
+                    auto const dy = direction[1];
+
+                    media::PointCollection points{};
+
+                    points.Append({ static_cast<float>(center + dx * tip), static_cast<float>(center + dy * tip) });
+                    points.Append({ static_cast<float>(center + dx * back - dy * halfBase), static_cast<float>(center + dy * back + dx * halfBase) });
+                    points.Append({ static_cast<float>(center + dx * back + dy * halfBase), static_cast<float>(center + dy * back - dx * halfBase) });
+
+                    shapes::Polygon arrow{};
+
+                    arrow.Points(points);
+                    arrow.UseLayoutRounding(false);
+                    arrow.Fill(AccentAt(art.StrokeOpacity));
+
+                    canvas.Children().Append(arrow);
+                }
+
+                constexpr double ball = 4.8;
+
+                shapes::Ellipse knob{};
+
+                knob.Width(ball);
+                knob.Height(ball);
+                knob.UseLayoutRounding(false);
+                knob.Fill(AccentAt(1.0));
+
+                controls::Canvas::SetLeft(knob, center - ball / 2.0);
+                controls::Canvas::SetTop(knob, center - ball / 2.0);
+
+                canvas.Children().Append(knob);
+
+                return canvas;
+            }
+
+            case glass::PaletteArtShape::FaderCap:
+            {
+                // The slot, and the cap riding it a third of the way up, so a fader does not read
+                // as a meter.
+                controls::Canvas canvas{};
+
+                canvas.Width(art.Width);
+                canvas.Height(art.Height);
+
+                constexpr double slotWidth = 5.0;
+                constexpr double capHeight = 5.0;
+
+                shapes::Rectangle slot{};
+
+                slot.Width(slotWidth);
+                slot.Height(art.Height);
+                slot.RadiusX(std::min(art.CornerRadius, slotWidth / 2.0));
+                slot.RadiusY(std::min(art.CornerRadius, slotWidth / 2.0));
+                slot.UseLayoutRounding(false);
+                slot.Fill(AccentAt(art.FillOpacity));
+
+                controls::Canvas::SetLeft(slot, (art.Width - slotWidth) / 2.0);
+
+                shapes::Rectangle cap{};
+
+                cap.Width(art.Width);
+                cap.Height(capHeight);
+                cap.RadiusX(1.5);
+                cap.RadiusY(1.5);
+                cap.UseLayoutRounding(false);
+                cap.Fill(AccentAt(1.0));
+
+                controls::Canvas::SetTop(cap, art.Height * 0.70 - capHeight / 2.0);
+
+                canvas.Children().Append(slot);
+                canvas.Children().Append(cap);
+
+                return canvas;
+            }
+
             case glass::PaletteArtShape::Rectangle:
             default:
             {

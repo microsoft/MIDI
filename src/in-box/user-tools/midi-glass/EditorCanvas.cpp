@@ -21,6 +21,7 @@
 #include "StringResources.h"
 #include "PageTemplates.h"
 #include "GlassControl.h"
+#include "FontCatalog.h"
 
 namespace resources = ::midiglass::resources;
 
@@ -36,8 +37,8 @@ namespace winrt::midiglass::implementation
         // label sits right against the control it belongs to.
         constexpr double LabelHandleSize = 6.0;
 
-        constexpr double MinimumCanvasScale = 0.1;
-        constexpr double MaximumCanvasScale = 2.0;
+        constexpr double MinimumCanvasScale = glass::MinimumEditorZoom;
+        constexpr double MaximumCanvasScale = glass::MaximumEditorZoom;
 
         // What Fit leaves around the page, in screen pixels, on the tighter axis. Whatever is
         // left on the other axis is canvas, not padding.
@@ -101,6 +102,7 @@ namespace winrt::midiglass::implementation
             // playing in before it is told to stop.
             m_renderer.SetVideosLive(m_tryMode);
             m_renderer.Build(SurfaceCanvas(), document, m_theme, m_editor.PageIndex());
+            m_renderer.ShowCurrentPage(document, m_editor.PageIndex());
 
             auto weak = get_weak();
 
@@ -411,8 +413,14 @@ namespace winrt::midiglass::implementation
                 std::to_wstring(m_editor.PageIndex() + 1),
                 std::to_wstring(m_editor.Document().Pages.size()),
                 std::to_wstring(m_editor.Document().PageWidth),
-                std::to_wstring(m_editor.Document().PageHeight),
-                std::to_wstring(static_cast<int32_t>(std::lround(scale * 100.0)))));
+                std::to_wstring(m_editor.Document().PageHeight)));
+
+            auto const percent = std::to_wstring(static_cast<int32_t>(std::lround(scale * 100.0)));
+
+            ZoomPercentText().Text(resources::FormatString(L"CanvasScaleFormat", percent));
+
+            xaml::Automation::AutomationProperties::SetName(
+                ZoomPercentHost(), resources::FormatString(L"ZoomPercentNameFormat", percent));
 
             ZoomInButton().IsEnabled(scale < MaximumCanvasScale);
             ZoomOutButton().IsEnabled(scale > MinimumCanvasScale);
@@ -460,6 +468,127 @@ namespace winrt::midiglass::implementation
 
         ApplyCanvasScale();
         RebuildGrid();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnZoomPercentDoubleTapped(
+        foundation::IInspectable const& sender,
+        xaml::Input::DoubleTappedRoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+
+        args.Handled(true);
+        BeginZoomEdit();
+    }
+
+    // The keyboard way in, for anybody who cannot double click.
+    _Use_decl_annotations_
+    void EditorWindow::OnZoomPercentKeyDown(
+        foundation::IInspectable const& sender,
+        xaml::Input::KeyRoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+
+        auto const key = args.Key();
+
+        if (key == winrt::Windows::System::VirtualKey::Enter ||
+            key == winrt::Windows::System::VirtualKey::Space ||
+            key == winrt::Windows::System::VirtualKey::F2)
+        {
+            args.Handled(true);
+            BeginZoomEdit();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnZoomPercentBoxKeyDown(
+        foundation::IInspectable const& sender,
+        xaml::Input::KeyRoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+
+        if (args.Key() == winrt::Windows::System::VirtualKey::Enter)
+        {
+            args.Handled(true);
+            EndZoomEdit(true);
+        }
+        else if (args.Key() == winrt::Windows::System::VirtualKey::Escape)
+        {
+            args.Handled(true);
+            EndZoomEdit(false);
+        }
+    }
+
+    // Clicking away keeps what was typed, the way typing a label does.
+    _Use_decl_annotations_
+    void EditorWindow::OnZoomPercentBoxLostFocus(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        EndZoomEdit(true);
+    }
+
+    void EditorWindow::BeginZoomEdit()
+    {
+        if (m_editingZoom)
+        {
+            return;
+        }
+
+        try
+        {
+            m_editingZoom = true;
+
+            ZoomPercentBox().Text(winrt::to_hstring(static_cast<int32_t>(std::lround(m_canvasScale * 100.0))));
+            ZoomPercentBox().Visibility(xaml::Visibility::Visible);
+            ZoomPercentHost().Visibility(xaml::Visibility::Collapsed);
+
+            // After layout, or the box has no size yet and the focus goes nowhere.
+            m_dispatcher.TryEnqueue([weak = get_weak()]()
+                {
+                    if (auto strong = weak.get(); strong != nullptr && strong->m_editingZoom)
+                    {
+                        strong->ZoomPercentBox().Focus(xaml::FocusState::Programmatic);
+                        strong->ZoomPercentBox().SelectAll();
+                    }
+                });
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to start typing a zoom.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::EndZoomEdit(bool apply)
+    {
+        if (!m_editingZoom)
+        {
+            return;
+        }
+
+        // Cleared first: hiding the box moves focus, and LostFocus would come straight back in.
+        m_editingZoom = false;
+
+        try
+        {
+            auto const typed = glass::ParseZoomPercent(std::wstring_view{ ZoomPercentBox().Text() });
+
+            ZoomPercentHost().Visibility(xaml::Visibility::Visible);
+            ZoomPercentBox().Visibility(xaml::Visibility::Collapsed);
+
+            if (apply && typed.has_value())
+            {
+                m_zoomIsFit = false;
+                m_canvasScale = *typed;
+
+                ApplyCanvasScale();
+                RebuildGrid();
+            }
+
+            ZoomPercentHost().Focus(xaml::FocusState::Programmatic);
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to finish typing a zoom.")
     }
 
     _Use_decl_annotations_
@@ -545,8 +674,9 @@ namespace winrt::midiglass::implementation
                     winrt::Windows::UI::ColorHelper::FromArgb(38, 96, 205, 255)));
             }
 
-            for (auto const& control : page->Controls)
+            for (size_t index = 0; index < page->Controls.size(); ++index)
             {
+                auto const& control = page->Controls[index];
                 auto const rect = RectOf(control);
 
                 // Off the page: ghosted and edged in red, counted in the warning strip, and
@@ -559,6 +689,24 @@ namespace winrt::midiglass::implementation
                 if (m_editor.IsSelected(control.Id))
                 {
                     addRectangle({ rect.X - 1.0, rect.Y - 1.0, rect.Width + 2.0, rect.Height + 2.0 }, accent, 1.0, false);
+                }
+
+                // Text set in a font this PC does not have. It runs in the default font, and the
+                // box says why the words do not look the way somebody chose.
+                double labelX{ 0.0 };
+                double labelY{ 0.0 };
+                double labelWidth{ 0.0 };
+                double labelHeight{ 0.0 };
+
+                if (!control.LabelLook.FontFamily.empty() &&
+                    !::midiglass::fonts::IsInstalled(control.LabelLook.FontFamily) &&
+                    m_renderer.TryGetLabelBox(index, labelX, labelY, labelWidth, labelHeight))
+                {
+                    addRectangle(
+                        { control.X + labelX - 2.0, control.Y + labelY - 2.0, labelWidth + 4.0, labelHeight + 4.0 },
+                        critical,
+                        1.5,
+                        false);
                 }
             }
 

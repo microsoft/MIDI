@@ -325,6 +325,13 @@ namespace winrt::midiglass::implementation
     {
         m_renderer.SetValue(itemIndex, isOn ? 1.0 : 0.0);
 
+        // A tab let go still says which page is showing. The page it goes to lights its own
+        // tabs when it is built.
+        if (!isOn && m_renderer.KindAt(itemIndex) == glass::ControlKind::PageTab)
+        {
+            m_renderer.ShowCurrentPage(m_document, m_pageIndex);
+        }
+
         // A time display counts again from zero when it is tapped. Nothing is sent: it is
         // there for the person on stage, not for the desk.
         if (m_renderer.KindAt(itemIndex) == glass::ControlKind::TimeDisplay)

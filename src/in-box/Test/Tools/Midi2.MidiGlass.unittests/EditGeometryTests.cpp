@@ -390,3 +390,33 @@ void EditGeometryTests::TheWorkAreaGrowsToHoldAnOffPageControl()
 
     VERIFY_IS_LESS_THAN(area.X, -600.0);
 }
+
+// ---- a typed zoom ----
+
+void EditGeometryTests::ATypedZoomReadsTheWayItIsShown()
+{
+    // The figure reads "150 %", so every way of typing that back has to mean it.
+    for (auto const* const text : { L"150", L"150%", L"150 %", L" 150 % ", L"150.0" })
+    {
+        auto const zoom = glass::ParseZoomPercent(text);
+
+        VERIFY_IS_TRUE(zoom.has_value());
+        VerifyNear(1.5, *zoom);
+    }
+
+    VerifyNear(0.125, *glass::ParseZoomPercent(L"12.5"));
+}
+
+void EditGeometryTests::ATypedZoomThatIsNotANumberIsNoZoom()
+{
+    for (auto const* const text : { L"", L"   ", L"%", L"abc", L"150x", L"1 50", L"0", L"-50", L"nan", L"inf" })
+    {
+        VERIFY_IS_FALSE(glass::ParseZoomPercent(text).has_value());
+    }
+}
+
+void EditGeometryTests::ATypedZoomOutsideTheRangeIsBroughtInside()
+{
+    VerifyNear(glass::MaximumEditorZoom, *glass::ParseZoomPercent(L"1000"));
+    VerifyNear(glass::MinimumEditorZoom, *glass::ParseZoomPercent(L"1"));
+}

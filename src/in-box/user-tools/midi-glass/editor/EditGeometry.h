@@ -12,6 +12,8 @@
 
 #include <sal.h>
 #include <cstdint>
+#include <optional>
+#include <string_view>
 #include <vector>
 
 namespace glass
@@ -181,4 +183,13 @@ namespace glass
         _In_ double pageWidth,
         _In_ double pageHeight,
         _In_ std::vector<EditRect> const& rects) noexcept;
+
+    // The editor's zoom, as a fraction of actual size.
+    constexpr double MinimumEditorZoom = 0.1;
+    constexpr double MaximumEditorZoom = 4.0;
+
+    // A zoom typed as a percentage, the way the editor shows one: "150", "150%" and " 150 % "
+    // all mean half as big again. Nothing, or anything that is not a number above zero, is no
+    // zoom at all. A number outside the range is brought inside it.
+    std::optional<double> ParseZoomPercent(_In_ std::wstring_view text) noexcept;
 }

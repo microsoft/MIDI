@@ -33,3 +33,10 @@ This list also tells you which program list each channel uses. A device with mor
 | Static Method | Description |
 | ------------- | ----------- |
 | `FromJson(json)` | Reads a list from the resource's JSON array |
+
+## Examples
+
+These read the General MIDI synthesizer's channel list and follow each channel's link to its program list. They use `GetEntryForChannel` to see what channel 1 plays before and after a program change.
+
+* [C++ Sample: reading channel and program lists](https://github.com/microsoft/MIDI/blob/main/samples/cpp-winrt/capability-inquiry-program-list/main_capability_inquiry_program_list.cpp)
+* [C# Sample: reading channel and program lists](https://github.com/microsoft/MIDI/blob/main/samples/csharp-net/capability-inquiry-program-list/Program.cs)

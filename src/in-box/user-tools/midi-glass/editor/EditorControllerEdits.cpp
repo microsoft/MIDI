@@ -358,6 +358,11 @@ namespace glass
         control->LabelLook.FontSize = std::clamp(style.FontSize, 0.0, 200.0);
         control->LabelLook.FontWeight = std::clamp(style.FontWeight, 0, 1000);
         control->LabelLook.WidthPercent = std::clamp(style.WidthPercent, 10.0, 400.0);
+
+        if (!style.FontFamily.empty() && !IsSafeFontFamilyName(style.FontFamily))
+        {
+            control->LabelLook.FontFamily.clear();
+        }
         control->LabelLook.Color = SanitizeStoredString(style.Color);
         control->LabelLook.Unknown = unknown;
 
@@ -491,6 +496,28 @@ namespace glass
         }
 
         control->ReturnsToDefault = returns;
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetControlLightsFromCenter(std::wstring const& id, bool fromCenter)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr || control->LightsFromCenter == fromCenter)
+        {
+            return false;
+        }
+
+        control->LightsFromCenter = fromCenter;
+
+        if (fromCenter && control->DefaultValue == 0.0)
+        {
+            control->DefaultValue = 0.5;
+        }
+
         Commit(EditNames::Properties);
 
         return true;
@@ -2025,6 +2052,48 @@ namespace glass
         }
 
         m_document.FullScreenButtonCorner = corner;
+        Commit(EditNames::LayoutProperties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetToolbarWindow(bool toolbar)
+    {
+        if (m_document.ToolbarWindow == toolbar)
+        {
+            return false;
+        }
+
+        m_document.ToolbarWindow = toolbar;
+        Commit(EditNames::LayoutProperties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetAlwaysOnTop(bool onTop)
+    {
+        if (m_document.AlwaysOnTop == onTop)
+        {
+            return false;
+        }
+
+        m_document.AlwaysOnTop = onTop;
+        Commit(EditNames::LayoutProperties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetSeeThrough(bool seeThrough)
+    {
+        if (m_document.SeeThrough == seeThrough)
+        {
+            return false;
+        }
+
+        m_document.SeeThrough = seeThrough;
         Commit(EditNames::LayoutProperties);
 
         return true;

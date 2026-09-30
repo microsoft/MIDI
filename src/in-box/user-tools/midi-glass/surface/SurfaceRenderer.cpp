@@ -11,6 +11,7 @@
 #include "InputRules.h"
 #include "LayoutStore.h"
 #include "GlassControl.h"
+#include "FontCatalog.h"
 #include "StringResources.h"
 
 #include <winrt/Microsoft.Graphics.Canvas.h>
@@ -415,7 +416,6 @@ namespace glass
         bool IsRoundControl(_In_ ControlKind kind) noexcept
         {
             return kind == ControlKind::Knob ||
-                kind == ControlKind::Encoder ||
                 kind == ControlKind::Joystick ||
                 kind == ControlKind::Turntable;
         }
@@ -424,7 +424,7 @@ namespace glass
         // because the arc hangs outside the knob rather than being painted on it.
         bool IsDialControl(_In_ ControlKind kind) noexcept
         {
-            return kind == ControlKind::Knob || kind == ControlKind::Encoder;
+            return kind == ControlKind::Knob;
         }
 
         // How wide a fader's slot is. Proportional, so a wide fader does not get a pinstripe.
@@ -2867,6 +2867,9 @@ namespace glass
             visual.TravelLatches = control.Kind == ControlKind::Toggle || control.Kind == ControlKind::PageTab;
         }
 
+        visual.LightsFromCenter = control.LightsFromCenter &&
+            (control.Kind == ControlKind::Knob || control.Kind == ControlKind::Fader);
+
         if (DrawsItsOwnValue(control.Kind))
         {
             switch (control.Kind)
@@ -2975,6 +2978,7 @@ namespace glass
 
                 visual.ArcThickness = arcThickness;
                 visual.ArcRoundEnds = theme.ArcRoundEnds && !UsesLampRing(theme, control.Width, control.Height);
+                visual.ArcDashed = UsesLampRing(theme, control.Width, control.Height);
 
                 // Round ends overhang each end of the sweep by half the band, the way a pen
                 // draws it.
@@ -3925,9 +3929,9 @@ namespace glass
 
         label.FontSize(look.FontSize > 0.0 ? look.FontSize : 12.0);
 
-        label.FontFamily(look.FontFamily.empty()
-            ? media::FontFamily{ L"Segoe UI Variable Text" }
-            : media::FontFamily{ look.FontFamily });
+        // A font this PC does not have falls back to the default rather than to whatever
+        // Windows picks.
+        label.FontFamily(::midiglass::fonts::FamilyFor(look.FontFamily));
 
         label.FontWeight(winrt::Windows::UI::Text::FontWeight{
             static_cast<uint16_t>(look.FontWeight > 0 ? look.FontWeight : 400) });
@@ -5988,6 +5992,47 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    void SurfaceRenderer::ShowCurrentPage(LayoutDocument const& document, size_t pageIndex) noexcept
+    {
+        try
+        {
+            if (pageIndex >= document.Pages.size())
+            {
+                return;
+            }
+
+            auto const& showing = document.Pages[pageIndex].Id;
+
+            for (size_t item = 0; item < m_visuals.size(); ++item)
+            {
+                if (KindAt(item) != ControlKind::PageTab)
+                {
+                    continue;
+                }
+
+                auto const* const control = document.ControlAtIndex(ControlIndexOf(item));
+
+                if (control == nullptr)
+                {
+                    continue;
+                }
+
+                auto const on = !showing.empty() && PageTabTarget(*control) == showing ? 1.0 : 0.0;
+
+                SetValue(item, on);
+
+                if (auto const element = ElementAt(item))
+                {
+                    winrt::get_self<winrt::midiglass::implementation::GlassControl>(element)->SetValueDirect(on);
+                }
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
     DragAxis SurfaceRenderer::DragAxisAt(size_t itemIndex) const noexcept
     {
         return itemIndex < m_dragAxes.size() ? m_dragAxes[itemIndex] : DragAxis::Vertical;
@@ -6217,12 +6262,29 @@ namespace glass
 
             if (visual.ArcGeometry != nullptr)
             {
-                visual.ArcGeometry.TrimEnd(clamped * (KnobSweepDegrees / 360.0f));
+                auto const sweep = KnobSweepDegrees / 360.0f;
+
+                // A pan knob lights from the top of its travel out to the value, either way.
+                auto const from = visual.LightsFromCenter ? std::min(clamped, 0.5f) : 0.0f;
+                auto const to = visual.LightsFromCenter ? std::max(clamped, 0.5f) : clamped;
+
+                visual.ArcGeometry.TrimStart(from * sweep);
+                visual.ArcGeometry.TrimEnd(to * sweep);
+
+                // The gaps are counted from where the arc starts, so an arc that starts part way
+                // round moves them along by what was trimmed off, or its lamps sit between the
+                // empty ring's.
+                if (visual.ArcDashed && visual.PipeShape != nullptr && visual.ArcThickness > 0.0f)
+                {
+                    auto const trimmed = 2.0f * 3.14159265f * visual.ArcGeometry.Radius().x * from * sweep;
+
+                    visual.PipeShape.StrokeDashOffset(trimmed / visual.ArcThickness);
+                }
 
                 // A round end on a sweep of nothing would draw a dot where there is no value.
                 if (visual.ArcRoundEnds)
                 {
-                    auto const shown = clamped > 0.0f;
+                    auto const shown = to > from;
 
                     if (visual.PipeShape != nullptr)
                     {
@@ -6254,13 +6316,20 @@ namespace glass
                 auto const vertical = visual.Vertical;
                 auto const filled = visual.TrackLength * clamped;
 
-                auto const fillX = vertical ? visual.PipeCrossOffset : visual.TrackOrigin;
+                // A pan fader lights from the middle of its travel to the value, either way.
+                auto const low = visual.LightsFromCenter ? std::min(clamped, 0.5f) : 0.0f;
+                auto const high = visual.LightsFromCenter ? std::max(clamped, 0.5f) : clamped;
+
+                auto const start = visual.TrackLength * low;
+                auto const span = visual.TrackLength * (high - low);
+
+                auto const fillX = vertical ? visual.PipeCrossOffset : visual.TrackOrigin + start;
                 auto const fillY = vertical
-                    ? visual.TrackOrigin + visual.TrackLength - filled
+                    ? visual.TrackOrigin + visual.TrackLength - start - span
                     : visual.PipeCrossOffset;
 
-                auto const fillW = vertical ? visual.PipeThickness : filled;
-                auto const fillH = vertical ? filled : visual.PipeThickness;
+                auto const fillW = vertical ? visual.PipeThickness : span;
+                auto const fillH = vertical ? span : visual.PipeThickness;
 
                 visual.PipeGeometry.Size(float2{ fillW, fillH });
                 visual.PipeGeometry.Offset(float2{ fillX, fillY });

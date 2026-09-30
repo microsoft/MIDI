@@ -127,4 +127,6 @@ Capability Inquiry travels as System Exclusive inside UMP. There is no bytestrea
 * [`Windows.Devices.Midi2.CapabilityInquiry` reference]({{ site.baseurl }}/sdk-reference/CapabilityInquiry/)
 * [Browsing a device: C++ sample](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/capability-inquiry-browse)
 * [Browsing a device: C# sample](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/capability-inquiry-browse)
+* [Reading channel and program lists: C++ sample](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/capability-inquiry-program-list)
+* [Reading channel and program lists: C# sample](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/capability-inquiry-program-list)
 * [Answering Capability Inquiry from your own application]({{ site.baseurl }}/sdk-reference/CapabilityInquiry/MidiCapabilityInquiryDeviceResponder)

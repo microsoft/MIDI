@@ -185,7 +185,6 @@ namespace glass
         switch (kind)
         {
         case ControlKind::Knob:
-        case ControlKind::Encoder:
         case ControlKind::Fader:
         case ControlKind::XYPad:
         case ControlKind::Joystick:
@@ -751,8 +750,7 @@ namespace glass
         // A cap in the knob's own color: lit a little at the top, deeper at its edge. The line on
         // it is the theme's pointer where that reads on this cap, and otherwise white or near
         // black, whichever does, the way a name on a switch is chosen.
-        if (theme.KnobCapFromHue &&
-            (control.Kind == ControlKind::Knob || control.Kind == ControlKind::Encoder))
+        if (theme.KnobCapFromHue && control.Kind == ControlKind::Knob)
         {
             constexpr ThemeColor white{ 255, 255, 255, 255 };
             constexpr ThemeColor black{ 0, 0, 0, 255 };

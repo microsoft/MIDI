@@ -15,28 +15,18 @@
 #include "pch.h"
 #include "EditorWindow.xaml.h"
 
+#include "AppSettings.h"
+#include "FontCatalog.h"
 #include "StringResources.h"
 #include "ThemeStore.h"
 
 namespace resources = ::midiglass::resources;
+namespace fonts = ::midiglass::fonts;
 
 namespace winrt::midiglass::implementation
 {
     namespace
     {
-        // In-box only. A layout is carried between machines, and a font that is not on the other
-        // one is a label that silently changes shape.
-        constexpr wchar_t const* LabelFonts[]
-        {
-            L"Segoe UI Variable Text",
-            L"Segoe UI Variable Display",
-            L"Segoe UI",
-            L"Bahnschrift",
-            L"Cascadia Mono",
-            L"Consolas",
-            L"Segoe UI Emoji",
-        };
-
         // The design's own scale. A free number box invites 13.5 px labels that line up with
         // nothing else on the page.
         constexpr double LabelSizes[]{ 9, 11, 12, 14, 18, 24, 32, 48, 64 };
@@ -88,27 +78,75 @@ namespace winrt::midiglass::implementation
             root.MinWidth(380);
 
             // ---- family ----
+            //
+            // The fonts every PC has, or every font on this one for somebody who asked for that.
+            // A font the layout already names stays in the list either way, so opening the
+            // dialog never quietly changes it, and it says so when this PC does not have it.
+            auto const families = std::make_shared<std::vector<std::wstring>>();
 
             controls::ComboBox family{};
             family.Header(box_value(resources::GetString(L"FontFamilyHeader")));
             family.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
-            family.Items().Append(box_value(resources::GetString(L"FontFamilyTheme")));
 
-            for (auto const* const name : LabelFonts)
-            {
-                family.Items().Append(box_value(winrt::hstring{ name }));
-            }
-
-            family.SelectedIndex(0);
-
-            for (int32_t index = 0; index < static_cast<int32_t>(std::size(LabelFonts)); ++index)
-            {
-                if (working->FontFamily == LabelFonts[index])
+            auto const fillFamilies = [family, families](bool all, std::wstring const& keep)
                 {
-                    family.SelectedIndex(index + 1);
-                    break;
-                }
-            }
+                    auto const sameName = [](std::wstring const& left, std::wstring const& right)
+                        {
+                            return ::CompareStringOrdinal(
+                                left.c_str(), static_cast<int>(left.size()),
+                                right.c_str(), static_cast<int>(right.size()), TRUE) == CSTR_EQUAL;
+                        };
+
+                    auto const offered = all ? fonts::InstalledFamilies(true) : fonts::InBoxFamilies();
+
+                    families->clear();
+                    family.Items().Clear();
+                    family.Items().Append(box_value(resources::GetString(L"FontFamilyTheme")));
+
+                    auto const listed = std::any_of(offered.begin(), offered.end(),
+                        [&](std::wstring const& name) { return sameName(name, keep); });
+
+                    if (!keep.empty() && !listed)
+                    {
+                        families->push_back(keep);
+                        family.Items().Append(box_value(fonts::IsInstalled(keep)
+                            ? winrt::hstring{ keep }
+                            : resources::FormatString(L"FontMissingFormat", keep)));
+                    }
+
+                    for (auto const& name : offered)
+                    {
+                        families->push_back(name);
+                        family.Items().Append(box_value(winrt::hstring{ name }));
+                    }
+
+                    auto selected = 0;
+
+                    for (size_t index = 0; index < families->size() && !keep.empty(); ++index)
+                    {
+                        if (sameName((*families)[index], keep))
+                        {
+                            selected = static_cast<int32_t>(index) + 1;
+                            break;
+                        }
+                    }
+
+                    family.SelectedIndex(selected);
+                };
+
+            fillFamilies(::midiglass::AppSettings::Current().ShowAllFonts(), working->FontFamily);
+
+            controls::CheckBox allFonts{};
+            allFonts.Content(box_value(resources::GetString(L"FontShowAll")));
+            allFonts.IsChecked(::midiglass::AppSettings::Current().ShowAllFonts());
+
+            controls::TextBlock allFontsCaption{};
+            allFontsCaption.Text(resources::GetString(L"FontShowAllCaption"));
+            allFontsCaption.FontSize(11);
+            allFontsCaption.TextWrapping(xaml::TextWrapping::Wrap);
+            allFontsCaption.Margin({ 0, -8, 0, 0 });
+            allFontsCaption.Foreground(xaml::Application::Current().Resources()
+                .Lookup(box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
 
             // ---- size ----
 
@@ -232,6 +270,8 @@ namespace winrt::midiglass::implementation
             previewHost.Child(preview);
 
             root.Children().Append(family);
+            root.Children().Append(allFonts);
+            root.Children().Append(allFontsCaption);
             root.Children().Append(size);
             root.Children().Append(weight);
             root.Children().Append(switches);
@@ -247,8 +287,8 @@ namespace winrt::midiglass::implementation
                     auto const weightIndex = weight.SelectedIndex();
 
                     working->FontFamily = familyIndex > 0 &&
-                        familyIndex <= static_cast<int32_t>(std::size(LabelFonts))
-                        ? LabelFonts[familyIndex - 1]
+                        familyIndex <= static_cast<int32_t>(families->size())
+                        ? (*families)[static_cast<size_t>(familyIndex) - 1]
                         : L"";
 
                     working->FontSize = sizeIndex > 0 &&
@@ -270,9 +310,7 @@ namespace winrt::midiglass::implementation
                     // nothing to keep in step.
                     preview.FontSize(working->FontSize > 0.0 ? working->FontSize : 12.0);
 
-                    preview.FontFamily(working->FontFamily.empty()
-                        ? media::FontFamily{ L"Segoe UI Variable Text" }
-                        : media::FontFamily{ working->FontFamily });
+                    preview.FontFamily(fonts::FamilyFor(working->FontFamily));
 
                     preview.FontWeight(winrt::Windows::UI::Text::FontWeight{
                         static_cast<uint16_t>(working->FontWeight > 0 ? working->FontWeight : 400) });
@@ -295,6 +333,21 @@ namespace winrt::midiglass::implementation
                 };
 
             family.SelectionChanged([=](auto&&, auto&&) { apply(); });
+
+            // Remembered for this PC, and the font already chosen survives the list changing.
+            auto const showAll = [=](bool all)
+                {
+                    ::midiglass::AppSettings::Current().ShowAllFonts(all);
+
+                    auto const keep = working->FontFamily;
+
+                    fillFamilies(all, keep);
+                    apply();
+                };
+
+            allFonts.Checked([=](auto&&, auto&&) { showAll(true); });
+            allFonts.Unchecked([=](auto&&, auto&&) { showAll(false); });
+
             size.SelectionChanged([=](auto&&, auto&&) { apply(); });
             weight.SelectionChanged([=](auto&&, auto&&) { apply(); });
             italic.Checked([=](auto&&, auto&&) { apply(); });

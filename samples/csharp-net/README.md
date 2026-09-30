@@ -8,6 +8,7 @@ Using C# / WinRT and the latest versions of .NET to use the Windows MIDI Service
 | -------| ----------- |
 | [Basics](basics/) | Shows how to open a MidiSession, and connect to a MidiEndpoint to send and receive messages |
 | [Capability Inquiry Browse](capability-inquiry-browse/) | Asks a device what it can do, and reads the device info, channel list and program list it publishes. This is what a patch browser is built on |
+| [Capability Inquiry Program List](capability-inquiry-program-list/) | Reads the channel list and program lists of the General MIDI synthesizer a page at a time, groups the programs by category, and uses an entry to choose the sound on a channel |
 | [Capability Inquiry Virtual Device](capability-inquiry-virtual-device/) | Publishes device info, channels, programs and a profile from a virtual device, and lets the API answer capability inquiry for it |
 | [Endpoint Listeners](endpoint-listeners/) | Demonstrates filtering incoming messages down to specific groups, which is how you emulate a MIDI 1.0 port |
 | [Get VID and PID](get-vid-pid/) | Shows where to find the USB vendor and product ids for an endpoint. Replaces the WinMM `DRV_QUERYDEVICEINTERFACE` approach |
@@ -15,8 +16,11 @@ Using C# / WinRT and the latest versions of .NET to use the Windows MIDI Service
 | [Loopback Basic Endpoints](loopback-basic-endpoints/) | Creates a MIDI 1.0-style loopback endpoint at runtime, visible to older MIDI APIs |
 | [Loopback Endpoints](loopback-endpoints/) | Creates a pair of MIDI 2.0 bidirectional loopback endpoints at runtime |
 | [Message Light WPF](message-light-wpf/) | A small WPF application which flashes on incoming messages |
+| [MIDI File Player](midi-file-player/) | Reads a Standard MIDI File, shows what is in it, and plays it on the General MIDI synthesizer. Also sets the synthesizer's volume while it plays |
+| [MIDI File Writer](midi-file-writer/) | Saves a sequence as a Standard MIDI File, shows which messages MIDI 1.0 cannot hold, and reads the file back |
 | [Scheduled Send Messages](scheduled-send-messages/) | Schedules messages for delivery at a future timestamp. There is no WinMM equivalent for this |
 | [Send Speed](send-speed/) | Measures message sending throughput |
+| [Sequence Builder](sequence-builder/) | Builds sequences in memory, one in musical time and one in real time, and plays them on the General MIDI synthesizer |
 | [Static Enum Endpoints](static-enum-endpoints/) | Gets a one-time list of active endpoints, with function blocks and group terminal blocks |
 | [SysEx File Receiver](sysex-file-receiver/) | Receives a System Exclusive message and writes it to a `.syx` file |
 | [SysEx File Sender](sysex-file-sender/) | Sends the contents of a `.syx` file to a device. Replaces WinMM `midiOutLongMsg` and `MIDIHDR` buffer management |

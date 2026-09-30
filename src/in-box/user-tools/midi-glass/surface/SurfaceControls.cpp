@@ -2332,8 +2332,7 @@ namespace glass
             xaml::Automation::AutomationProperties::SetAccessibilityView(
                 host, xaml::Automation::Peers::AccessibilityView::Raw);
 
-            auto const round = control.Kind == ControlKind::Knob ||
-                control.Kind == ControlKind::Encoder;
+            auto const round = control.Kind == ControlKind::Knob;
 
             auto const vertical = !round && height >= width;
 

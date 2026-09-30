@@ -221,6 +221,7 @@ namespace glass
             renderer.SetVideosLive(false);
 
             renderer.Build(surface, document, theme, 0);
+            renderer.ShowCurrentPage(document, 0);
 
             // A stopwatch on a card reads zero, the way the layout opens.
             renderer.SetElapsedRunning(false);

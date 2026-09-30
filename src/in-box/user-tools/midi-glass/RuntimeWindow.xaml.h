@@ -44,7 +44,11 @@ namespace winrt::midiglass::implementation
             foundation::IInspectable const& sender,
             controls::SelectionChangedEventArgs const& args);
 
-        void OnViewModeToggled(
+        void OnKeepOnTopChecked(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
+        void OnKeepOnTopUnchecked(
             foundation::IInspectable const& sender,
             xaml::RoutedEventArgs const& args);
 
@@ -87,7 +91,38 @@ namespace winrt::midiglass::implementation
             foundation::IInspectable const& sender,
             xaml::SizeChangedEventArgs const& args);
 
+        // ---- the toolbar window (RuntimeWindowToolbar.cpp) ----
+
+        void OnToolbarHandlePressed(
+            foundation::IInspectable const& sender,
+            xaml::Input::PointerRoutedEventArgs const& args);
+        void OnToolbarHandleMoved(
+            foundation::IInspectable const& sender,
+            xaml::Input::PointerRoutedEventArgs const& args);
+        void OnToolbarHandleReleased(
+            foundation::IInspectable const& sender,
+            xaml::Input::PointerRoutedEventArgs const& args);
+        void OnToolbarHandleCaptureLost(
+            foundation::IInspectable const& sender,
+            xaml::Input::PointerRoutedEventArgs const& args);
+        void OnToolbarHandleKeyDown(
+            foundation::IInspectable const& sender,
+            xaml::Input::KeyRoutedEventArgs const& args);
+        void OnToolbarFlyoutOpening(
+            foundation::IInspectable const& sender,
+            foundation::IInspectable const& args);
+        void OnToolbarKeepOnTopClick(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+        void OnToolbarCloseClick(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
     private:
+        // The usual window, in physical pixels, for a page that does not fit a smaller one.
+        static constexpr int32_t DefaultWindowWidth = 1320;
+        static constexpr int32_t DefaultWindowHeight = 900;
+
         void OnWindowClosed(
             foundation::IInspectable const& sender,
             xaml::WindowEventArgs const& args);
@@ -109,6 +144,40 @@ namespace winrt::midiglass::implementation
         void ShowFullScreenChrome();
         void ApplyCornerButtonPlacement();
         void ShowEscapeToast();
+
+        // One entry per page, for the corner menu and the toolbar menu alike.
+        void FillPagesMenu(_In_ controls::MenuFlyoutSubItem const& pages);
+
+        // ---- the window itself (RuntimeWindowToolbar.cpp) ----
+
+        // The size a layout opens at: the page and its handle for a toolbar, and a window that
+        // fits a small page rather than the usual big one otherwise.
+        winrt::Windows::Graphics::SizeInt32 OpeningClientSize();
+
+        // The title bar and buttons, or the toolbar's handle, and whether it stays in front.
+        // Run again after full screen, because leaving it brings back an ordinary window.
+        void ApplyWindowStyle();
+        void ApplyKeepOnTop(_In_ bool keepOnTop);
+
+        // Nothing drawn behind the controls: no deck, and no window.
+        void ApplySeeThrough();
+        void ClearDeckOverlays();
+
+        // Sizes the window to OpeningClientSize. False when the page wants the usual window.
+        bool FitWindowToPage();
+
+        // The toolbar menu's sizes. The window is the page, so a size is the window's size.
+        void FillSizeMenu();
+        void SetToolbarSize(_In_ int32_t percent);
+
+        // The last scale used is kept in the layout, so it opens that way next time.
+        void RememberScale();
+
+        bool ToolbarHandleOnLeft() const noexcept;
+        double ToolbarPageScale() const noexcept;
+        double WindowScale();
+        void ShowToolbarMenu();
+        void EndToolbarHandleGesture();
 
         // A performer's screen must not blank mid set.
         void HoldDisplayAwake(_In_ bool hold);
@@ -173,6 +242,21 @@ namespace winrt::midiglass::implementation
 
         winrt::Windows::System::Display::DisplayRequest m_displayRequest{ nullptr };
         bool m_displayHeld{ false };
+
+        // What the layout asked of its window, read when it opens. The pin changes only this
+        // window, never the file.
+        bool m_toolbar{ false };
+        bool m_seeThrough{ false };
+        bool m_keepOnTop{ false };
+
+        // A drag on the toolbar's handle. Worked out in screen pixels, so a finger and a pen move
+        // the window as well as a mouse does.
+        bool m_handlePressed{ false };
+        bool m_handleDragging{ false };
+        uint32_t m_handlePointerId{ 0 };
+        double m_handleStartX{ 0.0 };
+        double m_handleStartY{ 0.0 };
+        winrt::Windows::Graphics::PointInt32 m_handleWindowStart{};
     };
 }
 

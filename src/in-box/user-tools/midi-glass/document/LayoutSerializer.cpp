@@ -43,6 +43,9 @@ namespace glass
         constexpr wchar_t KeyPreferredDisplay[] = L"preferredDisplayId";
         constexpr wchar_t KeySuppressStartup[] = L"suppressAllStartupValues";
         constexpr wchar_t KeyVirtualDevice[] = L"publishesVirtualDevice";
+        constexpr wchar_t KeyToolbarWindow[] = L"toolbarWindow";
+        constexpr wchar_t KeyAlwaysOnTop[] = L"alwaysOnTop";
+        constexpr wchar_t KeySeeThrough[] = L"seeThrough";
         constexpr wchar_t KeyFavorite[] = L"isFavorite";
         constexpr wchar_t KeyTempo[] = L"tempo";
         constexpr wchar_t KeyDevices[] = L"devices";
@@ -168,6 +171,7 @@ namespace glass
         constexpr wchar_t KeyDefaultValue[] = L"defaultValue";
         constexpr wchar_t KeyDefaultValueY[] = L"defaultValueY";
         constexpr wchar_t KeyReturnsToDefault[] = L"returnsToDefault";
+        constexpr wchar_t KeyLightsFromCenter[] = L"lightsFromCenter";
         constexpr wchar_t KeySendsValueOnStart[] = L"sendsValueOnStart";
         constexpr wchar_t KeySendInterval[] = L"sendIntervalMilliseconds";
         constexpr wchar_t KeyMessages[] = L"messages";
@@ -226,7 +230,6 @@ namespace glass
             { ControlKind::Button, L"button" },
             { ControlKind::Toggle, L"toggle" },
             { ControlKind::XYPad, L"xyPad" },
-            { ControlKind::Encoder, L"encoder" },
             { ControlKind::Meter, L"meter" },
             { ControlKind::Lamp, L"lamp" },
             { ControlKind::Readout, L"readout" },
@@ -247,6 +250,10 @@ namespace glass
             { ControlKind::Line, L"line" },
             { ControlKind::NotePads, L"notePads" },
             { ControlKind::HexPads, L"hexPads" },
+
+            // Read only. An encoder was a knob under another name, so the writer, which takes
+            // the first name a kind has, writes it back as a knob.
+            { ControlKind::Knob, L"encoder" },
         };
 
         constexpr EnumName<MusicalScale> ScaleNames[]
@@ -1237,7 +1244,10 @@ namespace glass
 
             if (auto const style = ReadObject(object, KeyLabelStyle))
             {
-                control.LabelLook.FontFamily = ReadString(style, KeyFontFamily);
+                // A family name, never a path or a link to a font file somewhere else.
+                auto family = ReadString(style, KeyFontFamily);
+
+                control.LabelLook.FontFamily = IsSafeFontFamilyName(family) ? std::move(family) : std::wstring{};
                 control.LabelLook.FontSize = std::clamp(ReadNumber(style, KeyFontSize, 0.0), 0.0, 200.0);
                 control.LabelLook.FontWeight = ReadInt(style, KeyFontWeight, 0, 0, 1000);
                 control.LabelLook.Italic = ReadBool(style, KeyItalic, false);
@@ -1284,6 +1294,7 @@ namespace glass
             control.DefaultValue = std::clamp(ReadNumber(object, KeyDefaultValue, 0.0), 0.0, 1.0);
             control.DefaultValueY = std::clamp(ReadNumber(object, KeyDefaultValueY, 0.0), 0.0, 1.0);
             control.ReturnsToDefault = ReadBool(object, KeyReturnsToDefault, false);
+            control.LightsFromCenter = ReadBool(object, KeyLightsFromCenter, false);
             control.SendsValueOnStart = ReadBool(object, KeySendsValueOnStart, false);
             control.SendIntervalMilliseconds = ReadInt(object, KeySendInterval, 0, 0, 10000);
 
@@ -1308,7 +1319,7 @@ namespace glass
             control.Unknown = CaptureUnknown(object,
                 { KeyId, KeyKind, KeyLabel, KeyX, KeyY, KeyWidth, KeyHeight, KeyHueSlot,
                   KeyLiteralColor, KeyAspectLocked, KeyControlGroup, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
-                  KeyReturnsToDefault, KeyDrag, KeyTicks, KeyShowDetentValues, KeyPicture,
+                  KeyReturnsToDefault, KeyLightsFromCenter, KeyDrag, KeyTicks, KeyShowDetentValues, KeyPicture,
                   KeyKeyboard, KeyClock, KeyLfo, KeyTurntable, KeyLine, KeySwitch, KeySequencer, KeyPads, KeyDefaultValueY, KeyVelocityFromTouch,
                   KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback,
                   KeyStyle, KeyLabelPlaced, KeyLabelStyle, KeyShowValue });
@@ -1566,6 +1577,9 @@ namespace glass
             document.PreferredDisplayId = ReadString(root, KeyPreferredDisplay);
             document.SuppressAllStartupValues = ReadBool(root, KeySuppressStartup, false);
             document.PublishesVirtualDevice = ReadBool(root, KeyVirtualDevice, false);
+            document.ToolbarWindow = ReadBool(root, KeyToolbarWindow, false);
+            document.AlwaysOnTop = ReadBool(root, KeyAlwaysOnTop, false);
+            document.SeeThrough = ReadBool(root, KeySeeThrough, false);
             document.IsFavorite = ReadBool(root, KeyFavorite, false);
 
             if (auto const tempo = ReadObject(root, KeyTempo))
@@ -1621,7 +1635,8 @@ namespace glass
                   KeyThemeColors,
                   KeyBackgroundImage, KeyBackgroundFit, KeyBackgroundOpacity,
                   KeyScaleMode, KeyCustomScalePercent, KeyCornerButton, KeyPreferredDisplay,
-                  KeySuppressStartup, KeyVirtualDevice, KeyFavorite, KeyTempo, KeyDevices, KeyPages, KeySequences });
+                  KeySuppressStartup, KeyVirtualDevice, KeyToolbarWindow, KeyAlwaysOnTop, KeySeeThrough,
+                  KeyFavorite, KeyTempo, KeyDevices, KeyPages, KeySequences });
 
             result.Succeeded = true;
         }
@@ -1790,6 +1805,11 @@ namespace glass
             if (control.DefaultValueY != 0.0)
             {
                 writer.Write(KeyDefaultValueY, control.DefaultValueY);
+            }
+
+            if (control.LightsFromCenter)
+            {
+                writer.Write(KeyLightsFromCenter, control.LightsFromCenter);
             }
 
             if (control.ShowDetentValues)
@@ -2055,6 +2075,23 @@ namespace glass
             writer.Write(KeyPreferredDisplay, document.PreferredDisplayId);
             writer.Write(KeySuppressStartup, document.SuppressAllStartupValues);
             writer.Write(KeyVirtualDevice, document.PublishesVirtualDevice);
+
+            // Only when on, so a layout that never asked for them writes the file it always did.
+            if (document.ToolbarWindow)
+            {
+                writer.Write(KeyToolbarWindow, document.ToolbarWindow);
+            }
+
+            if (document.AlwaysOnTop)
+            {
+                writer.Write(KeyAlwaysOnTop, document.AlwaysOnTop);
+            }
+
+            if (document.SeeThrough)
+            {
+                writer.Write(KeySeeThrough, document.SeeThrough);
+            }
+
             writer.Write(KeyFavorite, document.IsFavorite);
 
             writer.BeginObject(KeyTempo);
