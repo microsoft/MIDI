@@ -111,6 +111,7 @@ namespace midiapp
                 {
                     wuxc::SelectorBarItem tab{};
                     tab.Text(label);
+                    wux::Automation::AutomationProperties::SetName(tab, label);
                     tabs.Items().Append(tab);
 
                     wuxc::StackPanel page{};

@@ -18,6 +18,7 @@
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="KeyboardLayout.cpp" />
+    <ClCompile Include="KeyColors.cpp" />
     <ClCompile Include="MidiOutput.cpp" />
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
@@ -35,6 +36,7 @@
     <ClInclude Include="BackgroundWork.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="KeyboardLayout.h" />
+    <ClInclude Include="KeyColors.h" />
     <ClInclude Include="MidiOutput.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />

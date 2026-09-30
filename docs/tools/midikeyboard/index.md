@@ -109,7 +109,7 @@ The gear button at the top right opens the settings panel beside the keys.
 
 **Expression** holds the ribbon position, the velocity settings, and what dragging up a key sends, all covered above.
 
-**Appearance** sets whether the app follows your Windows light or dark mode, and which window background to use.
+**Appearance** sets whether the app follows your Windows light or dark mode, and which window background to use. Its **Black keys** and **White keys** tabs let you pick your own color for each kind of key. The letters and note names on the keys switch between dark and light text on their own, so they stay easy to read whatever colors you choose.
 
 The pin button next to the settings button keeps the keyboard above your other windows, which is what you want when you're playing an instrument hosted in a DAW.
 

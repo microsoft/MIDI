@@ -11,6 +11,7 @@
 
 #include "AppSettings.h"
 #include "Arpeggiator.h"
+#include "KeyColors.h"
 #include "KeyboardLayout.h"
 #include "MidiCiPresence.h"
 #include "MidiCiProgramList.h"
@@ -131,6 +132,9 @@ namespace winrt::midikeyboard::implementation
         void InitializeSettingsPanelControls() noexcept;
         void ReleaseFlagWhenIdle(bool MainWindow::* flag) noexcept;
         void InitializeBrushes() noexcept;
+
+        // recolors the keys from the appearance settings without rebuilding them
+        void ApplyKeyColors() noexcept;
 
         void StartEndpointWatcher() noexcept;
         void StopEndpointWatcher() noexcept;
@@ -304,13 +308,13 @@ namespace winrt::midikeyboard::implementation
         RibbonVisuals m_pitchRibbon{};
         RibbonVisuals m_modRibbon{};
 
-        media::Brush m_whiteKeyBrush{ nullptr };
-        media::Brush m_blackKeyBrush{ nullptr };
+        media::LinearGradientBrush m_whiteKeyBrush{ nullptr };
+        media::LinearGradientBrush m_blackKeyBrush{ nullptr };
         media::Brush m_keyBorderBrush{ nullptr };
         media::Brush m_glowBrush{ nullptr };
         winrt::Windows::UI::Color m_glowColor{};
-        media::Brush m_whiteKeyTextBrush{ nullptr };
-        media::Brush m_blackKeyTextBrush{ nullptr };
+        media::SolidColorBrush m_whiteKeyTextBrush{ nullptr };
+        media::SolidColorBrush m_blackKeyTextBrush{ nullptr };
 
         media::Brush m_keyboardFrameBrush{ nullptr };
         media::Brush m_keyboardFrameFocusBrush{ nullptr };

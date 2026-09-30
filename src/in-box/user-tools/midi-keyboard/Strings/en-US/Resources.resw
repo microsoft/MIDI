@@ -580,4 +580,28 @@
   <data name="SettingsColorPickerName" xml:space="preserve">
     <value>Window color</value>
   </data>
+  <data name="SettingsColorTabsName" xml:space="preserve">
+    <value>Colors</value>
+  </data>
+  <data name="SettingsWindowColorTab" xml:space="preserve">
+    <value>Window</value>
+  </data>
+  <data name="SettingsBlackKeysTab" xml:space="preserve">
+    <value>Black keys</value>
+  </data>
+  <data name="SettingsBlackKeysCustomColorCheckBox" xml:space="preserve">
+    <value>Use a custom black key color</value>
+  </data>
+  <data name="SettingsBlackKeysColorPickerName" xml:space="preserve">
+    <value>Black key color</value>
+  </data>
+  <data name="SettingsWhiteKeysTab" xml:space="preserve">
+    <value>White keys</value>
+  </data>
+  <data name="SettingsWhiteKeysCustomColorCheckBox" xml:space="preserve">
+    <value>Use a custom white key color</value>
+  </data>
+  <data name="SettingsWhiteKeysColorPickerName" xml:space="preserve">
+    <value>White key color</value>
+  </data>
 </root>

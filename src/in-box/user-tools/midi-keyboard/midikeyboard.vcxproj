@@ -132,6 +132,7 @@
     <ClInclude Include="BackgroundWork.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="KeyboardLayout.h" />
+    <ClInclude Include="KeyColors.h" />
     <ClInclude Include="MidiCiPresence.h" />
     <ClInclude Include="MidiCiProgramList.h" />
     <ClInclude Include="MidiOutput.h" />
@@ -165,6 +166,7 @@
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="KeyboardLayout.cpp" />
+    <ClCompile Include="KeyColors.cpp" />
     <ClCompile Include="MidiCiPresence.cpp" />
     <ClCompile Include="MidiCiProgramList.cpp" />
     <ClCompile Include="MidiOutput.cpp" />
