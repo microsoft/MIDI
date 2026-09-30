@@ -366,6 +366,11 @@ namespace midi2console
 
         table.Render();
 
+        if (!options.Verbose)
+        {
+            return 0;
+        }
+
         for (auto const& transport : transports)
         {
             WriteBlankLine();
@@ -381,17 +386,14 @@ namespace midi2console
                 WriteField(ResourceString(IDS_LABEL_DESCRIPTION), description);
             }
 
-            if (options.Verbose)
-            {
-                WriteField(ResourceString(IDS_LABEL_ID), FormatGuid(transport.TransportId()), guidTextStyle);
-                WriteField(ResourceString(IDS_LABEL_IMAGE_FILE_NAME), ToUtf8(transport.ImageFileName()));
-                WriteField(ResourceString(IDS_ENUM_TRANSPORT_IS_API_CREATABLE),
-                    FormatBoolean(transport.IsRuntimeCreatableByApps()), BooleanStyle(transport.IsRuntimeCreatableByApps()));
-                WriteField(ResourceString(IDS_ENUM_TRANSPORT_IS_CONFIG_CREATABLE),
-                    FormatBoolean(transport.IsRuntimeCreatableBySettings()), BooleanStyle(transport.IsRuntimeCreatableBySettings()));
-                WriteField(ResourceString(IDS_ENUM_TRANSPORT_IS_SYSTEM_MANAGED),
-                    FormatBoolean(transport.IsSystemManaged()), BooleanStyle(transport.IsSystemManaged()));
-            }
+            WriteField(ResourceString(IDS_LABEL_ID), FormatGuid(transport.TransportId()), guidTextStyle);
+            WriteField(ResourceString(IDS_LABEL_IMAGE_FILE_NAME), ToUtf8(transport.ImageFileName()));
+            WriteField(ResourceString(IDS_ENUM_TRANSPORT_IS_API_CREATABLE),
+                FormatBoolean(transport.IsRuntimeCreatableByApps()), BooleanStyle(transport.IsRuntimeCreatableByApps()));
+            WriteField(ResourceString(IDS_ENUM_TRANSPORT_IS_CONFIG_CREATABLE),
+                FormatBoolean(transport.IsRuntimeCreatableBySettings()), BooleanStyle(transport.IsRuntimeCreatableBySettings()));
+            WriteField(ResourceString(IDS_ENUM_TRANSPORT_IS_SYSTEM_MANAGED),
+                FormatBoolean(transport.IsSystemManaged()), BooleanStyle(transport.IsSystemManaged()));
         }
 
         return 0;

@@ -179,11 +179,11 @@ Lists the MIDI transports installed on this PC. A transport is the part of Windo
 
 | Option | Short | Default | Description |
 | ----- | ----- | ----- | ----- |
-| `--verbose` | `-v` | | Include more details for each transport |
+| `--verbose` | `-v` | | After the table, list each transport's description and id, and whether apps or settings can create endpoints with it |
 
 ```
 midi enumerate transport-plugins
-midi enumerate transports
+midi enumerate transports --verbose
 ```
 
 ![The list of transports in the MIDI Console]({{ site.baseurl }}/assets/images/console-enum-transports.png)
