@@ -175,7 +175,7 @@ Decided on September 27, 2026:
 
 Still open:
 
-1. **One server for all the MIDI tools, or one per app?** Pete leans toward one for all, so one request can use several apps and APIs. For example, "route my keyboard to the Moog One and give me a touch surface for it" needs Patchbay and Glass together. A combined server should offer only the tools of the apps that are installed, since Glass has its own installer. Tools that change the MIDI service right away, like making a loopback, aren't drafts, so they'd need their own review step.
+1. **One server for all the MIDI tools, or one per app?** Pete leans toward one for all, so one request can use several apps and APIs. For example, "route my keyboard to the Moog One and give me a touch surface for it" needs Patchbay and Glass together. Patchbay and Glass both ship in the Tools installer, so a combined server that ships there too can offer both apps' tools without checking which apps are installed. Tools that change the MIDI service right away, like making a loopback, aren't drafts, so they'd need their own review step.
 2. **Where the server lives:** an `--mcp` switch on an app's exe, like Glass's `--thumbnail`, or a small console exe built from the apps' own file code?
    - A switch means one binary that can't drift from the app. But the apps are windowed WinUI apps, and the `--mcp` path would have to run before single-instance handling. Today a second launch hands off to the running copy and its arguments are lost.
    - A console exe starts faster and loads no UI, but Patchbay's patch code would have to move into a library both can build, and it's one more file to sign and install.
