@@ -310,7 +310,8 @@ namespace winrt::midikeyboard::implementation
 
         media::LinearGradientBrush m_whiteKeyBrush{ nullptr };
         media::LinearGradientBrush m_blackKeyBrush{ nullptr };
-        media::Brush m_keyBorderBrush{ nullptr };
+        media::SolidColorBrush m_whiteKeyLineBrush{ nullptr };
+        media::SolidColorBrush m_blackKeyLineBrush{ nullptr };
         media::Brush m_glowBrush{ nullptr };
         winrt::Windows::UI::Color m_glowColor{};
         media::SolidColorBrush m_whiteKeyTextBrush{ nullptr };

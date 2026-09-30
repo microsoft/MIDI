@@ -111,10 +111,18 @@ namespace winrt::midikeyboard::implementation
         constexpr native::KeyPalette BuiltInWhiteKeys{ 0xFFFCFCFC, 0xFFDEDEE0, 0xFF606064 };
         constexpr native::KeyPalette BuiltInBlackKeys{ 0xFF3A3A3E, 0xFF101012, 0xFFC4C4C8 };
 
-        // every key of one kind shares these two brushes, so recoloring them recolors the keys
+        // the built-in keys get their lines by the same rule as custom keys
+        native::KeyPalette WithKeyLines(_In_ native::KeyPalette palette, _In_ uint32_t keyColorArgb) noexcept
+        {
+            palette.LineArgb = native::MakeKeyLineArgb(keyColorArgb, palette);
+            return palette;
+        }
+
+        // every key of one kind shares these brushes, so recoloring them recolors the keys
         void PaintKeyBrushes(
             _In_ media::LinearGradientBrush const& body,
             _In_ media::SolidColorBrush const& text,
+            _In_ media::SolidColorBrush const& line,
             _In_ native::KeyPalette const& palette)
         {
             auto const stops = body.GradientStops();
@@ -122,6 +130,7 @@ namespace winrt::midikeyboard::implementation
             stops.GetAt(0).Color(ColorFromArgb(palette.TopArgb));
             stops.GetAt(1).Color(ColorFromArgb(palette.BottomArgb));
             text.Color(ColorFromArgb(palette.TextArgb));
+            line.Color(ColorFromArgb(palette.LineArgb));
         }
 
         uint32_t NormalizedToUnsigned(double normalized) noexcept
@@ -314,7 +323,8 @@ namespace winrt::midikeyboard::implementation
             m_blackKeyBrush = MakeVerticalGradient(Color{}, Color{});
             m_whiteKeyTextBrush = media::SolidColorBrush{};
             m_blackKeyTextBrush = media::SolidColorBrush{};
-            m_keyBorderBrush = MakeSolidBrush(MakeColor(24, 24, 26, 170));
+            m_whiteKeyLineBrush = media::SolidColorBrush{};
+            m_blackKeyLineBrush = media::SolidColorBrush{};
 
             ApplyKeyColors();
 
@@ -370,22 +380,23 @@ namespace winrt::midikeyboard::implementation
         try
         {
             if (m_whiteKeyBrush == nullptr || m_blackKeyBrush == nullptr ||
-                m_whiteKeyTextBrush == nullptr || m_blackKeyTextBrush == nullptr)
+                m_whiteKeyTextBrush == nullptr || m_blackKeyTextBrush == nullptr ||
+                m_whiteKeyLineBrush == nullptr || m_blackKeyLineBrush == nullptr)
             {
                 return;
             }
 
             auto const& settings = native::AppSettings::Current();
 
-            PaintKeyBrushes(m_whiteKeyBrush, m_whiteKeyTextBrush,
+            PaintKeyBrushes(m_whiteKeyBrush, m_whiteKeyTextBrush, m_whiteKeyLineBrush,
                 settings.UseCustomWhiteKeyColor()
                     ? native::MakeKeyPalette(settings.WhiteKeyColorArgb())
-                    : BuiltInWhiteKeys);
+                    : WithKeyLines(BuiltInWhiteKeys, native::AppSettings::DefaultWhiteKeyColorArgb));
 
-            PaintKeyBrushes(m_blackKeyBrush, m_blackKeyTextBrush,
+            PaintKeyBrushes(m_blackKeyBrush, m_blackKeyTextBrush, m_blackKeyLineBrush,
                 settings.UseCustomBlackKeyColor()
                     ? native::MakeKeyPalette(settings.BlackKeyColorArgb())
-                    : BuiltInBlackKeys);
+                    : WithKeyLines(BuiltInBlackKeys, native::AppSettings::DefaultBlackKeyColorArgb));
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the key colors.")
     }
@@ -1276,7 +1287,7 @@ namespace winrt::midikeyboard::implementation
                 key.Body = controls::Border{};
                 key.Body.Child(inner);
                 key.Body.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-                key.Body.BorderBrush(m_keyBorderBrush);
+                key.Body.BorderBrush(m_keyGeometry[i].IsBlack ? m_blackKeyLineBrush : m_whiteKeyLineBrush);
 
                 canvas.Children().Append(key.Body);
 

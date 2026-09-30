@@ -16,6 +16,9 @@ namespace midikeyboard
         // better of the two can never fall below the square root of 21, about 4.58.
         constexpr double MinimumTextContrast = 4.5;
 
+        // the lines between keys: plainly visible, while still a shade of the key color
+        constexpr double MinimumLineContrast = 2.0;
+
         // how the built-in keys are shaded: lighter at the far end, darker toward the player
         constexpr double TopLighten = 0.18;
         constexpr double BottomDarken = 0.12;
@@ -135,6 +138,34 @@ namespace midikeyboard
             }
         }
 
-        return KeyPalette{ ToArgb(top), ToArgb(bottom), ToArgb(text) };
+        KeyPalette palette{ ToArgb(top), ToArgb(bottom), ToArgb(text) };
+        palette.LineArgb = MakeKeyLineArgb(keyColorArgb, palette);
+
+        return palette;
+    }
+
+    _Use_decl_annotations_
+    uint32_t MakeKeyLineArgb(uint32_t keyColorArgb, KeyPalette const& palette) noexcept
+    {
+        auto const base = FromArgb(keyColorArgb);
+        auto const top = FromArgb(palette.TopArgb);
+        auto const bottom = FromArgb(palette.BottomArgb);
+
+        // darker lines on a key with dark text, lighter ones on a key with light text
+        auto const darkText = Luminance(FromArgb(palette.TextArgb)) < Luminance(bottom);
+        auto const ink = darkText ? Black : White;
+        auto const hardestBackground = darkText ? bottom : top;
+
+        for (auto percent = 1; percent <= 100; percent++)
+        {
+            auto const shaded = Mix(base, ink, percent / 100.0);
+
+            if (Contrast(shaded, hardestBackground) >= MinimumLineContrast)
+            {
+                return ToArgb(shaded);
+            }
+        }
+
+        return ToArgb(ink);
     }
 }
