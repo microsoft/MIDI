@@ -29,6 +29,12 @@
       <Component Id="c95CC5CAA7966E059" Guid="6a664332-44a4-51eb-a912-7e6e121a6bc8" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midi2monitor.pri -->
         <File Id="f95CC5CAA7966E059" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi2monitor.pri" Vital="true" />
       </Component>
+      <Component Id="cE3FD4F7315BBDD96" Guid="b185d1ee-4cd6-5c99-810e-7568510463f8" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midibluetoothsetup.exe -->
+        <File Id="midibluetoothsetupExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midibluetoothsetup.exe" Vital="true" />
+      </Component>
+      <Component Id="cF864DE8313397783" Guid="b7b98b6e-16ec-5016-895b-5abd588b3923" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midibluetoothsetup.pri -->
+        <File Id="fF864DE8313397783" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midibluetoothsetup.pri" Vital="true" />
+      </Component>
       <Component Id="cA7FBAA28DA9B8426" Guid="ab88a013-ff5d-51ba-a375-e4be26ae06fd" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midiclock.exe -->
         <File Id="midiclockExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiclock.exe" Vital="true" />
       </Component>
@@ -58,6 +64,12 @@
       </Component>
       <Component Id="c244B868E75467402" Guid="a3847d26-deb5-5f72-9075-10bbfe636cf1" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midiloopbacksetup.pri -->
         <File Id="f244B868E75467402" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiloopbacksetup.pri" Vital="true" />
+      </Component>
+      <Component Id="c2B1DA80FC8FAED9A" Guid="d54aa58a-8228-5816-ba12-410884a9536a" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midinetworksetup.exe -->
+        <File Id="midinetworksetupExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midinetworksetup.exe" Vital="true" />
+      </Component>
+      <Component Id="cC702706EE86A4573" Guid="febe75ab-34d4-54f7-8185-8af03dd1bb99" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midinetworksetup.pri -->
+        <File Id="fC702706EE86A4573" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midinetworksetup.pri" Vital="true" />
       </Component>
       <Component Id="cC0DDE72C42E8D0C4" Guid="ae5abee6-6437-5d7f-acde-77f786864f9a" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midinotifications.exe -->
         <File Id="midinotificationsExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midinotifications.exe" Vital="true" />

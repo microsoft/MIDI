@@ -44,6 +44,18 @@ namespace WindowsMidiServices
             }
         }
 
+        // Null once playback has been stopped with Stop-MidiFilePlayback.
+        public MidiSequencePlayerPosition? Position
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return BackingPlayer?.Position;
+                }
+            }
+        }
+
         internal MidiSequencePlayer? BackingPlayer { get; set; }
 
         internal Windows.Devices.Midi2.MidiSession? BackingSession { get; set; }
@@ -58,6 +70,38 @@ namespace WindowsMidiServices
             BackingSession = session;
             FilePath = filePath;
             EndpointDeviceId = endpointDeviceId;
+        }
+
+        // Pausing silences what is sounding, and resuming picks up where it left off with each
+        // channel's sound put back first. Both return false when the state does not allow it.
+        internal bool Pause()
+        {
+            lock (_lock)
+            {
+                if (BackingPlayer is null || BackingPlayer.State != MidiSequencePlayerState.Playing)
+                {
+                    return false;
+                }
+
+                BackingPlayer.Pause();
+
+                return true;
+            }
+        }
+
+        internal bool Resume()
+        {
+            lock (_lock)
+            {
+                if (BackingPlayer is null || BackingPlayer.State != MidiSequencePlayerState.Paused)
+                {
+                    return false;
+                }
+
+                BackingPlayer.Play();
+
+                return true;
+            }
         }
 
         // Stopping silences the instrument first. A player which is simply dropped leaves the

@@ -23,7 +23,7 @@ namespace WindowsMidiServices
         protected override void ProcessRecord()
         {
             RequireMidiServices();
-            RequireTransport(MidiBasicLoopbackManager.IsTransportAvailable, "MIDI 1.0 basic loopback");
+            RequireTransport(MidiBasicLoopbackManager.IsTransportAvailable, Strings.TransportNameBasicLoopback);
 
             var entries = MidiBasicLoopbackManager.GetActiveLoopbackEntries();
 

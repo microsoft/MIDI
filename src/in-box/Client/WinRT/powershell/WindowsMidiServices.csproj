@@ -39,6 +39,10 @@
            separately by build\build-all.ps1. -->
       <AllowedReferenceRelatedFileExtensions>.xml</AllowedReferenceRelatedFileExtensions>
 
+      <!-- The English strings in Resources\Strings.resx are built into the module itself, so
+           English needs no satellite assembly. -->
+      <NeutralLanguage>en-US</NeutralLanguage>
+
   </PropertyGroup>
 
   <ItemGroup>
@@ -59,6 +63,19 @@
     <Content Include="WindowsMidiServices.format.ps1xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The class that reads these strings is generated at build time, so a message the code
+         asks for that is missing from the file fails the build instead of showing up empty. -->
+    <EmbeddedResource Update="Resources\Strings.resx">
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>WindowsMidiServices.Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>Strings</StronglyTypedClassName>
+      <StronglyTypedFileName>$(IntermediateOutputPath)Strings.Designer.cs</StronglyTypedFileName>
+    </EmbeddedResource>
+
+    <Using Include="WindowsMidiServices.Resources" />
   </ItemGroup>
 
 

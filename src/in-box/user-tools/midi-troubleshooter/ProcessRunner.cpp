@@ -82,6 +82,58 @@ namespace miditroubleshooter
             }
         }
 
+        // The longest prefix ending on a whole UTF-8 character, so a character split across two reads is decoded once.
+        size_t CompleteUtf8Length(_In_ std::string_view const bytes) noexcept
+        {
+            auto const size = bytes.size();
+
+            for (size_t back = 1; back <= 4 && back <= size; back++)
+            {
+                auto const byte = static_cast<unsigned char>(bytes[size - back]);
+
+                if ((byte & 0xC0) == 0x80)
+                {
+                    continue;
+                }
+
+                size_t const length =
+                    (byte & 0xE0) == 0xC0 ? 2 :
+                    (byte & 0xF0) == 0xE0 ? 3 :
+                    (byte & 0xF8) == 0xF0 ? 4 : 1;
+
+                return length > back ? size - back : size;
+            }
+
+            return size;
+        }
+
+        // False when the handler failed, so the caller stops handing output on.
+        bool DeliverOutput(
+            _In_ std::string const& rawOutput,
+            _Inout_ size_t& delivered,
+            _In_ OutputReceivedHandler const& onOutputReceived) noexcept
+        {
+            try
+            {
+                auto const pending = std::string_view{ rawOutput }.substr(delivered);
+                auto const complete = CompleteUtf8Length(pending);
+
+                if (complete > 0)
+                {
+                    auto const text = Utf8ToWide(std::string{ pending.substr(0, complete) });
+
+                    delivered += complete;
+
+                    onOutputReceived(text);
+                }
+
+                return true;
+            }
+            MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to pass on output as it arrived.")
+
+            return false;
+        }
+
         // A quoted, escaped copy of the whole command line. CreateProcess writes to its
         // lpCommandLine buffer, so it can never be a literal.
         std::wstring BuildCommandLine(
@@ -105,7 +157,8 @@ namespace miditroubleshooter
             _In_ std::wstring const& executablePath,
             _In_ std::wstring const& arguments,
             _In_ std::chrono::seconds const timeout,
-            _In_ bool const captureOutput) noexcept
+            _In_ bool const captureOutput,
+            _In_ OutputReceivedHandler const& onOutputReceived) noexcept
         {
             ProcessResult result{};
 
@@ -191,6 +244,11 @@ namespace miditroubleshooter
                 {
                     std::array<char, 8192> buffer{};
 
+                    size_t delivered{ 0 };
+                    bool streaming{ static_cast<bool>(onOutputReceived) };
+
+                    bool exited{ false };
+
                     // An anonymous pipe cannot be read with an overlapped handle, and a blocking
                     // ReadFile on a child that never exits would never return, so the timeout
                     // below would never be reached. Peeking first keeps every read short.
@@ -225,16 +283,24 @@ namespace miditroubleshooter
                             }
 
                             rawOutput.append(buffer.data(), bytesRead);
+
+                            if (streaming)
+                            {
+                                streaming = DeliverOutput(rawOutput, delivered, onOutputReceived);
+                            }
+
                             continue;
                         }
 
                         // Nothing buffered. The child having exited is not enough on its own,
                         // because output written just before it exited is still in the pipe, so
-                        // this only stops once an exited child has also stopped producing.
-                        if (::WaitForSingleObject(processHandle.get(), ReadPollIntervalMilliseconds) == WAIT_OBJECT_0)
+                        // the pipe is read dry once more after the exit before this stops.
+                        if (exited)
                         {
                             break;
                         }
+
+                        exited = ::WaitForSingleObject(processHandle.get(), ReadPollIntervalMilliseconds) == WAIT_OBJECT_0;
                     }
                 }
 
@@ -289,7 +355,17 @@ namespace miditroubleshooter
         std::wstring const& arguments,
         std::chrono::seconds timeout) noexcept
     {
-        return Run(executablePath, arguments, timeout, true);
+        return Run(executablePath, arguments, timeout, true, {});
+    }
+
+    _Use_decl_annotations_
+    ProcessResult RunCapture(
+        std::wstring const& executablePath,
+        std::wstring const& arguments,
+        std::chrono::seconds timeout,
+        OutputReceivedHandler const& onOutputReceived) noexcept
+    {
+        return Run(executablePath, arguments, timeout, true, onOutputReceived);
     }
 
     _Use_decl_annotations_
@@ -298,7 +374,7 @@ namespace miditroubleshooter
         std::wstring const& arguments,
         std::chrono::seconds timeout) noexcept
     {
-        return Run(executablePath, arguments, timeout, false);
+        return Run(executablePath, arguments, timeout, false, {});
     }
 
     _Use_decl_annotations_

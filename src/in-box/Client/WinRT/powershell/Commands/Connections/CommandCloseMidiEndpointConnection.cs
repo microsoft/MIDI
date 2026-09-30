@@ -32,7 +32,7 @@ namespace WindowsMidiServices
             if (Session?.BackingSession is null)
             {
                 ThrowTerminating(
-                    new ArgumentException("An open MIDI session is required.", nameof(Session)),
+                    new ArgumentException(Strings.SessionRequired, nameof(Session)),
                     "MidiSessionRequired",
                     ErrorCategory.InvalidArgument);
 
@@ -51,14 +51,14 @@ namespace WindowsMidiServices
 
             var id = Connection.ConnectionId;
 
-            if (!ShouldProcess(Connection.EndpointDeviceId, "Close MIDI endpoint connection"))
+            if (!ShouldProcess(Connection.EndpointDeviceId, Strings.ConnectionCloseAction))
             {
                 return;
             }
 
             Session.BackingSession.DisconnectEndpointConnection(id);
 
-            WriteVerbose($"MIDI endpoint connection {id} closed.");
+            WriteVerbose(Format(Strings.ConnectionClosedFormat, id));
         }
     }
 

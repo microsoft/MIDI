@@ -198,6 +198,19 @@ namespace midikeyboard
         bool Latch() const noexcept { return m_latch; }
         void Latch(bool value) noexcept;
 
+        // Off means the keys' built-in look. Colors are 0xAARRGGBB.
+        bool UseCustomWhiteKeyColor() const noexcept { return m_useCustomWhiteKeyColor; }
+        void UseCustomWhiteKeyColor(_In_ bool value) noexcept;
+
+        uint32_t WhiteKeyColorArgb() const noexcept { return m_whiteKeyColorArgb; }
+        void WhiteKeyColorArgb(_In_ uint32_t value) noexcept;
+
+        bool UseCustomBlackKeyColor() const noexcept { return m_useCustomBlackKeyColor; }
+        void UseCustomBlackKeyColor(_In_ bool value) noexcept;
+
+        uint32_t BlackKeyColorArgb() const noexcept { return m_blackKeyColorArgb; }
+        void BlackKeyColorArgb(_In_ uint32_t value) noexcept;
+
         static constexpr int32_t MinimumBaseOctave = -2;
         static constexpr int32_t MaximumBaseOctave = 8;
         static constexpr uint32_t MinimumOctaveCount = 1;
@@ -218,6 +231,11 @@ namespace midikeyboard
         static constexpr uint32_t MinimumProgramNumber = 1;
         static constexpr uint32_t MaximumProgramNumber = 128;
         static constexpr uint32_t MaximumBankByte = 127;
+
+        // where the pickers start: close enough to the built-in keys that turning a custom
+        // color on changes nothing until a color is picked
+        static constexpr uint32_t DefaultWhiteKeyColorArgb = 0xFFFCFCFC;
+        static constexpr uint32_t DefaultBlackKeyColorArgb = 0xFF101012;
 
     private:
         AppSettings() noexcept;
@@ -264,5 +282,10 @@ namespace midikeyboard
         ArpeggiatorDivision m_arpeggiatorRate{ ArpeggiatorDivision::Sixteenth };
 
         bool m_latch{ false };
+
+        bool m_useCustomWhiteKeyColor{ false };
+        uint32_t m_whiteKeyColorArgb{ DefaultWhiteKeyColorArgb };
+        bool m_useCustomBlackKeyColor{ false };
+        uint32_t m_blackKeyColorArgb{ DefaultBlackKeyColorArgb };
     };
 }

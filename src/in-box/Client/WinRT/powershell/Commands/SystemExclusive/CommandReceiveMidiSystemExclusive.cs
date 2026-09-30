@@ -20,20 +20,30 @@ namespace WindowsMidiServices
     // Receiving is open ended, so this runs until one of -MessageCount, -TimeoutSeconds or
     // Ctrl+C stops it. Whatever has already arrived is kept in either case.
     [Cmdlet(VerbsCommunications.Receive, "MidiSystemExclusive", DefaultParameterSetName = ObjectParameterSet)]
-    [OutputType(typeof(MidiSystemExclusiveMessage), ParameterSetName = new[] { ObjectParameterSet })]
-    [OutputType(typeof(FileInfo), ParameterSetName = new[] { PathParameterSet })]
+    [OutputType(typeof(MidiSystemExclusiveMessage), ParameterSetName = new[] { ObjectParameterSet, EndpointObjectParameterSet })]
+    [OutputType(typeof(FileInfo), ParameterSetName = new[] { PathParameterSet, EndpointPathParameterSet })]
     public class CommandReceiveMidiSystemExclusive : MidiCmdletBase, IDisposable
     {
         private const string ObjectParameterSet = "Object";
         private const string PathParameterSet = "Path";
+        private const string EndpointObjectParameterSet = "EndpointDeviceIdObject";
+        private const string EndpointPathParameterSet = "EndpointDeviceIdPath";
 
         private readonly CancellationTokenSource _stopRequested = new();
 
-        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ObjectParameterSet)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = PathParameterSet)]
         public MidiEndpointConnection? Connection { get; set; }
+
+        // Opens a connection for this command alone, so one capture needs no session first
+        [Parameter(Mandatory = true, ParameterSetName = EndpointObjectParameterSet)]
+        [Parameter(Mandatory = true, ParameterSetName = EndpointPathParameterSet)]
+        [ValidateNotNullOrWhiteSpace]
+        public string EndpointDeviceId { get; set; } = string.Empty;
 
         // Written as it arrives, so the file is complete even when the cmdlet is interrupted
         [Parameter(Mandatory = true, Position = 1, ParameterSetName = PathParameterSet)]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = EndpointPathParameterSet)]
         [ValidateNotNullOrWhiteSpace]
         public string Path { get; set; } = string.Empty;
 
@@ -58,16 +68,43 @@ namespace WindowsMidiServices
         public int TimeoutSeconds { get; set; }
 
         [Parameter(ParameterSetName = PathParameterSet)]
+        [Parameter(ParameterSetName = EndpointPathParameterSet)]
         public SwitchParameter Force { get; set; }
 
         protected override void ProcessRecord()
         {
             RequireMidiServices();
 
-            var connection = RequireOpenConnection(Connection);
+            var writesFile = ParameterSetName == PathParameterSet || ParameterSetName == EndpointPathParameterSet;
 
-            var fullPath = ParameterSetName == PathParameterSet ? ResolveOutputPath() : null;
+            var fullPath = writesFile ? ResolveOutputPath() : null;
 
+            MidiTemporaryConnection? temporary = null;
+
+            try
+            {
+                Windows.Devices.Midi2.MidiEndpointConnection connection;
+
+                if (ParameterSetName == ObjectParameterSet || ParameterSetName == PathParameterSet)
+                {
+                    connection = RequireOpenConnection(Connection);
+                }
+                else
+                {
+                    temporary = OpenTemporaryConnection(EndpointDeviceId);
+                    connection = temporary.Connection;
+                }
+
+                Receive(connection, fullPath);
+            }
+            finally
+            {
+                temporary?.Dispose();
+            }
+        }
+
+        private void Receive(Windows.Devices.Midi2.MidiEndpointConnection connection, string? fullPath)
+        {
             var received = new BlockingCollection<MidiSystemExclusiveMessage>(new ConcurrentQueue<MidiSystemExclusiveMessage>());
 
             TypedEventHandler<MidiSystemExclusiveReceiver, MidiSystemExclusiveReceivedEventArgs> handler =
@@ -101,7 +138,7 @@ namespace WindowsMidiServices
                 if (!receiver.Start())
                 {
                     ThrowTerminating(
-                        new InvalidOperationException("Unable to start receiving system exclusive data."),
+                        new InvalidOperationException(Strings.SysExReceiveStartFailed),
                         "MidiSysExReceiveStartFailed",
                         ErrorCategory.OpenError,
                         connection.ConnectedEndpointDeviceId);
@@ -109,7 +146,7 @@ namespace WindowsMidiServices
                     return;
                 }
 
-                WriteVerbose($"Listening on group {GroupIndex + 1} of {connection.ConnectedEndpointDeviceId}.");
+                WriteVerbose(Format(Strings.SysExListeningFormat, GroupIndex + 1, connection.ConnectedEndpointDeviceId));
 
                 Drain(received, outputStream);
             }
@@ -138,7 +175,7 @@ namespace WindowsMidiServices
                 return;
             }
 
-            WriteVerbose($"Received {bytesReceived:N0} bytes in {messagesReceived:N0} messages.");
+            WriteVerbose(Format(Strings.SysExReceivedFormat, bytesReceived, messagesReceived));
 
             if (fullPath is not null)
             {
@@ -153,7 +190,7 @@ namespace WindowsMidiServices
             if (File.Exists(fullPath) && !Force.IsPresent)
             {
                 ThrowTerminating(
-                    new IOException($"The file \"{fullPath}\" already exists. Use -Force to overwrite it."),
+                    new IOException(Format(Strings.FileExistsFormat, fullPath)),
                     "MidiSysExFileExists",
                     ErrorCategory.ResourceExists,
                     fullPath);

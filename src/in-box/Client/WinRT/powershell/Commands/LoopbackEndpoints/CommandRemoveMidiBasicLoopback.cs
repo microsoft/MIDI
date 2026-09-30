@@ -26,9 +26,9 @@ namespace WindowsMidiServices
         protected override void ProcessRecord()
         {
             RequireMidiServices();
-            RequireTransport(MidiBasicLoopbackManager.IsTransportAvailable, "MIDI 1.0 basic loopback");
+            RequireTransport(MidiBasicLoopbackManager.IsTransportAvailable, Strings.TransportNameBasicLoopback);
 
-            if (!ShouldProcess(AssociationId.ToString(), "Remove MIDI 1.0 basic loopback endpoint"))
+            if (!ShouldProcess(AssociationId.ToString(), Strings.LoopbackBasicRemoveAction))
             {
                 return;
             }
@@ -40,7 +40,7 @@ namespace WindowsMidiServices
             if (response is null || !response.Success)
             {
                 WriteNonTerminating(
-                    new InvalidOperationException(response is null ? "Unable to remove the basic loopback." : response.ErrorMessage),
+                    new InvalidOperationException(response is null ? Strings.LoopbackBasicRemovalFailed : response.ErrorMessage),
                     "MidiBasicLoopbackRemovalFailed",
                     ErrorCategory.InvalidOperation,
                     AssociationId);
@@ -48,7 +48,7 @@ namespace WindowsMidiServices
                 return;
             }
 
-            WriteVerbose("The loopback was removed from the running service. An entry saved in the configuration file is not affected.");
+            WriteVerbose(Strings.LoopbackRemoved);
 
             if (PassThru.IsPresent)
             {

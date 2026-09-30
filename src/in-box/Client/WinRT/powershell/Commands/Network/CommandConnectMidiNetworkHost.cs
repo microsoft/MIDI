@@ -60,7 +60,7 @@ namespace WindowsMidiServices
         protected override void ProcessRecord()
         {
             RequireMidiServices();
-            RequireTransport(MidiNetworkTransportManager.IsTransportAvailable, "Network MIDI 2.0");
+            RequireTransport(MidiNetworkTransportManager.IsTransportAvailable, Strings.TransportNameNetwork);
 
             var criteria = new MidiNetworkClientMatchCriteria();
             string target;
@@ -101,7 +101,7 @@ namespace WindowsMidiServices
                 target = string.IsNullOrEmpty(AdvertisedHost.DeviceName) ? AdvertisedHost.DeviceId : AdvertisedHost.DeviceName;
             }
 
-            if (!ShouldProcess(target, "Connect to network MIDI host"))
+            if (!ShouldProcess(target, Strings.NetworkConnectAction))
             {
                 return;
             }
@@ -120,7 +120,7 @@ namespace WindowsMidiServices
             if (response is null || !response.Success)
             {
                 WriteNonTerminating(
-                    new InvalidOperationException(response is null ? "Unable to connect to the host." : response.ErrorMessage),
+                    new InvalidOperationException(response is null ? Strings.HostConnectFailed : response.ErrorMessage),
                     "MidiNetworkConnectFailed",
                     ErrorCategory.ConnectionError,
                     target);
@@ -134,7 +134,7 @@ namespace WindowsMidiServices
             }
             else
             {
-                WriteVerbose("This connection is transient and will be lost when the service restarts. Use -SaveToConfiguration to keep it.");
+                WriteVerbose(Strings.ConnectionTransient);
             }
 
             WriteObject(response);

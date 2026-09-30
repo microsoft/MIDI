@@ -37,7 +37,7 @@ namespace WindowsMidiServices
                 if (!MidiEndpointDeviceHelper.IsPossibleWindowsMidiServicesEndpointDeviceId(id))
                 {
                     WriteError(new ErrorRecord(
-                        new ArgumentException($"'{id}' is not a Windows MIDI Services endpoint device id."),
+                        new ArgumentException(Format(Strings.EndpointDeviceIdInvalidFormat, id)),
                         "NotAnEndpointDeviceId", ErrorCategory.InvalidArgument, id));
 
                     return;
@@ -55,7 +55,7 @@ namespace WindowsMidiServices
                 if (string.IsNullOrEmpty(fullId))
                 {
                     WriteError(new ErrorRecord(
-                        new ArgumentException($"'{id}' could not be expanded into an endpoint device id."),
+                        new ArgumentException(Format(Strings.EndpointDeviceIdNotExpandableFormat, id)),
                         "NotAnEndpointDeviceId", ErrorCategory.InvalidArgument, id));
 
                     return;

@@ -788,6 +788,15 @@ namespace MidiBleUtilities
         return evaluation;
     }
 
+    inline bool ShouldAutoConnectPairedDevice(
+        _In_ bool const isPaired,
+        _In_ bool const presenceKnown,
+        _In_ bool const isPresent,
+        _In_ bool const explicitlyDisabled) noexcept
+    {
+        return isPaired && (!presenceKnown || isPresent) && !explicitlyDisabled;
+    }
+
     // The wait before retrying a device which has failed this many attempts in a row: the base
     // interval, doubled for each failure after the first, and never more than the maximum.
     inline uint64_t ConnectRetryIntervalMilliseconds(

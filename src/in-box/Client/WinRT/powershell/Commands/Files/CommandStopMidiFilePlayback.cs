@@ -32,11 +32,11 @@ namespace WindowsMidiServices
 
             if (Playback.BackingPlayer is null)
             {
-                WriteVerbose("Playback had already stopped.");
+                WriteVerbose(Strings.PlaybackAlreadyStopped);
                 return;
             }
 
-            if (!ShouldProcess(Playback.FilePath, "Stop MIDI file playback"))
+            if (!ShouldProcess(Playback.FilePath, Strings.PlaybackStopAction))
             {
                 return;
             }
@@ -44,7 +44,7 @@ namespace WindowsMidiServices
             Playback.StopAndRelease();
             GC.SuppressFinalize(Playback);
 
-            WriteVerbose("MIDI file playback stopped.");
+            WriteVerbose(Strings.PlaybackStopped);
         }
     }
 }

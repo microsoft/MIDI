@@ -92,6 +92,8 @@ public:
     TEST_METHOD(TestCountResetsWhenADropIsNotEarly);
     TEST_METHOD(TestZeroThresholdNeverInfersPairing);
 
+    TEST_METHOD(TestPairedDeviceAutoConnectPolicy);
+
     // tuning knobs may move, but not past each other
     TEST_METHOD(TestTimeoutBudgetsKeepTheirOrdering);
 };

@@ -40,9 +40,27 @@ Start here for anything to do with Network MIDI 2.0. All members are static.
 | `GetTransportSettings()` | Returns a [MidiNetworkTransportSettings]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkTransportSettings/) with the settings the transport is using right now. These may not match the configuration exactly, because a value that's out of range or the wrong type is corrected when it's read |
 | `GenerateAvailableHostPort()` | Returns a free UDP port for a host to keep, or zero if none was found. It's picked below the range Windows hands out on its own, so Windows won't give it to another program while the service isn't running |
 | `IsHostPortAvailable(port)` | Returns true if a host can use the port. Use it to check a port someone typed in, before you try to create the host with it |
+| `GetSavedHosts()` | Returns a [MidiNetworkSavedHost]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSavedHost/) for every host saved in the configuration file, with its saved allow and deny decisions. Works even when the service isn't running |
+| `GetSavedClients()` | Returns a [MidiNetworkSavedClient]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSavedClient/) for every client saved in the configuration file. Works even when the service isn't running |
 
 ## Remarks
 
 All the `Async` methods are truly asynchronous, and none of them throw exceptions. They report failure with the `Success` and `ErrorCode` properties on the response they return.
 
-`GetConfiguredClients()` comes from the configuration, not from live connections. So an entry that has never connected, or that can't be reached right now, still shows up in the results, with its `EntryState` set to match.
+`GetConfiguredClients()` lists every client entry the running service holds, not just live connections. So an entry that has never connected, or that can't be reached right now, still shows up in the results, with its `EntryState` set to match.
+
+## Saved and configured
+
+Configured means what the running service holds now. Saved means what's in the configuration file, which is what the service creates the next time it starts. An entry can be one without the other. For example, a client connected without being saved is configured but not saved. Match the two lists on `HostId` or `ClientId`.
+
+To change what's saved, pass a configuration object to `MidiServiceTransportPluginConfigManager.SaveUpdate`:
+
+| To | Save |
+| --- | --- |
+| Save a host | `MidiNetworkHostCreationConfig` |
+| Change a saved host's MIDI 1.0 port settings | `MidiNetworkHostUpdateConfig` |
+| Change a saved host's allow and deny decisions | `MidiNetworkHostKnownClientsConfig`, starting from `MidiNetworkSavedHost.KnownRemoteClients` |
+| Remove a saved host | `MidiNetworkHostRemovalConfig` |
+| Save a client | `MidiNetworkClientConnectConfig` |
+| Change a saved client's MIDI 1.0 port settings | `MidiNetworkClientUpdateConfig` |
+| Remove a saved client | `MidiNetworkClientDisconnectConfig` |

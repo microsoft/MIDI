@@ -268,6 +268,38 @@ TransportState::TakeConfiguredDeviceIds()
 
 _Use_decl_annotations_
 void
+TransportState::SetConfiguredDeviceAutoConnectDisabled(winrt::hstring const& deviceId, bool const disabled)
+{
+    if (deviceId.empty())
+    {
+        return;
+    }
+
+    auto lock = std::scoped_lock{ m_configuredDeviceIdsLock };
+
+    if (disabled)
+    {
+        m_disabledConfiguredDeviceIds.insert(deviceId);
+    }
+    else
+    {
+        m_disabledConfiguredDeviceIds.erase(deviceId);
+    }
+}
+
+
+_Use_decl_annotations_
+bool
+TransportState::IsConfiguredDeviceAutoConnectDisabled(winrt::hstring const& deviceId)
+{
+    auto lock = std::scoped_lock{ m_configuredDeviceIdsLock };
+
+    return m_disabledConfiguredDeviceIds.find(deviceId) != m_disabledConfiguredDeviceIds.end();
+}
+
+
+_Use_decl_annotations_
+void
 TransportState::SetConfiguredPeripheralProtocol(MidiBleProtocol::Protocol const protocol)
 {
     auto lock = std::scoped_lock{ m_configuredDeviceIdsLock };

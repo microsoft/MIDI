@@ -32,8 +32,8 @@ The main window lists every MIDI endpoint on this PC, with the other MIDI apps a
 Across the top are the other Windows MIDI Services apps. Only the ones actually installed on this PC appear, so the toolbar reflects what you can really do:
 
 - **Loopback Setup** creates and manages loopback endpoints
-- **Bluetooth Setup** connects Bluetooth LE MIDI devices (installed with the Bluetooth MIDI transport)
-- **Network Setup** sets up Network MIDI 2.0 (installed with the Network MIDI 2.0 transport)
+- **Bluetooth Setup** connects Bluetooth LE MIDI devices
+- **Network Setup** sets up Network MIDI 2.0
 - **Patchbay** connects endpoints to each other
 - **SysEx Send/Receive** sends and receives system exclusive files
 - **Monitor** watches the messages flowing through an endpoint

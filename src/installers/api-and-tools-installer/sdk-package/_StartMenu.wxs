@@ -26,6 +26,10 @@
                   Name="MIDI Loopback Setup"
                   Target="[#midiloopbacksetupExe]"
                   WorkingDirectory="TOOLSROOT_INSTALLFOLDER" />
+        <Shortcut Id="Shortcut_midinetworksetup"
+                  Name="Network MIDI Setup"
+                  Target="[#midinetworksetupExe]"
+                  WorkingDirectory="TOOLSROOT_INSTALLFOLDER" />
         <Shortcut Id="Shortcut_midiscratchpad"
                   Name="MIDI Scratch Pad"
                   Target="[#midiscratchpadExe]"
@@ -71,6 +75,16 @@
         <RemoveFolder Id="RemoveMidiProgramsFolder_Tools" Directory="MIDI_PROGRAMS_FOLDER" On="uninstall" />
         <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
           <RegistryValue Type="string" Name="ToolAppShortcuts" Value="installed" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="midibluetoothsetupShortcut" Bitness="always64" Directory="MIDI_PROGRAMS_FOLDER" Guid="09b22819-60e9-4362-b105-50025afe5aa3">
+        <Shortcut Id="Shortcut_midibluetoothsetup"
+                  Name="Bluetooth MIDI Setup"
+                  Target="[#midibluetoothsetupExe]"
+                  WorkingDirectory="TOOLSROOT_INSTALLFOLDER" />
+        <RemoveFolder Id="RemoveMidiProgramsFolder_midibluetoothsetup" Directory="MIDI_PROGRAMS_FOLDER" On="uninstall" />
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Bluetooth MIDI Preview">
+          <RegistryValue Type="string" Name="BluetoothSetupShortcut" Value="installed" KeyPath="yes" />
         </RegistryKey>
       </Component>
       <Component Id="midinotificationsAutostart" Bitness="always64" Directory="MIDI_PROGRAMS_FOLDER" Guid="6f3a9c21-58d4-4b7e-b1a6-0c9d3e7f2a48" Condition="MIDINOTIFICATIONSAUTOSTARTPRESENT">

@@ -20,7 +20,7 @@ namespace WindowsMidiServices
         protected override void ProcessRecord()
         {
             RequireMidiServices();
-            RequireTransport(MidiSynthManager.IsTransportAvailable, "General MIDI synthesizer");
+            RequireTransport(MidiSynthManager.IsTransportAvailable, Strings.TransportNameSynth);
 
             var endpointDeviceId = MidiSynthManager.EndpointDeviceId;
 
@@ -28,7 +28,7 @@ namespace WindowsMidiServices
             {
                 // Switched off is the ordinary reason, and it is not an error worth stopping a
                 // script over.
-                WriteVerbose("The synthesizer has no endpoint. It is most likely switched off.");
+                WriteVerbose(Strings.SynthNoEndpoint);
 
                 return;
             }

@@ -37,7 +37,7 @@ The values are grouped by the step where a connection fails, which is why they s
 | `EndpointCreationFailed` | `0x0000010D` | The connection worked, but the MIDI endpoint couldn't be created |
 | `PairingRequired` | `0x0000010E` | The device refused until the connection is authenticated. Trying again can't work until someone pairs it, so the service stops trying this device until it's asked again |
 | `GattTimeout` | `0x0000010F` | The device stopped answering partway through connecting. Some devices drop the connection until they're paired, so this and `PairingRequired` can describe the same device |
-| `GattCallFailed` | `0x00000110` | The request to read the device's MIDI service failed right away, instead of running out of time. The device was there and answering, so it refused or dropped the request. Not the same as `GattTimeout`, which means the device went quiet |
+| `GattCallFailed` | `0x00000110` | Windows asked for the device's MIDI service or its characteristics, and the request failed right away instead of running out of time. `ErrorHResult` has the error number. This doesn't mean the device refused: some devices answer and the request still fails. Not the same as `GattTimeout`, which means the device went quiet |
 | `RadioNotAvailable` | `0x00000301` | This PC has no Bluetooth radio it can use. See `MidiBluetoothRadioInformation` |
 | `Unexpected` | `0x11002011` | Something unexpected went wrong |
 

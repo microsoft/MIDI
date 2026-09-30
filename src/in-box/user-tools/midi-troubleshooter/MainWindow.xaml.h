@@ -157,6 +157,17 @@ namespace winrt::miditroubleshooter::implementation
 
         winrt::fire_and_forget SaveTextAsync(winrt::hstring const& suggestedName, winrt::hstring const& text) noexcept;
 
+        enum class DiagnosticReport
+        {
+            MidiDiag,
+            MidiKsInfo
+        };
+
+        winrt::fire_and_forget RunDiagnosticReportAsync(_In_ DiagnosticReport const report) noexcept;
+
+        // busy while either report is running
+        void UpdateDiagnosticsCursor() noexcept;
+
         // The Win32 save dialog rather than Windows.Storage.Pickers: the WinRT picker never
         // completes in an elevated process, and this tool normally runs elevated. Blocks until
         // the dialog is dismissed, and returns an empty string when the customer cancels.
@@ -248,6 +259,9 @@ namespace winrt::miditroubleshooter::implementation
 
         winrt::hstring m_midiDiagOutput{};
         winrt::hstring m_midiKsInfoOutput{};
+
+        bool m_midiDiagRunning{ false };
+        bool m_midiKsInfoRunning{ false };
 
         uint32_t m_currentPageIndex{ 0 };
 

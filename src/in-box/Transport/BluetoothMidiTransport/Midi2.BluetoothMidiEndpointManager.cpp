@@ -850,6 +850,9 @@ CMidi2BluetoothMidiEndpointManager::MergeDiscoveredDevice(MidiBleProtocol::Disco
     bool isNewDevice{ false };
     bool needsName{ false };
     bool becamePaired{ false };
+    bool isPaired{ false };
+    bool presenceKnown{ false };
+    bool isPresent{ false };
 
     {
         auto lock = std::scoped_lock{ m_discoveredDevicesLock };
@@ -890,6 +893,15 @@ CMidi2BluetoothMidiEndpointManager::MergeDiscoveredDevice(MidiBleProtocol::Disco
                 }
             }
 
+            isPaired = existing->second.IsPaired;
+            presenceKnown = device.LastSeenTimestamp != 0 || existing->second.LastSeenTimestamp != 0;
+            auto const now = NowInMilliseconds();
+            auto const lastSeenTimestamp = device.LastSeenTimestamp != 0 ?
+                device.LastSeenTimestamp : existing->second.LastSeenTimestamp;
+            isPresent = presenceKnown &&
+                now >= lastSeenTimestamp &&
+                now - lastSeenTimestamp <= MIDI_BLE_DEVICE_PRESENT_WITHIN_MS;
+
             if (device.LastSignalStrengthDbm != 0)
             {
                 existing->second.LastSignalStrengthDbm = device.LastSignalStrengthDbm;
@@ -910,6 +922,12 @@ CMidi2BluetoothMidiEndpointManager::MergeDiscoveredDevice(MidiBleProtocol::Disco
 
             isNewDevice = true;
             needsName = device.Name.empty();
+            isPaired = device.IsPaired;
+            presenceKnown = device.LastSeenTimestamp != 0;
+            auto const now = NowInMilliseconds();
+            isPresent = presenceKnown &&
+                now >= device.LastSeenTimestamp &&
+                now - device.LastSeenTimestamp <= MIDI_BLE_DEVICE_PRESENT_WITHIN_MS;
         }
     }
 
@@ -955,6 +973,20 @@ CMidi2BluetoothMidiEndpointManager::MergeDiscoveredDevice(MidiBleProtocol::Disco
 
             LOG_IF_FAILED(connection->RefreshNotificationSubscription());
         }
+    }
+
+    if (MidiBleUtilities::ShouldAutoConnectPairedDevice(
+        isPaired,
+        presenceKnown,
+        isPresent,
+        TransportState::Current().IsConfiguredDeviceAutoConnectDisabled(device.Id)))
+    {
+        {
+            auto lock = std::scoped_lock{ m_pendingRequestsLock };
+            m_desiredConnections.insert(device.Id);
+        }
+
+        QueueConnectIfWanted(device.Id, ConnectTrigger::Requested);
     }
 }
 
@@ -1253,6 +1285,8 @@ CMidi2BluetoothMidiEndpointManager::ConnectDevice(winrt::hstring const& deviceId
 {
     RETURN_HR_IF(E_INVALIDARG, deviceId.empty());
     RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
+
+    TransportState::Current().SetConfiguredDeviceAutoConnectDisabled(deviceId, false);
 
     if (TransportState::Current().GetConnectionByDeviceId(deviceId) != nullptr)
     {

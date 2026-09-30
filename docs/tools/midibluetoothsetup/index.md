@@ -71,7 +71,7 @@ Each device shows its name and what Windows currently knows about it:
 
 **Forget** removes it from the remembered list entirely, so Windows stops trying to reconnect. Use this for a device you have sold or no longer use.
 
-In the majority of cases, you do not necessarily have to pair a Bluetooth MIDI device in Windows Settings first. If the device is advertising, this app can usually connect to it directly.
+In the majority of cases, you do not necessarily have to pair a Bluetooth MIDI device in Windows Settings first. If the device is advertising, this app can usually connect to it directly. A device already paired with this PC is also connected automatically unless you have explicitly disconnected it and saved that choice.
 
 ### What the app is telling you
 

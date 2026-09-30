@@ -30,9 +30,9 @@ namespace WindowsMidiServices
         protected override void ProcessRecord()
         {
             RequireMidiServices();
-            RequireTransport(MidiBasicLoopbackManager.IsTransportAvailable, "MIDI 1.0 basic loopback");
+            RequireTransport(MidiBasicLoopbackManager.IsTransportAvailable, Strings.TransportNameBasicLoopback);
 
-            var action = Muted ? "Mute MIDI 1.0 basic loopback" : "Unmute MIDI 1.0 basic loopback";
+            var action = Muted ? Strings.LoopbackBasicMuteAction : Strings.LoopbackBasicUnmuteAction;
 
             if (!ShouldProcess(AssociationId.ToString(), action))
             {
@@ -46,7 +46,7 @@ namespace WindowsMidiServices
             if (response is null || !response.Success)
             {
                 WriteNonTerminating(
-                    new InvalidOperationException(response is null ? "Unable to change the mute state." : response.ErrorMessage),
+                    new InvalidOperationException(response is null ? Strings.LoopbackMuteFailed : response.ErrorMessage),
                     "MidiBasicLoopbackMuteFailed",
                     ErrorCategory.InvalidOperation,
                     AssociationId);

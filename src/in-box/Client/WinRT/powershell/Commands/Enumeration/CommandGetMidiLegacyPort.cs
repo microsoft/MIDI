@@ -57,7 +57,7 @@ namespace WindowsMidiServices
                 if (port is null)
                 {
                     WriteNonTerminating(
-                        new ItemNotFoundException($"No MIDI 1.0 port was found with the identifier \"{PortDeviceId}\"."),
+                        new ItemNotFoundException(Format(Strings.LegacyPortNotFoundFormat, PortDeviceId)),
                         "MidiLegacyPortNotFound",
                         ErrorCategory.ObjectNotFound,
                         PortDeviceId);

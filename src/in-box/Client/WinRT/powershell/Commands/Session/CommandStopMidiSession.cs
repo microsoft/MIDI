@@ -31,11 +31,11 @@ namespace WindowsMidiServices
 
             if (Session.BackingSession is null)
             {
-                WriteVerbose("The MIDI session was already stopped.");
+                WriteVerbose(Strings.SessionAlreadyStopped);
                 return;
             }
 
-            if (!ShouldProcess(Session.Name, "Stop MIDI session"))
+            if (!ShouldProcess(Session.Name, Strings.SessionStopAction))
             {
                 return;
             }
@@ -44,7 +44,7 @@ namespace WindowsMidiServices
             Session.BackingSession.Dispose();
             Session.BackingSession = null;
 
-            WriteVerbose("MIDI session stopped.");
+            WriteVerbose(Strings.SessionStopped);
         }
 
 

@@ -490,7 +490,14 @@ namespace
             }
 
             // Only an entry marked enabled asks for a connection; one holding just a setting does not
-            if (!MidiBleProtocol::SafeJson::GetBoolean(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY, false))
+            auto const hasEnabledSetting = deviceObject.HasKey(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY);
+            auto const isEnabled = MidiBleProtocol::SafeJson::GetBoolean(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY, false);
+
+            TransportState::Current().SetConfiguredDeviceAutoConnectDisabled(
+                deviceId,
+                hasEnabledSetting && !isEnabled);
+
+            if (!isEnabled)
             {
                 TraceLoggingWrite(
                     MidiBluetoothMidiTransportTelemetryProvider::Provider(),
@@ -522,6 +529,44 @@ namespace
             if (endpointManager != nullptr && endpointManager->IsInitialized())
             {
                 LOG_IF_FAILED(endpointManager->ConnectConfiguredDevices());
+            }
+        }
+    }
+
+    void ClearRemovedDeviceAutoConnectOverrides(_In_ json::JsonObject const& transportObject)
+    {
+        json::JsonObject removeObject{ nullptr };
+
+        if (!MidiBleProtocol::SafeJson::TryGetObject(
+                transportObject,
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY,
+                removeObject))
+        {
+            return;
+        }
+
+        json::JsonArray deviceIds{ nullptr };
+
+        if (!MidiBleProtocol::SafeJson::TryGetArray(
+                removeObject,
+                MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICES_ARRAY_KEY,
+                deviceIds))
+        {
+            return;
+        }
+
+        for (auto const& entry : deviceIds)
+        {
+            if (entry == nullptr || entry.ValueType() != json::JsonValueType::String)
+            {
+                continue;
+            }
+
+            auto const deviceId = MidiBleUtilities::CanonicalBluetoothDeviceId(std::wstring{ entry.GetString() });
+
+            if (!deviceId.empty())
+            {
+                TransportState::Current().SetConfiguredDeviceAutoConnectDisabled(deviceId, false);
             }
         }
     }
@@ -834,6 +879,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
             );
 
             QueueConfiguredDevices(jsonObject);
+            ClearRemovedDeviceAutoConnectOverrides(jsonObject);
             QueueConfiguredPeripheral(jsonObject);
 
             if (jsonObject.HasKey(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_KEY))

@@ -77,10 +77,13 @@ CmdletsToExport = @(
 
     # connections and messages
     'Open-MidiEndpointConnection', 'Close-MidiEndpointConnection',
-    'Send-MidiMessage', 'Get-MidiMessageInfo',
+    'Send-MidiMessage', 'Receive-MidiMessage', 'Get-MidiMessageInfo',
 
     # system exclusive transfers
     'Send-MidiSystemExclusive', 'Receive-MidiSystemExclusive',
+
+    # MIDI Capability Inquiry (MIDI-CI) Property Exchange
+    'Get-MidiChannelList', 'Get-MidiProgramList',
 
     # MIDI 2.0 loopback endpoint pairs
     'New-MidiLoopback', 'Remove-MidiLoopback', 'Get-MidiLoopback', 'Set-MidiLoopbackMute',
@@ -92,11 +95,16 @@ CmdletsToExport = @(
     'Get-MidiNetworkAdvertisedHost', 'Get-MidiNetworkConfiguredHost', 'Get-MidiNetworkConfiguredClient',
     'Connect-MidiNetworkHost', 'Disconnect-MidiNetworkHost',
 
+    # RTP-MIDI
+    'Get-MidiRtpAdvertisedHost', 'Get-MidiRtpConfiguredHost', 'Get-MidiRtpConfiguredClient',
+    'Connect-MidiRtpHost', 'Disconnect-MidiRtpHost',
+
     # built-in General MIDI synthesizer
     'Get-MidiSynth', 'Get-MidiSynthEndpointDeviceId', 'Set-MidiSynth',
+    'Get-MidiSynthSoundSet', 'Get-MidiSynthInstrument', 'Set-MidiSynthDrumChannel',
 
     # Standard MIDI File playback
-    'Start-MidiFilePlayback', 'Stop-MidiFilePlayback'
+    'Start-MidiFilePlayback', 'Stop-MidiFilePlayback', 'Suspend-MidiFilePlayback', 'Resume-MidiFilePlayback'
 )
 
 # Variables to export from this module

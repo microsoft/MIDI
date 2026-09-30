@@ -35,6 +35,12 @@ namespace WindowsMidiServices
         [ValidateRange(0, 15)]
         public byte Group { get; set; } = 0;
 
+        // How far into the file to begin. Each channel's bank, program and controllers are sent
+        // as they stand at that point, so the music starts on the right sounds.
+        [Parameter()]
+        [ValidateRange(ValidateRangeKind.NonNegative)]
+        public double StartAtSeconds { get; set; }
+
         // Returns as soon as playback starts, and hands back an object to stop it with. Keep that
         // object: dropping it ends playback.
         [Parameter()]
@@ -71,13 +77,29 @@ namespace WindowsMidiServices
                 return;
             }
 
+            var startMicroseconds = (ulong)(StartAtSeconds * 1000000.0);
+
+            // Past the end, the player would quietly start again from the top instead.
+            if (startMicroseconds > 0 && startMicroseconds >= sequence.DurationMicroseconds)
+            {
+                WriteNonTerminating(
+                    new ArgumentOutOfRangeException(
+                        nameof(StartAtSeconds),
+                        Format(Strings.PlaybackStartBeyondEndFormat, sequence.DurationMicroseconds / 1000000.0)),
+                    "MidiPlaybackStartBeyondEnd",
+                    ErrorCategory.InvalidArgument,
+                    StartAtSeconds);
+
+                return;
+            }
+
             _session = Windows.Devices.Midi2.MidiSession.Create(
-                $"PowerShell playback of {System.IO.Path.GetFileName(resolved)}");
+                Format(Strings.PlaybackSessionNameFormat, System.IO.Path.GetFileName(resolved)));
 
             if (_session is null)
             {
                 ThrowTerminating(
-                    new InvalidOperationException("A MIDI session could not be created."),
+                    new InvalidOperationException(Strings.SessionCreationFailed),
                     "MidiSessionFailed",
                     ErrorCategory.ResourceUnavailable);
 
@@ -92,7 +114,7 @@ namespace WindowsMidiServices
                 CleanUp();
 
                 ThrowTerminating(
-                    new InvalidOperationException($"The endpoint could not be opened for playback: {endpointDeviceId}"),
+                    new InvalidOperationException(Format(Strings.PlaybackEndpointFailedFormat, endpointDeviceId)),
                     "MidiPlaybackEndpointFailed",
                     ErrorCategory.OpenError,
                     endpointDeviceId);
@@ -101,9 +123,15 @@ namespace WindowsMidiServices
             }
 
             _player.SetSequenceAsync(sequence).GetAwaiter().GetResult();
+
+            if (startMicroseconds > 0)
+            {
+                _player.SeekToMicroseconds(startMicroseconds);
+            }
+
             _player.Play();
 
-            WriteVerbose($"Playing {resolved} to {endpointDeviceId} on group {Group}.");
+            WriteVerbose(Format(Strings.PlaybackStartedFormat, resolved, endpointDeviceId, Group + 1));
 
             if (NoWait.IsPresent)
             {
@@ -131,7 +159,7 @@ namespace WindowsMidiServices
         {
             var totalSeconds = sequence.DurationMicroseconds / 1000000.0;
 
-            var progress = new ProgressRecord(0, "Playing MIDI file", System.IO.Path.GetFileName(resolvedPath));
+            var progress = new ProgressRecord(0, Strings.PlaybackProgressActivity, System.IO.Path.GetFileName(resolvedPath));
 
             try
             {
@@ -151,7 +179,7 @@ namespace WindowsMidiServices
 
                     if (Stopping)
                     {
-                        WriteVerbose("Stopped before the end of the file.");
+                        WriteVerbose(Strings.PlaybackStoppedEarly);
                         break;
                     }
 
@@ -161,8 +189,8 @@ namespace WindowsMidiServices
 
                         progress.PercentComplete = (int)Math.Clamp(elapsed / totalSeconds * 100.0, 0, 100);
                         progress.SecondsRemaining = (int)Math.Max(0, totalSeconds - elapsed);
-                        progress.StatusDescription =
-                            $"Bar {position.Bar}, beat {position.Beat}, {position.BeatsPerMinute:F0} BPM";
+                        progress.StatusDescription = Format(
+                            Strings.PlaybackProgressStatusFormat, position.Bar, position.Beat, position.BeatsPerMinute);
 
                         WriteProgress(progress);
                     }
@@ -186,7 +214,7 @@ namespace WindowsMidiServices
                 if (!System.IO.File.Exists(resolved))
                 {
                     WriteNonTerminating(
-                        new System.IO.FileNotFoundException("The MIDI file was not found.", resolved),
+                        new System.IO.FileNotFoundException(Strings.PlaybackFileNotFound, resolved),
                         "MidiFileNotFound",
                         ErrorCategory.ObjectNotFound,
                         resolved);
@@ -214,8 +242,7 @@ namespace WindowsMidiServices
             if (!MidiSynthManager.IsTransportAvailable)
             {
                 ThrowTerminating(
-                    new InvalidOperationException(
-                        "No endpoint was given and the built-in synthesizer is not available. Pass -EndpointDeviceId."),
+                    new InvalidOperationException(Strings.PlaybackNoEndpoint),
                     "MidiSynthUnavailable",
                     ErrorCategory.ResourceUnavailable);
 
@@ -227,8 +254,7 @@ namespace WindowsMidiServices
             if (string.IsNullOrEmpty(synthEndpoint))
             {
                 ThrowTerminating(
-                    new InvalidOperationException(
-                        "The built-in synthesizer is switched off, so it has no endpoint. Turn it on with Set-MidiSynth -Enabled, or pass -EndpointDeviceId."),
+                    new InvalidOperationException(Strings.PlaybackSynthDisabled),
                     "MidiSynthDisabled",
                     ErrorCategory.ResourceUnavailable);
 
@@ -249,8 +275,9 @@ namespace WindowsMidiServices
                 if (result is null || !result.Succeeded)
                 {
                     WriteNonTerminating(
-                        new InvalidOperationException(
-                            $"The MIDI file could not be read: {result?.Status.ToString() ?? "no result"}"),
+                        new InvalidOperationException(result is null
+                            ? Strings.PlaybackFileUnreadable
+                            : Format(Strings.PlaybackFileUnreadableFormat, result.Status)),
                         "MidiFileUnreadable",
                         ErrorCategory.InvalidData,
                         path);
@@ -260,7 +287,7 @@ namespace WindowsMidiServices
 
                 if (result.Truncated)
                 {
-                    WriteWarning("The file ended sooner than it said it would. Playing what was read.");
+                    WriteWarning(Strings.PlaybackFileTruncated);
                 }
 
                 return result.Sequence;

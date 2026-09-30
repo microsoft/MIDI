@@ -36,7 +36,7 @@ namespace WindowsMidiServices
             if (Session is null || !Session.IsValid)
             {
                 ThrowTerminating(
-                    new ArgumentException("An open MIDI session is required. Use Start-MidiSession first.", nameof(Session)),
+                    new ArgumentException(Strings.SessionRequiredStartFirst, nameof(Session)),
                     "MidiSessionRequired",
                     ErrorCategory.InvalidArgument);
 
@@ -48,7 +48,7 @@ namespace WindowsMidiServices
             if (backingConnection is null)
             {
                 ThrowTerminating(
-                    new InvalidOperationException($"Unable to create a connection to \"{EndpointDeviceId}\"."),
+                    new InvalidOperationException(Format(Strings.ConnectionCreationFailedFormat, EndpointDeviceId)),
                     "MidiConnectionCreationFailed",
                     ErrorCategory.ResourceUnavailable,
                     EndpointDeviceId);
@@ -62,7 +62,7 @@ namespace WindowsMidiServices
             if (!backingConnection.Open())
             {
                 ThrowTerminating(
-                    new InvalidOperationException($"Unable to open the connection to \"{EndpointDeviceId}\"."),
+                    new InvalidOperationException(Format(Strings.ConnectionOpenFailedFormat, EndpointDeviceId)),
                     "MidiConnectionOpenFailed",
                     ErrorCategory.OpenError,
                     EndpointDeviceId);

@@ -82,7 +82,7 @@ A device that isn't advertising is also retried on a timer, in case it's awake b
 
 A remembered device stays in the device list while it's being retried, even when it's switched off, so the customer can see it and disconnect it.
 
-Nothing connects without being asked first. Pairing alone is not treated as consent, because a paired device is frequently one the user intends to use with a different host.
+An unconfigured paired device is treated as wanted when the transport discovers it. If discovery also knows that the device is currently out of range, it waits for a later advertisement; if presence is unknown, it keeps the request because the paired-device watcher can still be the only evidence Windows has after a restart. A saved `enabled: false` entry is an explicit exception and prevents this automatic connection. This lets paired devices from the older Windows BLE MIDI support appear through the new transport without requiring a second manual connection step.
 
 The intent itself is held in memory, so it does not survive a service restart. The durable form is a `devices` array in the transport's section of the configuration file, which the service reads but never writes. `midi bluetooth connect` writes that entry, and `disconnect` removes it, so a connection made once is re-established on every subsequent service start. Saving a setting for a device, such as how long its endpoint stays after it goes offline, does not make it a device to reconnect.
 

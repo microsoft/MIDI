@@ -26,6 +26,9 @@ void OutputSectionHeader(_In_ std::wstring const& headerText)
     fmt::println(L"{}", Styled(headerText, infoTextStyle));
     fmt::println(L"{}", Styled(sectionHeaderSeparator, separatorTextStyle));
     fmt::println(L"");
+
+    // redirected output is buffered, so send the last section and this header before a crash can lose them
+    fflush(stdout);
 }
 
 void OutputItemSeparator()
@@ -124,18 +127,6 @@ void OutputGuidField(_In_ std::wstring const& fieldName, _In_ winrt::guid const&
 }
 
 
-void OutputCurrentTime()
-{
-    // At the time of this writing, C++ 20 consteval and format are broken in the MSVC 
-    // std library so need to use vformat instead of format
-
-    const auto time = std::time(nullptr);
-    auto formattedDateTime = std::vformat(L"{0:%F} {0:%X}", std::make_wformat_args(time));
-
-    OutputStringField(MIDIDIAG_FIELD_LABEL_CURRENT_TIME, formattedDateTime);
-}
-
-
 
 void OutputTimestampField(_In_ std::wstring const& fieldName, _In_ uint64_t const value)
 {
@@ -143,6 +134,47 @@ void OutputTimestampField(_In_ std::wstring const& fieldName, _In_ uint64_t cons
     OutputFieldSeparator();
 
     fmt::println(L"{}", Styled(value, fieldValueTextStyle));
+}
+
+void OutputDateTimeField(_In_ std::wstring const& fieldName, _In_ foundation::DateTime const& value)
+{
+    OutputFieldLabel(fieldName);
+    OutputFieldSeparator();
+
+    // The SDK hands back the Unix epoch for a time the service did not send, and 1601 for an unset one
+    if (value.time_since_epoch().count() == 0 ||
+        value == winrt::clock::from_sys(std::chrono::system_clock::time_point{}))
+    {
+        fmt::println(L"{}", Styled(std::wstring{ L"Not reported" }, fieldValueTextStyle));
+        return;
+    }
+
+    auto const fileTimeValue = winrt::clock::to_file_time(value).value;
+
+    FILETIME utcFileTime{};
+    utcFileTime.dwLowDateTime = static_cast<DWORD>(fileTimeValue & 0xFFFFFFFF);
+    utcFileTime.dwHighDateTime = static_cast<DWORD>(fileTimeValue >> 32);
+
+    SYSTEMTIME utcSystemTime{};
+    SYSTEMTIME localSystemTime{};
+
+    if (!FileTimeToSystemTime(&utcFileTime, &utcSystemTime) ||
+        !SystemTimeToTzSpecificLocalTime(nullptr, &utcSystemTime, &localSystemTime))
+    {
+        fmt::println(L"{}", Styled(std::wstring{ L"INVALID VALUE" }, fieldValueTextStyle));
+        return;
+    }
+
+    auto const formatted = fmt::format(L"{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
+        localSystemTime.wYear, localSystemTime.wMonth, localSystemTime.wDay,
+        localSystemTime.wHour, localSystemTime.wMinute, localSystemTime.wSecond);
+
+    fmt::println(L"{}", Styled(formatted, fieldValueTextStyle));
+}
+
+void OutputCurrentTime()
+{
+    OutputDateTimeField(MIDIDIAG_FIELD_LABEL_CURRENT_TIME, winrt::clock::now());
 }
 
 void OutputNumericField(_In_ std::wstring const& fieldName, _In_ uint32_t const value)
@@ -741,6 +773,12 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
     {
         for (uint32_t i = 0; i < devices.Size(); i++)
         {
+            // Separator goes first so the diagnostic endpoints skipped below still get one
+            if (i > 0)
+            {
+                OutputItemSeparator();
+            }
+
             auto device = devices.GetAt(i);
 
             auto transportInfo = device.GetTransportSuppliedInfo();
@@ -761,6 +799,9 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
                 OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_DESC, userInfo.Description());
                 OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_DESC, transportInfo.Description());
             }
+
+            OutputBooleanField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_MUTED, device.IsMuted());
+            OutputBooleanField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_DISCOVERY_COMPLETE, device.IsEndpointDiscoveryComplete());
 
 
             if (device.EndpointPurpose() == midi2enum::MidiEndpointDevicePurpose::DiagnosticLoopback ||
@@ -932,15 +973,38 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
             {
                 OutputEntityIdentifierField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_ID, parent.Id());
                 OutputEntityNameField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_NAME, parent.Name());
+
+                // The SDK leaves these at zero when the parent is not a USB device
+                std::wstring usbVendorId{};
+                std::wstring usbProductId{};
+
+                if (parent.UsbVendorId() != 0 || parent.UsbProductId() != 0)
+                {
+                    usbVendorId = fmt::format(L"0x{:04X}", parent.UsbVendorId());
+                    usbProductId = fmt::format(L"0x{:04X}", parent.UsbProductId());
+                }
+
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_USB_VID, usbVendorId);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_USB_PID, usbProductId);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_USB_SERIAL, parent.UsbSerialNumber());
+
+                // Driver properties come from the &MI_xx media interface when there is one, not from the composite parent
+                auto driverDeviceId = parent.RelatedParentMediaDriverDeviceInstanceId();
+
+                if (driverDeviceId.empty())
+                {
+                    driverDeviceId = parent.Id();
+                }
+
+                OutputEntityIdentifierField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_DRIVER_DEVICE_ID, driverDeviceId);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_ENUMERATOR_NAME, parent.EnumeratorName());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_SERVICE_NAME, parent.ServiceName());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_DRIVER_INF_PATH, parent.DriverInfPath());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_DRIVER_VERSION, parent.DriverVersion());
             }
             else
             {
                 OutputError(internal::ResourceGetWString(IDS_ERROR_NO_ENDPOINT_PARENT));
-            }
-
-            if (i != devices.Size() - 1)
-            {
-                OutputItemSeparator();
             }
         }
     }
@@ -949,6 +1013,57 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
         OutputError(internal::ResourceGetWString(IDS_ERROR_NO_DEVICES_FOUND_1));
         OutputError(internal::ResourceGetWString(IDS_ERROR_NO_DEVICES_FOUND_2));
         OutputError(internal::ResourceGetWString(IDS_ERROR_NO_DEVICES_FOUND_3));
+        return false;
+    }
+
+    return true;
+}
+
+bool DoSectionSessions(_In_ bool const verbose)
+{
+    UNREFERENCED_PARAMETER(verbose);
+
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SESSIONS);
+
+    try
+    {
+        auto sessions = rept::MidiReporting::GetActiveSessions();
+        uint32_t const sessionCount = sessions == nullptr ? 0 : sessions.Size();
+
+        OutputNumericField(MIDIDIAG_FIELD_LABEL_SESSION_COUNT, sessionCount);
+
+        for (uint32_t i = 0; i < sessionCount; i++)
+        {
+            auto session = sessions.GetAt(i);
+
+            OutputItemSeparator();
+
+            OutputEntityNameField(MIDIDIAG_FIELD_LABEL_SESSION_NAME, session.SessionName());
+            OutputStringField(MIDIDIAG_FIELD_LABEL_SESSION_PROCESS_NAME, session.ProcessName());
+            OutputStringField(MIDIDIAG_FIELD_LABEL_SESSION_PROCESS_ID, std::to_wstring(session.ProcessId()));
+            OutputDateTimeField(MIDIDIAG_FIELD_LABEL_SESSION_START_TIME, session.StartTime());
+
+            auto connections = session.Connections();
+            uint32_t const connectionCount = connections == nullptr ? 0 : connections.Size();
+
+            OutputNumericField(MIDIDIAG_FIELD_LABEL_SESSION_CONNECTION_COUNT, connectionCount);
+
+            for (uint32_t j = 0; j < connectionCount; j++)
+            {
+                auto connection = connections.GetAt(j);
+
+                WriteBlankLine();
+
+                OutputEntityIdentifierField(MIDIDIAG_FIELD_LABEL_SESSION_CONNECTION_DEVICE_ID, connection.EndpointOrPortDeviceId());
+                OutputNumericField(MIDIDIAG_FIELD_LABEL_SESSION_CONNECTION_INSTANCE_COUNT, connection.InstanceCount());
+                OutputDateTimeField(MIDIDIAG_FIELD_LABEL_SESSION_CONNECTION_EARLIEST_TIME, connection.EarliestConnectionTime());
+            }
+        }
+    }
+    catch (...)
+    {
+        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_SESSIONS));
+
         return false;
     }
 
@@ -1379,12 +1494,12 @@ bool DoSectionDevMode(_In_ bool verbose)
         }
         else
         {
-            OutputBooleanField(MIDIDIAG_FIELD_LABEL_DEV_MODE_ENABLED, L"Value Not Present");
+            OutputStringField(MIDIDIAG_FIELD_LABEL_DEV_MODE_ENABLED, std::wstring{ L"Value Not Present" });
         }
     }
     else
     {
-        OutputBooleanField(MIDIDIAG_FIELD_LABEL_DEV_MODE_ENABLED, L"Key Not Present");
+        OutputStringField(MIDIDIAG_FIELD_LABEL_DEV_MODE_ENABLED, std::wstring{ L"Key Not Present" });
     }
 
     return true;
@@ -1467,6 +1582,8 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2PortNumberCache.h"
 #include "Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock.h"
 #include "Feature_Servicing_MIDI2USBSystemRealTimeUmpSize.h"
+#include "Feature_Servicing_MIDI2USBSystemRealTimeCin.h"
+#include "Feature_Servicing_MIDI2USBCableMaskDirection.h"
 #include "Feature_Servicing_MIDI2BsToUMPConvDisallowNOOPs.h"
 #include "Feature_Servicing_MIDI2XProcSendWaitTimeouts.h"
 #include "Feature_Servicing_MIDI2ConfigJsonSizeLimit.h"
@@ -1478,6 +1595,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit.h"
 #include "Feature_Servicing_MIDI2EndpointUniqueIdValidation.h"
 #include "Feature_Servicing_MIDI2LoopbackErrorStringResources.h"
+#include "Feature_Servicing_MIDI2LoopbackFeedbackProtection.h"
 #include "Feature_Servicing_MIDI2LoopbackUniqueEndpointNames.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
 #include "Feature_Servicing_MIDI2ProtocolNegotiationDeadlock.h"
@@ -1531,6 +1649,8 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSAWatcherHardening::IsEnabled(),                  L"MIDI2KSAWatcherHardening (fix for MONTAGE M / MODX usb port move)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2PortNumberCache::IsEnabled(),                      L"MIDI2PortNumberCache (greatly speeds up service startup)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBSystemRealTimeUmpSize::IsEnabled(),             L"MIDI2USBSystemRealTimeUmpSize (fix timing clock coming in as NOOP on MIDI2 driver)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBSystemRealTimeCin::IsEnabled(),                 L"MIDI2USBSystemRealTimeCin (fix timing clock, start and stop not recognized by some USB MIDI 1.0 devices on MIDI2 driver)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBCableMaskDirection::IsEnabled(),                L"MIDI2USBCableMaskDirection (fix missing ports on USB MIDI 1.0 devices with different numbers of inputs and outputs on MIDI2 driver)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2BsToUMPConvDisallowNOOPs::IsEnabled(),             L"MIDI2BsToUMPConvDisallowNOOPs (ensure over-stated MIDI 1 packet size doesn't result in trailing NOOPs)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock::IsEnabled(),         L"MIDI2VirtualDeviceRemovalDeadlock (fix service hang when a virtual device is shut down)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2XProcSendWaitTimeouts::IsEnabled(),                L"MIDI2XProcSendWaitTimeouts (stop aborting sends to devices that are slow to accept data)");
@@ -1543,6 +1663,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit::IsEnabled(),            L"MIDI2EndpointNameUtf8ByteLimit (enforce the ump spec utf-8 byte limit on endpoint names)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2EndpointUniqueIdValidation::IsEnabled(),           L"MIDI2EndpointUniqueIdValidation (reject a unique id which is not usable in a device id)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackErrorStringResources::IsEnabled(),         L"MIDI2LoopbackErrorStringResources (localizable error text for loopback configuration failures)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled(),           L"MIDI2LoopbackFeedbackProtection (mute a loopback when MIDI feeds back into it)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackUniqueEndpointNames::IsEnabled(),          L"MIDI2LoopbackUniqueEndpointNames (reject duplicate names when creating loopback endpoints)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2PortNamingRework::IsEnabled(),                     L"MIDI2PortNamingRework (rework of how midi 1.0 port names are generated)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2ProtocolNegotiationDeadlock::IsEnabled(),          L"MIDI2ProtocolNegotiationDeadlock (fix service hang during endpoint protocol negotiation)");
@@ -1597,6 +1718,7 @@ int __cdecl main()
     WriteBlankLine();
     OutputHeader(MIDIDIAG_PRODUCT_NAME);
     WriteBlankLine();
+    OutputCurrentTime();
 
     try
     {
@@ -1631,6 +1753,9 @@ int __cdecl main()
         if (transportsWorked)
         {
             if (!DoSectionMidi2ApiEndpoints(verbose)) goto abort_run;
+
+            // before the ping test, so the ping's own session is not listed
+            DoSectionSessions(verbose);     // don't bail if fails
 
             // ping the service
             if (pingTest)
