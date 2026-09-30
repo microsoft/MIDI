@@ -230,6 +230,12 @@
     <Midl Include="MidiBasicLoopbackUpdateResponse.idl">
       <Filter>SDK\Transports\BasicLoopback</Filter>
     </Midl>
+    <Midl Include="MidiBasicLoopbackSavedEntry.idl">
+      <Filter>SDK\Transports\BasicLoopback</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackUpdateConfig.idl">
+      <Filter>SDK\Transports\BasicLoopback</Filter>
+    </Midl>
     <Midl Include="MidiChannelEndpointListener.idl">
       <Filter>SDK\ClientPlugins</Filter>
     </Midl>
@@ -285,6 +291,12 @@
       <Filter>SDK\Transports\Loopback</Filter>
     </Midl>
     <Midl Include="MidiLoopbackUpdateResponse.idl">
+      <Filter>SDK\Transports\Loopback</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackSavedEntry.idl">
+      <Filter>SDK\Transports\Loopback</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackUpdateConfig.idl">
       <Filter>SDK\Transports\Loopback</Filter>
     </Midl>
     <Midl Include="MidiLegacyPortDeviceInformation.idl">
@@ -719,6 +731,9 @@
     <Midl Include="MidiBluetoothRememberedClient.idl">
       <Filter>SDK\Transports\Bluetooth</Filter>
     </Midl>
+    <Midl Include="MidiBluetoothSavedDevice.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
     <Midl Include="MidiBluetoothTransportManager.idl">
       <Filter>SDK\Transports\Bluetooth</Filter>
     </Midl>
@@ -756,6 +771,12 @@
       <Filter>SDK\Transports\Network</Filter>
     </Midl>
     <Midl Include="MidiNetworkKnownRemoteClient.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkSavedHost.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkSavedClient.idl">
       <Filter>SDK\Transports\Network</Filter>
     </Midl>
     <Midl Include="MidiNetworkRemoteClientForgetConfig.idl">
@@ -945,6 +966,12 @@
       <Filter>SDK\Transports\Rtp</Filter>
     </Midl>
     <Midl Include="MidiRtpKnownRemoteClient.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpSavedHost.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpSavedClient.idl">
       <Filter>SDK\Transports\Rtp</Filter>
     </Midl>
     <Midl Include="MidiRtpPendingRemoteClient.idl">

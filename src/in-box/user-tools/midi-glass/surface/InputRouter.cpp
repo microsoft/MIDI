@@ -294,7 +294,7 @@ namespace glass
     _Use_decl_annotations_
     void InputRouter::OnPressed(size_t index, PointerRoutedEventArgs const& args)
     {
-        if (index >= m_bindings.size() || m_viewMode)
+        if (index >= m_bindings.size())
         {
             return;
         }

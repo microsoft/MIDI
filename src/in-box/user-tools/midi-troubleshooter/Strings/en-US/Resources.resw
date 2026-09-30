@@ -327,6 +327,14 @@
   <data name="DiagnosticsTimedOut" xml:space="preserve">
     <value>The report took too long and was stopped. What was collected is shown below.</value>
   </data>
+  <data name="DiagnosticsStoppedUnexpectedlyFormat" xml:space="preserve">
+    <value>The report stopped unexpectedly (exit code {0}).</value>
+    <comment>{0} is a hexadecimal exit code, for example 0xC0000005. Kept short: the status line is cut off at the end when it is longer than the space next to the buttons</comment>
+  </data>
+  <data name="DiagnosticsStoppedUnexpectedlyNoteFormat" xml:space="preserve">
+    <value>{0} stopped unexpectedly with exit code {1}. The report above is incomplete.</value>
+    <comment>Added to the end of the report text, so it stays with the report when it is copied or saved. {0} is the program file name, {1} is a hexadecimal exit code</comment>
+  </data>
   <data name="DiagnosticsFailed" xml:space="preserve">
     <value>The report could not be run.</value>
   </data>

@@ -30,8 +30,8 @@ namespace winrt::midiglass::implementation
 
         // The same bounds the canvas enforces, so a remembered zoom cannot come back as one the
         // zoom buttons would refuse.
-        constexpr double MinimumRememberedScale = 0.1;
-        constexpr double MaximumRememberedScale = 2.0;
+        constexpr double MinimumRememberedScale = glass::MinimumEditorZoom;
+        constexpr double MaximumRememberedScale = glass::MaximumEditorZoom;
 
         // What the designer opens at the very first time, before there is anything to remember.
         constexpr int32_t DefaultEditorWidth = 1500;

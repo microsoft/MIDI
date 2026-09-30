@@ -27,6 +27,12 @@
 #include "MidiRtpPendingRemoteClient.h"
 #include "MidiRtpAdvertisedHost.h"
 
+#include "MidiRtpSavedHost.h"
+#include "MidiRtpSavedClient.h"
+
+#include "MidiConfigFile.h"
+#include "midi_saved_config_json.h"
+
 namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 {
     namespace
@@ -439,6 +445,68 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 
 
     // In each list, an entry the SDK cannot read costs that entry, not the whole list
+
+    collections::IVectorView<rtp::MidiRtpSavedHost> MidiRtpTransportManager::GetSavedHosts() noexcept
+    {
+        auto results = winrt::single_threaded_vector<rtp::MidiRtpSavedHost>();
+
+        try
+        {
+            auto const create = MidiSavedConfigJson::Object(
+                svc::implementation::MidiConfigFile::LoadTransportSection(TransportId()),
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY);
+
+            // Kept beside the hosts rather than inside them, so a decision can be saved without
+            // rewriting the host
+            auto const decisions = MidiSavedConfigJson::Entries(
+                MidiSavedConfigJson::Object(create, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENT_DECISIONS_KEY));
+
+            for (auto const& [hostId, entry] : MidiSavedConfigJson::Entries(
+                MidiSavedConfigJson::Object(create, MIDI_CONFIG_JSON_RTP_MIDI_HOSTS_KEY)))
+            {
+                auto host = winrt::make_self<MidiRtpSavedHost>();
+
+                host->InternalInitialize(hostId, entry, MidiSavedConfigJson::EntriesFor(decisions, hostId));
+
+                results.Append(*host);
+            }
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"Exception reading the saved RTP-MIDI hosts.");
+        }
+
+        return results.GetView();
+    }
+
+    collections::IVectorView<rtp::MidiRtpSavedClient> MidiRtpTransportManager::GetSavedClients() noexcept
+    {
+        auto results = winrt::single_threaded_vector<rtp::MidiRtpSavedClient>();
+
+        try
+        {
+            auto const clients = MidiSavedConfigJson::Object(
+                MidiSavedConfigJson::Object(
+                    svc::implementation::MidiConfigFile::LoadTransportSection(TransportId()),
+                    MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY),
+                MIDI_CONFIG_JSON_RTP_MIDI_CLIENTS_KEY);
+
+            for (auto const& [clientId, entry] : MidiSavedConfigJson::Entries(clients))
+            {
+                auto client = winrt::make_self<MidiRtpSavedClient>();
+
+                client->InternalInitialize(clientId, entry);
+
+                results.Append(*client);
+            }
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"Exception reading the saved RTP-MIDI clients.");
+        }
+
+        return results.GetView();
+    }
 
     collections::IVectorView<rtp::MidiRtpConfiguredHost> MidiRtpTransportManager::GetConfiguredHosts() noexcept
     {

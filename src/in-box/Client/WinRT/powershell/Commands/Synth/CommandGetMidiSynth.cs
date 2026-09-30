@@ -21,14 +21,14 @@ namespace WindowsMidiServices
         protected override void ProcessRecord()
         {
             RequireMidiServices();
-            RequireTransport(MidiSynthManager.IsTransportAvailable, "General MIDI synthesizer");
+            RequireTransport(MidiSynthManager.IsTransportAvailable, Strings.TransportNameSynth);
 
             var status = MidiSynthManager.GetStatus();
 
             if (status is null)
             {
                 WriteNonTerminating(
-                    new InvalidOperationException("The synthesizer did not report its status."),
+                    new InvalidOperationException(Strings.SynthStatusUnavailable),
                     "MidiSynthStatusUnavailable",
                     ErrorCategory.ResourceUnavailable);
 

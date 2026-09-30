@@ -103,7 +103,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shlwapi.lib;shell32.lib;advapi32.lib;pathcch.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shlwapi.lib;shell32.lib;advapi32.lib;pathcch.lib;dwrite.lib;CoreMessaging.lib;dwmapi.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -128,6 +128,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="AppSettings.h" />
+    <ClInclude Include="FontCatalog.h" />
     <ClInclude Include="CommandLine.h" />
     <ClInclude Include="LibraryItems.h" />
     <ClInclude Include="EditorItems.h" />
@@ -214,6 +215,7 @@
     </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="AppSettings.cpp" />
+    <ClCompile Include="FontCatalog.cpp" />
     <ClCompile Include="LibraryItems.cpp" />
     <ClCompile Include="EditorItems.cpp" />
     <ClCompile Include="StringResources.cpp" />
@@ -231,6 +233,7 @@
     </ClCompile>
     <ClCompile Include="RuntimeWindowDevices.cpp" />
     <ClCompile Include="RuntimeWindowFullScreen.cpp" />
+    <ClCompile Include="RuntimeWindowToolbar.cpp" />
     <ClCompile Include="EditorWindow.xaml.cpp">
       <DependentUpon>EditorWindow.xaml</DependentUpon>
     </ClCompile>

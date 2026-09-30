@@ -176,6 +176,16 @@ enum class MidiNetworkEntryState
 
 #define MIDI_NETWORK_STARTING_OUTBOUND_UMP_QUEUE_CAPACITY               50
 
+// UDP drops a datagram that arrives while the socket's receive buffer is full, and a dropped
+// datagram costs a retransmit request and a round trip. Packets are handled one at a time, so a
+// burst waits here. Measured with 8 remotes bursting into one socket: the 64 KB default lost 55%
+// to 93% of packets, and 1 MB lost none of a 512 KB burst. Must be set before the socket binds.
+#define MIDI_NETWORK_SOCKET_RECEIVE_BUFFER_BYTES                        (1024 * 1024)
+
+// How often each endpoint's measured latency is written to it. The scheduler reads it when an
+// app opens the endpoint, so this only has to keep it roughly current.
+#define MIDI_NETWORK_LATENCY_REFRESH_INTERVAL_MILLISECONDS              5000
+
 // Upper bound on simultaneous remote clients for a single host. Datagram source addresses are
 // trivially forged, so without a cap a single sender can make us allocate connections and
 // threads without limit. The default is user-configurable, but never above the absolute max:

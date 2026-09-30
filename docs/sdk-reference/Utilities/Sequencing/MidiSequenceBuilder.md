@@ -85,6 +85,13 @@ builder.AddSystemExclusive(track, 20000, secondPacket);
 builder.AddSystemExclusive(track, 40000, thirdPacket);
 ```
 
+## Samples
+
+These build two sequences and play them on the General MIDI synthesizer. The first counts in beats and slows down near the end. The second counts in microseconds, so its pauses last a set time whatever the tempo. Together they add notes, tempo changes, a time signature, a MIDI 2.0 controller, and System Exclusive.
+
+* [C++/WinRT sequence-builder](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/sequence-builder)
+* [C# sequence-builder](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/sequence-builder)
+
 ## See Also
 
 - [`MidiSequence`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequence/)

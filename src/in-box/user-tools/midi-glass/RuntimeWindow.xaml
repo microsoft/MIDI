@@ -31,6 +31,13 @@
 
         <Border x:Name="WindowTint" Grid.Row="0" Grid.RowSpan="3" Visibility="Collapsed" />
 
+        <!-- Behind the title bar and the buttons only, when nothing is drawn behind the page. -->
+        <Border x:Name="ChromeFill"
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Visibility="Collapsed"
+                Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" />
+
         <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
@@ -86,14 +93,13 @@
                        TextTrimming="CharacterEllipsis"
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
-            <ToggleButton x:Name="ViewModeToggle"
-                          x:Uid="ViewModeToggle"
+            <!-- For this window only, while it runs. The layout's own setting decides how it opens. -->
+            <ToggleButton x:Name="KeepOnTopToggle"
+                          x:Uid="KeepOnTopToggle"
                           Grid.Column="3"
-                          Click="OnViewModeToggled">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                    <FontIcon Glyph="&#xE7B3;" FontSize="14" />
-                    <TextBlock x:Name="ViewModeLabel" x:Uid="ViewModeLabel" Text="View" />
-                </StackPanel>
+                          Checked="OnKeepOnTopChecked"
+                          Unchecked="OnKeepOnTopUnchecked">
+                <FontIcon Glyph="&#xE718;" FontSize="14" />
             </ToggleButton>
 
             <Button x:Name="FullScreenButton"
@@ -155,6 +161,67 @@
                    TextAlignment="Center"
                    Visibility="Collapsed"
                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+        <!-- A toolbar window's only chrome. Drag it to move the window; click it, or press Enter
+             on it, for the menu. -->
+        <ContentControl x:Name="ToolbarHandle"
+                        x:Uid="ToolbarHandle"
+                        Grid.Row="2"
+                        Visibility="Collapsed"
+                        IsTabStop="True"
+                        UseSystemFocusVisuals="True"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        PointerPressed="OnToolbarHandlePressed"
+                        PointerMoved="OnToolbarHandleMoved"
+                        PointerReleased="OnToolbarHandleReleased"
+                        PointerCaptureLost="OnToolbarHandleCaptureLost"
+                        KeyDown="OnToolbarHandleKeyDown">
+            <FlyoutBase.AttachedFlyout>
+                <!-- Free to open outside the window, which may be a strip only a few buttons high. -->
+                <MenuFlyout x:Name="ToolbarFlyout"
+                            ShouldConstrainToRootBounds="False"
+                            Opening="OnToolbarFlyoutOpening">
+                    <MenuFlyoutSubItem x:Name="ToolbarPagesItem" x:Uid="ToolbarPages" Text="Pages">
+                        <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE8A5;" /></MenuFlyoutSubItem.Icon>
+                    </MenuFlyoutSubItem>
+
+                    <MenuFlyoutSubItem x:Name="ToolbarSizeItem" x:Uid="ToolbarSize" Text="Size">
+                        <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE71E;" /></MenuFlyoutSubItem.Icon>
+                    </MenuFlyoutSubItem>
+
+                    <ToggleMenuFlyoutItem x:Name="ToolbarKeepOnTopItem" x:Uid="ToolbarKeepOnTop" Text="Keep in front" Click="OnToolbarKeepOnTopClick" />
+
+                    <MenuFlyoutItem x:Uid="ToolbarFullScreen" Text="Full screen" Click="OnFullScreenClick">
+                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE740;" /></MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+
+                    <MenuFlyoutItem x:Uid="ToolbarClose" Text="Close" Click="OnToolbarCloseClick">
+                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE711;" /></MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+
+                    <MenuFlyoutSeparator />
+
+                    <!-- Last, and in the same color as everywhere else. -->
+                    <MenuFlyoutItem x:Uid="ToolbarPanic" Text="Panic" Click="OnPanicClick"
+                                    Foreground="{ThemeResource SystemFillColorCriticalBrush}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE7BA;" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                </MenuFlyout>
+            </FlyoutBase.AttachedFlyout>
+
+            <Grid x:Name="ToolbarHandleFace" Background="{ThemeResource SolidBackgroundFillColorSecondaryBrush}">
+                <StackPanel x:Name="ToolbarHandleIcons"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="6">
+                    <FontIcon Glyph="&#xE7C2;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <FontIcon Glyph="&#xE712;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </Grid>
+        </ContentControl>
 
         <!-- Full screen has no bar. Everything the chrome offered lives behind one button in
              whichever corner the layout names, and it fades back to a quarter after a few

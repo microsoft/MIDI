@@ -1,6 +1,6 @@
 ---
 layout: tools_page
-title: MIDI File Player
+title: Windows MIDI Player
 tool: midiplayer
 description: Play standard MIDI files to any MIDI device on your PC, and watch the notes as they play
 icon: /assets/images/midiplayer.png
@@ -10,21 +10,23 @@ categories:
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
 
-MIDI File Player plays standard MIDI files to any MIDI device on your PC: a hardware synth, a software instrument, a sound module, or the built-in General MIDI synthesizer. It shows you the music as it plays, so you can see which track is doing what rather than just hearing the result.
+Windows MIDI Player plays standard MIDI files to any MIDI device on your PC: a hardware synth, a software instrument, a sound module, or the built-in General MIDI synthesizer. It shows you the music as it plays, so you can see which track is doing what rather than just hearing the result.
 
 A MIDI file isn't audio. It's a list of instructions, and what it sounds like depends entirely on the instrument you send it to. That's the point of this app: the same file through your sound module and through the built-in synthesizer are two different performances, and you can switch between them while it plays.
 
-![The MIDI File Player main window]({{ site.baseurl }}/assets/images/midiplayer.png)
+## Quick start
 
-## Getting started
+![The Windows MIDI Player window playing a file, with numbered callouts on Add files, the Play to and Group lists, the transport buttons, the track rail, the track roll, the queue, and the view, repeat and queue buttons]({{ site.baseurl }}/assets/images/midiplayer-quick-start.png)
 
-1. Choose where the music should go from the **Play to** list at the bottom.
-2. Select **Add files**, or drag MIDI files onto the window.
-3. Select **Play**.
+1. **Add files** puts MIDI files in the queue. You can also drag files onto the window.
+2. **Play to** chooses the instrument that plays the music, and **Group** chooses which part of it. Most MIDI 1.0 gear has a single group.
+3. **Play** starts the music, and changes to **Pause** while it plays. **Stop**, **Previous**, and **Next** sit on either side of it.
+4. **The track rail** lists each track with its instrument. **M** mutes a track, and **S** plays only that track.
+5. **The track roll** shows the notes, with time running left to right and each track in its own color.
+6. **The queue.** Files play one after another. Double-click a file to jump to it.
+7. **Keyboard view** switches to notes falling towards a keyboard. **Repeat** starts the queue again from the top, and the last button shows or hides the queue.
 
-Files play one after another. Double-click a file in the queue to jump to it.
-
-You can also open a MIDI file straight from File Explorer. MIDI File Player is added to the **Open with** menu for `.mid`, `.midi`, `.kar`, `.rmi`, and `.smf` files, and appears in **Settings &rsaquo; Apps &rsaquo; Default apps** if you want it to be the app that opens them. It deliberately doesn't take that over during installation &mdash; Windows doesn't allow an installer to claim a file type for you, and apps that try get reset.
+You can also open a MIDI file straight from File Explorer. Windows MIDI Player is added to the **Open with** menu for `.mid`, `.midi`, `.kar`, `.rmi`, and `.smf` files, and appears in **Settings &rsaquo; Apps &rsaquo; Default apps** if you want it to be the app that opens them. It deliberately doesn't take that over during installation &mdash; Windows doesn't allow an installer to claim a file type for you, and apps that try get reset.
 
 Opening a file while the player is already running hands it to the window that's already open rather than starting a second one.
 

@@ -345,11 +345,16 @@ namespace glass
         bool SetControlShowValue(_In_ std::wstring const& id, _In_ ShowValueOverride showValue);
         bool SetControlDefaultValue(_In_ std::wstring const& id, _In_ double value);
         bool SetControlReturnsToDefault(_In_ std::wstring const& id, _In_ bool returns);
+
+        // A knob or fader that works like a pan control. Turning it on also moves a control
+        // resting at the bottom of its travel to the middle, in the same undo step, because the
+        // middle is where a pan control rests.
+        bool SetControlLightsFromCenter(_In_ std::wstring const& id, _In_ bool fromCenter);
         bool SetControlSendsValueOnStart(_In_ std::wstring const& id, _In_ bool sends);
         bool SetControlSendInterval(_In_ std::wstring const& id, _In_ int32_t milliseconds);
         bool SetControlPickup(_In_ std::wstring const& id, _In_ PickupMode pickup);
 
-        // Which way a finger drags a knob or an encoder up.
+        // Which way a finger drags a knob up.
         bool SetControlDrag(_In_ std::wstring const& id, _In_ DragAxis drag);
 
         // The marks across the travel, and whether the value at each stop is printed beside
@@ -457,6 +462,9 @@ namespace glass
         bool SetPublishesVirtualDevice(_In_ bool publishes);
         bool SetScaleMode(_In_ ScaleMode mode, _In_ double customPercent);
         bool SetFullScreenButtonCorner(_In_ ScreenCorner corner);
+        bool SetToolbarWindow(_In_ bool toolbar);
+        bool SetAlwaysOnTop(_In_ bool onTop);
+        bool SetSeeThrough(_In_ bool seeThrough);
         bool SetTempoSource(_In_ TempoSource const& tempo);
         bool SetBackgroundOpacity(_In_ double opacity);
 

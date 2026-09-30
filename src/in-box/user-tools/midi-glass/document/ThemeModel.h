@@ -102,6 +102,70 @@ namespace glass
 
         // A key: a skirt with a dished top set into it, deeper at the front than at the back.
         Keycap = 1,
+
+        // A domed button, the largest circle that fits, set into a ring where the theme names
+        // one. Only the button moves under a finger; the ring stays where it is.
+        Round = 2,
+    };
+
+    // What the puck of an XY pad or a joystick is.
+    enum class PuckStyle
+    {
+        Disc = 0,
+
+        // A glossy ball in the control's color. On a joystick it sits on a short shaft.
+        Ball = 1,
+
+        // A ring with four ticks and nothing in the middle, so the point itself stays clear.
+        Reticle = 2,
+    };
+
+    // What the cap on a fader is shaped like.
+    enum class ThumbShapeStyle
+    {
+        Bar = 0,
+
+        // Five sided, pointing at the printed scale, the way a slider of the nineties was.
+        Pointer = 1,
+
+        // Two chevrons pinching the rail at the value, with a hairline between them.
+        Chevrons = 2,
+    };
+
+    // What says which way a knob is pointing.
+    enum class PointerShapeStyle
+    {
+        Line = 0,
+
+        // A small chevron riding the arc, pointing at the marks round it.
+        Chevron = 1,
+    };
+
+    // How a control's edge is drawn at rest.
+    enum class RimStyle
+    {
+        Outline = 0,
+
+        // Only the four corners. A control that is on closes them into a full frame.
+        Corners = 1,
+    };
+
+    // How a switch that stays on says so.
+    enum class LatchStyle
+    {
+        Lit = 0,
+
+        // Pressed in and filled with a fine checkerboard, with no color at all.
+        Checkerboard = 1,
+    };
+
+    // How a step sequencer marks the step that is playing.
+    enum class CurrentStepStyle
+    {
+        Lit = 0,
+
+        // A dotted line round it as well, the way a focused control is marked.
+        DottedFocus = 1,
     };
 
     // The texture laid over the deck.
@@ -252,13 +316,27 @@ namespace glass
         // fewer animations.
         int32_t RainSpeed{ 0 };
 
+        // A grid floor running away to the horizon, under the controls, 0 to 100. Alpha 0 on the
+        // color means the theme's first hue.
+        int32_t FloorPercent{ 0 };
+        ThemeColor FloorColor{ 0, 0, 0, 0 };
+
+        // Where the horizon is, as a share of the deck's picture where there is one, or of the
+        // page where there is not.
+        int32_t FloorHorizonPercent{ 58 };
+
+        // How fast the floor rolls toward you, in pixels a second. Zero is still, and so is any
+        // floor when Windows asks for fewer animations.
+        int32_t FloorSpeed{ 0 };
+
         bool IsEmpty() const noexcept
         {
             return (ScanLinePitch <= 0 || ScanLineStrength <= 0) &&
                 VignettePercent <= 0 &&
                 GrainPercent <= 0 &&
                 FaceplateSheenPercent <= 0 &&
-                RainPercent <= 0;
+                RainPercent <= 0 &&
+                FloorPercent <= 0;
         }
     };
 
@@ -270,6 +348,9 @@ namespace glass
     // its desk, and a tube theme has no green, amber and red to have, so it spends the widest
     // three brightnesses it owns instead.
     constexpr int32_t MeterZoneCount = 3;
+
+    // The stops a chrome finish is named by.
+    constexpr int32_t ChromeColorCount = 4;
 
     // A theme is six hue slots, a deck, and a handful of control defaults. A control stores a
     // slot rather than a color, so switching theme is a six color operation instead of a
@@ -524,6 +605,11 @@ namespace glass
         double PadFillAtRest{ -1.0 };
         int32_t PadFillWhenOnPercent{ -1 };
 
+        // A lamp is a light rather than a switch. Zero makes every lamp a round lens that lights,
+        // on a page whose switches fill with their color when they are on. Below zero means the
+        // same as every other switch.
+        int32_t LampFillWhenOnPercent{ -1 };
+
         // A fader or a switch on the neutral slot wears the neutral as its cap, the way one row
         // of cream caps on a panel of black ones says "these belong together".
         bool NeutralCaps{ false };
@@ -750,6 +836,75 @@ namespace glass
         // which is what the design sheet draws.
         std::array<int32_t, MeterZoneCount> MeterSlots{ 1, 2, 5 };
 
+        // ---- round buttons, colored caps and balls ----
+
+        // What a round button is set into. Alpha 0 is no ring: the button is the whole circle.
+        ThemeColor SwitchRingColor{ 0, 0, 0, 0 };
+
+        // A pad takes the switches' shape. Off keeps pads as plates beside round buttons.
+        bool PadsFollowSwitchShape{ true };
+
+        // A knob's cap is the control's own color, and its pointer is whichever of white or
+        // near-black reads on it.
+        bool KnobCapFromHue{ false };
+
+        PuckStyle Puck{ PuckStyle::Disc };
+
+        // ---- pointers, caps and scales ----
+
+        ThumbShapeStyle ThumbShape{ ThumbShapeStyle::Bar };
+        PointerShapeStyle PointerShape{ PointerShapeStyle::Line };
+
+        // Every so many marks round a knob, and beside a fader, one is longer. Zero is none.
+        int32_t KnobMajorTickEvery{ 0 };
+        int32_t FaderMajorTickEvery{ 0 };
+
+        // The knob's face reaches out under its arc, so the arc is printed on the face.
+        bool KnobArcOnFace{ false };
+
+        RimStyle RimShape{ RimStyle::Outline };
+
+        // ---- bevels ----
+
+        // How wide a bevel is, in pixels. Zero is none. Raised is something to press, pressed
+        // is down, and sunken is a field that holds a value.
+        int32_t BevelPixels{ 0 };
+
+        // Its four grays, outside in. Alpha 0 means white, the plate lifted, the plate shaded
+        // and black.
+        ThemeColor BevelHighlightColor{ 0, 0, 0, 0 };
+        ThemeColor BevelLightColor{ 0, 0, 0, 0 };
+        ThemeColor BevelShadowColor{ 0, 0, 0, 0 };
+        ThemeColor BevelDarkColor{ 0, 0, 0, 0 };
+
+        LatchStyle Latch{ LatchStyle::Lit };
+        CurrentStepStyle CurrentStep{ CurrentStepStyle::Lit };
+
+        // A small square of the control's color before a name printed on a switch.
+        bool SwitchColorTag{ false };
+
+        // ---- print ----
+
+        // A soft halo behind anything printed straight on the deck, so it reads over a picture.
+        // The alpha is how strong it is; zero is none.
+        ThemeColor DeckInkHaloColor{ 0, 0, 0, 0 };
+
+        // Numbers inside a window. Alpha 0 means the window's own light, the control's color.
+        ThemeColor WellInkColor{ 0, 0, 0, 0 };
+
+        // ---- chrome ----
+
+        // Knob caps and fader caps are polished metal: a sky over a hard horizon line.
+        bool ChromeCaps{ false };
+
+        // The sky, the light and dark sides of the horizon, and the glow in the ground. Alpha 0
+        // means a cool sky and a sunset glow.
+        std::array<ThemeColor, ChromeColorCount> ChromeColors{
+            ThemeColor{ 0, 0, 0, 0 }, ThemeColor{ 0, 0, 0, 0 }, ThemeColor{ 0, 0, 0, 0 }, ThemeColor{ 0, 0, 0, 0 } };
+
+        // Section names and the words on a Text control in the same chrome.
+        bool ChromeLetters{ false };
+
         // What this theme costs, as a resource key rather than a sentence, so it is translated
         // like everything else. Empty where a theme costs nothing worth saying.
         //
@@ -831,6 +986,23 @@ namespace glass
     // What a hue slot is drawn on, for measuring it. The deck, except on a theme whose colors
     // only ever light inside its windows and lamp holders.
     ThemeColor SlotBackdrop(_In_ Theme const& theme) noexcept;
+
+    // A bevel's four grays, once the ones the theme left empty are worked out from its plate.
+    ThemeColor EffectiveBevelHighlightColor(_In_ Theme const& theme) noexcept;
+    ThemeColor EffectiveBevelLightColor(_In_ Theme const& theme) noexcept;
+    ThemeColor EffectiveBevelShadowColor(_In_ Theme const& theme) noexcept;
+    ThemeColor EffectiveBevelDarkColor(_In_ Theme const& theme) noexcept;
+
+    // A chrome stop, once an empty one is worked out.
+    ThemeColor EffectiveChromeColor(_In_ Theme const& theme, _In_ int32_t stop) noexcept;
+
+    // The floor's lines.
+    ThemeColor EffectiveFloorColor(_In_ Theme const& theme) noexcept;
+
+    // Whether print on an inset panel takes the section's ink rather than the theme's own. It
+    // does only where the theme's own does not read on the inset and the section's does: a group
+    // box inside a gray window is printed in the window's black, not in the desktop's white.
+    bool InsetTakesSectionInk(_In_ Theme const& theme) noexcept;
 
     // ---- contrast, measured rather than guessed ----
 

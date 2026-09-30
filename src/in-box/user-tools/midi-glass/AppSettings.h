@@ -47,6 +47,11 @@ namespace midiglass
         bool KeepAwakeWhileRunning() const noexcept { return m_keepAwakeWhileRunning; }
         void KeepAwakeWhileRunning(_In_ bool value) noexcept;
 
+        // Whether the font list offers every font on this PC rather than only the ones every PC
+        // has. Off unless asked: a layout set in a font the next PC lacks looks different there.
+        bool ShowAllFonts() const noexcept { return m_showAllFonts; }
+        void ShowAllFonts(_In_ bool value) noexcept;
+
         // When a layout was last opened, as a FILETIME, or 0. Kept here rather than in the layout
         // file because "when did I last use this" is about this PC, and because writing the file
         // every time it opened would make every run look like an edit.
@@ -85,6 +90,7 @@ namespace midiglass
         LibrarySort m_librarySort{ LibrarySort::LastUsed };
         bool m_libraryShowsList{ false };
         bool m_keepAwakeWhileRunning{ false };
+        bool m_showAllFonts{ false };
 
         WindowPlacementInfo m_editorPlacement{};
 

@@ -187,6 +187,16 @@ namespace glass
 
         // The light catching the lower edge of anything cut into the surface.
         ThemeColor RecessLip{ 0, 0, 0, 0 };
+
+        // Numbers inside a window: the theme's own ink for them, or the window's light.
+        ThemeColor WellInk{};
+
+        // A bevel's four grays, outside in, from the light side. Transparent where the theme
+        // draws no bevel.
+        ThemeColor BevelHighlight{ 0, 0, 0, 0 };
+        ThemeColor BevelLight{ 0, 0, 0, 0 };
+        ThemeColor BevelShadow{ 0, 0, 0, 0 };
+        ThemeColor BevelDark{ 0, 0, 0, 0 };
     };
 
     // The control's own hue. A slot unless the control asked for a literal color and gave one
@@ -225,6 +235,14 @@ namespace glass
 
     // Whether a switch of this kind is drawn as a key on this theme.
     bool IsKeycap(_In_ Theme const& theme, _In_ ControlKind kind) noexcept;
+
+    // Whether a switch of this kind is drawn as a round button on this theme. A page tab and a
+    // lamp never are, and a pad only when the theme's pads follow its switches.
+    bool IsRoundSwitch(_In_ Theme const& theme, _In_ ControlKind kind) noexcept;
+
+    // Whether a switch of this kind stays on after it is let go, which is what a checkered latch
+    // is drawn on.
+    bool LatchesOn(_In_ ControlKind kind) noexcept;
 
     ControlColors ResolveControlColors(_In_ Control const& control, _In_ Theme const& theme) noexcept;
 

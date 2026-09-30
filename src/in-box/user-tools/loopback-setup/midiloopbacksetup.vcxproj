@@ -130,7 +130,6 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="loopback_setup_protocol_defs.h" />
-    <ClInclude Include="ConfigFile.h" />
     <ClInclude Include="ImportCandidates.h" />
     <ClInclude Include="ImportItems.h">
       <DependentUpon>ImportItems.idl</DependentUpon>
@@ -166,7 +165,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
-    <ClCompile Include="ConfigFile.cpp" />
     <ClCompile Include="ImportCandidates.cpp" />
     <ClCompile Include="ImportItems.cpp">
       <DependentUpon>ImportItems.idl</DependentUpon>

@@ -27,7 +27,7 @@ The MIDI cmdlets exist so you can script MIDI. Some things people do with them:
 
 They're reasonably fast, but they aren't the way to build a MIDI sequencer or anything else where timing has to be tight.
 
-> The MIDI Console can do everything these cmdlets can. The difference is that the console opens a new connection every time you send a message and closes it again afterwards. That's wasteful if your script does many things with the same connection. For a single message, `midi endpoint send-message 0x25971234` is simple and fast.
+> The MIDI Console can do much of what these cmdlets can. The difference is that the console opens a new connection every time you send a message and closes it again afterwards. That's wasteful if your script does many things with the same connection. For a single message, `midi endpoint send-message 0x25971234` is simple and fast.
 
 ## Startup cmdlet
 
@@ -140,6 +140,7 @@ Given the session object and an endpoint device id, opens a connection to a MIDI
 # open a connection to the endpoint
 $connection = Open-MidiEndpointConnection $session $endpointDeviceId
 ```
+
 ### Close-MidiEndpointConnection
 
 Given session and connection objects, closes an open MIDI Endpoint Connection within the specified session.
@@ -198,18 +199,28 @@ Stop-Job $job
 Remove-Job $job
 ```
 
+To record what arrives into a MIDI file instead, use `Receive-MidiMessage`, described under [MIDI file cmdlets](#midi-file-cmdlets).
+
 ## System Exclusive cmdlets
 
 MIDI 1.0 bytestream System Exclusive data, of the kind held in a `.syx` file, is carried over UMP as SysEx7 messages. These two cmdlets do the conversion and the flow control for you.
 
+Both take either an open connection or `-EndpointDeviceId`. With an endpoint device id, the cmdlet opens its own session and connection, and closes them when it's done, so a one-off transfer doesn't need `Start-MidiSession` first.
+
 ### Send-MidiSystemExclusive
 
-Sends a `.syx` file, or a byte array, to an open connection. Progress is reported through PowerShell's normal progress bar, and Ctrl+C cancels the transfer.
+Sends a `.syx` file, or a byte array. Progress is reported through PowerShell's normal progress bar, and Ctrl+C cancels the transfer.
 
 `-MessagesPerTransfer` and `-DelayBetweenTransfersMilliseconds` pace the data. Some devices, particularly older ones, need a slower pace to keep up.
 
 ```pwsh
 Send-MidiSystemExclusive -Connection $connection -Path .\patches.syx -GroupIndex 0
+
+# a one-off transfer, with no session to set up
+Send-MidiSystemExclusive -EndpointDeviceId $endpointDeviceId -Path .\patches.syx
+
+# every .syx file in a folder, one after another, over one connection
+Get-ChildItem .\patches\*.syx | Send-MidiSystemExclusive -EndpointDeviceId $endpointDeviceId
 ```
 
 ### Receive-MidiSystemExclusive
@@ -221,6 +232,91 @@ Receiving is open ended, so it runs until `-MessageCount` messages have arrived,
 ```pwsh
 # capture one complete message, or give up after 30 seconds
 Receive-MidiSystemExclusive -Connection $connection -Path .\dump.syx -MessageCount 1 -TimeoutSeconds 30
+
+# the same, with no session to set up
+Receive-MidiSystemExclusive -EndpointDeviceId $endpointDeviceId -Path .\dump.syx -MessageCount 1 -TimeoutSeconds 30
+```
+
+## MIDI file cmdlets
+
+These play a Standard MIDI File (`.mid`) to an endpoint, and record what an endpoint receives into one.
+
+### Start-MidiFilePlayback
+
+Plays a Standard MIDI File. With no endpoint, it plays to the built-in General MIDI synthesizer, so `Start-MidiFilePlayback .\song.mid` is all it takes. The cmdlet waits until the file ends and shows its progress. Press Ctrl+C to stop early, and the notes that are sounding are turned off.
+
+`-StartAtSeconds` starts part way into the file. Each channel's bank, program and controllers are sent as they stand at that point, so the music starts on the right sounds.
+
+`-NoWait` returns right away with an object you use to control the playback. Keep it in a variable. If nothing holds on to it, playback stops.
+
+```pwsh
+# play to the built-in synthesizer, and wait for the end
+Start-MidiFilePlayback .\song.mid
+
+# play to another endpoint, starting 30 seconds in
+Start-MidiFilePlayback .\song.mid -EndpointDeviceId $endpointDeviceId -StartAtSeconds 30
+
+# start it, then carry on with the script
+$playback = Start-MidiFilePlayback .\song.mid -NoWait
+```
+
+### Suspend-MidiFilePlayback, Resume-MidiFilePlayback and Stop-MidiFilePlayback
+
+These control a playback started with `-NoWait`. Suspending turns off the notes that are sounding and holds the position. Resuming carries on from the same place, with each channel's sound put back first. Stopping ends it and releases the connection. The `State` and `Position` properties of the playback object tell you where it's at.
+
+```pwsh
+Suspend-MidiFilePlayback $playback
+$playback.Position.Microseconds / 1000000    # seconds into the file
+Resume-MidiFilePlayback $playback
+Stop-MidiFilePlayback $playback
+```
+
+### Receive-MidiMessage
+
+Records the messages an endpoint receives into a Standard MIDI File, so you can play the recording back or load it into a sequencer. Like the System Exclusive cmdlets, it takes an open connection or `-EndpointDeviceId`.
+
+It runs until `-MessageCount` messages have arrived, `-TimeoutSeconds` passes, or you press Ctrl+C, and the file is written in each case. Nothing goes into the file until the recording ends, because a MIDI file stores the length of each track in front of it. If nothing arrived, no file is written. An existing file is only replaced when you add `-Force`.
+
+A few things to know about the file:
+
+- The first message is at the very start of the file. Times are kept to about half a millisecond: 960 ticks per quarter note, at a fixed 120 beats per minute.
+- Each group gets its own track, because a MIDI file has no other place to record which group a message came from.
+- MIDI 2.0 messages are converted to MIDI 1.0 where MIDI 1.0 has the same message. The ones it can't hold, such as per-note controllers, are left out, and the cmdlet tells you how many.
+- MIDI clock, active sensing and the other real-time messages are left out unless you add `-IncludeRealTimeMessages`. Clock alone arrives dozens of times a second.
+
+```pwsh
+# record for one minute
+Receive-MidiMessage -EndpointDeviceId $endpointDeviceId -Path .\take1.mid -TimeoutSeconds 60
+
+# record until Ctrl+C
+Receive-MidiMessage -Connection $connection -Path .\take2.mid
+```
+
+## MIDI Capability Inquiry cmdlets
+
+MIDI Capability Inquiry (MIDI-CI) is how a device tells you about itself. Many devices that support it publish a list of their channels and a list of their programs (patches) through Property Exchange, which is part of MIDI-CI. These cmdlets ask for those lists. The built-in General MIDI synthesizer answers both, so it's a good one to try them on.
+
+Each cmdlet takes an endpoint device id, or an open connection with `-Connection`, and asks every device on the endpoint that answers. Finding those devices always takes the whole response time, two seconds unless you change it with `-ResponseTimeoutMilliseconds`, because there's no way to know how many will answer. So expect each call to take at least that long. `-GroupIndex` picks the group to ask on. It's the first group unless you say otherwise.
+
+A device that doesn't support MIDI-CI, or doesn't publish the list, gives you an error rather than an empty list, so a script can tell the difference.
+
+### Get-MidiChannelList
+
+Returns each channel's name, and the program it's set to right now. Channel numbers run from 1 to 256, not 1 to 16, because MIDI-CI counts across all 16 groups.
+
+```pwsh
+Get-MidiChannelList (Get-MidiSynthEndpointDeviceId) | Format-Table -AutoSize
+```
+
+### Get-MidiProgramList
+
+Returns every program the device offers, with the bank select and program change that choose it. The bank and program numbers start at 0, the way they're sent in MIDI messages. A long list arrives a page at a time, and the cmdlet asks for every page.
+
+When a device has more than one collection, `CollectionTitle` says which one each program belongs to. The synthesizer has two, one for instruments and one for drum kits. `-ResourceId` asks for just one collection, by the id the device gave it.
+
+```pwsh
+# find the organs
+Get-MidiProgramList (Get-MidiSynthEndpointDeviceId) | Where-Object Title -like '*Organ*'
 ```
 
 ## Loopback endpoint cmdlets
@@ -305,6 +401,95 @@ Hosts are what this PC advertises for remote devices to connect to. Clients are 
 ```pwsh
 Get-MidiNetworkConfiguredHost | Format-Table -AutoSize
 Get-MidiNetworkConfiguredClient | Format-Table -AutoSize
+```
+
+## RTP-MIDI cmdlets
+
+RTP-MIDI is the network MIDI 1.0 protocol that macOS, iOS and many MIDI interfaces use. These cmdlets work the same way as the Network MIDI 2.0 ones.
+
+### Get-MidiRtpAdvertisedHost
+
+Lists the RTP-MIDI devices this PC can currently see advertised on the network. A host on this PC is listed too, with `IsThisPc` set.
+
+```pwsh
+Get-MidiRtpAdvertisedHost | Format-Table -AutoSize
+```
+
+### Connect-MidiRtpHost
+
+Connects to a device that was discovered, to a device by the name it advertises, or to a fixed address. A device found by name is looked up again each time it connects, so the connection survives it moving to a new address. Leave out `-Port` to use 5004, where RTP-MIDI devices listen unless they're set up otherwise.
+
+The cmdlet returns once the service has the entry. Connecting happens in the background, and `Get-MidiRtpConfiguredClient` shows how it's going. Like the Network MIDI 2.0 cmdlet, the connection lasts until the service restarts unless you add `-SaveToConfiguration`.
+
+Two name parameters are easy to mix up. `-LocalEndpointName` is what the other device shows for this PC. `-EndpointName` is what Windows calls the endpoint this connection creates.
+
+```pwsh
+# connect to something which was discovered
+Get-MidiRtpAdvertisedHost |
+    Where-Object { $_.ServiceInstanceName -eq 'Studio Mac' } |
+    Connect-MidiRtpHost -SaveToConfiguration
+
+# connect to a fixed address
+Connect-MidiRtpHost -HostNameOrAddress 192.168.1.167 -Port 5006
+```
+
+### Disconnect-MidiRtpHost
+
+Disconnects by client identifier, by the name the device advertises, or by address and port. The connection ends and the entry is removed from the running service. An entry saved in the configuration file comes back when the service restarts.
+
+```pwsh
+Disconnect-MidiRtpHost -ClientId $response.ClientId
+Disconnect-MidiRtpHost -HostNameOrAddress 192.168.1.167 -Port 5006
+```
+
+### Get-MidiRtpConfiguredHost and Get-MidiRtpConfiguredClient
+
+Hosts are what this PC offers for other devices to connect to. Clients are the connections this PC makes to other devices. A client is listed even when it isn't connected, so `EntryState` is what says whether it's usable: `Pending` while it looks for the device, `Active` when it's connected, `Retrying` after a try that didn't work, and `Unavailable` when it has stopped trying. To try an `Unavailable` client again, run `Connect-MidiRtpHost` with the same target and the same `-ClientId`.
+
+```pwsh
+Get-MidiRtpConfiguredHost | Format-Table -AutoSize
+Get-MidiRtpConfiguredClient | Format-Table -AutoSize
+```
+
+## General MIDI synthesizer cmdlets
+
+Windows MIDI Services includes a General MIDI synthesizer, which shows up as the General MIDI Synth endpoint. These cmdlets show and change its settings, and list the sounds it has.
+
+### Get-MidiSynth and Set-MidiSynth
+
+`Get-MidiSynth` shows the synthesizer's settings. `Set-MidiSynth` changes the ones you name and leaves the rest alone. A change lasts until the service restarts, unless you add `-Persist`.
+
+Turning the synthesizer off removes its endpoint and releases the audio device. That matters if you use audio software which needs the audio device to itself, through WASAPI exclusive mode or ASIO.
+
+```pwsh
+Get-MidiSynth
+Set-MidiSynth -VolumeDecibels -6 -Persist
+Set-MidiSynth -Disabled
+```
+
+### Get-MidiSynthEndpointDeviceId
+
+Returns the synthesizer's endpoint device id, for any cmdlet that takes one. It returns nothing while the synthesizer is turned off, because then the endpoint doesn't exist.
+
+### Get-MidiSynthSoundSet and Get-MidiSynthInstrument
+
+`Get-MidiSynthSoundSet` describes the sound set the synthesizer plays: its name and version, how many instruments it has, and its drum kits. `Get-MidiSynthInstrument` lists every melodic instrument, with the bank select and program change that choose it. Drum kits are chosen with a program change on a drum channel, so they're only in the sound set.
+
+```pwsh
+Get-MidiSynthSoundSet
+(Get-MidiSynthSoundSet).DrumKits
+Get-MidiSynthInstrument | Where-Object Name -like '*Guitar*'
+```
+
+### Set-MidiSynthDrumChannel
+
+Makes a channel play drum kits, or makes it play instruments again. Channel 10 is the drum channel unless something changes it. Channel indexes start at 0, so channel 10 is index 9.
+
+This isn't saved, and a MIDI file can change it too: a reset in a file puts channel 10 back as the only drum channel.
+
+```pwsh
+# make channel 11 a second drum channel
+Set-MidiSynthDrumChannel -ChannelIndex 10 -IsDrumChannel $true
 ```
 
 ## MIDI utility cmdlets

@@ -561,8 +561,13 @@ namespace winrt::midiglass::implementation
         host.Children().Append(canvas);
 
         // The tube themes are their overlay as much as they are their palette, so the card wears
-        // it too. Without it Cathode and Terminal Green are two dark rectangles.
-        glass::ApplyDeckOverlay(canvas, theme, GalleryCardWidth, GalleryPreviewHeight, 1.0);
+        // it too. Without it Cathode and Terminal Green are two dark rectangles. The wall and its
+        // texture go on the deck, under the marks, and only the glass goes over them.
+        glass::ApplyDeckOverlay(
+            deck, theme, GalleryCardWidth, GalleryPreviewHeight, 1.0, glass::DeckOverlayLayer::BeneathControls);
+
+        glass::ApplyDeckOverlay(
+            canvas, theme, GalleryCardWidth, GalleryPreviewHeight, 1.0, glass::DeckOverlayLayer::AboveControls);
 
         return host;
     }
@@ -955,9 +960,15 @@ namespace winrt::midiglass::implementation
                 }
             }
 
-            // A tube theme is its overlay as much as it is its palette.
+            // A tube theme is its overlay as much as it is its palette. The wall, its texture and
+            // its rain go on the deck, under the controls; only the glass goes over them.
             glass::ApplyDeckOverlay(
-                ThemePreviewCanvas(), m_theme, PreviewPageWidth, PreviewPageHeight, 1.0);
+                ThemePreviewDeck(), m_theme, PreviewPageWidth, PreviewPageHeight, 1.0,
+                glass::DeckOverlayLayer::BeneathControls);
+
+            glass::ApplyDeckOverlay(
+                ThemePreviewCanvas(), m_theme, PreviewPageWidth, PreviewPageHeight, 1.0,
+                glass::DeckOverlayLayer::AboveControls);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to draw the theme preview.")
     }

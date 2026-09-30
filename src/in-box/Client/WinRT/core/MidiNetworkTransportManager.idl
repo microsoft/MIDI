@@ -32,6 +32,8 @@ import "MidiNetworkAdvertisedHost.idl";
 
 import "MidiNetworkConfiguredHost.idl";
 import "MidiNetworkConfiguredClient.idl";
+import "MidiNetworkSavedHost.idl";
+import "MidiNetworkSavedClient.idl";
 
 import "MidiNetworkRemoteClientApprovalConfig.idl";
 import "MidiNetworkRemoteClientApprovalResponse.idl";
@@ -132,6 +134,12 @@ namespace Windows.Devices.Midi2.Transports.Network
 
         // For validating a port a user typed in before trying to create the host with it.
         [noexcept] static Boolean IsHostPortAvailable(UInt16 port);
+
+        // What is saved in the configuration file, which is what the service creates when it
+        // starts. GetConfiguredHosts and GetConfiguredClients report what is running now. These
+        // work when the service is not running.
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiNetworkSavedHost> GetSavedHosts();
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiNetworkSavedClient> GetSavedClients();
 
     }
 }

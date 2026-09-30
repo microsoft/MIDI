@@ -16,6 +16,15 @@
 #include "MidiBasicLoopbackRemovalResponse.h"
 #include "MidiBasicLoopbackUpdateResponse.h"
 #include "MidiBasicLoopbackEntry.h"
+#include "MidiBasicLoopbackEndpointDefinition.h"
+#include "MidiBasicLoopbackSavedEntry.h"
+#include "MidiBasicLoopbackUpdateConfig.h"
+
+#include "MidiConfigFile.h"
+#include "MidiEndpointCustomProperties.h"
+#include "MidiServiceEndpointCustomizationConfig.h"
+#include "MidiServiceConfigEndpointMatchCriteria.h"
+#include "midi_saved_config_json.h"
 
 
 #include "MidiReporting.h"
@@ -812,6 +821,191 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         catch (...)
         {
             MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception setting basic loopback feedback protection.");
+
+            result->InternalSetFailure(
+                bloop::MidiBasicLoopbackErrorCode::ClientApiException,
+                internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
+        }
+
+        return *result;
+    }
+
+
+    collections::IVectorView<bloop::MidiBasicLoopbackSavedEntry> MidiBasicLoopbackManager::GetSavedLoopbackEntries() noexcept
+    {
+        auto results = winrt::single_threaded_vector<bloop::MidiBasicLoopbackSavedEntry>();
+
+        try
+        {
+            // Read from the file, because the service only reads it at start
+            auto const create = MidiSavedConfigJson::Object(
+                svc::implementation::MidiConfigFile::LoadTransportSection(TransportId()),
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY);
+
+            for (auto const& [associationId, entryObject] : MidiSavedConfigJson::Entries(create))
+            {
+                // a basic loopback keeps everything, including the muted flag, on its endpoint
+                auto const endpointObject = MidiSavedConfigJson::Object(entryObject, MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_ENDPOINT_KEY);
+
+                auto definition = winrt::make_self<MidiBasicLoopbackEndpointDefinition>();
+
+                definition->Name(MidiSavedConfigJson::String(endpointObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY));
+                definition->Description(MidiSavedConfigJson::String(endpointObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY));
+                definition->UniqueId(MidiSavedConfigJson::String(endpointObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY));
+                definition->ImageFileName(MidiSavedConfigJson::String(endpointObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY));
+
+                auto entry = winrt::make_self<MidiBasicLoopbackSavedEntry>();
+
+                entry->InternalInitialize(
+                    associationId,
+                    *definition,
+                    MidiSavedConfigJson::Boolean(endpointObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY, false),
+                    internal::ReadFeedbackProtectionEnabled(endpointObject) ?
+                        bloop::MidiBasicLoopbackFeedbackProtection::Mute :
+                        bloop::MidiBasicLoopbackFeedbackProtection::Off);
+
+                results.Append(*entry);
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error reading saved basic loopback entries.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception reading saved basic loopback entries.");
+        }
+
+        return results.GetView();
+    }
+
+
+    _Use_decl_annotations_
+    bloop::MidiBasicLoopbackUpdateResponse MidiBasicLoopbackManager::UpdateLoopback(
+        bloop::MidiBasicLoopbackUpdateConfig const& updateConfig) noexcept
+    {
+        auto result = winrt::make_self<MidiBasicLoopbackUpdateResponse>();
+
+        if (result == nullptr)
+        {
+            return nullptr;
+        }
+
+        try
+        {
+            if (updateConfig == nullptr)
+            {
+                result->InternalSetFailure(
+                    bloop::MidiBasicLoopbackErrorCode::InvalidArgument,
+                    internal::ResourceGetHString(IDS_LOOPBACK_ERROR_NULL_UPDATE_CONFIG));
+
+                return *result;
+            }
+
+            auto const* const config = winrt::get_self<MidiBasicLoopbackUpdateConfig>(updateConfig);
+            auto const associationId = config->AssociationId();
+
+            if (config->InternalChangesEndpointDetails())
+            {
+                bloop::MidiBasicLoopbackEntry active{ nullptr };
+
+                for (auto const& entry : GetActiveLoopbackEntries())
+                {
+                    if (entry != nullptr && entry.AssociationId() == associationId)
+                    {
+                        active = entry;
+                        break;
+                    }
+                }
+
+                if (active == nullptr)
+                {
+                    result->InternalSetFailure(
+                        bloop::MidiBasicLoopbackErrorCode::EndpointNotFound,
+                        internal::ResourceGetHString(IDS_LOOPBACK_ERROR_NOT_RUNNING));
+
+                    return *result;
+                }
+
+                // The service applies the whole set, so what is not changing is sent as it is now
+                auto customization = winrt::make_self<svc::implementation::MidiServiceEndpointCustomizationConfig>(
+                    TransportId(),
+                    config->InternalHasName() ? config->Name() : active.Name(),
+                    config->InternalHasDescription() ? config->Description() : active.Description(),
+                    config->InternalHasImageFileName() ? config->ImageFileName() : active.ImageFileName());
+
+                auto match = winrt::make_self<svc::implementation::MidiServiceConfigEndpointMatchCriteria>();
+                match->EndpointDeviceId(active.EndpointDeviceId());
+
+                customization->MatchCriteria(*match);
+
+                auto const payload = customization->ConfigJson();
+
+                if (payload == nullptr)
+                {
+                    result->InternalSetFailure(
+                        bloop::MidiBasicLoopbackErrorCode::ClientApiException,
+                        internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
+
+                    return *result;
+                }
+
+                auto const serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(TransportId(), payload);
+
+                if (serviceResponse == nullptr || serviceResponse.Status() != svc::MidiServiceConfigResponseStatus::Success)
+                {
+                    auto errorMessage = serviceResponse == nullptr ?
+                        winrt::hstring{} :
+                        internal::TrimmedHStringCopy(serviceResponse.ServiceErrorMessage());
+
+                    if (errorMessage.empty())
+                    {
+                        errorMessage = internal::ResourceGetHString(IDS_ERROR_SERVICE_CALL_FAILED_NO_MESSAGE);
+                    }
+
+                    result->InternalSetFailure(
+                        serviceResponse == nullptr ?
+                            bloop::MidiBasicLoopbackErrorCode::NoErrorInformationAvailable :
+                            static_cast<bloop::MidiBasicLoopbackErrorCode>(serviceResponse.ServiceErrorCode()),
+                        errorMessage);
+
+                    return *result;
+                }
+            }
+
+            if (config->InternalHasIsMuted())
+            {
+                auto const muteResult = config->IsMuted() ?
+                    MuteLoopback(associationId) :
+                    UnmuteLoopback(associationId);
+
+                if (muteResult == nullptr || !muteResult.Success())
+                {
+                    return muteResult;
+                }
+            }
+
+            if (config->InternalHasFeedbackProtection())
+            {
+                auto const protectionResult = SetFeedbackProtection(associationId, config->FeedbackProtection());
+
+                if (protectionResult == nullptr || !protectionResult.Success())
+                {
+                    return protectionResult;
+                }
+            }
+
+            result->InternalSetSuccess();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error updating basic loopback.");
+
+            result->InternalSetFailure(bloop::MidiBasicLoopbackErrorCode::ClientApiException, ex.message());
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception updating basic loopback.");
 
             result->InternalSetFailure(
                 bloop::MidiBasicLoopbackErrorCode::ClientApiException,

@@ -12,7 +12,7 @@
 _Use_decl_annotations_
 HRESULT 
 MidiNetworkClient::Initialize(
-    MidiNetworkClientDefinition& clientDefinition
+    MidiNetworkClientDefinition const& clientDefinition
 )
 {
     TraceLoggingWrite(
@@ -128,6 +128,7 @@ MidiNetworkClient::Start(
     DatagramSocket socket;
     socket.Control().QualityOfService(SocketQualityOfService::LowLatency);
     socket.Control().DontFragment(true);
+    socket.Control().InboundBufferSizeInBytes(MIDI_NETWORK_SOCKET_RECEIVE_BUFFER_BYTES);
 
     {
         auto lock = m_socketLock.lock();

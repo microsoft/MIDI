@@ -27,10 +27,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
 
         try
         {
+            auto const deviceId = ::Windows::Devices::Midi2::Transports::Bluetooth::Internal::BluetoothDeviceIdForConfig(m_bluetoothDeviceId);
+
             if (m_removeFromConfiguration)
             {
                 json::JsonArray idsJson;
-                idsJson.Append(json::JsonValue::CreateStringValue(m_bluetoothDeviceId));
+                idsJson.Append(json::JsonValue::CreateStringValue(deviceId));
 
                 json::JsonObject removeJson;
                 removeJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICES_ARRAY_KEY, idsJson);
@@ -44,7 +46,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
 
             deviceJson.SetNamedValue(
                 MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ID_KEY,
-                json::JsonValue::CreateStringValue(m_bluetoothDeviceId));
+                json::JsonValue::CreateStringValue(deviceId));
 
             deviceJson.SetNamedValue(
                 MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY,

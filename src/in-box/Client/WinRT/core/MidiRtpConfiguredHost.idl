@@ -45,7 +45,8 @@ namespace Windows.Devices.Midi2.Transports.Rtp
 
         [noexcept] Boolean AllowPortFallback{ get; };
 
-        // true when the configured port was taken and the host started on another one
+        // True when the host could not have the port it wanted and started on another one: the
+        // configured port, or 5004 when the port is automatic
         [noexcept] Boolean UsedPortFallback{ get; };
 
         [noexcept] Boolean SendRecoveryJournal{ get; };

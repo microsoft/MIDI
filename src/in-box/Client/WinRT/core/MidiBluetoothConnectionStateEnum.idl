@@ -26,9 +26,10 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         // Wanted, but the device has not been reachable yet. The transport keeps retrying.
         WaitingForDevice = 1,
 
-        // An attempt is running right now.
+        // An attempt is running right now, or is next in line.
         Connecting = 2,
 
+        // Connected, with the endpoint created and ready to open
         Connected = 3,
     };
 }

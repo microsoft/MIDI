@@ -26,6 +26,9 @@ void OutputSectionHeader(_In_ std::wstring const& headerText)
     fmt::println(L"{}", Styled(headerText, infoTextStyle));
     fmt::println(L"{}", Styled(sectionHeaderSeparator, separatorTextStyle));
     fmt::println(L"");
+
+    // redirected output is buffered, so send the last section and this header before a crash can lose them
+    fflush(stdout);
 }
 
 void OutputItemSeparator()

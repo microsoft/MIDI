@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - Night Drive theme</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="30-night-drive.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .chiprow { position: absolute; left: 14px; top: 13px; display: flex; gap: 6px; align-items: center; }
+    .tchip {
+        height: 26px; padding: 0 11px; border-radius: 13px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: var(--text3);
+        background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .tchip i { width: 11px; height: 11px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    .tchip.new { color: #F3EAFF; font-weight: 600; font-style: italic; background: linear-gradient(180deg, #140A2E, #3A1258); box-shadow: inset 0 0 0 1px #FF3FA4, 0 0 10px rgba(255,63,164,.45); }
+    .tchip.new i { border-radius: 50%; background: linear-gradient(180deg, #FFD23F, #FF7B39 55%, #FF3FA4); box-shadow: none; }
+
+    .deck {
+        position: absolute; left: 14px; top: 54px; width: 972px; height: 510px;
+        border-radius: 8px; overflow: hidden;
+    }
+    .decktag { position: absolute; left: 14px; top: 576px; font-size: 11px; color: var(--text3); }
+    .decktag b { color: var(--text2); font-weight: 600; }
+
+    .rhead { position: absolute; font-size: 11px; font-weight: 700; letter-spacing: .12em; color: #F3EAFF; }
+    .kcap { position: absolute; text-align: center; font-size: 10.5px; line-height: 1.45; color: #C4B3E4; }
+    .kcap b { display: block; color: #F3EAFF; font-weight: 700; font-size: 11px; margin-bottom: 2px; }
+    .state { position: absolute; font-size: 9px; font-weight: 700; letter-spacing: .12em; color: #C4B3E4; text-align: center; }
+    .sample { position: absolute; font-size: 15px; font-weight: 700; letter-spacing: .06em; color: #F3EAFF; white-space: nowrap; }
+    .chip {
+        position: absolute; padding: 3px 9px; border-radius: 10px; white-space: nowrap;
+        background: rgba(23,13,43,.92); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+        font-size: 10.5px; color: #F3EAFF;
+    }
+    .chip b { font-family: "Cascadia Mono","Consolas",monospace; }
+    .chip.bad { box-shadow: inset 0 0 0 1px #FF7B39; }
+    .chip.good { box-shadow: inset 0 0 0 1px #46F2A0; }
+    .measure {
+        position: absolute; font-size: 11.5px; line-height: 1.6; color: rgba(243,234,255,.82);
+        background: rgba(23,13,43,.90); border-radius: 10px; padding: 8px 14px; box-sizing: border-box;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.10);
+    }
+    .measure b { color: #F3EAFF; font-weight: 700; }
+    .measure .num { font-family: "Cascadia Mono","Consolas",monospace; color: #F3EAFF; font-weight: 700; white-space: nowrap; }
+
+    .swatches { display: flex; gap: 0; width: 1000px; border-radius: 7px; overflow: hidden; margin-top: 14px; }
+    .swatches div {
+        flex: 1; height: 58px; display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 6px 6px; font-size: 9px; font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .swatches div span { display: block; font-family: "Segoe UI Variable Text","Segoe UI",sans-serif; font-size: 10px; opacity: .78; }
+
+    .costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; width: 1000px; margin-top: 12px; }
+    .cost {
+        border-radius: 7px; padding: 12px 14px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 11.5px; color: var(--text3); line-height: 1.55;
+    }
+    .cost h4 { margin: 0 0 7px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .cost b { color: var(--text2); font-weight: 600; }
+    .cost .yes { color: var(--success); font-weight: 600; }
+    .cost .no { color: var(--caution); font-weight: 600; }
+    .cost .mono { color: var(--accent); }
+
+    .asks { width: 1000px; margin-top: 11px; border-radius: 7px; padding: 12px 14px 6px 14px; box-sizing: border-box;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke); }
+    .asks h4 { margin: 0 0 8px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .asks table { width: 100%; border-collapse: collapse; font-size: 11.5px; line-height: 1.5; color: var(--text3); }
+    .asks th { text-align: left; font-weight: 600; color: var(--text2); padding: 0 10px 6px 0; border-bottom: 1px solid var(--divider); font-size: 11px; }
+    .asks td { vertical-align: top; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--divider); }
+    .asks tr:last-child td { border-bottom: none; }
+    .asks td.n { width: 18px; color: var(--caution); font-weight: 600; }
+    .asks td.ask { width: 290px; }
+    .asks td.ask b { color: var(--text); font-weight: 600; }
+    .asks td.without { width: 220px; }
+    .asks .mono { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 30 &mdash; <b>Night Drive</b>, the synthwave sunset. A violet sky going to orange at the horizon, a striped sun sitting on it and a pink grid running away to the sun, with <b>dark glass, neon and chrome</b> on top. <b>The sky is an ordinary deck picture</b>, which the engine already fits to the page without stretching, so the sun stays round. <b>Neon is for values and chrome is for the things you hold</b>: every value is a neon line with a white-hot core, and every cap you grab is chrome. The one rule: <b>words never sit on the bright part of the sky</b>.</p>
+
+<!-- ============================================================= DECK -->
+<div class="board" style="height:600px;">
+
+    <div class="chiprow">
+        <div class="tchip"><i style="background:#4CE0FF"></i>Studio Dark</div>
+        <div class="tchip"><i style="background:#E8601C"></i>Jove</div>
+        <div class="tchip"><i style="background:#D8D1C0; box-shadow: inset 0 0 0 2px #2A2723"></i>Soft Sector</div>
+        <div class="tchip"><i style="background:radial-gradient(circle at 40% 35%, #FF8A8C, #E3262B 60%, #7A1215)"></i>Insert Coin</div>
+        <div class="tchip"><i style="background:#008080; border-radius:0; box-shadow: 0 0 0 1px #000"></i>Chicago</div>
+        <div class="tchip new"><i></i>Night Drive</div>
+        <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
+    </div>
+
+    <div class="deck surf tonal nightdrive">
+
+        <div class="surftext chrometext" style="left:20px; top:4px; font-family:'Segoe UI Variable Display','Segoe UI',sans-serif; font-size:34px; letter-spacing:.03em; filter: drop-shadow(0 0 8px rgba(255,63,164,.45));">NIGHT DRIVE</div>
+        <div class="surftext neon hue1" style="left:268px; top:14px; font-family:'Segoe Script','Segoe UI',cursive; font-size:17px;">after hours</div>
+
+        <div class="ctl display hue3" style="left:540px; top:10px; width:124px; height:34px;"><span class="digits">118.0<span class="unit">BPM</span></span></div>
+
+        <div class="pagetabs" style="right:16px; top:13px; gap:8px;">
+            <div class="tab sel">DRIVE</div>
+            <div class="tab">CRUISE</div>
+            <div class="tab">GARAGE</div>
+        </div>
+
+        <!-- ======================================== SYNTH -->
+        <div class="ctlpanel hue1" style="left:14px; top:62px; width:318px; height:434px;"><div class="ptitle"><span class="chrometext">SYNTH</span></div></div>
+
+        <div class="ctl knob hue1" style="left:34px; top:90px; width:54px; height:54px;"><div class="dial"><div class="arc" style="--pct:.547turn"></div><div class="core" style="--pct:.547turn"></div><div class="chromecap"></div><div class="ptr" style="transform:rotate(52.2deg)"></div></div></div>
+        <div class="ctl knob hue5" style="left:110px; top:90px; width:54px; height:54px;"><div class="dial"><div class="arc" style="--pct:.322turn"></div><div class="core" style="--pct:.322turn"></div><div class="chromecap"></div><div class="ptr" style="transform:rotate(-29deg)"></div></div></div>
+        <div class="ctl knob hue4" style="left:186px; top:90px; width:54px; height:54px;"><div class="dial"><div class="arc" style="--pct:.443turn"></div><div class="core" style="--pct:.443turn"></div><div class="chromecap"></div><div class="ptr" style="transform:rotate(14.5deg)"></div></div></div>
+        <div class="ctl knob hue2" style="left:262px; top:90px; width:54px; height:54px;"><div class="dial"><div class="arc" style="--pct:.201turn"></div><div class="core" style="--pct:.201turn"></div><div class="chromecap"></div><div class="ptr" style="transform:rotate(-72.5deg)"></div></div></div>
+        <div class="lbl" style="left:23px; top:156px; width:76px;">CUTOFF</div>
+        <div class="lbl" style="left:99px; top:156px; width:76px;">RESO</div>
+        <div class="lbl" style="left:175px; top:156px; width:76px;">ENVELOPE</div>
+        <div class="lbl" style="left:251px; top:156px; width:76px;">LFO</div>
+
+        <div class="ctl xy hue1" style="left:34px; top:182px; width:176px; height:126px;">
+            <div class="field2"></div>
+            <div class="trail" style="left:40%; top:62%"></div>
+            <div class="trail" style="left:50%; top:52%"></div>
+            <div class="cross h" style="top:42%"></div><div class="cross v" style="left:60%"></div>
+            <div class="puck" style="left:60%; top:42%"></div>
+        </div>
+        <div class="lbl" style="left:34px; top:314px; width:176px;">CUTOFF / DRIVE</div>
+
+        <div class="ctl btn-ctl hue5 on" style="left:224px; top:182px; width:90px; height:36px;"><span class="name">ARP</span></div>
+        <div class="ctl btn-ctl hue1" style="left:224px; top:227px; width:90px; height:36px;"><span class="name">HOLD</span></div>
+        <div class="ctl btn-ctl hue2 held" style="left:224px; top:272px; width:90px; height:36px;"><span class="name">GLIDE</span></div>
+
+        <div class="ctl btn-ctl hue4 on" style="left:34px; top:342px; width:64px; height:30px;"><span class="name">SUNSET</span></div>
+        <div class="ctl btn-ctl hue1" style="left:104px; top:342px; width:64px; height:30px;"><span class="name">HIGHWAY</span></div>
+        <div class="ctl btn-ctl hue5" style="left:174px; top:342px; width:64px; height:30px;"><span class="name">NEON</span></div>
+        <div class="ctl btn-ctl hue2 dim" style="left:244px; top:342px; width:64px; height:30px;"><span class="name">COAST</span></div>
+
+        <div class="ctl fader horiz hue5" style="left:34px; top:394px; width:280px; height:30px;"><div class="slot"><div class="fill" style="width:58%"></div><div class="capbar" style="left:calc(58% - 8px);"></div></div></div>
+        <div class="lbl" style="left:34px; top:430px; width:280px;">MOD WHEEL</div>
+
+        <div class="ctl led hue6 on" style="left:36px; top:460px; width:12px; height:12px;"></div>
+        <div class="lbl" style="left:54px; top:460px; text-align:left;">GATE</div>
+        <div class="ctl led hue1" style="left:112px; top:460px; width:12px; height:12px;"></div>
+        <div class="lbl" style="left:130px; top:460px; text-align:left;">CLIP</div>
+
+        <!-- ======================================== DRUMS -->
+        <div class="ctlpanel hue2" style="left:640px; top:62px; width:318px; height:434px;"><div class="ptitle"><span class="chrometext">DRUMS</span></div></div>
+
+        <div class="ctl btn-ctl pad hue1 on" style="left:658px; top:88px; width:66px; height:50px;"><span class="name">KICK</span></div>
+        <div class="ctl btn-ctl pad hue4" style="left:732px; top:88px; width:66px; height:50px;"><span class="name">SNARE</span></div>
+        <div class="ctl btn-ctl pad hue3" style="left:806px; top:88px; width:66px; height:50px;"><span class="name">CLAP</span></div>
+        <div class="ctl btn-ctl pad hue2 on" style="left:880px; top:88px; width:66px; height:50px;"><span class="name">HAT</span></div>
+        <div class="ctl btn-ctl pad hue5 held" style="left:658px; top:146px; width:66px; height:50px;"><span class="name">TOM</span></div>
+        <div class="ctl btn-ctl pad hue6" style="left:732px; top:146px; width:66px; height:50px;"><span class="name">RIM</span></div>
+        <div class="ctl btn-ctl pad hue6" style="left:806px; top:146px; width:66px; height:50px;"><span class="name">PERC</span></div>
+        <div class="ctl btn-ctl pad hue3" style="left:880px; top:146px; width:66px; height:50px;"><span class="name">CRASH</span></div>
+
+        <div class="ctl steps hue2" style="left:658px; top:210px; width:288px; height:30px;"><div class="row"><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i class="cur"></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i class="on"></i><i></i></div></div>
+        <div class="lbl" style="left:658px; top:246px; width:288px;">HAT PATTERN</div>
+
+        <div class="ctl knob hue2" style="left:670px; top:274px; width:50px; height:50px;"><div class="dial"><div class="arc" style="--pct:.4025turn"></div><div class="core" style="--pct:.4025turn"></div><div class="chromecap"></div><div class="ptr" style="transform:rotate(0deg)"></div></div></div>
+        <div class="ctl knob hue4 held" style="left:764px; top:274px; width:50px; height:50px;"><div class="dial"><div class="arc" style="--pct:.58turn"></div><div class="core" style="--pct:.58turn"></div><div class="chromecap"></div><div class="ptr" style="transform:rotate(63.8deg)"></div></div><div class="kval">0.72</div></div>
+        <div class="ctl knob hue5" style="left:858px; top:274px; width:50px; height:50px;"><div class="dial"><div class="arc" style="--pct:.2415turn"></div><div class="core" style="--pct:.2415turn"></div><div class="chromecap"></div><div class="ptr" style="transform:rotate(-58deg)"></div></div></div>
+        <div class="lbl" style="left:657px; top:346px; width:76px;">TUNE</div>
+        <div class="lbl" style="left:751px; top:346px; width:76px;">DECAY</div>
+        <div class="lbl" style="left:845px; top:346px; width:76px;">SWING</div>
+
+        <div class="ctl display hue3" style="left:658px; top:374px; width:120px; height:34px;"><span class="digits">A-03</span></div>
+        <div class="lbl" style="left:658px; top:414px; width:120px;">PATTERN</div>
+        <div class="ctl btn-ctl hue6 on" style="left:794px; top:374px; width:70px; height:34px;"><span class="name">PLAY</span></div>
+        <div class="ctl btn-ctl hue1 offline" style="left:876px; top:374px; width:70px; height:34px;"><span class="name">REC</span></div>
+
+        <div class="ctl led hue2 on" style="left:662px; top:458px; width:12px; height:12px;"></div>
+        <div class="lbl" style="left:680px; top:458px; text-align:left;">SYNC</div>
+        <div class="ctl led hue6 on" style="left:740px; top:458px; width:12px; height:12px;"></div>
+        <div class="lbl" style="left:758px; top:458px; text-align:left;">MIDI IN</div>
+
+        <!-- ======================================== MIX, on the road under the sun -->
+        <div class="ctlpanel hue5" style="left:346px; top:342px; width:280px; height:154px;"><div class="ptitle"><span class="chrometext">MIX</span></div></div>
+
+        <div class="ctl fader hue1" style="left:366px; top:360px; width:26px; height:104px;"><div class="slot"><div class="fill" style="height:70%"></div><div class="capbar" style="bottom:calc(70% - 8px);"></div></div></div>
+        <div class="ctl meter" style="left:398px; top:360px; width:8px; height:104px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl fader hue2" style="left:430px; top:360px; width:26px; height:104px;"><div class="slot"><div class="fill" style="height:55%"></div><div class="capbar" style="bottom:calc(55% - 8px);"></div></div></div>
+        <div class="ctl meter" style="left:462px; top:360px; width:8px; height:104px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl fader hue4" style="left:494px; top:360px; width:26px; height:104px;"><div class="slot"><div class="fill" style="height:82%"></div><div class="capbar" style="bottom:calc(82% - 8px);"></div></div></div>
+        <div class="ctl meter" style="left:526px; top:360px; width:8px; height:104px;"><i></i><i></i><i></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="ctl fader hue6" style="left:558px; top:360px; width:26px; height:104px;"><div class="slot"><div class="fill" style="height:40%"></div><div class="capbar" style="bottom:calc(40% - 8px);"></div></div></div>
+        <div class="ctl meter" style="left:590px; top:360px; width:8px; height:104px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        <div class="lbl" style="left:352px; top:472px; width:60px;">SYNTH</div>
+        <div class="lbl" style="left:416px; top:472px; width:60px;">DRUMS</div>
+        <div class="lbl" style="left:480px; top:472px; width:60px;">BASS</div>
+        <div class="lbl" style="left:544px; top:472px; width:60px;">FX</div>
+
+    </div>
+    <div class="decktag"><b>Night Drive</b> &mdash; a sunset sky as the deck picture, dark glass sections edged in neon, chrome caps and chrome names, neon values with a white-hot core, and not one word on the bright part of the sky</div>
+
+</div>
+
+<!-- ============================================= THE ONE RULE, AND CHROME -->
+<div class="board" style="height:470px; margin-top:13px;">
+
+    <div class="surf tonal nightdrive" style="position:absolute; inset:0;">
+
+        <div class="rhead" style="left:20px; top:16px;">THE SKY IS A PICTURE. WORDS NEVER SIT ON ITS BRIGHT PART.</div>
+
+        <!-- three places to print a word -->
+        <div class="sample" style="left:30px; top:66px;">ON THE DARK SKY</div>
+        <div class="chip good" style="left:30px; top:92px;"><b>16.20 : 1</b></div>
+
+        <div class="sample" style="left:30px; top:258px;">ON THE BARE HORIZON</div>
+        <div class="chip bad" style="left:30px; top:292px;"><b>2.43 : 1</b> &mdash; never</div>
+
+        <div class="sample halo surftext" style="left:700px; top:258px;">WITH A HALO</div>
+        <div class="chip good" style="left:700px; top:292px;"><b>9.08 : 1</b> &mdash; ask 1</div>
+
+        <!-- chrome: a knob, a fader cap, a name -->
+        <div class="ctl knob hue1" style="left:694px; top:66px; width:86px; height:86px;"><div class="dial"><div class="arc" style="--pct:.515turn"></div><div class="core" style="--pct:.515turn"></div><div class="chromecap"></div><div class="ptr" style="transform:rotate(40.6deg)"></div></div></div>
+        <div class="ctl fader hue2" style="left:812px; top:52px; width:30px; height:128px;"><div class="slot"><div class="fill" style="height:62%"></div><div class="capbar" style="bottom:calc(62% - 8px);"></div></div></div>
+        <div class="surftext chrometext" style="left:860px; top:86px; font-family:'Segoe UI Variable Display','Segoe UI',sans-serif; font-size:32px; letter-spacing:.04em;">SYNTH</div>
+        <div class="kcap" style="left:680px; top:190px; width:300px;"><b>Chrome, asks 2 and 3</b>a sky reflected over a hard horizon line, with the sunset in the ground</div>
+
+        <!-- a switch, five ways, and a pad three ways -->
+        <div class="state" style="left:30px; top:330px; width:96px;">AT REST</div>
+        <div class="ctl btn-ctl hue1" style="left:30px; top:344px; width:96px; height:34px;"><span class="name">ARP</span></div>
+        <div class="state" style="left:136px; top:330px; width:96px;">ON</div>
+        <div class="ctl btn-ctl hue1 on" style="left:136px; top:344px; width:96px; height:34px;"><span class="name">ARP</span></div>
+        <div class="state" style="left:242px; top:330px; width:96px;">HELD</div>
+        <div class="ctl btn-ctl hue1 held" style="left:242px; top:344px; width:96px; height:34px;"><span class="name">ARP</span></div>
+        <div class="state" style="left:348px; top:330px; width:96px;">DISABLED</div>
+        <div class="ctl btn-ctl hue1 dim" style="left:348px; top:344px; width:96px; height:34px;"><span class="name">ARP</span></div>
+        <div class="state" style="left:454px; top:330px; width:96px;">NO DEVICE</div>
+        <div class="ctl btn-ctl hue1 offline" style="left:454px; top:344px; width:96px; height:34px;"><span class="name">ARP</span></div>
+
+        <div class="state" style="left:640px; top:330px; width:96px;">PAD AT REST</div>
+        <div class="ctl btn-ctl pad hue2" style="left:640px; top:344px; width:96px; height:34px;"><span class="name">HAT</span></div>
+        <div class="state" style="left:748px; top:330px; width:96px;">PAD, LIT</div>
+        <div class="ctl btn-ctl pad hue2 on" style="left:748px; top:344px; width:96px; height:34px;"><span class="name">HAT</span></div>
+        <div class="state" style="left:856px; top:330px; width:96px;">PAD, HELD</div>
+        <div class="ctl btn-ctl pad hue2 held" style="left:856px; top:344px; width:96px; height:34px;"><span class="name">HAT</span></div>
+
+        <div class="measure" style="left:20px; top:396px; width:960px;">
+            <b>Why the words need a halo.</b> The picture is bright where the sun sets: white print on the bare horizon measures <span class="num">2.43 : 1</span>. On a section's dark glass it is <span class="num">10.26</span> and on a plate <span class="num">14.19</span>, so every word on this page sits on glass. A customer's Text control can go anywhere, though, so ask 1 puts a soft halo of the sky's darkest violet behind anything printed straight on the deck: <span class="num">9.08 : 1</span> at the brightest point.
+        </div>
+    </div>
+</div>
+
+<div class="swatches">
+    <div style="background:#140A2E; color:#F3EAFF">#140A2E <span>Sky, top</span></div>
+    <div style="background:#3A1258; color:#F3EAFF">#3A1258 <span>Sky</span></div>
+    <div style="background:#FF6A4D; color:#170D2B">#FF6A4D <span>Horizon</span></div>
+    <div style="background:#1C0B30; color:#F3EAFF">#1C0B30 <span>Ground</span></div>
+    <div style="background:#170D2B; color:#F3EAFF">#170D2B <span>Glass, ink on lit</span></div>
+    <div style="background:#F3EAFF; color:#170D2B">#F3EAFF <span>Print</span></div>
+    <div style="background:#C4B3E4; color:#170D2B">#C4B3E4 <span>Dim print</span></div>
+    <div style="background:#FF3FA4; color:#170D2B">#FF3FA4 <span>Pink</span></div>
+    <div style="background:#2DE2E6; color:#170D2B">#2DE2E6 <span>Cyan</span></div>
+    <div style="background:#FFD23F; color:#170D2B">#FFD23F <span>Sun</span></div>
+    <div style="background:#FF7B39; color:#170D2B">#FF7B39 <span>Orange</span></div>
+    <div style="background:#A55CFF; color:#170D2B">#A55CFF <span>Violet</span></div>
+    <div style="background:#46F2A0; color:#170D2B">#46F2A0 <span>Mint</span></div>
+</div>
+
+<div class="costgrid">
+    <div class="cost">
+        <h4><span class="yes">Built</span> &mdash; what the engine already does for this road</h4>
+        <b>A picture for the deck</b>, fitted to the page without stretching, so the sun stays round (<span class="mono">deck</span> image). <b>Dark glass</b> plates and sections (<span class="mono">glassColor</span>, <span class="mono">glassTintPercent</span> 90, <span class="mono">panelFill</span> color). <b>Neon</b>: glow, arcs that glow (<span class="mono">arcGlow</span>), a white-hot core down every value (<span class="mono">valueCorePercent</span>) and words that glow in their own color (<span class="mono">neonLetters</span>). <b>Pads that light up in their color</b> with dark violet ink (<span class="mono">padFillWhenOnPercent</span> 100, <span class="mono">onInkColor</span>), and switches that light only their edge (<span class="mono">fillWhenOnPercent</span> 0). Section names cut into the top line (<span class="mono">sectionHeader</span> notched). Readouts and the XY field as dark windows (<span class="mono">wellFillsControl</span>). Meter zones in mint, sun and pink (<span class="mono">meterSlots</span>). A warning in the picker (<span class="mono">cautionResourceKey</span>).
+    </div>
+    <div class="cost">
+        <h4><span class="no">Needs</span> &mdash; a halo, chrome, and a road that moves</h4>
+        <b>Words on the deck have nothing behind them</b>, so on a bright picture they can vanish. Here they get a soft halo. <b>A cap has two colors and a smooth blend between them</b>; chrome needs a hard line through the middle, which two colors cannot make. <b>Names are ink or neon</b>; here the section names are chrome too. <b>The grid is part of the picture</b>, so it stands still; the engine would have to draw it to make it move. That last one is optional.
+    </div>
+    <div class="cost">
+        <h4>What it costs</h4>
+        <b>A picture is a lot to put behind a control surface.</b> The sun pulls the eye to the middle, so a layout with its controls in the middle hides the best part. <b>The horizon is bright</b>: <span class="mono">2.43 : 1</span> for white print. Every word here sits on glass; until ask 1, the warning in the picker says to keep words off the horizon. <b>It is a night theme</b>, made for a dark room. <b>The six neons are the easiest set in this round for color-blind players</b>: the closest pair is sun and orange, delta E 20.7 for a green-blind (deutan) player, and orange and mint, 33.2 for a red-blind (protan) one. A lit switch takes dark violet ink on every color, 4.94 to 12.88 : 1.
+    </div>
+</div>
+
+<div class="asks">
+    <h4>Four asks, smallest first. Each is independent; the last is optional.</h4>
+    <table>
+        <tr><th></th><th>Ask</th><th>Why Night Drive needs it</th><th>Without it</th></tr>
+        <tr>
+            <td class="n">1</td>
+            <td class="ask"><b>A halo behind words on the deck.</b> Anything printed straight on the deck, rather than on a plate or a section, gets a soft halo in a color the theme names. Here it is the sky's darkest violet at 65 percent.</td>
+            <td>A picture has bright places, and a customer can put a Text control anywhere. White on the bare horizon is 2.43 : 1; on the halo it is 9.08. Offworld and every customer's own picture get the same protection.</td>
+            <td class="without">The warning in the picker says to keep words off the horizon, and the layout's author has to.</td>
+        </tr>
+        <tr>
+            <td class="n">2</td>
+            <td class="ask"><b>Chrome caps.</b> Knob caps and fader caps drawn in chrome: a gradient with a hard line through the middle, sky above it and dark ground with a warm reflection below, in stops the theme names.</td>
+            <td>Chrome is half of this look, and the hard horizon line is what makes metal read as polished. Two colors blended smoothly read as plastic.</td>
+            <td class="without">A smooth light to dark cap, from the two cap colors the engine has.</td>
+        </tr>
+        <tr>
+            <td class="n">3</td>
+            <td class="ask"><b>Chrome letters.</b> Section names and the words on a Text control filled with the same chrome, in italic, on a dark badge so the dark line through them never meets a dark sky.</td>
+            <td>The chrome lettering is the other half of the look, and it is what a title in this style is.</td>
+            <td class="without">The names in neon, which the engine already does.</td>
+        </tr>
+        <tr>
+            <td class="n">4</td>
+            <td class="ask"><b>A moving floor, optional.</b> The engine draws the grid itself, in the picture's perspective, and rolls it slowly toward the viewer. It stands still when Windows asks for fewer animations, the way the rain does.</td>
+            <td>The grid sliding toward the sun is what makes it a drive. It would be the only thing on the page that moves on its own, which is why it is optional and last.</td>
+            <td class="without">The grid in the picture, standing still. Only the motion is lost.</td>
+        </tr>
+    </table>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>What I left out on purpose.</b> Palm trees, mountains and a car. They are pictures of things, and a deck picture should be a place, not a scene; a customer can still use their own. <b>The name:</b> this sunset belongs to nobody, and I kept away from the name of the arcade game that made it famous. The type in the title is the layout's choice: Segoe UI Variable in chrome, and Segoe Script in neon, both in Windows. <b>Where I was honest rather than faithful:</b> the real look puts chrome on everything. Here chrome is only on what you grab, so it always means "hold this", and every value is neon, so it always means "this is where it is". Every color was measured.
+</p>
+
+</div>
+</body>
+</html>

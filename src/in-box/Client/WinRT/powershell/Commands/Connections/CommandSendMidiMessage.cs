@@ -32,12 +32,12 @@ namespace WindowsMidiServices
 
             if (Windows.Devices.Midi2.MidiEndpointConnection.SendMessageSucceeded(result))
             {
-                WriteVerbose($"MIDI message with {Words.Length} UMP words sent with timestamp {Timestamp}.");
+                WriteVerbose(Format(Strings.MessageSentFormat, Words.Length, Timestamp));
                 return;
             }
 
             WriteNonTerminating(
-                new InvalidOperationException($"The MIDI message was not sent. Send result: {result}."),
+                new InvalidOperationException(Format(Strings.MessageNotSentFormat, result)),
                 "MidiMessageSendFailed",
                 ErrorCategory.WriteError,
                 result);

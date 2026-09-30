@@ -37,6 +37,8 @@ Start here for anything to do with RTP-MIDI. All members are static.
 | `GetConfiguredClients()` | Returns a `MidiRtpConfiguredClient` for every client entry, connected or not |
 | `GetPendingRemoteClients()` | Returns a `MidiRtpPendingRemoteClient` for each remote device waiting for someone to decide. Call it every few seconds to keep an approval screen up to date |
 | `GetAdvertisedHosts()` | Returns a `MidiRtpAdvertisedHost` for each RTP-MIDI device advertised on the local network right now, including this PC's own hosts |
+| `GetSavedHosts()` | Returns a [MidiRtpSavedHost]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpSavedHost/) for every host saved in the configuration file, with its saved allow and deny decisions. Works even when the service isn't running |
+| `GetSavedClients()` | Returns a [MidiRtpSavedClient]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpSavedClient/) for every client saved in the configuration file. Works even when the service isn't running |
 
 ## Remarks
 
@@ -44,4 +46,6 @@ All the `Async` methods are truly asynchronous, and none of them throw exception
 
 Everything these methods change is in the running service only. To keep a host, a client, or a decision after the service restarts, also save it with `MidiServiceTransportPluginConfigManager.SaveUpdate`. See the [namespace overview]({{ site.baseurl }}/sdk-reference/Transports/Rtp/).
 
-The service watches the network for advertised RTP-MIDI devices all the time, so `GetAdvertisedHosts()` answers right away. Each `Get` method returns a copy taken when you called it, not a list that updates itself. Call it again to refresh. When the transport isn't installed, or the service isn't running, they return empty lists.
+`GetConfiguredHosts` and `GetConfiguredClients` report what the running service holds now. `GetSavedHosts` and `GetSavedClients` report what's saved in the configuration file, which is what the service creates the next time it starts. An entry can be one without the other. Match the two lists on `HostId` or `ClientId`.
+
+The service watches the network for advertised RTP-MIDI devices all the time, so `GetAdvertisedHosts()` answers right away. Each `Get` method returns a copy taken when you called it, not a list that updates itself. Call it again to refresh. When the transport isn't installed, or the service isn't running, they return empty lists. The exceptions are `GetSavedHosts` and `GetSavedClients`, which read the configuration file instead of asking the service.

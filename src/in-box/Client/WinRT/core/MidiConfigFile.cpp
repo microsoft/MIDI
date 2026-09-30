@@ -31,6 +31,9 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             { L"devices", L"deviceId" },
         };
 
+        // Network MIDI 2.0 saves changes made after an entry was created here, shaped like create
+        constexpr std::wstring_view SavedEntryChangesKey{ L"updateEntries" };
+
         constexpr size_t IndentSpaces = 4;
 
         // a config file far larger than this is not something we wrote
@@ -38,6 +41,9 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
         constexpr uint32_t SharingRetryCount = 20;
         constexpr uint32_t SharingRetryWaitMilliseconds = 100;
+
+        // A read which lands while a save is rewriting the file sees something that does not parse
+        constexpr uint32_t ReadRetryCount = 3;
 
         std::wstring_view IdentityKeyForArray(_In_ std::wstring_view const arrayKey) noexcept
         {
@@ -650,6 +656,127 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             }
         }
 
+        // Entry keys are mostly GUIDs, which writers spell with or without braces and in either case
+        std::wstring EntryKeyForComparison(_In_ std::wstring_view const key) noexcept
+        {
+            try
+            {
+                auto text = internal::ToUpperTrimmedWStringCopy(std::wstring{ key });
+
+                if (text.size() >= 2 && text.front() == L'{' && text.back() == L'}')
+                {
+                    text = text.substr(1, text.size() - 2);
+                }
+
+                return text;
+            }
+            catch (...)
+            {
+                return {};
+            }
+        }
+
+        // The key of the child object with this name as the parent spells it. Empty when none.
+        winrt::hstring FindChildObjectKey(
+            _In_ json::JsonObject const& parent,
+            _In_ std::wstring_view const key) noexcept
+        {
+            try
+            {
+                if (parent == nullptr)
+                {
+                    return {};
+                }
+
+                auto const wanted = EntryKeyForComparison(key);
+
+                for (auto const& pair : parent)
+                {
+                    if (EntryKeyForComparison(std::wstring_view{ pair.Key() }) != wanted)
+                    {
+                        continue;
+                    }
+
+                    auto const value = pair.Value();
+
+                    if (value != nullptr && value.ValueType() == json::JsonValueType::Object)
+                    {
+                        return pair.Key();
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return {};
+        }
+
+        // False when any required entry is missing from what is saved. Along each path, the
+        // incoming keys are respelled the way the file spells them, so the merge changes the
+        // saved entry instead of adding a second copy of it under different casing.
+        bool RequiredEntriesAreSaved(
+            _In_ json::JsonObject const& persistedSection,
+            _In_ json::JsonObject const& incomingSection,
+            _In_ std::vector<std::vector<std::wstring>> const& requiredEntryPaths) noexcept
+        {
+            try
+            {
+                for (auto const& path : requiredEntryPaths)
+                {
+                    if (path.empty())
+                    {
+                        return false;
+                    }
+
+                    json::JsonObject persisted{ persistedSection };
+                    json::JsonObject incoming{ incomingSection };
+
+                    for (auto const& segment : path)
+                    {
+                        auto const persistedKey = FindChildObjectKey(persisted, segment);
+
+                        if (persistedKey.empty())
+                        {
+                            return false;
+                        }
+
+                        persisted = persisted.GetNamedObject(persistedKey);
+
+                        if (incoming == nullptr)
+                        {
+                            continue;
+                        }
+
+                        auto const incomingKey = FindChildObjectKey(incoming, segment);
+
+                        // the change sits beside this entry rather than inside it
+                        if (incomingKey.empty())
+                        {
+                            incoming = nullptr;
+                            continue;
+                        }
+
+                        auto const child = incoming.GetNamedObject(incomingKey);
+
+                        if (incomingKey != persistedKey)
+                        {
+                            incoming.Remove(incomingKey);
+                            incoming.SetNamedValue(persistedKey, child);
+                        }
+
+                        incoming = child;
+                    }
+                }
+
+                return true;
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
+
         void MergeTransportSection(
             _In_ json::JsonObject const& persistedSection,
             _In_ json::JsonObject const& incomingSection) noexcept
@@ -696,6 +823,17 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                             if (createValue != nullptr && createValue.ValueType() == json::JsonValueType::Object)
                             {
                                 ApplyRemoval(createValue.GetObject(), removeValue);
+                            }
+                        }
+
+                        // the changes saved for an entry go with it, rather than being left behind
+                        if (!handledAsKeyedArray && persistedSection.HasKey(winrt::hstring{ SavedEntryChangesKey }))
+                        {
+                            auto const changesValue = persistedSection.GetNamedValue(winrt::hstring{ SavedEntryChangesKey });
+
+                            if (changesValue != nullptr && changesValue.ValueType() == json::JsonValueType::Object)
+                            {
+                                ApplyRemoval(changesValue.GetObject(), removeValue);
                             }
                         }
 
@@ -854,6 +992,38 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
         std::mutex g_pathOverrideLock{};
         std::wstring g_pathOverride{};
+
+        // Matched without regard to case, the same way a save finds the section it merges into
+        json::JsonObject FindTransportSection(
+            _In_ json::JsonObject const& config,
+            _In_ winrt::guid const& transportId)
+        {
+            if (config == nullptr || !config.HasKey(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT))
+            {
+                return nullptr;
+            }
+
+            auto const pluginSettings = config.GetNamedValue(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
+
+            if (pluginSettings == nullptr || pluginSettings.ValueType() != json::JsonValueType::Object)
+            {
+                return nullptr;
+            }
+
+            auto const transportKey = internal::ToUpperTrimmedWStringCopy(internal::GuidToString(transportId));
+
+            for (auto const& pair : pluginSettings.GetObject())
+            {
+                if (internal::ToUpperTrimmedWStringCopy(std::wstring{ pair.Key() }) == transportKey &&
+                    pair.Value() != nullptr &&
+                    pair.Value().ValueType() == json::JsonValueType::Object)
+                {
+                    return pair.Value().GetObject();
+                }
+            }
+
+            return nullptr;
+        }
     }
 
 
@@ -1065,7 +1235,8 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
     _Use_decl_annotations_
     MidiConfigFileSaveOutcome MidiConfigFile::SaveTransportSection(
         winrt::guid const& transportId,
-        json::JsonObject const& transportSection) noexcept
+        json::JsonObject const& transportSection,
+        std::vector<std::vector<std::wstring>> const& requiredEntryPaths) noexcept
     {
         MidiConfigFileSaveOutcome outcome{};
 
@@ -1190,6 +1361,25 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                 return outcome;
             }
 
+            json::JsonObject incomingSection{ transportSection };
+
+            if (!requiredEntryPaths.empty())
+            {
+                // a copy, because the keys are respelled and the caller's object is theirs
+                if (!json::JsonObject::TryParse(transportSection.Stringify(), incomingSection) || incomingSection == nullptr)
+                {
+                    outcome.Result = svc::MidiServiceConfigSaveResult::ErrorProcessingConfigJson;
+                    return outcome;
+                }
+
+                // checked under the lock, so the entry cannot be removed between check and write
+                if (!RequiredEntriesAreSaved(persistedSection, incomingSection, requiredEntryPaths))
+                {
+                    outcome.Result = svc::MidiServiceConfigSaveResult::ErrorEntryNotSaved;
+                    return outcome;
+                }
+            }
+
             // Json has no comments, so this names the transport for anyone reading the file by
             // hand. It is refreshed on every save and is never read back by the service.
             if (!transportName.empty())
@@ -1199,7 +1389,7 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                     json::JsonValue::CreateStringValue(winrt::hstring{ transportName }));
             }
 
-            MergeTransportSection(persistedSection, transportSection);
+            MergeTransportSection(persistedSection, incomingSection);
 
             std::wstring text{};
             AppendPretty(text, config, 0);
@@ -1252,5 +1442,67 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             outcome.Result = svc::MidiServiceConfigSaveResult::ErrorUnexpected;
             return outcome;
         }
+    }
+
+    _Use_decl_annotations_
+    json::JsonObject MidiConfigFile::LoadTransportSection(
+        winrt::guid const& transportId) noexcept
+    {
+        try
+        {
+            auto const path = ResolvePath();
+
+            if (path.empty())
+            {
+                return nullptr;
+            }
+
+            for (uint32_t attempt = 0; attempt < ReadRetryCount; attempt++)
+            {
+                // A save holds the file for writing and shares only reading, so a reader must share
+                // writing too or it cannot open the file at all while a save is under way.
+                wil::unique_hfile file{ ::CreateFileW(
+                    path.c_str(),
+                    GENERIC_READ,
+                    FILE_SHARE_READ | FILE_SHARE_WRITE,
+                    nullptr,
+                    OPEN_EXISTING,
+                    FILE_ATTRIBUTE_NORMAL,
+                    nullptr) };
+
+                if (!file)
+                {
+                    auto const error = ::GetLastError();
+
+                    if (error != ERROR_SHARING_VIOLATION && error != ERROR_LOCK_VIOLATION)
+                    {
+                        return nullptr;
+                    }
+                }
+                else
+                {
+                    std::string bytes{};
+
+                    if (!ReadWholeFile(file.get(), bytes) || bytes.empty())
+                    {
+                        return nullptr;
+                    }
+
+                    json::JsonObject config{ nullptr };
+
+                    if (json::JsonObject::TryParse(winrt::hstring{ FromUtf8(bytes) }, config) && config != nullptr)
+                    {
+                        return FindTransportSection(config, transportId);
+                    }
+                }
+
+                ::Sleep(SharingRetryWaitMilliseconds);
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return nullptr;
     }
 }

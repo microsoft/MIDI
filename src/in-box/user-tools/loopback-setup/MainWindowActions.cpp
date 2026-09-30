@@ -6,8 +6,8 @@
 // ============================================================================
 //
 // Everything the customer can act on. The order is always the same: ask the service to make
-// the change, and only write it to the configuration file once the service has agreed. A
-// configuration entry for something the service refused would come back on the next restart.
+// the change, and only save it once the service has agreed. A saved entry for something the
+// service refused would come back on the next restart.
 
 #include "pch.h"
 #include "MainWindow.xaml.h"
@@ -158,6 +158,31 @@ namespace winrt::midiloopbacksetup::implementation
             {
                 return false;
             }
+        }
+
+        // Saves a change the service has already accepted. On failure, errorMessage says why.
+        bool SaveToConfiguration(
+            _In_ midi2svc::IMidiServiceTransportPluginConfig const& config,
+            _Out_ winrt::hstring& errorMessage) noexcept
+        {
+            errorMessage = winrt::hstring{};
+
+            try
+            {
+                auto const response = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                if (response != nullptr && response.Success())
+                {
+                    return true;
+                }
+
+                errorMessage = response == nullptr ? winrt::hstring{} : response.ErrorMessage();
+            }
+            catch (...)
+            {
+            }
+
+            return false;
         }
     }
 
@@ -434,13 +459,7 @@ namespace winrt::midiloopbacksetup::implementation
             }
             else if (persist)
             {
-                saved = native::LoopbackConfigFile::Current().MergeSection(
-                    native::LoopbackKind::Loopback, creationConfig.ConfigJson());
-
-                if (!saved)
-                {
-                    errorMessage = native::LoopbackConfigFile::Current().LastErrorMessage();
-                }
+                saved = SaveToConfiguration(creationConfig, errorMessage);
             }
         }
         MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to create the loopback.")
@@ -623,13 +642,7 @@ namespace winrt::midiloopbacksetup::implementation
             }
             else if (persist)
             {
-                saved = native::LoopbackConfigFile::Current().MergeSection(
-                    native::LoopbackKind::BasicLoopback, creationConfig.ConfigJson());
-
-                if (!saved)
-                {
-                    errorMessage = native::LoopbackConfigFile::Current().LastErrorMessage();
-                }
+                saved = SaveToConfiguration(creationConfig, errorMessage);
             }
         }
         MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to create the basic loopback.")
@@ -729,13 +742,7 @@ namespace winrt::midiloopbacksetup::implementation
             }
             else
             {
-                saved = native::LoopbackConfigFile::Current().MergeSection(
-                    native::LoopbackKind::Loopback, creationConfig.ConfigJson());
-
-                if (!saved)
-                {
-                    errorMessage = native::LoopbackConfigFile::Current().LastErrorMessage();
-                }
+                saved = SaveToConfiguration(creationConfig, errorMessage);
             }
         }
         MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to create the default loopback.")
@@ -820,13 +827,7 @@ namespace winrt::midiloopbacksetup::implementation
             }
             else
             {
-                saved = native::LoopbackConfigFile::Current().MergeSection(
-                    native::LoopbackKind::BasicLoopback, creationConfig.ConfigJson());
-
-                if (!saved)
-                {
-                    errorMessage = native::LoopbackConfigFile::Current().LastErrorMessage();
-                }
+                saved = SaveToConfiguration(creationConfig, errorMessage);
             }
         }
         MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to create the default basic loopback.")
@@ -920,7 +921,6 @@ namespace winrt::midiloopbacksetup::implementation
         }
 
         auto const isPersisted = item.IsPersisted();
-        auto const associationKey = item.AssociationId();
 
         item.IsBusy(true);
 
@@ -943,6 +943,16 @@ namespace winrt::midiloopbacksetup::implementation
 
                 applied = response != nullptr && response.Success();
                 errorMessage = response == nullptr ? winrt::hstring{} : response.ErrorMessage();
+
+                // Only a saved loopback has somewhere to record this. A transient one is muted
+                // live and that is all it can be.
+                if (applied && isPersisted)
+                {
+                    midi2bloop::MidiBasicLoopbackUpdateConfig update{ associationId };
+                    update.IsMuted(mute);
+
+                    saved = SaveToConfiguration(update, errorMessage);
+                }
             }
             else
             {
@@ -952,17 +962,13 @@ namespace winrt::midiloopbacksetup::implementation
 
                 applied = response != nullptr && response.Success();
                 errorMessage = response == nullptr ? winrt::hstring{} : response.ErrorMessage();
-            }
 
-            // Only a loopback the file knows about has somewhere to record this. A transient
-            // one is muted live and that is all it can be.
-            if (applied && isPersisted)
-            {
-                saved = native::LoopbackConfigFile::Current().SetMuted(kind, associationKey, mute);
-
-                if (!saved)
+                if (applied && isPersisted)
                 {
-                    errorMessage = native::LoopbackConfigFile::Current().LastErrorMessage();
+                    midi2loop::MidiLoopbackUpdateConfig update{ associationId };
+                    update.IsMuted(mute);
+
+                    saved = SaveToConfiguration(update, errorMessage);
                 }
             }
         }
@@ -1085,7 +1091,7 @@ namespace winrt::midiloopbacksetup::implementation
             co_return;
         }
 
-        auto const associationKey = item.AssociationId();
+        auto const isPersisted = item.IsPersisted();
 
         item.IsBusy(true);
 
@@ -1108,6 +1114,12 @@ namespace winrt::midiloopbacksetup::implementation
 
                 removed = response != nullptr && response.Success();
                 errorMessage = response == nullptr ? winrt::hstring{} : response.ErrorMessage();
+
+                // a transient loopback has no saved entry to remove
+                if (removed && isPersisted)
+                {
+                    saved = SaveToConfiguration(removalConfig, errorMessage);
+                }
             }
             else
             {
@@ -1117,15 +1129,10 @@ namespace winrt::midiloopbacksetup::implementation
 
                 removed = response != nullptr && response.Success();
                 errorMessage = response == nullptr ? winrt::hstring{} : response.ErrorMessage();
-            }
 
-            if (removed)
-            {
-                saved = native::LoopbackConfigFile::Current().RemoveEntry(kind, associationKey);
-
-                if (!saved)
+                if (removed && isPersisted)
                 {
-                    errorMessage = native::LoopbackConfigFile::Current().LastErrorMessage();
+                    saved = SaveToConfiguration(removalConfig, errorMessage);
                 }
             }
         }
@@ -1386,52 +1393,6 @@ namespace winrt::midiloopbacksetup::implementation
             std::transform(b.begin(), b.end(), b.begin(), ::towlower);
 
             return a == b;
-        }
-
-        // The update travels as one object carrying an entry per endpoint, so the transport can
-        // check both names against each other before it writes either one.
-        json::JsonObject MergeUpdateEntries(
-            _In_ json::JsonObject const& first,
-            _In_ json::JsonObject const& second) noexcept
-        {
-            try
-            {
-                if (first == nullptr) return second;
-                if (second == nullptr) return first;
-
-                // wrapper keys the SDK's ConfigJson produces
-                winrt::hstring const settingsKey{ L"endpointTransportPluginSettings" };
-                winrt::hstring const updateKey{ L"update" };
-
-                auto firstSettings = first.GetNamedObject(settingsKey, nullptr);
-                auto secondSettings = second.GetNamedObject(settingsKey, nullptr);
-
-                if (firstSettings == nullptr || secondSettings == nullptr) return first;
-
-                for (auto const& transportPair : secondSettings)
-                {
-                    auto secondTransport = transportPair.Value().GetObject();
-                    auto firstTransport = firstSettings.GetNamedObject(transportPair.Key(), nullptr);
-
-                    if (secondTransport == nullptr || firstTransport == nullptr) continue;
-
-                    auto firstUpdates = firstTransport.GetNamedArray(updateKey, nullptr);
-                    auto secondUpdates = secondTransport.GetNamedArray(updateKey, nullptr);
-
-                    if (firstUpdates == nullptr || secondUpdates == nullptr) continue;
-
-                    for (auto const& entry : secondUpdates)
-                    {
-                        firstUpdates.Append(entry);
-                    }
-                }
-
-                return first;
-            }
-            catch (...)
-            {
-                return first;
-            }
         }
     }
 
@@ -1754,14 +1715,12 @@ namespace winrt::midiloopbacksetup::implementation
 
         bool const isBasic = (kind == native::LoopbackKind::BasicLoopback);
 
-        winrt::guid transportId{};
-        json::JsonObject payload{ nullptr };
+        winrt::guid associationId{};
 
-        winrt::hstring nameA{};
-        winrt::hstring nameB{};
-        winrt::hstring descriptionA{};
-        winrt::hstring descriptionB{};
-        winrt::hstring image{ m_pendingEditImage };
+        if (item == nullptr || !TryParseAssociationId(item.AssociationId(), associationId))
+        {
+            co_return;
+        }
 
         // Sent only when the transport can watch and the customer actually changed it, so an edit
         // of a name never touches the setting.
@@ -1781,49 +1740,53 @@ namespace winrt::midiloopbacksetup::implementation
         {
         }
 
+        midi2loop::MidiLoopbackUpdateConfig loopbackUpdate{ nullptr };
+        midi2bloop::MidiBasicLoopbackUpdateConfig basicUpdate{ nullptr };
+
         try
         {
+            auto const image = m_pendingEditImage;
+
             if (isBasic)
             {
-                transportId = midi2bloop::MidiBasicLoopbackManager::TransportId();
+                basicUpdate = midi2bloop::MidiBasicLoopbackUpdateConfig{ associationId };
 
-                nameA = TextOf(EditBasicLoopbackNameTextBox());
-                descriptionA = TextOf(EditBasicLoopbackDescriptionTextBox());
+                basicUpdate.Name(TextOf(EditBasicLoopbackNameTextBox()));
+                basicUpdate.Description(TextOf(EditBasicLoopbackDescriptionTextBox()));
+                basicUpdate.ImageFileName(image);
 
-                midi2svc::MidiServiceEndpointCustomizationConfig config{ transportId, nameA, descriptionA, image };
-
-                midi2svc::MidiServiceConfigEndpointMatchCriteria match{};
-                match.EndpointDeviceId(item.EndpointDeviceIdA());
-                config.MatchCriteria(match);
-
-                payload = config.ConfigJson();
+                if (protectionChanged)
+                {
+                    basicUpdate.FeedbackProtection(wantProtection ?
+                        midi2bloop::MidiBasicLoopbackFeedbackProtection::Mute :
+                        midi2bloop::MidiBasicLoopbackFeedbackProtection::Off);
+                }
             }
             else
             {
-                transportId = midi2loop::MidiLoopbackManager::TransportId();
+                // one update for both sides, so the transport sees the two names together
+                loopbackUpdate = midi2loop::MidiLoopbackUpdateConfig{ associationId };
 
-                nameA = TextOf(EditLoopbackNameATextBox());
-                nameB = TextOf(EditLoopbackNameBTextBox());
-                descriptionA = TextOf(EditLoopbackDescriptionATextBox());
-                descriptionB = TextOf(EditLoopbackDescriptionBTextBox());
+                loopbackUpdate.EndpointAName(TextOf(EditLoopbackNameATextBox()));
+                loopbackUpdate.EndpointADescription(TextOf(EditLoopbackDescriptionATextBox()));
+                loopbackUpdate.EndpointBName(TextOf(EditLoopbackNameBTextBox()));
+                loopbackUpdate.EndpointBDescription(TextOf(EditLoopbackDescriptionBTextBox()));
 
-                midi2svc::MidiServiceEndpointCustomizationConfig configA{ transportId, nameA, descriptionA, image };
-                midi2svc::MidiServiceConfigEndpointMatchCriteria matchA{};
-                matchA.EndpointDeviceId(item.EndpointDeviceIdA());
-                configA.MatchCriteria(matchA);
+                // the pair shares one picture
+                loopbackUpdate.EndpointAImageFileName(image);
+                loopbackUpdate.EndpointBImageFileName(image);
 
-                midi2svc::MidiServiceEndpointCustomizationConfig configB{ transportId, nameB, descriptionB, image };
-                midi2svc::MidiServiceConfigEndpointMatchCriteria matchB{};
-                matchB.EndpointDeviceId(item.EndpointDeviceIdB());
-                configB.MatchCriteria(matchB);
-
-                // one payload, so the transport sees both names together
-                payload = MergeUpdateEntries(configA.ConfigJson(), configB.ConfigJson());
+                if (protectionChanged)
+                {
+                    loopbackUpdate.FeedbackProtection(wantProtection ?
+                        midi2loop::MidiLoopbackFeedbackProtection::Mute :
+                        midi2loop::MidiLoopbackFeedbackProtection::Off);
+                }
             }
         }
         MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to prepare the loopback edit.")
 
-        if (payload == nullptr)
+        if (loopbackUpdate == nullptr && basicUpdate == nullptr)
         {
             co_return;
         }
@@ -1832,68 +1795,36 @@ namespace winrt::midiloopbacksetup::implementation
 
         auto weak = get_weak();
         auto queue = DispatcherQueue();
-        auto const associationKey = item.AssociationId();
         auto const isPersisted = item.IsPersisted();
 
         co_await winrt::resume_background();
 
         bool applied{ false };
         bool saved{ false };
-        winrt::hstring errorMessage{};
 
         try
         {
-            auto const response = midi2svc::MidiServiceTransportPluginConfigManager::SendUpdate(transportId, payload);
-
-            applied = response != nullptr &&
-                response.Status() == midi2svc::MidiServiceConfigResponseStatus::Success;
-
-            if (!applied)
+            if (isBasic)
             {
-                errorMessage = response == nullptr ? winrt::hstring{} : response.ResponseJson().Stringify();
+                auto const response = midi2bloop::MidiBasicLoopbackManager::UpdateLoopback(basicUpdate);
+
+                applied = response != nullptr && response.Success();
             }
             else
             {
-                // The endpoint is user-owned, so the entry it was created from is rewritten
-                // rather than a separate customization being stored beside it.
-                saved = native::LoopbackConfigFile::Current().UpdateEntryDetails(
-                    kind, associationKey, nameA, descriptionA, nameB, descriptionB, image);
+                auto const response = midi2loop::MidiLoopbackManager::UpdateLoopback(loopbackUpdate);
+
+                applied = response != nullptr && response.Success();
             }
 
-            winrt::guid associationId{};
-
-            if (applied && protectionChanged && TryParseAssociationId(associationKey, associationId))
+            // a transient loopback has no saved entry to record the change in
+            if (applied && isPersisted)
             {
-                bool protectionApplied{ false };
+                winrt::hstring saveError{};
 
-                if (isBasic)
-                {
-                    auto const protectionResponse = midi2bloop::MidiBasicLoopbackManager::SetFeedbackProtection(
-                        associationId,
-                        wantProtection ?
-                            midi2bloop::MidiBasicLoopbackFeedbackProtection::Mute :
-                            midi2bloop::MidiBasicLoopbackFeedbackProtection::Off);
-
-                    protectionApplied = protectionResponse != nullptr && protectionResponse.Success();
-                }
-                else
-                {
-                    auto const protectionResponse = midi2loop::MidiLoopbackManager::SetFeedbackProtection(
-                        associationId,
-                        wantProtection ?
-                            midi2loop::MidiLoopbackFeedbackProtection::Mute :
-                            midi2loop::MidiLoopbackFeedbackProtection::Off);
-
-                    protectionApplied = protectionResponse != nullptr && protectionResponse.Success();
-                }
-
-                applied = protectionApplied;
-
-                // a transient loopback has no entry to record it in, and that is not a failure
-                if (protectionApplied && isPersisted)
-                {
-                    saved = native::LoopbackConfigFile::Current().SetFeedbackProtection(kind, associationKey, wantProtection) && saved;
-                }
+                saved = isBasic ?
+                    SaveToConfiguration(basicUpdate, saveError) :
+                    SaveToConfiguration(loopbackUpdate, saveError);
             }
         }
         MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to save the loopback edit.")
@@ -1952,7 +1883,7 @@ namespace winrt::midiloopbacksetup::implementation
     {
         try
         {
-            std::vector<winrt::hstring> ordered{};
+            std::vector<std::wstring> ordered{};
 
             auto& sessionOrder = kind == native::LoopbackKind::BasicLoopback ?
                 m_basicLoopbackOrder : m_loopbackOrder;
@@ -1971,14 +1902,19 @@ namespace winrt::midiloopbacksetup::implementation
                 row.DisplayOrder(position);
 
                 sessionOrder.insert_or_assign(std::wstring{ row.AssociationId() }, position);
-                ordered.push_back(row.AssociationId());
+                ordered.push_back(std::wstring{ row.AssociationId() });
 
                 position++;
             }
 
-            // The file write is best effort: a loopback which was never saved has no entry to
-            // record a position in, and the session order still holds until the tool is closed.
-            native::LoopbackConfigFile::Current().SetDisplayOrder(kind, ordered);
+            if (kind == native::LoopbackKind::BasicLoopback)
+            {
+                native::AppSettings::Current().BasicLoopbackOrder(ordered);
+            }
+            else
+            {
+                native::AppSettings::Current().LoopbackOrder(ordered);
+            }
         }
         MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to save the new order.")
     }

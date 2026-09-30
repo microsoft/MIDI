@@ -41,3 +41,10 @@ Paging only moves forward through the list, never back.
 | Static Method | Description |
 | ------------- | ----------- |
 | `FromJson(json)` | Reads a list from the resource's JSON array |
+
+## Examples
+
+These ask for the General MIDI synthesizer's program lists a page at a time with `GetProgramListPageAsync`, following `HasMoreEntries` and `NextOffset`, and group the entries by category.
+
+* [C++ Sample: reading channel and program lists](https://github.com/microsoft/MIDI/blob/main/samples/cpp-winrt/capability-inquiry-program-list/main_capability_inquiry_program_list.cpp)
+* [C# Sample: reading channel and program lists](https://github.com/microsoft/MIDI/blob/main/samples/csharp-net/capability-inquiry-program-list/Program.cs)

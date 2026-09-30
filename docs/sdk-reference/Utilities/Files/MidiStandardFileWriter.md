@@ -71,3 +71,10 @@ if (result.Succeeded())
     }
 }
 ```
+
+## Samples
+
+These build a short sequence, save it in your temporary folder, and read it back to compare. The sequence includes a MIDI 2.0 controller, which is written with its value scaled to 7 bits, and two per-note pitch bends, which MIDI 1.0 can't hold and `SkippedEventCount` counts. They also write the same sequence as a single track, to memory instead of to a file.
+
+* [C++/WinRT midi-file-writer](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/midi-file-writer)
+* [C# midi-file-writer](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/midi-file-writer)

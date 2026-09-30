@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - Visor theme</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="31-visor.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .chiprow { position: absolute; left: 14px; top: 13px; display: flex; gap: 6px; align-items: center; }
+    .tchip {
+        height: 26px; padding: 0 11px; border-radius: 13px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: var(--text3);
+        background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .tchip i { width: 11px; height: 11px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    .tchip.new { color: #D2F1FF; font-weight: 600; letter-spacing: .14em; border-radius: 0; background: #040A10; box-shadow: inset 0 0 0 1px rgba(78,214,255,.70), 0 0 8px rgba(78,214,255,.30); }
+    .tchip.new i { border-radius: 50%; background: none; box-shadow: inset 0 0 0 1.5px #4ED6FF; }
+
+    .deck {
+        position: absolute; left: 14px; top: 54px; width: 972px; height: 510px;
+        border-radius: 8px; overflow: hidden;
+    }
+    .decktag { position: absolute; left: 14px; top: 576px; font-size: 11px; color: var(--text3); }
+    .decktag b { color: var(--text2); font-weight: 600; }
+
+    .rhead { position: absolute; font-size: 11px; font-weight: 700; letter-spacing: .16em; color: #D2F1FF; }
+    .kcap { position: absolute; text-align: center; font-size: 10.5px; line-height: 1.45; color: #86A8BE; }
+    .kcap b { display: block; color: #D2F1FF; font-weight: 700; font-size: 11px; margin-bottom: 2px; }
+    .state { position: absolute; font-size: 9px; font-weight: 700; letter-spacing: .16em; color: #86A8BE; text-align: center; }
+    .measure { position: absolute; font-size: 11.5px; line-height: 1.6; color: rgba(210,241,255,.78); }
+    .measure b { color: #D2F1FF; font-weight: 700; }
+    .measure .num { font-family: "Cascadia Mono","Consolas",monospace; color: #D2F1FF; font-weight: 700; white-space: nowrap; }
+
+    .swatches { display: flex; gap: 0; width: 1000px; border-radius: 7px; overflow: hidden; margin-top: 14px; }
+    .swatches div {
+        flex: 1; height: 58px; display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 6px 7px; font-size: 9.5px; font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .swatches div span { display: block; font-family: "Segoe UI Variable Text","Segoe UI",sans-serif; font-size: 10px; opacity: .78; }
+
+    .costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; width: 1000px; margin-top: 12px; }
+    .cost {
+        border-radius: 7px; padding: 12px 14px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 11.5px; color: var(--text3); line-height: 1.55;
+    }
+    .cost h4 { margin: 0 0 7px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .cost b { color: var(--text2); font-weight: 600; }
+    .cost .yes { color: var(--success); font-weight: 600; }
+    .cost .no { color: var(--caution); font-weight: 600; }
+    .cost .mono { color: var(--accent); }
+
+    .asks { width: 1000px; margin-top: 11px; border-radius: 7px; padding: 12px 14px 6px 14px; box-sizing: border-box;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke); }
+    .asks h4 { margin: 0 0 8px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .asks table { width: 100%; border-collapse: collapse; font-size: 11.5px; line-height: 1.5; color: var(--text3); }
+    .asks th { text-align: left; font-weight: 600; color: var(--text2); padding: 0 10px 6px 0; border-bottom: 1px solid var(--divider); font-size: 11px; }
+    .asks td { vertical-align: top; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--divider); }
+    .asks tr:last-child td { border-bottom: none; }
+    .asks td.n { width: 18px; color: var(--caution); font-weight: 600; }
+    .asks td.ask { width: 290px; }
+    .asks td.ask b { color: var(--text); font-weight: 600; }
+    .asks td.without { width: 220px; }
+    .asks .mono { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 31 &mdash; <b>Visor</b>, first proposed as Telemetry. <b>Why the new name:</b> to a lot of Windows users, "telemetry" means data collection, and a theme should not remind anyone of that. A visor is the glass in a pilot's helmet that a head-up display is drawn on, which is exactly this look. Vector, Wireframe and Hairline would fit as well. <b>The look:</b> thin light on a dark field. <b>Every control is four corners, not a box</b>, and only a control that is on has its corners closed into a frame. Knobs are rings of fine marks with a chevron riding the value, faders are rails pinched by two chevrons, and the XY field has a reticle. <b>Nothing is filled until it is on.</b></p>
+
+<!-- ============================================================= DECK -->
+<div class="board" style="height:600px;">
+
+    <div class="chiprow">
+        <div class="tchip"><i style="background:#4CE0FF"></i>Studio Dark</div>
+        <div class="tchip"><i style="background:#131414; box-shadow: inset 0 0 0 2px #35EE7A"></i>Airy System</div>
+        <div class="tchip"><i style="background:radial-gradient(circle at 40% 35%, #FF8A8C, #E3262B 60%, #7A1215)"></i>Insert Coin</div>
+        <div class="tchip"><i style="background:#008080; border-radius:0; box-shadow: 0 0 0 1px #000"></i>Chicago</div>
+        <div class="tchip"><i style="background:linear-gradient(180deg, #FFD23F, #FF7B39 55%, #FF3FA4); border-radius:50%"></i>Night Drive</div>
+        <div class="tchip new"><i></i>VISOR</div>
+        <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
+    </div>
+
+    <div class="deck surf tonal visor">
+
+        <div class="surftext h1" style="left:22px; top:10px; font-size:24px;">VISOR</div>
+        <div class="surftext small" style="left:162px; top:21px;">LIVE SET &nbsp;&middot;&nbsp; FLIGHT DECK</div>
+
+        <div class="ctl vr hue1" style="left:372px; top:6px; width:104px; height:44px;"><span class="cap2">TEMPO</span><span class="digits">126.0</span></div>
+        <div class="ctl vr hue6" style="left:486px; top:6px; width:124px; height:44px;"><span class="cap2">POSITION</span><span class="digits">012.3.1</span></div>
+
+        <div class="pagetabs" style="right:22px; top:16px; gap:18px;">
+            <div class="tab sel">FLIGHT</div>
+            <div class="tab">ORBIT</div>
+            <div class="tab">LANDING</div>
+        </div>
+
+        <div class="surfrule" style="left:14px; top:58px; width:944px;"></div>
+
+        <!-- ======================================== SYNTH -->
+        <div class="ctlpanel hue1" style="left:14px; top:70px; width:300px; height:426px;"><div class="ptitle">SYNTH</div></div>
+
+        <div class="ctl knob vk hue1" style="left:30px; top:100px; width:72px; height:72px;"><svg class="ticks" viewBox="0 0 100 100"><circle class="minor" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 360" transform="rotate(135 50 50)"/><circle class="major" cx="50" cy="50" r="45" pathLength="360" stroke-dasharray="2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 360" transform="rotate(135 50 50)"/></svg><div class="varc" style="--pct:.48turn"></div><div class="chev" style="transform:rotate(37.8deg)"><i></i></div><div class="hub"></div></div>
+        <div class="ctl knob vk hue5 held" style="left:128px; top:100px; width:72px; height:72px;"><svg class="ticks" viewBox="0 0 100 100"><circle class="minor" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 360" transform="rotate(135 50 50)"/><circle class="major" cx="50" cy="50" r="45" pathLength="360" stroke-dasharray="2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 360" transform="rotate(135 50 50)"/></svg><div class="varc" style="--pct:.225turn"></div><div class="chev" style="transform:rotate(-54deg)"><i></i></div><div class="kval">0.30</div></div>
+        <div class="ctl knob vk hue3" style="left:226px; top:100px; width:72px; height:72px;"><svg class="ticks" viewBox="0 0 100 100"><circle class="minor" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 360" transform="rotate(135 50 50)"/><circle class="major" cx="50" cy="50" r="45" pathLength="360" stroke-dasharray="2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 360" transform="rotate(135 50 50)"/></svg><div class="varc" style="--pct:.375turn"></div><div class="chev" style="transform:rotate(0deg)"><i></i></div><div class="hub"></div></div>
+        <div class="lbl" style="left:18px; top:180px; width:96px;">CUTOFF</div>
+        <div class="lbl" style="left:116px; top:180px; width:96px;">RESONANCE</div>
+        <div class="lbl" style="left:214px; top:180px; width:96px;">DRIVE</div>
+
+        <div class="ctl vxy hue5" style="left:30px; top:208px; width:268px; height:146px;">
+            <div class="grid"></div>
+            <div class="trail" style="left:44%; top:60%"></div><div class="trail" style="left:50%; top:53%"></div><div class="trail" style="left:56%; top:46%"></div>
+            <div class="cross h" style="top:38%"></div><div class="cross v" style="left:62%"></div>
+            <div class="ret" style="left:62%; top:38%"></div>
+            <div class="coords">X 0.62 &nbsp; Y 0.62</div>
+        </div>
+        <div class="lbl" style="left:30px; top:360px; width:268px;">FILTER SPACE</div>
+
+        <div class="ctl btn-ctl hue1 on" style="left:30px; top:386px; width:62px; height:30px;"><span class="name">SAW</span></div>
+        <div class="ctl btn-ctl hue1" style="left:99px; top:386px; width:62px; height:30px;"><span class="name">SQR</span></div>
+        <div class="ctl btn-ctl hue1" style="left:168px; top:386px; width:62px; height:30px;"><span class="name">TRI</span></div>
+        <div class="ctl btn-ctl hue1 dim" style="left:237px; top:386px; width:62px; height:30px;"><span class="name">NOISE</span></div>
+
+        <div class="ctl lamp hue2 on" style="left:32px; top:452px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:50px; top:453px;">GATE</div>
+        <div class="ctl lamp hue1 on" style="left:112px; top:452px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:130px; top:453px;">SYNC</div>
+        <div class="ctl lamp hue4" style="left:192px; top:452px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:210px; top:453px;">CLIP</div>
+
+        <!-- ======================================== SEQUENCE -->
+        <div class="ctlpanel hue2" style="left:330px; top:70px; width:312px; height:204px;"><div class="ptitle">SEQUENCE</div></div>
+
+        <div class="ctl steps hue2" style="left:346px; top:100px; width:280px; height:56px;">
+            <div class="row"><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on cur"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i></div>
+            <div class="row"><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i class="cur"></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i class="on"></i><i></i></div>
+        </div>
+
+        <div class="ctl btn-ctl hue2 on" style="left:346px; top:170px; width:62px; height:30px;"><span class="name">PLAY</span></div>
+        <div class="ctl btn-ctl hue6" style="left:418px; top:170px; width:62px; height:30px;"><span class="name">STOP</span></div>
+        <div class="ctl btn-ctl hue4 held" style="left:490px; top:170px; width:62px; height:30px;"><span class="name">REC</span></div>
+        <div class="ctl btn-ctl hue3 on" style="left:562px; top:170px; width:62px; height:30px;"><span class="name">LOOP</span></div>
+
+        <div class="ctl vf horiz hue2" style="left:346px; top:214px; width:280px; height:30px;"><div class="scale l"></div><div class="scale r"></div><div class="rail"></div><div class="val" style="width:calc((100% - 8px) * .36)"></div><div class="cap" style="left:calc(4px + (100% - 8px) * .36)"><i class="l"></i><i class="r"></i></div></div>
+        <div class="lbl" style="left:346px; top:250px; width:280px;">SWING</div>
+
+        <!-- ======================================== MIX -->
+        <div class="ctlpanel hue3" style="left:330px; top:290px; width:312px; height:206px;"><div class="ptitle">MIX</div></div>
+
+        <div class="ctl vf hue1" style="left:350px; top:318px; width:30px; height:136px;"><div class="scale l"></div><div class="scale r"></div><div class="rail"></div><div class="val" style="height:calc((100% - 8px) * .70)"></div><div class="cap" style="bottom:calc(4px + (100% - 8px) * .70)"><i class="l"></i><i class="r"></i></div></div>
+        <div class="ctl vm" style="left:388px; top:318px; width:6px; height:136px; --mh:136px;"><div class="lvl" style="height:62%"></div></div>
+        <div class="ctl vf hue2" style="left:424px; top:318px; width:30px; height:136px;"><div class="scale l"></div><div class="scale r"></div><div class="rail"></div><div class="val" style="height:calc((100% - 8px) * .55)"></div><div class="cap" style="bottom:calc(4px + (100% - 8px) * .55)"><i class="l"></i><i class="r"></i></div></div>
+        <div class="ctl vm" style="left:462px; top:318px; width:6px; height:136px; --mh:136px;"><div class="lvl" style="height:48%"></div></div>
+        <div class="ctl vf hue3" style="left:498px; top:318px; width:30px; height:136px;"><div class="scale l"></div><div class="scale r"></div><div class="rail"></div><div class="val" style="height:calc((100% - 8px) * .80)"></div><div class="cap" style="bottom:calc(4px + (100% - 8px) * .80)"><i class="l"></i><i class="r"></i></div></div>
+        <div class="ctl vm" style="left:536px; top:318px; width:6px; height:136px; --mh:136px;"><div class="lvl" style="height:92%"></div></div>
+        <div class="ctl vf hue5" style="left:572px; top:318px; width:30px; height:136px;"><div class="scale l"></div><div class="scale r"></div><div class="rail"></div><div class="val" style="height:calc((100% - 8px) * .40)"></div><div class="cap" style="bottom:calc(4px + (100% - 8px) * .40)"><i class="l"></i><i class="r"></i></div></div>
+        <div class="ctl vm" style="left:610px; top:318px; width:6px; height:136px; --mh:136px;"><div class="lvl" style="height:34%"></div></div>
+        <div class="lbl" style="left:335px; top:466px; width:74px;">SYNTH</div>
+        <div class="lbl" style="left:409px; top:466px; width:74px;">SEQ</div>
+        <div class="lbl" style="left:483px; top:466px; width:74px;">BASS</div>
+        <div class="lbl" style="left:557px; top:466px; width:74px;">PAD</div>
+
+        <!-- ======================================== DRUMS -->
+        <div class="ctlpanel hue4" style="left:658px; top:70px; width:300px; height:426px;"><div class="ptitle">DRUMS</div></div>
+
+        <div class="ctl btn-ctl hue4 on" style="left:674px; top:100px; width:62px; height:50px;"><span class="name">KICK</span></div>
+        <div class="ctl btn-ctl hue4" style="left:742px; top:100px; width:62px; height:50px;"><span class="name">SNARE</span></div>
+        <div class="ctl btn-ctl hue3" style="left:810px; top:100px; width:62px; height:50px;"><span class="name">CLAP</span></div>
+        <div class="ctl btn-ctl hue2 on" style="left:878px; top:100px; width:62px; height:50px;"><span class="name">HAT</span></div>
+        <div class="ctl btn-ctl hue5" style="left:674px; top:158px; width:62px; height:50px;"><span class="name">TOM L</span></div>
+        <div class="ctl btn-ctl hue5 held" style="left:742px; top:158px; width:62px; height:50px;"><span class="name">TOM H</span></div>
+        <div class="ctl btn-ctl hue3" style="left:810px; top:158px; width:62px; height:50px;"><span class="name">RIM</span></div>
+        <div class="ctl btn-ctl hue2" style="left:878px; top:158px; width:62px; height:50px;"><span class="name">OPEN</span></div>
+        <div class="ctl btn-ctl hue1" style="left:674px; top:216px; width:62px; height:50px;"><span class="name">PERC</span></div>
+        <div class="ctl btn-ctl hue1 offline" style="left:742px; top:216px; width:62px; height:50px;"><span class="name">SHAKER</span></div>
+        <div class="ctl btn-ctl hue6" style="left:810px; top:216px; width:62px; height:50px;"><span class="name">CRASH</span></div>
+        <div class="ctl btn-ctl hue6" style="left:878px; top:216px; width:62px; height:50px;"><span class="name">RIDE</span></div>
+
+        <div class="ctl knob vk hue4" style="left:684px; top:290px; width:60px; height:60px;"><svg class="ticks" viewBox="0 0 100 100"><circle class="minor" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 360" transform="rotate(135 50 50)"/><circle class="major" cx="50" cy="50" r="45" pathLength="360" stroke-dasharray="2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 360" transform="rotate(135 50 50)"/></svg><div class="varc" style="--pct:.315turn"></div><div class="chev" style="transform:rotate(-21.6deg)"><i></i></div><div class="hub"></div></div>
+        <div class="ctl knob vk hue3" style="left:778px; top:290px; width:60px; height:60px;"><svg class="ticks" viewBox="0 0 100 100"><circle class="minor" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 360" transform="rotate(135 50 50)"/><circle class="major" cx="50" cy="50" r="45" pathLength="360" stroke-dasharray="2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 360" transform="rotate(135 50 50)"/></svg><div class="varc" style="--pct:.525turn"></div><div class="chev" style="transform:rotate(54deg)"><i></i></div><div class="hub"></div></div>
+        <div class="ctl knob vk hue6" style="left:872px; top:290px; width:60px; height:60px;"><svg class="ticks" viewBox="0 0 100 100"><circle class="minor" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 360" transform="rotate(135 50 50)"/><circle class="major" cx="50" cy="50" r="45" pathLength="360" stroke-dasharray="2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 360" transform="rotate(135 50 50)"/></svg><div class="varc" style="--pct:.435turn"></div><div class="chev" style="transform:rotate(21.6deg)"><i></i></div><div class="hub"></div></div>
+        <div class="lbl" style="left:669px; top:360px; width:90px;">TUNE</div>
+        <div class="lbl" style="left:763px; top:360px; width:90px;">DECAY</div>
+        <div class="lbl" style="left:857px; top:360px; width:90px;">TONE</div>
+
+        <div class="ctl vr hue4" style="left:674px; top:392px; width:130px; height:46px;"><span class="cap2">PATTERN</span><span class="digits">A-07</span></div>
+        <div class="ctl vr hue3" style="left:812px; top:392px; width:128px; height:46px;"><span class="cap2">KIT</span><span class="digits">04</span></div>
+
+        <div class="ctl lamp hue1 on" style="left:676px; top:458px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:694px; top:459px;">MIDI IN</div>
+        <div class="ctl lamp hue2 on" style="left:776px; top:458px; width:12px; height:12px;"></div>
+        <div class="lbl left" style="left:794px; top:459px;">CLOCK</div>
+
+    </div>
+    <div class="decktag"><b>Visor</b> &mdash; thin light on a dark field: four corners for every control, closed only when it is on; fine scales, chevrons and a reticle; nothing filled until it is on</div>
+
+</div>
+
+<!-- ============================================= FOUR CORNERS -->
+<div class="board" style="height:372px; margin-top:13px;">
+
+    <div class="surf tonal visor" style="position:absolute; inset:0;">
+
+        <div class="rhead" style="left:30px; top:16px;">EVERY CONTROL IS FOUR CORNERS. ON CLOSES THEM.</div>
+
+        <div class="state" style="left:30px; top:50px; width:104px;">AT REST</div>
+        <div class="ctl btn-ctl hue1" style="left:30px; top:64px; width:104px; height:40px;"><span class="name">ARM</span></div>
+        <div class="state" style="left:150px; top:50px; width:104px;">ON</div>
+        <div class="ctl btn-ctl hue1 on" style="left:150px; top:64px; width:104px; height:40px;"><span class="name">ARM</span></div>
+        <div class="state" style="left:270px; top:50px; width:104px;">HELD</div>
+        <div class="ctl btn-ctl hue1 held" style="left:270px; top:64px; width:104px; height:40px;"><span class="name">ARM</span></div>
+        <div class="state" style="left:390px; top:50px; width:104px;">DISABLED</div>
+        <div class="ctl btn-ctl hue1 dim" style="left:390px; top:64px; width:104px; height:40px;"><span class="name">ARM</span></div>
+        <div class="state" style="left:510px; top:50px; width:104px;">NO DEVICE</div>
+        <div class="ctl btn-ctl hue1 offline" style="left:510px; top:64px; width:104px; height:40px;"><span class="name">ARM</span></div>
+
+        <div class="ctl btn-ctl hue1" style="left:30px; top:128px; width:60px; height:28px;"><span class="name">CYAN</span></div>
+        <div class="ctl btn-ctl hue2" style="left:100px; top:128px; width:60px; height:28px;"><span class="name">GREEN</span></div>
+        <div class="ctl btn-ctl hue3" style="left:170px; top:128px; width:60px; height:28px;"><span class="name">AMBER</span></div>
+        <div class="ctl btn-ctl hue4" style="left:240px; top:128px; width:60px; height:28px;"><span class="name">RED</span></div>
+        <div class="ctl btn-ctl hue5" style="left:310px; top:128px; width:60px; height:28px;"><span class="name">VIOLET</span></div>
+        <div class="ctl btn-ctl hue6" style="left:380px; top:128px; width:60px; height:28px;"><span class="name">ICE</span></div>
+        <div class="ctl btn-ctl hue1 on" style="left:30px; top:166px; width:60px; height:28px;"><span class="name">CYAN</span></div>
+        <div class="ctl btn-ctl hue2 on" style="left:100px; top:166px; width:60px; height:28px;"><span class="name">GREEN</span></div>
+        <div class="ctl btn-ctl hue3 on" style="left:170px; top:166px; width:60px; height:28px;"><span class="name">AMBER</span></div>
+        <div class="ctl btn-ctl hue4 on" style="left:240px; top:166px; width:60px; height:28px;"><span class="name">RED</span></div>
+        <div class="ctl btn-ctl hue5 on" style="left:310px; top:166px; width:60px; height:28px;"><span class="name">VIOLET</span></div>
+        <div class="ctl btn-ctl hue6 on" style="left:380px; top:166px; width:60px; height:28px;"><span class="name">ICE</span></div>
+        <div class="state" style="left:452px; top:138px; text-align:left;">AT REST</div>
+        <div class="state" style="left:452px; top:176px; text-align:left;">ON</div>
+
+        <div class="kcap" style="left:30px; top:210px; width:584px;"><b>Switch, pad, anything you press</b>its corners at rest, in its color at 60 percent; on, a closed frame with a wash inside, and the name keeps the print color</div>
+
+        <div class="ctl knob vk hue1" style="left:652px; top:46px; width:120px; height:120px;"><svg class="ticks" viewBox="0 0 100 100"><circle class="minor" cx="50" cy="50" r="46" pathLength="360" stroke-dasharray="1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 5.9 1.6 360" transform="rotate(135 50 50)"/><circle class="major" cx="50" cy="50" r="45" pathLength="360" stroke-dasharray="2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 27.6 2.4 360" transform="rotate(135 50 50)"/></svg><div class="varc" style="--pct:.495turn"></div><div class="chev" style="transform:rotate(43.2deg)"><i></i></div><div class="hub"></div></div>
+        <div class="ctl vf hue3" style="left:800px; top:40px; width:34px; height:150px;"><div class="scale l"></div><div class="scale r"></div><div class="rail"></div><div class="val" style="height:calc((100% - 8px) * .64)"></div><div class="cap" style="bottom:calc(4px + (100% - 8px) * .64)"><i class="l"></i><i class="r"></i></div></div>
+        <div class="ctl vxy hue2" style="left:852px; top:46px; width:128px; height:124px;">
+            <div class="grid"></div>
+            <div class="cross h" style="top:44%"></div><div class="cross v" style="left:40%"></div>
+            <div class="ret" style="left:40%; top:44%"></div>
+            <div class="coords">X 0.40 &nbsp; Y 0.56</div>
+        </div>
+        <div class="kcap" style="left:636px; top:210px; width:152px;"><b>Knob</b>fine marks, a longer one every fourth, and a chevron riding the value</div>
+        <div class="kcap" style="left:790px; top:210px; width:190px;"><b>Fader and XY</b>two chevrons pinch the rail; a reticle leaves the point itself clear</div>
+
+        <div class="measure" style="left:30px; top:270px; width:940px;">
+            <b>Why the corners are 60 percent at rest.</b> A resting corner measures <span class="num">3.42 to 6.75 : 1</span> on the deck and <span class="num">3.27</span> at its lit middle: enough to find every control, and quiet enough that forty of them do not turn the page into a grid of boxes. A lit line is <span class="num">7.86 to 18.16</span>. On closes the frame and lays a wash inside it, and the name keeps the print color, <span class="num">11.34 to 13.66 : 1</span>. So on never depends on telling one color from another: it is a closed frame among open corners.
+        </div>
+    </div>
+</div>
+
+<div class="swatches">
+    <div style="background:#040A10; color:#D2F1FF">#040A10 <span>Deck</span></div>
+    <div style="background:#08182A; color:#D2F1FF">#08182A <span>Lit middle</span></div>
+    <div style="background:#010306; color:#D2F1FF">#010306 <span>Corners</span></div>
+    <div style="background:#D2F1FF; color:#040A10">#D2F1FF <span>Print</span></div>
+    <div style="background:#86A8BE; color:#040A10">#86A8BE <span>Dim print, marks</span></div>
+    <div style="background:#4ED6FF; color:#040A10">#4ED6FF <span>Cyan</span></div>
+    <div style="background:#5CF5A8; color:#040A10">#5CF5A8 <span>Green</span></div>
+    <div style="background:#FFC857; color:#040A10">#FFC857 <span>Amber</span></div>
+    <div style="background:#FF805F; color:#040A10">#FF805F <span>Red</span></div>
+    <div style="background:#A993FF; color:#040A10">#A993FF <span>Violet</span></div>
+    <div style="background:#E8F7FF; color:#040A10">#E8F7FF <span>Ice</span></div>
+</div>
+
+<div class="costgrid">
+    <div class="cost">
+        <h4><span class="yes">Built</span> &mdash; what the engine already does for this display</h4>
+        A dark deck lit in the middle (<span class="mono">deck</span> gradient), a <b>fine dot grid</b> laid over it as a repeating picture (<span class="mono">imageRepeats</span>), and a <b>fall-off to the corners</b> (<span class="mono">vignettePercent</span>). <b>No plate and no shadow</b> (<span class="mono">glassTintPercent</span> 0, <span class="mono">plateElevation</span> 0). <b>Thin lines</b>: arcs two pixels wide (<span class="mono">arcThickness</span>) that glow (<span class="mono">arcGlow</span>), rims one pixel (<span class="mono">rimThickness</span>). <b>Marks round every knob</b> (<span class="mono">knobTickCount</span> 37) and a scale beside every fader (<span class="mono">faderScalePercent</span>). <b>A wash when on</b> (<span class="mono">fillWhenOnPercent</span> 16) with the name kept in the print color (<span class="mono">onInkColor</span>). Sections as captions in their own color with no fill (<span class="mono">sectionNameInHue</span>, <span class="mono">panelFill</span> none). Meter zones in green, amber and red (<span class="mono">meterSlots</span>), and ice as the sixth color.
+    </div>
+    <div class="cost">
+        <h4><span class="no">Needs</span> &mdash; corners, longer marks, chevrons</h4>
+        <b>A rim goes all the way round.</b> Here a control at rest is only its corners, and on closes them into a frame. <b>Every printed mark is the same length</b>, so a scale reads as a comb; here every fourth mark on a knob and every fifth beside a fader is longer. <b>A pointer is a line, a cap is a bar and a puck is a disc</b>, and all three cover the scale; here they are chevrons and a reticle that point at it instead.
+    </div>
+    <div class="cost">
+        <h4>What it costs</h4>
+        <b>Thin lines want a close screen or a big one.</b> At arm's length on a small tablet, corners one and a half pixels wide are hard to find. <b>Nothing is filled at rest</b>, so the corners alone say where a control is. That is quick once you know the page, and slower for somebody new to it. <b>It glows</b>, so it is made for a dark room. <b>The colors stay apart for color-blind players</b>: the closest pair is cyan and violet, delta E 19.6 for a green-blind (deutan) player, and cyan and ice, 24 for a red-blind (protan) one. Print reads at 16.82 : 1 and dim print at 7.91.
+    </div>
+</div>
+
+<div class="asks">
+    <h4>Three asks, largest first. Each is independent, and the page above uses all three.</h4>
+    <table>
+        <tr><th></th><th>Ask</th><th>Why Visor needs it</th><th>Without it</th></tr>
+        <tr>
+            <td class="n">1</td>
+            <td class="ask"><b>Corner brackets.</b> A control's edge drawn as four corners rather than a full outline, in its color at a strength the theme names (here 60 percent). On, the corners close into a full frame with the wash inside. Held, the corners grow and glow. Sections get larger corners, and a knob under a finger gets corners too.</td>
+            <td>The corners are the look. They also keep a busy page quiet: forty full outlines are a grid of boxes, and forty sets of corners are a field of targets in which the few that are on stand out, because only they are closed.</td>
+            <td class="without">A thin full outline at rest and a brighter one when on. It reads as a thin dark theme rather than a visor.</td>
+        </tr>
+        <tr>
+            <td class="n">2</td>
+            <td class="ask"><b>Major marks.</b> The ring of marks round a knob and the scale beside a fader get a longer mark at an interval the theme names: here every fourth mark on a knob, every fifth beside a fader.</td>
+            <td>A scale with every mark the same length is a comb. Longer marks let you read a position at a glance, which is the whole point of drawing a scale.</td>
+            <td class="without">Every mark the same length. The engine already draws both scales.</td>
+        </tr>
+        <tr>
+            <td class="n">3</td>
+            <td class="ask"><b>Chevrons and a reticle.</b> A knob's pointer drawn as a small chevron riding its arc and pointing at the marks; a fader's cap as two chevrons pinching the rail at the value, with a hairline between them; the XY puck as a reticle, a ring with four ticks and an open middle.</td>
+            <td>These are the shapes a head-up display uses to point at a number. A solid cap or puck would cover the very scale this look is built around.</td>
+            <td class="without">The engine's pointer line, cap bar and round puck, drawn thin.</td>
+        </tr>
+    </table>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>What I left out on purpose.</b> Horizon ladders, compass strips, altitude tapes and blinking warnings. They are the decoration of a real display, and here they would be numbers that mean nothing, on a surface where every number should mean something. The two readouts at the top are real: the tempo and the song position. <b>Honest rather than faithful:</b> a real visor is one color, usually green. This one keeps the six colors, because on a control surface the color is how you tell the synth from the drums. The type is Segoe UI Variable, spaced wide, and Cascadia Mono for numbers; that is the layout's choice, and the theme sets no typeface. Every color was measured.
+</p>
+
+</div>
+</body>
+</html>

@@ -42,6 +42,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         static winrt::hstring MidiRtpDnsDomain() noexcept { return MIDI_RTP_SDK_DNSSD_DOMAIN; }
         static winrt::hstring MidiRtpDnsSdQueryName() noexcept { return MIDI_RTP_SDK_DNSSD_SERVICE_TYPE L"." MIDI_RTP_SDK_DNSSD_DOMAIN; }
         static uint16_t DefaultHostPort() noexcept { return MIDI_RTP_SDK_DEFAULT_HOST_PORT; }
+
+        static collections::IVectorView<rtp::MidiRtpSavedHost> GetSavedHosts() noexcept;
+        static collections::IVectorView<rtp::MidiRtpSavedClient> GetSavedClients() noexcept;
     };
 }
 

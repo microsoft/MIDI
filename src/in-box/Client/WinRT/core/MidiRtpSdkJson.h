@@ -176,6 +176,67 @@ namespace MidiRtpSdkJson
         return winrt::hstring{ internal::GuidToString(entryId) };
     }
 
+    // A saved port, read the way the transport reads it: a number or a string of digits from 1024
+    // to 65534, because the data port is the next one up, or "auto". A missing key is valid, and
+    // reported through isPresent so the caller can apply its default. False for anything else.
+    inline bool TryPort(
+        _In_ json::JsonObject const& parent,
+        _In_ std::wstring_view const key,
+        _Out_ uint16_t& port,
+        _Out_ bool& isAuto,
+        _Out_ bool& isPresent) noexcept
+    {
+        port = 0;
+        isAuto = false;
+        isPresent = false;
+
+        try
+        {
+            if (parent == nullptr || !parent.HasKey(winrt::hstring{ key })) return true;
+
+            isPresent = true;
+
+            if (auto const number = Find(parent, key, json::JsonValueType::Number))
+            {
+                auto const value = number.GetNumber();
+
+                if (!(value >= 1024 && value <= 65534) || value != static_cast<double>(static_cast<uint32_t>(value))) return false;
+
+                port = static_cast<uint16_t>(value);
+                return true;
+            }
+
+            if (auto const text = Find(parent, key, json::JsonValueType::String))
+            {
+                std::wstring const value{ text.GetString() };
+
+                if (_wcsicmp(value.c_str(), MIDI_CONFIG_JSON_RTP_MIDI_PORT_VALUE_AUTO) == 0)
+                {
+                    isAuto = true;
+                    return true;
+                }
+
+                if (value.empty() || value.size() > 5) return false;
+                if (!std::all_of(value.begin(), value.end(), [](wchar_t const ch) { return ch >= L'0' && ch <= L'9'; })) return false;
+
+                auto const parsed = std::stoul(value);
+
+                if (parsed < 1024 || parsed > 65534) return false;
+
+                port = static_cast<uint16_t>(parsed);
+                return true;
+            }
+
+            return false;
+        }
+        catch (...)
+        {
+            port = 0;
+            isAuto = false;
+            return false;
+        }
+    }
+
     // a transport section wrapped the way MidiServiceTransportPluginConfigManager expects it
     inline json::JsonObject WrapTransportSection(_In_ json::JsonObject const& section)
     {

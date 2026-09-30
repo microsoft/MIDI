@@ -300,7 +300,6 @@
     </ClCompile>
     <ClCompile Include="MidiNetworkAdvertiser.cpp" />
     <ClCompile Include="MidiNetworkClient.cpp" />
-    <ClCompile Include="MidiNetworkCredentials.cpp" />
     <ClCompile Include="MidiNetworkHost.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>

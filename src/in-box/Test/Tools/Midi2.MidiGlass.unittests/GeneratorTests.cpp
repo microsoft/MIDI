@@ -255,7 +255,6 @@ void GeneratorTests::OnlyThePlatterIsTurnedByHand()
     VERIFY_IS_TRUE(glass::IsTurnedByHand(glass::ControlKind::Turntable));
 
     VERIFY_IS_FALSE(glass::IsTurnedByHand(glass::ControlKind::Knob));
-    VERIFY_IS_FALSE(glass::IsTurnedByHand(glass::ControlKind::Encoder));
     VERIFY_IS_FALSE(glass::IsTurnedByHand(glass::ControlKind::Joystick));
 }
 

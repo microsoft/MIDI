@@ -73,7 +73,7 @@ MidiNetworkClientConnection::SendInvitationCommand()
 {
     RETURN_IF_FAILED(SendToNetwork([this](MidiNetworkDataWriter& writer)
         {
-            // TODO: When we support authentication, advertise it in the capabilities bitmap
+            // Authentication support would be advertised in these capability bits. See MidiNetworkCredentials.h.
             RETURN_IF_FAILED(writer.WriteCommandInvitation(MidiNetworkCommandInvitationCapabilities::Capabilities_None, m_thisEndpointName, m_thisProductInstanceId));
 
             return S_OK;
@@ -234,69 +234,29 @@ MidiNetworkClientConnection::HandleIncomingInvitationReplyAccepted(
     // the host answered, so stop repeating the invitation
     m_invitation.Answered();
 
-    if (m_sessionActive)
-    {
-        // per protocol, if we've already accepted this, then just ignore it
-        return S_OK;
-    }
-
-    // TODO: will we accept a session invitation from the specified hostname?
-    // TODO: Also need to check auth mechanism and follow instructions in 6.4 and send a Bye if not supported
-
-    // todo: see if we already have a session active for this remote. If so, use it.
-    // otherwise, we need to spin up a new session
-
-    std::wstring newDeviceInstanceId{ };
-    std::wstring newEndpointDeviceInterfaceId{ };
-
-    // A user disconnect can land between our invitation going out and this reply arriving, and
-    // this runs on the socket receive path rather than through the endpoint creator, so nothing
-    // upstream has already vetted it. Building the endpoint now would leave a device node no
-    // caller owns: the connection is already torn down, so nothing will ever delete it. The host
-    // role has the same protection via OnSessionEndedBeforeEndpointCreated.
-    if (m_shuttingDown)
-    {
-        TraceLoggingWrite(
-            MidiNetworkMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Invitation was answered after this connection was shut down. Not creating an endpoint.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingGuid(m_configIdentifier, "entry identifier")
-        );
-
-        return S_OK;
-    }
-
     // Captured once. It can be torn down while a datagram is in flight, and each call to
-    // GetEndpointManager() is a fresh read, so re-reading it per use is a null deref waiting
-    // to happen.
+    // GetEndpointManager() is a fresh read.
     auto endpointManager = TransportState::Current().GetEndpointManager();
 
     RETURN_HR_IF_NULL(S_FALSE, endpointManager);
 
-    if (endpointManager->IsInitialized())
+    if (!endpointManager->IsInitialized())
     {
-        // Create the endpoint for Windows MIDI Services clients
-        HRESULT hr = S_OK;
+        return S_FALSE;
+    }
 
-        hr = endpointManager->CreateNewClientEndpointToRemoteHost(
-            internal::GuidToString(m_configIdentifier),
-            remoteHostUmpEndpointName,
-            remoteHostProductInstanceId,
-            m_remoteHostName,
-            m_remotePort,
-            m_createUmpEndpointsOnly,
-            m_fallbackMidi1PortCount,
-            newDeviceInstanceId,
-            newEndpointDeviceInterfaceId
-        );
+    {
+        auto lock = m_sessionLock.lock();
 
-        // Creation takes a noticeable amount of time, so the disconnect can also arrive while it
-        // is running. Shutdown already deleted whatever it knew about, which at that point was
-        // nothing, so this one has to be cleaned up here.
-        if (SUCCEEDED(hr) && m_shuttingDown)
+        // per protocol, if we've already accepted this, then just ignore it
+        if (m_sessionActive)
+        {
+            return S_OK;
+        }
+
+        // A user disconnect can land between our invitation going out and this reply arriving.
+        // Nothing would own an endpoint built now.
+        if (m_shuttingDown)
         {
             TraceLoggingWrite(
                 MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -304,61 +264,30 @@ MidiNetworkClientConnection::HandleIncomingInvitationReplyAccepted(
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"This connection was shut down while its endpoint was being created. Removing it.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Invitation was answered after this connection was shut down. Not creating an endpoint.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingGuid(m_configIdentifier, "entry identifier")
             );
-
-            LOG_IF_FAILED(endpointManager->DeleteEndpoint(internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceInstanceId)));
 
             return S_OK;
         }
 
-        if (SUCCEEDED(hr))
-        {
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Created MIDI endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
+        // Active now, not once the endpoint exists, or the host's first UMP Data would be
+        // answered with Bye Session Not Established while the worker builds the endpoint.
+        m_sessionActive = true;
+        m_sessionEverEstablished = true;
+    }
 
-            m_sessionEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newEndpointDeviceInterfaceId);
-            m_sessionDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceInstanceId);
+    // Creating the endpoint blocks on the service, and this is the socket receive callback
+    auto queueHr = endpointManager->QueueClientEndpointCreation(
+        std::static_pointer_cast<MidiNetworkClientConnection>(shared_from_this()),
+        remoteHostUmpEndpointName,
+        remoteHostProductInstanceId);
 
-            m_sessionActive = true;
-            m_sessionEverEstablished = true;
+    if (FAILED(queueHr))
+    {
+        LOG_IF_FAILED(FailClientSessionEndpointCreation(queueHr));
 
-            // this is what the Bidi uses when it is created
-            RETURN_IF_FAILED(TransportState::Current().AssociateMidiEndpointWithConnection(m_sessionEndpointDeviceInterfaceId.c_str(), m_remoteHostName, m_remotePort.c_str()));
-
-            RETURN_IF_FAILED(StartOutboundMidiMessageProcessingThread());
-
-            // protocol negotiation needs to happen here, not in the endpoint creation
-            // because we need to wire up the connection first. Bit of a race.
-
-            LOG_IF_FAILED(endpointManager->QueueDiscoveryAndNegotiation(m_sessionEndpointDeviceInterfaceId));
-        }
-        else
-        {
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Failed to create MIDI endpoint.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingHResult(hr, "hresult")
-            );
-
-            // let the other side know that we can't create the session
-
-            LOG_IF_FAILED(RefuseSessionForEndpointCreationFailure(hr));
-
-            // exit out of here, and log while we're at it
-            RETURN_IF_FAILED(hr);
-        }
+        RETURN_IF_FAILED(queueHr);
     }
 
     TraceLoggingWrite(
@@ -375,12 +304,151 @@ MidiNetworkClientConnection::HandleIncomingInvitationReplyAccepted(
 
 _Use_decl_annotations_
 HRESULT
-MidiNetworkClientConnection::HandleIncomingInvitationReplyAuthenticationRequired(
-    MidiNetworkCommandPacketHeader const& header,
-    MidiNetworkAuthenticationKind const kind)
+MidiNetworkClientConnection::CreateClientEndpointForAcceptedInvitation(
+    std::wstring const& remoteHostUmpEndpointName,
+    std::wstring const& remoteHostProductInstanceId,
+    std::wstring& newDeviceInstanceId,
+    std::wstring& newEndpointDeviceInterfaceId
+)
 {
-    UNREFERENCED_PARAMETER(header);
+    auto endpointManager = TransportState::Current().GetEndpointManager();
 
+    RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
+
+    RETURN_IF_FAILED(endpointManager->CreateNewClientEndpointToRemoteHost(
+        internal::GuidToString(m_configIdentifier),
+        remoteHostUmpEndpointName,
+        remoteHostProductInstanceId,
+        m_remoteHostName,
+        m_remotePort,
+        m_createUmpEndpointsOnly,
+        m_fallbackMidi1PortCount,
+        newDeviceInstanceId,
+        newEndpointDeviceInterfaceId));
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkClientConnection::CompleteClientSessionAfterEndpointCreated(
+    std::wstring const& newDeviceInstanceId,
+    std::wstring const& newEndpointDeviceInterfaceId
+)
+{
+    auto const deviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceInstanceId);
+    auto const endpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newEndpointDeviceInterfaceId);
+
+    auto endpointManager = TransportState::Current().GetEndpointManager();
+
+    RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
+
+    HRESULT hr{ S_OK };
+    bool claimed{ false };
+
+    {
+        auto lock = m_sessionLock.lock();
+
+        // The host said Bye, the session timed out, or this connection is being shut down
+        if (m_sessionActive && !m_shuttingDown)
+        {
+            // this is what the Bidi uses when it is created
+            hr = TransportState::Current().AssociateMidiEndpointWithConnection(endpointDeviceInterfaceId, m_remoteHostName, m_remotePort.c_str());
+
+            if (SUCCEEDED(hr))
+            {
+                m_sessionDeviceInstanceId = deviceInstanceId;
+                m_sessionEndpointDeviceInterfaceId = endpointDeviceInterfaceId;
+
+                claimed = true;
+            }
+        }
+    }
+
+    if (!claimed)
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"The session ended while its endpoint was being created. Removing it.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingGuid(m_configIdentifier, "entry identifier"),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
+
+        // Nothing else knows this endpoint exists. This is the endpoint worker, so it goes now.
+        LOG_IF_FAILED(endpointManager->DeleteEndpoint(deviceInstanceId));
+
+        if (FAILED(hr))
+        {
+            LOG_IF_FAILED(FailClientSessionEndpointCreation(hr));
+
+            RETURN_IF_FAILED(hr);
+        }
+
+        return S_FALSE;
+    }
+
+    hr = StartOutboundMidiMessageProcessingThread();
+
+    if (FAILED(hr))
+    {
+        // Ending the session removes the endpoint claimed above
+        LOG_IF_FAILED(FailClientSessionEndpointCreation(hr));
+
+        RETURN_IF_FAILED(hr);
+    }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Created MIDI endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointDeviceInterfaceId.c_str(), "endpoint device interface id")
+    );
+
+    // negotiation needs the connection wired up first, so it cannot happen during creation
+    LOG_IF_FAILED(endpointManager->QueueDiscoveryAndNegotiation(endpointDeviceInterfaceId));
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkClientConnection::FailClientSessionEndpointCreation(HRESULT const failure)
+{
+    if (m_shuttingDown)
+    {
+        return S_FALSE;
+    }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Failed to create MIDI endpoint.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingHResult(failure, MIDI_TRACE_EVENT_HRESULT_FIELD)
+    );
+
+    // let the other side know that we can't create the session
+    LOG_IF_FAILED(RefuseSessionForEndpointCreationFailure(failure));
+
+    // The session went active when the host accepted. Ending it here is not the remote leaving,
+    // so it is not reconnected.
+    return EndActiveSession(false);
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkClientConnection::HandleIncomingInvitationReplyAuthenticationRequired(
+    MidiNetworkCommandPacketHeader const& header)
+{
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_WARNING,
@@ -388,14 +456,11 @@ MidiNetworkClientConnection::HandleIncomingInvitationReplyAuthenticationRequired
         TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Remote host requires authentication, which is not yet implemented. Canceling the invitation.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingUInt32(static_cast<uint32_t>(kind), "authentication kind")
+        TraceLoggingUInt8(header.HeaderData.CommandCode, "Command Code")
     );
 
-    // The host is challenging us. Once this is implemented the sequence is: resolve the secret
-    // for the configured credential identifier, compute the digest over the supplied nonce, and
-    // reply with InvitationWithAuthentication. Until then we withdraw politely rather than time
-    // out.
-    // TODO: https://github.com/microsoft/MIDI/issues/733
+    // A client which supports authentication answers the challenge here instead of withdrawing.
+    // See MidiNetworkCredentials.h.
     return RefuseInvitationForAuthentication(MidiNetworkCommandByeReason::CommandByeReasonClientToHost_InvitationCanceled);
 }
 

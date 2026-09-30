@@ -51,6 +51,12 @@ A connected app should ask the synthesizer what it can play with MIDI Capability
 
 [MidiSynthManager.GetMelodicInstruments()]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthManager/) is for when Property Exchange can't help: showing instruments in a settings screen or instrument picker before any connection is open. The list comes from the sound set, so it doesn't change when the settings do.
 
+## Samples
+
+* [C++/WinRT sequence-builder](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/sequence-builder) and [C# sequence-builder](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/sequence-builder) for finding the synthesizer with `EndpointDeviceId` and playing it
+* [C++/WinRT midi-file-player](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/midi-file-player) and [C# midi-file-player](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/midi-file-player) for changing the volume while a file plays, without saving it, and putting it back afterward
+* [C++/WinRT capability-inquiry-program-list](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/capability-inquiry-program-list) and [C# capability-inquiry-program-list](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/capability-inquiry-program-list) for reading the instrument list with MIDI Capability Inquiry
+
 ## See also
 
 - [MIDI Settings]({{ site.baseurl }}/tools/settings/), which has these settings in its global settings dialog

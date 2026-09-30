@@ -1,0 +1,245 @@
+/* =========================================================================
+   "NIGHT DRIVE" - screen 30. The synthwave sunset: a violet sky going to
+   orange at the horizon, a striped sun sitting on it, a pink grid running
+   away to the sun, and on top of it dark glass, neon and chrome.
+
+   Loaded after mock.css by 30-night-drive.html. Every selector carries
+   .nightdrive, so the block can move to the end of mock.css unchanged.
+
+   Three ideas carry it:
+
+   1. THE SKY IS A PICTURE. 30-night-drive-sky.svg is an ordinary deck
+      picture, and the engine already fits one to the page without
+      stretching it (cover, centered), so the sun stays round.
+
+   2. WORDS NEVER SIT ON THE BRIGHT PART. White print measures 2.43 : 1 on
+      the bare horizon. On a section's dark glass it is 10.26, on a plate
+      14.19, on the dark sky 16.20. A soft halo behind words printed on the
+      deck (ask 1) makes it 9.08 anywhere.
+
+   3. NEON FOR VALUES, CHROME FOR THE THINGS YOU HOLD. Every value is a neon
+      line with a white-hot core (the engine's value core); every cap you
+      grab is chrome, a sky above a hard horizon line (asks 2 and 3).
+
+   Measured in g:\midi-scratch\round6-comps-contrast.ps1: values on a plate
+   over the horizon 4.39 to 11.45, on a section 3.17 to 8.28; a lit switch
+   takes dark violet ink, 4.94 to 12.88. The six neons stay well apart for
+   color-blind players: the closest pair is sun and orange, delta E 20.7 for
+   a green-blind (deutan) player.
+   ========================================================================= */
+
+.surf.nightdrive {
+    --deck: url("30-night-drive-sky.svg") center / cover no-repeat, #140A2E;
+    --plate: rgba(23, 13, 43, .90);
+    --plate-solid: #170D2B;
+    --section: rgba(23, 13, 43, .72);
+    --well: #0B0618;
+    --track: rgba(243, 234, 255, .12);
+    --on-hue: #170D2B;
+    --deck-ink: #F3EAFF;
+    --deck-ink2: #C4B3E4;
+    --grid1: rgba(255, 255, 255, .14);
+    --grid2: rgba(255, 255, 255, .05);
+    --tonal-rest: 0;
+    --tonal-held: 0;
+    --rim-rest: 0;
+    --tonal-radius: 10px;
+    --cap-shadow: none;
+
+    /* ask 2: chrome is a sky reflected over a hard horizon, with the sunset in the ground */
+    --chrome: linear-gradient(180deg, #EEF2FF 0%, #C9D2F0 36%, #8E97C6 48%, #2A2350 50%, #3B2A66 60%, #C4539A 84%, #FFD0E6 100%);
+    /* ask 3: the same, for letters */
+    --chrome-text: linear-gradient(180deg, #FFFFFF 0%, #D6DDF7 44%, #2A2350 50%, #7A3C8C 58%, #FF8FC4 82%, #FFE6F2 100%);
+    /* ask 1: the halo behind words on the bare deck, the sky's top at 65 % */
+    --halo: 0 0 3px rgba(20, 10, 46, .65), 0 0 7px rgba(20, 10, 46, .65), 0 0 12px rgba(20, 10, 46, .65);
+
+    --h1: 255,  63, 164;   /* #FF3FA4 pink - the default */
+    --h2:  45, 226, 230;   /* #2DE2E6 cyan */
+    --h3: 255, 210,  63;   /* #FFD23F sun */
+    --h4: 255, 123,  57;   /* #FF7B39 orange */
+    --h5: 165,  92, 255;   /* #A55CFF violet */
+    --h6:  70, 242, 160;   /* #46F2A0 mint */
+}
+
+/* --------------------------------------------------------- dark glass */
+.surf.nightdrive .ctl {
+    border-radius: 10px;
+    background: var(--plate);
+    box-shadow: inset 0 0 0 1px rgba(var(--hue), .38), inset 0 1px 0 rgba(255, 255, 255, .08);
+    color: var(--deck-ink);
+}
+
+/* a switch lights its neon edge; its name takes the color */
+.surf.nightdrive .ctl.btn-ctl .name { font-weight: 700; letter-spacing: .08em; font-size: 11px; }
+.surf.nightdrive .ctl.btn-ctl.on {
+    background: var(--plate);
+    box-shadow: inset 0 0 0 2px rgb(var(--hue)), inset 0 0 14px rgba(var(--hue), .35), 0 0 14px rgba(var(--hue), .55), 0 0 34px rgba(var(--hue), .22);
+    color: color-mix(in srgb, rgb(var(--hue)) 72%, white);
+}
+/* held: the white-hot core runs inside the neon */
+.surf.nightdrive .ctl.btn-ctl.held {
+    background: var(--plate);
+    box-shadow: inset 0 0 0 2px rgb(var(--hue)), inset 0 0 0 3px rgba(255, 255, 255, .75), inset 0 0 18px rgba(var(--hue), .45), 0 0 20px rgba(var(--hue), .70), 0 0 46px rgba(var(--hue), .28);
+    color: #FFFFFF;
+}
+/* a pad is a tube of colored light: the color outright, dark violet name */
+.surf.nightdrive .ctl.btn-ctl.pad { background: linear-gradient(0deg, rgba(var(--hue), .10), rgba(var(--hue), .10)), var(--plate); }
+.surf.nightdrive .ctl.btn-ctl.pad.on,
+.surf.nightdrive .ctl.btn-ctl.pad.held {
+    background: radial-gradient(ellipse 70% 60% at 50% 45%, color-mix(in srgb, rgb(var(--hue)) 70%, white) 0%, rgb(var(--hue)) 70%);
+    color: var(--on-hue);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .55), 0 0 16px rgba(var(--hue), .80), 0 0 42px rgba(var(--hue), .35);
+}
+.surf.nightdrive .ctl.btn-ctl.pad.held { box-shadow: inset 0 0 0 2px #FFFFFF, 0 0 22px rgba(var(--hue), .95), 0 0 56px rgba(var(--hue), .45); }
+.surf.nightdrive .ctl.dim { opacity: .45; background: var(--plate); box-shadow: inset 0 0 0 1px rgba(243, 234, 255, .18); color: var(--deck-ink2); }
+.surf.nightdrive .ctl.offline {
+    background: repeating-linear-gradient(135deg, rgba(243, 234, 255, .14) 0 2px, transparent 2px 8px), var(--plate);
+    box-shadow: inset 0 0 0 1px rgba(243, 234, 255, .22);
+}
+
+/* -------------------------------------------------------------- knobs */
+/* a chrome cap on a disc of glass, with a neon arc round it */
+.surf.nightdrive .knob,
+.surf.nightdrive .knob.held { background: none; box-shadow: none; }
+.surf.nightdrive .knob .dial { background: var(--plate); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10), 0 2px 8px rgba(0, 0, 0, .6); }
+.surf.nightdrive .knob .arc {
+    inset: -7px;
+    background: conic-gradient(from 215deg,
+        rgb(var(--hue)) 0turn var(--pct, .35turn),
+        rgba(var(--hue), .16) var(--pct, .35turn) .805turn,
+        transparent .805turn 1turn);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 5px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 5px));
+    filter: drop-shadow(0 0 4px rgba(var(--hue), .95)) drop-shadow(0 0 10px rgba(var(--hue), .45));
+}
+/* the white-hot core: a thin light line down the middle of the lit arc (the engine's value core) */
+.surf.nightdrive .knob .core {
+    position: absolute; inset: -5px; border-radius: 50%;
+    background: conic-gradient(from 215deg, color-mix(in srgb, rgb(var(--hue)) 35%, white) 0turn var(--pct, .35turn), transparent var(--pct, .35turn) 1turn);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px), #000 calc(100% - 1px), transparent calc(100% - 1px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px), #000 calc(100% - 1px), transparent calc(100% - 1px));
+}
+.surf.nightdrive .knob .chromecap {
+    position: absolute; inset: 16%; border-radius: 50%;
+    background: var(--chrome);
+    box-shadow: 0 0 0 1px rgba(42, 35, 80, .9), 0 3px 6px rgba(0, 0, 0, .7), inset 0 0 0 1px rgba(255, 255, 255, .35);
+}
+.surf.nightdrive .knob .ptr {
+    top: 17%; height: 22%; width: 3px; margin-left: -1.5px;
+    background: #170D2B; box-shadow: 0 0 0 1px rgba(255, 255, 255, .25);
+    transform-origin: 50% 150%;
+}
+.surf.nightdrive .knob .kval {
+    top: auto; bottom: -16px; transform: none;
+    font-size: 10.5px; color: color-mix(in srgb, rgb(var(--hue)) 70%, white);
+    text-shadow: 0 0 6px rgba(var(--hue), .8);
+}
+
+/* ------------------------------------------------------------- faders */
+/* a dark glass slot, a neon fill with a light core, a chrome cap */
+.surf.nightdrive .fader { background: none; box-shadow: none; }
+.surf.nightdrive .fader .slot { width: 8px; border-radius: 4px; background: rgba(8, 4, 15, .85); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
+.surf.nightdrive .fader .fill {
+    border-radius: 4px;
+    background: linear-gradient(90deg, rgb(var(--hue)) 0 28%, color-mix(in srgb, rgb(var(--hue)) 35%, white) 42% 58%, rgb(var(--hue)) 72% 100%);
+    box-shadow: 0 0 8px rgba(var(--hue), .9), 0 0 20px rgba(var(--hue), .40);
+}
+.surf.nightdrive .fader .capbar {
+    left: -12px; right: -12px; height: 16px; border-radius: 3px;
+    background: var(--chrome);
+    box-shadow: 0 0 0 1px rgba(42, 35, 80, .9), 0 3px 7px rgba(0, 0, 0, .75);
+}
+.surf.nightdrive .fader .capbar::after { display: none; }
+.surf.nightdrive .fader.horiz .slot { width: auto; height: 8px; }
+.surf.nightdrive .fader.horiz .fill { background: linear-gradient(180deg, rgb(var(--hue)) 0 28%, color-mix(in srgb, rgb(var(--hue)) 35%, white) 42% 58%, rgb(var(--hue)) 72% 100%); }
+.surf.nightdrive .fader.horiz .capbar { top: -12px; bottom: -12px; width: 16px; height: auto; background: linear-gradient(90deg, #EEF2FF 0%, #C9D2F0 36%, #2A2350 50%, #C4539A 84%, #FFD0E6 100%); }
+
+/* ------------------------------------------------ meters, wells, lamps */
+.surf.nightdrive .ctl.meter { background: var(--plate); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); padding: 5px 3px; gap: 2px; border-radius: 4px; }
+.surf.nightdrive .meter i { height: 3px; border-radius: 1px; background: rgba(243, 234, 255, .08); box-shadow: none; }
+.surf.nightdrive .meter i.lit { background: rgb(var(--h6)); box-shadow: 0 0 5px rgba(var(--h6), .85); }
+.surf.nightdrive .meter i.lit.warn { background: rgb(var(--h3)); box-shadow: 0 0 5px rgba(var(--h3), .85); }
+.surf.nightdrive .meter i.lit.hot { background: rgb(var(--h1)); box-shadow: 0 0 5px rgba(var(--h1), .90); }
+
+/* the XY field is a dark window with a flat neon grid, and the puck is a light */
+.surf.nightdrive .xy { background: var(--well); box-shadow: inset 0 0 0 1px rgba(var(--hue), .45), 0 0 12px rgba(var(--hue), .18); }
+.surf.nightdrive .xy .field2 { border-radius: 10px; }
+.surf.nightdrive .xy .field2::before {
+    background-image:
+        linear-gradient(rgba(var(--hue), .24) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--hue), .24) 1px, transparent 1px);
+    background-size: 12.5% 16.66%, 12.5% 16.66%;
+}
+.surf.nightdrive .xy .cross { background: rgba(var(--hue), .70); box-shadow: 0 0 6px rgba(var(--hue), .8); }
+.surf.nightdrive .xy .trail { background: rgba(var(--hue), .35); box-shadow: 0 0 6px rgba(var(--hue), .5); }
+.surf.nightdrive .xy .puck {
+    width: 16px; height: 16px; margin: -8px 0 0 -8px;
+    background: radial-gradient(circle, #FFFFFF 0 25%, color-mix(in srgb, rgb(var(--hue)) 60%, white) 40%, rgb(var(--hue)) 70%);
+    box-shadow: 0 0 12px rgba(var(--hue), 1), 0 0 30px rgba(var(--hue), .5);
+}
+
+/* the steps are small glass cells; a step that is on is lit, the playing one has the core */
+.surf.nightdrive .steps { background: var(--plate); }
+.surf.nightdrive .steps .row i { border-radius: 3px; background: rgba(243, 234, 255, .06); box-shadow: inset 0 0 0 1px rgba(var(--hue), .28); }
+.surf.nightdrive .steps .row i.on { background: rgba(var(--hue), .75); box-shadow: 0 0 8px rgba(var(--hue), .7); }
+.surf.nightdrive .steps .row i.cur { box-shadow: inset 0 0 0 2px #FFFFFF, 0 0 12px rgba(var(--hue), .9); }
+
+/* a readout is a dark window with neon digits */
+.surf.nightdrive .ctl.display {
+    background: var(--well); border-radius: 8px;
+    box-shadow: inset 0 0 0 1px rgba(var(--hue), .45), 0 0 12px rgba(var(--hue), .18);
+    align-items: flex-end; justify-content: center; padding: 0 10px;
+}
+.surf.nightdrive .ctl.display .digits {
+    font-family: "Cascadia Mono", "Consolas", monospace; font-weight: 700; font-size: 20px; letter-spacing: .04em;
+    color: color-mix(in srgb, rgb(var(--hue)) 70%, white);
+    text-shadow: 0 0 6px rgba(var(--hue), .95), 0 0 16px rgba(var(--hue), .5);
+}
+.surf.nightdrive .ctl.display .unit { font-size: 9px; letter-spacing: .14em; color: var(--deck-ink2); margin-left: 4px; }
+
+.surf.nightdrive .ctl.led { border-radius: 50%; background: rgba(var(--hue), .18); box-shadow: inset 0 0 0 1px rgba(var(--hue), .45); }
+.surf.nightdrive .ctl.led.on { background: radial-gradient(circle, #FFFFFF 0 20%, rgb(var(--hue)) 55%); box-shadow: 0 0 10px rgba(var(--hue), .95), 0 0 22px rgba(var(--hue), .45); }
+
+/* ------------------------------------------------- sections and words */
+/* a section is dark glass edged in neon, with its name in chrome on the top line */
+.surf.nightdrive .ctlpanel {
+    border-radius: 14px;
+    background: var(--section);
+    box-shadow: inset 0 0 0 1px rgba(var(--hue), .85), inset 0 0 16px rgba(var(--hue), .16), 0 0 14px rgba(var(--hue), .40);
+}
+.surf.nightdrive .ctlpanel > .ptitle {
+    top: -10px; left: 16px; height: 20px; padding: 0 10px;
+    display: flex; align-items: center;
+    border-radius: 10px;
+    background: var(--plate-solid);
+    box-shadow: inset 0 0 0 1px rgba(var(--hue), .85), 0 0 10px rgba(var(--hue), .45);
+}
+.surf.nightdrive .chrometext {
+    background: var(--chrome-text);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    font-style: italic; font-weight: 800;
+}
+.surf.nightdrive .ctlpanel > .ptitle .chrometext { font-size: 12px; letter-spacing: .14em; }
+
+.surf.nightdrive .lbl {
+    position: absolute; font-size: 10px; font-weight: 600; letter-spacing: .12em;
+    color: var(--deck-ink2); text-align: center; white-space: nowrap;
+}
+.surf.nightdrive .surftext.small { color: var(--deck-ink2); }
+.surf.nightdrive .surftext.halo { text-shadow: var(--halo); }
+.surf.nightdrive .neon { color: rgb(var(--hue)); text-shadow: 0 0 4px rgba(var(--hue), .9), 0 0 12px rgba(var(--hue), .55), 0 0 26px rgba(var(--hue), .30); }
+
+/* page tabs: chrome rimmed; the current page is lit pink */
+.surf.nightdrive .pagetabs .tab {
+    height: 26px; padding: 0 14px; border-radius: 13px;
+    border: 2px solid transparent;
+    background: linear-gradient(var(--plate-solid), var(--plate-solid)) padding-box, var(--chrome) border-box;
+    color: var(--deck-ink); font-size: 10.5px; font-weight: 700; letter-spacing: .14em;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .6);
+}
+.surf.nightdrive .pagetabs .tab.sel {
+    background: linear-gradient(rgb(var(--h1)), rgb(var(--h1))) padding-box, var(--chrome) border-box;
+    color: var(--on-hue);
+    box-shadow: 0 0 14px rgba(var(--h1), .75), 0 2px 8px rgba(0, 0, 0, .6);
+}

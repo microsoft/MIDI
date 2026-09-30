@@ -246,10 +246,15 @@ namespace winrt::midinetworksetup::implementation
             // the startup options were parsed before the window existed
             auto const& options = App::StartupOptions();
 
+#ifdef _DEBUG
+            // Developer switch: the SDK reads and saves this file instead of the PC's own. Release
+            // builds of the SDK have no override, so the switch does nothing there.
             if (!options.ConfigFilePath.empty())
             {
-                native::NetworkConfigFile::Current().OverridePath(options.ConfigFilePath);
+                midi2svc::MidiServiceTransportPluginConfigManager::ConfigFilePathOverride(
+                    winrt::hstring{ options.ConfigFilePath });
             }
+#endif
 
             // The network transports ship out of band today, and older builds are in the wild.
             // This also decides which pages are offered, so it comes before choosing one.
@@ -283,6 +288,12 @@ namespace winrt::midinetworksetup::implementation
                 ShowPage(startupPage);
 
                 MainNavigation().SelectedItem(NavigationItemForPage(startupPage));
+
+                // The title bar gear is first in tab order, so focus would otherwise start there.
+                if (auto const selected = MainNavigation().SelectedItem().try_as<xaml::UIElement>())
+                {
+                    selected.Focus(xaml::FocusState::Programmatic);
+                }
             }
 
             Closed([weak = get_weak()](auto&&, auto&&)
@@ -309,11 +320,11 @@ namespace winrt::midinetworksetup::implementation
                 return;
             }
 
-            if (native::NetworkConfigFile::Current().IsOverridden())
+#ifdef _DEBUG
+            if (auto const overridePath = midi2svc::MidiServiceTransportPluginConfigManager::ConfigFilePathOverride();
+                !overridePath.empty())
             {
-                auto const notice = res::FormatString(
-                    L"ConfigFileOverrideNotice",
-                    native::NetworkConfigFile::Current().Path());
+                auto const notice = res::FormatString(L"ConfigFileOverrideNotice", overridePath);
 
                 if (m_networkMidi2Usable)
                 {
@@ -324,6 +335,7 @@ namespace winrt::midinetworksetup::implementation
                     SetRtpRemoteStatus(notice);
                 }
             }
+#endif
 
             // RTP-MIDI has no watcher: the service browses all the time, and every refresh asks
             // it what it has found
@@ -1026,24 +1038,36 @@ namespace winrt::midinetworksetup::implementation
                     snapshot.ConfiguredClients = midi2net::MidiNetworkTransportManager::GetConfiguredClients();
                     snapshot.PendingRemoteClients = midi2net::MidiNetworkTransportManager::GetPendingRemoteClients();
 
-                    snapshot.ClientDisplayNames = native::NetworkConfigFile::Current().GetClientDisplayNames();
-                    snapshot.ConfiguredClientIds = native::NetworkConfigFile::Current().GetClientEntryIds();
-
-                    if (snapshot.ConfiguredHosts != nullptr)
+                    // What is saved, which is not always what the service is running now
+                    for (auto const& saved : midi2net::MidiNetworkTransportManager::GetSavedClients())
                     {
-                        for (auto const& host : snapshot.ConfiguredHosts)
+                        if (saved != nullptr)
                         {
-                            if (host == nullptr)
-                            {
-                                continue;
-                            }
-
-                            auto const key = EntryKey(host.HostId());
-
-                            snapshot.KnownClients.insert_or_assign(
-                                std::wstring{ key },
-                                native::NetworkConfigFile::Current().GetKnownClients(key));
+                            snapshot.SavedClients.insert_or_assign(std::wstring{ EntryKey(saved.ClientId()) }, saved);
                         }
+                    }
+
+                    for (auto const& saved : midi2net::MidiNetworkTransportManager::GetSavedHosts())
+                    {
+                        if (saved == nullptr)
+                        {
+                            continue;
+                        }
+
+                        std::vector<midi2net::MidiNetworkKnownRemoteClient> known{};
+
+                        if (auto const decisions = saved.KnownRemoteClients())
+                        {
+                            for (auto const& decision : decisions)
+                            {
+                                if (decision != nullptr)
+                                {
+                                    known.push_back(decision);
+                                }
+                            }
+                        }
+
+                        snapshot.KnownClients.insert_or_assign(std::wstring{ EntryKey(saved.HostId()) }, std::move(known));
                     }
 
                     snapshot.Gathered = true;
@@ -1607,22 +1631,20 @@ namespace winrt::midinetworksetup::implementation
 
                     auto const clientKey = EntryKey(client.ClientId());
 
-                    // The configuration file is this app's record of which entries are meant to
-                    // exist, and an entry the service still reports but the file no longer has is
-                    // usually one on its way out. A live session is the exception: the service is
-                    // the authority on what is actually connected, and hiding a connection which
-                    // is passing traffic tells the customer a plain untruth. This also covers an
-                    // entry created before the file could be written, or by another tool.
-                    auto const listedInConfigFile = std::find(
-                        snapshot.ConfiguredClientIds.begin(),
-                        snapshot.ConfiguredClientIds.end(),
-                        std::wstring{ Lowered(clientKey) }) != snapshot.ConfiguredClientIds.end();
+                    // The saved configuration is this app's record of which entries are meant to
+                    // exist, and an entry the service still reports but the configuration no longer
+                    // has is usually one on its way out. A live session is the exception: the
+                    // service is the authority on what is actually connected, and hiding a
+                    // connection which is passing traffic tells the customer a plain untruth. This
+                    // also covers an entry created before it could be saved, or by another tool.
+                    auto const saved = snapshot.SavedClients.find(std::wstring{ clientKey });
+                    auto const isSaved = saved != snapshot.SavedClients.end();
 
                     auto const liveInService =
                         client.IsSessionActive() ||
                         client.EntryState() == midi2net::MidiNetworkClientEntryState::Active;
 
-                    if (!listedInConfigFile && !liveInService)
+                    if (!isSaved && !liveInService)
                     {
                         continue;
                     }
@@ -1653,10 +1675,19 @@ namespace winrt::midinetworksetup::implementation
                         created.Key = matchKey;
                         created.Advertised = false;
 
-                        auto const named = snapshot.ClientDisplayNames.find(std::wstring{ clientKey });
+                        // the name saved with the entry, or failing that the name it matches on
+                        if (isSaved)
+                        {
+                            created.DisplayName = saved->second.UmpEndpointName();
 
-                        created.DisplayName = named != snapshot.ClientDisplayNames.end() ?
-                            named->second : winrt::hstring{};
+                            if (created.DisplayName.empty())
+                            {
+                                if (auto const criteria = saved->second.MatchCriteria())
+                                {
+                                    created.DisplayName = criteria.UmpEndpointName();
+                                }
+                            }
+                        }
 
                         if (created.DisplayName.empty())
                         {
@@ -1723,10 +1754,10 @@ namespace winrt::midinetworksetup::implementation
                     // empty identity and no reason for the entry never matching. The saved entry
                     // still holds what it is looking for, and when a firmware update changes a
                     // device's identity that stale value is the whole explanation.
-                    if (row->ProductInstanceId.empty())
+                    if (row->ProductInstanceId.empty() && isSaved)
                     {
-                        auto const expected =
-                            native::NetworkConfigFile::Current().GetClientMatchProductInstanceId(clientKey);
+                        auto const criteria = saved->second.MatchCriteria();
+                        auto const expected = criteria != nullptr ? criteria.ProductInstanceId() : winrt::hstring{};
 
                         if (!expected.empty())
                         {
@@ -2061,7 +2092,7 @@ namespace winrt::midinetworksetup::implementation
                     // only rebuilt when its contents actually differ.
                     auto const known = snapshot.KnownClients.find(std::wstring{ hostKey });
 
-                    std::vector<::midinetworksetup::KnownClientEntry> knownEntries{};
+                    std::vector<midi2net::MidiNetworkKnownRemoteClient> knownEntries{};
 
                     if (known != snapshot.KnownClients.end())
                     {
@@ -2077,8 +2108,8 @@ namespace winrt::midinetworksetup::implementation
                             auto const existing = self->KnownClients().GetAt(i);
 
                             if (existing == nullptr ||
-                                existing.DisplayName() != knownEntries[i].UmpEndpointName ||
-                                existing.IsAllowed() != knownEntries[i].Allowed)
+                                existing.DisplayName() != knownEntries[i].RemoteClientName() ||
+                                existing.IsAllowed() != knownEntries[i].IsAllowed())
                             {
                                 knownChanged = true;
                                 break;
@@ -2092,16 +2123,20 @@ namespace winrt::midinetworksetup::implementation
 
                         for (auto const& entry : knownEntries)
                         {
+                            auto const knownName = entry.RemoteClientName();
+                            auto const knownProductInstanceId = entry.RemoteClientProductInstanceId();
+                            auto const knownAllowed = entry.IsAllowed();
+
                             auto created = winrt::make_self<KnownClientItem>();
 
                             created->InternalInitialize(
                                 Lowered(winrt::hstring{
-                                    std::wstring{ entry.ProductInstanceId } + L"|" + std::wstring{ entry.UmpEndpointName } }),
+                                    std::wstring{ knownProductInstanceId } + L"|" + std::wstring{ knownName } }),
                                 hostKey,
-                                entry.UmpEndpointName.empty() ? res::GetString(L"UnnamedDevice") : entry.UmpEndpointName,
-                                entry.ProductInstanceId,
-                                entry.Allowed ? res::GetString(L"KnownClientAllowed") : res::GetString(L"KnownClientBlocked"),
-                                entry.Allowed);
+                                knownName.empty() ? res::GetString(L"UnnamedDevice") : knownName,
+                                knownProductInstanceId,
+                                knownAllowed ? res::GetString(L"KnownClientAllowed") : res::GetString(L"KnownClientBlocked"),
+                                knownAllowed);
 
                             self->KnownClients().Append(*created);
                         }
@@ -2759,8 +2794,13 @@ namespace winrt::midinetworksetup::implementation
                     }
                     else if (host.HasStarted())
                     {
+                        // an automatic host wanted the default port
+                        auto const wantedPort = host.ConfiguredPort() == MIDI_CONFIG_JSON_RTP_MIDI_PORT_VALUE_AUTO ?
+                            winrt::to_hstring(midi2rtp::MidiRtpTransportManager::DefaultHostPort()) :
+                            host.ConfiguredPort();
+
                         status = host.UsedPortFallback() ?
-                            res::FormatString(L"HostStartedPortFallbackFormat", host.ActualPort(), host.ConfiguredPort()) :
+                            res::FormatString(L"HostStartedPortFallbackFormat", host.ActualPort(), wantedPort) :
                             res::FormatString(L"HostStartedFormat", host.ActualPort());
                     }
                     else if (host.LastErrorCode() != 0)

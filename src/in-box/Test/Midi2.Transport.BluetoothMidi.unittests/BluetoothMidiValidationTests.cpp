@@ -724,6 +724,15 @@ void BluetoothMidiValidationTests::TestZeroThresholdNeverInfersPairing()
     VERIFY_IS_FALSE(evaluation.AssumePairingRequired);
 }
 
+void BluetoothMidiValidationTests::TestPairedDeviceAutoConnectPolicy()
+{
+    VERIFY_IS_TRUE(MidiBleUtilities::ShouldAutoConnectPairedDevice(true, false, false, false));
+    VERIFY_IS_TRUE(MidiBleUtilities::ShouldAutoConnectPairedDevice(true, true, true, false));
+    VERIFY_IS_FALSE(MidiBleUtilities::ShouldAutoConnectPairedDevice(true, true, false, false));
+    VERIFY_IS_FALSE(MidiBleUtilities::ShouldAutoConnectPairedDevice(true, false, false, true));
+    VERIFY_IS_FALSE(MidiBleUtilities::ShouldAutoConnectPairedDevice(false, false, false, false));
+}
+
 
 void BluetoothMidiValidationTests::TestTimeoutBudgetsKeepTheirOrdering()
 {

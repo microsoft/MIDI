@@ -11,6 +11,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cwchar>
+#include <string>
 
 namespace glass
 {
@@ -493,5 +495,46 @@ namespace glass
         }
 
         return { left, top, right - left, bottom - top };
+    }
+
+    _Use_decl_annotations_
+    std::optional<double> ParseZoomPercent(std::wstring_view text) noexcept
+    {
+        try
+        {
+            auto const isSpace = [](wchar_t ch) { return ch == L' ' || ch == L'\t'; };
+
+            while (!text.empty() && isSpace(text.front()))
+            {
+                text.remove_prefix(1);
+            }
+
+            while (!text.empty() && (isSpace(text.back()) || text.back() == L'%'))
+            {
+                text.remove_suffix(1);
+            }
+
+            // Longer than any zoom anybody types, and the copy below is then never large.
+            if (text.empty() || text.size() > 16)
+            {
+                return std::nullopt;
+            }
+
+            std::wstring const number{ text };
+            wchar_t* end{ nullptr };
+
+            auto const percent = std::wcstod(number.c_str(), &end);
+
+            if (end != number.c_str() + number.size() || !std::isfinite(percent) || percent <= 0.0)
+            {
+                return std::nullopt;
+            }
+
+            return std::clamp(percent / 100.0, MinimumEditorZoom, MaximumEditorZoom);
+        }
+        catch (...)
+        {
+            return std::nullopt;
+        }
     }
 }

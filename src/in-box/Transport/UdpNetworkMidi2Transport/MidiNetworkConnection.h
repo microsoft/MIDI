@@ -58,6 +58,8 @@ public:
         _In_ winrt::Windows::Storage::Streams::DataReader const& reader,
         _In_ uint32_t const firstCommandHeaderWord);
 
+    // The newest endpoint instance wins. The service can open the endpoint again before it has
+    // shut the previous instance down.
     HRESULT ConnectMidiCallback(
         _In_ wil::com_ptr_nothrow<IMidiCallback> callback
     );
@@ -69,14 +71,25 @@ public:
         _In_ PVOID const bytes,
         _In_ UINT const byteCount);
 
-    HRESULT DisconnectMidiCallback();
+    // Does nothing unless this callback is still the connected one
+    HRESULT DisconnectMidiCallbackIfCurrent(_In_ IMidiCallback* callback);
+
+    // An app can open the endpoint before its creation returns. What it sends in the meantime is
+    // held for the session, and dropped if no session comes of it.
+    void BeginEndpointCreation() noexcept;
+    void EndEndpointCreation() noexcept;
 
     // if this was created from a host here
     winrt::guid ConfigIdentifier() { return m_configIdentifier; }
     MidiNetworkConnectionRole Role() const noexcept { return m_role; }
 
     bool IsSessionActive() { return m_sessionActive; }
-    std::wstring GetEndpointDeviceId() { return m_sessionEndpointDeviceInterfaceId; }
+    std::wstring GetEndpointDeviceId()
+    {
+        auto lock = m_sessionLock.lock();
+
+        return m_sessionEndpointDeviceInterfaceId;
+    }
 
     winrt::Windows::Networking::HostName GetRemoteHostName() { return m_remoteHostName; }
     std::wstring GetRemotePort() { return m_remotePort; }
@@ -198,9 +211,9 @@ protected:
         _In_ std::wstring const& clientUmpEndpointName,
         _In_ std::wstring const& clientProductInstanceId);
 
+    // Both authentication commands arrive here. They are refused until authentication exists.
     virtual HRESULT HandleIncomingInvitationWithAuthentication(
-        _In_ MidiNetworkCommandPacketHeader const& header,
-        _In_ MidiNetworkAuthenticationKind const kind);
+        _In_ MidiNetworkCommandPacketHeader const& header);
 
     virtual HRESULT HandleIncomingInvitationReplyAccepted(
         _In_ MidiNetworkCommandPacketHeader const& header,
@@ -209,9 +222,9 @@ protected:
 
     virtual HRESULT HandleIncomingInvitationReplyPending();
 
+    // Both authentication-required replies arrive here
     virtual HRESULT HandleIncomingInvitationReplyAuthenticationRequired(
-        _In_ MidiNetworkCommandPacketHeader const& header,
-        _In_ MidiNetworkAuthenticationKind const kind);
+        _In_ MidiNetworkCommandPacketHeader const& header);
 
     // Which Bye reason this role uses when the remote is already attached.
     virtual MidiNetworkCommandByeReason ByeReasonForDeviceAlreadyAttached() const noexcept
@@ -314,6 +327,9 @@ protected:
     wil::slim_event_manual_reset m_newMessagesInQueueEvent;
     wil::critical_section m_outgoingUmpMessageQueueLock;
     std::vector<uint32_t> m_outgoingUmpMessages{};
+
+    // written under m_outgoingUmpMessageQueueLock
+    std::atomic<bool> m_endpointBeingCreated{ false };
     HRESULT OutboundProcessingThreadWorker(_In_ std::stop_token stopToken);
 
     bool m_createUmpEndpointsOnly{ true };
@@ -324,6 +340,12 @@ protected:
     wil::critical_section m_socketWriterLock;
 
     std::wstring m_parentDeviceInstanceId;              // the parent under which new endpoints are created
+
+    // Guards the two ids below, and the decisions which start and end a session. An endpoint is
+    // claimed and associated under it, and taken back and disassociated under it, so a session
+    // which has ended can never claim an endpoint that nothing will remove. Taken before
+    // TransportState's lock, never while holding it.
+    wil::critical_section m_sessionLock;
 
     std::wstring m_sessionEndpointDeviceInterfaceId{};  // swd
     std::wstring m_sessionDeviceInstanceId{};           // what we used to create/delete the device
@@ -400,6 +422,51 @@ protected:
         _In_ std::vector<uint32_t> const& words
     );
 
+    // What one datagram has already provoked. Each of these goes out at most once per datagram,
+    // however many of its commands would ask for another.
+    struct DatagramReplyState
+    {
+        bool RetransmitRequested{ false };
+        bool SessionNotEstablishedSent{ false };
+    };
+
+    // Reads one command's payload and hands it to its handler. The payload length has already
+    // been checked against the datagram.
+    void DispatchIncomingCommand(
+        _In_ winrt::Windows::Storage::Streams::DataReader const& reader,
+        _In_ MidiNetworkCommandPacketHeader const& commandHeader,
+        _In_ uint32_t const payloadLengthInBytes,
+        _Inout_ DatagramReplyState& replyState);
+
+    // The UMP Endpoint Name and Product Instance Id which an invitation and an invitation reply
+    // both carry. False when the payload is malformed.
+    bool TryReadIdentityPayload(
+        _In_ winrt::Windows::Storage::Streams::DataReader const& reader,
+        _In_ MidiNetworkCommandPacketHeader const& commandHeader,
+        _In_ uint32_t const payloadLengthInBytes,
+        _Out_ std::wstring& umpEndpointName,
+        _Out_ std::wstring& productInstanceId);
+
+    void ReadIncomingNAK(
+        _In_ winrt::Windows::Storage::Streams::DataReader const& reader,
+        _In_ MidiNetworkCommandPacketHeader const& commandHeader,
+        _In_ uint32_t const payloadLengthInBytes);
+
+    void ReadIncomingUmpData(
+        _In_ winrt::Windows::Storage::Streams::DataReader const& reader,
+        _In_ MidiNetworkCommandPacketHeader const& commandHeader,
+        _Inout_ DatagramReplyState& replyState);
+
+    // Spec: UMP Data, a Retransmit Request or Error, a Session Reset or a Session Reset Reply
+    // outside an established session is answered with Bye Session Not Established. True when
+    // there is no session, so the caller goes no further.
+    bool RefuseCommandOutsideSession(
+        _In_ MidiNetworkCommandPacketHeader const& commandHeader,
+        _Inout_ DatagramReplyState& replyState);
+
+    // Spec 6.15, for a command code we don't know
+    void ReplyCommandNotSupported(_In_ MidiNetworkCommandPacketHeader const& commandHeader);
+
     HRESULT HandleIncomingRetransmitRequest(
         _In_ MidiNetworkCommandPacketHeader const& header,
         _In_ uint16_t const startingSequenceNumber, 
@@ -473,6 +540,28 @@ protected:
         _In_ std::vector<uint32_t> const& words,
         _In_ size_t const position,
         _In_ size_t const maxWords);
+
+    // One UMP Data command in an outbound datagram: a run of whole messages from the queue
+    struct OutboundUmpChunk
+    {
+        size_t Offset{ 0 };
+        size_t WordCount{ 0 };
+        MidiSequenceNumber SequenceNumber{ 0 };
+    };
+
+    // The newest retransmit buffer entries which fit in the budget, oldest first, for forward
+    // error correction. Needs m_socketWriterLock.
+    std::vector<size_t> ChooseForwardErrorCorrectionPackets(_Inout_ size_t& budgetBytes);
+
+    // Whole messages from the outbound queue which fit in the budget, each numbered after the
+    // last one sent. Moves position past what it took. Needs both queue and writer locks.
+    std::vector<OutboundUmpChunk> TakeOutboundChunks(
+        _Inout_ size_t& position,
+        _Inout_ size_t& budgetBytes);
+
+    // The endpoint worker can start the send thread while a host stop, on another thread, stops
+    // and joins it. Declared before the threads so it outlives them.
+    wil::critical_section m_workerThreadsLock;
 
     // These must remain the last members declared. Members are destroyed in reverse declaration
     // order, so declaring them last guarantees both threads are joined before anything they

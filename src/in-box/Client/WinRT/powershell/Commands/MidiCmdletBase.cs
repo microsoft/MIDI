@@ -6,6 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using System.Globalization;
 using System.Management.Automation;
 
 using Windows.Devices.Midi2;
@@ -15,6 +16,13 @@ namespace WindowsMidiServices
 {
     public abstract class MidiCmdletBase : PSCmdlet
     {
+        // Fills in a Format string from Resources\Strings.resx, with numbers written the way the
+        // reader's culture writes them.
+        protected static string Format(string format, params object?[] args)
+        {
+            return string.Format(CultureInfo.CurrentCulture, format, args);
+        }
+
         // Terminating errors go through ThrowTerminatingError rather than a bare throw so the
         // caller gets an ErrorRecord with a stable FullyQualifiedErrorId to trap on.
         protected void ThrowTerminating(
@@ -40,7 +48,7 @@ namespace WindowsMidiServices
             if (!MidiApi.EnsureServiceAvailable())
             {
                 ThrowTerminating(
-                    new InvalidOperationException("Windows MIDI Services is not available on this PC."),
+                    new InvalidOperationException(Strings.ServiceUnavailable),
                     "MidiServicesUnavailable",
                     ErrorCategory.ResourceUnavailable);
             }
@@ -51,7 +59,7 @@ namespace WindowsMidiServices
             if (!isAvailable)
             {
                 ThrowTerminating(
-                    new InvalidOperationException($"The {transportName} transport is not available on this PC."),
+                    new InvalidOperationException(Format(Strings.TransportUnavailableFormat, transportName)),
                     "MidiTransportUnavailable",
                     ErrorCategory.ResourceUnavailable,
                     transportName);
@@ -63,7 +71,7 @@ namespace WindowsMidiServices
             if (connection?.BackingConnection is null)
             {
                 ThrowTerminating(
-                    new ArgumentNullException(nameof(connection), "An open MIDI endpoint connection is required. Use Open-MidiEndpointConnection first."),
+                    new ArgumentNullException(nameof(connection), Strings.ConnectionRequired),
                     "MidiConnectionRequired",
                     ErrorCategory.InvalidArgument);
             }
@@ -71,13 +79,56 @@ namespace WindowsMidiServices
             if (!connection!.BackingConnection!.IsOpen)
             {
                 ThrowTerminating(
-                    new InvalidOperationException("The MIDI endpoint connection is not open."),
+                    new InvalidOperationException(Strings.ConnectionNotOpen),
                     "MidiConnectionNotOpen",
                     ErrorCategory.InvalidOperation,
                     connection.EndpointDeviceId);
             }
 
             return connection.BackingConnection!;
+        }
+
+        // For a cmdlet which takes an endpoint device id instead of an open connection, so a single
+        // operation needs no Start-MidiSession or Open-MidiEndpointConnection first. The session is
+        // named after the cmdlet, which is what shows in the list of sessions using the endpoint.
+        internal MidiTemporaryConnection OpenTemporaryConnection(string endpointDeviceId)
+        {
+            var session = Windows.Devices.Midi2.MidiSession.Create(
+                Format(Strings.SessionTemporaryNameFormat, MyInvocation.MyCommand.Name));
+
+            if (session is null)
+            {
+                ThrowTerminating(
+                    new InvalidOperationException(Strings.SessionCreationFailed),
+                    "MidiSessionFailed",
+                    ErrorCategory.ResourceUnavailable);
+            }
+
+            var connection = session!.CreateEndpointConnection(endpointDeviceId);
+
+            if (connection is null)
+            {
+                session.Dispose();
+
+                ThrowTerminating(
+                    new InvalidOperationException(Format(Strings.ConnectionCreationFailedFormat, endpointDeviceId)),
+                    "MidiConnectionCreationFailed",
+                    ErrorCategory.ResourceUnavailable,
+                    endpointDeviceId);
+            }
+
+            if (!connection!.Open())
+            {
+                session.Dispose();
+
+                ThrowTerminating(
+                    new InvalidOperationException(Format(Strings.ConnectionOpenFailedFormat, endpointDeviceId)),
+                    "MidiConnectionOpenFailed",
+                    ErrorCategory.OpenError,
+                    endpointDeviceId);
+            }
+
+            return new MidiTemporaryConnection(session, connection);
         }
 
         // Sending a configuration to the service and saving it to the configuration file are
@@ -89,19 +140,19 @@ namespace WindowsMidiServices
 
             if (response is not null && response.Success)
             {
-                WriteVerbose($"Saved to the configuration file {response.ConfigFilePath}.");
+                WriteVerbose(Format(Strings.ConfigurationSavedFormat, response.ConfigFilePath));
 
                 if (!string.IsNullOrEmpty(response.BackupFilePath))
                 {
-                    WriteVerbose($"A backup of the previous configuration was written to {response.BackupFilePath}.");
+                    WriteVerbose(Format(Strings.ConfigurationBackupWrittenFormat, response.BackupFilePath));
                 }
 
                 return;
             }
 
             WriteWarning(response is null
-                ? "The change was applied, but could not be saved, so it will be lost when the service restarts."
-                : $"{response.ErrorMessage} The change was applied, but will be lost when the service restarts.");
+                ? Strings.ConfigurationNotSaved
+                : Format(Strings.ConfigurationNotSavedReasonFormat, response.ErrorMessage));
         }
     }
 }

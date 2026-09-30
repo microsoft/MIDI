@@ -67,9 +67,16 @@ public:
         _In_ std::shared_ptr<MidiNetworkHost>);
     std::vector<std::shared_ptr<MidiNetworkHost>> GetHosts();
 
-    HRESULT AddPendingHostDefinition(
-        _In_ std::shared_ptr<MidiNetworkHostDefinition>);
-    std::vector<std::shared_ptr<MidiNetworkHostDefinition>> GetPendingHostDefinitions();
+    // Configured host entries, whether or not a host has been built from one. Held and handed
+    // out by value, so no caller is ever reading a definition another thread is writing.
+    HRESULT AddHostDefinition(_In_ MidiNetworkHostDefinition const& hostDefinition);
+    std::vector<MidiNetworkHostDefinition> GetHostDefinitions();
+    std::optional<MidiNetworkHostDefinition> GetHostDefinition(_In_ winrt::guid const& hostEntryIdentifier);
+
+    // Changes a stored definition under the state lock. The update must not call into anything.
+    HRESULT UpdateHostDefinition(
+        _In_ winrt::guid const& hostEntryIdentifier,
+        _In_ std::function<void(MidiNetworkHostDefinition&)> const& update);
 
     std::shared_ptr<MidiNetworkHost> GetHost(_In_ winrt::guid const& hostEntryIdentifier);
 
@@ -137,9 +144,14 @@ public:
     std::shared_ptr<MidiNetworkClient> GetClient(_In_ winrt::guid const& clientEntryIdentifier);
 
 
-    HRESULT AddPendingClientDefinition(
-        _In_ std::shared_ptr<MidiNetworkClientDefinition>);
-    std::vector<std::shared_ptr<MidiNetworkClientDefinition>> GetPendingClientDefinitions();
+    // Configured client entries, held and handed out by value like the host definitions
+    HRESULT AddClientDefinition(_In_ MidiNetworkClientDefinition const& clientDefinition);
+    std::vector<MidiNetworkClientDefinition> GetClientDefinitions();
+    std::optional<MidiNetworkClientDefinition> GetClientDefinition(_In_ winrt::guid const& clientEntryIdentifier);
+
+    HRESULT UpdateClientDefinition(
+        _In_ winrt::guid const& clientEntryIdentifier,
+        _In_ std::function<void(MidiNetworkClientDefinition&)> const& update);
 
     // Puts the entry back in front of the endpoint creator worker. Returns S_FALSE when no
     // definition remains, which is how a user-requested disconnect avoids being reconnected.
@@ -177,6 +189,16 @@ public:
 
     std::shared_ptr<MidiNetworkConnection> GetSessionConnection(
         _In_ std::wstring endpointDeviceInterfaceId);
+
+    // An endpoint is visible to apps before its creation returns, so an app can open it before
+    // any session has claimed it. Until then its connection is found by instance id.
+    HRESULT RegisterEndpointBeingCreated(
+        _In_ std::wstring const& deviceInstanceId,
+        _In_ std::shared_ptr<MidiNetworkConnection> const& connection);
+
+    void UnregisterEndpointBeingCreated(
+        _In_ std::wstring const& deviceInstanceId,
+        _In_ MidiNetworkConnection const* connection) noexcept;
 
     // these are for when the connection is first created. They also live through when they become UMP endpoints
     bool NetworkConnectionExists(
@@ -218,10 +240,6 @@ public:
         _In_ winrt::hstring const& remotePort,
         _In_ std::shared_ptr<MidiNetworkConnection> connection);
 
-    HRESULT RemoveNetworkConnection(
-        _In_ winrt::Windows::Networking::HostName const& remoteHostName,
-        _In_ winrt::hstring const& remotePort);
-
     // Removes the entry and hands the connection back WITHOUT shutting it down. Shutdown joins
     // worker threads, which must never happen on the socket receive callback.
     std::shared_ptr<MidiNetworkConnection> DetachNetworkConnection(
@@ -243,10 +261,13 @@ private:
     std::vector<std::shared_ptr<MidiNetworkHost>> m_hosts{ };
     std::vector<std::shared_ptr<MidiNetworkClient>> m_clients{ };
 
-    std::vector<std::shared_ptr<MidiNetworkHostDefinition>> m_pendingHostDefinitions{ };
-    std::vector<std::shared_ptr<MidiNetworkClientDefinition>> m_pendingClientDefinitions{ };
+    std::vector<MidiNetworkHostDefinition> m_hostDefinitions{ };
+    std::vector<MidiNetworkClientDefinition> m_clientDefinitions{ };
 
     std::map<std::wstring, std::shared_ptr<MidiNetworkConnection>> m_sessionConnections{ };
+
+    // keyed by normalized device instance id
+    std::map<std::wstring, std::shared_ptr<MidiNetworkConnection>> m_endpointsBeingCreated{ };
 
     // Map of MidiNetworkConnections and their related remote client addresses
     // the keys for these two maps are the values created with CreateConnectionMapKey

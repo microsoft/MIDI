@@ -54,6 +54,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
             _In_ winrt::guid const& associationId,
             _In_ loop::MidiLoopbackFeedbackProtection const& feedbackProtection) noexcept;
 
+        static collections::IVectorView<loop::MidiLoopbackSavedEntry> GetSavedLoopbackEntries() noexcept;
+
+        static loop::MidiLoopbackUpdateResponse UpdateLoopback(
+            _In_ loop::MidiLoopbackUpdateConfig const& updateConfig) noexcept;
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::Transports::Loopback::factory_implementation

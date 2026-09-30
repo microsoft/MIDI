@@ -35,6 +35,24 @@ public:
     std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache> CustomPropertiesCache() { return m_customPropertiesCache; }
 
 private:
+    // The transport-wide settings. A bad value is corrected rather than rejected.
+    void ApplyTransportSettings(_In_ json::JsonObject const& transportSettingsSection);
+
+    // One "create" entry. On failure, errorMessage and errorCode say what to report for it.
+    bool TryReadHostDefinition(
+        _In_ winrt::hstring const& entryKey,
+        _In_ json::JsonObject const& hostEntry,
+        _Out_ MidiNetworkHostDefinition& definition,
+        _Out_ winrt::hstring& errorMessage,
+        _Out_ uint32_t& errorCode);
+
+    bool TryReadClientDefinition(
+        _In_ winrt::hstring const& entryKey,
+        _In_ json::JsonObject const& clientEntry,
+        _Out_ MidiNetworkClientDefinition& definition,
+        _Out_ winrt::hstring& errorMessage,
+        _Out_ uint32_t& errorCode);
+
     HRESULT ProcessEndpointCustomizations(
         _In_ json::JsonObject const& jsonObject,
         _Inout_ json::JsonObject& responseObject) noexcept;
@@ -45,6 +63,12 @@ private:
     HRESULT ProcessEndpointCustomizationRemovals(
         _In_ json::JsonObject const& removeSection,
         _Inout_ json::JsonObject& responseObject) noexcept;
+
+    // Caches a customization, and applies it now if its endpoint is already live. A removal is a
+    // customization with every property cleared.
+    void CacheAndApplyEndpointCustomization(
+        _In_ std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria> const& matchCriteria,
+        _In_ std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> const& customProperties);
 
     // Changes to this transport's own host and client entries, keyed by entry identifier. Kept
     // separate from the array-shaped endpoint customization every transport shares.

@@ -1,0 +1,42 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiNetworkClientMatchCriteria.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    // A client saved in the configuration file, which the service connects when it starts. This
+    // is what is saved, not what is connected now. GetConfiguredClients reports that.
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkSavedClient", UUID_IMidiNetworkSavedClient)]
+    runtimeclass MidiNetworkSavedClient
+    {
+        [noexcept] Guid ClientId{ get; };
+
+        // the comment saved with the entry, often the device's name
+        [noexcept] String Comment{ get; };
+
+        [noexcept] Boolean IsEnabled{ get; };
+
+        // These include changes saved later with MidiNetworkClientUpdateConfig
+        [noexcept] Boolean CreateOnlyUmpEndpoints{ get; };
+        [noexcept] UInt8 FallbackMidi1PortCount{ get; };
+
+        // The name this PC announces to the remote. Empty means the machine name.
+        [noexcept] String UmpEndpointName{ get; };
+
+        // Empty when the endpoint uses the name the remote device announces
+        [noexcept] String CustomEndpointName{ get; };
+
+        // A new copy each time, so changing it changes nothing
+        [noexcept] MidiNetworkClientMatchCriteria MatchCriteria{ get; };
+    };
+}

@@ -41,6 +41,8 @@ namespace glass
         {
             { L"Off-world Colonies wall.png", IDR_THEME_OFFWORLD_WALL },
             { L"Off-world Colonies stains.png", IDR_THEME_OFFWORLD_STAINS },
+            { L"Night Drive sky.png", IDR_THEME_NIGHT_DRIVE_SKY },
+            { L"Visor dots.png", IDR_THEME_VISOR_DOTS },
         };
 
         // A picture repeated across a page has no need to be bigger than this, and a stranger's
@@ -438,6 +440,71 @@ namespace glass
                         pixel[2] = 0;
                         pixel[3] = static_cast<uint8_t>(std::lround(255.0 * alpha));
                     }
+                }
+            }
+
+            auto image = std::make_shared<TextureImage>();
+
+            image->Width = size;
+            image->Height = size;
+            image->Encoded = EncodePng(size, size, bgra);
+
+            if (image->Encoded.empty())
+            {
+                return nullptr;
+            }
+
+            std::lock_guard guard{ lock };
+            cache.emplace(key, image);
+
+            return image;
+        }
+        catch (...)
+        {
+            return nullptr;
+        }
+    }
+
+    _Use_decl_annotations_
+    std::shared_ptr<TextureImage const> CheckerImage(ThemeColor const& first, ThemeColor const& second) noexcept
+    {
+        try
+        {
+            static std::mutex lock{};
+            static std::unordered_map<uint64_t, std::shared_ptr<TextureImage const>> cache{};
+
+            auto const pack = [](ThemeColor const& color) noexcept
+                {
+                    return (static_cast<uint32_t>(color.A) << 24) | (static_cast<uint32_t>(color.R) << 16) |
+                        (static_cast<uint32_t>(color.G) << 8) | static_cast<uint32_t>(color.B);
+                };
+
+            auto const key = (static_cast<uint64_t>(pack(first)) << 32) | pack(second);
+
+            {
+                std::lock_guard guard{ lock };
+
+                if (auto const found = cache.find(key); found != cache.end())
+                {
+                    return found->second;
+                }
+            }
+
+            constexpr int32_t size = 64;
+
+            std::vector<uint8_t> bgra(static_cast<size_t>(size) * size * 4);
+
+            for (int32_t row = 0; row < size; ++row)
+            {
+                for (int32_t column = 0; column < size; ++column)
+                {
+                    auto const& color = ((row + column) % 2) == 0 ? first : second;
+                    auto const at = (static_cast<size_t>(row) * size + column) * 4;
+
+                    bgra[at + 0] = color.B;
+                    bgra[at + 1] = color.G;
+                    bgra[at + 2] = color.R;
+                    bgra[at + 3] = color.A;
                 }
             }
 

@@ -89,6 +89,9 @@ namespace winrt::midiclock::implementation
             ReportStoreError();
 
             StartEndpointWatcher();
+
+            // The title bar gear is first in tab order, so focus would otherwise start there.
+            AddClockButton().Focus(xaml::FocusState::Programmatic);
         }
         MIDI_CLOCK_CATCH_AND_LOG(L"Unable to finish loading the window.")
     }

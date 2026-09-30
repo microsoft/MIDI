@@ -1,0 +1,565 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Every message a person reads in PowerShell comes from this file. Error ids, parameter
+       names and the values scripts compare against stay in the code and are never translated.
+       Keys ending in Format take placeholders. Keep each {0} and anything after its colon, such
+       as {0:N0}, exactly as it is. Keys ending in Action are what -WhatIf and -Confirm show as the
+       operation, as in: Performing the operation "Stop MIDI session" on target "My session". -->
+
+  <!-- Service, transports and configuration -->
+  <data name="ServiceAvailable" xml:space="preserve">
+    <value>Windows MIDI Services is available.</value>
+  </data>
+  <data name="ServiceUnavailable" xml:space="preserve">
+    <value>Windows MIDI Services is not available on this PC.</value>
+  </data>
+  <data name="TransportUnavailableFormat" xml:space="preserve">
+    <value>The {0} transport is not available on this PC.</value>
+    <comment>{0} is the name of a transport, such as Network MIDI 2.0.</comment>
+  </data>
+  <data name="TransportNameBasicLoopback" xml:space="preserve">
+    <value>MIDI 1.0 basic loopback</value>
+  </data>
+  <data name="TransportNameLoopback" xml:space="preserve">
+    <value>MIDI 2.0 loopback</value>
+  </data>
+  <data name="TransportNameNetwork" xml:space="preserve">
+    <value>Network MIDI 2.0</value>
+    <comment>Name of a MIDI Association standard. Usually left in English.</comment>
+  </data>
+  <data name="TransportNameRtp" xml:space="preserve">
+    <value>RTP-MIDI</value>
+    <comment>Name of a network protocol. Usually left in English.</comment>
+  </data>
+  <data name="TransportNameSynth" xml:space="preserve">
+    <value>General MIDI synthesizer</value>
+  </data>
+  <data name="ConfigurationBackupWrittenFormat" xml:space="preserve">
+    <value>A backup of the previous configuration was written to {0}.</value>
+    <comment>{0} is the full path of the backup file.</comment>
+  </data>
+  <data name="ConfigurationNotSaved" xml:space="preserve">
+    <value>The change was applied, but could not be saved, so it will be lost when the service restarts.</value>
+  </data>
+  <data name="ConfigurationNotSavedReasonFormat" xml:space="preserve">
+    <value>{0} The change was applied, but will be lost when the service restarts.</value>
+    <comment>{0} is the reason the service gave, as a full sentence.</comment>
+  </data>
+  <data name="ConfigurationSavedFormat" xml:space="preserve">
+    <value>Saved to the configuration file {0}.</value>
+    <comment>{0} is the full path of the configuration file.</comment>
+  </data>
+
+  <!-- Sessions and connections -->
+  <data name="SessionAlreadyStopped" xml:space="preserve">
+    <value>The MIDI session was already stopped.</value>
+  </data>
+  <data name="SessionCreationFailed" xml:space="preserve">
+    <value>A MIDI session could not be created.</value>
+  </data>
+  <data name="SessionNamedCreationFailedFormat" xml:space="preserve">
+    <value>Unable to create the MIDI session "{0}".</value>
+    <comment>{0} is the session name the caller chose.</comment>
+  </data>
+  <data name="SessionRequired" xml:space="preserve">
+    <value>An open MIDI session is required.</value>
+  </data>
+  <data name="SessionRequiredStartFirst" xml:space="preserve">
+    <value>An open MIDI session is required. Use Start-MidiSession first.</value>
+    <comment>Start-MidiSession is a command name. Do not translate it.</comment>
+  </data>
+  <data name="SessionStarted" xml:space="preserve">
+    <value>MIDI session started.</value>
+  </data>
+  <data name="SessionStopAction" xml:space="preserve">
+    <value>Stop MIDI session</value>
+  </data>
+  <data name="SessionStopped" xml:space="preserve">
+    <value>MIDI session stopped.</value>
+  </data>
+  <data name="SessionTemporaryNameFormat" xml:space="preserve">
+    <value>PowerShell {0}</value>
+    <comment>Name of a session a single command opens for itself. Other tools show it in their list of apps using an endpoint. {0} is the command name, such as Send-MidiSystemExclusive.</comment>
+  </data>
+  <data name="ConnectionCloseAction" xml:space="preserve">
+    <value>Close MIDI endpoint connection</value>
+  </data>
+  <data name="ConnectionClosedFormat" xml:space="preserve">
+    <value>MIDI endpoint connection {0} closed.</value>
+    <comment>{0} is the connection id, a GUID.</comment>
+  </data>
+  <data name="ConnectionCreationFailedFormat" xml:space="preserve">
+    <value>Unable to create a connection to "{0}".</value>
+    <comment>{0} is an endpoint device id.</comment>
+  </data>
+  <data name="ConnectionNotOpen" xml:space="preserve">
+    <value>The MIDI endpoint connection is not open.</value>
+  </data>
+  <data name="ConnectionOpenFailedFormat" xml:space="preserve">
+    <value>Unable to open the connection to "{0}".</value>
+    <comment>{0} is an endpoint device id.</comment>
+  </data>
+  <data name="ConnectionRequired" xml:space="preserve">
+    <value>An open MIDI endpoint connection is required. Use Open-MidiEndpointConnection first.</value>
+    <comment>Open-MidiEndpointConnection is a command name. Do not translate it.</comment>
+  </data>
+
+  <!-- Endpoints and ports -->
+  <data name="EndpointDeviceIdInvalidFormat" xml:space="preserve">
+    <value>'{0}' is not a Windows MIDI Services endpoint device id.</value>
+    <comment>{0} is the text the caller passed in.</comment>
+  </data>
+  <data name="EndpointDeviceIdNotExpandableFormat" xml:space="preserve">
+    <value>'{0}' could not be expanded into an endpoint device id.</value>
+    <comment>{0} is the text the caller passed in.</comment>
+  </data>
+  <data name="EndpointNotFoundFormat" xml:space="preserve">
+    <value>No MIDI endpoint was found with the identifier "{0}".</value>
+    <comment>{0} is an endpoint device id.</comment>
+  </data>
+  <data name="LegacyPortNotFoundFormat" xml:space="preserve">
+    <value>No MIDI 1.0 port was found with the identifier "{0}".</value>
+    <comment>{0} is a port device id.</comment>
+  </data>
+
+  <!-- Sending and capturing messages -->
+  <data name="MessageNotSentFormat" xml:space="preserve">
+    <value>The MIDI message was not sent. Send result: {0}.</value>
+    <comment>{0} is the result code, an English name such as EndpointConnectionClosedOrInvalid.</comment>
+  </data>
+  <data name="MessageSentFormat" xml:space="preserve">
+    <value>MIDI message with {0} UMP words sent with timestamp {1}.</value>
+    <comment>{0} is a number from 1 to 4. {1} is a timestamp, a large number.</comment>
+  </data>
+  <data name="FileExistsFormat" xml:space="preserve">
+    <value>The file "{0}" already exists. Use -Force to overwrite it.</value>
+    <comment>{0} is a full file path. -Force is a parameter name. Do not translate it.</comment>
+  </data>
+  <data name="CaptureDefaultTrackName" xml:space="preserve">
+    <value>MIDI capture</value>
+    <comment>Track name written into the captured file when the endpoint has no name.</comment>
+  </data>
+  <data name="CaptureGroupTrackNameFormat" xml:space="preserve">
+    <value>{0} - group {1}</value>
+    <comment>Track name written into the captured file. {0} is the endpoint name. {1} is the group number, 1 to 16.</comment>
+  </data>
+  <data name="CaptureLimitReachedFormat" xml:space="preserve">
+    <value>The capture stopped when it reached its limit of {0:N0} messages.</value>
+    <comment>{0:N0} is the message limit.</comment>
+  </data>
+  <data name="CaptureNothingReceived" xml:space="preserve">
+    <value>No MIDI messages were received, so no file was written.</value>
+  </data>
+  <data name="CaptureNothingStorable" xml:space="preserve">
+    <value>None of the messages received can be stored in a Standard MIDI File, so no file was written.</value>
+  </data>
+  <data name="CaptureProgressActivityFormat" xml:space="preserve">
+    <value>Capturing MIDI messages from {0}</value>
+    <comment>Progress bar title. {0} is the endpoint name.</comment>
+  </data>
+  <data name="CaptureProgressStatusFormat" xml:space="preserve">
+    <value>{0:N0} messages. Press Ctrl+C to stop and save the file.</value>
+    <comment>Progress bar status. {0:N0} is the number of messages captured so far.</comment>
+  </data>
+  <data name="CaptureProgressWaiting" xml:space="preserve">
+    <value>Waiting for messages</value>
+    <comment>Progress bar status before the first update.</comment>
+  </data>
+  <data name="CaptureSkippedFormat" xml:space="preserve">
+    <value>{0:N0} messages have no MIDI 1.0 equivalent, so a Standard MIDI File cannot hold them. They were left out.</value>
+    <comment>{0:N0} is the number of messages left out.</comment>
+  </data>
+  <data name="CaptureWriteFailedFormat" xml:space="preserve">
+    <value>The Standard MIDI File could not be written: {0}</value>
+    <comment>{0} is the reason, an English status name.</comment>
+  </data>
+  <data name="CaptureWrittenFormat" xml:space="preserve">
+    <value>Captured {0:N0} messages and wrote {1} tracks, {2:N0} bytes.</value>
+    <comment>{0:N0} is the number of messages. {1} is the number of tracks. {2:N0} is the file size in bytes.</comment>
+  </data>
+
+  <!-- System exclusive -->
+  <data name="SysExByteCountFormat" xml:space="preserve">
+    <value>{0} bytes</value>
+    <comment>Describes the data being sent, inside SysExSendActionFormat. {0} is a number of bytes.</comment>
+  </data>
+  <data name="SysExFileNotFoundFormat" xml:space="preserve">
+    <value>The file "{0}" was not found.</value>
+    <comment>{0} is a full file path.</comment>
+  </data>
+  <data name="SysExListeningFormat" xml:space="preserve">
+    <value>Listening on group {0} of {1}.</value>
+    <comment>{0} is the group number, 1 to 16. {1} is an endpoint device id.</comment>
+  </data>
+  <data name="SysExReceivedFormat" xml:space="preserve">
+    <value>Received {0:N0} bytes in {1:N0} messages.</value>
+    <comment>{0:N0} is the number of bytes. {1:N0} is the number of messages.</comment>
+  </data>
+  <data name="SysExReceiveStartFailed" xml:space="preserve">
+    <value>Unable to start receiving system exclusive data.</value>
+  </data>
+  <data name="SysExSendActionFormat" xml:space="preserve">
+    <value>Send system exclusive data ({0})</value>
+    <comment>{0} is a full file path, or the text from SysExByteCountFormat.</comment>
+  </data>
+  <data name="SysExSendIncomplete" xml:space="preserve">
+    <value>The system exclusive transfer did not complete.</value>
+  </data>
+  <data name="SysExSendProgressActivity" xml:space="preserve">
+    <value>Sending system exclusive data</value>
+    <comment>Progress bar title.</comment>
+  </data>
+  <data name="SysExSendProgressPreparing" xml:space="preserve">
+    <value>Preparing</value>
+    <comment>Progress bar status before the first update.</comment>
+  </data>
+  <data name="SysExSendProgressStatusFormat" xml:space="preserve">
+    <value>Read {0:N0} of {1:N0} bytes, sent {2:N0} messages</value>
+    <comment>Progress bar status. {0:N0} is bytes read so far. {1:N0} is the total. {2:N0} is the number of messages sent.</comment>
+  </data>
+  <data name="SysExSentFormat" xml:space="preserve">
+    <value>Read {0:N0} bytes and sent {1:N0} UMP messages.</value>
+    <comment>{0:N0} is the number of bytes. {1:N0} is the number of messages.</comment>
+  </data>
+
+  <!-- MIDI file playback -->
+  <data name="PlaybackAlreadyStopped" xml:space="preserve">
+    <value>Playback had already stopped.</value>
+  </data>
+  <data name="PlaybackEndpointFailedFormat" xml:space="preserve">
+    <value>The endpoint could not be opened for playback: {0}</value>
+    <comment>{0} is an endpoint device id.</comment>
+  </data>
+  <data name="PlaybackFileNotFound" xml:space="preserve">
+    <value>The MIDI file was not found.</value>
+  </data>
+  <data name="PlaybackFileTruncated" xml:space="preserve">
+    <value>The file ended sooner than it said it would. Playing what was read.</value>
+  </data>
+  <data name="PlaybackFileUnreadable" xml:space="preserve">
+    <value>The MIDI file could not be read.</value>
+  </data>
+  <data name="PlaybackFileUnreadableFormat" xml:space="preserve">
+    <value>The MIDI file could not be read: {0}</value>
+    <comment>{0} is the reason, an English status name.</comment>
+  </data>
+  <data name="PlaybackNoEndpoint" xml:space="preserve">
+    <value>No endpoint was given and the built-in synthesizer is not available. Pass -EndpointDeviceId.</value>
+    <comment>-EndpointDeviceId is a parameter name. Do not translate it.</comment>
+  </data>
+  <data name="PlaybackNotPausedFormat" xml:space="preserve">
+    <value>Only a file which is paused can be resumed. This one is {0}.</value>
+    <comment>{0} is the playback state, an English name such as Stopped.</comment>
+  </data>
+  <data name="PlaybackNotPlayingFormat" xml:space="preserve">
+    <value>Only a file which is playing can be paused. This one is {0}.</value>
+    <comment>{0} is the playback state, an English name such as Stopped.</comment>
+  </data>
+  <data name="PlaybackPauseAction" xml:space="preserve">
+    <value>Pause MIDI file playback</value>
+  </data>
+  <data name="PlaybackPaused" xml:space="preserve">
+    <value>MIDI file playback paused.</value>
+  </data>
+  <data name="PlaybackProgressActivity" xml:space="preserve">
+    <value>Playing MIDI file</value>
+    <comment>Progress bar title.</comment>
+  </data>
+  <data name="PlaybackProgressStatusFormat" xml:space="preserve">
+    <value>Bar {0}, beat {1}, {2:F0} BPM</value>
+    <comment>Progress bar status. {0} is the bar number. {1} is the beat number. {2:F0} is the tempo in beats per minute.</comment>
+  </data>
+  <data name="PlaybackResumeAction" xml:space="preserve">
+    <value>Resume MIDI file playback</value>
+  </data>
+  <data name="PlaybackResumed" xml:space="preserve">
+    <value>MIDI file playback resumed.</value>
+  </data>
+  <data name="PlaybackSessionNameFormat" xml:space="preserve">
+    <value>PowerShell playback of {0}</value>
+    <comment>Name of the session that plays the file. Other tools show it in their list of apps using an endpoint. {0} is the file name.</comment>
+  </data>
+  <data name="PlaybackStartBeyondEndFormat" xml:space="preserve">
+    <value>The file is only {0:F1} seconds long.</value>
+    <comment>{0:F1} is the length of the file in seconds.</comment>
+  </data>
+  <data name="PlaybackStartedFormat" xml:space="preserve">
+    <value>Playing {0} to {1} on group {2}.</value>
+    <comment>{0} is a full file path. {1} is an endpoint device id. {2} is the group number, 1 to 16.</comment>
+  </data>
+  <data name="PlaybackStopAction" xml:space="preserve">
+    <value>Stop MIDI file playback</value>
+  </data>
+  <data name="PlaybackStopped" xml:space="preserve">
+    <value>MIDI file playback stopped.</value>
+  </data>
+  <data name="PlaybackStoppedEarly" xml:space="preserve">
+    <value>Stopped before the end of the file.</value>
+  </data>
+  <data name="PlaybackSynthDisabled" xml:space="preserve">
+    <value>The built-in synthesizer is switched off, so it has no endpoint. Turn it on with Set-MidiSynth -Enabled, or pass -EndpointDeviceId.</value>
+    <comment>Set-MidiSynth is a command name, and -Enabled and -EndpointDeviceId are parameter names. Do not translate them.</comment>
+  </data>
+
+  <!-- MIDI Capability Inquiry -->
+  <data name="CiAskingResponderFormat" xml:space="preserve">
+    <value>Asking responder {0} on function block {1}.</value>
+    <comment>{0} identifies the device, as in MIDI Unique Id 262163041. It is always in English. {1} is the function block number.</comment>
+  </data>
+  <data name="CiChannelListNotSentFormat" xml:space="preserve">
+    <value>MIDI-CI responder {0} did not send a channel list.</value>
+    <comment>{0} identifies the device, as in MIDI Unique Id 262163041. It is always in English.</comment>
+  </data>
+  <data name="CiLookingForDevicesFormat" xml:space="preserve">
+    <value>Looking for MIDI-CI devices on group {0} of {1}.</value>
+    <comment>{0} is the group number, 1 to 16. {1} is an endpoint device id.</comment>
+  </data>
+  <data name="CiNamedProgramListNotSentFormat" xml:space="preserve">
+    <value>MIDI-CI responder {0} did not send program list "{1}".</value>
+    <comment>{0} identifies the device, as in MIDI Unique Id 262163041. It is always in English. {1} is the name the device uses for one of its program lists.</comment>
+  </data>
+  <data name="CiNoPropertyExchange" xml:space="preserve">
+    <value>The device answered MIDI-CI Discovery, but does not offer Property Exchange, which is how it would publish this list.</value>
+    <comment>Discovery and Property Exchange are names of parts of the MIDI-CI standard.</comment>
+  </data>
+  <data name="CiNoResponderFormat" xml:space="preserve">
+    <value>Nothing answered MIDI-CI Discovery on group {0}, so this endpoint does not support MIDI Capability Inquiry there.</value>
+    <comment>{0} is the group number, 1 to 16. Discovery is the name of a part of the MIDI-CI standard.</comment>
+  </data>
+  <data name="CiProgramListNotOfferedFormat" xml:space="preserve">
+    <value>MIDI-CI responder {0} does not publish a program list.</value>
+    <comment>{0} identifies the device, as in MIDI Unique Id 262163041. It is always in English.</comment>
+  </data>
+  <data name="CiProgramListNotSentFormat" xml:space="preserve">
+    <value>MIDI-CI responder {0} did not send its program list.</value>
+    <comment>{0} identifies the device, as in MIDI Unique Id 262163041. It is always in English.</comment>
+  </data>
+  <data name="CiProgramsReceivedFormat" xml:space="preserve">
+    <value>Received {0} programs.</value>
+    <comment>{0} is the number of programs.</comment>
+  </data>
+  <data name="CiSessionFailed" xml:space="preserve">
+    <value>A MIDI Capability Inquiry session could not be started on the connection.</value>
+  </data>
+
+  <!-- Loopback endpoints -->
+  <data name="LoopbackBasicCreateAction" xml:space="preserve">
+    <value>Create MIDI 1.0 basic loopback endpoint</value>
+  </data>
+  <data name="LoopbackBasicCreationFailed" xml:space="preserve">
+    <value>Unable to create the basic loopback.</value>
+  </data>
+  <data name="LoopbackBasicExistsFormat" xml:space="preserve">
+    <value>A basic loopback with the unique identifier "{0}" already exists.</value>
+    <comment>{0} is the unique identifier, letters and digits only.</comment>
+  </data>
+  <data name="LoopbackBasicMuteAction" xml:space="preserve">
+    <value>Mute MIDI 1.0 basic loopback</value>
+  </data>
+  <data name="LoopbackBasicRemovalFailed" xml:space="preserve">
+    <value>Unable to remove the basic loopback.</value>
+  </data>
+  <data name="LoopbackBasicRemoveAction" xml:space="preserve">
+    <value>Remove MIDI 1.0 basic loopback endpoint</value>
+  </data>
+  <data name="LoopbackBasicUnmuteAction" xml:space="preserve">
+    <value>Unmute MIDI 1.0 basic loopback</value>
+  </data>
+  <data name="LoopbackCreateAction" xml:space="preserve">
+    <value>Create MIDI 2.0 loopback endpoint pair</value>
+  </data>
+  <data name="LoopbackCreationFailed" xml:space="preserve">
+    <value>Unable to create the loopback.</value>
+  </data>
+  <data name="LoopbackExistsFormat" xml:space="preserve">
+    <value>A loopback with the unique identifier "{0}" already exists.</value>
+    <comment>{0} is the unique identifier, letters and digits only.</comment>
+  </data>
+  <data name="LoopbackInvalidUniqueId" xml:space="preserve">
+    <value>The unique identifier must contain at least one letter or digit.</value>
+  </data>
+  <data name="LoopbackMuteAction" xml:space="preserve">
+    <value>Mute MIDI 2.0 loopback</value>
+  </data>
+  <data name="LoopbackMuteFailed" xml:space="preserve">
+    <value>Unable to change the mute state.</value>
+  </data>
+  <data name="LoopbackNamesMustDifferFormat" xml:space="preserve">
+    <value>The two endpoint names must differ within the first {0} characters.</value>
+    <comment>{0} is the longest name a MIDI 1.0 port can have, 31.</comment>
+  </data>
+  <data name="LoopbackRemovalFailed" xml:space="preserve">
+    <value>Unable to remove the loopback.</value>
+  </data>
+  <data name="LoopbackRemoveAction" xml:space="preserve">
+    <value>Remove MIDI 2.0 loopback endpoint pair</value>
+  </data>
+  <data name="LoopbackRemoved" xml:space="preserve">
+    <value>The loopback was removed from the running service. An entry saved in the configuration file is not affected.</value>
+  </data>
+  <data name="LoopbackSideANameFormat" xml:space="preserve">
+    <value>{0} (A)</value>
+    <comment>Name of the first endpoint of a new loopback pair. Apps show it as a port name. {0} is the name the caller chose. Keep it short: a MIDI 1.0 port name holds at most 31 characters, and the chosen name is shortened to make room for the rest. Must differ from LoopbackSideBNameFormat.</comment>
+  </data>
+  <data name="LoopbackSideBNameFormat" xml:space="preserve">
+    <value>{0} (B)</value>
+    <comment>Name of the second endpoint of a new loopback pair. Apps show it as a port name. {0} is the name the caller chose. Keep it short: a MIDI 1.0 port name holds at most 31 characters, and the chosen name is shortened to make room for the rest. Must differ from LoopbackSideANameFormat.</comment>
+  </data>
+  <data name="LoopbackTransient" xml:space="preserve">
+    <value>This loopback is transient and will disappear when the service restarts. Use -SaveToConfiguration to keep it.</value>
+    <comment>-SaveToConfiguration is a parameter name. Do not translate it.</comment>
+  </data>
+  <data name="LoopbackUnmuteAction" xml:space="preserve">
+    <value>Unmute MIDI 2.0 loopback</value>
+  </data>
+
+  <!-- Network MIDI 2.0 and RTP-MIDI -->
+  <data name="ConnectionTransient" xml:space="preserve">
+    <value>This connection is transient and will be lost when the service restarts. Use -SaveToConfiguration to keep it.</value>
+    <comment>-SaveToConfiguration is a parameter name. Do not translate it.</comment>
+  </data>
+  <data name="HostConnectFailed" xml:space="preserve">
+    <value>Unable to connect to the host.</value>
+  </data>
+  <data name="HostDisconnectFailed" xml:space="preserve">
+    <value>Unable to disconnect the host.</value>
+  </data>
+  <data name="NetworkClientNotFoundFormat" xml:space="preserve">
+    <value>No configured network MIDI client matches {0}.</value>
+    <comment>{0} is what the caller asked for: a client id, a service instance name, or an address and port.</comment>
+  </data>
+  <data name="NetworkConnectAction" xml:space="preserve">
+    <value>Connect to network MIDI host</value>
+  </data>
+  <data name="NetworkDisconnectAction" xml:space="preserve">
+    <value>Disconnect network MIDI host</value>
+  </data>
+  <data name="RtpClientNotFoundFormat" xml:space="preserve">
+    <value>No configured RTP-MIDI client matches {0}.</value>
+    <comment>{0} is what the caller asked for: a client id, a service instance name, or an address and port.</comment>
+  </data>
+  <data name="RtpConnectAction" xml:space="preserve">
+    <value>Connect to RTP-MIDI host</value>
+  </data>
+  <data name="RtpDisconnectAction" xml:space="preserve">
+    <value>Disconnect RTP-MIDI host</value>
+  </data>
+  <data name="RtpReconnectRefusedFormat" xml:space="preserve">
+    <value>The entry was updated, but will not be tried again until its next retry: {0}</value>
+    <comment>{0} is the reason the service gave.</comment>
+  </data>
+  <data name="RtpReconnectUnanswered" xml:space="preserve">
+    <value>The entry was updated, but the service did not say whether it will try again now.</value>
+  </data>
+
+  <!-- General MIDI synthesizer -->
+  <data name="SynthChannelTargetFormat" xml:space="preserve">
+    <value>Synthesizer channel {0}</value>
+    <comment>What -WhatIf and -Confirm show as the target. {0} is the channel number, 1 to 16.</comment>
+  </data>
+  <data name="SynthConflictingState" xml:space="preserve">
+    <value>Specify either -Enabled or -Disabled, not both.</value>
+    <comment>-Enabled and -Disabled are parameter names. Do not translate them.</comment>
+  </data>
+  <data name="SynthDrumChannelAction" xml:space="preserve">
+    <value>Make it a drum channel</value>
+  </data>
+  <data name="SynthDrumChannelFailed" xml:space="preserve">
+    <value>The synthesizer did not accept the change. If nothing is connected to it, open a connection to it with Open-MidiEndpointConnection and try again.</value>
+    <comment>Open-MidiEndpointConnection is a command name. Do not translate it.</comment>
+  </data>
+  <data name="SynthInstrumentsUnavailable" xml:space="preserve">
+    <value>The synthesizer did not report its instruments.</value>
+  </data>
+  <data name="SynthMelodicChannelAction" xml:space="preserve">
+    <value>Make it a melodic channel</value>
+  </data>
+  <data name="SynthNoEndpoint" xml:space="preserve">
+    <value>The synthesizer has no endpoint. It is most likely switched off.</value>
+  </data>
+  <data name="SynthNothingToChange" xml:space="preserve">
+    <value>The synthesizer did not report its status, so there is nothing to change.</value>
+  </data>
+  <data name="SynthSettingsNotApplied" xml:space="preserve">
+    <value>The synthesizer settings were not applied.</value>
+  </data>
+  <data name="SynthSettingsNotAppliedFormat" xml:space="preserve">
+    <value>The synthesizer settings were not applied: {0}</value>
+    <comment>{0} is the reason, an English status name.</comment>
+  </data>
+  <data name="SynthSoundSetUnavailable" xml:space="preserve">
+    <value>The synthesizer did not report its sound set.</value>
+  </data>
+  <data name="SynthStatusUnavailable" xml:space="preserve">
+    <value>The synthesizer did not report its status.</value>
+  </data>
+  <data name="SynthTarget" xml:space="preserve">
+    <value>General MIDI synthesizer</value>
+    <comment>What -WhatIf and -Confirm show as the target.</comment>
+  </data>
+  <data name="SynthUpdateAction" xml:space="preserve">
+    <value>Update the settings</value>
+  </data>
+  <data name="SynthUpdateAndSaveAction" xml:space="preserve">
+    <value>Update and save the settings</value>
+  </data>
+</root>

@@ -26,12 +26,23 @@ namespace miditroubleshooter
         std::wstring ErrorMessage{};
     };
 
+    // Called on the thread running the program with each piece of output as it arrives.
+    // A piece never splits a character, but it often splits a line.
+    using OutputReceivedHandler = std::function<void(std::wstring_view const text)>;
+
     // Runs a console program with its output redirected to a pipe and no console window.
     // Blocking: callers run it from a background thread.
     ProcessResult RunCapture(
         _In_ std::wstring const& executablePath,
         _In_ std::wstring const& arguments,
         _In_ std::chrono::seconds timeout) noexcept;
+
+    // The same, also handing output to the handler as it arrives. The result still carries all of it.
+    ProcessResult RunCapture(
+        _In_ std::wstring const& executablePath,
+        _In_ std::wstring const& arguments,
+        _In_ std::chrono::seconds timeout,
+        _In_ OutputReceivedHandler const& onOutputReceived) noexcept;
 
     // Runs a console program without capturing anything, for the tools that write their own
     // output files. Also blocking.

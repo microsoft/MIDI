@@ -480,8 +480,9 @@
                 </ScrollViewer>
 
                 <!-- =============================== Diagnostics =============================== -->
+                <!-- The background is what lets the busy pointer show in the gaps between controls. -->
                 <Grid x:Name="DiagnosticsPanel" Grid.Row="1" Margin="16,12,16,16" Visibility="Collapsed"
-                      RowSpacing="8">
+                      RowSpacing="8" Background="Transparent">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />

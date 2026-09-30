@@ -50,17 +50,15 @@ namespace WindowsMidiServices
         protected override void ProcessRecord()
         {
             RequireMidiServices();
-            RequireTransport(MidiLoopbackManager.IsTransportAvailable, "MIDI 2.0 loopback");
+            RequireTransport(MidiLoopbackManager.IsTransportAvailable, Strings.TransportNameLoopback);
 
             string nameA;
             string nameB;
 
             if (ParameterSetName == BaseNameParameterSet)
             {
-                var root = LoopbackNaming.Truncate(BaseName, LoopbackNaming.MaxPortNameLength - LoopbackNaming.SuffixA.Length);
-
-                nameA = root + LoopbackNaming.SuffixA;
-                nameB = root + LoopbackNaming.SuffixB;
+                nameA = LoopbackNaming.FormatSideName(Strings.LoopbackSideANameFormat, BaseName);
+                nameB = LoopbackNaming.FormatSideName(Strings.LoopbackSideBNameFormat, BaseName);
             }
             else
             {
@@ -71,7 +69,7 @@ namespace WindowsMidiServices
             if (string.Equals(nameA, nameB, StringComparison.OrdinalIgnoreCase))
             {
                 ThrowTerminating(
-                    new ArgumentException($"The two endpoint names must differ within the first {LoopbackNaming.MaxPortNameLength} characters."),
+                    new ArgumentException(Format(Strings.LoopbackNamesMustDifferFormat, LoopbackNaming.MaxPortNameLength)),
                     "MidiLoopbackDuplicateName",
                     ErrorCategory.InvalidArgument,
                     nameA);
@@ -84,7 +82,7 @@ namespace WindowsMidiServices
             if (string.IsNullOrEmpty(uniqueId))
             {
                 ThrowTerminating(
-                    new ArgumentException("The unique identifier must contain at least one letter or digit."),
+                    new ArgumentException(Strings.LoopbackInvalidUniqueId),
                     "MidiLoopbackInvalidUniqueId",
                     ErrorCategory.InvalidArgument,
                     UniqueId);
@@ -93,13 +91,13 @@ namespace WindowsMidiServices
             if (MidiLoopbackManager.DoesLoopbackAExist(uniqueId) || MidiLoopbackManager.DoesLoopbackBExist(uniqueId))
             {
                 ThrowTerminating(
-                    new ArgumentException($"A loopback with the unique identifier \"{uniqueId}\" already exists."),
+                    new ArgumentException(Format(Strings.LoopbackExistsFormat, uniqueId)),
                     "MidiLoopbackAlreadyExists",
                     ErrorCategory.ResourceExists,
                     uniqueId);
             }
 
-            if (!ShouldProcess($"{nameA} / {nameB}", "Create MIDI 2.0 loopback endpoint pair"))
+            if (!ShouldProcess($"{nameA} / {nameB}", Strings.LoopbackCreateAction))
             {
                 return;
             }
@@ -116,7 +114,7 @@ namespace WindowsMidiServices
             if (response is null || !response.Success)
             {
                 ThrowTerminating(
-                    new InvalidOperationException(response is null ? "Unable to create the loopback." : response.ErrorMessage),
+                    new InvalidOperationException(response is null ? Strings.LoopbackCreationFailed : response.ErrorMessage),
                     "MidiLoopbackCreationFailed",
                     ErrorCategory.InvalidOperation,
                     creationConfig);
@@ -130,7 +128,7 @@ namespace WindowsMidiServices
             }
             else
             {
-                WriteVerbose("This loopback is transient and will disappear when the service restarts. Use -SaveToConfiguration to keep it.");
+                WriteVerbose(Strings.LoopbackTransient);
             }
 
             WriteObject(response.CreatedLoopbackEntry);

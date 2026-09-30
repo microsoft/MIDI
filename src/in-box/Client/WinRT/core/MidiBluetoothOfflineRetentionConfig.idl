@@ -21,7 +21,8 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
     // restart; both are usually wanted.
     //
     // A device entry is merged into the configuration file by its Bluetooth device id, so setting
-    // one device leaves the others alone.
+    // one device leaves the others alone. It does not connect the device, or save it as one to
+    // connect.
     [interface_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothOfflineRetentionConfig", UUID_IMidiBluetoothOfflineRetentionConfig)]
     [constructor_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothOfflineRetentionConfigFactory", UUID_IMidiBluetoothOfflineRetentionConfigFactory)]
     runtimeclass MidiBluetoothOfflineRetentionConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig

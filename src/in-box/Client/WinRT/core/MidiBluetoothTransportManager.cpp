@@ -19,7 +19,9 @@
 #include "MidiBluetoothPeripheralClient.h"
 #include "MidiBluetoothPeripheralClientDecisionResponse.h"
 #include "MidiBluetoothRadioInformation.h"
+#include "MidiBluetoothSavedDevice.h"
 
+#include "MidiConfigFile.h"
 #include "MidiReporting.h"
 #include "MidiServiceConfigResponse.h"
 #include "MidiServiceTransportCommand.h"
@@ -105,6 +107,47 @@ namespace
 
         return *status;
     }
+
+    winrt::hstring StringValueOrEmpty(
+        _In_ json::JsonObject const& jsonObject,
+        _In_ winrt::hstring const& key) noexcept
+    {
+        try
+        {
+            if (auto const value = jsonObject.TryLookup(key); value != nullptr && value.ValueType() == json::JsonValueType::String)
+            {
+                return value.GetString();
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
+    // Matches the service: an entry without a true or false flag only holds settings, and connects nothing
+    bool TryGetBooleanValue(
+        _In_ json::JsonObject const& jsonObject,
+        _In_ winrt::hstring const& key,
+        _Out_ bool& result) noexcept
+    {
+        result = false;
+
+        try
+        {
+            if (auto const value = jsonObject.TryLookup(key); value != nullptr && value.ValueType() == json::JsonValueType::Boolean)
+            {
+                result = value.GetBoolean();
+                return true;
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return false;
+    }
 }
 
 namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
@@ -158,6 +201,75 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         return static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::KeepAlways);
     }
 
+    collections::IVectorView<bluetooth::MidiBluetoothSavedDevice> MidiBluetoothTransportManager::GetSavedDevices() noexcept
+    {
+        auto devices = winrt::single_threaded_vector<bluetooth::MidiBluetoothSavedDevice>();
+
+        try
+        {
+            // The service only reads this section at start, and connecting and saving are separate
+            // steps, so what is saved is not something the running transport can report.
+            auto const section = svc::implementation::MidiConfigFile::LoadTransportSection(TransportId());
+
+            if (section == nullptr)
+            {
+                return devices.GetView();
+            }
+
+            auto const devicesValue = section.TryLookup(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICES_ARRAY_KEY);
+
+            if (devicesValue == nullptr || devicesValue.ValueType() != json::JsonValueType::Array)
+            {
+                return devices.GetView();
+            }
+
+            for (auto const& entry : devicesValue.GetArray())
+            {
+                if (entry == nullptr || entry.ValueType() != json::JsonValueType::Object)
+                {
+                    continue;
+                }
+
+                auto const deviceObject = entry.GetObject();
+
+                auto const deviceId = btinternal::NormalizedBluetoothDeviceId(
+                    StringValueOrEmpty(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ID_KEY));
+
+                if (deviceId.empty())
+                {
+                    continue;
+                }
+
+                bool isEnabled{ false };
+
+                if (!TryGetBooleanValue(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY, isEnabled))
+                {
+                    continue;
+                }
+
+                auto device = winrt::make_self<implementation::MidiBluetoothSavedDevice>();
+
+                auto const retention = StringValueOrEmpty(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY);
+
+                device->InternalInitialize(
+                    deviceId,
+                    StringValueOrEmpty(deviceObject, MIDI_CONFIG_JSON_COMMON_COMMENT_KEY),
+                    isEnabled,
+                    retention.empty() ?
+                        static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::UseTransportDefault) :
+                        btinternal::OfflineRetentionFromJsonString(retention));
+
+                devices.Append(*device);
+            }
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception reading the saved Bluetooth MIDI devices.");
+        }
+
+        return devices.GetView();
+    }
+
     collections::IVectorView<bluetooth::MidiBluetoothDeviceInformation> MidiBluetoothTransportManager::GetAvailableDevices() noexcept
     {        auto devices = winrt::single_threaded_vector<bluetooth::MidiBluetoothDeviceInformation>();
 
@@ -207,15 +319,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
     {
         try
         {
-            if (internal::TrimmedHStringCopy(bluetoothDeviceId).empty())
+            auto const wantedId = btinternal::NormalizedBluetoothDeviceId(bluetoothDeviceId);
+
+            if (wantedId.empty())
             {
                 return nullptr;
             }
 
             for (auto const& device : GetAvailableDevices())
             {
-                if (internal::ToUpperTrimmedWStringCopy(std::wstring{ device.BluetoothDeviceId() }) ==
-                    internal::ToUpperTrimmedWStringCopy(std::wstring{ bluetoothDeviceId }))
+                if (btinternal::NormalizedBluetoothDeviceId(device.BluetoothDeviceId()) == wantedId)
                 {
                     return device;
                 }

@@ -12,3 +12,8 @@ It also writes one back out. [`MidiStandardFileWriter`]({{ site.baseurl }}/sdk-r
 Reading and writing are both asynchronous, because a MIDI file may come from anywhere: a download, an email attachment, or a document a browser handed to your app.
 
 A MIDI file usually comes from somewhere your app doesn't control. So the reader never sets aside memory for a length the file claims, until it has checked that the bytes are really there. [`MidiFileReadOptions`]({{ site.baseurl }}/sdk-reference/Utilities/Files/MidiFileReadOptions/) is where you set those limits, if the generous defaults aren't what you want.
+
+## Samples
+
+* [C++/WinRT midi-file-writer](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/midi-file-writer) and [C# midi-file-writer](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/midi-file-writer) for saving a sequence as a file, and reading it back to compare
+* [C++/WinRT midi-file-player](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/midi-file-player) and [C# midi-file-player](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/midi-file-player) for reading a file, showing what's in it, and playing it

@@ -42,3 +42,10 @@ if (result.Succeeded())
     }
 }
 ```
+
+## Samples
+
+These read a file, show its title, length, tempo, time signature, and tracks, and then play it. Pass the path of a MIDI file on the command line, or leave it off to play one that comes with Windows.
+
+* [C++/WinRT midi-file-player](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/midi-file-player)
+* [C# midi-file-player](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/midi-file-player)

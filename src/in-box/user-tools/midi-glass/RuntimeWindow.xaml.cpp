@@ -24,9 +24,6 @@ namespace winrt::midiglass::implementation
 {
     namespace
     {
-        constexpr int32_t DefaultWindowWidth = 1320;
-        constexpr int32_t DefaultWindowHeight = 900;
-
         winrt::Windows::UI::Color ToColor(_In_ glass::ThemeColor const& color) noexcept
         {
             return winrt::Windows::UI::ColorHelper::FromArgb(255, color.R, color.G, color.B);
@@ -48,6 +45,10 @@ namespace winrt::midiglass::implementation
             m_filePath = filePath;
             m_document = read.Document;
 
+            m_toolbar = m_document.ToolbarWindow;
+            m_seeThrough = m_document.SeeThrough;
+            m_keepOnTop = m_document.AlwaysOnTop;
+
             m_theme = glass::ResolveDocumentTheme(m_document);
 
             // One owner per running layout, and the file path is what makes it unique, so the
@@ -62,7 +63,15 @@ namespace winrt::midiglass::implementation
             {
                 if (auto const appWindow = AppWindow())
                 {
-                    appWindow.Resize({ DefaultWindowWidth, DefaultWindowHeight });
+                    // The title bar becomes part of the window's content when the chrome is set
+                    // up, so the window is measured that way from the start.
+                    ExtendsContentIntoTitleBar(true);
+
+                    // A toolbar, or a page smaller than the usual window, opens at its own size.
+                    if (!FitWindowToPage())
+                    {
+                        appWindow.Resize({ DefaultWindowWidth, DefaultWindowHeight });
+                    }
                 }
             }
             catch (...)
@@ -98,6 +107,11 @@ namespace winrt::midiglass::implementation
 
             m_chrome.Initialize(elements, ::midiglass::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
+
+            // After the shared chrome, which would otherwise pin this window whenever the
+            // library window is pinned.
+            ApplyWindowStyle();
+            ApplySeeThrough();
 
             auto const title = m_document.Name.empty()
                 ? resources::GetString(L"AppDisplayName")
@@ -206,6 +220,16 @@ namespace winrt::midiglass::implementation
     {
         try
         {
+            // Nothing behind the controls at all, so whatever is behind the window shows.
+            if (m_seeThrough)
+            {
+                SurfaceDeck().Background(nullptr);
+                SurfaceScroll().Background(media::SolidColorBrush(winrt::Windows::UI::Colors::Transparent()));
+
+                ClearDeckOverlays();
+                return;
+            }
+
             SurfaceDeck().Background(glass::MakeDeckBrush(m_theme.Deck));
 
             // Everything outside the page is deliberately not the deck, so the page reads as the
@@ -248,6 +272,7 @@ namespace winrt::midiglass::implementation
         SurfaceCanvas().Height(m_document.PageHeight);
 
         m_renderer.Build(SurfaceCanvas(), m_document, m_theme, pageIndex);
+        m_renderer.ShowCurrentPage(m_document, pageIndex);
 
         auto weak = get_weak();
 
@@ -386,12 +411,16 @@ namespace winrt::midiglass::implementation
     {
         try
         {
+            // A toolbar's window is its page, so the page fills it, whatever size the window
+            // came out at on this display.
+            auto const mode = m_toolbar && !m_fullScreen ? glass::ScaleMode::FitToScreen : m_document.Scale;
+
             auto const viewport = glass::ComputeViewport(
                 m_document.PageWidth,
                 m_document.PageHeight,
                 SurfaceScroll().ActualWidth(),
                 SurfaceScroll().ActualHeight(),
-                m_document.Scale,
+                mode,
                 m_document.CustomScalePercent);
 
             if (viewport.Scale <= 0.0)
@@ -406,6 +435,11 @@ namespace winrt::midiglass::implementation
             // scroll viewer knows how much there is and centers what fits.
             SurfaceDeck().Width(viewport.ContentWidth);
             SurfaceDeck().Height(viewport.ContentHeight);
+
+            if (m_seeThrough)
+            {
+                return;
+            }
 
             // The scan lines belong to the border rather than to the scaled canvas, so their
             // pitch is screen pixels at every zoom instead of a beat pattern at most of them.
@@ -475,7 +509,11 @@ namespace winrt::midiglass::implementation
         m_document.Scale = static_cast<glass::ScaleMode>(index);
 
         ApplyScale();
+        RememberScale();
+    }
 
+    void RuntimeWindow::RememberScale()
+    {
         // The last used mode is remembered per layout, which is the whole reason it is on the
         // document rather than in app settings.
         try
@@ -489,20 +527,35 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
-    void RuntimeWindow::OnViewModeToggled(
+    void RuntimeWindow::OnKeepOnTopChecked(
         foundation::IInspectable const& sender,
         xaml::RoutedEventArgs const& args)
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
-        auto const on = ViewModeToggle().IsChecked().GetBoolean();
+        if (m_updatingChrome || !m_loaded)
+        {
+            return;
+        }
 
-        // While View mode is on the surface sends nothing. A pinch on a control surface is
-        // ambiguous, because two fingers might be two fingers on two faders, which is the entire
-        // point of the product.
-        m_input.ReleaseAll();
-        m_input.SetViewMode(on);
+        ApplyKeepOnTop(true);
+    }
+
+    _Use_decl_annotations_
+    void RuntimeWindow::OnKeepOnTopUnchecked(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingChrome || !m_loaded)
+        {
+            return;
+        }
+
+        ApplyKeepOnTop(false);
     }
 
     _Use_decl_annotations_
@@ -534,9 +587,9 @@ namespace winrt::midiglass::implementation
                 ? winrt::Microsoft::UI::Windowing::AppWindowPresenterKind::FullScreen
                 : winrt::Microsoft::UI::Windowing::AppWindowPresenterKind::Default);
 
-            // The chrome is the only place Panic lives, so it cannot go away with the title bar.
-            AppTitleBar().Visibility(m_fullScreen ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
-            ChromeBar().Visibility(m_fullScreen ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+            // Leaving full screen brings back an ordinary window, so the layout's own style, and a
+            // toolbar's handle, go back on it.
+            ApplyWindowStyle();
 
             ShowFullScreenChrome();
             HoldDisplayAwake(m_fullScreen || ::midiglass::AppSettings::Current().KeepAwakeWhileRunning());

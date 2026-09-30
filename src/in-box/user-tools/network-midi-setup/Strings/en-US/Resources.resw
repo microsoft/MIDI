@@ -688,21 +688,6 @@
   <data name="ConfigFileOverrideNotice" xml:space="preserve">
     <value>Using an alternate configuration file: {0}</value>
   </data>
-  <data name="ConfigFileNoPathError" xml:space="preserve">
-    <value>Windows could not work out where the MIDI configuration file is.</value>
-  </data>
-  <data name="ConfigFileReadError" xml:space="preserve">
-    <value>The MIDI configuration file could not be read: {0}</value>
-  </data>
-  <data name="ConfigFileParseError" xml:space="preserve">
-    <value>The MIDI configuration file is not valid JSON, so it was left alone: {0}</value>
-  </data>
-  <data name="ConfigFileWriteError" xml:space="preserve">
-    <value>The MIDI configuration file could not be written, so this change will be lost when the service restarts: {0} (error {1})</value>
-  </data>
-  <data name="ConfigFileHostEntryMissingError" xml:space="preserve">
-    <value>The change was applied, but there is no entry for this host in the configuration file to remember it in.</value>
-  </data>
   <data name="ConnectingToDeviceFormat" xml:space="preserve">
     <value>Connecting to {0}...</value>
   </data>
@@ -932,11 +917,11 @@
     <value>From {0}, using RTP-MIDI.</value>
     <comment>{0} is the address the request came from.</comment>
   </data>
-  <data name="RtpChangeNotSavedFormat" xml:space="preserve">
+  <data name="ChangeNotSavedFormat" xml:space="preserve">
     <value>The change was made, but Windows could not save it, so it lasts only until the MIDI service restarts. {0}</value>
     <comment>{0} is the reason the save failed, and may be empty.</comment>
   </data>
-  <data name="RtpDecisionNotSavedFormat" xml:space="preserve">
+  <data name="DecisionNotSavedFormat" xml:space="preserve">
     <value>Your decision about {0} is in effect, but Windows could not save it, so it lasts only until the MIDI service restarts. {1}</value>
     <comment>{0} is the device name. {1} is the reason the save failed, and may be empty.</comment>
   </data>

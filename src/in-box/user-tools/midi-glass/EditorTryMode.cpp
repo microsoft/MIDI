@@ -602,6 +602,12 @@ namespace winrt::midiglass::implementation
     {
         m_renderer.SetValue(itemIndex, isOn ? 1.0 : 0.0);
 
+        // A tab let go still says which page is showing.
+        if (!isOn && m_renderer.KindAt(itemIndex) == glass::ControlKind::PageTab)
+        {
+            m_renderer.ShowCurrentPage(m_editor.Document(), m_editor.PageIndex());
+        }
+
         // A time display counts again from zero when it is tapped, in Try mode too.
         if (m_renderer.KindAt(itemIndex) == glass::ControlKind::TimeDisplay)
         {

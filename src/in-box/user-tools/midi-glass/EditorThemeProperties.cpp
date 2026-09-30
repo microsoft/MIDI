@@ -649,6 +649,15 @@ namespace winrt::midiglass::implementation
 
         AddThemeNote(L"ThemePadNote");
 
+        AddThemeSliderRow(L"ThemeRowLampFillWhenOn", L"ThemeUnitPercentOrFollow", -1, 100, m_theme.LampFillWhenOnPercent,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.LampFillWhenOnPercent = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeNote(L"ThemeLampFillNote");
+
         AddThemeSliderRow(L"ThemeRowTouchFill", L"ThemeUnitPercent", 0, 100, m_theme.TouchFillPercent,
             [edit](double value)
             {
@@ -710,6 +719,14 @@ namespace winrt::midiglass::implementation
             });
 
         AddThemeNote(L"ThemeInkNote");
+
+        AddThemeColorRow(L"ThemeRowDeckInkHalo", m_theme.DeckInkHaloColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.DeckInkHaloColor, true); });
+            });
+
+        AddThemeNote(L"ThemeDeckInkHaloNote");
 
         AddThemeColorRow(L"ThemeRowOnInk", m_theme.OnInkColor, true,
             [edit, color](std::wstring const& code)
@@ -839,6 +856,54 @@ namespace winrt::midiglass::implementation
                 edit([value](glass::Theme& theme)
                     { theme.RimThickness = static_cast<int32_t>(std::lround(value)); });
             });
+
+        AddThemeComboRow(L"ThemeRowRimShape",
+            { L"ThemeRimOutline", L"ThemeRimCorners" },
+            static_cast<int32_t>(m_theme.RimShape),
+            [edit](int32_t index)
+            {
+                edit([index](glass::Theme& theme)
+                    { theme.RimShape = static_cast<glass::RimStyle>(index); });
+            });
+
+        AddThemeNote(L"ThemeRimShapeNote");
+
+        // ---- bevels ----
+
+        AddThemeGroupHeading(L"ThemeGroupBevels", false);
+
+        AddThemeSliderRow(L"ThemeRowBevelWidth", L"ThemeUnitPixels", 0, 3, m_theme.BevelPixels,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.BevelPixels = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeColorRow(L"ThemeRowBevelHighlight", m_theme.BevelHighlightColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.BevelHighlightColor, true); });
+            });
+
+        AddThemeColorRow(L"ThemeRowBevelLight", m_theme.BevelLightColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.BevelLightColor, true); });
+            });
+
+        AddThemeColorRow(L"ThemeRowBevelShadow", m_theme.BevelShadowColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.BevelShadowColor, true); });
+            });
+
+        AddThemeColorRow(L"ThemeRowBevelDark", m_theme.BevelDarkColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.BevelDarkColor, true); });
+            });
+
+        AddThemeNote(L"ThemeBevelNote");
 
         // ---- the value ----
 
@@ -1010,6 +1075,13 @@ namespace winrt::midiglass::implementation
 
         AddThemeNote(L"ThemeFaderScaleNote");
 
+        AddThemeSliderRow(L"ThemeRowFaderMajorTicks", nullptr, 0, 32, m_theme.FaderMajorTickEvery,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.FaderMajorTickEvery = static_cast<int32_t>(std::lround(value)); });
+            });
+
         AddThemeSliderRow(L"ThemeRowThumbShadow", L"ThemeUnitPercent", 0, 100, m_theme.ThumbShadowPercent,
             [edit](double value)
             {
@@ -1021,6 +1093,24 @@ namespace winrt::midiglass::implementation
             [edit](bool on)
             {
                 edit([on](glass::Theme& theme) { theme.CapLineWide = on; });
+            });
+
+        AddThemeComboRow(L"ThemeRowThumbShape",
+            { L"ThemeThumbShapeBar", L"ThemeThumbShapePointer", L"ThemeThumbShapeChevrons" },
+            static_cast<int32_t>(m_theme.ThumbShape),
+            [edit](int32_t index)
+            {
+                edit([index](glass::Theme& theme)
+                    { theme.ThumbShape = static_cast<glass::ThumbShapeStyle>(index); });
+            });
+
+        AddThemeComboRow(L"ThemeRowPuck",
+            { L"ThemePuckDisc", L"ThemePuckBall", L"ThemePuckReticle" },
+            static_cast<int32_t>(m_theme.Puck),
+            [edit](int32_t index)
+            {
+                edit([index](glass::Theme& theme)
+                    { theme.Puck = static_cast<glass::PuckStyle>(index); });
             });
 
         AddThemeSliderRow(L"ThemeRowRecessShade", L"ThemeUnitPercent", 0, 100, m_theme.RecessShadePercent,
@@ -1061,6 +1151,14 @@ namespace winrt::midiglass::implementation
                     { theme.WellGlossPercent = static_cast<int32_t>(std::lround(value)); });
             });
 
+        AddThemeColorRow(L"ThemeRowWellInk", m_theme.WellInkColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.WellInkColor, true); });
+            });
+
+        AddThemeNote(L"ThemeWellInkNote");
+
         // ---- knobs ----
 
         AddThemeGroupHeading(L"ThemeGroupKnobs", false);
@@ -1098,18 +1196,50 @@ namespace winrt::midiglass::implementation
                     { theme.KnobCapSizePercent = static_cast<int32_t>(std::lround(value)); });
             });
 
+        AddThemeSwitchRow(L"ThemeRowKnobCapFromHue", m_theme.KnobCapFromHue,
+            [edit](bool on)
+            {
+                edit([on](glass::Theme& theme) { theme.KnobCapFromHue = on; });
+            });
+
+        AddThemeNote(L"ThemeKnobCapFromHueNote");
+
         AddThemeSwitchRow(L"ThemeRowPointerOnCap", m_theme.PointerOnCap,
             [edit](bool on)
             {
                 edit([on](glass::Theme& theme) { theme.PointerOnCap = on; });
             });
 
-        AddThemeSliderRow(L"ThemeRowKnobTicks", nullptr, 0, 32, m_theme.KnobTickCount,
+        AddThemeComboRow(L"ThemeRowPointerShape",
+            { L"ThemePointerShapeLine", L"ThemePointerShapeChevron" },
+            static_cast<int32_t>(m_theme.PointerShape),
+            [edit](int32_t index)
+            {
+                edit([index](glass::Theme& theme)
+                    { theme.PointerShape = static_cast<glass::PointerShapeStyle>(index); });
+            });
+
+        AddThemeSwitchRow(L"ThemeRowKnobArcOnFace", m_theme.KnobArcOnFace,
+            [edit](bool on)
+            {
+                edit([on](glass::Theme& theme) { theme.KnobArcOnFace = on; });
+            });
+
+        AddThemeSliderRow(L"ThemeRowKnobTicks", nullptr, 0, 64, m_theme.KnobTickCount,
             [edit](double value)
             {
                 edit([value](glass::Theme& theme)
                     { theme.KnobTickCount = static_cast<int32_t>(std::lround(value)); });
             });
+
+        AddThemeSliderRow(L"ThemeRowKnobMajorTicks", nullptr, 0, 32, m_theme.KnobMajorTickEvery,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.KnobMajorTickEvery = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeNote(L"ThemeMajorTicksNote");
 
         AddThemeSliderRow(L"ThemeRowKnobKnurl", nullptr, 0, 120, m_theme.KnobKnurlCount,
             [edit](double value)
@@ -1173,13 +1303,27 @@ namespace winrt::midiglass::implementation
         AddThemeNote(L"ThemeLampGlowNote");
 
         AddThemeComboRow(L"ThemeRowSwitchShape",
-            { L"ThemeSwitchShapePlate", L"ThemeSwitchShapeKeycap" },
+            { L"ThemeSwitchShapePlate", L"ThemeSwitchShapeKeycap", L"ThemeSwitchShapeRound" },
             static_cast<int32_t>(m_theme.SwitchShape),
             [edit](int32_t index)
             {
                 edit([index](glass::Theme& theme)
                     { theme.SwitchShape = static_cast<glass::SwitchShapeStyle>(index); });
             });
+
+        AddThemeColorRow(L"ThemeRowSwitchRing", m_theme.SwitchRingColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.SwitchRingColor, true); });
+            });
+
+        AddThemeSwitchRow(L"ThemeRowPadsFollowSwitchShape", m_theme.PadsFollowSwitchShape,
+            [edit](bool on)
+            {
+                edit([on](glass::Theme& theme) { theme.PadsFollowSwitchShape = on; });
+            });
+
+        AddThemeNote(L"ThemeRoundSwitchNote");
 
         AddThemeColorRow(L"ThemeRowKeycapTop", m_theme.KeycapTopColor, true,
             [edit, color](std::wstring const& code)
@@ -1211,6 +1355,30 @@ namespace winrt::midiglass::implementation
             });
 
         AddThemeNote(L"ThemeNeutralCapsNote");
+
+        AddThemeComboRow(L"ThemeRowLatch",
+            { L"ThemeLatchLit", L"ThemeLatchCheckerboard" },
+            static_cast<int32_t>(m_theme.Latch),
+            [edit](int32_t index)
+            {
+                edit([index](glass::Theme& theme)
+                    { theme.Latch = static_cast<glass::LatchStyle>(index); });
+            });
+
+        AddThemeSwitchRow(L"ThemeRowSwitchColorTag", m_theme.SwitchColorTag,
+            [edit](bool on)
+            {
+                edit([on](glass::Theme& theme) { theme.SwitchColorTag = on; });
+            });
+
+        AddThemeComboRow(L"ThemeRowCurrentStep",
+            { L"ThemeCurrentStepLit", L"ThemeCurrentStepDottedFocus" },
+            static_cast<int32_t>(m_theme.CurrentStep),
+            [edit](int32_t index)
+            {
+                edit([index](glass::Theme& theme)
+                    { theme.CurrentStep = static_cast<glass::CurrentStepStyle>(index); });
+            });
 
         // ---- sections ----
 
@@ -1436,6 +1604,42 @@ namespace winrt::midiglass::implementation
 
         AddThemeNote(L"ThemeNeonLettersNote");
 
+        // ---- chrome ----
+
+        AddThemeGroupHeading(L"ThemeGroupChrome", false);
+
+        AddThemeSwitchRow(L"ThemeRowChromeCaps", m_theme.ChromeCaps,
+            [edit](bool on)
+            {
+                edit([on](glass::Theme& theme) { theme.ChromeCaps = on; });
+            });
+
+        AddThemeSwitchRow(L"ThemeRowChromeLetters", m_theme.ChromeLetters,
+            [edit](bool on)
+            {
+                edit([on](glass::Theme& theme) { theme.ChromeLetters = on; });
+            });
+
+        {
+            wchar_t const* const chromeKeys[]
+            {
+                L"ThemeRowChromeSky", L"ThemeRowChromeLight", L"ThemeRowChromeDark", L"ThemeRowChromeGlow",
+            };
+
+            static_assert(std::size(chromeKeys) == glass::ChromeColorCount);
+
+            for (size_t stop = 0; stop < std::size(chromeKeys); ++stop)
+            {
+                AddThemeColorRow(chromeKeys[stop], m_theme.ChromeColors[stop], true,
+                    [edit, color, stop](std::wstring const& code)
+                    {
+                        edit([code, color, stop](glass::Theme& theme) { color(code, theme.ChromeColors[stop], true); });
+                    });
+            }
+        }
+
+        AddThemeNote(L"ThemeChromeNote");
+
         // ---- the piano keyboard ----
 
         AddThemeGroupHeading(L"ThemeGroupKeyboard", false);
@@ -1620,6 +1824,35 @@ namespace winrt::midiglass::implementation
             });
 
         AddThemeNote(L"ThemeRainNote");
+
+        AddThemeSliderRow(L"ThemeRowFloor", L"ThemeUnitPercent", 0, 100, m_theme.Overlay.FloorPercent,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.Overlay.FloorPercent = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeColorRow(L"ThemeRowFloorColor", m_theme.Overlay.FloorColor, true,
+            [edit, color](std::wstring const& code)
+            {
+                edit([code, color](glass::Theme& theme) { color(code, theme.Overlay.FloorColor, true); });
+            });
+
+        AddThemeSliderRow(L"ThemeRowFloorHorizon", L"ThemeUnitPercent", 0, 100, m_theme.Overlay.FloorHorizonPercent,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.Overlay.FloorHorizonPercent = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeSliderRow(L"ThemeRowFloorSpeed", L"ThemeUnitPixelsPerSecond", 0, 600, m_theme.Overlay.FloorSpeed,
+            [edit](double value)
+            {
+                edit([value](glass::Theme& theme)
+                    { theme.Overlay.FloorSpeed = static_cast<int32_t>(std::lround(value)); });
+            });
+
+        AddThemeNote(L"ThemeFloorNote");
 
         // ---- the meter's three zones ----
 

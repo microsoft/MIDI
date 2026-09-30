@@ -21,7 +21,7 @@ namespace WindowsMidiServices
         protected override void ProcessRecord()
         {
             RequireMidiServices();
-            RequireTransport(MidiNetworkTransportManager.IsTransportAvailable, "Network MIDI 2.0");
+            RequireTransport(MidiNetworkTransportManager.IsTransportAvailable, Strings.TransportNameNetwork);
 
             var hosts = MidiNetworkTransportManager.GetAdvertisedHosts();
 

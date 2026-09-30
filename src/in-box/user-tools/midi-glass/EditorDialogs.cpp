@@ -426,11 +426,12 @@ namespace winrt::midiglass::implementation
                 presetNames,
                 static_cast<int32_t>(presetNames.size()) - 1);
 
+            // Down to a strip a few buttons high or wide, because a layout can be a toolbar.
             auto width = MakeNumberField(
-                resources::GetString(L"PageSizeWidthLabel"), startWidth, 320, 8192);
+                resources::GetString(L"PageSizeWidthLabel"), startWidth, glass::MinimumPageSide, glass::MaximumPageSide);
 
             auto height = MakeNumberField(
-                resources::GetString(L"PageSizeHeightLabel"), startHeight, 240, 8192);
+                resources::GetString(L"PageSizeHeightLabel"), startHeight, glass::MinimumPageSide, glass::MaximumPageSide);
 
             // "was 1280 x 800", beside the fields, because the number being changed away from
             // is the one nobody can see any more.

@@ -49,6 +49,12 @@
 #include "MidiNetworkRemoteClientForgetConfig.h"
 #include "MidiNetworkRemoteClientForgetResponse.h"
 
+#include "MidiNetworkSavedHost.h"
+#include "MidiNetworkSavedClient.h"
+
+#include "MidiConfigFile.h"
+#include "midi_saved_config_json.h"
+
 //#include <pplawait.h>
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
@@ -1700,6 +1706,83 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     bool MidiNetworkTransportManager::IsHostPortAvailable(uint16_t const port) noexcept
     {
         return ::WindowsMidiServicesInternal::IsUdpPortAvailable(port);
+    }
+
+
+    collections::IVectorView<network::MidiNetworkSavedHost> MidiNetworkTransportManager::GetSavedHosts() noexcept
+    {
+        auto results = winrt::single_threaded_vector<network::MidiNetworkSavedHost>();
+
+        try
+        {
+            auto const section = svc::implementation::MidiConfigFile::LoadTransportSection(TransportId());
+
+            auto const hosts = MidiSavedConfigJson::Object(
+                MidiSavedConfigJson::Object(section, MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY),
+                MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY);
+
+            // changes saved after a host was created, which the service applies on top of it
+            auto const updates = MidiSavedConfigJson::Entries(MidiSavedConfigJson::Object(
+                MidiSavedConfigJson::Object(section, MIDI_CONFIG_JSON_NETWORK_MIDI_UPDATE_ENTRIES_KEY),
+                MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY));
+
+            for (auto const& [hostId, entry] : MidiSavedConfigJson::Entries(hosts))
+            {
+                auto host = winrt::make_self<MidiNetworkSavedHost>();
+
+                host->InternalInitialize(hostId, entry, MidiSavedConfigJson::EntriesFor(updates, hostId));
+
+                results.Append(*host);
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error reading saved network hosts.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception reading saved network hosts.");
+        }
+
+        return results.GetView();
+    }
+
+    collections::IVectorView<network::MidiNetworkSavedClient> MidiNetworkTransportManager::GetSavedClients() noexcept
+    {
+        auto results = winrt::single_threaded_vector<network::MidiNetworkSavedClient>();
+
+        try
+        {
+            auto const section = svc::implementation::MidiConfigFile::LoadTransportSection(TransportId());
+
+            auto const clients = MidiSavedConfigJson::Object(
+                MidiSavedConfigJson::Object(section, MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY),
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY);
+
+            // changes saved after a client was created, which the service applies on top of it
+            auto const updates = MidiSavedConfigJson::Entries(MidiSavedConfigJson::Object(
+                MidiSavedConfigJson::Object(section, MIDI_CONFIG_JSON_NETWORK_MIDI_UPDATE_ENTRIES_KEY),
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY));
+
+            for (auto const& [clientId, entry] : MidiSavedConfigJson::Entries(clients))
+            {
+                auto client = winrt::make_self<MidiNetworkSavedClient>();
+
+                client->InternalInitialize(clientId, entry, MidiSavedConfigJson::EntriesFor(updates, clientId));
+
+                results.Append(*client);
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error reading saved network clients.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception reading saved network clients.");
+        }
+
+        return results.GetView();
     }
 
 

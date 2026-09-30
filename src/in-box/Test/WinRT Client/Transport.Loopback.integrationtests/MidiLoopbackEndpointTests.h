@@ -58,6 +58,11 @@ public:
     TEST_METHOD(TestFeedbackLoopWithProtectionOffIsNotMuted);
     TEST_METHOD(TestSteadyTrafficIsNotMuted);
 
+    // What is saved in the configuration file, and changing a loopback which already exists
+    TEST_METHOD(TestSavedLoopbackFollowsSavedChanges);
+    TEST_METHOD(TestSavingUpdateForUnsavedLoopbackIsRefused);
+    TEST_METHOD(TestUpdateRunningLoopback);
+
 
 private:
 

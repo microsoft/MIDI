@@ -29,7 +29,7 @@ namespace WindowsMidiServices
             if (backingSession is null)
             {
                 ThrowTerminating(
-                    new InvalidOperationException($"Unable to create the MIDI session \"{Name}\"."),
+                    new InvalidOperationException(Format(Strings.SessionNamedCreationFailedFormat, Name)),
                     "MidiSessionCreationFailed",
                     ErrorCategory.ResourceUnavailable,
                     Name);
@@ -37,7 +37,7 @@ namespace WindowsMidiServices
                 return;
             }
 
-            WriteVerbose("MIDI session started.");
+            WriteVerbose(Strings.SessionStarted);
             WriteObject(new MidiSession(backingSession));
         }
     }

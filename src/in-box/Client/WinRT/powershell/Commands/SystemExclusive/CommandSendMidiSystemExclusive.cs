@@ -18,22 +18,36 @@ namespace WindowsMidiServices
 {
 
     [Cmdlet(VerbsCommunications.Send, "MidiSystemExclusive", SupportsShouldProcess = true, DefaultParameterSetName = PathParameterSet)]
-    public class CommandSendMidiSystemExclusive : MidiCmdletBase
+    public class CommandSendMidiSystemExclusive : MidiCmdletBase, IDisposable
     {
         private const string PathParameterSet = "Path";
         private const string BytesParameterSet = "Bytes";
+        private const string EndpointPathParameterSet = "EndpointDeviceIdPath";
+        private const string EndpointBytesParameterSet = "EndpointDeviceIdBytes";
 
         private IAsyncOperationWithProgress<bool, MidiSystemExclusiveSendProgress>? _operation;
 
-        [Parameter(Mandatory = true, Position = 0)]
+        // Opened on the first file and shared by every file in the pipeline
+        private MidiTemporaryConnection? _temporaryConnection;
+
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = PathParameterSet)]
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = BytesParameterSet)]
         public MidiEndpointConnection? Connection { get; set; }
+
+        // Opens a connection for this command alone, so one transfer needs no session first
+        [Parameter(Mandatory = true, ParameterSetName = EndpointPathParameterSet)]
+        [Parameter(Mandatory = true, ParameterSetName = EndpointBytesParameterSet)]
+        [ValidateNotNullOrWhiteSpace]
+        public string EndpointDeviceId { get; set; } = string.Empty;
 
         // A binary MIDI 1.0 bytestream SysEx file, usually named .syx
         [Parameter(Mandatory = true, Position = 1, ParameterSetName = PathParameterSet, ValueFromPipeline = true)]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = EndpointPathParameterSet, ValueFromPipeline = true)]
         [ValidateNotNullOrWhiteSpace]
         public string Path { get; set; } = string.Empty;
 
         [Parameter(Mandatory = true, Position = 1, ParameterSetName = BytesParameterSet, ValueFromPipeline = true)]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = EndpointBytesParameterSet, ValueFromPipeline = true)]
         [ValidateNotNullOrEmpty]
         public byte[] Bytes { get; set; } = [];
 
@@ -53,20 +67,22 @@ namespace WindowsMidiServices
         {
             RequireMidiServices();
 
-            var connection = RequireOpenConnection(Connection);
+            var usesConnection = ParameterSetName == PathParameterSet || ParameterSetName == BytesParameterSet;
+
+            var connection = usesConnection ? RequireOpenConnection(Connection) : null;
 
             Stream source;
             long totalBytes;
             string target;
 
-            if (ParameterSetName == PathParameterSet)
+            if (ParameterSetName == PathParameterSet || ParameterSetName == EndpointPathParameterSet)
             {
                 var fullPath = GetUnresolvedProviderPathFromPSPath(Path);
 
                 if (!File.Exists(fullPath))
                 {
                     ThrowTerminating(
-                        new FileNotFoundException($"The file \"{fullPath}\" was not found.", fullPath),
+                        new FileNotFoundException(Format(Strings.SysExFileNotFoundFormat, fullPath), fullPath),
                         "MidiSysExFileNotFound",
                         ErrorCategory.ObjectNotFound,
                         fullPath);
@@ -80,14 +96,22 @@ namespace WindowsMidiServices
             {
                 totalBytes = Bytes.LongLength;
                 source = new MemoryStream(Bytes, writable: false);
-                target = $"{totalBytes} bytes";
+                target = Format(Strings.SysExByteCountFormat, totalBytes);
             }
 
             using (source)
             {
-                if (!ShouldProcess(connection.ConnectedEndpointDeviceId, $"Send system exclusive data ({target})"))
+                var endpointDeviceId = connection is null ? EndpointDeviceId : connection.ConnectedEndpointDeviceId;
+
+                if (!ShouldProcess(endpointDeviceId, Format(Strings.SysExSendActionFormat, target)))
                 {
                     return;
+                }
+
+                if (connection is null)
+                {
+                    _temporaryConnection ??= OpenTemporaryConnection(EndpointDeviceId);
+                    connection = _temporaryConnection.Connection;
                 }
 
                 SendData(connection, source, totalBytes);
@@ -102,7 +126,7 @@ namespace WindowsMidiServices
             long bytesRead = 0;
             long messagesSent = 0;
 
-            var progressRecord = new ProgressRecord(0, "Sending system exclusive data", "Preparing")
+            var progressRecord = new ProgressRecord(0, Strings.SysExSendProgressActivity, Strings.SysExSendProgressPreparing)
             {
                 RecordType = ProgressRecordType.Processing
             };
@@ -158,7 +182,7 @@ namespace WindowsMidiServices
                 {
                     var read = Interlocked.Read(ref bytesRead);
 
-                    progressRecord.StatusDescription = $"Read {read:N0} of {totalBytes:N0} bytes, sent {Interlocked.Read(ref messagesSent):N0} messages";
+                    progressRecord.StatusDescription = Format(Strings.SysExSendProgressStatusFormat, read, totalBytes, Interlocked.Read(ref messagesSent));
                     progressRecord.PercentComplete = totalBytes > 0 ? (int)Math.Clamp(read * 100 / totalBytes, 0, 100) : -1;
 
                     WriteProgress(progressRecord);
@@ -181,7 +205,7 @@ namespace WindowsMidiServices
             if (!success)
             {
                 ThrowTerminating(
-                    new InvalidOperationException("The system exclusive transfer did not complete."),
+                    new InvalidOperationException(Strings.SysExSendIncomplete),
                     "MidiSysExSendIncomplete",
                     ErrorCategory.WriteError,
                     connection.ConnectedEndpointDeviceId);
@@ -189,12 +213,24 @@ namespace WindowsMidiServices
                 return;
             }
 
-            WriteVerbose($"Read {Interlocked.Read(ref bytesRead):N0} bytes and sent {Interlocked.Read(ref messagesSent):N0} UMP messages.");
+            WriteVerbose(Format(Strings.SysExSentFormat, Interlocked.Read(ref bytesRead), Interlocked.Read(ref messagesSent)));
         }
 
         protected override void StopProcessing()
         {
             _operation?.Cancel();
+        }
+
+        protected override void EndProcessing()
+        {
+            _temporaryConnection?.Dispose();
+        }
+
+        public void Dispose()
+        {
+            _temporaryConnection?.Dispose();
+
+            GC.SuppressFinalize(this);
         }
     }
 

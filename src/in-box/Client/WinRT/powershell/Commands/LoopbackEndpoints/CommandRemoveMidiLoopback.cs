@@ -29,9 +29,9 @@ namespace WindowsMidiServices
         protected override void ProcessRecord()
         {
             RequireMidiServices();
-            RequireTransport(MidiLoopbackManager.IsTransportAvailable, "MIDI 2.0 loopback");
+            RequireTransport(MidiLoopbackManager.IsTransportAvailable, Strings.TransportNameLoopback);
 
-            if (!ShouldProcess(AssociationId.ToString(), "Remove MIDI 2.0 loopback endpoint pair"))
+            if (!ShouldProcess(AssociationId.ToString(), Strings.LoopbackRemoveAction))
             {
                 return;
             }
@@ -43,7 +43,7 @@ namespace WindowsMidiServices
             if (response is null || !response.Success)
             {
                 WriteNonTerminating(
-                    new InvalidOperationException(response is null ? "Unable to remove the loopback." : response.ErrorMessage),
+                    new InvalidOperationException(response is null ? Strings.LoopbackRemovalFailed : response.ErrorMessage),
                     "MidiLoopbackRemovalFailed",
                     ErrorCategory.InvalidOperation,
                     AssociationId);
@@ -51,7 +51,7 @@ namespace WindowsMidiServices
                 return;
             }
 
-            WriteVerbose("The loopback was removed from the running service. An entry saved in the configuration file is not affected.");
+            WriteVerbose(Strings.LoopbackRemoved);
 
             if (PassThru.IsPresent)
             {

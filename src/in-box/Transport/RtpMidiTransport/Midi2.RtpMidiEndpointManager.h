@@ -123,6 +123,11 @@ private:
     std::mutex m_createdEndpointsLock;
     std::vector<CreatedEndpoint> m_createdEndpoints;
 
+    // The endpoint the worker is activating. Apps can see it before activation returns, and so
+    // before it has a record above. Guarded by m_createdEndpointsLock.
+    std::shared_ptr<RtpMidiConnection> m_endpointBeingCreated;
+    std::wstring m_endpointBeingCreatedInstanceId;
+
     // worker thread only
     std::map<std::wstring, uint64_t> m_lastWrittenLatencyTicks;
     uint64_t m_nextLatencyRefreshTick{ 0 };

@@ -27,8 +27,10 @@ Pass this to `MidiServiceTransportPluginConfigManager.SaveUpdate`, so a host's a
 
 This is a saved record, not a command, so there's nothing to send. The running service already has each decision from `ApproveOrDenyRemoteClientConnectRequestAsync`. It never saves them itself, and saving one of these is what keeps a decision after a restart.
 
-`KnownClients` must hold every remote device for the host, not just the ones that changed. Both saved lists are replaced with what it holds. So start from `MidiRtpConfiguredHost.KnownRemoteClients`, change it, and save the whole thing. Leaving a remote device out is how you take back a decision.
+`KnownClients` must hold every remote device for the host, not just the ones that changed. Both saved lists are replaced with what it holds. So start from `MidiRtpSavedHost.KnownRemoteClients`, change it, and save the whole thing. Leaving a remote device out is how you take back a decision.
 
 Leaving a remote device out only changes what's read the next time the service starts. To take the decision back in the running service too, call `ForgetRemoteClientAsync`. Otherwise, the old decision stays until the service restarts.
 
 Saving an empty `KnownClients` clears both lists for the host.
+
+The decisions are only used while their host is saved. If the host isn't saved, `SaveUpdate` returns `ErrorEntryNotSaved` and writes nothing.

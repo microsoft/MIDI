@@ -98,6 +98,41 @@ namespace winrt::midikeyboard::implementation
             return nullptr;
         }
 
+        Color ColorFromArgb(_In_ uint32_t argb) noexcept
+        {
+            return MakeColor(
+                static_cast<uint8_t>((argb >> 16) & 0xFF),
+                static_cast<uint8_t>((argb >> 8) & 0xFF),
+                static_cast<uint8_t>(argb & 0xFF),
+                static_cast<uint8_t>((argb >> 24) & 0xFF));
+        }
+
+        // the keys as they look until the customer picks colors of their own
+        constexpr native::KeyPalette BuiltInWhiteKeys{ 0xFFFCFCFC, 0xFFDEDEE0, 0xFF606064 };
+        constexpr native::KeyPalette BuiltInBlackKeys{ 0xFF3A3A3E, 0xFF101012, 0xFFC4C4C8 };
+
+        // the built-in keys get their lines by the same rule as custom keys
+        native::KeyPalette WithKeyLines(_In_ native::KeyPalette palette, _In_ uint32_t keyColorArgb) noexcept
+        {
+            palette.LineArgb = native::MakeKeyLineArgb(keyColorArgb, palette);
+            return palette;
+        }
+
+        // every key of one kind shares these brushes, so recoloring them recolors the keys
+        void PaintKeyBrushes(
+            _In_ media::LinearGradientBrush const& body,
+            _In_ media::SolidColorBrush const& text,
+            _In_ media::SolidColorBrush const& line,
+            _In_ native::KeyPalette const& palette)
+        {
+            auto const stops = body.GradientStops();
+
+            stops.GetAt(0).Color(ColorFromArgb(palette.TopArgb));
+            stops.GetAt(1).Color(ColorFromArgb(palette.BottomArgb));
+            text.Color(ColorFromArgb(palette.TextArgb));
+            line.Color(ColorFromArgb(palette.LineArgb));
+        }
+
         uint32_t NormalizedToUnsigned(double normalized) noexcept
         {
             if (normalized <= 0.0)
@@ -283,11 +318,15 @@ namespace winrt::midikeyboard::implementation
     {
         try
         {
-            m_whiteKeyBrush = MakeVerticalGradient(MakeColor(252, 252, 252), MakeColor(222, 222, 224));
-            m_blackKeyBrush = MakeVerticalGradient(MakeColor(58, 58, 62), MakeColor(16, 16, 18));
-            m_keyBorderBrush = MakeSolidBrush(MakeColor(24, 24, 26, 170));
-            m_whiteKeyTextBrush = MakeSolidBrush(MakeColor(96, 96, 100));
-            m_blackKeyTextBrush = MakeSolidBrush(MakeColor(196, 196, 200));
+            // ApplyKeyColors gives these their colors
+            m_whiteKeyBrush = MakeVerticalGradient(Color{}, Color{});
+            m_blackKeyBrush = MakeVerticalGradient(Color{}, Color{});
+            m_whiteKeyTextBrush = media::SolidColorBrush{};
+            m_blackKeyTextBrush = media::SolidColorBrush{};
+            m_whiteKeyLineBrush = media::SolidColorBrush{};
+            m_blackKeyLineBrush = media::SolidColorBrush{};
+
+            ApplyKeyColors();
 
             m_glowBrush = LookupBrush(L"AccentFillColorDefaultBrush");
 
@@ -334,6 +373,32 @@ namespace winrt::midikeyboard::implementation
             m_modRibbon.GlowHost = ModRibbonGlowHost();
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to create the keyboard brushes.")
+    }
+
+    void MainWindow::ApplyKeyColors() noexcept
+    {
+        try
+        {
+            if (m_whiteKeyBrush == nullptr || m_blackKeyBrush == nullptr ||
+                m_whiteKeyTextBrush == nullptr || m_blackKeyTextBrush == nullptr ||
+                m_whiteKeyLineBrush == nullptr || m_blackKeyLineBrush == nullptr)
+            {
+                return;
+            }
+
+            auto const& settings = native::AppSettings::Current();
+
+            PaintKeyBrushes(m_whiteKeyBrush, m_whiteKeyTextBrush, m_whiteKeyLineBrush,
+                settings.UseCustomWhiteKeyColor()
+                    ? native::MakeKeyPalette(settings.WhiteKeyColorArgb())
+                    : WithKeyLines(BuiltInWhiteKeys, native::AppSettings::DefaultWhiteKeyColorArgb));
+
+            PaintKeyBrushes(m_blackKeyBrush, m_blackKeyTextBrush, m_blackKeyLineBrush,
+                settings.UseCustomBlackKeyColor()
+                    ? native::MakeKeyPalette(settings.BlackKeyColorArgb())
+                    : WithKeyLines(BuiltInBlackKeys, native::AppSettings::DefaultBlackKeyColorArgb));
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the key colors.")
     }
 
     void MainWindow::InitializeWindowChrome() noexcept
@@ -1222,7 +1287,7 @@ namespace winrt::midikeyboard::implementation
                 key.Body = controls::Border{};
                 key.Body.Child(inner);
                 key.Body.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-                key.Body.BorderBrush(m_keyBorderBrush);
+                key.Body.BorderBrush(m_keyGeometry[i].IsBlack ? m_blackKeyLineBrush : m_whiteKeyLineBrush);
 
                 canvas.Children().Append(key.Body);
 
@@ -4158,17 +4223,63 @@ namespace winrt::midikeyboard::implementation
             strings.CustomColorCheckBox = res::GetString(L"SettingsCustomColorCheckBox");
             strings.ColorPickerName = res::GetString(L"SettingsColorPickerName");
 
+            auto& settings = native::AppSettings::Current();
+            auto const weak = get_weak();
+
+            midiapp::AppearanceColorChoice blackKeys{};
+            blackKeys.TabLabel = res::GetString(L"SettingsBlackKeysTab");
+            blackKeys.CustomColorCheckBox = res::GetString(L"SettingsBlackKeysCustomColorCheckBox");
+            blackKeys.ColorPickerName = res::GetString(L"SettingsBlackKeysColorPickerName");
+            blackKeys.UseCustomColor = settings.UseCustomBlackKeyColor();
+            blackKeys.ColorArgb = settings.BlackKeyColorArgb();
+            blackKeys.Changed = [weak](bool useCustomColor, uint32_t colorArgb)
+                {
+                    native::AppSettings::Current().UseCustomBlackKeyColor(useCustomColor);
+                    native::AppSettings::Current().BlackKeyColorArgb(colorArgb);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->ApplyKeyColors();
+                    }
+                };
+
+            midiapp::AppearanceColorChoice whiteKeys{};
+            whiteKeys.TabLabel = res::GetString(L"SettingsWhiteKeysTab");
+            whiteKeys.CustomColorCheckBox = res::GetString(L"SettingsWhiteKeysCustomColorCheckBox");
+            whiteKeys.ColorPickerName = res::GetString(L"SettingsWhiteKeysColorPickerName");
+            whiteKeys.UseCustomColor = settings.UseCustomWhiteKeyColor();
+            whiteKeys.ColorArgb = settings.WhiteKeyColorArgb();
+            whiteKeys.Changed = [weak](bool useCustomColor, uint32_t colorArgb)
+                {
+                    native::AppSettings::Current().UseCustomWhiteKeyColor(useCustomColor);
+                    native::AppSettings::Current().WhiteKeyColorArgb(colorArgb);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->ApplyKeyColors();
+                    }
+                };
+
+            midiapp::AppearanceColorTabs colorTabs{};
+            colorTabs.TabsName = res::GetString(L"SettingsColorTabsName");
+            colorTabs.WindowTabLabel = res::GetString(L"SettingsWindowColorTab");
+            colorTabs.Colors.push_back(blackKeys);
+            colorTabs.Colors.push_back(whiteKeys);
+
             midiapp::ShowAppearanceFlyout(
                 AppearanceButton(),
-                native::AppSettings::Current(),
+                settings,
                 strings,
-                [weak = get_weak()]()
+                [weak]()
                 {
                     if (auto strong = weak.get())
                     {
                         strong->m_chrome.ApplyTheme();
                     }
-                });
+                },
+                nullptr,
+                nullptr,
+                colorTabs);
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to open the appearance settings.")
     }

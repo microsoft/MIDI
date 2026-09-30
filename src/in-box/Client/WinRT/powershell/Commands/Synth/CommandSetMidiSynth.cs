@@ -49,12 +49,12 @@ namespace WindowsMidiServices
         protected override void ProcessRecord()
         {
             RequireMidiServices();
-            RequireTransport(MidiSynthManager.IsTransportAvailable, "General MIDI synthesizer");
+            RequireTransport(MidiSynthManager.IsTransportAvailable, Strings.TransportNameSynth);
 
             if (Enabled.IsPresent && Disabled.IsPresent)
             {
                 ThrowTerminating(
-                    new ArgumentException("Specify either -Enabled or -Disabled, not both."),
+                    new ArgumentException(Strings.SynthConflictingState),
                     "MidiSynthConflictingState",
                     ErrorCategory.InvalidArgument);
             }
@@ -64,7 +64,7 @@ namespace WindowsMidiServices
             if (status is null)
             {
                 ThrowTerminating(
-                    new InvalidOperationException("The synthesizer did not report its status, so there is nothing to change."),
+                    new InvalidOperationException(Strings.SynthNothingToChange),
                     "MidiSynthStatusUnavailable",
                     ErrorCategory.ResourceUnavailable);
 
@@ -84,9 +84,9 @@ namespace WindowsMidiServices
             if (VolumeDecibels.HasValue) { config.VolumeDecibels = VolumeDecibels.Value; }
             if (EffectsEnabled.HasValue) { config.AreEffectsEnabled = EffectsEnabled.Value; }
 
-            var action = Persist.IsPresent ? "Update and save the settings" : "Update the settings";
+            var action = Persist.IsPresent ? Strings.SynthUpdateAndSaveAction : Strings.SynthUpdateAction;
 
-            if (!ShouldProcess("General MIDI synthesizer", action))
+            if (!ShouldProcess(Strings.SynthTarget, action))
             {
                 return;
             }
@@ -96,8 +96,9 @@ namespace WindowsMidiServices
             if (response is null || response.Status != MidiServiceConfigResponseStatus.Success)
             {
                 WriteNonTerminating(
-                    new InvalidOperationException(
-                        $"The synthesizer settings were not applied: {response?.Status.ToString() ?? "no response"}"),
+                    new InvalidOperationException(response is null
+                        ? Strings.SynthSettingsNotApplied
+                        : Format(Strings.SynthSettingsNotAppliedFormat, response.Status)),
                     "MidiSynthUpdateFailed",
                     ErrorCategory.WriteError,
                     response);

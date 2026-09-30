@@ -73,6 +73,13 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             _In_ winrt::guid const& transportId,
             _In_ json::JsonObject const& configObject) noexcept;
 
+        // Each required path names an entry, as keys below the transport section, which must
+        // already be saved for the change to be written.
+        static svc::MidiServiceConfigSaveResponse InternalSaveUpdate(
+            _In_ winrt::guid const& transportId,
+            _In_ json::JsonObject const& fullConfigObject,
+            _In_ std::vector<std::vector<std::wstring>> const& requiredEntryPaths) noexcept;
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::ServiceConfig::factory_implementation

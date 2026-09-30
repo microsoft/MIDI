@@ -346,6 +346,11 @@
 #define UUID_IMidiBasicLoopbackEndpointDefinition               8087b303-0519-c0de-31d1-dd00F0108000   
 #define UUID_IMidiBasicLoopbackEndpointDefinitionFactory        8087b303-0519-c0de-31d1-ff00F0108000   
 
+#define UUID_IMidiBasicLoopbackSavedEntry                       8087b303-0519-c0de-31d1-dd00F0109000
+
+#define UUID_IMidiBasicLoopbackUpdateConfig                     8087b303-0519-c0de-31d1-dd00F010A000
+#define UUID_IMidiBasicLoopbackUpdateConfigFactory              8087b303-0519-c0de-31d1-ff00F010A000
+
 
 // ============================================================================
 // Windows.Devices.Midi2.Transports.Loopback : Interface number 00F02
@@ -367,6 +372,11 @@
 
 #define UUID_IMidiLoopbackEndpointDefinition                    8087b303-0519-c0de-31d1-dd00F0209000
 #define UUID_IMidiLoopbackEndpointDefinitionFactory             8087b303-0519-c0de-31d1-ff00F0209000
+
+#define UUID_IMidiLoopbackSavedEntry                            8087b303-0519-c0de-31d1-dd00F020A000
+
+#define UUID_IMidiLoopbackUpdateConfig                          8087b303-0519-c0de-31d1-dd00F020B000
+#define UUID_IMidiLoopbackUpdateConfigFactory                   8087b303-0519-c0de-31d1-ff00F020B000
 
 
 // ============================================================================
@@ -446,6 +456,9 @@
 
 #define UUID_IMidiNetworkRemoteClientForgetResponse             8087b303-0519-c0de-31d1-dd00F0320000
 
+#define UUID_IMidiNetworkSavedHost                              8087b303-0519-c0de-31d1-dd00F0321000
+#define UUID_IMidiNetworkSavedClient                            8087b303-0519-c0de-31d1-dd00F0322000
+
 // ============================================================================
 // Windows.Devices.Midi2.Transports.Virtual : Interface number 00F04
 
@@ -496,6 +509,8 @@
 #define UUID_IMidiBluetoothPeripheralClientListConfigFactory    8087b303-0519-c0de-31d1-ff00F050E000
 #define UUID_IMidiBluetoothOfflineRetentionConfig               8087b303-0519-c0de-31d1-dd00F050F000
 #define UUID_IMidiBluetoothOfflineRetentionConfigFactory        8087b303-0519-c0de-31d1-ff00F050F000
+
+#define UUID_IMidiBluetoothSavedDevice                          8087b303-0519-c0de-31d1-dd00F0511000
 
 
 // ============================================================================
@@ -553,6 +568,8 @@
 #define UUID_IMidiRtpKnownRemoteClientFactory                   8087b303-0519-c0de-31d1-ff00F0717000
 #define UUID_IMidiRtpHostKnownClientsConfig                     8087b303-0519-c0de-31d1-dd00F0718000
 #define UUID_IMidiRtpHostKnownClientsConfigFactory              8087b303-0519-c0de-31d1-ff00F0718000
+#define UUID_IMidiRtpSavedHost                                  8087b303-0519-c0de-31d1-dd00F0719000
+#define UUID_IMidiRtpSavedClient                                8087b303-0519-c0de-31d1-dd00F071A000
 
 
 #endif

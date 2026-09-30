@@ -44,14 +44,14 @@ namespace WindowsMidiServices
         protected override void ProcessRecord()
         {
             RequireMidiServices();
-            RequireTransport(MidiNetworkTransportManager.IsTransportAvailable, "Network MIDI 2.0");
+            RequireTransport(MidiNetworkTransportManager.IsTransportAvailable, Strings.TransportNameNetwork);
 
             var clientIds = ResolveClientIds(out var target);
 
             if (clientIds.Count == 0)
             {
                 WriteNonTerminating(
-                    new ItemNotFoundException($"No configured network MIDI client matches {target}."),
+                    new ItemNotFoundException(Format(Strings.NetworkClientNotFoundFormat, target)),
                     "MidiNetworkClientNotFound",
                     ErrorCategory.ObjectNotFound,
                     target);
@@ -61,7 +61,7 @@ namespace WindowsMidiServices
 
             foreach (var clientId in clientIds)
             {
-                if (!ShouldProcess(clientId.ToString(), "Disconnect network MIDI host"))
+                if (!ShouldProcess(clientId.ToString(), Strings.NetworkDisconnectAction))
                 {
                     continue;
                 }
@@ -73,7 +73,7 @@ namespace WindowsMidiServices
                 if (response is null || !response.Success)
                 {
                     WriteNonTerminating(
-                        new InvalidOperationException(response is null ? "Unable to disconnect the host." : response.ErrorMessage),
+                        new InvalidOperationException(response is null ? Strings.HostDisconnectFailed : response.ErrorMessage),
                         "MidiNetworkDisconnectFailed",
                         ErrorCategory.ConnectionError,
                         clientId);

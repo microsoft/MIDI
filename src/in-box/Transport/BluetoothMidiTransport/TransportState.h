@@ -65,6 +65,8 @@ public:
     // not control, so configured devices are parked here until someone can act on them.
     void AddConfiguredDeviceId(_In_ winrt::hstring const& deviceId);
     std::vector<winrt::hstring> TakeConfiguredDeviceIds();
+    void SetConfiguredDeviceAutoConnectDisabled(_In_ winrt::hstring const& deviceId, _In_ bool const disabled);
+    bool IsConfiguredDeviceAutoConnectDisabled(_In_ winrt::hstring const& deviceId);
 
     void SetConfiguredPeripheralProtocol(_In_ MidiBleProtocol::Protocol const protocol);
     MidiBleProtocol::Protocol TakeConfiguredPeripheralProtocol();
@@ -188,6 +190,7 @@ private:
     std::mutex m_connectionsLock;
 
     std::vector<winrt::hstring> m_configuredDeviceIds{ };
+    std::set<winrt::hstring> m_disabledConfiguredDeviceIds{ };
     std::mutex m_configuredDeviceIdsLock;
 
     std::shared_ptr<MidiBlePeripheral> m_peripheral{ nullptr };

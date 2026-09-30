@@ -445,25 +445,12 @@ namespace
 
             auto const deviceObject = entry.GetObject();
 
-            if (!MidiBleProtocol::SafeJson::GetBoolean(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY, true))
-            {
-                TraceLoggingWrite(
-                    MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingWideString(L"Skipping a configured Bluetooth MIDI device which is disabled", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(deviceObject.Stringify().c_str(), "device")
-                );
-
-                continue;
-            }
-
-            auto const deviceId = MidiBleProtocol::SafeJson::GetString(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ID_KEY);
+            auto const configuredId = MidiBleProtocol::SafeJson::GetString(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ID_KEY);
+            auto const deviceId = MidiBleUtilities::CanonicalBluetoothDeviceId(std::wstring{ configuredId });
 
             // Every command keys on a 12 hex digit address, so anything else in the file is a
             // typo or tampering and would otherwise sit in the connect list forever.
-            if (!MidiBleUtilities::IsWellFormedBluetoothDeviceId(std::wstring{ deviceId }))
+            if (deviceId.empty())
             {
                 TraceLoggingWrite(
                     MidiBluetoothMidiTransportTelemetryProvider::Provider(),
@@ -471,16 +458,13 @@ namespace
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                     TraceLoggingWideString(L"Skipping a configured Bluetooth MIDI device with an unusable id", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(deviceId.c_str(), "device id")
+                    TraceLoggingWideString(configuredId.c_str(), "device id")
                 );
 
                 continue;
             }
 
-            // Parked either way. The endpoint manager may not exist yet, and if it does it
-            // drains this list again on the way up, so the id can never be dropped.
-            TransportState::Current().AddConfiguredDeviceId(deviceId);
-
+            // Applied whether or not the device connects, so it is in place when it does
             if (deviceObject.HasKey(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY))
             {
                 int32_t retentionSeconds{ MidiBleProtocol::OfflineRetentionUseTransportDefault };
@@ -505,6 +489,33 @@ namespace
                 }
             }
 
+            // Only an entry marked enabled asks for a connection; one holding just a setting does not
+            auto const hasEnabledSetting = deviceObject.HasKey(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY);
+            auto const isEnabled = MidiBleProtocol::SafeJson::GetBoolean(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY, false);
+
+            TransportState::Current().SetConfiguredDeviceAutoConnectDisabled(
+                deviceId,
+                hasEnabledSetting && !isEnabled);
+
+            if (!isEnabled)
+            {
+                TraceLoggingWrite(
+                    MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingWideString(L"Not connecting a configured Bluetooth MIDI device which is disabled or only holds settings", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(deviceId.c_str(), "device id"),
+                    TraceLoggingBool(deviceObject.HasKey(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY), "has enabled flag")
+                );
+
+                continue;
+            }
+
+            // Parked either way. The endpoint manager may not exist yet, and if it does it
+            // drains this list again on the way up, so the id can never be dropped.
+            TransportState::Current().AddConfiguredDeviceId(deviceId);
+
             TraceLoggingWrite(
                 MidiBluetoothMidiTransportTelemetryProvider::Provider(),
                 MIDI_TRACE_EVENT_INFO,
@@ -518,6 +529,44 @@ namespace
             if (endpointManager != nullptr && endpointManager->IsInitialized())
             {
                 LOG_IF_FAILED(endpointManager->ConnectConfiguredDevices());
+            }
+        }
+    }
+
+    void ClearRemovedDeviceAutoConnectOverrides(_In_ json::JsonObject const& transportObject)
+    {
+        json::JsonObject removeObject{ nullptr };
+
+        if (!MidiBleProtocol::SafeJson::TryGetObject(
+                transportObject,
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY,
+                removeObject))
+        {
+            return;
+        }
+
+        json::JsonArray deviceIds{ nullptr };
+
+        if (!MidiBleProtocol::SafeJson::TryGetArray(
+                removeObject,
+                MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICES_ARRAY_KEY,
+                deviceIds))
+        {
+            return;
+        }
+
+        for (auto const& entry : deviceIds)
+        {
+            if (entry == nullptr || entry.ValueType() != json::JsonValueType::String)
+            {
+                continue;
+            }
+
+            auto const deviceId = MidiBleUtilities::CanonicalBluetoothDeviceId(std::wstring{ entry.GetString() });
+
+            if (!deviceId.empty())
+            {
+                TransportState::Current().SetConfiguredDeviceAutoConnectDisabled(deviceId, false);
             }
         }
     }
@@ -806,7 +855,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
             internal::SetConfigurationResponseObjectFailWithErrorCode(
                 responseObject,
                 BLUETOOTH_MIDI_ERROR_CODE_INVALID_JSON,
-                L"Invalid Bluetooth MIDI transport configuration JSON.");
+                internal::ResourceGetWString(IDS_ERROR_INVALID_JSON));
             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
             return S_OK;
@@ -830,6 +879,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
             );
 
             QueueConfiguredDevices(jsonObject);
+            ClearRemovedDeviceAutoConnectOverrides(jsonObject);
             QueueConfiguredPeripheral(jsonObject);
 
             if (jsonObject.HasKey(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_KEY))
@@ -901,21 +951,22 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
         }
         else if (commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_CONNECT_DEVICE)
         {
-            auto deviceId = GetCommandDeviceId(commandHelper);
+            auto const requestedId = GetCommandDeviceId(commandHelper);
+            auto const deviceId = MidiBleUtilities::CanonicalBluetoothDeviceId(std::wstring{ requestedId });
 
-            if (deviceId.empty())
+            if (requestedId.empty())
             {
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_MISSING_DEVICE_ID,
-                    L"Bluetooth MIDI connectDevice requires a deviceId.");
+                    internal::ResourceGetWString(IDS_ERROR_CONNECT_MISSING_DEVICE_ID));
             }
-            else if (!MidiBleUtilities::IsWellFormedBluetoothDeviceId(std::wstring{ deviceId }))
+            else if (deviceId.empty())
             {
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_INVALID_DEVICE_ID,
-                    L"A Bluetooth MIDI deviceId must be a 12 hex digit Bluetooth address.");
+                    internal::ResourceGetWString(IDS_ERROR_INVALID_DEVICE_ID));
             }
             else if (auto endpointManager = TransportState::Current().GetEndpointManager())
             {
@@ -955,7 +1006,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                         hr == E_INVALIDARG
                             ? BLUETOOTH_MIDI_ERROR_CODE_INVALID_DEVICE_ID
                             : BLUETOOTH_MIDI_ERROR_CODE_TRANSPORT_NOT_AVAILABLE,
-                        L"Bluetooth MIDI connectDevice failed.");
+                        internal::ResourceGetWString(IDS_ERROR_CONNECT_FAILED));
                 }
             }
             else
@@ -963,26 +1014,27 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_TRANSPORT_NOT_AVAILABLE,
-                    L"Bluetooth MIDI endpoint manager is not available.");
+                    internal::ResourceGetWString(IDS_ERROR_ENDPOINT_MANAGER_NOT_AVAILABLE));
             }
         }
         else if (commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_DISCONNECT_DEVICE)
         {
-            auto deviceId = GetCommandDeviceId(commandHelper);
+            auto const requestedId = GetCommandDeviceId(commandHelper);
+            auto const deviceId = MidiBleUtilities::CanonicalBluetoothDeviceId(std::wstring{ requestedId });
 
-            if (deviceId.empty())
+            if (requestedId.empty())
             {
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_MISSING_DEVICE_ID,
-                    L"Bluetooth MIDI disconnectDevice requires a deviceId.");
+                    internal::ResourceGetWString(IDS_ERROR_DISCONNECT_MISSING_DEVICE_ID));
             }
-            else if (!MidiBleUtilities::IsWellFormedBluetoothDeviceId(std::wstring{ deviceId }))
+            else if (deviceId.empty())
             {
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_INVALID_DEVICE_ID,
-                    L"A Bluetooth MIDI deviceId must be a 12 hex digit Bluetooth address.");
+                    internal::ResourceGetWString(IDS_ERROR_INVALID_DEVICE_ID));
             }
             else if (auto endpointManager = TransportState::Current().GetEndpointManager())
             {
@@ -1000,7 +1052,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                         hr == E_NOTFOUND
                             ? BLUETOOTH_MIDI_ERROR_CODE_DEVICE_NOT_DISCOVERED
                             : BLUETOOTH_MIDI_ERROR_CODE_NOT_CONNECTED,
-                        L"Bluetooth MIDI disconnectDevice failed.");
+                        internal::ResourceGetWString(IDS_ERROR_DISCONNECT_FAILED));
                 }
             }
             else
@@ -1008,7 +1060,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_TRANSPORT_NOT_AVAILABLE,
-                    L"Bluetooth MIDI endpoint manager is not available.");
+                    internal::ResourceGetWString(IDS_ERROR_ENDPOINT_MANAGER_NOT_AVAILABLE));
             }
         }
         else if (commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_START_PERIPHERAL)
@@ -1032,7 +1084,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                         responseObject,
                         hr,
                         PeripheralCommandErrorCode(hr, false),
-                        L"Bluetooth MIDI startPeripheral failed.");
+                        internal::ResourceGetWString(IDS_ERROR_START_PERIPHERAL_FAILED));
                 }
             }
             else
@@ -1040,7 +1092,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_TRANSPORT_NOT_AVAILABLE,
-                    L"Bluetooth MIDI endpoint manager is not available.");
+                    internal::ResourceGetWString(IDS_ERROR_ENDPOINT_MANAGER_NOT_AVAILABLE));
             }
         }
         else if (commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_STOP_PERIPHERAL)
@@ -1060,7 +1112,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                         responseObject,
                         hr,
                         PeripheralCommandErrorCode(hr, true),
-                        L"Bluetooth MIDI stopPeripheral failed.");
+                        internal::ResourceGetWString(IDS_ERROR_STOP_PERIPHERAL_FAILED));
                 }
             }
             else
@@ -1068,7 +1120,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_TRANSPORT_NOT_AVAILABLE,
-                    L"Bluetooth MIDI endpoint manager is not available.");
+                    internal::ResourceGetWString(IDS_ERROR_ENDPOINT_MANAGER_NOT_AVAILABLE));
             }
         }
         else if (commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_GET_PERIPHERAL_STATUS)
@@ -1096,7 +1148,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_MISSING_CLIENT_ADDRESS,
-                    L"A Bluetooth address is required to identify the client being decided about.");
+                    internal::ResourceGetWString(IDS_ERROR_DECISION_MISSING_ADDRESS));
             }
             else if (!MidiBleUtilities::TryApprovalScopeFromJsonString(
                 GetCommandArgument(commandHelper, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_KEY), scope))
@@ -1104,7 +1156,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_INVALID_APPROVAL_SCOPE,
-                    L"Unrecognized approval scope. Use once, untilRestart or always.");
+                    internal::ResourceGetWString(IDS_ERROR_INVALID_APPROVAL_SCOPE));
             }
             else
             {
@@ -1119,23 +1171,21 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                     internal::SetConfigurationResponseObjectFailWithErrorCode(
                         responseObject,
                         decisionError,
-                        L"This device's Bluetooth address changes periodically, so a permanent decision "
-                        L"about it cannot be honored. Pair the device first, or choose a scope of once "
-                        L"or untilRestart.");
+                        internal::ResourceGetWString(IDS_ERROR_ADDRESS_NOT_REMEMBERABLE));
                 }
                 else if (decisionError == BLUETOOTH_MIDI_ERROR_CODE_CLIENT_IDENTITY_MISMATCH)
                 {
                     internal::SetConfigurationResponseObjectFailWithErrorCode(
                         responseObject,
                         decisionError,
-                        L"A different Bluetooth MIDI client is waiting for a decision.");
+                        internal::ResourceGetWString(IDS_ERROR_DIFFERENT_CLIENT_WAITING));
                 }
                 else if (decisionError != 0)
                 {
                     internal::SetConfigurationResponseObjectFailWithErrorCode(
                         responseObject,
                         decisionError,
-                        L"No Bluetooth MIDI client is waiting for a decision.");
+                        internal::ResourceGetWString(IDS_ERROR_NO_CLIENT_WAITING));
                 }
                 else
                 {
@@ -1185,14 +1235,14 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_MISSING_CLIENT_ADDRESS,
-                    L"A Bluetooth address is required to identify the client to forget.");
+                    internal::ResourceGetWString(IDS_ERROR_FORGET_MISSING_ADDRESS));
             }
             else if (!TransportState::Current().ForgetPeripheralClient(std::wstring{ address }))
             {
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_CLIENT_NOT_REMEMBERED,
-                    L"No remembered Bluetooth MIDI client has that address.");
+                    internal::ResourceGetWString(IDS_ERROR_CLIENT_NOT_REMEMBERED));
             }
             else
             {
@@ -1206,28 +1256,29 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
         else if (commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_SET_OFFLINE_RETENTION)
         {
             // No device id means the transport default, which is what a device set to "default" uses.
-            auto const deviceId = GetCommandArgument(commandHelper, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_ARGUMENT_DEVICE_ID_KEY);
+            auto const requestedId = GetCommandArgument(commandHelper, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_ARGUMENT_DEVICE_ID_KEY);
+            auto const deviceId = MidiBleUtilities::CanonicalBluetoothDeviceId(std::wstring{ requestedId });
             auto const requested = GetCommandArgument(commandHelper, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY);
 
             int32_t retentionSeconds{ MidiBleProtocol::OfflineRetentionKeepAlways };
 
-            if (!MidiBleUtilities::TryOfflineRetentionFromJsonString(requested, !deviceId.empty(), retentionSeconds))
+            if (!MidiBleUtilities::TryOfflineRetentionFromJsonString(requested, !requestedId.empty(), retentionSeconds))
             {
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_INVALID_OFFLINE_RETENTION,
-                    L"Offline retention must be \"always\", \"immediate\", a whole number of seconds up to 86400, or \"default\" for a single device.");
+                    internal::ResourceGetWString(IDS_ERROR_INVALID_OFFLINE_RETENTION));
             }
-            else if (!deviceId.empty() && !MidiBleUtilities::IsWellFormedBluetoothDeviceId(std::wstring{ deviceId }))
+            else if (!requestedId.empty() && deviceId.empty())
             {
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_INVALID_DEVICE_ID,
-                    L"That is not a usable Bluetooth device id.");
+                    internal::ResourceGetWString(IDS_ERROR_UNUSABLE_DEVICE_ID));
             }
             else
             {
-                if (deviceId.empty())
+                if (requestedId.empty())
                 {
                     TransportState::Current().SetDefaultOfflineRetentionSeconds(retentionSeconds);
                 }
@@ -1267,7 +1318,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject,
                     BLUETOOTH_MIDI_ERROR_CODE_INVALID_JSON,
-                    L"Unrecognized Bluetooth MIDI connection parameter preference.");
+                    internal::ResourceGetWString(IDS_ERROR_INVALID_CONNECTION_PARAMETERS));
             }
             else
             {
@@ -1297,7 +1348,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
             internal::SetConfigurationResponseObjectFailWithErrorCode(
                 responseObject,
                 BLUETOOTH_MIDI_ERROR_CODE_UNRECOGNIZED_COMMAND,
-                L"Unsupported Bluetooth MIDI transport command.");
+                internal::ResourceGetWString(IDS_ERROR_UNSUPPORTED_COMMAND));
         }
 
         // return the json with the information the client will need

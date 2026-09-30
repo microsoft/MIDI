@@ -185,7 +185,6 @@ namespace glass
         switch (kind)
         {
         case ControlKind::Knob:
-        case ControlKind::Encoder:
         case ControlKind::Fader:
         case ControlKind::XYPad:
         case ControlKind::Joystick:
@@ -216,6 +215,11 @@ namespace glass
         if (kind == ControlKind::Pad && theme.PadFillWhenOnPercent >= 0)
         {
             return theme.PadFillWhenOnPercent;
+        }
+
+        if (kind == ControlKind::Lamp && theme.LampFillWhenOnPercent >= 0)
+        {
+            return theme.LampFillWhenOnPercent;
         }
 
         return theme.FillWhenOnPercent;
@@ -250,6 +254,25 @@ namespace glass
             theme.PlateColor.A != 0 &&
             FillsLikeASwitch(kind) &&
             kind != ControlKind::Lamp;
+    }
+
+    _Use_decl_annotations_
+    bool IsRoundSwitch(Theme const& theme, ControlKind kind) noexcept
+    {
+        if (theme.SwitchShape != SwitchShapeStyle::Round)
+        {
+            return false;
+        }
+
+        return kind == ControlKind::Button ||
+            kind == ControlKind::Toggle ||
+            (kind == ControlKind::Pad && theme.PadsFollowSwitchShape);
+    }
+
+    _Use_decl_annotations_
+    bool LatchesOn(ControlKind kind) noexcept
+    {
+        return kind == ControlKind::Toggle || kind == ControlKind::PageTab;
     }
 
     _Use_decl_annotations_
@@ -646,6 +669,31 @@ namespace glass
                 colors.OnPlate = BlendOver(colors.OnPlate, toward, amount);
                 colors.OnPlateEnd = BlendOver(colors.OnPlateEnd, toward, lift > 0.0 ? amount * 0.5 : amount);
             }
+
+            // A switch that stays on is checkered rather than colored, and one that only goes
+            // on while it is held is simply pressed. A pad and a lamp still light in their color.
+            if (theme.Latch == LatchStyle::Checkerboard &&
+                control.Kind != ControlKind::Pad &&
+                control.Kind != ControlKind::Lamp &&
+                FillsLikeASwitch(control.Kind))
+            {
+                if (LatchesOn(control.Kind))
+                {
+                    auto const light = EffectiveBevelHighlightColor(theme);
+
+                    colors.OnPlate = BlendOver(restingTop, light, 0.5);
+                    colors.OnPlate.A = 255;
+                    colors.OnPlateEnd = BlendOver(restingBottom, light, 0.5);
+                    colors.OnPlateEnd.A = 255;
+                }
+                else
+                {
+                    colors.OnPlate = restingTop;
+                    colors.OnPlate.A = 255;
+                    colors.OnPlateEnd = restingBottom;
+                    colors.OnPlateEnd.A = 255;
+                }
+            }
         }
 
         colors.OnRim = hue;
@@ -697,6 +745,31 @@ namespace glass
         {
             colors.KnobCap = theme.KnobCapColor;
             colors.KnobCapEnd = theme.KnobCapEndColor.A != 0 ? theme.KnobCapEndColor : theme.KnobCapColor;
+        }
+
+        // A cap in the knob's own color: lit a little at the top, deeper at its edge. The line on
+        // it is the theme's pointer where that reads on this cap, and otherwise white or near
+        // black, whichever does, the way a name on a switch is chosen.
+        if (theme.KnobCapFromHue && control.Kind == ControlKind::Knob)
+        {
+            constexpr ThemeColor white{ 255, 255, 255, 255 };
+            constexpr ThemeColor black{ 0, 0, 0, 255 };
+            constexpr ThemeColor nearBlack{ 0x11, 0x11, 0x11, 255 };
+
+            auto cap = hue;
+            cap.A = 255;
+
+            colors.KnobCap = BlendOver(cap, white, 0.12);
+            colors.KnobCapEnd = BlendOver(cap, black, 0.28);
+
+            auto const capMiddle = BlendOver(colors.KnobCap, colors.KnobCapEnd, 0.5);
+
+            if (theme.PointerColor.A == 0 || ContrastRatio(theme.PointerColor, capMiddle) < 3.0)
+            {
+                colors.Pointer = ContrastRatio(white, capMiddle) >= ContrastRatio(nearBlack, capMiddle)
+                    ? white
+                    : nearBlack;
+            }
         }
 
         // Printed on the panel, so it is the ink rather than the barely-there marks inside a
@@ -780,6 +853,18 @@ namespace glass
         // Behind smoked plastic a light keeps its own color, even on a theme that prints every
         // other value in one ink.
         colors.WellValue = theme.WellFillsControl && theme.ValueColor.A != 0 ? hue : value;
+
+        // A number in a window can be printed in an ink of its own. Six colors dark enough to
+        // read on a light panel are too dark for small figures on black.
+        colors.WellInk = theme.WellInkColor.A != 0 ? Opaque(theme.WellInkColor) : colors.WellValue;
+
+        if (theme.BevelPixels > 0)
+        {
+            colors.BevelHighlight = Opaque(EffectiveBevelHighlightColor(theme));
+            colors.BevelLight = Opaque(EffectiveBevelLightColor(theme));
+            colors.BevelShadow = Opaque(EffectiveBevelShadowColor(theme));
+            colors.BevelDark = Opaque(EffectiveBevelDarkColor(theme));
+        }
 
         if (theme.ValueCorePercent > 0)
         {

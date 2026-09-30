@@ -19,6 +19,7 @@
 #include "cmd_loopback.h"
 #include "cmd_synth.h"
 #include "cmd_network.h"
+#include "cmd_rtp.h"
 #include "cmd_sysex.h"
 #include "cmd_system.h"
 #include "console_output.h"
@@ -78,13 +79,17 @@ namespace
             arguments[1] = "sysex";
             arguments[index] = "send-file";
 
+            // send-file takes the endpoint id after the file, so an id given before the verb goes last.
+            std::rotate(arguments.begin() + 2, arguments.begin() + index, arguments.end());
+
             return;
         }
     }
 
     // The shipping console takes the endpoint id between the branch and the sub-command
-    // ("midi endpoint <id> monitor"). CLI11 cannot express that, so the id is moved to the end
-    // where it is parsed as the sub-command's positional. Existing scripts keep working.
+    // ("midi endpoint <id> monitor"). CLI11 cannot express that, so the id is moved to just after
+    // the sub-command, where a note list or a multi-value option such as --group cannot swallow
+    // it. Existing scripts keep working.
     //
     // The sub-command names are asked of CLI11 rather than listed here. A list went stale the
     // first time a new endpoint verb was added, and the symptom was baffling: the new verb was
@@ -111,14 +116,8 @@ namespace
             return;
         }
 
-        auto const subcommands = endpointCommand->get_subcommands(
-            [](CLI::App const*) noexcept { return true; });
-
         // check_name matches a sub-command's own name and every alias it was given.
-        auto const isSubcommand = std::any_of(subcommands.begin(), subcommands.end(),
-            [&candidate](CLI::App const* const command) { return command->check_name(candidate); });
-
-        if (isSubcommand)
+        if (endpointCommand->get_subcommand_no_throw(candidate) != nullptr)
         {
             return;
         }
@@ -126,7 +125,36 @@ namespace
         auto const endpointId = candidate;
 
         arguments.erase(arguments.begin() + 2);
-        arguments.push_back(endpointId);
+
+        // Walk to the sub-command that runs, so "request function-blocks" gets the id too.
+        CLI::App const* command{ endpointCommand };
+        size_t insertAt{ 2 };
+
+        while (insertAt < arguments.size())
+        {
+            CLI::App const* const child = command->get_subcommand_no_throw(arguments[insertAt]);
+
+            if (child == nullptr)
+            {
+                break;
+            }
+
+            command = child;
+            insertAt++;
+        }
+
+        if (command == endpointCommand)
+        {
+            arguments.push_back(endpointId);
+        }
+        else if (command->get_option_no_throw("--endpoint-id") != nullptr)
+        {
+            arguments.insert(arguments.begin() + insertAt, { "--endpoint-id", endpointId });
+        }
+        else
+        {
+            arguments.insert(arguments.begin() + insertAt, endpointId);
+        }
     }
 }
 
@@ -617,6 +645,39 @@ int main()
     auto networkStatusCommand = networkCommand->add_subcommand("status", ResourceString(IDS_CMD_NET_STATUS));
     networkStatusCommand->add_flag("-v,--verbose", networkStatusOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
 
+    // ---------------------------------------------------------------- rtp
+
+    auto rtpCommand = app.add_subcommand("rtp", ResourceString(IDS_CMD_RTP));
+    rtpCommand->alias("rtp-midi");
+    rtpCommand->alias("rtpmidi");
+    rtpCommand->require_subcommand(1);
+
+    RtpListOptions rtpHostsOptions{};
+
+    auto rtpHostsCommand = rtpCommand->add_subcommand("list-hosts", ResourceString(IDS_CMD_RTP_HOSTS));
+    rtpHostsCommand->alias("hosts");
+    rtpHostsCommand->add_flag("-v,--verbose", rtpHostsOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
+
+    RtpListOptions rtpClientsOptions{};
+
+    auto rtpClientsCommand = rtpCommand->add_subcommand("list-clients", ResourceString(IDS_CMD_RTP_CLIENTS));
+    rtpClientsCommand->alias("clients");
+    rtpClientsCommand->add_flag("-v,--verbose", rtpClientsOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
+
+    RtpListOptions rtpBrowseOptions{};
+
+    auto rtpBrowseCommand = rtpCommand->add_subcommand("browse", ResourceString(IDS_CMD_RTP_BROWSE));
+    rtpBrowseCommand->alias("advertised");
+    rtpBrowseCommand->alias("mdns");
+    rtpBrowseCommand->add_flag("-v,--verbose", rtpBrowseOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
+
+    auto rtpPendingCommand = rtpCommand->add_subcommand("pending", ResourceString(IDS_CMD_RTP_PENDING));
+
+    RtpListOptions rtpStatusOptions{};
+
+    auto rtpStatusCommand = rtpCommand->add_subcommand("status", ResourceString(IDS_CMD_RTP_STATUS));
+    rtpStatusCommand->add_flag("-v,--verbose", rtpStatusOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
+
     // ---------------------------------------------------------------- bluetooth
 
     auto bluetoothCommand = app.add_subcommand("bluetooth", ResourceString(IDS_CMD_BLUETOOTH));
@@ -842,6 +903,12 @@ int main()
         if (networkBrowseCommand->parsed())         return RunNetworkBrowseCommand(networkBrowseOptions);
         if (networkPendingCommand->parsed())        return RunNetworkPendingCommand();
         if (networkStatusCommand->parsed())         return RunNetworkStatusCommand(networkStatusOptions);
+
+        if (rtpHostsCommand->parsed())              return RunRtpHostsCommand(rtpHostsOptions);
+        if (rtpClientsCommand->parsed())            return RunRtpClientsCommand(rtpClientsOptions);
+        if (rtpBrowseCommand->parsed())             return RunRtpBrowseCommand(rtpBrowseOptions);
+        if (rtpPendingCommand->parsed())            return RunRtpPendingCommand();
+        if (rtpStatusCommand->parsed())             return RunRtpStatusCommand(rtpStatusOptions);
 
         if (bluetoothListCommand->parsed())         return RunBluetoothListCommand();
         if (bluetoothStatusCommand->parsed())       return RunBluetoothStatusCommand();

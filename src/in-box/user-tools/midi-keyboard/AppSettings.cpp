@@ -44,6 +44,10 @@ namespace midikeyboard
         constexpr wchar_t ValueArpeggiatorBpm[] = L"ArpeggiatorBpm";
         constexpr wchar_t ValueArpeggiatorRate[] = L"ArpeggiatorRate";
         constexpr wchar_t ValueLatch[] = L"Latch";
+        constexpr wchar_t ValueUseCustomWhiteKeyColor[] = L"UseCustomWhiteKeyColor";
+        constexpr wchar_t ValueWhiteKeyColor[] = L"WhiteKeyColorArgb";
+        constexpr wchar_t ValueUseCustomBlackKeyColor[] = L"UseCustomBlackKeyColor";
+        constexpr wchar_t ValueBlackKeyColor[] = L"BlackKeyColorArgb";
 
         template <typename TEnum>
         TEnum ReadEnum(uint32_t stored, TEnum maximum, TEnum fallback) noexcept
@@ -152,6 +156,11 @@ namespace midikeyboard
             ArpeggiatorDivision::ThirtySecond, ArpeggiatorDivision::Sixteenth);
 
         m_latch = ReadDword(ValueLatch, 0u) != 0;
+
+        m_useCustomWhiteKeyColor = ReadDword(ValueUseCustomWhiteKeyColor, 0u) != 0;
+        m_whiteKeyColorArgb = ReadDword(ValueWhiteKeyColor, DefaultWhiteKeyColorArgb);
+        m_useCustomBlackKeyColor = ReadDword(ValueUseCustomBlackKeyColor, 0u) != 0;
+        m_blackKeyColorArgb = ReadDword(ValueBlackKeyColor, DefaultBlackKeyColorArgb);
     }
 
     void AppSettings::Connection(ConnectionMode value) noexcept
@@ -319,5 +328,33 @@ namespace midikeyboard
     {
         m_latch = value;
         WriteDword(ValueLatch, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::UseCustomWhiteKeyColor(bool value) noexcept
+    {
+        m_useCustomWhiteKeyColor = value;
+        WriteDword(ValueUseCustomWhiteKeyColor, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::WhiteKeyColorArgb(uint32_t value) noexcept
+    {
+        m_whiteKeyColorArgb = value;
+        WriteDword(ValueWhiteKeyColor, value);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::UseCustomBlackKeyColor(bool value) noexcept
+    {
+        m_useCustomBlackKeyColor = value;
+        WriteDword(ValueUseCustomBlackKeyColor, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::BlackKeyColorArgb(uint32_t value) noexcept
+    {
+        m_blackKeyColorArgb = value;
+        WriteDword(ValueBlackKeyColor, value);
     }
 }

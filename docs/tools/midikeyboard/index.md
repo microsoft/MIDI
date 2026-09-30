@@ -1,6 +1,6 @@
 ---
 layout: tools_page
-title: MIDI Keyboard
+title: Windows MIDI Keyboard
 tool: midikeyboard
 description: An on-screen MIDI keyboard for playing and testing instruments without plugging anything in
 icon: /assets/images/midikeyboard.png
@@ -10,19 +10,21 @@ categories:
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
 
-MIDI Keyboard is an on-screen keyboard for playing MIDI instruments. It's the quickest way to answer "is this thing making a sound?" without unpacking a controller, and it's genuinely playable with a mouse, a touchscreen, or your computer keyboard.
+Windows MIDI Keyboard is an on-screen keyboard for playing MIDI instruments. It's the quickest way to answer "is this thing making a sound?" without unpacking a controller, and it's genuinely playable with a mouse, a touchscreen, or your computer keyboard.
 
 It's also the easiest way to test the parts of MIDI 2.0 that a MIDI 1.0 controller can't send at all: high-resolution velocity and per-note controllers.
 
-![The MIDI Keyboard main window]({{ site.baseurl }}/assets/images/midikeyboard.png)
+## Quick start
 
-## Getting started
+![The Windows MIDI Keyboard window, with numbered callouts on the connection, the keys, the octave buttons, the pitch and modulation ribbons, the arpeggiator and latch controls, the program and panic buttons, and the settings button]({{ site.baseurl }}/assets/images/midikeyboard-quick-start.png)
 
-1. Open the settings with the gear button at the top right.
-2. Under **Connection**, choose **An existing MIDI endpoint** and pick your instrument, group, and channel.
-3. Close the settings and play the keys.
-
-The connection indicator at the top left shows what you're connected to. If the device goes away, the keyboard says so and reconnects on its own when it comes back, so unplugging a USB instrument doesn't mean restarting the app.
+1. **The connection** shows the instrument you're playing, with its group and channel. The arrow next to it switches to a different instrument. If the device goes away, the keyboard says so and reconnects on its own when it comes back, so unplugging a USB instrument doesn't mean restarting the app.
+2. **The keys.** Click or tap them, or play them from your computer keyboard. Striking a key near the top plays softly, and near the bottom plays loudly.
+3. **Octave** moves the whole keyboard up or down. **Page Up** and **Page Down** do the same.
+4. **The ribbons** bend the pitch and send modulation, like the wheels on a hardware keyboard.
+5. **Arp** turns the notes you hold into a pattern, and **Latch** keeps notes sounding after you let go.
+6. **The program button**, showing **43: Cello** here, chooses the sound. **Panic**, at the far right, stops every note that's sounding.
+7. **Settings** holds everything else: the instrument, group, and channel under **Connection**, plus the keyboard, expression, and appearance options.
 
 > The **virtual device** connection type, which makes the keyboard appear to other applications as a MIDI input they can open, is temporarily unavailable in this preview.
 
@@ -107,7 +109,7 @@ The gear button at the top right opens the settings panel beside the keys.
 
 **Expression** holds the ribbon position, the velocity settings, and what dragging up a key sends, all covered above.
 
-**Appearance** sets whether the app follows your Windows light or dark mode, and which window background to use.
+**Appearance** sets whether the app follows your Windows light or dark mode, and which window background to use. Its **Black keys** and **White keys** tabs let you pick your own color for each kind of key. The letters and note names on the keys switch between dark and light text on their own, so they stay easy to read whatever colors you choose.
 
 The pin button next to the settings button keeps the keyboard above your other windows, which is what you want when you're playing an instrument hosted in a DAW.
 

@@ -25,11 +25,11 @@ namespace glass
     // numbers rather than as a shape per kind.
     enum class PaletteArtShape
     {
-        // A rounded rectangle, outlined, filled, or both. Covers button, toggle, pad, wheel,
-        // range, XY pad and ribbon.
+        // A rounded rectangle, outlined, filled, or both. Covers button, toggle, pad, wheel and
+        // ribbon.
         Rectangle = 0,
 
-        // A circle. Knob, encoder, joystick, lamp.
+        // A circle. A lamp.
         Ellipse = 1,
 
         // Upright bars, for a bank of faders.
@@ -58,6 +58,21 @@ namespace glass
 
         // A few hexagons nested together, for the hex pads.
         HexGrid = 10,
+
+        // A circle with its pointer at eleven o'clock, for a knob.
+        Dial = 11,
+
+        // A circle with a record's label ring and spindle, for a turntable.
+        Platter = 12,
+
+        // A square field with a crosshair and its dot down and to the left, for an XY pad.
+        CrosshairField = 13,
+
+        // A circle with an arrow at each compass point and a ball in the middle, for a joystick.
+        Stick = 14,
+
+        // A slot with its cap a third of the way up, for a fader.
+        FaderCap = 15,
     };
 
     struct PaletteArt

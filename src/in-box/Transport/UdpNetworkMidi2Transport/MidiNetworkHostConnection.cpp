@@ -34,14 +34,9 @@ MidiNetworkHostConnection::Initialize(
     uint16_t const retransmitBufferMaxCommandPacketCount,
     uint8_t const maxForwardErrorCorrectionCommandPacketCount,
     bool createUmpEndpointsOnly,
-    uint8_t const fallbackMidi1PortCount,
-    MidiNetworkAuthenticationKind const authenticationKind,
-    MidiNetworkCredentialIdentifier const& credentialIdentifier
+    uint8_t const fallbackMidi1PortCount
 )
 {
-    m_authenticationKind = authenticationKind;
-    m_credentialIdentifier = credentialIdentifier;
-
     return MidiNetworkConnection::Initialize(
         MidiNetworkConnectionRole::ConnectionWindowsIsHost,
         configIdentifier,
@@ -93,38 +88,85 @@ MidiNetworkHostConnection::CompleteHostSessionAfterEndpointCreated(
     std::wstring const& newEndpointDeviceInterfaceId
 )
 {
-    m_hostEndpointCreationPending = false;
+    // Cleared last. A repeated invitation meanwhile finds the session live and is answered,
+    // instead of queuing a second creation of an endpoint which already exists.
+    auto clearPending = wil::scope_exit([this]() { m_hostEndpointCreationPending = false; });
 
-    if (m_shuttingDown)
+    auto const deviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceInstanceId);
+    auto const endpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newEndpointDeviceInterfaceId);
+
+    auto endpointManager = TransportState::Current().GetEndpointManager();
+
+    RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
+
+    HRESULT hr{ S_OK };
+    bool claimed{ false };
+
+    {
+        auto lock = m_sessionLock.lock();
+
+        // The remote said Bye, or this connection is being shut down
+        if (!m_shuttingDown && !m_hostEndpointCreationAbandoned)
+        {
+            // this is what the Bidi uses when it is created
+            hr = TransportState::Current().AssociateMidiEndpointWithConnection(endpointDeviceInterfaceId, m_remoteHostName, m_remotePort.c_str());
+
+            if (SUCCEEDED(hr))
+            {
+                m_sessionDeviceInstanceId = deviceInstanceId;
+                m_sessionEndpointDeviceInterfaceId = endpointDeviceInterfaceId;
+
+                // Before Accepted goes out. A client can send the moment it is accepted, and
+                // anything arriving outside a session is refused with a Bye.
+                m_sessionActive = true;
+
+                claimed = true;
+            }
+        }
+    }
+
+    if (!claimed)
+    {
+        // Nothing else knows this endpoint exists. This is the endpoint worker, so it goes now.
+        LOG_IF_FAILED(endpointManager->DeleteEndpoint(deviceInstanceId));
+
+        if (FAILED(hr))
+        {
+            LOG_IF_FAILED(FailHostSessionEndpointCreation(hr));
+
+            RETURN_IF_FAILED(hr);
+        }
+
+        return S_FALSE;
+    }
+
+    // A Bye since the claim has already ended the session and queued the endpoint's removal
+    if (!m_sessionActive)
     {
         return S_FALSE;
     }
 
-    m_sessionEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newEndpointDeviceInterfaceId);
-    m_sessionDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceInstanceId);
+    hr = SendInvitationReplyAccepted();
 
-    // this is what the Bidi uses when it is created
-    RETURN_IF_FAILED(TransportState::Current().AssociateMidiEndpointWithConnection(m_sessionEndpointDeviceInterfaceId.c_str(), m_remoteHostName, m_remotePort.c_str()));
-
-    RETURN_IF_FAILED(StartOutboundMidiMessageProcessingThread());
-
-    auto endpointManager = TransportState::Current().GetEndpointManager();
-
-    if (endpointManager != nullptr)
+    // Only after Accepted, so no UMP Data can reach the client ahead of it
+    if (SUCCEEDED(hr))
     {
-        // negotiation needs the connection wired up first, so it cannot happen during creation
-        LOG_IF_FAILED(endpointManager->QueueDiscoveryAndNegotiation(m_sessionEndpointDeviceInterfaceId));
+        hr = StartOutboundMidiMessageProcessingThread();
     }
 
-    RETURN_IF_FAILED(SendToNetwork([this](MidiNetworkDataWriter& writer)
-        {
-            RETURN_IF_FAILED(writer.WriteCommandInvitationReplyAccepted(m_thisEndpointName, m_thisProductInstanceId));
+    if (FAILED(hr))
+    {
+        // Removes the endpoint claimed above
+        LOG_IF_FAILED(EndActiveSession(false));
+        LOG_IF_FAILED(FailHostSessionEndpointCreation(hr));
 
-            return S_OK;
-        }));
+        RETURN_IF_FAILED(hr);
+    }
 
-    m_sessionActive = true;
     m_sessionEverEstablished = true;
+
+    // negotiation needs the connection wired up first, so it cannot happen during creation
+    LOG_IF_FAILED(endpointManager->QueueDiscoveryAndNegotiation(endpointDeviceInterfaceId));
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -133,7 +175,7 @@ MidiNetworkHostConnection::CompleteHostSessionAfterEndpointCreated(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Session accepted after deferred endpoint creation", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(m_sessionEndpointDeviceInterfaceId.c_str(), "endpoint device interface id")
+        TraceLoggingWideString(endpointDeviceInterfaceId.c_str(), "endpoint device interface id")
     );
 
     return S_OK;
@@ -287,13 +329,14 @@ MidiNetworkHostConnection::DisconnectByUser()
 
         if (remoteHostName != nullptr)
         {
-            LOG_IF_FAILED(TransportState::Current().RemoveNetworkConnection(
+            // Only detached here. It is shut down below.
+            TransportState::Current().DetachNetworkConnection(
                 remoteHostName,
-                winrt::hstring{ GetRemotePort() }));
+                winrt::hstring{ GetRemotePort() });
         }
 
-        // Teardown deletes the MIDI endpoint, which blocks on the device manager. This is called
-        // from a service configuration call, so it goes to the worker rather than blocking it.
+        // Shutdown joins this connection's threads and can remove its endpoint, which blocks on
+        // the service. This is a service configuration call, so the endpoint worker does it.
         auto endpointManager = TransportState::Current().GetEndpointManager();
 
         if (endpointManager != nullptr)
@@ -329,40 +372,21 @@ MidiNetworkHostConnection::HandleIncomingInvitation(
 
     RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointManager());
 
-    // Spec 6.4. If this host was configured to require authentication we must challenge,
-    // never accept. Configuration validation refuses to start such a host today, so this is
-    // defense in depth rather than the primary control.
-    // TODO: https://github.com/microsoft/MIDI/issues/733
-    if (m_authenticationKind != MidiNetworkAuthenticationKind::None)
-    {
-        TraceLoggingWrite(
-            MidiNetworkMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_WARNING,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Host requires authentication, which is not yet implemented. Refusing the invitation.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingUInt8(capabilities, "client advertised capabilities")
-        );
-
-        return RefuseInvitationForAuthentication(MidiNetworkCommandByeReason::CommandByeReasonHostToClient_NoMatchingAuthenticationMethod);
-    }
+    // A host which required authentication would challenge here, before any other decision.
+    // Configuration refuses such a host today. See MidiNetworkCredentials.h.
+    UNREFERENCED_PARAMETER(capabilities);
 
     if (m_sessionActive)
     {
         // if the session is already active, we simply accept it again
-
-        LOG_IF_FAILED(SendToNetwork([this](MidiNetworkDataWriter& writer)
-            {
-                RETURN_IF_FAILED(writer.WriteCommandInvitationReplyAccepted(m_thisEndpointName, m_thisProductInstanceId));
-
-                return S_OK;
-            }));
+        LOG_IF_FAILED(SendInvitationReplyAccepted());
 
         return S_OK;
     }
 
     // TODO: will we accept a session invitation from the specified hostname?
+
+    MidiNetworkRemoteClientIdentity const identity{ clientUmpEndpointName, clientProductInstanceId };
 
     // Remember who this is. The approval command and the enumeration feed both need it, and
     // a re-invitation can arrive on another thread while a user is deciding.
@@ -378,148 +402,175 @@ MidiNetworkHostConnection::HandleIncomingInvitation(
     // No host means it was stopped between the datagram arriving and now. Nothing can
     // approve this, so it is refused rather than accepted by default.
     auto decision = host != nullptr
-        ? host->EvaluateRemoteClient(MidiNetworkRemoteClientIdentity{ clientUmpEndpointName, clientProductInstanceId })
+        ? host->EvaluateRemoteClient(identity)
         : MidiNetworkRemoteClientDecision::DecisionDeny;
 
     if (decision == MidiNetworkRemoteClientDecision::DecisionDeny)
     {
-        TraceLoggingWrite(
-            MidiNetworkMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_WARNING,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Invitation refused. The remote client is on the deny list, or could not be identified.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(clientUmpEndpointName.c_str(), "client endpoint name"),
-            TraceLoggingWideString(clientProductInstanceId.c_str(), "client product instance id")
-        );
-
-        m_awaitingUserApproval = false;
-
-        auto message = internal::ResourceGetWString(IDS_MESSAGE_INVITATION_DENIED);
-
-        LOG_IF_FAILED(SendToNetwork([&message](MidiNetworkDataWriter& writer)
-            {
-                RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationRejectedUserDidNotAccept, message));
-
-                return S_OK;
-            }));
-
-        return S_OK;
+        return RefuseDeniedInvitation(identity);
     }
 
     if (decision == MidiNetworkRemoteClientDecision::DecisionRequireApproval)
     {
-        // Spec 6.6. The client is told its invitation is pending and keeps re-inviting while
-        // it waits. Nothing is created for it until a user decides, so an unapproved remote
-        // costs us no endpoint and no device node.
-        auto alreadyPending = m_awaitingUserApproval.exchange(true);
-
-        if (!alreadyPending)
-        {
-            FILETIME requestedTime{};
-            GetSystemTimeAsFileTime(&requestedTime);
-
-            m_userApprovalRequestedFileTime.store(
-                (static_cast<uint64_t>(requestedTime.dwHighDateTime) << 32) | requestedTime.dwLowDateTime);
-
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Invitation is awaiting user approval.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(clientUmpEndpointName.c_str(), "client endpoint name"),
-                TraceLoggingWideString(clientProductInstanceId.c_str(), "client product instance id")
-            );
-
-            // Nothing here waits on a user. This only lets an app in the customer's session know
-            // to ask what is waiting, because the service itself cannot show them anything.
-            TransportState::Current().NotificationSignal().SignalPendingApprovalChanged();
-        }
-
-        LOG_IF_FAILED(SendToNetwork([this](MidiNetworkDataWriter& writer)
-            {
-                RETURN_IF_FAILED(writer.WriteCommandInvitationReplyPending(m_thisEndpointName, m_thisProductInstanceId));
-
-                return S_OK;
-            }));
-
-        return S_OK;
+        return AwaitUserApproval(identity);
     }
 
     m_awaitingUserApproval = false;
 
+    return AcceptInvitation(identity);
+}
+
+HRESULT
+MidiNetworkHostConnection::SendInvitationReplyPending()
+{
+    return SendToNetwork([this](MidiNetworkDataWriter& writer)
+        {
+            RETURN_IF_FAILED(writer.WriteCommandInvitationReplyPending(m_thisEndpointName, m_thisProductInstanceId));
+
+            return S_OK;
+        });
+}
+
+HRESULT
+MidiNetworkHostConnection::SendInvitationReplyAccepted()
+{
+    return SendToNetwork([this](MidiNetworkDataWriter& writer)
+        {
+            RETURN_IF_FAILED(writer.WriteCommandInvitationReplyAccepted(m_thisEndpointName, m_thisProductInstanceId));
+
+            return S_OK;
+        });
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkHostConnection::RefuseDeniedInvitation(MidiNetworkRemoteClientIdentity const& identity)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_WARNING,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Invitation refused. The remote client is on the deny list, or could not be identified.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(identity.UmpEndpointName.c_str(), "client endpoint name"),
+        TraceLoggingWideString(identity.ProductInstanceId.c_str(), "client product instance id")
+    );
+
+    m_awaitingUserApproval = false;
+
+    auto message = internal::ResourceGetWString(IDS_MESSAGE_INVITATION_DENIED);
+
+    LOG_IF_FAILED(SendToNetwork([&message](MidiNetworkDataWriter& writer)
+        {
+            RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationRejectedUserDidNotAccept, message));
+
+            return S_OK;
+        }));
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkHostConnection::AwaitUserApproval(MidiNetworkRemoteClientIdentity const& identity)
+{
+    // Spec 6.6. The client is told its invitation is pending and keeps re-inviting while
+    // it waits. Nothing is created for it until a user decides, so an unapproved remote
+    // costs us no endpoint and no device node.
+    auto alreadyPending = m_awaitingUserApproval.exchange(true);
+
+    if (!alreadyPending)
+    {
+        FILETIME requestedTime{};
+        GetSystemTimeAsFileTime(&requestedTime);
+
+        m_userApprovalRequestedFileTime.store(
+            (static_cast<uint64_t>(requestedTime.dwHighDateTime) << 32) | requestedTime.dwLowDateTime);
+
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Invitation is awaiting user approval.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(identity.UmpEndpointName.c_str(), "client endpoint name"),
+            TraceLoggingWideString(identity.ProductInstanceId.c_str(), "client product instance id")
+        );
+
+        // Nothing here waits on a user. This only lets an app in the customer's session know
+        // to ask what is waiting, because the service itself cannot show them anything.
+        TransportState::Current().NotificationSignal().SignalPendingApprovalChanged();
+    }
+
+    LOG_IF_FAILED(SendInvitationReplyPending());
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkHostConnection::AcceptInvitation(MidiNetworkRemoteClientIdentity const& identity)
+{
     // Captured once. It can be torn down while a datagram is in flight, and each call to
     // GetEndpointManager() is a fresh read.
     auto endpointManager = TransportState::Current().GetEndpointManager();
 
     RETURN_HR_IF_NULL(S_FALSE, endpointManager);
 
-    if (endpointManager->IsInitialized())
-    {
-        // Spec 6.6: the host may tell the client permission is being sought and follow with
-        // an Accepted or a Bye. Endpoint creation takes over a second when invitations
-        // arrive together, and doing it here would block the socket receive callback and
-        // every other remote behind it, so it is queued and this returns immediately.
-        if (m_hostEndpointCreationPending.exchange(true))
-        {
-            // a repeated invitation while the endpoint is still being created
-            LOG_IF_FAILED(SendToNetwork([this](MidiNetworkDataWriter& writer)
-                {
-                    RETURN_IF_FAILED(writer.WriteCommandInvitationReplyPending(m_thisEndpointName, m_thisProductInstanceId));
-
-                    return S_OK;
-                }));
-
-            return S_OK;
-        }
-
-        LOG_IF_FAILED(SendToNetwork([this](MidiNetworkDataWriter& writer)
-            {
-                RETURN_IF_FAILED(writer.WriteCommandInvitationReplyPending(m_thisEndpointName, m_thisProductInstanceId));
-
-                return S_OK;
-            }));
-
-        // A remote which said Bye and then invited again wants an endpoint after all.
-        m_hostEndpointCreationAbandoned = false;
-
-        auto queueHr = endpointManager->QueueHostEndpointCreation(
-            std::static_pointer_cast<MidiNetworkHostConnection>(shared_from_this()),
-            clientUmpEndpointName,
-            clientProductInstanceId);
-
-        if (FAILED(queueHr))
-        {
-            m_hostEndpointCreationPending = false;
-
-            LOG_IF_FAILED(RefuseSessionForEndpointCreationFailure(queueHr));
-
-            RETURN_IF_FAILED(queueHr);
-        }
-    }
-    else
+    if (!endpointManager->IsInitialized())
     {
         // this shouldn't happen, but we handle it anyway
-
         LOG_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
             {
                 RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_Undefined, internal::ResourceGetWString(IDS_MESSAGE_HOST_CANNOT_ACCEPT_INVITATIONS)));
 
                 return S_OK;
             }));
+
+        return S_OK;
     }
 
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
+    // Spec 6.6: the host may tell the client permission is being sought and follow with
+    // an Accepted or a Bye. Endpoint creation takes over a second when invitations
+    // arrive together, and doing it here would block the socket receive callback and
+    // every other remote behind it, so it is queued and this returns immediately.
+    if (m_hostEndpointCreationPending.exchange(true))
+    {
+        // a repeated invitation while the endpoint is still being created
+        LOG_IF_FAILED(SendInvitationReplyPending());
+
+        return S_OK;
+    }
+
+    // A creation which finished after HandleIncomingInvitation looked has made the session live.
+    // It sets the session active before it clears the pending flag, so this cannot miss it.
+    if (m_sessionActive)
+    {
+        m_hostEndpointCreationPending = false;
+
+        return SendInvitationReplyAccepted();
+    }
+
+    LOG_IF_FAILED(SendInvitationReplyPending());
+
+    // A remote which said Bye and then invited again wants an endpoint after all.
+    m_hostEndpointCreationAbandoned = false;
+
+    auto queueHr = endpointManager->QueueHostEndpointCreation(
+        std::static_pointer_cast<MidiNetworkHostConnection>(shared_from_this()),
+        identity.UmpEndpointName,
+        identity.ProductInstanceId);
+
+    if (FAILED(queueHr))
+    {
+        m_hostEndpointCreationPending = false;
+
+        LOG_IF_FAILED(RefuseSessionForEndpointCreationFailure(queueHr));
+
+        RETURN_IF_FAILED(queueHr);
+    }
 
     return S_OK;
 }
@@ -527,14 +578,12 @@ MidiNetworkHostConnection::HandleIncomingInvitation(
 _Use_decl_annotations_
 HRESULT
 MidiNetworkHostConnection::HandleIncomingInvitationWithAuthentication(
-    MidiNetworkCommandPacketHeader const& header,
-    MidiNetworkAuthenticationKind const kind)
+    MidiNetworkCommandPacketHeader const& header)
 {
     UNREFERENCED_PARAMETER(header);
-    UNREFERENCED_PARAMETER(kind);
 
     // We never challenged, so a client answering a challenge is either confused or probing.
-    // Spec 6.4 says to Bye rather than leave it hanging.
-    // TODO: https://github.com/microsoft/MIDI/issues/733
+    // Spec 6.4 says to Bye rather than leave it hanging. A host which supports authentication
+    // verifies the digest here instead. See MidiNetworkCredentials.h.
     return RefuseInvitationForAuthentication(MidiNetworkCommandByeReason::CommandByeReasonHostToClient_NoMatchingAuthenticationMethod);
 }

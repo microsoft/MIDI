@@ -22,6 +22,9 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             case svc::MidiServiceConfigSaveResult::ErrorNotPersistable:
                 return IDS_CONFIG_SAVE_ERROR_NOT_PERSISTABLE;
 
+            case svc::MidiServiceConfigSaveResult::ErrorEntryNotSaved:
+                return IDS_CONFIG_SAVE_ERROR_ENTRY_NOT_SAVED;
+
             case svc::MidiServiceConfigSaveResult::ErrorConfigJsonNullOrEmpty:
                 return IDS_CONFIG_SAVE_ERROR_JSON_NULL_OR_EMPTY;
 

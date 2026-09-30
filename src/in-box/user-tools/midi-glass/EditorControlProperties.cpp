@@ -240,7 +240,6 @@ namespace winrt::midiglass::implementation
             switch (kind)
             {
             case glass::ControlKind::Knob:
-            case glass::ControlKind::Encoder:
             case glass::ControlKind::Fader:
             case glass::ControlKind::Meter:
             case glass::ControlKind::XYPad:
@@ -259,7 +258,7 @@ namespace winrt::midiglass::implementation
 
         bool ChoosesHowItIsDragged(_In_ glass::ControlKind kind) noexcept
         {
-            return kind == glass::ControlKind::Knob || kind == glass::ControlKind::Encoder;
+            return kind == glass::ControlKind::Knob;
         }
     }
 
@@ -870,7 +869,6 @@ namespace winrt::midiglass::implementation
                     }
 
                     if (candidate.Kind != glass::ControlKind::Knob &&
-                        candidate.Kind != glass::ControlKind::Encoder &&
                         candidate.Kind != glass::ControlKind::Fader &&
                         candidate.Kind != glass::ControlKind::Ribbon)
                     {

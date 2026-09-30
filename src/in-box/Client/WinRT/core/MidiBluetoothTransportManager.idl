@@ -24,6 +24,7 @@ import "MidiBluetoothPeripheralClient.idl";
 import "MidiBluetoothPeripheralClientDecisionResponse.idl";
 import "MidiBluetoothApprovalScopeEnum.idl";
 import "MidiBluetoothRadioInformation.idl";
+import "MidiBluetoothSavedDevice.idl";
 
 namespace Windows.Devices.Midi2.Transports.Bluetooth
 {
@@ -38,7 +39,10 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
 
         [noexcept] static Guid TransportId{ get; };
 
-        // Every Bluetooth MIDI device this PC has seen advertising, whether or not it is connected
+        // Every Bluetooth MIDI device this PC has found, by hearing it advertise or because it is
+        // paired, whether or not it is connected. A device the service is still trying to connect
+        // stays listed while it is switched off. One asked for by an address this PC has never
+        // found is not listed until it is.
         [noexcept] static IVectorView<MidiBluetoothDeviceInformation> GetAvailableDevices();
 
         // Null when no device with that address has been discovered
@@ -86,5 +90,10 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         // The transport-wide value every device set to UseTransportDefault falls back to. Never
         // UseTransportDefault itself, because there is nothing above it to defer to.
         [noexcept] static Int32 GetDefaultOfflineRetentionSeconds();
+
+        // Devices saved in the configuration file, including ones kept but switched off. This is
+        // what the service connects when it next starts, not what is connected now. Works when
+        // the service is not running.
+        [noexcept] static IVectorView<MidiBluetoothSavedDevice> GetSavedDevices();
     }
 }

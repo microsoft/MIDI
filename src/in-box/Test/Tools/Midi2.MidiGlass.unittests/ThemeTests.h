@@ -100,6 +100,17 @@ public:
     TEST_METHOD(ANeonThemeHasAHotCoreAndAFlare);
     TEST_METHOD(GroovyIsDrawnInHeavyFlatLines);
     TEST_METHOD(OffWorldRepeatsItsWallAndDirtiesItsSections);
+
+    // ---- Insert Coin, Chicago, Night Drive, Visor and Good Form ----
+
+    TEST_METHOD(ARoundButtonIsForButtonsTogglesAndPads);
+    TEST_METHOD(AKnobCapCanBeItsOwnColorWithAPointerThatReads);
+    TEST_METHOD(ALampCanBeALensWhileSwitchesFill);
+    TEST_METHOD(ChicagoLatchesWithACheckerboardAndMeasuresInItsWindows);
+    TEST_METHOD(ABevelFallsBackToThePlate);
+    TEST_METHOD(NightDriveDrawsAFloorAndChromeOverItsPicture);
+    TEST_METHOD(VisorIsCornersAndThinLight);
+    TEST_METHOD(GoodFormDeepensALitKeySoItsNameReads);
 };
 
 

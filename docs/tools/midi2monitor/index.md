@@ -1,6 +1,6 @@
 ---
 layout: tools_page
-title: MIDI Monitor
+title: Windows MIDI Monitor
 tool: midi2monitor
 description: Watch the MIDI messages coming from your instruments and controllers
 icon: /assets/images/midi2monitor.png
@@ -10,19 +10,22 @@ categories:
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
 
-MIDI Monitor shows you the MIDI messages arriving from a keyboard, controller, synth, or any other MIDI device on your PC. It's the tool to reach for when you want to answer questions like "is this knob actually sending anything?", "which channel is my keyboard on?", or "what exactly does my synth send when I press that button?".
+Windows MIDI Monitor shows you the MIDI messages arriving from a keyboard, controller, synth, or any other MIDI device on your PC. It's the tool to reach for when you want to answer questions like "is this knob actually sending anything?", "which channel is my keyboard on?", or "what exactly does my synth send when I press that button?".
 
 Everything appears as it arrives, so you can play a note or move a control and watch it show up straight away.
 
-![The MIDI Monitor main window]({{ site.baseurl }}/assets/images/midi2monitor.png)
+## Quick start
 
-## Getting started
+![The Windows MIDI Monitor window, with numbered callouts on the MIDI Device list, the Group and Channel lists, the Start listening button, the Details column, the clock and active sense buttons, and Save to File]({{ site.baseurl }}/assets/images/midi2monitor-quick-start.png)
 
-1. Pick your instrument from the **MIDI Device** list at the top.
-2. Select **Start listening**.
-3. Play a note, move a wheel, or turn a knob.
+1. **MIDI Device** picks the instrument to watch.
+2. **Group** and **Channel** narrow the list to one part of the instrument. Leave them on all groups and all channels to see everything.
+3. **Start listening** begins the capture. Play a note, move a wheel, or turn a knob. Select **Stop listening** when you're done.
+4. **Messages** appear as they arrive, newest at the bottom. The **Details** column says what each one means in plain words.
+5. **Clock** and **active sense** messages are hidden to start with, because many instruments send them all the time. These two buttons show them.
+6. **Save to File** keeps a copy of everything you captured.
 
-Messages appear as they come in, newest at the bottom. Select **Stop listening** when you're done. You can open more than one copy of MIDI Monitor at a time if you want to watch two instruments side by side.
+You can open more than one copy of Windows MIDI Monitor at a time if you want to watch two instruments side by side.
 
 ![Choosing a MIDI device]({{ site.baseurl }}/assets/images/midi2monitor-devices.png)
 
@@ -108,7 +111,7 @@ The pin button next to the window's minimize button keeps MIDI Monitor above you
 
 ## Settings
 
-The gear button at the bottom left opens the settings.
+The gear button in the title bar opens the settings.
 
 ![The settings panel]({{ site.baseurl }}/assets/images/midi2monitor-settings.png)
 

@@ -311,10 +311,14 @@ namespace winrt::midiloopbacksetup::implementation
 
                 created++;
 
-                if (persist && !native::LoopbackConfigFile::Current().MergeSection(
-                    native::LoopbackKind::BasicLoopback, creationConfig.ConfigJson()))
+                if (persist)
                 {
-                    notSaved++;
+                    auto const saveResponse = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(creationConfig);
+
+                    if (saveResponse == nullptr || !saveResponse.Success())
+                    {
+                        notSaved++;
+                    }
                 }
             }
             MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to import a loopback.")

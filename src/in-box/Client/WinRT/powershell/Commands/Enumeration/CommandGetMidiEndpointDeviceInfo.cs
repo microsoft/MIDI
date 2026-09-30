@@ -44,7 +44,7 @@ namespace WindowsMidiServices
             if (device is null)
             {
                 WriteNonTerminating(
-                    new ItemNotFoundException($"No MIDI endpoint was found with the identifier \"{EndpointDeviceId}\"."),
+                    new ItemNotFoundException(Format(Strings.EndpointNotFoundFormat, EndpointDeviceId)),
                     "MidiEndpointNotFound",
                     ErrorCategory.ObjectNotFound,
                     EndpointDeviceId);

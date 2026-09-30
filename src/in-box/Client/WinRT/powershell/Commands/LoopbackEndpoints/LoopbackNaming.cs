@@ -6,6 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using System.Globalization;
 using System.Text;
 
 namespace WindowsMidiServices
@@ -16,8 +17,16 @@ namespace WindowsMidiServices
         // than this, so names are trimmed here rather than being silently truncated later.
         internal const int MaxPortNameLength = 31;
 
-        internal const string SuffixA = " (A)";
-        internal const string SuffixB = " (B)";
+        // The base name is shortened by however much the side format adds, so the finished name
+        // still fits.
+        internal static string FormatSideName(string format, string baseName)
+        {
+            var added = string.Format(CultureInfo.CurrentCulture, format, string.Empty).Length;
+
+            var root = Truncate(baseName, Math.Max(0, MaxPortNameLength - added));
+
+            return string.Format(CultureInfo.CurrentCulture, format, root);
+        }
 
         internal static string Truncate(string name, int maxLength)
         {

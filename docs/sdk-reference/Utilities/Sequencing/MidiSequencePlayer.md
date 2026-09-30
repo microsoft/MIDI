@@ -81,3 +81,10 @@ player.StateChanged([](auto&& sender, auto&&)
 
 player.Play();
 ```
+
+## Samples
+
+* [C++/WinRT midi-file-player](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/midi-file-player) and [C# midi-file-player](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/midi-file-player) for pausing and resuming, reading `Position` to show the bar and beat, and handling `PlaybackEnded`
+* [C++/WinRT sequence-builder](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/sequence-builder) and [C# sequence-builder](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/sequence-builder) for playing one sequence after another on the same player
+
+Both borrow a connection the app opened, instead of letting the player open its own.

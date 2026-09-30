@@ -1888,3 +1888,225 @@ void MidiLoopbackEndpointTests::TestSteadyTrafficIsNotMuted()
     VERIFY_IS_FALSE(entry.IsMuted());
     VERIFY_IS_FALSE(entry.IsMutedForFeedback());
 }
+
+
+// ------------------------------------------------------------------------------------
+// What is saved in the configuration file, and changing a loopback which already exists
+// ------------------------------------------------------------------------------------
+
+namespace
+{
+    namespace svc = winrt::Windows::Devices::Midi2::ServiceConfig;
+
+    bool ConfigFileRegisteredOrSkip()
+    {
+        if (svc::MidiServiceTransportPluginConfigManager::ConfigFilePath().empty())
+        {
+            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"No configuration file is registered on this PC, so nothing can be saved.");
+            return false;
+        }
+
+        return true;
+    }
+
+    MidiLoopbackSavedEntry FindSavedLoopbackEntry(_In_ winrt::guid const& associationId)
+    {
+        for (auto const& entry : MidiLoopbackManager::GetSavedLoopbackEntries())
+        {
+            if (entry != nullptr && entry.AssociationId() == associationId)
+            {
+                return entry;
+            }
+        }
+
+        return nullptr;
+    }
+
+    void VerifySaved(_In_ svc::MidiServiceConfigSaveResponse const& response, _In_ PCWSTR description)
+    {
+        VERIFY_IS_TRUE(response != nullptr);
+
+        if (!response.Success())
+        {
+            std::wcout << L"Save failed: " << static_cast<int>(response.Result()) << L" " << response.ErrorMessage().c_str() << std::endl;
+        }
+
+        VERIFY_IS_TRUE(response.Success(), description);
+    }
+
+    // for cleanup, so it never throws
+    void RemoveSavedLoopback(_In_ winrt::guid const& associationId) noexcept
+    {
+        try
+        {
+            svc::MidiServiceTransportPluginConfigManager::SaveUpdate(MidiLoopbackRemovalConfig(associationId));
+        }
+        catch (...)
+        {
+        }
+    }
+}
+
+
+// Saved without being created, so the running service never sees it
+void MidiLoopbackEndpointTests::TestSavedLoopbackFollowsSavedChanges()
+{
+    if (!ConfigFileRegisteredOrSkip())
+    {
+        return;
+    }
+
+    auto const suffix = winrt::to_hstring(MidiClock::Now());
+
+    MidiLoopbackEndpointDefinition definitionA(L"Test Saved Loopback A " + suffix, L"Saved A side", L"SAVEDA" + suffix);
+    MidiLoopbackEndpointDefinition definitionB(L"Test Saved Loopback B " + suffix, L"Saved B side", L"SAVEDB" + suffix);
+
+    MidiLoopbackCreationConfig creationConfig(definitionA, definitionB);
+
+    auto const associationId = creationConfig.AssociationId();
+
+    VERIFY_IS_TRUE(FindSavedLoopbackEntry(associationId) == nullptr, L"not saved to begin with");
+
+    auto removeEntry = wil::scope_exit([&] { RemoveSavedLoopback(associationId); });
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(creationConfig), L"saving the loopback works");
+
+    auto saved = FindSavedLoopbackEntry(associationId);
+
+    VERIFY_IS_TRUE(saved != nullptr, L"it is listed once saved");
+    VERIFY_IS_TRUE(saved.EndpointDefinitionA().Name() == definitionA.Name(), L"with the A name");
+    VERIFY_IS_TRUE(saved.EndpointDefinitionA().Description() == definitionA.Description(), L"the A description");
+    VERIFY_IS_TRUE(saved.EndpointDefinitionA().UniqueId() == definitionA.UniqueId(), L"the A unique id");
+    VERIFY_IS_TRUE(saved.EndpointDefinitionB().Name() == definitionB.Name(), L"and the B name");
+    VERIFY_IS_FALSE(saved.IsMuted());
+    VERIFY_ARE_EQUAL(saved.FeedbackProtection(), MidiLoopbackFeedbackProtection::Mute);
+
+    MidiLoopbackUpdateConfig update(associationId);
+    update.EndpointAName(L"Test Saved Loopback A Renamed " + suffix);
+    update.EndpointBDescription(L"");
+    update.IsMuted(true);
+    update.FeedbackProtection(MidiLoopbackFeedbackProtection::Off);
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(update), L"saving a change to it works");
+
+    saved = FindSavedLoopbackEntry(associationId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_IS_TRUE(saved.EndpointDefinitionA().Name() == update.EndpointAName(), L"the new name is saved");
+    VERIFY_IS_TRUE(saved.EndpointDefinitionA().Description() == definitionA.Description(), L"what was not set is left alone");
+    VERIFY_IS_TRUE(saved.EndpointDefinitionA().UniqueId() == definitionA.UniqueId(), L"including the unique id");
+    VERIFY_IS_TRUE(saved.EndpointDefinitionB().Name() == definitionB.Name(), L"and the other side's name");
+    VERIFY_IS_TRUE(saved.EndpointDefinitionB().Description().empty(), L"a description set to empty is saved empty");
+    VERIFY_IS_TRUE(saved.IsMuted());
+    VERIFY_ARE_EQUAL(saved.FeedbackProtection(), MidiLoopbackFeedbackProtection::Off);
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(MidiLoopbackRemovalConfig(associationId)), L"removing it works");
+
+    VERIFY_IS_TRUE(FindSavedLoopbackEntry(associationId) == nullptr, L"a removed loopback is no longer listed");
+}
+
+
+// Saving a change for an entry that is not there would leave half an entry in the file
+void MidiLoopbackEndpointTests::TestSavingUpdateForUnsavedLoopbackIsRefused()
+{
+    if (!ConfigFileRegisteredOrSkip())
+    {
+        return;
+    }
+
+    auto const associationId = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
+
+    auto removeEntry = wil::scope_exit([&] { RemoveSavedLoopback(associationId); });
+
+    MidiLoopbackUpdateConfig update(associationId);
+    update.EndpointAName(L"Test Unsaved Loopback");
+    update.IsMuted(true);
+
+    auto const response = svc::MidiServiceTransportPluginConfigManager::SaveUpdate(update);
+
+    VERIFY_IS_TRUE(response != nullptr);
+    VERIFY_IS_FALSE(response.Success(), L"a change to a loopback which is not saved is not saved");
+    VERIFY_IS_TRUE(response.Result() == svc::MidiServiceConfigSaveResult::ErrorEntryNotSaved, L"and says why");
+    VERIFY_IS_FALSE(response.ErrorMessage().empty(), L"in words as well");
+
+    VERIFY_IS_TRUE(FindSavedLoopbackEntry(associationId) == nullptr, L"and nothing is left in the file");
+}
+
+
+void MidiLoopbackEndpointTests::TestUpdateRunningLoopback()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiLoopbackManager::IsTransportAvailable());
+
+    auto response = CreateTestLoopback(L"Test Loopback Update");
+    auto const created = response.CreatedLoopbackEntry();
+    auto const associationId = created.AssociationId();
+
+    auto cleanupLoopback = wil::scope_exit([&] { RemoveTestLoopback(associationId); });
+
+    // a transport build without the customization handler can still mute
+    bool const canRename = svc::MidiServiceTransportPluginConfigManager::QueryCapability(
+        MidiLoopbackManager::TransportId(),
+        L"customizeEndpoint");
+
+    auto const newNameA = created.EndpointA().Name() + L" Renamed";
+
+    MidiLoopbackUpdateConfig update(associationId);
+    update.IsMuted(true);
+
+    if (canRename)
+    {
+        update.EndpointAName(newNameA);
+    }
+    else
+    {
+        WEX::Logging::Log::Comment(L"This loopback transport cannot rename an endpoint, so only muting is checked.");
+    }
+
+    auto const updateResponse = MidiLoopbackManager::UpdateLoopback(update);
+
+    VERIFY_IS_NOT_NULL(updateResponse);
+
+    if (!updateResponse.Success())
+    {
+        std::wcout << L"Error Message: " << updateResponse.ErrorMessage().c_str() << std::endl;
+    }
+
+    VERIFY_IS_TRUE(updateResponse.Success());
+
+    auto entry = FindActiveLoopbackEntry(associationId);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_IS_TRUE(entry.IsMuted(), L"the loopback is muted");
+
+    if (canRename)
+    {
+        VERIFY_IS_TRUE(entry.EndpointA().Name() == newNameA, L"side A has its new name");
+        VERIFY_IS_TRUE(entry.EndpointA().Description() == created.EndpointA().Description(), L"and keeps its description");
+        VERIFY_IS_TRUE(entry.EndpointB().Name() == created.EndpointB().Name(), L"side B is left alone");
+    }
+
+    // the same kind of change through the generic path goes to the manager, not the transport
+    MidiLoopbackUpdateConfig unmute(associationId);
+    unmute.IsMuted(false);
+
+    auto const sendResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(unmute);
+
+    VERIFY_IS_NOT_NULL(sendResponse);
+    VERIFY_IS_TRUE(sendResponse.Status() == svc::MidiServiceConfigResponseStatus::Success, L"SendUpdate applies an update config");
+
+    entry = FindActiveLoopbackEntry(associationId);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_IS_FALSE(entry.IsMuted(), L"the loopback is unmuted");
+
+    // a loopback which is not running is reported, rather than the change being lost quietly
+    MidiLoopbackUpdateConfig missing(winrt::Windows::Foundation::GuidHelper::CreateNewGuid());
+    missing.EndpointAName(L"Test Loopback Nobody");
+
+    auto const missingResponse = MidiLoopbackManager::UpdateLoopback(missing);
+
+    VERIFY_IS_NOT_NULL(missingResponse);
+    VERIFY_IS_FALSE(missingResponse.Success());
+    VERIFY_ARE_EQUAL(missingResponse.ErrorCode(), MidiLoopbackErrorCode::EndpointNotFound);
+}

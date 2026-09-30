@@ -32,6 +32,14 @@ namespace midiloopbacksetup
         uint32_t SelectedPageIndex() const noexcept { return m_selectedPageIndex; }
         void SelectedPageIndex(uint32_t value) noexcept;
 
+        // The order the customer arranged each page in, as association ids. It is only how this
+        // tool lays out its lists, so it is kept with the tool's settings, not the MIDI setup.
+        std::vector<std::wstring> const& LoopbackOrder() const noexcept { return m_loopbackOrder; }
+        void LoopbackOrder(_In_ std::vector<std::wstring> const& value) noexcept;
+
+        std::vector<std::wstring> const& BasicLoopbackOrder() const noexcept { return m_basicLoopbackOrder; }
+        void BasicLoopbackOrder(_In_ std::vector<std::wstring> const& value) noexcept;
+
         static constexpr uint32_t MinimumRefreshIntervalSeconds = 1;
         static constexpr uint32_t MaximumRefreshIntervalSeconds = 60;
         static constexpr uint32_t DefaultRefreshIntervalSeconds = 3;
@@ -46,5 +54,8 @@ namespace midiloopbacksetup
 
         uint32_t m_refreshIntervalSeconds{ DefaultRefreshIntervalSeconds };
         uint32_t m_selectedPageIndex{ PageIndexBasicLoopbacks };
+
+        std::vector<std::wstring> m_loopbackOrder{};
+        std::vector<std::wstring> m_basicLoopbackOrder{};
     };
 }

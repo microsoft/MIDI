@@ -20,7 +20,7 @@ namespace WindowsMidiServices
         {
             RequireMidiServices();
 
-            WriteVerbose("Windows MIDI Services is available.");
+            WriteVerbose(Strings.ServiceAvailable);
         }
 
     }

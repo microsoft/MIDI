@@ -1,0 +1,50 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiNetworkKnownRemoteClient.idl";
+import "MidiNetworkRemoteClientPolicyEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    // A host saved in the configuration file, which the service starts when it starts. This is
+    // what is saved, not what is running now. GetConfiguredHosts reports that.
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkSavedHost", UUID_IMidiNetworkSavedHost)]
+    runtimeclass MidiNetworkSavedHost
+    {
+        [noexcept] Guid HostId{ get; };
+
+        [noexcept] String Name{ get; };
+        [noexcept] String ServiceInstanceName{ get; };
+        [noexcept] String ProductInstanceId{ get; };
+
+        [noexcept] Boolean IsEnabled{ get; };
+
+        // These include changes saved later with MidiNetworkHostUpdateConfig
+        [noexcept] Boolean CreateOnlyUmpEndpoints{ get; };
+        [noexcept] UInt8 FallbackMidi1PortCount{ get; };
+
+        [noexcept] Boolean UseAutomaticPortAllocation{ get; };
+
+        // Empty when UseAutomaticPortAllocation is true
+        [noexcept] String ManuallyAssignedPort{ get; };
+
+        [noexcept] Boolean AllowPortFallback{ get; };
+
+        [noexcept] Boolean Advertise{ get; };
+
+        [noexcept] MidiNetworkRemoteClientPolicy RemoteClientPolicy{ get; };
+
+        // Every saved allow and deny decision. To change one, save a
+        // MidiNetworkHostKnownClientsConfig holding this whole list with the change made.
+        [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkKnownRemoteClient> KnownRemoteClients{ get; };
+    };
+}

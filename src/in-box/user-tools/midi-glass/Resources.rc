@@ -30,6 +30,8 @@ IDI_APPICON ICON "Assets\\AppIcon.ico"
 
 IDR_THEME_OFFWORLD_WALL     RCDATA "Assets\\Themes\\offworld-wall.png"
 IDR_THEME_OFFWORLD_STAINS   RCDATA "Assets\\Themes\\offworld-stains.png"
+IDR_THEME_NIGHT_DRIVE_SKY   RCDATA "Assets\\Themes\\night-drive-sky.png"
+IDR_THEME_VISOR_DOTS        RCDATA "Assets\\Themes\\visor-dots.png"
 
 STRINGTABLE
 BEGIN

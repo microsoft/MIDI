@@ -1,6 +1,6 @@
 ---
 layout: tools_page
-title: MIDI Clock
+title: Windows MIDI Clock
 tool: midiclock
 description: Send MIDI beat clock to your instruments at a tempo you choose
 icon: /assets/images/midiclock.png
@@ -10,19 +10,20 @@ categories:
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
 
-MIDI Clock sends MIDI beat clock to your instruments so their arpeggiators, sequencers, delays, and drum machines run at a tempo you set, and run together.
+Windows MIDI Clock sends MIDI beat clock to your instruments so their arpeggiators, sequencers, delays, and drum machines run at a tempo you set, and run together.
 
 It's the tool for a rig where nothing is the master. A drum machine, a groovebox, and a delay pedal all want a clock, and without one they each drift at their own rate. Start a clock here and they lock to it.
 
-![The MIDI Clock main window]({{ site.baseurl }}/assets/images/midiclock.png)
+## Quick start
 
-## Getting started
+![The Windows MIDI Clock window, with numbered callouts on Add clock, a clock tile, a tile's Start button, a tile's check box, the Start selected, Start all and Stop all buttons, and the settings button]({{ site.baseurl }}/assets/images/midiclock-quick-start.png)
 
-1. Select **Add clock**.
-2. Give it a tempo, choose the endpoint to send to, and pick a group.
-3. Select **Save**, then **Start** on the tile.
-
-Each clock is a tile, with its tempo as the headline number. The tile's border picks up your accent color while it's running.
+1. **Add clock** makes a new clock. Give it a tempo, choose the endpoint to send to, pick a group, and select **Save**.
+2. **Each clock is a tile**, with its tempo as the headline number and the endpoint it sends to underneath. The edit button in the corner of the tile changes its settings.
+3. **Start** runs that one clock. While it runs, the button says **Stop** and the tile's border picks up your accent color.
+4. **The check box** on a tile chooses that clock for **Start selected**.
+5. **Start selected**, **Start all**, and **Stop all** work on several clocks at once. Clocks started together begin on the same instant.
+6. **Settings** holds the appearance options and a note about how accurate the clock can be. Read it before you rely on the clock for anything critical.
 
 Clocks are saved as soon as you make them, and they come back the next time you open the app. They're saved **for everyone who uses this PC**, not per account, so a clock you set up is there for every user. You can have up to 128 of them.
 

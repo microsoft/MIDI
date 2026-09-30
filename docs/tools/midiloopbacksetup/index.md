@@ -1,6 +1,6 @@
 ---
 layout: tools_page
-title: MIDI Loopback Setup
+title: Windows MIDI Loopback Setup
 tool: midiloopbacksetup
 description: Create loopback endpoints so apps on this PC can send MIDI to each other
 icon: /assets/images/midiloopbacksetup.png
@@ -10,13 +10,22 @@ categories:
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
 
-MIDI Loopback Setup creates loopback MIDI endpoints: virtual MIDI connections that exist only on this PC, with no cable and no hardware. Send MIDI to one and it arrives back in another app, which is how you get a sequencer talking to a software synth, a lighting program listening to your DAW, or a controller mapping tool sitting in between two other apps.
+Windows MIDI Loopback Setup creates loopback MIDI endpoints: virtual MIDI connections that exist only on this PC, with no cable and no hardware. Send MIDI to one and it arrives back in another app, which is how you get a sequencer talking to a software synth, a lighting program listening to your DAW, or a controller mapping tool sitting in between two other apps.
 
-If you've used a third-party loopback or "virtual MIDI cable" driver before, this is the same idea, built into Windows MIDI Services.
-
-![The MIDI Loopback Setup main window]({{ site.baseurl }}/assets/images/midiloopbacksetup.png)
+If you've used a third-party loopback or "virtual MIDI cable" driver before, this is the same idea, built into Windows MIDI Services. You can [bring your loopbacks over](#moving-over-from-another-loopback-tool) from the other tool.
 
 Loopbacks you create here belong to the PC, not to the app that made them. They're there for every app, they show up in Windows like any other MIDI device, and they come back after a restart unless you ask for one that doesn't.
+
+## Quick start
+
+![The Windows MIDI Loopback Setup window, with numbered callouts on the two pages, the New basic loopback button, a loopback in the list, and its Mute, Edit and Delete buttons]({{ site.baseurl }}/assets/images/midiloopbacksetup-quick-start.png)
+
+1. **The pages.** **MIDI 1.0 Basic Loopbacks** makes a single endpoint that sends back to itself, the way older loopback drivers do. **MIDI 2.0 Loopbacks** makes a pair of endpoints connected to each other. [Which kind do you need?](#which-kind-do-you-need) helps you choose.
+2. **New basic loopback** creates a loopback. On the MIDI 2.0 page, the button is called **New loopback**.
+3. **Each loopback** shows its name, its description, whether it's saved, and its endpoint device ID.
+4. **Mute**, **Edit**, and **Delete** work on that one loopback. Mute stops it carrying messages without removing it, so no app loses its connection.
+
+Once you've made a loopback, it shows up in your DAW and your other MIDI apps like any other MIDI device.
 
 ## You don't need to keep this app running
 
@@ -88,6 +97,28 @@ Untick it and the loopback is created but not saved: it works now and disappears
 **Unique identifier** is filled in for you. It's how apps recognize this endpoint as the same one across restarts without relying on the name, so if you have an app whose saved setup keeps pointing at the wrong port, this is the value that matters. Letters and digits only. Change it only if you're deliberately recreating a loopback that another app already knows by that identifier.
 
 **Name of the A side** and **Name of the B side**, on a MIDI 2.0 loopback, let you name each end yourself instead of taking the `(A)` and `(B)` endings. Leave both empty to use the name above, or fill in both. This is worth doing when the two ends mean different things: naming them "To Synth" and "From Synth" is clearer than "MyLoopback (A)" and "MyLoopback (B)".
+
+## Moving over from another loopback tool
+
+If you've been using another loopback or virtual MIDI cable tool, this app can make a basic loopback to match each of its ports, with the same name. Most apps remember a port by its name, so they find the new loopbacks the same way they found the old ones.
+
+On the **MIDI 1.0 Basic Loopbacks** page, select **Import from another provider...** next to **New basic loopback**. Then:
+
+1. Tick the ports you want to bring over. They're grouped by the device they belong to.
+2. Leave **Keep these loopbacks after a restart** ticked, unless you only want to try them out.
+3. Select **Import**.
+
+Each port you tick becomes one basic loopback. Its description says which device it was imported from.
+
+The list shows every MIDI port whose driver didn't come with Windows. Most of those are loopbacks, but real hardware with its own driver shows up too, so check what you tick. If a port's input and output have different names, the list tells you it's probably not a loopback.
+
+Some ports can't be imported:
+
+- A port with no name.
+- A port with the same name as a loopback you already have.
+- Two ports with the same name as each other. Loopback names have to be different, so rename one of them in the other tool first.
+
+**When the import is done, remove the matching loopbacks from the other tool, or uninstall it.** Until you do, this PC has two ports with each name, and your apps can't tell them apart. Some tools need a restart before their ports go away.
 
 ## Managing what you've made
 

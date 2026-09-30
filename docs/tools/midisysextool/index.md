@@ -1,6 +1,6 @@
 ---
 layout: tools_page
-title: MIDI SysEx Utility
+title: Windows MIDI SysEx Utility
 tool: midisysextool
 description: Send System Exclusive files to a device, and capture dumps back to disk
 icon: /assets/images/midisysextool.png
@@ -10,13 +10,20 @@ categories:
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
 
-The MIDI SysEx Utility sends System Exclusive files to an instrument and captures System Exclusive data coming back from one. Although not intended to be a fully-featured librarian, it covers most of what people mean by "patch librarian" jobs: loading a bank of sounds you downloaded, backing up the sounds you've made, applying a firmware update, or capturing a dump to send to a manufacturer's support desk.
+The Windows MIDI SysEx Utility sends System Exclusive files to an instrument and captures System Exclusive data coming back from one. Although not intended to be a fully-featured librarian, it covers most of what people mean by "patch librarian" jobs: loading a bank of sounds you downloaded, backing up the sounds you've made, applying a firmware update, or capturing a dump to send to a manufacturer's support desk.
 
 System Exclusive, usually written SysEx, is the part of MIDI that manufacturers use for anything the standard messages don't cover. Because the contents are specific to each device, this tool doesn't try to interpret them. It moves the bytes accurately, shows you exactly what went past, and lets you save them.
 
-![The MIDI SysEx Utility sending a file]({{ site.baseurl }}/assets/images/midisysextool.png)
+## Quick start
 
-The **Task** buttons at the top right switch between the two jobs. Everything else on the window changes with them, so you only ever see the controls for the thing you're doing.
+![The Windows MIDI SysEx Utility window ready to send, with numbered callouts on the MIDI device and Group lists, the Task buttons, the file box and Browse button, the transfer settings, the Send button, and the status line]({{ site.baseurl }}/assets/images/midisysextool-quick-start.png)
+
+1. **MIDI device** and **Group** choose the instrument to send to or receive from.
+2. **Task** switches between **Send a file** and **Receive**. The rest of the window changes to match, so you only ever see the controls for the job you're doing.
+3. **Browse** picks the `.syx` file to send.
+4. **Messages per transfer** and **Delay between transfers** slow the transfer down for older instruments. The defaults suit most gear.
+5. **Send** starts the transfer. It changes to **Cancel** while the transfer runs.
+6. **The status line** tells you what's still missing before you can send.
 
 ## Sending a SysEx file to a device
 
@@ -86,7 +93,7 @@ Both the Save dialog and the Browse dialog open in your System Exclusive library
 
 ## Settings
 
-The gear button at the bottom left opens the settings.
+The gear button in the title bar opens the settings.
 
 ![The settings panel]({{ site.baseurl }}/assets/images/midisysextool-settings.png)
 

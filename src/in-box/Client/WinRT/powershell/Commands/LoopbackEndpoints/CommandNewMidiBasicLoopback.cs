@@ -36,7 +36,7 @@ namespace WindowsMidiServices
         protected override void ProcessRecord()
         {
             RequireMidiServices();
-            RequireTransport(MidiBasicLoopbackManager.IsTransportAvailable, "MIDI 1.0 basic loopback");
+            RequireTransport(MidiBasicLoopbackManager.IsTransportAvailable, Strings.TransportNameBasicLoopback);
 
             var name = LoopbackNaming.Truncate(Name, LoopbackNaming.MaxPortNameLength);
 
@@ -47,7 +47,7 @@ namespace WindowsMidiServices
             if (string.IsNullOrEmpty(uniqueId))
             {
                 ThrowTerminating(
-                    new ArgumentException("The unique identifier must contain at least one letter or digit."),
+                    new ArgumentException(Strings.LoopbackInvalidUniqueId),
                     "MidiBasicLoopbackInvalidUniqueId",
                     ErrorCategory.InvalidArgument,
                     UniqueId);
@@ -56,13 +56,13 @@ namespace WindowsMidiServices
             if (MidiBasicLoopbackManager.DoesLoopbackExist(uniqueId))
             {
                 ThrowTerminating(
-                    new ArgumentException($"A basic loopback with the unique identifier \"{uniqueId}\" already exists."),
+                    new ArgumentException(Format(Strings.LoopbackBasicExistsFormat, uniqueId)),
                     "MidiBasicLoopbackAlreadyExists",
                     ErrorCategory.ResourceExists,
                     uniqueId);
             }
 
-            if (!ShouldProcess(name, "Create MIDI 1.0 basic loopback endpoint"))
+            if (!ShouldProcess(name, Strings.LoopbackBasicCreateAction))
             {
                 return;
             }
@@ -78,7 +78,7 @@ namespace WindowsMidiServices
             if (response is null || !response.Success)
             {
                 ThrowTerminating(
-                    new InvalidOperationException(response is null ? "Unable to create the basic loopback." : response.ErrorMessage),
+                    new InvalidOperationException(response is null ? Strings.LoopbackBasicCreationFailed : response.ErrorMessage),
                     "MidiBasicLoopbackCreationFailed",
                     ErrorCategory.InvalidOperation,
                     creationConfig);
@@ -92,7 +92,7 @@ namespace WindowsMidiServices
             }
             else
             {
-                WriteVerbose("This loopback is transient and will disappear when the service restarts. Use -SaveToConfiguration to keep it.");
+                WriteVerbose(Strings.LoopbackTransient);
             }
 
             WriteObject(response.CreatedLoopbackEntry);

@@ -54,6 +54,8 @@ Everything here is sent as UMP. There's no MIDI 1.0 byte stream version.
 ## Examples
 
 * [C++ Sample: browsing a device](https://github.com/microsoft/MIDI/blob/main/samples/cpp-winrt/capability-inquiry-browse/main_capability_inquiry_browse.cpp)
+* [C++ Sample: reading channel and program lists](https://github.com/microsoft/MIDI/blob/main/samples/cpp-winrt/capability-inquiry-program-list/main_capability_inquiry_program_list.cpp)
 * [C++ Sample: being a device](https://github.com/microsoft/MIDI/blob/main/samples/cpp-winrt/capability-inquiry-virtual-device/main_capability_inquiry_virtual_device.cpp)
 * [C# Sample: browsing a device](https://github.com/microsoft/MIDI/blob/main/samples/csharp-net/capability-inquiry-browse/Program.cs)
+* [C# Sample: reading channel and program lists](https://github.com/microsoft/MIDI/blob/main/samples/csharp-net/capability-inquiry-program-list/Program.cs)
 * [C# Sample: being a device](https://github.com/microsoft/MIDI/blob/main/samples/csharp-net/capability-inquiry-virtual-device/Program.cs)

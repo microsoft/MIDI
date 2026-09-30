@@ -191,39 +191,45 @@ namespace winrt::midiglass::implementation
         {
             CornerButton().Opacity(1.0);
 
-            // One item per page, rebuilt each time, because a page can be added while the
-            // layout is running in another window.
-            CornerPagesItem().Items().Clear();
-
-            for (size_t index = 0; index < m_document.Pages.size(); ++index)
-            {
-                controls::MenuFlyoutItem item{};
-
-                item.Text(winrt::hstring{ m_document.Pages[index].Name });
-                item.Tag(box_value(winrt::hstring{ L"page" + std::to_wstring(index) }));
-
-                auto weak = get_weak();
-
-                item.Click([weak](auto&& clicked, auto&&)
-                    {
-                        auto strong = weak.get();
-
-                        if (strong == nullptr)
-                        {
-                            return;
-                        }
-
-                        strong->OnCornerMenuClick(clicked, xaml::RoutedEventArgs{});
-                    });
-
-                xaml::Automation::AutomationProperties::SetName(item, item.Text());
-
-                CornerPagesItem().Items().Append(item);
-            }
-
-            CornerPagesItem().IsEnabled(m_document.Pages.size() > 1);
+            FillPagesMenu(CornerPagesItem());
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to fill the corner menu.")
+    }
+
+    // One item per page, rebuilt each time, because a page can be added while the layout is
+    // running in another window.
+    _Use_decl_annotations_
+    void RuntimeWindow::FillPagesMenu(controls::MenuFlyoutSubItem const& pages)
+    {
+        pages.Items().Clear();
+
+        for (size_t index = 0; index < m_document.Pages.size(); ++index)
+        {
+            controls::MenuFlyoutItem item{};
+
+            item.Text(winrt::hstring{ m_document.Pages[index].Name });
+            item.Tag(box_value(winrt::hstring{ L"page" + std::to_wstring(index) }));
+
+            auto weak = get_weak();
+
+            item.Click([weak](auto&& clicked, auto&&)
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr)
+                    {
+                        return;
+                    }
+
+                    strong->OnCornerMenuClick(clicked, xaml::RoutedEventArgs{});
+                });
+
+            xaml::Automation::AutomationProperties::SetName(item, item.Text());
+
+            pages.Items().Append(item);
+        }
+
+        pages.IsEnabled(m_document.Pages.size() > 1);
     }
 
     _Use_decl_annotations_

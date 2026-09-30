@@ -78,7 +78,7 @@ void PageTemplateTests::EverySizeLandsOnTheFourPixelQuantum()
     {
         glass::ControlKind::Knob, glass::ControlKind::Fader, glass::ControlKind::Pad,
         glass::ControlKind::Button, glass::ControlKind::Toggle, glass::ControlKind::XYPad,
-        glass::ControlKind::Encoder, glass::ControlKind::Meter, glass::ControlKind::Lamp,
+        glass::ControlKind::Meter, glass::ControlKind::Lamp,
         glass::ControlKind::Readout, glass::ControlKind::Label, glass::ControlKind::Image,
         glass::ControlKind::PageTab,
     };

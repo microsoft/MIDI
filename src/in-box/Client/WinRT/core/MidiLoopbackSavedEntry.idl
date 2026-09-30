@@ -1,0 +1,35 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiLoopbackEndpointDefinition.idl";
+import "MidiLoopbackFeedbackProtectionEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Loopback
+{
+    [contract(MidiTransportsLoopbackApiContract, 1)]
+
+    // A loopback saved in the configuration file, which the service creates when it starts. This
+    // is what is saved, not what is running now. GetActiveLoopbackEntries reports that.
+    [interface_name("Windows.Devices.Midi2.Transports.Loopback.IMidiLoopbackSavedEntry", UUID_IMidiLoopbackSavedEntry)]
+    runtimeclass MidiLoopbackSavedEntry
+    {
+        [noexcept] Guid AssociationId{ get; };
+
+        // Copies of what is saved, so changing them changes nothing
+        [noexcept] MidiLoopbackEndpointDefinition EndpointDefinitionA{ get; };
+        [noexcept] MidiLoopbackEndpointDefinition EndpointDefinitionB{ get; };
+
+        [noexcept] Boolean IsMuted{ get; };
+
+        // What is saved. A transport which cannot watch for feedback ignores it.
+        [noexcept] MidiLoopbackFeedbackProtection FeedbackProtection{ get; };
+    }
+}

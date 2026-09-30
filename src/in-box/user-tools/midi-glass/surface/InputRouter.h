@@ -80,12 +80,6 @@ namespace glass
 
         bool IsAnythingHeld() const noexcept { return m_heldCount > 0; }
 
-        // While View mode is on, the surface sends nothing. A pinch on a control surface is
-        // ambiguous - two fingers might be two fingers on two faders - so zoom and pan live
-        // behind an explicit switch rather than being guessed at.
-        void SetViewMode(_In_ bool viewMode) noexcept { m_viewMode = viewMode; }
-        bool IsViewMode() const noexcept { return m_viewMode; }
-
     private:
         // Ten fingers on one grid. A pen or a mouse is one more pointer, and a hand has five.
         static constexpr size_t MaximumPadFingers = 10;
@@ -133,7 +127,7 @@ namespace glass
             // A switch: how many slices its face is cut into.
             int32_t SwitchPositions{ 0 };
 
-            // Which way a finger drags this control up. Knobs and encoders only.
+            // Which way a finger drags this control up. Knobs only.
             DragAxis Drag{ DragAxis::Vertical };
 
             // A pad that takes its velocity from how hard it was hit.
@@ -199,6 +193,5 @@ namespace glass
         std::vector<Binding> m_bindings{};
         SurfaceRenderer* m_renderer{ nullptr };
         int32_t m_heldCount{ 0 };
-        bool m_viewMode{ false };
     };
 }

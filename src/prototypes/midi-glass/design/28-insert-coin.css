@@ -1,0 +1,316 @@
+/* =========================================================================
+   "INSERT COIN" - screen 28. Arcade control panels, and the finger drumming
+   controllers built from their buttons: a black panel under a sheet of clear
+   plastic, round domed buttons set into black rings, knobs with colored caps
+   and rings of lights, fader caps in color, and a joystick with a ball on top.
+
+   Loaded after mock.css by 28-insert-coin.html. Every selector carries
+   .insertcoin, so the block can move to the end of mock.css unchanged.
+
+   Three ideas carry it:
+
+   1. A BUTTON IS COLORED PLASTIC, LIT OR NOT. At rest a button shows its color
+      with no light behind it (62 % of the color, toward black). Lit, the same
+      button is its color outright with a hot center and a halo. Held, it is
+      lit AND two pixels down. So on is said twice, by light and by travel,
+      and neither depends on telling one color from another.
+
+   2. ROUND IS ROUND. A button is the largest circle that fits its control,
+      centered, in a black ring. Its name is printed on the panel below it,
+      the way a cabinet prints nothing on the button itself.
+
+   3. COLOR TELLS YOU WHAT IT IS, EVERYWHERE. A knob wears its color as a cap
+      inside a ring of eleven lights; a fader wears it as its cap. Sections
+      are named on a bar of their color, like a cabinet's instruction card.
+
+   Measured in g:\midi-scratch\round6-comps-contrast.ps1: every lit color
+   clears 3.58 on the panel; unlit plastic 1.86 to 4.83; lit against unlit
+   1.93 to 2.56 for every color; print 15.28, dim print 6.47. Blue and purple
+   are the closest pair for a red-blind (protan) player, delta E 5.4.
+   ========================================================================= */
+
+.surf.insertcoin {
+    --deck: linear-gradient(180deg, #16171A 0%, #121315 58%, #0C0D0F 100%);
+    --plate: #1C1D21;
+    --track: rgba(255, 255, 255, .08);
+    --on-hue: #111111;
+    --deck-ink: #EDEDEA;
+    --deck-ink2: #9A9BA1;
+    --grid1: rgba(255, 255, 255, .14);
+    --grid2: rgba(255, 255, 255, .05);
+    --tonal-rest: 0;
+    --tonal-held: 0;
+    --rim-rest: 0;
+    --tonal-radius: 10px;
+    --cap-shadow: none;
+
+    --section: #1C1D21;                 /* a section: the panel, one step lighter */
+    --well: #08090A;                    /* a window cut into the panel */
+    --bezel: radial-gradient(circle at 50% 36%, #2A2B2F 0%, #17181B 56%, #070708 100%);
+    --bezel-edge: 0 0 0 1px rgba(255, 255, 255, .09), 0 2px 5px rgba(0, 0, 0, .65);
+    --unlit-hi: 72%;                    /* ask 3: colored plastic with no light behind it */
+    --unlit: 62%;
+    --unlit-lo: 40%;
+    --gloss: radial-gradient(ellipse 34% 24% at 38% 27%, rgba(255, 255, 255, .50), rgba(255, 255, 255, 0) 100%);
+
+    --neutral: 237, 237, 234;           /* the white button */
+    --h1:  31, 106, 224;   /* #1F6AE0 blue - the default */
+    --h2:  34, 176,  75;   /* #22B04B green */
+    --h3: 255, 210,  31;   /* #FFD21F yellow */
+    --h4: 227,  38,  43;   /* #E3262B red */
+    --h5: 154,  72, 220;   /* #9A48DC purple */
+    --h6: 255, 122,  26;   /* #FF7A1A orange */
+}
+.surf.insertcoin .neutral { --hue: var(--neutral); }
+
+/* the sheet of clear plastic over the panel: one soft reflection across the upper
+   left, drawn over everything (the faceplate reflection the engine already has) */
+.surf.insertcoin::after {
+    display: block;
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(142deg, rgba(205, 220, 240, .075) 0%, rgba(205, 220, 240, .025) 30%, rgba(205, 220, 240, 0) 44%);
+    pointer-events: none;
+}
+
+/* anything not drawn below: a dark plate, no rim */
+.surf.insertcoin .ctl {
+    border-radius: var(--tonal-radius);
+    background: var(--well);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06);
+    color: var(--deck-ink);
+}
+
+/* ------------------------------------------------------------ buttons */
+/* ask 3: a round button in a black ring, the largest circle that fits */
+.surf.insertcoin .ctl.dome { background: none; box-shadow: none; border-radius: 50%; }
+.surf.insertcoin .ctl.dome::before {
+    content: "";
+    position: absolute; inset: 0; border-radius: 50%;
+    background: var(--bezel);
+    box-shadow: var(--bezel-edge);
+}
+.surf.insertcoin .ctl.dome .cap {
+    position: absolute; inset: 14%; border-radius: 50%;
+    background:
+        var(--gloss),
+        radial-gradient(circle at 50% 40%,
+            color-mix(in srgb, rgb(var(--hue)) var(--unlit-hi), black) 0%,
+            color-mix(in srgb, rgb(var(--hue)) var(--unlit), black) 62%,
+            color-mix(in srgb, rgb(var(--hue)) var(--unlit-lo), black) 100%);
+    box-shadow: inset 0 -2px 3px rgba(0, 0, 0, .35), 0 1px 2px rgba(0, 0, 0, .60);
+}
+/* lit: the color outright, hotter in the middle where the lamp is, and a halo that
+   spills onto the ring */
+.surf.insertcoin .ctl.dome.on::before,
+.surf.insertcoin .ctl.dome.held::before {
+    box-shadow: var(--bezel-edge), inset 0 0 0 2px rgba(var(--hue), .80), 0 0 18px rgba(var(--hue), .42);
+}
+.surf.insertcoin .ctl.dome.on .cap,
+.surf.insertcoin .ctl.dome.held .cap {
+    background:
+        radial-gradient(ellipse 34% 24% at 38% 27%, rgba(255, 255, 255, .62), rgba(255, 255, 255, 0) 100%),
+        radial-gradient(circle at 50% 46%,
+            color-mix(in srgb, rgb(var(--hue)) 55%, white) 0%,
+            rgb(var(--hue)) 48%,
+            color-mix(in srgb, rgb(var(--hue)) 78%, black) 100%);
+    box-shadow: 0 0 12px rgba(var(--hue), .80), 0 0 30px rgba(var(--hue), .36);
+}
+/* held: all the way down. The ring stays where it is; only the button moves */
+.surf.insertcoin .ctl.dome.held .cap {
+    transform: translateY(2px);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, .30), 0 0 12px rgba(var(--hue), .80), 0 0 30px rgba(var(--hue), .36);
+}
+/* the white button is lit white, with no colored halo to speak of */
+.surf.insertcoin .ctl.dome.neutral.on .cap { box-shadow: 0 0 10px rgba(255, 255, 255, .55); }
+/* disabled: the color is gone. Gray plastic, which no working button ever is */
+.surf.insertcoin .ctl.dome.dim { opacity: 1; }
+.surf.insertcoin .ctl.dome.dim .cap {
+    background: var(--gloss), radial-gradient(circle at 50% 40%, #4A4B50 0%, #36373B 62%, #222326 100%);
+    box-shadow: inset 0 -2px 3px rgba(0, 0, 0, .35), 0 1px 2px rgba(0, 0, 0, .60);
+}
+/* no device: the engine's hatch over the plastic, and the whole control dimmed */
+.surf.insertcoin .ctl.dome.offline { opacity: .55; }
+.surf.insertcoin .ctl.dome.offline .cap {
+    background:
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, .16) 0 3px, rgba(255, 255, 255, 0) 3px 7px),
+        color-mix(in srgb, rgb(var(--hue)) 40%, black);
+}
+
+/* ------------------------------------------------------------- knobs */
+/* ask 1: a black knob with a cap in its own color, inside a ring of eleven lights */
+.surf.insertcoin .knob,
+.surf.insertcoin .knob.held { background: none; box-shadow: none; }
+.surf.insertcoin .knob .leds { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.surf.insertcoin .knob .leds circle { fill: none; stroke-width: 6; stroke-linecap: round; }
+.surf.insertcoin .knob .leds .off { stroke: rgba(255, 255, 255, .10); }
+.surf.insertcoin .knob .leds .lit { stroke: rgb(var(--hue)); filter: drop-shadow(0 0 2.5px rgba(var(--hue), .90)); }
+.surf.insertcoin .knob .body {
+    position: absolute; inset: 17%; border-radius: 50%;
+    background:
+        repeating-conic-gradient(rgba(255, 255, 255, .045) 0 5deg, rgba(0, 0, 0, 0) 5deg 10deg),
+        radial-gradient(circle at 50% 34%, #2E2F33 0%, #18191C 58%, #0A0A0B 100%);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .07), 0 3px 6px rgba(0, 0, 0, .70);
+}
+.surf.insertcoin .knob .kcap {
+    position: absolute; inset: 30%; border-radius: 50%;
+    background: var(--gloss), radial-gradient(circle at 50% 40%, color-mix(in srgb, rgb(var(--hue)) 88%, white) 0%, rgb(var(--hue)) 60%, color-mix(in srgb, rgb(var(--hue)) 72%, black) 100%);
+    box-shadow: inset 0 -2px 3px rgba(0, 0, 0, .30);
+}
+/* the pointer is printed on the cap: white, or near-black where white would not read */
+.surf.insertcoin .knob .ptr {
+    position: absolute; left: 50%; top: 31%; width: 3px; height: 17%; margin-left: -1.5px;
+    border-radius: 1.5px;
+    background: #FFFFFF;
+    transform-origin: 50% 112%;
+}
+.surf.insertcoin .knob.hue3 .ptr,
+.surf.insertcoin .knob.hue6 .ptr,
+.surf.insertcoin .knob.hue2 .ptr,
+.surf.insertcoin .knob.neutral .ptr { background: #111111; }
+.surf.insertcoin .knob.held .body { box-shadow: 0 0 0 2px rgba(var(--hue), .55), 0 0 16px rgba(var(--hue), .35), 0 3px 6px rgba(0, 0, 0, .70); }
+.surf.insertcoin .knob.held .leds .lit { filter: drop-shadow(0 0 4px rgba(var(--hue), 1)); }
+.surf.insertcoin .knob .kval {
+    top: auto; bottom: -15px; transform: none;
+    font-size: 10px; color: var(--deck-ink);
+}
+
+/* ------------------------------------------------------------ faders */
+/* a dark slot with a little of its color in it, and a cap in its color */
+.surf.insertcoin .fader { background: none; box-shadow: none; padding: 10px 0; }
+.surf.insertcoin .fader .slot {
+    width: 8px; border-radius: 4px;
+    background: #050506;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .9), 0 1px 0 rgba(255, 255, 255, .06);
+}
+.surf.insertcoin .fader .fill { border-radius: 4px; background: rgba(var(--hue), .45); box-shadow: 0 0 8px rgba(var(--hue), .35); }
+.surf.insertcoin .fader .capbar {
+    left: -12px; right: -12px; height: 18px;
+    border-radius: 4px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .34) 0%, rgba(255, 255, 255, 0) 45%),
+        linear-gradient(180deg, rgb(var(--hue)) 0%, color-mix(in srgb, rgb(var(--hue)) 70%, black) 100%);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, .75), inset 0 -1px 0 rgba(0, 0, 0, .35);
+}
+.surf.insertcoin .fader .capbar::after {
+    left: 5px; right: 5px; height: 2px; margin-top: -1px;
+    background: rgba(0, 0, 0, .55); box-shadow: none;
+}
+.surf.insertcoin .fader.horiz .slot { width: auto; height: 8px; }
+.surf.insertcoin .fader.horiz .capbar { top: -12px; bottom: -12px; width: 18px; height: auto; }
+.surf.insertcoin .fader.horiz .capbar::after { left: 50%; right: auto; top: 5px; bottom: 5px; width: 2px; height: auto; margin: 0 0 0 -1px; }
+
+/* ----------------------------------------------------------- joystick */
+/* ask 2: a ball in the control's color on a short shaft, over a black washer */
+.surf.insertcoin .stick { background: none; box-shadow: none; border-radius: 50%; }
+.surf.insertcoin .stick .washer {
+    position: absolute; inset: 14%; border-radius: 50%;
+    background: radial-gradient(circle at 50% 42%, #1E1F23 0%, #0D0E10 70%, #050506 100%);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), inset 0 0 0 5px rgba(255, 255, 255, .03);
+}
+.surf.insertcoin .stick .gate {
+    position: absolute; inset: 34%; border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(var(--hue), .30);
+}
+.surf.insertcoin .stick .shaft {
+    position: absolute; left: 50%; top: 50%; width: 6px; height: 26%; margin-left: -3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #6C6E75, #C8CAD0 45%, #55575D);
+    transform-origin: 50% 0;
+}
+.surf.insertcoin .stick .ball {
+    position: absolute; width: 38%; height: 38%; margin: -19% 0 0 -19%;
+    border-radius: 50%;
+    background:
+        radial-gradient(ellipse 30% 22% at 36% 28%, rgba(255, 255, 255, .72), rgba(255, 255, 255, 0) 100%),
+        radial-gradient(circle at 45% 40%, color-mix(in srgb, rgb(var(--hue)) 85%, white) 0%, rgb(var(--hue)) 45%, color-mix(in srgb, rgb(var(--hue)) 55%, black) 100%);
+    box-shadow: 4px 7px 10px rgba(0, 0, 0, .70), 0 0 16px rgba(var(--hue), .30);
+}
+
+/* ---------------------------------------------------- windows and lamps */
+/* the XY field is a window with a small ball for a puck */
+.surf.insertcoin .xy { background: var(--well); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06), inset 0 2px 4px rgba(0, 0, 0, .8); }
+.surf.insertcoin .xy .field2 { inset: 0; border-radius: 10px; }
+.surf.insertcoin .xy .field2::before {
+    background-image:
+        linear-gradient(rgba(var(--hue), .13) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--hue), .13) 1px, transparent 1px);
+}
+.surf.insertcoin .xy .cross { background: rgba(var(--hue), .45); box-shadow: 0 0 6px rgba(var(--hue), .45); }
+.surf.insertcoin .xy .trail { background: rgba(var(--hue), .28); }
+.surf.insertcoin .xy .puck {
+    width: 18px; height: 18px; margin: -9px 0 0 -9px;
+    background:
+        radial-gradient(ellipse 30% 22% at 36% 28%, rgba(255, 255, 255, .70), rgba(255, 255, 255, 0) 100%),
+        radial-gradient(circle at 45% 40%, color-mix(in srgb, rgb(var(--hue)) 80%, white) 0%, rgb(var(--hue)) 50%, color-mix(in srgb, rgb(var(--hue)) 55%, black) 100%);
+    box-shadow: 0 0 12px rgba(var(--hue), .85), 0 0 28px rgba(var(--hue), .35);
+}
+
+/* the meter is a column of lights in a window */
+.surf.insertcoin .ctl.meter { background: var(--well); padding: 6px 5px; gap: 2px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06), inset 0 2px 4px rgba(0, 0, 0, .8); border-radius: 6px; }
+.surf.insertcoin .meter i { height: 4px; border-radius: 1px; background: rgba(255, 255, 255, .07); box-shadow: none; }
+.surf.insertcoin .meter i.lit { background: rgb(var(--h2)); box-shadow: 0 0 5px rgba(var(--h2), .70); }
+.surf.insertcoin .meter i.lit.warn { background: rgb(var(--h3)); box-shadow: 0 0 5px rgba(var(--h3), .70); }
+.surf.insertcoin .meter i.lit.hot { background: rgb(var(--h4)); box-shadow: 0 0 5px rgba(var(--h4), .80); }
+
+/* a readout: lit digits in a window, like a cabinet's credit counter */
+.surf.insertcoin .ctl.display {
+    background: var(--well); border-radius: 6px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06), inset 0 2px 4px rgba(0, 0, 0, .8);
+    align-items: flex-end; justify-content: center; padding: 0 10px;
+}
+.surf.insertcoin .ctl.display .digits {
+    font-family: "Cascadia Mono", "Consolas", monospace; font-weight: 700;
+    font-size: 19px; letter-spacing: .06em;
+    /* lifted a fifth of the way to white: red outright is 4.34 : 1 in the window, this is 5.47 */
+    color: color-mix(in srgb, rgb(var(--hue)) 80%, white); text-shadow: 0 0 8px rgba(var(--hue), .70);
+}
+
+/* a lamp is a small LED in a black holder */
+.surf.insertcoin .ctl.led {
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, color-mix(in srgb, rgb(var(--hue)) 30%, black) 0 38%, #060607 42% 100%);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .10), 0 1px 2px rgba(0, 0, 0, .7);
+}
+.surf.insertcoin .ctl.led.on {
+    background: radial-gradient(circle at 50% 50%, color-mix(in srgb, rgb(var(--hue)) 55%, white) 0 14%, rgb(var(--hue)) 30% 38%, #060607 42% 100%);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .10), 0 0 10px rgba(var(--hue), .80);
+}
+
+/* ------------------------------------------------ sections, text, tabs */
+/* a section is the panel one step lighter, named on a bar of its own color, the way
+   a cabinet's instruction card is (a filled bar header, which the engine draws) */
+.surf.insertcoin .ctlpanel {
+    border-radius: 10px; overflow: hidden;
+    background: var(--section);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+}
+.surf.insertcoin .ctlpanel > .ptitle {
+    top: 0; left: 0; right: 0; height: 18px; padding: 0 11px;
+    display: flex; align-items: center;
+    background: rgb(var(--hue));
+    color: #111111;
+    font-family: "Bahnschrift", "Segoe UI", sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .16em;
+}
+.surf.insertcoin .ctlpanel.hue1 > .ptitle,
+.surf.insertcoin .ctlpanel.hue4 > .ptitle,
+.surf.insertcoin .ctlpanel.hue5 > .ptitle { color: #FFFFFF; }
+
+.surf.insertcoin .surftext.h1 { color: var(--deck-ink); }
+.surf.insertcoin .surftext.small { color: var(--deck-ink2); }
+.surf.insertcoin .surfrule { height: 2px; background: rgba(255, 255, 255, .08); }
+
+/* page tabs are small white buttons; the current page is lit and pressed in */
+.surf.insertcoin .pagetabs .tab {
+    height: 24px; padding: 0 13px; border-radius: 6px;
+    font-family: "Bahnschrift", "Segoe UI", sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .12em;
+    color: #1A1A1A;
+    background: linear-gradient(180deg, #F4F4F1 0%, #D6D6D2 100%);
+    box-shadow: 0 0 0 2px #070708, 0 0 0 3px rgba(255, 255, 255, .08), 0 3px 4px rgba(0, 0, 0, .6);
+}
+.surf.insertcoin .pagetabs .tab.sel {
+    color: #1A1A1A;
+    background: linear-gradient(180deg, #FFFFFF 0%, #EEEEEA 100%);
+    box-shadow: 0 0 0 2px #070708, 0 0 0 3px rgba(255, 255, 255, .20), 0 0 14px rgba(255, 255, 255, .45);
+    transform: translateY(1px);
+}

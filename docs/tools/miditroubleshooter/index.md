@@ -1,6 +1,6 @@
 ---
 layout: tools_page
-title: MIDI Troubleshooting and Repair
+title: Windows MIDI Troubleshooting and Repair
 tool: miditroubleshooter
 description: Check the health of MIDI on this PC, collect diagnostics for support, and repair common problems
 icon: /assets/images/miditroubleshooter.png
@@ -10,13 +10,18 @@ categories:
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
 
-MIDI Troubleshooting and Repair is where you go when MIDI on this PC isn't behaving. It shows you what Windows MIDI Services thinks the state of the machine is, collects the reports support will ask for, and fixes the handful of things that commonly get broken by other software.
+Windows MIDI Troubleshooting and Repair is where you go when MIDI on this PC isn't behaving. It shows you what Windows MIDI Services thinks the state of the machine is, collects the reports support will ask for, and fixes the handful of things that commonly get broken by other software.
 
 Most of what it does needs administrator rights, so it asks for them when it starts. If you say no, it still runs: the diagnostics and the informational pages work, and a banner across the top offers to restart it with the rights it needs.
 
-At the top of every page is a strip with the version of Windows, the architecture, your language and region, the Windows App SDK version and the current API mode. That's the first thing support asks for, so it stays visible wherever you are in the app.
+## Quick start
 
-![The MIDI Troubleshooting and Repair main window]({{ site.baseurl }}/assets/images/miditroubleshooter.png)
+![The Windows MIDI Troubleshooting and Repair window, with numbered callouts on the system information strip, the administrator banner, the Diagnostics and Capture repro log pages, and the rest of the pages]({{ site.baseurl }}/assets/images/miditroubleshooter-quick-start.png)
+
+1. **The strip at the top** shows the version of Windows, the architecture, your language and region, the Windows App SDK version, the current API mode, and whether Developer Mode is on. That's the first thing support asks for, so it stays visible wherever you are in the app.
+2. **This banner** appears when the app isn't running as administrator. **Restart as administrator** gives it the rights it needs for repairs.
+3. **Diagnostics** and **Capture repro log** collect the reports and traces that support will ask for.
+4. **The other pages** show the state of the MIDI service, its transports, the registry, and the drivers, and fix the common problems.
 
 ## API mode
 

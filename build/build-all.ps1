@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Builds, stages, signs and packages everything Windows MIDI Services releases from GitHub: the
-    WinRT SDK and its NuGet package, the Tools installer, MIDI Glass, and the transport installers.
+    WinRT SDK and its NuGet package, the Tools installer and the Transports installer.
 
 .DESCRIPTION
     One pass builds each solution once per platform:
@@ -11,29 +11,28 @@
       src/in-box/Midi2-AppSDK.sln   the SDK, every app and tool including MIDI Glass, and the
                                     NuGet projection
 
-    The installers stay separate, and so do the version numbers:
+    There are two installers for each platform, and each has its own version number:
 
-      build/version.json              the SDK, the NuGet package, the samples and the Tools installer
-      build/version-plugins.json      the transport installers: Network MIDI 2.0 and RTP-MIDI,
+      build/version.json              the Tools installer: every app and tool, the SDK they use and
+                                      the PowerShell module. Also the NuGet package and samples.
+      build/version-plugins.json      the Transports installer: Network MIDI 2.0, RTP-MIDI,
                                       Bluetooth MIDI, Basic Loopback and General MIDI Synthesizer
-      build/version-midi-glass.json   MIDI Glass
 
     Every app installs into one folder, Program Files\Windows MIDI Services\Tools, the way they are
-    laid out in Windows itself. The transport-specific setup apps still come from the installer
-    that carries their transport. Sharing a folder works because this script makes sure that:
+    laid out in Windows itself. Sharing a folder works because this script makes sure that:
 
       - each WinUI app keeps its resources in <exe>.pri instead of a shared resources.pri, and its
         XAML is compiled into that file, so no .xbf file is installed for another app to overwrite;
       - any file two apps both carry is byte for byte the same file;
-      - every installer that puts a file in the Tools folder gives it the same component GUID,
+      - every package that puts a file in the Tools folder gives it the same component GUID,
         worked out from its install path, so Windows Installer keeps count of it and removing one
-        installer leaves it in place for the others;
+        package leaves it in place for the others;
       - every copy of Windows.Devices.Midi2.dll and .pri is the one in the NuGet package: the x64
         build for x64, and the Arm64X build for Arm64.
 
 .PARAMETER Target
     One or more of:
-      Version  Work out all three versions, write the WiX version includes and the version
+      Version  Work out both versions, write the WiX version includes and the version
                headers, and stamp the NuGet nuspec.
       Service  Build src/in-box/Midi2.sln for each platform (the transports).
       Sdk      Build src/in-box/Midi2-AppSDK.sln for each platform, plus Arm64EC for the Arm64X
@@ -50,11 +49,11 @@
       All      Version, Service, Sdk, Pack, Samples, Stage, Setup, Release.
 
 .PARAMETER BuildNumber
-    Overrides the 'build' field of all three version files without changing them. For CI, for
+    Overrides the 'build' field of both version files without changing them. For CI, for
     example -BuildNumber $env:GITHUB_RUN_NUMBER.
 
 .PARAMETER BumpBuildNumber
-    Increments and saves the 'build' field of all three version files before anything else runs.
+    Increments and saves the 'build' field of both version files before anything else runs.
 
 .PARAMETER Sign
     Authenticode-sign everything that ships: the staged binaries, the SDK binaries the NuGet
@@ -182,11 +181,9 @@ $TransportStagingRoot = Join-Path $StagingRoot 'api'
 # pick up another's version number.
 $SdkVersionFile = Join-Path $BuildRoot 'version.json'
 $PluginsVersionFile = Join-Path $BuildRoot 'version-plugins.json'
-$GlassVersionFile = Join-Path $BuildRoot 'version-midi-glass.json'
 
 $SdkVersionInclude = Join-Path $VersionStagingFolder 'AppSdkVersion.wxi'
 $PluginsVersionInclude = Join-Path $VersionStagingFolder 'BundleInfo.wxi'
-$GlassVersionInclude = Join-Path $VersionStagingFolder 'MidiGlassVersion.wxi'
 
 $SignScript = Join-Path $BuildRoot 'sign-files.ps1'
 
@@ -215,12 +212,15 @@ $ConsoleTools = @(
 # title bar carries. The Start Menu gives a tile about a dozen characters before it elides, so
 # "Windows MIDI Player" showed as "Windows MIDI..." and the only part that identified the app was
 # the part that got cut. The group these all sit in is already called Windows MIDI (Preview).
-# Network MIDI 2.0 Setup and Bluetooth MIDI Setup are deliberately NOT here: each ships in the
-# installer that carries its transport, because the app is useless without it. MIDI Glass has an
-# installer of its own.
+# The Network and Bluetooth setup apps are here too: the transports are expected in Windows before
+# the apps are, and the Transports installer goes away when they arrive.
 $GuiTools = @(
     [pscustomobject]@{ Name = 'midisettings';       Display = 'MIDI Settings' }
     [pscustomobject]@{ Name = 'midiloopbacksetup';  Display = 'MIDI Loopback Setup' }
+    [pscustomobject]@{ Name = 'midinetworksetup';   Display = 'Network MIDI Setup' }
+    # ShortcutComponent: the Bluetooth MIDI installer this replaces made the same shortcut. Using
+    # its component means removing that installer later cannot delete this one's shortcut.
+    [pscustomobject]@{ Name = 'midibluetoothsetup'; Display = 'Bluetooth MIDI Setup'; ShortcutComponent = [pscustomobject]@{ Guid = '09b22819-60e9-4362-b105-50025afe5aa3'; RegistryKey = 'SOFTWARE\Microsoft\Windows MIDI Services\Bluetooth MIDI Preview'; RegistryValue = 'BluetoothSetupShortcut' } }
     [pscustomobject]@{ Name = 'midiscratchpad';     Display = 'MIDI Scratch Pad' }
     [pscustomobject]@{ Name = 'midikeyboard';       Display = 'MIDI Keyboard' }
     [pscustomobject]@{ Name = 'midiplayer';         Display = 'MIDI Player' }
@@ -228,6 +228,7 @@ $GuiTools = @(
     [pscustomobject]@{ Name = 'midisysextool';      Display = 'MIDI SysEx Tool' }
     [pscustomobject]@{ Name = 'midi2monitor';       Display = 'MIDI Monitor' }
     [pscustomobject]@{ Name = 'midipatchbay';       Display = 'MIDI Patchbay' }
+    [pscustomobject]@{ Name = 'midiglass';          Display = 'MIDI Glass' }
     [pscustomobject]@{ Name = 'miditroubleshooter'; Display = 'MIDI Troubleshooting and Repair' }
     # Aumid: the notification platform will not accept a toast from an unpackaged app unless the
     # identity it publishes under is on a Start Menu shortcut. RunAtLogon means the installer
@@ -241,10 +242,10 @@ $GuiTools = @(
 $ToolsDirectoryId = 'TOOLSROOT_INSTALLFOLDER'
 
 # Every file installed into the Tools folder gets a component GUID made from this and its path
-# under Program Files, so every installer that carries the file owns the same component. Windows
-# Installer then keeps count, and removing one installer leaves the file for the others. The
-# installers are built with two different WiX versions, so this does not rely on WiX's own
-# generated GUIDs agreeing. Never change it: every shared file would get a new GUID.
+# under Program Files, so every package that carries the file owns the same component. Windows
+# Installer then keeps count, and removing one package leaves the file for the others. It does
+# not rely on the GUIDs WiX generates, which could change with the WiX version. Never change it:
+# every shared file would get a new GUID.
 $ToolsComponentGuidNamespace = [guid]'ef756d1b-877d-48c9-830a-02f7cb471a69'
 
 # The GUIDs WiX generated for these two when only the Tools installer put them in this folder
@@ -255,8 +256,8 @@ $ToolsComponentGuidOverrides = @{
     'windows.devices.midi2.pri' = 'a6448708-c0b1-5e9c-b651-c6aa09d686c3'
 }
 
-# The installers that put apps into the Tools folder, and which apps each one carries. Staged to
-# build/staging/<Name>/<platform>.
+# The Tools installer packages that put apps into the Tools folder, and which apps each one
+# carries. Staged to build/staging/<Name>/<platform>.
 $ToolsFolderPayloads = @(
     [pscustomobject]@{
         Name           = 'app-sdk'
@@ -271,27 +272,6 @@ $ToolsFolderPayloads = @(
         Apps           = @('midi')
         Fragment       = Join-Path $InstallersRoot 'api-and-tools-installer\console-package\_SetupFiles.wxs'
         ComponentGroup = 'ConsoleAppFiles'
-    }
-    [pscustomobject]@{
-        Name           = 'midi-glass'
-        Installer      = 'Glass'
-        Apps           = @('midiglass')
-        Fragment       = Join-Path $InstallersRoot 'midi-glass-installer\app-package\_AppFiles.wxs'
-        ComponentGroup = 'MidiGlassFiles'
-    }
-    [pscustomobject]@{
-        Name           = 'network-app'
-        Installer      = 'Network'
-        Apps           = @('midinetworksetup')
-        Fragment       = Join-Path $InstallersRoot 'oob-setup-network\api-package\_AppFiles.wxs'
-        ComponentGroup = 'NetworkSetupAppFiles'
-    }
-    [pscustomobject]@{
-        Name           = 'bluetooth-app'
-        Installer      = 'Bluetooth'
-        Apps           = @('midibluetoothsetup')
-        Fragment       = Join-Path $InstallersRoot 'oob-setup-bluetooth\api-package\_AppFiles.wxs'
-        ComponentGroup = 'BluetoothSetupAppFiles'
     }
 )
 
@@ -326,59 +306,15 @@ $Installers = @(
         Transports    = @()
     }
     [pscustomobject]@{
-        Name          = 'Glass'
-        Train         = 'Glass'
-        SolutionDir   = Join-Path $InstallersRoot 'midi-glass-installer'
-        Solution      = 'midi-glass-setup.sln'
-        BundleName    = 'WindowsMidiServicesMidiGlassSetup'
-        ReleaseName   = 'MIDI Glass'
-        ReleaseFolder = 'midi-glass-{0}'
-        Apps          = @('midiglass')
-        Transports    = @()
-    }
-    [pscustomobject]@{
-        Name          = 'Network'
+        Name          = 'Transports'
         Train         = 'Plugins'
-        SolutionDir   = Join-Path $InstallersRoot 'oob-setup-network'
-        Solution      = 'midi-services-network-midi-preview-setup.sln'
-        BundleName    = 'WindowsMidiServicesNetworkMidiSetup'
-        ReleaseName   = 'Windows MIDI Services (Network MIDI 2.0 and RTP-MIDI Preview)'
-        ReleaseFolder = 'plugins-{0}'
-        Apps          = @('midinetworksetup')
-        Transports    = @('Midi2.NetworkMidiTransport', 'Midi2.RtpMidiTransport')
-    }
-    [pscustomobject]@{
-        Name          = 'BasicLoopback'
-        Train         = 'Plugins'
-        SolutionDir   = Join-Path $InstallersRoot 'oob-setup-basic-loopback'
-        Solution      = 'midi-services-basic-loopback-setup.sln'
-        BundleName    = 'WindowsMidiServicesBasicLoopbackSetup'
-        ReleaseName   = 'Windows MIDI Services (Basic MIDI 1.0 Loopback Preview)'
+        SolutionDir   = Join-Path $InstallersRoot 'plugins-installer'
+        Solution      = 'midi-services-plugins-setup.sln'
+        BundleName    = 'WindowsMidiServicesTransportsSetup'
+        ReleaseName   = 'Windows MIDI Services Transports'
         ReleaseFolder = 'plugins-{0}'
         Apps          = @()
-        Transports    = @('Midi2.BasicLoopbackMidiTransport')
-    }
-    [pscustomobject]@{
-        Name          = 'Synth'
-        Train         = 'Plugins'
-        SolutionDir   = Join-Path $InstallersRoot 'oob-setup-synth'
-        Solution      = 'midi-services-synth-setup.sln'
-        BundleName    = 'WindowsMidiServicesSynthSetup'
-        ReleaseName   = 'Windows MIDI Services (General MIDI Synthesizer Preview)'
-        ReleaseFolder = 'plugins-{0}'
-        Apps          = @()
-        Transports    = @('Midi2.MidiSynthTransport')
-    }
-    [pscustomobject]@{
-        Name          = 'Bluetooth'
-        Train         = 'Plugins'
-        SolutionDir   = Join-Path $InstallersRoot 'oob-setup-bluetooth'
-        Solution      = 'midi-services-bluetooth-midi-preview-setup.sln'
-        BundleName    = 'WindowsMidiServicesBluetoothMidiSetup'
-        ReleaseName   = 'Windows MIDI Services (Bluetooth MIDI Preview)'
-        ReleaseFolder = 'bluetooth-{0}'
-        Apps          = @('midibluetoothsetup')
-        Transports    = @('Midi2.BluetoothMidiTransport')
+        Transports    = $Transports
     }
 )
 
@@ -842,11 +778,9 @@ function Invoke-VersionTarget {
 
     $sdk = $script:Versions.Sdk
     $plugins = $script:Versions.Plugins
-    $glass = $script:Versions.Glass
 
     Write-Detail "SDK and Tools   $($sdk.VersionName), $($sdk.SemVer), MSI $($sdk.NumericVersion)"
     Write-Detail "Transports      $($plugins.VersionName), $($plugins.SemVer), MSI $($plugins.NumericVersion)"
-    Write-Detail "MIDI Glass      $($glass.VersionName), $($glass.SemVer), MSI $($glass.NumericVersion)"
 
     # --- SDK and Tools installer ---------------------------------------------------------------
     Write-VersionFile -Path $SdkVersionInclude -Content @"
@@ -872,17 +806,6 @@ function Invoke-VersionTarget {
   <?define SetupVersionNumber="$($plugins.SemVer)" ?>
   <?define MidiSdkAndToolsVersion="$($plugins.SemVer)" ?>
   <?define MidiPluginsNumericVersion="$($plugins.NumericVersion)" ?>
-</Include>
-"@
-
-    # --- MIDI Glass ------------------------------------------------------------------------------
-    Write-VersionFile -Path $GlassVersionInclude -Content @"
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generated by build\build-all.ps1 from build\version-midi-glass.json. Do not edit. -->
-<Include>
-  <?define MidiGlassVersionName="$($glass.VersionName)" ?>
-  <?define MidiGlassSetupVersion="$($glass.SemVer)" ?>
-  <?define MidiGlassNumericVersion="$($glass.NumericVersion)" ?>
 </Include>
 "@
 
@@ -2114,16 +2037,18 @@ function New-StartMenuFragment {
     [void]$sb.AppendLine('    <ComponentGroup Id="ToolAppShortcuts">')
     [void]$sb.AppendLine('      <Component Id="ToolAppShortcutsComponent" Bitness="always64" Directory="MIDI_PROGRAMS_FOLDER" Guid="0d1b7b1e-3a5e-4a2f-9a3c-6f2b6c4d5e71">')
 
-    foreach ($tool in $GuiTools) {
-        [void]$sb.AppendLine("        <Shortcut Id=`"Shortcut_$($tool.Name)`"")
-        [void]$sb.AppendLine("                  Name=`"$($tool.Display)`"")
-        [void]$sb.AppendLine("                  Target=`"[#$($tool.Name)Exe]`"")
+    # Most tools declare none of the optional fields used here, and Set-StrictMode makes a missing
+    # property an error rather than $null, so presence is tested before value.
+    function Add-ToolShortcut {
+        param([Parameter(Mandatory)] $Tool)
 
-        # Most tools declare neither of the optional fields below, and Set-StrictMode makes a
-        # missing property an error rather than $null, so presence is tested before value.
-        if ($tool.PSObject.Properties.Name -contains 'Aumid' -and $tool.Aumid) {
+        [void]$sb.AppendLine("        <Shortcut Id=`"Shortcut_$($Tool.Name)`"")
+        [void]$sb.AppendLine("                  Name=`"$($Tool.Display)`"")
+        [void]$sb.AppendLine("                  Target=`"[#$($Tool.Name)Exe]`"")
+
+        if ($Tool.PSObject.Properties.Name -contains 'Aumid' -and $Tool.Aumid) {
             [void]$sb.AppendLine("                  WorkingDirectory=`"$ToolsDirectoryId`">")
-            [void]$sb.AppendLine("          <ShortcutProperty Key=`"System.AppUserModel.ID`" Value=`"$($tool.Aumid)`" />")
+            [void]$sb.AppendLine("          <ShortcutProperty Key=`"System.AppUserModel.ID`" Value=`"$($Tool.Aumid)`" />")
             [void]$sb.AppendLine('        </Shortcut>')
         }
         else {
@@ -2131,11 +2056,31 @@ function New-StartMenuFragment {
         }
     }
 
+    $ownComponentTools = @($GuiTools | Where-Object { $_.PSObject.Properties.Name -contains 'ShortcutComponent' })
+
+    foreach ($tool in $GuiTools) {
+        if ($tool.PSObject.Properties.Name -contains 'ShortcutComponent') { continue }
+        Add-ToolShortcut -Tool $tool
+    }
+
     [void]$sb.AppendLine('        <RemoveFolder Id="RemoveMidiProgramsFolder_Tools" Directory="MIDI_PROGRAMS_FOLDER" On="uninstall" />')
     [void]$sb.AppendLine('        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">')
     [void]$sb.AppendLine('          <RegistryValue Type="string" Name="ToolAppShortcuts" Value="installed" KeyPath="yes" />')
     [void]$sb.AppendLine('        </RegistryKey>')
     [void]$sb.AppendLine('      </Component>')
+
+    # Same component GUID, shortcut name and key path as the installer that made this shortcut
+    # before, so Windows Installer counts the two as one component.
+    foreach ($tool in $ownComponentTools) {
+        $component = $tool.ShortcutComponent
+        [void]$sb.AppendLine("      <Component Id=`"$($tool.Name)Shortcut`" Bitness=`"always64`" Directory=`"MIDI_PROGRAMS_FOLDER`" Guid=`"$($component.Guid)`">")
+        Add-ToolShortcut -Tool $tool
+        [void]$sb.AppendLine("        <RemoveFolder Id=`"RemoveMidiProgramsFolder_$($tool.Name)`" Directory=`"MIDI_PROGRAMS_FOLDER`" On=`"uninstall`" />")
+        [void]$sb.AppendLine("        <RegistryKey Root=`"HKLM`" Key=`"$($component.RegistryKey)`">")
+        [void]$sb.AppendLine("          <RegistryValue Type=`"string`" Name=`"$($component.RegistryValue)`" Value=`"installed`" KeyPath=`"yes`" />")
+        [void]$sb.AppendLine('        </RegistryKey>')
+        [void]$sb.AppendLine('      </Component>')
+    }
 
     foreach ($tool in $autostartTools) {
         # Separate component, and the Run value is deliberately not the key path. MIDI Settings
@@ -2205,7 +2150,7 @@ function Get-InstallerPath {
 function Invoke-SetupTarget {
     Write-Step 'Setup'
 
-    foreach ($include in @($SdkVersionInclude, $PluginsVersionInclude, $GlassVersionInclude)) {
+    foreach ($include in @($SdkVersionInclude, $PluginsVersionInclude)) {
         if (-not (Test-Path $include)) {
             throw "Version include not found: $include. Run the Version target first."
         }
@@ -2336,7 +2281,7 @@ function Invoke-CleanTarget {
 
     # Only what the build writes. build\staging also holds a few files that are checked in.
     $paths = @(
-        'app-sdk', 'midi-console', 'midi-powershell', 'midi-glass', 'network-app', 'bluetooth-app',
+        'app-sdk', 'midi-console', 'midi-powershell',
         'api', 'CollectMidiLogs', 'Assets', 'symbols', 'samples'
     ) | ForEach-Object { Join-Path $StagingRoot $_ }
 
@@ -2425,11 +2370,10 @@ try {
     $script:Versions = @{
         Sdk     = Get-TrainVersion -File $SdkVersionFile
         Plugins = Get-TrainVersion -File $PluginsVersionFile
-        Glass   = Get-TrainVersion -File $GlassVersionFile
     }
 
     if ($targets -notcontains 'Version') {
-        Write-Detail "Versions      SDK $($script:Versions.Sdk.SemVer), transports $($script:Versions.Plugins.SemVer), MIDI Glass $($script:Versions.Glass.SemVer)"
+        Write-Detail "Versions      SDK $($script:Versions.Sdk.SemVer), transports $($script:Versions.Plugins.SemVer)"
     }
 
     if (@($targets | Where-Object { $_ -in @('Service', 'Sdk', 'Pack', 'Samples', 'Stage', 'Setup') }).Count -gt 0) {

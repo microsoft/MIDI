@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WindowsPerformanceRecorder Version="1.0" Author="Microsoft Corporation" Copyright="Microsoft Corporation" Company="Microsoft Corporation">
+  <Profiles>
+    <!-- MidiServices.wprp plus the kernel PnP, DevQuery and USB events, for devices that don't come back after an unplug or a move to another USB port.
+         Run it in file mode: wpr -start MidiServices-pnp.wprp -filemode, then wpr -stop PnpCapture.etl -->
+  <!--
+    <SystemCollector Id="SystemCollector" Name="System Collector">
+      <BufferSize Value="256" />
+      <Buffers Value="3" PercentageOfTotalMemory="true" MaximumBufferSpace="256" />
+    </SystemCollector>
+
+    <SystemProvider Id="SystemProvider">
+      <Keywords>
+        <Keyword Value="Drivers" />
+        <Keyword Value="Registry" />
+      </Keywords>
+    </SystemProvider>
+    -->
+
+    <EventCollector Id="EventCollector_MidiSrvSimple" Name="Windows MIDI Services Events">
+      <BufferSize Value="1024" />
+      <Buffers Value="64" />
+    </EventCollector>
+
+    <!-- Kernel-mode providers cannot log into paged-memory buffers, so they get their own session.
+         128 MB of non-paged memory, because one device arrival can log more than 10,000 DevQuery events in a few milliseconds. -->
+    <EventCollector Id="EventCollector_MidiSrvKernel" Name="Windows MIDI Services Kernel Events">
+      <BufferSize Value="1024" />
+      <Buffers Value="128" />
+    </EventCollector>
+
+
+    <EventProvider Id="EventProvider_MidiSrv" Stack="true" ProcessExeFilter="Midisrv.exe" Name="*Microsoft.Windows.Midi2.MidiSrv"/>
+    <EventProvider Id="EventProvider_MidiSrvTransport" Name="*Microsoft.Windows.Midi2.MidiSrvTransport"/>
+
+    <!-- Statically linked into midisrv.exe, the transports and wdmaud2, so this covers both sides of the shared ring buffer. -->
+    <EventProvider Id="EventProvider_MidiXproc" Name="*Microsoft.Windows.Midi2.MidiXproc"/>
+
+    <EventProvider Id="EventProvider_KSTransport" Name="*Microsoft.Windows.Midi2.KSTransport"/>
+    <EventProvider Id="EventProvider_KSAggregateTransport" Name="*Microsoft.Windows.Midi2.KSAggregateTransport"/>
+    <EventProvider Id="EventProvider_DiagnosticsTransport" Name="*Microsoft.Windows.Midi2.DiagnosticsTransport"/>
+    <EventProvider Id="EventProvider_SampleTransport" Name="*Microsoft.Windows.Midi2.SampleTransport"/>
+    <EventProvider Id="EventProvider_VirtualMidiTransport" Name="*Microsoft.Windows.Midi2.VirtualMidiTransport"/>
+    <EventProvider Id="EventProvider_VirtualPatchBayTransport" Name="*Microsoft.Windows.Midi2.VirtualPatchBayTransport"/>
+    <EventProvider Id="EventProvider_NetworkMidiTransport" Name="*Microsoft.Windows.Midi2.NetworkMidiTransport"/>
+    <EventProvider Id="EventProvider_BluetoothMidiTransport" Name="*Microsoft.Windows.Midi2.BluetoothMidiTransport"/>
+    <EventProvider Id="EventProvider_LoopbackMidiTransport" Name="*Microsoft.Windows.Midi2.LoopbackMidiTransport"/>
+    <EventProvider Id="EventProvider_BasicLoopbackMidiTransport" Name="*Microsoft.Windows.Midi2.BasicLoopbackMidiTransport"/>
+    <EventProvider Id="EventProvider_MidiSynthTransport" Name="*Microsoft.Windows.Midi2.MidiSynthTransport"/>
+    <EventProvider Id="EventProvider_WdmAud2" Name="*Microsoft.Windows.Midi2.WdmAud2" />
+    <EventProvider Id="EventProvider_SDK" Name="*Microsoft.Windows.Midi2.Sdk"/>
+    
+    <EventProvider Id="EventProvider_BS2UMPTransform" Name="*Microsoft.Windows.Midi2.BS2UMPTransform"/>
+    <EventProvider Id="EventProvider_EndpointMetadataListenerTransform" Name="*Microsoft.Windows.Midi2.EndpointMetadataListenerTransform"/>
+    <EventProvider Id="EventProvider_JitterReductionGeneratorTransform" Name="*Microsoft.Windows.Midi2.JitterReductionGeneratorTransform"/>
+    <EventProvider Id="EventProvider_JitterReductionListenerTransform" Name="*Microsoft.Windows.Midi2.JitterReductionListenerTransform"/>
+    <EventProvider Id="EventProvider_SchedulerTransform" Name="*Microsoft.Windows.Midi2.SchedulerTransform"/>
+    <EventProvider Id="EventProvider_UMP2BSTransform" Name="*Microsoft.Windows.Midi2.UMP2BSTransform"/>
+    <EventProvider Id="EventProvider_UmpProtocolDownscalerTransform" Name="*Microsoft.Windows.Midi2.UmpProtocolDownscalerTransform"/>
+    <EventProvider Id="EventProvider_ChannelTransform" Name="*Microsoft.Windows.Midi2.ChannelTransform"/>
+    <EventProvider Id="EventProvider_GroupTransform" Name="*Microsoft.Windows.Midi2.GroupTransform"/>
+    <EventProvider Id="EventProvider_MessageTypeFilterTransform" Name="*Microsoft.Windows.Midi2.MessageTypeFilterTransform"/>
+
+    <EventProvider Id="EventProvider_SettingsApp" Name="*Microsoft.Midi.Settings"/>
+    <EventProvider Id="EventProvider_ConsoleApp" Name="*Microsoft.Midi.Console"/>
+
+    <!-- The WinUI tools. Each one owns its provider, so a report about a single app can be read
+         without the others' events in the way. -->
+    <EventProvider Id="EventProvider_SettingsAppNative" Name="*Microsoft.Windows.Midi2.Settings"/>
+    <EventProvider Id="EventProvider_NetworkSetupApp" Name="*Microsoft.Windows.Midi2.NetworkSetup"/>
+    <EventProvider Id="EventProvider_BluetoothSetupApp" Name="*Microsoft.Windows.Midi2.BluetoothSetup"/>
+    <EventProvider Id="EventProvider_LoopbackSetupApp" Name="*Microsoft.Windows.Midi2.LoopbackSetup"/>
+    <EventProvider Id="EventProvider_MonitorApp" Name="*Microsoft.Windows.Midi2.Monitor"/>
+    <EventProvider Id="EventProvider_ScratchPadApp" Name="*Microsoft.Windows.Midi2.ScratchPad"/>
+    <EventProvider Id="EventProvider_SysExToolApp" Name="*Microsoft.Windows.Midi2.SysExTool"/>
+    <EventProvider Id="EventProvider_TroubleshooterApp" Name="*Microsoft.Windows.Midi2.Troubleshooter"/>
+
+    <!-- Microsoft-Windows-Kernel-PnP. Keep the keywords unfiltered: the storm is on the DevQuery keyword (0x200000), events 500 to 503. -->
+    <EventProvider Id="EventProvider_KernelPnP" Name="9C205A39-1250-487D-ABD7-E831C6290539" NonPagedMemory="true" Level="5" />
+
+    <!-- Microsoft-Windows-Kernel-PnP-Rundown. Only emits during a capture state (rundown). -->
+    <EventProvider Id="EventProvider_KernelPnPRundown" Name="B3A0C2C8-83BB-4DDF-9F8D-4B22D3C38AD7" NonPagedMemory="true" Level="5" CaptureStateOnly="true">
+      <CaptureStateOnStart>
+        <Keyword Value="0xFFFFFFFFFFFFFFFF" />
+      </CaptureStateOnStart>
+      <CaptureStateOnSave>
+        <Keyword Value="0xFFFFFFFFFFFFFFFF" />
+      </CaptureStateOnSave>
+    </EventProvider>
+
+    <!-- Microsoft-Windows-UserPnp -->
+    <EventProvider Id="EventProvider_UserPnP" Name="96F4A050-7E31-453C-88BE-9634F4E02139" Level="5" />
+
+    <!-- Microsoft-Windows-DriverFrameworks-UserMode -->
+    <EventProvider Id="EventProvider_UmdfDriverFrameworks" Name="2E35AAEB-857F-4BEB-A418-2E6C0E54D988" Level="5" />
+
+    <!-- USB stack. Kernel-mode, so these belong in the non-paged collector. -->
+    <EventProvider Id="EventProvider_UsbHub3" Name="AC52AD17-CC01-4F85-8DF5-4DCE4333C99B" NonPagedMemory="true" Level="5" />
+    <EventProvider Id="EventProvider_UsbUcx" Name="36DA592D-E43A-4E28-AF6F-4BC57C5A11E8" NonPagedMemory="true" Level="5" />
+    <EventProvider Id="EventProvider_UsbXhci" Name="30E1D284-5D88-459C-83FD-6345B39B19EC" NonPagedMemory="true" Level="5" />
+
+     <Profile Id="MidiSrv.Verbose.File" Name="MidiSrv" DetailLevel="Verbose" Description="Windows MIDI Services trace profile with kernel PnP, DevQuery and USB events" LoggingMode="File">
+      <Collectors>
+      <!--
+        <SystemCollectorId Value="SystemCollector">
+          <SystemProviderId Value="SystemProvider" />
+        </SystemCollectorId>   
+      -->
+
+        <EventCollectorId Value="EventCollector_MidiSrvSimple">
+          <EventProviders>
+            <EventProviderId Value="EventProvider_MidiSrv"/>
+            <EventProviderId Value="EventProvider_MidiSrvTransport"/>
+            <EventProviderId Value="EventProvider_MidiXproc"/>
+
+            <EventProviderId Value="EventProvider_KSTransport"/>
+            <EventProviderId Value="EventProvider_KSAggregateTransport"/>
+            <EventProviderId Value="EventProvider_DiagnosticsTransport"/>
+            <EventProviderId Value="EventProvider_SampleTransport"/>
+            <EventProviderId Value="EventProvider_VirtualMidiTransport"/>
+            <EventProviderId Value="EventProvider_VirtualPatchBayTransport"/>
+            <EventProviderId Value="EventProvider_NetworkMidiTransport"/>
+            <EventProviderId Value="EventProvider_BluetoothMidiTransport"/>
+            <EventProviderId Value="EventProvider_LoopbackMidiTransport"/>
+            <EventProviderId Value="EventProvider_BasicLoopbackMidiTransport"/>
+            <EventProviderId Value="EventProvider_MidiSynthTransport"/>
+            <EventProviderId Value="EventProvider_WdmAud2"/>
+
+            <EventProviderId Value="EventProvider_SDK"/>
+            
+            <EventProviderId Value="EventProvider_BS2UMPTransform"/>
+            <EventProviderId Value="EventProvider_EndpointMetadataListenerTransform"/>
+            <EventProviderId Value="EventProvider_JitterReductionGeneratorTransform"/>
+            <EventProviderId Value="EventProvider_JitterReductionListenerTransform"/>
+            <EventProviderId Value="EventProvider_SchedulerTransform"/>
+            <EventProviderId Value="EventProvider_UMP2BSTransform"/>
+            <EventProviderId Value="EventProvider_UmpProtocolDownscalerTransform"/>
+            <EventProviderId Value="EventProvider_ChannelTransform"/>
+            <EventProviderId Value="EventProvider_GroupTransform"/>
+            <EventProviderId Value="EventProvider_MessageTypeFilterTransform"/>
+
+            <EventProviderId Value="EventProvider_SettingsApp"/>
+            <EventProviderId Value="EventProvider_ConsoleApp"/>
+
+            <EventProviderId Value="EventProvider_SettingsAppNative"/>
+            <EventProviderId Value="EventProvider_NetworkSetupApp"/>
+            <EventProviderId Value="EventProvider_BluetoothSetupApp"/>
+            <EventProviderId Value="EventProvider_LoopbackSetupApp"/>
+            <EventProviderId Value="EventProvider_MonitorApp"/>
+            <EventProviderId Value="EventProvider_ScratchPadApp"/>
+            <EventProviderId Value="EventProvider_SysExToolApp"/>
+            <EventProviderId Value="EventProvider_TroubleshooterApp"/>
+
+            <EventProviderId Value="EventProvider_UserPnP"/>
+            <EventProviderId Value="EventProvider_UmdfDriverFrameworks"/>
+
+          </EventProviders>
+        </EventCollectorId>
+
+        <EventCollectorId Value="EventCollector_MidiSrvKernel">
+          <EventProviders>
+            <EventProviderId Value="EventProvider_KernelPnP"/>
+            <EventProviderId Value="EventProvider_KernelPnPRundown"/>
+            <EventProviderId Value="EventProvider_UsbHub3"/>
+            <EventProviderId Value="EventProvider_UsbUcx"/>
+            <EventProviderId Value="EventProvider_UsbXhci"/>
+          </EventProviders>
+        </EventCollectorId>
+        
+      </Collectors>
+    </Profile>
+
+  </Profiles>
+</WindowsPerformanceRecorder>

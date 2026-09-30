@@ -12,7 +12,9 @@
 #include "InputRules.h"
 #include "LayoutSerializer.h"
 
+#include <algorithm>
 #include <cmath>
+#include <vector>
 
 using namespace WEX::Common;
 using namespace WEX::Logging;
@@ -2332,4 +2334,121 @@ void EditorControllerTests::OnlyTheControlsThatListenAreMoved()
 
     VERIFY_IS_FALSE(ControlAt(controller, 1)->Feedback.Enabled);
     VERIFY_ARE_EQUAL(0, ControlAt(controller, 1)->Feedback.GroupIndex);
+}
+
+// ---- page tabs, pan controls and the window ----
+
+void EditorControllerTests::ANewPageTabGoesToThePageItIsOn()
+{
+    // A tab that goes nowhere does nothing when it is pressed, so a new one goes to the page it
+    // was dropped on. Copied to another page, it is the way back.
+    auto controller = LoadedController();
+
+    VERIFY_IS_TRUE(glass::SendsAnything(glass::ControlKind::PageTab));
+
+    auto const id = controller.AddControlAtFreeSpot(glass::ControlKind::PageTab);
+
+    VERIFY_IS_FALSE(id.empty());
+
+    auto const* const tab = ControlAt(controller, 0);
+
+    VERIFY_ARE_EQUAL(controller.CurrentPage()->Id, glass::PageTabTarget(*tab));
+    VERIFY_IS_TRUE(tab->Messages[0].DeviceName.empty());
+}
+
+void EditorControllerTests::APanControlStartsInTheMiddle()
+{
+    auto controller = LoadedController();
+    auto const id = controller.AddControlAtFreeSpot(glass::ControlKind::Knob);
+
+    VerifyNear(0.0, ControlAt(controller, 0)->DefaultValue);
+
+    // A pan knob that starts hard left is not a pan knob, so it moves to the middle with it.
+    VERIFY_IS_TRUE(controller.SetControlLightsFromCenter(id, true));
+    VERIFY_IS_TRUE(ControlAt(controller, 0)->LightsFromCenter);
+    VerifyNear(0.5, ControlAt(controller, 0)->DefaultValue);
+
+    // One step, so one undo takes both back.
+    VERIFY_IS_TRUE(controller.Undo());
+    VERIFY_IS_FALSE(ControlAt(controller, 0)->LightsFromCenter);
+    VerifyNear(0.0, ControlAt(controller, 0)->DefaultValue);
+
+    // A starting value somebody picked is theirs, and it stays.
+    VERIFY_IS_TRUE(controller.SetControlDefaultValue(id, 0.25));
+    VERIFY_IS_TRUE(controller.SetControlLightsFromCenter(id, true));
+    VerifyNear(0.25, ControlAt(controller, 0)->DefaultValue);
+
+    VERIFY_IS_FALSE(controller.SetControlLightsFromCenter(id, true));
+}
+
+void EditorControllerTests::TheWindowSettingsCanBeUndone()
+{
+    auto controller = LoadedController();
+
+    VERIFY_IS_TRUE(controller.SetToolbarWindow(true));
+    VERIFY_IS_TRUE(controller.SetAlwaysOnTop(true));
+    VERIFY_IS_TRUE(controller.SetSeeThrough(true));
+
+    VERIFY_IS_TRUE(controller.Document().ToolbarWindow);
+    VERIFY_IS_TRUE(controller.Document().AlwaysOnTop);
+    VERIFY_IS_TRUE(controller.Document().SeeThrough);
+
+    // Setting what is already set is not a change, so it is not an undo step either.
+    VERIFY_IS_FALSE(controller.SetSeeThrough(true));
+
+    VERIFY_IS_TRUE(controller.Undo());
+    VERIFY_IS_FALSE(controller.Document().SeeThrough);
+    VERIFY_IS_TRUE(controller.Document().AlwaysOnTop);
+
+    VERIFY_IS_TRUE(controller.Undo());
+    VERIFY_IS_TRUE(controller.Undo());
+    VERIFY_IS_FALSE(controller.Document().ToolbarWindow);
+}
+
+void EditorControllerTests::APageCanBeAsSmallAsAToolbar()
+{
+    auto controller = LoadedController();
+
+    glass::PageResizeRequest wide{};
+    wide.NewWidth = 800;
+    wide.NewHeight = glass::MinimumPageSide;
+
+    VERIFY_IS_TRUE(controller.ResizePage(wide));
+    VERIFY_ARE_EQUAL(glass::MinimumPageSide, controller.Document().PageHeight);
+
+    glass::PageResizeRequest tall{};
+    tall.NewWidth = 50;
+    tall.NewHeight = 600;
+
+    VERIFY_IS_TRUE(controller.ResizePage(tall));
+
+    auto const reread = glass::ReadLayoutFromJson(glass::WriteLayoutToJson(controller.Document()));
+
+    VERIFY_IS_TRUE(reread.Succeeded);
+    VERIFY_ARE_EQUAL(50, reread.Document.PageWidth);
+    VERIFY_ARE_EQUAL(600, reread.Document.PageHeight);
+}
+
+void EditorControllerTests::ThePaletteOffersOnlyWhatIsBuilt()
+{
+    // Every tile drops a control that is saved and read back as what it is, and no kind is on
+    // the palette twice.
+    std::vector<glass::ControlKind> seen{};
+
+    for (auto const& entry : glass::Palette())
+    {
+        VERIFY_IS_FALSE(entry.IsComing);
+        VERIFY_IS_TRUE(std::find(seen.begin(), seen.end(), entry.Kind) == seen.end());
+
+        seen.push_back(entry.Kind);
+
+        auto controller = LoadedController();
+
+        VERIFY_IS_FALSE(controller.AddControlAtFreeSpot(entry.Kind).empty());
+
+        auto const reread = glass::ReadLayoutFromJson(glass::WriteLayoutToJson(controller.Document()));
+
+        VERIFY_IS_TRUE(reread.Succeeded);
+        VERIFY_IS_TRUE(reread.Document.Pages[0].Controls[0].Kind == entry.Kind);
+    }
 }

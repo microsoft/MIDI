@@ -102,6 +102,26 @@ namespace winrt::midiloopbacksetup::implementation
             return std::find(values.begin(), values.end(), std::wstring{ value }) != values.end();
         }
 
+        std::unordered_map<std::wstring, int32_t> PositionsOf(_In_ std::vector<std::wstring> const& ids) noexcept
+        {
+            std::unordered_map<std::wstring, int32_t> positions{};
+
+            try
+            {
+                for (auto const& id : ids)
+                {
+                    // the first position wins if the stored list ever names a row twice
+                    positions.try_emplace(id, static_cast<int32_t>(positions.size()));
+                }
+            }
+            catch (...)
+            {
+                positions.clear();
+            }
+
+            return positions;
+        }
+
         // "My Loopback (A)" and "My Loopback (B)" are one thing to the customer, so the card is
         // headed with the shared part when there is one, and with both names when the two sides
         // were named separately.
@@ -259,13 +279,19 @@ namespace winrt::midiloopbacksetup::implementation
             BasicLoopbacksListView().ItemsSource(m_basicLoopbacks);
             ImportDevicesList().ItemsSource(m_importDevices);
 
-            // the startup options were parsed before the window existed
-            auto const& options = App::StartupOptions();
-
-            if (!options.ConfigFilePath.empty())
+#ifdef _DEBUG
+            // Developer switch: the SDK reads and saves this file instead of the PC's own. Release
+            // builds of the SDK have no override, so the switch does nothing there. The startup
+            // options were parsed before the window existed.
+            if (auto const& options = App::StartupOptions(); !options.ConfigFilePath.empty())
             {
-                native::LoopbackConfigFile::Current().OverridePath(options.ConfigFilePath);
+                midi2svc::MidiServiceTransportPluginConfigManager::ConfigFilePathOverride(
+                    winrt::hstring{ options.ConfigFilePath });
             }
+#endif
+
+            m_loopbackOrder = PositionsOf(native::AppSettings::Current().LoopbackOrder());
+            m_basicLoopbackOrder = PositionsOf(native::AppSettings::Current().BasicLoopbackOrder());
 
             ShowLoopbackPage(
                 native::AppSettings::Current().SelectedPageIndex() != native::AppSettings::PageIndexBasicLoopbacks);
@@ -274,6 +300,12 @@ namespace winrt::midiloopbacksetup::implementation
                 native::AppSettings::Current().SelectedPageIndex() == native::AppSettings::PageIndexBasicLoopbacks ?
                 BasicLoopbacksNavigationItem().as<foundation::IInspectable>() :
                 LoopbacksNavigationItem().as<foundation::IInspectable>());
+
+            // The title bar gear is first in tab order, so focus would otherwise start there.
+            if (auto const selected = MainNavigation().SelectedItem().try_as<xaml::UIElement>())
+            {
+                selected.Focus(xaml::FocusState::Programmatic);
+            }
 
             Closed([weak = get_weak()](auto&&, auto&&)
                 {
@@ -288,15 +320,16 @@ namespace winrt::midiloopbacksetup::implementation
 
             m_loaded = true;
 
-            if (native::LoopbackConfigFile::Current().IsOverridden())
+#ifdef _DEBUG
+            if (auto const overridePath = midi2svc::MidiServiceTransportPluginConfigManager::ConfigFilePathOverride();
+                !overridePath.empty())
             {
-                auto const notice = res::FormatString(
-                    L"ConfigFileOverrideNotice",
-                    native::LoopbackConfigFile::Current().Path());
+                auto const notice = res::FormatString(L"ConfigFileOverrideNotice", overridePath);
 
                 SetLoopbackStatus(notice);
                 SetBasicLoopbackStatus(notice);
             }
+#endif
 
             StartRefreshTimer();
 
@@ -650,11 +683,16 @@ namespace winrt::midiloopbacksetup::implementation
                 // command, so this is asked for unconditionally.
                 snapshot.LoopbackEntries = midi2loop::MidiLoopbackManager::GetActiveLoopbackEntries();
 
-                snapshot.Loopback.ConfiguredIds =
-                    native::LoopbackConfigFile::Current().GetEntryIds(native::LoopbackKind::Loopback);
-
-                snapshot.Loopback.DisplayOrders =
-                    native::LoopbackConfigFile::Current().GetDisplayOrders(native::LoopbackKind::Loopback);
+                if (auto const savedEntries = midi2loop::MidiLoopbackManager::GetSavedLoopbackEntries(); savedEntries != nullptr)
+                {
+                    for (auto const& saved : savedEntries)
+                    {
+                        if (saved != nullptr)
+                        {
+                            snapshot.Loopback.SavedIds.push_back(std::wstring{ AssociationKey(saved.AssociationId()) });
+                        }
+                    }
+                }
             }
 
             snapshot.BasicLoopback.Available = midi2bloop::MidiBasicLoopbackManager::IsTransportAvailable();
@@ -685,11 +723,16 @@ namespace winrt::midiloopbacksetup::implementation
                     snapshot.BasicLoopbackEntries = midi2bloop::MidiBasicLoopbackManager::GetActiveLoopbackEntries();
                 }
 
-                snapshot.BasicLoopback.ConfiguredIds =
-                    native::LoopbackConfigFile::Current().GetEntryIds(native::LoopbackKind::BasicLoopback);
-
-                snapshot.BasicLoopback.DisplayOrders =
-                    native::LoopbackConfigFile::Current().GetDisplayOrders(native::LoopbackKind::BasicLoopback);
+                if (auto const savedEntries = midi2bloop::MidiBasicLoopbackManager::GetSavedLoopbackEntries(); savedEntries != nullptr)
+                {
+                    for (auto const& saved : savedEntries)
+                    {
+                        if (saved != nullptr)
+                        {
+                            snapshot.BasicLoopback.SavedIds.push_back(std::wstring{ AssociationKey(saved.AssociationId()) });
+                        }
+                    }
+                }
             }
 
             snapshot.Gathered = true;
@@ -947,7 +990,7 @@ namespace winrt::midiloopbacksetup::implementation
                     row.EditButtonAccessibleName = res::FormatString(
                         L"EditButtonAccessibleNameFormat", row.DisplayName);
 
-                    row.IsPersisted = Contains(transport.ConfiguredIds, row.AssociationId);
+                    row.IsPersisted = Contains(transport.SavedIds, row.AssociationId);
                     row.PersistenceText = res::GetString(
                         row.IsPersisted ? L"LoopbackIsPersistedText" : L"LoopbackIsTransientText");
 
@@ -955,7 +998,7 @@ namespace winrt::midiloopbacksetup::implementation
                 }
             }
 
-            ReconcileRows(m_loopbacks, incoming, transport.DisplayOrders, m_loopbackOrder, transport.CanMute, transport.CanCustomize);
+            ReconcileRows(m_loopbacks, incoming, m_loopbackOrder, transport.CanMute, transport.CanCustomize);
 
             LoopbackFeedbackBar().IsOpen(anyMutedForFeedback);
 
@@ -1049,7 +1092,7 @@ namespace winrt::midiloopbacksetup::implementation
                     row.EditButtonAccessibleName = res::FormatString(
                         L"EditButtonAccessibleNameFormat", row.DisplayName);
 
-                    row.IsPersisted = Contains(transport.ConfiguredIds, row.AssociationId);
+                    row.IsPersisted = Contains(transport.SavedIds, row.AssociationId);
                     row.PersistenceText = res::GetString(
                         row.IsPersisted ? L"LoopbackIsPersistedText" : L"LoopbackIsTransientText");
 
@@ -1060,7 +1103,7 @@ namespace winrt::midiloopbacksetup::implementation
                 }
             }
 
-            ReconcileRows(m_basicLoopbacks, incoming, transport.DisplayOrders, m_basicLoopbackOrder, transport.CanMute, transport.CanCustomize);
+            ReconcileRows(m_basicLoopbacks, incoming, m_basicLoopbackOrder, transport.CanMute, transport.CanCustomize);
 
             BasicLoopbackFeedbackBar().IsOpen(anyMutedForFeedback);
 
@@ -1120,8 +1163,7 @@ namespace winrt::midiloopbacksetup::implementation
     void MainWindow::ReconcileRows(
         collections::IObservableVector<midiloopbacksetup::LoopbackItem> const& rows,
         std::vector<native::LoopbackRowData> const& incoming,
-        std::unordered_map<std::wstring, int32_t> const& fileDisplayOrders,
-        std::unordered_map<std::wstring, int32_t> const& sessionDisplayOrders,
+        std::unordered_map<std::wstring, int32_t> const& displayOrders,
         bool const canMute,
         bool const canCustomize) noexcept
     {
@@ -1180,21 +1222,12 @@ namespace winrt::midiloopbacksetup::implementation
                 }
             }
 
-            // The customer's arrangement wins over the file, which wins over alphabetical. A
-            // position set during this session has not necessarily reached the file: a loopback
-            // which was never saved has no entry to record one in.
+            // the customer's arrangement first, then alphabetical for anything never placed
             auto const positionOf = [&](winrt::hstring const& id) -> int32_t
                 {
-                    std::wstring const key{ id };
-
-                    if (auto const session = sessionDisplayOrders.find(key); session != sessionDisplayOrders.end())
+                    if (auto const found = displayOrders.find(std::wstring{ id }); found != displayOrders.end())
                     {
-                        return session->second;
-                    }
-
-                    if (auto const file = fileDisplayOrders.find(key); file != fileDisplayOrders.end())
-                    {
-                        return file->second;
+                        return found->second;
                     }
 
                     return UnorderedPosition;

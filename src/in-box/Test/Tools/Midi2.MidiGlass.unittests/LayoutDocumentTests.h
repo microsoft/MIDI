@@ -94,4 +94,12 @@ public:
     TEST_METHOD(AGroupNameSurvivesARoundTrip);
     TEST_METHOD(AGroupNameFromAFileIsChecked);
     TEST_METHOD(ACopiedGroupIsNumberedOnFromItsName);
+
+    // ---- toolbars, pan controls, page tabs and fonts ----
+
+    TEST_METHOD(AnEncoderInAFileOpensAsAKnob);
+    TEST_METHOD(APanControlSurvivesARoundTrip);
+    TEST_METHOD(TheWindowSettingsSurviveARoundTrip);
+    TEST_METHOD(AFontNameThatIsReallyAPathIsDropped);
+    TEST_METHOD(APageTabGoesWhereItsFirstPageRowSays);
 };

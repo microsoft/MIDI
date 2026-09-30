@@ -15,6 +15,8 @@
 // Pictures the shipped themes lay over the page, kept inside the exe like the themes themselves.
 #define IDR_THEME_OFFWORLD_WALL         201
 #define IDR_THEME_OFFWORLD_STAINS       202
+#define IDR_THEME_NIGHT_DRIVE_SKY       203
+#define IDR_THEME_VISOR_DOTS            204
 
 // Next default values for new objects
 // 

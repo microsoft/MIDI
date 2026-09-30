@@ -9,6 +9,7 @@
 #pragma once
 
 #include "MidiEndpointMatchCriteria.h"
+#include "MidiEndpointCustomProperties.h"
 
 
 
@@ -89,15 +90,12 @@ public:
     STDMETHOD(StartRemoteHostWatcher)();
     STDMETHOD(StartBackgroundEndpointCreator)();
 
-    void RefreshCalculatedLatencyProperties();
-    STDMETHOD(StartBackgroundConnectionShutdown)();
     STDMETHOD(StartBackgroundNegotiation)();
-    STDMETHOD(StartBackgroundHostEndpointCreation)();
+    HRESULT StartBackgroundEndpointWorker();
 
     bool IsInitialized() { return m_initialized; }
 
     STDMETHOD(WakeupBackgroundEndpointCreatorThread)();
-    STDMETHOD(WakeupBackgroundConnectionShutdownThread)();
     STDMETHOD(WakeupBackgroundNegotiationThread)();
 
     // Creating an endpoint takes over a second when several arrive at once, and it used to run
@@ -108,6 +106,16 @@ public:
         _In_ std::wstring const& clientUmpEndpointName,
         _In_ std::wstring const& clientProductInstanceId);
 
+    // The same for a remote host which accepted our invitation.
+    HRESULT QueueClientEndpointCreation(
+        _In_ std::shared_ptr<MidiNetworkClientConnection> connection,
+        _In_ std::wstring const& remoteHostUmpEndpointName,
+        _In_ std::wstring const& remoteHostProductInstanceId);
+
+    // Removing an endpoint blocks on the service, so a session's endpoint is removed by the
+    // endpoint worker. Runs inline only on that worker, or once it has stopped.
+    HRESULT RemoveEndpointForSession(_In_ std::wstring const& deviceInstanceId);
+
     // Created once per host and kept for the lifetime of the transport. There is deliberately no
     // matching delete: deactivating it leaves the instance id behind, which blocks activation and
     // leaves the host unable to build endpoints.
@@ -116,12 +124,6 @@ public:
         _In_ winrt::hstring const& id,
         _Inout_ std::wstring& createdNewDeviceInstanceId);
 
-
-    HRESULT StartNewClient(
-        _In_ std::shared_ptr<MidiNetworkClientDefinition> clientDefinition,
-        _In_ winrt::hstring const& hostNameOrIPAddress,
-        _In_ uint16_t const hostPort);
-
     // A host's DNS-SD registration, for the repeated announcements in midi_dnssd_announcer.h.
     // The label is the one actually on the network. Withdraw it before the registration is.
     void OnHostRegistered(_In_ std::wstring_view const serviceInstanceLabel);
@@ -129,6 +131,23 @@ public:
 
 
 private:
+    // Only EndpointCreatorWorker may call this, so two callers can't build the same client.
+    HRESULT StartNewClient(
+        _In_ MidiNetworkClientDefinition const& clientDefinition,
+        _In_ winrt::hstring const& hostNameOrIPAddress,
+        _In_ uint16_t const hostPort);
+
+    // The two halves of each EndpointCreatorWorker pass
+    void StartPendingHosts();
+    void StartPendingClients();
+
+    // Where a client definition should connect: the advertised host it matches, or its direct
+    // address. False when there is nowhere to connect yet.
+    bool TryResolveClientTarget(
+        _In_ MidiNetworkClientDefinition const& definition,
+        _Out_ winrt::hstring& hostNameOrIPAddress,
+        _Out_ uint16_t& port);
+
     STDMETHOD(CreateNewEndpoint(
         _In_ MidiNetworkConnectionRole thisServiceRole,
         _In_ std::wstring const& configIdentifier,
@@ -142,6 +161,16 @@ private:
         _Out_ std::wstring& createdNewDeviceInstanceId,
         _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
     ));
+
+    // The name and description the user chose for an endpoint, and the cached customization to
+    // write once it exists. A customization matched by the remote's identity wins over the name
+    // on the configured entry.
+    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> ResolveEndpointCustomization(
+        _In_ MidiNetworkConnectionRole const thisServiceRole,
+        _In_ std::wstring const& configIdentifier,
+        _In_ WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& matchCriteria,
+        _Out_ std::wstring& customName,
+        _Out_ std::wstring& customDescription);
 
     // Shared by endpoint creation and the live refresh, so both produce the same blocks. The two
     // buffers are owned by the caller because the property entries point into them and must stay
@@ -200,8 +229,13 @@ private:
 
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
 
+    // Writes each endpoint's measured latency. Runs on the endpoint worker, the same thread which
+    // removes endpoints, so a refresh can't write back an entry that a removal has just cleared.
+    void RefreshCalculatedLatencyProperties();
+
     // Last calculated latency written per endpoint, so the timer-driven refresh only writes on a
     // meaningful change. One millisecond at the 10 MHz clock the platform reports.
+    wil::critical_section m_lastWrittenLatencyTicksLock;
     std::map<std::wstring, uint64_t> m_lastWrittenLatencyTicks;
     uint64_t m_latencyWriteThresholdTicks{ ::WindowsMidiServicesInternal::GetMidiTimestampFrequency() / 1000 };
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
@@ -224,37 +258,57 @@ private:
 
     HRESULT NegotiationWorker(_In_ std::stop_token stopToken);
 
-    // Teardown runs on its own thread. Deactivating an endpoint is slow, and it has no ordering
-    // relationship with starting a new connection, so sharing one worker meant a disconnecting
-    // device delayed an unrelated device connecting.
-    wil::slim_event_manual_reset m_backgroundConnectionShutdownThreadWakeup;
-    HRESULT ConnectionShutdownWorker(_In_ std::stop_token stopToken);
-
-    wil::critical_section m_pendingConnectionShutdownsLock;
-    std::vector<std::shared_ptr<MidiNetworkConnection>> m_pendingConnectionShutdowns;
-
-    struct PendingHostEndpointCreation
+    // One worker creates and removes the endpoints for sessions, and shuts down released
+    // connections. An endpoint's instance id comes from the remote's identity, so a remote which
+    // leaves and comes straight back asks for an id that can still be queued for removal. One
+    // queue is what lets that removal run first. Otherwise creations run first, so a device
+    // leaving never holds up an unrelated device arriving.
+    enum class EndpointWorkKind
     {
-        std::shared_ptr<MidiNetworkHostConnection> Connection;
-        std::wstring ClientUmpEndpointName;
-        std::wstring ClientProductInstanceId;
+        CreateHostEndpoint,
+        CreateClientEndpoint,
+        RemoveEndpoint,
+        ShutdownConnection,
+    };
+
+    struct EndpointWorkItem
+    {
+        EndpointWorkKind Kind{ EndpointWorkKind::RemoveEndpoint };
+
+        // not used by RemoveEndpoint
+        std::shared_ptr<MidiNetworkConnection> Connection{ nullptr };
+
+        // the remote's identity, for a creation
+        std::wstring RemoteEndpointName{ };
+        std::wstring RemoteProductInstanceId{ };
+
+        // The id being removed, or the id a creation will be given
+        std::wstring DeviceInstanceId{ };
 
         // Time to Invitation Reply: Accepted is queue wait plus activation, and only the
         // measurement tells us which of the two to attack.
         std::chrono::steady_clock::time_point QueuedAt{ std::chrono::steady_clock::now() };
     };
 
-    wil::slim_event_manual_reset m_backgroundHostEndpointCreationThreadWakeup;
-    HRESULT HostEndpointCreationWorker(_In_ std::stop_token stopToken);
+    HRESULT QueueEndpointWork(_In_ EndpointWorkItem item);
+    bool TryTakeNextEndpointWork(_Out_ EndpointWorkItem& item);
+    void RunEndpointWork(_In_ EndpointWorkItem const& item, _In_ bool const workerStopping);
+    HRESULT EndpointWorker(_In_ std::stop_token stopToken);
 
-    wil::critical_section m_pendingHostEndpointCreationsLock;
-    std::vector<PendingHostEndpointCreation> m_pendingHostEndpointCreations;
+    wil::critical_section m_endpointWorkLock;
+    std::vector<EndpointWorkItem> m_endpointWork;
+
+    // Guarded by m_endpointWorkLock. Cleared as the worker exits, after which callers do their
+    // own removals and shutdowns, because nothing would take them from the queue.
+    bool m_endpointWorkerAcceptingWork{ false };
+
+    std::atomic<DWORD> m_endpointWorkerThreadId{ 0 };
+    wil::slim_event_manual_reset m_endpointWorkerWakeup;
 
     // Must remain the last members. Members are destroyed in reverse declaration order, so this
     // guarantees the workers are joined before the wakeup events they wait on are destroyed.
     std::jthread m_backgroundEndpointCreatorThread;
-    std::jthread m_backgroundConnectionShutdownThread;
     std::jthread m_backgroundNegotiationThread;
-    std::jthread m_backgroundHostEndpointCreationThread;
+    std::jthread m_endpointWorkerThread;
 
 };

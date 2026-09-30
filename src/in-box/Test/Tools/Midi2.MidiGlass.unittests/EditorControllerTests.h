@@ -174,4 +174,12 @@ public:
     TEST_METHOD(ADestinationLeavesRowsThatGoNowhereAlone);
     TEST_METHOD(ADestinationMustBeInTheDeviceTable);
     TEST_METHOD(OnlyTheControlsThatListenAreMoved);
+
+    // ---- page tabs, pan controls and the window ----
+
+    TEST_METHOD(ANewPageTabGoesToThePageItIsOn);
+    TEST_METHOD(APanControlStartsInTheMiddle);
+    TEST_METHOD(TheWindowSettingsCanBeUndone);
+    TEST_METHOD(APageCanBeAsSmallAsAToolbar);
+    TEST_METHOD(ThePaletteOffersOnlyWhatIsBuilt);
 };
