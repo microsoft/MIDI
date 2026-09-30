@@ -1,6 +1,6 @@
 ---
 layout: tools_page
-title: MIDI Settings
+title: Windows MIDI Settings
 tool: settings
 description: See every MIDI endpoint on this PC, customize them, and launch the rest of the MIDI tools
 icon: /assets/images/midisettings.png
@@ -10,11 +10,22 @@ categories:
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
 
-MIDI Settings is the front door to MIDI on this PC. It shows every MIDI endpoint Windows knows about, lets you name them and give them a picture, and launches the rest of the MIDI tools.
+Windows MIDI Settings is the front door to MIDI on this PC. It shows every MIDI endpoint Windows knows about, lets you name them and give them a picture, and launches the rest of the MIDI tools.
 
-Most of what you do day to day works as a standard user. Only the machine-wide settings behind the **MIDI Settings** button on the toolbar need administrator rights, and the app tells you when that is the case rather than demanding them up front.
+Most of what you do day to day works as a standard user. Only the machine-wide settings behind the **Global MIDI Settings** button on the toolbar need administrator rights, and the app tells you when that is the case rather than demanding them up front.
 
-![The MIDI Settings main window, showing endpoints as cards]({{ site.baseurl }}/assets/images/midisettings.png)
+## Quick start
+
+The main window lists every MIDI endpoint on this PC, with the other MIDI apps across the top.
+
+![The Windows MIDI Settings main window, with numbered callouts on the app toolbar, the Global MIDI Settings and Notifications buttons, the transport list, the card and list view buttons, an endpoint card, and its Monitor and Panic buttons]({{ site.baseurl }}/assets/images/midisettings-quick-start.png)
+
+1. **The toolbar** opens the other Windows MIDI Services apps. Only the apps installed on this PC appear here.
+2. **Global MIDI Settings** holds the settings shared by everyone who uses this PC, so it needs administrator rights. **Notifications** chooses what Windows MIDI Services tells you about.
+3. **The transport list**, set to **All transports** here, narrows the list to one kind of connection, such as Bluetooth devices or loopbacks.
+4. **Card view** and **List view** switch between pictures and a denser list.
+5. **Select an endpoint** to see its details. That's also where you give it a name, a description, and a picture of your own.
+6. **Monitor** watches the messages the endpoint sends. **Panic** silences a note that's stuck on.
 
 ## The toolbar
 

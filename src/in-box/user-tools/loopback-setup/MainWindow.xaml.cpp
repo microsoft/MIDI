@@ -301,6 +301,12 @@ namespace winrt::midiloopbacksetup::implementation
                 BasicLoopbacksNavigationItem().as<foundation::IInspectable>() :
                 LoopbacksNavigationItem().as<foundation::IInspectable>());
 
+            // The title bar gear is first in tab order, so focus would otherwise start there.
+            if (auto const selected = MainNavigation().SelectedItem().try_as<xaml::UIElement>())
+            {
+                selected.Focus(xaml::FocusState::Programmatic);
+            }
+
             Closed([weak = get_weak()](auto&&, auto&&)
                 {
                     if (auto strong = weak.get())

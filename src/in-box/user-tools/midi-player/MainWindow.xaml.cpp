@@ -162,6 +162,9 @@ namespace winrt::midiplayer::implementation
             RebuildTrackList();
 
             StartEndpointWatcher();
+
+            // The title bar gear is first in tab order, so focus would otherwise start there.
+            OpenFilesButton().Focus(xaml::FocusState::Programmatic);
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to finish loading the window.")
     }

@@ -507,6 +507,41 @@ void RtpMidiTransportTests::TestEndpointOpenedAgainBeforeTheOldOneCloses()
     VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints()[baseline].Removed; }, 3000), L"the endpoint goes when the remote leaves");
 }
 
+void RtpMidiTransportTests::TestEndpointOpenedWhileItIsBeingActivated()
+{
+    auto const baseline = m_deviceManager->Endpoints().size();
+
+    // Written on the transport's worker, read here once the flag is set
+    std::unique_ptr<RtpMidiTest::OpenedEndpoint> early;
+    std::atomic<bool> openedDuringActivation{ false };
+
+    m_deviceManager->DuringNextActivation([&](std::wstring const& interfaceId)
+    {
+        early = std::make_unique<RtpMidiTest::OpenedEndpoint>(m_transport, interfaceId, 9);
+        openedDuringActivation = true;
+    });
+
+    Peer remote("Early Open Peer", false);
+    VERIFY_IS_TRUE(remote.Start(), L"the remote binds a loopback port pair");
+    remote.Invite(m_hostPort);
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return openedDuringActivation.load(); }, 5000), L"the endpoint is opened while it is being activated");
+    VERIFY_IS_TRUE(early->IsOpen(), L"an endpoint opened before its activation returns still opens");
+
+    remote.Send({ 0x90, 0x3C, 0x64 });
+    VERIFY_IS_TRUE(WaitFor([&]() { return Contains(early->Received().Words(), 0x20903C64); }, 3000), L"it receives from the remote");
+    VERIFY_IS_FALSE(early->Received().WrongContext(), L"with the context it was opened with");
+
+    uint32_t const noteOn{ 0x20914050 };
+    VERIFY_SUCCEEDED(early->Send(&noteOn, sizeof(noteOn)), L"it sends to the remote");
+    VERIFY_IS_TRUE(WaitFor([&]() { return ContainsSequence(remote.Received(), { 0x91, 0x40, 0x50 }); }, 3000), L"the remote receives it");
+
+    early.reset();
+    remote.Stop();
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints()[baseline].Removed; }, 3000), L"the endpoint goes when the remote leaves");
+}
+
 void RtpMidiTransportTests::TestHostileConfigurationIsRejected()
 {
     struct Case { std::wstring Json; uint32_t ExpectedError; wchar_t const* What; };

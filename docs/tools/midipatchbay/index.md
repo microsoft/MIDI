@@ -1,6 +1,6 @@
 ---
 layout: tools_page
-title: MIDI Patchbay
+title: Windows MIDI Patchbay
 tool: midipatchbay
 description: Route MIDI between endpoints on a canvas you draw yourself
 icon: /assets/images/midipatchbay.png
@@ -10,11 +10,23 @@ categories:
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
 
-MIDI Patchbay connects MIDI endpoints to each other. You drop the devices you care about onto a canvas, draw connections from one device's **Out** to another device's **In**, and from then on everything arriving on that connection point is passed along.
+Windows MIDI Patchbay connects MIDI endpoints to each other. You drop the devices you care about onto a canvas, draw connections from one device's **Out** to another device's **In**, and from then on everything arriving on that connection point is passed along.
 
 It's the software version of the patchbay in a studio rack: keys into a sound module, a drum machine into your DAW, one controller split across three instruments.
 
-![The MIDI Patchbay canvas]({{ site.baseurl }}/assets/images/midipatchbay.png)
+## Quick start
+
+![The Windows MIDI Patchbay window, with numbered callouts on the patch list, the Add endpoint and Create loopback buttons, an endpoint on the canvas, a connection, the details panel, the Routing and Start automatically controls, and the zoom and Test buttons]({{ site.baseurl }}/assets/images/midipatchbay-quick-start.png)
+
+1. **Patches.** **New quick patch** connects one device to another in two steps. **New empty patch** gives you a blank canvas. Your saved patches are listed underneath.
+2. **Add endpoint** puts a device on the canvas. **Create loopback** makes a new loopback, so you can send MIDI to another app.
+3. **Each endpoint** has an **In** column and an **Out** column, with a row for each group.
+4. **Draw a connection** by dragging from an **Out** point to an **In** point. Select the cord to see what it carries.
+5. **The details panel** shows whatever you've selected. For a connection, **Edit filters** and **Edit transforms** change what it passes along.
+6. **Routing** turns the patch on and off. **Start automatically** starts it each time Windows MIDI Patchbay starts.
+7. **The zoom buttons** change how much of the canvas you see. **Test** opens a monitor, a keyboard, or a scratch pad pointed at the selected endpoint.
+
+Routing happens only while Windows MIDI Patchbay is running. [Routing only runs while Patchbay is running](#routing-only-runs-while-patchbay-is-running) explains how to keep it going in the background.
 
 ## What a patch is
 

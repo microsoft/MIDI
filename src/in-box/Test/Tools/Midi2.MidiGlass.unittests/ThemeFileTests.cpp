@@ -203,6 +203,40 @@ void ThemeFileTests::EveryShippedThemeSurvivesARoundTrip()
         VERIFY_IS_TRUE(theme.OnInkColor == read.Value.OnInkColor);
         VERIFY_ARE_EQUAL(theme.RestTintOnPlate, read.Value.RestTintOnPlate);
 
+        // Everything Insert Coin, Chicago, Night Drive, Visor and Good Form added.
+        VERIFY_ARE_EQUAL(theme.LampFillWhenOnPercent, read.Value.LampFillWhenOnPercent);
+        VERIFY_IS_TRUE(theme.SwitchRingColor == read.Value.SwitchRingColor);
+        VERIFY_ARE_EQUAL(theme.PadsFollowSwitchShape, read.Value.PadsFollowSwitchShape);
+        VERIFY_ARE_EQUAL(theme.KnobCapFromHue, read.Value.KnobCapFromHue);
+        VERIFY_IS_TRUE(theme.Puck == read.Value.Puck);
+        VERIFY_IS_TRUE(theme.ThumbShape == read.Value.ThumbShape);
+        VERIFY_IS_TRUE(theme.PointerShape == read.Value.PointerShape);
+        VERIFY_ARE_EQUAL(theme.KnobMajorTickEvery, read.Value.KnobMajorTickEvery);
+        VERIFY_ARE_EQUAL(theme.FaderMajorTickEvery, read.Value.FaderMajorTickEvery);
+        VERIFY_ARE_EQUAL(theme.KnobArcOnFace, read.Value.KnobArcOnFace);
+        VERIFY_IS_TRUE(theme.RimShape == read.Value.RimShape);
+        VERIFY_ARE_EQUAL(theme.BevelPixels, read.Value.BevelPixels);
+        VERIFY_IS_TRUE(theme.BevelHighlightColor == read.Value.BevelHighlightColor);
+        VERIFY_IS_TRUE(theme.BevelLightColor == read.Value.BevelLightColor);
+        VERIFY_IS_TRUE(theme.BevelShadowColor == read.Value.BevelShadowColor);
+        VERIFY_IS_TRUE(theme.BevelDarkColor == read.Value.BevelDarkColor);
+        VERIFY_IS_TRUE(theme.Latch == read.Value.Latch);
+        VERIFY_IS_TRUE(theme.CurrentStep == read.Value.CurrentStep);
+        VERIFY_ARE_EQUAL(theme.SwitchColorTag, read.Value.SwitchColorTag);
+        VERIFY_IS_TRUE(theme.DeckInkHaloColor == read.Value.DeckInkHaloColor);
+        VERIFY_IS_TRUE(theme.WellInkColor == read.Value.WellInkColor);
+        VERIFY_ARE_EQUAL(theme.ChromeCaps, read.Value.ChromeCaps);
+        VERIFY_ARE_EQUAL(theme.ChromeLetters, read.Value.ChromeLetters);
+        VERIFY_ARE_EQUAL(theme.Overlay.FloorPercent, read.Value.Overlay.FloorPercent);
+        VERIFY_IS_TRUE(theme.Overlay.FloorColor == read.Value.Overlay.FloorColor);
+        VERIFY_ARE_EQUAL(theme.Overlay.FloorHorizonPercent, read.Value.Overlay.FloorHorizonPercent);
+        VERIFY_ARE_EQUAL(theme.Overlay.FloorSpeed, read.Value.Overlay.FloorSpeed);
+
+        for (size_t stop = 0; stop < glass::ChromeColorCount; ++stop)
+        {
+            VERIFY_IS_TRUE(theme.ChromeColors[stop] == read.Value.ChromeColors[stop]);
+        }
+
         for (int32_t zone = 0; zone < glass::MeterZoneCount; ++zone)
         {
             VERIFY_ARE_EQUAL(

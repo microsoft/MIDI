@@ -33,6 +33,9 @@ namespace glass
     // a level for every percent of its grain.
     std::shared_ptr<TextureImage const> FineGrainImage(_In_ Theme const& theme) noexcept;
 
+    // A one pixel checkerboard of two colors, as a tile to repeat.
+    std::shared_ptr<TextureImage const> CheckerImage(_In_ ThemeColor const& first, _In_ ThemeColor const& second) noexcept;
+
     // The image, on this compositor. Call on the thread that owns the window.
     winrt::Microsoft::UI::Composition::CompositionSurfaceBrush MakeTextureBrush(
         _In_ winrt::Microsoft::UI::Composition::Compositor const& compositor,

@@ -523,6 +523,12 @@ namespace winrt::midiclock::implementation
 
     void MainWindow::RefreshEditorTimingCaptions() noexcept
     {
+        // The swing slider's XAML Minimum fires ValueChanged before later x:Name fields exist.
+        if (!m_initialized)
+        {
+            return;
+        }
+
         try
         {
             auto const ratioIndex = EditClockRatioComboBox().SelectedIndex();

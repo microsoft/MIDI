@@ -83,6 +83,13 @@ namespace glass
         constexpr int32_t RainTilesPerLoop = 6;
         constexpr uint64_t RainSeed = 20190101ull;
 
+        // The grid floor: how many rungs, how far the rails fan out for every pixel of floor, how
+        // far down it fades in, and how heavy its lines are at full page size.
+        constexpr int32_t FloorRungCount = 13;
+        constexpr float FloorRailSpread = 1.105f;
+        constexpr float FloorFadeShare = 0.32f;
+        constexpr float FloorLineWeight = 1.6f;
+
         // Deterministic, so a re-render is the same grain rather than a shimmer. A real random
         // source here would make every resize look like the panel was re-manufactured.
         uint32_t NextGrainNoise(_Inout_ uint32_t& state) noexcept
@@ -130,6 +137,217 @@ namespace glass
             tiles.Clip(compositor.CreateInsetClip());
 
             return tiles;
+        }
+
+        // A picture that ships with a theme, covering the page without being stretched: scaled
+        // until it fills both ways and centered, so a sun stays round on any shape of page. A
+        // picture on disk is drawn by the deck's own brush instead.
+        Visual BuildCoverPicture(
+            _In_ Compositor const& compositor,
+            _In_ Theme const& theme,
+            _In_ float width,
+            _In_ float height)
+        {
+            auto const pixels = LoadThemePicture(theme.Deck.ImageFileName);
+
+            if (pixels == nullptr)
+            {
+                return nullptr;
+            }
+
+            auto brush = MakeTextureBrush(compositor, *pixels);
+            brush.Stretch(CompositionStretch::UniformToFill);
+            brush.HorizontalAlignmentRatio(0.5f);
+            brush.VerticalAlignmentRatio(0.5f);
+
+            auto sprite = compositor.CreateSpriteVisual();
+            sprite.Size(float2{ width, height });
+            sprite.Brush(brush);
+
+            return sprite;
+        }
+
+        // A grid floor running away to the horizon, under the controls: rungs closer together the
+        // further off they are, and rails that meet in the middle of the horizon. It fades in out
+        // of the haze rather than piling up where the rails meet, and rolls toward the viewer
+        // where the page is allowed to move.
+        Visual BuildFloor(
+            _In_ Compositor const& compositor,
+            _In_ Theme const& theme,
+            _In_ float width,
+            _In_ float height,
+            _In_ double pageScale,
+            _In_ bool animate)
+        {
+            auto const share = std::clamp(theme.Overlay.FloorHorizonPercent, 0, 100) / 100.0f;
+
+            // A share of the picture, where one covers the page, because the horizon is in the
+            // picture; a share of the page otherwise.
+            auto horizon = height * share;
+
+            if (theme.Deck.Kind == DeckKind::Image && !theme.Deck.ImageRepeats)
+            {
+                if (auto const pixels = LoadThemePicture(theme.Deck.ImageFileName);
+                    pixels != nullptr && pixels->Width > 0 && pixels->Height > 0)
+                {
+                    auto const scale = std::max(width / static_cast<float>(pixels->Width), height / static_cast<float>(pixels->Height));
+                    auto const shown = static_cast<float>(pixels->Height) * scale;
+
+                    horizon = (height - shown) * 0.5f + shown * share;
+                }
+            }
+
+            if (horizon >= height - 4.0f)
+            {
+                return nullptr;
+            }
+
+            auto const depth = height - horizon;
+            auto const weight = static_cast<float>(std::max(pageScale, 0.25)) * FloorLineWeight;
+
+            auto color = EffectiveFloorColor(theme);
+            color.A = static_cast<uint8_t>(std::lround(255.0 * std::clamp(theme.Overlay.FloorPercent, 0, 100) / 100.0));
+
+            auto clearColor = color;
+            clearColor.A = 0;
+
+            // Out of the haze: nothing at the horizon, the full line a third of the way down. Each
+            // line carries its own fade rather than the floor being drawn offscreen and masked.
+            auto const fadeDepth = std::max(depth * FloorFadeShare, 1.0f);
+
+            auto railBrush = compositor.CreateLinearGradientBrush();
+            railBrush.MappingMode(CompositionMappingMode::Absolute);
+            railBrush.StartPoint(float2{ 0.0f, horizon });
+            railBrush.EndPoint(float2{ 0.0f, horizon + fadeDepth });
+
+            for (auto const& [offset, stopColor] : { std::pair{ 0.0f, clearColor }, std::pair{ 1.0f, color } })
+            {
+                auto stop = compositor.CreateColorGradientStop();
+                stop.Offset(offset);
+                stop.Color(ToColor(stopColor));
+
+                railBrush.ColorStops().Append(stop);
+            }
+
+            auto lines = compositor.CreateShapeVisual();
+            lines.Size(float2{ width, height });
+
+            // The rails, all running to the middle of the horizon, as far out as the page reaches.
+            auto const middle = width * 0.5f;
+            auto const run = FloorRailSpread * depth;
+            auto const rails = static_cast<int32_t>(std::ceil(middle / std::max(run, 1.0f))) + 1;
+
+            for (int32_t rail = -rails; rail <= rails; ++rail)
+            {
+                auto line = compositor.CreateLineGeometry();
+                line.Start(float2{ middle, horizon });
+                line.End(float2{ middle + run * static_cast<float>(rail), height });
+
+                auto shape = compositor.CreateSpriteShape(line);
+                shape.StrokeBrush(railBrush);
+                shape.StrokeThickness(weight);
+
+                lines.Shapes().Append(shape);
+            }
+
+            // The rungs, closer together the further off they are. Rung n sits at the square of
+            // its share of the way down, so the spacing reads as a flat floor seen from above.
+            // Each has its own brush, faded by how far below the horizon it is.
+            auto const count = static_cast<float>(FloorRungCount - 1);
+
+            std::vector<CompositionSpriteShape> rungs{};
+            std::vector<CompositionColorBrush> rungBrushes{};
+
+            for (int32_t rung = 0; rung < FloorRungCount; ++rung)
+            {
+                auto line = compositor.CreateLineGeometry();
+                line.Start(float2{ 0.0f, horizon });
+                line.End(float2{ width, horizon });
+
+                auto const along = static_cast<float>(rung) / count;
+                auto const below = depth * along * along;
+
+                auto faded = color;
+                faded.A = static_cast<uint8_t>(std::lround(color.A * std::clamp(below / fadeDepth, 0.0f, 1.0f)));
+
+                auto brush = compositor.CreateColorBrush(ToColor(faded));
+
+                auto shape = compositor.CreateSpriteShape(line);
+                shape.StrokeBrush(brush);
+                shape.StrokeThickness(weight);
+                shape.Offset(float2{ 0.0f, below });
+
+                lines.Shapes().Append(shape);
+                rungs.push_back(shape);
+                rungBrushes.push_back(brush);
+            }
+
+            auto root = compositor.CreateContainerVisual();
+            root.Size(float2{ width, height });
+            root.Children().InsertAtTop(lines);
+
+            auto const speed = std::clamp(theme.Overlay.FloorSpeed, 0, 600);
+
+            auto moves = animate && speed > 0;
+
+            if (moves)
+            {
+                try
+                {
+                    moves = winrt::Windows::UI::ViewManagement::UISettings{}.AnimationsEnabled();
+                }
+                catch (...)
+                {
+                    moves = false;
+                }
+            }
+
+            // Every rung slides down to where the next one was, so one loop of a single number
+            // moves the whole floor. The nearest gap is the one that covers `speed` pixels a
+            // second.
+            if (moves)
+            {
+                auto floor = compositor.CreatePropertySet();
+                floor.InsertScalar(L"Phase", 0.0f);
+
+                for (size_t rung = 0; rung < rungs.size(); ++rung)
+                {
+                    auto slide = compositor.CreateExpressionAnimation(L"Vector2(0, Depth * Pow((Rung + Floor.Phase) / Count, 2))");
+                    slide.SetScalarParameter(L"Depth", depth);
+                    slide.SetScalarParameter(L"Rung", static_cast<float>(rung));
+                    slide.SetScalarParameter(L"Count", count);
+                    slide.SetReferenceParameter(L"Floor", floor);
+
+                    rungs[rung].StartAnimation(L"Offset", slide);
+
+                    // and out of the haze as it comes
+                    auto fade = compositor.CreateExpressionAnimation(
+                        L"ColorLerp(Clear, Full, Clamp(Depth * Pow((Rung + Floor.Phase) / Count, 2) / Fade, 0, 1))");
+                    fade.SetColorParameter(L"Clear", ToColor(clearColor));
+                    fade.SetColorParameter(L"Full", ToColor(color));
+                    fade.SetScalarParameter(L"Depth", depth);
+                    fade.SetScalarParameter(L"Rung", static_cast<float>(rung));
+                    fade.SetScalarParameter(L"Count", count);
+                    fade.SetScalarParameter(L"Fade", fadeDepth);
+                    fade.SetReferenceParameter(L"Floor", floor);
+
+                    rungBrushes[rung].StartAnimation(L"Color", fade);
+                }
+
+                auto const last = (count - 1.0f) / count;
+                auto const gap = depth * (1.0f - last * last);
+                auto const seconds = std::max(gap / static_cast<float>(speed), 0.1f);
+
+                auto phase = compositor.CreateScalarKeyFrameAnimation();
+                phase.InsertKeyFrame(0.0f, 0.0f, compositor.CreateLinearEasingFunction());
+                phase.InsertKeyFrame(1.0f, 1.0f, compositor.CreateLinearEasingFunction());
+                phase.Duration(std::chrono::milliseconds{ static_cast<int64_t>(seconds * 1000.0f) });
+                phase.IterationBehavior(AnimationIterationBehavior::Forever);
+
+                floor.StartAnimation(L"Phase", phase);
+            }
+
+            return root;
         }
 
         // A fine noise in every screen pixel, whatever the page's zoom.
@@ -671,6 +889,16 @@ namespace glass
                 theme.Deck.ImageRepeats &&
                 !theme.Deck.ImageFileName.empty();
 
+            // A picture that ships inside the app, with nothing of that name on disk for the
+            // deck's own brush to draw.
+            auto const wantsCover = beneath &&
+                theme.Deck.Kind == DeckKind::Image &&
+                !theme.Deck.ImageRepeats &&
+                IsBuiltInThemePicture(theme.Deck.ImageFileName) &&
+                DeckImagePath(theme.Deck).empty();
+
+            auto const wantsFloor = beneath && theme.Overlay.FloorPercent > 0;
+
             auto const wantsGrain = beneath && theme.Overlay.GrainPercent > 0;
 
             auto const wantsRain = beneath && theme.Overlay.RainPercent > 0;
@@ -684,7 +912,7 @@ namespace glass
 
             auto const wantsFaceplate = wantsGlass && theme.Overlay.FaceplateSheenPercent > 0;
 
-            if ((!wantsPicture && !wantsGrain && !wantsRain && !wantsVignette && !wantsScanLines && !wantsFaceplate) ||
+            if ((!wantsPicture && !wantsCover && !wantsFloor && !wantsGrain && !wantsRain && !wantsVignette && !wantsScanLines && !wantsFaceplate) ||
                 width < 1.0 || height < 1.0)
             {
                 ElementCompositionPreview::SetElementChildVisual(element, nullptr);
@@ -707,6 +935,22 @@ namespace glass
                 if (auto picture = BuildRepeatingPicture(compositor, theme, pixelWidth, pixelHeight, pageScale); picture != nullptr)
                 {
                     root.Children().InsertAtTop(picture);
+                }
+            }
+
+            if (wantsCover)
+            {
+                if (auto picture = BuildCoverPicture(compositor, theme, pixelWidth, pixelHeight); picture != nullptr)
+                {
+                    root.Children().InsertAtTop(picture);
+                }
+            }
+
+            if (wantsFloor)
+            {
+                if (auto floor = BuildFloor(compositor, theme, pixelWidth, pixelHeight, pageScale, animate); floor != nullptr)
+                {
+                    root.Children().InsertAtTop(floor);
                 }
             }
 

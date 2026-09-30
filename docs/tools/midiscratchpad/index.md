@@ -1,6 +1,6 @@
 ---
 layout: tools_page
-title: MIDI Scratch Pad
+title: Windows MIDI Scratch Pad
 tool: midiscratchpad
 description: Type MIDI messages by hand and send them to a device
 icon: /assets/images/midiscratchpad.png
@@ -10,20 +10,21 @@ categories:
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
 
-MIDI Scratch Pad lets you type MIDI messages yourself and send them to a MIDI device. It's the tool to reach for when you want to answer questions like "does this synth actually respond to that controller?", "what does this SysEx message from the manual do?", or "can I reproduce that bug with one message?".
+Windows MIDI Scratch Pad lets you type MIDI messages yourself and send them to a MIDI device. It's the tool to reach for when you want to answer questions like "does this synth actually respond to that controller?", "what does this SysEx message from the manual do?", or "can I reproduce that bug with one message?".
 
 You type the message data as hexadecimal, the app tells you as you type whether it makes sense, and then you send it. Nothing is hidden behind a wizard, so it's also a good way to learn what MIDI messages really look like.
 
-![The MIDI Scratch Pad main window]({{ site.baseurl }}/assets/images/midiscratchpad.png)
+## Quick start
 
-## Getting started
+![The Windows MIDI Scratch Pad window with three messages typed in, and numbered callouts on the MIDI Device and Group lists, the Send as buttons, the message editor, the Insert panel, and the Clear and Send buttons]({{ site.baseurl }}/assets/images/midiscratchpad-quick-start.png)
 
-1. Pick your instrument from the **MIDI Device** list at the top.
-2. Pick a **Group**. Most MIDI 1.0 gear has only one, so this is usually already chosen for you.
-3. Type some message data, or build it with the **Insert** panel on the right.
-4. Select **Send all**.
+1. **MIDI Device** and **Group** choose where the messages go. Most MIDI 1.0 gear has only one group, so it's usually chosen for you.
+2. **Send as** switches between **MIDI 1.0 bytes**, the form you'll find in instrument manuals, and **UMP words**, the newer MIDI 2.0 form.
+3. **Type your messages** here as hexadecimal, one per line if you like. Anything after `#` is a comment. The line under the editor tells you as you type whether it all makes sense.
+4. **Insert** builds common messages for you and adds them at the cursor, so you don't have to remember the hex.
+5. **Send all** sends everything in the editor. **Send selection** sends only what you've highlighted, and **Clear** empties the editor.
 
-The status strip under the editor tells you at every step whether what you've typed is valid, so you'll know before you send.
+The **Send** buttons stay unavailable while there's a mistake in what you've typed, so you can't send half a message to an instrument by accident.
 
 ## Two ways to write messages
 
@@ -117,7 +118,7 @@ The pin button next to the window's minimize button keeps the Scratch Pad above 
 
 ## Settings
 
-The gear button at the bottom left opens the settings.
+The gear button in the title bar opens the settings.
 
 ![The settings panel]({{ site.baseurl }}/assets/images/midiscratchpad-settings.png)
 

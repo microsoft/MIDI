@@ -141,6 +141,9 @@ namespace winrt::miditroubleshooter::implementation
             if (auto const item = NavigationItemForPage(pageIndex))
             {
                 MainNavigation().SelectedItem(item);
+
+                // The title bar gear is first in tab order, so focus would otherwise start there.
+                item.Focus(xaml::FocusState::Programmatic);
             }
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to finish loading the window.")

@@ -90,6 +90,10 @@ namespace glass
         // is the only thing that knows how wide the name came out.
         comp::CompositionSpriteShape NotchShape{ nullptr };
 
+        // The badge behind a name in chrome, straddling the top of the frame. A visual of its
+        // own, because half of it is above the control and a shape visual clips to its size.
+        comp::ShapeVisual NotchBadge{ nullptr };
+
         // A section's frame, when a name is cut into it or it is drawn in stripes: one copy,
         // clipped round the gap, so whatever is under the frame shows through the gap rather
         // than a patch painted to look like it. Empty on every other control.
@@ -131,6 +135,35 @@ namespace glass
         // A picture laid over a section, in black, and a well drawn the size of the control.
         comp::ContainerVisual Texture{ nullptr };
         bool Windowed{ false };
+
+        // The ring a round button is set into. A visual of its own under the glow, so only the
+        // button moves when it is pressed and its light spills onto the ring.
+        comp::ShapeVisual Bezel{ nullptr };
+
+        // A bevel: the edge drawn at rest, and the one drawn while the switch is down. Above the
+        // plate and never moved, so a pressed switch is the same size as a raised one.
+        comp::ShapeVisual Edge{ nullptr };
+        comp::ShapeVisual EdgeDown{ nullptr };
+
+        // The checkerboard a latched switch is filled with, shown only while it is on.
+        comp::ContainerVisual Latch{ nullptr };
+
+        // How far a switch's name moves while its bevel shows it pressed.
+        float PressNudge{ 0.0f };
+
+        // The corner of a well or a window. Below zero means the usual rounded one.
+        float WellCorner{ -1.0f };
+
+        // A control drawn as four corners, and what they are painted with at rest and when its
+        // frame closes. A dial's corners only show under a finger.
+        std::vector<comp::CompositionSpriteShape> Corners{};
+        comp::CompositionBrush CornerRestBrush{ nullptr };
+        comp::CompositionBrush CornerOnBrush{ nullptr };
+
+        // The small square of the control's color before its name, and its edge at rest and on.
+        comp::CompositionSpriteShape ColorTag{ nullptr };
+        comp::CompositionBrush ColorTagRestEdge{ nullptr };
+        comp::CompositionBrush ColorTagOnEdge{ nullptr };
 
         comp::CompositionSpriteShape PlateShape{ nullptr };
         comp::CompositionSpriteShape PipeShape{ nullptr };
@@ -205,6 +238,11 @@ namespace glass
         float FieldHeight{ 0.0f };
         float PuckRadius{ 0.0f };
 
+        // A puck that is more than a disc - a ball, a reticle - drawn round the origin and moved
+        // as one group. A joystick's ball rides a shaft from the middle of the field.
+        comp::CompositionContainerShape PuckGroup{ nullptr };
+        comp::CompositionLineGeometry Shaft{ nullptr };
+
         // ---- ribbon: light under the finger rather than a bar that grows ----
 
         std::vector<comp::CompositionRoundedRectangleGeometry> RibbonGlow{};
@@ -235,6 +273,11 @@ namespace glass
         comp::CompositionBrush StepBarRestFill{ nullptr };
         comp::CompositionBrush StepBarLitFill{ nullptr };
         int32_t CurrentStep{ -1 };
+
+        // The dotted line round the step that is playing, on a theme that marks it that way.
+        comp::CompositionRoundedRectangleGeometry StepFocus{ nullptr };
+        std::vector<winrt::Windows::Foundation::Numerics::float2> StepOrigins{};
+        float StepFocusGap{ 0.0f };
 
         // ---- piano keyboard ----
 
@@ -634,6 +677,59 @@ namespace glass
             _In_ float height,
             _In_ float corner);
 
+        // Which way a bevel's light falls. A window's frame is lit from inside its outer line.
+        enum class BevelKind
+        {
+            Raised,
+            Pressed,
+            Sunken,
+            Window,
+            Etched,
+        };
+
+        // A bevel round a rectangle, or round a circle when `round`, into `target`.
+        void AppendBevel(
+            _In_ comp::Compositor const& compositor,
+            _In_ comp::ShapeVisual const& target,
+            _In_ ControlColors const& colors,
+            _In_ BevelKind kind,
+            _In_ float x,
+            _In_ float y,
+            _In_ float width,
+            _In_ float height,
+            _In_ float pixels,
+            _In_ bool round);
+
+        // The four corners of a rectangle, `arm` long each way, into the plate's shapes.
+        void AppendCorners(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ float x,
+            _In_ float y,
+            _In_ float width,
+            _In_ float height,
+            _In_ float arm,
+            _In_ float thickness);
+
+        // A closed shape, or an open line, through the points.
+        static comp::CompositionPathGeometry PathThrough(
+            _In_ comp::Compositor const& compositor,
+            _In_ std::vector<winrt::Windows::Foundation::Numerics::float2> const& points,
+            _In_ bool closed);
+
+        // Polished metal: the theme's sky, a hard horizon line, and a glow in the ground.
+        comp::CompositionLinearGradientBrush ChromeBrush(
+            _In_ comp::Compositor const& compositor,
+            _In_ Theme const& theme,
+            _In_ bool horizontal);
+
+        // A glossy ball, or a reticle, round the origin, for a puck.
+        comp::CompositionContainerShape BuildPuckGroup(
+            _In_ comp::Compositor const& compositor,
+            _In_ Theme const& theme,
+            _In_ ThemeColor const& color,
+            _In_ float radius);
+
         // A meter as a row of lights.
         void LayoutMeterSegments(
             _In_ comp::Compositor const& compositor,
@@ -674,14 +770,16 @@ namespace glass
 
         // The light behind a name that glows: a Text control or a section's name on a theme with
         // neon letters. A sibling behind the label, because a child visual of the label would
-        // be drawn over its own words.
+        // be drawn over its own words. A halo is the same thing in a dark color, drawn tight and
+        // strong so print reads over a bright picture.
         void LayoutLabelGlow(
             _In_ size_t itemIndex,
             _In_ controls::TextBlock const& label,
             _In_ ThemeColor const& hue,
             _In_ Theme const& theme,
             _In_ double x,
-            _In_ double y);
+            _In_ double y,
+            _In_ bool halo = false);
 
         void LayoutLabel(
             _In_ size_t itemIndex,
@@ -839,6 +937,7 @@ namespace glass
             _Inout_ SurfaceVisual& visual,
             _In_ Control const& control,
             _In_ ControlColors const& colors,
+            _In_ Theme const& theme,
             _In_ float width,
             _In_ float height);
 

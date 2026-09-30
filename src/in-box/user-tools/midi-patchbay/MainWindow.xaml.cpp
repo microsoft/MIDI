@@ -246,6 +246,12 @@ namespace winrt::midipatchbay::implementation
 
             LoadPatches();
 
+            // The title bar gear is first in tab order, so focus would otherwise start there.
+            if (auto const selected = MainNavigation().SelectedItem().try_as<xaml::UIElement>())
+            {
+                selected.Focus(xaml::FocusState::Programmatic);
+            }
+
             m_refreshTimer = xaml::DispatcherTimer{};
             m_refreshTimer.Interval(std::chrono::milliseconds{ RefreshIntervalMilliseconds });
             m_refreshTimer.Tick([weak](auto&&, auto&&)

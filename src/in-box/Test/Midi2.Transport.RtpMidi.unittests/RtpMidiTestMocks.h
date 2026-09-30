@@ -97,32 +97,51 @@ namespace RtpMidiTest
 
             *createdEndpointDeviceInterfaceId = nullptr;
 
-            auto lock = std::scoped_lock{ m_lock };
+            std::function<void(std::wstring const&)> duringActivation{ nullptr };
+            std::wstring interfaceId{ };
 
-            if (parentInstanceId == nullptr || !SameText(parentInstanceId, m_parentId)) m_wrongParent = true;
-
-            std::wstring const instanceId{ createInfo->pszInstanceId };
-
-            // the real device manager reports an instance id which is already active this way
-            for (auto const& existing : m_endpoints)
             {
-                if (!existing.Removed && SameText(existing.InstanceId, instanceId)) return S_FALSE;
+                auto lock = std::scoped_lock{ m_lock };
+
+                if (parentInstanceId == nullptr || !SameText(parentInstanceId, m_parentId)) m_wrongParent = true;
+
+                std::wstring const instanceId{ createInfo->pszInstanceId };
+
+                // the real device manager reports an instance id which is already active this way
+                for (auto const& existing : m_endpoints)
+                {
+                    if (!existing.Removed && SameText(existing.InstanceId, instanceId)) return S_FALSE;
+                }
+
+                ActivatedEndpoint endpoint{};
+                endpoint.InstanceId = instanceId;
+                endpoint.InterfaceId = L"\\\\?\\SWD#MIDISRV#" + instanceId + L"#{e7cce071-3c03-423f-88d3-f1045d02552b}";
+                endpoint.EndpointName = common->EndpointName != nullptr ? common->EndpointName : L"";
+                endpoint.UniqueIdentifier = common->UniqueIdentifier != nullptr ? common->UniqueIdentifier : L"";
+                endpoint.TransportCode = common->TransportCode != nullptr ? common->TransportCode : L"";
+                endpoint.TransportId = common->TransportId;
+                endpoint.NativeFormat = common->NativeDataFormat;
+                endpoint.PropertyCount = intPropertyCount;
+
+                *createdEndpointDeviceInterfaceId = CoTaskCopy(endpoint.InterfaceId);
+                m_endpoints.push_back(endpoint);
+
+                interfaceId = endpoint.InterfaceId;
+                duringActivation = std::exchange(m_duringNextActivation, nullptr);
             }
 
-            ActivatedEndpoint endpoint{};
-            endpoint.InstanceId = instanceId;
-            endpoint.InterfaceId = L"\\\\?\\SWD#MIDISRV#" + instanceId + L"#{e7cce071-3c03-423f-88d3-f1045d02552b}";
-            endpoint.EndpointName = common->EndpointName != nullptr ? common->EndpointName : L"";
-            endpoint.UniqueIdentifier = common->UniqueIdentifier != nullptr ? common->UniqueIdentifier : L"";
-            endpoint.TransportCode = common->TransportCode != nullptr ? common->TransportCode : L"";
-            endpoint.TransportId = common->TransportId;
-            endpoint.NativeFormat = common->NativeDataFormat;
-            endpoint.PropertyCount = intPropertyCount;
-
-            *createdEndpointDeviceInterfaceId = CoTaskCopy(endpoint.InterfaceId);
-            m_endpoints.push_back(endpoint);
+            // The real service makes the endpoint visible to apps, and builds its MIDI 1.0 ports,
+            // before this returns. An app can open it in that time.
+            if (duringActivation != nullptr) duringActivation(interfaceId);
 
             return S_OK;
+        }
+
+        // Runs once, inside the next activation, with the new endpoint's interface id
+        void DuringNextActivation(_In_ std::function<void(std::wstring const&)> action)
+        {
+            auto lock = std::scoped_lock{ m_lock };
+            m_duringNextActivation = std::move(action);
         }
 
         STDMETHODIMP UpdateEndpointProperties(LPCWSTR endpointDeviceInterfaceId, ULONG count, const DEVPROPERTY* properties) override
@@ -200,6 +219,7 @@ namespace RtpMidiTest
         std::wstring m_parentId;
         std::vector<ActivatedEndpoint> m_endpoints;
         std::vector<std::pair<std::wstring, uint64_t>> m_latencyWrites;
+        std::function<void(std::wstring const&)> m_duringNextActivation{ nullptr };
         bool m_wrongParent{ false };
         uint32_t m_unknownRemovals{ 0 };
     };

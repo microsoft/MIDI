@@ -224,15 +224,6 @@ namespace glass
                 }
 
                 {
-                    auto neon = MakeDarkTheme(L"Neon Booth", 0x08040F,
-                        { 0x00E5FF, 0x76FF03, 0xFFEA00, 0xFF1744, 0xD500F9, 0x1DE9B6 });
-
-                    neon.MeterUnlitColor = { 255, 255, 255, 18 };
-
-                    list.push_back(neon);
-                }
-
-                {
                     // The one light theme in the original six, and the reason the track color
                     // had to become a property: black tracks on a near-white deck look like dirt.
                     auto daylight = MakeDarkTheme(L"Daylight", 0xF2F3F5,
@@ -1536,6 +1527,423 @@ namespace glass
                     list.push_back(hard);
                 }
 
+                // ---- Insert Coin ----
+                // An arcade panel, and the finger drumming controllers built from its buttons: a
+                // black panel under clear plastic, round domed buttons set into black rings, knobs
+                // with caps in their colors, and a joystick with a ball on top. A button is
+                // colored plastic whether it is lit or not: 62 per cent of its color at rest, the
+                // color outright when on, and two pixels down while it is held.
+
+                {
+                    auto coin = MakeDarkTheme(L"Insert Coin", 0x16171A,
+                        { 0x1F6AE0, 0x22B04B, 0xFFD21F, 0xE3262B, 0x9A48DC, 0xFF7A1A });
+
+                    coin.Deck.Kind = DeckKind::Gradient;
+                    coin.Deck.Color = Rgb(0x16171A);
+                    coin.Deck.GradientEndColor = Rgb(0x0C0D0F);
+
+                    // The white button: the absence of a color.
+                    coin.NeutralColor = Rgb(0xEDEDEA);
+                    coin.InkColor = Rgb(0xEDEDEA);
+
+                    // Colored plastic over black, domed, with a hard spot of light on it.
+                    coin.SwitchShape = SwitchShapeStyle::Round;
+                    coin.SwitchRingColor = Rgb(0x17181B);
+                    coin.PlateColor = Rgb(0x08090A);
+                    coin.PlateEndColor = Rgb(0x08090A);
+                    coin.RestTintOnPlate = true;
+                    coin.SwitchFillAtRest = 0.62;
+                    coin.FillWhenOnPercent = 100;
+                    coin.PlateSheenPercent = 12;
+                    coin.PlateShadePercent = 35;
+                    coin.PlateHighlightPercent = 50;
+                    coin.PressTravelPixels = 2;
+                    coin.RimStrengthPercent = 0;
+                    coin.GlowStrength = 60;
+                    coin.TouchFillPercent = 0;
+                    coin.PlateElevation = 55;
+                    coin.ShadowSpread = 5;
+                    coin.ShadowColor = Rgb(0x000000);
+                    coin.CornerRadius = 10;
+
+                    // A black knob with a cap in its own color, in a ring of eleven lights.
+                    coin.KnobFaceColor = Rgb(0x2E2F33);
+                    coin.KnobFaceEndColor = Rgb(0x0A0A0B);
+                    coin.KnobCapFromHue = true;
+                    coin.KnobCapSizePercent = 60;
+                    coin.PointerOnCap = true;
+                    coin.ValueIndicator = ValueIndicatorStyle::SegmentedLamps;
+                    coin.LampCount = 11;
+                    coin.ArcGlow = true;
+                    coin.ArcTrackColor = { 255, 255, 255, 26 };
+
+                    // A dark slot with a little of its color in it, and a cap in its color.
+                    coin.FaderPlate = FaderPlateStyle::None;
+                    coin.Thumb = ThumbStyle::Hue;
+                    coin.ThumbShadowPercent = 70;
+                    coin.CapLineColor = { 0, 0, 0, 140 };
+                    coin.FaderFillPercent = 45;
+                    coin.TrackColor = Rgb(0x050506);
+
+                    coin.Puck = PuckStyle::Ball;
+                    coin.ValueStrip = ValueStripPlacement::None;
+
+                    // Sections named on a bar of their color, like a cabinet's instruction card, and
+                    // everything that shows something is a window cut into the panel.
+                    coin.SectionHeader = SectionHeaderStyle::FilledBar;
+                    coin.PanelFill = PanelFillStyle::Color;
+                    coin.PanelColor = Rgb(0x1C1D21);
+                    coin.PanelElevation = 0;
+                    coin.PanelOutlineColor = { 255, 255, 255, 13 };
+                    coin.WellFillsControl = true;
+                    coin.WellColor = Rgb(0x08090A);
+
+                    coin.LampShape = LampStyle::Dot;
+                    coin.LampHolderColor = Rgb(0x060607);
+                    coin.LampFillWhenOnPercent = 0;
+
+                    // The sheet of clear plastic over the panel.
+                    coin.Overlay.FaceplateSheenPercent = 8;
+                    coin.Overlay.FaceplateSheenColor = Rgb(0xCDDCF0);
+
+                    coin.MeterSlots = { 1, 2, 3 };
+                    coin.MeterUnlitColor = { 255, 255, 255, 18 };
+
+                    coin.CautionResourceKey = L"ThemeCautionInsertCoin";
+
+                    list.push_back(coin);
+                }
+
+                // ---- Chicago ----
+                // Windows 95, whose code name this was. Two pixel bevels are the whole language:
+                // raised is something to press, pressed is down, and sunken is a white field that
+                // holds a value. On the gray face green, olive and teal measure 2.82, 2.31 and
+                // 2.62 : 1, so every value sits in a white field, where all six clear 4.20.
+
+                {
+                    auto chicago = MakeDarkTheme(L"Chicago", 0x008080,
+                        { 0x000080, 0x008000, 0x808000, 0x800000, 0x800080, 0x008080 });
+
+                    chicago.Deck.Kind = DeckKind::SolidColor;
+                    chicago.Deck.Color = Rgb(0x008080);
+                    chicago.Deck.GradientEndColor = Rgb(0x008080);
+
+                    // White on the desktop (4.77 : 1; black there is 4.40), black in a window.
+                    chicago.InkColor = Rgb(0xFFFFFF);
+                    chicago.SectionInkColor = Rgb(0x000000);
+
+                    chicago.PlateColor = Rgb(0xC0C0C0);
+                    chicago.PlateEndColor = Rgb(0xC0C0C0);
+                    chicago.CornerRadius = 0;
+                    chicago.GlowStrength = 0;
+                    chicago.PlateElevation = 0;
+                    chicago.PlateSheenPercent = 0;
+                    chicago.RimStrengthPercent = 0;
+                    chicago.TouchFillPercent = 14;
+
+                    chicago.BevelPixels = 2;
+                    chicago.BevelHighlightColor = Rgb(0xFFFFFF);
+                    chicago.BevelLightColor = Rgb(0xDFDFDF);
+                    chicago.BevelShadowColor = Rgb(0x808080);
+                    chicago.BevelDarkColor = Rgb(0x000000);
+                    chicago.Latch = LatchStyle::Checkerboard;
+                    chicago.CurrentStep = CurrentStepStyle::DottedFocus;
+                    chicago.SwitchColorTag = true;
+                    chicago.ValueStrip = ValueStripPlacement::None;
+                    chicago.PipeFalloff = 1.0;
+
+                    // A button's name on the button; a pad is lit in its color while it sounds.
+                    chicago.NamesInsideSwitches = true;
+                    chicago.FillWhenOnPercent = 100;
+                    chicago.PadFillWhenOnPercent = 100;
+                    chicago.OnInkColor = Rgb(0xFFFFFF);
+
+                    // A raised gray cap in a sunken white ring that holds the value.
+                    chicago.KnobArcOnFace = true;
+                    chicago.KnobFaceColor = Rgb(0xFFFFFF);
+                    chicago.KnobFaceEndColor = Rgb(0xFFFFFF);
+                    chicago.KnobCapColor = Rgb(0xC0C0C0);
+                    chicago.KnobCapEndColor = Rgb(0xC0C0C0);
+                    chicago.KnobCapSizePercent = 52;
+                    chicago.PointerOnCap = true;
+                    chicago.PointerColor = Rgb(0x000000);
+                    chicago.ArcTrackColor = Rgb(0xDFDFDF);
+
+                    // A white slot, a printed scale, and a raised cap pointing at it.
+                    chicago.FaderPlate = FaderPlateStyle::None;
+                    chicago.Thumb = ThumbStyle::Neutral;
+                    chicago.ThumbColor = Rgb(0xC0C0C0);
+                    chicago.ThumbEndColor = Rgb(0xC0C0C0);
+                    chicago.ThumbShape = ThumbShapeStyle::Pointer;
+                    chicago.TrackColor = Rgb(0xFFFFFF);
+                    chicago.FaderScalePercent = 100;
+
+                    // Readouts are text boxes: black figures in a white field.
+                    chicago.WellFillsControl = true;
+                    chicago.WellColor = Rgb(0xFFFFFF);
+                    chicago.WellInkColor = Rgb(0x000000);
+
+                    // A window, with its title bar in its color; a group inside it is etched.
+                    chicago.SectionHeader = SectionHeaderStyle::FilledBar;
+                    chicago.PanelFill = PanelFillStyle::Color;
+                    chicago.PanelColor = Rgb(0xC0C0C0);
+                    chicago.PanelElevation = 0;
+                    chicago.InsetPanelColor = Rgb(0xC0C0C0);
+
+                    chicago.LampShape = LampStyle::Dot;
+
+                    chicago.MeterSlots = { 1, 2, 3 };
+                    chicago.MeterUnlitColor = Rgb(0xFFFFFF);
+
+                    chicago.KeyWhiteColor = Rgb(0xFFFFFF);
+                    chicago.KeyBlackColor = Rgb(0x000000);
+
+                    chicago.CautionResourceKey = L"ThemeCautionChicago";
+
+                    list.push_back(chicago);
+                }
+
+                // ---- Night Drive ----
+                // The synthwave sunset: a violet sky going to orange at the horizon, a striped sun
+                // sitting on it, and a pink grid floor running away to it, with dark glass, neon
+                // and chrome on top. Neon is for values and chrome for what you hold. White print
+                // is 2.43 : 1 on the bare horizon, so words printed on the deck get a halo.
+
+                {
+                    auto drive = MakeDarkTheme(L"Night Drive", 0x140A2E,
+                        { 0xFF3FA4, 0x2DE2E6, 0xFFD23F, 0xFF7B39, 0xA55CFF, 0x46F2A0 });
+
+                    drive.Deck.Kind = DeckKind::Image;
+                    drive.Deck.ImageFileName = L"Night Drive sky.png";
+                    drive.Deck.ImageRepeats = false;
+                    drive.Deck.Color = Rgb(0x140A2E);
+                    drive.Deck.GradientEndColor = Rgb(0x08040F);
+
+                    drive.Overlay.FloorPercent = 55;
+                    drive.Overlay.FloorHorizonPercent = 58;
+                    drive.Overlay.FloorSpeed = 14;
+
+                    drive.DeckInkHaloColor = { 0x14, 0x0A, 0x2E, 166 };
+                    drive.InkColor = Rgb(0xF3EAFF);
+
+                    drive.GlassColor = Rgb(0x170D2B);
+                    drive.GlassTintPercent = 90;
+                    drive.PlateSheenPercent = 6;
+                    drive.PlateElevation = 40;
+                    drive.CornerRadius = 10;
+                    drive.RimStrengthPercent = 38;
+                    drive.GlowStrength = 60;
+
+                    // Neon: a white hot core down every lit value, and arcs that glow.
+                    drive.ValueCorePercent = 65;
+                    drive.ArcGlow = true;
+                    drive.ArcThickness = 5;
+                    drive.ArcTrackHuePercent = 16;
+
+                    // A switch lights its neon edge and a little of its color; a pad is a tube of
+                    // colored light with a dark violet name.
+                    drive.NamesInsideSwitches = true;
+                    drive.ValueStrip = ValueStripPlacement::None;
+                    drive.FillWhenOnPercent = 18;
+                    drive.PadFillAtRest = 0.10;
+                    drive.PadFillWhenOnPercent = 100;
+                    drive.OnInkColor = Rgb(0x170D2B);
+
+                    // Chrome for everything you hold, and for the names.
+                    drive.ChromeCaps = true;
+                    drive.ChromeLetters = true;
+                    drive.KnobCapColor = Rgb(0xEEF2FF);
+                    drive.KnobCapSizePercent = 70;
+                    drive.PointerOnCap = true;
+                    drive.PointerColor = Rgb(0x170D2B);
+                    drive.FaderPlate = FaderPlateStyle::None;
+                    drive.Thumb = ThumbStyle::Neutral;
+                    drive.ThumbShadowPercent = 75;
+                    drive.TrackColor = { 8, 4, 15, 217 };
+
+                    // Dark glass sections edged in neon, their names cut into the top line.
+                    drive.SectionHeader = SectionHeaderStyle::Notched;
+                    drive.PanelFill = PanelFillStyle::Color;
+                    drive.PanelColor = { 23, 13, 43, 184 };
+                    drive.PanelElevation = 0;
+                    drive.WellFillsControl = true;
+                    drive.WellColor = Rgb(0x0B0618);
+
+                    drive.LampShape = LampStyle::Dot;
+                    drive.LampFillWhenOnPercent = 0;
+
+                    drive.MeterSlots = { 5, 2, 0 };
+                    drive.MeterUnlitColor = { 243, 234, 255, 20 };
+
+                    drive.KeyWhiteColor = Rgb(0xF3EAFF);
+                    drive.KeyBlackColor = Rgb(0x170D2B);
+
+                    drive.CautionResourceKey = L"ThemeCautionNightDrive";
+
+                    list.push_back(drive);
+                }
+
+                // ---- Visor ----
+                // A head-up display, first proposed as Telemetry: thin light on a dark field.
+                // Every control is four corners, closed into a frame only when it is on; knobs are
+                // rings of fine marks with a chevron riding the value, faders are rails pinched by
+                // two chevrons, and the XY field has a reticle. Nothing is filled until it is on.
+
+                {
+                    auto visor = MakeDarkTheme(L"Visor", 0x040A10,
+                        { 0x4ED6FF, 0x5CF5A8, 0xFFC857, 0xFF805F, 0xA993FF, 0xE8F7FF });
+
+                    visor.Deck.Kind = DeckKind::Image;
+                    visor.Deck.ImageFileName = L"Visor dots.png";
+                    visor.Deck.ImageRepeats = true;
+                    visor.Deck.Color = Rgb(0x08182A);
+                    visor.Deck.GradientEndColor = Rgb(0x010306);
+                    visor.Overlay.VignettePercent = 35;
+                    visor.Overlay.VignetteColor = Rgb(0x010306);
+
+                    visor.InkColor = Rgb(0xD2F1FF);
+
+                    // No plate to speak of: a glass so clear it only exists to carry the wash of
+                    // color a control takes when it is on.
+                    visor.GlassColor = Rgb(0x040A10);
+                    visor.GlassTintPercent = 2;
+                    visor.PlateSheenPercent = 0;
+                    visor.PlateElevation = 0;
+                    visor.CornerRadius = 0;
+                    visor.GlowStrength = 30;
+                    visor.TouchFillPercent = 0;
+
+                    visor.RimShape = RimStyle::Corners;
+                    visor.RimStrengthPercent = 60;
+                    visor.FillWhenOnPercent = 16;
+                    visor.OnInkColor = Rgb(0xD2F1FF);
+                    visor.NamesInsideSwitches = true;
+                    visor.ValueStrip = ValueStripPlacement::None;
+
+                    visor.KnobTickCount = 37;
+                    visor.KnobMajorTickEvery = 4;
+                    visor.PointerShape = PointerShapeStyle::Chevron;
+                    visor.ArcThickness = 2;
+                    visor.ArcGlow = true;
+                    visor.ArcTrackHuePercent = 18;
+
+                    visor.ThumbShape = ThumbShapeStyle::Chevrons;
+                    visor.FaderPlate = FaderPlateStyle::None;
+                    visor.FaderScalePercent = 60;
+                    visor.FaderMajorTickEvery = 5;
+                    visor.TrackColor = { 134, 168, 190, 90 };
+
+                    visor.Puck = PuckStyle::Reticle;
+
+                    visor.PanelFill = PanelFillStyle::None;
+                    visor.SectionHeader = SectionHeaderStyle::Caption;
+                    visor.SectionNameInHue = true;
+
+                    visor.LampShape = LampStyle::Dot;
+                    visor.LampFillWhenOnPercent = 0;
+
+                    visor.MeterSlots = { 1, 2, 3 };
+                    visor.MeterUnlitColor = { 134, 168, 190, 40 };
+
+                    visor.KeyWhiteColor = Rgb(0xD2F1FF);
+                    visor.KeyBlackColor = Rgb(0x040A10);
+
+                    visor.CautionResourceKey = L"ThemeCautionVisor";
+
+                    list.push_back(visor);
+                }
+
+                // ---- Good Form ----
+                // Rational industrial design, and the small instruments that took it up again: a
+                // warm light gray panel with a fine grain, light keys that stand on it and take
+                // their color when on, knobs whose caps are their color, slim dark slots, and
+                // small black windows with light figures.
+
+                {
+                    auto form = MakeDarkTheme(L"Good Form", 0xE6E4DF,
+                        { 0xC24A12, 0x3F8434, 0x7A7410, 0xB8254F, 0x2F63B0, 0x1E8586 });
+
+                    form.Deck.Kind = DeckKind::Gradient;
+                    form.Deck.Color = Rgb(0xE9E7E2);
+                    form.Deck.GradientEndColor = Rgb(0xDEDCD6);
+                    form.Overlay.GrainPercent = 25;
+                    form.Overlay.Grain = GrainStyle::Speckle;
+
+                    // The gray key lit is charcoal, the way the current page is.
+                    form.NeutralColor = Rgb(0x2B2B2A);
+                    form.InkColor = Rgb(0x2B2B2A);
+
+                    // A key at rest is the panel's color (1.11 : 1); its soft warm shadow is what
+                    // holds it apart, as on Bone.
+                    form.PlateColor = Rgb(0xF1F0EC);
+                    form.PlateEndColor = Rgb(0xE4E2DC);
+                    form.PlateSheenPercent = 40;
+                    form.PlateShadePercent = 8;
+                    form.PlateElevation = 55;
+                    form.ShadowSpread = 6;
+                    form.ShadowColor = Rgb(0x463E32);
+                    form.GlowStrength = 0;
+                    form.RimStrengthPercent = 0;
+                    form.CornerRadius = 12;
+                    form.TouchFillPercent = 14;
+
+                    // Round transport keys, rounded square pads; on is the color a shade deeper,
+                    // so a white name reads on it (5.45 to 7.39 : 1).
+                    form.SwitchShape = SwitchShapeStyle::Round;
+                    form.PadsFollowSwitchShape = false;
+                    form.FillWhenOnPercent = 100;
+                    form.OnLiftPercent = -12;
+                    form.OnInkColor = Rgb(0xFFFFFF);
+                    form.NamesInsideSwitches = true;
+                    form.Labels = LabelPlacement::Above;
+                    form.ValueStrip = ValueStripPlacement::None;
+
+                    // The cap is the knob: its color, a line on it, a thin arc and printed marks.
+                    form.KnobCapFromHue = true;
+                    form.KnobCapSizePercent = 80;
+                    form.PointerOnCap = true;
+                    form.KnobTickCount = 11;
+                    form.ArcThickness = 2;
+                    form.ArcTrackColor = Rgb(0xCFCDC7);
+
+                    // A slim dark slot, no fill, and a light key for a cap with a line of its color.
+                    form.FaderPlate = FaderPlateStyle::None;
+                    form.FaderFillPercent = 0;
+                    form.Thumb = ThumbStyle::Neutral;
+                    form.ThumbColor = Rgb(0xFBFAF8);
+                    form.ThumbEndColor = Rgb(0xE4E2DC);
+                    form.CapLineWide = true;
+                    form.ThumbShadowPercent = 45;
+                    form.TrackColor = Rgb(0x2B2B2A);
+                    form.FaderScalePercent = 65;
+
+                    // Black windows with light figures: six colors dark enough for a light panel
+                    // are too dark for small numbers on black (3.02 to 4.21 : 1); these are 16.29.
+                    form.WellFillsControl = true;
+                    form.WellColor = Rgb(0x131313);
+                    form.WellInkColor = Rgb(0xF1F0EC);
+                    form.RecessLipColor = { 255, 255, 255, 204 };
+
+                    // A section is only a printed caption, and charcoal rules divide the groups.
+                    form.PanelFill = PanelFillStyle::None;
+                    form.SectionHeader = SectionHeaderStyle::Caption;
+                    form.RuleColor = { 43, 43, 42, 102 };
+                    form.RuleFades = false;
+
+                    form.LampShape = LampStyle::Dot;
+                    form.LampHolderColor = Rgb(0x2B2B2A);
+                    form.LampFillWhenOnPercent = 0;
+
+                    form.MeterSlots = { 1, 2, 3 };
+
+                    form.KeyWhiteColor = Rgb(0xF1F0EC);
+                    form.KeyBlackColor = Rgb(0x2B2B2A);
+
+                    form.CautionResourceKey = L"ThemeCautionGoodForm";
+
+                    list.push_back(form);
+                }
+
                 // Studio Dark stays first as the default; the rest are alphabetical, so a family
                 // like Terminal Amber and Terminal Green sits together in the picker.
                 std::sort(list.begin() + 1, list.end(), [](Theme const& a, Theme const& b)
@@ -1772,7 +2180,106 @@ namespace glass
             return well;
         }
 
+        // A beveled theme sinks everything that holds a value into a field of its well color:
+        // the windows, a knob's face and a fader's slot. The colors are only ever seen there.
+        if (theme.BevelPixels > 0 && theme.WellFillsControl && theme.WellColor.A != 0)
+        {
+            auto well = theme.WellColor;
+            well.A = 255;
+
+            return well;
+        }
+
         return theme.Deck.Color;
+    }
+
+    _Use_decl_annotations_
+    ThemeColor EffectiveBevelHighlightColor(Theme const& theme) noexcept
+    {
+        return theme.BevelHighlightColor.A != 0 ? theme.BevelHighlightColor : ThemeColor{ 255, 255, 255, 255 };
+    }
+
+    _Use_decl_annotations_
+    ThemeColor EffectiveBevelLightColor(Theme const& theme) noexcept
+    {
+        if (theme.BevelLightColor.A != 0)
+        {
+            return theme.BevelLightColor;
+        }
+
+        auto const plate = theme.PlateColor.A != 0 ? theme.PlateColor : theme.Deck.Color;
+
+        auto const lift = [](uint8_t channel) noexcept
+            {
+                return static_cast<uint8_t>(std::clamp(std::lround(channel + (255.0 - channel) * 0.5), 0L, 255L));
+            };
+
+        return { lift(plate.R), lift(plate.G), lift(plate.B), 255 };
+    }
+
+    _Use_decl_annotations_
+    ThemeColor EffectiveBevelShadowColor(Theme const& theme) noexcept
+    {
+        if (theme.BevelShadowColor.A != 0)
+        {
+            return theme.BevelShadowColor;
+        }
+
+        auto shade = ShadeBy(theme.PlateColor.A != 0 ? theme.PlateColor : theme.Deck.Color, 0.33);
+        shade.A = 255;
+
+        return shade;
+    }
+
+    _Use_decl_annotations_
+    ThemeColor EffectiveBevelDarkColor(Theme const& theme) noexcept
+    {
+        return theme.BevelDarkColor.A != 0 ? theme.BevelDarkColor : ThemeColor{ 0, 0, 0, 255 };
+    }
+
+    _Use_decl_annotations_
+    ThemeColor EffectiveChromeColor(Theme const& theme, int32_t stop) noexcept
+    {
+        // A cool sky, the light and the dark sides of a hard horizon, and a sunset in the ground.
+        constexpr ThemeColor defaults[ChromeColorCount]
+        {
+            { 0xEE, 0xF2, 0xFF, 255 },
+            { 0x8E, 0x97, 0xC6, 255 },
+            { 0x2A, 0x23, 0x50, 255 },
+            { 0xC4, 0x53, 0x9A, 255 },
+        };
+
+        auto const at = static_cast<size_t>(std::clamp(stop, 0, ChromeColorCount - 1));
+
+        return theme.ChromeColors[at].A != 0 ? theme.ChromeColors[at] : defaults[at];
+    }
+
+    _Use_decl_annotations_
+    ThemeColor EffectiveFloorColor(Theme const& theme) noexcept
+    {
+        if (theme.Overlay.FloorColor.A != 0)
+        {
+            return theme.Overlay.FloorColor;
+        }
+
+        auto first = theme.HueSlots[0];
+        first.A = 255;
+
+        return first;
+    }
+
+    _Use_decl_annotations_
+    bool InsetTakesSectionInk(Theme const& theme) noexcept
+    {
+        if (theme.InsetPanelColor.A == 0 || theme.SectionInkColor.A == 0 || theme.InkColor.A == 0)
+        {
+            return false;
+        }
+
+        auto inset = theme.InsetPanelColor;
+        inset.A = 255;
+
+        return ContrastRatio(theme.InkColor, inset) < 4.5 && ContrastRatio(theme.SectionInkColor, inset) >= 4.5;
     }
 
     _Use_decl_annotations_

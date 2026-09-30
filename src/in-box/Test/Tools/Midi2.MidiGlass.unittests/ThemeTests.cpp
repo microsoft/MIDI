@@ -23,20 +23,24 @@ void ThemeTests::ShipsTheThemesTheDesignNames()
 {
     auto const& themes = glass::BuiltInThemes();
 
-    VERIFY_ARE_EQUAL(size_t{ 21 }, themes.size());
+    VERIFY_ARE_EQUAL(size_t{ 25 }, themes.size());
 
     wchar_t const* expected[]
     {
-        L"Studio Dark", L"Neon Booth", L"Daylight", L"Terminal Amber", L"Blueprint",
+        L"Studio Dark", L"Daylight", L"Terminal Amber", L"Blueprint",
         L"High contrast", L"Tonal Light", L"Tonal Dark", L"Bigwig", L"Bone",
         L"Cathode", L"Terminal Green", L"Jove", L"Supersaw", L"Five-iSH", L"Airy System",
         L"Off-world Colonies", L"Groovy", L"Groovy Dark", L"Soft Sector", L"Hard Sector",
+        L"Insert Coin", L"Chicago", L"Night Drive", L"Visor", L"Good Form",
     };
 
     for (auto const* name : expected)
     {
         VERIFY_IS_NOT_NULL(glass::FindBuiltInTheme(name));
     }
+
+    // Retired to make room for the sixth round. A layout that names it opens in the default.
+    VERIFY_IS_NULL(glass::FindBuiltInTheme(L"Neon Booth"));
 
     // Studio Dark is the default and the one that stays readable on the densest page, so it is
     // first rather than alphabetical.
@@ -355,7 +359,7 @@ void ThemeTests::OnlyALightThemeRaisesItsRestingRim()
     // Nothing is saturated at rest, and the plain dark themes keep the quarter-strength rim that
     // rule produces. This is the guard on that: a theme needing a stronger hairline must not
     // drag the others up with it.
-    for (auto const* name : { L"Studio Dark", L"Neon Booth", L"Blueprint",
+    for (auto const* name : { L"Studio Dark", L"Blueprint",
         L"High contrast", L"Tonal Dark" })
     {
         auto const* theme = glass::FindBuiltInTheme(name);
@@ -399,10 +403,12 @@ void ThemeTests::OnlyBoneMovesTheShadowOffItsShippedGeometry()
     // knob bolted to a steel panel casts a real shadow on it, and that shadow is part of what
     // makes the control read as an object sitting on a surface rather than as paint. Airy
     // System's controls stand off brushed metal the same way, Off-world Colonies' metal is
-    // bolted to a wall, and the two Sector themes' keys stand up off their cases.
+    // bolted to a wall, and the two Sector themes' keys stand up off their cases. Insert Coin's
+    // rings stand on a panel, and Good Form's keys stand on a light one the way Bone's do.
     wchar_t const* const raised[]
     {
         L"Bone", L"Jove", L"Supersaw", L"Airy System", L"Off-world Colonies", L"Soft Sector", L"Hard Sector",
+        L"Insert Coin", L"Good Form",
     };
 
     auto const isRaised = [&raised](std::wstring const& name)
@@ -479,7 +485,13 @@ void ThemeTests::OnlyATubeThemeLaysAnOverlayOverTheDeck()
         if (!IsTubeTheme(theme))
         {
             VERIFY_ARE_EQUAL(0, theme.Overlay.ScanLinePitch);
-            VERIFY_ARE_EQUAL(0, theme.Overlay.FaceplateSheenPercent);
+
+            // Insert Coin's panel is under a sheet of clear plastic, which reflects the room the
+            // way a terminal's glass does.
+            if (theme.Name != L"Insert Coin")
+            {
+                VERIFY_ARE_EQUAL(0, theme.Overlay.FaceplateSheenPercent);
+            }
 
             // Off-world Colonies' corners fall into the dark the way a tube's glass does, and
             // it is the one wall it rains on.
@@ -487,6 +499,14 @@ void ThemeTests::OnlyATubeThemeLaysAnOverlayOverTheDeck()
             {
                 VERIFY_IS_GREATER_THAN(theme.Overlay.VignettePercent, 0);
                 VERIFY_IS_GREATER_THAN(theme.Overlay.RainPercent, 0);
+                continue;
+            }
+
+            // A visor's display is brightest in the middle, and falls off to its edges.
+            if (theme.Name == L"Visor")
+            {
+                VERIFY_IS_GREATER_THAN(theme.Overlay.VignettePercent, 0);
+                VERIFY_ARE_EQUAL(0, theme.Overlay.RainPercent);
                 continue;
             }
 
@@ -866,6 +886,7 @@ namespace
     wchar_t const* const LaterCompThemeNames[]
     {
         L"Off-world Colonies", L"Groovy", L"Groovy Dark", L"Soft Sector", L"Hard Sector",
+        L"Insert Coin", L"Chicago", L"Night Drive", L"Visor", L"Good Form",
     };
 
     bool IsLaterCompTheme(_In_ glass::Theme const& theme) noexcept
@@ -935,6 +956,7 @@ void ThemeTests::OnlyAPanelThemeCarriesAGrainOrANeutral()
         L"Jove", L"Supersaw", L"Bigwig", L"Bone", L"Five-iSH", L"Airy System",
         L"Tonal Light", L"Tonal Dark", L"Cathode", L"Terminal Amber", L"Terminal Green",
         L"Off-world Colonies", L"Groovy", L"Groovy Dark", L"Soft Sector", L"Hard Sector",
+        L"Insert Coin", L"Chicago", L"Night Drive", L"Visor", L"Good Form",
     };
 
     auto const fromAComp = [&drawnFromAComp](std::wstring const& name)
@@ -1016,6 +1038,60 @@ void ThemeTests::OnlyAPanelThemeCarriesAGrainOrANeutral()
         VERIFY_IS_FALSE(theme.RestTintOnPlate);
         VERIFY_IS_FALSE(theme.Deck.ImageRepeats);
         VERIFY_ARE_EQUAL(0, theme.Overlay.RainPercent);
+
+        // and none of what the sixth round added
+        VERIFY_ARE_EQUAL(-1, theme.LampFillWhenOnPercent);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.SwitchRingColor.A);
+        VERIFY_IS_TRUE(theme.PadsFollowSwitchShape);
+        VERIFY_IS_FALSE(theme.KnobCapFromHue);
+        VERIFY_IS_TRUE(theme.Puck == glass::PuckStyle::Disc);
+        VERIFY_IS_TRUE(theme.ThumbShape == glass::ThumbShapeStyle::Bar);
+        VERIFY_IS_TRUE(theme.PointerShape == glass::PointerShapeStyle::Line);
+        VERIFY_ARE_EQUAL(0, theme.KnobMajorTickEvery);
+        VERIFY_ARE_EQUAL(0, theme.FaderMajorTickEvery);
+        VERIFY_IS_FALSE(theme.KnobArcOnFace);
+        VERIFY_IS_TRUE(theme.RimShape == glass::RimStyle::Outline);
+        VERIFY_ARE_EQUAL(0, theme.BevelPixels);
+        VERIFY_IS_TRUE(theme.Latch == glass::LatchStyle::Lit);
+        VERIFY_IS_TRUE(theme.CurrentStep == glass::CurrentStepStyle::Lit);
+        VERIFY_IS_FALSE(theme.SwitchColorTag);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.DeckInkHaloColor.A);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.WellInkColor.A);
+        VERIFY_IS_FALSE(theme.ChromeCaps);
+        VERIFY_IS_FALSE(theme.ChromeLetters);
+        VERIFY_ARE_EQUAL(0, theme.Overlay.FloorPercent);
+    }
+
+    // The earlier comps asked for none of the sixth round's properties either, so they come out
+    // exactly as they did before it.
+    wchar_t const* const sixthRound[]
+    {
+        L"Insert Coin", L"Chicago", L"Night Drive", L"Visor", L"Good Form",
+    };
+
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        if (std::find_if(std::begin(sixthRound), std::end(sixthRound),
+            [&theme](wchar_t const* one) { return theme.Name == one; }) != std::end(sixthRound))
+        {
+            continue;
+        }
+
+        VERIFY_ARE_EQUAL(-1, theme.LampFillWhenOnPercent);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.SwitchRingColor.A);
+        VERIFY_IS_TRUE(theme.SwitchShape != glass::SwitchShapeStyle::Round);
+        VERIFY_IS_FALSE(theme.KnobCapFromHue);
+        VERIFY_IS_TRUE(theme.Puck == glass::PuckStyle::Disc);
+        VERIFY_IS_TRUE(theme.ThumbShape == glass::ThumbShapeStyle::Bar);
+        VERIFY_IS_TRUE(theme.PointerShape == glass::PointerShapeStyle::Line);
+        VERIFY_IS_FALSE(theme.KnobArcOnFace);
+        VERIFY_IS_TRUE(theme.RimShape == glass::RimStyle::Outline);
+        VERIFY_ARE_EQUAL(0, theme.BevelPixels);
+        VERIFY_IS_FALSE(theme.SwitchColorTag);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.DeckInkHaloColor.A);
+        VERIFY_IS_FALSE(theme.ChromeCaps);
+        VERIFY_IS_FALSE(theme.ChromeLetters);
+        VERIFY_ARE_EQUAL(0, theme.Overlay.FloorPercent);
     }
 
     // The grain is the panel's texture rather than a second color over it, so it belongs to
@@ -1715,7 +1791,8 @@ void ThemeTests::TheDeckColorIsReadDownThePage()
 void ThemeTests::EveryThemesInkReadsOnItsInsetPanel()
 {
     // A section inside a section is printed in the theme's own ink, so an inset panel has to be
-    // one that ink reads on. Soft Sector once shipped a charcoal inset under charcoal print.
+    // one that ink reads on. Soft Sector once shipped a charcoal inset under charcoal print. A
+    // theme whose own ink is for the deck prints its insets in the section's ink instead.
     for (auto const& theme : glass::BuiltInThemes())
     {
         if (theme.InsetPanelColor.A == 0)
@@ -1724,9 +1801,10 @@ void ThemeTests::EveryThemesInkReadsOnItsInsetPanel()
         }
 
         auto const end = theme.InsetPanelEndColor.A != 0 ? theme.InsetPanelEndColor : theme.InsetPanelColor;
+        auto const ink = glass::InsetTakesSectionInk(theme) ? theme.SectionInkColor : theme.InkColor;
 
-        auto const top = glass::ContrastRatio(theme.InkColor, theme.InsetPanelColor);
-        auto const bottom = glass::ContrastRatio(theme.InkColor, end);
+        auto const top = glass::ContrastRatio(ink, theme.InsetPanelColor);
+        auto const bottom = glass::ContrastRatio(ink, end);
 
         Log::Comment(String().Format(L"%s: ink on its inset panel %.2f to %.2f : 1",
             theme.Name.c_str(), std::min(top, bottom), std::max(top, bottom)));
@@ -2750,4 +2828,295 @@ void ThemeTests::OffWorldRepeatsItsWallAndDirtiesItsSections()
     auto const colors = glass::ResolveControlColors(button, *wall);
 
     VERIFY_IS_GREATER_THAN_OR_EQUAL(glass::ContrastRatio(colors.OnPlate, colors.Plate), 1.15);
+}
+
+// ============================================================================
+// Insert Coin, Chicago, Night Drive, Visor and Good Form, and what they added.
+// ============================================================================
+
+void ThemeTests::ARoundButtonIsForButtonsTogglesAndPads()
+{
+    auto const* coin = glass::FindBuiltInTheme(L"Insert Coin");
+    VERIFY_IS_NOT_NULL(coin);
+
+    VERIFY_IS_TRUE(glass::IsRoundSwitch(*coin, glass::ControlKind::Button));
+    VERIFY_IS_TRUE(glass::IsRoundSwitch(*coin, glass::ControlKind::Toggle));
+    VERIFY_IS_TRUE(glass::IsRoundSwitch(*coin, glass::ControlKind::Pad));
+
+    // A page tab is a word and a lamp is a light, and neither is an arcade button.
+    VERIFY_IS_FALSE(glass::IsRoundSwitch(*coin, glass::ControlKind::PageTab));
+    VERIFY_IS_FALSE(glass::IsRoundSwitch(*coin, glass::ControlKind::Lamp));
+    VERIFY_IS_FALSE(glass::IsRoundSwitch(*coin, glass::ControlKind::Knob));
+
+    // Good Form's transport keys are round and its pads are not.
+    auto const* form = glass::FindBuiltInTheme(L"Good Form");
+    VERIFY_IS_NOT_NULL(form);
+
+    VERIFY_IS_TRUE(glass::IsRoundSwitch(*form, glass::ControlKind::Button));
+    VERIFY_IS_FALSE(glass::IsRoundSwitch(*form, glass::ControlKind::Pad));
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, form->SwitchRingColor.A);
+
+    VERIFY_IS_FALSE(glass::IsRoundSwitch(*glass::FindBuiltInTheme(L"Studio Dark"), glass::ControlKind::Button));
+
+    // At rest a button is its own colored plastic, 62 per cent of the way from black.
+    glass::Control button{};
+    button.Kind = glass::ControlKind::Button;
+    button.HueSlot = 3;
+
+    auto const colors = glass::ResolveControlColors(button, *coin);
+
+    auto expected = glass::BlendOver(coin->PlateColor, coin->HueSlots[3], coin->SwitchFillAtRest);
+    expected.A = 255;
+
+    VERIFY_IS_TRUE((colors.Plate == expected));
+    VERIFY_IS_TRUE((colors.OnPlate == coin->HueSlots[3]));
+}
+
+void ThemeTests::AKnobCapCanBeItsOwnColorWithAPointerThatReads()
+{
+    for (auto const* name : { L"Insert Coin", L"Good Form" })
+    {
+        auto const* theme = glass::FindBuiltInTheme(name);
+        VERIFY_IS_NOT_NULL(theme);
+        VERIFY_IS_TRUE(theme->KnobCapFromHue);
+
+        for (int32_t slot = 0; slot < glass::ThemeHueSlotCount; ++slot)
+        {
+            glass::Control knob{};
+            knob.Kind = glass::ControlKind::Knob;
+            knob.HueSlot = slot;
+
+            auto const colors = glass::ResolveControlColors(knob, *theme);
+            auto const middle = glass::BlendOver(colors.KnobCap, colors.KnobCapEnd, 0.5);
+
+            // Lit at the top and deeper at the edge, and the line on it always reads.
+            VERIFY_IS_GREATER_THAN(glass::RelativeLuminance(colors.KnobCap), glass::RelativeLuminance(colors.KnobCapEnd));
+            VERIFY_IS_GREATER_THAN_OR_EQUAL(glass::ContrastRatio(colors.Pointer, middle), 3.0);
+        }
+    }
+
+    // White on blue, near black on yellow: whichever reads.
+    auto const* coin = glass::FindBuiltInTheme(L"Insert Coin");
+
+    glass::Control knob{};
+    knob.Kind = glass::ControlKind::Knob;
+
+    knob.HueSlot = 0;
+    VERIFY_IS_TRUE((glass::ResolveControlColors(knob, *coin).Pointer == glass::ThemeColor{ 255, 255, 255, 255 }));
+
+    knob.HueSlot = 2;
+    VERIFY_IS_TRUE((glass::ResolveControlColors(knob, *coin).Pointer == glass::ThemeColor{ 0x11, 0x11, 0x11, 255 }));
+
+    // A fader is not a knob.
+    glass::Control fader{};
+    fader.Kind = glass::ControlKind::Fader;
+    fader.HueSlot = 0;
+
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, glass::ResolveControlColors(fader, *glass::FindBuiltInTheme(L"Good Form")).KnobCap.A);
+}
+
+void ThemeTests::ALampCanBeALensWhileSwitchesFill()
+{
+    for (auto const* name : { L"Insert Coin", L"Night Drive", L"Visor", L"Good Form" })
+    {
+        auto const* theme = glass::FindBuiltInTheme(name);
+        VERIFY_IS_NOT_NULL(theme);
+
+        VERIFY_ARE_EQUAL(0, glass::FillWhenOnFor(*theme, glass::ControlKind::Lamp));
+        VERIFY_IS_GREATER_THAN(glass::FillWhenOnFor(*theme, glass::ControlKind::Button), 0);
+        VERIFY_IS_TRUE(theme->LampShape == glass::LampStyle::Dot);
+    }
+
+    // Below zero, a lamp is a switch like any other.
+    auto const* chicago = glass::FindBuiltInTheme(L"Chicago");
+    VERIFY_ARE_EQUAL(chicago->FillWhenOnPercent, glass::FillWhenOnFor(*chicago, glass::ControlKind::Lamp));
+
+    auto const* studio = glass::FindBuiltInTheme(L"Studio Dark");
+    VERIFY_ARE_EQUAL(studio->FillWhenOnPercent, glass::FillWhenOnFor(*studio, glass::ControlKind::Lamp));
+}
+
+void ThemeTests::ChicagoLatchesWithACheckerboardAndMeasuresInItsWindows()
+{
+    auto const* chicago = glass::FindBuiltInTheme(L"Chicago");
+    VERIFY_IS_NOT_NULL(chicago);
+
+    // The small dark palette is only ever seen in a white field, so it is measured there. On
+    // the gray face green, olive and teal are under 3 : 1.
+    VERIFY_IS_TRUE((glass::SlotBackdrop(*chicago) == glass::ThemeColor{ 255, 255, 255, 255 }));
+    VERIFY_IS_LESS_THAN(glass::ContrastRatio(chicago->HueSlots[2], chicago->PlateColor), glass::MinimumSlotContrast);
+
+    for (auto const& slot : glass::MeasureContrast(*chicago))
+    {
+        VERIFY_IS_TRUE(slot.MeetsMinimum);
+    }
+
+    VERIFY_IS_TRUE(glass::LatchesOn(glass::ControlKind::Toggle));
+    VERIFY_IS_TRUE(glass::LatchesOn(glass::ControlKind::PageTab));
+    VERIFY_IS_FALSE(glass::LatchesOn(glass::ControlKind::Button));
+
+    glass::Control control{};
+    control.HueSlot = 0;
+
+    // A toggle that is on is pressed and checkered: no color at all.
+    control.Kind = glass::ControlKind::Toggle;
+    auto const toggle = glass::ResolveControlColors(control, *chicago);
+
+    auto checkered = glass::BlendOver(chicago->PlateColor, glass::EffectiveBevelHighlightColor(*chicago), 0.5);
+    checkered.A = 255;
+
+    VERIFY_IS_TRUE((toggle.OnPlate == checkered));
+
+    // A button that is on is only pressed, and a pad lights in its color while it sounds.
+    control.Kind = glass::ControlKind::Button;
+    VERIFY_IS_TRUE((glass::ResolveControlColors(control, *chicago).OnPlate == chicago->PlateColor));
+
+    control.Kind = glass::ControlKind::Pad;
+    VERIFY_IS_TRUE((glass::ResolveControlColors(control, *chicago).OnPlate == chicago->HueSlots[0]));
+
+    // Black print in a window, white print on the desktop, and both read.
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(glass::ContrastRatio(chicago->SectionInkColor, chicago->PanelColor), 4.5);
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(glass::ContrastRatio(chicago->InkColor, chicago->Deck.Color), 4.5);
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(glass::ContrastRatio(chicago->WellInkColor, chicago->WellColor), 4.5);
+
+    // A group box inside a window is printed in the window's black. Five-iSH's own ink already
+    // reads on its insets, so it keeps it.
+    VERIFY_IS_TRUE(glass::InsetTakesSectionInk(*chicago));
+    VERIFY_IS_FALSE(glass::InsetTakesSectionInk(*glass::FindBuiltInTheme(L"Five-iSH")));
+}
+
+void ThemeTests::ABevelFallsBackToThePlate()
+{
+    glass::Theme theme{};
+    theme.BevelPixels = 2;
+    theme.PlateColor = { 0x80, 0x80, 0x80, 255 };
+
+    // White and black at the two outside edges, and the plate lifted and shaded between them.
+    VERIFY_IS_TRUE((glass::EffectiveBevelHighlightColor(theme) == glass::ThemeColor{ 255, 255, 255, 255 }));
+    VERIFY_IS_TRUE((glass::EffectiveBevelDarkColor(theme) == glass::ThemeColor{ 0, 0, 0, 255 }));
+    VERIFY_IS_GREATER_THAN(glass::RelativeLuminance(glass::EffectiveBevelLightColor(theme)), glass::RelativeLuminance(theme.PlateColor));
+    VERIFY_IS_LESS_THAN(glass::RelativeLuminance(glass::EffectiveBevelShadowColor(theme)), glass::RelativeLuminance(theme.PlateColor));
+
+    // Named, they are what they are named.
+    auto const* chicago = glass::FindBuiltInTheme(L"Chicago");
+
+    VERIFY_IS_TRUE((glass::EffectiveBevelLightColor(*chicago) == chicago->BevelLightColor));
+    VERIFY_IS_TRUE((glass::EffectiveBevelShadowColor(*chicago) == chicago->BevelShadowColor));
+
+    // The renderer gets them only where the theme asks for a bevel.
+    glass::Control button{};
+    button.Kind = glass::ControlKind::Button;
+
+    VERIFY_ARE_EQUAL(uint8_t{ 255 }, glass::ResolveControlColors(button, *chicago).BevelDark.A);
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, glass::ResolveControlColors(button, *glass::FindBuiltInTheme(L"Studio Dark")).BevelDark.A);
+}
+
+void ThemeTests::NightDriveDrawsAFloorAndChromeOverItsPicture()
+{
+    auto const* drive = glass::FindBuiltInTheme(L"Night Drive");
+    VERIFY_IS_NOT_NULL(drive);
+
+    // The sky is one picture fitted to the page, so the sun stays round. The grid is drawn by
+    // the engine, in the first color, from the picture's own horizon.
+    VERIFY_IS_TRUE(drive->Deck.Kind == glass::DeckKind::Image);
+    VERIFY_IS_FALSE(drive->Deck.ImageRepeats);
+    VERIFY_IS_FALSE(drive->Deck.ImageFileName.empty());
+    VERIFY_IS_GREATER_THAN(drive->Overlay.FloorPercent, 0);
+    VERIFY_IS_FALSE(drive->Overlay.IsEmpty());
+    VERIFY_IS_TRUE((glass::EffectiveFloorColor(*drive) == drive->HueSlots[0]));
+
+    // White on the bare horizon is 2.43 : 1, so anything printed on the deck has a halo.
+    VERIFY_IS_GREATER_THAN(static_cast<int32_t>(drive->DeckInkHaloColor.A), 0);
+
+    VERIFY_IS_TRUE(drive->ChromeCaps);
+    VERIFY_IS_TRUE(drive->ChromeLetters);
+
+    // An empty chrome stop is a cool sky over a hard horizon: light above, dark below.
+    VERIFY_IS_GREATER_THAN(
+        glass::RelativeLuminance(glass::EffectiveChromeColor(*drive, 1)),
+        glass::RelativeLuminance(glass::EffectiveChromeColor(*drive, 2)));
+
+    // A lit pad is a tube of colored light with a dark violet name that reads on every color.
+    for (int32_t slot = 0; slot < glass::ThemeHueSlotCount; ++slot)
+    {
+        glass::Control pad{};
+        pad.Kind = glass::ControlKind::Pad;
+        pad.HueSlot = slot;
+
+        auto const colors = glass::ResolveControlColors(pad, *drive);
+
+        VERIFY_IS_TRUE((colors.SwitchInkOn == drive->OnInkColor));
+    }
+
+    // No floor on a theme that did not ask for one.
+    VERIFY_ARE_EQUAL(0, glass::FindBuiltInTheme(L"Studio Dark")->Overlay.FloorPercent);
+}
+
+void ThemeTests::VisorIsCornersAndThinLight()
+{
+    auto const* visor = glass::FindBuiltInTheme(L"Visor");
+    VERIFY_IS_NOT_NULL(visor);
+
+    VERIFY_IS_TRUE(visor->RimShape == glass::RimStyle::Corners);
+    VERIFY_IS_TRUE(visor->PointerShape == glass::PointerShapeStyle::Chevron);
+    VERIFY_IS_TRUE(visor->ThumbShape == glass::ThumbShapeStyle::Chevrons);
+    VERIFY_IS_TRUE(visor->Puck == glass::PuckStyle::Reticle);
+
+    // A scale you can read: a longer mark every so often, round the knob and beside the fader.
+    VERIFY_IS_GREATER_THAN(visor->KnobTickCount, visor->KnobMajorTickEvery);
+    VERIFY_IS_GREATER_THAN(visor->KnobMajorTickEvery, 0);
+    VERIFY_IS_GREATER_THAN(visor->FaderMajorTickEvery, 0);
+    VERIFY_IS_GREATER_THAN(visor->FaderScalePercent, 0);
+
+    // The dots repeat at their own size rather than being stretched to the page.
+    VERIFY_IS_TRUE(visor->Deck.Kind == glass::DeckKind::Image);
+    VERIFY_IS_TRUE(visor->Deck.ImageRepeats);
+
+    // Nothing is filled until it is on, and on is a wash the name still reads on.
+    for (int32_t slot = 0; slot < glass::ThemeHueSlotCount; ++slot)
+    {
+        glass::Control button{};
+        button.Kind = glass::ControlKind::Button;
+        button.HueSlot = slot;
+
+        auto const colors = glass::ResolveControlColors(button, *visor);
+
+        VERIFY_IS_LESS_THAN(static_cast<int32_t>(colors.Plate.A), 16);
+        VERIFY_IS_GREATER_THAN_OR_EQUAL(
+            glass::ContrastRatio(colors.SwitchInkOn, glass::BlendOver(colors.OnPlate, colors.OnPlateEnd, 0.5)), 4.5);
+    }
+}
+
+void ThemeTests::GoodFormDeepensALitKeySoItsNameReads()
+{
+    auto const* form = glass::FindBuiltInTheme(L"Good Form");
+    VERIFY_IS_NOT_NULL(form);
+
+    VERIFY_IS_LESS_THAN(form->OnLiftPercent, 0);
+
+    for (int32_t slot = 0; slot < glass::ThemeHueSlotCount; ++slot)
+    {
+        glass::Control button{};
+        button.Kind = glass::ControlKind::Button;
+        button.HueSlot = slot;
+
+        auto const colors = glass::ResolveControlColors(button, *form);
+
+        // A shade deeper than the color, with a white name on it.
+        VERIFY_IS_LESS_THAN(glass::RelativeLuminance(colors.OnPlate), glass::RelativeLuminance(form->HueSlots[static_cast<size_t>(slot)]));
+        VERIFY_IS_TRUE((colors.SwitchInkOn == glass::ThemeColor{ 255, 255, 255, 255 }));
+    }
+
+    // Light figures in a black window, rather than six colors too dark to read there.
+    glass::Control readout{};
+    readout.Kind = glass::ControlKind::Readout;
+    readout.HueSlot = 0;
+
+    auto const colors = glass::ResolveControlColors(readout, *form);
+
+    VERIFY_IS_TRUE((colors.WellInk == form->WellInkColor));
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(glass::ContrastRatio(colors.WellInk, form->WellColor), 7.0);
+
+    // A key at rest is the panel's own color, so its shadow is its structure.
+    VERIFY_IS_LESS_THAN(glass::ContrastRatio(form->PlateColor, form->Deck.Color), 1.5);
+    VERIFY_IS_GREATER_THAN(form->PlateElevation, 0);
 }

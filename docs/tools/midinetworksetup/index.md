@@ -1,6 +1,6 @@
 ---
 layout: tools_page
-title: Network MIDI Setup
+title: Windows MIDI Network Setup
 tool: midinetworksetup
 description: Connect this PC to MIDI devices over your local network
 icon: /assets/images/midinetworksetup.png
@@ -10,13 +10,26 @@ categories:
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
 
-Network MIDI Setup connects this PC to MIDI devices over your local network, with no traditional MIDI cables between them. If you have an interface, a synth, or another computer that speaks Network MIDI 2.0 over Ethernet or WiFi, this is where you set up the connection.
+Windows MIDI Network Setup connects this PC to MIDI devices over your local network, with no traditional MIDI cables between them. If you have an interface, a synth, or another computer that speaks Network MIDI 2.0 over Ethernet or WiFi, this is where you set up the connection.
 
 Once a connection is made, the device appears in Windows like any other MIDI device, so your DAW and other MIDI software can use it straight away.
 
-![The Network MIDI Setup main window]({{ site.baseurl }}/assets/images/midinetworksetup.png)
+## Quick start
 
-There are two pages, each with a different but related function:
+Devices that announce themselves on your network appear on their own, so there's nothing to scan or search for.
+
+![The Windows MIDI Network Setup window, with numbered callouts on the list of pages, a device's name and address, its Connect button, a connected device's round trip graph, a device's Details, and Connect to a device by address]({{ site.baseurl }}/assets/images/midinetworksetup-quick-start.png)
+
+1. **The pages** are down the left. **Network devices** and **This PC** are described below the picture, and **Transport settings** holds the settings shared by every connection. The **RTP-MIDI** pages appear only when the RTP-MIDI transport is installed.
+2. **Each device** shows its name, where it is on the network, and whether it's available or connected.
+3. **Connect** connects to the device. You're asked what to call it in Windows, and then it shows up in your DAW and other MIDI apps like any other MIDI device.
+4. **A connected device** shows a graph of its round trip time, which is how long a message takes to get there and back. **Disconnect and forget** ends the connection.
+5. **Details** shows the device's identity, its network addresses, and its endpoint device ID.
+6. **Connect to a device by address** is for a device that doesn't announce itself on the network.
+
+If a connection sits at **Connecting**, look at the other device. It may be waiting for you to allow the connection. See [The other device may be waiting for you too](#the-other-device-may-be-waiting-for-you-too).
+
+**Network devices** and **This PC** have different but related jobs:
 
 - **Network devices** is for connecting *this PC to something else*, such as an interface or a synth. The remote device is a "host", and this PC is a "client". The connection is initiated from this PC.
 - **This PC** is for letting *other devices connect to this PC*, such as a laptop or a phone or external device that wants to communicate over MIDI. In this case, this PC is the "host" and the remote device is the "client". The connection is initiated by the remote device.
@@ -179,19 +192,9 @@ Each host lists the devices currently connected to it, with the same round trip 
 
 **Stop** takes a host off the network without deleting it, and **Delete** removes it entirely.
 
-## Settings
+## Transport settings
 
-The gear button in the title bar opens the settings.
-
-![The settings panel]({{ site.baseurl }}/assets/images/midinetworksetup-settings.png)
-
-**Theme** and **Window background** control how the app looks. Mica and Acrylic pick up colors from your desktop; Acrylic lets what's behind the window show through. Tick **Use a custom background color** to choose your own.
-
-**Refresh connection details every (seconds)** sets how often the app asks the MIDI service for connection state, round trip times, and packet counts. Three to five seconds suits most people. A shorter interval gives a more detailed graph at the cost of asking the service more often. The polling only happens while this app is running.
-
-### Transport settings
-
-Further down the settings panel are the transport settings. These are different from everything above: they belong to the MIDI service, not to this app, and they apply to **every** Network MIDI 2.0 host and client on this PC. They also persist once changed, whether or not this app is running.
+The **Transport settings** page, under **Network MIDI 2.0** in the list of pages, is different from the rest of the app. Its settings belong to the MIDI service, not to this app, and they apply to **every** Network MIDI 2.0 host and client on this PC. They stay changed whether or not this app is running.
 
 The defaults suit almost every network. Change them only if you have a reason to.
 
@@ -204,11 +207,21 @@ The defaults suit almost every network. Change them only if you have a reason to
 | **Repeated messages per packet** | How many recently sent messages are repeated in each packet, so a lost packet can be recovered without asking again. Higher copes better with an unreliable network and makes each packet larger | New connections. Reconnect a device for it to apply there |
 | **Messages kept for resending** | How many sent messages are held in case the other end asks for them again. Higher recovers from longer gaps and uses more memory per connection | New connections. Reconnect a device for it to apply there |
 
-Each box shows the range it accepts. A value outside that range is corrected rather than rejected, so if a number changes after you type it, that is why.
+Each box shows the range it accepts. A value outside that range is corrected rather than rejected, so if a number changes after you type it, that is why. There's no save button: a change is saved a moment after you make it. **Restore defaults** puts all six back.
 
 The two that matter most in practice are **How often to check a quiet connection**, if you want a dropped device noticed sooner, and **Repeated messages per packet**, if you are on Wi-Fi or a busy network and are losing messages.
 
 For the exact defaults, ranges, and the configuration file keys behind these, see [How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/).
+
+## Settings
+
+The gear button in the title bar opens the settings.
+
+![The settings panel]({{ site.baseurl }}/assets/images/midinetworksetup-settings.png)
+
+**Theme** and **Window background** control how the app looks. Mica and Acrylic pick up colors from your desktop; Acrylic lets what's behind the window show through. Tick **Use a custom background color** to choose your own.
+
+**Refresh connection details every (seconds)** sets how often the app asks the MIDI service for connection state, round trip times, and packet counts. Three to five seconds suits most people. A shorter interval gives a more detailed graph at the cost of asking the service more often. The polling only happens while this app is running.
 
 The pin button next to the minimize button keeps the window above your other windows, which is handy while you're setting a device up.
 

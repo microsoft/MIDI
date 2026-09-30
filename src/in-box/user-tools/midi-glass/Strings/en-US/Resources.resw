@@ -4561,4 +4561,193 @@
   <data name="ThemeCautionHardSector" xml:space="preserve">
     <value>Red, amber and green are the three colors hardest to tell apart with red-green color blindness. A switch that's on also stays pressed down, so its state isn't shown by color alone.</value>
   </data>
+  <data name="ThemeCautionInsertCoin" xml:space="preserve">
+    <value>Every button shows its color all the time, which suits a page of pads more than a page of two hundred switches. Round buttons want square controls. With red-green color blindness, blue and purple look alike, so don't use them for opposite jobs.</value>
+  </data>
+  <data name="ThemeCautionChicago" xml:space="preserve">
+    <value>Mostly gray, with the color in small places: title bars, tags and values. It's not made for a dark stage, and the teal background is loud. With red-green color blindness, green and olive look alike, so don't use them for opposite jobs.</value>
+  </data>
+  <data name="ThemeCautionNightDrive" xml:space="preserve">
+    <value>A picture is a lot to put behind a control surface. The sun pulls your eye to the middle of the page, so a layout with its controls there hides the best part. Made for a dark room.</value>
+  </data>
+  <data name="ThemeCautionVisor" xml:space="preserve">
+    <value>Thin lines want a close screen or a big one: at arm's length on a small tablet, the corners are hard to find. Nothing is filled until it's on, which is quick once you know the page and slower for somebody new to it. Made for a dark room.</value>
+  </data>
+  <data name="ThemeCautionGoodForm" xml:space="preserve">
+    <value>A light theme, so it's bright on a dark stage. A key at rest is the color of the panel, and only its shadow sets it apart. Pads have no color until they're on. With red-green color blindness, orange and mustard look alike, so don't use them for opposite jobs.</value>
+  </data>
+  <data name="ThemeRowLampFillWhenOn" xml:space="preserve">
+    <value>Lamp fill when on</value>
+  </data>
+  <data name="ThemeLampFillNote" xml:space="preserve">
+    <value>At 0, every lamp is a round light that comes on, even when switches fill with their color. At Same, a lamp looks like any other switch.</value>
+  </data>
+  <data name="ThemeRowDeckInkHalo" xml:space="preserve">
+    <value>Halo behind words on the background</value>
+  </data>
+  <data name="ThemeDeckInkHaloNote" xml:space="preserve">
+    <value>Words printed straight on a picture can land on a bright part of it. A soft halo keeps them readable. The color's transparency sets how strong the halo is.</value>
+  </data>
+  <data name="ThemeRowRimShape" xml:space="preserve">
+    <value>Edge at rest</value>
+  </data>
+  <data name="ThemeRimOutline" xml:space="preserve">
+    <value>A full outline</value>
+  </data>
+  <data name="ThemeRimCorners" xml:space="preserve">
+    <value>Corners only</value>
+  </data>
+  <data name="ThemeRimShapeNote" xml:space="preserve">
+    <value>With corners only, a control that's on closes its corners into a full frame, so the few that are on stand out on a busy page.</value>
+  </data>
+  <data name="ThemeGroupBevels" xml:space="preserve">
+    <value>Bevels</value>
+  </data>
+  <data name="ThemeRowBevelWidth" xml:space="preserve">
+    <value>Bevel width</value>
+  </data>
+  <data name="ThemeRowBevelHighlight" xml:space="preserve">
+    <value>Bevel highlight</value>
+  </data>
+  <data name="ThemeRowBevelLight" xml:space="preserve">
+    <value>Bevel light</value>
+  </data>
+  <data name="ThemeRowBevelShadow" xml:space="preserve">
+    <value>Bevel shadow</value>
+  </data>
+  <data name="ThemeRowBevelDark" xml:space="preserve">
+    <value>Bevel dark</value>
+  </data>
+  <data name="ThemeBevelNote" xml:space="preserve">
+    <value>Raised is something to press, pressed is down, and sunken is a field that holds a value. The four colors run from the outside edge in. Leave one empty to work it out from the plate. 0 is no bevels.</value>
+  </data>
+  <data name="ThemeRowFaderMajorTicks" xml:space="preserve">
+    <value>Longer fader mark every</value>
+  </data>
+  <data name="ThemeRowThumbShape" xml:space="preserve">
+    <value>Fader cap shape</value>
+  </data>
+  <data name="ThemeThumbShapeBar" xml:space="preserve">
+    <value>A bar</value>
+  </data>
+  <data name="ThemeThumbShapePointer" xml:space="preserve">
+    <value>Pointing at the scale</value>
+  </data>
+  <data name="ThemeThumbShapeChevrons" xml:space="preserve">
+    <value>Two chevrons on a rail</value>
+  </data>
+  <data name="ThemeRowPuck" xml:space="preserve">
+    <value>XY and joystick puck</value>
+  </data>
+  <data name="ThemePuckDisc" xml:space="preserve">
+    <value>A disc</value>
+  </data>
+  <data name="ThemePuckBall" xml:space="preserve">
+    <value>A ball</value>
+  </data>
+  <data name="ThemePuckReticle" xml:space="preserve">
+    <value>A ring with four ticks</value>
+  </data>
+  <data name="ThemeRowWellInk" xml:space="preserve">
+    <value>Numbers in a window</value>
+  </data>
+  <data name="ThemeWellInkNote" xml:space="preserve">
+    <value>Leave it empty for each control's own color.</value>
+  </data>
+  <data name="ThemeRowKnobCapFromHue" xml:space="preserve">
+    <value>Cap in the knob's color</value>
+  </data>
+  <data name="ThemeKnobCapFromHueNote" xml:space="preserve">
+    <value>The line on the cap is white or near black, whichever reads on it. With no knob face, the cap is the whole knob.</value>
+  </data>
+  <data name="ThemeRowPointerShape" xml:space="preserve">
+    <value>Pointer shape</value>
+  </data>
+  <data name="ThemePointerShapeLine" xml:space="preserve">
+    <value>A line</value>
+  </data>
+  <data name="ThemePointerShapeChevron" xml:space="preserve">
+    <value>A chevron on the arc</value>
+  </data>
+  <data name="ThemeRowKnobArcOnFace" xml:space="preserve">
+    <value>Arc printed on the face</value>
+  </data>
+  <data name="ThemeRowKnobMajorTicks" xml:space="preserve">
+    <value>Longer knob mark every</value>
+  </data>
+  <data name="ThemeMajorTicksNote" xml:space="preserve">
+    <value>Every so many marks, one is longer, so a scale can be read at a glance. 0 is none.</value>
+  </data>
+  <data name="ThemeSwitchShapeRound" xml:space="preserve">
+    <value>A round button</value>
+  </data>
+  <data name="ThemeRowSwitchRing" xml:space="preserve">
+    <value>Ring around a round button</value>
+  </data>
+  <data name="ThemeRowPadsFollowSwitchShape" xml:space="preserve">
+    <value>Pads take the switch shape</value>
+  </data>
+  <data name="ThemeRoundSwitchNote" xml:space="preserve">
+    <value>A round button is the largest circle that fits its control, so it looks best on a square one. Leave the ring empty for a button with no ring.</value>
+  </data>
+  <data name="ThemeRowLatch" xml:space="preserve">
+    <value>A switch that stays on</value>
+  </data>
+  <data name="ThemeLatchLit" xml:space="preserve">
+    <value>Lights up</value>
+  </data>
+  <data name="ThemeLatchCheckerboard" xml:space="preserve">
+    <value>Stays pressed, checkered</value>
+  </data>
+  <data name="ThemeRowSwitchColorTag" xml:space="preserve">
+    <value>Color tag before a switch's name</value>
+  </data>
+  <data name="ThemeRowCurrentStep" xml:space="preserve">
+    <value>The step that's playing</value>
+  </data>
+  <data name="ThemeCurrentStepLit" xml:space="preserve">
+    <value>Lit</value>
+  </data>
+  <data name="ThemeCurrentStepDottedFocus" xml:space="preserve">
+    <value>Lit, with a dotted line around it</value>
+  </data>
+  <data name="ThemeGroupChrome" xml:space="preserve">
+    <value>Chrome</value>
+  </data>
+  <data name="ThemeRowChromeCaps" xml:space="preserve">
+    <value>Chrome knob and fader caps</value>
+  </data>
+  <data name="ThemeRowChromeLetters" xml:space="preserve">
+    <value>Chrome section names</value>
+  </data>
+  <data name="ThemeRowChromeSky" xml:space="preserve">
+    <value>Chrome sky</value>
+  </data>
+  <data name="ThemeRowChromeLight" xml:space="preserve">
+    <value>Chrome horizon, light side</value>
+  </data>
+  <data name="ThemeRowChromeDark" xml:space="preserve">
+    <value>Chrome horizon, dark side</value>
+  </data>
+  <data name="ThemeRowChromeGlow" xml:space="preserve">
+    <value>Chrome glow</value>
+  </data>
+  <data name="ThemeChromeNote" xml:space="preserve">
+    <value>Chrome is a sky reflected over a hard horizon line, with a glow in the ground below it. Leave the colors empty for a cool sky and a sunset glow.</value>
+  </data>
+  <data name="ThemeRowFloor" xml:space="preserve">
+    <value>Grid floor</value>
+  </data>
+  <data name="ThemeRowFloorColor" xml:space="preserve">
+    <value>Grid floor color</value>
+  </data>
+  <data name="ThemeRowFloorHorizon" xml:space="preserve">
+    <value>Horizon height</value>
+  </data>
+  <data name="ThemeRowFloorSpeed" xml:space="preserve">
+    <value>Grid floor speed</value>
+  </data>
+  <data name="ThemeFloorNote" xml:space="preserve">
+    <value>A grid running away to the horizon, under the controls. Leave the color empty for the theme's first color. The horizon is measured down the background picture, or down the page when there's no picture. The grid holds still while you're editing, and whenever Windows is set to show fewer animations.</value>
+  </data>
 </root>

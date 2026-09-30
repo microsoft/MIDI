@@ -49,23 +49,34 @@ So where you may have seen a device with 5 input and 5 output ports in the past 
 
 ## Specifying an Endpoint
 
-Every command under `midi endpoint` takes an optional Endpoint Device Id, supplied immediately after the `endpoint` keyword and before the sub-command.
-
-If you leave it out, you will be prompted with a menu of the available endpoints.
-
-![midi endpoint prompt]({{ site.baseurl }}/assets/images/console-midi-endpoint-prompt.png)
-
-If you want to script a command so that it requires no user interaction, provide the endpoint device Id explicitly.
+Most commands under `midi endpoint` work with one endpoint. To say which one, put its endpoint device id after the command name.
 
 ```
-midi endpoint \\?\SWD#MIDISRV#MIDIU_DIAG_LOOPBACK_B#{e7cce071-3c03-423f-88d3-f1045d02552b} properties --verbose
+midi endpoint properties \\?\SWD#MIDISRV#MIDIU_DIAG_LOOPBACK_B#{e7cce071-3c03-423f-88d3-f1045d02552b} --verbose
 ```
 
 The general form is:
 
 ```
-midi endpoint [Endpoint Device Id] <command> [OPTIONS]
+midi endpoint <command> [Endpoint Device Id] [OPTIONS]
 ```
+
+If you leave the id out, you're shown a menu of the available endpoints to pick from.
+
+![midi endpoint prompt]({{ site.baseurl }}/assets/images/console-midi-endpoint-prompt.png)
+
+In a script, always give the id, so the script doesn't stop and wait for someone to pick from the menu.
+
+A few commands are different:
+
+- `send-message`, `send-message-file` and `play-notes` take the id as an option, `--endpoint-id`, because they already take a list of words, a file name or a list of notes.
+- `send-sysex-file` takes the id after the file name.
+
+```
+midi endpoint play-notes 60 64 67 --endpoint-id \\?\SWD#MIDISRV#MIDIU_DIAG_LOOPBACK_B#{e7cce071-3c03-423f-88d3-f1045d02552b}
+```
+
+Scripts written for older versions of the console put the id straight after `endpoint`, as in `midi endpoint <id> properties`. That still works, except with `play-notes`, `send-message-file` and `send-sysex-file`.
 
 ## Command Summary
 
@@ -235,6 +246,7 @@ Send a single message to a UMP endpoint as a list of up to four 32-bit MIDI word
 
 | Option | Short | Default | Description |
 | ----- | ----- | ----- | ----- |
+| `--endpoint-id` | | | The endpoint device id. See [Specifying an Endpoint](#specifying-an-endpoint) |
 | `--pause` | `-p` | `2` | Pause (delay), in milliseconds, between messages. Specify 0 for no delay |
 | `--word-format` | `-w` | `Hex` | Data format for the individual words. Valid values include Binary, Decimal, Hex |
 | `--no-wait` | `-n` | | Do not prompt the user to hit any key to close the connection |
@@ -289,6 +301,7 @@ Sends a text file of UMP MIDI words to the specified endpoint.
 
 | Option | Short | Default | Description |
 | ----- | ----- | ----- | ----- |
+| `--endpoint-id` | | | The endpoint device id. See [Specifying an Endpoint](#specifying-an-endpoint) |
 | `--pause` | `-p` | `2` | Pause (delay), in milliseconds, between messages. Specify 0 for no delay |
 | `--word-format` | `-w` | `Hex` | Data format for the individual words. Valid values include Binary, Decimal, Hex |
 | `--no-wait` | `-n` | | Do not prompt the user to hit any key to close the connection |
@@ -340,7 +353,7 @@ Here is one of the test files we use. It demonstrates comments, multiple represe
 
 Send a file of MIDI 1.0 binary SysEx 7-bit messages to a compatible endpoint. These are first translated to UMP SysEx 7 for transmission.
 
-**Argument:** the binary SysEx 7 file to send.
+**Arguments:** the binary SysEx 7 file to send, then the optional endpoint device id.
 
 | Option | Short | Default | Description |
 | ----- | ----- | ----- | ----- |
@@ -363,6 +376,7 @@ Send MIDI 1.0 or 2.0 note on and off messages to the endpoint. This is not meant
 
 | Option | Short | Default | Description |
 | ----- | ----- | ----- | ----- |
+| `--endpoint-id` | | | The endpoint device id. See [Specifying an Endpoint](#specifying-an-endpoint) |
 | `--length` | `-l` | `250` | Length / duration of the note in whole decimal milliseconds |
 | `--rest` | `-r` | `250` | Duration of wait time between notes, in whole decimal milliseconds |
 | `--group` | `-g` | `1` | Number (1-16 decimal) for the group to send the messages to |

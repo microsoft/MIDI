@@ -1,6 +1,6 @@
 ---
 layout: tools_page
-title: Bluetooth MIDI Setup
+title: Windows MIDI Bluetooth Setup
 tool: midibluetoothsetup
 description: Connect this PC to Bluetooth LE MIDI devices, and let other devices connect to this PC
 icon: /assets/images/midibluetoothsetup.png
@@ -11,11 +11,22 @@ categories:
 > Bluetooth MIDI is a preview feature for Windows MIDI Services. It's installed separately from the
 > service, API, and tools, and it is not yet part of a consumer release.
 
-Bluetooth MIDI Setup connects this PC to wireless MIDI devices: keyboards, controllers, and instruments which speak Bluetooth LE MIDI. Once connected, the device appears in Windows like any other MIDI device, so your DAW and other MIDI software can use it straight away.
+Windows MIDI Bluetooth Setup connects this PC to wireless MIDI devices: keyboards, controllers, and instruments which speak Bluetooth LE MIDI. Once connected, the device appears in Windows like any other MIDI device, so your DAW and other MIDI software can use it straight away.
 
 It also works the other way around. This PC can publish itself so a phone, a tablet, or another computer can connect to it.
 
-![The Bluetooth MIDI Setup main window]({{ site.baseurl }}/assets/images/midibluetoothsetup.png)
+## Quick start
+
+Devices appear on their own when they advertise, so there's nothing to scan or search for.
+
+![The Windows MIDI Bluetooth Setup window, with numbered callouts on the list of pages, a device's name and status, its Connect or Disconnect button, and its Details]({{ site.baseurl }}/assets/images/midibluetoothsetup-quick-start.png)
+
+1. **The pages** are down the left. Each one is described below the picture.
+2. **Each device** shows its name and what's happening with it, such as **Connected** or **Waiting for the device...**.
+3. **Connect** connects the device and creates its MIDI endpoint. Windows remembers the device and reconnects it when it comes back. While a device is connected, or Windows is waiting for it, the button says **Disconnect**.
+4. **Details** shows what Windows knows about the device, along with the settings for that one device.
+
+Once a device says **Connected**, it's ready to use in your DAW and other MIDI apps.
 
 There are three pages:
 

@@ -47,6 +47,17 @@ namespace glass
         constexpr float JoystickPuckFraction = 0.166f;
         constexpr float MinimumPuckSize = 8.0f;
 
+        // A joystick's ball is most of the stick you grab; a reticle is wider than a disc so its
+        // open middle stays open.
+        constexpr float JoystickBallFraction = 0.38f;
+        constexpr float ReticleFraction = 0.18f;
+
+        // How thick a joystick's shaft is, as a share of the ball.
+        constexpr float ShaftFraction = 0.16f;
+
+        // The dotted line round the playing step stands this far off the step.
+        constexpr float StepFocusOffset = 2.0f;
+
         // The dot of hue inside a joystick's cap. The comp insets it 11 px on a 30 px puck,
         // which leaves a dot 8 px across - so this is its radius, not its width.
         constexpr float JoystickDotFraction = 4.0f / 30.0f;
@@ -244,7 +255,7 @@ namespace glass
 
         // On a theme whose displays are windows, the window is the whole control, whatever part
         // of it the control asked for.
-        auto corner = WellCornerRadius;
+        auto corner = visual.WellCorner >= 0.0f ? visual.WellCorner : WellCornerRadius;
 
         if (visual.Windowed)
         {
@@ -252,7 +263,7 @@ namespace glass
             y = 0.0f;
             width = visual.Width;
             height = visual.Height;
-            corner = WindowCornerRadius;
+            corner = visual.WellCorner >= 0.0f ? visual.WellCorner : WindowCornerRadius;
         }
         else if (colors.RecessLip.A != 0)
         {
@@ -713,6 +724,7 @@ namespace glass
         SurfaceVisual& visual,
         Control const& control,
         ControlColors const& colors,
+        Theme const& theme,
         float width,
         float height)
     {
@@ -816,6 +828,28 @@ namespace glass
             }
 
             visual.StepBars.push_back(barShape);
+            visual.StepOrigins.push_back(float2{ x, y });
+        }
+
+        // The step that is playing gets a dotted line round it as well, the way a focused control
+        // is marked. It waits, unpainted, until a step plays.
+        if (theme.CurrentStep == CurrentStepStyle::DottedFocus)
+        {
+            visual.StepFocusGap = StepFocusOffset;
+            visual.StepFocus = compositor.CreateRoundedRectangleGeometry();
+            visual.StepFocus.Size(float2{ cellW + StepFocusOffset * 2.0f, cellH + StepFocusOffset * 2.0f });
+            visual.StepFocus.Offset(float2{ -1000.0f, -1000.0f });
+
+            auto ink = colors.Label;
+            ink.A = 255;
+
+            auto focusShape = compositor.CreateSpriteShape(visual.StepFocus);
+            focusShape.StrokeBrush(BrushFor(compositor, ink));
+            focusShape.StrokeThickness(1.0f);
+            focusShape.StrokeDashArray().Append(1.0f);
+            focusShape.StrokeDashArray().Append(1.0f);
+
+            visual.ValueShape.Shapes().Append(focusShape);
         }
     }
 
@@ -857,6 +891,14 @@ namespace glass
             paint(stepIndex, true);
 
             visual.CurrentStep = stepIndex;
+
+            if (visual.StepFocus != nullptr)
+            {
+                auto const valid = stepIndex >= 0 && static_cast<size_t>(stepIndex) < visual.StepOrigins.size();
+                auto const origin = valid ? visual.StepOrigins[static_cast<size_t>(stepIndex)] : float2{ -1000.0f, -1000.0f };
+
+                visual.StepFocus.Offset(float2{ origin.x - visual.StepFocusGap, origin.y - visual.StepFocusGap });
+            }
         }
         catch (...)
         {
@@ -984,9 +1026,11 @@ namespace glass
             AppendWell(compositor, visual, colors, fieldX, fieldY, fieldW, fieldH);
         }
 
-        auto const puck = std::max(
-            MinimumPuckSize,
-            std::min(width, height) * (joystick ? JoystickPuckFraction : PuckFraction));
+        auto const puckFraction = theme.Puck == PuckStyle::Ball && joystick
+            ? JoystickBallFraction
+            : (theme.Puck == PuckStyle::Reticle ? ReticleFraction : (joystick ? JoystickPuckFraction : PuckFraction));
+
+        auto const puck = std::max(MinimumPuckSize, std::min(width, height) * puckFraction);
 
         visual.PuckRadius = puck * 0.5f;
 
@@ -1094,6 +1138,44 @@ namespace glass
 
             visual.ValueShape.Shapes().Append(acrossShape);
             visual.ValueShape.Shapes().Append(downShape);
+        }
+
+        // A ball or a reticle, drawn round the origin and moved as one group. A joystick's ball
+        // rides a short shaft from the middle of the field.
+        if (theme.Puck != PuckStyle::Disc)
+        {
+            if (joystick && theme.Puck == PuckStyle::Ball)
+            {
+                auto const middle = float2{ width * 0.5f, height * 0.5f };
+
+                visual.Shaft = compositor.CreateLineGeometry();
+                visual.Shaft.Start(middle);
+                visual.Shaft.End(middle);
+
+                auto shaftShape = compositor.CreateSpriteShape(visual.Shaft);
+                shaftShape.StrokeBrush(BrushFor(compositor, ThemeColor{ 0xB8, 0xBA, 0xC0, 255 }));
+                shaftShape.StrokeThickness(std::max(3.0f, puck * ShaftFraction));
+                shaftShape.StrokeStartCap(CompositionStrokeCap::Round);
+                shaftShape.StrokeEndCap(CompositionStrokeCap::Round);
+
+                visual.ValueShape.Shapes().Append(shaftShape);
+            }
+
+            visual.PuckGroup = BuildPuckGroup(compositor, theme, lit, visual.PuckRadius);
+            visual.PuckGroup.Offset(float2{ visual.FieldX, visual.FieldY });
+            visual.PuckGeometry = nullptr;
+
+            visual.ValueShape.Shapes().Append(visual.PuckGroup);
+
+            if (joystick)
+            {
+                visual.CrossAcross = nullptr;
+                visual.CrossDown = nullptr;
+                visual.ArcGeometry = nullptr;
+                visual.SweepGeometry = nullptr;
+            }
+
+            return;
         }
 
         // The puck. On a joystick it is a cap with a dot of hue in it, the way a real stick has
@@ -1543,7 +1625,7 @@ namespace glass
 
         auto& visual = m_visuals[itemIndex];
 
-        if (visual.PuckGeometry == nullptr)
+        if (visual.PuckGeometry == nullptr && visual.PuckGroup == nullptr)
         {
             return;
         }
@@ -1569,7 +1651,20 @@ namespace glass
                 visual.FieldX + visual.FieldWidth * x,
                 visual.FieldY + visual.FieldHeight * y };
 
-            visual.PuckGeometry.Center(at);
+            if (visual.PuckGeometry != nullptr)
+            {
+                visual.PuckGeometry.Center(at);
+            }
+
+            if (visual.PuckGroup != nullptr)
+            {
+                visual.PuckGroup.Offset(at);
+            }
+
+            if (visual.Shaft != nullptr)
+            {
+                visual.Shaft.End(at);
+            }
 
             if (visual.Flare != nullptr)
             {
@@ -1869,7 +1964,7 @@ namespace glass
             // Monospace, or every tenth of a second shuffles the digits sideways.
             text.FontFamily(media::FontFamily{ L"Cascadia Mono, Consolas" });
             text.FontSize(std::clamp(height * 0.42, 11.0, 48.0));
-            text.Foreground(media::SolidColorBrush{ ToWindowsColor(windowed ? colors.WellValue : colors.Pipe) });
+            text.Foreground(media::SolidColorBrush{ ToWindowsColor(windowed ? colors.WellInk : colors.Pipe) });
             text.IsHitTestVisible(false);
             text.TextAlignment(xaml::TextAlignment::Center);
             text.Width(width);

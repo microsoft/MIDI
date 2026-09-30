@@ -138,6 +138,9 @@ namespace winrt::midisettings::implementation
             ApplyToolButtons();
             ShowFirstRunInvitation();
 
+            // The title bar gear is first in tab order, so focus would otherwise start there.
+            TransportFilterComboBox().Focus(xaml::FocusState::Programmatic);
+
             Closed([weak = get_weak()](auto&&, auto&&)
                 {
                     if (auto strong = weak.get())
