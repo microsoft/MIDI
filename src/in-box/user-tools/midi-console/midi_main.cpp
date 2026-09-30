@@ -79,13 +79,17 @@ namespace
             arguments[1] = "sysex";
             arguments[index] = "send-file";
 
+            // send-file takes the endpoint id after the file, so an id given before the verb goes last.
+            std::rotate(arguments.begin() + 2, arguments.begin() + index, arguments.end());
+
             return;
         }
     }
 
     // The shipping console takes the endpoint id between the branch and the sub-command
-    // ("midi endpoint <id> monitor"). CLI11 cannot express that, so the id is moved to the end
-    // where it is parsed as the sub-command's positional. Existing scripts keep working.
+    // ("midi endpoint <id> monitor"). CLI11 cannot express that, so the id is moved to just after
+    // the sub-command, where a note list or a multi-value option such as --group cannot swallow
+    // it. Existing scripts keep working.
     //
     // The sub-command names are asked of CLI11 rather than listed here. A list went stale the
     // first time a new endpoint verb was added, and the symptom was baffling: the new verb was
@@ -112,14 +116,8 @@ namespace
             return;
         }
 
-        auto const subcommands = endpointCommand->get_subcommands(
-            [](CLI::App const*) noexcept { return true; });
-
         // check_name matches a sub-command's own name and every alias it was given.
-        auto const isSubcommand = std::any_of(subcommands.begin(), subcommands.end(),
-            [&candidate](CLI::App const* const command) { return command->check_name(candidate); });
-
-        if (isSubcommand)
+        if (endpointCommand->get_subcommand_no_throw(candidate) != nullptr)
         {
             return;
         }
@@ -127,7 +125,36 @@ namespace
         auto const endpointId = candidate;
 
         arguments.erase(arguments.begin() + 2);
-        arguments.push_back(endpointId);
+
+        // Walk to the sub-command that runs, so "request function-blocks" gets the id too.
+        CLI::App const* command{ endpointCommand };
+        size_t insertAt{ 2 };
+
+        while (insertAt < arguments.size())
+        {
+            CLI::App const* const child = command->get_subcommand_no_throw(arguments[insertAt]);
+
+            if (child == nullptr)
+            {
+                break;
+            }
+
+            command = child;
+            insertAt++;
+        }
+
+        if (command == endpointCommand)
+        {
+            arguments.push_back(endpointId);
+        }
+        else if (command->get_option_no_throw("--endpoint-id") != nullptr)
+        {
+            arguments.insert(arguments.begin() + insertAt, { "--endpoint-id", endpointId });
+        }
+        else
+        {
+            arguments.insert(arguments.begin() + insertAt, endpointId);
+        }
     }
 }
 
