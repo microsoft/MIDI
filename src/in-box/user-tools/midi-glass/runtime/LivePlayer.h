@@ -77,6 +77,9 @@ namespace glass
         // because the editor and the runtime window draw the same control differently.
         std::function<void(uint32_t controlIndex, double value)> FeedbackMoved{};
 
+        // A DAW told a Mackie Control light to blink. It blinks until FeedbackMoved says otherwise.
+        std::function<void(uint32_t controlIndex)> FeedbackBlinks{};
+
         // A device sent something a control is only watching for as traffic, so there is no
         // value to carry. Lit says whether it blinks, comes on, or goes dark.
         enum class ListenerState
@@ -375,6 +378,9 @@ namespace glass
         // What each keyboard is playing, so releasing a key sends the note it started rather
         // than whatever the key would be after an edit.
         std::vector<uint16_t> m_soundingNotes{};
+
+        // Where each control was when it last sent a turn, for the controls that send turns.
+        std::vector<double> m_relativeBase{};
 
         // How many clock messages have arrived for each control following the wire's beat.
         // Twenty four of them is a quarter note, and that is when the lamp blinks.

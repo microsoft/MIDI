@@ -501,6 +501,11 @@ namespace glass
 
         bool SetDeviceMatchMode(_In_ std::wstring const& name, _In_ midiapp::EndpointMatchMode mode);
 
+        // Changes how the layout talks to a device, and brings every row sent there along. A row
+        // that already is a Mackie Control function becomes it, and a function becomes the plain
+        // message it stands for when the device stops speaking Mackie Control.
+        bool SetDeviceProtocol(_In_ std::wstring const& name, _In_ DeviceProtocol protocol);
+
         // How many controls, across every page, send to this entry. The device list shows it so
         // that removing an entry is not a guess.
         size_t CountControlsUsingDevice(_In_ std::wstring const& name) const;

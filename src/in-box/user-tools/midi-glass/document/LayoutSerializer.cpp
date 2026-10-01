@@ -9,6 +9,7 @@
 
 #include "LayoutSerializer.h"
 #include "JsonText.h"
+#include "MackieControl.h"
 #include "ThemeStore.h"
 
 #include <algorithm>
@@ -198,11 +199,13 @@ namespace glass
         constexpr wchar_t KeySequence[] = L"sequence";
         constexpr wchar_t KeyTargetPage[] = L"targetPage";
         constexpr wchar_t KeyTargetLayer[] = L"targetLayer";
+        constexpr wchar_t KeyFunction[] = L"function";
 
         constexpr wchar_t KeyEnabled[] = L"enabled";
         constexpr wchar_t KeyMatch[] = L"match";
         constexpr wchar_t KeyMatchMode[] = L"matchMode";
         constexpr wchar_t KeySendsBeatClock[] = L"sendsBeatClock";
+        constexpr wchar_t KeyProtocol[] = L"protocol";
 
         constexpr wchar_t KeySteps[] = L"steps";
         constexpr wchar_t KeyMessage[] = L"message";
@@ -393,6 +396,14 @@ namespace glass
             { MessageKind::Sequence, L"sequence" },
             { MessageKind::GoToPage, L"goToPage" },
             { MessageKind::HoldLayer, L"holdLayer" },
+            { MessageKind::MackieControl, L"mackieControl" },
+        };
+
+        constexpr EnumName<DeviceProtocol> DeviceProtocolNames[]
+        {
+            { DeviceProtocol::Midi2, L"midi2" },
+            { DeviceProtocol::Midi1, L"midi1" },
+            { DeviceProtocol::MackieControl, L"mackieControl" },
         };
 
         constexpr EnumName<PickupMode> PickupNames[]
@@ -895,6 +906,21 @@ namespace glass
                 { KeyTrigger, KeyKind, KeyDevice, KeyGroup, KeyChannel, KeyNumber, KeyMinimum,
                   KeyMaximum, KeySystemExclusive, KeyWords, KeySequence, KeyTargetPage,
                   KeyTargetLayer, KeyMidi1Protocol, KeyDetents, KeyAxis, KeyPosition });
+
+            // A function this build does not know stays in the file for the build that does,
+            // and the row sends nothing until somebody picks one.
+            if (message.Kind == MessageKind::MackieControl)
+            {
+                message.Number = MackieFunctionFromFileName(ReadString(object, KeyFunction));
+
+                if (message.Number != MackieNoFunction)
+                {
+                    message.Unknown = CaptureUnknown(object,
+                        { KeyTrigger, KeyKind, KeyDevice, KeyGroup, KeyChannel, KeyNumber, KeyMinimum,
+                          KeyMaximum, KeySystemExclusive, KeyWords, KeySequence, KeyTargetPage,
+                          KeyTargetLayer, KeyMidi1Protocol, KeyDetents, KeyAxis, KeyPosition, KeyFunction });
+                }
+            }
 
             return message;
         }
@@ -1399,7 +1425,16 @@ namespace glass
                 midiapp::EndpointMatchMode::EndpointDeviceId);
             device.SendsBeatClock = ReadBool(object, KeySendsBeatClock, false);
 
-            device.Unknown = CaptureUnknown(object, { KeyName, KeyMatch, KeyMatchMode, KeySendsBeatClock });
+            auto const protocolName = ReadString(object, KeyProtocol);
+
+            device.Protocol = ValueOf(DeviceProtocolNames, protocolName, DeviceProtocol::Midi2);
+
+            if (!protocolName.empty() && NameOf(DeviceProtocolNames, device.Protocol) != protocolName)
+            {
+                device.UnrecognizedProtocol = protocolName;
+            }
+
+            device.Unknown = CaptureUnknown(object, { KeyName, KeyMatch, KeyMatchMode, KeySendsBeatClock, KeyProtocol });
 
             return device;
         }
@@ -1660,7 +1695,21 @@ namespace glass
             writer.Write(KeyDevice, message.DeviceName);
             writer.Write(KeyGroup, static_cast<int64_t>(message.GroupIndex));
             writer.Write(KeyChannel, static_cast<int64_t>(message.ChannelIndex));
-            writer.Write(KeyNumber, static_cast<int64_t>(message.Number));
+
+            // A Mackie Control function is written by name. The number behind it is this build's
+            // own business.
+            if (message.Kind == MessageKind::MackieControl)
+            {
+                if (message.Number != MackieNoFunction)
+                {
+                    writer.Write(KeyFunction, MackieFunctionFileName(message.Number));
+                }
+            }
+            else
+            {
+                writer.Write(KeyNumber, static_cast<int64_t>(message.Number));
+            }
+
             WriteMessageValue(writer, KeyMinimum, message.Minimum);
             WriteMessageValue(writer, KeyMaximum, message.Maximum);
             WriteDetents(writer, message.Detents);
@@ -2110,6 +2159,16 @@ namespace glass
                 writer.WriteRaw(KeyMatch, CanonicalJson(midiapp::MatchToJson(device.Match), writer.Depth()));
                 writer.Write(KeyMatchMode, NameOf(MatchModeNames, device.MatchMode));
                 writer.Write(KeySendsBeatClock, device.SendsBeatClock);
+
+                if (!device.UnrecognizedProtocol.empty())
+                {
+                    writer.Write(KeyProtocol, device.UnrecognizedProtocol);
+                }
+                else if (device.Protocol != DeviceProtocol::Midi2)
+                {
+                    writer.Write(KeyProtocol, NameOf(DeviceProtocolNames, device.Protocol));
+                }
+
                 WriteUnknown(writer, device.Unknown);
                 writer.EndObject();
             }

@@ -110,6 +110,7 @@
     <ClInclude Include="RuntimeSurfaceTests.h" />
     <ClInclude Include="EditGeometryTests.h" />
     <ClInclude Include="EditorControllerTests.h" />
+    <ClInclude Include="MackieControlTests.h" />
     <ClInclude Include="TestLayoutFiles.h" />
     <!-- shared by source with midiglass, so the document layer is tested exactly as it ships -->
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\JsonText.h" />
@@ -124,6 +125,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutStore.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutPackage.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutTemplates.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\document\MackieControl.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\runtime\PanicMessages.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\runtime\SurfaceScale.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\surface\SurfaceColors.h" />
@@ -163,6 +165,7 @@
     <ClCompile Include="RuntimeSurfaceTests.cpp" />
     <ClCompile Include="EditGeometryTests.cpp" />
     <ClCompile Include="EditorControllerTests.cpp" />
+    <ClCompile Include="MackieControlTests.cpp" />
     <ClCompile Include="TestLayoutFiles.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\JsonText.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutModel.cpp" />
@@ -176,6 +179,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutStore.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutPackage.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutTemplates.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\MackieControl.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\runtime\PanicMessages.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\runtime\SurfaceScale.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\surface\SurfaceColors.cpp" />

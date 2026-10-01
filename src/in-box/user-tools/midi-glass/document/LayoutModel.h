@@ -205,6 +205,22 @@ namespace glass
         Sequence = 10,
         GoToPage = 11,
         HoldLayer = 12,
+
+        // A named Mackie Control function, such as Play or Fader 3. Number holds which one.
+        MackieControl = 13,
+    };
+
+    // How the layout talks to one device. It decides what a row sent there can say.
+    enum class DeviceProtocol
+    {
+        // Values are percentages at MIDI 2.0 resolution. Windows converts for a MIDI 1.0 device.
+        Midi2 = 0,
+
+        // Values are the exact 7 and 14 bit numbers MIDI 1.0 manuals print.
+        Midi1 = 1,
+
+        // A DAW set up for a Mackie Control surface. Rows name functions rather than messages.
+        MackieControl = 2,
     };
 
     // A page of faders that fights the DAW is worse than no page at all.
@@ -1044,11 +1060,29 @@ namespace glass
     // Whether a row carries a channel. Only the channel voice messages do.
     bool CarriesAChannel(_In_ MessageKind kind) noexcept;
 
-    // A note row's velocity on the 1 to 127 scale, read from the top of its range.
-    int32_t NoteVelocity(_In_ ControlMessage const& message) noexcept;
+    // Whether a row goes out as MIDI 1.0 protocol. An RPN, an NRPN and a per-note controller
+    // have no single MIDI 1.0 message, so they go as MIDI 2.0 and Windows converts them.
+    bool SendsAsMidi1(_In_ ControlMessage const& message, _In_ DeviceProtocol protocol) noexcept;
 
-    // Kept as a share of the range, so it means the same velocity in MIDI 1.0 and MIDI 2.0.
-    void SetNoteVelocity(_Inout_ ControlMessage& message, _In_ int32_t velocity) noexcept;
+    // The highest number a row's values are typed as: 127, or 16383 for a MIDI 1.0 pitch bend,
+    // RPN or NRPN. 0 means they are typed as a percentage, the way MIDI 2.0 values are.
+    int32_t RawValueMaximum(_In_ ControlMessage const& message, _In_ DeviceProtocol protocol) noexcept;
+
+    // One end of a row's range the way it is typed: a whole number, or a percentage.
+    double ShownValue(
+        _In_ MessageValue const& end,
+        _In_ ControlMessage const& message,
+        _In_ DeviceProtocol protocol) noexcept;
+
+    // Kept as a share of the range, so it survives the device changing protocol.
+    MessageValue ValueFromShown(
+        _In_ double shown,
+        _In_ ControlMessage const& message,
+        _In_ DeviceProtocol protocol) noexcept;
+
+    // Turns exact numbers into shares of the range, as the row sends them under this protocol.
+    // Done before a device changes protocol, because an exact number is only exact in one.
+    void ShareExactValues(_Inout_ ControlMessage& message, _In_ DeviceProtocol protocol) noexcept;
 
     // What a control listens for, so a fader can follow the DAW rather than only lead it.
     struct FeedbackBinding
@@ -1268,6 +1302,11 @@ namespace glass
         // Clock to a device that does not want it is noise, so this is per destination.
         bool SendsBeatClock{ false };
 
+        DeviceProtocol Protocol{ DeviceProtocol::Midi2 };
+
+        // A protocol a newer build named. Treated as MIDI 2.0 and written back as it was.
+        std::wstring UnrecognizedProtocol{};
+
         UnknownFields Unknown{ nullptr };
     };
 
@@ -1422,6 +1461,9 @@ namespace glass
         Control const* ControlAtIndex(_In_ size_t controlIndex) const noexcept;
 
         DeviceEntry const* FindDevice(_In_ std::wstring const& name) const noexcept;
+
+        // MIDI 2.0 for a name that is not in the table.
+        DeviceProtocol ProtocolOf(_In_ std::wstring const& deviceName) const noexcept;
         Sequence const* FindSequence(_In_ std::wstring const& name) const noexcept;
 
         size_t ControlCount() const noexcept;

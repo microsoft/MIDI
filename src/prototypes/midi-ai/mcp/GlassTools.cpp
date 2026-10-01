@@ -13,6 +13,7 @@
 #include "LayoutModel.h"
 #include "LayoutSerializer.h"
 #include "LayoutStore.h"
+#include "MackieControl.h"
 #include "PageTemplates.h"
 #include "ThemeModel.h"
 #include "ControlFactory.h"
@@ -790,6 +791,15 @@ namespace midimcp
 
         std::wstring DescribeMessage(glass::ControlMessage const& message)
         {
+            // A function is sent the way Mackie Control says, so its channel is not the row's.
+            if (message.Kind == glass::MessageKind::MackieControl)
+            {
+                auto const name = glass::MackieFunctionFileName(message.Number);
+
+                return L"Mackie Control " + (name.empty() ? std::wstring{ L"(no function yet)" } : name) +
+                    L" to " + message.DeviceName;
+            }
+
             std::wstring what{};
 
             switch (message.Kind)

@@ -12,6 +12,7 @@
 
 #include "EditorController.h"
 #include "ControlFactory.h"
+#include "MackieControl.h"
 #include "PageTemplates.h"
 
 #include <algorithm>
@@ -897,6 +898,8 @@ namespace glass
 
         auto control = MakeNewControl(kind, x, y, m_document.PageWidth, m_document.PageHeight, deviceName, *page);
 
+        WaitForMackieFunction(control, m_document);
+
         auto const settings = EffectiveSnap();
 
         if (settings.GridEnabled)
@@ -952,6 +955,8 @@ namespace glass
 
         auto control = MakeNewControl(
             kind, area.X, area.Y, m_document.PageWidth, m_document.PageHeight, deviceName, *page);
+
+        WaitForMackieFunction(control, m_document);
 
         auto const settings = EffectiveSnap();
 

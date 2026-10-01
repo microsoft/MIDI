@@ -12,6 +12,7 @@
 
 #include "EditorController.h"
 #include "ControlFactory.h"
+#include "MackieControl.h"
 #include "PageTemplates.h"
 #include "LayoutSerializer.h"
 #include "PadGrid.h"
@@ -68,6 +69,60 @@ namespace glass
                 left.TargetLayerId == right.TargetLayerId &&
                 left.Axis == right.Axis &&
                 left.Position == right.Position;
+        }
+
+        // A row moving from one protocol to another keeps what it means wherever it can.
+        void ConvertRow(
+            _Inout_ ControlMessage& row,
+            _In_ ControlKind controlKind,
+            _In_ DeviceProtocol from,
+            _In_ DeviceProtocol to)
+        {
+            if (from == to)
+            {
+                return;
+            }
+
+            if (to == DeviceProtocol::MackieControl)
+            {
+                auto const function = MackieFunctionOf(row);
+
+                if (function != MackieNoFunction && MackieFunctionFits(function, controlKind))
+                {
+                    row = MakeMackieRow(function, row.DeviceName, row.GroupIndex);
+                    return;
+                }
+            }
+
+            if (row.Kind == MessageKind::MackieControl)
+            {
+                if (to != DeviceProtocol::MackieControl)
+                {
+                    row = PlainRowFor(row);
+                }
+
+                return;
+            }
+
+            // The device decides the protocol from here on, not the row.
+            ShareExactValues(row, from);
+            row.UseMidi1Protocol = false;
+        }
+
+        // A turn is sent from how far a control moved, so a knob sending one comes back to the
+        // middle when let go, the way a platter does, or it would run out of travel.
+        void SpringForTurns(_Inout_ Control& control) noexcept
+        {
+            for (auto const& row : control.Messages)
+            {
+                if (row.Kind == MessageKind::MackieControl &&
+                    ShapeOfMackieFunction(row.Number) == MackieShape::Encoder)
+                {
+                    control.ReturnsToDefault = true;
+                    control.DefaultValue = 0.5;
+                    return;
+                }
+            }
         }
 
         bool SameFeedback(_In_ FeedbackBinding const& left, _In_ FeedbackBinding const& right) noexcept
@@ -1254,6 +1309,12 @@ namespace glass
             message.Trigger = MessageTrigger::Changes;
             message.Kind = MessageKind::ControlChange;
             message.Number = NextFreeNumber(*page, MessageKind::ControlChange, 1);
+
+            // A Mackie Control device takes a function, and which one is the customer's to say.
+            if (m_document.ProtocolOf(message.DeviceName) == DeviceProtocol::MackieControl)
+            {
+                message = MakeMackieRow(MackieNoFunction, message.DeviceName, message.GroupIndex);
+            }
         }
 
         control->Messages.push_back(std::move(message));
@@ -1303,7 +1364,18 @@ namespace glass
         auto updated = message;
         updated.Unknown = control->Messages[index].Unknown;
 
+        // Moved to another device, the row becomes something that device understands.
+        if (updated.DeviceName != control->Messages[index].DeviceName)
+        {
+            ConvertRow(
+                updated,
+                control->Kind,
+                m_document.ProtocolOf(control->Messages[index].DeviceName),
+                m_document.ProtocolOf(updated.DeviceName));
+        }
+
         control->Messages[index] = std::move(updated);
+        SpringForTurns(*control);
         CommitCoalesced(EditNames::Messages, L"message:" + id + L":" + std::to_wstring(index));
 
         return true;
@@ -2381,6 +2453,83 @@ namespace glass
         }
 
         found->MatchMode = mode;
+
+        Commit(EditNames::Devices);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetDeviceProtocol(std::wstring const& name, DeviceProtocol protocol)
+    {
+        auto const found = std::find_if(
+            m_document.Devices.begin(),
+            m_document.Devices.end(),
+            [&name](DeviceEntry const& entry) { return entry.Name == name; });
+
+        if (found == m_document.Devices.end() ||
+            (found->Protocol == protocol && found->UnrecognizedProtocol.empty()))
+        {
+            return false;
+        }
+
+        auto const previous = found->Protocol;
+
+        found->Protocol = protocol;
+        found->UnrecognizedProtocol.clear();
+
+        for (auto& page : m_document.Pages)
+        {
+            for (auto& control : page.Controls)
+            {
+                auto& rows = control.Messages;
+
+                std::vector<uint32_t> functions{};
+
+                for (size_t index = 0; index < rows.size();)
+                {
+                    auto& row = rows[index];
+
+                    if (row.DeviceName != name)
+                    {
+                        ++index;
+                        continue;
+                    }
+
+                    ConvertRow(row, control.Kind, previous, protocol);
+
+                    // A press row and a release row, or a fader and its touch note, were one
+                    // function all along.
+                    if (row.Kind == MessageKind::MackieControl && row.Number != MackieNoFunction)
+                    {
+                        if (std::find(functions.begin(), functions.end(), row.Number) != functions.end())
+                        {
+                            rows.erase(rows.begin() + static_cast<ptrdiff_t>(index));
+                            continue;
+                        }
+
+                        functions.push_back(row.Number);
+                    }
+
+                    ++index;
+                }
+
+                SpringForTurns(control);
+            }
+        }
+
+        // A step in a sequence plays a plain message whatever the device speaks.
+        for (auto& sequence : m_document.Sequences)
+        {
+            for (auto& step : sequence.Steps)
+            {
+                if (step.Message.DeviceName == name && step.Message.Kind != MessageKind::MackieControl)
+                {
+                    ShareExactValues(step.Message, previous);
+                    step.Message.UseMidi1Protocol = false;
+                }
+            }
+        }
 
         Commit(EditNames::Devices);
 

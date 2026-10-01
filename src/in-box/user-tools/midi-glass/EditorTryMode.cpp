@@ -90,6 +90,17 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_player->FeedbackBlinks = [weak](uint32_t controlIndex)
+            {
+                auto strong = weak.get();
+                size_t itemIndex{ 0 };
+
+                if (strong != nullptr && strong->m_tryMode && strong->m_renderer.TryFindItem(controlIndex, itemIndex))
+                {
+                    strong->m_renderer.SetBlinking(itemIndex, true);
+                }
+            };
+
         m_player->ActivitySeen = [weak](uint32_t controlIndex, glass::LivePlayer::ListenerState state)
             {
                 auto strong = weak.get();
@@ -289,6 +300,11 @@ namespace winrt::midiglass::implementation
                 if (m_player != nullptr)
                 {
                     m_player->SetOutputEnabled(false);
+                }
+
+                for (size_t index = 0; index < m_renderer.ItemCount(); ++index)
+                {
+                    m_renderer.SetBlinking(index, false);
                 }
             }
 
@@ -650,6 +666,7 @@ namespace winrt::midiglass::implementation
                 return;
             }
 
+            m_renderer.SetBlinking(itemIndex, false);
             m_renderer.SetValue(itemIndex, value);
             m_renderer.BloomFeedback(itemIndex);
 

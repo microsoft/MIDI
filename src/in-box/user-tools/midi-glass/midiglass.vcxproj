@@ -172,6 +172,7 @@
     <ClInclude Include="document\StepPattern.h" />
     <ClInclude Include="document\PadGrid.h" />
     <ClInclude Include="document\LayoutTemplates.h" />
+    <ClInclude Include="document\MackieControl.h" />
     <ClInclude Include="document\ThemeModel.h" />
     <ClInclude Include="document\ThemeStore.h" />
     <ClInclude Include="thumbnail\ThumbnailLayout.h" />
@@ -301,6 +302,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\LayoutTemplates.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\MackieControl.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\ThemeModel.cpp">

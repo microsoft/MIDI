@@ -328,6 +328,18 @@ namespace glass
         m_throttlesY.assign(m_document.ControlCount(), ValueThrottle{});
         m_soundingNotes.assign(m_document.ControlCount(), 0xFFFF);
         m_clockTickCounts.assign(m_document.ControlCount(), 0);
+
+        m_relativeBase.clear();
+        m_relativeBase.reserve(m_document.ControlCount());
+
+        for (auto const& page : m_document.Pages)
+        {
+            for (auto const& control : page.Controls)
+            {
+                m_relativeBase.push_back(control.DefaultValue);
+            }
+        }
+
         m_clockControls.clear();
         m_lfoControls.clear();
         m_stepControls.clear();
@@ -961,6 +973,13 @@ namespace glass
             controlIndex,
             m_engine.Evaluate(controlIndex, MessageTrigger::Changes, value, m_sends));
 
+        if (m_engine.HasRelativeRows(controlIndex) && controlIndex < m_relativeBase.size())
+        {
+            auto const ticks = TakeRelativeTicks(m_relativeBase[controlIndex], value);
+
+            SendPrepared(controlIndex, m_engine.EvaluateRelative(controlIndex, ticks, m_sends));
+        }
+
         // A knob or a fader can be a tempo control. Nothing happens unless some clock on this
         // layout named it, so every other control pays one loop over an empty list.
         TempoSourceMoved(controlIndex, value);
@@ -1303,6 +1322,16 @@ namespace glass
     _Use_decl_annotations_
     void LivePlayer::Touched(uint32_t controlIndex, bool isTouched)
     {
+        // A control that springs back when let go has not turned anything by doing so.
+        if (!isTouched && m_engine.HasRelativeRows(controlIndex) && controlIndex < m_relativeBase.size())
+        {
+            if (auto const* const control = m_document.ControlAtIndex(controlIndex);
+                control != nullptr && control->ReturnsToDefault)
+            {
+                m_relativeBase[controlIndex] = control->DefaultValue;
+            }
+        }
+
         SendPrepared(
             controlIndex,
             m_engine.Evaluate(
@@ -1572,7 +1601,14 @@ namespace glass
 
         // This is a service callback thread and the buffer belongs to the caller, so what is
         // wanted is resolved here and only the answer is marshalled.
-        std::vector<std::pair<uint32_t, double>> moves{};
+        struct Move
+        {
+            uint32_t ControlIndex{ 0 };
+            double Value{ 0.0 };
+            bool Blinks{ false };
+        };
+
+        std::vector<Move> moves{};
         std::vector<LearnedBinding> captures{};
         std::vector<uint32_t> lit{};
         std::vector<std::pair<uint32_t, ListenerState>> latched{};
@@ -1591,10 +1627,12 @@ namespace glass
 
             size_t controlIndex{ 0 };
             double value{ 0.0 };
+            bool blinks{ false };
 
-            if (FeedbackMoved && m_engine.TryResolveFeedback(words + position, length, controlIndex, value))
+            if (FeedbackMoved && m_engine.TryResolveFeedback(
+                words + position, length, destinationIndex, controlIndex, value, blinks))
             {
-                moves.emplace_back(static_cast<uint32_t>(controlIndex), value);
+                moves.push_back({ static_cast<uint32_t>(controlIndex), value, blinks });
             }
 
             if (ActivitySeen)
@@ -1668,9 +1706,16 @@ namespace glass
 
                 if (strong->FeedbackMoved)
                 {
-                    for (auto const& [controlIndex, value] : moves)
+                    for (auto const& move : moves)
                     {
-                        strong->FeedbackMoved(controlIndex, value);
+                        if (move.Blinks && strong->FeedbackBlinks)
+                        {
+                            strong->FeedbackBlinks(move.ControlIndex);
+                        }
+                        else
+                        {
+                            strong->FeedbackMoved(move.ControlIndex, move.Value);
+                        }
                     }
                 }
 

@@ -110,6 +110,7 @@
     <ClCompile Include="$(UserToolsDir)midi-glass\document\LayoutStore.cpp" />
     <ClCompile Include="$(UserToolsDir)midi-glass\document\LayoutTemplates.cpp" />
     <ClCompile Include="$(UserToolsDir)midi-glass\document\LfoShape.cpp" />
+    <ClCompile Include="$(UserToolsDir)midi-glass\document\MackieControl.cpp" />
     <ClCompile Include="$(UserToolsDir)midi-glass\document\PadGrid.cpp" />
     <ClCompile Include="$(UserToolsDir)midi-glass\document\PageTemplates.cpp" />
     <ClCompile Include="$(UserToolsDir)midi-glass\document\StepPattern.cpp" />

@@ -97,6 +97,7 @@ namespace glass
         // control's. A step does not move, so its position is the top of its own range: that is
         // what makes "note 60 at velocity 100" mean 100 rather than something between the ends.
         PreparedMessage PrepareStepMessage(
+            _In_ LayoutDocument const& document,
             _In_ ControlMessage const& message,
             _In_ int32_t destinationIndex) noexcept
         {
@@ -112,7 +113,7 @@ namespace glass
             prepared.Minimum = message.Minimum;
             prepared.Maximum = message.Maximum;
             prepared.Detents = message.Detents;
-            prepared.UseMidi1Protocol = message.UseMidi1Protocol;
+            prepared.UseMidi1Protocol = SendsAsMidi1(message, document.ProtocolOf(message.DeviceName));
 
             return prepared;
         }
@@ -306,7 +307,7 @@ namespace glass
 
                     if (step.Message.Kind == MessageKind::Note)
                     {
-                        auto const prepared = PrepareStepMessage(step.Message, destination);
+                        auto const prepared = PrepareStepMessage(document, step.Message, destination);
 
                         if (AppendBuiltWords(prepared, 1.0, actions))
                         {
@@ -333,7 +334,7 @@ namespace glass
                     }
                     else
                     {
-                        AppendBuiltWords(PrepareStepMessage(step.Message, destination), 1.0, actions);
+                        AppendBuiltWords(PrepareStepMessage(document, step.Message, destination), 1.0, actions);
                     }
 
                     ++index;

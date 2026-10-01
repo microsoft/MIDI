@@ -72,6 +72,17 @@ namespace glass
 
         // On a switch, the one position that sends this row; -1 for every change.
         int32_t Position{ -1 };
+
+        // Sent exactly as it is. A Mackie Control button's release is a note on at velocity
+        // zero, and nothing else here builds one. 0 when the row builds its words.
+        uint32_t FixedWord{ 0 };
+
+        // Sends how far the control turned since the last send, never where it is.
+        bool IsRelative{ false };
+
+        // Came from a Mackie Control function. A DAW's faders must not jump when a layout opens,
+        // so these stay out of the startup pass.
+        bool IsMackie{ false };
     };
 
     struct PreparedControl
@@ -84,6 +95,9 @@ namespace glass
 
         // How many positions a switch has. Zero for every other kind of control.
         int32_t SwitchPositions{ 0 };
+
+        // At least one row sends turns rather than positions.
+        bool HasRelative{ false };
     };
 
     // One message ready to hand to a connection. Fixed size on purpose: the hot path fills a
@@ -189,6 +203,14 @@ namespace glass
             _In_ uint8_t status,
             _Inout_ std::span<PreparedSend> sends) const noexcept;
 
+        // A turn, in ticks, on every row that sends turns: positive is clockwise.
+        uint32_t EvaluateRelative(
+            _In_ size_t controlIndex,
+            _In_ int32_t ticks,
+            _Inout_ std::span<PreparedSend> sends) const noexcept;
+
+        bool HasRelativeRows(_In_ size_t controlIndex) const noexcept;
+
         // The initialization pass a layout runs when it opens, in keyboard order, so a synth can
         // be put into a known state. Returns how many sends were written.
         uint32_t EvaluateStartupValues(_Inout_ std::span<PreparedSend> sends) const noexcept;
@@ -200,6 +222,16 @@ namespace glass
             _In_ uint32_t wordCount,
             _Out_ size_t& controlIndex,
             _Out_ double& value) const noexcept;
+
+        // The same, knowing which device it came in on. A Mackie Control light only answers its
+        // own device, and it can be told to blink, which no value can say.
+        bool TryResolveFeedback(
+            _In_ uint32_t const* words,
+            _In_ uint32_t wordCount,
+            _In_ int32_t destinationIndex,
+            _Out_ size_t& controlIndex,
+            _Out_ double& value,
+            _Out_ bool& blinks) const noexcept;
 
         // What a listening control saw. An activity light blinks, a transport light latches,
         // and a beat light has to be told about every clock message so somebody can count them.
@@ -286,7 +318,15 @@ namespace glass
             _In_ double value,
             _In_ ValueAxis axis,
             _In_ NoteGate gate,
+            _In_ bool atStartup,
             _Inout_ std::span<PreparedSend> sends) const noexcept;
+
+        // The rows and the feedback one Mackie Control function stands for.
+        void PrepareMackieRow(
+            _In_ ControlKind controlKind,
+            _In_ ControlMessage const& message,
+            _In_ int32_t destinationIndex,
+            _Inout_ PreparedControl& prepared);
 
         struct PreparedFeedback
         {
@@ -305,6 +345,10 @@ namespace glass
 
             // Tempo mode: whether the beat comes from the wire or from a clock on this layout.
             bool TempoFromWire{ true };
+
+            // A Mackie Control light or motor fader: answers only its own device, and a light
+            // reads the note's velocity as off, on or blinking.
+            bool IsMackie{ false };
         };
 
         std::vector<PreparedDestination> m_destinations{};
@@ -411,4 +455,8 @@ namespace glass
     // Semitones as the 7.25 fixed point number the per-note bend range is given in: seven bits
     // of whole semitones and twenty five of fraction.
     uint32_t SemitonesAsPitch725(_In_ double semitones) noexcept;
+
+    // Whole ticks a control has turned since the baseline, at most 63 either way, and the
+    // baseline moved on by exactly that much so nothing is lost between sends.
+    int32_t TakeRelativeTicks(_Inout_ double& baseline, _In_ double value) noexcept;
 }

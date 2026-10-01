@@ -222,7 +222,7 @@ namespace winrt::midiglass::implementation
         void OnRemoveMessageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnMessageFieldChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnMessageNumberChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
-        void OnMessageVelocityChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnMessageValueChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
         void OnMessageParameterChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
 
         // Several controls picked: where all of them send, and where the ones that listen do.
@@ -486,6 +486,14 @@ namespace winrt::midiglass::implementation
         void RefreshMessageKindFields(_In_ glass::Control const& control);
         void RefreshMessageKindFields(_In_ glass::ControlMessage const& message);
         void RefreshSequenceChoices(_In_ std::wstring const& selectedName);
+
+        // The What list for a row, which depends on what its device speaks: every message, only
+        // the MIDI 1.0 ones, or Mackie Control functions for this kind of control.
+        void RefreshWhatChoices(_In_ glass::Control const& control, _In_ glass::ControlMessage const& message);
+
+        // The value fields: which end of the range each edits, what they are called, and the
+        // units, all from the row's kind, when it is sent, and its device's protocol.
+        void RefreshValueFields(_In_ glass::Control const& control, _In_ glass::ControlMessage const& message);
 
         // The groups the chosen device actually declares, so a control cannot be pointed at one
         // that goes nowhere. m_groupChoices maps a combo index back to a group number.
@@ -858,6 +866,15 @@ namespace winrt::midiglass::implementation
 
         std::vector<int32_t> m_groupChoices{};
         bool m_showAllGroups{ false };
+
+        // What each entry of the What list stands for: a message kind, and for a Mackie Control
+        // function, which one. A heading is a function of MackieNoFunction.
+        std::vector<std::pair<glass::MessageKind, uint32_t>> m_whatChoices{};
+        std::wstring m_whatListKey{};
+
+        // Which end of the range each value field edits. True is the maximum.
+        bool m_valueEditsMaximum{ true };
+        bool m_secondValueEditsMaximum{ false };
 
         // Combo index to group, and to device name, for the panels that edit several controls.
         std::vector<int32_t> m_manySendGroupChoices{};

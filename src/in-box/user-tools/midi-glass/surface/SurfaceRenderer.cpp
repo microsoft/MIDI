@@ -1234,6 +1234,7 @@ namespace glass
         m_values.push_back(control.DefaultValue);
         m_valuesY.push_back(control.DefaultValueY);
         m_litUntil.push_back(0);
+        m_blinking.push_back(false);
 
         auto const itemIndex = m_visuals.size() - 1;
 
@@ -4657,6 +4658,14 @@ namespace glass
             m_flashTimer.Stop();
             m_flashTimer = nullptr;
         }
+
+        m_blinking.clear();
+
+        if (m_blinkTimer != nullptr)
+        {
+            m_blinkTimer.Stop();
+            m_blinkTimer = nullptr;
+        }
         m_brushes.clear();
         m_gradients.clear();
         m_domes.clear();
@@ -6571,6 +6580,82 @@ namespace glass
         {
             visual.Bloom.StopAnimation(L"Opacity");
             visual.Bloom.Opacity(visual.RestingGlow);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::SetBlinking(size_t itemIndex, bool blinking) noexcept
+    {
+        if (itemIndex >= m_blinking.size() || m_blinking[itemIndex] == blinking)
+        {
+            return;
+        }
+
+        m_blinking[itemIndex] = blinking;
+
+        if (!blinking)
+        {
+            return;
+        }
+
+        if (m_reducedMotion)
+        {
+            SetValue(itemIndex, 1.0);
+            return;
+        }
+
+        SetValue(itemIndex, m_blinkLit ? 1.0 : 0.0);
+
+        if (m_blinkTimer != nullptr)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const queue = winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread();
+
+            if (queue == nullptr)
+            {
+                return;
+            }
+
+            // Two blinks a second, well under the three a second that can trigger seizures.
+            m_blinkTimer = queue.CreateTimer();
+            m_blinkTimer.Interval(std::chrono::milliseconds{ 250 });
+            m_blinkTimer.Tick([this](auto&&, auto&&) { SweepBlinks(); });
+            m_blinkTimer.Start();
+        }
+        catch (...)
+        {
+        }
+    }
+
+    void SurfaceRenderer::SweepBlinks() noexcept
+    {
+        try
+        {
+            m_blinkLit = !m_blinkLit;
+
+            auto anyBlinking = false;
+
+            for (size_t index = 0; index < m_blinking.size(); ++index)
+            {
+                if (m_blinking[index])
+                {
+                    anyBlinking = true;
+                    SetValue(index, m_blinkLit ? 1.0 : 0.0);
+                }
+            }
+
+            if (!anyBlinking && m_blinkTimer != nullptr)
+            {
+                m_blinkTimer.Stop();
+                m_blinkTimer = nullptr;
+            }
         }
         catch (...)
         {

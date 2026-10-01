@@ -97,6 +97,14 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    DeviceProtocol LayoutDocument::ProtocolOf(std::wstring const& deviceName) const noexcept
+    {
+        auto const* const device = FindDevice(deviceName);
+
+        return device == nullptr ? DeviceProtocol::Midi2 : device->Protocol;
+    }
+
+    _Use_decl_annotations_
     Sequence const* LayoutDocument::FindSequence(std::wstring const& name) const noexcept
     {
         auto it = std::find_if(Sequences.begin(), Sequences.end(),
@@ -414,27 +422,131 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    int32_t NoteVelocity(ControlMessage const& message) noexcept
+    bool SendsAsMidi1(ControlMessage const& message, DeviceProtocol protocol) noexcept
     {
-        auto const& top = message.Maximum;
-
-        if (!std::isfinite(top.Value))
+        switch (message.Kind)
         {
-            return 127;
+        case MessageKind::Note:
+        case MessageKind::ControlChange:
+        case MessageKind::ProgramChange:
+        case MessageKind::PitchBend:
+        case MessageKind::ChannelPressure:
+            return message.UseMidi1Protocol || protocol != DeviceProtocol::Midi2;
+
+        default:
+            return false;
         }
-
-        // An absolute value is in the note's own units: seven bits in MIDI 1.0, sixteen in 2.0.
-        auto const share = top.Scaling == ValueScaling::Absolute
-            ? top.Value / (message.UseMidi1Protocol ? 127.0 : 65535.0)
-            : top.Value;
-
-        return std::clamp(static_cast<int32_t>(std::lround(std::clamp(share, 0.0, 1.0) * 127.0)), 1, 127);
     }
 
     _Use_decl_annotations_
-    void SetNoteVelocity(ControlMessage& message, int32_t velocity) noexcept
+    int32_t RawValueMaximum(ControlMessage const& message, DeviceProtocol protocol) noexcept
     {
-        message.Maximum = { std::clamp(velocity, 1, 127) / 127.0, ValueScaling::Fraction };
+        if (protocol == DeviceProtocol::Midi2 && !message.UseMidi1Protocol)
+        {
+            return 0;
+        }
+
+        switch (message.Kind)
+        {
+        case MessageKind::Note:
+        case MessageKind::ControlChange:
+        case MessageKind::ChannelPressure:
+            return 127;
+
+        case MessageKind::PitchBend:
+        case MessageKind::RegisteredController:
+        case MessageKind::AssignedController:
+            return 16383;
+
+        default:
+            return 0;
+        }
+    }
+
+    namespace
+    {
+        // The largest number the field this row's value lands in can hold on the wire.
+        double WireMaximum(_In_ ControlMessage const& message, _In_ DeviceProtocol protocol) noexcept
+        {
+            if (SendsAsMidi1(message, protocol))
+            {
+                return message.Kind == MessageKind::PitchBend ? 16383.0 : 127.0;
+            }
+
+            return message.Kind == MessageKind::Note ? 65535.0 : 4294967295.0;
+        }
+
+        double ShareOf(
+            _In_ double value,
+            _In_ ValueScaling scaling,
+            _In_ ControlMessage const& message,
+            _In_ DeviceProtocol protocol) noexcept
+        {
+            if (!std::isfinite(value))
+            {
+                return 0.0;
+            }
+
+            auto const share = scaling == ValueScaling::Absolute
+                ? value / WireMaximum(message, protocol)
+                : value;
+
+            return std::clamp(share, 0.0, 1.0);
+        }
+    }
+
+    _Use_decl_annotations_
+    double ShownValue(MessageValue const& end, ControlMessage const& message, DeviceProtocol protocol) noexcept
+    {
+        auto const share = ShareOf(end.Value, end.Scaling, message, protocol);
+        auto const raw = RawValueMaximum(message, protocol);
+
+        return raw > 0
+            ? std::round(share * raw)
+            : std::round(share * 1000.0) / 10.0;
+    }
+
+    _Use_decl_annotations_
+    MessageValue ValueFromShown(double shown, ControlMessage const& message, DeviceProtocol protocol) noexcept
+    {
+        if (!std::isfinite(shown))
+        {
+            shown = 0.0;
+        }
+
+        auto const raw = RawValueMaximum(message, protocol);
+
+        auto const share = raw > 0
+            ? std::round(shown) / raw
+            : shown / 100.0;
+
+        return { std::clamp(share, 0.0, 1.0), ValueScaling::Fraction };
+    }
+
+    _Use_decl_annotations_
+    void ShareExactValues(ControlMessage& message, DeviceProtocol protocol) noexcept
+    {
+        for (auto* const end : { &message.Minimum, &message.Maximum })
+        {
+            if (end->Scaling == ValueScaling::Absolute)
+            {
+                *end = { ShareOf(end->Value, ValueScaling::Absolute, message, protocol), ValueScaling::Fraction };
+            }
+        }
+
+        auto& detents = message.Detents;
+
+        if (detents.Scaling == ValueScaling::Absolute)
+        {
+            detents.Step = ShareOf(detents.Step, ValueScaling::Absolute, message, protocol);
+
+            for (auto& stop : detents.Stops)
+            {
+                stop = ShareOf(stop, ValueScaling::Absolute, message, protocol);
+            }
+
+            detents.Scaling = ValueScaling::Fraction;
+        }
     }
 
     _Use_decl_annotations_

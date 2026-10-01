@@ -2256,9 +2256,10 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
 
-                                        <TextBlock x:Uid="MessageWhenLabel" Grid.Row="0" Grid.Column="0" Text="When" Style="{StaticResource InspectorLabelStyle}" />
+                                        <TextBlock x:Name="MessageWhenLabel" x:Uid="MessageWhenLabel" Grid.Row="0" Grid.Column="0" Text="When" Style="{StaticResource InspectorLabelStyle}" />
                                         <ComboBox x:Name="TriggerCombo" x:Uid="TriggerCombo" Grid.Row="0" Grid.Column="1"
                                                   HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
 
@@ -2338,12 +2339,28 @@
                                                        ValueChanged="OnMessageParameterChanged" />
                                         </Grid>
 
-                                        <TextBlock x:Name="MessageVelocityLabel" x:Uid="MessageVelocityLabel" Grid.Row="6" Grid.Column="0" Text="Velocity"
+                                        <!-- The one or two values a row sends, in the units its
+                                             device is set to: exact MIDI 1.0 numbers, or a
+                                             percentage. Labeled in code, because a note's
+                                             velocity and a fader's range are not the same question. -->
+                                        <TextBlock x:Name="MessageValueLabel" Grid.Row="6" Grid.Column="0" Text="Value"
                                                    Style="{StaticResource InspectorLabelStyle}" Visibility="Collapsed" />
-                                        <NumberBox x:Name="MessageVelocityBox" x:Uid="MessageVelocityBox" Grid.Row="6" Grid.Column="1"
-                                                   Minimum="1" Maximum="127" SpinButtonPlacementMode="Compact" Visibility="Collapsed"
-                                                   ValueChanged="OnMessageVelocityChanged" />
+                                        <NumberBox x:Name="MessageValueBox" Grid.Row="6" Grid.Column="1"
+                                                   Minimum="0" Maximum="127" SpinButtonPlacementMode="Compact" Visibility="Collapsed"
+                                                   ValueChanged="OnMessageValueChanged" />
+
+                                        <TextBlock x:Name="MessageSecondValueLabel" Grid.Row="7" Grid.Column="0" Text="Value"
+                                                   Style="{StaticResource InspectorLabelStyle}" Visibility="Collapsed" />
+                                        <NumberBox x:Name="MessageSecondValueBox" Grid.Row="7" Grid.Column="1"
+                                                   Minimum="0" Maximum="127" SpinButtonPlacementMode="Compact" Visibility="Collapsed"
+                                                   ValueChanged="OnMessageValueChanged" />
                                     </Grid>
+
+                                    <TextBlock x:Name="MessageProtocolText"
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Visibility="Collapsed"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
                                     <!-- Stops, so a control does not have to be smooth. A six
                                          position mode switch and a volume fader are the same

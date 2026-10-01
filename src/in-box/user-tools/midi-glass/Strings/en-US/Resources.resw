@@ -392,6 +392,12 @@
   <data name="TemplateTransportDescription" xml:space="preserve">
     <value>Play, stop, record and loop, plus eight track faders</value>
   </data>
+  <data name="TemplateMackieControlName" xml:space="preserve">
+    <value>Mackie Control</value>
+  </data>
+  <data name="TemplateMackieControlDescription" xml:space="preserve">
+    <value>Eight channel strips, a master fader, transport and a jog wheel for a DAW set up to use a Mackie Control surface</value>
+  </data>
   <data name="TemplateHorizontalToolbarName" xml:space="preserve">
     <value>Horizontal toolbar</value>
   </data>
@@ -2550,14 +2556,64 @@
   <data name="MessageNumberBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Controller or note number</value>
   </data>
-  <data name="MessageVelocityLabel.Text" xml:space="preserve">
+  <data name="ValueVelocity" xml:space="preserve">
     <value>Velocity</value>
+    <comment>How hard a note is played.</comment>
   </data>
-  <data name="MessageVelocityBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Velocity, 1 to 127</value>
+  <data name="ValueReleaseVelocity" xml:space="preserve">
+    <value>Release velocity</value>
+    <comment>The velocity of a note off: how fast the key was let go.</comment>
   </data>
-  <data name="MessageVelocityBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>How hard the note is played, from 1 to 127. A pad that takes its velocity from how hard it is pressed plays up to this.</value>
+  <data name="ValueValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="ValueFrom" xml:space="preserve">
+    <value>From</value>
+    <comment>The value a message sends at the bottom of the control's travel.</comment>
+  </data>
+  <data name="ValueTo" xml:space="preserve">
+    <value>To</value>
+    <comment>The value a message sends at the top of the control's travel.</comment>
+  </data>
+  <data name="ValuePercentLabelFormat" xml:space="preserve">
+    <value>{0} %</value>
+    <comment>A value field that takes a percentage. {0} is its name, such as "Velocity".</comment>
+  </data>
+  <data name="ValueRawNameFormat" xml:space="preserve">
+    <value>{0}, {1} to {2}</value>
+    <comment>The screen reader name of a value field. {0} is its name, {1} and {2} the lowest and highest numbers it takes.</comment>
+  </data>
+  <data name="ValuePercentNameFormat" xml:space="preserve">
+    <value>{0}, percent</value>
+    <comment>The screen reader name of a value field that takes a percentage. {0} is its name.</comment>
+  </data>
+  <data name="ValueUnitsMidi1" xml:space="preserve">
+    <value>Exact MIDI 1.0 numbers, because this device is set to MIDI 1.0 in Layout settings.</value>
+  </data>
+  <data name="ValueUnitsMidi2" xml:space="preserve">
+    <value>Percentages, because this device is set to MIDI 2.0 in Layout settings.</value>
+  </data>
+  <data name="MessageRowMackieFormat" xml:space="preserve">
+    <value>{0}  ·  {1}</value>
+    <comment>A row in a control's Sends list for a Mackie Control device. {0} is the function, such as "Play" or "Fader 3". {1} is the device's name.</comment>
+  </data>
+  <data name="MessageRowPickFunction" xml:space="preserve">
+    <value>Pick a function</value>
+  </data>
+  <data name="MackiePickCaption" xml:space="preserve">
+    <value>Pick a Mackie Control function. This row sends nothing until you do.</value>
+  </data>
+  <data name="MackieNothingForThisControl" xml:space="preserve">
+    <value>Mackie Control has nothing for this kind of control. Use a button, pad, toggle, fader, knob, wheel or turntable.</value>
+  </data>
+  <data name="MackieButtonCaption" xml:space="preserve">
+    <value>Sends a press and a release. The DAW lights it, and it blinks when the DAW says so.</value>
+  </data>
+  <data name="MackieFaderCaption" xml:space="preserve">
+    <value>Sends where the fader is and when you touch it. The fader moves when the DAW moves it.</value>
+  </data>
+  <data name="MackieEncoderCaption" xml:space="preserve">
+    <value>Sends how far you turn it, and springs back to the middle when you let go.</value>
   </data>
   <data name="TriggerChanges" xml:space="preserve">
     <value>It changes</value>
@@ -3177,6 +3233,267 @@
   </data>
   <data name="MatchModeUsbModel" xml:space="preserve">
     <value>USB model</value>
+  </data>
+  <data name="DeviceProtocolLabel" xml:space="preserve">
+    <value>Talk to it in</value>
+    <comment>Followed by a choice of MIDI 2.0, MIDI 1.0 or Mackie Control.</comment>
+  </data>
+  <data name="DeviceProtocolMidi2" xml:space="preserve">
+    <value>MIDI 2.0</value>
+  </data>
+  <data name="DeviceProtocolMidi1" xml:space="preserve">
+    <value>MIDI 1.0</value>
+  </data>
+  <data name="DeviceProtocolMackie" xml:space="preserve">
+    <value>Mackie Control</value>
+  </data>
+  <data name="DeviceProtocolMidi2Tip" xml:space="preserve">
+    <value>Values are percentages, at the highest resolution. Windows converts them for a MIDI 1.0 device.</value>
+  </data>
+  <data name="DeviceProtocolMidi1Tip" xml:space="preserve">
+    <value>Values are the exact 0 to 127 numbers device manuals print, so you can copy them straight from the manual.</value>
+  </data>
+  <data name="DeviceProtocolMackieTip" xml:space="preserve">
+    <value>For a DAW set up to use a Mackie Control surface. Controls pick functions such as Play or Fader 1, and lights and motor faders follow the DAW.</value>
+  </data>
+  <data name="MackieHeadingTransport" xml:space="preserve">
+    <value>Transport</value>
+  </data>
+  <data name="MackieHeadingStrips" xml:space="preserve">
+    <value>Channel strips</value>
+  </data>
+  <data name="MackieHeadingNavigation" xml:space="preserve">
+    <value>Banks and cursor</value>
+  </data>
+  <data name="MackieHeadingFunctionKeys" xml:space="preserve">
+    <value>Function keys</value>
+  </data>
+  <data name="MackieHeadingViews" xml:space="preserve">
+    <value>Views</value>
+  </data>
+  <data name="MackieHeadingAssign" xml:space="preserve">
+    <value>Assign</value>
+  </data>
+  <data name="MackieHeadingAutomation" xml:space="preserve">
+    <value>Automation</value>
+  </data>
+  <data name="MackieHeadingUtility" xml:space="preserve">
+    <value>Modifiers and utility</value>
+  </data>
+  <data name="MackieRecFormat" xml:space="preserve">
+    <value>Rec {0}</value>
+    <comment>A Mackie Control strip's record arm button. {0} is the strip, 1 to 8.</comment>
+  </data>
+  <data name="MackieSoloFormat" xml:space="preserve">
+    <value>Solo {0}</value>
+    <comment>{0} is the strip, 1 to 8.</comment>
+  </data>
+  <data name="MackieMuteFormat" xml:space="preserve">
+    <value>Mute {0}</value>
+    <comment>{0} is the strip, 1 to 8.</comment>
+  </data>
+  <data name="MackieSelectFormat" xml:space="preserve">
+    <value>Select {0}</value>
+    <comment>{0} is the strip, 1 to 8.</comment>
+  </data>
+  <data name="MackieVPotPressFormat" xml:space="preserve">
+    <value>V-Pot {0} press</value>
+    <comment>Pressing a Mackie Control strip's rotary encoder. {0} is the strip, 1 to 8.</comment>
+  </data>
+  <data name="MackieVPotFormat" xml:space="preserve">
+    <value>V-Pot {0}</value>
+    <comment>Turning a Mackie Control strip's rotary encoder. {0} is the strip, 1 to 8.</comment>
+  </data>
+  <data name="MackieFaderFormat" xml:space="preserve">
+    <value>Fader {0}</value>
+    <comment>{0} is the strip, 1 to 8.</comment>
+  </data>
+  <data name="MackieMasterFader" xml:space="preserve">
+    <value>Master fader</value>
+  </data>
+  <data name="MackieJog" xml:space="preserve">
+    <value>Jog wheel</value>
+  </data>
+  <data name="MackieFunctionKeyFormat" xml:space="preserve">
+    <value>F{0}</value>
+    <comment>A Mackie Control function key. {0} is 1 to 8.</comment>
+  </data>
+  <data name="MackieAssignTrack" xml:space="preserve">
+    <value>Assign track</value>
+  </data>
+  <data name="MackieAssignSend" xml:space="preserve">
+    <value>Assign send</value>
+  </data>
+  <data name="MackieAssignPan" xml:space="preserve">
+    <value>Assign pan</value>
+  </data>
+  <data name="MackieAssignPlugIn" xml:space="preserve">
+    <value>Assign plug-in</value>
+  </data>
+  <data name="MackieAssignEq" xml:space="preserve">
+    <value>Assign EQ</value>
+  </data>
+  <data name="MackieAssignInstrument" xml:space="preserve">
+    <value>Assign instrument</value>
+  </data>
+  <data name="MackieBankLeft" xml:space="preserve">
+    <value>Bank left</value>
+  </data>
+  <data name="MackieBankRight" xml:space="preserve">
+    <value>Bank right</value>
+  </data>
+  <data name="MackieChannelLeft" xml:space="preserve">
+    <value>Channel left</value>
+  </data>
+  <data name="MackieChannelRight" xml:space="preserve">
+    <value>Channel right</value>
+  </data>
+  <data name="MackieFlip" xml:space="preserve">
+    <value>Flip</value>
+  </data>
+  <data name="MackieGlobalView" xml:space="preserve">
+    <value>Global view</value>
+  </data>
+  <data name="MackieNameValue" xml:space="preserve">
+    <value>Name/Value</value>
+  </data>
+  <data name="MackieSmpteBeats" xml:space="preserve">
+    <value>SMPTE/Beats</value>
+  </data>
+  <data name="MackieMidiTracks" xml:space="preserve">
+    <value>MIDI tracks</value>
+  </data>
+  <data name="MackieInputs" xml:space="preserve">
+    <value>Inputs</value>
+  </data>
+  <data name="MackieAudioTracks" xml:space="preserve">
+    <value>Audio tracks</value>
+  </data>
+  <data name="MackieAudioInstruments" xml:space="preserve">
+    <value>Audio instruments</value>
+  </data>
+  <data name="MackieAux" xml:space="preserve">
+    <value>Aux</value>
+  </data>
+  <data name="MackieBuses" xml:space="preserve">
+    <value>Buses</value>
+  </data>
+  <data name="MackieOutputs" xml:space="preserve">
+    <value>Outputs</value>
+  </data>
+  <data name="MackieUser" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="MackieShift" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="MackieOption" xml:space="preserve">
+    <value>Option</value>
+  </data>
+  <data name="MackieControlKey" xml:space="preserve">
+    <value>Control</value>
+    <comment>The Control modifier key on a Mackie Control surface.</comment>
+  </data>
+  <data name="MackieAlt" xml:space="preserve">
+    <value>Alt</value>
+  </data>
+  <data name="MackieReadOff" xml:space="preserve">
+    <value>Read/Off</value>
+    <comment>An automation mode.</comment>
+  </data>
+  <data name="MackieWrite" xml:space="preserve">
+    <value>Write</value>
+    <comment>An automation mode.</comment>
+  </data>
+  <data name="MackieTrim" xml:space="preserve">
+    <value>Trim</value>
+    <comment>An automation mode.</comment>
+  </data>
+  <data name="MackieTouch" xml:space="preserve">
+    <value>Touch</value>
+    <comment>An automation mode.</comment>
+  </data>
+  <data name="MackieLatch" xml:space="preserve">
+    <value>Latch</value>
+    <comment>An automation mode.</comment>
+  </data>
+  <data name="MackieGroup" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="MackieSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="MackieUndo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="MackieCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="MackieEnter" xml:space="preserve">
+    <value>Enter</value>
+  </data>
+  <data name="MackieMarker" xml:space="preserve">
+    <value>Marker</value>
+  </data>
+  <data name="MackieNudge" xml:space="preserve">
+    <value>Nudge</value>
+  </data>
+  <data name="MackieCycle" xml:space="preserve">
+    <value>Cycle</value>
+    <comment>Loop playback on or off.</comment>
+  </data>
+  <data name="MackieDrop" xml:space="preserve">
+    <value>Drop</value>
+    <comment>Punch in.</comment>
+  </data>
+  <data name="MackieReplace" xml:space="preserve">
+    <value>Replace</value>
+  </data>
+  <data name="MackieClick" xml:space="preserve">
+    <value>Click</value>
+    <comment>The metronome.</comment>
+  </data>
+  <data name="MackieGlobalSolo" xml:space="preserve">
+    <value>Global solo</value>
+  </data>
+  <data name="MackieRewind" xml:space="preserve">
+    <value>Rewind</value>
+  </data>
+  <data name="MackieFastForward" xml:space="preserve">
+    <value>Fast forward</value>
+  </data>
+  <data name="MackieStop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="MackiePlay" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="MackieRecord" xml:space="preserve">
+    <value>Record</value>
+  </data>
+  <data name="MackieUp" xml:space="preserve">
+    <value>Up</value>
+  </data>
+  <data name="MackieDown" xml:space="preserve">
+    <value>Down</value>
+  </data>
+  <data name="MackieLeft" xml:space="preserve">
+    <value>Left</value>
+  </data>
+  <data name="MackieRight" xml:space="preserve">
+    <value>Right</value>
+  </data>
+  <data name="MackieZoom" xml:space="preserve">
+    <value>Zoom</value>
+  </data>
+  <data name="MackieScrub" xml:space="preserve">
+    <value>Scrub</value>
+  </data>
+  <data name="MackieUserSwitch1" xml:space="preserve">
+    <value>User switch 1</value>
+  </data>
+  <data name="MackieUserSwitch2" xml:space="preserve">
+    <value>User switch 2</value>
   </data>
   <data name="NoDevicesYet" xml:space="preserve">
     <value>This layout has no devices yet. Add one, then point your controls at it from the MIDI tab.</value>

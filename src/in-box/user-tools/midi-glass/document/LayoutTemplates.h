@@ -31,6 +31,10 @@ namespace glass
         HorizontalToolbar = 5,
         VerticalToolbar = 6,
         FloatingPalette = 7,
+
+        // A DAW control surface: eight strips, a master fader, transport and a jog wheel, all
+        // speaking Mackie Control.
+        MackieControl = 8,
     };
 
     struct LayoutTemplateInfo

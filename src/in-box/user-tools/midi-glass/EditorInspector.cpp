@@ -14,6 +14,7 @@
 #include "StringResources.h"
 #include "ControlFactory.h"
 #include "FontCatalog.h"
+#include "MackieControl.h"
 #include "SurfaceColors.h"
 #include "HexText.h"
 
@@ -248,6 +249,30 @@ namespace winrt::midiglass::implementation
                 return fallback;
             }
         }
+
+        winrt::hstring MackieFunctionName(_In_ uint32_t function)
+        {
+            auto const text = glass::DescribeMackieFunction(function);
+
+            if (text.ResourceKey == nullptr)
+            {
+                return resources::GetString(L"MessageRowPickFunction");
+            }
+
+            return text.Number > 0
+                ? resources::FormatString(text.ResourceKey, std::to_wstring(text.Number))
+                : resources::GetString(text.ResourceKey);
+        }
+
+        // A page change or a sequence goes nowhere, so its device, if it kept one, says nothing.
+        glass::DeviceProtocol RowProtocol(
+            _In_ glass::LayoutDocument const& document,
+            _In_ glass::ControlMessage const& message) noexcept
+        {
+            return glass::SendsToADevice(message.Kind)
+                ? document.ProtocolOf(message.DeviceName)
+                : glass::DeviceProtocol::Midi2;
+        }
     }
 
     void EditorWindow::BuildInspectorChoices()
@@ -274,11 +299,6 @@ namespace winrt::midiglass::implementation
             for (auto const* const key : TriggerResourceKeys)
             {
                 TriggerCombo().Items().Append(box_value(resources::GetString(key)));
-            }
-
-            for (auto const* const key : MessageKindResourceKeys)
-            {
-                KindMessageCombo().Items().Append(box_value(resources::GetString(key)));
             }
 
             GroupCombo().Items().Append(box_value(resources::GetString(L"GroupAll")));
@@ -1131,6 +1151,18 @@ namespace winrt::midiglass::implementation
                             : page->Name);
                 }
 
+                // A Mackie Control row is its function, and a row that has none yet says so.
+                if (message.Kind == glass::MessageKind::MackieControl ||
+                    RowProtocol(m_editor.Document(), message) == glass::DeviceProtocol::MackieControl)
+                {
+                    text = resources::FormatString(
+                        L"MessageRowMackieFormat",
+                        message.Kind == glass::MessageKind::MackieControl
+                            ? MackieFunctionName(message.Number)
+                            : resources::GetString(L"MessageRowPickFunction"),
+                        message.DeviceName);
+                }
+
                 // Every row of a switch otherwise reads the same. The position is the difference.
                 if (control->Kind == glass::ControlKind::Switch && message.Position >= 0)
                 {
@@ -1203,7 +1235,8 @@ namespace winrt::midiglass::implementation
             GroupCombo().IsEnabled(valid);
             ChannelCombo().IsEnabled(valid);
             MessageNumberBox().IsEnabled(valid);
-            MessageVelocityBox().IsEnabled(valid);
+            MessageValueBox().IsEnabled(valid);
+            MessageSecondValueBox().IsEnabled(valid);
 
             if (!valid)
             {
@@ -1212,6 +1245,7 @@ namespace winrt::midiglass::implementation
                 RawWordsPanel().Visibility(xaml::Visibility::Collapsed);
                 SequencePanel().Visibility(xaml::Visibility::Collapsed);
                 TargetPagePanel().Visibility(xaml::Visibility::Collapsed);
+                MessageProtocolText().Visibility(xaml::Visibility::Collapsed);
 
                 m_updatingInspector = previous;
                 return;
@@ -1245,7 +1279,7 @@ namespace winrt::midiglass::implementation
             }
 
             TriggerCombo().SelectedIndex(IndexOf(TriggerOrder, message.Trigger));
-            KindMessageCombo().SelectedIndex(IndexOf(MessageKindOrder, message.Kind));
+            RefreshWhatChoices(*control, message);
 
             auto deviceIndex = -1;
 
@@ -1265,11 +1299,10 @@ namespace winrt::midiglass::implementation
 
             ChannelCombo().SelectedIndex(std::clamp(message.ChannelIndex, 0, 15));
             MessageNumberBox().Value(message.Number);
-            MessageVelocityBox().Value(glass::NoteVelocity(message));
             ParameterBankBox().Value(glass::ControllerBank(message.Number));
             ParameterIndexBox().Value(glass::ControllerIndex(message.Number));
 
-            RefreshMessageKindFields(message);
+            RefreshMessageKindFields(*control);
 
             m_updatingInspector = previous;
         }
@@ -1385,7 +1418,46 @@ namespace winrt::midiglass::implementation
             return;
         }
 
-        RefreshMessageKindFields(control.Messages[static_cast<size_t>(m_messageIndex)]);
+        auto const& message = control.Messages[static_cast<size_t>(m_messageIndex)];
+
+        RefreshMessageKindFields(message);
+        RefreshValueFields(control, message);
+
+        auto const show = [](xaml::UIElement const& element, bool visible)
+            {
+                element.Visibility(visible ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            };
+
+        // A Mackie Control function decides its own message, so every field that would say what
+        // the message is goes away, and the caption says what the function does instead.
+        auto const mackie = RowProtocol(m_editor.Document(), message) == glass::DeviceProtocol::MackieControl;
+
+        show(MessageWhenLabel(), !mackie);
+        show(TriggerCombo(), !mackie);
+
+        if (mackie)
+        {
+            for (auto const& element : std::initializer_list<xaml::UIElement>{
+                MessageChannelLabel(), ChannelCombo(), MessageNumberLabel(), MessageNumberBox(),
+                MessageParameterLabel(), ParameterPanel(), DetentPanel(), SysExPanel(), RawWordsPanel(),
+                SequencePanel(), TargetPagePanel() })
+            {
+                show(element, false);
+            }
+
+            auto const picked = message.Kind == glass::MessageKind::MackieControl
+                ? glass::ShapeOfMackieFunction(message.Number)
+                : glass::MackieShape::None;
+
+            MessageProtocolText().Text(resources::GetString(
+                glass::MackiePickerFor(control.Kind).empty() ? L"MackieNothingForThisControl" :
+                picked == glass::MackieShape::Button ? L"MackieButtonCaption" :
+                picked == glass::MackieShape::Fader ? L"MackieFaderCaption" :
+                picked == glass::MackieShape::Encoder ? L"MackieEncoderCaption" :
+                L"MackiePickCaption"));
+
+            show(MessageProtocolText(), true);
+        }
 
         // A clock generates its own stream. Its row is there so it knows where to send, and
         // asking somebody to type the words it will send would be a question with no answer.
@@ -1441,15 +1513,6 @@ namespace winrt::midiglass::implementation
         show(MessageNumberBox(), isChannelVoice && !bankAndIndex);
         show(MessageParameterLabel(), bankAndIndex);
         show(ParameterPanel(), bankAndIndex);
-
-        // A note row sent when the control turns off or is let go is the note off, which has no
-        // velocity worth setting.
-        auto const playsNote = kind == glass::MessageKind::Note &&
-            message.Trigger != glass::MessageTrigger::TurnsOff &&
-            message.Trigger != glass::MessageTrigger::Released;
-
-        show(MessageVelocityLabel(), playsNote);
-        show(MessageVelocityBox(), playsNote);
 
         show(SysExPanel(), kind == glass::MessageKind::SystemExclusive);
         show(RawWordsPanel(), kind == glass::MessageKind::RawUmp);
@@ -1527,6 +1590,200 @@ namespace winrt::midiglass::implementation
 
             TargetPageCombo().SelectedIndex(selected);
         }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::RefreshWhatChoices(glass::Control const& control, glass::ControlMessage const& message)
+    {
+        auto const protocol = RowProtocol(m_editor.Document(), message);
+
+        // MIDI 1.0 has no per-note controller, but a row that already is one keeps it on offer so
+        // the list still shows what it is.
+        auto const offersPerNote =
+            protocol != glass::DeviceProtocol::Midi1 || message.Kind == glass::MessageKind::PerNoteController;
+
+        auto const key = protocol == glass::DeviceProtocol::MackieControl
+            ? L"mackie:" + std::to_wstring(static_cast<int32_t>(control.Kind))
+            : std::wstring{ offersPerNote ? L"all" : L"midi1" };
+
+        if (key != m_whatListKey)
+        {
+            m_whatListKey = key;
+            m_whatChoices.clear();
+            KindMessageCombo().Items().Clear();
+
+            if (protocol == glass::DeviceProtocol::MackieControl)
+            {
+                for (auto const& entry : glass::MackiePickerFor(control.Kind))
+                {
+                    if (entry.HeadingKey != nullptr)
+                    {
+                        controls::ComboBoxItem heading{};
+                        heading.Content(box_value(resources::GetString(entry.HeadingKey)));
+                        heading.IsEnabled(false);
+
+                        KindMessageCombo().Items().Append(heading);
+                    }
+                    else
+                    {
+                        KindMessageCombo().Items().Append(box_value(MackieFunctionName(entry.Function)));
+                    }
+
+                    m_whatChoices.emplace_back(glass::MessageKind::MackieControl, entry.Function);
+                }
+
+                // What a button can do inside the layout does not depend on the device.
+                for (auto const kind : { glass::MessageKind::Sequence, glass::MessageKind::GoToPage })
+                {
+                    KindMessageCombo().Items().Append(box_value(
+                        resources::GetString(MessageKindResourceKeys[IndexOf(MessageKindOrder, kind)])));
+
+                    m_whatChoices.emplace_back(kind, 0u);
+                }
+            }
+            else
+            {
+                for (size_t index = 0; index < std::size(MessageKindOrder); ++index)
+                {
+                    if (MessageKindOrder[index] == glass::MessageKind::PerNoteController && !offersPerNote)
+                    {
+                        continue;
+                    }
+
+                    KindMessageCombo().Items().Append(box_value(resources::GetString(MessageKindResourceKeys[index])));
+                    m_whatChoices.emplace_back(MessageKindOrder[index], 0u);
+                }
+            }
+        }
+
+        auto selected = -1;
+
+        for (size_t index = 0; index < m_whatChoices.size(); ++index)
+        {
+            auto const& [kind, function] = m_whatChoices[index];
+
+            if (kind == message.Kind &&
+                (kind != glass::MessageKind::MackieControl ||
+                    (function == message.Number && function != glass::MackieNoFunction)))
+            {
+                selected = static_cast<int32_t>(index);
+                break;
+            }
+        }
+
+        KindMessageCombo().SelectedIndex(selected);
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::RefreshValueFields(glass::Control const& control, glass::ControlMessage const& message)
+    {
+        UNREFERENCED_PARAMETER(control);
+
+        auto const show = [](xaml::UIElement const& element, bool visible)
+            {
+                element.Visibility(visible ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            };
+
+        auto const kind = message.Kind;
+        auto const protocol = RowProtocol(m_editor.Document(), message);
+
+        auto const note = kind == glass::MessageKind::Note;
+
+        auto const ranged =
+            kind == glass::MessageKind::ControlChange ||
+            kind == glass::MessageKind::PitchBend ||
+            kind == glass::MessageKind::ChannelPressure ||
+            kind == glass::MessageKind::PerNoteController ||
+            kind == glass::MessageKind::RegisteredController ||
+            kind == glass::MessageKind::AssignedController;
+
+        if (protocol == glass::DeviceProtocol::MackieControl || (!note && !ranged))
+        {
+            for (auto const& element : std::initializer_list<xaml::UIElement>{
+                MessageValueLabel(), MessageValueBox(), MessageSecondValueLabel(), MessageSecondValueBox(),
+                MessageProtocolText() })
+            {
+                show(element, false);
+            }
+
+            return;
+        }
+
+        // A row sent when the control lands on something sends the top of its range, and one
+        // sent when it lets go sends the bottom. One that follows the control sends both.
+        auto const landsOn =
+            message.Position >= 0 ||
+            message.Trigger == glass::MessageTrigger::TurnsOn ||
+            message.Trigger == glass::MessageTrigger::Touched;
+
+        auto const letsGo =
+            message.Trigger == glass::MessageTrigger::TurnsOff ||
+            message.Trigger == glass::MessageTrigger::Released;
+
+        wchar_t const* firstKey{ nullptr };
+        wchar_t const* secondKey{ nullptr };
+
+        if (note)
+        {
+            firstKey = letsGo ? L"ValueReleaseVelocity" : L"ValueVelocity";
+            m_valueEditsMaximum = !letsGo;
+
+            if (!landsOn && !letsGo)
+            {
+                secondKey = L"ValueReleaseVelocity";
+                m_secondValueEditsMaximum = false;
+            }
+        }
+        else if (landsOn || letsGo)
+        {
+            firstKey = L"ValueValue";
+            m_valueEditsMaximum = landsOn;
+        }
+        else
+        {
+            firstKey = L"ValueFrom";
+            m_valueEditsMaximum = false;
+            secondKey = L"ValueTo";
+            m_secondValueEditsMaximum = true;
+        }
+
+        auto const raw = glass::RawValueMaximum(message, protocol);
+
+        auto const configure = [&](controls::TextBlock const& label, controls::NumberBox const& box, wchar_t const* labelKey, bool editsMaximum)
+            {
+                auto const name = resources::GetString(labelKey);
+
+                label.Text(raw > 0 ? name : resources::FormatString(L"ValuePercentLabelFormat", name));
+
+                // A MIDI 1.0 note on at velocity 0 is a note off, so a note plays at 1 or more.
+                auto const lowest = note && editsMaximum && raw > 0 ? 1 : 0;
+
+                box.Minimum(static_cast<double>(lowest));
+                box.Maximum(raw > 0 ? static_cast<double>(raw) : 100.0);
+                box.SmallChange(1.0);
+                box.LargeChange(raw > 127 ? 1024.0 : 10.0);
+                box.Value(glass::ShownValue(editsMaximum ? message.Maximum : message.Minimum, message, protocol));
+
+                xaml::Automation::AutomationProperties::SetName(box, raw > 0
+                    ? resources::FormatString(L"ValueRawNameFormat", name, std::to_wstring(lowest), std::to_wstring(raw))
+                    : resources::FormatString(L"ValuePercentNameFormat", name));
+            };
+
+        configure(MessageValueLabel(), MessageValueBox(), firstKey, m_valueEditsMaximum);
+
+        show(MessageValueLabel(), true);
+        show(MessageValueBox(), true);
+
+        if (secondKey != nullptr)
+        {
+            configure(MessageSecondValueLabel(), MessageSecondValueBox(), secondKey, m_secondValueEditsMaximum);
+        }
+
+        show(MessageSecondValueLabel(), secondKey != nullptr);
+        show(MessageSecondValueBox(), secondKey != nullptr);
+
+        MessageProtocolText().Text(resources::GetString(raw > 0 ? L"ValueUnitsMidi1" : L"ValueUnitsMidi2"));
+        show(MessageProtocolText(), true);
     }
 
     _Use_decl_annotations_
@@ -2373,17 +2630,6 @@ namespace winrt::midiglass::implementation
                 message.Trigger = TriggerOrder[triggerIndex];
             }
 
-            if (kindIndex >= 0 && kindIndex < static_cast<int32_t>(std::size(MessageKindOrder)))
-            {
-                message.Kind = MessageKindOrder[kindIndex];
-
-                // An RPN or NRPN number goes up to 16383; every other kind stops at 127.
-                if (!glass::HasBankAndIndex(message.Kind))
-                {
-                    message.Number = (std::min)(message.Number, 127u);
-                }
-            }
-
             if (deviceIndex >= 0 && deviceIndex < static_cast<int32_t>(m_editor.Document().Devices.size()))
             {
                 message.DeviceName = m_editor.Document().Devices[static_cast<size_t>(deviceIndex)].Name;
@@ -2408,6 +2654,31 @@ namespace winrt::midiglass::implementation
                 if (positionIndex >= 0)
                 {
                     message.Position = positionIndex - 1;
+                }
+            }
+
+            if (kindIndex >= 0 && kindIndex < static_cast<int32_t>(m_whatChoices.size()))
+            {
+                auto const [kind, function] = m_whatChoices[static_cast<size_t>(kindIndex)];
+
+                if (kind != glass::MessageKind::MackieControl)
+                {
+                    message.Kind = kind;
+
+                    // An RPN or NRPN number goes up to 16383; every other kind stops at 127.
+                    if (!glass::HasBankAndIndex(message.Kind))
+                    {
+                        message.Number = (std::min)(message.Number, 127u);
+                    }
+                }
+                else if (function != glass::MackieNoFunction)
+                {
+                    // A function is the whole message, so it is sent whenever the control moves.
+                    message.Kind = kind;
+                    message.Number = function;
+                    message.Trigger = glass::MessageTrigger::Changes;
+                    message.ChannelIndex = 0;
+                    message.Position = -1;
                 }
             }
 
@@ -2467,11 +2738,10 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
-    void EditorWindow::OnMessageVelocityChanged(
+    void EditorWindow::OnMessageValueChanged(
         controls::NumberBox const& sender,
         controls::NumberBoxValueChangedEventArgs const& args)
     {
-        UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
         if (m_updatingInspector)
@@ -2488,20 +2758,27 @@ namespace winrt::midiglass::implementation
             return;
         }
 
-        auto const value = MessageVelocityBox().Value();
+        auto const shown = sender.Value();
 
-        if (!std::isfinite(value))
+        if (!std::isfinite(shown))
         {
             return;
         }
 
         auto message = control->Messages[static_cast<size_t>(m_messageIndex)];
 
-        glass::SetNoteVelocity(message, static_cast<int32_t>(std::lround(value)));
+        auto const editsMaximum = sender == MessageSecondValueBox()
+            ? m_secondValueEditsMaximum
+            : m_valueEditsMaximum;
+
+        auto const value = glass::ValueFromShown(shown, message, RowProtocol(m_editor.Document(), message));
+
+        (editsMaximum ? message.Maximum : message.Minimum) = value;
 
         auto const id = control->Id;
         auto const index = static_cast<size_t>(m_messageIndex);
 
+        // The list is left alone so the field keeps focus while somebody types or spins it.
         if (m_editor.SetMessage(id, index, message))
         {
             MarkChanged();
