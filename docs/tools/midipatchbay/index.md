@@ -84,7 +84,7 @@ A **note range** keeps only notes inside a span, which is how you split a keyboa
 
 Transforms change messages on the way past. They run after the filters, on the copy sent to that one destination, so nothing here affects what any other connection carries. Between them they do everything the old Windows MIDI Mapper did, and quite a lot it couldn't.
 
-![Transposing and reshaping velocity]({{ site.baseurl }}/assets/images/midipatchbay-transforms.png)
+![Transposing down an octave, with note mapping below it]({{ site.baseurl }}/assets/images/midipatchbay-transforms.png)
 
 - **Channel mapping** moves everything on one channel to another. Only messages that carry a channel are affected, and channels you don't list are passed through.
 - **Transpose** shifts every note, including aftertouch and the MIDI 2.0 per note messages. A note pushed past either end is clamped rather than wrapped, so nothing lands an octave out.
