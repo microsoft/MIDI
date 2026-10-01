@@ -443,7 +443,7 @@ namespace winrt::midiglass::implementation
 
         default:
             // A blink has no value to carry, so the light is the whole message. It goes out on
-            // its own after "stays lit for", which is what makes it read as a blink rather than
+            // its own after "light duration", which is what makes it read as a blink rather than
             // a light left on.
             m_renderer.FlashFeedback(itemIndex);
             break;

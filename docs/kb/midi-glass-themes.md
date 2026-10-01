@@ -133,7 +133,7 @@ Picking a theme in the gallery drops any copy the layout was carrying and makes 
 
 - **To share a theme,** send its `.miditheme` file.
 - **To install a theme you were sent,** copy the file into `Documents\MIDI Layouts\Themes`, or open a layout in the editor and use **Import a theme…** on its **Appearance** page. Import copies the file into the Themes folder under the theme's name, replacing an older file with that name, and puts the theme on the layout you have open.
-- **To save a theme from the app,** use **Save these colors as a theme…** on the **Appearance** page. MIDI Glass won't save under a built-in theme's name. After saving, the layout points at the new file by name instead of carrying its own copy.
+- **To save a theme from the app,** use **Save as theme…** on the **Appearance** page. MIDI Glass won't save under a built-in theme's name. After saving, the layout points at the new file by name instead of carrying its own copy.
 - **To share a layout that uses a theme of your own,** make sure the layout carries the theme. Exporting a layout package doesn't include files from your Themes folder, so if the layout only names your theme, the person you send it to sees Studio Dark. Send the theme file along with it, or change any setting on the layout's **Appearance** page so the layout stores its own copy.
 
 ## Inside a theme file
@@ -222,12 +222,12 @@ These are laid over the whole page once, so they cost the same with four control
 - **Rain** (`rainPercent`) is fine streaks falling nine degrees off the vertical, under the controls. `rainColor` is what they're made of, and a cool white, `#C6E4EE`, when it isn't set. `rainSpeed` is how fast they fall, in page pixels a second, up to 600. The rain holds still in the editor, in thumbnails, and whenever Windows animation effects are turned off. Off-world Colonies uses 35 percent, falling at 300.
 - **A grid floor** (`floorPercent`) is a grid running away to the horizon, under the controls: lines that meet in the middle of the horizon, and rungs that get closer together as they get further away. It fades in out of the haze over the first third below the horizon. `floorColor` is what the lines are drawn in, and slot 1 when it isn't set. `floorHorizonPercent` is where the horizon is, as a share of the way down the deck's picture when one picture fills the page, so the grid meets the horizon painted in the picture, or of the page otherwise. `floorSpeed` rolls the floor toward you, in page pixels a second, up to 600. Like the rain, it holds still in the editor, in thumbnails, and whenever Windows animation effects are turned off. Night Drive uses 55 percent of its pink, with the horizon at 58 percent of the way down its sky, rolling at 14.
 - **Scan lines** are the raster of a picture tube: one dark line every few pixels, drawn over everything, controls included. `scanLinePitch` is the distance between lines. It's measured in screen pixels rather than page pixels, so the lines stay the same distance apart and stay sharp at every zoom. `scanLineStrength` is how dark each line is. Cathode, Terminal Amber, and Terminal Green use a pitch of 3 at about 45 percent.
-- **Corner fall-off** (`vignettePercent`) darkens the corners, the way a tube is brightest in the middle. It's drawn over the controls. The tube themes use 60, Off-world Colonies uses 30 so its corners fall into the dark, and Visor uses 35 so its display is brightest in the middle. An unset `vignetteColor` is the deck's floor color, taken further down.
+- **Vignette** (`vignettePercent`) darkens the corners, the way a tube is brightest in the middle. It's drawn over the controls. The tube themes use 60, Off-world Colonies uses 30 so its corners fall into the dark, and Visor uses 35 so its display is brightest in the middle. An unset `vignetteColor` is the deck's floor color, taken further down.
 - **Faceplate reflection** (`faceplateSheenPercent`) is a soft diagonal light across the upper left: the room, reflected in the glass. It's in every photograph of a real terminal, and it's what makes glass look like glass instead of paint. Terminal Green uses 5 percent of `#BEE1F0`, which is also what an unset color means. It's meant to be faint: at 5 percent, the top left of the page is only a little lighter than the top right, so you won't see it in a close-up. Insert Coin uses 8 percent of `#CDDCF0`: the sheet of clear plastic over an arcade panel.
 
-From the bottom up, the order is: the deck's picture, the grid floor, grain, rain, the controls, the corner fall-off, the scan lines, and the reflection.
+From the bottom up, the order is: the deck's picture, the grid floor, grain, rain, the controls, the vignette, the scan lines, and the reflection.
 
-![Fine grain on Supersaw and brushed grain on Airy System, enlarged three times, and scan lines with corner fall-off in the bottom right corner of Cathode]({{ site.baseurl }}/assets/images/midiglass-theme-decks.png)
+![Fine grain on Supersaw and brushed grain on Airy System, enlarged three times, and scan lines with a vignette in the bottom right corner of Cathode]({{ site.baseurl }}/assets/images/midiglass-theme-decks.png)
 
 ### The plate
 
@@ -299,7 +299,7 @@ On a beveled theme, windows are square. A round lamp on a beveled theme with a `
 - `glowStrength` is how bright a control's glow gets when you touch it, when MIDI arrives for it, or while a switch is on. A switch that stays on holds a little over half of it. The glow is a soft blur in the shape of the plate.
 - `bloomColor` is the color of the glow. When it isn't set, each control glows in its own color.
 - `restingGlowPercent` is a floor under the glow, so a control spills a little light all the time. It's a share of `glowStrength`, so it does nothing when the glow is 0. `switchRestingGlowPercent` sets a different floor for everything you press or read, and `-1` means the same.
-- `persistenceMilliseconds` is how long the glow takes to fade after a touch. 0 means the normal 220 milliseconds. A control that listens for MIDI has its own "stays lit for" time, 120 milliseconds unless the layout changes it, and that's what MIDI arriving for it uses. The theme's time applies there only when the control's own time is 0.
+- `persistenceMilliseconds` is how long the glow takes to fade after a touch. 0 means the normal 220 milliseconds. A control that listens for MIDI has its own **Light duration**, 120 milliseconds unless the layout changes it, and that's what MIDI arriving for it uses. The theme's time applies there only when the control's own time is 0.
 - `touchFillPercent` washes the plate with the control's color while a finger is on it. On a flat theme with no glow, it's the only thing that shows a control is being held. Switches never take it, because a switch shows it's held by being on, or on a theme with key travel, by going down.
 - `glowFallPixels` moves a control's glow down by this many pixels, so the light reaches further below a control than above it, the way it runs down a wet wall. Off-world Colonies uses 8. A name in neon takes it too.
 - `flarePercent` makes a lit light throw a lens flare. A lit switch's value strip gets a streak along it that runs past both ends and a short ray across it. An XY pad's puck gets a long streak, a ring that fringes red at its edge, and a faint four-point star, all following the puck. `flareColor` is the flare's warm heart, and the light's own color when it isn't set. Off-world Colonies uses 100 with `#FFF1DC`. A flare is only decoration: the light coming on is still what shows the state.
@@ -357,7 +357,7 @@ When on:
 - `lampHolderColor` sets a round lamp into a holder: a dark ring round the lens, with the light catching its lower edge. Unlit, the lens is only a hint of its color. Soft Sector's holder is `#2B2723` and Hard Sector's `#0C0C0C`.
 - `lampGlowPercent` is how strongly a lit round lamp glows, apart from `glowStrength`. `-1` means the same as `glowStrength`. It lets an LED light the key round it on a theme where nothing else glows: both Sector themes use 100 with a glow of 0.
 - `namesInsideSwitches` puts a switch's name in its middle, whatever `labels` says for everything else, the way a hardware panel prints names above its knobs but on its buttons. The name changes ink when the switch lights, so it can still be read on a bright fill.
-- `switchNames` says where that name sits: `"center"`, or `"topLeft"`, one line at the top left the way a keyboard prints the legend on a key. A layout can also put one control's name there with the **Inside, at the top left** label placement.
+- `switchNames` says where that name sits: `"center"`, or `"topLeft"`, one line at the top left the way a keyboard prints the legend on a key. A layout can also put one control's name there with the **Inside top left** label placement.
 - `neutralCaps` makes a switch or fader on the neutral slot wear the neutral color as its cap. It's how a hardware panel marks one row of controls as belonging together without giving it a color. Five-iSH uses it for one row of cream caps. The theme needs a `neutralColor` for this to do anything.
 - `latchStyle` says how a switch that stays on shows it: `"lit"`, or `"checkerboard"`, where a toggle or a page tab that's on stays pressed in and fills with a fine checkerboard of the bevel highlight and the plate, with no color at all. A button that's on is only pressed, and a pad still lights in its color. Chicago uses it.
 - `switchColorTag` puts a small square of the control's color before a name printed in the middle of a switch, so a gray button still says what it's for. It needs `namesInsideSwitches`.
@@ -603,7 +603,7 @@ Studio Dark comes first in the gallery because it's the default and the one that
 | **Bigwig** | A ladder of grays with one lead orange. Color only ever means the value, the state, or which section this is. | A neutral edge instead of colored rims, named plates, sections in their own gray with names in their color, names on switches, a full fill when on, turned knob faces, dark wells. | Red is for light, not words: it's too dark to read as a name. |
 | **Blueprint** | Six blues on a navy deck. | A one-color family on Studio Dark's glass. | Its closest two slots, 2 and 4, are only about 11 apart in color, so pair color with position and names. |
 | **Bone** | A warm light theme in two colors, bone and a warm brown. The shadow is what separates a control from the page. | A warm shadow (elevation 45, spread 9), rims at 85, a white glow, lit buttons that deepen (-16), sunk slots and wells, cap shadows. | In a dark room it's a lamp pointed at the performer. Best at a desk or in a lit room. |
-| **Cathode** | An old black and white TV: olive glass, a blue-white phosphor, soft edges, and no pure black or white anywhere. | Scan lines, corner fall-off, a named plate gradient, a resting glow, a glow color, an ink that is the phosphor, a fill that fades to the glow, and inverse video: a lit switch is the phosphor with a dark name. | Its six slots are six brightnesses of one phosphor, so nothing can be grouped by color. Controls are known by where they are and what they're called. |
+| **Cathode** | An old black and white TV: olive glass, a blue-white phosphor, soft edges, and no pure black or white anywhere. | Scan lines, a vignette, a named plate gradient, a resting glow, a glow color, an ink that is the phosphor, a fill that fades to the glow, and inverse video: a lit switch is the phosphor with a dark name. | Its six slots are six brightnesses of one phosphor, so nothing can be grouped by color. Controls are known by where they are and what they're called. |
 | **Chicago** | Windows 95, whose code name this was: a teal desktop, gray windows with title bars in their color, and two pixel bevels on everything. Raised is something to press, pressed is down, and sunken is a white field that holds a value. | Bevels, a checkered latch, color tags on buttons, a dotted line around the playing step, arcs printed on the knob face, pointer caps, white windows with black figures, white print on the desktop and black print in the windows. | Mostly gray, with the color in small places. It's not made for a dark stage, and the teal is loud. With red-green color blindness, green and olive look alike. |
 | **Daylight** | The light version of the original set: a near-white deck with dark, saturated colors. | A named light track, glass at 92, a softer glow (35), a white cap. | Like any light theme, it's bright in a dark room. |
 | **Five-iSH** | Black metal with the panel printed on it twice, after the Roland SH-7: tan sections named in black, green blocks named in white, silver knobs with black caps. | Inner sections, a section ink, centered names, pointers on caps, printed scales, round lamps, cream caps on the neutral slot, every value in the print white. | Color is only a lamp, so knobs and faders can't be grouped by color. Put controls on the green or the black, not the tan. |
@@ -790,28 +790,28 @@ Keys are in the order MIDI Glass writes them. **If left out** is the value the a
 | `name` | text | required | (the name you save under) | The theme's name in the gallery. It can't be a built-in theme's name, or Pigment Light, Pigment Dark, or Amber Console. |
 | `hueSlots` | six colors | `#4FC3F7`, `#81C784`, `#FFC247`, `#FF7043`, `#BA68C8`, `#4DD0E1` | Colors | Slots 1 to 6. A missing or unreadable entry keeps Studio Dark's color for that slot. |
 | `deck.kind` | `solidColor`, `gradient`, `image` | `gradient` with no `deck` block; `solidColor` in a block without it | Background | A flat deck, a deck lit from above, or a picture. |
-| `deck.color` | color | `#1D1E21` | Lit top | The deck color, or the top of the gradient. |
-| `deck.gradientEndColor` | color | `#07080A`; `deck.color` in a block without it | Shaded floor | The bottom and lower corners of a gradient. |
-| `deck.image` | file name | empty | Picture | A `.png` or `.jpg` file in the Themes folder, for a picture deck. Only a plain file name is accepted. |
-| `deck.imageRepeats` | `true`, `false` | `false` | Repeat the picture | The picture repeats at its own size over the deck's colors instead of filling the page. |
-| `cornerRadius` | 0 to 128 pixels (0 to 32) | 7 | Corner rounding | How round plates, sections, and note pads are. Never more than half a control's shorter side. |
+| `deck.color` | color | `#1D1E21` | Color | The deck color, or the top of the gradient. |
+| `deck.gradientEndColor` | color | `#07080A`; `deck.color` in a block without it | Bottom color | The bottom and lower corners of a gradient. |
+| `deck.image` | file name | empty | Image | A `.png` or `.jpg` file in the Themes folder, for a picture deck. Only a plain file name is accepted. |
+| `deck.imageRepeats` | `true`, `false` | `false` | Tile image | The picture repeats at its own size over the deck's colors instead of filling the page. |
+| `cornerRadius` | 0 to 128 pixels (0 to 32) | 7 | Corner radius | How round plates, sections, and note pads are. Never more than half a control's shorter side. |
 | `glassTintPercent` | 0 to 100 | 86 | Glass tint | How solid a glass plate is. 0 is no plate at all. Only used when there's no `plateColor` and no fill at rest. |
 | `glowStrength` | 0 to 100 | 60 | Glow | How bright a control glows when touched, when MIDI arrives, or while a switch is on. Also drives every halo. |
 | `labels` | `inside`, `below`, `none`, `above` | `below` | Labels | Where control names go by default. |
 | `fillAtRest` | 0 to 1 (the app shows a percentage) | 0 | Fill at rest | A wash of each control's own color over the deck, making the plate. Above 0 the theme is tonal. |
-| `touchFillPercent` | 0 to 100 | 22 | Fill under a finger | A wash of the control's color while it's touched. Not used on switches. |
+| `touchFillPercent` | 0 to 100 | 22 | Touch fill | A wash of the control's color while it's touched. Not used on switches. |
 | `trackColor` | color | `#0D0D0F` | Slot track | The empty part of a fader or meter slot, a beat clock's ring, and a turntable's face. |
 | `inkColor` | color | `#00000000`: measured light or dark ink | Ink | Labels, marks, and printed scales. |
 | `plateColor` | color | `#00000000`: glass or tonal plate | Plate | A plate of this color instead of glass. |
-| `rim` | `controlHue`, `neutralEdge`, `none` | `controlHue` | Rim from | Where the rim's color comes from. |
+| `rim` | `controlHue`, `neutralEdge`, `none` | `controlHue` | Rim color | Where the rim's color comes from. |
 | `neutralRimColor` | color | `#5A5A5A` | Neutral rim | The rim on every control when `rim` is `neutralEdge`. Its alpha counts. |
 | `valueStrip` | `bottom`, `top`, `none` | `bottom` | Value strip | A thin line along one edge of switches, lamps, and readouts. |
 | `valueIndicator` | `solidArc`, `segmentedLamps` | `solidArc` | Knob indicator | A knob's value as a solid arc or a ring of lamps. |
 | `lampCount` | 2 to 128 (2 to 64) | 24 | Lamps | How many lamps in a ring of lamps. |
 | `minimumLampRingSize` | 8 to 512 pixels (8 to 160) | 48 | Smallest ring | Below this size a knob uses the solid arc instead. |
 | `plateSheenPercent` | 0 to 100 | 6 | Sheen | Light down the top of a plate. |
-| `plateElevation` | 0 to 100 | 55 | Raised | How dark the shadow under a plate is. |
-| `shadowSpread` | 0 to 64 pixels (0 to 32) | 3 | Shadow reach | How far the shadow reaches. It also drops by a third of this. |
+| `plateElevation` | 0 to 100 | 55 | Elevation | How dark the shadow under a plate is. |
+| `shadowSpread` | 0 to 64 pixels (0 to 32) | 3 | Shadow spread | How far the shadow reaches. It also drops by a third of this. |
 | `shadowColor` | color | `#000000` | Shadow color | The color of every shadow and shade: under plates and caps, in slots, and at the bottom of plates. |
 | `rimStrengthPercent` | 0 to 100 | 28 | Rim strength | How strong a colored rim is at rest. 0 is no rim. |
 | `pipeFalloff` | 0 to 1 (the app shows a percentage) | 0.35 | Value fade | How bright the far end of a fader's fill is. 1 is a flat bar. |
@@ -821,18 +821,18 @@ Keys are in the order MIDI Glass writes them. **If left out** is the value the a
 | `glassColor` | color | `#17181B` | Glass color | What a glass plate is made of. Keep it a little lighter than the deck. |
 | `bloomColor` | color | `#00000000`: each control's own color | Light color | The color every control glows in. |
 | `restingGlowPercent` | 0 to 100 | 0 | Resting glow | A floor under the glow, as a share of `glowStrength`. |
-| `persistenceMilliseconds` | 0 to 10000 (0 to 2000) | 0: 220 ms | Stays lit for | How long the glow takes to fade after a touch, and after MIDI on a control whose own hold time is 0. |
+| `persistenceMilliseconds` | 0 to 10000 (0 to 2000) | 0: 220 ms | Light duration | How long the glow takes to fade after a touch, and after MIDI on a control whose own hold time is 0. |
 | `plateSheenColor` | color | `#00000000`: white | Sheen color | What the sheen and the top-edge line are made of. |
 | `plateEndColor` | color | `#00000000`: a flat plate | Plate bottom | The bottom of a named plate. Needs `plateColor`. |
 | `arcTrackColor` | color | `#00000000`: `trackColor` | Knob arc track | The empty part of a knob's arc. |
-| `valueFadesToLight` | `true`, `false` | `false` | Fade to the light | The far end of a fader's fill runs into the glow color. Needs a `bloomColor`. |
+| `valueFadesToLight` | `true`, `false` | `false` | Fade to light color | The far end of a fader's fill runs into the glow color. Needs a `bloomColor`. |
 | `switchFillAtRest` | `-1`, or 0 to 1 (the app shows a percentage) | `-1`: `fillAtRest` | Switch fill at rest | The fill at rest for buttons, toggles, pads, page tabs, and lamps. |
 | `fillWhenOnPercent` | 0 to 100 | 34 | Fill when on | How much of its color a switch's plate takes when on. 0 lights a lamp instead. |
 | `pointerColor` | color | `#00000000`: the control's color, or the ink with a neutral rim | Knob pointer | Every knob's pointer. |
 | `capLineColor` | color | `#00000000`: the control's color | Cap line | The line across every neutral fader cap. |
 | `neutralColor` | color | `#00000000`: none, and neutral controls use slot 1 | Neutral color | The one "no color" color. |
 | `sectionHeader` | `caption`, `filledBar`, `notched`, `centered` | `caption` | Section header | How a section shows its name. |
-| `sectionNameInHue` | `true`, `false` | `false` | Section name in color | A section's name in its color instead of the ink. |
+| `sectionNameInHue` | `true`, `false` | `false` | Colored section names | A section's name in its color instead of the ink. |
 | `panelFill` | `plate`, `color`, `none` | `plate` | Section fill | What fills a section. |
 | `panelColor` | color | `#00000000` | Section color | A section's color when `panelFill` is `color`. |
 | `panelEndColor` | color | `#00000000`: a flat fill | Section bottom | The bottom of a section's color. |
@@ -843,15 +843,15 @@ Keys are in the order MIDI Glass writes them. **If left out** is the value the a
 | `knobCapEndColor` | color | `#00000000`: `knobCapColor` | Knob cap edge | The edge of the cap. |
 | `knobCapSizePercent` | 5 to 100 | 28 | Knob cap size | The cap's size, as a share of the face. |
 | `knobTickCount` | 0 to 64 | 0 | Knob marks | A printed ring of marks around knobs, in the ink. Knobs that show their own marks keep their own count. |
-| `namesInsideSwitches` | `true`, `false` | `false` | Names on switches | Switch names go in the middle of the switch. |
+| `namesInsideSwitches` | `true`, `false` | `false` | Names inside switches | Switch names go in the middle of the switch. |
 | `onLiftPercent` | -100 to 100 | 0 | Lift when on | A lit switch toward white (above 0) or black (below 0). |
 | `lampColor` | color | `#00000000`: the control's color | Lamp color | The lamp a switch lights when `fillWhenOnPercent` is 0. |
 | `plateShadePercent` | 0 to 100 | 0 | Shade | A shade up from the bottom of a plate, in the shadow color. |
-| `plateHighlightPercent` | 0 to 100 | 0 | Top edge light | A one-pixel light line inside the top edge of plates, caps, and pads. |
+| `plateHighlightPercent` | 0 to 100 | 0 | Top highlight | A one-pixel light line inside the top edge of plates, caps, and pads. |
 | `faderPlate` | `full`, `strip`, `none`, `frame` | `full` | Fader plate | What a fader's slot is cut into. |
 | `faderFillPercent` | 0 to 100 | 100 | Fader fill | How strong a fader's fill is. |
 | `valueColor` | color | `#00000000`: each control's own color | Value color | Every value on the page in one color. |
-| `recessShadePercent` | 0 to 100 | 0 | Sunk shadow | A shade inside slots and wells, in the shadow color. |
+| `recessShadePercent` | 0 to 100 | 0 | Recess shadow | A shade inside slots and wells, in the shadow color. |
 | `wellColor` | color | `#00000000`: no well | Display well | A sunk field for XY pads, LFOs, and ribbons. |
 | `thumbShadowPercent` | 0 to 100 | 0 | Cap shadow | A shadow under fader caps. |
 | `capLineWide` | `true`, `false` | `false` | Wide cap line | A cap line nearly the cap's width and 3 pixels thick. |
@@ -859,11 +859,11 @@ Keys are in the order MIDI Glass writes them. **If left out** is the value the a
 | `keyBlackColor` | color | `#00000000`: `#16191F` | Sharp keys | A keyboard's sharps and flats. |
 | `insetPanelColor` | color | `#00000000`: like any section | Inner section | The color of a section inside another section, printed flat. |
 | `insetPanelEndColor` | color | `#00000000`: `insetPanelColor` | Inner section bottom | The bottom of an inner section. |
-| `panelElevation` | `-1`, or 0 to 100 | `-1`: `plateElevation` | Section raised | How dark the shadow under a section is. |
+| `panelElevation` | `-1`, or 0 to 100 | `-1`: `plateElevation` | Section elevation | How dark the shadow under a section is. |
 | `sectionInkColor` | color | `#00000000`: `inkColor` | Section ink | The ink for anything printed on a filled section. |
-| `pointerOnCap` | `true`, `false` | `false` | Pointer on the cap | The pointer is printed on the knob cap. Needs a cap. |
-| `arcGlow` | `true`, `false` | `false` | Knob value glows | A halo around a knob's value arc. |
-| `arcTrackHuePercent` | 0 to 100 | 0: `arcTrackColor` | Knob ring in its color | The empty part of a knob's arc in the knob's own color at this strength. |
+| `pointerOnCap` | `true`, `false` | `false` | Pointer on cap | The pointer is printed on the knob cap. Needs a cap. |
+| `arcGlow` | `true`, `false` | `false` | Knob value glow | A halo around a knob's value arc. |
+| `arcTrackHuePercent` | 0 to 100 | 0: `arcTrackColor` | Colored knob ring | The empty part of a knob's arc in the knob's own color at this strength. |
 | `lampShape` | `bar`, `dot` | `bar` | Lamp shape | A bar lamp or a round lens. With `dot`, a lamp control is round. |
 | `switchRimStrengthPercent` | `-1`, or 0 to 100 | `-1`: `rimStrengthPercent` | Switch rim strength | The rim at rest on everything you press or read. |
 | `switchRestingGlowPercent` | `-1`, or 0 to 100 | `-1`: `restingGlowPercent` | Switch resting glow | The resting glow on everything you press or read. |
@@ -873,7 +873,7 @@ Keys are in the order MIDI Glass writes them. **If left out** is the value the a
 | `neutralCaps` | `true`, `false` | `false` | Neutral caps | Faders and switches on the neutral slot wear the neutral as their cap. Needs `neutralColor`. |
 | `faderScalePercent` | 0 to 100 | 0 | Fader scale | Fader marks printed in the ink at this strength. |
 | `ruleColor` | color | `#00000000`: the ink at a sixth | Line color | The color of Line controls. |
-| `ruleFades` | `true`, `false` | `true` | Lines fade at the ends | Lines fade out at both ends instead of stopping square. |
+| `ruleFades` | `true`, `false` | `true` | Faded line ends | Lines fade out at both ends instead of stopping square. |
 | `stripeColors` | up to four colors | empty: a plain outline | Stripe 1 to Stripe 4 | Bands of flat color that frame every section, outside in, and split a line with no color of its own, top down. The list ends at the first empty color. |
 | `stripeWidth` | 1 to 16 pixels | 4 | Stripe width | How wide each stripe is. |
 | `rimThickness` | 1 to 6 pixels | 1 | Rim weight | How heavy the rim is on plates, knob faces, and sections. |
@@ -882,46 +882,46 @@ Keys are in the order MIDI Glass writes them. **If left out** is the value the a
 | `switchShape` | `plate`, `keycap`, `round` | `plate` | Switch shape | A switch as a plate, a key with a dished top, or a round button. A key needs `plateColor`. |
 | `keycapTopColor` | color | `#00000000`: from the plate | Key top, back | The back of a key's dished top. |
 | `keycapTopEndColor` | color | `#00000000`: from the plate | Key top, front | The front of a key's dished top. |
-| `switchNames` | `center`, `topLeft` | `center` | Where a switch's name sits | Where a name inside a switch goes. |
+| `switchNames` | `center`, `topLeft` | `center` | Switch name placement | Where a name inside a switch goes. |
 | `pressTravelPixels` | 0 to 8 | 0 | Key travel | How far a switch goes down under a finger. Half as far while it's latched on. |
-| `lampPosition` | `topCenter`, `topRight` | `topCenter` | Where a round lamp sits | A round lamp at the top middle of a switch or in its corner. |
+| `lampPosition` | `topCenter`, `topRight` | `topCenter` | Round lamp placement | A round lamp at the top middle of a switch or in its corner. |
 | `lampHolderColor` | color | `#00000000`: a thin dark ring | Lamp holder | The holder a round lamp is set into. |
 | `lampGlowPercent` | `-1`, or 0 to 100 | `-1`: `glowStrength` | Lamp glow | How strongly a lit round lamp glows. |
 | `knobKnurlCount` | 0 to 120 | 0 | Knob ridges | Ridges round the side of a knob's face, in its two colors. |
-| `panelRecessPercent` | 0 to 100 | 0 | Sections pressed in | A section as a tray, shaded along its top inside edge. |
-| `recessLipColor` | color | `#00000000`: none | Lip under cutouts | A thin light line under anything cut into the surface. |
-| `wellFillsControl` | `true`, `false` | `false` | Displays are windows | Every display is a dark window the size of the control, and lights inside keep their own color. |
+| `panelRecessPercent` | 0 to 100 | 0 | Section recess | A section as a tray, shaded along its top inside edge. |
+| `recessLipColor` | color | `#00000000`: none | Cutout lip | A thin light line under anything cut into the surface. |
+| `wellFillsControl` | `true`, `false` | `false` | Window displays | Every display is a dark window the size of the control, and lights inside keep their own color. |
 | `wellGlossPercent` | 0 to 100 | 0 | Window reflection | A hard-edged reflection across the upper left of every window. |
-| `neonLetters` | `true`, `false` | `false` | Neon names | Section names and Text glow in their own color. |
+| `neonLetters` | `true`, `false` | `false` | Neon text | Section names and Text glow in their own color. |
 | `valueCorePercent` | 0 to 100 | 0 | Hot core | A lighter line down the middle of every lit value, this far toward white. |
-| `glowFallPixels` | 0 to 32 | 0 | Glow runs down | How much further a glow reaches below a control than above it. |
+| `glowFallPixels` | 0 to 32 | 0 | Downward glow | How much further a glow reaches below a control than above it. |
 | `flarePercent` | 0 to 100 | 0 | Lens flare | A streak and a star thrown by a lit light. |
 | `flareColor` | color | `#00000000`: the light's own color | Flare color | The heart of a flare. |
-| `sectionTexture` | file name | empty | Section picture | A picture in the Themes folder, laid over every section in black. |
-| `sectionTexturePercent` | 0 to 100 | 0 | Section picture strength | How strongly the section picture shows. |
+| `sectionTexture` | file name | empty | Section texture | A picture in the Themes folder, laid over every section in black. |
+| `sectionTexturePercent` | 0 to 100 | 0 | Section texture strength | How strongly the section picture shows. |
 | `meterUnlitColor` | color | `#00000000`: each zone's color, turned down | Unlit segment | A meter's lights while they're out. |
-| `onInkColor` | color | `#00000000`: the ink | Name on a lit switch | A switch's name while it's on, where it reads. |
-| `restTintOnPlate` | `true`, `false` | `false` | Resting color on the plate | A resting tint mixed into the plate instead of into the page. |
-| `switchRingColor` | color | `#00000000`: no ring | Ring around a round button | The ring a round button is set into. |
-| `padsFollowSwitchShape` | `true`, `false` | `true` | Pads take the switch shape | Pads are round too, on a theme with round buttons. |
-| `knobCapFromHue` | `true`, `false` | `false` | Cap in the knob's color | Each knob's cap is its own color, with a pointer that reads on it. With no `knobFaceColor`, the cap is the whole knob. |
+| `onInkColor` | color | `#00000000`: the ink | Name color when on | A switch's name while it's on, where it reads. |
+| `restTintOnPlate` | `true`, `false` | `false` | Resting tint on plate | A resting tint mixed into the plate instead of into the page. |
+| `switchRingColor` | color | `#00000000`: no ring | Round button ring | The ring a round button is set into. |
+| `padsFollowSwitchShape` | `true`, `false` | `true` | Pads match switch shape | Pads are round too, on a theme with round buttons. |
+| `knobCapFromHue` | `true`, `false` | `false` | Colored knob cap | Each knob's cap is its own color, with a pointer that reads on it. With no `knobFaceColor`, the cap is the whole knob. |
 | `puck` | `disc`, `ball`, `reticle` | `disc` | XY and joystick puck | The puck on XY pads and joysticks. |
 | `thumbShape` | `bar`, `pointer`, `chevrons` | `bar` | Fader cap shape | A bar, a cap pointing at the scale, or two chevrons on a rail. |
 | `pointerShape` | `line`, `chevron` | `line` | Pointer shape | A line across the knob, or a chevron riding its arc. |
-| `knobMajorTickEvery` | 0 to 32 | 0 | Longer knob mark every | Every so many of the theme's knob marks, one is longer. |
-| `faderMajorTickEvery` | 0 to 32 | 0 | Longer fader mark every | Every so many fader marks, one is longer. |
-| `knobArcOnFace` | `true`, `false` | `false` | Arc printed on the face | The face reaches out under the arc, so the arc is printed on it. |
-| `rimStyle` | `outline`, `corners` | `outline` | Edge at rest | A full outline, or only its four corners until the control is on. |
+| `knobMajorTickEvery` | 0 to 32 | 0 | Knob major mark interval | Every so many of the theme's knob marks, one is longer. |
+| `faderMajorTickEvery` | 0 to 32 | 0 | Fader major mark interval | Every so many fader marks, one is longer. |
+| `knobArcOnFace` | `true`, `false` | `false` | Arc on face | The face reaches out under the arc, so the arc is printed on it. |
+| `rimStyle` | `outline`, `corners` | `outline` | Rim style | A full outline, or only its four corners until the control is on. |
 | `bevelPixels` | 0 to 3 pixels | 0 | Bevel width | How wide the bevels are. 0 is none. |
 | `bevelHighlightColor` | color | `#00000000`: white | Bevel highlight | The bevel's outer light edge. |
 | `bevelLightColor` | color | `#00000000`: the plate, lifted | Bevel light | The bevel's inner light edge. |
 | `bevelShadowColor` | color | `#00000000`: the plate, darkened | Bevel shadow | The bevel's inner dark edge. |
 | `bevelDarkColor` | color | `#00000000`: black | Bevel dark | The bevel's outer dark edge. |
-| `latchStyle` | `lit`, `checkerboard` | `lit` | A switch that stays on | A toggle or page tab that's on lights up, or stays pressed and checkered. |
-| `currentStepStyle` | `lit`, `dottedFocus` | `lit` | The step that's playing | The playing step is lit, or lit with a dotted line around it. |
-| `switchColorTag` | `true`, `false` | `false` | Color tag before a switch's name | A small square of the control's color before a name in the middle of a switch. |
-| `deckInkHaloColor` | color | `#00000000`: none | Halo behind words on the background | A halo behind print on the bare deck. Its alpha is how strong it is. |
-| `wellInkColor` | color | `#00000000`: the window's own light | Numbers in a window | Numbers printed inside a window. |
+| `latchStyle` | `lit`, `checkerboard` | `lit` | Latched switch | A toggle or page tab that's on lights up, or stays pressed and checkered. |
+| `currentStepStyle` | `lit`, `dottedFocus` | `lit` | Current step | The playing step is lit, or lit with a dotted line around it. |
+| `switchColorTag` | `true`, `false` | `false` | Switch color tag | A small square of the control's color before a name in the middle of a switch. |
+| `deckInkHaloColor` | color | `#00000000`: none | Text background halo | A halo behind print on the bare deck. Its alpha is how strong it is. |
+| `wellInkColor` | color | `#00000000`: the window's own light | Window text | Numbers printed inside a window. |
 | `chromeCaps` | `true`, `false` | `false` | Chrome knob and fader caps | Knob caps and fader caps in chrome. |
 | `chromeColors` | up to four colors | empty: `#EEF2FF`, `#8E97C6`, `#2A2350`, `#C4539A` | Chrome sky to Chrome glow | The sky, the light and dark sides of the horizon, and the glow in the ground. An empty color keeps its default. |
 | `chromeLetters` | `true`, `false` | `false` | Chrome section names | Section names and Text in chrome. |
@@ -929,8 +929,8 @@ Keys are in the order MIDI Glass writes them. **If left out** is the value the a
 | `deckOverlay.scanLinePitch` | 0 to 64 screen pixels (0 to 12) | 0 | Scan lines | Distance between scan lines. 0 is off. |
 | `deckOverlay.scanLineStrength` | 0 to 100 | 0 | Scan strength | How dark each scan line is. |
 | `deckOverlay.scanLineColor` | color | `#000000` | Scan color | What scan lines are made of. |
-| `deckOverlay.vignettePercent` | 0 to 100 | 0 | Corner fall-off | How much the corners darken. |
-| `deckOverlay.vignetteColor` | color | `#00000000`: the deck floor, darker | Corner color | What the corners darken to. |
+| `deckOverlay.vignettePercent` | 0 to 100 | 0 | Vignette | How much the corners darken. |
+| `deckOverlay.vignetteColor` | color | `#00000000`: the deck floor, darker | Vignette color | What the corners darken to. |
 | `deckOverlay.faceplateSheenPercent` | 0 to 100 | 0 | Faceplate | A reflection across the upper left of the page. |
 | `deckOverlay.faceplateSheenColor` | color | `#00000000`: `#BEE1F0` | Faceplate color | What the reflection is made of. |
 | `deckOverlay.grainPercent` | 0 to 100 | 0 | Grain | How strong the panel's texture is. |

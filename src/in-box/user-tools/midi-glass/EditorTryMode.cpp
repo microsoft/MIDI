@@ -284,6 +284,7 @@ namespace winrt::midiglass::implementation
                 // so the handles and the rubber band go away for as long as Try mode is on.
                 m_dragMode = DragMode::None;
                 m_hasArmedKind = false;
+                SyncPaletteSelection();
 
                 // An edit made while Try mode was off has to reach the engine before a finger
                 // does, and the player has to exist before either.

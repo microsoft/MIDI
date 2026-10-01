@@ -40,7 +40,7 @@ Windows MIDI Services comes with one pair, **Default App Loopback (A)** and **De
 
 1. In the MIDI Glass library, select **New layout**.
 2. Give it a name. Under **Send to**, pick **Default App Loopback (A)**.
-3. Under **Start from**, pick **Mackie Control**.
+3. Under **Template**, pick **Mackie Control**.
 4. Select **Create**. The layout opens in the editor.
 5. Open the **Layout…** menu and select **Save and run**.
 
@@ -77,8 +77,8 @@ Then move a fader in MIDI Glass. The DAW's first track volume should move with i
 You can add Mackie Control to any layout, or build a surface of your own from scratch.
 
 1. Open the **Layout…** menu and select **Pages and devices…**. Then select **Outputs** in the list on the left.
-2. On the card for your DAW's loopback, next to **Talk to it in**, pick **Mackie Control**.
-3. Select a control and open its **Sends** tab. For a row that goes to that device, the **What** list now lists Mackie Control functions, such as **Play**, **Mute 3** or **Fader 1**.
+2. On the card for your DAW's loopback, next to **Protocol**, pick **Mackie Control**.
+3. Select a control and open its **Sends** tab. For a row that goes to that device, the **Type** list now lists Mackie Control functions, such as **Play**, **Mute 3** or **Fader 1**.
 
 What a control can do depends on what kind of control it is:
 
@@ -94,7 +94,7 @@ If you switch a device that already has rows to Mackie Control, a row that alrea
 
 ## How MIDI Glass talks to each device
 
-Every device on the **Outputs** page has its own **Talk to it in** setting. It decides what the controls can send there and how you type their values.
+Every device on the **Outputs** page has its own **Protocol** setting. It decides what the controls can send there and how you type their values.
 
 | Setting | Values are typed as | Use it when |
 | --- | --- | --- |

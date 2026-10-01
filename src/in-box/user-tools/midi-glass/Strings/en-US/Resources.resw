@@ -358,7 +358,7 @@
     <value>Send to</value>
   </data>
   <data name="NewLayoutTemplateLabel" xml:space="preserve">
-    <value>Start from</value>
+    <value>Template</value>
   </data>
   <data name="NewLayoutDefaultName" xml:space="preserve">
     <value>My control surface</value>
@@ -469,10 +469,10 @@
     <value>Custom size</value>
   </data>
   <data name="KeepOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Keep this window in front of other windows</value>
+    <value>Always on top</value>
   </data>
   <data name="KeepOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Keep in front of other windows</value>
+    <value>Always on top</value>
   </data>
   <data name="FullScreenButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Full screen</value>
@@ -878,7 +878,7 @@
     <value>Position</value>
   </data>
   <data name="SwitchPositionCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Which position sends this message</value>
+    <value>Position</value>
   </data>
   <data name="SwitchPositionEvery" xml:space="preserve">
     <value>Every change</value>
@@ -1031,7 +1031,7 @@
     <value>Text</value>
   </data>
   <data name="InspectorLabelPlacedLabel.Text" xml:space="preserve">
-    <value>Placed</value>
+    <value>Placement</value>
   </data>
   <data name="InspectorShowValueLabel.Text" xml:space="preserve">
     <value>Show value</value>
@@ -1040,37 +1040,37 @@
     <value>Kind</value>
   </data>
   <data name="LabelPlacedCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Where the label sits</value>
+    <value>Label placement</value>
   </data>
   <data name="LabelPlacedTheme" xml:space="preserve">
-    <value>Same as the theme</value>
+    <value>Theme default</value>
   </data>
   <data name="LabelPlacedAbove" xml:space="preserve">
-    <value>Above the control</value>
+    <value>Above</value>
   </data>
   <data name="LabelPlacedBelow" xml:space="preserve">
-    <value>Below the control</value>
+    <value>Below</value>
   </data>
   <data name="LabelPlacedInsideTop" xml:space="preserve">
-    <value>Inside, at the top</value>
+    <value>Inside top</value>
   </data>
   <data name="LabelPlacedInsideTopLeft" xml:space="preserve">
-    <value>Inside, at the top left</value>
+    <value>Inside top left</value>
   </data>
   <data name="LabelPlacedInsideCenter" xml:space="preserve">
-    <value>Inside, in the middle</value>
+    <value>Inside center</value>
   </data>
   <data name="LabelPlacedInsideBottom" xml:space="preserve">
-    <value>Inside, at the bottom</value>
+    <value>Inside bottom</value>
   </data>
   <data name="LabelPlacedVerticalLeft" xml:space="preserve">
-    <value>Up the left side</value>
+    <value>Vertical left</value>
   </data>
   <data name="LabelPlacedVerticalRight" xml:space="preserve">
-    <value>Down the right side</value>
+    <value>Vertical right</value>
   </data>
   <data name="LabelPlacedCustom" xml:space="preserve">
-    <value>Where I dragged it</value>
+    <value>Custom</value>
   </data>
   <data name="FontCustomBox" xml:space="preserve">
     <value>dragged into place</value>
@@ -1079,7 +1079,7 @@
     <value>Width</value>
   </data>
   <data name="LabelWidthBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>How wide the label may be, as a percentage of the control</value>
+    <value>Label width, as a percentage of the control</value>
   </data>
   <data name="LabelFontButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Choose the label font</value>
@@ -1088,28 +1088,28 @@
     <value>Font…</value>
   </data>
   <data name="InspectorTitleText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>What this control is called</value>
+    <value>Control name</value>
   </data>
   <data name="InspectorTitleControlAccessibleName" xml:space="preserve">
-    <value>What this control is called</value>
+    <value>Control name</value>
   </data>
   <data name="InspectorTitleGroupAccessibleName" xml:space="preserve">
-    <value>What this group is called</value>
+    <value>Group name</value>
   </data>
   <data name="FontDialogTitle" xml:space="preserve">
     <value>Label font</value>
   </data>
   <data name="FontDialogReset" xml:space="preserve">
-    <value>Back to the theme</value>
+    <value>Reset to theme</value>
   </data>
   <data name="FontFamilyHeader" xml:space="preserve">
     <value>Font</value>
   </data>
   <data name="FontFamilyTheme" xml:space="preserve">
-    <value>Same as the theme</value>
+    <value>Theme default</value>
   </data>
   <data name="FontShowAll" xml:space="preserve">
-    <value>Show every font on this PC</value>
+    <value>Show all fonts</value>
   </data>
   <data name="FontShowAllCaption" xml:space="preserve">
     <value>Otherwise the list has only the fonts every Windows PC has. A label set in a font another PC doesn't have is shown there in the default font.</value>
@@ -1122,13 +1122,13 @@
     <value>Size</value>
   </data>
   <data name="FontSizeTheme" xml:space="preserve">
-    <value>Same as the theme</value>
+    <value>Theme default</value>
   </data>
   <data name="FontWeightHeader" xml:space="preserve">
     <value>Weight</value>
   </data>
   <data name="FontWeightTheme" xml:space="preserve">
-    <value>Same as the theme</value>
+    <value>Theme default</value>
   </data>
   <data name="FontWeightLight" xml:space="preserve">
     <value>Light</value>
@@ -1149,7 +1149,7 @@
     <value>Underline</value>
   </data>
   <data name="FontWrap" xml:space="preserve">
-    <value>Wrap long text</value>
+    <value>Wrap text</value>
   </data>
   <data name="FontNoWrap" xml:space="preserve">
     <value>no wrapping</value>
@@ -1158,13 +1158,13 @@
     <value>Color</value>
   </data>
   <data name="FontColorPlaceholder" xml:space="preserve">
-    <value>Same as the theme, or #RRGGBB</value>
+    <value>Theme default, or #RRGGBB</value>
   </data>
   <data name="FontColorButtonName" xml:space="preserve">
     <value>Pick the label color</value>
   </data>
   <data name="ColorPickerThemeHeading" xml:space="preserve">
-    <value>This theme's colors</value>
+    <value>Theme colors</value>
   </data>
   <data name="ColorPickerSlotFormat" xml:space="preserve">
     <value>Theme color {0}, {1}</value>
@@ -1174,7 +1174,7 @@
     <value>Use this color</value>
   </data>
   <data name="ColorPickerClear" xml:space="preserve">
-    <value>Use the theme's color</value>
+    <value>Use theme color</value>
   </data>
   <data name="ColorPickerNone" xml:space="preserve">
     <value>No color set</value>
@@ -1186,7 +1186,7 @@
     <value>Pick the black key color</value>
   </data>
   <data name="PressedKeyColorButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Pick the color of the key being played</value>
+    <value>Pick the pressed key color</value>
   </data>
   <data name="PictureTintColorButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Pick the overlay color</value>
@@ -1201,7 +1201,7 @@
     <value>No label</value>
   </data>
   <data name="ShowValueCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>When the number is shown inside the control</value>
+    <value>Show value</value>
   </data>
   <data name="ShowValueTheme" xml:space="preserve">
     <value>While touched</value>
@@ -1234,7 +1234,7 @@
     <value>Grouping</value>
   </data>
   <data name="PaletteGroupKeys" xml:space="preserve">
-    <value>Keys</value>
+    <value>Keys and pads</value>
   </data>
   <data name="PaletteKeyboard" xml:space="preserve">
     <value>Mono keyboard</value>
@@ -1372,7 +1372,7 @@
     <value>Show marks</value>
   </data>
   <data name="TickCountBox.Header" xml:space="preserve">
-    <value>How many</value>
+    <value>Count</value>
   </data>
   <data name="TicksGridCaption" xml:space="preserve">
     <value>Marks give a hand somewhere to be other than the two ends. A two axis control draws the same number both ways, as a grid.</value>
@@ -1381,10 +1381,10 @@
     <value>This control has {0} stops, so it draws a mark at each of them instead.</value>
   </data>
   <data name="ShowDetentValuesCheck.Content" xml:space="preserve">
-    <value>Print the value at each stop</value>
+    <value>Show stop values</value>
   </data>
   <data name="InspectorPictureHeading.Text" xml:space="preserve">
-    <value>Picture or Video</value>
+    <value>Image or video</value>
   </data>
   <data name="ChoosePictureButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Choose a picture or video</value>
@@ -1405,7 +1405,7 @@
     <value>Choose a picture or a video</value>
   </data>
   <data name="PictureFitCombo.Header" xml:space="preserve">
-    <value>Scale and Stretch</value>
+    <value>Scaling</value>
   </data>
   <data name="PictureOpacityLabel.Text" xml:space="preserve">
     <value>Opacity</value>
@@ -1414,7 +1414,7 @@
     <value>Opacity</value>
   </data>
   <data name="PictureLoopsCheck.Content" xml:space="preserve">
-    <value>Loop between start/stop points</value>
+    <value>Loop</value>
   </data>
   <data name="PictureVideoHeading.Text" xml:space="preserve">
     <value>Video</value>
@@ -1431,13 +1431,13 @@
     <value>Videos stay still while you design, so they don't distract you. This plays the selected one on the page.</value>
   </data>
   <data name="PictureVideoRangeLabel.Text" xml:space="preserve">
-    <value>Start and Stop Points</value>
+    <value>Playback range</value>
   </data>
   <data name="PictureVideoStartBox.Header" xml:space="preserve">
-    <value>Starts at, in seconds</value>
+    <value>Start (seconds)</value>
   </data>
   <data name="PictureVideoEndBox.Header" xml:space="preserve">
-    <value>Stops at, in seconds</value>
+    <value>End (seconds)</value>
   </data>
   <data name="PictureVideoEndBox.PlaceholderText" xml:space="preserve">
     <value>the end</value>
@@ -1450,10 +1450,10 @@
     <value>Finding out how long the clip is…</value>
   </data>
   <data name="PictureAutoPlayCheck.Content" xml:space="preserve">
-    <value>Start playing with layout start</value>
+    <value>Autoplay</value>
   </data>
   <data name="PictureClickToPlayCheck.Content" xml:space="preserve">
-    <value>Click to start/stop</value>
+    <value>Click to play</value>
   </data>
   <data name="PictureScrubberCheck.Content" xml:space="preserve">
     <value>Show scrub bar</value>
@@ -1473,7 +1473,7 @@
     <value>Position and crop</value>
   </data>
   <data name="PictureCropFrame.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>The part of the picture that shows</value>
+    <value>Crop area</value>
   </data>
   <data name="PictureCropFrame.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.HelpText" xml:space="preserve">
     <value>Use the arrow keys to move the box. Hold Shift to move it further.</value>
@@ -1483,16 +1483,16 @@
     <comment>Read by a screen reader as the crop box moves. {0} and {1} are whole numbers from 0 to 100.</comment>
   </data>
   <data name="PictureZoomSlider.Header" xml:space="preserve">
-    <value>Zoom, as a percentage</value>
+    <value>Zoom (%)</value>
   </data>
   <data name="PictureCropCaption.Text" xml:space="preserve">
-    <value>The buttons push the picture to an edge or a corner. To crop, zoom in and drag the box to the part you want. Fill in Scale and Stretch crops too.</value>
+    <value>The buttons push the picture to an edge or a corner. To crop, zoom in and drag the box to the part you want. Scaling set to Fill crops too.</value>
   </data>
   <data name="PictureTintHeading.Text" xml:space="preserve">
     <value>Color overlay</value>
   </data>
   <data name="PictureTintBox.Header" xml:space="preserve">
-    <value>Color, or blank for none</value>
+    <value>Color</value>
   </data>
   <data name="PictureTintBox.PlaceholderText" xml:space="preserve">
     <value>no overlay</value>
@@ -1507,19 +1507,19 @@
     <value>Line</value>
   </data>
   <data name="LineDirectionCombo.Header" xml:space="preserve">
-    <value>Which way it runs</value>
+    <value>Orientation</value>
   </data>
   <data name="LineDirectionAcross" xml:space="preserve">
-    <value>Across</value>
+    <value>Horizontal</value>
   </data>
   <data name="LineDirectionDown" xml:space="preserve">
-    <value>Up and down</value>
+    <value>Vertical</value>
   </data>
   <data name="LineThicknessBox.Header" xml:space="preserve">
-    <value>Thickness in pixels</value>
+    <value>Thickness (px)</value>
   </data>
   <data name="LineColorBox.Header" xml:space="preserve">
-    <value>Color, or blank for the theme's</value>
+    <value>Color</value>
   </data>
   <data name="LineColorBox.PlaceholderText" xml:space="preserve">
     <value>the theme's line color</value>
@@ -1531,7 +1531,7 @@
     <value>Ends</value>
   </data>
   <data name="LineEndsUseTheme" xml:space="preserve">
-    <value>Whatever the theme does</value>
+    <value>Theme default</value>
   </data>
   <data name="LineEndsSquare" xml:space="preserve">
     <value>Square</value>
@@ -1555,16 +1555,16 @@
     <value>Keys</value>
   </data>
   <data name="KeyCountLabel.Text" xml:space="preserve">
-    <value>How many keys</value>
+    <value>Number of keys</value>
   </data>
   <data name="KeyCountBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>How many keys</value>
+    <value>Number of keys</value>
   </data>
   <data name="LowestNoteLabel.Text" xml:space="preserve">
-    <value>Lowest key plays</value>
+    <value>Lowest note</value>
   </data>
   <data name="LowestNoteBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Note the lowest key plays</value>
+    <value>Lowest note</value>
   </data>
   <data name="KeyboardRangeFormat" xml:space="preserve">
     <value>{0} up to {1}.</value>
@@ -1585,37 +1585,37 @@
     <value>the theme's black keys</value>
   </data>
   <data name="PressedKeyColorBox.Header" xml:space="preserve">
-    <value>Key being played</value>
+    <value>Pressed key</value>
   </data>
   <data name="PressedKeyColorBox.PlaceholderText" xml:space="preserve">
     <value>the control's own color</value>
   </data>
   <data name="KeyVelocityCheck.Content" xml:space="preserve">
-    <value>Velocity from where the key is touched</value>
+    <value>Velocity by touch position</value>
   </data>
   <data name="InspectorPadsHeading.Text" xml:space="preserve">
     <value>Pads</value>
   </data>
   <data name="PadCountBox.Header" xml:space="preserve">
-    <value>How many pads</value>
+    <value>Number of pads</value>
   </data>
   <data name="PadSizeBox.Header" xml:space="preserve">
     <value>Pad size</value>
   </data>
   <data name="PadStartNoteBox.Header" xml:space="preserve">
-    <value>First pad plays</value>
+    <value>First note</value>
   </data>
   <data name="PadRowCombo.Header" xml:space="preserve">
-    <value>Each row starts</value>
+    <value>Row offset</value>
   </data>
   <data name="PadHexLayoutCombo.Header" xml:space="preserve">
     <value>Layout</value>
   </data>
   <data name="PadRightIntervalBox.Header" xml:space="preserve">
-    <value>Next pad to the right</value>
+    <value>Right interval</value>
   </data>
   <data name="PadUpIntervalBox.Header" xml:space="preserve">
-    <value>Up and to the right</value>
+    <value>Up-right interval</value>
   </data>
   <data name="PadKeyHeading.Text" xml:space="preserve">
     <value>Key</value>
@@ -1630,25 +1630,25 @@
     <value>Pad colors</value>
   </data>
   <data name="PadRootColorBox.Header" xml:space="preserve">
-    <value>The key's root note</value>
+    <value>Root note</value>
   </data>
   <data name="PadRootColorBox.PlaceholderText" xml:space="preserve">
     <value>a color from the theme</value>
   </data>
   <data name="PadInKeyColorBox.Header" xml:space="preserve">
-    <value>Notes in the key</value>
+    <value>In key</value>
   </data>
   <data name="PadInKeyColorBox.PlaceholderText" xml:space="preserve">
     <value>the control's own color</value>
   </data>
   <data name="PadOutOfKeyColorBox.Header" xml:space="preserve">
-    <value>Notes outside the key</value>
+    <value>Out of key</value>
   </data>
   <data name="PadOutOfKeyColorBox.PlaceholderText" xml:space="preserve">
     <value>the theme's plain color</value>
   </data>
   <data name="PadPressedColorBox.Header" xml:space="preserve">
-    <value>Pad being played</value>
+    <value>Pressed pad</value>
   </data>
   <data name="PadPressedColorBox.PlaceholderText" xml:space="preserve">
     <value>a brighter version of the pad</value>
@@ -1663,25 +1663,25 @@
     <value>Pick the color of notes outside the key</value>
   </data>
   <data name="PadPressedColorButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Pick the color of the pad being played</value>
+    <value>Pick the pressed pad color</value>
   </data>
   <data name="PadNamesHeading.Text" xml:space="preserve">
     <value>Note names</value>
   </data>
   <data name="PadNamesCombo.Header" xml:space="preserve">
-    <value>Where</value>
+    <value>Position</value>
   </data>
   <data name="PadNameSizeBox.Header" xml:space="preserve">
-    <value>Size, 0 to fit</value>
+    <value>Size (0 = fit)</value>
   </data>
   <data name="PadGlideHeading.Text" xml:space="preserve">
-    <value>Sliding from pad to pad</value>
+    <value>Glide</value>
   </data>
   <data name="PadGlideCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>What sliding from pad to pad does</value>
+    <value>Glide</value>
   </data>
   <data name="PadBendRangeBox.Header" xml:space="preserve">
-    <value>Bend range in semitones</value>
+    <value>Bend range (semitones)</value>
   </data>
   <data name="PadScaleMajor" xml:space="preserve">
     <value>Major</value>
@@ -1723,37 +1723,37 @@
     <value>Whole tone</value>
   </data>
   <data name="PadNamesCenter" xml:space="preserve">
-    <value>In the middle</value>
+    <value>Center</value>
   </data>
   <data name="PadNamesTop" xml:space="preserve">
-    <value>At the top</value>
+    <value>Top</value>
   </data>
   <data name="PadNamesBottom" xml:space="preserve">
-    <value>At the bottom</value>
+    <value>Bottom</value>
   </data>
   <data name="PadNamesTopLeft" xml:space="preserve">
-    <value>Top left corner</value>
+    <value>Top left</value>
   </data>
   <data name="PadNamesTopRight" xml:space="preserve">
-    <value>Top right corner</value>
+    <value>Top right</value>
   </data>
   <data name="PadNamesBottomLeft" xml:space="preserve">
-    <value>Bottom left corner</value>
+    <value>Bottom left</value>
   </data>
   <data name="PadNamesBottomRight" xml:space="preserve">
-    <value>Bottom right corner</value>
+    <value>Bottom right</value>
   </data>
   <data name="PadNamesHidden" xml:space="preserve">
-    <value>Don't show them</value>
+    <value>Hidden</value>
   </data>
   <data name="PadGlideOff" xml:space="preserve">
-    <value>Play each pad</value>
+    <value>Retrigger</value>
   </data>
   <data name="PadGlidePortamento" xml:space="preserve">
-    <value>Glide with portamento (MIDI 1.0)</value>
+    <value>Portamento (MIDI 1.0)</value>
   </data>
   <data name="PadGlidePerNoteBend" xml:space="preserve">
-    <value>Bend the note (MIDI 2.0)</value>
+    <value>Per-note pitch bend (MIDI 2.0)</value>
   </data>
   <data name="PadGlideOffCaption" xml:space="preserve">
     <value>Sliding onto another pad ends the first note and plays the next one, the way a finger dragged along a keyboard does.</value>
@@ -1774,46 +1774,46 @@
     <value>Jankó</value>
   </data>
   <data name="PadHexLayoutCustom" xml:space="preserve">
-    <value>Your own intervals</value>
+    <value>Custom</value>
   </data>
   <data name="PadRowCarryOn" xml:space="preserve">
-    <value>Where the row below ends</value>
+    <value>Continuous</value>
   </data>
   <data name="PadRowSemitone" xml:space="preserve">
-    <value>A semitone higher</value>
+    <value>Semitone</value>
   </data>
   <data name="PadRowWholeTone" xml:space="preserve">
-    <value>A whole tone higher</value>
+    <value>Whole tone</value>
   </data>
   <data name="PadRowMinorThird" xml:space="preserve">
-    <value>A minor third higher</value>
+    <value>Minor third</value>
   </data>
   <data name="PadRowMajorThird" xml:space="preserve">
-    <value>A major third higher</value>
+    <value>Major third</value>
   </data>
   <data name="PadRowFourth" xml:space="preserve">
-    <value>A fourth higher</value>
+    <value>Fourth</value>
   </data>
   <data name="PadRowTritone" xml:space="preserve">
-    <value>A tritone higher</value>
+    <value>Tritone</value>
   </data>
   <data name="PadRowFifth" xml:space="preserve">
-    <value>A fifth higher</value>
+    <value>Fifth</value>
   </data>
   <data name="PadRowMinorSixth" xml:space="preserve">
-    <value>A minor sixth higher</value>
+    <value>Minor sixth</value>
   </data>
   <data name="PadRowMajorSixth" xml:space="preserve">
-    <value>A major sixth higher</value>
+    <value>Major sixth</value>
   </data>
   <data name="PadRowMinorSeventh" xml:space="preserve">
-    <value>A minor seventh higher</value>
+    <value>Minor seventh</value>
   </data>
   <data name="PadRowMajorSeventh" xml:space="preserve">
-    <value>A major seventh higher</value>
+    <value>Major seventh</value>
   </data>
   <data name="PadRowOctave" xml:space="preserve">
-    <value>An octave higher</value>
+    <value>Octave</value>
   </data>
   <data name="PadKeyNone" xml:space="preserve">
     <value>No key</value>
@@ -1831,73 +1831,73 @@
     <value>Every pad is past the end of the note range, so none of them play.</value>
   </data>
   <data name="InspectorDragHeading.Text" xml:space="preserve">
-    <value>Which way to drag</value>
+    <value>Drag direction</value>
   </data>
   <data name="DragAxisCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Which way to drag</value>
+    <value>Drag direction</value>
   </data>
   <data name="DragAxisVertical" xml:space="preserve">
-    <value>Up and down</value>
+    <value>Vertical</value>
   </data>
   <data name="DragAxisHorizontal" xml:space="preserve">
-    <value>Left and right</value>
+    <value>Horizontal</value>
   </data>
   <data name="DragAxisCircular" xml:space="preserve">
-    <value>Round and round</value>
+    <value>Circular</value>
   </data>
   <data name="DragAxisCaption.Text" xml:space="preserve">
-    <value>Up is more, or right is more for a row of knobs in a narrow strip. Round and round turns it like a real knob: clockwise is more, and it turns from where it is instead of jumping to your finger. It works best on a big knob.</value>
+    <value>Up is more, or right is more for a row of knobs in a narrow strip. Circular turns it like a real knob: clockwise is more, and it turns from where it is instead of jumping to your finger. It works best on a big knob.</value>
   </data>
   <data name="SpringTargetCombo.Header" xml:space="preserve">
-    <value>Springs back to</value>
+    <value>Return to</value>
   </data>
   <data name="SpringTargetLowest" xml:space="preserve">
-    <value>The bottom</value>
+    <value>Minimum</value>
   </data>
   <data name="SpringTargetCenter" xml:space="preserve">
-    <value>The middle</value>
+    <value>Center</value>
   </data>
   <data name="SpringTargetHighest" xml:space="preserve">
-    <value>The top</value>
+    <value>Maximum</value>
   </data>
   <data name="SpringTargetCustom" xml:space="preserve">
-    <value>Wherever the starting value is</value>
+    <value>Starting value</value>
   </data>
   <data name="InspectorClockHeading.Text" xml:space="preserve">
     <value>Tempo</value>
   </data>
   <data name="ClockBpmBox.Header" xml:space="preserve">
-    <value>Beats per minute</value>
+    <value>BPM</value>
   </data>
   <data name="ClockSourceLabel.Text" xml:space="preserve">
-    <value>Take the tempo from</value>
+    <value>Tempo source</value>
   </data>
   <data name="ClockSourceCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Take the tempo from</value>
+    <value>Tempo source</value>
   </data>
   <data name="ClockSourceNone" xml:space="preserve">
-    <value>The number above</value>
+    <value>Fixed BPM</value>
   </data>
   <data name="ClockSourceCaption.Text" xml:space="preserve">
     <value>A knob or a fader on this layout can set the tempo while it runs. The two numbers below say what its ends mean.</value>
   </data>
   <data name="ClockLowestBpmBox.Header" xml:space="preserve">
-    <value>At the bottom</value>
+    <value>Minimum BPM</value>
   </data>
   <data name="ClockHighestBpmBox.Header" xml:space="preserve">
-    <value>At the top</value>
+    <value>Maximum BPM</value>
   </data>
   <data name="ClockStartsRunningCheck.Content" xml:space="preserve">
-    <value>Running when the layout opens</value>
+    <value>Start on open</value>
   </data>
   <data name="ClockSendsTransportCheck.Content" xml:space="preserve">
-    <value>Send start and stop as well</value>
+    <value>Send start/stop</value>
   </data>
   <data name="InspectorLfoHeading.Text" xml:space="preserve">
-    <value>Sweep</value>
+    <value>LFO</value>
   </data>
   <data name="LfoWaveCombo.Header" xml:space="preserve">
-    <value>Shape</value>
+    <value>Waveform</value>
   </data>
   <data name="LfoWaveSine" xml:space="preserve">
     <value>Sine</value>
@@ -1921,59 +1921,59 @@
     <value>Pink noise</value>
   </data>
   <data name="LfoWaveBrown" xml:space="preserve">
-    <value>Brown noise, also called red</value>
+    <value>Brown noise</value>
   </data>
   <data name="LfoWaveBlue" xml:space="preserve">
     <value>Blue noise</value>
   </data>
   <data name="LfoRateCombo.Header" xml:space="preserve">
-    <value>One pass takes</value>
+    <value>Rate</value>
   </data>
   <data name="LfoRateSixteenth" xml:space="preserve">
-    <value>A sixteenth note</value>
+    <value>1/16</value>
   </data>
   <data name="LfoRateEighth" xml:space="preserve">
-    <value>An eighth note</value>
+    <value>1/8</value>
   </data>
   <data name="LfoRateQuarter" xml:space="preserve">
-    <value>A quarter note</value>
+    <value>1/4</value>
   </data>
   <data name="LfoRateDottedQuarter" xml:space="preserve">
-    <value>A dotted quarter note</value>
+    <value>1/4 dotted</value>
   </data>
   <data name="LfoRateHalf" xml:space="preserve">
-    <value>A half note</value>
+    <value>1/2</value>
   </data>
   <data name="LfoRateDottedHalf" xml:space="preserve">
-    <value>A dotted half note</value>
+    <value>1/2 dotted</value>
   </data>
   <data name="LfoRateBar" xml:space="preserve">
-    <value>One bar</value>
+    <value>1 bar</value>
   </data>
   <data name="LfoRateTwoBars" xml:space="preserve">
-    <value>Two bars</value>
+    <value>2 bars</value>
   </data>
   <data name="LfoRateFourBars" xml:space="preserve">
-    <value>Four bars</value>
+    <value>4 bars</value>
   </data>
   <data name="LfoRateEightBars" xml:space="preserve">
-    <value>Eight bars</value>
+    <value>8 bars</value>
   </data>
   <data name="LfoRateCaptionFormat" xml:space="preserve">
     <value>{0} beats, which is about {1} seconds at this layout's tempo of {2}.</value>
     <comment>{0} is a number of beats, {1} a number of seconds, {2} a tempo in beats per minute.</comment>
   </data>
   <data name="LfoLowestSlider.Header" xml:space="preserve">
-    <value>Low end of the sweep</value>
+    <value>Minimum</value>
   </data>
   <data name="LfoHighestSlider.Header" xml:space="preserve">
-    <value>High end of the sweep</value>
+    <value>Maximum</value>
   </data>
   <data name="LfoRangeCaption.Text" xml:space="preserve">
     <value>How much of the travel the sweep covers. The middle of the wave lands halfway between the two. Setting the low end above the high one turns the wave upside down.</value>
   </data>
   <data name="LfoUpdateLabel.Text" xml:space="preserve">
-    <value>Send a value every</value>
+    <value>Update interval</value>
   </data>
   <data name="LfoUpdateBox.Header" xml:space="preserve">
     <value>Milliseconds</value>
@@ -1983,55 +1983,55 @@
     <comment>{0} is a number of messages per second.</comment>
   </data>
   <data name="LfoLatchingCheck.Content" xml:space="preserve">
-    <value>Press to start, press again to stop</value>
+    <value>Latch</value>
   </data>
   <data name="LfoStartsRunningCheck.Content" xml:space="preserve">
-    <value>Running when the layout opens</value>
+    <value>Start on open</value>
   </data>
   <data name="LfoReturnsToRestCheck.Content" xml:space="preserve">
-    <value>Go back to the middle when it stops</value>
+    <value>Return to center on stop</value>
   </data>
   <data name="InspectorStepsHeading.Text" xml:space="preserve">
     <value>Sequence</value>
   </data>
   <data name="StepsRateCombo.Header" xml:space="preserve">
-    <value>Each step is</value>
+    <value>Step length</value>
   </data>
   <data name="StepsRateQuarter" xml:space="preserve">
-    <value>A quarter note</value>
+    <value>1/4</value>
   </data>
   <data name="StepsRateEighth" xml:space="preserve">
-    <value>An eighth note</value>
+    <value>1/8</value>
   </data>
   <data name="StepsRateEighthTriplet" xml:space="preserve">
-    <value>An eighth note triplet</value>
+    <value>1/8 triplet</value>
   </data>
   <data name="StepsRateSixteenth" xml:space="preserve">
-    <value>A sixteenth note</value>
+    <value>1/16</value>
   </data>
   <data name="StepsRateSixteenthTriplet" xml:space="preserve">
-    <value>A sixteenth note triplet</value>
+    <value>1/16 triplet</value>
   </data>
   <data name="StepsRateThirtySecond" xml:space="preserve">
-    <value>A thirty-second note</value>
+    <value>1/32</value>
   </data>
   <data name="StepsDirectionCombo.Header" xml:space="preserve">
-    <value>Plays the steps</value>
+    <value>Direction</value>
   </data>
   <data name="StepsDirectionForward" xml:space="preserve">
-    <value>In order</value>
+    <value>Forward</value>
   </data>
   <data name="StepsDirectionBackward" xml:space="preserve">
     <value>Backward</value>
   </data>
   <data name="StepsDirectionPingPong" xml:space="preserve">
-    <value>Forward, then back</value>
+    <value>Ping-pong</value>
   </data>
   <data name="StepsDirectionRandom" xml:space="preserve">
-    <value>In a random order</value>
+    <value>Random</value>
   </data>
   <data name="StepsGateSlider.Header" xml:space="preserve">
-    <value>How long each note sounds, as a share of its step</value>
+    <value>Gate length</value>
   </data>
   <data name="StepsSwingSlider.Header" xml:space="preserve">
     <value>Swing</value>
@@ -2041,16 +2041,16 @@
     <comment>{0} is a number of milliseconds, {1} a tempo in beats per minute.</comment>
   </data>
   <data name="StepsLatchingCheck.Content" xml:space="preserve">
-    <value>Press to start, press again to stop</value>
+    <value>Latch</value>
   </data>
   <data name="StepsStartsRunningCheck.Content" xml:space="preserve">
-    <value>Running when the layout opens</value>
+    <value>Start on open</value>
   </data>
   <data name="InspectorStepListHeading.Text" xml:space="preserve">
     <value>Steps</value>
   </data>
   <data name="StepCountBox.Header" xml:space="preserve">
-    <value>How many steps</value>
+    <value>Number of steps</value>
   </data>
   <data name="StepListCaption.Text" xml:space="preserve">
     <value>Each step plays its own note through the note row on the Sends tab, or rests when it is off. Velocity is how hard, from 1 to 100.</value>
@@ -2071,43 +2071,43 @@
     <value>Platter</value>
   </data>
   <data name="TurntableDegreesBox.Header" xml:space="preserve">
-    <value>Degrees for the full range</value>
+    <value>Rotation range (degrees)</value>
   </data>
   <data name="TurntableDegreesCaption.Text" xml:space="preserve">
     <value>How far you push the platter round to take it from one end to the other. Less is twitchier. The middle means the platter is not moving, so a pitch bend row nudges the track and a controller row set 0 to 127 sits at 64 at rest, which is how DJ software reads a jog wheel.</value>
   </data>
   <data name="TurntableGripCheck.Content" xml:space="preserve">
-    <value>Show the ridges around the edge</value>
+    <value>Show grip ridges</value>
   </data>
   <data name="FeedbackEnabledSwitch.Header" xml:space="preserve">
-    <value>Follow what arrives</value>
+    <value>MIDI follow</value>
   </data>
   <data name="FeedbackEnabledCaption.Text" xml:space="preserve">
     <value>The control moves or lights when the device sends, instead of only when a finger does.</value>
   </data>
   <data name="FeedbackModeHeading.Text" xml:space="preserve">
-    <value>What to listen for</value>
+    <value>Follow mode</value>
   </data>
   <data name="FeedbackModeCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>What to listen for</value>
+    <value>Follow mode</value>
   </data>
   <data name="FeedbackModeMessage" xml:space="preserve">
-    <value>One message</value>
+    <value>Single message</value>
   </data>
   <data name="FeedbackModeActivity" xml:space="preserve">
-    <value>Anything at all</value>
+    <value>Any activity</value>
   </data>
   <data name="FeedbackModeTempo" xml:space="preserve">
-    <value>The beat</value>
+    <value>Beat</value>
   </data>
   <data name="FeedbackModeNotes" xml:space="preserve">
     <value>Notes</value>
   </data>
   <data name="FeedbackModeControlChanges" xml:space="preserve">
-    <value>Controller messages</value>
+    <value>Control changes</value>
   </data>
   <data name="FeedbackModeTransport" xml:space="preserve">
-    <value>Start and stop</value>
+    <value>Transport</value>
   </data>
   <data name="FeedbackModeNotesCaption" xml:space="preserve">
     <value>The control lights when any note is played, and goes out when the last one is let go.</value>
@@ -2131,10 +2131,10 @@
     <value>From</value>
   </data>
   <data name="InspectorPadVelocityHeading.Text" xml:space="preserve">
-    <value>How hard it was hit</value>
+    <value>Velocity</value>
   </data>
   <data name="PadVelocityCheck.Content" xml:space="preserve">
-    <value>Use pen or touch pressure for the value</value>
+    <value>Pressure sensitive</value>
   </data>
   <data name="PadVelocityCaption.Text" xml:space="preserve">
     <value>Only a pen and a few touch screens report pressure. Everything else, including a mouse, hits at full. Leave this off unless you have tried it on the machine you will play on.</value>
@@ -2152,31 +2152,31 @@
     <value>Channel</value>
   </data>
   <data name="FeedbackMatchChannelCheck.Content" xml:space="preserve">
-    <value>Only that channel</value>
+    <value>Match channel</value>
   </data>
   <data name="FeedbackKindHeading.Text" xml:space="preserve">
-    <value>Which message</value>
+    <value>Message</value>
   </data>
   <data name="FeedbackKindCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Which message</value>
+    <value>Message</value>
   </data>
   <data name="FeedbackNumberBox.Header" xml:space="preserve">
     <value>Number</value>
   </data>
   <data name="FeedbackTempoHeading.Text" xml:space="preserve">
-    <value>Whose beat</value>
+    <value>Beat source</value>
   </data>
   <data name="FeedbackTempoCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Whose beat</value>
+    <value>Beat source</value>
   </data>
   <data name="FeedbackTempoCaption.Text" xml:space="preserve">
     <value>Either the clock arriving from the device above, or a clock generator on this layout.</value>
   </data>
   <data name="BeatSourceIncoming" xml:space="preserve">
-    <value>Clock arriving from the device</value>
+    <value>Incoming MIDI clock</value>
   </data>
   <data name="FeedbackHoldHeading.Text" xml:space="preserve">
-    <value>Stays lit for</value>
+    <value>Light duration</value>
   </data>
   <data name="FeedbackHoldBox.Header" xml:space="preserve">
     <value>Milliseconds</value>
@@ -2356,22 +2356,22 @@
     <value>Stops</value>
   </data>
   <data name="DetentModeContinuous" xml:space="preserve">
-    <value>Smooth all the way</value>
+    <value>Continuous</value>
   </data>
   <data name="DetentModeEvenSteps" xml:space="preserve">
-    <value>Evenly spaced</value>
+    <value>Even steps</value>
   </data>
   <data name="DetentModeList" xml:space="preserve">
-    <value>A list of values</value>
+    <value>Value list</value>
   </data>
   <data name="DetentStepBox.Header" xml:space="preserve">
-    <value>Step, in the same units as the ends</value>
+    <value>Step size</value>
   </data>
   <data name="DetentStopLowest" xml:space="preserve">
-    <value>At the bottom</value>
+    <value>Minimum</value>
   </data>
   <data name="DetentStopHighest" xml:space="preserve">
-    <value>At the top</value>
+    <value>Maximum</value>
   </data>
   <data name="DetentStopBetween" xml:space="preserve">
     <value>Stop {0}</value>
@@ -2404,7 +2404,7 @@
     <value>A group of {0} controls</value>
   </data>
   <data name="ManySendHeading.Text" xml:space="preserve">
-    <value>Where they send</value>
+    <value>Destination</value>
   </data>
   <data name="ManySendDeviceLabel.Text" xml:space="preserve">
     <value>To</value>
@@ -2434,7 +2434,7 @@
     <value>Changes where all {0} of their messages go. A blank box means they don't all agree yet. Pick a setting to give it to every one of them.</value>
   </data>
   <data name="ManyListenHeading.Text" xml:space="preserve">
-    <value>Where they listen</value>
+    <value>Source</value>
   </data>
   <data name="ManyListenDeviceLabel.Text" xml:space="preserve">
     <value>From</value>
@@ -2455,13 +2455,13 @@
     <value>Channel they all listen on</value>
   </data>
   <data name="ManyListenCaptionOne" xml:space="preserve">
-    <value>Changes the one control here that follows what arrives.</value>
+    <value>Changes the one control here that has MIDI follow on.</value>
   </data>
   <data name="ManyListenCaptionFormat" xml:space="preserve">
-    <value>Changes the {0} controls here that follow what arrives. A blank box means they don't all agree yet. Pick a setting to give it to every one of them.</value>
+    <value>Changes the {0} controls here that have MIDI follow on. A blank box means they don't all agree yet. Pick a setting to give it to every one of them.</value>
   </data>
   <data name="ManyListenNothing" xml:space="preserve">
-    <value>None of these controls follow what arrives. Turn that on for each one on its own Listens tab.</value>
+    <value>None of these controls have MIDI follow on. Turn it on for each one on its own Listens tab.</value>
   </data>
   <data name="InspectorUnnamedControl" xml:space="preserve">
     <value>Unnamed</value>
@@ -2509,7 +2509,7 @@
     <value>Kind of control</value>
   </data>
   <data name="InspectorMessagesHeading.Text" xml:space="preserve">
-    <value>What it sends</value>
+    <value>Action list</value>
   </data>
   <data name="MessageList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Messages this control sends</value>
@@ -2531,10 +2531,10 @@
     <value>no device</value>
   </data>
   <data name="MessageWhenLabel.Text" xml:space="preserve">
-    <value>When</value>
+    <value>Trigger</value>
   </data>
   <data name="MessageWhatLabel.Text" xml:space="preserve">
-    <value>What</value>
+    <value>Type</value>
   </data>
   <data name="MessageDeviceLabel.Text" xml:space="preserve">
     <value>To</value>
@@ -2558,7 +2558,7 @@
     <value>Index (LSB)</value>
   </data>
   <data name="TriggerCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>When this message is sent</value>
+    <value>Trigger</value>
   </data>
   <data name="KindMessageCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>What this message is</value>
@@ -2635,19 +2635,19 @@
     <value>Sends how far you turn it, and springs back to the middle when you let go.</value>
   </data>
   <data name="TriggerChanges" xml:space="preserve">
-    <value>It changes</value>
+    <value>Value change</value>
   </data>
   <data name="TriggerTurnsOn" xml:space="preserve">
-    <value>It turns on</value>
+    <value>On</value>
   </data>
   <data name="TriggerTurnsOff" xml:space="preserve">
-    <value>It turns off</value>
+    <value>Off</value>
   </data>
   <data name="TriggerTouched" xml:space="preserve">
-    <value>It is touched</value>
+    <value>Touch</value>
   </data>
   <data name="TriggerReleased" xml:space="preserve">
-    <value>It is released</value>
+    <value>Release</value>
   </data>
   <data name="MessageControlChange" xml:space="preserve">
     <value>Control change</value>
@@ -2683,7 +2683,7 @@
     <value>System exclusive</value>
   </data>
   <data name="LearnHeading.Text" xml:space="preserve">
-    <value>Learn from your hardware</value>
+    <value>MIDI Learn</value>
   </data>
   <data name="LearnOneToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Learn this control from your hardware</value>
@@ -2707,7 +2707,7 @@
     <value>Channel</value>
   </data>
   <data name="LearnAcceptKind.Content" xml:space="preserve">
-    <value>What</value>
+    <value>Type</value>
   </data>
   <data name="LearnAcceptNumber.Content" xml:space="preserve">
     <value>Number</value>
@@ -2765,7 +2765,7 @@
     <comment>A toolbar window's menu. Its choices are percentages of the size the layout was designed at.</comment>
   </data>
   <data name="ToolbarKeepOnTop.Text" xml:space="preserve">
-    <value>Keep in front</value>
+    <value>Always on top</value>
   </data>
   <data name="ToolbarFullScreen.Text" xml:space="preserve">
     <value>Full screen</value>
@@ -2801,7 +2801,7 @@
     <value>Go to a page</value>
   </data>
   <data name="SysExHeading.Text" xml:space="preserve">
-    <value>The bytes to send</value>
+    <value>Data</value>
   </data>
   <data name="SysExBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>System exclusive bytes, in hexadecimal</value>
@@ -2831,19 +2831,19 @@
     <value>Open a system exclusive file</value>
   </data>
   <data name="RawWordsHeading.Text" xml:space="preserve">
-    <value>The words to send</value>
+    <value>UMP words</value>
   </data>
   <data name="RawWordsBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>The words to send, in hexadecimal</value>
+    <value>UMP words, in hexadecimal</value>
   </data>
   <data name="RawWordsHelp.Text" xml:space="preserve">
     <value>Up to four 32 bit words, hexadecimal, separated by spaces. Sent exactly as written.</value>
   </data>
   <data name="SequenceHeading.Text" xml:space="preserve">
-    <value>Which sequence</value>
+    <value>Sequence</value>
   </data>
   <data name="SequenceCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Which sequence this plays</value>
+    <value>Sequence</value>
   </data>
   <data name="NewSequenceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Make a new sequence</value>
@@ -2882,10 +2882,10 @@
     <value>Sequence</value>
   </data>
   <data name="TargetPageHeading.Text" xml:space="preserve">
-    <value>Which page</value>
+    <value>Page</value>
   </data>
   <data name="TargetPageCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Which page this goes to</value>
+    <value>Page</value>
   </data>
   <data name="SequenceDialogTitleFormat" xml:space="preserve">
     <value>Sequence — {0}</value>
@@ -2897,16 +2897,16 @@
     <value>{0} steps · about {1} s of waiting</value>
   </data>
   <data name="SequenceModeHeader" xml:space="preserve">
-    <value>Pressing the button</value>
+    <value>Button mode</value>
   </data>
   <data name="SequenceModeOnce" xml:space="preserve">
-    <value>runs it once</value>
+    <value>Run once</value>
   </data>
   <data name="SequenceModeWhileHeld" xml:space="preserve">
-    <value>repeats it while held</value>
+    <value>Repeat while held</value>
   </data>
   <data name="SequenceModeToggle" xml:space="preserve">
-    <value>starts it, and the next press stops it</value>
+    <value>Start/stop</value>
   </data>
   <data name="StepAddNote" xml:space="preserve">
     <value>Note</value>
@@ -2951,7 +2951,7 @@
     <value>Note {0} for {1} ms</value>
   </data>
   <data name="StepDurationHeader" xml:space="preserve">
-    <value>Held for, in milliseconds</value>
+    <value>Duration (ms)</value>
   </data>
   <data name="StepMessageFormat" xml:space="preserve">
     <value>Control change {0}</value>
@@ -2981,16 +2981,16 @@
     <value>Channel</value>
   </data>
   <data name="StepControlHeader" xml:space="preserve">
-    <value>Which control</value>
+    <value>Control</value>
   </data>
   <data name="StepValueHeader" xml:space="preserve">
-    <value>Set it to, as a percentage</value>
+    <value>Value (%)</value>
   </data>
   <data name="StepPageHeader" xml:space="preserve">
-    <value>Which page</value>
+    <value>Page</value>
   </data>
   <data name="StepBytesHeader" xml:space="preserve">
-    <value>The bytes to send</value>
+    <value>Data</value>
   </data>
   <data name="StepMoveUp" xml:space="preserve">
     <value>Move this step earlier</value>
@@ -3017,7 +3017,7 @@
     <value>When the layout opens</value>
   </data>
   <data name="SendOnStartSwitch.Header" xml:space="preserve">
-    <value>Send this control's value</value>
+    <value>Send value</value>
   </data>
   <data name="SendOnStartCaption.Text" xml:space="preserve">
     <value>A layout whose faders sit at zero, pushed to a live desk on load, mutes the show. Leave this off unless this control genuinely has to put something into a known state.</value>
@@ -3026,7 +3026,7 @@
     <value>Starting value</value>
   </data>
   <data name="ReturnsToDefaultSwitch.Header" xml:space="preserve">
-    <value>Springs back when released</value>
+    <value>Spring back</value>
   </data>
   <data name="ReturnsToDefaultCaption.Text" xml:space="preserve">
     <value>What makes a pitch wheel a pitch wheel. The control goes back to its starting value the moment the finger comes off, and that value is sent.</value>
@@ -3038,28 +3038,28 @@
     <value>Starting value, as a percentage</value>
   </data>
   <data name="DefaultValueAcrossHeader" xml:space="preserve">
-    <value>Across</value>
+    <value>X</value>
   </data>
   <data name="DefaultValueAcrossName" xml:space="preserve">
-    <value>Starting value across, as a percentage</value>
+    <value>Starting value X, as a percentage</value>
   </data>
   <data name="DefaultValueYSlider.Header" xml:space="preserve">
-    <value>Up and down</value>
+    <value>Y</value>
   </data>
   <data name="DefaultValueYSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Starting value up and down, as a percentage</value>
+    <value>Starting value Y, as a percentage</value>
   </data>
   <data name="StartsOnSwitch.Header" xml:space="preserve">
     <value>Starts on</value>
   </data>
   <data name="LightsFromCenterSwitch.Header" xml:space="preserve">
-    <value>Centered, like a pan control</value>
+    <value>Bipolar</value>
   </data>
   <data name="LightsFromCenterCaption.Text" xml:space="preserve">
     <value>Rests in the middle, and lights only the part it has moved away from the middle, to either side. Turning this on starts it in the middle.</value>
   </data>
   <data name="InspectorThrottleHeading.Text" xml:space="preserve">
-    <value>Least time between sends</value>
+    <value>Minimum send interval</value>
   </data>
   <data name="SendIntervalBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Least time between sends, in milliseconds</value>
@@ -3074,13 +3074,13 @@
     <value>Pickup mode</value>
   </data>
   <data name="PickupJump" xml:space="preserve">
-    <value>Jump to where it was touched</value>
+    <value>Jump</value>
   </data>
   <data name="PickupCatch" xml:space="preserve">
-    <value>Catch the value first</value>
+    <value>Catch</value>
   </data>
   <data name="PickupRelative" xml:space="preserve">
-    <value>Move relative to where it is</value>
+    <value>Relative</value>
   </data>
   <data name="InspectorKeyboardOrderHeading.Text" xml:space="preserve">
     <value>Keyboard order</value>
@@ -3098,40 +3098,40 @@
     <value>Save</value>
   </data>
   <data name="LayoutMenuBackground.Text" xml:space="preserve">
-    <value>Background picture or video…</value>
+    <value>Background image…</value>
   </data>
   <data name="BackgroundDialogTitle" xml:space="preserve">
-    <value>Background picture or video</value>
+    <value>Background image</value>
   </data>
   <data name="BackgroundOpenTitle" xml:space="preserve">
     <value>Choose a background picture or video</value>
   </data>
   <data name="BackgroundChoose" xml:space="preserve">
-    <value>Choose a picture or video…</value>
+    <value>Choose image or video…</value>
   </data>
   <data name="BackgroundClear" xml:space="preserve">
-    <value>Take it away</value>
+    <value>Remove</value>
   </data>
   <data name="BackgroundNone" xml:space="preserve">
     <value>No picture or video. The surface uses the theme's own background.</value>
   </data>
   <data name="BackgroundFitHeader" xml:space="preserve">
-    <value>Scale and Stretch</value>
+    <value>Scaling</value>
   </data>
   <data name="BackgroundFitUniform" xml:space="preserve">
-    <value>Scale to fit, keeping its shape</value>
+    <value>Fit</value>
   </data>
   <data name="BackgroundFitStretch" xml:space="preserve">
-    <value>Stretch to fill the page</value>
+    <value>Stretch</value>
   </data>
   <data name="BackgroundFitCentered" xml:space="preserve">
-    <value>Centered, at its own size</value>
+    <value>Center</value>
   </data>
   <data name="BackgroundFitTiled" xml:space="preserve">
-    <value>Tiled</value>
+    <value>Tile</value>
   </data>
   <data name="BackgroundFitFill" xml:space="preserve">
-    <value>Fill, cutting off what does not fit</value>
+    <value>Fill</value>
   </data>
   <data name="BackgroundOpacityHeader" xml:space="preserve">
     <value>Opacity</value>
@@ -3170,7 +3170,7 @@
     <value>A band is pinned to every page, so transport and panic do not have to be rebuilt four times. Turn one on from a page's … menu.</value>
   </data>
   <data name="LayoutSettingsDevicesHeader.Text" xml:space="preserve">
-    <value>Devices this layout uses</value>
+    <value>MIDI devices</value>
   </data>
   <data name="LayoutSettingsAddDevice.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Add a device</value>
@@ -3254,19 +3254,19 @@
     <value>Ready</value>
   </data>
   <data name="DeviceNotHere" xml:space="preserve">
-    <value>Not here right now</value>
+    <value>Not connected</value>
   </data>
   <data name="DeviceMenuRename" xml:space="preserve">
     <value>Rename…</value>
   </data>
   <data name="DeviceMenuRepoint" xml:space="preserve">
-    <value>Point at another device…</value>
+    <value>Change device…</value>
   </data>
   <data name="DeviceMenuRemove" xml:space="preserve">
-    <value>Remove from this layout</value>
+    <value>Remove</value>
   </data>
   <data name="DeviceFoundByFormat" xml:space="preserve">
-    <value>Found by {0}</value>
+    <value>Match: {0}</value>
   </data>
   <data name="DeviceControlsUseFormat" xml:space="preserve">
     <value>{0} controls use it</value>
@@ -3275,19 +3275,19 @@
     <value>1 control uses it</value>
   </data>
   <data name="DeviceFindItNextTime" xml:space="preserve">
-    <value>Find it next time by</value>
+    <value>Match by</value>
   </data>
   <data name="MatchModeExactDevice" xml:space="preserve">
-    <value>this exact device</value>
+    <value>Exact device</value>
   </data>
   <data name="MatchModeName" xml:space="preserve">
-    <value>its name</value>
+    <value>Name</value>
   </data>
   <data name="MatchModeUsbModel" xml:space="preserve">
     <value>USB model</value>
   </data>
   <data name="DeviceProtocolLabel" xml:space="preserve">
-    <value>Talk to it in</value>
+    <value>Protocol</value>
     <comment>Followed by a choice of MIDI 2.0, MIDI 1.0 or Mackie Control.</comment>
   </data>
   <data name="DeviceProtocolMidi2" xml:space="preserve">
@@ -3551,25 +3551,25 @@
     <value>This layout has no devices yet. Add one, then point your controls at it from the MIDI tab.</value>
   </data>
   <data name="OneDeviceMissingFormat" xml:space="preserve">
-    <value>1 device is not here</value>
+    <value>1 device not connected</value>
   </data>
   <data name="DevicesMissingFormat" xml:space="preserve">
-    <value>{0} devices are not here</value>
+    <value>{0} devices not connected</value>
   </data>
   <data name="DevicePickerAddTitle" xml:space="preserve">
     <value>Add a device</value>
   </data>
   <data name="DevicePickerRepointTitle" xml:space="preserve">
-    <value>Point at another device</value>
+    <value>Change device</value>
   </data>
   <data name="DevicePickerNameLabel" xml:space="preserve">
-    <value>What this layout calls it</value>
+    <value>Name</value>
   </data>
   <data name="DevicePickerEndpointLabel" xml:space="preserve">
-    <value>Endpoints on this PC</value>
+    <value>Endpoint</value>
   </data>
   <data name="DevicePickerMatchLabel" xml:space="preserve">
-    <value>Find it next time by</value>
+    <value>Match by</value>
   </data>
   <data name="DevicePickerNothingHere" xml:space="preserve">
     <value>No MIDI endpoints are present right now. Plug something in, or start the Windows MIDI Services service, then try again.</value>
@@ -3671,22 +3671,22 @@
     <value>Direction</value>
   </data>
   <data name="RepeatDirectionRight" xml:space="preserve">
-    <value>To the right</value>
+    <value>Right</value>
   </data>
   <data name="RepeatDirectionLeft" xml:space="preserve">
-    <value>To the left</value>
+    <value>Left</value>
   </data>
   <data name="RepeatDirectionDown" xml:space="preserve">
-    <value>Downward</value>
+    <value>Down</value>
   </data>
   <data name="RepeatDirectionUp" xml:space="preserve">
-    <value>Upward</value>
+    <value>Up</value>
   </data>
   <data name="RepeatGapLabel" xml:space="preserve">
-    <value>Gap, in pixels</value>
+    <value>Gap (px)</value>
   </data>
   <data name="RepeatFieldLabel" xml:space="preserve">
-    <value>Step the binding by</value>
+    <value>Increment</value>
   </data>
   <data name="RepeatFieldNothing" xml:space="preserve">
     <value>Nothing</value>
@@ -3758,7 +3758,7 @@
     <value>Page height</value>
   </data>
   <data name="PageSizeAnchorLabel" xml:space="preserve">
-    <value>Put existing controls</value>
+    <value>Anchor</value>
   </data>
   <data name="AnchorTopLeft" xml:space="preserve">
     <value>Top left</value>
@@ -3887,7 +3887,7 @@
     <value>Colors</value>
   </data>
   <data name="ThemeOwnHeading.Text" xml:space="preserve">
-    <value>Your own themes</value>
+    <value>Custom themes</value>
   </data>
   <data name="ThemeOwnCaption.Text" xml:space="preserve">
     <value>A theme is a small file. Save one and it shows up in the gallery for every layout on this PC.</value>
@@ -3903,10 +3903,10 @@
     <value>The theme travels inside the layout file, so a layout you send to somebody looks the way you built it even if they have never seen your theme.</value>
   </data>
   <data name="SaveThemeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Save these colors as a theme</value>
+    <value>Save as theme</value>
   </data>
   <data name="SaveThemeLabel.Text" xml:space="preserve">
-    <value>Save these colors as a theme…</value>
+    <value>Save as theme…</value>
   </data>
   <data name="ImportThemeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Import a theme</value>
@@ -4050,7 +4050,7 @@
     <value>Light</value>
   </data>
   <data name="ThemeGroupOverlay" xml:space="preserve">
-    <value>Glass over the page</value>
+    <value>Glass overlay</value>
   </data>
   <data name="ThemeGroupMeter" xml:space="preserve">
     <value>Meter zones</value>
@@ -4073,13 +4073,13 @@
     <value>Background</value>
   </data>
   <data name="ThemeRowDeckTop" xml:space="preserve">
-    <value>Lit top</value>
+    <value>Color</value>
   </data>
   <data name="ThemeRowDeckFloor" xml:space="preserve">
-    <value>Shaded floor</value>
+    <value>Bottom color</value>
   </data>
   <data name="ThemeRowCornerRounding" xml:space="preserve">
-    <value>Corner rounding</value>
+    <value>Corner radius</value>
   </data>
   <data name="ThemeRowGlassTint" xml:space="preserve">
     <value>Glass tint</value>
@@ -4115,30 +4115,30 @@
     <value>Section header</value>
   </data>
   <data name="ThemeSectionCaption" xml:space="preserve">
-    <value>Caption on the deck</value>
+    <value>Caption</value>
   </data>
   <data name="ThemeSectionFilledBar" xml:space="preserve">
     <value>Filled bar</value>
   </data>
   <data name="ThemeSectionNotched" xml:space="preserve">
-    <value>Name in the frame</value>
+    <value>Notched</value>
     <comment>A section header style: the section's name sits in a gap cut into the top line of its frame.</comment>
   </data>
   <data name="ThemeSectionCentered" xml:space="preserve">
-    <value>Name centered at the top</value>
+    <value>Centered</value>
     <comment>A section header style: the section's name is centered across the top of the section.</comment>
   </data>
   <data name="ThemeRowSectionNameInHue" xml:space="preserve">
-    <value>Section name in color</value>
+    <value>Colored section names</value>
   </data>
   <data name="ThemeRowNamesInside" xml:space="preserve">
-    <value>Names on switches</value>
+    <value>Names inside switches</value>
   </data>
   <data name="ThemeRowPlateShade" xml:space="preserve">
     <value>Shade</value>
   </data>
   <data name="ThemeRowPlateHighlight" xml:space="preserve">
-    <value>Top edge light</value>
+    <value>Top highlight</value>
   </data>
   <data name="ThemeRowValueColor" xml:space="preserve">
     <value>Value color</value>
@@ -4150,16 +4150,16 @@
     <value>Fader plate</value>
   </data>
   <data name="ThemeFaderPlateFull" xml:space="preserve">
-    <value>The whole control</value>
+    <value>Full</value>
   </data>
   <data name="ThemeFaderPlateStrip" xml:space="preserve">
-    <value>A strip around the slot</value>
+    <value>Strip</value>
   </data>
   <data name="ThemeFaderPlateNone" xml:space="preserve">
-    <value>None, just the slot</value>
+    <value>None</value>
   </data>
   <data name="ThemeFaderPlateFrame" xml:space="preserve">
-    <value>A lit frame around the slot</value>
+    <value>Lit frame</value>
     <comment>A fader plate style: the rim and its glow go around the fader's slot, and the marks are printed outside them.</comment>
   </data>
   <data name="ThemeRowFaderFill" xml:space="preserve">
@@ -4178,7 +4178,7 @@
     <value>Wide cap line</value>
   </data>
   <data name="ThemeRowRecessShade" xml:space="preserve">
-    <value>Sunk shadow</value>
+    <value>Recess shadow</value>
   </data>
   <data name="ThemeRowWellColor" xml:space="preserve">
     <value>Display well</value>
@@ -4205,7 +4205,7 @@
     <value>Knob cap size</value>
   </data>
   <data name="ThemeRowPointerOnCap" xml:space="preserve">
-    <value>Pointer on the cap</value>
+    <value>Pointer on cap</value>
   </data>
   <data name="ThemeRowKnobTicks" xml:space="preserve">
     <value>Knob marks</value>
@@ -4232,10 +4232,10 @@
     <value>Section fill</value>
   </data>
   <data name="ThemePanelFillPlate" xml:space="preserve">
-    <value>Like a control</value>
+    <value>Plate</value>
   </data>
   <data name="ThemePanelFillColor" xml:space="preserve">
-    <value>Its own color</value>
+    <value>Color</value>
   </data>
   <data name="ThemePanelFillNone" xml:space="preserve">
     <value>Outline only</value>
@@ -4250,7 +4250,7 @@
     <value>Section outline</value>
   </data>
   <data name="ThemeRowPanelElevation" xml:space="preserve">
-    <value>Section raised</value>
+    <value>Section elevation</value>
   </data>
   <data name="ThemeRowInsetPanel" xml:space="preserve">
     <value>Inner section</value>
@@ -4271,7 +4271,7 @@
     <value>Line color</value>
   </data>
   <data name="ThemeRowRuleFades" xml:space="preserve">
-    <value>Lines fade at the ends</value>
+    <value>Faded line ends</value>
   </data>
   <data name="ThemeRowKeyWhite" xml:space="preserve">
     <value>Natural keys</value>
@@ -4286,7 +4286,7 @@
     <value>The seventh color, and it is the absence of one. A control set to the neutral slot uses this instead of a hue, so an unassigned button stays unassigned after a theme swap.</value>
   </data>
   <data name="ThemeRowTouchFill" xml:space="preserve">
-    <value>Fill under a finger</value>
+    <value>Touch fill</value>
   </data>
   <data name="ThemeRowLabels" xml:space="preserve">
     <value>Labels</value>
@@ -4307,16 +4307,16 @@
     <value>Sheen color</value>
   </data>
   <data name="ThemeRowElevation" xml:space="preserve">
-    <value>Raised</value>
+    <value>Elevation</value>
   </data>
   <data name="ThemeRowShadowReach" xml:space="preserve">
-    <value>Shadow reach</value>
+    <value>Shadow spread</value>
   </data>
   <data name="ThemeRowShadowColor" xml:space="preserve">
     <value>Shadow color</value>
   </data>
   <data name="ThemeRowRimFrom" xml:space="preserve">
-    <value>Rim from</value>
+    <value>Rim color</value>
   </data>
   <data name="ThemeRowRimStrength" xml:space="preserve">
     <value>Rim strength</value>
@@ -4337,13 +4337,13 @@
     <value>Knob arc track</value>
   </data>
   <data name="ThemeRowArcTrackHue" xml:space="preserve">
-    <value>Knob ring in its color</value>
+    <value>Colored knob ring</value>
   </data>
   <data name="ThemeArcTrackHueNote" xml:space="preserve">
     <value>Above zero, the unlit part of a knob's ring is the knob's own color at this strength, instead of the arc track color. A blue knob then sits in a blue ring.</value>
   </data>
   <data name="ThemeRowArcGlow" xml:space="preserve">
-    <value>Knob value glows</value>
+    <value>Knob value glow</value>
   </data>
   <data name="ThemeRowValueStrip" xml:space="preserve">
     <value>Value strip</value>
@@ -4361,7 +4361,7 @@
     <value>Value fade</value>
   </data>
   <data name="ThemeRowFadeToLight" xml:space="preserve">
-    <value>Fade to the light</value>
+    <value>Fade to light color</value>
   </data>
   <data name="ThemeRowCap" xml:space="preserve">
     <value>Fader cap</value>
@@ -4395,7 +4395,7 @@
     <value>Switch resting glow</value>
   </data>
   <data name="ThemeRowStaysLit" xml:space="preserve">
-    <value>Stays lit for</value>
+    <value>Light duration</value>
   </data>
   <data name="ThemeRowScanLines" xml:space="preserve">
     <value>Scan lines</value>
@@ -4407,10 +4407,10 @@
     <value>Scan color</value>
   </data>
   <data name="ThemeRowVignette" xml:space="preserve">
-    <value>Corner fall-off</value>
+    <value>Vignette</value>
   </data>
   <data name="ThemeRowVignetteColor" xml:space="preserve">
-    <value>Corner color</value>
+    <value>Vignette color</value>
   </data>
   <data name="ThemeRowFaceplate" xml:space="preserve">
     <value>Faceplate</value>
@@ -4445,19 +4445,19 @@
 
   <!-- theme property choices -->
   <data name="ThemeDeckOneColor" xml:space="preserve">
-    <value>One color</value>
+    <value>Solid</value>
   </data>
   <data name="ThemeDeckTwoColors" xml:space="preserve">
-    <value>Two colors</value>
+    <value>Gradient</value>
   </data>
   <data name="ThemeDeckPicture" xml:space="preserve">
-    <value>Picture</value>
+    <value>Image</value>
   </data>
   <data name="ThemeRowDeckPicture" xml:space="preserve">
-    <value>Picture</value>
+    <value>Image</value>
   </data>
   <data name="ThemeDeckPictureNone" xml:space="preserve">
-    <value>None chosen</value>
+    <value>None</value>
   </data>
   <data name="ThemeDeckPictureChoose" xml:space="preserve">
     <value>Choose…</value>
@@ -4475,55 +4475,55 @@
     <value>The picture is copied into the Themes folder, next to your theme files. It fills the page and is cut to fit. A layout sent to someone else doesn't bring it along.</value>
   </data>
   <data name="ThemeLabelsInside" xml:space="preserve">
-    <value>Inside the control</value>
+    <value>Inside</value>
   </data>
   <data name="ThemeLabelsBelow" xml:space="preserve">
-    <value>Below the control</value>
+    <value>Below</value>
   </data>
   <data name="ThemeLabelsNone" xml:space="preserve">
-    <value>No labels</value>
+    <value>None</value>
   </data>
   <data name="ThemeLabelsAbove" xml:space="preserve">
-    <value>Above the control</value>
+    <value>Above</value>
   </data>
   <data name="ThemeRimControlColor" xml:space="preserve">
-    <value>The control's color</value>
+    <value>Control color</value>
   </data>
   <data name="ThemeRimNeutral" xml:space="preserve">
-    <value>A neutral edge</value>
+    <value>Neutral</value>
   </data>
   <data name="ThemeRimNone" xml:space="preserve">
-    <value>No rim</value>
+    <value>None</value>
   </data>
   <data name="ThemeStripBottom" xml:space="preserve">
-    <value>Along the bottom</value>
+    <value>Bottom</value>
   </data>
   <data name="ThemeStripTop" xml:space="preserve">
-    <value>Along the top</value>
+    <value>Top</value>
   </data>
   <data name="ThemeStripNone" xml:space="preserve">
     <value>None</value>
   </data>
   <data name="ThemeIndicatorArc" xml:space="preserve">
-    <value>A solid arc</value>
+    <value>Solid arc</value>
   </data>
   <data name="ThemeIndicatorLamps" xml:space="preserve">
-    <value>A ring of lamps</value>
+    <value>Lamp ring</value>
   </data>
   <data name="ThemeCapNone" xml:space="preserve">
-    <value>No cap</value>
+    <value>None</value>
   </data>
   <data name="ThemeCapNeutral" xml:space="preserve">
     <value>Neutral</value>
   </data>
   <data name="ThemeCapControlColor" xml:space="preserve">
-    <value>The control's color</value>
+    <value>Control color</value>
   </data>
   <data name="ThemeLampBar" xml:space="preserve">
-    <value>A bar</value>
+    <value>Bar</value>
   </data>
   <data name="ThemeLampDot" xml:space="preserve">
-    <value>A round lamp</value>
+    <value>Round</value>
   </data>
   <data name="ThemeSlotOne" xml:space="preserve">
     <value>Slot 1</value>
@@ -4587,13 +4587,13 @@
 
   <!-- ================================================== behavior -->
   <data name="BehaviorHeadingOpening" xml:space="preserve">
-    <value>How it opens</value>
+    <value>Display</value>
   </data>
   <data name="BehaviorCaptionOpening" xml:space="preserve">
     <value>A surface is muscle memory, so a page is never stretched. Fitting scales both axes by the same amount and leaves a band at the edge.</value>
   </data>
   <data name="BehaviorScaleLabel" xml:space="preserve">
-    <value>Size when it opens</value>
+    <value>Initial size</value>
   </data>
   <data name="BehaviorCornerLabel" xml:space="preserve">
     <value>Full screen button corner</value>
@@ -4611,67 +4611,67 @@
     <value>Bottom right</value>
   </data>
   <data name="BehaviorHeadingWindow" xml:space="preserve">
-    <value>The window it runs in</value>
+    <value>Runtime window</value>
   </data>
   <data name="BehaviorCaptionWindow" xml:space="preserve">
     <value>For a strip of buttons that sits over another app, like a toolbar. A toolbar window is exactly the size of the page, with a handle at one end: drag the handle to move it, and click it for the menu. These take effect the next time the layout runs.</value>
   </data>
   <data name="BehaviorToolbarWindow" xml:space="preserve">
-    <value>Toolbar window, with no title bar, buttons or border</value>
+    <value>Toolbar window</value>
   </data>
   <data name="BehaviorAlwaysOnTop" xml:space="preserve">
-    <value>Keep it in front of other windows</value>
+    <value>Always on top</value>
   </data>
   <data name="BehaviorSeeThrough" xml:space="preserve">
-    <value>See-through, so only the controls are drawn</value>
+    <value>Transparent background</value>
   </data>
   <data name="BehaviorHeadingStartup" xml:space="preserve">
-    <value>What it sends when it opens</value>
+    <value>Startup send override</value>
   </data>
   <data name="BehaviorCaptionStartup" xml:space="preserve">
     <value>A control can be set to send its value as soon as the layout loads. This is the one switch that stops a layout whose faders sit at zero from muting a live desk.</value>
   </data>
   <data name="BehaviorSuppressStartup" xml:space="preserve">
-    <value>Send nothing when this layout opens</value>
+    <value>Suppress startup values</value>
   </data>
   <data name="BehaviorHeadingVirtual" xml:space="preserve">
-    <value>What other apps see</value>
+    <value>Virtual MIDI device</value>
   </data>
   <data name="BehaviorCaptionVirtual" xml:space="preserve">
     <value>The layout can appear to other apps as a MIDI device named after itself. It is a virtual device rather than a loopback, so it goes away with the layout and leaves nothing behind.</value>
   </data>
   <data name="BehaviorVirtualDevice" xml:space="preserve">
-    <value>Appear to other apps as a MIDI device</value>
+    <value>Create virtual MIDI device</value>
   </data>
   <data name="BehaviorHeadingTempo" xml:space="preserve">
-    <value>What keeps time</value>
+    <value>MIDI clock source</value>
   </data>
   <data name="BehaviorCaptionTempo" xml:space="preserve">
-    <value>Clocks and sweeps on this layout run from here. Following an incoming clock holds the last tempo if the clock stops, rather than snapping back.</value>
+    <value>Clocks and LFOs on this layout run from here. Following an incoming clock holds the last tempo if the clock stops, rather than snapping back.</value>
   </data>
   <data name="BehaviorCaptionTempoInternal" xml:space="preserve">
-    <value>Clocks and sweeps on this layout run at this tempo.</value>
+    <value>Clocks and LFOs on this layout run at this tempo.</value>
   </data>
   <data name="BehaviorTempoSourceLabel" xml:space="preserve">
-    <value>Tempo comes from</value>
+    <value>Tempo source</value>
   </data>
   <data name="BehaviorTempoLabel" xml:space="preserve">
-    <value>Beats per minute</value>
+    <value>Tempo (BPM)</value>
   </data>
   <data name="TempoInternal" xml:space="preserve">
     <value>This layout</value>
   </data>
   <data name="TempoFollowIncoming" xml:space="preserve">
-    <value>An incoming clock</value>
+    <value>Incoming MIDI clock</value>
   </data>
   <data name="BehaviorHeadingBackground" xml:space="preserve">
-    <value>The picture behind everything</value>
+    <value>Background image</value>
   </data>
   <data name="BehaviorCaptionBackground" xml:space="preserve">
     <value>The deck is still what the controls are read against, so a picture at full strength is usually the wrong answer.</value>
   </data>
   <data name="BehaviorBackgroundButton" xml:space="preserve">
-    <value>Background picture…</value>
+    <value>Background image…</value>
   </data>
 
   <!-- ================================================== name pane -->
@@ -4758,7 +4758,7 @@
 
   <!-- ============================================= saving a theme out -->
   <data name="SaveThemeTitle" xml:space="preserve">
-    <value>Save these colors as a theme</value>
+    <value>Save as theme</value>
   </data>
   <data name="SaveThemeNameLabel" xml:space="preserve">
     <value>Theme name</value>
@@ -4800,28 +4800,28 @@
     <value>That file is not a MIDI Glass theme.</value>
   </data>
   <data name="ThemeRowDeckRepeats" xml:space="preserve">
-    <value>Repeat the picture</value>
+    <value>Tile image</value>
   </data>
   <data name="ThemeDeckRepeatsNote" xml:space="preserve">
     <value>On, the picture is laid across the page at its own size, over and over, on top of the two colors below. Off, one copy fills the page. A pattern stretched to fill a page turns into a blur.</value>
   </data>
   <data name="ThemeRowSwitchNames" xml:space="preserve">
-    <value>Where a switch's name sits</value>
+    <value>Switch name placement</value>
   </data>
   <data name="ThemeSwitchNamesCenter" xml:space="preserve">
-    <value>In the middle</value>
+    <value>Center</value>
   </data>
   <data name="ThemeSwitchNamesTopLeft" xml:space="preserve">
-    <value>At the top left</value>
+    <value>Top left</value>
   </data>
   <data name="ThemeRowOnInk" xml:space="preserve">
-    <value>Name on a lit switch</value>
+    <value>Name color when on</value>
   </data>
   <data name="ThemeOnInkNote" xml:space="preserve">
     <value>The color of a switch's name while the switch is on. Leave it empty to use the ink. If it can't be read on the lit color, the ink is used instead, and then whichever of a light or dark ink reads.</value>
   </data>
   <data name="ThemeRowRestTintOnPlate" xml:space="preserve">
-    <value>Resting color on the plate</value>
+    <value>Resting tint on plate</value>
   </data>
   <data name="ThemeRestTintOnPlateNote" xml:space="preserve">
     <value>A control's resting color is mixed into its plate instead of into the page, so a pad at rest is a pale shade of the plate rather than of the background.</value>
@@ -4845,13 +4845,13 @@
     <value>A lighter line down the middle of every lit value, like the white hot middle of a neon tube. The number is how far toward white it goes.</value>
   </data>
   <data name="ThemeRowRecessLip" xml:space="preserve">
-    <value>Lip under cutouts</value>
+    <value>Cutout lip</value>
   </data>
   <data name="ThemeRecessLipNote" xml:space="preserve">
     <value>A thin light line along the lower edge of anything cut into the surface: a slot, a display, a lamp holder or a pressed-in section. Leave it empty for none.</value>
   </data>
   <data name="ThemeRowWellFillsControl" xml:space="preserve">
-    <value>Displays are windows</value>
+    <value>Window displays</value>
   </data>
   <data name="ThemeWellFillsControlNote" xml:space="preserve">
     <value>Every display is a dark window the size of the control, with no plate round it, and what lights up inside keeps its own color.</value>
@@ -4866,13 +4866,13 @@
     <value>Ridges round the side of a knob, in the knob face's two colors. 0 is a smooth knob.</value>
   </data>
   <data name="ThemeRowLampPosition" xml:space="preserve">
-    <value>Where a round lamp sits</value>
+    <value>Round lamp placement</value>
   </data>
   <data name="ThemeLampTopCenter" xml:space="preserve">
-    <value>Top middle</value>
+    <value>Top center</value>
   </data>
   <data name="ThemeLampTopRight" xml:space="preserve">
-    <value>Top right corner</value>
+    <value>Top right</value>
   </data>
   <data name="ThemeRowLampHolder" xml:space="preserve">
     <value>Lamp holder</value>
@@ -4887,10 +4887,10 @@
     <value>Switch shape</value>
   </data>
   <data name="ThemeSwitchShapePlate" xml:space="preserve">
-    <value>A flat plate</value>
+    <value>Plate</value>
   </data>
   <data name="ThemeSwitchShapeKeycap" xml:space="preserve">
-    <value>A key</value>
+    <value>Keycap</value>
   </data>
   <data name="ThemeRowKeycapTop" xml:space="preserve">
     <value>Key top, back</value>
@@ -4908,7 +4908,7 @@
     <value>How far a switch goes down under a finger. A switch that's on stays half as far down. 0 is a switch that doesn't move.</value>
   </data>
   <data name="ThemeRowPanelRecess" xml:space="preserve">
-    <value>Sections pressed in</value>
+    <value>Section recess</value>
   </data>
   <data name="ThemePanelRecessNote" xml:space="preserve">
     <value>A section is a tray pressed into the surface, with a shadow along its top inside edge.</value>
@@ -4932,7 +4932,7 @@
     <value>Bands of flat color that take the place of a section's outline and a line's color, from the outside in and from the top down. Leave them empty for a plain outline.</value>
   </data>
   <data name="ThemeRowSectionTexture" xml:space="preserve">
-    <value>Section picture</value>
+    <value>Section texture</value>
   </data>
   <data name="ThemeSectionTextureChooseName" xml:space="preserve">
     <value>Choose a picture for every section</value>
@@ -4941,19 +4941,19 @@
     <value>Remove the section picture</value>
   </data>
   <data name="ThemeRowSectionTextureStrength" xml:space="preserve">
-    <value>Section picture strength</value>
+    <value>Section texture strength</value>
   </data>
   <data name="ThemeSectionTextureNote" xml:space="preserve">
     <value>Laid over every section in black, through the picture's own see-through parts, so it only ever darkens. It's for dirt and stains.</value>
   </data>
   <data name="ThemeRowNeonLetters" xml:space="preserve">
-    <value>Neon names</value>
+    <value>Neon text</value>
   </data>
   <data name="ThemeNeonLettersNote" xml:space="preserve">
     <value>A section's name and the words on a Text control glow in their own color.</value>
   </data>
   <data name="ThemeRowGlowFall" xml:space="preserve">
-    <value>Glow runs down</value>
+    <value>Downward glow</value>
   </data>
   <data name="ThemeGlowFallNote" xml:space="preserve">
     <value>How much further a glow reaches below a control than above it, like light on a wet wall.</value>
@@ -5037,16 +5037,16 @@
     <value>At 0, every lamp is a round light that comes on, even when switches fill with their color. At Same, a lamp looks like any other switch.</value>
   </data>
   <data name="ThemeRowDeckInkHalo" xml:space="preserve">
-    <value>Halo behind words on the background</value>
+    <value>Text background halo</value>
   </data>
   <data name="ThemeDeckInkHaloNote" xml:space="preserve">
     <value>Words printed straight on a picture can land on a bright part of it. A soft halo keeps them readable. The color's transparency sets how strong the halo is.</value>
   </data>
   <data name="ThemeRowRimShape" xml:space="preserve">
-    <value>Edge at rest</value>
+    <value>Rim style</value>
   </data>
   <data name="ThemeRimOutline" xml:space="preserve">
-    <value>A full outline</value>
+    <value>Outline</value>
   </data>
   <data name="ThemeRimCorners" xml:space="preserve">
     <value>Corners only</value>
@@ -5076,40 +5076,40 @@
     <value>Raised is something to press, pressed is down, and sunken is a field that holds a value. The four colors run from the outside edge in. Leave one empty to work it out from the plate. 0 is no bevels.</value>
   </data>
   <data name="ThemeRowFaderMajorTicks" xml:space="preserve">
-    <value>Longer fader mark every</value>
+    <value>Fader major mark interval</value>
   </data>
   <data name="ThemeRowThumbShape" xml:space="preserve">
     <value>Fader cap shape</value>
   </data>
   <data name="ThemeThumbShapeBar" xml:space="preserve">
-    <value>A bar</value>
+    <value>Bar</value>
   </data>
   <data name="ThemeThumbShapePointer" xml:space="preserve">
-    <value>Pointing at the scale</value>
+    <value>Pointer</value>
   </data>
   <data name="ThemeThumbShapeChevrons" xml:space="preserve">
-    <value>Two chevrons on a rail</value>
+    <value>Chevrons</value>
   </data>
   <data name="ThemeRowPuck" xml:space="preserve">
     <value>XY and joystick puck</value>
   </data>
   <data name="ThemePuckDisc" xml:space="preserve">
-    <value>A disc</value>
+    <value>Disc</value>
   </data>
   <data name="ThemePuckBall" xml:space="preserve">
-    <value>A ball</value>
+    <value>Ball</value>
   </data>
   <data name="ThemePuckReticle" xml:space="preserve">
-    <value>A ring with four ticks</value>
+    <value>Reticle</value>
   </data>
   <data name="ThemeRowWellInk" xml:space="preserve">
-    <value>Numbers in a window</value>
+    <value>Window text</value>
   </data>
   <data name="ThemeWellInkNote" xml:space="preserve">
     <value>Leave it empty for each control's own color.</value>
   </data>
   <data name="ThemeRowKnobCapFromHue" xml:space="preserve">
-    <value>Cap in the knob's color</value>
+    <value>Colored knob cap</value>
   </data>
   <data name="ThemeKnobCapFromHueNote" xml:space="preserve">
     <value>The line on the cap is white or near black, whichever reads on it. With no knob face, the cap is the whole knob.</value>
@@ -5118,52 +5118,52 @@
     <value>Pointer shape</value>
   </data>
   <data name="ThemePointerShapeLine" xml:space="preserve">
-    <value>A line</value>
+    <value>Line</value>
   </data>
   <data name="ThemePointerShapeChevron" xml:space="preserve">
-    <value>A chevron on the arc</value>
+    <value>Chevron</value>
   </data>
   <data name="ThemeRowKnobArcOnFace" xml:space="preserve">
-    <value>Arc printed on the face</value>
+    <value>Arc on face</value>
   </data>
   <data name="ThemeRowKnobMajorTicks" xml:space="preserve">
-    <value>Longer knob mark every</value>
+    <value>Knob major mark interval</value>
   </data>
   <data name="ThemeMajorTicksNote" xml:space="preserve">
     <value>Every so many marks, one is longer, so a scale can be read at a glance. 0 is none.</value>
   </data>
   <data name="ThemeSwitchShapeRound" xml:space="preserve">
-    <value>A round button</value>
+    <value>Round</value>
   </data>
   <data name="ThemeRowSwitchRing" xml:space="preserve">
-    <value>Ring around a round button</value>
+    <value>Round button ring</value>
   </data>
   <data name="ThemeRowPadsFollowSwitchShape" xml:space="preserve">
-    <value>Pads take the switch shape</value>
+    <value>Pads match switch shape</value>
   </data>
   <data name="ThemeRoundSwitchNote" xml:space="preserve">
     <value>A round button is the largest circle that fits its control, so it looks best on a square one. Leave the ring empty for a button with no ring.</value>
   </data>
   <data name="ThemeRowLatch" xml:space="preserve">
-    <value>A switch that stays on</value>
+    <value>Latched switch</value>
   </data>
   <data name="ThemeLatchLit" xml:space="preserve">
-    <value>Lights up</value>
+    <value>Lit</value>
   </data>
   <data name="ThemeLatchCheckerboard" xml:space="preserve">
-    <value>Stays pressed, checkered</value>
+    <value>Checkerboard</value>
   </data>
   <data name="ThemeRowSwitchColorTag" xml:space="preserve">
-    <value>Color tag before a switch's name</value>
+    <value>Switch color tag</value>
   </data>
   <data name="ThemeRowCurrentStep" xml:space="preserve">
-    <value>The step that's playing</value>
+    <value>Current step</value>
   </data>
   <data name="ThemeCurrentStepLit" xml:space="preserve">
     <value>Lit</value>
   </data>
   <data name="ThemeCurrentStepDottedFocus" xml:space="preserve">
-    <value>Lit, with a dotted line around it</value>
+    <value>Lit with dotted outline</value>
   </data>
   <data name="ThemeGroupChrome" xml:space="preserve">
     <value>Chrome</value>

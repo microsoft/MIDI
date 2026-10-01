@@ -196,7 +196,7 @@ namespace winrt::midiglass::implementation
                     SettingsBehaviorPanel().Children().Append(box);
                 };
 
-            // ---- how it opens ----
+            // ---- display ----
 
             heading(L"BehaviorHeadingOpening", true);
             caption(L"BehaviorCaptionOpening");
@@ -285,7 +285,7 @@ namespace winrt::midiglass::implementation
                 SettingsBehaviorPanel().Children().Append(corner);
             }
 
-            // ---- the window it runs in ----
+            // ---- runtime window ----
 
             heading(L"BehaviorHeadingWindow", false);
             caption(L"BehaviorCaptionWindow");
@@ -326,7 +326,7 @@ namespace winrt::midiglass::implementation
                     }
                 });
 
-            // ---- what it sends when it opens ----
+            // ---- startup send override ----
 
             heading(L"BehaviorHeadingStartup", false);
             caption(L"BehaviorCaptionStartup");
@@ -343,7 +343,7 @@ namespace winrt::midiglass::implementation
                     }
                 });
 
-            // ---- what other apps see ----
+            // ---- virtual MIDI device ----
 
             if constexpr (VirtualDeviceIsBuilt)
             {
@@ -363,7 +363,7 @@ namespace winrt::midiglass::implementation
                     });
             }
 
-            // ---- what keeps time ----
+            // ---- MIDI clock source ----
 
             heading(L"BehaviorHeadingTempo", false);
             caption(IncomingClockIsBuilt ? L"BehaviorCaptionTempo" : L"BehaviorCaptionTempoInternal");
@@ -457,7 +457,7 @@ namespace winrt::midiglass::implementation
                 SettingsBehaviorPanel().Children().Append(beats);
             }
 
-            // ---- the picture behind everything ----
+            // ---- background image ----
 
             heading(L"BehaviorHeadingBackground", false);
             caption(L"BehaviorCaptionBackground");

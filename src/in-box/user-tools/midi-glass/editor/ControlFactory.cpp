@@ -75,14 +75,14 @@ namespace glass
                 { PaletteArtShape::FaderCap, 12, 19, 3, 0.00, 0.50 } },
             { ControlKind::Wheel,   L"PaletteWheel",   L"PaletteGroupKnobs",   L'\uE9E9',
                 { PaletteArtShape::Rectangle, 10, 19, 3, 0.80, 0.00 } },
+            { ControlKind::Ribbon,  L"PaletteRibbon",  L"PaletteGroupKnobs",   L'\uE80A',
+                { PaletteArtShape::Rectangle, 20, 8, 4, 0.00, 0.30 } },
 
             // ---- Two axis ----
             { ControlKind::XYPad,   L"PaletteXYPad",   L"PaletteGroupTwoAxis", L'\uE80A',
                 { PaletteArtShape::CrosshairField, 18, 18, 3, 0.80, 0.00 } },
             { ControlKind::Joystick, L"PaletteJoystick", L"PaletteGroupTwoAxis", L'\uE80A',
                 { PaletteArtShape::Stick, 18, 18, 0, 0.80, 0.00 } },
-            { ControlKind::Ribbon,  L"PaletteRibbon",  L"PaletteGroupTwoAxis", L'\uE80A',
-                { PaletteArtShape::Rectangle, 20, 8, 4, 0.00, 0.30 } },
 
             // ---- Generators ----
             { ControlKind::BeatClock, L"PaletteBeatClock", L"PaletteGroupGenerators", L'\uE916',
@@ -92,7 +92,7 @@ namespace glass
             { ControlKind::Steps,   L"PaletteSteps",   L"PaletteGroupGenerators", L'\uE8FD',
                 { PaletteArtShape::HorizontalBars, 20, 10, 0, 0.00, 0.80 } },
 
-            // ---- Keys ----
+            // ---- Keys and pads ----
             { ControlKind::PianoKeyboard, L"PaletteKeyboard", L"PaletteGroupKeys", L'\uEC4F',
                 { PaletteArtShape::Keys, 26, 14, 1, 0.00, 0.00 } },
             { ControlKind::NotePads, L"PaletteNotePads", L"PaletteGroupKeys", L'\uF0E2',

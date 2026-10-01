@@ -32,7 +32,7 @@ MIDI Glass opens to the **library**, where all your layouts are.
 
 1. Select **New layout**.
 2. Type a name. Under **Send to**, pick the device you want to play.
-3. Under **Start from**, pick a template, then select **Create**. The layout opens in the editor.
+3. Pick a **Template**, then select **Create**. The layout opens in the editor.
 4. Select **Try** near the top left, and play the page. The **Sending** list under the page shows what goes out.
 5. Select **Library** to go back. You don't need to save, because MIDI Glass saves as you go. Click the new card to run your layout.
 
@@ -58,7 +58,7 @@ MIDI Glass saves your layout a moment after each change. The chip near the top r
 
 - **Name** is what the card in the library shows. You can change it later.
 - **Send to** is the device the controls play. You can add more devices later.
-- **Start from** is the template.
+- **Template** is what the new layout starts with.
 
 | Template | What you get |
 | --- | --- |
@@ -83,10 +83,10 @@ The **Add** pane groups the controls by what they do.
 | Group | Controls |
 | --- | --- |
 | Buttons | Button, Toggle, Pad, Page tab, Switch |
-| Knobs and faders | Knob, Turntable, Fader, Wheel |
-| Two axis | XY pad, Joystick, Ribbon |
+| Knobs and faders | Knob, Turntable, Fader, Wheel, Ribbon |
+| Two axis | XY pad, Joystick |
 | Generators | Beat clock, LFO, Steps |
-| Keys | Mono keyboard, Note pads, Hex pads |
+| Keys and pads | Mono keyboard, Note pads, Hex pads |
 | Feedback and text | Meter, Lamp, Readout, Stopwatch, Text, Image |
 | Grouping | Group, Line |
 
@@ -94,13 +94,14 @@ A few of them need a word of explanation:
 
 - A **Page tab** switches to another page of the layout when you press it.
 - A **Switch** has two or more positions, and each position sends its own message.
-- An **XY pad** or a **Joystick** sends two values at once: one for across and one for up and down. A **Ribbon** is a strip you slide a finger along.
+- An **XY pad** or a **Joystick** sends two values at once: one for across and one for up and down.
+- A **Ribbon** is a strip you slide a finger along. It sends one value, like a fader.
 - **Generators** play by themselves once they start. **Beat clock** sends MIDI clock at the tempo you set. **LFO** sweeps a value up and down. **Steps** plays a short pattern of notes, one step at a time.
 - **Note pads** and **Hex pads** take a finger on each pad, so you can play chords. The **Mono keyboard** plays one key at a time, and you can slide along it.
 - **Meter**, **Lamp** and **Readout** show values that arrive from a device. You set that up on their **Listens** tab. A **Stopwatch** counts up from when the layout starts, so you can see how long you've been playing. Tap it to start again from zero.
 - A **Group** control draws a frame around controls that belong together, and a **Line** divides one part of a page from another. Neither sends anything. Don't mix up the **Group** control with **Group** on the toolbar, which ties the selected controls together.
 
-Type in **Find a control** to narrow the list. To add a control without the mouse, pick it with the keyboard and select **Add to page**.
+Type in **Find a control** to narrow the list. To add a control without the mouse, pick it with the keyboard and select **Add to page**. **Add to page** stays off until you pick a control.
 
 ## Arranging controls
 
@@ -127,26 +128,26 @@ Type in **Find a control** to narrow the list. To add a control without the mous
 
 ## What a control sends
 
-The **Sends** tab is a list of rows. Each row says *when* to send, *what* to send, and *where* to send it.
+The **Sends** tab has an **Action list**. Each row in it says when to send, what to send, and where to send it.
 
-- **When** is one of these: it changes, it turns on, it turns off, it's touched, or it's released. A fader usually sends as it changes. A button usually sends one message when it turns on and another when it turns off.
-- **What** can be a note, a control change, a program change, pitch bend, channel pressure, a per-note controller, an RPN or NRPN, or system exclusive.
-- **Where** is one of the layout's devices, with its group and channel.
+- **Trigger** is one of these: **Value change**, **On**, **Off**, **Touch** or **Release**. A fader usually sends on **Value change**. A button usually sends one message on **On** and another on **Off**.
+- **Type** can be a note, a control change, a program change, pitch bend, channel pressure, a per-note controller, an RPN or NRPN, or system exclusive.
+- **To** is one of the layout's devices, with its group and channel.
 
-The fastest way to fill in a row is **Learn**. Turn on **Learn**, then move a knob or press a key on your hardware, and MIDI Glass copies what it sends. **Learn a bank** fills several controls in a row: touch the knobs on your hardware one after another, and each one fills the next control in keyboard order. Learn listens to the devices in the layout's device list, so add your hardware there first.
+The fastest way to fill in a row is **MIDI Learn**. Turn on **Learn**, then move a knob or press a key on your hardware, and MIDI Glass copies what it sends. **Learn a bank** fills several controls in a row: touch the knobs on your hardware one after another, and each one fills the next control in keyboard order. MIDI Learn listens to the devices in the layout's device list, so add your hardware there first.
 
-Each device has a **Talk to it in** setting: **MIDI 2.0**, **MIDI 1.0** or **Mackie Control**. It decides how you type values on the **Sends** tab. [How MIDI Glass talks to each device]({{ site.baseurl }}/kb/midi-glass-mackie-control/#how-midi-glass-talks-to-each-device) explains the choices.
+Each device has a **Protocol** setting: **MIDI 2.0**, **MIDI 1.0** or **Mackie Control**. It decides how you type values on the **Sends** tab. [How MIDI Glass talks to each device]({{ site.baseurl }}/kb/midi-glass-mackie-control/#how-midi-glass-talks-to-each-device) explains the choices.
 
 ## Controls that listen
 
-On the **Listens** tab, turn on **Follow what arrives** and the control moves or lights up when a device sends something, not only when you touch it. Under **What to listen for**, pick one of these:
+On the **Listens** tab, turn on **MIDI follow** and the control moves or lights up when a device sends something, not only when you touch it. Under **Follow mode**, pick one of these:
 
-- **One message**: the control follows one controller, note or pitch bend, and shows its value. Use it when your DAW should move a fader, the way it moves a motorized fader on a hardware desk.
+- **Single message**: the control follows one controller, note or pitch bend, and shows its value. Use it when your DAW should move a fader, the way it moves a motorized fader on a hardware desk.
 - **Notes**: the control lights while any note is held.
-- **Controller messages**: the control blinks whenever a controller message arrives.
-- **Start and stop**: the control lights while the other end is playing.
-- **The beat**: the control flashes on the beat.
-- **Anything at all**: the control lights whenever anything arrives, like an activity light.
+- **Control changes**: the control blinks whenever a control change arrives.
+- **Transport**: the control lights while the other end is playing.
+- **Beat**: the control flashes on the beat.
+- **Any activity**: the control lights whenever anything arrives, like an activity light.
 
 ## Trying a layout as you build it
 
@@ -170,7 +171,7 @@ A running layout has its own window. The bar along the top has:
 
 - **Page**, to switch pages.
 - **Size on screen**: **Actual size**, **Fit to window**, or a custom size.
-- **Keep in front**, to keep the window on top of your other apps.
+- **Always on top**, to keep the window in front of your other apps.
 - **Full screen**. In full screen, everything on the bar moves behind one small button in a corner of the screen. It fades after a few seconds so it's out of the way. You can move it to another corner. Press Esc to leave full screen, or F11 to switch in and out.
 - **Panic**, which stops every note on every device MIDI Glass is sending to. Ctrl+Shift+P does the same thing. Use it when a note gets stuck.
 
@@ -194,7 +195,7 @@ A **theme** sets how the whole layout looks: the page behind the controls, how e
 
 Each control uses one of the theme's six colors, chosen on its **Look** tab. A control remembers which of the six it uses, not the color itself. So when you change the theme, the colors change along with it and still mean the same thing.
 
-**Layout…**, then **Background picture or video…**, puts a picture or a video behind the controls. You can set how it fits the page and how see-through it is.
+**Layout…**, then **Background image…**, puts a picture or a video behind the controls. You can set how it fits the page and how see-through it is.
 
 [How MIDI Glass themes work]({{ site.baseurl }}/kb/midi-glass-themes/) covers every theme setting, where theme files go, and how to make your own.
 
