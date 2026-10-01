@@ -51,10 +51,8 @@ STRINGTABLE
 BEGIN
     IDS_PROJNAME                            "Midi2.RtpMidiTransport"
 
-    IDS_PLUGIN_METADATA_VERSION             "0.1.0.3"
     IDS_PLUGIN_METADATA_NAME                "RTP-MIDI"
     IDS_PLUGIN_METADATA_DESCRIPTION         "Provides host and client RTP-MIDI (IETF RFC 6295) network MIDI 1.0 capabilities"
-    IDS_PLUGIN_METADATA_AUTHOR              "Microsoft"
 
     IDS_RTP_PARENT_DEVICE_NAME              "RTP-MIDI Endpoints"
     IDS_RTP_ENDPOINT_DESCRIPTION_HOST       "RTP-MIDI network connection. The other device connected to this PC."

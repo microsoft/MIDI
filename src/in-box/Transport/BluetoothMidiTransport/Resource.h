@@ -3,10 +3,8 @@
 #define IDS_PROJNAME                    100
 #define IDR_MIDI2BLE2MIDITRANSPORT		101
 
-#define IDS_PLUGIN_METADATA_VERSION     500
 #define IDS_PLUGIN_METADATA_NAME        501
 #define IDS_PLUGIN_METADATA_DESCRIPTION 502
-#define IDS_PLUGIN_METADATA_AUTHOR      503
 
 // Names and descriptions shown for the transport's device nodes and endpoints
 #define IDS_TRANSPORT_PARENT_DEVICE_NAME                        1000
