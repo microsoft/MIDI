@@ -197,7 +197,6 @@
 
             <TextBlock x:Name="AppTitleTextBlock"
                        Grid.Column="2"
-                       Text="Windows MIDI Troubleshooting and Repair"
                        Margin="12,0,0,0"
                        VerticalAlignment="Center"
                        Style="{ThemeResource CaptionTextBlockStyle}" />
@@ -492,28 +491,47 @@
                     </Grid.RowDefinitions>
 
                     <TextBlock x:Uid="DiagnosticsPageDescription" Grid.Row="0"
-                               Text="These reports are what support asks for first. Run them, then copy the text into your issue or email."
+                               Text="These reports are what support asks for first. Run them, then attach them to your issue or email. Save mididiag as a zip file, because the full text is often too long to paste into a GitHub issue."
                                TextWrapping="Wrap" />
 
-                    <Grid Grid.Row="1" ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+                    <!-- The banner's top margin only takes space while it is open -->
+                    <StackPanel Grid.Row="1">
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
 
-                        <Button x:Name="RunMidiDiagButton" x:Uid="RunMidiDiagButton" Grid.Column="0"
-                                Content="Run mididiag" Click="OnRunMidiDiagClick" />
-                        <Button x:Name="CopyMidiDiagButton" x:Uid="CopyMidiDiagButton" Grid.Column="1"
-                                Content="Copy all" IsEnabled="False" Click="OnCopyMidiDiagClick" />
-                        <Button x:Name="SaveMidiDiagButton" x:Uid="SaveMidiDiagButton" Grid.Column="2"
-                                Content="Save as..." IsEnabled="False" Click="OnSaveMidiDiagClick" />
-                        <TextBlock x:Name="MidiDiagStatusText" Grid.Column="3"
-                                   VerticalAlignment="Center" Margin="8,0,0,0"
-                                   TextTrimming="CharacterEllipsis"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    </Grid>
+                            <Button x:Name="RunMidiDiagButton" x:Uid="RunMidiDiagButton" Grid.Column="0"
+                                    Content="Run mididiag" Click="OnRunMidiDiagClick" />
+                            <Button x:Name="CopyMidiDiagButton" x:Uid="CopyMidiDiagButton" Grid.Column="1"
+                                    Content="Copy all" IsEnabled="False" Click="OnCopyMidiDiagClick" />
+                            <Button x:Name="SaveMidiDiagButton" x:Uid="SaveMidiDiagButton" Grid.Column="2"
+                                    Content="Save as..." IsEnabled="False" Click="OnSaveMidiDiagClick" />
+                            <Button x:Name="SaveMidiDiagZipButton" x:Uid="SaveMidiDiagZipButton" Grid.Column="3"
+                                    Content="Save as zip..." IsEnabled="False" Click="OnSaveMidiDiagZipClick" />
+                            <!-- always available: with no report run yet, it asks for a file -->
+                            <Button x:Name="ViewMidiDiagReportButton" x:Uid="ViewMidiDiagReportButton" Grid.Column="4"
+                                    Content="View report..." Click="OnViewMidiDiagReportClick" />
+                            <TextBlock x:Name="MidiDiagStatusText" Grid.Column="5"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </Grid>
+
+                        <!-- opened when mididiag reports that the MIDI service stopped answering -->
+                        <InfoBar x:Name="MidiServiceStuckInfoBar" Margin="0,8,0,0"
+                                 Severity="Warning" IsOpen="False" IsClosable="True">
+                            <InfoBar.ActionButton>
+                                <Button x:Name="SaveServiceDumpButton" x:Uid="SaveServiceDumpButton"
+                                        Content="Save a memory dump..." Click="OnSaveServiceDumpClick" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
+                    </StackPanel>
 
                     <TextBox x:Name="MidiDiagOutputBox" x:Uid="MidiDiagOutputBox" Grid.Row="2"
                              Style="{StaticResource OutputTextBoxStyle}" MinHeight="120" />

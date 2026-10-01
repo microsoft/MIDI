@@ -157,6 +157,18 @@
   <data name="SystemInfoComputerFormat" xml:space="preserve">
     <value>Computer: {0}, troubleshooter version {1}</value>
   </data>
+  <data name="SystemInfoNotLoaded" xml:space="preserve">
+    <value>Not loaded</value>
+    <comment>Shown in place of the Windows App SDK version when it can't be read</comment>
+  </data>
+  <data name="SystemInfoVersionWithBuildFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+    <comment>{0} is a Windows App SDK release such as 1.8, {1} is its full version number</comment>
+  </data>
+  <data name="SystemInfoEmulatedArchitectureFormat" xml:space="preserve">
+    <value>{0} (app is {1})</value>
+    <comment>{0} is the PC's processor architecture, such as Arm64. {1} is the one this app is running as under emulation, such as x64.</comment>
+  </data>
 
   <!-- Navigation -->
   <data name="ApiModeNavigationItem.Content" xml:space="preserve">
@@ -280,7 +292,7 @@
 
   <!-- Diagnostics page -->
   <data name="DiagnosticsPageDescription.Text" xml:space="preserve">
-    <value>These reports are what support asks for first. Run them, then copy the text into your issue or email.</value>
+    <value>These reports are what support asks for first. Run them, then attach them to your issue or email. Save mididiag as a zip file, because the full text is often too long to paste into a GitHub issue.</value>
   </data>
   <data name="RunMidiDiagButton.Content" xml:space="preserve">
     <value>Run mididiag</value>
@@ -316,7 +328,7 @@
     <value>Kernel streaming report</value>
   </data>
   <data name="DiagnosticsToolMissingFormat" xml:space="preserve">
-    <value>{0} could not be found. Install the Windows MIDI Services SDK runtime and try again.</value>
+    <value>{0} could not be found. Install the Windows MIDI Services Tools and try again.</value>
   </data>
   <data name="DiagnosticsRunning" xml:space="preserve">
     <value>Running. This can take a minute or two.</value>
@@ -338,6 +350,19 @@
   <data name="DiagnosticsFailed" xml:space="preserve">
     <value>The report could not be run.</value>
   </data>
+  <data name="ProcessErrorNoPath" xml:space="preserve">
+    <value>No path was supplied for the program to run.</value>
+  </data>
+  <data name="ProcessErrorRunUnexpected" xml:space="preserve">
+    <value>An unexpected error occurred while running the program.</value>
+  </data>
+  <data name="ProcessErrorStartUnexpected" xml:space="preserve">
+    <value>An unexpected error occurred while starting the program.</value>
+  </data>
+  <data name="SystemErrorCodeFormat" xml:space="preserve">
+    <value>Error 0x{0:08X}</value>
+    <comment>Used when Windows has no message for an error. {0:08X} is the error code as eight hexadecimal digits, so keep the :08X part.</comment>
+  </data>
   <data name="DiagnosticsCopied" xml:space="preserve">
     <value>Copied to the clipboard.</value>
   </data>
@@ -346,6 +371,322 @@
   </data>
   <data name="SaveZipFileType" xml:space="preserve">
     <value>Zip archive</value>
+  </data>
+  <data name="SaveMidiDiagZipButton.Content" xml:space="preserve">
+    <value>Save as zip...</value>
+  </data>
+  <data name="DiagnosticsZipFailed" xml:space="preserve">
+    <value>The zip file couldn't be saved.</value>
+  </data>
+  <data name="DiagnosticsServiceNotResponding" xml:space="preserve">
+    <value>The MIDI service isn't responding.</value>
+    <comment>Status line next to the buttons, so it is kept short. The banner below it explains what to do.</comment>
+  </data>
+  <data name="DiagnosticsSectionTimedOut" xml:space="preserve">
+    <value>Part of the report took too long, so it stopped early.</value>
+    <comment>Status line next to the buttons, so it is kept short</comment>
+  </data>
+  <data name="ServiceStuckTitle" xml:space="preserve">
+    <value>The MIDI service isn't responding</value>
+  </data>
+  <data name="ServiceStuckMessage" xml:space="preserve">
+    <value>Restarting the PC clears this. Before you restart, you can save a memory dump of the service, which shows the developers where it's stuck. The file is large, and it can hold private information such as device names and network MIDI passwords.</value>
+  </data>
+  <data name="SaveServiceDumpButton.Content" xml:space="preserve">
+    <value>Save a memory dump...</value>
+  </data>
+  <data name="ServiceDumpSaving" xml:space="preserve">
+    <value>Saving the memory dump. This can take a few minutes.</value>
+  </data>
+  <data name="ServiceDumpSavedTitle" xml:space="preserve">
+    <value>Memory dump saved</value>
+  </data>
+  <data name="ServiceDumpSavedFormat" xml:space="preserve">
+    <value>Saved to {0}. It can hold private information, so share it only with the developers who asked for it.</value>
+    <comment>{0} is the full path of the zip file</comment>
+  </data>
+  <data name="ServiceDumpFailedTitle" xml:space="preserve">
+    <value>The memory dump couldn't be saved</value>
+  </data>
+  <data name="ServiceDumpNoWorkFolder" xml:space="preserve">
+    <value>A temporary folder for the memory dump couldn't be created.</value>
+  </data>
+  <data name="ServiceDumpZipFailed" xml:space="preserve">
+    <value>The memory dump couldn't be packed into a zip file.</value>
+  </data>
+  <data name="ViewMidiDiagReportButton.Content" xml:space="preserve">
+    <value>View report...</value>
+  </data>
+
+  <!-- Report viewer -->
+  <data name="ReportViewerTitle" xml:space="preserve">
+    <value>Windows MIDI Diagnostics Report Viewer</value>
+  </data>
+  <data name="ReportViewerTitleFormat" xml:space="preserve">
+    <value>{0} - Windows MIDI Diagnostics Report Viewer</value>
+    <comment>{0} is the name of the report file, or of the zip file it came from</comment>
+  </data>
+  <data name="OpenReportButton.Content" xml:space="preserve">
+    <value>Open...</value>
+  </data>
+  <data name="ExpandAllButton.Content" xml:space="preserve">
+    <value>Expand all</value>
+  </data>
+  <data name="CollapseAllButton.Content" xml:space="preserve">
+    <value>Collapse all</value>
+  </data>
+  <data name="EmptyReportText.Text" xml:space="preserve">
+    <value>Open a mididiag report, or a zip file with one in it, to see it here.</value>
+  </data>
+  <data name="ReportViewerSourceThisPc" xml:space="preserve">
+    <value>The report you just ran on this PC</value>
+  </data>
+  <data name="ReportViewerSourceZipFormat" xml:space="preserve">
+    <value>{0} in {1}</value>
+    <comment>{0} is the name of the report inside the zip file. {1} is the full path of the zip file.</comment>
+  </data>
+  <data name="ReportViewerOpening" xml:space="preserve">
+    <value>Opening the report...</value>
+  </data>
+  <data name="OpenReportDialogTitle" xml:space="preserve">
+    <value>Open a mididiag report</value>
+  </data>
+  <data name="OpenReportFileType" xml:space="preserve">
+    <value>mididiag reports and zip files</value>
+  </data>
+  <data name="OpenAllFilesType" xml:space="preserve">
+    <value>All files</value>
+  </data>
+  <data name="ReportLoadFailedTitle" xml:space="preserve">
+    <value>This file can't be shown</value>
+  </data>
+  <data name="ReportLoadCannotRead" xml:space="preserve">
+    <value>The file couldn't be read. Another app may be using it, or you may not have permission to read it.</value>
+  </data>
+  <data name="ReportLoadEmpty" xml:space="preserve">
+    <value>The file is empty.</value>
+  </data>
+  <data name="ReportLoadTooLarge" xml:space="preserve">
+    <value>The file is too large to be a mididiag report.</value>
+  </data>
+  <data name="ReportLoadNotAReport" xml:space="preserve">
+    <value>The file isn't a mididiag report.</value>
+  </data>
+  <data name="ReportLoadZipUnreadable" xml:space="preserve">
+    <value>The zip file couldn't be opened. It may be damaged.</value>
+  </data>
+  <data name="ReportLoadZipHasNoReport" xml:space="preserve">
+    <value>The zip file doesn't have a mididiag report in it.</value>
+  </data>
+  <data name="ReportSummaryTitle" xml:space="preserve">
+    <value>mididiag report</value>
+  </data>
+  <data name="ReportSummaryTitleFormat" xml:space="preserve">
+    <value>mididiag report from {0}</value>
+    <comment>{0} is the date and time the report was made, exactly as the report wrote it</comment>
+  </data>
+  <data name="ReportSummaryWindowsLabel" xml:space="preserve">
+    <value>Windows</value>
+  </data>
+  <data name="ReportSummaryMidiServicesLabel" xml:space="preserve">
+    <value>Windows MIDI Services</value>
+  </data>
+  <data name="ReportSummaryApiModeLabel" xml:space="preserve">
+    <value>API mode</value>
+  </data>
+  <data name="ReportSummaryServiceLabel" xml:space="preserve">
+    <value>MIDI service</value>
+  </data>
+  <data name="ReportSummaryElevatedLabel" xml:space="preserve">
+    <value>Ran as administrator</value>
+  </data>
+  <data name="ReportSummaryFormatLabel" xml:space="preserve">
+    <value>Report format</value>
+  </data>
+  <data name="ReportSummaryFindingsLabel" xml:space="preserve">
+    <value>Findings</value>
+  </data>
+  <data name="ReportSummaryErrorsLabel" xml:space="preserve">
+    <value>Errors</value>
+  </data>
+  <data name="ReportValueWithDetailFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+    <comment>{0} is a version number. {1} is its name, as in 10.0.26100 (24H2).</comment>
+  </data>
+  <data name="ReportOutcomeFinished" xml:space="preserve">
+    <value>Finished</value>
+  </data>
+  <data name="ReportOutcomeStoppedEarly" xml:space="preserve">
+    <value>Stopped early</value>
+  </data>
+  <data name="ReportOutcomeIncomplete" xml:space="preserve">
+    <value>Cut short</value>
+  </data>
+  <data name="ReportOutcomeStoppedEarlyMessage" xml:space="preserve">
+    <value>mididiag stopped before it finished, so some sections are missing. The findings and errors below say where it stopped.</value>
+  </data>
+  <data name="ReportOutcomeIncompleteMessage" xml:space="preserve">
+    <value>This report doesn't reach its end. mididiag may have stopped suddenly, or only part of the report was copied.</value>
+  </data>
+  <data name="ReportNewerFormatMessage" xml:space="preserve">
+    <value>This report is from a newer version of mididiag than this app knows about, so some of it may not show the way it should.</value>
+  </data>
+  <data name="ReportOlderFormatMessage" xml:space="preserve">
+    <value>This report is from an older version of mididiag. It doesn't list findings, and its values aren't split into columns.</value>
+  </data>
+  <data name="ReportFindingsTitleFormat" xml:space="preserve">
+    <value>Findings ({0})</value>
+    <comment>{0} is how many findings there are</comment>
+  </data>
+  <data name="ReportNoFindings" xml:space="preserve">
+    <value>mididiag didn't find anything that's likely to cause a problem.</value>
+  </data>
+  <data name="ReportErrorsTitleFormat" xml:space="preserve">
+    <value>Errors ({0})</value>
+    <comment>{0} is how many errors there are</comment>
+  </data>
+  <data name="ReportOneError" xml:space="preserve">
+    <value>1 error</value>
+  </data>
+  <data name="ReportErrorsFormat" xml:space="preserve">
+    <value>{0} errors</value>
+    <comment>{0} is always more than 1</comment>
+  </data>
+  <data name="ReportLabelValueFormat" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="ReportErrorAutomationFormat" xml:space="preserve">
+    <value>Error: {0}</value>
+    <comment>Read by screen readers. {0} is the error message.</comment>
+  </data>
+  <data name="ReportShowSection" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="ReportShowSectionAutomationFormat" xml:space="preserve">
+    <value>Show the {0} section</value>
+    <comment>Read by screen readers. {0} is the title of the section.</comment>
+  </data>
+  <data name="ReportSectionsHeading" xml:space="preserve">
+    <value>Sections</value>
+  </data>
+  <data name="ReportSectionEntriesFormat" xml:space="preserve">
+    <value>{0}, {1} entries</value>
+    <comment>{0} is the section name as the report writes it. {1} is always more than 1.</comment>
+  </data>
+  <data name="ReportGroupCountFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+    <comment>{0} is what each row in a table is, such as MIDI 1.0 port. {1} is how many rows there are.</comment>
+  </data>
+  <data name="ReportEmptyValue" xml:space="preserve">
+    <value>(empty)</value>
+  </data>
+
+  <!-- Report section titles. The part after ReportSection_ is the section name in the report
+       text, and must not be translated. -->
+  <data name="ReportSection_header" xml:space="preserve">
+    <value>Report</value>
+  </data>
+  <data name="ReportSection_os" xml:space="preserve">
+    <value>Windows</value>
+  </data>
+  <data name="ReportSection_processor_env" xml:space="preserve">
+    <value>Processor environment variables</value>
+  </data>
+  <data name="ReportSection_native_system_info" xml:space="preserve">
+    <value>Processor and timers</value>
+  </data>
+  <data name="ReportSection_dev_mode" xml:space="preserve">
+    <value>Developer Mode</value>
+  </data>
+  <data name="ReportSection_api_mode" xml:space="preserve">
+    <value>API mode</value>
+  </data>
+  <data name="ReportSection_component_versions" xml:space="preserve">
+    <value>Component versions</value>
+  </data>
+  <data name="ReportSection_service_status" xml:space="preserve">
+    <value>MIDI service</value>
+  </data>
+  <data name="ReportSection_service_history" xml:space="preserve">
+    <value>MIDI service history</value>
+  </data>
+  <data name="ReportSection_feature_enablement" xml:space="preserve">
+    <value>Features</value>
+  </data>
+  <data name="ReportSection_reg_drivers32" xml:space="preserve">
+    <value>Drivers32 registry key (64-bit)</value>
+  </data>
+  <data name="ReportSection_reg_drivers32wow" xml:space="preserve">
+    <value>Drivers32 registry key (32-bit)</value>
+  </data>
+  <data name="ReportSection_enum_registry" xml:space="preserve">
+    <value>Windows MIDI Services registry settings</value>
+  </data>
+  <data name="ReportSection_device_nodes" xml:space="preserve">
+    <value>Devices</value>
+  </data>
+  <data name="ReportSection_network" xml:space="preserve">
+    <value>Network and firewall</value>
+  </data>
+  <data name="ReportSection_enum_winrt_midi1_api_input_ports" xml:space="preserve">
+    <value>WinRT MIDI 1.0 input ports</value>
+  </data>
+  <data name="ReportSection_enum_winrt_midi1_api_output_ports" xml:space="preserve">
+    <value>WinRT MIDI 1.0 output ports</value>
+  </data>
+  <data name="ReportSection_service_response" xml:space="preserve">
+    <value>MIDI service response</value>
+  </data>
+  <data name="ReportSection_midi_clock" xml:space="preserve">
+    <value>MIDI clock</value>
+  </data>
+  <data name="ReportSection_enum_transports" xml:space="preserve">
+    <value>Transports</value>
+  </data>
+  <data name="ReportSection_enum_ump_api_endpoints" xml:space="preserve">
+    <value>Endpoints</value>
+  </data>
+  <data name="ReportSection_enum_winmm_midi1_api_input_ports" xml:space="preserve">
+    <value>WinMM MIDI 1.0 input ports</value>
+  </data>
+  <data name="ReportSection_enum_winmm_midi1_api_output_ports" xml:space="preserve">
+    <value>WinMM MIDI 1.0 output ports</value>
+  </data>
+  <data name="ReportSection_transport_bluetooth" xml:space="preserve">
+    <value>Bluetooth MIDI</value>
+  </data>
+  <data name="ReportSection_transport_network_midi2" xml:space="preserve">
+    <value>Network MIDI 2.0</value>
+  </data>
+  <data name="ReportSection_transport_rtp_midi" xml:space="preserve">
+    <value>RTP-MIDI</value>
+  </data>
+  <data name="ReportSection_transport_loopback" xml:space="preserve">
+    <value>Loopback endpoints</value>
+  </data>
+  <data name="ReportSection_transport_basic_loopback" xml:space="preserve">
+    <value>Basic loopback endpoints</value>
+  </data>
+  <data name="ReportSection_endpoint_customizations" xml:space="preserve">
+    <value>Endpoint customizations</value>
+  </data>
+  <data name="ReportSection_enum_sessions" xml:space="preserve">
+    <value>Apps using MIDI</value>
+  </data>
+  <data name="ReportSection_ping_test" xml:space="preserve">
+    <value>Ping test</value>
+  </data>
+  <data name="ReportSection_connection_timing" xml:space="preserve">
+    <value>Connection timing</value>
+  </data>
+  <data name="ReportSection_findings" xml:space="preserve">
+    <value>Findings</value>
+  </data>
+  <data name="ReportSection_section_timing" xml:space="preserve">
+    <value>Section timing</value>
+  </data>
+  <data name="ReportSection_aborted_run" xml:space="preserve">
+    <value>Stopped early</value>
   </data>
 
   <!-- Capture page -->
@@ -389,7 +730,7 @@
     <value>Capture log</value>
   </data>
   <data name="CaptureProfileMissing" xml:space="preserve">
-    <value>providers.wprp could not be found, so a trace cannot be recorded. Install the Windows MIDI Services SDK runtime and try again.</value>
+    <value>providers.wprp could not be found, so a trace cannot be recorded. Install the Windows MIDI Services Tools and try again.</value>
   </data>
   <data name="CaptureProfileFoundFormat" xml:space="preserve">
     <value>Trace profile: {0}</value>
@@ -444,6 +785,10 @@
   </data>
   <data name="CaptureErrorUnexpected" xml:space="preserve">
     <value>An unexpected error occurred.</value>
+  </data>
+  <data name="CaptureSuggestedFileNameFormat" xml:space="preserve">
+    <value>MIDI Capture {0}_{1}.zip</value>
+    <comment>The file name offered when a capture is saved. {0} is the computer name, {1} is the date and time. It has to stay a valid file name, so don't add any of these: \ / : * ? " &lt; &gt; |</comment>
   </data>
   <data name="CaptureLogWorkingFolderFormat" xml:space="preserve">
     <value>Working folder: {0}</value>
@@ -748,6 +1093,15 @@ Every application using MIDI loses its connections when the service restarts, so
   <data name="ServiceStateUnknown" xml:space="preserve">
     <value>Unknown</value>
   </data>
+  <data name="ServiceErrorStopTimedOut" xml:space="preserve">
+    <value>The service didn't stop in time.</value>
+  </data>
+  <data name="ServiceErrorStartTimedOut" xml:space="preserve">
+    <value>The service didn't start in time.</value>
+  </data>
+  <data name="ServiceErrorUnexpected" xml:space="preserve">
+    <value>An unexpected error occurred.</value>
+  </data>
   <data name="ServiceStartAutomatic" xml:space="preserve">
     <value>Automatic, with Windows</value>
   </data>
@@ -913,7 +1267,7 @@ Every application using MIDI loses its connections when the service restarts, so
     <value>CoolSoft VirtualMIDISynth</value>
   </data>
   <data name="RegistryCommentServiceRootMissing" xml:space="preserve">
-    <value>The Windows MIDI Services registry key is missing. Reinstall the SDK runtime.</value>
+    <value>The Windows MIDI Services registry key is missing. Reinstall the Windows MIDI Services Tools.</value>
   </data>
   <data name="RegistryCommentCurrentConfig" xml:space="preserve">
     <value>Configuration file the service reads</value>
@@ -1137,11 +1491,23 @@ Every application using MIDI loses its connections when the service restarts, so
   <data name="KorgDriverFoundFormat" xml:space="preserve">
     <value>{0} KORG driver package(s) installed: {1}</value>
   </data>
+  <data name="KorgDriverPackageNameFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+    <comment>{0} is the package file name, such as oem14.inf. {1} is the driver's name.</comment>
+  </data>
+  <data name="KorgDriverPackageListFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>Adds one driver package to a list. {0} is the list so far, {1} is the package to add.</comment>
+  </data>
   <data name="KorgRemoveConfirmTitle" xml:space="preserve">
     <value>Uninstall the KORG driver?</value>
   </data>
   <data name="KorgRemoveConfirmIntro" xml:space="preserve">
     <value>These driver packages will be removed, along with any device using them:</value>
+  </data>
+  <data name="KorgRemoveConfirmItemFormat" xml:space="preserve">
+    <value>• {0} - {1}</value>
+    <comment>One line of the list. {0} is the driver's name, {1} is its package file name, such as oem14.inf.</comment>
   </data>
   <data name="KorgRemoveConfirmOutro" xml:space="preserve">
     <value>Close your MIDI applications first. Devices that were using this driver fall back to the in-box class driver.</value>

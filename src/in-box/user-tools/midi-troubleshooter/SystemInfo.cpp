@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "SystemInfo.h"
+#include "StringResources.h"
 #include "ToolPaths.h"
 
 namespace miditroubleshooter
@@ -21,7 +22,7 @@ namespace miditroubleshooter
             case PROCESSOR_ARCHITECTURE_ARM64:  return L"Arm64";
             case PROCESSOR_ARCHITECTURE_ARM:    return L"Arm32";
             case PROCESSOR_ARCHITECTURE_INTEL:  return L"x86";
-            default:                            return L"Unknown";
+            default:                            return std::wstring{ resources::GetString(L"ValueUnknown") };
             }
         }
 
@@ -71,7 +72,7 @@ namespace miditroubleshooter
             }
             MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to read the operating system version.")
 
-            return L"Unknown";
+            return std::wstring{ resources::GetString(L"ValueUnknown") };
         }
 
         std::wstring OperatingSystemEdition() noexcept
@@ -125,7 +126,7 @@ namespace miditroubleshooter
                 return buffer;
             }
 
-            return L"Unknown";
+            return std::wstring{ resources::GetString(L"ValueUnknown") };
         }
 
         // The Windows App SDK version people quote is the framework package version, and the
@@ -177,8 +178,9 @@ namespace miditroubleshooter
                             auto const rest = folder.substr(underscore + 1);
                             auto const versionEnd = rest.find(L'_');
 
-                            return framework + L" (" +
-                                (versionEnd == std::wstring::npos ? rest : rest.substr(0, versionEnd)) + L")";
+                            return std::wstring{ resources::FormatString(L"SystemInfoVersionWithBuildFormat",
+                                framework,
+                                versionEnd == std::wstring::npos ? rest : rest.substr(0, versionEnd)) };
                         }
                     }
 
@@ -192,7 +194,7 @@ namespace miditroubleshooter
             }
             MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to read the Windows App SDK version.")
 
-            return L"Not loaded";
+            return std::wstring{ resources::GetString(L"SystemInfoNotLoaded") };
         }
 
         std::wstring MidiSdkVersion() noexcept
@@ -256,6 +258,7 @@ namespace miditroubleshooter
             }
             MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to read the MIDI SDK version.")
 
+            // Only the capture summary file shows this, and that file is in English for support.
             return L"Not installed";
         }
 
@@ -346,8 +349,10 @@ namespace miditroubleshooter
             // out rather than showing one architecture and hoping.
             if (processSystemInfo.wProcessorArchitecture != nativeSystemInfo.wProcessorArchitecture)
             {
-                information.WindowsArchitecture += L" (app is " +
-                    ArchitectureName(processSystemInfo.wProcessorArchitecture) + L")";
+                information.WindowsArchitecture = std::wstring{ resources::FormatString(
+                    L"SystemInfoEmulatedArchitectureFormat",
+                    information.WindowsArchitecture,
+                    ArchitectureName(processSystemInfo.wProcessorArchitecture)) };
             }
 
             wchar_t modulePath[MAX_PATH]{};

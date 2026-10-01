@@ -63,7 +63,8 @@ The paths differ, so which one fails localizes the fault:
 
 ## Evidence every report needs
 
-- Full `mididiag` output (MIDI Settings > Troubleshooting), which carries the Windows build and stack version.
+- Full `mididiag` report, attached as a zip: MIDI Troubleshooting and Repair > Diagnostics > **Save as zip**, or `mididiag > mididiag.txt` zipped by hand. The whole text is usually longer than an issue body allows. It carries the Windows build, component versions, API mode, service crash history and a `findings` section near the end; read the findings first and quote them in the write-up. `mididiag` is safe to run in Legacy mode: it skips the sections that would start the service.
+- If `mididiag` exits with code 5, the service stopped answering. Before the user restarts, have them save a memory dump from the banner the same app shows, and keep it out of the public issue: it can hold device names and network MIDI passwords.
 - Device make, model, connection, and the driver in use with its version.
 - The transport code from the endpoint's device instance id (`MIDIU_<CODE>_...`).
 - Monitor output from each path tested, not a paraphrase of it.

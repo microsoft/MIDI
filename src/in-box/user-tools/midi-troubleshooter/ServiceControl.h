@@ -73,4 +73,8 @@ namespace miditroubleshooter
     // Nice to have rather than a repair: a service set to Manual still starts on demand, so
     // this only changes when it starts, not whether MIDI works.
     ServiceOperationResult SetMidiServiceStartMode(ServiceStartMode mode) noexcept;
+
+    // A full memory dump of the running service, which shows the developers where a service
+    // that stopped responding is stuck. Needs administrator rights.
+    ServiceOperationResult WriteMidiServiceDump(_In_ std::wstring const& dumpPath) noexcept;
 }

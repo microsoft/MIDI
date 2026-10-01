@@ -82,17 +82,13 @@ namespace winrt::miditroubleshooter::implementation
 
                 for (auto const& package : packages)
                 {
-                    if (!names.empty())
-                    {
-                        names += L", ";
-                    }
+                    auto const item = package.DisplayName.empty() ?
+                        package.PublishedName :
+                        std::wstring{ res::FormatString(L"KorgDriverPackageNameFormat", package.PublishedName, package.DisplayName) };
 
-                    names += package.PublishedName;
-
-                    if (!package.DisplayName.empty())
-                    {
-                        names += L" (" + package.DisplayName + L")";
-                    }
+                    names = names.empty() ?
+                        item :
+                        std::wstring{ res::FormatString(L"KorgDriverPackageListFormat", names, item) };
                 }
 
                 status.Text(res::FormatString(
@@ -663,10 +659,10 @@ namespace winrt::miditroubleshooter::implementation
 
             for (auto const& package : packages)
             {
-                message += L"\r\n\x2022 ";
-                message += package.DisplayName.empty() ? package.PublishedName : package.DisplayName;
-                message += L" - ";
-                message += package.PublishedName;
+                message += L"\r\n";
+                message += res::FormatString(L"KorgRemoveConfirmItemFormat",
+                    package.DisplayName.empty() ? package.PublishedName : package.DisplayName,
+                    package.PublishedName);
             }
 
             message += L"\r\n\r\n";

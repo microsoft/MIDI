@@ -56,7 +56,7 @@ Expected: Actual:
 
 ## Evidence
 
-- `mididiag` output: (paste in full)
+- `mididiag` report: attached as a zip. Paste its `findings` section here.
 - Monitor output per path tested:
 - Device instance ids:
 

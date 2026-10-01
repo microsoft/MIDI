@@ -134,6 +134,7 @@
     <ClInclude Include="Elevation.h" />
     <ClInclude Include="ProcessRunner.h" />
     <ClInclude Include="RegistryRepair.h" />
+    <ClInclude Include="ReportFile.h" />
     <ClInclude Include="ReproLog.h" />
     <ClInclude Include="ServiceControl.h" />
     <ClInclude Include="StringResources.h" />
@@ -149,6 +150,12 @@
     <ClInclude Include="MainWindow.xaml.h">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClInclude>
+    <ClInclude Include="ReportViewerWindow.xaml.h">
+      <DependentUpon>ReportViewerWindow.xaml</DependentUpon>
+    </ClInclude>
+    <!-- the report parser lives with mididiag, so partners can copy it from one place -->
+    <ClInclude Include="..\mididiag\mididiag_report_parser.h" />
+    <ClInclude Include="..\mididiag\mididiag_field_defs.h" />
     <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md -->
     <ClInclude Include="..\midi-app-shared\LiveRegion.h" />
     <ClInclude Include="..\midi-app-shared\PreviewBuild.h" />
@@ -171,6 +178,7 @@
     <ClCompile Include="Elevation.cpp" />
     <ClCompile Include="ProcessRunner.cpp" />
     <ClCompile Include="RegistryRepair.cpp" />
+    <ClCompile Include="ReportFile.cpp" />
     <ClCompile Include="ReproLog.cpp" />
     <ClCompile Include="ServiceControl.cpp" />
     <ClCompile Include="StringResources.cpp" />
@@ -203,6 +211,13 @@
     <ClCompile Include="MainWindowService.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
+    <ClCompile Include="ReportViewerWindow.xaml.cpp">
+      <DependentUpon>ReportViewerWindow.xaml</DependentUpon>
+    </ClCompile>
+    <!-- standard C++ only, so it doesn't use this project's precompiled header -->
+    <ClCompile Include="..\mididiag\mididiag_report_parser.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
@@ -217,12 +232,18 @@
     <Midl Include="MainWindow.idl">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Midl>
+    <Midl Include="ReportViewerWindow.idl">
+      <DependentUpon>ReportViewerWindow.xaml</DependentUpon>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="MainWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ReportViewerWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

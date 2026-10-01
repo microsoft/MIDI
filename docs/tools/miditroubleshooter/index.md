@@ -37,15 +37,19 @@ There's more detail in [How to change the API mode]({{ site.baseurl }}/kb/how-to
 
 ## Diagnostics
 
-Two reports, each with a button to run it, a box showing the output, and **Copy all** and **Save as** buttons.
+Two reports, each with a button to run it, a box showing the output, and **Copy all** and **Save as** buttons. mididiag also has **Save as zip** and **View report**.
 
 ![The two diagnostic reports, with output]({{ site.baseurl }}/assets/images/miditroubleshooter-diagnostics.png)
 
-**mididiag** is the broad one. It walks the registry, the transports, every MIDI endpoint the service knows about and the old MIDI 1.0 APIs, and reports what it found.
+**mididiag** is the broad one. It walks the registry, the transports, every MIDI endpoint the service knows about and the old MIDI 1.0 APIs, and reports what it found. It ends with a short list of findings, things worth a look written as plain sentences.
+
+**View report** opens the mididiag report in a window of its own, where it's much easier to read than the plain text. The findings come first, then any errors in red, then one line for each section that opens to show what's in it, and lists such as the ports become tables. If you haven't run the report yet, it asks for a file instead, so you can also read a report somebody sent you. It opens the zip file the report came in, too.
 
 **midiksinfo** is the narrow one, for USB and other kernel streaming devices. If a device isn't showing up, or is showing up with the wrong number of ports or the wrong names, this is the report that says why.
 
-Both can take a minute or two on a machine with a lot of hardware attached. Paste the output into your GitHub issue or your email to support.
+Both can take a minute or two on a machine with a lot of hardware attached. For a GitHub issue, save mididiag with **Save as zip** and attach the zip file. The full text is often too long to paste into an issue. For email to support, attach the saved files.
+
+If mididiag finds that the MIDI service has stopped answering, a banner offers **Save a memory dump**. The dump shows the developers where the service is stuck, so save it before you restart the PC, because restarting clears the problem and the evidence with it. Saving it needs administrator rights. The dump can hold private information, such as device names and network MIDI passwords, so share it only with the developers who asked for it.
 
 ## Capture repro log
 
