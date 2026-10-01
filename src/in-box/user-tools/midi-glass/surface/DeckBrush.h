@@ -41,7 +41,7 @@ namespace glass
     // ONE composition visual for the whole page. Eighty controls cost what four cost.
     //
     // `scale` is how many screen pixels one of the element's own units is. A three pixel pitch
-    // measured in page units at 87 per cent zoom is a beat pattern across the screen rather than
+    // measured in page units at 87 percent zoom is a beat pattern across the screen rather than
     // a row of scan lines, so the pitch is divided back out by it.
     //
     // `pageScale` is how many of the element's own units one page unit is. A deck's repeating

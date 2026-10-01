@@ -76,28 +76,6 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    std::wstring ToHexBytes(std::vector<uint8_t> const& bytes) noexcept
-    {
-        try
-        {
-            std::wstring text{};
-            text.reserve(bytes.size() * 2);
-
-            for (auto const value : bytes)
-            {
-                text += Digits[(value >> 4) & 0x0F];
-                text += Digits[value & 0x0F];
-            }
-
-            return text;
-        }
-        catch (...)
-        {
-            return {};
-        }
-    }
-
-    _Use_decl_annotations_
     std::wstring FormatHexBytes(std::vector<uint8_t> const& bytes) noexcept
     {
         try

@@ -84,8 +84,6 @@ namespace glass
         // the beat reads, and what the editor shows.
         double TempoOf(_In_ uint32_t controlIndex) const noexcept;
 
-        size_t RunningCount() const noexcept;
-
     private:
         ClockGenerator() = default;
 

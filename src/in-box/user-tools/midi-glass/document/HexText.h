@@ -21,11 +21,8 @@
 
 namespace glass
 {
-    // Upper case, no separators. This is the form that goes in the file.
-    std::wstring ToHexBytes(_In_ std::vector<uint8_t> const& bytes) noexcept;
-
-    // The same bytes with a space every byte and a line break every sixteen, which is what makes
-    // a dump readable in a text box.
+    // A space every byte and a line break every sixteen, which is what makes a dump readable in
+    // a text box.
     std::wstring FormatHexBytes(_In_ std::vector<uint8_t> const& bytes) noexcept;
 
     // Whitespace, commas and an optional 0x on each byte are all accepted, because a person

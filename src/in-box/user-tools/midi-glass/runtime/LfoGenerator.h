@@ -68,8 +68,6 @@ namespace glass
         // had reached, so speeding a sweep up does not jump it back to the start.
         void SetTempo(_In_ double beatsPerMinute) noexcept;
 
-        size_t RunningCount() const noexcept;
-
     private:
         LfoGenerator() = default;
 

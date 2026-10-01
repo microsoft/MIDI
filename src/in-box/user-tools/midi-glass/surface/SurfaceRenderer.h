@@ -514,6 +514,10 @@ namespace glass
 
         void ClearBloom(_In_ size_t itemIndex) noexcept;
 
+        // A light the DAW asked to blink. It goes on and off by itself until told to stop, and
+        // stays lit instead when Windows says to reduce motion.
+        void SetBlinking(_In_ size_t itemIndex, _In_ bool blinking) noexcept;
+
         // Windows says reduce motion, so the bloom switches instead of fading. The surface is a
         // wall of animation by design, which is exactly why honoring this is not optional.
         void SetReducedMotion(_In_ bool reduced) noexcept { m_reducedMotion = reduced; }
@@ -981,6 +985,7 @@ namespace glass
         // Turns off every control whose lit time has run out. One timer for the whole page
         // rather than one per blink, because a busy page blinks a lot.
         void SweepFlashes() noexcept;
+        void SweepBlinks() noexcept;
 
         comp::CompositionColorBrush BrushFor(
             _In_ comp::Compositor const& compositor,
@@ -1022,15 +1027,6 @@ namespace glass
             _In_ comp::Compositor const& compositor,
             _In_ ThemeColor const& lit,
             _In_ ThemeColor const& edge);
-
-        // A meter's three zones, mapped to the TRACK rather than to the bar, so the boundaries
-        // stay where the marks are as the bar grows past them.
-        comp::CompositionLinearGradientBrush MeterBrush(
-            _In_ comp::Compositor const& compositor,
-            _In_ ControlColors const& colors,
-            _In_ float trackOrigin,
-            _In_ float trackLength,
-            _In_ bool vertical);
 
         // A brush whose alpha is the shape of a control, for a drop shadow to be cast through.
         // Without one, a shadow is the visual's rectangle, which is how a knob ended up with a
@@ -1118,6 +1114,11 @@ namespace glass
         // When a blinking control goes out again, as a tick count. Zero means it is not lit.
         std::vector<uint64_t> m_litUntil{};
         winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_flashTimer{ nullptr };
+
+        // Lights a DAW has set blinking, all in step with each other.
+        std::vector<bool> m_blinking{};
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_blinkTimer{ nullptr };
+        bool m_blinkLit{ false };
 
         // The number drawn inside a control, for the few that show one. Null everywhere else,
         // so a page of two hundred pays nothing for a feature four of them use.

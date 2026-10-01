@@ -13,6 +13,7 @@
 #include "LayoutModel.h"
 #include "LayoutSerializer.h"
 #include "LayoutStore.h"
+#include "MackieControl.h"
 #include "PageTemplates.h"
 #include "ThemeModel.h"
 #include "ControlFactory.h"
@@ -54,7 +55,7 @@ namespace midimcp
             { L"panel", L"A frame that groups controls. Sends nothing." },
             { L"joystick", L"A stick with two values that springs back to the middle." },
             { L"ribbon", L"A long touch strip." },
-            { L"pianoKeyboard", L"Piano keys that play notes." },
+            { L"pianoKeyboard", L"Mono keyboard: piano keys that play one note at a time. For chords, use notePads or hexPads." },
             { L"beatClock", L"Sends MIDI clock and shows the beat." },
             { L"timeDisplay", L"A stopwatch. Sends nothing." },
             { L"lfo", L"Moves a value up and down by itself while running." },
@@ -790,6 +791,15 @@ namespace midimcp
 
         std::wstring DescribeMessage(glass::ControlMessage const& message)
         {
+            // A function is sent the way Mackie Control says, so its channel is not the row's.
+            if (message.Kind == glass::MessageKind::MackieControl)
+            {
+                auto const name = glass::MackieFunctionFileName(message.Number);
+
+                return L"Mackie Control " + (name.empty() ? std::wstring{ L"(no function yet)" } : name) +
+                    L" to " + message.DeviceName;
+            }
+
             std::wstring what{};
 
             switch (message.Kind)

@@ -55,6 +55,9 @@ namespace midiapp
         std::array<std::wstring, MaximumGroupCount> SourceGroupNames{};
         std::array<std::wstring, MaximumGroupCount> DestinationGroupNames{};
 
+        // Read from what the watcher already holds, so nobody has to query the device for it.
+        bool SupportsMidi2Protocol{ false };
+
         // Loopbacks are the only endpoints an app knows for certain will echo what it sends,
         // which is what makes a loop provable rather than merely possible.
         bool IsLoopback{ false };
@@ -82,8 +85,17 @@ namespace midiapp
         // Raised after the snapshot has been replaced. Called on a background thread.
         void SetChangedHandler(_In_ std::function<void()> handler) noexcept;
 
+        // The same, for something that comes and goes, such as a dialog, while another part of
+        // the app owns the handler above. Returns 0 when it could not be added.
+        uint64_t AddChangedHandler(_In_ std::function<void()> handler) noexcept;
+        void RemoveChangedHandler(_In_ uint64_t token) noexcept;
+
         bool Start() noexcept;
         void Stop() noexcept;
+
+        // False until the first full look at the endpoints is done, which takes a while on a PC
+        // with many devices. Until then an empty snapshot means "not looked yet", not "nothing".
+        bool HasEnumerated() const noexcept { return m_enumerated.load(std::memory_order_acquire); }
 
         // A copy, deliberately: callers hold it while they walk a patch.
         std::vector<LiveEndpoint> Snapshot() const noexcept;
@@ -108,26 +120,54 @@ namespace midiapp
 
         bool IsServiceAvailable() const noexcept { return m_serviceAvailable.load(std::memory_order_relaxed); }
 
-        // Forces a rebuild, used after creating a loopback so the new endpoint shows up without
-        // waiting for the watcher.
+        // Asks Windows directly instead of reading the watchers' lists, used after creating a
+        // loopback so the new endpoint shows up without waiting for the watcher. Slower.
         void Refresh() noexcept;
 
     private:
         EndpointCatalog() noexcept = default;
 
-        void Rebuild() noexcept;
+        enum class RebuildSource
+        {
+            Watchers,
+            Query,
+        };
+
+        void Rebuild(_In_ RebuildSource source) noexcept;
         void NotifyChanged() noexcept;
+        void OnWatcherChanged() noexcept;
+        void StopWatchers() noexcept;
+        winrt::fire_and_forget RebuildForChanges() noexcept;
 
         mutable std::mutex m_lock{};
         std::vector<LiveEndpoint> m_endpoints{};
 
         std::function<void()> m_changedHandler{};
+        std::vector<std::pair<uint64_t, std::function<void()>>> m_extraHandlers{};
+        uint64_t m_nextHandlerToken{ 1 };
 
+        // Rebuilds can overlap, so each takes a number, and a slow one that started first never
+        // puts back an older list. The newest applied is guarded by m_lock.
+        std::atomic<uint64_t> m_rebuildsStarted{ 0 };
+        uint64_t m_newestRebuildApplied{ 0 };
+
+        // Watcher changes not yet covered by a rebuild. Whoever takes it from zero rebuilds.
+        std::atomic<uint32_t> m_pendingChanges{ 0 };
+
+        std::atomic<bool> m_enumerated{ false };
+        std::atomic<bool> m_changedWhileEnumerating{ false };
+
+        // Guarded by m_lock, because a rebuild on another thread reads them.
         winrt::Windows::Devices::Midi2::Enumeration::MidiEndpointDeviceWatcher m_watcher{ nullptr };
+        winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceWatcher m_portWatcher{ nullptr };
 
         winrt::event_token m_addedToken{};
         winrt::event_token m_removedToken{};
         winrt::event_token m_updatedToken{};
+
+        winrt::event_token m_portAddedToken{};
+        winrt::event_token m_portRemovedToken{};
+        winrt::event_token m_portUpdatedToken{};
 
         std::atomic<bool> m_serviceAvailable{ false };
         std::atomic<bool> m_running{ false };

@@ -214,64 +214,6 @@ namespace glass
         }
     }
 
-    _Use_decl_annotations_
-    bool StepSequencer::IsRunning(uint32_t controlIndex) const noexcept
-    {
-        try
-        {
-            std::lock_guard guard{ m_lock };
-
-            for (auto const& sequence : m_sequences)
-            {
-                if (sequence.ControlIndex == controlIndex)
-                {
-                    return true;
-                }
-            }
-        }
-        catch (...)
-        {
-        }
-
-        return false;
-    }
-
-    _Use_decl_annotations_
-    bool StepSequencer::IsCurrent(uint32_t controlIndex, uint64_t run) const noexcept
-    {
-        try
-        {
-            std::lock_guard guard{ m_lock };
-
-            for (auto const& sequence : m_sequences)
-            {
-                if (sequence.ControlIndex == controlIndex)
-                {
-                    return sequence.Run == run;
-                }
-            }
-        }
-        catch (...)
-        {
-        }
-
-        return false;
-    }
-
-    size_t StepSequencer::RunningCount() const noexcept
-    {
-        try
-        {
-            std::lock_guard guard{ m_lock };
-
-            return m_sequences.size();
-        }
-        catch (...)
-        {
-            return 0;
-        }
-    }
-
     void StepSequencer::TimeLoop()
     {
         for (;;)

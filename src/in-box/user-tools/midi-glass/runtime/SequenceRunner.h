@@ -70,10 +70,6 @@ namespace glass
         // time that it means stop rather than start again.
         bool IsRunning(_In_ uint32_t controlIndex) const noexcept;
 
-        // How many plans are still on the clock. The runtime window shows it, and a test can
-        // assert a plan finished rather than sleeping and hoping.
-        size_t PendingCount() const noexcept;
-
     private:
         SequenceRunner() = default;
 

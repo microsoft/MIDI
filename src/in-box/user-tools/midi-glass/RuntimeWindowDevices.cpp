@@ -15,6 +15,7 @@
 
 #include "StringResources.h"
 #include "GlassControl.h"
+#include "MidiServiceStatus.h"
 
 namespace resources = ::midiglass::resources;
 
@@ -39,6 +40,17 @@ namespace winrt::midiglass::implementation
                 if (auto strong = weak.get())
                 {
                     strong->OnFeedbackMoved(controlIndex, value);
+                }
+            };
+
+        m_player->FeedbackBlinks = [weak](uint32_t controlIndex)
+            {
+                auto strong = weak.get();
+                size_t itemIndex{ 0 };
+
+                if (strong != nullptr && !strong->m_closing && strong->m_renderer.TryFindItem(controlIndex, itemIndex))
+                {
+                    strong->m_renderer.SetBlinking(itemIndex, true);
                 }
             };
 
@@ -185,6 +197,12 @@ namespace winrt::midiglass::implementation
             {
                 DeviceStatusText().Text(resources::FormatString(
                     L"RuntimeAllDevicesFormat", static_cast<int32_t>(available)));
+            }
+            else if (!midiapp::IsMidiServiceRunning())
+            {
+                // Every device goes with the service, and naming them would send somebody to
+                // check cables that are fine.
+                DeviceStatusText().Text(resources::GetString(L"ErrorServiceUnavailable"));
             }
             else
             {
@@ -383,6 +401,7 @@ namespace winrt::midiglass::implementation
             return;
         }
 
+        m_renderer.SetBlinking(itemIndex, false);
         m_renderer.SetValue(itemIndex, value);
         m_renderer.BloomFeedback(itemIndex);
 
@@ -424,7 +443,7 @@ namespace winrt::midiglass::implementation
 
         default:
             // A blink has no value to carry, so the light is the whole message. It goes out on
-            // its own after "stays lit for", which is what makes it read as a blink rather than
+            // its own after "light duration", which is what makes it read as a blink rather than
             // a light left on.
             m_renderer.FlashFeedback(itemIndex);
             break;

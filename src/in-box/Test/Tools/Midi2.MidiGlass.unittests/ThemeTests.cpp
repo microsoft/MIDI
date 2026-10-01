@@ -250,7 +250,7 @@ void ThemeTests::TheTonalThemesTurnOffTheGlass()
             continue;
         }
 
-        Log::Comment(String().Format(L"%s has no glow, so its touch fill is %d per cent",
+        Log::Comment(String().Format(L"%s has no glow, so its touch fill is %d percent",
             theme.Name.c_str(), theme.TouchFillPercent));
 
         VERIFY_IS_GREATER_THAN(theme.TouchFillPercent, 0);
@@ -2819,7 +2819,7 @@ void ThemeTests::OffWorldRepeatsItsWallAndDirtiesItsSections()
     VERIFY_IS_GREATER_THAN(wall->Overlay.RainPercent, 0);
     VERIFY_IS_FALSE(wall->Overlay.IsEmpty());
 
-    // A lit button washes its plate by enough to see: at ten per cent the red one moved only
+    // A lit button washes its plate by enough to see: at ten percent the red one moved only
     // 1.11 : 1, under the 1.15 every shipped theme's lit plate moves by.
     glass::Control button{};
     button.Kind = glass::ControlKind::Button;
@@ -2858,7 +2858,7 @@ void ThemeTests::ARoundButtonIsForButtonsTogglesAndPads()
 
     VERIFY_IS_FALSE(glass::IsRoundSwitch(*glass::FindBuiltInTheme(L"Studio Dark"), glass::ControlKind::Button));
 
-    // At rest a button is its own colored plastic, 62 per cent of the way from black.
+    // At rest a button is its own colored plastic, 62 percent of the way from black.
     glass::Control button{};
     button.Kind = glass::ControlKind::Button;
     button.HueSlot = 3;

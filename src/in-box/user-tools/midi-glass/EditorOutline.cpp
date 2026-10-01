@@ -1085,6 +1085,9 @@ namespace winrt::midiglass::implementation
         {
             tile.IsChecked(m_hasArmedKind && kind == m_armedKind);
         }
+
+        // Add to page places the armed tile, so with nothing armed there is nothing to add.
+        AddToPageButton().IsEnabled(m_hasArmedKind);
     }
 
     std::wstring EditorWindow::NameForArmedKind() const
@@ -1118,7 +1121,12 @@ namespace winrt::midiglass::implementation
             // The keyboard path. Somebody who cannot click the page still has to be able to put
             // a control on it, so this places whichever palette tile is armed at the first free
             // spot rather than waiting for a pointer that is never coming.
-            auto const kind = m_hasArmedKind ? m_armedKind : glass::ControlKind::Knob;
+            if (!m_hasArmedKind)
+            {
+                return;
+            }
+
+            auto const kind = m_armedKind;
 
             m_hasArmedKind = false;
             SyncPaletteSelection();
@@ -1216,6 +1224,15 @@ namespace winrt::midiglass::implementation
                     { control->X, control->Y, control->Width, control->Height },
                     document.PageWidth,
                     document.PageHeight);
+
+                data.IsLocked = control->Locked;
+
+                if (control->Locked)
+                {
+                    data.AccessibleName = std::wstring{ resources::FormatString(
+                        L"OutlineLockedAccessibleFormat",
+                        data.AccessibleName.empty() ? data.DisplayName : data.AccessibleName) };
+                }
 
                 item->Update(data);
 

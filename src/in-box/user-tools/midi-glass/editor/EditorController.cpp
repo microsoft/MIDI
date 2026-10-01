@@ -12,6 +12,7 @@
 
 #include "EditorController.h"
 #include "ControlFactory.h"
+#include "MackieControl.h"
 #include "PageTemplates.h"
 
 #include <algorithm>
@@ -32,6 +33,126 @@ namespace glass
             control.Y = rect.Y;
             control.Width = rect.Width;
             control.Height = rect.Height;
+        }
+
+        // One thing to arrange, and the controls that move with it.
+        struct ArrangeBlock
+        {
+            EditRect Bounds{};
+            std::vector<std::wstring> Ids{};
+            bool Locked{ false };
+        };
+
+        // In the page's own order, so an arrangement gives the same answer whichever order the
+        // controls were picked in.
+        std::vector<Control const*> ControlsWithIds(_In_ Page const* page, _In_ std::vector<std::wstring> const& ids)
+        {
+            std::vector<Control const*> controls{};
+
+            if (page == nullptr)
+            {
+                return controls;
+            }
+
+            for (auto const& control : page->Controls)
+            {
+                if (std::find(ids.begin(), ids.end(), control.Id) != ids.end())
+                {
+                    controls.push_back(&control);
+                }
+            }
+
+            return controls;
+        }
+
+        // A group is one block. When every control is in the same group, each is its own block.
+        std::vector<ArrangeBlock> BlocksOf(_In_ std::vector<Control const*> const& controls)
+        {
+            std::vector<ArrangeBlock> blocks{};
+
+            if (controls.empty())
+            {
+                return blocks;
+            }
+
+            auto const& firstGroup = controls.front()->GroupId;
+
+            auto const oneGroup = !firstGroup.empty() &&
+                std::all_of(controls.begin(), controls.end(),
+                    [&firstGroup](Control const* control) { return control->GroupId == firstGroup; });
+
+            std::vector<std::wstring> keys{};
+
+            for (auto const* const control : controls)
+            {
+                auto const& key = (oneGroup || control->GroupId.empty()) ? control->Id : control->GroupId;
+                auto const found = std::find(keys.begin(), keys.end(), key);
+
+                if (found == keys.end())
+                {
+                    keys.push_back(key);
+                    blocks.push_back({ RectOf(*control), { control->Id }, control->Locked });
+                    continue;
+                }
+
+                auto& block = blocks[static_cast<size_t>(found - keys.begin())];
+
+                auto const left = std::min(block.Bounds.X, control->X);
+                auto const top = std::min(block.Bounds.Y, control->Y);
+                auto const right = std::max(block.Bounds.Right(), control->X + control->Width);
+                auto const bottom = std::max(block.Bounds.Bottom(), control->Y + control->Height);
+
+                block.Bounds = { left, top, right - left, bottom - top };
+                block.Ids.push_back(control->Id);
+                block.Locked = block.Locked || control->Locked;
+            }
+
+            return blocks;
+        }
+
+        std::vector<EditRect> BoundsOf(_In_ std::vector<ArrangeBlock> const& blocks)
+        {
+            std::vector<EditRect> rects{};
+            rects.reserve(blocks.size());
+
+            for (auto const& block : blocks)
+            {
+                rects.push_back(block.Bounds);
+            }
+
+            return rects;
+        }
+
+        // Every member keeps its place inside its block. A block holding a locked control is
+        // arranged against and never moved, so a group never comes apart around one.
+        bool PlaceBlocks(
+            _Inout_ Page& page,
+            _In_ std::vector<ArrangeBlock> const& blocks,
+            _In_ std::vector<EditRect> const& placed)
+        {
+            auto moved = false;
+
+            for (size_t index = 0; index < blocks.size() && index < placed.size(); ++index)
+            {
+                auto const& block = blocks[index];
+
+                if (block.Locked || (placed[index].X == block.Bounds.X && placed[index].Y == block.Bounds.Y))
+                {
+                    continue;
+                }
+
+                for (auto& control : page.Controls)
+                {
+                    if (std::find(block.Ids.begin(), block.Ids.end(), control.Id) != block.Ids.end())
+                    {
+                        control.X = placed[index].X + (control.X - block.Bounds.X);
+                        control.Y = placed[index].Y + (control.Y - block.Bounds.Y);
+                        moved = true;
+                    }
+                }
+            }
+
+            return moved;
         }
     }
 
@@ -241,9 +362,13 @@ namespace glass
             return;
         }
 
+        // A locked control is left out, the same as a click on the page leaves it out.
         for (auto const& control : page->Controls)
         {
-            m_selection.push_back(control.Id);
+            if (!control.Locked)
+            {
+                m_selection.push_back(control.Id);
+            }
         }
     }
 
@@ -284,7 +409,7 @@ namespace glass
 
         for (auto const& control : page->Controls)
         {
-            if (Intersects(area, RectOf(control)))
+            if (!control.Locked && Intersects(area, RectOf(control)))
             {
                 AddToSelection(control.Id);
             }
@@ -338,6 +463,49 @@ namespace glass
         }
 
         return { left, top, right - left, bottom - top };
+    }
+
+    // ---------------------------------------------------------------- locking
+
+    _Use_decl_annotations_
+    bool EditorController::SetSelectionLocked(bool locked)
+    {
+        auto changed = false;
+
+        for (auto const& id : m_selection)
+        {
+            auto* const control = MutableControl(id);
+
+            if (control != nullptr && control->Locked != locked)
+            {
+                control->Locked = locked;
+                changed = true;
+            }
+        }
+
+        if (!changed)
+        {
+            return false;
+        }
+
+        Commit(locked ? EditNames::Lock : EditNames::Unlock);
+
+        return true;
+    }
+
+    bool EditorController::SelectionIsLocked() const
+    {
+        auto const selected = SelectedControls();
+
+        return !selected.empty() &&
+            std::all_of(selected.begin(), selected.end(), [](Control const* control) { return control->Locked; });
+    }
+
+    bool EditorController::SelectionHasLocked() const
+    {
+        auto const selected = SelectedControls();
+
+        return std::any_of(selected.begin(), selected.end(), [](Control const* control) { return control->Locked; });
     }
 
     // ---------------------------------------------------------------- groups
@@ -736,7 +904,8 @@ namespace glass
     _Use_decl_annotations_
     bool EditorController::SetSelectionBounds(double x, double y, double width, double height)
     {
-        if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(width) || !std::isfinite(height))
+        if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(width) || !std::isfinite(height) ||
+            SelectionHasLocked())
         {
             return false;
         }
@@ -897,6 +1066,8 @@ namespace glass
 
         auto control = MakeNewControl(kind, x, y, m_document.PageWidth, m_document.PageHeight, deviceName, *page);
 
+        WaitForMackieFunction(control, m_document);
+
         auto const settings = EffectiveSnap();
 
         if (settings.GridEnabled)
@@ -931,72 +1102,6 @@ namespace glass
         auto const size = DefaultControlSize(kind, m_document.PageWidth, m_document.PageHeight);
 
         return AddControl(kind, centerX - size.Width / 2.0, centerY - size.Height / 2.0);
-    }
-
-    _Use_decl_annotations_
-    std::wstring EditorController::AddControlInRectangle(ControlKind kind, EditRect const& area)
-    {
-        auto* const page = MutablePage();
-
-        if (page == nullptr || page->Controls.size() >= MaximumControlsPerPage)
-        {
-            return {};
-        }
-
-        std::wstring deviceName{};
-
-        if (!m_document.Devices.empty())
-        {
-            deviceName = m_document.Devices[0].Name;
-        }
-
-        auto control = MakeNewControl(
-            kind, area.X, area.Y, m_document.PageWidth, m_document.PageHeight, deviceName, *page);
-
-        auto const settings = EffectiveSnap();
-
-        auto x = area.X;
-        auto y = area.Y;
-        auto width = std::max(MinimumControlSize, area.Width);
-        auto height = std::max(MinimumControlSize, area.Height);
-
-        if (settings.GridEnabled)
-        {
-            x = SnapToGrid(x, settings.GridSize);
-            y = SnapToGrid(y, settings.GridSize);
-            width = std::max(settings.GridSize, SnapToGrid(width, settings.GridSize));
-            height = std::max(settings.GridSize, SnapToGrid(height, settings.GridSize));
-        }
-
-        // A knob drawn as a wide rectangle is still a knob, so the shorter side wins rather than
-        // the control arriving as an ellipse nobody asked for.
-        if (control.AspectLocked)
-        {
-            width = height = std::min(width, height);
-        }
-
-        control.X = x;
-        control.Y = y;
-        control.Width = width;
-        control.Height = height;
-
-        auto const id = control.Id;
-
-        page->Controls.push_back(std::move(control));
-
-        if (kind == ControlKind::Panel && page->Controls.size() > 1)
-        {
-            auto added = std::move(page->Controls.back());
-            page->Controls.pop_back();
-            page->Controls.insert(page->Controls.begin(), std::move(added));
-        }
-
-        // One entry. Drawing a control out to a size is one action, and undoing it must not
-        // leave a default-sized one behind.
-        Commit(EditNames::Add);
-        SelectOnly(id);
-
-        return id;
     }
 
     _Use_decl_annotations_
@@ -1140,9 +1245,13 @@ namespace glass
     {
         m_dragOrigins.clear();
 
+        // A locked control stays where it is while the rest of the selection moves.
         for (auto const* const control : SelectedControls())
         {
-            m_dragOrigins.push_back({ control->Id, RectOf(*control) });
+            if (!control->Locked)
+            {
+                m_dragOrigins.push_back({ control->Id, RectOf(*control) });
+            }
         }
 
         m_dragging = !m_dragOrigins.empty();
@@ -1240,7 +1349,9 @@ namespace glass
 
         m_resizeBounds = SelectionBounds();
         m_resizeHandle = handle;
-        m_dragging = !m_dragOrigins.empty() && handle != ResizeHandle::None;
+
+        // The box is drawn around the whole selection, so one locked control holds all of it.
+        m_dragging = !m_dragOrigins.empty() && handle != ResizeHandle::None && !SelectionHasLocked();
     }
 
     _Use_decl_annotations_
@@ -1372,13 +1483,21 @@ namespace glass
             return false;
         }
 
+        auto moved = false;
+
         for (auto& control : page->Controls)
         {
-            if (IsSelected(control.Id))
+            if (IsSelected(control.Id) && !control.Locked)
             {
                 control.X += deltaX;
                 control.Y += deltaY;
+                moved = true;
             }
+        }
+
+        if (!moved)
+        {
+            return false;
         }
 
         // A run of arrow presses is one entry, so taking a nudge back does not need twenty
@@ -1398,7 +1517,7 @@ namespace glass
     {
         auto* const control = MutableControl(id);
 
-        if (control == nullptr ||
+        if (control == nullptr || control->Locked ||
             !std::isfinite(x) || !std::isfinite(y) ||
             !std::isfinite(width) || !std::isfinite(height))
         {
@@ -1429,32 +1548,13 @@ namespace glass
     _Use_decl_annotations_
     bool EditorController::AlignSelection(AlignEdge edge)
     {
-        auto const selected = SelectedControls();
+        auto* const page = MutablePage();
+        auto const blocks = BlocksOf(SelectedControls());
 
-        if (selected.size() < 2)
+        // A locked control is lined up against, never moved.
+        if (page == nullptr || blocks.size() < 2 || !PlaceBlocks(*page, blocks, AlignRects(BoundsOf(blocks), edge)))
         {
             return false;
-        }
-
-        std::vector<EditRect> rects{};
-        rects.reserve(selected.size());
-
-        for (auto const* const control : selected)
-        {
-            rects.push_back(RectOf(*control));
-        }
-
-        auto const aligned = AlignRects(rects, edge);
-
-        for (size_t index = 0; index < selected.size(); ++index)
-        {
-            auto* const control = MutableControl(selected[index]->Id);
-
-            if (control != nullptr)
-            {
-                control->X = aligned[index].X;
-                control->Y = aligned[index].Y;
-            }
         }
 
         Commit(EditNames::Arrange);
@@ -1515,32 +1615,12 @@ namespace glass
     _Use_decl_annotations_
     bool EditorController::DistributeSelection(ArrangeAxis axis)
     {
-        auto const selected = SelectedControls();
+        auto* const page = MutablePage();
+        auto const blocks = BlocksOf(SelectedControls());
 
-        if (selected.size() < 3)
+        if (page == nullptr || blocks.size() < 3 || !PlaceBlocks(*page, blocks, DistributeEvenly(BoundsOf(blocks), axis)))
         {
             return false;
-        }
-
-        std::vector<EditRect> rects{};
-        rects.reserve(selected.size());
-
-        for (auto const* const control : selected)
-        {
-            rects.push_back(RectOf(*control));
-        }
-
-        auto const spread = DistributeEvenly(rects, axis);
-
-        for (size_t index = 0; index < selected.size(); ++index)
-        {
-            auto* const control = MutableControl(selected[index]->Id);
-
-            if (control != nullptr)
-            {
-                control->X = spread[index].X;
-                control->Y = spread[index].Y;
-            }
         }
 
         Commit(EditNames::Arrange);
@@ -1551,32 +1631,21 @@ namespace glass
     _Use_decl_annotations_
     bool EditorController::SetSelectionGap(ArrangeAxis axis, double gap)
     {
-        auto const selected = SelectedControls();
+        return SpaceControls(m_selection, axis, gap);
+    }
 
-        if (selected.size() < 2 || !std::isfinite(gap))
+    _Use_decl_annotations_
+    bool EditorController::SpaceControls(std::vector<std::wstring> const& ids, ArrangeAxis axis, double gap)
+    {
+        auto* const page = MutablePage();
+        auto const blocks = BlocksOf(ControlsWithIds(page, ids));
+
+        if (page == nullptr ||
+            blocks.size() < 2 ||
+            !std::isfinite(gap) ||
+            !PlaceBlocks(*page, blocks, SetGap(BoundsOf(blocks), axis, gap)))
         {
             return false;
-        }
-
-        std::vector<EditRect> rects{};
-        rects.reserve(selected.size());
-
-        for (auto const* const control : selected)
-        {
-            rects.push_back(RectOf(*control));
-        }
-
-        auto const spaced = SetGap(rects, axis, gap);
-
-        for (size_t index = 0; index < selected.size(); ++index)
-        {
-            auto* const control = MutableControl(selected[index]->Id);
-
-            if (control != nullptr)
-            {
-                control->X = spaced[index].X;
-                control->Y = spaced[index].Y;
-            }
         }
 
         Commit(EditNames::Arrange);
@@ -1584,20 +1653,20 @@ namespace glass
         return true;
     }
 
+    size_t EditorController::SelectionBlockCount() const
+    {
+        return BlocksOf(SelectedControls()).size();
+    }
+
     _Use_decl_annotations_
     std::vector<double> EditorController::SelectionGaps(ArrangeAxis axis) const
     {
-        auto const selected = SelectedControls();
+        return MeasureGaps(BoundsOf(BlocksOf(SelectedControls())), axis);
+    }
 
-        std::vector<EditRect> rects{};
-        rects.reserve(selected.size());
-
-        for (auto const* const control : selected)
-        {
-            rects.push_back(RectOf(*control));
-        }
-
-        return MeasureGaps(rects, axis);
+    std::optional<SpacingReadout> EditorController::SelectionSpacing() const
+    {
+        return ReadSpacing(BoundsOf(BlocksOf(SelectedControls())));
     }
 
     _Use_decl_annotations_

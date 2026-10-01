@@ -386,7 +386,7 @@ namespace glass
 
         // What that sheen is made of. Alpha 0 means white, which is where it started and what
         // every dark theme wants. A warm plate does not: measured on Terminal Amber, white at
-        // 7 per cent over #3A2413 overshoots blue by eight counts and the warm lift goes gray.
+        // 7 percent over #3A2413 overshoots blue by eight counts and the warm lift goes gray.
         //
         // This is the third time a percentage of pure white has needed a color of its own, after
         // the shadow and the bloom. If a fourth is ever added to this model, give it one at

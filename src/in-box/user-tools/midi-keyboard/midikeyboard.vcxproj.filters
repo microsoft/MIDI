@@ -40,7 +40,6 @@
     <ClInclude Include="MidiOutput.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
-    <ClInclude Include="TemporaryFlags.h" />
     <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
     <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />

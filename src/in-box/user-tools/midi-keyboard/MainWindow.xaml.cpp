@@ -13,7 +13,6 @@
 #include "BackgroundWork.h"
 #include "ProgramChoice.h"
 #include "StringResources.h"
-#include "TemporaryFlags.h"
 #include "resource.h"
 
 namespace native = ::midikeyboard;
@@ -441,6 +440,8 @@ namespace winrt::midikeyboard::implementation
             EndpointComboBox().ItemsSource(m_endpoints);
             GroupComboBox().ItemsSource(m_groups);
 
+            EndpointComboBox().PlaceholderText(res::GetString(L"EndpointComboBoxPlaceholder"));
+
             // boxed IInspectable rather than IVector<hstring>: the stock item container renders
             // the former without needing a template
             auto channels = winrt::single_threaded_vector<foundation::IInspectable>();
@@ -499,9 +500,13 @@ namespace winrt::midikeyboard::implementation
             auto const& settings = native::AppSettings::Current();
 
             m_suppressArpHandlers = true;
+            m_suppressConnectionHandlers = true;
 
             // only the controls that are visible from the start; the settings panel is
-            // populated the first time it is opened
+            // populated the first time it is opened, and the destination and group lists as
+            // the endpoints arrive
+            ChannelComboBox().SelectedIndex(static_cast<int32_t>(settings.TransmitChannelNumber()) - 1);
+
             ArpModeComboBox().SelectedIndex(static_cast<int32_t>(settings.Arpeggiator()));
             ArpRateComboBox().SelectedIndex(static_cast<int32_t>(settings.ArpeggiatorRate()));
             ArpBpmBox().Value(settings.ArpeggiatorBpm());
@@ -511,11 +516,11 @@ namespace winrt::midikeyboard::implementation
             AlwaysOnTopToggle().IsChecked(settings.AlwaysOnTop());
 
             ReleaseFlagWhenIdle(&MainWindow::m_suppressArpHandlers);
+            ReleaseFlagWhenIdle(&MainWindow::m_suppressConnectionHandlers);
 
             m_arpeggiator.Rate(settings.ArpeggiatorBpm(), settings.ArpeggiatorRate());
             m_arpeggiator.Mode(settings.Arpeggiator());
 
-            UpdateConnectionModeLayout();
             UpdateVelocityLayout();
             UpdateRibbonLayout();
         }
@@ -534,17 +539,6 @@ namespace winrt::midikeyboard::implementation
             auto const& settings = native::AppSettings::Current();
 
             m_suppressSettingHandlers = true;
-
-            // TEMPORARY: see TemporaryFlags.h. Disabled rather than removed so the index to
-            // ConnectionMode mapping stays intact.
-            if (native::TemporarilyDisableVirtualDevice)
-            {
-                ConnectionModeVirtualRadio().IsEnabled(false);
-                VirtualDeviceUnavailableNote().Visibility(xaml::Visibility::Visible);
-            }
-
-            ConnectionModeRadios().SelectedIndex(static_cast<int32_t>(settings.Connection()));
-            ChannelComboBox().SelectedIndex(static_cast<int32_t>(settings.TransmitChannelNumber()) - 1);
 
             BaseOctaveBox().Value(settings.BaseOctave());
             OctaveCountBox().Value(settings.OctaveCount());
@@ -717,24 +711,16 @@ namespace winrt::midikeyboard::implementation
             auto const& settings = native::AppSettings::Current();
             auto const devices = midiapp::SortedEndpoints(m_watcher);
 
-            auto const clientEndpointId = m_output.ClientEndpointDeviceId();
             auto const previousSelection = winrt::hstring{ settings.EndpointDeviceId() };
 
-            auto const previousSuppress = m_suppressSettingHandlers;
-            m_suppressSettingHandlers = true;
+            auto const previousSuppress = m_suppressConnectionHandlers;
+            m_suppressConnectionHandlers = true;
 
             m_endpoints.Clear();
             m_endpointDevices.clear();
 
             for (auto const& device : devices)
             {
-                // playing our own virtual device from its client side would be a feedback loop
-                if (!clientEndpointId.empty() &&
-                    midiapp::EndpointIdsMatch(device.EndpointDeviceId(), clientEndpointId))
-                {
-                    continue;
-                }
-
                 winrt::hstring imagePath{};
 
                 if (auto const userInfo = device.GetUserSuppliedInfo())
@@ -771,7 +757,7 @@ namespace winrt::midikeyboard::implementation
 
             EndpointComboBox().SelectedIndex(selectedIndex);
 
-            m_suppressSettingHandlers = previousSuppress;
+            m_suppressConnectionHandlers = previousSuppress;
 
             RefreshGroupList();
 
@@ -786,9 +772,7 @@ namespace winrt::midikeyboard::implementation
             }
             else
             {
-                if (presentNow && !m_endpointWasPresent &&
-                    !m_reconnectInProgress &&
-                    settings.Connection() == native::ConnectionMode::ExistingEndpoint)
+                if (presentNow && !m_endpointWasPresent && !m_reconnectInProgress)
                 {
                     ReconnectAsync();
                 }
@@ -801,7 +785,6 @@ namespace winrt::midikeyboard::implementation
                 m_startupOptionsApplied = true;
 
                 native::AppSettings::Current().EndpointDeviceId(options.EndpointDeviceId);
-                native::AppSettings::Current().Connection(native::ConnectionMode::ExistingEndpoint);
 
                 if (options.GroupNumber.has_value())
                 {
@@ -814,12 +797,45 @@ namespace winrt::midikeyboard::implementation
                 }
 
                 InitializeControlsFromSettings();
-                RefreshGroupList();
+
+                // connecting first, for the reason given in OnEndpointSelectionChanged
                 ReconnectAsync();
+                RefreshGroupList();
             }
 
-            // the list is what carries the device's name, so the strip can only show it now
-            UpdateConnectionDisplay(m_lastConnectResult);
+            winrt::hstring const savedEndpointId{ settings.EndpointDeviceId() };
+
+            if (selectedIndex >= 0)
+            {
+                auto const choice = m_endpoints.GetAt(static_cast<uint32_t>(selectedIndex));
+                auto const name = choice.DisplayName();
+
+                if (midiapp::EndpointIdsMatch(choice.EndpointDeviceId(), savedEndpointId) &&
+                    settings.EndpointName() != std::wstring_view{ name })
+                {
+                    native::AppSettings::Current().EndpointName(std::wstring{ name });
+                }
+            }
+
+            // A destination that is away keeps its name in the picker, dimmed, so it is clear
+            // which device the keyboard is waiting for.
+            auto const showAwayName = selectedIndex < 0 &&
+                !settings.EndpointName().empty() &&
+                midiapp::EndpointIdsMatch(desiredEndpointId, savedEndpointId);
+
+            EndpointComboBox().PlaceholderText(showAwayName
+                ? winrt::hstring{ settings.EndpointName() }
+                : res::GetString(L"EndpointComboBoxPlaceholder"));
+
+            // the list is what says whether the device is still here
+            if (m_reconnectInProgress)
+            {
+                ShowConnectingState();
+            }
+            else
+            {
+                UpdateConnectionDisplay(m_lastConnectResult);
+            }
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to refresh the endpoint list.")
     }
@@ -831,8 +847,8 @@ namespace winrt::midikeyboard::implementation
             auto const endpointIndex = EndpointComboBox().SelectedIndex();
             auto const previousGroupNumber = native::AppSettings::Current().TransmitGroupNumber();
 
-            auto const previousSuppress = m_suppressSettingHandlers;
-            m_suppressSettingHandlers = true;
+            auto const previousSuppress = m_suppressConnectionHandlers;
+            m_suppressConnectionHandlers = true;
 
             m_groups.Clear();
 
@@ -872,9 +888,49 @@ namespace winrt::midikeyboard::implementation
 
             GroupComboBox().SelectedIndex(selectedIndex);
 
-            m_suppressSettingHandlers = previousSuppress;
+            // With the device away there is nothing to pick from, but the group the notes will
+            // go to when it is back is still worth showing.
+            GroupComboBox().IsEnabled(m_groups.Size() > 0);
+            GroupComboBox().PlaceholderText(res::FormatString(L"GroupChoiceFormat",
+                static_cast<int32_t>(previousGroupNumber)));
+
+            m_suppressConnectionHandlers = previousSuppress;
+
+            // A device without the saved group plays on the first group it does have, so the
+            // picker never shows a group the notes are not going to.
+            if (selectedIndex >= 0)
+            {
+                ChangeTransmitGroup(static_cast<uint32_t>(
+                    m_groups.GetAt(static_cast<uint32_t>(selectedIndex)).Value()));
+            }
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to refresh the group list.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::ChangeTransmitGroup(uint32_t groupNumber) noexcept
+    {
+        try
+        {
+            auto& settings = native::AppSettings::Current();
+
+            if (groupNumber == settings.TransmitGroupNumber())
+            {
+                return;
+            }
+
+            EndAllNotes();
+            settings.TransmitGroupNumber(groupNumber);
+
+            m_ciPresence.Group(TransmitGroupIndex());
+
+            // a connection on its way up asks for the programs itself once it is through
+            if (!m_reconnectInProgress)
+            {
+                StartProgramListQuery();
+            }
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the group.")
     }
 
     // ------------------------------------------------------------------------------------
@@ -904,14 +960,11 @@ namespace winrt::midikeyboard::implementation
                 EndAllNotes();
                 ShowConnectingState();
 
-                auto const mode = native::AppSettings::Current().Connection();
                 auto const endpointId = native::AppSettings::Current().EndpointDeviceId();
 
-                co_await native::RunOnBackgroundAsync([this, mode, endpointId, &result]()
+                co_await native::RunOnBackgroundAsync([this, endpointId, &result]()
                     {
-                        result = (mode == native::ConnectionMode::VirtualDevice)
-                            ? m_output.ConnectVirtualDevice()
-                            : m_output.ConnectEndpoint(endpointId);
+                        result = m_output.ConnectEndpoint(endpointId);
                     });
 
                 if (!m_reconnectRequested)
@@ -952,9 +1005,6 @@ namespace winrt::midikeyboard::implementation
 
                 StartProgramListQuery();
             }
-
-            // the virtual device's own client endpoint has to stay out of the destination list
-            RefreshEndpointList();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -994,8 +1044,7 @@ namespace winrt::midikeyboard::implementation
         try
         {
             ConnectionStateDot().Fill(LookupBrush(L"SystemFillColorCautionBrush"));
-            SetStripText(ConnectionNameText(), res::GetString(L"ConnectionConnecting"));
-            SetStripText(ConnectionDetailText(), L"");
+            SetStripText(ConnectionStatusText(), res::GetString(L"ConnectionConnecting"));
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to show the connecting state.")
     }
@@ -1010,41 +1059,9 @@ namespace winrt::midikeyboard::implementation
 
             m_lastConnectResult = result;
 
-            ConnectionStateDot().Fill(LookupBrush(
-                connected ? L"SystemFillColorSuccessBrush" : L"SystemFillColorCriticalBrush"));
-
-            if (!connected)
-            {
-                wchar_t const* key{ L"ConnectionFailed" };
-
-                switch (result)
-                {
-                case native::ConnectResult::ServiceUnavailable: key = L"ConnectionServiceUnavailable"; break;
-                case native::ConnectResult::VirtualDeviceFailed: key = L"ConnectionVirtualDeviceFailed"; break;
-                case native::ConnectResult::NoEndpointChosen: key = L"ConnectionNoEndpoint"; break;
-                default: break;
-                }
-
-                SetStripText(ConnectionNameText(), res::GetString(key));
-                SetStripText(ConnectionDetailText(), L"");
-                return;
-            }
-
-            if (settings.Connection() == native::ConnectionMode::VirtualDevice)
-            {
-                SetStripText(ConnectionNameText(), res::GetString(L"ConnectionVirtualDeviceName"));
-                SetStripText(ConnectionDetailText(),
-                    res::GetString(L"ConnectionVirtualDeviceDetail"),
-                    res::GetString(L"ConnectionVirtualDeviceDetailToolTip"));
-                return;
-            }
-
             winrt::hstring const endpointId{ settings.EndpointDeviceId() };
-            winrt::hstring endpointName{ endpointId };
             bool endpointFound{ false };
 
-            // The combo lives in the settings panel and is populated later than this runs, so
-            // resolve against the endpoint list itself rather than against its selection.
             if (m_endpoints != nullptr)
             {
                 for (uint32_t i = 0; i < m_endpoints.Size(); i++)
@@ -1054,48 +1071,45 @@ namespace winrt::midikeyboard::implementation
                     if (choice != nullptr &&
                         midiapp::EndpointIdsMatch(choice.EndpointDeviceId(), endpointId))
                     {
-                        endpointName = choice.DisplayName();
                         endpointFound = true;
                         break;
                     }
                 }
             }
 
-            // The open connection outlives the device going away, so presence has to come from
-            // the endpoint list. Without this the light stays green over a device that is gone.
-            if (m_endpoints != nullptr && m_endpoints.Size() > 0 && !endpointFound)
+            // Only the endpoint list can say the device has gone. An open connection outlives
+            // it, and connecting to a device that is away fails like any other failure. Either
+            // way the keyboard connects again by itself as soon as the device is back.
+            if (m_endpointListReady && !endpointFound && !endpointId.empty() &&
+                (connected || result == native::ConnectResult::ConnectionFailed))
             {
                 ConnectionStateDot().Fill(LookupBrush(L"SystemFillColorCautionBrush"));
-
-                SetStripText(ConnectionNameText(), endpointName);
-                SetStripText(ConnectionDetailText(),
+                SetStripText(ConnectionStatusText(),
                     res::GetString(L"ConnectionEndpointUnavailable"),
                     res::GetString(L"ConnectionEndpointUnavailableToolTip"));
                 return;
             }
 
-            SetStripText(ConnectionNameText(), endpointName);
-            SetStripText(ConnectionDetailText(), res::FormatString(L"ConnectionEndpointDetailFormat",
-                static_cast<int32_t>(settings.TransmitGroupNumber()),
-                static_cast<int32_t>(settings.TransmitChannelNumber())));
+            if (connected)
+            {
+                ConnectionStateDot().Fill(LookupBrush(L"SystemFillColorSuccessBrush"));
+                SetStripText(ConnectionStatusText(), res::GetString(L"ConnectionConnected"));
+                return;
+            }
+
+            wchar_t const* key{ L"ConnectionFailed" };
+
+            switch (result)
+            {
+            case native::ConnectResult::ServiceUnavailable: key = L"ConnectionServiceUnavailable"; break;
+            case native::ConnectResult::NoEndpointChosen: key = L"ConnectionNoEndpoint"; break;
+            default: break;
+            }
+
+            ConnectionStateDot().Fill(LookupBrush(L"SystemFillColorCriticalBrush"));
+            SetStripText(ConnectionStatusText(), res::GetString(key));
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to show the connection state.")
-    }
-
-    void MainWindow::UpdateConnectionModeLayout() noexcept
-    {
-        try
-        {
-            auto const isEndpoint =
-                native::AppSettings::Current().Connection() == native::ConnectionMode::ExistingEndpoint;
-
-            EndpointSettingsPanel().Visibility(
-                isEndpoint ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
-
-            VirtualDeviceHint().Visibility(
-                isEndpoint ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
-        }
-        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to update the connection layout.")
     }
 
     void MainWindow::UpdateVelocityLayout() noexcept
@@ -1494,20 +1508,12 @@ namespace winrt::midikeyboard::implementation
 
     uint8_t MainWindow::TransmitGroupIndex() const noexcept
     {
-        auto const& settings = native::AppSettings::Current();
-
-        return settings.Connection() == native::ConnectionMode::VirtualDevice
-            ? native::MidiOutput::VirtualDeviceGroupIndex
-            : static_cast<uint8_t>(settings.TransmitGroupNumber() - 1);
+        return static_cast<uint8_t>(native::AppSettings::Current().TransmitGroupNumber() - 1);
     }
 
     uint8_t MainWindow::TransmitChannelIndex() const noexcept
     {
-        auto const& settings = native::AppSettings::Current();
-
-        return settings.Connection() == native::ConnectionMode::VirtualDevice
-            ? uint8_t{ 0 }
-            : static_cast<uint8_t>(settings.TransmitChannelNumber() - 1);
+        return static_cast<uint8_t>(native::AppSettings::Current().TransmitChannelNumber() - 1);
     }
 
     _Use_decl_annotations_
@@ -2547,94 +2553,6 @@ namespace winrt::midikeyboard::implementation
     }
 
     // ------------------------------------------------------------------------------------
-    // Changing destination from the strip
-    // ------------------------------------------------------------------------------------
-
-    _Use_decl_annotations_
-    void MainWindow::OnEndpointSwitchFlyoutOpening(
-        foundation::IInspectable const&,
-        foundation::IInspectable const&)
-    {
-        try
-        {
-            auto items = EndpointSwitchFlyout().Items();
-            items.Clear();
-
-            if (m_endpoints == nullptr || m_endpoints.Size() == 0)
-            {
-                controls::MenuFlyoutItem empty{};
-                empty.Text(res::GetString(L"EndpointSwitchNone"));
-                empty.IsEnabled(false);
-                items.Append(empty);
-                return;
-            }
-
-            auto const currentId = winrt::hstring{ native::AppSettings::Current().EndpointDeviceId() };
-
-            for (uint32_t i = 0; i < m_endpoints.Size(); i++)
-            {
-                auto const choice = m_endpoints.GetAt(i);
-
-                if (choice == nullptr)
-                {
-                    continue;
-                }
-
-                controls::ToggleMenuFlyoutItem item{};
-
-                item.Text(choice.DisplayName());
-                item.Tag(winrt::box_value(choice.EndpointDeviceId()));
-                item.IsChecked(midiapp::EndpointIdsMatch(choice.EndpointDeviceId(), currentId));
-                item.Click({ this, &MainWindow::OnEndpointSwitchItemClick });
-
-                items.Append(item);
-            }
-        }
-        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to list the MIDI destinations.")
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::OnEndpointSwitchItemClick(
-        foundation::IInspectable const& sender,
-        xaml::RoutedEventArgs const&)
-    {
-        try
-        {
-            // ToggleMenuFlyoutItem is not a MenuFlyoutItem, so read the tag off the base type
-            auto const element = sender.try_as<xaml::FrameworkElement>();
-
-            if (element == nullptr)
-            {
-                return;
-            }
-
-            auto const endpointId = winrt::unbox_value_or<winrt::hstring>(element.Tag(), L"");
-
-            if (endpointId.empty())
-            {
-                return;
-            }
-
-            auto& settings = native::AppSettings::Current();
-
-            if (settings.Connection() == native::ConnectionMode::ExistingEndpoint &&
-                midiapp::EndpointIdsMatch(endpointId, winrt::hstring{ settings.EndpointDeviceId() }))
-            {
-                return;
-            }
-
-            EndAllNotes();
-
-            settings.EndpointDeviceId(std::wstring{ endpointId.c_str() });
-            settings.Connection(native::ConnectionMode::ExistingEndpoint);
-
-            InitializeControlsFromSettings();
-            ReconnectAsync();
-        }
-        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the MIDI destination.")
-    }
-
-    // ------------------------------------------------------------------------------------
     // Bank and program
     // ------------------------------------------------------------------------------------
 
@@ -2732,10 +2650,8 @@ namespace winrt::midikeyboard::implementation
                 return;
             }
 
-            // the values belong to a chosen endpoint, which is the only thing reconnected to
-            // automatically at startup
-            if (settings.Connection() != native::ConnectionMode::ExistingEndpoint ||
-                settings.EndpointDeviceId().empty())
+            // the values belong to a chosen endpoint
+            if (settings.EndpointDeviceId().empty())
             {
                 return;
             }
@@ -3617,40 +3533,9 @@ namespace winrt::midikeyboard::implementation
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to show the settings.")
     }
 
-    _Use_decl_annotations_
-    void MainWindow::OnConnectionModeChanged(
-        foundation::IInspectable const&,
-        controls::SelectionChangedEventArgs const&)
-    {
-        try
-        {
-            if (m_suppressSettingHandlers)
-            {
-                return;
-            }
-
-            auto const index = ConnectionModeRadios().SelectedIndex();
-
-            if (index < 0)
-            {
-                return;
-            }
-
-            auto const mode = static_cast<native::ConnectionMode>(index);
-
-            // a control can raise this long after its value was set, so only a real change acts
-            if (mode == native::AppSettings::Current().Connection())
-            {
-                return;
-            }
-
-            native::AppSettings::Current().Connection(mode);
-
-            UpdateConnectionModeLayout();
-            ReconnectAsync();
-        }
-        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the connection type.")
-    }
+    // ------------------------------------------------------------------------------------
+    // Destination, group and channel
+    // ------------------------------------------------------------------------------------
 
     _Use_decl_annotations_
     void MainWindow::OnEndpointSelectionChanged(
@@ -3659,24 +3544,37 @@ namespace winrt::midikeyboard::implementation
     {
         try
         {
-            if (m_suppressSettingHandlers)
+            if (m_suppressConnectionHandlers)
             {
                 return;
             }
 
+            // an empty selection only comes from the list being rebuilt, never from a choice
             auto const choice = EndpointComboBox().SelectedItem().try_as<appshared::EndpointChoice>();
 
-            std::wstring const endpointId{ choice == nullptr ? L"" : std::wstring{ choice.EndpointDeviceId() } };
-
-            if (endpointId == native::AppSettings::Current().EndpointDeviceId())
+            if (choice == nullptr)
             {
                 return;
             }
 
-            native::AppSettings::Current().EndpointDeviceId(endpointId);
+            auto& settings = native::AppSettings::Current();
 
-            RefreshGroupList();
+            if (midiapp::EndpointIdsMatch(choice.EndpointDeviceId(), winrt::hstring{ settings.EndpointDeviceId() }))
+            {
+                return;
+            }
+
+            settings.EndpointDeviceId(std::wstring{ choice.EndpointDeviceId() });
+            settings.EndpointName(std::wstring{ choice.DisplayName() });
+
+            // It was picked from the list, so it is here. Without this the next refresh would
+            // take it for a device arriving and connect a second time.
+            m_endpointWasPresent = true;
+
+            // Connecting first lets go of anything held, on the group it was played on, before
+            // the new device's groups can change which group that is.
             ReconnectAsync();
+            RefreshGroupList();
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the destination.")
     }
@@ -3688,23 +3586,14 @@ namespace winrt::midikeyboard::implementation
     {
         try
         {
-            if (m_suppressSettingHandlers)
+            if (m_suppressConnectionHandlers)
             {
                 return;
             }
 
             if (auto const choice = GroupComboBox().SelectedItem().try_as<appshared::NamedChoice>())
             {
-                auto const groupNumber = static_cast<uint32_t>(choice.Value());
-
-                if (groupNumber == native::AppSettings::Current().TransmitGroupNumber())
-                {
-                    return;
-                }
-
-                EndAllNotes();
-                native::AppSettings::Current().TransmitGroupNumber(groupNumber);
-                UpdateConnectionDisplay(native::ConnectResult::Success);
+                ChangeTransmitGroup(static_cast<uint32_t>(choice.Value()));
             }
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the group.")
@@ -3717,7 +3606,7 @@ namespace winrt::midikeyboard::implementation
     {
         try
         {
-            if (m_suppressSettingHandlers)
+            if (m_suppressConnectionHandlers)
             {
                 return;
             }
@@ -3738,7 +3627,6 @@ namespace winrt::midikeyboard::implementation
 
             EndAllNotes();
             native::AppSettings::Current().TransmitChannelNumber(channelNumber);
-            UpdateConnectionDisplay(native::ConnectResult::Success);
 
             // a ChannelList declares different program collections per channel, so the list
             // that was fetched for the old channel no longer applies
@@ -3746,6 +3634,10 @@ namespace winrt::midikeyboard::implementation
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the channel.")
     }
+
+    // ------------------------------------------------------------------------------------
+    // Keyboard and expression settings
+    // ------------------------------------------------------------------------------------
 
     _Use_decl_annotations_
     void MainWindow::OnBaseOctaveChanged(

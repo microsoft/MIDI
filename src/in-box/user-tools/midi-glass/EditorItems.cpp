@@ -23,6 +23,7 @@ namespace winrt::midiglass::implementation
         m_glyph = hstring{ data.Glyph };
         m_badge = hstring{ data.Badge };
         m_isOutsidePage = data.IsOutsidePage;
+        m_isLocked = data.IsLocked;
         m_indent = xaml::ThicknessHelper::FromLengths(data.IndentPixels, 0, 0, 0);
     }
 

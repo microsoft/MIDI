@@ -11,6 +11,8 @@
 
 #include <sal.h>
 #include <cstdint>
+#include <optional>
+#include <string_view>
 #include <vector>
 
 #include "EditGeometry.h"
@@ -53,6 +55,25 @@ namespace glass
     // Equalizes the gaps without moving the outermost two, so a bank keeps the width somebody
     // already chose. Three or more rectangles, or nothing happens.
     std::vector<EditRect> DistributeEvenly(_In_ std::vector<EditRect> const& rects, _In_ ArrangeAxis axis);
+
+    // A selection seen the way it runs: each block in position order, and the gap after every
+    // block but the last. What the spacing pills are drawn from.
+    struct SpacingReadout
+    {
+        ArrangeAxis Axis{ ArrangeAxis::Horizontal };
+        std::vector<EditRect> Blocks{};
+        std::vector<double> Gaps{};
+    };
+
+    // The way rectangles run is the axis along which none of them overlap, so every gap is a
+    // real one. Both ways, as on a diagonal, takes the longer run. Neither way, as in a grid or
+    // a pile, has no gaps worth showing.
+    std::optional<SpacingReadout> ReadSpacing(_In_ std::vector<EditRect> const& rects);
+
+    // A gap typed into a spacing pill: "16", "16px" and " 16 px " all mean sixteen. Nothing, a
+    // negative number or anything that is not a number is no gap. More than the widest page is
+    // brought back to it.
+    std::optional<double> ParseGapPixels(_In_ std::wstring_view text) noexcept;
 
     // Which way a control moves through the stack. A page is drawn in the order its controls are
     // stored, first at the back, so this is a reorder of that list and nothing else.

@@ -1035,7 +1035,7 @@ namespace glass
                     airy.TouchFillPercent = 20;
 
                     // A button is black until it is on, and then its edge lights in its own color.
-                    // The comp fills a lit button at 12 per cent; the red one then measures 1.14 : 1
+                    // The comp fills a lit button at 12 percent; the red one then measures 1.14 : 1
                     // against itself at rest, under the 1.15 every shipped theme's lit plate has
                     // to move by, so it is 14 here.
                     airy.SwitchRimStrengthPercent = 0;
@@ -1184,7 +1184,7 @@ namespace glass
                     wall.SectionTexture = L"Off-world Colonies stains.png";
                     wall.SectionTexturePercent = 55;
 
-                    // The dim print is 74 per cent of the print, not 60: at 60 it failed on a
+                    // The dim print is 74 percent of the print, not 60: at 60 it failed on a
                     // rain streak (2.84), in a lit pad's glow (3.67) and under a flare (3.96).
                     wall.InkColor = Rgb(0xD8E4E1);
 
@@ -1531,7 +1531,7 @@ namespace glass
                 // An arcade panel, and the finger drumming controllers built from its buttons: a
                 // black panel under clear plastic, round domed buttons set into black rings, knobs
                 // with caps in their colors, and a joystick with a ball on top. A button is
-                // colored plastic whether it is lit or not: 62 per cent of its color at rest, the
+                // colored plastic whether it is lit or not: 62 percent of its color at rest, the
                 // color outright when on, and two pixels down while it is held.
 
                 {

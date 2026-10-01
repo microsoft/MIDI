@@ -72,6 +72,12 @@
     <ClCompile Include="MidiNetworkClientConnection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidiNetworkNotificationSignal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)inc\midi_network_port_picker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Midi2.NetworkMidiTransport.rgs">

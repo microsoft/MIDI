@@ -26,9 +26,10 @@
                 <Setter Property="UseLayoutRounding" Value="False" />
             </Style>
 
-            <Style x:Key="ChipPanelStyle" TargetType="StackPanel">
-                <Setter Property="Orientation" Value="Horizontal" />
-                <Setter Property="Spacing" Value="6" />
+            <!-- A Grid rather than a StackPanel: a StackPanel gives its text all the room it asks
+                 for, so a long status was cut off mid-letter instead of ending in an ellipsis. -->
+            <Style x:Key="ChipPanelStyle" TargetType="Grid">
+                <Setter Property="ColumnSpacing" Value="6" />
                 <Setter Property="Height" Value="22" />
                 <Setter Property="Padding" Value="9,0,9,0" />
             </Style>
@@ -69,42 +70,57 @@
                         <Rectangle Style="{StaticResource ChipShapeStyle}"
                                    Fill="{ThemeResource SystemFillColorSuccessBackgroundBrush}"
                                    Stroke="{ThemeResource SystemFillColorSuccessBrush}" />
-                        <StackPanel Style="{StaticResource ChipPanelStyle}">
+                        <Grid Style="{StaticResource ChipPanelStyle}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
                             <FontIcon Glyph="&#xE73E;"
                                       Style="{StaticResource ChipGlyphStyle}"
                                       Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
-                            <TextBlock Text="{x:Bind StatusText}"
+                            <TextBlock Grid.Column="1"
+                                       Text="{x:Bind StatusText}"
                                        Style="{StaticResource ChipTextStyle}"
                                        Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
-                        </StackPanel>
+                        </Grid>
                     </Grid>
 
                     <Grid Visibility="{x:Bind WarningVisibility}">
                         <Rectangle Style="{StaticResource ChipShapeStyle}"
                                    Fill="{ThemeResource SystemFillColorCautionBackgroundBrush}"
                                    Stroke="{ThemeResource SystemFillColorCautionBrush}" />
-                        <StackPanel Style="{StaticResource ChipPanelStyle}">
+                        <Grid Style="{StaticResource ChipPanelStyle}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
                             <FontIcon Glyph="&#xE7BA;"
                                       Style="{StaticResource ChipGlyphStyle}"
                                       Foreground="{ThemeResource SystemFillColorCautionBrush}" />
-                            <TextBlock Text="{x:Bind StatusText}"
+                            <TextBlock Grid.Column="1"
+                                       Text="{x:Bind StatusText}"
                                        Style="{StaticResource ChipTextStyle}"
                                        Foreground="{ThemeResource SystemFillColorCautionBrush}" />
-                        </StackPanel>
+                        </Grid>
                     </Grid>
 
                     <Grid Visibility="{x:Bind InfoVisibility}">
                         <Rectangle Style="{StaticResource ChipShapeStyle}"
                                    Fill="{ThemeResource SystemFillColorAttentionBackgroundBrush}"
                                    Stroke="{ThemeResource SystemFillColorAttentionBrush}" />
-                        <StackPanel Style="{StaticResource ChipPanelStyle}">
+                        <Grid Style="{StaticResource ChipPanelStyle}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
                             <FontIcon Glyph="&#xE946;"
                                       Style="{StaticResource ChipGlyphStyle}"
                                       Foreground="{ThemeResource SystemFillColorAttentionBrush}" />
-                            <TextBlock Text="{x:Bind StatusText}"
+                            <TextBlock Grid.Column="1"
+                                       Text="{x:Bind StatusText}"
                                        Style="{StaticResource ChipTextStyle}"
                                        Foreground="{ThemeResource SystemFillColorAttentionBrush}" />
-                        </StackPanel>
+                        </Grid>
                     </Grid>
                 </Grid>
             </DataTemplate>
@@ -844,6 +860,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <FontIcon Grid.Column="0"
@@ -859,7 +876,26 @@
                            TextTrimming="CharacterEllipsis"
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
-                <Grid Grid.Column="2" Height="19" VerticalAlignment="Center">
+                <StackPanel x:Name="DeviceSearchPanel"
+                            Grid.Column="2"
+                            Orientation="Horizontal"
+                            Spacing="6"
+                            VerticalAlignment="Center"
+                            Visibility="Collapsed">
+                    <ProgressRing x:Name="DeviceSearchRing"
+                                  Width="14"
+                                  Height="14"
+                                  MinWidth="0"
+                                  MinHeight="0"
+                                  IsActive="False" />
+                    <TextBlock x:Uid="DeviceSearchText"
+                               Text="Looking for MIDI devices…"
+                               FontSize="11"
+                               VerticalAlignment="Center"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                </StackPanel>
+
+                <Grid Grid.Column="3" Height="19" VerticalAlignment="Center">
                     <Rectangle x:Name="ServiceChipShape"
                                RadiusX="9.5"
                                RadiusY="9.5"

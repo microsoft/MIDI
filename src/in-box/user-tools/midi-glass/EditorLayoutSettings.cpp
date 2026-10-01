@@ -130,6 +130,26 @@ namespace winrt::midiglass::implementation
 
         static_assert(std::size(MatchModeOrder) == std::size(MatchModeKeys));
 
+        constexpr glass::DeviceProtocol ProtocolOrder[]
+        {
+            glass::DeviceProtocol::Midi2,
+            glass::DeviceProtocol::Midi1,
+            glass::DeviceProtocol::MackieControl,
+        };
+
+        constexpr wchar_t const* ProtocolKeys[]
+        {
+            L"DeviceProtocolMidi2", L"DeviceProtocolMidi1", L"DeviceProtocolMackie",
+        };
+
+        constexpr wchar_t const* ProtocolTipKeys[]
+        {
+            L"DeviceProtocolMidi2Tip", L"DeviceProtocolMidi1Tip", L"DeviceProtocolMackieTip",
+        };
+
+        static_assert(std::size(ProtocolOrder) == std::size(ProtocolKeys));
+        static_assert(std::size(ProtocolOrder) == std::size(ProtocolTipKeys));
+
         // The device picker's panel width.
         constexpr double DevicePickerWidth = 560.0;
 
@@ -191,21 +211,6 @@ namespace winrt::midiglass::implementation
             }
 
             return groups;
-        }
-
-        std::wstring DescribeEndpoint(_In_ midiapp::LiveEndpoint const& endpoint)
-        {
-            std::wstring text{ endpoint.Description };
-
-            auto const groups = DescribeEndpointGroups(endpoint);
-
-            if (!groups.empty())
-            {
-                if (!text.empty()) { text += L" \u00b7 "; }
-                text += groups;
-            }
-
-            return text;
         }
 
         // BitmapImage cannot render SVG and the shipped default endpoint art is SVG, so the
@@ -942,6 +947,47 @@ namespace winrt::midiglass::implementation
             }
 
             body.Children().Append(modes);
+
+            // What the controls may say to it. The rows sent there follow the choice.
+            controls::StackPanel protocols{};
+            protocols.Orientation(controls::Orientation::Horizontal);
+            protocols.Spacing(4.0);
+            protocols.VerticalAlignment(xaml::VerticalAlignment::Center);
+
+            protocols.Children().Append(MakeText(
+                resources::GetString(L"DeviceProtocolLabel"), 11.0, L"TextFillColorTertiaryBrush"));
+
+            for (size_t protocolIndex = 0; protocolIndex < std::size(ProtocolOrder); ++protocolIndex)
+            {
+                auto const protocol = ProtocolOrder[protocolIndex];
+
+                controls::RadioButton radio{};
+                radio.Content(box_value(resources::GetString(ProtocolKeys[protocolIndex])));
+                radio.GroupName(winrt::hstring{ L"protocol:" + deviceName });
+                radio.IsChecked(device.UnrecognizedProtocol.empty() && device.Protocol == protocol);
+                radio.FontSize(11.0);
+                radio.MinWidth(0.0);
+                radio.MinHeight(0.0);
+                radio.VerticalAlignment(xaml::VerticalAlignment::Center);
+                radio.VerticalContentAlignment(xaml::VerticalAlignment::Center);
+                radio.Padding(xaml::ThicknessHelper::FromLengths(6.0, 0.0, 10.0, 0.0));
+
+                controls::ToolTipService::SetToolTip(
+                    radio, box_value(resources::GetString(ProtocolTipKeys[protocolIndex])));
+
+                radio.Checked([weak, deviceName, protocol](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->ApplyDeviceEdit([deviceName, protocol](glass::EditorController& editor)
+                                { return editor.SetDeviceProtocol(deviceName, protocol); });
+                        }
+                    });
+
+                protocols.Children().Append(radio);
+            }
+
+            body.Children().Append(protocols);
 
             card.Child(body);
             list.Children().Append(card);

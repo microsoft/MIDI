@@ -732,6 +732,149 @@ void EditorControllerTests::GapsAreMeasuredInPositionOrderNotSelectionOrder()
     VerifyNear(44.0, gaps[1]);
 }
 
+namespace
+{
+    // A fader with a knob under it, grouped the way a channel strip is. Left selected.
+    std::vector<std::wstring> PlaceStrip(_Inout_ glass::EditorController& controller, _In_ double x)
+    {
+        auto const fader = PlaceExactly(controller, glass::ControlKind::Fader, x, 100, 40, 180);
+        auto const knob = PlaceExactly(controller, glass::ControlKind::Knob, x + 4, 300, 32, 32);
+
+        controller.SelectOnly(fader);
+        controller.AddToSelection(knob);
+        VERIFY_IS_TRUE(controller.GroupSelection());
+
+        return { fader, knob };
+    }
+
+    double XOf(_In_ glass::EditorController const& controller, _In_ std::wstring const& id)
+    {
+        auto const* const control = controller.Document().FindControl(id);
+
+        VERIFY_IS_NOT_NULL(control);
+
+        return control->X;
+    }
+}
+
+void EditorControllerTests::AGroupIsSpacedAsOneBlock()
+{
+    // Spacing a strip's fader and knob apart from each other would take the strip to pieces.
+    auto controller = LoadedController();
+
+    auto const first = PlaceStrip(controller, 100);
+    auto const second = PlaceStrip(controller, 200);
+    auto const third = PlaceStrip(controller, 400);
+
+    controller.SelectAll();
+
+    VERIFY_ARE_EQUAL(size_t{ 3 }, controller.SelectionBlockCount());
+
+    auto const spacing = controller.SelectionSpacing();
+
+    VERIFY_IS_TRUE(spacing.has_value());
+    VERIFY_IS_TRUE(spacing->Axis == glass::ArrangeAxis::Horizontal);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, spacing->Gaps.size());
+    VerifyNear(60.0, spacing->Gaps[0]);
+    VerifyNear(160.0, spacing->Gaps[1]);
+
+    VERIFY_IS_TRUE(controller.SetSelectionGap(glass::ArrangeAxis::Horizontal, 20.0));
+
+    VerifyNear(100.0, XOf(controller, first[0]));
+    VerifyNear(160.0, XOf(controller, second[0]));
+    VerifyNear(164.0, XOf(controller, second[1]));
+    VerifyNear(220.0, XOf(controller, third[0]));
+    VerifyNear(224.0, XOf(controller, third[1]));
+}
+
+void EditorControllerTests::DistributeKeepsEachGroupInOnePiece()
+{
+    auto controller = LoadedController();
+
+    PlaceStrip(controller, 100);
+    auto const middle = PlaceStrip(controller, 160);
+    PlaceStrip(controller, 400);
+
+    controller.SelectAll();
+    VERIFY_IS_TRUE(controller.DistributeSelection(glass::ArrangeAxis::Horizontal));
+
+    VerifyNear(250.0, XOf(controller, middle[0]));
+    VerifyNear(254.0, XOf(controller, middle[1]));
+
+    auto const gaps = controller.SelectionGaps(glass::ArrangeAxis::Horizontal);
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, gaps.size());
+    VerifyNear(gaps[0], gaps[1]);
+}
+
+void EditorControllerTests::AlignMovesAGroupAsOneBlock()
+{
+    auto controller = LoadedController();
+
+    auto const strip = PlaceStrip(controller, 300);
+    auto const pad = PlaceExactly(controller, glass::ControlKind::Pad, 100, 500, 56, 56);
+
+    controller.SelectAll();
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, controller.SelectionBlockCount());
+    VERIFY_IS_TRUE(controller.AlignSelection(glass::AlignEdge::Left));
+
+    VerifyNear(100.0, XOf(controller, strip[0]));
+    VerifyNear(104.0, XOf(controller, strip[1]));
+    VerifyNear(100.0, XOf(controller, pad));
+}
+
+void EditorControllerTests::TheMembersOfOneGroupAreLinedUpOneByOne()
+{
+    // Picking one group and nothing else, then lining it up, is lining its members up with each
+    // other.
+    auto controller = LoadedController();
+
+    auto const strip = PlaceStrip(controller, 300);
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, controller.SelectionBlockCount());
+    VERIFY_IS_TRUE(controller.AlignSelection(glass::AlignEdge::Left));
+
+    VerifyNear(300.0, XOf(controller, strip[1]));
+}
+
+void EditorControllerTests::ATypedGapGoesToTheControlsItWasTypedFor()
+{
+    // The canvas applies a typed gap when its box closes, and a click elsewhere can change the
+    // selection before that.
+    auto controller = LoadedController();
+
+    auto const left = PlaceExactly(controller, glass::ControlKind::Pad, 100, 100, 56, 56);
+    auto const middle = PlaceExactly(controller, glass::ControlKind::Pad, 200, 100, 56, 56);
+    auto const right = PlaceExactly(controller, glass::ControlKind::Pad, 400, 100, 56, 56);
+
+    controller.SelectOnly(right);
+
+    VERIFY_IS_TRUE(controller.SpaceControls({ left, middle, right }, glass::ArrangeAxis::Horizontal, 8.0));
+
+    VerifyNear(100.0, XOf(controller, left));
+    VerifyNear(164.0, XOf(controller, middle));
+    VerifyNear(228.0, XOf(controller, right));
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, controller.Selection().size());
+    VERIFY_IS_TRUE(controller.IsSelected(right));
+}
+
+void EditorControllerTests::AnArrangementThatMovesNothingIsNotAnEdit()
+{
+    auto controller = LoadedController();
+
+    PlaceExactly(controller, glass::ControlKind::Pad, 100, 100, 56, 56);
+    PlaceExactly(controller, glass::ControlKind::Pad, 100, 200, 56, 56);
+
+    controller.SelectAll();
+
+    auto const depth = controller.UndoDepth();
+
+    VERIFY_IS_FALSE(controller.AlignSelection(glass::AlignEdge::Left));
+    VERIFY_ARE_EQUAL(depth, controller.UndoDepth());
+}
+
 // ---- which control is drawn over which ----
 
 namespace
@@ -2451,4 +2594,173 @@ void EditorControllerTests::ThePaletteOffersOnlyWhatIsBuilt()
         VERIFY_IS_TRUE(reread.Succeeded);
         VERIFY_IS_TRUE(reread.Document.Pages[0].Controls[0].Kind == entry.Kind);
     }
+}
+
+// ---- the background picture and sequences ----
+
+void EditorControllerTests::ThePictureItsFitAndItsOpacityAreOneStep()
+{
+    // They are chosen in one dialog, so one Ctrl+Z takes back the whole choice.
+    auto controller = LoadedController();
+    auto const depth = controller.UndoDepth();
+
+    VERIFY_IS_TRUE(controller.SetBackgroundImage(L"wood.jpg", glass::BackgroundFit::Tiled, 0.4));
+
+    VERIFY_ARE_EQUAL(depth + 1, controller.UndoDepth());
+    VERIFY_ARE_EQUAL(std::wstring{ L"wood.jpg" }, controller.Document().BackgroundImage);
+    VERIFY_IS_TRUE(controller.Document().BackgroundFitMode == glass::BackgroundFit::Tiled);
+    VerifyNear(0.4, controller.Document().BackgroundOpacity);
+
+    // The same three again is not an edit.
+    VERIFY_IS_FALSE(controller.SetBackgroundImage(L"wood.jpg", glass::BackgroundFit::Tiled, 0.4));
+
+    // Too much is full strength, and something that is not a number at all is too.
+    VERIFY_IS_TRUE(controller.SetBackgroundImage(L"wood.jpg", glass::BackgroundFit::Tiled, 7.0));
+    VerifyNear(1.0, controller.Document().BackgroundOpacity);
+
+    VERIFY_IS_TRUE(controller.SetBackgroundImage(L"wood.jpg", glass::BackgroundFit::Tiled, 0.0));
+    VERIFY_IS_TRUE(controller.SetBackgroundImage(L"wood.jpg", glass::BackgroundFit::Tiled, std::nan("")));
+    VerifyNear(1.0, controller.Document().BackgroundOpacity);
+
+    VERIFY_IS_TRUE(controller.Undo());
+    VerifyNear(0.0, controller.Document().BackgroundOpacity);
+}
+
+void EditorControllerTests::DeletingASequenceLeavesTheRowsThatPlayedIt()
+{
+    auto controller = LoadedController();
+
+    auto const name = controller.AddSequence(L"Intro");
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"Intro" }, name);
+
+    controller.AddControl(glass::ControlKind::Button, 100, 100);
+    controller.AddControl(glass::ControlKind::Button, 300, 100);
+
+    for (size_t index = 0; index < 2; ++index)
+    {
+        auto const* const control = ControlAt(controller, index);
+        auto message = control->Messages[0];
+
+        message.Kind = glass::MessageKind::Sequence;
+        message.SequenceName = name;
+
+        VERIFY_IS_TRUE(controller.SetMessage(control->Id, 0, message));
+    }
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, controller.CountControlsUsingSequence(name));
+    VERIFY_ARE_EQUAL(size_t{ 0 }, controller.CountControlsUsingSequence(L"Outro"));
+
+    VERIFY_IS_TRUE(controller.RemoveSequence(name));
+
+    // The rows keep the name, so what they were meant to play is still there to read.
+    VERIFY_IS_NULL(controller.Document().FindSequence(name));
+    VERIFY_ARE_EQUAL(name, ControlAt(controller, 0)->Messages[0].SequenceName);
+    VERIFY_IS_FALSE(controller.RemoveSequence(name));
+
+    VERIFY_IS_TRUE(controller.Undo());
+    VERIFY_IS_NOT_NULL(controller.Document().FindSequence(name));
+}
+
+// ---- locking ----
+
+void EditorControllerTests::ALockedControlCannotBePickedOnThePage()
+{
+    // A press goes through a locked control, so a big panel behind everything stops getting in
+    // the way. The outline still picks it, which is how it gets unlocked.
+    auto controller = LoadedController();
+
+    auto const panel = PlaceExactly(controller, glass::ControlKind::Panel, 50, 50, 600, 400);
+    auto const knob = PlaceExactly(controller, glass::ControlKind::Knob, 100, 100, 56, 56);
+
+    controller.SelectOnly(panel);
+    VERIFY_IS_TRUE(controller.SetSelectionLocked(true));
+
+    controller.SelectAll();
+    VERIFY_ARE_EQUAL(size_t{ 1 }, controller.Selection().size());
+    VERIFY_IS_TRUE(controller.IsSelected(knob));
+
+    controller.SelectInRectangle({ 0, 0, 800, 600 }, false);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, controller.Selection().size());
+    VERIFY_IS_TRUE(controller.IsSelected(knob));
+
+    controller.SelectOnly(panel);
+    VERIFY_IS_TRUE(controller.SelectionIsLocked());
+}
+
+void EditorControllerTests::ALockedControlStaysWhereItIs()
+{
+    auto controller = LoadedController();
+
+    auto const locked = PlaceExactly(controller, glass::ControlKind::Fader, 100, 100, 40, 180);
+    auto const loose = PlaceExactly(controller, glass::ControlKind::Fader, 200, 100, 40, 180);
+
+    controller.SelectOnly(locked);
+    VERIFY_IS_TRUE(controller.SetSelectionLocked(true));
+
+    // Picked from the outline along with a loose one, so a drag moves only the loose one.
+    controller.AddToSelection(loose);
+    controller.SetSnapSuspended(true);
+
+    controller.BeginDrag();
+    controller.UpdateDrag(50.0, 0.0);
+    controller.EndDrag();
+
+    VerifyNear(100.0, ControlAt(controller, 0)->X);
+    VerifyNear(250.0, ControlAt(controller, 1)->X);
+
+    VERIFY_IS_TRUE(controller.NudgeSelection(1.0, 0.0));
+    VerifyNear(100.0, ControlAt(controller, 0)->X);
+    VerifyNear(251.0, ControlAt(controller, 1)->X);
+
+    // One locked control holds the box drawn around the whole selection.
+    controller.BeginResize(glass::ResizeHandle::Right);
+    controller.UpdateResize(40.0, 0.0, false);
+    controller.EndResize();
+
+    VerifyNear(40.0, ControlAt(controller, 0)->Width);
+    VerifyNear(40.0, ControlAt(controller, 1)->Width);
+
+    // Lined up against, never moved.
+    VERIFY_IS_TRUE(controller.AlignSelection(glass::AlignEdge::Left));
+    VerifyNear(100.0, ControlAt(controller, 0)->X);
+    VerifyNear(100.0, ControlAt(controller, 1)->X);
+
+    // Typed numbers do not move it either, and on its own nothing nudges it.
+    VERIFY_IS_FALSE(controller.SetControlBounds(locked, 300, 300, 40, 180));
+
+    controller.SelectOnly(locked);
+    VERIFY_IS_FALSE(controller.NudgeSelection(1.0, 0.0));
+}
+
+void EditorControllerTests::LockingIsOneStepAndTravelsInTheFile()
+{
+    auto controller = LoadedController();
+
+    auto const first = controller.AddControl(glass::ControlKind::Pad, 100, 100);
+    auto const second = controller.AddControl(glass::ControlKind::Pad, 200, 100);
+
+    controller.SelectOnly(first);
+    controller.AddToSelection(second);
+
+    auto const depth = controller.UndoDepth();
+
+    VERIFY_IS_TRUE(controller.SetSelectionLocked(true));
+    VERIFY_ARE_EQUAL(depth + 1, controller.UndoDepth());
+    VERIFY_IS_TRUE(controller.SelectionIsLocked());
+
+    // Locking what is already locked is not an edit.
+    VERIFY_IS_FALSE(controller.SetSelectionLocked(true));
+
+    auto const reread = glass::ReadLayoutFromJson(glass::WriteLayoutToJson(controller.Document()));
+
+    VERIFY_IS_TRUE(reread.Succeeded);
+    VERIFY_IS_TRUE(reread.Document.Pages[0].Controls[0].Locked);
+    VERIFY_IS_TRUE(reread.Document.Pages[0].Controls[1].Locked);
+
+    VERIFY_IS_TRUE(controller.Undo());
+    VERIFY_IS_FALSE(ControlAt(controller, 0)->Locked);
+
+    // A layout nobody locked writes no key for it, so its file is the same as before.
+    VERIFY_IS_TRUE(glass::WriteLayoutToJson(controller.Document()).find(L"\"locked\"") == std::wstring::npos);
 }

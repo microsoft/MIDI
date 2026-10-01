@@ -29,6 +29,10 @@ public:
     // EnumerationCompleted first.
     TEST_METHOD(TestAddedRaisedForPortsCreatedWhileWatching);
 
+    // Removing a loopback renumbers the ports created after it, and the watcher updates the
+    // ports it holds. Their numbers must still match a fresh query.
+    TEST_METHOD(TestPortNumbersFollowRenumbering);
+
 private:
 
 

@@ -380,7 +380,7 @@ namespace winrt::midipatchbay::implementation
 
                 controls::VariableSizedWrapGrid grid{};
                 grid.Orientation(controls::Orientation::Horizontal);
-                grid.MaximumRowsOrColumns(2);
+                grid.MaximumRowsOrColumns(4);
                 grid.ItemWidth(116);
                 grid.ItemHeight(32);
 

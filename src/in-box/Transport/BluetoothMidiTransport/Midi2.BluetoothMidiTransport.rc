@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 1,0,0,3
+ PRODUCTVERSION 1,0,0,3
  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
  FILEFLAGS VS_FF_DEBUG
@@ -70,13 +70,13 @@ BEGIN
         BLOCK "040904B0"
         BEGIN
             VALUE "CompanyName", "Microsoft Corporation"
-            VALUE "FileDescription", "Windows MIDI Services Plugin"
-            VALUE "FileVersion", "1.0.0.1"
+            VALUE "FileDescription", "Windows MIDI Services Bluetooth LE MIDI Plugin"
+            VALUE "FileVersion", "1.0.0.3"
+            VALUE "ProductVersion", "1.0.0.3"
             VALUE "LegalCopyright", "Copyright (c) Microsoft Corporation.  All rights reserved."
             VALUE "InternalName", "Midi2.BluetoothMidiTransport.dll"
             VALUE "OriginalFilename", "Midi2.BluetoothMidiTransport.dll"
             VALUE "ProductName", "Windows MIDI Services"
-            VALUE "ProductVersion", "1.0.0.1"
             VALUE "OLESelfRegister", ""
         END
     END
@@ -95,10 +95,8 @@ STRINGTABLE
 BEGIN
     IDS_PROJNAME                        "Midi2.BluetoothMidiTransport"
 
-    IDS_PLUGIN_METADATA_VERSION         "1.0.0.1"
-    IDS_PLUGIN_METADATA_NAME            "Bluetooth Low Energy MIDI Preview"
-    IDS_PLUGIN_METADATA_DESCRIPTION     "(Preview) Provides Bluetooth Low Energy MIDI 1.0 and 2.0 capabilities"
-    IDS_PLUGIN_METADATA_AUTHOR          "Microsoft Corporation"
+    IDS_PLUGIN_METADATA_NAME            "Bluetooth Low Energy MIDI"
+    IDS_PLUGIN_METADATA_DESCRIPTION     "Bluetooth Low Energy MIDI 1.0 and 2.0 transport"
 
     IDS_TRANSPORT_PARENT_DEVICE_NAME                    "Bluetooth Low Energy MIDI Endpoints"
     IDS_MIDI1_ENDPOINT_DESCRIPTION                      "Bluetooth Low Energy MIDI 1.0 endpoint"

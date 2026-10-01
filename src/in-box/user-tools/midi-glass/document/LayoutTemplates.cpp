@@ -8,6 +8,7 @@
 // Deliberately free of pch.h and XAML, like the rest of the document layer.
 
 #include "LayoutTemplates.h"
+#include "MackieControl.h"
 #include "PageTemplates.h"
 
 #include <format>
@@ -96,7 +97,8 @@ namespace glass
             _In_ std::wstring const& deviceName,
             _In_ midiapp::EndpointMatch const& match,
             _In_ midiapp::EndpointMatchMode matchMode,
-            _In_ std::wstring pageName) noexcept
+            _In_ std::wstring pageName,
+            _In_ std::wstring themeName) noexcept
         {
             LayoutDocument document{};
 
@@ -105,7 +107,7 @@ namespace glass
             document.PageHeight = PageHeight;
             document.CanvasWidth = PageWidth;
             document.CanvasHeight = PageHeight;
-            document.ThemeName = L"Studio Dark";
+            document.ThemeName = std::move(themeName);
             document.Scale = ScaleMode::FitToScreen;
 
             DeviceEntry device{};
@@ -396,6 +398,191 @@ namespace glass
                 page.Controls.push_back(std::move(control));
             }
         }
+
+        // ------------------------------------------------ floating toolbars
+
+        // The window is the page, only the buttons are drawn, and it stays in front of the app
+        // it sits over.
+        void MakeFloating(_Inout_ LayoutDocument& document, _In_ int32_t width, _In_ int32_t height) noexcept
+        {
+            document.PageWidth = width;
+            document.PageHeight = height;
+            document.CanvasWidth = width;
+            document.CanvasHeight = height;
+            document.Scale = ScaleMode::ActualSize;
+            document.ToolbarWindow = true;
+            document.SeeThrough = true;
+            document.AlwaysOnTop = true;
+        }
+
+        // Square buttons, evenly spaced and centered, each playing the next note up.
+        void FillButtons(
+            _Inout_ LayoutDocument& document,
+            _In_ std::wstring const& deviceName,
+            _In_ int32_t columns,
+            _In_ int32_t rows,
+            _In_ int32_t side) noexcept
+        {
+            constexpr int32_t gap = 16;
+
+            auto& page = document.Pages[0];
+
+            auto const left = (document.PageWidth - (columns * side + (columns - 1) * gap)) / 2;
+            auto const top = (document.PageHeight - (rows * side + (rows - 1) * gap)) / 2;
+
+            int32_t order{ 0 };
+
+            for (int32_t row = 0; row < rows; ++row)
+            {
+                for (int32_t column = 0; column < columns; ++column)
+                {
+                    auto button = MakeControl(
+                        ControlKind::Button,
+                        std::format(L"{}", order + 1),
+                        left + column * (side + gap),
+                        top + row * (side + gap),
+                        side,
+                        side,
+                        order % HueSlotCount,
+                        order);
+
+                    AddNotePair(button, deviceName, StarterFirstPadNote + static_cast<uint32_t>(order), 0);
+
+                    page.Controls.push_back(std::move(button));
+                    ++order;
+                }
+            }
+        }
+
+        // --------------------------------------------------------- Mackie Control
+
+        // The DAW decides what every one of these does and lights them, so each control is a
+        // function rather than a message, and every button is momentary.
+        void FillMackieControl(_Inout_ LayoutDocument& document, _In_ std::wstring const& deviceName) noexcept
+        {
+            constexpr int32_t stripWidth = 112;
+            constexpr int32_t stripLeft = 24;
+            constexpr int32_t buttonWidth = 88;
+            constexpr int32_t buttonHeight = 40;
+            constexpr int32_t knobSide = 72;
+            constexpr int32_t faderWidth = 64;
+            constexpr int32_t faderTop = 312;
+            constexpr int32_t faderHeight = 440;
+
+            document.Devices[0].Protocol = DeviceProtocol::MackieControl;
+
+            auto& page = document.Pages[0];
+
+            int32_t order{ 0 };
+
+            auto const add = [&](ControlKind kind, std::wstring label, int32_t x, int32_t y, int32_t width, int32_t height, int32_t hue, uint32_t function)
+                {
+                    auto control = MakeControl(kind, std::move(label), x, y, width, height, hue, order++);
+
+                    control.Messages.push_back(MakeMackieRow(function, deviceName, 0));
+
+                    // A turn is sent from how far the control moved, so it comes back to the middle.
+                    if (ShapeOfMackieFunction(function) == MackieShape::Encoder)
+                    {
+                        control.ReturnsToDefault = true;
+                        control.DefaultValue = 0.5;
+                    }
+
+                    page.Controls.push_back(std::move(control));
+                };
+
+            struct StripButton
+            {
+                wchar_t const* Label;
+                uint32_t FirstNote;
+                int32_t HueSlot;
+            };
+
+            constexpr StripButton stripButtons[]
+            {
+                { L"Rec", 0, 5 },
+                { L"Solo", 8, 3 },
+                { L"Mute", 16, 2 },
+                { L"Select", 24, 0 },
+            };
+
+            for (uint32_t strip = 0; strip < MackieStripCount; ++strip)
+            {
+                auto const left = stripLeft + static_cast<int32_t>(strip) * stripWidth;
+                auto const number = strip + 1;
+
+                add(ControlKind::Knob, std::format(L"V-Pot {}", number),
+                    left + (stripWidth - knobSide) / 2, 24, knobSide, knobSide, 4, MackieVPotBase + strip);
+
+                for (size_t row = 0; row < std::size(stripButtons); ++row)
+                {
+                    auto const& button = stripButtons[row];
+
+                    add(ControlKind::Button, std::format(L"{} {}", button.Label, number),
+                        left + (stripWidth - buttonWidth) / 2, 112 + static_cast<int32_t>(row) * 48,
+                        buttonWidth, buttonHeight, button.HueSlot, button.FirstNote + strip);
+                }
+
+                add(ControlKind::Fader, std::format(L"Fader {}", number),
+                    left + (stripWidth - faderWidth) / 2, faderTop, faderWidth, faderHeight, 4, MackieFaderBase + strip);
+            }
+
+            add(ControlKind::Fader, L"Master",
+                stripLeft + static_cast<int32_t>(MackieStripCount) * stripWidth + (stripWidth - faderWidth) / 2,
+                faderTop, faderWidth, faderHeight, 1, MackieFaderBase + MackieMasterStrip);
+
+            // Transport, banks, cursor keys and the jog wheel down the right.
+            constexpr int32_t panelLeft = 1060;
+            constexpr int32_t smallWidth = 60;
+            constexpr int32_t smallHeight = 48;
+            constexpr int32_t smallStep = 68;
+
+            struct PanelButton
+            {
+                wchar_t const* Label;
+                uint32_t Note;
+                int32_t Column;
+                int32_t Top;
+                int32_t HueSlot;
+            };
+
+            constexpr PanelButton transport[]
+            {
+                { L"Rewind", 91, 0, 24, 0 },
+                { L"Forward", 92, 1, 24, 0 },
+                { L"Stop", 93, 2, 24, 1 },
+                { L"Play", 94, 0, 80, 1 },
+                { L"Record", 95, 1, 80, 5 },
+                { L"Cycle", 86, 2, 80, 4 },
+                { L"Up", 96, 1, 504, 2 },
+                { L"Left", 98, 0, 560, 2 },
+                { L"Zoom", 100, 1, 560, 2 },
+                { L"Right", 99, 2, 560, 2 },
+                { L"Down", 97, 1, 616, 2 },
+            };
+
+            for (auto const& button : transport)
+            {
+                add(ControlKind::Button, button.Label, panelLeft + button.Column * smallStep, button.Top,
+                    smallWidth, smallHeight, button.HueSlot, button.Note);
+            }
+
+            constexpr PanelButton banks[]
+            {
+                { L"Bank left", 46, 0, 152, 3 },
+                { L"Bank right", 47, 1, 152, 3 },
+                { L"Channel left", 48, 0, 200, 3 },
+                { L"Channel right", 49, 1, 200, 3 },
+            };
+
+            for (auto const& button : banks)
+            {
+                add(ControlKind::Button, button.Label, panelLeft + button.Column * 100, button.Top,
+                    96, buttonHeight, button.HueSlot, button.Note);
+            }
+
+            add(ControlKind::Turntable, L"Jog", panelLeft, 264, 196, 196, 3, MackieJog);
+        }
     }
 
     std::vector<LayoutTemplateInfo> const& LayoutTemplates() noexcept
@@ -406,6 +593,10 @@ namespace glass
             { LayoutTemplateKind::DjDeck,    L"TemplateDjDeckName",    L"TemplateDjDeckDescription",    L'\xE93C' },
             { LayoutTemplateKind::DrumPads,  L"TemplateDrumPadsName",  L"TemplateDrumPadsDescription",  L'\xE80A' },
             { LayoutTemplateKind::Transport, L"TemplateTransportName", L"TemplateTransportDescription", L'\xE768' },
+            { LayoutTemplateKind::MackieControl, L"TemplateMackieControlName", L"TemplateMackieControlDescription", L'\xE9E9' },
+            { LayoutTemplateKind::HorizontalToolbar, L"TemplateHorizontalToolbarName", L"TemplateHorizontalToolbarDescription", L'\xE90E' },
+            { LayoutTemplateKind::VerticalToolbar, L"TemplateVerticalToolbarName", L"TemplateVerticalToolbarDescription", L'\xE90C' },
+            { LayoutTemplateKind::FloatingPalette, L"TemplateFloatingPaletteName", L"TemplateFloatingPaletteDescription", L'\xE790' },
             { LayoutTemplateKind::Blank,     L"TemplateBlankName",     L"TemplateBlankDescription",     L'\xE7C3' },
         };
 
@@ -420,39 +611,71 @@ namespace glass
         midiapp::EndpointMatch const& match,
         midiapp::EndpointMatchMode matchMode) noexcept
     {
+        // A shipped theme per starter: the nearly black default made a new page look empty.
         switch (kind)
         {
         case LayoutTemplateKind::Mixer:
         {
-            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Mixer");
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Mixer", L"Bigwig");
             FillMixer(document, deviceName);
             return document;
         }
 
         case LayoutTemplateKind::DjDeck:
         {
-            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Decks");
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Decks", L"Supersaw");
             FillDjDeck(document, deviceName);
             return document;
         }
 
         case LayoutTemplateKind::DrumPads:
         {
-            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Pads");
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Pads", L"Insert Coin");
             FillDrumPads(document, deviceName);
             return document;
         }
 
         case LayoutTemplateKind::Transport:
         {
-            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Transport");
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Transport", L"Daylight");
             FillTransport(document, deviceName);
+            return document;
+        }
+
+        case LayoutTemplateKind::HorizontalToolbar:
+        {
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Toolbar", L"Bone");
+            MakeFloating(document, ToolbarLength, ToolbarThickness);
+            FillButtons(document, deviceName, 8, 1, 80);
+            return document;
+        }
+
+        case LayoutTemplateKind::VerticalToolbar:
+        {
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Toolbar", L"Bone");
+            MakeFloating(document, ToolbarThickness, ToolbarLength);
+            FillButtons(document, deviceName, 1, 8, 80);
+            return document;
+        }
+
+        case LayoutTemplateKind::FloatingPalette:
+        {
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Palette", L"Bone");
+            MakeFloating(document, PaletteSide, PaletteSide);
+            FillButtons(document, deviceName, 4, 4, 72);
+            return document;
+        }
+
+        case LayoutTemplateKind::MackieControl:
+        {
+            auto document = MakeDocument(layoutName, deviceName, match, matchMode, L"Mixer", L"Bigwig");
+            FillMackieControl(document, deviceName);
             return document;
         }
 
         case LayoutTemplateKind::Blank:
         default:
-            return MakeDocument(layoutName, deviceName, match, matchMode, L"Page 1");
+            return MakeDocument(layoutName, deviceName, match, matchMode, L"Page 1", L"Tonal Light");
         }
     }
 

@@ -359,6 +359,84 @@ void NewControlTests::ANoteOnNeverGoesOutAtVelocityZero()
     }
 }
 
+void NewControlTests::AValueIsTypedInItsDevicesUnits()
+{
+    using glass::DeviceProtocol;
+
+    glass::ControlMessage message{};
+    message.Kind = glass::MessageKind::Note;
+
+    VERIFY_ARE_EQUAL(127, glass::RawValueMaximum(message, DeviceProtocol::Midi1));
+    VERIFY_ARE_EQUAL(0, glass::RawValueMaximum(message, DeviceProtocol::Midi2));
+
+    VERIFY_ARE_EQUAL(127.0, glass::ShownValue(message.Maximum, message, DeviceProtocol::Midi1));
+    VERIFY_ARE_EQUAL(100.0, glass::ShownValue(message.Maximum, message, DeviceProtocol::Midi2));
+
+    // Typed into a file in the note's own units: seven bits in MIDI 1.0, sixteen in MIDI 2.0.
+    VERIFY_ARE_EQUAL(100.0, glass::ShownValue({ 100.0, glass::ValueScaling::Absolute }, message, DeviceProtocol::Midi1));
+    VERIFY_ARE_EQUAL(50.0, glass::ShownValue({ 32768.0, glass::ValueScaling::Absolute }, message, DeviceProtocol::Midi2));
+
+    // A row asking for MIDI 1.0 on its own is typed in MIDI 1.0 numbers whatever its device says.
+    message.UseMidi1Protocol = true;
+    VERIFY_ARE_EQUAL(127, glass::RawValueMaximum(message, DeviceProtocol::Midi2));
+    message.UseMidi1Protocol = false;
+
+    // Pitch bend and both kinds of parameter number are fourteen bits in MIDI 1.0.
+    message.Kind = glass::MessageKind::PitchBend;
+    VERIFY_ARE_EQUAL(16383, glass::RawValueMaximum(message, DeviceProtocol::Midi1));
+    VERIFY_ARE_EQUAL(8192.0, glass::ShownValue({ 0.5, glass::ValueScaling::Fraction }, message, DeviceProtocol::Midi1));
+
+    message.Kind = glass::MessageKind::RegisteredController;
+    VERIFY_ARE_EQUAL(16383, glass::RawValueMaximum(message, DeviceProtocol::Midi1));
+    VERIFY_IS_FALSE(glass::SendsAsMidi1(message, DeviceProtocol::Midi1));
+
+    // A per-note controller has no MIDI 1.0 form, so it stays a percentage.
+    message.Kind = glass::MessageKind::PerNoteController;
+    VERIFY_ARE_EQUAL(0, glass::RawValueMaximum(message, DeviceProtocol::Midi1));
+
+    message.Kind = glass::MessageKind::ControlChange;
+    VERIFY_ARE_EQUAL(78.7, glass::ShownValue({ 100.0 / 127.0, glass::ValueScaling::Fraction }, message, DeviceProtocol::Midi2));
+}
+
+void NewControlTests::AValueTypedOnARowIsWhatTheWireCarries()
+{
+    std::array<glass::PreparedSend, glass::MaximumSendsPerEvent> sends{};
+
+    for (auto const protocol : { glass::DeviceProtocol::Midi1, glass::DeviceProtocol::Midi2 })
+    {
+        auto const midi1 = protocol == glass::DeviceProtocol::Midi1;
+
+        auto document = OneControl(NoteRowControl(glass::ControlKind::Pad, false));
+        document.Devices[0].Protocol = protocol;
+
+        auto& row = document.Pages[0].Controls[0].Messages[0];
+
+        // 100 on a MIDI 1.0 device, and the percentage that is on a MIDI 2.0 one.
+        row.Maximum = glass::ValueFromShown(midi1 ? 100.0 : 78.7, row, protocol);
+        row.Minimum = glass::ValueFromShown(midi1 ? 64.0 : 50.4, row, protocol);
+
+        VERIFY_ARE_EQUAL(midi1 ? 100.0 : 78.7, glass::ShownValue(row.Maximum, row, protocol));
+
+        glass::BindingEngine engine{};
+        engine.Prepare(document, OneDevice());
+
+        VERIFY_ARE_EQUAL(1u, engine.EvaluatePress(0, glass::MessageTrigger::Changes, true, 1.0, sends));
+        VERIFY_ARE_EQUAL(midi1 ? 1u : 2u, sends[0].WordCount);
+        VERIFY_ARE_EQUAL(0x9u, (sends[0].Words[0] >> 20) & 0x0F);
+
+        // A MIDI 2.0 velocity folds to the same seven bits on its way to a MIDI 1.0 device.
+        auto const sent = midi1 ? (sends[0].Words[0] & 0x7F) : ((sends[0].Words[1] >> 16) >> 9);
+        VERIFY_ARE_EQUAL(100u, sent);
+
+        // The release is a note off at the release velocity.
+        VERIFY_ARE_EQUAL(1u, engine.EvaluatePress(0, glass::MessageTrigger::Changes, false, 0.0, sends));
+        VERIFY_ARE_EQUAL(0x8u, (sends[0].Words[0] >> 20) & 0x0F);
+
+        auto const released = midi1 ? (sends[0].Words[0] & 0x7F) : ((sends[0].Words[1] >> 16) >> 9);
+        VERIFY_ARE_EQUAL(64u, released);
+    }
+}
+
 // ------------------------------------------------------------------- the clock
 
 void NewControlTests::AClockSendsOneWordPerDestination()

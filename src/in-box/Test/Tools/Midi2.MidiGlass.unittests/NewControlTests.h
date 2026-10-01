@@ -37,6 +37,8 @@ public:
     TEST_METHOD(ASoftKeyStillPlaysANoteOn);
     TEST_METHOD(ALightPadPressStillPlaysANoteOn);
     TEST_METHOD(ANoteOnNeverGoesOutAtVelocityZero);
+    TEST_METHOD(AValueIsTypedInItsDevicesUnits);
+    TEST_METHOD(AValueTypedOnARowIsWhatTheWireCarries);
 
     // ---- the clock ----
 

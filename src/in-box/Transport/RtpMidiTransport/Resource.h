@@ -3,10 +3,8 @@
 #define IDS_PROJNAME                                100
 #define IDR_MIDI2RTPMIDITRANSPORT                   101
 
-#define IDS_PLUGIN_METADATA_VERSION                 500
 #define IDS_PLUGIN_METADATA_NAME                    501
 #define IDS_PLUGIN_METADATA_DESCRIPTION             502
-#define IDS_PLUGIN_METADATA_AUTHOR                  503
 
 #define IDS_RTP_PARENT_DEVICE_NAME                  600
 #define IDS_RTP_ENDPOINT_DESCRIPTION_HOST           601

@@ -482,7 +482,11 @@ namespace winrt::midiglass::implementation
 
         if (index >= 0 && static_cast<size_t>(index) != m_pageIndex)
         {
-            BuildPage(static_cast<size_t>(index));
+            try
+            {
+                BuildPage(static_cast<size_t>(index));
+            }
+            MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the page.")
         }
     }
 
@@ -649,10 +653,20 @@ namespace winrt::midiglass::implementation
         Panic();
     }
 
+    // Panic is pressed when something has already gone wrong, so neither half may take the window
+    // down, and a failure releasing the held controls must not stop the panic itself going out.
     void RuntimeWindow::Panic()
     {
-        m_input.ReleaseAll();
+        try
+        {
+            m_input.ReleaseAll();
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to release the held controls.")
 
-        glass::LivePlayer::Panic();
+        try
+        {
+            glass::LivePlayer::Panic();
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to send panic.")
     }
 }

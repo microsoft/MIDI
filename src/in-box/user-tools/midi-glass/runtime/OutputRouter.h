@@ -77,10 +77,6 @@ namespace glass
         uint32_t MaximumWordsPerSend(
             _In_ winrt::com_ptr<IMidiEndpointConnectionRaw> const& connection) const noexcept;
 
-        winrt::hstring LastErrorMessage() const noexcept;
-
-        size_t OpenConnectionCount() const noexcept;
-
         // Drops everything, for app shutdown.
         void Shutdown() noexcept;
 
@@ -125,7 +121,5 @@ namespace glass
         // settled list without waiting on the lock a blocking Open is holding.
         mutable std::shared_mutex m_handlerLock{};
         std::shared_ptr<std::vector<FeedbackHandler> const> m_publishedHandlers{};
-
-        winrt::hstring m_lastError{};
     };
 }

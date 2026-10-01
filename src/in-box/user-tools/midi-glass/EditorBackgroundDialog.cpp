@@ -237,6 +237,20 @@ namespace winrt::midiglass::implementation
 
             fitCombo.SelectedIndex(IndexOfFit(m_editor.Document().BackgroundFitMode));
 
+            // In whole percent. Only written back if it moved, so opening and saving the dialog
+            // never rounds a value a layout file carried.
+            auto const startingOpacity = m_editor.Document().BackgroundOpacity;
+            auto const startingPercent = std::round(std::clamp(startingOpacity, 0.0, 1.0) * 100.0);
+
+            controls::Slider opacitySlider{};
+            opacitySlider.Header(box_value(resources::GetString(L"BackgroundOpacityHeader")));
+            opacitySlider.Minimum(0.0);
+            opacitySlider.Maximum(100.0);
+            opacitySlider.StepFrequency(1.0);
+            opacitySlider.Value(startingPercent);
+            xaml::Automation::AutomationProperties::SetName(
+                opacitySlider, resources::GetString(L"BackgroundOpacityHeader"));
+
             controls::Button chooseButton{};
             chooseButton.Content(box_value(resources::GetString(L"BackgroundChoose")));
 
@@ -311,6 +325,7 @@ namespace winrt::midiglass::implementation
                     }
 
                     fitCombo.IsEnabled(showing);
+                    opacitySlider.IsEnabled(showing);
                     clearButton.IsEnabled(showing);
                 };
 
@@ -335,6 +350,7 @@ namespace winrt::midiglass::implementation
                     fileText.Text(resources::GetString(L"BackgroundNone"));
                     copyNote.Visibility(xaml::Visibility::Collapsed);
                     fitCombo.IsEnabled(false);
+                    opacitySlider.IsEnabled(false);
                     clearButton.IsEnabled(false);
                 });
 
@@ -342,6 +358,7 @@ namespace winrt::midiglass::implementation
             panel.Children().Append(fileText);
             panel.Children().Append(buttonRow);
             panel.Children().Append(fitCombo);
+            panel.Children().Append(opacitySlider);
             panel.Children().Append(copyNote);
 
             refresh();
@@ -391,7 +408,10 @@ namespace winrt::midiglass::implementation
                 ? FitOrder[static_cast<size_t>(fitIndex)]
                 : glass::BackgroundFit::Uniform;
 
-            if (m_editor.SetBackgroundImage(name, fit))
+            auto const percent = opacitySlider.Value();
+            auto const opacity = std::abs(percent - startingPercent) < 0.5 ? startingOpacity : percent / 100.0;
+
+            if (m_editor.SetBackgroundImage(name, fit, opacity))
             {
                 RebuildSurface();
                 MarkChanged();

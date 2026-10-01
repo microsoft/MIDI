@@ -97,6 +97,9 @@ namespace glass
             { L"PageTemplateSurface", 2736, 1824 },
             { L"PageTemplateClassic", 1024, 768 },
             { L"PageTemplatePortrait", 1080, 1920 },
+            { L"PageTemplateHorizontalToolbar", ToolbarLength, ToolbarThickness },
+            { L"PageTemplateVerticalToolbar", ToolbarThickness, ToolbarLength },
+            { L"PageTemplateFloatingPalette", PaletteSide, PaletteSide },
         };
 
         return templates;

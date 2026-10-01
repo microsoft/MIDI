@@ -18,7 +18,7 @@ namespace midikeyboard
         std::wstring ErrorResourceKey{};
         std::wstring ErrorArgument{};
 
-        // when present the app plays this endpoint instead of creating a virtual device
+        // the endpoint to play, which also becomes the saved destination
         std::wstring EndpointDeviceId{};
 
         // user-facing numbers (1-16), not indexes

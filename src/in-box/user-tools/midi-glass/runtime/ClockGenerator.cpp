@@ -355,20 +355,6 @@ namespace glass
         return 0.0;
     }
 
-    size_t ClockGenerator::RunningCount() const noexcept
-    {
-        try
-        {
-            std::lock_guard guard{ m_lock };
-
-            return m_clocks.size();
-        }
-        catch (...)
-        {
-            return 0;
-        }
-    }
-
     void ClockGenerator::ClockLoop()
     {
         for (;;)

@@ -34,19 +34,6 @@ namespace midikeyboard
 
         // the MIDI 1.0 convention of 64 for "no release velocity information", scaled up
         constexpr uint16_t DefaultReleaseVelocity = 0x8000;
-
-        // These become the MIDI port names other applications remember in their own projects,
-        // so they are deliberately fixed rather than localized, and short enough that the
-        // service can build a MIDI 1.0 port name from them.
-        constexpr wchar_t VirtualEndpointName[] = L"Windows MIDI Keyboard";
-        constexpr wchar_t VirtualFunctionBlockName[] = L"Keys";
-        constexpr wchar_t VirtualProductInstanceId[] = L"windows-midi-keyboard";
-        constexpr wchar_t VirtualManufacturer[] = L"Microsoft";
-
-        // The client endpoint is created by the service as the connection opens, so its id is
-        // not available the instant the call returns.
-        constexpr int32_t ClientEndpointIdAttempts = 20;
-        constexpr int32_t ClientEndpointIdWaitMilliseconds = 50;
     }
 
     MidiOutput::~MidiOutput() noexcept
@@ -61,134 +48,11 @@ namespace midikeyboard
         return m_connection != nullptr;
     }
 
-    winrt::hstring MidiOutput::ClientEndpointDeviceId() const noexcept
-    {
-        std::shared_lock lock{ m_lock };
-
-        return m_clientEndpointDeviceId;
-    }
-
     winrt::Windows::Devices::Midi2::MidiEndpointConnection MidiOutput::Connection() const noexcept
     {
         std::shared_lock lock{ m_lock };
 
         return m_connection;
-    }
-
-    ConnectResult MidiOutput::ConnectVirtualDevice() noexcept
-    {
-        try
-        {
-            Disconnect();
-
-            if (!midi2::MidiApi::EnsureServiceAvailable())
-            {
-                return ConnectResult::ServiceUnavailable;
-            }
-
-            if (!midi2virt::MidiVirtualDeviceManager::IsTransportAvailable())
-            {
-                return ConnectResult::VirtualDeviceFailed;
-            }
-
-            auto session = midi2::MidiSession::Create(res::GetString(L"AppDisplayName"));
-
-            if (session == nullptr)
-            {
-                return ConnectResult::SessionFailed;
-            }
-
-            midi2enum::MidiDeclaredEndpointInfo endpointInfo{};
-
-            endpointInfo.Name(VirtualEndpointName);
-            endpointInfo.ProductInstanceId(VirtualProductInstanceId);
-            endpointInfo.SupportsMidi10Protocol(true);
-            endpointInfo.SupportsMidi20Protocol(true);
-            endpointInfo.SupportsReceivingJitterReductionTimestamps(false);
-            endpointInfo.SupportsSendingJitterReductionTimestamps(false);
-            endpointInfo.HasStaticFunctionBlocks(true);
-            endpointInfo.SpecificationVersionMajor(1);
-            endpointInfo.SpecificationVersionMinor(1);
-
-            midi2virt::MidiVirtualDeviceCreationConfig creationConfig{
-                endpointInfo.Name(),
-                res::GetString(L"VirtualDeviceDescription"),
-                VirtualManufacturer,
-                endpointInfo };
-
-            midi2enum::MidiFunctionBlock block{};
-
-            block.Number(0);
-            block.IsActive(true);
-            block.Name(VirtualFunctionBlockName);
-            block.FirstGroup(midi2::MidiGroup{ VirtualDeviceGroupIndex });
-            block.GroupCount(1);
-
-            // bidirectional so a host can talk back to the keyboard, and hinted the same way so
-            // the customer's other applications show it as both a source and a destination
-            block.Direction(midi2enum::MidiFunctionBlockDirection::Bidirectional);
-            block.UIHint(midi2enum::MidiFunctionBlockUIHint::Bidirectional);
-
-            creationConfig.FunctionBlocks().Append(block);
-
-            auto virtualDevice = midi2virt::MidiVirtualDeviceManager::CreateVirtualDevice(creationConfig);
-
-            if (virtualDevice == nullptr)
-            {
-                return ConnectResult::VirtualDeviceFailed;
-            }
-
-            auto connection = session.CreateEndpointConnection(virtualDevice.DeviceEndpointDeviceId());
-
-            if (connection == nullptr)
-            {
-                return ConnectResult::ConnectionFailed;
-            }
-
-            // this is what associates the virtual device with the connection; the client
-            // endpoint other applications see is created when the connection opens
-            if (connection.AddMessageProcessingPlugin(virtualDevice) != midi2::MidiMessageProcessingPluginAddResult::Succeeded)
-            {
-                return ConnectResult::VirtualDeviceFailed;
-            }
-
-            if (!connection.Open())
-            {
-                return ConnectResult::ConnectionFailed;
-            }
-
-            winrt::hstring clientEndpointDeviceId{};
-
-            for (int32_t attempt = 0; attempt < ClientEndpointIdAttempts; attempt++)
-            {
-                clientEndpointDeviceId = midi2virt::MidiVirtualDeviceManager::GetAssociatedClientEndpointDeviceId(
-                    virtualDevice.AssociationId());
-
-                if (!clientEndpointDeviceId.empty())
-                {
-                    break;
-                }
-
-                ::Sleep(ClientEndpointIdWaitMilliseconds);
-            }
-
-            {
-                std::unique_lock lock{ m_lock };
-
-                m_session = session;
-                m_virtualDevice = virtualDevice;
-                m_connection = connection;
-                m_clientEndpointDeviceId = clientEndpointDeviceId;
-            }
-
-            MIDI_KEYBOARD_LOG_INFO_WITH_ENDPOINT(
-                L"Virtual device created.", clientEndpointDeviceId.c_str());
-
-            return ConnectResult::Success;
-        }
-        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to create the virtual device.")
-
-        return ConnectResult::VirtualDeviceFailed;
     }
 
     _Use_decl_annotations_
@@ -227,7 +91,6 @@ namespace midikeyboard
 
                 m_session = session;
                 m_connection = connection;
-                m_clientEndpointDeviceId = {};
             }
 
             MIDI_KEYBOARD_LOG_INFO_WITH_ENDPOINT(L"Connected.", endpointDeviceId.c_str());
@@ -258,8 +121,6 @@ namespace midikeyboard
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to disconnect the endpoint connection.")
 
         m_connection = nullptr;
-        m_virtualDevice = nullptr;
-        m_clientEndpointDeviceId = {};
 
         try
         {

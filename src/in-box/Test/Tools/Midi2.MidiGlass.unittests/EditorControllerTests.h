@@ -68,6 +68,12 @@ public:
     TEST_METHOD(DistributeLeavesTheOutermostTwoAlone);
     TEST_METHOD(SettingAGapSpacesThemAll);
     TEST_METHOD(GapsAreMeasuredInPositionOrderNotSelectionOrder);
+    TEST_METHOD(AGroupIsSpacedAsOneBlock);
+    TEST_METHOD(DistributeKeepsEachGroupInOnePiece);
+    TEST_METHOD(AlignMovesAGroupAsOneBlock);
+    TEST_METHOD(TheMembersOfOneGroupAreLinedUpOneByOne);
+    TEST_METHOD(ATypedGapGoesToTheControlsItWasTypedFor);
+    TEST_METHOD(AnArrangementThatMovesNothingIsNotAnEdit);
 
     // ---- which control is drawn over which ----
 
@@ -182,4 +188,15 @@ public:
     TEST_METHOD(TheWindowSettingsCanBeUndone);
     TEST_METHOD(APageCanBeAsSmallAsAToolbar);
     TEST_METHOD(ThePaletteOffersOnlyWhatIsBuilt);
+
+    // ---- the background picture and sequences ----
+
+    TEST_METHOD(ThePictureItsFitAndItsOpacityAreOneStep);
+    TEST_METHOD(DeletingASequenceLeavesTheRowsThatPlayedIt);
+
+    // ---- locking ----
+
+    TEST_METHOD(ALockedControlCannotBePickedOnThePage);
+    TEST_METHOD(ALockedControlStaysWhereItIs);
+    TEST_METHOD(LockingIsOneStepAndTravelsInTheFile);
 };

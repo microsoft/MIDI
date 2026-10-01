@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,1,7
- PRODUCTVERSION 1,0,1,7
+ FILEVERSION 1,0,1,8
+ PRODUCTVERSION 1,0,1,8
  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
  FILEFLAGS VS_FF_DEBUG
@@ -77,8 +77,8 @@ BEGIN
             VALUE "InternalName", "Midi2.BasicLoopbackMidiTransport.dll"
             VALUE "OriginalFilename", "Midi2.BasicLoopbackMidiTransport.dll"
 
-            VALUE "FileVersion", "1.0.1.7"
-            VALUE "ProductVersion", "1.0.1.7"
+            VALUE "FileVersion", "1.0.1.8"
+            VALUE "ProductVersion", "1.0.1.8"
 
             VALUE "OLESelfRegister", ""
         END
@@ -98,7 +98,7 @@ STRINGTABLE
 BEGIN
     IDS_PROJNAME                        "Midi2.BasicLoopbackMidiTransport"
 
-    IDS_PLUGIN_METADATA_NAME            "Basic Loopback MIDI"
+    IDS_PLUGIN_METADATA_NAME            "MIDI 1.0 Basic Loopback"
     IDS_PLUGIN_METADATA_DESCRIPTION     "Provides MIDI 1.0-style basic loopback app-to-app MIDI support"
 
     IDS_ERROR_PARSING_JSON              "Error parsing JSON. Is it valid?"

@@ -61,6 +61,7 @@ public:
     TEST_METHOD(AControlPictureSurvivesARoundTrip);
     TEST_METHOD(AVideoFromBeforeTrimmingPlaysWhole);
     TEST_METHOD(ABackgroundPictureThatIsAPathIsRefused);
+    TEST_METHOD(APictureNamedLikeADeviceIsRefused);
     TEST_METHOD(NoBackgroundPictureWritesNothing);
 
     // ---- validation ----

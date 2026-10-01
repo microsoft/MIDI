@@ -23,6 +23,8 @@
 #include "GlassControl.h"
 #include "FontCatalog.h"
 
+#include <limits>
+
 namespace resources = ::midiglass::resources;
 
 namespace winrt::midiglass::implementation
@@ -399,6 +401,9 @@ namespace winrt::midiglass::implementation
             CanvasScale().ScaleX(scale);
             CanvasScale().ScaleY(scale);
 
+            // The pills are drawn at one size on screen, so a new zoom needs new pills.
+            UpdateSpacingPills();
+
             // The scan lines are laid over the page in page units, so the pitch has to be
             // divided back out by the zoom or it turns into a beat pattern across the screen.
             UpdateDeckOverlay();
@@ -611,6 +616,8 @@ namespace winrt::midiglass::implementation
             OverlayCanvas().Children().Clear();
             m_handleShapes.clear();
 
+            UpdateSpacingPills();
+
             auto const* const page = m_editor.CurrentPage();
 
             if (page == nullptr)
@@ -689,6 +696,23 @@ namespace winrt::midiglass::implementation
                 if (m_editor.IsSelected(control.Id))
                 {
                     addRectangle({ rect.X - 1.0, rect.Y - 1.0, rect.Width + 2.0, rect.Height + 2.0 }, accent, 1.0, false);
+                }
+
+                // A locked control is marked, because a press on it goes straight through and
+                // nothing else on the page says why.
+                if (control.Locked)
+                {
+                    controls::FontIcon lockMark{};
+
+                    lockMark.Glyph(L"\uE72E");
+                    lockMark.FontSize(11.0);
+                    lockMark.Foreground(m_editor.IsSelected(control.Id) ? accent : tertiary);
+                    lockMark.IsHitTestVisible(false);
+
+                    controls::Canvas::SetLeft(lockMark, rect.Right() - m_workArea.X - 14.0);
+                    controls::Canvas::SetTop(lockMark, rect.Y - m_workArea.Y + 3.0);
+
+                    OverlayCanvas().Children().Append(lockMark);
                 }
 
                 // Text set in a font this PC does not have. It runs in the default font, and the
@@ -780,8 +804,10 @@ namespace winrt::midiglass::implementation
 
             // Eight handles. Several controls share one box around them all, dashed so it reads
             // as the selection rather than as another control, and its handles scale everything
-            // inside it.
+            // inside it. A selection holding a locked control gets the box and no handles,
+            // because none of them would do anything.
             auto const selected = m_editor.SelectedControls();
+            auto const resizable = !m_editor.SelectionHasLocked();
 
             if (!selected.empty())
             {
@@ -818,7 +844,7 @@ namespace winrt::midiglass::implementation
                 double const xs[]{ rect.X, rect.CenterX(), rect.Right() };
                 double const ys[]{ rect.Y, rect.CenterY(), rect.Bottom() };
 
-                for (int32_t row = 0; row < 3; ++row)
+                for (int32_t row = 0; resizable && row < 3; ++row)
                 {
                     for (int32_t column = 0; column < 3; ++column)
                     {
@@ -850,7 +876,7 @@ namespace winrt::midiglass::implementation
                 // given room a narrow control does not have.
                 glass::EditRect labelRect{};
 
-                if (selected.size() == 1 && TryGetLabelRect(*selected[0], labelRect))
+                if (selected.size() == 1 && resizable && TryGetLabelRect(*selected[0], labelRect))
                 {
                     auto dashed = addRectangle(labelRect, tertiary, 1.0, true);
                     dashed.Fill(nullptr);
@@ -1013,10 +1039,11 @@ namespace winrt::midiglass::implementation
             return {};
         }
 
-        // Back to front, so the control drawn on top is the one somebody meant.
+        // Back to front, so the control drawn on top is the one somebody meant. A locked one is
+        // passed over, so a press goes through it to whatever is under it.
         for (auto iterator = page->Controls.rbegin(); iterator != page->Controls.rend(); ++iterator)
         {
-            if (glass::ContainsPoint(RectOf(*iterator), pageX, pageY))
+            if (!iterator->Locked && glass::ContainsPoint(RectOf(*iterator), pageX, pageY))
             {
                 return iterator->Id;
             }
@@ -1032,7 +1059,7 @@ namespace winrt::midiglass::implementation
 
         auto const selected = m_editor.SelectedControls();
 
-        if (selected.empty())
+        if (selected.empty() || m_editor.SelectionHasLocked())
         {
             return glass::ResizeHandle::None;
         }
@@ -1100,7 +1127,7 @@ namespace winrt::midiglass::implementation
 
         glass::EditRect rect{};
 
-        if (selected.size() != 1 || !TryGetLabelRect(*selected[0], rect))
+        if (selected.size() != 1 || selected[0]->Locked || !TryGetLabelRect(*selected[0], rect))
         {
             return glass::ResizeHandle::None;
         }
@@ -1142,7 +1169,7 @@ namespace winrt::midiglass::implementation
 
         glass::EditRect rect{};
 
-        if (selected.size() != 1 || !TryGetLabelRect(*selected[0], rect))
+        if (selected.size() != 1 || selected[0]->Locked || !TryGetLabelRect(*selected[0], rect))
         {
             return false;
         }
@@ -1233,6 +1260,10 @@ namespace winrt::midiglass::implementation
 
         try
         {
+            // A gap still being typed goes to the controls it was typed for, before this press
+            // can change the selection under it.
+            EndGapEdit(true);
+
             auto const point = args.GetCurrentPoint(OverlayCanvas());
             auto const pageX = PointToPageX(point.Position().X);
             auto const pageY = PointToPageY(point.Position().Y);
@@ -1673,6 +1704,70 @@ namespace winrt::midiglass::implementation
         m_editor.SetSnapSuspended(false);
     }
 
+    // The arrow keys move what is selected, a pixel at a time or a grid cell with Shift, while
+    // the page itself has the keyboard. A box on the page keeps its arrows for its own text.
+    _Use_decl_annotations_
+    void EditorWindow::OnCanvasPreviewKeyDown(
+        foundation::IInspectable const& sender,
+        xaml::Input::KeyRoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+
+        try
+        {
+            auto deltaX = 0.0;
+            auto deltaY = 0.0;
+
+            switch (args.Key())
+            {
+            case winrt::Windows::System::VirtualKey::Left:
+                deltaX = -1.0;
+                break;
+
+            case winrt::Windows::System::VirtualKey::Right:
+                deltaX = 1.0;
+                break;
+
+            case winrt::Windows::System::VirtualKey::Up:
+                deltaY = -1.0;
+                break;
+
+            case winrt::Windows::System::VirtualKey::Down:
+                deltaY = 1.0;
+                break;
+
+            default:
+                return;
+            }
+
+            auto const source = args.OriginalSource().try_as<controls::ScrollViewer>();
+
+            if (m_tryMode ||
+                m_dragMode != DragMode::None ||
+                m_editor.Selection().empty() ||
+                source == nullptr ||
+                source != CanvasScroll())
+            {
+                return;
+            }
+
+            auto const step = (::GetKeyState(VK_SHIFT) < 0) ? m_editor.Snap().GridSize : 1.0;
+
+            // Taken even at the edge, so the page does not scroll out from under the selection.
+            args.Handled(true);
+
+            if (m_editor.NudgeSelection(deltaX * step, deltaY * step))
+            {
+                RebuildSurface();
+                UpdateOffPageBar();
+                RefreshInspectorGeometry();
+                UpdateStatusBar();
+                MarkChanged();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to move the selection with the keyboard.")
+    }
+
     // ---------------------------------------------------------------- typing a label in place
 
     _Use_decl_annotations_
@@ -1932,6 +2027,325 @@ namespace winrt::midiglass::implementation
             CanvasScroll().Focus(xaml::FocusState::Programmatic);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to finish typing a label.")
+    }
+
+    // ---------------------------------------------------------------- spacing pills
+
+    void EditorWindow::UpdateSpacingPills()
+    {
+        try
+        {
+            SpacingCanvas().Children().Clear();
+
+            // A selection holding a locked control gets none: it stays put, and the gaps would
+            // not come out even.
+            if (m_tryMode ||
+                m_keyboardOrderMode ||
+                (m_dragMode != DragMode::None && m_dragMoved) ||
+                m_canvasScale <= 0.0 ||
+                m_editor.SelectionHasLocked())
+            {
+                return;
+            }
+
+            auto const spacing = m_editor.SelectionSpacing();
+
+            // Three or more, as the design has it. Two have one gap and nothing for it to equal,
+            // and a pill under every pair somebody picks would be noise.
+            if (!spacing.has_value() || spacing->Gaps.size() < 2)
+            {
+                return;
+            }
+
+            // One screen pixel in page units. Everything here is sized in screen pixels, so the
+            // numbers can be read at any zoom.
+            auto const pixel = 1.0 / m_canvasScale;
+
+            constexpr double SelectionOutset = 3.0;
+            constexpr double BarClearance = 8.0;
+            constexpr double PillClearance = 5.0;
+            constexpr double TickReach = 3.0;
+            constexpr double EdgeRoom = 4.0;
+
+            auto const guide = BrushNamed(L"SystemFillColorAttentionBrush");
+            auto const pillStyle = xaml::Application::Current().Resources()
+                .Lookup(box_value(L"GapPillStyle")).as<xaml::Style>();
+
+            auto const equal = glass::GapsAreEqual(spacing->Gaps);
+            auto const count = spacing->Gaps.size();
+
+            // Measured before any is placed, because which side they go on depends on how much
+            // room they take.
+            std::vector<controls::Button> pills{};
+            double widest{ 0.0 };
+            double tallest{ 0.0 };
+
+            for (size_t index = 0; index < count; ++index)
+            {
+                auto const shown = std::to_wstring(static_cast<int32_t>(std::lround(spacing->Gaps[index])));
+
+                controls::Button pill{};
+
+                pill.Style(pillStyle);
+                pill.Content(box_value(winrt::hstring{ shown }));
+
+                if (equal)
+                {
+                    pill.Background(guide);
+                    pill.Foreground(BrushNamed(L"TextOnAccentFillColorPrimaryBrush"));
+                }
+
+                xaml::Automation::AutomationProperties::SetName(pill, resources::FormatString(
+                    equal ? L"GapPillEqualNameFormat" : L"GapPillNameFormat",
+                    std::to_wstring(index + 1),
+                    std::to_wstring(count),
+                    shown));
+
+                controls::ToolTipService::SetToolTip(pill, box_value(resources::GetString(L"GapPillToolTip")));
+
+                media::ScaleTransform shrink{};
+                shrink.ScaleX(pixel);
+                shrink.ScaleY(pixel);
+
+                pill.RenderTransform(shrink);
+                pill.RenderTransformOrigin({ 0.5f, 0.5f });
+
+                SpacingCanvas().Children().Append(pill);
+
+                pill.Measure(foundation::Size{
+                    std::numeric_limits<float>::infinity(),
+                    std::numeric_limits<float>::infinity() });
+
+                widest = std::max(widest, static_cast<double>(pill.DesiredSize().Width));
+                tallest = std::max(tallest, static_cast<double>(pill.DesiredSize().Height));
+
+                pills.push_back(pill);
+            }
+
+            auto const addLine = [this, &guide, pixel](double x1, double y1, double x2, double y2)
+                {
+                    shapes::Line line{};
+
+                    line.X1(x1 - m_workArea.X);
+                    line.Y1(y1 - m_workArea.Y);
+                    line.X2(x2 - m_workArea.X);
+                    line.Y2(y2 - m_workArea.Y);
+                    line.Stroke(guide);
+                    line.StrokeThickness(pixel);
+                    line.IsHitTestVisible(false);
+
+                    SpacingCanvas().Children().Append(line);
+                };
+
+            auto const across = spacing->Axis == glass::ArrangeAxis::Horizontal;
+            auto const bounds = m_editor.SelectionBounds();
+
+            // Under a row and to the right of a column, unless the work area ends first.
+            auto const outward = across
+                ? bounds.Bottom() + SelectionOutset + (BarClearance + PillClearance + tallest + EdgeRoom) * pixel <= m_workArea.Bottom()
+                : bounds.Right() + SelectionOutset + (BarClearance + PillClearance + widest + EdgeRoom) * pixel <= m_workArea.Right();
+
+            auto const direction = outward ? 1.0 : -1.0;
+
+            auto const bar = across
+                ? (outward ? bounds.Bottom() + SelectionOutset : bounds.Y - SelectionOutset) + direction * BarClearance * pixel
+                : (outward ? bounds.Right() + SelectionOutset : bounds.X - SelectionOutset) + direction * BarClearance * pixel;
+
+            for (size_t index = 0; index < count; ++index)
+            {
+                auto const& before = spacing->Blocks[index];
+                auto const& after = spacing->Blocks[index + 1];
+                auto const size = pills[index].DesiredSize();
+
+                double centerX{ 0.0 };
+                double centerY{ 0.0 };
+
+                if (across)
+                {
+                    addLine(before.Right(), bar, after.X, bar);
+                    addLine(before.Right(), bar - TickReach * pixel, before.Right(), bar + TickReach * pixel);
+                    addLine(after.X, bar - TickReach * pixel, after.X, bar + TickReach * pixel);
+
+                    centerX = (before.Right() + after.X) / 2.0;
+                    centerY = bar + direction * (PillClearance + tallest / 2.0) * pixel;
+                }
+                else
+                {
+                    addLine(bar, before.Bottom(), bar, after.Y);
+                    addLine(bar - TickReach * pixel, before.Bottom(), bar + TickReach * pixel, before.Bottom());
+                    addLine(bar - TickReach * pixel, after.Y, bar + TickReach * pixel, after.Y);
+
+                    centerX = bar + direction * (PillClearance + size.Width / 2.0) * pixel;
+                    centerY = (before.Bottom() + after.Y) / 2.0;
+                }
+
+                // The pill is laid out at its own size and scaled about its middle, so its middle
+                // is what lands on the gap.
+                controls::Canvas::SetLeft(pills[index], centerX - m_workArea.X - size.Width / 2.0);
+                controls::Canvas::SetTop(pills[index], centerY - m_workArea.Y - size.Height / 2.0);
+
+                pills[index].Click(
+                    [weak = get_weak(), axis = spacing->Axis, gap = spacing->Gaps[index], centerX, centerY](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->BeginGapEdit(axis, gap, centerX, centerY);
+                        }
+                    });
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to draw the spacing pills.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::BeginGapEdit(glass::ArrangeAxis axis, double gap, double pageX, double pageY)
+    {
+        // Ended here rather than when they lose the keyboard, which happens later: a label box
+        // closing then would hand the keyboard back to the canvas and close this one with it.
+        EndGapEdit(true);
+        EndLabelEdit(true);
+
+        try
+        {
+            constexpr double BoxWidth = 76.0;
+            constexpr double BoxHeight = 28.0;
+
+            auto const pixel = 1.0 / std::max(m_canvasScale, MinimumCanvasScale);
+
+            controls::TextBox box{};
+
+            // Opaque, because the pill it was opened from is underneath it. A text box's own
+            // fill lets the page through.
+            auto const plate = BrushNamed(L"SolidBackgroundFillColorBaseBrush");
+
+            for (auto const* const key : { L"TextControlBackground", L"TextControlBackgroundPointerOver", L"TextControlBackgroundFocused" })
+            {
+                box.Resources().Insert(box_value(key), plate);
+            }
+
+            box.Text(winrt::to_hstring(static_cast<int32_t>(std::lround(gap))));
+            box.FontSize(12.0);
+            box.Width(BoxWidth);
+            box.Height(BoxHeight);
+            box.MinWidth(0.0);
+            box.MinHeight(0.0);
+            box.Padding(xaml::Thickness{ 6.0, 3.0, 6.0, 3.0 });
+            box.TextAlignment(xaml::TextAlignment::Center);
+            box.VerticalContentAlignment(xaml::VerticalAlignment::Center);
+            box.MaxLength(16);
+
+            // The number keys first, on a touch keyboard.
+            xaml::Input::InputScopeName number{};
+            number.NameValue(xaml::Input::InputScopeNameValue::Number);
+
+            xaml::Input::InputScope scope{};
+            scope.Names().Append(number);
+            box.InputScope(scope);
+
+            xaml::Automation::AutomationProperties::SetName(box, resources::GetString(L"GapEditBoxName"));
+
+            media::ScaleTransform shrink{};
+            shrink.ScaleX(pixel);
+            shrink.ScaleY(pixel);
+
+            box.RenderTransform(shrink);
+            box.RenderTransformOrigin({ 0.5f, 0.5f });
+
+            controls::Canvas::SetLeft(box, pageX - m_workArea.X - BoxWidth / 2.0);
+            controls::Canvas::SetTop(box, pageY - m_workArea.Y - BoxHeight / 2.0);
+
+            box.KeyDown([weak = get_weak()](foundation::IInspectable const&, xaml::Input::KeyRoutedEventArgs const& keyArgs)
+                {
+                    try
+                    {
+                        auto strong = weak.get();
+                        auto const key = keyArgs.Key();
+
+                        if (strong == nullptr ||
+                            (key != winrt::Windows::System::VirtualKey::Enter &&
+                             key != winrt::Windows::System::VirtualKey::Escape))
+                        {
+                            return;
+                        }
+
+                        keyArgs.Handled(true);
+                        strong->EndGapEdit(key == winrt::Windows::System::VirtualKey::Enter);
+
+                        // Only from the keyboard. A box closed by a click elsewhere leaves the
+                        // keyboard wherever the click put it.
+                        strong->CanvasScroll().Focus(xaml::FocusState::Programmatic);
+                    }
+                    MIDI_GLASS_CATCH_AND_LOG(L"Unable to finish typing a gap.")
+                });
+
+            // Clicking anywhere else keeps what was typed, the way the label box does.
+            box.LostFocus([weak = get_weak()](foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->EndGapEdit(true);
+                    }
+                });
+
+            box.Loaded([](foundation::IInspectable const& loaded, xaml::RoutedEventArgs const&)
+                {
+                    try
+                    {
+                        if (auto const target = loaded.try_as<controls::TextBox>())
+                        {
+                            target.Focus(xaml::FocusState::Programmatic);
+                            target.SelectAll();
+                        }
+                    }
+                    MIDI_GLASS_CATCH_AND_LOG(L"Unable to focus the gap box.")
+                });
+
+            m_gapEditor = box;
+            m_gapEditIds = m_editor.Selection();
+            m_gapEditAxis = axis;
+
+            LabelEditCanvas().Children().Append(box);
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to start typing a gap.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::EndGapEdit(bool apply)
+    {
+        if (m_gapEditor == nullptr)
+        {
+            return;
+        }
+
+        // Taken first: removing the box moves focus, and LostFocus would come straight back in.
+        auto const box = m_gapEditor;
+        auto const ids = std::move(m_gapEditIds);
+        auto const axis = m_gapEditAxis;
+
+        m_gapEditor = nullptr;
+        m_gapEditIds.clear();
+
+        try
+        {
+            auto const typed = glass::ParseGapPixels(std::wstring_view{ box.Text() });
+
+            uint32_t index{ 0 };
+
+            if (LabelEditCanvas().Children().IndexOf(box, index))
+            {
+                LabelEditCanvas().Children().RemoveAt(index);
+            }
+
+            if (apply && typed.has_value() && m_editor.SpaceControls(ids, axis, *typed))
+            {
+                RebuildSurface();
+                UpdateOffPageBar();
+                RefreshInspector();
+                UpdateStatusBar();
+                MarkChanged();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to finish typing a gap.")
     }
 
     _Use_decl_annotations_

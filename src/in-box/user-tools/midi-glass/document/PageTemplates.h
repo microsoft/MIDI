@@ -35,6 +35,11 @@ namespace glass
 
     std::vector<PageTemplate> const& PageTemplates() noexcept;
 
+    // The pages a toolbar or a palette that floats over another app starts from.
+    constexpr int32_t ToolbarLength = 800;
+    constexpr int32_t ToolbarThickness = 120;
+    constexpr int32_t PaletteSide = 360;
+
     // Starting sizes, derived from the page rather than fixed, so a 1024 x 768 page gets chunkier
     // controls than a 2560 x 1440 one. See DefaultControlSize for how, and why it is a formula
     // rather than a table.

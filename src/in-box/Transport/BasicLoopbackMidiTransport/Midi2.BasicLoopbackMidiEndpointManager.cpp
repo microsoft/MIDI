@@ -364,7 +364,7 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
     commonProperties.NativeDataFormat = MidiDataFormats::MidiDataFormats_UMP;
 
     UINT32 capabilities {0};
-    capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
+    capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;     // MIDI 1.0 only, so no SupportsMidi2Protocol
     capabilities |= MidiEndpointCapabilities_SupportsMultiClient;
     capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
     commonProperties.Capabilities = (MidiEndpointCapabilities) capabilities;
@@ -381,6 +381,8 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
     gtb1.GroupCount = 1;         // todo: we could get this from properties
     gtb1.FirstGroupIndex = 0;    // group indexes start at 0
     gtb1.Protocol = 0x01;        // 0x01 = MIDI 1.0
+    gtb1.MaxInputBandwidth = 0x0000;    // 0x0000 = not rate-limited. 0x0001 would be 31.25 kb/s
+    gtb1.MaxOutputBandwidth = 0x0000;   // 0x0000 = not rate-limited. 0x0001 would be 31.25 kb/s
     gtb1.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // MIDI Out from user's perspective
     gtb1.Name = friendlyName; //+ L" Out";           // todo: get this from properties so folks can control the port name
     blocks.push_back(gtb1);
@@ -390,6 +392,8 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
     gtb2.GroupCount = 1;         // todo: we could get this from properties
     gtb2.FirstGroupIndex = 0;    // group indexes start at 0
     gtb2.Protocol = 0x01;        // 0x01 = MIDI 1.0
+    gtb2.MaxInputBandwidth = 0x0000;    // 0x0000 = not rate-limited. 0x0001 would be 31.25 kb/s
+    gtb2.MaxOutputBandwidth = 0x0000;   // 0x0000 = not rate-limited. 0x0001 would be 31.25 kb/s
     gtb2.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;  // MIDI In from user's perspective
     gtb2.Name = friendlyName; // + L" In";           // todo: get this from properties so folks can control the port name
     blocks.push_back(gtb2);
@@ -455,6 +459,17 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
 
 
     TransportState::Current().GetEndpointTable()->SetDevice(definition->AssociationId, device);
+
+    // Written after activation because activation clears it, and nothing negotiates it for this endpoint
+    BYTE configuredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI1 };
+
+    DEVPROPERTY configuredProtocolProperty{ { PKEY_MIDI_EndpointConfiguredProtocol, DEVPROP_STORE_SYSTEM, nullptr },
+        DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(configuredProtocol)), &configuredProtocol };
+
+    LOG_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(
+        definition->CreatedEndpointInterfaceId.c_str(),
+        1,
+        &configuredProtocolProperty));
 
     TraceLoggingWrite(
         MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),

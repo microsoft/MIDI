@@ -347,8 +347,10 @@ namespace winrt::midiglass::implementation
 
     void MainWindow::RefreshLibrary()
     {
+        // Dropping it would lose whatever asked, such as the device list arriving.
         if (m_refreshing)
         {
+            m_refreshAgain = true;
             return;
         }
 
@@ -358,7 +360,7 @@ namespace winrt::midiglass::implementation
 
         // Reading every layout and drawing every missing card is disk work, so it never happens
         // on the UI thread.
-        std::thread([weak]()
+        std::thread([weak, queue = m_dispatcher]()
             {
                 winrt::init_apartment(winrt::apartment_type::multi_threaded);
 
@@ -429,19 +431,29 @@ namespace winrt::midiglass::implementation
                 {
                 }
 
-                auto strong = weak.get();
-
-                if (strong != nullptr && strong->m_dispatcher != nullptr)
+                // The window is resolved on the UI thread only, so it is never released here.
+                try
                 {
-                    strong->m_dispatcher.TryEnqueue([weak, cards, stale]()
-                        {
-                            if (auto inner = weak.get())
+                    if (queue != nullptr)
+                    {
+                        queue.TryEnqueue([weak, cards = std::move(cards), stale = std::move(stale)]()
                             {
-                                inner->ApplyCards(cards);
-                                inner->m_refreshing = false;
-                                inner->QueueStaleCards(stale);
-                            }
-                        });
+                                if (auto inner = weak.get())
+                                {
+                                    inner->ApplyCards(cards);
+                                    inner->m_refreshing = false;
+                                    inner->QueueStaleCards(stale);
+
+                                    if (std::exchange(inner->m_refreshAgain, false))
+                                    {
+                                        inner->RefreshLibrary();
+                                    }
+                                }
+                            });
+                    }
+                }
+                catch (...)
+                {
                 }
 
                 winrt::uninit_apartment();
@@ -781,6 +793,13 @@ namespace winrt::midiglass::implementation
 
             ServiceChipIcon().Foreground(foreground);
             ServiceChipText().Foreground(foreground);
+
+            // On a PC with a lot of devices the first look takes a while, and until it is done
+            // an empty device list does not mean there is nothing there.
+            auto const looking = m_serviceRunning && !midiapp::EndpointCatalog::Current().HasEnumerated();
+
+            DeviceSearchPanel().Visibility(looking ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            DeviceSearchRing().IsActive(looking);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the status bar.")
     }

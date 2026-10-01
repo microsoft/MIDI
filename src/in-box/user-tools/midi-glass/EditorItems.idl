@@ -50,6 +50,10 @@ namespace midiglass
         // here, because the outline is how somebody using a screen reader finds it.
         Boolean IsOutsidePage{ get; };
         Microsoft.UI.Xaml.Visibility OutsideVisibility{ get; };
+
+        // A locked control. The outline is the one place it can still be picked, so it says so.
+        Boolean IsLocked{ get; };
+        Microsoft.UI.Xaml.Visibility LockedVisibility{ get; };
     }
 
     // One line in the monitor rail: a message that actually went out.

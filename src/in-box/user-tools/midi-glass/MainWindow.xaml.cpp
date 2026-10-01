@@ -165,22 +165,28 @@ namespace winrt::midiglass::implementation
             // device with it and says nothing else about itself.
             auto weak = get_weak();
 
-            midiapp::EndpointCatalog::Current().SetChangedHandler([weak]()
+            // Resolved only on the UI thread. A window released on the watcher's thread is
+            // destroyed there, and XAML objects must not be.
+            m_endpointsChangedToken = midiapp::EndpointCatalog::Current().AddChangedHandler(
+                [weak, queue = m_dispatcher]()
                 {
-                    auto strong = weak.get();
-
-                    if (strong == nullptr || strong->m_dispatcher == nullptr)
+                    if (queue == nullptr)
                     {
                         return;
                     }
 
-                    strong->m_dispatcher.TryEnqueue([weak]()
+                    queue.TryEnqueue([weak]()
                         {
-                            if (auto inner = weak.get())
+                            try
                             {
-                                inner->CheckServiceState();
-                                inner->RefreshLibrary();
+                                if (auto inner = weak.get())
+                                {
+                                    inner->CheckServiceState();
+                                    inner->UpdateStatusBar();
+                                    inner->RefreshLibrary();
+                                }
                             }
+                            MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the device change.")
                         });
                 });
 
@@ -231,7 +237,8 @@ namespace winrt::midiglass::implementation
         {
             // A handler left pointing at a closed window is a use after free waiting for
             // somebody to plug something in.
-            midiapp::EndpointCatalog::Current().SetChangedHandler(nullptr);
+            midiapp::EndpointCatalog::Current().RemoveChangedHandler(m_endpointsChangedToken);
+            m_endpointsChangedToken = 0;
 
             if (m_serviceTimer != nullptr)
             {

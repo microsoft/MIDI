@@ -112,7 +112,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         collections::IMap<winrt::hstring, foundation::IInspectable> m_properties 
             { winrt::multi_threaded_map<winrt::hstring, foundation::IInspectable>() };
 
-        // these don't change, so fine to keep them as a class var
+        // Replaced whole, never edited, because a watcher updates it while apps hold the last one.
+        mutable std::mutex m_groupTerminalBlocksLock;
         collections::IVector<midi2enum::MidiGroupTerminalBlock> m_groupTerminalBlocks
             { winrt::multi_threaded_vector<midi2enum::MidiGroupTerminalBlock>() };
 

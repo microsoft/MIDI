@@ -10,6 +10,7 @@
 #include "stdafx.h"
 
 #include <algorithm>
+#include <atomic>
 
 void MidiLegacyPortDeviceWatcherTests::TestCreateAndEnumerateForAllFlows()
 {
@@ -606,5 +607,178 @@ void MidiLegacyPortDeviceWatcherTests::TestAddedRaisedForPortsCreatedWhileWatchi
     VERIFY_ARE_EQUAL(reportedByWatcherCount, expectedPorts.size());
     VERIFY_ARE_EQUAL(withCorrectAssociatedEndpointCount, expectedPorts.size());
 
+}
+
+// Source port numbers used to come back one too high after a renumber, because the update
+// skipped the conversion applied when a port is first read.
+void MidiLegacyPortDeviceWatcherTests::TestPortNumbersFollowRenumbering()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiLoopbackManager::IsTransportAvailable());
+
+    auto const createLoopback = [](std::wstring const& name)
+        {
+            auto uniqueId = winrt::to_hstring(foundation::GuidHelper::CreateNewGuid());
+
+            MidiLoopbackEndpointDefinition definitionA(
+                winrt::hstring{ name + L" A" }, L"Port renumbering test", uniqueId + L"-A");
+            MidiLoopbackEndpointDefinition definitionB(
+                winrt::hstring{ name + L" B" }, L"Port renumbering test", uniqueId + L"-B");
+
+            return MidiLoopbackManager::CreateTransientLoopback(MidiLoopbackCreationConfig(definitionA, definitionB));
+        };
+
+    // The second loopback's ports are numbered after the first's, so removing the first
+    // renumbers them.
+    auto first = createLoopback(L"Test Renumber First");
+    VERIFY_IS_NOT_NULL(first);
+    VERIFY_IS_TRUE(first.Success());
+
+    auto const firstAssociationId = first.CreatedLoopbackEntry().AssociationId();
+    bool firstRemoved{ false };
+
+    auto cleanupFirst = wil::scope_exit([&]
+        {
+            if (!firstRemoved)
+            {
+                MidiLoopbackManager::RemoveTransientLoopback(MidiLoopbackRemovalConfig(firstAssociationId));
+            }
+        });
+
+    auto second = createLoopback(L"Test Renumber Second");
+    VERIFY_IS_NOT_NULL(second);
+    VERIFY_IS_TRUE(second.Success());
+
+    auto const secondAssociationId = second.CreatedLoopbackEntry().AssociationId();
+
+    auto cleanupSecond = wil::scope_exit([&]
+        {
+            MidiLoopbackManager::RemoveTransientLoopback(MidiLoopbackRemovalConfig(secondAssociationId));
+        });
+
+    std::vector<winrt::hstring> const secondEndpointIds{
+        second.CreatedLoopbackEntry().EndpointA().EndpointDeviceId(),
+        second.CreatedLoopbackEntry().EndpointB().EndpointDeviceId() };
+
+    wil::unique_event_nothrow enumerationCompleted;
+    enumerationCompleted.create();
+
+    std::atomic<uint32_t> numberUpdates{ 0 };
+
+    auto watcher = MidiLegacyPortDeviceWatcher::Create();
+    VERIFY_IS_NOT_NULL(watcher);
+
+    auto enumerationCompletedToken = watcher.EnumerationCompleted([&](auto const&, auto const&)
+        {
+            enumerationCompleted.SetEvent();
+        });
+
+    auto updatedToken = watcher.Updated([&](auto const&, MidiLegacyPortDeviceInformationUpdatedEventArgs const& args)
+        {
+            // No VERIFY in here: it runs on a watcher thread.
+            if (args != nullptr && args.IsNumberUpdated())
+            {
+                numberUpdates++;
+            }
+        });
+
+    auto cleanupWatcher = wil::scope_exit([&]
+        {
+            watcher.Stop();
+
+            watcher.EnumerationCompleted(enumerationCompletedToken);
+            watcher.Updated(updatedToken);
+        });
+
+    watcher.Start();
+
+    VERIFY_IS_TRUE(enumerationCompleted.wait(30000));
+
+    // An A/B loopback has a source and a destination port on each of its two endpoints.
+    uint32_t const expectedPorts{ 4 };
+    uint32_t held{ 0 };
+    uint32_t matching{ 0 };
+
+    auto const compareWithFreshQuery = [&](bool logEach)
+        {
+            held = 0;
+            matching = 0;
+
+            for (auto const& endpointId : secondEndpointIds)
+            {
+                for (auto const flow : { Midi1PortFlow::MidiMessageSource, Midi1PortFlow::MidiMessageDestination })
+                {
+                    auto const fresh = MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(endpointId, flow);
+
+                    for (auto const& port : watcher.GetEnumeratedPortsForAssociatedEndpoint(endpointId, flow))
+                    {
+                        held++;
+
+                        auto const found = std::find_if(begin(fresh), end(fresh),
+                            [&](MidiLegacyPortDeviceInformation const& candidate) { return candidate.PortDeviceId() == port.PortDeviceId(); });
+
+                        auto const freshNumber = found != end(fresh) ? (*found).Number() : UINT32_MAX;
+
+                        if (port.Number() == freshNumber)
+                        {
+                            matching++;
+                        }
+
+                        if (logEach)
+                        {
+                            LOG_OUTPUT(L"%s: watcher %u, fresh query %u", port.Name().c_str(), port.Number(), freshNumber);
+                        }
+                    }
+                }
+            }
+        };
+
+    // Ports of a loopback created a moment ago can still be arriving.
+    auto const waitForMatch = [&]()
+        {
+            for (int attempt = 0; attempt < 60; attempt++)
+            {
+                compareWithFreshQuery(false);
+
+                if (held == expectedPorts && matching == expectedPorts)
+                {
+                    break;
+                }
+
+                Sleep(250);
+            }
+
+            compareWithFreshQuery(true);
+        };
+
+    waitForMatch();
+
+    VERIFY_ARE_EQUAL(held, expectedPorts);
+    VERIFY_ARE_EQUAL(matching, expectedPorts);
+
+    LOG_OUTPUT(L"Removing the first loopback, which renumbers the second loopback's ports");
+
+    auto removal = MidiLoopbackManager::RemoveTransientLoopback(MidiLoopbackRemovalConfig(firstAssociationId));
+    VERIFY_IS_NOT_NULL(removal);
+    VERIFY_IS_TRUE(removal.Success());
+
+    firstRemoved = true;
+
+    // Compared only once the renumbering has reached the watcher and settled, so a match is not
+    // just both sides still showing the old numbers.
+    for (int attempt = 0; attempt < 60 && numberUpdates.load() == 0; attempt++)
+    {
+        Sleep(250);
+    }
+
+    Sleep(2000);
+
+    waitForMatch();
+
+    // Without a renumber, this test would prove nothing.
+    VERIFY_IS_TRUE(numberUpdates.load() > 0);
+
+    VERIFY_ARE_EQUAL(held, expectedPorts);
+    VERIFY_ARE_EQUAL(matching, expectedPorts);
 }
 

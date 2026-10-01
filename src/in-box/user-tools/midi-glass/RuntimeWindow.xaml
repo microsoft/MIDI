@@ -190,7 +190,7 @@
                         <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE71E;" /></MenuFlyoutSubItem.Icon>
                     </MenuFlyoutSubItem>
 
-                    <ToggleMenuFlyoutItem x:Name="ToolbarKeepOnTopItem" x:Uid="ToolbarKeepOnTop" Text="Keep in front" Click="OnToolbarKeepOnTopClick" />
+                    <ToggleMenuFlyoutItem x:Name="ToolbarKeepOnTopItem" x:Uid="ToolbarKeepOnTop" Text="Always on top" Click="OnToolbarKeepOnTopClick" />
 
                     <MenuFlyoutItem x:Uid="ToolbarFullScreen" Text="Full screen" Click="OnFullScreenClick">
                         <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE740;" /></MenuFlyoutItem.Icon>

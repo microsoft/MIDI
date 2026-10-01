@@ -67,9 +67,6 @@ namespace winrt::midikeyboard::implementation
         void OnOctaveUpClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnPanicClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
-        void OnEndpointSwitchFlyoutOpening(foundation::IInspectable const& sender, foundation::IInspectable const& args);
-        void OnEndpointSwitchItemClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-
         void OnPatchFlyoutOpened(foundation::IInspectable const& sender, foundation::IInspectable const& args);
         void OnProgramNumberChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnBankMsbChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
@@ -86,7 +83,6 @@ namespace winrt::midikeyboard::implementation
         void OnArpBpmChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnLatchToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
-        void OnConnectionModeChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnEndpointSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnGroupSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnChannelSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
@@ -141,12 +137,15 @@ namespace winrt::midikeyboard::implementation
         void RefreshEndpointList() noexcept;
         void RefreshGroupList() noexcept;
 
+        // Moves the notes to another group. Anything held is let go on the group it was played
+        // on, and capability inquiry moves too, so the program list is the new group's.
+        void ChangeTransmitGroup(_In_ uint32_t groupNumber) noexcept;
+
         winrt::fire_and_forget ReconnectAsync();
         winrt::fire_and_forget ShutdownAsync();
 
         void UpdateConnectionDisplay(::midikeyboard::ConnectResult result) noexcept;
         void ShowConnectingState() noexcept;
-        void UpdateConnectionModeLayout() noexcept;
         void UpdateVelocityLayout() noexcept;
         void UpdateOctaveDisplay() noexcept;
 
@@ -339,6 +338,9 @@ namespace winrt::midikeyboard::implementation
 
         // the arpeggiator controls live in the always visible strip, so they have their own
         bool m_suppressArpHandlers{ true };
+
+        // and so do the destination, group and channel pickers above them
+        bool m_suppressConnectionHandlers{ true };
 
         // the bank and program controls live in a flyout, which builds its content on first
         // open, so they raise their change events late in exactly the same way

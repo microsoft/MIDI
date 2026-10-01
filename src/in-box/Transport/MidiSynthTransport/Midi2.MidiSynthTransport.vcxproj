@@ -96,6 +96,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\RtpMidiTransport\TransportState.h" />
+    <ClInclude Include="..\RtpMidiTransport\transport_defs.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Midi2.MidiSynthBidi.h" />
     <ClInclude Include="Midi2.MidiSynthConfigurationManager.h" />

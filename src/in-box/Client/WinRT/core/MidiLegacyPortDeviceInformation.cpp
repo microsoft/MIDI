@@ -14,6 +14,22 @@
 
 namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 {
+    namespace
+    {
+        // The service numbers source ports from 1, so 1 is subtracted. Destination ports keep the
+        // service's number, because the GS synth occupies number 0.
+        uint32_t PortNumberFromServiceAssigned(
+            _In_ midi2enum::Midi1PortFlow const flow,
+            _In_ uint32_t const serviceAssignedNumber) noexcept
+        {
+            if (flow == midi2enum::Midi1PortFlow::MidiMessageSource)
+            {
+                return serviceAssignedNumber > 0 ? serviceAssignedNumber - 1 : 0;
+            }
+
+            return serviceAssignedNumber;
+        }
+    }
 
 
     void AddSingleDeviceInformationEntriesToPortsList(
@@ -947,33 +963,18 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         if (properties.HasKey(STRING_PKEY_MIDI_ServiceAssignedPortNumber))
         {
-            // for MIDI Input (Source) ports, we have to subtract 1 because we number in the service starting at 1
-            // For midi Output (Destination) ports, we leave the number as-is, because the GS synth occupies number 0
-
-            if (m_portFlow == Midi1PortFlow::MidiMessageSource)
-            {
-                auto portNumber = internal::GetDeviceInfoProperty<uint32_t>(properties, STRING_PKEY_MIDI_ServiceAssignedPortNumber, 0);
-
-                if (portNumber > 0)
-                {
-                    m_portNumber = portNumber - 1;
-                }
-                else
-                {
-                    m_portNumber = 0;
-                }
-            }
-            else
-            {
-                m_portNumber = internal::GetDeviceInfoProperty<uint32_t>(properties, STRING_PKEY_MIDI_ServiceAssignedPortNumber, 0);
-            }
-
+            m_portNumber = PortNumberFromServiceAssigned(m_portFlow,
+                internal::GetDeviceInfoProperty<uint32_t>(properties, STRING_PKEY_MIDI_ServiceAssignedPortNumber, 0));
         }
 
 
 
 
-        m_name = name;
+        {
+            std::lock_guard<std::mutex> guard(m_nameLock);
+            m_name = name;
+        }
+
         m_id = internal::NormalizeEndpointInterfaceIdHStringCopy(id);
 
 
@@ -1009,30 +1010,62 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept
     {
         if (deviceInformationUpdate == nullptr) return false;
-       
-        // most properties cannot change. We're checking just a few of them here
-        for (auto&& [key, value] : deviceInformationUpdate.Properties())
+
+        try
         {
-            // insert does a replace if the key exists in the map
-
-            m_properties.Insert(key, value);
-
-            if (key == L"System.Devices.FriendlyName" || key == L"System.ItemNameDisplay")
+            // most properties cannot change. We're checking just a few of them here
+            for (auto&& [key, value] : deviceInformationUpdate.Properties())
             {
-                auto newName = winrt::unbox_value<winrt::hstring>(value);
+                // insert does a replace if the key exists in the map
 
-                if (!newName.empty())
+                m_properties.Insert(key, value);
+
+                // A removed property arrives with no value, which unbox_value would throw on.
+                if (key == L"System.Devices.FriendlyName" || key == L"System.ItemNameDisplay")
                 {
-                    m_name = newName;
+                    auto newName = winrt::unbox_value_or<winrt::hstring>(value, L"");
+
+                    if (!newName.empty())
+                    {
+                        std::lock_guard<std::mutex> guard(m_nameLock);
+                        m_name = newName;
+                    }
+                }
+                else if (key == STRING_PKEY_MIDI_ServiceAssignedPortNumber)
+                {
+                    if (auto const number = value.try_as<uint32_t>(); number.has_value())
+                    {
+                        m_portNumber = PortNumberFromServiceAssigned(m_portFlow, number.value());
+                    }
                 }
             }
-            else if (key == STRING_PKEY_MIDI_ServiceAssignedPortNumber)
-            {
-                m_portNumber = winrt::unbox_value<uint32_t>(value);
-            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error updating legacy port properties.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception updating legacy port properties.");
+            return false;
         }
 
         return true;
+    }
+
+    winrt::hstring MidiLegacyPortDeviceInformation::Name() const noexcept
+    {
+        try
+        {
+            std::lock_guard<std::mutex> guard(m_nameLock);
+            return m_name;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception reading legacy port name.");
+            return L"";
+        }
     }
 
 

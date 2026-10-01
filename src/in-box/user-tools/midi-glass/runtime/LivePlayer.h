@@ -77,6 +77,9 @@ namespace glass
         // because the editor and the runtime window draw the same control differently.
         std::function<void(uint32_t controlIndex, double value)> FeedbackMoved{};
 
+        // A DAW told a Mackie Control light to blink. It blinks until FeedbackMoved says otherwise.
+        std::function<void(uint32_t controlIndex)> FeedbackBlinks{};
+
         // A device sent something a control is only watching for as traffic, so there is no
         // value to carry. Lit says whether it blinks, comes on, or goes dark.
         enum class ListenerState
@@ -178,10 +181,6 @@ namespace glass
 
         void PadReleased(_In_ uint32_t controlIndex, _In_ uint32_t touch);
 
-        // Assistive technology setting a value is one discrete change, not a drag, so it is a
-        // whole gesture. Going straight to the release would find nothing held back.
-        void SetDirectly(_In_ uint32_t controlIndex, _In_ double value);
-
         void Switched(_In_ uint32_t controlIndex, _In_ bool isOn);
 
         // The same, for a pad that takes its velocity from how hard it was hit. Everything else
@@ -219,17 +218,6 @@ namespace glass
         // Clock generators. Starting one is what pressing it does; a layout can also ask for it
         // to be running the moment it opens.
         void StartClocks();
-        bool IsClockRunning(_In_ uint32_t controlIndex) const noexcept;
-
-        bool IsLfoRunning(_In_ uint32_t controlIndex) const noexcept;
-
-        // Runs while held rather than latching. The surface needs this to decide whether a
-        // press is a toggle or a hold, and the answer is per control rather than per kind.
-        bool LfoLatchesAt(_In_ uint32_t controlIndex) const noexcept;
-
-        // The same two questions for a step sequencer.
-        bool AreStepsRunning(_In_ uint32_t controlIndex) const noexcept;
-        bool StepsLatchAt(_In_ uint32_t controlIndex) const noexcept;
 
         // A control feeding a clock its tempo moved. Does nothing unless some clock on this
         // layout named that control.
@@ -375,6 +363,9 @@ namespace glass
         // What each keyboard is playing, so releasing a key sends the note it started rather
         // than whatever the key would be after an edit.
         std::vector<uint16_t> m_soundingNotes{};
+
+        // Where each control was when it last sent a turn, for the controls that send turns.
+        std::vector<double> m_relativeBase{};
 
         // How many clock messages have arrived for each control following the wire's beat.
         // Twenty four of them is a quarter note, and that is when the lamp blinks.

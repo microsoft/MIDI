@@ -51,6 +51,8 @@ namespace glass
         inline constexpr wchar_t Group[]{ L"EditGroupControls" };
         inline constexpr wchar_t Ungroup[]{ L"EditUngroupControls" };
         inline constexpr wchar_t RenameGroup[]{ L"EditRenameGroup" };
+        inline constexpr wchar_t Lock[]{ L"EditLockControls" };
+        inline constexpr wchar_t Unlock[]{ L"EditUnlockControls" };
     }
 
     // The page size is changing. What the grow and shrink dialogs hand back.
@@ -203,6 +205,19 @@ namespace glass
         // as a control on its own, because nothing moves with it.
         std::vector<OutlineRow> OutlineRows() const;
 
+        // ------------------------------------------------------------------ locking
+
+        // Everything selected, locked or unlocked in one undo step. A locked control cannot be
+        // picked on the page, moved or resized. The outline still selects it, which is how it
+        // gets unlocked again.
+        bool SetSelectionLocked(_In_ bool locked);
+
+        // Something is selected and all of it is locked.
+        bool SelectionIsLocked() const;
+
+        // Any of the selection is locked, which is what stops a resize.
+        bool SelectionHasLocked() const;
+
         // ------------------------------------------------------------------ several at once
 
         // Every edit between these two is one undo entry, however many controls it touched.
@@ -236,10 +251,6 @@ namespace glass
 
         // Same, but centered on the point somebody clicked, which is what dropping feels like.
         std::wstring AddControlCentered(_In_ ControlKind kind, _In_ double centerX, _In_ double centerY);
-
-        // Drawn out to a size with a palette tool armed, the way a drawing app places a shape.
-        // One undo entry, not a placement followed by a resize.
-        std::wstring AddControlInRectangle(_In_ ControlKind kind, _In_ EditRect const& area);
 
         // The first place on the page nothing is already using, walking the grid from the top
         // left. This is the keyboard path: somebody who cannot click the page still has to be
@@ -304,17 +315,32 @@ namespace glass
 
         // ------------------------------------------------------------------ arranging
 
+        // A group is lined up and spaced as one block, so a channel strip keeps its shape. A
+        // selection that is all one group is taken control by control instead, because lining
+        // up the members of one group with each other is the reason to pick just them.
         bool AlignSelection(_In_ AlignEdge edge);
         bool DistributeSelection(_In_ ArrangeAxis axis);
         bool SetSelectionGap(_In_ ArrangeAxis axis, _In_ double gap);
+
+        // The same for controls named by id rather than by the selection. A gap typed into the
+        // canvas is applied when the box closes, and a click elsewhere can change the selection
+        // first.
+        bool SpaceControls(_In_ std::vector<std::wstring> const& ids, _In_ ArrangeAxis axis, _In_ double gap);
+
+        // How many blocks the selection is: what Align needs two of and Distribute three.
+        size_t SelectionBlockCount() const;
 
         // Which controls are drawn over which. A page is painted in the order its controls are
         // stored, so this reorders that list; nothing else about a control changes, and the
         // keyboard order is a separate idea that this leaves alone.
         bool ChangeZOrder(_In_ ZOrderMove move);
 
-        // What the spacing pills show. Empty when fewer than two are selected.
+        // The gaps between the selected blocks along one axis, in position order.
         std::vector<double> SelectionGaps(_In_ ArrangeAxis axis) const;
+
+        // What the spacing pills show: the way the selection runs, its blocks and their gaps.
+        // Nothing when fewer than two blocks are selected or they overlap both ways.
+        std::optional<SpacingReadout> SelectionSpacing() const;
 
         bool RepeatSelection(_In_ RepeatOptions const& options);
 
@@ -448,7 +474,6 @@ namespace glass
 
         bool SetLayoutName(_In_ std::wstring const& name);
         bool SetLayoutDescription(_In_ std::wstring const& description);
-        bool SetThemeName(_In_ std::wstring const& themeName);
 
         // The customer picked a theme out of the gallery. The layout stops carrying one of its
         // own, so an improvement to the shipped theme still reaches this layout.
@@ -466,12 +491,12 @@ namespace glass
         bool SetAlwaysOnTop(_In_ bool onTop);
         bool SetSeeThrough(_In_ bool seeThrough);
         bool SetTempoSource(_In_ TempoSource const& tempo);
-        bool SetBackgroundOpacity(_In_ double opacity);
 
         // The picture behind the whole surface. The name is a bare file name beside the layout,
         // never a path: a layout is untrusted input, and a path in it is a way to make this app
         // open a file somewhere else on the PC. Pass an empty name to take the picture away.
-        bool SetBackgroundImage(_In_ std::wstring const& fileName, _In_ BackgroundFit fit);
+        // The fit and how strongly it shows come from the same dialog, so all three are one step.
+        bool SetBackgroundImage(_In_ std::wstring const& fileName, _In_ BackgroundFit fit, _In_ double opacity);
 
         // Growing asks where the existing controls should sit; shrinking offers to scale them.
         // Neither ever clamps a control inside the page, because clamping makes a resize
@@ -480,9 +505,6 @@ namespace glass
 
         // How many controls a resize would leave outside, worked out before anything changes.
         size_t CountOutsideAfterResize(_In_ PageResizeRequest const& request) const;
-
-        // Where the page sits inside the work area the canvas draws.
-        EditRect WorkArea() const;
 
         std::vector<Control const*> ControlsOutsidePage() const;
 
@@ -501,6 +523,11 @@ namespace glass
 
         bool SetDeviceMatchMode(_In_ std::wstring const& name, _In_ midiapp::EndpointMatchMode mode);
 
+        // Changes how the layout talks to a device, and brings every row sent there along. A row
+        // that already is a Mackie Control function becomes it, and a function becomes the plain
+        // message it stands for when the device stops speaking Mackie Control.
+        bool SetDeviceProtocol(_In_ std::wstring const& name, _In_ DeviceProtocol protocol);
+
         // How many controls, across every page, send to this entry. The device list shows it so
         // that removing an entry is not a guess.
         size_t CountControlsUsingDevice(_In_ std::wstring const& name) const;
@@ -517,6 +544,9 @@ namespace glass
         bool SetSequence(_In_ std::wstring const& name, _In_ glass::Sequence const& sequence);
 
         bool RemoveSequence(_In_ std::wstring const& name);
+
+        // How many controls, across every page, have a row that plays this sequence.
+        size_t CountControlsUsingSequence(_In_ std::wstring const& name) const;
 
         // ------------------------------------------------------------------ undo
 

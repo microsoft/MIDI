@@ -8,7 +8,6 @@
 #include "pch.h"
 #include "AppSettings.h"
 #include "KeyboardLayout.h"
-#include "TemporaryFlags.h"
 
 namespace midikeyboard
 {
@@ -16,8 +15,8 @@ namespace midikeyboard
     {
         constexpr wchar_t SettingsKeyPath[] = LR"(Software\Microsoft\Windows MIDI Services\Tools\midikeyboard)";
 
-        constexpr wchar_t ValueConnection[] = L"Connection";
         constexpr wchar_t ValueEndpointDeviceId[] = L"EndpointDeviceId";
+        constexpr wchar_t ValueEndpointName[] = L"EndpointName";
         constexpr wchar_t ValueTransmitGroup[] = L"TransmitGroup";
         constexpr wchar_t ValueTransmitChannel[] = L"TransmitChannel";
         constexpr wchar_t ValueProgramNumber[] = L"ProgramNumber";
@@ -73,17 +72,8 @@ namespace midikeyboard
     {
         LoadShared();
 
-        m_connection = ReadEnum(
-            ReadDword(ValueConnection, static_cast<uint32_t>(ConnectionMode::VirtualDevice)),
-            ConnectionMode::ExistingEndpoint, ConnectionMode::VirtualDevice);
-
-        // TEMPORARY: see TemporaryFlags.h. In memory only, so the saved preference survives.
-        if (TemporarilyDisableVirtualDevice && m_connection == ConnectionMode::VirtualDevice)
-        {
-            m_connection = ConnectionMode::ExistingEndpoint;
-        }
-
         m_endpointDeviceId = ReadString(ValueEndpointDeviceId, L"");
+        m_endpointName = ReadString(ValueEndpointName, L"");
 
         m_transmitGroupNumber = std::clamp(ReadDword(ValueTransmitGroup, 1u), 1u, 16u);
         m_transmitChannelNumber = std::clamp(ReadDword(ValueTransmitChannel, 1u), 1u, 16u);
@@ -163,16 +153,17 @@ namespace midikeyboard
         m_blackKeyColorArgb = ReadDword(ValueBlackKeyColor, DefaultBlackKeyColorArgb);
     }
 
-    void AppSettings::Connection(ConnectionMode value) noexcept
-    {
-        m_connection = value;
-        WriteDword(ValueConnection, static_cast<uint32_t>(value));
-    }
-
     void AppSettings::EndpointDeviceId(std::wstring const& value) noexcept
     {
         m_endpointDeviceId = value;
         WriteString(ValueEndpointDeviceId, value);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::EndpointName(std::wstring const& value) noexcept
+    {
+        m_endpointName = value;
+        WriteString(ValueEndpointName, value);
     }
 
     void AppSettings::TransmitGroupNumber(uint32_t value) noexcept

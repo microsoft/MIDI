@@ -18,15 +18,25 @@ It's also the easiest way to test the parts of MIDI 2.0 that a MIDI 1.0 controll
 
 ![The Windows MIDI Keyboard window, with numbered callouts on the connection, the keys, the octave buttons, the pitch and modulation ribbons, the arpeggiator and latch controls, the program and panic buttons, and the settings button]({{ site.baseurl }}/assets/images/midikeyboard-quick-start.png)
 
-1. **The connection** shows the instrument you're playing, with its group and channel. The arrow next to it switches to a different instrument. If the device goes away, the keyboard says so and reconnects on its own when it comes back, so unplugging a USB instrument doesn't mean restarting the app.
+1. **The top row** is where the notes go: the device, then the group on it, then the channel. The words at the end of the row say whether the keyboard is connected. [Where the notes go](#where-the-notes-go) has the details.
 2. **The keys.** Click or tap them, or play them from your computer keyboard. Striking a key near the top plays softly, and near the bottom plays loudly.
 3. **Octave** moves the whole keyboard up or down. **Page Up** and **Page Down** do the same.
 4. **The ribbons** bend the pitch and send modulation, like the wheels on a hardware keyboard.
 5. **Arp** turns the notes you hold into a pattern, and **Latch** keeps notes sounding after you let go.
 6. **The program button**, showing **43: Cello** here, chooses the sound. **Panic**, at the far right, stops every note that's sounding.
-7. **Settings** holds everything else: the instrument, group, and channel under **Connection**, plus the keyboard, expression, and appearance options.
+7. **Settings** holds everything else: the keyboard, expression, and appearance options.
 
-> The **virtual device** connection type, which makes the keyboard appear to other applications as a MIDI input they can open, is temporarily unavailable in this preview.
+## Where the notes go
+
+The top row of the toolbar decides where the notes go. Read it from left to right:
+
+1. **The device.** Choose any MIDI device on your PC, a loopback, or the built-in General MIDI synthesizer.
+2. **The group.** A MIDI 2.0 device can have up to 16 groups, and many use them for different parts, like a different sound on each one. The list shows only the groups the device has, with the names the device gives them. On a MIDI 1.0 interface with several ports, each port is a group.
+3. **The channel**, 1 to 16, inside that group.
+
+The words at the end of the row say whether the keyboard is connected. If the device goes away, its name stays in the box, dimmed, and the keyboard says it's not available right now. It starts playing that device again as soon as it comes back, so unplugging a USB instrument doesn't mean restarting the app.
+
+When you switch to a device that doesn't have the group you were using, the keyboard moves to that device's first group. The group you see is always the group the notes go to.
 
 ## Playing
 
@@ -47,7 +57,7 @@ If Windows is set to a different layout from the one printed on your keyboard, t
 
 **Octave buttons.** The **Octave** buttons at the top, and **Page Up** and **Page Down**, move the whole keyboard up or down an octave. The range shown between them tells you where you are.
 
-**Panic.** The button at the right of the top strip stops every sounding note and puts the ribbons back to rest. Reach for it when something hangs.
+**Panic.** The button at the right end of the toolbar stops every sounding note and puts the ribbons back to rest. Reach for it when something hangs.
 
 ## The ribbons
 
@@ -73,7 +83,7 @@ You can move the ribbons to the other side of the keys, or hide them, in setting
 
 ## The arpeggiator
 
-The **Arp** controls in the top strip turn held notes into a pattern. Choose a direction &mdash; up, down, up and down, up and down with the ends repeated, random, or in the order you played them &mdash; then a tempo and a note length.
+The **Arp** controls on the toolbar turn held notes into a pattern. Choose a direction &mdash; up, down, up and down, up and down with the ends repeated, random, or in the order you played them &mdash; then a tempo and a note length.
 
 It's useful well beyond making arpeggios: it gives you a steady, repeatable stream of notes for testing an instrument, a connection, or a latency measurement, without having to keep playing by hand.
 
@@ -87,7 +97,7 @@ With the arpeggiator running, the pattern keeps playing the latched notes, so yo
 
 ## Bank and program
 
-The **Prog** button in the top strip is where you choose the sound.
+The **Prog** button on the toolbar is where you choose the sound.
 
 ![The bank and program flyout]({{ site.baseurl }}/assets/images/midikeyboard-patch.png)
 
@@ -102,8 +112,6 @@ Not every device answers, and the flyout tells you which case you're in. When it
 The gear button at the top right opens the settings panel beside the keys.
 
 ![The settings panel]({{ site.baseurl }}/assets/images/midikeyboard-settings.png)
-
-**Connection** is where you choose the instrument, the group, and the channel.
 
 **Keyboard** sets the base octave, how many octaves are shown, and transposition in semitones. More octaves means smaller keys, so three is a reasonable default on a normal window. Transposition shifts what's *sent* without moving the keys, which is how you play a part in a key that suits your hands. **Computer keyboard layout** chooses which layout's letters are drawn on the keys, and is covered under [Playing](#playing).
 

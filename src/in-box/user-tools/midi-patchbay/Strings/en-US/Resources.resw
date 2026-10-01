@@ -99,16 +99,16 @@
     <value>New quick patch</value>
   </data>
   <data name="ImportPatchButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Import a patch</value>
+    <value>Import patch</value>
   </data>
   <data name="ImportPatchButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Copy a .midipatch file from another folder into your patches. It won't route until you turn it on.</value>
   </data>
   <data name="ImportPatchText.Text" xml:space="preserve">
-    <value>Import a patch…</value>
+    <value>Import patch…</value>
   </data>
   <data name="ImportPatchTitle" xml:space="preserve">
-    <value>Import a patch</value>
+    <value>Import patch</value>
   </data>
   <data name="ImportPatchFilter" xml:space="preserve">
     <value>MIDI Patchbay patches</value>
@@ -117,10 +117,10 @@
     <value>Patches</value>
   </data>
   <data name="SortButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Sort the patch list</value>
+    <value>Sort</value>
   </data>
   <data name="SortButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Sort the patch list</value>
+    <value>Sort</value>
   </data>
   <data name="NavSortNewest" xml:space="preserve">
     <value>Newest first</value>
@@ -161,7 +161,7 @@
     <value>Not routing</value>
   </data>
   <data name="RoutingToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Route this patch</value>
+    <value>Routing</value>
   </data>
   <data name="AutoStartSwitch.OnContent" xml:space="preserve">
     <value>Start automatically</value>
@@ -170,19 +170,19 @@
     <value>Start automatically</value>
   </data>
   <data name="AutoStartSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Start this patch automatically</value>
+    <value>Start automatically</value>
   </data>
   <data name="AutoStartSwitch.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Start routing this patch every time Patchbay starts. A temporary patch has to be saved first.</value>
   </data>
   <data name="MenuRouteThisPatch" xml:space="preserve">
-    <value>Route this patch</value>
+    <value>Routing</value>
   </data>
   <data name="MenuRenameAndSave" xml:space="preserve">
-    <value>Rename and save...</value>
+    <value>Rename and save…</value>
   </data>
   <data name="MenuDeletePatch" xml:space="preserve">
-    <value>Delete this patch...</value>
+    <value>Delete patch…</value>
   </data>
 
   <!-- ============================================================== toolbar -->
@@ -214,7 +214,7 @@
     <value>Fit to screen</value>
   </data>
   <data name="ZoomInputBox.Header" xml:space="preserve">
-    <value>Zoom percent</value>
+    <value>Zoom (%)</value>
   </data>
   <data name="ZoomApplyButton.Content" xml:space="preserve">
     <value>Apply</value>
@@ -356,7 +356,7 @@
     <comment>{0} is the name of the setting, SettingActivateAtStartup</comment>
   </data>
   <data name="LoopShowButton.Content" xml:space="preserve">
-    <value>Show me the loop</value>
+    <value>Show loop</value>
   </data>
   <data name="LoopCertainTitle" xml:space="preserve">
     <value>This patch sends messages back to where they started</value>
@@ -397,30 +397,30 @@
     <value>To</value>
   </data>
   <data name="InspectorSendToGroup" xml:space="preserve">
-    <value>Send to group</value>
+    <value>Destination group</value>
   </data>
   <data name="InspectorFilters" xml:space="preserve">
     <value>Filters</value>
   </data>
   <data name="ActionEditFilters" xml:space="preserve">
-    <value>Edit filters...</value>
+    <value>Edit filters…</value>
   </data>
   <data name="InspectorTransforms" xml:space="preserve">
     <value>Transforms</value>
   </data>
   <data name="ActionEditTransforms" xml:space="preserve">
-    <value>Edit transforms...</value>
+    <value>Edit transforms…</value>
   </data>
 
   <!-- =========================================================== transforms -->
   <data name="TransformDialog.Title" xml:space="preserve">
-    <value>Transforms for this connection</value>
+    <value>Transforms</value>
   </data>
   <data name="TransformDialog.PrimaryButtonText" xml:space="preserve">
     <value>Apply</value>
   </data>
   <data name="TransformDialog.SecondaryButtonText" xml:space="preserve">
-    <value>Change nothing</value>
+    <value>Clear transforms</value>
   </data>
   <data name="TransformDialog.CloseButtonText" xml:space="preserve">
     <value>Cancel</value>
@@ -432,19 +432,19 @@
     <value>This connection does: {0}</value>
   </data>
   <data name="TransformSectionTranspose" xml:space="preserve">
-    <value>Notes</value>
+    <value>Transpose</value>
   </data>
   <data name="TransformSectionTransposeHint" xml:space="preserve">
     <value>Transposing shifts every note, including aftertouch and the MIDI 2.0 per note messages. A note pushed past either end is clamped rather than wrapped, so nothing lands an octave out.</value>
   </data>
   <data name="TransformSemitones" xml:space="preserve">
-    <value>Transpose semitones</value>
+    <value>Semitones</value>
   </data>
   <data name="TransformTransposeExampleFormat" xml:space="preserve">
     <value>{0} is sent as {1}</value>
   </data>
   <data name="TransformIgnoreExactPitch" xml:space="preserve">
-    <value>Leave MIDI 2.0 notes that carry an exact pitch alone</value>
+    <value>Bypass exact-pitch notes</value>
   </data>
   <data name="TransformIgnoreExactPitchHint" xml:space="preserve">
     <value>A MIDI 2.0 note can say exactly which pitch to play, which makes its note number an address rather than a pitch. Leave this clear and the pitch moves with the note. Check it and those notes are passed through as they are.</value>
@@ -480,7 +480,7 @@
     <value>Only note on messages are touched. A MIDI 1.0 note on with velocity zero is a note off, so it is always left alone.</value>
   </data>
   <data name="TransformValueScale" xml:space="preserve">
-    <value>Show values as</value>
+    <value>Value format</value>
   </data>
   <data name="TransformValueScaleSevenBit" xml:space="preserve">
     <value>0 to 127</value>
@@ -492,7 +492,7 @@
     <value>Applies to velocity, aftertouch and controller values. MIDI 2.0 carries velocity in sixteen bits and controller values in thirty-two, so a percentage is what the number really means. Pick 0 to 127 when your instrument gives each of those 128 steps its own meaning, such as a pad color. The value is the same either way; only the way you type it changes.</value>
   </data>
   <data name="TransformCurveUnchanged" xml:space="preserve">
-    <value>Leave the velocity alone</value>
+    <value>Unchanged</value>
   </data>
   <data name="TransformCurveLinearToCurved" xml:space="preserve">
     <value>Linear to curved (harder to play loud)</value>
@@ -501,13 +501,13 @@
     <value>Curved to linear (easier to play loud)</value>
   </data>
   <data name="TransformCurveFixed" xml:space="preserve">
-    <value>Send every note at the same velocity</value>
+    <value>Fixed</value>
   </data>
   <data name="TransformFixedVelocity" xml:space="preserve">
     <value>Fixed velocity</value>
   </data>
   <data name="TransformRescaleVelocity" xml:space="preserve">
-    <value>Rescale into a narrower range</value>
+    <value>Rescale range</value>
   </data>
   <data name="TransformQuietest" xml:space="preserve">
     <value>Quietest</value>
@@ -528,10 +528,10 @@
     <value>No channels are remapped.</value>
   </data>
   <data name="TransformChannelFrom" xml:space="preserve">
-    <value>Channel</value>
+    <value>From channel</value>
   </data>
   <data name="TransformChannelTo" xml:space="preserve">
-    <value>Becomes channel</value>
+    <value>To channel</value>
   </data>
   <data name="TransformSectionProgramMap" xml:space="preserve">
     <value>Program mapping</value>
@@ -546,10 +546,10 @@
     <value>No programs are remapped.</value>
   </data>
   <data name="TransformProgramFrom" xml:space="preserve">
-    <value>Program</value>
+    <value>From program</value>
   </data>
   <data name="TransformProgramTo" xml:space="preserve">
-    <value>Becomes program</value>
+    <value>To program</value>
   </data>
   <data name="TransformSectionBankMsbMap" xml:space="preserve">
     <value>Bank select MSB</value>
@@ -576,10 +576,10 @@
     <value>No bank LSB values are remapped.</value>
   </data>
   <data name="TransformBankFrom" xml:space="preserve">
-    <value>Bank</value>
+    <value>From bank</value>
   </data>
   <data name="TransformBankTo" xml:space="preserve">
-    <value>Becomes bank</value>
+    <value>To bank</value>
   </data>
   <data name="TransformSectionControlMap" xml:space="preserve">
     <value>Control change mapping</value>
@@ -594,10 +594,10 @@
     <value>No control change messages are remapped.</value>
   </data>
   <data name="TransformControlFrom" xml:space="preserve">
-    <value>CC</value>
+    <value>From CC</value>
   </data>
   <data name="TransformControlTo" xml:space="preserve">
-    <value>Becomes CC</value>
+    <value>To CC</value>
   </data>
   <data name="TransformTestNoDestination" xml:space="preserve">
     <value>The destination endpoint is not available right now, so there is nothing to play on.</value>
@@ -624,10 +624,10 @@
     <value>1 control change mapping</value>
   </data>
   <data name="TransformNoteFrom" xml:space="preserve">
-    <value>Note</value>
+    <value>From note</value>
   </data>
   <data name="TransformNoteTo" xml:space="preserve">
-    <value>Becomes note</value>
+    <value>To note</value>
   </data>
   <data name="TransformSummaryCurved" xml:space="preserve">
     <value>Velocity linear to curved</value>
@@ -735,13 +735,13 @@
 
   <!-- ============================================================== filters -->
   <data name="FilterDialog.Title" xml:space="preserve">
-    <value>Filters for this connection</value>
+    <value>Filters</value>
   </data>
   <data name="FilterDialog.PrimaryButtonText" xml:space="preserve">
     <value>Apply</value>
   </data>
   <data name="FilterDialog.SecondaryButtonText" xml:space="preserve">
-    <value>Pass everything</value>
+    <value>Clear filters</value>
   </data>
   <data name="FilterDialog.CloseButtonText" xml:space="preserve">
     <value>Cancel</value>
@@ -786,7 +786,7 @@
     <value>Click a key for the bottom of the range, Shift and click for the top. Applies to note on, note off, poly pressure and the MIDI 2.0 per note messages.</value>
   </data>
   <data name="FilterLimitNoteRange" xml:space="preserve">
-    <value>Only pass notes within a range</value>
+    <value>Limit note range</value>
   </data>
   <data name="FilterLowestNote" xml:space="preserve">
     <value>Lowest note</value>
@@ -798,7 +798,7 @@
     <value>{0} ({1}) to {2} ({3})</value>
   </data>
   <data name="FilterNoteRangeAll" xml:space="preserve">
-    <value>Every note</value>
+    <value>All notes</value>
   </data>
   <data name="FilterSummaryEverything" xml:space="preserve">
     <value>Everything</value>
@@ -948,16 +948,16 @@
     <value>Activity</value>
   </data>
   <data name="InspectorIdentifyBy" xml:space="preserve">
-    <value>Identify this device by</value>
+    <value>Match by</value>
   </data>
   <data name="MatchModeDeviceId" xml:space="preserve">
-    <value>Its exact device ID</value>
+    <value>Device ID</value>
   </data>
   <data name="MatchModeDeviceIdHint" xml:space="preserve">
     <value>Safest. Can change if a device with no serial number moves to another USB port.</value>
   </data>
   <data name="MatchModeUsb" xml:space="preserve">
-    <value>Manufacturer, VID and PID</value>
+    <value>USB model</value>
   </data>
   <data name="MatchModeUsbHintFormat" xml:space="preserve">
     <value>VID {0}, PID {1}. Matches the same model in any port.</value>
@@ -966,7 +966,7 @@
     <value>This endpoint does not report a USB vendor and product ID.</value>
   </data>
   <data name="MatchModeName" xml:space="preserve">
-    <value>Its name</value>
+    <value>Name</value>
   </data>
   <data name="MatchModeNameHint" xml:space="preserve">
     <value>Last resort. Two identical devices look the same.</value>
@@ -981,7 +981,7 @@
     <value>Use this device</value>
   </data>
   <data name="GroupSameAsSource" xml:space="preserve">
-    <value>Same group as the source</value>
+    <value>Same as source</value>
   </data>
   <data name="ConnectionLoopMuted" xml:space="preserve">
     <value>Muted because it closes a loop.</value>
@@ -1002,10 +1002,10 @@
     <value>Show all 16 groups</value>
   </data>
   <data name="ActionShowDeclaredGroups" xml:space="preserve">
-    <value>Show only the declared groups</value>
+    <value>Show declared groups only</value>
   </data>
   <data name="ActionRemoveEndpoint" xml:space="preserve">
-    <value>Remove from this patch</value>
+    <value>Remove from patch</value>
   </data>
   <data name="ActionRemoveConnection" xml:space="preserve">
     <value>Remove</value>
@@ -1022,12 +1022,12 @@
     <value>Every connected endpoint is already on this canvas</value>
   </data>
   <data name="PaletteSeenBefore" xml:space="preserve">
-    <value>Seen before, not connected</value>
+    <value>Not connected</value>
   </data>
 
   <!-- ========================================================= save a patch -->
   <data name="SavePatchDialog.Title" xml:space="preserve">
-    <value>Save this patch</value>
+    <value>Save patch</value>
   </data>
   <data name="SavePatchDialog.PrimaryButtonText" xml:space="preserve">
     <value>Save</value>
@@ -1042,13 +1042,13 @@
     <value>Name</value>
   </data>
   <data name="SavePatchDescriptionBox.Header" xml:space="preserve">
-    <value>Description, optional</value>
+    <value>Description (optional)</value>
   </data>
   <data name="SavePatchDescriptionHint.Text" xml:space="preserve">
     <value>Shown when you hover the patch in the list.</value>
   </data>
   <data name="SavePatchKeepRadio.Content" xml:space="preserve">
-    <value>Keep this patch</value>
+    <value>Saved</value>
   </data>
   <data name="SavePatchKeepHint.Text" xml:space="preserve">
     <value>Saved to disk and offered again next time Patchbay starts.</value>
@@ -1060,7 +1060,7 @@
     <value>Routes now, disappears when Patchbay closes. Nothing is written to disk.</value>
   </data>
   <data name="SavePatchStartupCheck.Content" xml:space="preserve">
-    <value>Start routing this patch when Patchbay starts</value>
+    <value>Start automatically</value>
   </data>
   <data name="ConfirmDeleteDialog.Title" xml:space="preserve">
     <value>Delete this patch?</value>
@@ -1107,13 +1107,13 @@
     <value>One route, from one endpoint to another. It goes on the canvas as an ordinary patch, so you can add to it, edit it or save it afterwards.</value>
   </data>
   <data name="QuickPatchSourceCombo.Header" xml:space="preserve">
-    <value>Messages come from</value>
+    <value>Source</value>
   </data>
   <data name="QuickPatchSourceGroupCombo.Header" xml:space="preserve">
     <value>Group</value>
   </data>
   <data name="QuickPatchDestinationCombo.Header" xml:space="preserve">
-    <value>Messages go to</value>
+    <value>Destination</value>
   </data>
   <data name="QuickPatchDestinationGroupCombo.Header" xml:space="preserve">
     <value>Group</value>
@@ -1136,7 +1136,7 @@
 
   <!-- ==================================================== create a loopback -->
   <data name="CreateLoopbackDialog.Title" xml:space="preserve">
-    <value>Create a loopback</value>
+    <value>Create loopback</value>
   </data>
   <data name="CreateLoopbackDialog.PrimaryButtonText" xml:space="preserve">
     <value>Create</value>
@@ -1163,7 +1163,7 @@
     <value>Name</value>
   </data>
   <data name="LoopbackKeepCheck.Content" xml:space="preserve">
-    <value>Keep this loopback after Patchbay closes</value>
+    <value>Keep after Patchbay closes</value>
   </data>
   <data name="LoopbackInfoBar.Message" xml:space="preserve">
     <value>Loopbacks are real MIDI endpoints on this PC. Every app sees them, not just Patchbay.</value>
@@ -1180,13 +1180,13 @@
 
   <!-- ================================================================= test -->
   <data name="TestOpenMonitor" xml:space="preserve">
-    <value>Open MIDI Monitor on this endpoint</value>
+    <value>Open in MIDI Monitor</value>
   </data>
   <data name="TestOpenKeyboard" xml:space="preserve">
-    <value>Open MIDI Keyboard on this endpoint</value>
+    <value>Open in MIDI Keyboard</value>
   </data>
   <data name="TestOpenScratchPad" xml:space="preserve">
-    <value>Open MIDI Scratch Pad on this endpoint</value>
+    <value>Open in MIDI Scratch Pad</value>
   </data>
 
   <!-- ============================================================= settings -->
@@ -1230,13 +1230,13 @@
     <value>Patchbay</value>
   </data>
   <data name="SettingStartWithWindows" xml:space="preserve">
-    <value>Start when I sign in</value>
+    <value>Start with Windows</value>
   </data>
   <data name="SettingStartWithWindowsHint" xml:space="preserve">
     <value>For this account only.</value>
   </data>
   <data name="SettingNotificationArea" xml:space="preserve">
-    <value>Keep running in the notification area</value>
+    <value>Run in notification area</value>
   </data>
   <data name="SettingNotificationAreaHint" xml:space="preserve">
     <value>Off by default. Turn this on if you want patches to keep routing after you close or minimize the window.</value>
@@ -1245,10 +1245,10 @@
     <value>Start minimized</value>
   </data>
   <data name="SettingActivateAtStartup" xml:space="preserve">
-    <value>Start routing saved patches at startup</value>
+    <value>Start patches automatically</value>
   </data>
   <data name="SettingWarnAboutLoops" xml:space="preserve">
-    <value>Warn me when a patch could feed back</value>
+    <value>Feedback loop warnings</value>
   </data>
 
   <!-- ============================================================= notification area -->

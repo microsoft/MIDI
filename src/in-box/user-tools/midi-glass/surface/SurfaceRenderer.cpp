@@ -835,61 +835,6 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    CompositionLinearGradientBrush SurfaceRenderer::MeterBrush(
-        Compositor const& compositor,
-        ControlColors const& colors,
-        float trackOrigin,
-        float trackLength,
-        bool vertical)
-    {
-        auto brush = compositor.CreateLinearGradientBrush();
-
-        // Absolute, so the ramp belongs to the track rather than to the bar drawn over it.
-        brush.MappingMode(CompositionMappingMode::Absolute);
-
-        auto const run = std::max(trackLength, 1.0f);
-
-        // Quiet end first, whichever way round that is on screen.
-        brush.StartPoint(vertical
-            ? float2{ 0.0f, trackOrigin + run }
-            : float2{ trackOrigin, 0.0f });
-
-        brush.EndPoint(vertical
-            ? float2{ 0.0f, trackOrigin }
-            : float2{ trackOrigin + run, 0.0f });
-
-        // Where the comp puts the two boundaries on an eight segment meter: five segments of
-        // signal, then two of warning, then one that says it is already too late.
-        constexpr float WarnAt = 0.70f;
-        constexpr float HotAt = 0.90f;
-
-        // A pair of stops at each boundary rather than one, so the zones read as zones instead
-        // of as one long fade through them.
-        struct Stop { float Offset; ThemeColor Color; };
-
-        Stop const stops[]
-        {
-            { 0.0f, colors.MeterLit },
-            { WarnAt - 0.01f, colors.MeterLit },
-            { WarnAt, colors.MeterWarn },
-            { HotAt - 0.01f, colors.MeterWarn },
-            { HotAt, colors.MeterHot },
-            { 1.0f, colors.MeterHot },
-        };
-
-        for (auto const& stop : stops)
-        {
-            auto gradientStop = compositor.CreateColorGradientStop();
-            gradientStop.Offset(stop.Offset);
-            gradientStop.Color(ToColor(stop.Color));
-
-            brush.ColorStops().Append(gradientStop);
-        }
-
-        return brush;
-    }
-
-    _Use_decl_annotations_
     CompositionBrush SurfaceRenderer::ShadowMaskFor(
         Compositor const& compositor,
         float width,
@@ -1234,6 +1179,7 @@ namespace glass
         m_values.push_back(control.DefaultValue);
         m_valuesY.push_back(control.DefaultValueY);
         m_litUntil.push_back(0);
+        m_blinking.push_back(false);
 
         auto const itemIndex = m_visuals.size() - 1;
 
@@ -2108,7 +2054,7 @@ namespace glass
 
             // The strength goes in the shadow's OPACITY, never in its color's alpha. A drop
             // shadow given a translucent color does not come out as a weak light - measured on
-            // Studio Dark, holding a knob painted its dial pure black behind an 86 per cent
+            // Studio Dark, holding a knob painted its dial pure black behind an 86 percent
             // plate. The elevation shadow beside it has always done it this way.
             auto light = colors.Bloom;
             light.A = 255;
@@ -4657,6 +4603,14 @@ namespace glass
             m_flashTimer.Stop();
             m_flashTimer = nullptr;
         }
+
+        m_blinking.clear();
+
+        if (m_blinkTimer != nullptr)
+        {
+            m_blinkTimer.Stop();
+            m_blinkTimer = nullptr;
+        }
         m_brushes.clear();
         m_gradients.clear();
         m_domes.clear();
@@ -6571,6 +6525,82 @@ namespace glass
         {
             visual.Bloom.StopAnimation(L"Opacity");
             visual.Bloom.Opacity(visual.RestingGlow);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::SetBlinking(size_t itemIndex, bool blinking) noexcept
+    {
+        if (itemIndex >= m_blinking.size() || m_blinking[itemIndex] == blinking)
+        {
+            return;
+        }
+
+        m_blinking[itemIndex] = blinking;
+
+        if (!blinking)
+        {
+            return;
+        }
+
+        if (m_reducedMotion)
+        {
+            SetValue(itemIndex, 1.0);
+            return;
+        }
+
+        SetValue(itemIndex, m_blinkLit ? 1.0 : 0.0);
+
+        if (m_blinkTimer != nullptr)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const queue = winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread();
+
+            if (queue == nullptr)
+            {
+                return;
+            }
+
+            // Two blinks a second, well under the three a second that can trigger seizures.
+            m_blinkTimer = queue.CreateTimer();
+            m_blinkTimer.Interval(std::chrono::milliseconds{ 250 });
+            m_blinkTimer.Tick([this](auto&&, auto&&) { SweepBlinks(); });
+            m_blinkTimer.Start();
+        }
+        catch (...)
+        {
+        }
+    }
+
+    void SurfaceRenderer::SweepBlinks() noexcept
+    {
+        try
+        {
+            m_blinkLit = !m_blinkLit;
+
+            auto anyBlinking = false;
+
+            for (size_t index = 0; index < m_blinking.size(); ++index)
+            {
+                if (m_blinking[index])
+                {
+                    anyBlinking = true;
+                    SetValue(index, m_blinkLit ? 1.0 : 0.0);
+                }
+            }
+
+            if (!anyBlinking && m_blinkTimer != nullptr)
+            {
+                m_blinkTimer.Stop();
+                m_blinkTimer = nullptr;
+            }
         }
         catch (...)
         {

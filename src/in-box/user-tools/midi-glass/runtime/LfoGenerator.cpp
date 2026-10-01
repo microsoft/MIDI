@@ -345,20 +345,6 @@ namespace glass
         }
     }
 
-    size_t LfoGenerator::RunningCount() const noexcept
-    {
-        try
-        {
-            std::lock_guard guard{ m_lock };
-
-            return m_sweeps.size();
-        }
-        catch (...)
-        {
-            return 0;
-        }
-    }
-
     void LfoGenerator::SweepLoop()
     {
         for (;;)

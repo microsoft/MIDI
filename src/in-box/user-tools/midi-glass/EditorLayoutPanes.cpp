@@ -31,6 +31,11 @@ namespace winrt::midiglass::implementation
     {
         namespace automation = ::winrt::Microsoft::UI::Xaml::Automation;
 
+        // Settings the file can hold but the runtime does not act on yet. Each stays out of this
+        // pane until its switch is turned on, so nobody sets something that does nothing.
+        constexpr bool VirtualDeviceIsBuilt = false;
+        constexpr bool IncomingClockIsBuilt = false;
+
         media::SolidColorBrush PaneBrush(_In_ wchar_t const* key)
         {
             return xaml::Application::Current().Resources()
@@ -191,7 +196,7 @@ namespace winrt::midiglass::implementation
                     SettingsBehaviorPanel().Children().Append(box);
                 };
 
-            // ---- how it opens ----
+            // ---- display ----
 
             heading(L"BehaviorHeadingOpening", true);
             caption(L"BehaviorCaptionOpening");
@@ -280,7 +285,7 @@ namespace winrt::midiglass::implementation
                 SettingsBehaviorPanel().Children().Append(corner);
             }
 
-            // ---- the window it runs in ----
+            // ---- runtime window ----
 
             heading(L"BehaviorHeadingWindow", false);
             caption(L"BehaviorCaptionWindow");
@@ -321,7 +326,7 @@ namespace winrt::midiglass::implementation
                     }
                 });
 
-            // ---- what it sends when it opens ----
+            // ---- startup send override ----
 
             heading(L"BehaviorHeadingStartup", false);
             caption(L"BehaviorCaptionStartup");
@@ -338,72 +343,78 @@ namespace winrt::midiglass::implementation
                     }
                 });
 
-            // ---- what other apps see ----
+            // ---- virtual MIDI device ----
 
-            heading(L"BehaviorHeadingVirtual", false);
-            caption(L"BehaviorCaptionVirtual");
-
-            check(L"BehaviorVirtualDevice", document.PublishesVirtualDevice,
-                [weak = get_weak()](bool on)
-                {
-                    if (auto strong = weak.get())
-                    {
-                        if (strong->m_editor.SetPublishesVirtualDevice(on))
-                        {
-                            strong->MarkChanged();
-                        }
-                    }
-                });
-
-            // ---- what keeps time ----
-
-            heading(L"BehaviorHeadingTempo", false);
-            caption(L"BehaviorCaptionTempo");
-
+            if constexpr (VirtualDeviceIsBuilt)
             {
-                controls::ComboBox source{};
+                heading(L"BehaviorHeadingVirtual", false);
+                caption(L"BehaviorCaptionVirtual");
 
-                source.Header(box_value(resources::GetString(L"BehaviorTempoSourceLabel")));
-                source.MinWidth(220.0);
-                source.FontSize(12.0);
-                source.Margin({ 0, 0, 0, 8 });
-
-                for (auto const* key : { L"TempoInternal", L"TempoFollowIncoming" })
-                {
-                    source.Items().Append(box_value(resources::GetString(key)));
-                }
-
-                source.SelectedIndex(static_cast<int32_t>(document.Tempo.Kind));
-
-                automation::AutomationProperties::SetName(
-                    source, resources::GetString(L"BehaviorTempoSourceLabel"));
-
-                source.SelectionChanged([weak = get_weak()](foundation::IInspectable const& sender, auto&&)
+                check(L"BehaviorVirtualDevice", document.PublishesVirtualDevice,
+                    [weak = get_weak()](bool on)
                     {
-                        auto strong = weak.get();
-
-                        if (strong == nullptr || strong->m_updatingSettings)
+                        if (auto strong = weak.get())
                         {
-                            return;
-                        }
-
-                        auto const index = sender.as<controls::ComboBox>().SelectedIndex();
-
-                        if (index < 0)
-                        {
-                            return;
-                        }
-
-                        auto tempo = strong->m_editor.Document().Tempo;
-                        tempo.Kind = static_cast<glass::TempoSourceKind>(index);
-
-                        if (strong->m_editor.SetTempoSource(tempo))
-                        {
-                            strong->MarkChanged();
+                            if (strong->m_editor.SetPublishesVirtualDevice(on))
+                            {
+                                strong->MarkChanged();
+                            }
                         }
                     });
+            }
 
-                SettingsBehaviorPanel().Children().Append(source);
+            // ---- MIDI clock source ----
+
+            heading(L"BehaviorHeadingTempo", false);
+            caption(IncomingClockIsBuilt ? L"BehaviorCaptionTempo" : L"BehaviorCaptionTempoInternal");
+
+            {
+                if constexpr (IncomingClockIsBuilt)
+                {
+                    controls::ComboBox source{};
+
+                    source.Header(box_value(resources::GetString(L"BehaviorTempoSourceLabel")));
+                    source.MinWidth(220.0);
+                    source.FontSize(12.0);
+                    source.Margin({ 0, 0, 0, 8 });
+
+                    for (auto const* key : { L"TempoInternal", L"TempoFollowIncoming" })
+                    {
+                        source.Items().Append(box_value(resources::GetString(key)));
+                    }
+
+                    source.SelectedIndex(static_cast<int32_t>(document.Tempo.Kind));
+
+                    automation::AutomationProperties::SetName(
+                        source, resources::GetString(L"BehaviorTempoSourceLabel"));
+
+                    source.SelectionChanged([weak = get_weak()](foundation::IInspectable const& sender, auto&&)
+                        {
+                            auto strong = weak.get();
+
+                            if (strong == nullptr || strong->m_updatingSettings)
+                            {
+                                return;
+                            }
+
+                            auto const index = sender.as<controls::ComboBox>().SelectedIndex();
+
+                            if (index < 0)
+                            {
+                                return;
+                            }
+
+                            auto tempo = strong->m_editor.Document().Tempo;
+                            tempo.Kind = static_cast<glass::TempoSourceKind>(index);
+
+                            if (strong->m_editor.SetTempoSource(tempo))
+                            {
+                                strong->MarkChanged();
+                            }
+                        });
+
+                    SettingsBehaviorPanel().Children().Append(source);
+                }
 
                 controls::NumberBox beats{};
 
@@ -446,7 +457,7 @@ namespace winrt::midiglass::implementation
                 SettingsBehaviorPanel().Children().Append(beats);
             }
 
-            // ---- the picture behind everything ----
+            // ---- background image ----
 
             heading(L"BehaviorHeadingBackground", false);
             caption(L"BehaviorCaptionBackground");

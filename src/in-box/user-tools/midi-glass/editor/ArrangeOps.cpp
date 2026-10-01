@@ -8,10 +8,13 @@
 // Deliberately free of pch.h and XAML, so the unit tests compile it unchanged.
 
 #include "ArrangeOps.h"
+#include "LayoutModel.h"
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <numeric>
+#include <string>
 
 namespace glass
 {
@@ -224,6 +227,117 @@ namespace glass
         auto const gap = (span - occupied) / static_cast<double>(order.size() - 1);
 
         return SetGap(rects, axis, gap);
+    }
+
+    _Use_decl_annotations_
+    std::optional<SpacingReadout> ReadSpacing(std::vector<EditRect> const& rects)
+    {
+        if (rects.size() < 2)
+        {
+            return std::nullopt;
+        }
+
+        // A hair under zero is still touching, so a row laid out by arithmetic that came to
+        // -0.000001 is not taken for an overlap.
+        auto const runsAlong = [&rects](ArrangeAxis axis)
+            {
+                auto const gaps = MeasureGaps(rects, axis);
+
+                return std::all_of(gaps.begin(), gaps.end(), [](double gap) { return gap > -0.01; });
+            };
+
+        auto const across = runsAlong(ArrangeAxis::Horizontal);
+        auto const down = runsAlong(ArrangeAxis::Vertical);
+
+        if (!across && !down)
+        {
+            return std::nullopt;
+        }
+
+        auto axis = across ? ArrangeAxis::Horizontal : ArrangeAxis::Vertical;
+
+        if (across && down)
+        {
+            auto left = rects.front().X;
+            auto top = rects.front().Y;
+            auto right = rects.front().Right();
+            auto bottom = rects.front().Bottom();
+
+            for (auto const& rect : rects)
+            {
+                left = std::min(left, rect.X);
+                top = std::min(top, rect.Y);
+                right = std::max(right, rect.Right());
+                bottom = std::max(bottom, rect.Bottom());
+            }
+
+            axis = (right - left) >= (bottom - top) ? ArrangeAxis::Horizontal : ArrangeAxis::Vertical;
+        }
+
+        SpacingReadout readout{};
+        readout.Axis = axis;
+        readout.Gaps = MeasureGaps(rects, axis);
+
+        for (auto const index : OrderAlong(rects, axis))
+        {
+            readout.Blocks.push_back(rects[index]);
+        }
+
+        return readout;
+    }
+
+    _Use_decl_annotations_
+    std::optional<double> ParseGapPixels(std::wstring_view text) noexcept
+    {
+        try
+        {
+            auto const isSpace = [](wchar_t ch) { return ch == L' ' || ch == L'\t'; };
+
+            auto const trim = [&isSpace](std::wstring_view& view)
+                {
+                    while (!view.empty() && isSpace(view.front()))
+                    {
+                        view.remove_prefix(1);
+                    }
+
+                    while (!view.empty() && isSpace(view.back()))
+                    {
+                        view.remove_suffix(1);
+                    }
+                };
+
+            trim(text);
+
+            if (text.size() >= 2 &&
+                (text[text.size() - 2] == L'p' || text[text.size() - 2] == L'P') &&
+                (text.back() == L'x' || text.back() == L'X'))
+            {
+                text.remove_suffix(2);
+                trim(text);
+            }
+
+            // Longer than any gap anybody types, and the copy below is then never large.
+            if (text.empty() || text.size() > 16)
+            {
+                return std::nullopt;
+            }
+
+            std::wstring const number{ text };
+            wchar_t* end{ nullptr };
+
+            auto const gap = std::wcstod(number.c_str(), &end);
+
+            if (end != number.c_str() + number.size() || !std::isfinite(gap) || gap < 0.0)
+            {
+                return std::nullopt;
+            }
+
+            return std::min(gap, static_cast<double>(MaximumPageSide));
+        }
+        catch (...)
+        {
+            return std::nullopt;
+        }
     }
 
     _Use_decl_annotations_

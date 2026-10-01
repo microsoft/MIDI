@@ -8,6 +8,7 @@
 // Deliberately free of pch.h, XAML and the MIDI SDK.
 
 #include "BindingEngine.h"
+#include "MackieControl.h"
 
 #include <algorithm>
 #include <cmath>
@@ -135,14 +136,6 @@ namespace glass
         {
             return InFieldUnits({ detents.Step, detents.Scaling }, bits);
         }
-    }
-
-    _Use_decl_annotations_
-    uint32_t ResolveEnd(MessageValue const& end, uint32_t bits) noexcept
-    {
-        return end.Scaling == ValueScaling::Absolute
-            ? ClampToBits(end.Value, bits)
-            : ScaleToBits(end.Value, bits);
     }
 
     _Use_decl_annotations_
@@ -500,6 +493,20 @@ namespace glass
 
                     for (auto const& message : control.Messages)
                     {
+                        auto const protocol = document.ProtocolOf(message.DeviceName);
+
+                        // Only a function reaches a Mackie Control device, and a function means
+                        // nothing anywhere else. A plain row there waits for somebody to pick one.
+                        if (protocol == DeviceProtocol::MackieControl || message.Kind == MessageKind::MackieControl)
+                        {
+                            if (protocol == DeviceProtocol::MackieControl && message.Kind == MessageKind::MackieControl)
+                            {
+                                PrepareMackieRow(control.Kind, message, indexOf(message.DeviceName), prepared);
+                            }
+
+                            continue;
+                        }
+
                         PreparedMessage entry{};
 
                         entry.Trigger = message.Trigger;
@@ -513,7 +520,7 @@ namespace glass
                         entry.Maximum = message.Maximum;
                         entry.Detents = message.Detents;
                         entry.Axis = message.Axis;
-                        entry.UseMidi1Protocol = message.UseMidi1Protocol;
+                        entry.UseMidi1Protocol = SendsAsMidi1(message, protocol);
                         entry.Position = message.Position;
 
                         m_messages.push_back(entry);
@@ -575,6 +582,113 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    void BindingEngine::PrepareMackieRow(
+        ControlKind controlKind,
+        ControlMessage const& message,
+        int32_t destinationIndex,
+        PreparedControl& prepared)
+    {
+        auto const function = message.Number;
+        auto const group = static_cast<uint8_t>(message.GroupIndex == AllGroups ? 0 : (message.GroupIndex & 0x0F));
+
+        PreparedMessage base{};
+
+        base.DestinationIndex = destinationIndex;
+        base.GroupIndex = group;
+        base.UseMidi1Protocol = true;
+        base.IsMackie = true;
+
+        // A press is a note on at 127 and a release is a note on at 0, never a note off.
+        auto const addBang = [this, &base, group](MessageTrigger trigger, uint32_t note, bool down)
+            {
+                auto entry = base;
+
+                entry.Trigger = trigger;
+                entry.Kind = MessageKind::RawUmp;
+                entry.FixedWord = BuildMidi1ChannelVoice(
+                    group, StatusNoteOn, 0, static_cast<uint8_t>(note), down ? uint8_t{ 127 } : uint8_t{ 0 });
+
+                m_messages.push_back(entry);
+            };
+
+        auto const addFeedback = [this, destinationIndex, group](MessageKind kind, uint8_t channel, uint32_t number)
+            {
+                PreparedFeedback feedback{};
+
+                feedback.ControlIndex = m_controls.size();
+                feedback.DestinationIndex = destinationIndex;
+                feedback.Mode = FeedbackMode::Message;
+                feedback.Kind = kind;
+                feedback.GroupIndex = group;
+                feedback.ChannelIndex = channel;
+                feedback.Number = static_cast<uint16_t>(number);
+                feedback.IsMackie = true;
+
+                m_feedback.push_back(feedback);
+            };
+
+        switch (ShapeOfMackieFunction(function))
+        {
+        case MackieShape::Button:
+            // A latching control changes once per press, and the DAW needs a whole press each time.
+            if (controlKind == ControlKind::Toggle)
+            {
+                for (auto const trigger : { MessageTrigger::TurnsOn, MessageTrigger::TurnsOff })
+                {
+                    addBang(trigger, function, true);
+                    addBang(trigger, function, false);
+                }
+            }
+            else
+            {
+                addBang(MessageTrigger::TurnsOn, function, true);
+                addBang(MessageTrigger::TurnsOff, function, false);
+            }
+
+            addFeedback(MessageKind::Note, 0, function);
+            break;
+
+        case MackieShape::Fader:
+        {
+            auto const strip = MackieStripOf(function);
+            auto entry = base;
+
+            entry.Trigger = MessageTrigger::Changes;
+            entry.Kind = MessageKind::PitchBend;
+            entry.ChannelIndex = static_cast<uint8_t>(strip);
+
+            m_messages.push_back(entry);
+
+            addBang(MessageTrigger::Touched, MackieFaderTouchNote + strip, true);
+            addBang(MessageTrigger::Released, MackieFaderTouchNote + strip, false);
+
+            addFeedback(MessageKind::PitchBend, static_cast<uint8_t>(strip), 0);
+            break;
+        }
+
+        case MackieShape::Encoder:
+        {
+            auto entry = base;
+
+            entry.Trigger = MessageTrigger::Changes;
+            entry.Kind = MessageKind::ControlChange;
+            entry.Number = static_cast<uint16_t>(function == MackieJog
+                ? MackieJogController
+                : MackieVPotController + MackieStripOf(function));
+            entry.IsRelative = true;
+
+            m_messages.push_back(entry);
+
+            prepared.HasRelative = true;
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+
+    _Use_decl_annotations_
     uint32_t BindingEngine::Evaluate(
         size_t controlIndex,
         MessageTrigger trigger,
@@ -592,7 +706,7 @@ namespace glass
         ValueAxis axis,
         std::span<PreparedSend> sends) const noexcept
     {
-        return EvaluateRows(controlIndex, trigger, value, axis, NoteGate::FromValue, sends);
+        return EvaluateRows(controlIndex, trigger, value, axis, NoteGate::FromValue, false, sends);
     }
 
     _Use_decl_annotations_
@@ -609,6 +723,7 @@ namespace glass
             isOn ? velocity : 0.0,
             ValueAxis::X,
             isOn ? NoteGate::On : NoteGate::Off,
+            false,
             sends);
     }
 
@@ -619,6 +734,7 @@ namespace glass
         double value,
         ValueAxis axis,
         NoteGate gate,
+        bool atStartup,
         std::span<PreparedSend> sends) const noexcept
     {
         if (controlIndex >= m_controls.size() || sends.empty())
@@ -640,6 +756,12 @@ namespace glass
             }
 
             if (message.Axis != axis)
+            {
+                continue;
+            }
+
+            // A turn is sent by EvaluateRelative, from how far the control moved.
+            if (message.IsRelative || (atStartup && message.IsMackie))
             {
                 continue;
             }
@@ -677,9 +799,17 @@ namespace glass
 
             auto& send = sends[written];
 
-            send.WordCount = message.Kind == MessageKind::Note && gate != NoteGate::FromValue
-                ? BuildNoteWords(message, gate == NoteGate::On, rowValue, send.Words)
-                : BuildMessageWords(message, rowValue, send.Words);
+            if (message.FixedWord != 0)
+            {
+                send.Words[0] = message.FixedWord;
+                send.WordCount = 1;
+            }
+            else
+            {
+                send.WordCount = message.Kind == MessageKind::Note && gate != NoteGate::FromValue
+                    ? BuildNoteWords(message, gate == NoteGate::On, rowValue, send.Words)
+                    : BuildMessageWords(message, rowValue, send.Words);
+            }
 
             if (send.WordCount == 0)
             {
@@ -1050,7 +1180,7 @@ namespace glass
         {
             auto const& message = m_messages[control.FirstMessage + i];
 
-            if (!IsChannelVoice(message.Kind) || message.Axis != axis)
+            if (!IsChannelVoice(message.Kind) || message.Axis != axis || message.IsRelative)
             {
                 continue;
             }
@@ -1059,11 +1189,13 @@ namespace glass
 
             value = InterpolateValue(message, position, bits);
 
-            // Either end being an exact number means the customer is working in a device's own
-            // units, and the number they typed is the one they want to see.
-            isAbsolute =
+            // A MIDI 1.0 device, or either end being an exact number, means the customer is
+            // working in a device's own units, and that is the number they want to see. A DAW
+            // fader reads as a percentage whatever it is carried in.
+            isAbsolute = !message.IsMackie && (
+                message.UseMidi1Protocol ||
                 message.Minimum.Scaling == ValueScaling::Absolute ||
-                message.Maximum.Scaling == ValueScaling::Absolute;
+                message.Maximum.Scaling == ValueScaling::Absolute);
 
             return true;
         }
@@ -1090,8 +1222,8 @@ namespace glass
                 continue;
             }
 
-            written += Evaluate(index, MessageTrigger::Changes, control.DefaultValue,
-                sends.subspan(written));
+            written += EvaluateRows(index, MessageTrigger::Changes, control.DefaultValue, ValueAxis::X,
+                NoteGate::FromValue, true, sends.subspan(written));
         }
 
         return written;
@@ -1104,8 +1236,23 @@ namespace glass
         size_t& controlIndex,
         double& value) const noexcept
     {
+        bool blinks{ false };
+
+        return TryResolveFeedback(words, wordCount, -1, controlIndex, value, blinks);
+    }
+
+    _Use_decl_annotations_
+    bool BindingEngine::TryResolveFeedback(
+        uint32_t const* words,
+        uint32_t wordCount,
+        int32_t destinationIndex,
+        size_t& controlIndex,
+        double& value,
+        bool& blinks) const noexcept
+    {
         controlIndex = 0;
         value = 0.0;
+        blinks = false;
 
         if (words == nullptr || wordCount == 0)
         {
@@ -1120,6 +1267,9 @@ namespace glass
         MessageKind kind{};
         uint16_t number{ 0 };
         double incoming{ 0.0 };
+
+        // A note's velocity on the seven bit scale, which is what a Mackie Control light reads.
+        uint32_t velocity{ 0 };
 
         if (messageType == MessageTypeMidi1ChannelVoice)
         {
@@ -1149,6 +1299,7 @@ namespace glass
                 kind = MessageKind::Note;
                 number = data1;
                 incoming = (status == StatusNoteOn && data2 > 0) ? 1.0 : 0.0;
+                velocity = status == StatusNoteOn ? data2 : 0;
                 break;
 
             default:
@@ -1187,6 +1338,7 @@ namespace glass
                 kind = MessageKind::Note;
                 number = index1;
                 incoming = (status == StatusNoteOn && (words[1] >> 16) > 0) ? 1.0 : 0.0;
+                velocity = status == StatusNoteOn ? (words[1] >> 25) : 0;
                 break;
 
             default:
@@ -1203,6 +1355,12 @@ namespace glass
             // Only a control watching for one particular message. An activity light and a
             // tempo light are answered somewhere else, and neither carries a value.
             if (feedback.Mode != FeedbackMode::Message)
+            {
+                continue;
+            }
+
+            // Note 94 from a keyboard is a note, not the DAW saying it is playing.
+            if (feedback.IsMackie && (destinationIndex < 0 || feedback.DestinationIndex != destinationIndex))
             {
                 continue;
             }
@@ -1225,10 +1383,90 @@ namespace glass
             controlIndex = feedback.ControlIndex;
             value = incoming;
 
+            if (feedback.IsMackie && kind == MessageKind::Note)
+            {
+                auto const light = MackieLightFromVelocity(velocity);
+
+                value = light == MackieLight::On ? 1.0 : 0.0;
+                blinks = light == MackieLight::Blinking;
+            }
+
             return true;
         }
 
         return false;
+    }
+
+    _Use_decl_annotations_
+    uint32_t BindingEngine::EvaluateRelative(
+        size_t controlIndex,
+        int32_t ticks,
+        std::span<PreparedSend> sends) const noexcept
+    {
+        if (controlIndex >= m_controls.size() || sends.empty() || ticks == 0)
+        {
+            return 0;
+        }
+
+        auto const& control = m_controls[controlIndex];
+
+        uint32_t written{ 0 };
+
+        for (uint32_t i = 0; i < control.MessageCount && written < sends.size(); ++i)
+        {
+            auto const& message = m_messages[control.FirstMessage + i];
+
+            if (!message.IsRelative ||
+                message.DestinationIndex < 0 ||
+                static_cast<size_t>(message.DestinationIndex) >= m_destinations.size() ||
+                !m_destinations[static_cast<size_t>(message.DestinationIndex)].IsAvailable)
+            {
+                continue;
+            }
+
+            auto& send = sends[written];
+
+            send.Words[0] = BuildMidi1ChannelVoice(
+                message.GroupIndex,
+                StatusControlChange,
+                message.ChannelIndex,
+                static_cast<uint8_t>(message.Number & 0x7F),
+                MackieTurnValue(ticks));
+
+            send.WordCount = 1;
+            send.DestinationIndex = message.DestinationIndex;
+            ++written;
+        }
+
+        return written;
+    }
+
+    _Use_decl_annotations_
+    bool BindingEngine::HasRelativeRows(size_t controlIndex) const noexcept
+    {
+        return controlIndex < m_controls.size() && m_controls[controlIndex].HasRelative;
+    }
+
+    _Use_decl_annotations_
+    int32_t TakeRelativeTicks(double& baseline, double value) noexcept
+    {
+        if (!std::isfinite(value))
+        {
+            return 0;
+        }
+
+        if (!std::isfinite(baseline))
+        {
+            baseline = value;
+            return 0;
+        }
+
+        auto const turned = std::trunc((value - baseline) * MackieTicksPerTravel);
+        auto const ticks = static_cast<int32_t>(std::clamp(turned, -63.0, 63.0));
+
+        baseline += ticks / MackieTicksPerTravel;
+
+        return ticks;
     }
 
     _Use_decl_annotations_

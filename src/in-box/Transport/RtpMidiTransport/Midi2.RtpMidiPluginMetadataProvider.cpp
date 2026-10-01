@@ -6,6 +6,8 @@
 
 #include "pch.h"
 
+#include "midi_service_plugin_version.h"
+
 HRESULT
 CMidi2RtpMidiPluginMetadataProvider::Initialize()
 {
@@ -28,8 +30,14 @@ CMidi2RtpMidiPluginMetadataProvider::GetMetadata(PTRANSPORTMETADATA metadata)
 
         RETURN_IF_FAILED(internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_NAME, &metadata->Name));
         RETURN_IF_FAILED(internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_DESCRIPTION, &metadata->Description));
-        RETURN_IF_FAILED(internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_AUTHOR, &metadata->Author));
-        RETURN_IF_FAILED(internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_VERSION, &metadata->Version));
+
+        auto author = wil::make_cotaskmem_string_nothrow(internal::GetCurrentModuleVersionCompanyName().c_str());
+        RETURN_IF_NULL_ALLOC(author.get());
+        metadata->Author = author.release();
+
+        auto version = wil::make_cotaskmem_string_nothrow(internal::GetCurrentModuleVersion().c_str());
+        RETURN_IF_NULL_ALLOC(version.get());
+        metadata->Version = version.release();
 
         metadata->SmallImagePath = nullptr;
 

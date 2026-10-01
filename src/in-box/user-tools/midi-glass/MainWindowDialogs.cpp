@@ -114,6 +114,96 @@ namespace winrt::midiglass::implementation
 
             return list;
         }
+
+        // The device list in the New layout dialog. It follows the endpoint watcher, because on
+        // a PC with a lot of devices the first look can still be going when the dialog opens.
+        struct NewLayoutDevices
+        {
+            controls::ComboBox Picker{};
+            controls::InfoBar Status{};
+            controls::ContentDialog Dialog{ nullptr };
+            std::vector<midiapp::LiveEndpoint> Endpoints{};
+
+            void Refresh()
+            {
+                auto const& catalog = midiapp::EndpointCatalog::Current();
+                auto endpoints = catalog.Snapshot();
+
+                auto const sameList = std::equal(
+                    endpoints.begin(), endpoints.end(), Endpoints.begin(), Endpoints.end(),
+                    [](midiapp::LiveEndpoint const& left, midiapp::LiveEndpoint const& right)
+                    {
+                        return left.EndpointDeviceId == right.EndpointDeviceId && left.Name == right.Name;
+                    });
+
+                // Rebuilt only when it changed, so a list somebody has open does not close on them.
+                if (!sameList)
+                {
+                    std::wstring chosen{};
+
+                    auto const selected = Picker.SelectedIndex();
+
+                    if (selected >= 0 && static_cast<size_t>(selected) < Endpoints.size())
+                    {
+                        chosen = Endpoints[static_cast<size_t>(selected)].EndpointDeviceId;
+                    }
+
+                    Endpoints = std::move(endpoints);
+
+                    Picker.Items().Clear();
+
+                    auto index = Endpoints.empty() ? -1 : 0;
+
+                    for (size_t i = 0; i < Endpoints.size(); ++i)
+                    {
+                        Picker.Items().Append(box_value(winrt::hstring{ Endpoints[i].Name }));
+
+                        // The device somebody already picked stays picked.
+                        if (!chosen.empty() && Endpoints[i].EndpointDeviceId == chosen)
+                        {
+                            index = static_cast<int32_t>(i);
+                        }
+                    }
+
+                    Picker.SelectedIndex(index);
+                }
+
+                auto const looking = Endpoints.empty() && !catalog.HasEnumerated();
+
+                Status.IsOpen(Endpoints.empty());
+                Status.Severity(looking ? controls::InfoBarSeverity::Informational : controls::InfoBarSeverity::Warning);
+                Status.Title(resources::GetString(looking ? L"NewLayoutLookingTitle" : L"NewLayoutNoDevicesTitle"));
+                Status.Message(resources::GetString(looking ? L"NewLayoutLooking" : L"NewLayoutNoDevices"));
+
+                if (looking)
+                {
+                    controls::ProgressBar progress{};
+                    progress.IsIndeterminate(true);
+
+                    Status.Content(progress);
+                }
+                else
+                {
+                    Status.Content(nullptr);
+                }
+
+                if (Dialog != nullptr)
+                {
+                    Dialog.IsPrimaryButtonEnabled(!Endpoints.empty());
+                }
+            }
+        };
+
+        // Ends a subscription however the dialog that holds it ends.
+        struct EndpointSubscription
+        {
+            uint64_t Token{ 0 };
+
+            ~EndpointSubscription()
+            {
+                midiapp::EndpointCatalog::Current().RemoveChangedHandler(Token);
+            }
+        };
     }
 
     foundation::IAsyncAction MainWindow::ShowNewLayoutDialogAsync()
@@ -122,26 +212,16 @@ namespace winrt::midiglass::implementation
 
         try
         {
-            auto const endpoints = midiapp::EndpointCatalog::Current().Snapshot();
-
             auto nameBox = MakeField(
                 resources::GetString(L"NewLayoutNameLabel"),
                 resources::GetString(L"NewLayoutDefaultName"));
 
-            controls::ComboBox picker{};
+            auto devices = std::make_shared<NewLayoutDevices>();
 
-            picker.Header(box_value(resources::GetString(L"NewLayoutDeviceLabel")));
-            picker.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+            devices->Picker.Header(box_value(resources::GetString(L"NewLayoutDeviceLabel")));
+            devices->Picker.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
 
-            for (auto const& endpoint : endpoints)
-            {
-                picker.Items().Append(box_value(winrt::hstring{ endpoint.Name }));
-            }
-
-            if (!endpoints.empty())
-            {
-                picker.SelectedIndex(0);
-            }
+            devices->Status.IsClosable(false);
 
             auto templateList = MakeTemplateList();
 
@@ -154,22 +234,10 @@ namespace winrt::midiglass::implementation
             panel.Spacing(12);
             panel.Width(440);
             panel.Children().Append(nameBox);
-            panel.Children().Append(picker);
+            panel.Children().Append(devices->Picker);
             panel.Children().Append(templateHeader);
             panel.Children().Append(templateList);
-
-            if (endpoints.empty())
-            {
-                controls::InfoBar warning{};
-
-                warning.Severity(controls::InfoBarSeverity::Warning);
-                warning.Title(resources::GetString(L"NewLayoutNoDevicesTitle"));
-                warning.Message(resources::GetString(L"NewLayoutNoDevices"));
-                warning.IsOpen(true);
-                warning.IsClosable(false);
-
-                panel.Children().Append(warning);
-            }
+            panel.Children().Append(devices->Status);
 
             controls::ContentDialog dialog{};
 
@@ -179,23 +247,55 @@ namespace winrt::midiglass::implementation
             dialog.PrimaryButtonText(resources::GetString(L"NewLayoutCreate"));
             dialog.CloseButtonText(resources::GetString(L"CommonCancel"));
             dialog.DefaultButton(controls::ContentDialogButton::Primary);
-            dialog.IsPrimaryButtonEnabled(!endpoints.empty());
+
+            devices->Dialog = dialog;
+            devices->Refresh();
+
+            // Only a weak reference crosses threads, so the dialog is always let go on this one.
+            std::weak_ptr<NewLayoutDevices> weakDevices = devices;
+            auto const queue = m_dispatcher;
+
+            EndpointSubscription subscription{};
+
+            subscription.Token = midiapp::EndpointCatalog::Current().AddChangedHandler([weakDevices, queue]()
+                {
+                    if (queue == nullptr)
+                    {
+                        return;
+                    }
+
+                    queue.TryEnqueue([weakDevices]()
+                        {
+                            try
+                            {
+                                if (auto const strongDevices = weakDevices.lock())
+                                {
+                                    strongDevices->Refresh();
+                                }
+                            }
+                            MIDI_GLASS_CATCH_AND_LOG(L"Unable to refresh the device list.")
+                        });
+                });
 
             auto const result = co_await dialog.ShowAsync();
+
+            devices->Dialog = nullptr;
+
+            auto const& endpoints = devices->Endpoints;
 
             if (result != controls::ContentDialogResult::Primary || endpoints.empty())
             {
                 co_return;
             }
 
-            auto const selected = picker.SelectedIndex();
+            auto const selected = devices->Picker.SelectedIndex();
 
             if (selected < 0 || static_cast<size_t>(selected) >= endpoints.size())
             {
                 co_return;
             }
 
-            auto const& endpoint = endpoints[static_cast<size_t>(selected)];
+            auto const endpoint = endpoints[static_cast<size_t>(selected)];
 
             auto kind = glass::LayoutTemplateKind::Mixer;
 

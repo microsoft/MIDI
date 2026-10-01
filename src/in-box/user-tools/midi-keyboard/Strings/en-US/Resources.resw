@@ -67,9 +67,6 @@
     <value>PREVIEW</value>
     <comment>Shown in the title bar. All capitals on purpose, so it reads as a badge.</comment>
   </data>
-  <data name="VirtualDeviceDescription" xml:space="preserve">
-    <value>Virtual MIDI device created by the Windows MIDI Keyboard app</value>
-  </data>
 
   <!-- ================================= Title bar ================================= -->
   <data name="SettingsToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
@@ -157,15 +154,6 @@
   </data>
   <data name="PatchFlyoutTitle.Text" xml:space="preserve">
     <value>Bank and program</value>
-  </data>
-  <data name="EndpointSwitchButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Change MIDI destination</value>
-  </data>
-  <data name="EndpointSwitchButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Choose which device this keyboard plays</value>
-  </data>
-  <data name="EndpointSwitchNone" xml:space="preserve">
-    <value>No MIDI destinations found</value>
   </data>
   <data name="ConnectionEndpointUnavailable" xml:space="preserve">
     <value>Not available right now</value>
@@ -324,45 +312,20 @@
   </data>
 
   <!-- ================================ Connection ================================== -->
-  <data name="SettingsSectionConnection.Text" xml:space="preserve">
-    <value>Connection</value>
-  </data>
-  <data name="ConnectionModeRadios.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Connection type</value>
-  </data>
-  <data name="ConnectionModeVirtual.Content" xml:space="preserve">
-    <value>Virtual device that other apps can play</value>
-  </data>
-  <data name="ConnectionModeEndpoint.Content" xml:space="preserve">
-    <value>An existing MIDI endpoint</value>
-  </data>
-  <data name="VirtualDeviceUnavailableNote.Text" xml:space="preserve">
-    <value>The virtual device option is temporarily unavailable in this preview.</value>
-    <comment>TEMPORARY: shown while the virtual device connection type is withheld. See TemporaryFlags.h.</comment>
-  </data>
-  <data name="EndpointPickerLabel.Text" xml:space="preserve">
-    <value>MIDI destination</value>
-  </data>
   <data name="EndpointComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>MIDI destination</value>
   </data>
-  <data name="EndpointComboBox.PlaceholderText" xml:space="preserve">
-    <value>Choose a device</value>
+  <data name="EndpointComboBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose which device this keyboard plays</value>
   </data>
-  <data name="GroupPickerLabel.Text" xml:space="preserve">
-    <value>Transmit group</value>
+  <data name="EndpointComboBoxPlaceholder" xml:space="preserve">
+    <value>Choose a device</value>
   </data>
   <data name="GroupComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Transmit group</value>
   </data>
-  <data name="ChannelPickerLabel.Text" xml:space="preserve">
-    <value>Transmit channel</value>
-  </data>
   <data name="ChannelComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Transmit channel</value>
-  </data>
-  <data name="VirtualDeviceHint.Text" xml:space="preserve">
-    <value>Other applications see this keyboard as a MIDI device named Windows MIDI Keyboard. Choose it as a MIDI input in your DAW or synthesizer.</value>
   </data>
   <data name="GroupChoiceFormat" xml:space="preserve">
     <value>Group {0}</value>
@@ -377,30 +340,17 @@
   <data name="ConnectionConnecting" xml:space="preserve">
     <value>Connecting...</value>
   </data>
+  <data name="ConnectionConnected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
   <data name="ConnectionFailed" xml:space="preserve">
     <value>Could not connect</value>
   </data>
   <data name="ConnectionServiceUnavailable" xml:space="preserve">
     <value>Windows MIDI Services is not running</value>
   </data>
-  <data name="ConnectionVirtualDeviceFailed" xml:space="preserve">
-    <value>Could not create the virtual device</value>
-  </data>
   <data name="ConnectionNoEndpoint" xml:space="preserve">
-    <value>Choose a MIDI destination in settings</value>
-  </data>
-  <data name="ConnectionVirtualDeviceName" xml:space="preserve">
-    <value>Windows MIDI Keyboard</value>
-    <comment>Name shown while the app is acting as its own MIDI device</comment>
-  </data>
-  <data name="ConnectionVirtualDeviceDetail" xml:space="preserve">
-    <value>This keyboard is a virtual controller.</value>
-  </data>
-  <data name="ConnectionVirtualDeviceDetailToolTip" xml:space="preserve">
-    <value>This keyboard is a virtual controller, and appears in apps just like physical MIDI controllers</value>
-  </data>
-  <data name="ConnectionEndpointDetailFormat" xml:space="preserve">
-    <value>Group {0}, channel {1}</value>
+    <value>Not connected</value>
   </data>
 
   <!-- ================================= Keyboard =================================== -->
