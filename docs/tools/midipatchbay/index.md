@@ -32,7 +32,7 @@ Routing happens only while Windows MIDI Patchbay is running. [Routing only runs 
 
 A **patch** is one canvas: the endpoints on it, the connections between them, and a name. Patches are saved as files in **Documents &rsaquo; MIDI Patchbay**, one file per patch, so you can back one up or copy it to another PC.
 
-Patch files end in `.midipatch`. To add one that somebody sent you, or one an AI assistant saved in another folder, select **Import a patch…** and pick the file. You can also double-click it in File Explorer. The first time you do, Windows asks which app to open it with, so pick MIDI Patchbay. Either way, the patch is copied into your patches. It doesn't route, and it doesn't start automatically, until you turn those on. A file from somewhere else shouldn't connect your devices before you've looked at it.
+Patch files end in `.midipatch`. To add one that somebody sent you, or one an AI assistant saved in another folder, select **Import patch…** and pick the file. You can also double-click it in File Explorer. The first time you do, Windows asks which app to open it with, so pick MIDI Patchbay. Either way, the patch is copied into your patches. It doesn't route, and it doesn't start automatically, until you turn those on. A file from somewhere else shouldn't connect your devices before you've looked at it.
 
 Older versions of Patchbay named patch files `.midipatch.json`. Patchbay renames them to `.midipatch` the next time it starts. If a file with the new name is already there, the old one is left alone.
 
@@ -40,7 +40,7 @@ You can have as many patches as you like, and more than one can be routing at th
 
 When the patch on screen isn't routing, a warning bar across the top says so. Select **Start routing** on the bar to turn it on, and the bar goes away.
 
-To have a saved patch start routing by itself every time Patchbay starts, turn on **Start automatically** next to the routing button. While it's off, another bar reminds you that you'll need to start the patch yourself each time. You can close that reminder. A temporary patch can't start by itself, so turning the switch on for one asks you to save it first. The **Start routing saved patches at startup** setting turns automatic starting off for every patch at once.
+To have a saved patch start routing by itself every time Patchbay starts, turn on **Start automatically** next to the routing button. While it's off, another bar reminds you that you'll need to start the patch yourself each time. You can close that reminder. A temporary patch can't start by itself, so turning the switch on for one asks you to save it first. Turn off the **Start patches automatically** setting to stop every patch from starting by itself.
 
 A patch you don't name is **temporary**: it routes right now and disappears when Patchbay closes. Nothing is written to disk. Give it a name and it sticks around.
 
@@ -123,7 +123,7 @@ So the transforms dialog starts with a choice: **0 to 127** or **Percentage**. V
 
 A MIDI 2.0 note on can say exactly which pitch to play, down to a fraction of a semitone. That makes its note number an address rather than a pitch, and moving one without moving the other would produce a message asking for one note and the pitch of another.
 
-Leave **Leave MIDI 2.0 notes that carry an exact pitch alone** clear and the pitch moves with the note, so transposing and note mapping both stay honest. Check it and those notes are passed through untouched, which is what you want when the note number means a drum pad or a key on a controller rather than a pitch.
+Leave **Bypass exact-pitch notes** clear and the pitch moves with the note, so transposing and note mapping both stay honest. Check it and those notes are passed through untouched, which is what you want when the note number means a drum pad or a key on a controller rather than a pitch.
 
 Selecting a connection shows what its filters and transforms add up to, so you can see at a glance what a cord is doing without opening either dialog.
 
@@ -133,8 +133,8 @@ Selecting a connection shows what its filters and transforms add up to, so you c
 
 This is the important limitation. Patchbay routes by receiving messages in its own process and sending them back out, so the routes exist only while the app is open. Two settings in the appearance and settings flyout deal with that:
 
-- **Start when I sign in** launches Patchbay with Windows.
-- **Keep running in the notification area** means closing or minimizing the window puts Patchbay in the notification area with the routes still up. Click the icon to bring the window back, or right-click it for the list of patches, to stop everything, or to exit properly.
+- **Start with Windows** launches Patchbay when you sign in.
+- **Run in notification area** means closing or minimizing the window puts Patchbay in the notification area with the routes still up. Click the icon to bring the window back, or right-click it for the list of patches, to stop everything, or to exit properly.
 
 Both are off unless you turn them on. Patchbay doesn't put itself in the notification area uninvited.
 
@@ -156,11 +156,11 @@ An endpoint that isn't connected right now is drawn with a dashed outline and a 
 
 If the device came back with a different identity &mdash; a USB device with no serial number moved to another port, for example &mdash; Patchbay notices a likely match and offers it. It never binds to a different device on its own.
 
-Selecting an endpoint shows **Identify this device by** in the details panel:
+Selecting an endpoint shows **Match by** in the details panel:
 
-- **Its exact device ID** is the default, and the safest.
-- **Manufacturer, VID and PID** matches the same model in any port.
-- **Its name** is a last resort, because two identical devices look the same.
+- **Device ID** is the default, and the safest.
+- **USB model** matches the USB vendor and product ID, so it finds the same model in any port.
+- **Name** is a last resort, because two identical devices look the same.
 
 ## Loops
 

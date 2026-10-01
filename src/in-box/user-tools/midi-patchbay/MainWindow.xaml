@@ -237,7 +237,7 @@
                                       Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                             <TextBlock x:Name="ImportPatchText"
                                        x:Uid="ImportPatchText"
-                                       Text="Import a patch…"
+                                       Text="Import patch…"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -406,7 +406,7 @@
                         <InfoBar.ActionButton>
                             <Button x:Name="LoopShowButton"
                                     x:Uid="LoopShowButton"
-                                    Content="Show me the loop"
+                                    Content="Show loop"
                                     Click="OnShowLoopClick" />
                         </InfoBar.ActionButton>
                     </InfoBar>
@@ -476,7 +476,7 @@
                                                 Click="OnZoomFitClick" />
                                         <NumberBox x:Name="ZoomInputBox"
                                                    x:Uid="ZoomInputBox"
-                                                   Header="Zoom percent"
+                                                   Header="Zoom (%)"
                                                    Minimum="10"
                                                    Maximum="400"
                                                    SmallChange="5"
@@ -660,7 +660,7 @@
         <!-- ================================== dialogs =================================== -->
         <ContentDialog x:Name="SavePatchDialog"
                        x:Uid="SavePatchDialog"
-                       Title="Save this patch"
+                       Title="Save patch"
                        PrimaryButtonText="Save"
                        CloseButtonText="Cancel"
                        DefaultButton="Primary">
@@ -680,7 +680,7 @@
                          TextChanged="OnSavePatchNameChanged" />
                 <TextBox x:Name="SavePatchDescriptionBox"
                          x:Uid="SavePatchDescriptionBox"
-                         Header="Description, optional"
+                         Header="Description (optional)"
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
                          MaxLength="400"
@@ -691,7 +691,7 @@
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                 <RadioButton x:Name="SavePatchKeepRadio"
                              x:Uid="SavePatchKeepRadio"
-                             Content="Keep this patch"
+                             Content="Saved"
                              GroupName="SavePatchKind"
                              IsChecked="True" />
                 <TextBlock x:Uid="SavePatchKeepHint"
@@ -710,14 +710,14 @@
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                 <CheckBox x:Name="SavePatchStartupCheck"
                           x:Uid="SavePatchStartupCheck"
-                          Content="Start routing this patch when Patchbay starts"
+                          Content="Start automatically"
                           IsChecked="True" />
             </StackPanel>
         </ContentDialog>
 
         <ContentDialog x:Name="CreateLoopbackDialog"
                        x:Uid="CreateLoopbackDialog"
-                       Title="Create a loopback"
+                       Title="Create loopback"
                        PrimaryButtonText="Create"
                        CloseButtonText="Cancel"
                        DefaultButton="Primary">
@@ -757,7 +757,7 @@
                          TextChanged="OnLoopbackNameChanged" />
                 <CheckBox x:Name="LoopbackKeepCheck"
                           x:Uid="LoopbackKeepCheck"
-                          Content="Keep this loopback after Patchbay closes"
+                          Content="Keep after Patchbay closes"
                           IsChecked="True" />
                 <InfoBar x:Uid="LoopbackInfoBar"
                          Severity="Informational"
@@ -794,7 +794,7 @@
                     </Grid.ColumnDefinitions>
                     <ComboBox x:Name="QuickPatchSourceCombo"
                               x:Uid="QuickPatchSourceCombo"
-                              Header="Messages come from"
+                              Header="Source"
                               HorizontalAlignment="Stretch"
                               SelectionChanged="OnQuickPatchSourceChanged" />
                     <ComboBox x:Name="QuickPatchSourceGroupCombo"
@@ -817,7 +817,7 @@
                     </Grid.ColumnDefinitions>
                     <ComboBox x:Name="QuickPatchDestinationCombo"
                               x:Uid="QuickPatchDestinationCombo"
-                              Header="Messages go to"
+                              Header="Destination"
                               HorizontalAlignment="Stretch"
                               SelectionChanged="OnQuickPatchDestinationChanged" />
                     <ComboBox x:Name="QuickPatchDestinationGroupCombo"
@@ -861,9 +861,9 @@
 
         <ContentDialog x:Name="FilterDialog"
                        x:Uid="FilterDialog"
-                       Title="Filters for this connection"
+                       Title="Filters"
                        PrimaryButtonText="Apply"
-                       SecondaryButtonText="Pass everything"
+                       SecondaryButtonText="Clear filters"
                        CloseButtonText="Cancel"
                        DefaultButton="Primary">
             <ContentDialog.Resources>
@@ -905,9 +905,9 @@
 
         <ContentDialog x:Name="TransformDialog"
                        x:Uid="TransformDialog"
-                       Title="Transforms for this connection"
+                       Title="Transforms"
                        PrimaryButtonText="Apply"
-                       SecondaryButtonText="Change nothing"
+                       SecondaryButtonText="Clear transforms"
                        CloseButtonText="Cancel"
                        DefaultButton="Primary">
             <ContentDialog.Resources>
