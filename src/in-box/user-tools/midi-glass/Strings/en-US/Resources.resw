@@ -3278,7 +3278,7 @@
     <value>Match by</value>
   </data>
   <data name="MatchModeExactDevice" xml:space="preserve">
-    <value>Exact device</value>
+    <value>Device ID</value>
   </data>
   <data name="MatchModeName" xml:space="preserve">
     <value>Name</value>
