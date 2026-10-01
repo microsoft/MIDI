@@ -165,7 +165,7 @@ namespace winrt::midiglass::implementation
             // device with it and says nothing else about itself.
             auto weak = get_weak();
 
-            midiapp::EndpointCatalog::Current().SetChangedHandler([weak]()
+            m_endpointsChangedToken = midiapp::EndpointCatalog::Current().AddChangedHandler([weak]()
                 {
                     auto strong = weak.get();
 
@@ -179,6 +179,7 @@ namespace winrt::midiglass::implementation
                             if (auto inner = weak.get())
                             {
                                 inner->CheckServiceState();
+                                inner->UpdateStatusBar();
                                 inner->RefreshLibrary();
                             }
                         });
@@ -231,7 +232,8 @@ namespace winrt::midiglass::implementation
         {
             // A handler left pointing at a closed window is a use after free waiting for
             // somebody to plug something in.
-            midiapp::EndpointCatalog::Current().SetChangedHandler(nullptr);
+            midiapp::EndpointCatalog::Current().RemoveChangedHandler(m_endpointsChangedToken);
+            m_endpointsChangedToken = 0;
 
             if (m_serviceTimer != nullptr)
             {

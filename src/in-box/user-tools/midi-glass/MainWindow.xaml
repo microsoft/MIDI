@@ -844,6 +844,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <FontIcon Grid.Column="0"
@@ -859,7 +860,26 @@
                            TextTrimming="CharacterEllipsis"
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
-                <Grid Grid.Column="2" Height="19" VerticalAlignment="Center">
+                <StackPanel x:Name="DeviceSearchPanel"
+                            Grid.Column="2"
+                            Orientation="Horizontal"
+                            Spacing="6"
+                            VerticalAlignment="Center"
+                            Visibility="Collapsed">
+                    <ProgressRing x:Name="DeviceSearchRing"
+                                  Width="14"
+                                  Height="14"
+                                  MinWidth="0"
+                                  MinHeight="0"
+                                  IsActive="False" />
+                    <TextBlock x:Uid="DeviceSearchText"
+                               Text="Looking for MIDI devices…"
+                               FontSize="11"
+                               VerticalAlignment="Center"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                </StackPanel>
+
+                <Grid Grid.Column="3" Height="19" VerticalAlignment="Center">
                     <Rectangle x:Name="ServiceChipShape"
                                RadiusX="9.5"
                                RadiusY="9.5"

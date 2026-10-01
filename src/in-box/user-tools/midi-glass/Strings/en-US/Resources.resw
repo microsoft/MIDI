@@ -338,6 +338,10 @@
   <data name="StatusServiceStopped" xml:space="preserve">
     <value>MIDI service not running</value>
   </data>
+  <data name="DeviceSearchText.Text" xml:space="preserve">
+    <value>Looking for MIDI devices…</value>
+    <comment>Shown in the status bar while the app is still finding the MIDI devices on this PC.</comment>
+  </data>
   <data name="EmptyHeading.Text" xml:space="preserve">
     <value>No layouts yet</value>
   </data>
@@ -366,7 +370,13 @@
     <value>No MIDI devices found</value>
   </data>
   <data name="NewLayoutNoDevices" xml:space="preserve">
-    <value>There is nothing for a layout to send to yet. Plug something in, or make a loopback, and try again.</value>
+    <value>There is nothing for a layout to send to yet. Plug something in or make a loopback, and it shows up here.</value>
+  </data>
+  <data name="NewLayoutLookingTitle" xml:space="preserve">
+    <value>Looking for MIDI devices…</value>
+  </data>
+  <data name="NewLayoutLooking" xml:space="preserve">
+    <value>This can take a moment on a PC with a lot of devices. They show up here as soon as they're found.</value>
   </data>
   <data name="TemplateMixerName" xml:space="preserve">
     <value>Mixer</value>

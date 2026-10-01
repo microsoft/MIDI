@@ -144,6 +144,10 @@ Because Patchbay works inside its own process, it can only route *from* a messag
 
 **Create loopback** on the toolbar makes one without leaving the canvas, and drops it straight onto the patch. It uses the same Windows MIDI Services feature that [MIDI Loopback Setup]({{ site.baseurl }}/tools/midiloopbacksetup/) does, so a loopback made here is a normal endpoint that every app sees, and it can stick around after Patchbay closes.
 
+> **Tip:** Some apps remember a device by its name. To filter what one of those apps receives from a device without breaking that, give a loopback the device's name. First rename the device with **Customize** in [MIDI Settings]({{ site.baseurl }}/tools/settings/). Older apps see the device's MIDI 1.0 ports rather than the device itself, so rename those too, with **Edit port names**. New port names take effect when the MIDI service restarts. Then create a **MIDI 1.0 basic loopback** with the device's original name, connect the device's **Out** to the loopback's **In**, and set the filters you want on that connection. The app finds the loopback under the name it remembers, and gets only what your filters let through.
+>
+> This works best for a device the app only listens to. A basic loopback sends whatever it's given straight back out, so anything the app sends to that name comes back to the app instead of reaching the device.
+
 ## When a device isn't there
 
 Gear gets unplugged. That's a normal state, not an error.

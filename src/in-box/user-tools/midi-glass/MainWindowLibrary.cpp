@@ -347,8 +347,10 @@ namespace winrt::midiglass::implementation
 
     void MainWindow::RefreshLibrary()
     {
+        // Dropping it would lose whatever asked, such as the device list arriving.
         if (m_refreshing)
         {
+            m_refreshAgain = true;
             return;
         }
 
@@ -440,6 +442,11 @@ namespace winrt::midiglass::implementation
                                 inner->ApplyCards(cards);
                                 inner->m_refreshing = false;
                                 inner->QueueStaleCards(stale);
+
+                                if (std::exchange(inner->m_refreshAgain, false))
+                                {
+                                    inner->RefreshLibrary();
+                                }
                             }
                         });
                 }
@@ -781,6 +788,13 @@ namespace winrt::midiglass::implementation
 
             ServiceChipIcon().Foreground(foreground);
             ServiceChipText().Foreground(foreground);
+
+            // On a PC with a lot of devices the first look takes a while, and until it is done
+            // an empty device list does not mean there is nothing there.
+            auto const looking = m_serviceRunning && !midiapp::EndpointCatalog::Current().HasEnumerated();
+
+            DeviceSearchPanel().Visibility(looking ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            DeviceSearchRing().IsActive(looking);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the status bar.")
     }

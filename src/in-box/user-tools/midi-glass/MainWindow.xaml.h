@@ -222,9 +222,8 @@ namespace winrt::midiglass::implementation
         // Everything read from disk, before the search and the sort are applied.
         std::vector<::midiglass::LayoutCardData> m_allCards{};
 
-        // What the last read produced. The endpoint watcher fires once per endpoint on the
-        // machine at startup and again whenever anything is plugged in, so a rebuild only
-        // happens when something a card actually shows has changed.
+        // What the last read produced. The endpoint list changes whenever anything is plugged
+        // in, so a rebuild only happens when something a card actually shows has changed.
         std::wstring m_cardSignature{};
 
         collections::IObservableVector<foundation::IInspectable> m_favorites{
@@ -241,10 +240,14 @@ namespace winrt::midiglass::implementation
 
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcher{ nullptr };
 
+        // The library's subscription to the endpoint list. A running layout has its own.
+        uint64_t m_endpointsChangedToken{ 0 };
+
         xaml::DispatcherTimer m_serviceTimer{ nullptr };
         bool m_serviceRunning{ false };
 
         bool m_refreshing{ false };
+        bool m_refreshAgain{ false };
         bool m_updatingChrome{ false };
 
         std::vector<StaleCard> m_cardQueue{};
