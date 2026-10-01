@@ -358,6 +358,27 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
+    void EditorWindow::OnLockClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            // Unlock only once everything picked is locked, so a mixed selection locks the rest.
+            if (!m_tryMode && m_editor.SetSelectionLocked(!m_editor.SelectionIsLocked()))
+            {
+                UpdateOverlay();
+                RebuildOutline();
+                RefreshInspector();
+                UpdateStatusBar();
+                MarkChanged();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to lock or unlock the selection.")
+    }
+
+    _Use_decl_annotations_
     void EditorWindow::OnGroupMenuClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
     {
         UNREFERENCED_PARAMETER(sender);

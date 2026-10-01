@@ -163,19 +163,6 @@ namespace glass
         }
     }
 
-    size_t SequenceRunner::PendingCount() const noexcept
-    {
-        try
-        {
-            std::lock_guard guard{ m_lock };
-            return m_pending.size();
-        }
-        catch (...)
-        {
-            return 0;
-        }
-    }
-
     _Use_decl_annotations_
     bool SequenceRunner::IsRunning(uint32_t controlIndex) const noexcept
     {

@@ -165,23 +165,28 @@ namespace winrt::midiglass::implementation
             // device with it and says nothing else about itself.
             auto weak = get_weak();
 
-            m_endpointsChangedToken = midiapp::EndpointCatalog::Current().AddChangedHandler([weak]()
+            // Resolved only on the UI thread. A window released on the watcher's thread is
+            // destroyed there, and XAML objects must not be.
+            m_endpointsChangedToken = midiapp::EndpointCatalog::Current().AddChangedHandler(
+                [weak, queue = m_dispatcher]()
                 {
-                    auto strong = weak.get();
-
-                    if (strong == nullptr || strong->m_dispatcher == nullptr)
+                    if (queue == nullptr)
                     {
                         return;
                     }
 
-                    strong->m_dispatcher.TryEnqueue([weak]()
+                    queue.TryEnqueue([weak]()
                         {
-                            if (auto inner = weak.get())
+                            try
                             {
-                                inner->CheckServiceState();
-                                inner->UpdateStatusBar();
-                                inner->RefreshLibrary();
+                                if (auto inner = weak.get())
+                                {
+                                    inner->CheckServiceState();
+                                    inner->UpdateStatusBar();
+                                    inner->RefreshLibrary();
+                                }
                             }
+                            MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the device change.")
                         });
                 });
 

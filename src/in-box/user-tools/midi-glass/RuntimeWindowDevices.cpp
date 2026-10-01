@@ -15,6 +15,7 @@
 
 #include "StringResources.h"
 #include "GlassControl.h"
+#include "MidiServiceStatus.h"
 
 namespace resources = ::midiglass::resources;
 
@@ -196,6 +197,12 @@ namespace winrt::midiglass::implementation
             {
                 DeviceStatusText().Text(resources::FormatString(
                     L"RuntimeAllDevicesFormat", static_cast<int32_t>(available)));
+            }
+            else if (!midiapp::IsMidiServiceRunning())
+            {
+                // Every device goes with the service, and naming them would send somebody to
+                // check cables that are fine.
+                DeviceStatusText().Text(resources::GetString(L"ErrorServiceUnavailable"));
             }
             else
             {

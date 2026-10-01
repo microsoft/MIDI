@@ -31,6 +31,11 @@ namespace winrt::midiglass::implementation
     {
         namespace automation = ::winrt::Microsoft::UI::Xaml::Automation;
 
+        // Settings the file can hold but the runtime does not act on yet. Each stays out of this
+        // pane until its switch is turned on, so nobody sets something that does nothing.
+        constexpr bool VirtualDeviceIsBuilt = false;
+        constexpr bool IncomingClockIsBuilt = false;
+
         media::SolidColorBrush PaneBrush(_In_ wchar_t const* key)
         {
             return xaml::Application::Current().Resources()
@@ -340,70 +345,76 @@ namespace winrt::midiglass::implementation
 
             // ---- what other apps see ----
 
-            heading(L"BehaviorHeadingVirtual", false);
-            caption(L"BehaviorCaptionVirtual");
+            if constexpr (VirtualDeviceIsBuilt)
+            {
+                heading(L"BehaviorHeadingVirtual", false);
+                caption(L"BehaviorCaptionVirtual");
 
-            check(L"BehaviorVirtualDevice", document.PublishesVirtualDevice,
-                [weak = get_weak()](bool on)
-                {
-                    if (auto strong = weak.get())
+                check(L"BehaviorVirtualDevice", document.PublishesVirtualDevice,
+                    [weak = get_weak()](bool on)
                     {
-                        if (strong->m_editor.SetPublishesVirtualDevice(on))
+                        if (auto strong = weak.get())
                         {
-                            strong->MarkChanged();
+                            if (strong->m_editor.SetPublishesVirtualDevice(on))
+                            {
+                                strong->MarkChanged();
+                            }
                         }
-                    }
-                });
+                    });
+            }
 
             // ---- what keeps time ----
 
             heading(L"BehaviorHeadingTempo", false);
-            caption(L"BehaviorCaptionTempo");
+            caption(IncomingClockIsBuilt ? L"BehaviorCaptionTempo" : L"BehaviorCaptionTempoInternal");
 
             {
-                controls::ComboBox source{};
-
-                source.Header(box_value(resources::GetString(L"BehaviorTempoSourceLabel")));
-                source.MinWidth(220.0);
-                source.FontSize(12.0);
-                source.Margin({ 0, 0, 0, 8 });
-
-                for (auto const* key : { L"TempoInternal", L"TempoFollowIncoming" })
+                if constexpr (IncomingClockIsBuilt)
                 {
-                    source.Items().Append(box_value(resources::GetString(key)));
-                }
+                    controls::ComboBox source{};
 
-                source.SelectedIndex(static_cast<int32_t>(document.Tempo.Kind));
+                    source.Header(box_value(resources::GetString(L"BehaviorTempoSourceLabel")));
+                    source.MinWidth(220.0);
+                    source.FontSize(12.0);
+                    source.Margin({ 0, 0, 0, 8 });
 
-                automation::AutomationProperties::SetName(
-                    source, resources::GetString(L"BehaviorTempoSourceLabel"));
-
-                source.SelectionChanged([weak = get_weak()](foundation::IInspectable const& sender, auto&&)
+                    for (auto const* key : { L"TempoInternal", L"TempoFollowIncoming" })
                     {
-                        auto strong = weak.get();
+                        source.Items().Append(box_value(resources::GetString(key)));
+                    }
 
-                        if (strong == nullptr || strong->m_updatingSettings)
+                    source.SelectedIndex(static_cast<int32_t>(document.Tempo.Kind));
+
+                    automation::AutomationProperties::SetName(
+                        source, resources::GetString(L"BehaviorTempoSourceLabel"));
+
+                    source.SelectionChanged([weak = get_weak()](foundation::IInspectable const& sender, auto&&)
                         {
-                            return;
-                        }
+                            auto strong = weak.get();
 
-                        auto const index = sender.as<controls::ComboBox>().SelectedIndex();
+                            if (strong == nullptr || strong->m_updatingSettings)
+                            {
+                                return;
+                            }
 
-                        if (index < 0)
-                        {
-                            return;
-                        }
+                            auto const index = sender.as<controls::ComboBox>().SelectedIndex();
 
-                        auto tempo = strong->m_editor.Document().Tempo;
-                        tempo.Kind = static_cast<glass::TempoSourceKind>(index);
+                            if (index < 0)
+                            {
+                                return;
+                            }
 
-                        if (strong->m_editor.SetTempoSource(tempo))
-                        {
-                            strong->MarkChanged();
-                        }
-                    });
+                            auto tempo = strong->m_editor.Document().Tempo;
+                            tempo.Kind = static_cast<glass::TempoSourceKind>(index);
 
-                SettingsBehaviorPanel().Children().Append(source);
+                            if (strong->m_editor.SetTempoSource(tempo))
+                            {
+                                strong->MarkChanged();
+                            }
+                        });
+
+                    SettingsBehaviorPanel().Children().Append(source);
+                }
 
                 controls::NumberBox beats{};
 

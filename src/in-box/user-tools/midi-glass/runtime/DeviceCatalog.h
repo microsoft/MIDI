@@ -73,6 +73,9 @@ namespace glass
 
         // Raised after the table has been re-resolved, on a background thread. The window layer
         // marshals; nothing here calls up into the UI.
+        //
+        // It runs under the catalog registry's lock, so it must not drop the last reference to
+        // whatever owns this catalog.
         void SetChangedHandler(_In_ std::function<void()> handler) noexcept;
 
         // The layout's device table, plus the groups each control actually uses, so the catalog
@@ -93,9 +96,6 @@ namespace glass
         void BuildOutputRequests(
             _Out_ std::vector<std::wstring>& endpointDeviceIds,
             _Out_ std::vector<uint16_t>& groupMasks) const noexcept;
-
-        size_t AvailableCount() const noexcept;
-        size_t MissingCount() const noexcept;
 
         // Which entry of the layout's device table this endpoint resolved to, or an empty string
         // when nothing did. What a learn capture needs: it arrives knowing an endpoint id, and a

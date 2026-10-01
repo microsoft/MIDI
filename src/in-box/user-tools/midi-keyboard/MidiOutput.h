@@ -14,12 +14,11 @@ namespace midikeyboard
         Success = 0,
         ServiceUnavailable = 1,
         SessionFailed = 2,
-        VirtualDeviceFailed = 3,
         ConnectionFailed = 4,
         NoEndpointChosen = 5
     };
 
-    // Owns the session, the optional virtual device and the open connection.
+    // Owns the session and the open connection.
     //
     // Connect and Disconnect block on the service over RPC, so they run on a background
     // thread. Everything else only writes to the service's shared memory queue and is meant
@@ -30,14 +29,10 @@ namespace midikeyboard
         ~MidiOutput() noexcept;
 
         // blocking; never call these from the XAML thread
-        ConnectResult ConnectVirtualDevice() noexcept;
         ConnectResult ConnectEndpoint(std::wstring const& endpointDeviceId) noexcept;
         void Disconnect() noexcept;
 
         bool IsConnected() const noexcept;
-
-        // What other applications will see this app as. Empty unless a virtual device is up.
-        winrt::hstring ClientEndpointDeviceId() const noexcept;
 
         // For the MIDI-CI program list query, which needs to both send and receive on the same
         // connection. Null when nothing is connected.
@@ -58,9 +53,6 @@ namespace midikeyboard
         // CC 123, plus a pitch bend reset, for panic and for tearing down
         void SendAllNotesOff(uint8_t group, uint8_t channel) noexcept;
 
-        // The virtual device always plays group 1; a chosen endpoint uses the customer's group.
-        static constexpr uint8_t VirtualDeviceGroupIndex = 0;
-
     private:
         void SendChannelVoiceMessage(
             uint8_t group,
@@ -75,7 +67,5 @@ namespace midikeyboard
 
         winrt::Windows::Devices::Midi2::MidiSession m_session{ nullptr };
         winrt::Windows::Devices::Midi2::MidiEndpointConnection m_connection{ nullptr };
-        winrt::Windows::Devices::Midi2::Transports::Virtual::MidiVirtualDevice m_virtualDevice{ nullptr };
-        winrt::hstring m_clientEndpointDeviceId{};
     };
 }

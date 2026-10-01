@@ -19,6 +19,7 @@
 #include "LayoutStore.h"
 #include "ControlFactory.h"
 #include "PadGrid.h"
+#include "InputRules.h"
 
 #include <shobjidl.h>
 #include <cwctype>
@@ -572,6 +573,19 @@ namespace winrt::midiglass::implementation
             {
                 StartsOnSwitch().IsOn(control.DefaultValue >= 0.5);
             }
+
+            // An XY pad and a joystick start at a point, so each axis gets its own slider.
+            auto const twoAxes = glass::UsesTwoAxes(control.Kind);
+
+            show(DefaultValueYSlider(), twoAxes);
+
+            DefaultValueSlider().Header(twoAxes
+                ? box_value(resources::GetString(L"DefaultValueAcrossHeader"))
+                : nullptr);
+
+            xaml::Automation::AutomationProperties::SetName(
+                DefaultValueSlider(),
+                resources::GetString(twoAxes ? L"DefaultValueAcrossName" : L"DefaultValueName"));
 
             // ---- how it is dragged ----
 

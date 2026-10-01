@@ -533,6 +533,11 @@ namespace winrt::midiglass::implementation
         BoundsWidth().Text(winrt::hstring{ FormatNumber(bounds.Width) });
         BoundsHeight().Text(winrt::hstring{ FormatNumber(bounds.Height) });
 
+        for (auto const& box : { BoundsX(), BoundsY(), BoundsWidth(), BoundsHeight() })
+        {
+            box.IsEnabled(!m_editor.SelectionHasLocked());
+        }
+
         LabelBox().Text(L"");
         KindCombo().SelectedIndex(-1);
         AspectLockToggle().IsChecked(false);
@@ -1029,6 +1034,12 @@ namespace winrt::midiglass::implementation
             BoundsWidth().Text(winrt::hstring{ FormatNumber(control->Width) });
             BoundsHeight().Text(winrt::hstring{ FormatNumber(control->Height) });
 
+            // A locked control keeps its place, so its numbers are shown and not taken.
+            for (auto const& box : { BoundsX(), BoundsY(), BoundsWidth(), BoundsHeight() })
+            {
+                box.IsEnabled(!control->Locked);
+            }
+
             AspectLockToggle().IsChecked(control->AspectLocked);
 
             LabelBox().Text(winrt::hstring{ control->Label });
@@ -1063,6 +1074,7 @@ namespace winrt::midiglass::implementation
 
             SendOnStartSwitch().IsOn(control->SendsValueOnStart);
             DefaultValueSlider().Value(control->DefaultValue * 100.0);
+            DefaultValueYSlider().Value(control->DefaultValueY * 100.0);
             ReturnsToDefaultSwitch().IsOn(control->ReturnsToDefault);
             LightsFromCenterSwitch().IsOn(control->LightsFromCenter);
             LightsFromCenterPanel().Visibility(
@@ -1810,6 +1822,7 @@ namespace winrt::midiglass::implementation
         auto const* const sequence = m_editor.Document().FindSequence(selectedName);
 
         EditSequenceButton().IsEnabled(sequence != nullptr);
+        DeleteSequenceButton().IsEnabled(sequence != nullptr);
 
         SequenceCaption().Text(sequence == nullptr
             ? resources::GetString(L"SequenceNoneChosen")
@@ -2927,6 +2940,28 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
+    void EditorWindow::OnDefaultValueYChanged(
+        foundation::IInspectable const& sender,
+        controls::Primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control != nullptr &&
+            m_editor.SetControlDefaultValueY(control->Id, DefaultValueYSlider().Value() / 100.0))
+        {
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
     void EditorWindow::OnStartsOnToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
     {
         UNREFERENCED_PARAMETER(sender);
@@ -3257,6 +3292,85 @@ namespace winrt::midiglass::implementation
         if (!name.empty())
         {
             ShowSequenceDialog(name);
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnDeleteSequenceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr ||
+            m_messageIndex < 0 ||
+            m_messageIndex >= static_cast<int32_t>(control->Messages.size()))
+        {
+            return;
+        }
+
+        auto const name = control->Messages[static_cast<size_t>(m_messageIndex)].SequenceName;
+
+        if (m_editor.Document().FindSequence(name) != nullptr)
+        {
+            DeleteSequenceWithConfirmation(name);
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget EditorWindow::DeleteSequenceWithConfirmation(std::wstring sequenceName)
+    {
+        auto strong = get_strong();
+        auto asked = false;
+
+        try
+        {
+            auto const users = m_editor.CountControlsUsingSequence(sequenceName);
+
+            if (users > 1)
+            {
+                if (m_openDialog != nullptr)
+                {
+                    co_return;
+                }
+
+                controls::TextBlock body{};
+                body.TextWrapping(xaml::TextWrapping::Wrap);
+                body.Width(360.0);
+                body.Text(resources::FormatString(
+                    L"DeleteSequenceInUseFormat", sequenceName, std::to_wstring(users)));
+
+                controls::ContentDialog dialog{};
+                dialog.XamlRoot(RootGrid().XamlRoot());
+                dialog.Title(box_value(resources::GetString(L"DeleteSequenceTitle")));
+                dialog.PrimaryButtonText(resources::GetString(L"DeleteSequenceAccept"));
+                dialog.CloseButtonText(resources::GetString(L"DialogCancel"));
+                dialog.DefaultButton(controls::ContentDialogButton::Close);
+                dialog.Content(body);
+
+                asked = true;
+                m_openDialog = dialog.ShowAsync();
+                auto const result = co_await m_openDialog;
+                m_openDialog = nullptr;
+
+                if (result != controls::ContentDialogResult::Primary)
+                {
+                    co_return;
+                }
+            }
+
+            if (m_editor.RemoveSequence(sequenceName))
+            {
+                RefreshInspector();
+                MarkChanged();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to delete the sequence.")
+
+        if (asked)
+        {
+            m_openDialog = nullptr;
         }
     }
 

@@ -67,6 +67,7 @@ namespace glass
         constexpr wchar_t KeyHeight[] = L"height";
         constexpr wchar_t KeyLiteralColor[] = L"literalColor";
         constexpr wchar_t KeyAspectLocked[] = L"aspectLocked";
+        constexpr wchar_t KeyLocked[] = L"locked";
         constexpr wchar_t KeyControlGroup[] = L"controlGroup";
         constexpr wchar_t KeyStyle[] = L"style";
         constexpr wchar_t KeyLabelPlaced[] = L"labelPlaced";
@@ -1264,6 +1265,7 @@ namespace glass
             control.HueSlot = ReadInt(object, KeyHueSlot, 0, LiteralHue, NeutralSlot);
             control.LiteralColor = ReadString(object, KeyLiteralColor);
             control.AspectLocked = ReadBool(object, KeyAspectLocked, false);
+            control.Locked = ReadBool(object, KeyLocked, false);
             control.GroupId = ReadString(object, KeyControlGroup);
             control.Style = ValueOf(StyleNames, ReadString(object, KeyStyle), ControlStyleOverride::UseTheme);
             control.LabelPlaced = ValueOf(LabelPlacedNames, ReadString(object, KeyLabelPlaced), LabelPlacementOverride::UseTheme);
@@ -1344,7 +1346,7 @@ namespace glass
 
             control.Unknown = CaptureUnknown(object,
                 { KeyId, KeyKind, KeyLabel, KeyX, KeyY, KeyWidth, KeyHeight, KeyHueSlot,
-                  KeyLiteralColor, KeyAspectLocked, KeyControlGroup, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
+                  KeyLiteralColor, KeyAspectLocked, KeyLocked, KeyControlGroup, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
                   KeyReturnsToDefault, KeyLightsFromCenter, KeyDrag, KeyTicks, KeyShowDetentValues, KeyPicture,
                   KeyKeyboard, KeyClock, KeyLfo, KeyTurntable, KeyLine, KeySwitch, KeySequencer, KeyPads, KeyDefaultValueY, KeyVelocityFromTouch,
                   KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback,
@@ -1508,6 +1510,62 @@ namespace glass
 
             return sequence;
         }
+
+        // Windows opens these as devices whatever extension follows, so a picture called NUL.png
+        // or COM1.png is not a file at all.
+        bool IsReservedDeviceName(_In_ std::wstring_view name) noexcept
+        {
+            auto stem = name.substr(0, name.find(L'.'));
+
+            while (!stem.empty() && stem.back() == L' ')
+            {
+                stem.remove_suffix(1);
+            }
+
+            // The reserved names are plain ASCII, so folding A to Z is all the comparison needs.
+            auto const same = [](std::wstring_view left, std::wstring_view right) noexcept
+                {
+                    if (left.size() != right.size())
+                    {
+                        return false;
+                    }
+
+                    for (size_t index = 0; index < left.size(); ++index)
+                    {
+                        auto a = left[index];
+                        auto b = right[index];
+
+                        if (a >= L'a' && a <= L'z') { a = static_cast<wchar_t>(a - L'a' + L'A'); }
+                        if (b >= L'a' && b <= L'z') { b = static_cast<wchar_t>(b - L'a' + L'A'); }
+
+                        if (a != b)
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                };
+
+            for (auto const* const reserved : { L"CON", L"PRN", L"AUX", L"NUL", L"CONIN$", L"CONOUT$", L"CLOCK$" })
+            {
+                if (same(stem, reserved))
+                {
+                    return true;
+                }
+            }
+
+            // COM and LPT with one digit, counting the superscript ones Windows also reserves.
+            if (stem.size() == 4 && (same(stem.substr(0, 3), L"COM") || same(stem.substr(0, 3), L"LPT")))
+            {
+                auto const digit = stem[3];
+
+                return (digit >= L'0' && digit <= L'9') ||
+                    digit == L'\u00B9' || digit == L'\u00B2' || digit == L'\u00B3';
+            }
+
+            return false;
+        }
     }
 
     _Use_decl_annotations_
@@ -1525,6 +1583,18 @@ namespace glass
         }
 
         if (name == L"." || name == L".." || name.find(L"..") != std::wstring::npos)
+        {
+            return {};
+        }
+
+        // Windows drops a trailing dot or space when it opens a file, so the file found would
+        // not be the one named.
+        if (name.back() == L'.' || name.back() == L' ')
+        {
+            return {};
+        }
+
+        if (IsReservedDeviceName(name))
         {
             return {};
         }
@@ -1781,6 +1851,12 @@ namespace glass
             }
 
             writer.Write(KeyAspectLocked, control.AspectLocked);
+
+            // Written only when set, so a layout nobody locked writes the same bytes as before.
+            if (control.Locked)
+            {
+                writer.Write(KeyLocked, true);
+            }
 
             if (!control.GroupId.empty())
             {

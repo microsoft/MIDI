@@ -26,6 +26,7 @@ namespace midiglass
         double IndentPixels{ 0.0 };
         bool IsOutsidePage{ false };
         bool IsGroup{ false };
+        bool IsLocked{ false };
     };
 }
 
@@ -69,6 +70,13 @@ namespace winrt::midiglass::implementation
             return m_isOutsidePage ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
         }
 
+        bool IsLocked() const noexcept { return m_isLocked; }
+
+        xaml::Visibility LockedVisibility() const noexcept
+        {
+            return m_isLocked ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
+        }
+
     private:
         hstring m_key{};
         hstring m_displayName{};
@@ -82,6 +90,7 @@ namespace winrt::midiglass::implementation
         xaml::Thickness m_indent{ 0, 0, 0, 0 };
         bool m_isOutsidePage{ false };
         bool m_isGroup{ false };
+        bool m_isLocked{ false };
     };
 
     struct MonitorItem : MonitorItemT<MonitorItem>

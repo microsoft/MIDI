@@ -258,6 +258,15 @@ namespace midiapp
 
             ReadGroupNames(device, endpoint);
 
+            try
+            {
+                endpoint.SupportsMidi2Protocol = device.GetDeclaredEndpointInfo().SupportsMidi20Protocol();
+            }
+            catch (...)
+            {
+                ReportEndpointError(L"Unable to read the protocols of an endpoint.");
+            }
+
             if (EqualsIgnoringCase(endpoint.TransportCode, TransportCodeBasicLoopback))
             {
                 endpoint.IsLoopback = true;

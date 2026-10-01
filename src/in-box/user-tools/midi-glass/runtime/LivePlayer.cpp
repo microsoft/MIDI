@@ -178,18 +178,18 @@ namespace glass
 
         m_steps->Start(dispatcher);
 
-        m_devices.SetChangedHandler([weak]()
+        m_devices.SetChangedHandler([weak, queue = m_dispatcher]()
             {
-                auto strong = weak.lock();
-
-                if (strong == nullptr || strong->m_dispatcher == nullptr)
+                if (queue == nullptr)
                 {
                     return;
                 }
 
                 // The watcher calls on its own thread. Nothing below the window layer calls up
-                // into the UI, so the marshalling happens here.
-                strong->m_dispatcher.TryEnqueue([weak]()
+                // into the UI, so the marshalling happens here. The player is only resolved on
+                // the UI thread, because releasing the last reference here would destroy it
+                // under the catalog registry's lock.
+                queue.TryEnqueue([weak]()
                     {
                         if (auto inner = weak.lock())
                         {
@@ -520,40 +520,6 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    bool LivePlayer::IsLfoRunning(uint32_t controlIndex) const noexcept
-    {
-        return m_lfos != nullptr && m_lfos->IsRunning(controlIndex);
-    }
-
-    _Use_decl_annotations_
-    bool LivePlayer::AreStepsRunning(uint32_t controlIndex) const noexcept
-    {
-        for (auto const& steps : m_stepControls)
-        {
-            if (steps.ControlIndex == controlIndex)
-            {
-                return steps.Run != 0;
-            }
-        }
-
-        return false;
-    }
-
-    _Use_decl_annotations_
-    bool LivePlayer::StepsLatchAt(uint32_t controlIndex) const noexcept
-    {
-        for (auto const& steps : m_stepControls)
-        {
-            if (steps.ControlIndex == controlIndex)
-            {
-                return steps.Spec.Latching;
-            }
-        }
-
-        return true;
-    }
-
-    _Use_decl_annotations_
     LivePlayer::StepsEntry* LivePlayer::FindStepControl(uint32_t controlIndex) noexcept
     {
         for (auto& steps : m_stepControls)
@@ -686,26 +652,6 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    bool LivePlayer::LfoLatchesAt(uint32_t controlIndex) const noexcept
-    {
-        for (auto const& lfo : m_lfoControls)
-        {
-            if (lfo.ControlIndex == controlIndex)
-            {
-                return lfo.Spec.Latching;
-            }
-        }
-
-        return true;
-    }
-
-    _Use_decl_annotations_
-    bool LivePlayer::IsClockRunning(uint32_t controlIndex) const noexcept
-    {
-        return m_clocks != nullptr && m_clocks->IsRunning(controlIndex);
-    }
-
-    _Use_decl_annotations_
     void LivePlayer::PulseTempoFollowers(uint32_t clockControlIndex, double phase, bool running)
     {
         if (!ActivitySeen)
@@ -834,8 +780,9 @@ namespace glass
 
         std::weak_ptr<LivePlayer> weak{ shared_from_this() };
         auto const ownerId = m_ownerId;
+        auto const queue = m_dispatcher;
 
-        std::thread([weak, ownerId, requests]()
+        std::thread([weak, ownerId, requests, queue]()
             {
                 winrt::init_apartment(winrt::apartment_type::multi_threaded);
 
@@ -854,13 +801,12 @@ namespace glass
 
                     OutputRouter::Current().Open(ownerId, requests, handler, table);
 
-                    auto strong = weak.lock();
-
-                    if (strong != nullptr && strong->m_dispatcher != nullptr)
+                    // Not resolved here, so the player is never destroyed on this thread.
+                    if (queue != nullptr)
                     {
                         // The send table is only ever read on the UI thread, which is why the hot
                         // path needs no lock. Swapping it whole is what keeps that true.
-                        strong->m_dispatcher.TryEnqueue([weak, table]()
+                        queue.TryEnqueue([weak, table]()
                             {
                                 auto inner = weak.lock();
 
@@ -1065,13 +1011,6 @@ namespace glass
             controlIndex,
             m_engine.EvaluateNote(
                 controlIndex, static_cast<uint16_t>(note), velocity, true, m_sends));
-    }
-
-    _Use_decl_annotations_
-    void LivePlayer::SetDirectly(uint32_t controlIndex, double value)
-    {
-        ValueChanged(controlIndex, value, false);
-        ValueChanged(controlIndex, value, true);
     }
 
     _Use_decl_annotations_

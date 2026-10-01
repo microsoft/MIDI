@@ -1998,20 +1998,6 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    bool EditorController::SetThemeName(std::wstring const& themeName)
-    {
-        if (themeName.size() > MaximumStringLength || m_document.ThemeName == themeName)
-        {
-            return false;
-        }
-
-        m_document.ThemeName = themeName;
-        Commit(EditNames::LayoutProperties);
-
-        return true;
-    }
-
-    _Use_decl_annotations_
     bool EditorController::ChooseTheme(Theme const& theme)
     {
         if (m_document.ThemeName == theme.Name && !m_document.HasOwnTheme)
@@ -2051,19 +2037,23 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    bool EditorController::SetBackgroundImage(std::wstring const& fileName, BackgroundFit fit)
+    bool EditorController::SetBackgroundImage(std::wstring const& fileName, BackgroundFit fit, double opacity)
     {
         // Only a bare file name is ever stored, so that a layout from a stranger cannot point
         // this at a file elsewhere on the PC.
         auto const safe = SanitizeFileName(fileName);
+        auto const strength = std::isfinite(opacity) ? std::clamp(opacity, 0.0, 1.0) : 1.0;
 
-        if (m_document.BackgroundImage == safe && m_document.BackgroundFitMode == fit)
+        if (m_document.BackgroundImage == safe &&
+            m_document.BackgroundFitMode == fit &&
+            std::abs(m_document.BackgroundOpacity - strength) < 0.001)
         {
             return false;
         }
 
         m_document.BackgroundImage = safe;
         m_document.BackgroundFitMode = fit;
+        m_document.BackgroundOpacity = strength;
 
         Commit(EditNames::LayoutProperties);
 
@@ -2190,22 +2180,6 @@ namespace glass
         return true;
     }
 
-    _Use_decl_annotations_
-    bool EditorController::SetBackgroundOpacity(double opacity)
-    {
-        auto const clamped = std::clamp(opacity, 0.0, 1.0);
-
-        if (std::abs(m_document.BackgroundOpacity - clamped) < 0.001)
-        {
-            return false;
-        }
-
-        m_document.BackgroundOpacity = clamped;
-        CommitCoalesced(EditNames::LayoutProperties, L"backgroundopacity");
-
-        return true;
-    }
-
     // ---------------------------------------------------------------- the page size
 
     _Use_decl_annotations_
@@ -2277,23 +2251,6 @@ namespace glass
         Commit(EditNames::PageSize);
 
         return true;
-    }
-
-    EditRect EditorController::WorkArea() const
-    {
-        std::vector<EditRect> rects{};
-
-        auto const* const page = CurrentPage();
-
-        if (page != nullptr)
-        {
-            for (auto const& control : page->Controls)
-            {
-                rects.push_back(RectOf(control));
-            }
-        }
-
-        return ComputeWorkArea(m_document.PageWidth, m_document.PageHeight, rects);
     }
 
     std::vector<Control const*> EditorController::ControlsOutsidePage() const
@@ -2563,6 +2520,26 @@ namespace glass
     }
 
     // ---------------------------------------------------------------- sequences
+
+    _Use_decl_annotations_
+    size_t EditorController::CountControlsUsingSequence(std::wstring const& name) const
+    {
+        size_t count{ 0 };
+
+        for (auto const& page : m_document.Pages)
+        {
+            for (auto const& control : page.Controls)
+            {
+                if (std::any_of(control.Messages.begin(), control.Messages.end(),
+                    [&name](ControlMessage const& message) { return message.SequenceName == name; }))
+                {
+                    ++count;
+                }
+            }
+        }
+
+        return count;
+    }
 
     _Use_decl_annotations_
     std::wstring EditorController::AddSequence(std::wstring const& name)

@@ -45,8 +45,8 @@ namespace glass
 
         // A step started (`starts` true) or the note of the step that started last should end
         // (`starts` false). Raised on the dispatcher's thread. `run` names the run that raised
-        // it, because one queued just before a stop can still arrive after it; IsCurrent tells
-        // the two apart.
+        // it, because one queued just before a stop can still arrive after it; the caller
+        // compares it with the number Run returned to tell the two apart.
         std::function<void(uint32_t controlIndex, uint64_t run, int32_t stepIndex, bool starts)> StepChanged{};
 
         void Start(_In_ winrt::Microsoft::UI::Dispatching::DispatcherQueue const& dispatcher);
@@ -63,13 +63,6 @@ namespace glass
         // the caller's to end, because the caller is the one that knows it.
         void CancelFor(_In_ uint32_t controlIndex) noexcept;
         void CancelAll() noexcept;
-
-        bool IsRunning(_In_ uint32_t controlIndex) const noexcept;
-
-        // Whether this run is still the one playing on this control.
-        bool IsCurrent(_In_ uint32_t controlIndex, _In_ uint64_t run) const noexcept;
-
-        size_t RunningCount() const noexcept;
 
     private:
         StepSequencer() = default;

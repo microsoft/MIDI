@@ -181,10 +181,6 @@ namespace glass
 
         void PadReleased(_In_ uint32_t controlIndex, _In_ uint32_t touch);
 
-        // Assistive technology setting a value is one discrete change, not a drag, so it is a
-        // whole gesture. Going straight to the release would find nothing held back.
-        void SetDirectly(_In_ uint32_t controlIndex, _In_ double value);
-
         void Switched(_In_ uint32_t controlIndex, _In_ bool isOn);
 
         // The same, for a pad that takes its velocity from how hard it was hit. Everything else
@@ -222,17 +218,6 @@ namespace glass
         // Clock generators. Starting one is what pressing it does; a layout can also ask for it
         // to be running the moment it opens.
         void StartClocks();
-        bool IsClockRunning(_In_ uint32_t controlIndex) const noexcept;
-
-        bool IsLfoRunning(_In_ uint32_t controlIndex) const noexcept;
-
-        // Runs while held rather than latching. The surface needs this to decide whether a
-        // press is a toggle or a hold, and the answer is per control rather than per kind.
-        bool LfoLatchesAt(_In_ uint32_t controlIndex) const noexcept;
-
-        // The same two questions for a step sequencer.
-        bool AreStepsRunning(_In_ uint32_t controlIndex) const noexcept;
-        bool StepsLatchAt(_In_ uint32_t controlIndex) const noexcept;
 
         // A control feeding a clock its tempo moved. Does nothing unless some clock on this
         // layout named that control.

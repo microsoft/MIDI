@@ -137,6 +137,7 @@ namespace winrt::midiglass::implementation
         winrt::fire_and_forget PasteFromClipboardAsync(_In_ bool atMenuPoint);
 
         void OnGroupClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnLockClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnGroupMenuClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnUngroupMenuClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnGroupAccelerator(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
@@ -167,12 +168,19 @@ namespace winrt::midiglass::implementation
         void OnCanvasPointerMoved(foundation::IInspectable const& sender, xaml::Input::PointerRoutedEventArgs const& args);
         void OnCanvasPointerReleased(foundation::IInspectable const& sender, xaml::Input::PointerRoutedEventArgs const& args);
         void OnCanvasPointerCaptureLost(foundation::IInspectable const& sender, xaml::Input::PointerRoutedEventArgs const& args);
+        void OnCanvasPreviewKeyDown(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::KeyRoutedEventArgs const& args);
 
         // Typing a label straight onto the canvas, over where it is drawn.
         bool IsSecondClick(_In_ winrt::Microsoft::UI::Input::PointerPoint const& point);
         bool TryBeginLabelEditAt(_In_ double pageX, _In_ double pageY);
         void BeginLabelEdit(_In_ std::wstring const& id, _In_ glass::EditRect const& rect);
         void EndLabelEdit(_In_ bool keep);
+
+        // The gaps between three or more selected blocks, under the row or beside the column, the
+        // same size on screen at any zoom. Clicking one opens a box to type a gap for all of them.
+        void UpdateSpacingPills();
+        void BeginGapEdit(_In_ glass::ArrangeAxis axis, _In_ double gap, _In_ double pageX, _In_ double pageY);
+        void EndGapEdit(_In_ bool apply);
         void OnSelectOffPageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnAddPageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnZoomInClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -235,12 +243,14 @@ namespace winrt::midiglass::implementation
         void OnSequenceChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnNewSequenceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnEditSequenceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnDeleteSequenceClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnTargetPageChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
         void OnSendOnStartToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnReturnsToDefaultToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnLightsFromCenterToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnDefaultValueChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+        void OnDefaultValueYChanged(_In_ foundation::IInspectable const& sender, _In_ controls::Primitives::RangeBaseValueChangedEventArgs const& args);
         void OnStartsOnToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSendIntervalChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnPickupChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
@@ -612,6 +622,9 @@ namespace winrt::midiglass::implementation
 
         winrt::fire_and_forget ShowSequenceDialog(_In_ std::wstring sequenceName);
 
+        // Asks first only when other controls play it too. Undo brings it back either way.
+        winrt::fire_and_forget DeleteSequenceWithConfirmation(_In_ std::wstring sequenceName);
+
         // ---- the label font dialog (EditorFontDialog.cpp) ----
 
         winrt::fire_and_forget ShowLabelFontDialog(_In_ std::wstring controlId);
@@ -819,6 +832,12 @@ namespace winrt::midiglass::implementation
         // The box a label is being typed into on the canvas, and whose label it is.
         controls::TextBox m_labelEditor{ nullptr };
         std::wstring m_labelEditId{};
+
+        // The box a gap is being typed into, and the controls it spaces: the ones selected when
+        // it opened, because a click elsewhere can change the selection before it closes.
+        controls::TextBox m_gapEditor{ nullptr };
+        std::vector<std::wstring> m_gapEditIds{};
+        glass::ArrangeAxis m_gapEditAxis{ glass::ArrangeAxis::Horizontal };
 
         // One row per step in the sequencer panel. Kept so an edit can update the numbers in
         // place: rebuilding the rows under a spin button takes the keyboard away mid-change.

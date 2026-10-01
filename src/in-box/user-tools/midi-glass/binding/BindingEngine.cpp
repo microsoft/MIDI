@@ -139,14 +139,6 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    uint32_t ResolveEnd(MessageValue const& end, uint32_t bits) noexcept
-    {
-        return end.Scaling == ValueScaling::Absolute
-            ? ClampToBits(end.Value, bits)
-            : ScaleToBits(end.Value, bits);
-    }
-
-    _Use_decl_annotations_
     double DetentPosition(uint32_t index, uint32_t count) noexcept
     {
         if (count < 2)

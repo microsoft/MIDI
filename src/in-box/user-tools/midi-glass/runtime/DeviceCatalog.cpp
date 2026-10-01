@@ -12,29 +12,6 @@ namespace glass
 {
     namespace
     {
-        // Display only, and only so the editor can show what a MIDI 1.0 device receives. What
-        // leaves the app is the same either way: the service owns the downscale.
-        DestinationProtocol ProtocolOf(_In_ std::wstring const& endpointDeviceId) noexcept
-        {
-            try
-            {
-                auto const information =
-                    midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(
-                        winrt::hstring{ endpointDeviceId });
-
-                if (information != nullptr &&
-                    information.GetDeclaredEndpointInfo().SupportsMidi20Protocol())
-                {
-                    return DestinationProtocol::Midi2;
-                }
-            }
-            catch (...)
-            {
-            }
-
-            return DestinationProtocol::Midi1;
-        }
-
         // The shared watcher takes exactly one changed handler, so it gets one, and that one
         // walks everybody who is interested. Keeping this here rather than in the shared catalog
         // is deliberate: one consumer wanting several subscribers is not yet a reason to change
@@ -53,14 +30,10 @@ namespace glass
 
         void NotifyEveryCatalog() noexcept
         {
-            std::vector<DeviceCatalog*> catalogs{};
+            // Held throughout, so a closing window cannot free a catalog while it is refreshed.
+            std::scoped_lock guard{ RegistryLock() };
 
-            {
-                std::scoped_lock guard{ RegistryLock() };
-                catalogs = Registry();
-            }
-
-            for (auto* const catalog : catalogs)
+            for (auto* const catalog : Registry())
             {
                 catalog->Refresh();
             }
@@ -161,7 +134,11 @@ namespace glass
 
         if (handler)
         {
-            handler();
+            try
+            {
+                handler();
+            }
+            MIDI_GLASS_CATCH_AND_LOG(L"A device change handler failed.")
         }
     }
 
@@ -195,7 +172,7 @@ namespace glass
             {
                 device.EndpointDeviceId = live->EndpointDeviceId;
                 device.ResolvedName = live->Name;
-                device.Protocol = ProtocolOf(live->EndpointDeviceId);
+                device.Protocol = live->SupportsMidi2Protocol ? DestinationProtocol::Midi2 : DestinationProtocol::Midi1;
                 device.IsAvailable = true;
             }
             else
@@ -261,22 +238,6 @@ namespace glass
             endpointDeviceIds.push_back(device.IsAvailable ? device.EndpointDeviceId : std::wstring{});
             groupMasks.push_back(device.GroupMask);
         }
-    }
-
-    size_t DeviceCatalog::AvailableCount() const noexcept
-    {
-        std::scoped_lock guard{ m_lock };
-
-        return static_cast<size_t>(std::count_if(m_resolved.begin(), m_resolved.end(),
-            [](ResolvedDevice const& device) { return device.IsAvailable; }));
-    }
-
-    size_t DeviceCatalog::MissingCount() const noexcept
-    {
-        std::scoped_lock guard{ m_lock };
-
-        return static_cast<size_t>(std::count_if(m_resolved.begin(), m_resolved.end(),
-            [](ResolvedDevice const& device) { return !device.IsAvailable; }));
     }
 
     _Use_decl_annotations_

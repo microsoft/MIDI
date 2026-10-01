@@ -1130,6 +1130,11 @@ namespace glass
 
         bool AspectLocked{ false };
 
+        // Locked on the page: it cannot be picked there, moved or resized until it is unlocked.
+        // Clicks go through it, which is what lets somebody work over a big panel behind
+        // everything. The outline still selects it.
+        bool Locked{ false };
+
         // Where this control disagrees with its theme. UseTheme is the default and almost every
         // control stays there, which is what makes switching theme a six color operation.
         ControlStyleOverride Style{ ControlStyleOverride::UseTheme };

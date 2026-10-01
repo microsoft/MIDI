@@ -69,4 +69,14 @@ public:
     TEST_METHOD(ATypedZoomReadsTheWayItIsShown);
     TEST_METHOD(ATypedZoomThatIsNotANumberIsNoZoom);
     TEST_METHOD(ATypedZoomOutsideTheRangeIsBroughtInside);
+
+    // ---- spacing ----
+
+    TEST_METHOD(SpacingFollowsTheWayARowRuns);
+    TEST_METHOD(SpacingFollowsTheWayAColumnRuns);
+    TEST_METHOD(AGridHasNoSpacingToShow);
+    TEST_METHOD(ADiagonalTakesTheLongerRun);
+    TEST_METHOD(ATypedGapReadsTheWayItIsShown);
+    TEST_METHOD(ATypedGapThatIsNotANumberIsNoGap);
+    TEST_METHOD(AnEnormousTypedGapIsBroughtBackToThePage);
 };

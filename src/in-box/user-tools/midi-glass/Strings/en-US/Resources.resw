@@ -500,12 +500,6 @@
   <data name="ErrorServiceUnavailable" xml:space="preserve">
     <value>Windows MIDI Services is not running, so nothing can be sent.</value>
   </data>
-  <data name="ErrorSessionFailed" xml:space="preserve">
-    <value>A MIDI session could not be created.</value>
-  </data>
-  <data name="ErrorNoComExtensions" xml:space="preserve">
-    <value>This build of the MIDI SDK does not have the fast send path MIDI Glass needs.</value>
-  </data>
   <data name="EditorWindowTitleFormat" xml:space="preserve">
     <value>{0} — Windows MIDI Glass</value>
   </data>
@@ -544,9 +538,6 @@
   </data>
   <data name="EditorArrangeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Arrange the selection</value>
-  </data>
-  <data name="EditorArrangeLabel.Text" xml:space="preserve">
-    <value>Arrange</value>
   </data>
   <data name="ArrangeAlignLeft.Text" xml:space="preserve">
     <value>Align left edges</value>
@@ -665,11 +656,26 @@
   <data name="OutlineMemberAccessibleFormat" xml:space="preserve">
     <value>{0}, in {1}</value>
   </data>
+  <data name="OutlineLockedAccessibleFormat" xml:space="preserve">
+    <value>{0}, locked</value>
+  </data>
   <data name="EditorLockButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Lock — not built yet</value>
+    <value>Lock</value>
   </data>
   <data name="EditorLockButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Lock — not built yet</value>
+    <value>Lock, so it can't be picked or moved on the page</value>
+  </data>
+  <data name="EditorLockName" xml:space="preserve">
+    <value>Lock</value>
+  </data>
+  <data name="EditorLockToolTip" xml:space="preserve">
+    <value>Lock, so it can't be picked or moved on the page</value>
+  </data>
+  <data name="EditorUnlockName" xml:space="preserve">
+    <value>Unlock</value>
+  </data>
+  <data name="EditorUnlockToolTip" xml:space="preserve">
+    <value>Unlock, so it can be picked and moved again</value>
   </data>
   <data name="EditorEditModeToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Edit mode</value>
@@ -788,9 +794,6 @@
   <data name="PaletteSearch.PlaceholderText" xml:space="preserve">
     <value>Find a control</value>
   </data>
-  <data name="PaletteGrid.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Controls you can add</value>
-  </data>
   <data name="PalettePivotItem.Content" xml:space="preserve">
     <value>Add</value>
   </data>
@@ -807,7 +810,7 @@
     <value>Move later in the keyboard order</value>
   </data>
   <data name="PaletteArmedFormat" xml:space="preserve">
-    <value>{0} — drag on the page to draw one, or click to drop one. Esc to stop.</value>
+    <value>{0} — click the page to drop one there, or press and drag to place it. Esc to stop.</value>
   </data>
   <data name="PaletteButton" xml:space="preserve">
     <value>Button</value>
@@ -926,6 +929,20 @@
   <data name="LabelEditBoxName" xml:space="preserve">
     <value>Label</value>
   </data>
+  <data name="GapPillNameFormat" xml:space="preserve">
+    <value>Gap {0} of {1}, {2} pixels</value>
+    <comment>A small button between selected controls on the editor's page. {0} is which gap, counted from 1, {1} is how many gaps there are, {2} is the gap in pixels.</comment>
+  </data>
+  <data name="GapPillEqualNameFormat" xml:space="preserve">
+    <value>Gap {0} of {1}, {2} pixels, the same as the others</value>
+    <comment>As GapPillNameFormat, when every gap is the same size.</comment>
+  </data>
+  <data name="GapPillToolTip" xml:space="preserve">
+    <value>Click to type one gap for all of them</value>
+  </data>
+  <data name="GapEditBoxName" xml:space="preserve">
+    <value>Gap between the selected controls, in pixels</value>
+  </data>
   <data name="InspectorMixedFonts" xml:space="preserve">
     <value>These controls use different fonts. Font… sets one font on all of them.</value>
   </data>
@@ -1033,9 +1050,6 @@
   </data>
   <data name="LabelPlacedBelow" xml:space="preserve">
     <value>Below the control</value>
-  </data>
-  <data name="LabelPlacedInside" xml:space="preserve">
-    <value>Inside the control</value>
   </data>
   <data name="LabelPlacedInsideTop" xml:space="preserve">
     <value>Inside, at the top</value>
@@ -1223,7 +1237,8 @@
     <value>Keys</value>
   </data>
   <data name="PaletteKeyboard" xml:space="preserve">
-    <value>Keyboard</value>
+    <value>Mono keyboard</value>
+    <comment>A palette item: piano keys that play one note at a time. Mono means monophonic.</comment>
   </data>
   <data name="PaletteNotePads" xml:space="preserve">
     <value>Note pads</value>
@@ -2352,9 +2367,6 @@
   <data name="DetentStepBox.Header" xml:space="preserve">
     <value>Step, in the same units as the ends</value>
   </data>
-  <data name="DetentStopsBox.Header" xml:space="preserve">
-    <value>The values, separated by commas</value>
-  </data>
   <data name="DetentStopLowest" xml:space="preserve">
     <value>At the bottom</value>
   </data>
@@ -2492,9 +2504,6 @@
   </data>
   <data name="LabelBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Label text</value>
-  </data>
-  <data name="InspectorKindHeading.Text" xml:space="preserve">
-    <value>Kind</value>
   </data>
   <data name="KindCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Kind of control</value>
@@ -2848,6 +2857,21 @@
   <data name="EditSequenceLabel.Text" xml:space="preserve">
     <value>Edit steps…</value>
   </data>
+  <data name="DeleteSequenceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Delete this sequence</value>
+  </data>
+  <data name="DeleteSequenceLabel.Text" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="DeleteSequenceTitle" xml:space="preserve">
+    <value>Delete this sequence?</value>
+  </data>
+  <data name="DeleteSequenceAccept" xml:space="preserve">
+    <value>Delete it</value>
+  </data>
+  <data name="DeleteSequenceInUseFormat" xml:space="preserve">
+    <value>{1} controls play "{0}", counting this one. They will play nothing for it until you choose another sequence. Undo brings it back.</value>
+  </data>
   <data name="SequenceNoneChosen" xml:space="preserve">
     <value>No sequence chosen yet, so this sends nothing.</value>
   </data>
@@ -3010,6 +3034,21 @@
   <data name="DefaultValueSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Starting value, as a percentage</value>
   </data>
+  <data name="DefaultValueName" xml:space="preserve">
+    <value>Starting value, as a percentage</value>
+  </data>
+  <data name="DefaultValueAcrossHeader" xml:space="preserve">
+    <value>Across</value>
+  </data>
+  <data name="DefaultValueAcrossName" xml:space="preserve">
+    <value>Starting value across, as a percentage</value>
+  </data>
+  <data name="DefaultValueYSlider.Header" xml:space="preserve">
+    <value>Up and down</value>
+  </data>
+  <data name="DefaultValueYSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Starting value up and down, as a percentage</value>
+  </data>
   <data name="StartsOnSwitch.Header" xml:space="preserve">
     <value>Starts on</value>
   </data>
@@ -3058,7 +3097,7 @@
   <data name="DialogSave" xml:space="preserve">
     <value>Save</value>
   </data>
-  <data name="LayoutMenuBackground" xml:space="preserve">
+  <data name="LayoutMenuBackground.Text" xml:space="preserve">
     <value>Background picture or video…</value>
   </data>
   <data name="BackgroundDialogTitle" xml:space="preserve">
@@ -3094,10 +3133,13 @@
   <data name="BackgroundFitFill" xml:space="preserve">
     <value>Fill, cutting off what does not fit</value>
   </data>
+  <data name="BackgroundOpacityHeader" xml:space="preserve">
+    <value>Opacity</value>
+  </data>
   <data name="BackgroundWillCopyFormat" xml:space="preserve">
     <value>This file will be copied to {0}, so that the layout and the file travel together.</value>
   </data>
-  <data name="LayoutMenuPagesDevices" xml:space="preserve">
+  <data name="LayoutMenuPagesDevices.Text" xml:space="preserve">
     <value>Pages and devices…</value>
   </data>
   <data name="LayoutSettingsBack.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
@@ -3538,12 +3580,6 @@
   <data name="DeviceRenameNote" xml:space="preserve">
     <value>Every control that points at this name follows the change.</value>
   </data>
-  <data name="EndpointGroupCountFormat" xml:space="preserve">
-    <value>{0} groups</value>
-  </data>
-  <data name="EndpointOneGroupFormat" xml:space="preserve">
-    <value>1 group</value>
-  </data>
   <data name="EndpointSourceGroupsFormat" xml:space="preserve">
     <value>{0} source groups</value>
   </data>
@@ -3750,15 +3786,6 @@
   </data>
   <data name="AnchorBottomRight" xml:space="preserve">
     <value>Bottom right</value>
-  </data>
-  <data name="PageSizeScaleContents" xml:space="preserve">
-    <value>Scale everything to fit</value>
-  </data>
-  <data name="PageSizeNothingOutside" xml:space="preserve">
-    <value>Nothing would end up outside the page.</value>
-  </data>
-  <data name="PageSizeWouldBeOutsideFormat" xml:space="preserve">
-    <value>{0} controls would end up outside the page. They stay where they are and can be brought back by hand.</value>
   </data>
   <data name="RenameLayoutDialogTitle" xml:space="preserve">
     <value>Rename layout</value>
@@ -4622,6 +4649,9 @@
   <data name="BehaviorCaptionTempo" xml:space="preserve">
     <value>Clocks and sweeps on this layout run from here. Following an incoming clock holds the last tempo if the clock stops, rather than snapping back.</value>
   </data>
+  <data name="BehaviorCaptionTempoInternal" xml:space="preserve">
+    <value>Clocks and sweeps on this layout run at this tempo.</value>
+  </data>
   <data name="BehaviorTempoSourceLabel" xml:space="preserve">
     <value>Tempo comes from</value>
   </data>
@@ -4699,13 +4729,13 @@
     <value>How strong the rim is</value>
   </data>
   <data name="CheckRimDarkPlate" xml:space="preserve">
-    <value>This plate is dark, so the hairline reads as a line at {0} per cent. Nothing is saturated at rest, which is what keeps a busy page readable.</value>
+    <value>This plate is dark, so the hairline reads as a line at {0} percent. Nothing is saturated at rest, which is what keeps a busy page readable.</value>
   </data>
   <data name="CheckRimPass" xml:space="preserve">
-    <value>The rim is strong enough at {0} per cent to carry which control is which.</value>
+    <value>The rim is strong enough at {0} percent to carry which control is which.</value>
   </data>
   <data name="CheckRimFail" xml:space="preserve">
-    <value>A hairline at {0} per cent vanishes on a plate this light, and the control's identity goes with it. Take it to 50 per cent or more.</value>
+    <value>A hairline at {0} percent vanishes on a plate this light, and the control's identity goes with it. Take it to 50 percent or more.</value>
   </data>
   <data name="CheckThemeCostTitle" xml:space="preserve">
     <value>What this theme costs</value>

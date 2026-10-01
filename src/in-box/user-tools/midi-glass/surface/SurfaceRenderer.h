@@ -1028,15 +1028,6 @@ namespace glass
             _In_ ThemeColor const& lit,
             _In_ ThemeColor const& edge);
 
-        // A meter's three zones, mapped to the TRACK rather than to the bar, so the boundaries
-        // stay where the marks are as the bar grows past them.
-        comp::CompositionLinearGradientBrush MeterBrush(
-            _In_ comp::Compositor const& compositor,
-            _In_ ControlColors const& colors,
-            _In_ float trackOrigin,
-            _In_ float trackLength,
-            _In_ bool vertical);
-
         // A brush whose alpha is the shape of a control, for a drop shadow to be cast through.
         // Without one, a shadow is the visual's rectangle, which is how a knob ended up with a
         // square of light behind it. Shared across every control of the same corner radius, so

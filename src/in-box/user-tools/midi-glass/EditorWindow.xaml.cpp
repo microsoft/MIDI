@@ -377,10 +377,13 @@ namespace winrt::midiglass::implementation
             }
 
             // Editing is not blocked in Try mode, but a rubber band over a live surface is, so
-            // the tools that only make sense against a selection say so.
+            // the tools that only make sense against a selection say so. A group counts once
+            // for lining up and spreading out, because that is how those move it.
+            auto const blocks = m_editor.SelectionBlockCount();
+
             RepeatButton().IsEnabled(selected > 0 && !m_tryMode);
-            AlignLeftButton().IsEnabled(selected > 1 && !m_tryMode);
-            AlignCenterButton().IsEnabled(selected > 1 && !m_tryMode);
+            AlignLeftButton().IsEnabled(blocks > 1 && !m_tryMode);
+            AlignCenterButton().IsEnabled(blocks > 1 && !m_tryMode);
 
             // The Arrange flyout carries the drawing order as well as the alignment, and
             // sending one panel to the back is the whole reason somebody opens it. It needs a
@@ -390,11 +393,11 @@ namespace winrt::midiglass::implementation
             for (auto const& item : { AlignLeftItem(), AlignCenterXItem(), AlignRightItem(),
                 AlignTopItem(), AlignCenterYItem(), AlignBottomItem() })
             {
-                item.IsEnabled(selected > 1);
+                item.IsEnabled(blocks > 1);
             }
 
-            SpreadAcrossItem().IsEnabled(selected > 2);
-            SpreadDownItem().IsEnabled(selected > 2);
+            SpreadAcrossItem().IsEnabled(blocks > 2);
+            SpreadDownItem().IsEnabled(blocks > 2);
 
             // Group while several loose controls are picked, Ungroup once a group is.
             auto const oneGroup = m_editor.SelectionIsOneGroup();
@@ -406,6 +409,18 @@ namespace winrt::midiglass::implementation
 
             xaml::Automation::AutomationProperties::SetName(GroupButton(), groupName);
             controls::ToolTipService::SetToolTip(GroupButton(), box_value(groupTip));
+
+            // Lock while anything picked is loose, Unlock once all of it is locked.
+            auto const allLocked = m_editor.SelectionIsLocked();
+
+            LockButton().IsEnabled(!m_tryMode && selected > 0);
+            LockButtonGlyph().Glyph(allLocked ? L"\uE785" : L"\uE72E");
+
+            xaml::Automation::AutomationProperties::SetName(
+                LockButton(), resources::GetString(allLocked ? L"EditorUnlockName" : L"EditorLockName"));
+            controls::ToolTipService::SetToolTip(
+                LockButton(),
+                box_value(resources::GetString(allLocked ? L"EditorUnlockToolTip" : L"EditorLockToolTip")));
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to update the status bar.")
     }

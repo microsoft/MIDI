@@ -17,16 +17,6 @@ namespace midikeyboard
     using midiapp::WindowBackdrop;
     using midiapp::WindowPlacementInfo;
 
-    enum class ConnectionMode : int32_t
-    {
-        // this app is the device other apps connect to. No group or channel choice: the
-        // single bidirectional function block owns group 1.
-        VirtualDevice = 0,
-
-        // play an endpoint that already exists, such as a loopback or an instrument
-        ExistingEndpoint = 1
-    };
-
     enum class RibbonPosition : int32_t
     {
         Left = 0,
@@ -96,11 +86,12 @@ namespace midikeyboard
 
         void Load() noexcept;
 
-        ConnectionMode Connection() const noexcept { return m_connection; }
-        void Connection(ConnectionMode value) noexcept;
-
         std::wstring const& EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
         void EndpointDeviceId(std::wstring const& value) noexcept;
+
+        // the endpoint's name when it was last seen, so it can still be shown while it is away
+        std::wstring const& EndpointName() const noexcept { return m_endpointName; }
+        void EndpointName(_In_ std::wstring const& value) noexcept;
 
         // user-facing numbers (1-16), not indexes
         uint32_t TransmitGroupNumber() const noexcept { return m_transmitGroupNumber; }
@@ -240,8 +231,8 @@ namespace midikeyboard
     private:
         AppSettings() noexcept;
 
-        ConnectionMode m_connection{ ConnectionMode::VirtualDevice };
         std::wstring m_endpointDeviceId{};
+        std::wstring m_endpointName{};
         uint32_t m_transmitGroupNumber{ 1 };
         uint32_t m_transmitChannelNumber{ 1 };
 

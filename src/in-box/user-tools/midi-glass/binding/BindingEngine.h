@@ -372,9 +372,6 @@ namespace glass
     // copying a device's documentation gets.
     uint32_t ClampToBits(_In_ double value, _In_ uint32_t bits) noexcept;
 
-    // One end of a range, in the units of a field this wide.
-    uint32_t ResolveEnd(_In_ MessageValue const& end, _In_ uint32_t bits) noexcept;
-
     // Where a control sitting at this position lands between the two ends. Rounding is what
     // quantizes a fader limited to 0 to 127 onto whole numbers.
     uint32_t InterpolateValue(

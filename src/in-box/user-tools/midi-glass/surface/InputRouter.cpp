@@ -82,36 +82,54 @@ namespace glass
         {
             auto& binding = m_bindings[index];
 
+            // Each handler reaches XAML and the window's callbacks, and an exception escaping a
+            // pointer event ends the app.
             binding.PressedHandler = PointerEventHandler(
                 [this, index](foundation::IInspectable const&, PointerRoutedEventArgs const& args)
                 {
-                    OnPressed(index, args);
+                    try
+                    {
+                        OnPressed(index, args);
+                    }
+                    MIDI_GLASS_CATCH_AND_LOG(L"Unable to handle a press on the surface.")
                 });
 
             binding.MovedHandler = PointerEventHandler(
                 [this, index](foundation::IInspectable const&, PointerRoutedEventArgs const& args)
                 {
-                    OnMoved(index, args);
+                    try
+                    {
+                        OnMoved(index, args);
+                    }
+                    MIDI_GLASS_CATCH_AND_LOG(L"Unable to handle a move on the surface.")
                 });
 
             binding.ReleasedHandler = PointerEventHandler(
                 [this, index](foundation::IInspectable const&, PointerRoutedEventArgs const& args)
                 {
-                    OnReleased(index, args);
+                    try
+                    {
+                        OnReleased(index, args);
+                    }
+                    MIDI_GLASS_CATCH_AND_LOG(L"Unable to handle a release on the surface.")
                 });
 
             binding.CaptureLostHandler = PointerEventHandler(
                 [this, index](foundation::IInspectable const&, PointerRoutedEventArgs const& args)
                 {
-                    // A pad grid holds a finger per pad, so losing one pointer ends that finger
-                    // and leaves the rest of the chord alone.
-                    if (index < m_bindings.size() && m_bindings[index].PlaysPads)
+                    try
                     {
-                        ReleasePad(m_bindings[index], args.Pointer().PointerId());
-                        return;
-                    }
+                        // A pad grid holds a finger per pad, so losing one pointer ends that
+                        // finger and leaves the rest of the chord alone.
+                        if (index < m_bindings.size() && m_bindings[index].PlaysPads)
+                        {
+                            ReleasePad(m_bindings[index], args.Pointer().PointerId());
+                            return;
+                        }
 
-                    OnCaptureLost(index);
+                        OnCaptureLost(index);
+                    }
+                    MIDI_GLASS_CATCH_AND_LOG(L"Unable to handle a lost pointer on the surface.")
                 });
 
             binding.PressedToken = binding.Element.PointerPressed(binding.PressedHandler);

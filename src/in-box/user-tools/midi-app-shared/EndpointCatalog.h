@@ -55,6 +55,9 @@ namespace midiapp
         std::array<std::wstring, MaximumGroupCount> SourceGroupNames{};
         std::array<std::wstring, MaximumGroupCount> DestinationGroupNames{};
 
+        // Read from what the watcher already holds, so nobody has to query the device for it.
+        bool SupportsMidi2Protocol{ false };
+
         // Loopbacks are the only endpoints an app knows for certain will echo what it sends,
         // which is what makes a loop provable rather than merely possible.
         bool IsLoopback{ false };

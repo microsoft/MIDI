@@ -1217,6 +1217,15 @@ namespace winrt::midiglass::implementation
                     document.PageWidth,
                     document.PageHeight);
 
+                data.IsLocked = control->Locked;
+
+                if (control->Locked)
+                {
+                    data.AccessibleName = std::wstring{ resources::FormatString(
+                        L"OutlineLockedAccessibleFormat",
+                        data.AccessibleName.empty() ? data.DisplayName : data.AccessibleName) };
+                }
+
                 item->Update(data);
 
                 // The same miniature the palette draws, built per row because a XAML element

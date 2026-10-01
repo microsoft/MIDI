@@ -835,61 +835,6 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    CompositionLinearGradientBrush SurfaceRenderer::MeterBrush(
-        Compositor const& compositor,
-        ControlColors const& colors,
-        float trackOrigin,
-        float trackLength,
-        bool vertical)
-    {
-        auto brush = compositor.CreateLinearGradientBrush();
-
-        // Absolute, so the ramp belongs to the track rather than to the bar drawn over it.
-        brush.MappingMode(CompositionMappingMode::Absolute);
-
-        auto const run = std::max(trackLength, 1.0f);
-
-        // Quiet end first, whichever way round that is on screen.
-        brush.StartPoint(vertical
-            ? float2{ 0.0f, trackOrigin + run }
-            : float2{ trackOrigin, 0.0f });
-
-        brush.EndPoint(vertical
-            ? float2{ 0.0f, trackOrigin }
-            : float2{ trackOrigin + run, 0.0f });
-
-        // Where the comp puts the two boundaries on an eight segment meter: five segments of
-        // signal, then two of warning, then one that says it is already too late.
-        constexpr float WarnAt = 0.70f;
-        constexpr float HotAt = 0.90f;
-
-        // A pair of stops at each boundary rather than one, so the zones read as zones instead
-        // of as one long fade through them.
-        struct Stop { float Offset; ThemeColor Color; };
-
-        Stop const stops[]
-        {
-            { 0.0f, colors.MeterLit },
-            { WarnAt - 0.01f, colors.MeterLit },
-            { WarnAt, colors.MeterWarn },
-            { HotAt - 0.01f, colors.MeterWarn },
-            { HotAt, colors.MeterHot },
-            { 1.0f, colors.MeterHot },
-        };
-
-        for (auto const& stop : stops)
-        {
-            auto gradientStop = compositor.CreateColorGradientStop();
-            gradientStop.Offset(stop.Offset);
-            gradientStop.Color(ToColor(stop.Color));
-
-            brush.ColorStops().Append(gradientStop);
-        }
-
-        return brush;
-    }
-
-    _Use_decl_annotations_
     CompositionBrush SurfaceRenderer::ShadowMaskFor(
         Compositor const& compositor,
         float width,
@@ -2109,7 +2054,7 @@ namespace glass
 
             // The strength goes in the shadow's OPACITY, never in its color's alpha. A drop
             // shadow given a translucent color does not come out as a weak light - measured on
-            // Studio Dark, holding a knob painted its dial pure black behind an 86 per cent
+            // Studio Dark, holding a knob painted its dial pure black behind an 86 percent
             // plate. The elevation shadow beside it has always done it this way.
             auto light = colors.Bloom;
             light.A = 255;

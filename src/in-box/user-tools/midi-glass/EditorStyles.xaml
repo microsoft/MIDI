@@ -190,6 +190,62 @@
         </Setter>
     </Style>
 
+    <!--
+        A spacing pill: one gap between selected controls, which a click turns into a box to type
+        one gap for all of them. In the guide color, because it measures the page the way a guide
+        does. When every gap is the same, the code fills it.
+    -->
+    <Style x:Key="GapPillStyle" TargetType="Button">
+        <Setter Property="Height" Value="18" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="6,0,6,0" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="Background" Value="{ThemeResource SolidBackgroundFillColorBaseBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource SystemFillColorAttentionBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource SystemFillColorAttentionBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Plate.StrokeThickness" Value="2" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Plate.StrokeThickness" Value="2" />
+                                        <Setter Target="Plate.Opacity" Value="0.85" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled" />
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <Rectangle x:Name="Plate"
+                                   RadiusX="4" RadiusY="4"
+                                   StrokeThickness="1"
+                                   UseLayoutRounding="False"
+                                   Fill="{TemplateBinding Background}"
+                                   Stroke="{TemplateBinding BorderBrush}" />
+
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          Padding="{TemplateBinding Padding}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          FontSize="{TemplateBinding FontSize}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ======================================================== group headings -->
 
     <!-- The 11px semibold dim heading above every group, in the palette and the inspector. -->

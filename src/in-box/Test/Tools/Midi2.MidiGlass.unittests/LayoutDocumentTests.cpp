@@ -735,6 +735,36 @@ void LayoutDocumentTests::ABackgroundPictureThatIsAPathIsRefused()
     VERIFY_ARE_EQUAL(std::wstring{ L"wood.jpg" }, good.Document.BackgroundImage);
 }
 
+void LayoutDocumentTests::APictureNamedLikeADeviceIsRefused()
+{
+    // Windows opens these as devices, with or without an extension after them.
+    wchar_t const* const refused[]
+    {
+        L"CON", L"con.png", L"NUL.tar.gz", L"aux .jpg", L"Prn.mp4", L"CLOCK$.png",
+        L"COM1.png", L"com0.png", L"lpt9.jpg", L"LPT0", L"COM\u00B9.png", L"LPT\u00B3",
+        L"CONIN$.png", L"conout$",
+
+        // Windows drops these, so the file it finds is not the one the layout names.
+        L"photo.png.", L"photo.png ",
+    };
+
+    for (auto const* const name : refused)
+    {
+        VERIFY_IS_TRUE(glass::SanitizeFileName(name).empty(), name);
+    }
+
+    // Only starting like a device name is fine.
+    wchar_t const* const allowed[]
+    {
+        L"console.png", L"COM10.png", L"nulled.jpg", L"auxiliary.mp4", L"my con.png", L"lpt.png",
+    };
+
+    for (auto const* const name : allowed)
+    {
+        VERIFY_ARE_EQUAL(std::wstring{ name }, glass::SanitizeFileName(name), name);
+    }
+}
+
 void LayoutDocumentTests::NoBackgroundPictureWritesNothing()
 {
     auto const text = glass::WriteLayoutToJson(LoadHandAuthored());

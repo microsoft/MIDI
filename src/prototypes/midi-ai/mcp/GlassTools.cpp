@@ -55,7 +55,7 @@ namespace midimcp
             { L"panel", L"A frame that groups controls. Sends nothing." },
             { L"joystick", L"A stick with two values that springs back to the middle." },
             { L"ribbon", L"A long touch strip." },
-            { L"pianoKeyboard", L"Piano keys that play notes." },
+            { L"pianoKeyboard", L"Mono keyboard: piano keys that play one note at a time. For chords, use notePads or hexPads." },
             { L"beatClock", L"Sends MIDI clock and shows the beat." },
             { L"timeDisplay", L"A stopwatch. Sends nothing." },
             { L"lfo", L"Moves a value up and down by itself while running." },

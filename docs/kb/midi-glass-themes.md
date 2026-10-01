@@ -573,7 +573,7 @@ These show something that's running rather than a position.
 
 A platter you push with a finger. It has a face in the track color with a rim, a ring of grip marks, a spindle in the fader cap color, and a marker in the value color that turns as you push it. The marker is the only part that moves, which is what shows the platter has been pushed.
 
-### Keyboard
+### Mono keyboard
 
 The keys fill the whole control, so its plate barely shows. It uses `keyWhiteColor`, `keyBlackColor`, and the value color for a pressed key.
 

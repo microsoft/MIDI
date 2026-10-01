@@ -213,21 +213,6 @@ namespace winrt::midiglass::implementation
             return groups;
         }
 
-        std::wstring DescribeEndpoint(_In_ midiapp::LiveEndpoint const& endpoint)
-        {
-            std::wstring text{ endpoint.Description };
-
-            auto const groups = DescribeEndpointGroups(endpoint);
-
-            if (!groups.empty())
-            {
-                if (!text.empty()) { text += L" \u00b7 "; }
-                text += groups;
-            }
-
-            return text;
-        }
-
         // BitmapImage cannot render SVG and the shipped default endpoint art is SVG, so the
         // decoder is chosen by extension, the same way the Settings app does it.
         media::ImageSource LoadEndpointImage(_In_ std::wstring const& path, _In_ int32_t pixelHeight) noexcept

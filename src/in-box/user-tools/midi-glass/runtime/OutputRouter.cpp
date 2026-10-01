@@ -202,7 +202,7 @@ namespace glass
         {
             if (!midi2::MidiApi::EnsureServiceAvailable())
             {
-                m_lastError = ::midiglass::resources::GetString(L"ErrorServiceUnavailable");
+                MIDI_GLASS_LOG_INFO(L"The MIDI service is not available, so nothing can be sent.");
                 return false;
             }
 
@@ -210,7 +210,7 @@ namespace glass
 
             if (m_session == nullptr)
             {
-                m_lastError = ::midiglass::resources::GetString(L"ErrorSessionFailed");
+                MIDI_GLASS_LOG_INFO(L"A MIDI session could not be created.");
                 return false;
             }
         }
@@ -243,7 +243,7 @@ namespace glass
 
             if (entry.Raw == nullptr)
             {
-                m_lastError = ::midiglass::resources::GetString(L"ErrorNoComExtensions");
+                MIDI_GLASS_LOG_INFO_WITH_ENDPOINT(L"This SDK has no raw send path for the endpoint.", id.c_str());
                 continue;
             }
 
@@ -399,18 +399,6 @@ namespace glass
         }
 
         return 0;
-    }
-
-    winrt::hstring OutputRouter::LastErrorMessage() const noexcept
-    {
-        std::scoped_lock guard{ m_lock };
-        return m_lastError;
-    }
-
-    size_t OutputRouter::OpenConnectionCount() const noexcept
-    {
-        std::scoped_lock guard{ m_lock };
-        return m_connections.size();
     }
 
     void OutputRouter::Shutdown() noexcept

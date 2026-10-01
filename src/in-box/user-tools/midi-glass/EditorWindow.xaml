@@ -77,6 +77,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Column="0"
@@ -107,6 +108,13 @@
                               VerticalAlignment="Center"
                               Visibility="{x:Bind OutsideVisibility}"
                               Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+
+                    <FontIcon Grid.Column="4"
+                              Glyph="&#xE72E;"
+                              FontSize="12"
+                              VerticalAlignment="Center"
+                              Visibility="{x:Bind LockedVisibility}"
+                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                 </Grid>
             </DataTemplate>
         </Grid.Resources>
@@ -388,13 +396,13 @@
                         <FontIcon x:Name="GroupButtonGlyph" Glyph="&#xE71D;" FontSize="14" />
                     </Button>
 
-                    <!-- In the comp and not built yet. Shown so the shape of the toolbar is the
-                         shape that was agreed, and disabled so it is not a promise. -->
+                    <!-- Lock what is picked, or Unlock once all of it is locked. -->
                     <Button x:Name="LockButton"
                             x:Uid="EditorLockButton"
                             Style="{StaticResource EditorIconButtonStyle}"
-                            IsEnabled="False">
-                        <FontIcon Glyph="&#xE72E;" FontSize="14" />
+                            IsEnabled="False"
+                            Click="OnLockClick">
+                        <FontIcon x:Name="LockButtonGlyph" Glyph="&#xE72E;" FontSize="14" />
                     </Button>
                 </StackPanel>
 
@@ -441,7 +449,7 @@
                                 <MenuFlyoutItem x:Uid="LayoutMenuPageSize" Text="Page size…" Click="OnPageSizeClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE740;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
-                                <MenuFlyoutItem x:Uid="LayoutMenuBackground" Text="Background picture…" Click="OnBackgroundClick">
+                                <MenuFlyoutItem x:Uid="LayoutMenuBackground" Text="Background picture or video…" Click="OnBackgroundClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xEB9F;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutItem x:Uid="LayoutMenuRename" Text="Rename layout…" Click="OnRenameLayoutClick">
@@ -707,6 +715,7 @@
                                   VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollMode="Auto"
                                   VerticalScrollMode="Auto"
+                                  PreviewKeyDown="OnCanvasPreviewKeyDown"
                                   SizeChanged="OnCanvasSizeChanged">
                         <ScrollViewer.ContextFlyout>
                             <MenuFlyout x:Name="CanvasMenu" Opening="OnCanvasMenuOpening" Closed="OnCanvasMenuClosed">
@@ -770,6 +779,10 @@
                                         PointerMoved="OnCanvasPointerMoved"
                                         PointerReleased="OnCanvasPointerReleased"
                                         PointerCaptureLost="OnCanvasPointerCaptureLost" />
+
+                                <!-- The spacing pills, which are buttons. No background, so it
+                                     only takes the pointer where a pill is. -->
+                                <Canvas x:Name="SpacingCanvas" />
 
                                 <!-- Holds the box a label is typed into after a double click.
                                      No background, so it only takes the pointer where the box is. -->
@@ -2480,6 +2493,12 @@
                                                     <TextBlock x:Uid="EditSequenceLabel" Text="Edit steps…" FontSize="11" />
                                                 </StackPanel>
                                             </Button>
+                                            <Button x:Name="DeleteSequenceButton" x:Uid="DeleteSequenceButton" FontSize="11" Click="OnDeleteSequenceClick">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE74D;" FontSize="11" />
+                                                    <TextBlock x:Uid="DeleteSequenceLabel" Text="Delete" FontSize="11" />
+                                                </StackPanel>
+                                            </Button>
                                         </StackPanel>
                                         <TextBlock x:Name="SequenceCaption"
                                                    FontSize="11"
@@ -2702,6 +2721,16 @@
                                             Maximum="100"
                                             StepFrequency="1"
                                             ValueChanged="OnDefaultValueChanged" />
+
+                                    <!-- An XY pad and a joystick also start somewhere up and down. -->
+                                    <Slider x:Name="DefaultValueYSlider"
+                                            x:Uid="DefaultValueYSlider"
+                                            Header="Up and down"
+                                            Minimum="0"
+                                            Maximum="100"
+                                            StepFrequency="1"
+                                            Visibility="Collapsed"
+                                            ValueChanged="OnDefaultValueYChanged" />
 
                                     <!-- A toggle is on or off, so it starts one way or the other rather than
                                          somewhere along a percentage. -->

@@ -7,9 +7,12 @@
 
 #include "EditGeometryTests.h"
 
+#include "ArrangeOps.h"
 #include "EditGeometry.h"
+#include "LayoutModel.h"
 
 #include <cmath>
+#include <vector>
 
 using namespace WEX::Common;
 using namespace WEX::Logging;
@@ -419,4 +422,101 @@ void EditGeometryTests::ATypedZoomOutsideTheRangeIsBroughtInside()
 {
     VerifyNear(glass::MaximumEditorZoom, *glass::ParseZoomPercent(L"1000"));
     VerifyNear(glass::MinimumEditorZoom, *glass::ParseZoomPercent(L"1"));
+}
+
+// ---- spacing ----
+
+void EditGeometryTests::SpacingFollowsTheWayARowRuns()
+{
+    // A little out of line, and listed out of order, as a row built by hand is.
+    std::vector<glass::EditRect> const row
+    {
+        { 300.0, 100.0, 56.0, 56.0 },
+        { 100.0, 104.0, 56.0, 56.0 },
+        { 200.0, 98.0, 56.0, 56.0 },
+    };
+
+    auto const readout = glass::ReadSpacing(row);
+
+    VERIFY_IS_TRUE(readout.has_value());
+    VERIFY_IS_TRUE(readout->Axis == glass::ArrangeAxis::Horizontal);
+    VERIFY_ARE_EQUAL(size_t{ 3 }, readout->Blocks.size());
+    VerifyNear(100.0, readout->Blocks[0].X);
+    VerifyNear(300.0, readout->Blocks[2].X);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, readout->Gaps.size());
+    VerifyNear(44.0, readout->Gaps[0]);
+    VerifyNear(44.0, readout->Gaps[1]);
+}
+
+void EditGeometryTests::SpacingFollowsTheWayAColumnRuns()
+{
+    std::vector<glass::EditRect> const column
+    {
+        { 100.0, 100.0, 56.0, 56.0 },
+        { 104.0, 180.0, 56.0, 56.0 },
+        { 98.0, 260.0, 56.0, 56.0 },
+    };
+
+    auto const readout = glass::ReadSpacing(column);
+
+    VERIFY_IS_TRUE(readout.has_value());
+    VERIFY_IS_TRUE(readout->Axis == glass::ArrangeAxis::Vertical);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, readout->Gaps.size());
+    VerifyNear(24.0, readout->Gaps[0]);
+    VerifyNear(24.0, readout->Gaps[1]);
+}
+
+void EditGeometryTests::AGridHasNoSpacingToShow()
+{
+    std::vector<glass::EditRect> const grid
+    {
+        { 100.0, 100.0, 56.0, 56.0 },
+        { 200.0, 100.0, 56.0, 56.0 },
+        { 100.0, 200.0, 56.0, 56.0 },
+        { 200.0, 200.0, 56.0, 56.0 },
+    };
+
+    VERIFY_IS_FALSE(glass::ReadSpacing(grid).has_value());
+}
+
+void EditGeometryTests::ADiagonalTakesTheLongerRun()
+{
+    std::vector<glass::EditRect> const diagonal
+    {
+        { 100.0, 100.0, 56.0, 56.0 },
+        { 300.0, 170.0, 56.0, 56.0 },
+        { 500.0, 240.0, 56.0, 56.0 },
+    };
+
+    auto const readout = glass::ReadSpacing(diagonal);
+
+    VERIFY_IS_TRUE(readout.has_value());
+    VERIFY_IS_TRUE(readout->Axis == glass::ArrangeAxis::Horizontal);
+}
+
+void EditGeometryTests::ATypedGapReadsTheWayItIsShown()
+{
+    for (auto const* const text : { L"16", L"16px", L" 16 px ", L"16PX", L"16.0" })
+    {
+        auto const gap = glass::ParseGapPixels(text);
+
+        VERIFY_IS_TRUE(gap.has_value());
+        VerifyNear(16.0, *gap);
+    }
+
+    VerifyNear(0.0, *glass::ParseGapPixels(L"0"));
+    VerifyNear(12.5, *glass::ParseGapPixels(L"12.5"));
+}
+
+void EditGeometryTests::ATypedGapThatIsNotANumberIsNoGap()
+{
+    for (auto const* const text : { L"", L"   ", L"px", L"abc", L"16x", L"1 6", L"-4", L"nan", L"inf" })
+    {
+        VERIFY_IS_FALSE(glass::ParseGapPixels(text).has_value());
+    }
+}
+
+void EditGeometryTests::AnEnormousTypedGapIsBroughtBackToThePage()
+{
+    VerifyNear(static_cast<double>(glass::MaximumPageSide), *glass::ParseGapPixels(L"100000"));
 }
