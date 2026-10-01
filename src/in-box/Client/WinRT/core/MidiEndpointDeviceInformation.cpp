@@ -817,6 +817,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
+            std::lock_guard<std::mutex> guard(m_groupTerminalBlocksLock);
+
             return m_groupTerminalBlocks.GetView();
         }
         catch (winrt::hresult_error const& ex)
@@ -1331,16 +1333,18 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
-            if (!m_properties.HasKey(key)) return nullptr;
-            if (m_properties.Lookup(key) == nullptr) return nullptr;
+            // One read, because the watcher can replace the value between separate ones.
+            auto const stored = m_properties.TryLookup(key);
 
-            auto value = m_properties.Lookup(key).as<foundation::IPropertyValue>();
+            if (stored == nullptr) return nullptr;
+
+            auto value = stored.as<foundation::IPropertyValue>();
 
             auto t = value.Type();
 
             if (t == foundation::PropertyType::UInt8Array)
             {
-                auto refArray = winrt::unbox_value<foundation::IReferenceArray<uint8_t>>(m_properties.Lookup(key));
+                auto refArray = winrt::unbox_value<foundation::IReferenceArray<uint8_t>>(stored);
 
                 return refArray;
             }
@@ -1405,6 +1409,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
+            auto blocks = winrt::multi_threaded_vector<midi2enum::MidiGroupTerminalBlock>();
+
             // in groups property
             // STRING_PKEY_MIDI_IN_GroupTerminalBlocks
 
@@ -1424,10 +1430,14 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                         auto block = winrt::make_self<MidiGroupTerminalBlock>();
                         block->InternalUpdateFromPropertyData(gtb, Name());
 
-                        m_groupTerminalBlocks.Append(*block);
+                        blocks.Append(*block);
                     }
                 }
             }
+
+            std::lock_guard<std::mutex> guard(m_groupTerminalBlocksLock);
+
+            m_groupTerminalBlocks = blocks;
         }
         catch (winrt::hresult_error const& ex)
         {

@@ -11,6 +11,9 @@
 
 #include <mmdeviceapi.h>
 
+#include <atomic>
+#include <mutex>
+
 namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 {
     struct MidiLegacyPortDeviceInformation : MidiLegacyPortDeviceInformationT<MidiLegacyPortDeviceInformation>
@@ -48,14 +51,14 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         winrt::hstring PortDeviceId() const noexcept { return m_id; }
         winrt::hstring PortDeviceInstanceId() const noexcept { return internal::NormalizeDeviceInstanceIdHStringCopy(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.Devices.DeviceInstanceId", L"")); }
-        winrt::hstring Name() const noexcept { return m_name; }
+        winrt::hstring Name() const noexcept;
         winrt::guid ContainerId() const noexcept { return internal::GetDeviceInfoProperty<winrt::guid>(m_properties, L"System.Devices.ContainerId", winrt::guid()); }
         winrt::hstring AssociatedEndpointDeviceId()  const noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_AssociatedUMP, L"")); }
         winrt::hstring ParentDeviceInstanceId() const noexcept { return m_parentDeviceInstanceId; }
         midi2enum::MidiParentDeviceInformation GetParentDeviceInformation() const noexcept;
         winrt::hstring DriverDeviceInterfaceId() const noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_DriverDeviceInterface, L"")); }
         midi2enum::Midi1PortFlow Flow() const noexcept { return m_portFlow; }
-        uint32_t Number() const noexcept { return m_portNumber; }
+        uint32_t Number() const noexcept { return m_portNumber.load(); }
 
         winrt::guid TransportId() const noexcept{ return m_transportId; }
 
@@ -110,9 +113,12 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         winrt::guid m_transportId{};
 
+        // A port watcher renames and renumbers a port on its own thread while apps read it.
+        mutable std::mutex m_nameLock;
         winrt::hstring m_name{};
+
         winrt::hstring m_id{};
-        uint32_t m_portNumber{ 0 };
+        std::atomic<uint32_t> m_portNumber{ 0 };
         midi2enum::Midi1PortFlow m_portFlow{ };
 
         collections::IMap<winrt::hstring, foundation::IInspectable> m_properties
