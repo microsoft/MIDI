@@ -957,6 +957,19 @@ namespace
             { L"Ableton Push 3 Live Port", L"Ableton Push 3 User Port", L"Ableton Push 3 External Port" },
             });
 
+        // Jacks the maker named just "In" and "Out". Generic, but they are the device's own words.
+        fixtures.push_back({
+            L"Jacks named In and Out",
+            L"Acme Box",
+            false,
+            {
+                { 0, MidiFlow::MidiFlowIn,  L"In",  L"", L"Acme Box" },
+                { 0, MidiFlow::MidiFlowOut, L"Out", L"", L"Acme Box" },
+            },
+            { L"Acme Box In" },
+            { L"Acme Box Out" },
+            });
+
         // Blokas Midihub with the product name in every jack name. The product name is not added
         // a second time.
         fixtures.push_back({
@@ -1080,6 +1093,39 @@ namespace
             fixtures.push_back(motu);
         }
 
+        // A driver that publishes one filter per port and names each one. "MIDI IN" is what tells
+        // the third input apart from the first.
+        fixtures.push_back({
+            L"One filter per port",
+            L"Acme DR-1",
+            false,
+            {
+                { 0, MidiFlow::MidiFlowIn,  L"", L"", L"Acme DR-1" },
+                { 1, MidiFlow::MidiFlowIn,  L"", L"", L"Acme DR-1 CTRL" },
+                { 2, MidiFlow::MidiFlowIn,  L"", L"", L"Acme DR-1 MIDI IN" },
+                { 0, MidiFlow::MidiFlowOut, L"", L"", L"Acme DR-1" },
+                { 1, MidiFlow::MidiFlowOut, L"", L"", L"Acme DR-1 CTRL" },
+                { 2, MidiFlow::MidiFlowOut, L"", L"", L"Acme DR-1 MIDI OUT 1" },
+                { 3, MidiFlow::MidiFlowOut, L"", L"", L"Acme DR-1 MIDI OUT 2" },
+            },
+            { L"Acme DR-1", L"Acme DR-1 CTRL", L"Acme DR-1 MIDI IN" },
+            { L"Acme DR-1", L"Acme DR-1 CTRL", L"Acme DR-1 MIDI OUT 1", L"Acme DR-1 MIDI OUT 2" },
+            });
+
+        // Native Instruments KOMPLETE KONTROL M32. The product name comes from the USB device node,
+        // and the interface name adds "MIDI" to it. That word is the driver's, so it is kept.
+        fixtures.push_back({
+            L"NI KOMPLETE KONTROL M32",
+            L"KOMPLETE KONTROL M32",
+            false,
+            {
+                { 0, MidiFlow::MidiFlowIn,  L"KOMPLETE KONTROL M32 MIDI [1]", L"KOMPLETE KONTROL M32 MIDI", L"KOMPLETE KONTROL M32 MIDI" },
+                { 0, MidiFlow::MidiFlowOut, L"KOMPLETE KONTROL M32 MIDI [0]", L"KOMPLETE KONTROL M32 MIDI", L"KOMPLETE KONTROL M32 MIDI" },
+            },
+            { L"KOMPLETE KONTROL M32 MIDI" },
+            { L"KOMPLETE KONTROL M32 MIDI" },
+            });
+
         // -- devices that say nothing about their individual ports -------------------------------
 
         // Roland UM-ONE. The jack names are the filter name with an index our own stack appended,
@@ -1094,20 +1140,6 @@ namespace
             },
             { L"UM-ONE" },
             { L"UM-ONE" },
-            });
-
-        // Native Instruments KOMPLETE KONTROL M32. The product name comes from the USB device node
-        // and is shorter than the interface name by the trailing "MIDI".
-        fixtures.push_back({
-            L"NI KOMPLETE KONTROL M32",
-            L"KOMPLETE KONTROL M32",
-            false,
-            {
-                { 0, MidiFlow::MidiFlowIn,  L"KOMPLETE KONTROL M32 MIDI [1]", L"KOMPLETE KONTROL M32 MIDI", L"KOMPLETE KONTROL M32 MIDI" },
-                { 0, MidiFlow::MidiFlowOut, L"KOMPLETE KONTROL M32 MIDI [0]", L"KOMPLETE KONTROL M32 MIDI", L"KOMPLETE KONTROL M32 MIDI" },
-            },
-            { L"KOMPLETE KONTROL M32" },
-            { L"KOMPLETE KONTROL M32" },
             });
 
         // ESI M8U eX. Sixteen ports each way and nothing to tell them apart, which is the case the
@@ -1133,19 +1165,20 @@ namespace
 
         // -- devices on the MIDI 2.0 driver, named by their blocks --------------------------------
 
-        // Akai MPK mini IV. The group terminal block names already carry the product name.
+        // Akai MPK mini IV. The group terminal block names already carry the product name. The UMP
+        // driver path records the product name where a filter name would go.
         fixtures.push_back({
             L"Akai MPK mini IV",
             L"MPK mini IV",
             false,
             {
-                { 0, MidiFlow::MidiFlowIn,  L"MPK mini IV MIDI Port",     L"", L"" },
-                { 1, MidiFlow::MidiFlowIn,  L"MPK mini IV DAW Port",      L"", L"" },
-                { 2, MidiFlow::MidiFlowIn,  L"MPK mini IV Software Port", L"", L"" },
-                { 0, MidiFlow::MidiFlowOut, L"MPK mini IV MIDI Port",     L"", L"" },
-                { 1, MidiFlow::MidiFlowOut, L"MPK mini IV Din Port",      L"", L"" },
-                { 2, MidiFlow::MidiFlowOut, L"MPK mini IV DAW Port",      L"", L"" },
-                { 3, MidiFlow::MidiFlowOut, L"MPK mini IV Software Port", L"", L"" },
+                { 0, MidiFlow::MidiFlowIn,  L"MPK mini IV MIDI Port",     L"", L"MPK mini IV" },
+                { 1, MidiFlow::MidiFlowIn,  L"MPK mini IV DAW Port",      L"", L"MPK mini IV" },
+                { 2, MidiFlow::MidiFlowIn,  L"MPK mini IV Software Port", L"", L"MPK mini IV" },
+                { 0, MidiFlow::MidiFlowOut, L"MPK mini IV MIDI Port",     L"", L"MPK mini IV" },
+                { 1, MidiFlow::MidiFlowOut, L"MPK mini IV Din Port",      L"", L"MPK mini IV" },
+                { 2, MidiFlow::MidiFlowOut, L"MPK mini IV DAW Port",      L"", L"MPK mini IV" },
+                { 3, MidiFlow::MidiFlowOut, L"MPK mini IV Software Port", L"", L"MPK mini IV" },
             },
             { L"MPK mini IV MIDI Port", L"MPK mini IV DAW Port", L"MPK mini IV Software Port" },
             { L"MPK mini IV MIDI Port", L"MPK mini IV Din Port", L"MPK mini IV DAW Port", L"MPK mini IV Software Port" },
@@ -1371,14 +1404,14 @@ void NamingTests::TestPlaceholderPortNameDetection()
     VERIFY_IS_TRUE(IsPlaceholderPortName(L"MIDI"));
     VERIFY_IS_TRUE(IsPlaceholderPortName(L"midi"));
 
-    // values manufacturers commonly supply that say nothing
-    VERIFY_IS_TRUE(IsPlaceholderPortName(L"In"));
-    VERIFY_IS_TRUE(IsPlaceholderPortName(L"Out"));
-    VERIFY_IS_TRUE(IsPlaceholderPortName(L"IO"));
-    VERIFY_IS_TRUE(IsPlaceholderPortName(L"Port"));
-    VERIFY_IS_TRUE(IsPlaceholderPortName(L"Port 2"));
-    VERIFY_IS_TRUE(IsPlaceholderPortName(L"MIDI Out"));
-    VERIFY_IS_TRUE(IsPlaceholderPortName(L"MIDI 3"));
+    // generic words the manufacturer chose are still the device's own, and get the product name in front
+    VERIFY_IS_FALSE(IsPlaceholderPortName(L"In"));
+    VERIFY_IS_FALSE(IsPlaceholderPortName(L"Out"));
+    VERIFY_IS_FALSE(IsPlaceholderPortName(L"IO"));
+    VERIFY_IS_FALSE(IsPlaceholderPortName(L"Port"));
+    VERIFY_IS_FALSE(IsPlaceholderPortName(L"Port 2"));
+    VERIFY_IS_FALSE(IsPlaceholderPortName(L"MIDI Out"));
+    VERIFY_IS_FALSE(IsPlaceholderPortName(L"MIDI 3"));
 
     // real names, including ones that contain an uninformative word
     VERIFY_IS_FALSE(IsPlaceholderPortName(L"Control Surface"));
@@ -1460,6 +1493,21 @@ void NamingTests::TestResolveDeviceSuppliedPortNamePrecedence()
     VERIFY_IS_TRUE(fromFilter.Source == Midi1PortNameSource::Filter);
     VERIFY_ARE_EQUAL(std::wstring{ L"HDSPe FX MADI1 MIDI" }, fromFilter.Name);
 
+    // a generic jack name the manufacturer chose is still theirs
+    auto genericJack = ResolveDeviceSuppliedPortName(L"Out", L"", false, L"Acme Box", L"Acme Box");
+    VERIFY_IS_TRUE(genericJack.Source == Midi1PortNameSource::Pin);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Out" }, genericJack.Name);
+
+    // KS never changes a filter name, so words on the end of one came from the driver
+    auto filterWithSuffix = ResolveDeviceSuppliedPortName(L"", L"", false, L"Acme DR-1 MIDI IN", L"Acme DR-1");
+    VERIFY_IS_TRUE(filterWithSuffix.Source == Midi1PortNameSource::Filter);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Acme DR-1 MIDI IN" }, filterWithSuffix.Name);
+
+    // the UMP driver path compares a block name against the product name
+    auto blockName = ResolveDeviceSuppliedPortName(L"MPK mini IV MIDI Port", L"", false, L"MPK mini IV", L"MPK mini IV");
+    VERIFY_IS_TRUE(blockName.Source == Midi1PortNameSource::Pin);
+    VERIFY_ARE_EQUAL(std::wstring{ L"MPK mini IV MIDI Port" }, blockName.Name);
+
     // nothing usable anywhere
     auto nothing = ResolveDeviceSuppliedPortName(L"UM-ONE [0]", L"UM-ONE", false, L"UM-ONE", L"UM-ONE");
     VERIFY_IS_TRUE(nothing.Source == Midi1PortNameSource::None);
@@ -1487,7 +1535,6 @@ void NamingTests::TestPortNameSourceFlags()
             L"%s: device supplied port names = %s", fixture.Description.c_str(), deviceSupplied ? L"yes" : L"no"));
 
         if (fixture.Description == L"Roland UM-ONE" ||
-            fixture.Description == L"NI KOMPLETE KONTROL M32" ||
             fixture.Description == L"ESI M8U eX" ||
             fixture.Description == L"Moog One" ||
             fixture.Description == L"Network MIDI 2.0 host, no function blocks")
@@ -1545,7 +1592,6 @@ void NamingTests::TestResolveAutomaticPortNameSelection()
         // These are the devices the published table says stay on legacy names.
         bool expectLegacy =
             fixture.Description == L"Roland UM-ONE" ||
-            fixture.Description == L"NI KOMPLETE KONTROL M32" ||
             fixture.Description == L"ESI M8U eX" ||
             fixture.Description == L"Moog One";
 

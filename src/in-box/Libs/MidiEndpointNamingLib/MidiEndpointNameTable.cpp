@@ -1397,8 +1397,8 @@ namespace
 {
     constexpr size_t MidiMaxPortNameCharacters = MAXPNAMELEN - 1;
 
-    // Words that mean nothing on their own, so a name made only of them is not a port name. Also
-    // stripped from the end of a name before comparing two names for sameness.
+    // Words that say nothing about which model a run of port names describes, as in the "Port" of
+    // "Express  128: Port".
     bool IsUninformativeWord(_In_ std::wstring const& lowercaseWord) noexcept
     {
         return
@@ -1466,8 +1466,8 @@ namespace
         return words;
     }
 
-    // Lowercase, separator-insensitive, with trailing uninformative words removed. Two names with
-    // the same comparison form say the same thing, so one of them is not worth showing.
+    // Lowercase and separator-insensitive, with every word kept. Two names with the same comparison
+    // form say the same thing, so one of them is not worth showing.
     std::wstring ComparisonForm(_In_ std::wstring const& value) noexcept
     {
         std::wstring result{ };
@@ -1475,11 +1475,6 @@ namespace
         try
         {
             auto words = SplitIntoComparisonWords(WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(value));
-
-            while (words.size() > 1 && IsUninformativeWord(words.back()))
-            {
-                words.pop_back();
-            }
 
             for (auto const& word : words)
             {
@@ -1862,28 +1857,16 @@ std::wstring RemoveGeneratedPinNameSuffix(std::wstring const& pinName) noexcept
 _Use_decl_annotations_
 bool IsPlaceholderPortName(std::wstring const& name) noexcept
 {
-    auto compare = ComparisonForm(name);
-
-    if (compare.empty()) { return true; }
-
-    auto words = SplitIntoComparisonWords(compare);
-    if (words.empty()) { return true; }
-
-    // a name made only of uninformative words, with or without a trailing number, says nothing
-    for (auto const& word : words)
+    try
     {
-        if (IsUninformativeWord(word)) { continue; }
+        // Our KS stack names a jack "MIDI" when the device did not. Any other text is the device's own.
+        auto compare = WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(name);
 
-        bool allDigits{ !word.empty() };
-        for (auto const& ch : word)
-        {
-            if (!iswdigit(ch)) { allDigits = false; break; }
-        }
-
-        if (!allDigits) { return false; }
+        return compare.empty() || compare == L"midi";
     }
+    CATCH_LOG();
 
-    return true;
+    return false;
 }
 
 _Use_decl_annotations_
@@ -2066,7 +2049,8 @@ Midi1ResolvedPortName ResolveDeviceSuppliedPortName(
                     ComparisonForm(RemoveDuplicateDeviceMarker(device));
             };
 
-        // 1. the jack name, unless it is empty, a placeholder, or our own stack's "<filter> [n]"
+        // 1. the jack name, unless it is empty, the "MIDI" our KS stack fills in, or the stack's own
+        //    "<filter> [n]"
         auto pin = RemoveGeneratedPinNameSuffix(pinName);
 
         if (!IsPlaceholderPortName(pin) && !isJustTheDeviceName(pin, filterName))
@@ -2082,7 +2066,7 @@ Midi1ResolvedPortName ResolveDeviceSuppliedPortName(
         auto registryName = WindowsMidiServicesInternal::TrimmedWStringCopy(driverRegistryName);
 
         if (driverRegistryNameIsPerFilter &&
-            !IsPlaceholderPortName(registryName) &&
+            !registryName.empty() &&
             !isJustTheDeviceName(registryName, deviceName))
         {
             resolved.Name = registryName;
@@ -2090,10 +2074,11 @@ Midi1ResolvedPortName ResolveDeviceSuppliedPortName(
             return resolved;
         }
 
-        // 3. the filter name, when it is not simply the device name again
+        // 3. the filter name, when it is not simply the device name again. KS never changes a
+        //    filter name, so every word in it came from the driver.
         auto filter = WindowsMidiServicesInternal::TrimmedWStringCopy(filterName);
 
-        if (!IsPlaceholderPortName(filter) && !isJustTheDeviceName(filter, deviceName))
+        if (!filter.empty() && !isJustTheDeviceName(filter, deviceName))
         {
             resolved.Name = filter;
             resolved.Source = Midi1PortNameSource::Filter;
