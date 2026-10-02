@@ -208,6 +208,8 @@ Layouts are saved in **Documents › MIDI Layouts**, one file per layout. The fi
 - **Package for another PC…** makes one file that holds the layout and its pictures. Copy it to the other PC, and in the library there, select **…** (More options), then **Import a layout package…**.
 - **Duplicate** makes a copy to try ideas on, and **Add to favorites** puts the layout in a **Favorites** section at the top of the library.
 
+To have an AI assistant build a layout for you, give it the link to [MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/) and ask it to read the whole page first.
+
 ## Keyboard and screen readers
 
 On a running layout, the Tab key moves from control to control, and a screen reader reads each control's name. The **keyboard order** decides the order Tab moves through the controls, and the order a screen reader reads them.
@@ -221,3 +223,4 @@ Open **Layout…**, then **Pages and devices…**, and select **Accessibility ch
 - [How MIDI Glass themes work]({{ site.baseurl }}/kb/midi-glass-themes/)
 - [How to control your DAW with Mackie Control in MIDI Glass]({{ site.baseurl }}/kb/midi-glass-mackie-control/)
 - [How to make a floating toolbar or palette in MIDI Glass]({{ site.baseurl }}/kb/midi-glass-floating-toolbars/)
+- [MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/)

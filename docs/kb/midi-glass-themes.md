@@ -11,7 +11,7 @@ Windows MIDI Glass ("MIDI Glass") is the Windows MIDI Services app for building 
 
 Two things decide what you see. A **layout** says what's on the page: where each control sits, how big it is, what it's called, and what it sends. A **theme** says how the page looks. Put a different theme on a layout and every control keeps its place, its name, and its messages. Only the look changes.
 
-This article is about themes: the theme file, where it goes, and how MIDI Glass turns each setting into what's on the screen. It doesn't cover building layouts.
+This article is about themes: the theme file, where it goes, and how MIDI Glass turns each setting into what's on the screen. It doesn't cover building layouts. For that, see [MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/).
 
 > **MIDI Glass is a preview app.** The theme file described here is version 1. Later versions can add settings, and a theme file written for an older version keeps loading when they do.
 

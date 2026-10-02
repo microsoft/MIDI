@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <winrt/Windows.Foundation.h>
@@ -73,7 +74,10 @@ namespace glass
         Button = 3,
         Toggle = 4,
         XYPad = 5,
-        Encoder = 6,
+
+        // 6 was an encoder, which drew and behaved exactly like a knob. A file that says encoder
+        // opens as a knob.
+
         Meter = 7,
         Lamp = 8,
         Readout = 9,
@@ -201,6 +205,22 @@ namespace glass
         Sequence = 10,
         GoToPage = 11,
         HoldLayer = 12,
+
+        // A named Mackie Control function, such as Play or Fader 3. Number holds which one.
+        MackieControl = 13,
+    };
+
+    // How the layout talks to one device. It decides what a row sent there can say.
+    enum class DeviceProtocol
+    {
+        // Values are percentages at MIDI 2.0 resolution. Windows converts for a MIDI 1.0 device.
+        Midi2 = 0,
+
+        // Values are the exact 7 and 14 bit numbers MIDI 1.0 manuals print.
+        Midi1 = 1,
+
+        // A DAW set up for a Mackie Control surface. Rows name functions rather than messages.
+        MackieControl = 2,
     };
 
     // A page of faders that fights the DAW is worse than no page at all.
@@ -255,6 +275,9 @@ namespace glass
         // Wherever the customer dragged the label's own handles to. Set by the canvas rather
         // than chosen from the list, and paired with the box in LabelStyle.
         Custom = 10,
+
+        // Inside, at the top left, the way a keyboard prints the legend on a key.
+        InsideTopLeft = 11,
     };
 
     enum class ShowValueOverride
@@ -351,8 +374,8 @@ namespace glass
     constexpr int32_t MinimumTickCount = 2;
     constexpr int32_t MaximumTickCount = 64;
 
-    // Which way a finger moves to turn a knob up. A circle is hard to trace on glass, so every
-    // plug-in on the market is dragged in a straight line instead; which line is a preference.
+    // Which way a finger moves to turn a knob up. A circle is hard to trace on a small knob, so
+    // most plug-ins drag in a straight line; which line, or a circle after all, is a preference.
     enum class DragAxis
     {
         // Up is more. The default, and what a plug-in does.
@@ -360,6 +383,10 @@ namespace glass
 
         // Right is more, for a row of knobs under a narrow strip of screen.
         Horizontal = 1,
+
+        // Round and round, like the real thing: clockwise is more, and the knob turns from where
+        // it is rather than jumping to the finger.
+        Circular = 2,
     };
 
     // How a picture fills the rectangle it is drawn into, whether that is the whole page or one
@@ -1026,6 +1053,37 @@ namespace glass
     // The number the way a device manual prints it: "3:17" for an RPN or NRPN, "74" otherwise.
     std::wstring FormatMessageNumber(_In_ MessageKind kind, _In_ uint32_t number);
 
+    // Whether a row goes out to a device, and so has a device and a group. A page change and a
+    // sequence stay inside the app.
+    bool SendsToADevice(_In_ MessageKind kind) noexcept;
+
+    // Whether a row carries a channel. Only the channel voice messages do.
+    bool CarriesAChannel(_In_ MessageKind kind) noexcept;
+
+    // Whether a row goes out as MIDI 1.0 protocol. An RPN, an NRPN and a per-note controller
+    // have no single MIDI 1.0 message, so they go as MIDI 2.0 and Windows converts them.
+    bool SendsAsMidi1(_In_ ControlMessage const& message, _In_ DeviceProtocol protocol) noexcept;
+
+    // The highest number a row's values are typed as: 127, or 16383 for a MIDI 1.0 pitch bend,
+    // RPN or NRPN. 0 means they are typed as a percentage, the way MIDI 2.0 values are.
+    int32_t RawValueMaximum(_In_ ControlMessage const& message, _In_ DeviceProtocol protocol) noexcept;
+
+    // One end of a row's range the way it is typed: a whole number, or a percentage.
+    double ShownValue(
+        _In_ MessageValue const& end,
+        _In_ ControlMessage const& message,
+        _In_ DeviceProtocol protocol) noexcept;
+
+    // Kept as a share of the range, so it survives the device changing protocol.
+    MessageValue ValueFromShown(
+        _In_ double shown,
+        _In_ ControlMessage const& message,
+        _In_ DeviceProtocol protocol) noexcept;
+
+    // Turns exact numbers into shares of the range, as the row sends them under this protocol.
+    // Done before a device changes protocol, because an exact number is only exact in one.
+    void ShareExactValues(_Inout_ ControlMessage& message, _In_ DeviceProtocol protocol) noexcept;
+
     // What a control listens for, so a fader can follow the DAW rather than only lead it.
     struct FeedbackBinding
     {
@@ -1072,6 +1130,11 @@ namespace glass
 
         bool AspectLocked{ false };
 
+        // Locked on the page: it cannot be picked there, moved or resized until it is unlocked.
+        // Clicks go through it, which is what lets somebody work over a big panel behind
+        // everything. The outline still selects it.
+        bool Locked{ false };
+
         // Where this control disagrees with its theme. UseTheme is the default and almost every
         // control stays there, which is what makes switching theme a six color operation.
         ControlStyleOverride Style{ ControlStyleOverride::UseTheme };
@@ -1085,7 +1148,7 @@ namespace glass
 
         PickupMode Pickup{ PickupMode::Jump };
 
-        // Which way a finger drags to turn this control up. Knobs and encoders only.
+        // Which way a finger drags to turn this control up. Knobs only.
         DragAxis Drag{ DragAxis::Vertical };
         // A pad hit softly sends a softer note. Pads only, and only worth turning on where the
         // hardware reports it: a mouse says the same thing every time, and a finger on a
@@ -1132,6 +1195,10 @@ namespace glass
 
         // The same, for the second axis of an XY pad or a joystick. Ignored everywhere else.
         double DefaultValueY{ 0.0 };
+
+        // Rests in the middle and lights only the part it has been moved away from the middle,
+        // the way a pan knob does. Knobs and faders only.
+        bool LightsFromCenter{ false };
 
         // Springs back to DefaultValue the moment the finger comes off. A pitch wheel does; a
         // volume fader had better not. It is a property of the control rather than of its kind
@@ -1185,6 +1252,29 @@ namespace glass
     // More than this and the numbers run into each other whatever size the control is.
     constexpr int32_t MaximumLabeledStops = 16;
 
+    // The page a page tab goes to: the page named by its first go-to-page row. Empty when it has
+    // none.
+    std::wstring PageTabTarget(_In_ Control const& control);
+
+    // Whether a label may name this font. A family name never holds a path, a link or a list of
+    // families, and a layout can come from a stranger, so a name that does is read as no font.
+    bool IsSafeFontFamilyName(_In_ std::wstring_view name) noexcept;
+
+    // The smallest side a page can have. Small enough for a strip of buttons used as a toolbar.
+    constexpr int32_t MinimumPageSide = 32;
+    constexpr int32_t MaximumPageSide = 8192;
+
+    // What a group is called. Which controls are in it is on the controls themselves; this is only
+    // the name, so a page of channel strips reads as Drums and Bass rather than Group 1 and 2. A
+    // group nobody named has no entry.
+    struct ControlGroup
+    {
+        std::wstring Id{};
+        std::wstring Name{};
+
+        UnknownFields Unknown{ nullptr };
+    };
+
     struct Page
     {
         std::wstring Id{};
@@ -1196,7 +1286,13 @@ namespace glass
 
         std::vector<Control> Controls{};
 
+        // Names for the groups on this page, by the group id the controls carry.
+        std::vector<ControlGroup> Groups{};
+
         UnknownFields Unknown{ nullptr };
+
+        ControlGroup* FindGroup(_In_ std::wstring const& id) noexcept;
+        ControlGroup const* FindGroup(_In_ std::wstring const& id) const noexcept;
     };
 
     // An entry in the layout's own device table. The criteria are the same ones the service
@@ -1210,6 +1306,11 @@ namespace glass
 
         // Clock to a device that does not want it is noise, so this is per destination.
         bool SendsBeatClock{ false };
+
+        DeviceProtocol Protocol{ DeviceProtocol::Midi2 };
+
+        // A protocol a newer build named. Treated as MIDI 2.0 and written back as it was.
+        std::wstring UnrecognizedProtocol{};
 
         UnknownFields Unknown{ nullptr };
     };
@@ -1312,6 +1413,17 @@ namespace glass
         double CustomScalePercent{ 100.0 };
         ScreenCorner FullScreenButtonCorner{ ScreenCorner::TopRight };
 
+        // A layout used as a toolbar. Its window is the page and nothing else: no title bar, no
+        // row of buttons and no border, with a handle at one end to move it and open its menu.
+        bool ToolbarWindow{ false };
+
+        // Stays in front of other windows while it runs, the way a toolbar has to.
+        bool AlwaysOnTop{ false };
+
+        // Nothing is drawn behind the controls while it runs, neither the theme's deck nor the
+        // window, so whatever is behind the window shows through.
+        bool SeeThrough{ false };
+
         // Which display this layout was last opened on. Gone display means primary, not
         // off screen.
         std::wstring PreferredDisplayId{};
@@ -1354,6 +1466,9 @@ namespace glass
         Control const* ControlAtIndex(_In_ size_t controlIndex) const noexcept;
 
         DeviceEntry const* FindDevice(_In_ std::wstring const& name) const noexcept;
+
+        // MIDI 2.0 for a name that is not in the table.
+        DeviceProtocol ProtocolOf(_In_ std::wstring const& deviceName) const noexcept;
         Sequence const* FindSequence(_In_ std::wstring const& name) const noexcept;
 
         size_t ControlCount() const noexcept;
@@ -1369,8 +1484,26 @@ namespace glass
     std::wstring SanitizeStoredString(_In_ std::wstring value) noexcept;
 
     // Copies of grouped controls get groups of their own, so a copy never joins the group it
-    // was copied from. Copies that were together are still together.
-    void RegroupCopies(_Inout_ std::vector<Control>& copies);
+    // was copied from. Copies that were together are still together. Hands back each group that
+    // is still a group among the copies, as the id it was copied from and the id it has now.
+    std::vector<std::pair<std::wstring, std::wstring>> RegroupCopies(_Inout_ std::vector<Control>& copies);
+
+    // A name for the copy of a group called this. The name itself while no group on the page has
+    // it, so a cut and paste changes nothing. Otherwise the number at its end moves on to one that
+    // is free, or a 2 goes on the end, so copies of Strip 1 read Strip 2 and Strip 3.
+    std::wstring NameForCopiedGroup(_In_ std::wstring const& name, _In_ Page const& page);
+
+    // Names the groups RegroupCopies made after the ones they were copied from, in order, so a
+    // bank of copies is numbered along the bank. The originals are a copy because they are often
+    // the page's own list, which this adds to.
+    void NameCopiedGroups(
+        _Inout_ Page& page,
+        _In_ std::vector<ControlGroup> originals,
+        _In_ std::vector<std::pair<std::wstring, std::wstring>> const& regrouped);
+
+    // Drops the names of groups with no control left on the page, and entries that carry
+    // nothing. Run after any edit that can empty a group.
+    void PruneControlGroups(_Inout_ Page& page) noexcept;
 
     // What is wrong with a document, in the order a person would want to fix it. An empty result
     // means the document is safe to run; it never means the document is beautiful.

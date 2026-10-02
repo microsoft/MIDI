@@ -34,6 +34,8 @@ A **patch** is one canvas: the endpoints on it, the connections between them, an
 
 Patch files end in `.midipatch`. To add one that somebody sent you, or one an AI assistant saved in another folder, select **Import patch…** and pick the file. You can also double-click it in File Explorer. The first time you do, Windows asks which app to open it with, so pick MIDI Patchbay. Either way, the patch is copied into your patches. It doesn't route, and it doesn't start automatically, until you turn those on. A file from somewhere else shouldn't connect your devices before you've looked at it.
 
+To have an AI assistant build a patch for you, give it the link to [MIDI Patchbay patch files, a guide for AI agents]({{ site.baseurl }}/kb/midi-patchbay-patches-for-agents/) and ask it to read the whole page first.
+
 Older versions of Patchbay named patch files `.midipatch.json`. Patchbay renames them to `.midipatch` the next time it starts. If a file with the new name is already there, the old one is left alone.
 
 You can have as many patches as you like, and more than one can be routing at the same time. Whether a patch is routing is separate from whether it's the one on screen, so you can look at one patch while three others are working.

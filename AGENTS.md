@@ -111,3 +111,24 @@ drafting an issue or a test plan. The three rules that get broken most often:
 
 The issue form requires AI-generated analysis to be tagged **"AI Generated Content"**, and the
 "personal observation" field must be the reporter's own words. Do not write that field for them.
+
+## Making MIDI Glass layouts and themes, and MIDI Patchbay patches
+
+When someone asks you to design a MIDI Glass layout or theme, or a MIDI Patchbay patch, read the matching guide from start to finish before you write anything. Each guide says what to ask, gives the whole file format with a working example, and has a script that checks the finished file.
+
+| To make | Read | Published at |
+| --- | --- | --- |
+| A MIDI Glass layout (`.midilayout`) | [docs/kb/midi-glass-layouts-for-agents.md](docs/kb/midi-glass-layouts-for-agents.md) | https://microsoft.github.io/MIDI/kb/midi-glass-layouts-for-agents/ |
+| A MIDI Glass theme (`.miditheme`) | [docs/kb/midi-glass-themes.md](docs/kb/midi-glass-themes.md) | https://microsoft.github.io/MIDI/kb/midi-glass-themes/ |
+| A MIDI Patchbay patch (`.midipatch`) | [docs/kb/midi-patchbay-patches-for-agents.md](docs/kb/midi-patchbay-patches-for-agents.md) | https://microsoft.github.io/MIDI/kb/midi-patchbay-patches-for-agents/ |
+
+The rules that get broken most often:
+
+1. **Use only the keys and values in the guide.** A key the app doesn't know is ignored without an error, so a made-up key looks fine and does nothing.
+2. **Match devices by the name Windows shows.** Never invent an endpoint device ID.
+3. **Count groups and channels from 0 in the file.** People and the apps' screens count them from 1.
+4. **Use a built-in theme by its exact name** unless the person asks for a theme of their own.
+5. **Say what the app can't do.** Don't build something that only looks like the feature the person asked for.
+6. **Check the file with the guide's script, and show the person a mockup or a plain-words plan** before you hand it over.
+
+If you change what MIDI Glass or MIDI Patchbay reads from or writes to these files, update the matching guide in the same change.

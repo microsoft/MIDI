@@ -61,6 +61,7 @@ public:
     TEST_METHOD(AControlPictureSurvivesARoundTrip);
     TEST_METHOD(AVideoFromBeforeTrimmingPlaysWhole);
     TEST_METHOD(ABackgroundPictureThatIsAPathIsRefused);
+    TEST_METHOD(APictureNamedLikeADeviceIsRefused);
     TEST_METHOD(NoBackgroundPictureWritesNothing);
 
     // ---- validation ----
@@ -84,4 +85,22 @@ public:
     // ---- RPN and NRPN ----
     TEST_METHOD(AnRpnOrNrpnNumberIsABankAndAnIndex);
     TEST_METHOD(AnNrpnAbove127SurvivesARoundTrip);
+
+    // ---- how a knob is turned ----
+
+    TEST_METHOD(AKnobTurnedRoundAndRoundSurvivesARoundTrip);
+
+    // ---- what a group is called ----
+
+    TEST_METHOD(AGroupNameSurvivesARoundTrip);
+    TEST_METHOD(AGroupNameFromAFileIsChecked);
+    TEST_METHOD(ACopiedGroupIsNumberedOnFromItsName);
+
+    // ---- toolbars, pan controls, page tabs and fonts ----
+
+    TEST_METHOD(AnEncoderInAFileOpensAsAKnob);
+    TEST_METHOD(APanControlSurvivesARoundTrip);
+    TEST_METHOD(TheWindowSettingsSurviveARoundTrip);
+    TEST_METHOD(AFontNameThatIsReallyAPathIsDropped);
+    TEST_METHOD(APageTabGoesWhereItsFirstPageRowSays);
 };

@@ -137,17 +137,27 @@ namespace winrt::midiglass::implementation
         winrt::fire_and_forget PasteFromClipboardAsync(_In_ bool atMenuPoint);
 
         void OnGroupClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnLockClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnGroupMenuClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnUngroupMenuClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnGroupAccelerator(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
         void OnUngroupAccelerator(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
         void ApplyGrouping(_In_ bool group);
 
+        // A control or a whole group is renamed in the inspector heading. F2 and Rename in either
+        // menu put the cursor there.
+        bool CanRename();
+        void BeginRename();
+        void OnRenameMenuClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnRenameAccelerator(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
+
         // ---- palette and outline ----
 
         void OnPaletteSearchChanged(controls::AutoSuggestBox const& sender, controls::AutoSuggestBoxTextChangedEventArgs const& args);
         void OnAddToPageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnOutlineSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnOutlineContextRequested(_In_ xaml::UIElement const& sender, _In_ xaml::Input::ContextRequestedEventArgs const& args);
+        void OnOutlineMenuOpening(_In_ foundation::IInspectable const& sender, _In_ foundation::IInspectable const& args);
         void OnOutlineMoveUp(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnOutlineMoveDown(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
@@ -158,17 +168,30 @@ namespace winrt::midiglass::implementation
         void OnCanvasPointerMoved(foundation::IInspectable const& sender, xaml::Input::PointerRoutedEventArgs const& args);
         void OnCanvasPointerReleased(foundation::IInspectable const& sender, xaml::Input::PointerRoutedEventArgs const& args);
         void OnCanvasPointerCaptureLost(foundation::IInspectable const& sender, xaml::Input::PointerRoutedEventArgs const& args);
+        void OnCanvasPreviewKeyDown(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::KeyRoutedEventArgs const& args);
 
         // Typing a label straight onto the canvas, over where it is drawn.
         bool IsSecondClick(_In_ winrt::Microsoft::UI::Input::PointerPoint const& point);
         bool TryBeginLabelEditAt(_In_ double pageX, _In_ double pageY);
         void BeginLabelEdit(_In_ std::wstring const& id, _In_ glass::EditRect const& rect);
         void EndLabelEdit(_In_ bool keep);
+
+        // The gaps between three or more selected blocks, under the row or beside the column, the
+        // same size on screen at any zoom. Clicking one opens a box to type a gap for all of them.
+        void UpdateSpacingPills();
+        void BeginGapEdit(_In_ glass::ArrangeAxis axis, _In_ double gap, _In_ double pageX, _In_ double pageY);
+        void EndGapEdit(_In_ bool apply);
         void OnSelectOffPageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnAddPageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnZoomInClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnZoomOutClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnZoomFitClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        // The zoom figure, which a double click turns into a box to type a zoom into.
+        void OnZoomPercentDoubleTapped(foundation::IInspectable const& sender, xaml::Input::DoubleTappedRoutedEventArgs const& args);
+        void OnZoomPercentKeyDown(foundation::IInspectable const& sender, xaml::Input::KeyRoutedEventArgs const& args);
+        void OnZoomPercentBoxKeyDown(foundation::IInspectable const& sender, xaml::Input::KeyRoutedEventArgs const& args);
+        void OnZoomPercentBoxLostFocus(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         // ---- panes (EditorPanes.cpp) ----
 
@@ -207,7 +230,12 @@ namespace winrt::midiglass::implementation
         void OnRemoveMessageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnMessageFieldChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnMessageNumberChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnMessageValueChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
         void OnMessageParameterChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+
+        // Several controls picked: where all of them send, and where the ones that listen do.
+        void OnManySendChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnManyListenChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
 
         void OnSysExChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSysExFromFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -215,11 +243,14 @@ namespace winrt::midiglass::implementation
         void OnSequenceChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnNewSequenceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnEditSequenceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnDeleteSequenceClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnTargetPageChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
         void OnSendOnStartToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnReturnsToDefaultToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnLightsFromCenterToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnDefaultValueChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+        void OnDefaultValueYChanged(_In_ foundation::IInspectable const& sender, _In_ controls::Primitives::RangeBaseValueChangedEventArgs const& args);
         void OnStartsOnToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSendIntervalChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnPickupChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
@@ -379,6 +410,8 @@ namespace winrt::midiglass::implementation
 
         void ApplyCanvasScale();
         void StepZoom(_In_ double factor);
+        void BeginZoomEdit();
+        void EndZoomEdit(_In_ bool apply);
 
         // True when the work area moved or resized, which means the grid and the overlay are
         // drawn against the wrong origin until they are redrawn.
@@ -464,9 +497,23 @@ namespace winrt::midiglass::implementation
         void RefreshMessageKindFields(_In_ glass::ControlMessage const& message);
         void RefreshSequenceChoices(_In_ std::wstring const& selectedName);
 
+        // The What list for a row, which depends on what its device speaks: every message, only
+        // the MIDI 1.0 ones, or Mackie Control functions for this kind of control.
+        void RefreshWhatChoices(_In_ glass::Control const& control, _In_ glass::ControlMessage const& message);
+
+        // The value fields: which end of the range each edits, what they are called, and the
+        // units, all from the row's kind, when it is sent, and its device's protocol.
+        void RefreshValueFields(_In_ glass::Control const& control, _In_ glass::ControlMessage const& message);
+
         // The groups the chosen device actually declares, so a control cannot be pointed at one
         // that goes nowhere. m_groupChoices maps a combo index back to a group number.
         void RefreshGroupChoices(_In_ std::wstring const& deviceName, _In_ int32_t selectedGroup);
+
+        // Which groups to offer for a device: the ones it declares, or all of them when it
+        // declares none, is not here, or the customer asked to see all of them.
+        std::array<bool, glass::MaximumGroupCount> OfferedGroups(
+            _In_ std::wstring const& deviceName,
+            _Out_ bool& declared) const;
 
         // Reads the selected message, hands it to the caller to change, and writes it back if
         // the caller says something changed. One path, so every payload field is saved the same
@@ -548,6 +595,9 @@ namespace winrt::midiglass::implementation
         void RefreshCommonProperties();
         void SetManyEditMode(_In_ bool many);
 
+        // The same for where they send and listen, on the Sends and Listens tabs.
+        void RefreshManyDestinations();
+
         // ---- saving ----
 
         void MarkChanged();
@@ -571,6 +621,9 @@ namespace winrt::midiglass::implementation
         // ---- the sequence editor (EditorSequenceDialog.cpp) ----
 
         winrt::fire_and_forget ShowSequenceDialog(_In_ std::wstring sequenceName);
+
+        // Asks first only when other controls play it too. Undo brings it back either way.
+        winrt::fire_and_forget DeleteSequenceWithConfirmation(_In_ std::wstring sequenceName);
 
         // ---- the label font dialog (EditorFontDialog.cpp) ----
 
@@ -715,6 +768,7 @@ namespace winrt::midiglass::implementation
         void AppendMonitorRow(_In_ glass::SentMessage const& message);
         void AppendMonitorItem(_In_ glass::SentMessage const& message);
         bool IsMonitoredControl(_In_ uint32_t controlIndex) const;
+        void FollowPlayedControl(_In_ size_t itemIndex);
         winrt::com_ptr<MonitorItem> MakeMonitorItem(_In_ glass::SentMessage const& message) const;
         void RebuildMonitorList();
         void UpdateMonitorEmptyText();
@@ -748,6 +802,9 @@ namespace winrt::midiglass::implementation
         // would throw away the zoom somebody just chose.
         bool m_zoomIsFit{ true };
 
+        // Set while the zoom figure is a box being typed into.
+        bool m_editingZoom{ false };
+
         // ---- drag state ----
 
         enum class DragMode
@@ -775,6 +832,12 @@ namespace winrt::midiglass::implementation
         // The box a label is being typed into on the canvas, and whose label it is.
         controls::TextBox m_labelEditor{ nullptr };
         std::wstring m_labelEditId{};
+
+        // The box a gap is being typed into, and the controls it spaces: the ones selected when
+        // it opened, because a click elsewhere can change the selection before it closes.
+        controls::TextBox m_gapEditor{ nullptr };
+        std::vector<std::wstring> m_gapEditIds{};
+        glass::ArrangeAxis m_gapEditAxis{ glass::ArrangeAxis::Horizontal };
 
         // One row per step in the sequencer panel. Kept so an edit can update the numbers in
         // place: rebuilding the rows under a spin button takes the keyboard away mid-change.
@@ -822,6 +885,19 @@ namespace winrt::midiglass::implementation
 
         std::vector<int32_t> m_groupChoices{};
         bool m_showAllGroups{ false };
+
+        // What each entry of the What list stands for: a message kind, and for a Mackie Control
+        // function, which one. A heading is a function of MackieNoFunction.
+        std::vector<std::pair<glass::MessageKind, uint32_t>> m_whatChoices{};
+        std::wstring m_whatListKey{};
+
+        // Which end of the range each value field edits. True is the maximum.
+        bool m_valueEditsMaximum{ true };
+        bool m_secondValueEditsMaximum{ false };
+
+        // Combo index to group, and to device name, for the panels that edit several controls.
+        std::vector<int32_t> m_manySendGroupChoices{};
+        std::vector<std::wstring> m_manyListenDeviceNames{};
 
         // The ids clicked so far while the keyboard order mode is up, in click order.
         bool m_keyboardOrderMode{ false };
@@ -1000,6 +1076,10 @@ namespace winrt::midiglass::implementation
         bool m_monitorPaused{ false };
         bool m_monitorSelectedOnly{ true };
         bool m_monitorExpanded{ true };
+
+        // Playing a control in Try mode does not select it, so there the filter follows the control
+        // last pressed. -1 until one is.
+        int32_t m_monitorPlayedControl{ -1 };
 
         // What the rail goes back to when it is opened again. The comp's rail is 104 px.
         double m_monitorHeight{ 104.0 };

@@ -13,6 +13,8 @@
 
 #include "StringResources.h"
 #include "ControlFactory.h"
+#include "FontCatalog.h"
+#include "MackieControl.h"
 #include "SurfaceColors.h"
 #include "HexText.h"
 
@@ -31,7 +33,6 @@ namespace winrt::midiglass::implementation
         constexpr glass::ControlKind KindOrder[]
         {
             glass::ControlKind::Knob,
-            glass::ControlKind::Encoder,
             glass::ControlKind::Turntable,
             glass::ControlKind::Fader,
             glass::ControlKind::Wheel,
@@ -61,7 +62,7 @@ namespace winrt::midiglass::implementation
 
         constexpr wchar_t const* KindResourceKeys[]
         {
-            L"PaletteKnob", L"PaletteEncoder", L"PaletteTurntable", L"PaletteFader", L"PaletteWheel", L"PalettePad", L"PaletteButton",
+            L"PaletteKnob", L"PaletteTurntable", L"PaletteFader", L"PaletteWheel", L"PalettePad", L"PaletteButton",
             L"PaletteToggle", L"PaletteSwitch", L"PaletteXYPad", L"PaletteJoystick", L"PaletteRibbon",
             L"PaletteKeyboard", L"PaletteNotePads", L"PaletteHexPads", L"PaletteBeatClock",
             L"PaletteLfo",
@@ -121,6 +122,7 @@ namespace winrt::midiglass::implementation
             glass::LabelPlacementOverride::Above,
             glass::LabelPlacementOverride::Below,
             glass::LabelPlacementOverride::InsideTop,
+            glass::LabelPlacementOverride::InsideTopLeft,
             glass::LabelPlacementOverride::InsideCenter,
             glass::LabelPlacementOverride::InsideBottom,
             glass::LabelPlacementOverride::VerticalLeft,
@@ -132,7 +134,7 @@ namespace winrt::midiglass::implementation
         constexpr wchar_t const* LabelPlacedResourceKeys[]
         {
             L"LabelPlacedTheme", L"LabelPlacedAbove", L"LabelPlacedBelow",
-            L"LabelPlacedInsideTop", L"LabelPlacedInsideCenter", L"LabelPlacedInsideBottom",
+            L"LabelPlacedInsideTop", L"LabelPlacedInsideTopLeft", L"LabelPlacedInsideCenter", L"LabelPlacedInsideBottom",
             L"LabelPlacedVerticalLeft", L"LabelPlacedVerticalRight",
             L"LabelPlacedCustom", L"LabelPlacedNone",
         };
@@ -183,7 +185,12 @@ namespace winrt::midiglass::implementation
         {
             std::vector<std::wstring> parts{};
 
-            if (!style.FontFamily.empty()) { parts.push_back(style.FontFamily); }
+            if (!style.FontFamily.empty())
+            {
+                parts.push_back(::midiglass::fonts::IsInstalled(style.FontFamily)
+                    ? style.FontFamily
+                    : std::wstring{ resources::FormatString(L"FontMissingFormat", style.FontFamily) });
+            }
             if (style.FontSize > 0.0) { parts.push_back(std::to_wstring(static_cast<int32_t>(style.FontSize)) + L" px"); }
             if (style.FontWeight > 0) { parts.push_back(std::to_wstring(style.FontWeight)); }
             if (style.Italic) { parts.push_back(std::wstring{ resources::GetString(L"FontItalic") }); }
@@ -218,6 +225,16 @@ namespace winrt::midiglass::implementation
             return std::to_wstring(static_cast<int32_t>(std::lround(value)));
         }
 
+        // Text, a picture and a frame are not driven by anything, and nothing about them changes
+        // over time either, so they have nothing to listen for and no behavior to set.
+        bool IsPassive(_In_ glass::ControlKind kind) noexcept
+        {
+            return kind == glass::ControlKind::Label ||
+                kind == glass::ControlKind::Image ||
+                kind == glass::ControlKind::Panel ||
+                kind == glass::ControlKind::Line;
+        }
+
         double ParseNumber(_In_ winrt::hstring const& text, _In_ double fallback) noexcept
         {
             try
@@ -231,6 +248,30 @@ namespace winrt::midiglass::implementation
             {
                 return fallback;
             }
+        }
+
+        winrt::hstring MackieFunctionName(_In_ uint32_t function)
+        {
+            auto const text = glass::DescribeMackieFunction(function);
+
+            if (text.ResourceKey == nullptr)
+            {
+                return resources::GetString(L"MessageRowPickFunction");
+            }
+
+            return text.Number > 0
+                ? resources::FormatString(text.ResourceKey, std::to_wstring(text.Number))
+                : resources::GetString(text.ResourceKey);
+        }
+
+        // A page change or a sequence goes nowhere, so its device, if it kept one, says nothing.
+        glass::DeviceProtocol RowProtocol(
+            _In_ glass::LayoutDocument const& document,
+            _In_ glass::ControlMessage const& message) noexcept
+        {
+            return glass::SendsToADevice(message.Kind)
+                ? document.ProtocolOf(message.DeviceName)
+                : glass::DeviceProtocol::Midi2;
         }
     }
 
@@ -260,17 +301,25 @@ namespace winrt::midiglass::implementation
                 TriggerCombo().Items().Append(box_value(resources::GetString(key)));
             }
 
-            for (auto const* const key : MessageKindResourceKeys)
-            {
-                KindMessageCombo().Items().Append(box_value(resources::GetString(key)));
-            }
-
             GroupCombo().Items().Append(box_value(resources::GetString(L"GroupAll")));
 
             for (int32_t channel = 1; channel <= 16; ++channel)
             {
-                ChannelCombo().Items().Append(box_value(
-                    resources::FormatString(L"ChannelNumberFormat", std::to_wstring(channel))));
+                auto const name = resources::FormatString(L"ChannelNumberFormat", std::to_wstring(channel));
+
+                ChannelCombo().Items().Append(box_value(name));
+                ManySendChannelCombo().Items().Append(box_value(name));
+                ManyListenChannelCombo().Items().Append(box_value(name));
+            }
+
+            // Listening takes any group, or one of all sixteen: what arrives is not limited to
+            // the groups a device declares for sending.
+            ManyListenGroupCombo().Items().Append(box_value(resources::GetString(L"GroupAny")));
+
+            for (int32_t group = 1; group <= glass::MaximumGroupCount; ++group)
+            {
+                ManyListenGroupCombo().Items().Append(box_value(
+                    resources::FormatString(L"GroupNumberFormat", std::to_wstring(group))));
             }
 
             for (auto const* const key : { L"PickupJump", L"PickupCatch", L"PickupRelative" })
@@ -431,6 +480,14 @@ namespace winrt::midiglass::implementation
         PreviewHeading().Visibility(shown);
         PreviewHost().Visibility(shown);
 
+        // One control's messages and what it listens for, or where several send and listen.
+        auto const several = many ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
+
+        MidiPanel().Visibility(shown);
+        ManySendPanel().Visibility(several);
+        MidiInPanel().Visibility(shown);
+        ManyListenPanel().Visibility(several);
+
         if (many)
         {
             TicksPanel().Visibility(xaml::Visibility::Collapsed);
@@ -475,6 +532,11 @@ namespace winrt::midiglass::implementation
         BoundsY().Text(winrt::hstring{ FormatNumber(bounds.Y) });
         BoundsWidth().Text(winrt::hstring{ FormatNumber(bounds.Width) });
         BoundsHeight().Text(winrt::hstring{ FormatNumber(bounds.Height) });
+
+        for (auto const& box : { BoundsX(), BoundsY(), BoundsWidth(), BoundsHeight() })
+        {
+            box.IsEnabled(!m_editor.SelectionHasLocked());
+        }
 
         LabelBox().Text(L"");
         KindCombo().SelectedIndex(-1);
@@ -529,6 +591,265 @@ namespace winrt::midiglass::implementation
         LabelFontCaption().Text(sameFont
             ? winrt::hstring{ DescribeLabelFont(first.LabelLook) }
             : resources::GetString(L"InspectorMixedFonts"));
+    }
+
+    // Where several selected controls send, and where the ones that listen do. A box they
+    // disagree on is blank, and picking a value for it sets it on all of them.
+    void EditorWindow::RefreshManyDestinations()
+    {
+        try
+        {
+            auto const previous = m_updatingInspector;
+            m_updatingInspector = true;
+
+            auto const show = [](xaml::UIElement const& element, bool visible)
+                {
+                    element.Visibility(visible ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+                };
+
+            auto const targets = EditTargets();
+            auto const& devices = m_editor.Document().Devices;
+
+            // ---- where they send ----
+
+            auto const send = m_editor.SharedSendDestination(targets);
+
+            ManySendCaption().Text(send.DeviceRows == 1
+                ? resources::GetString(L"ManySendCaptionOne")
+                : resources::FormatString(L"ManySendCaptionFormat", std::to_wstring(send.DeviceRows)));
+
+            ManySendDeviceCombo().Items().Clear();
+
+            auto sendDevice = -1;
+
+            for (size_t index = 0; index < devices.size(); ++index)
+            {
+                ManySendDeviceCombo().Items().Append(box_value(winrt::hstring{ devices[index].Name }));
+
+                if (send.Fields.DeviceName == devices[index].Name)
+                {
+                    sendDevice = static_cast<int32_t>(index);
+                }
+            }
+
+            ManySendDeviceCombo().SelectedIndex(sendDevice);
+
+            // The groups the one device they share declares, the same way a single message
+            // offers them. While they go to different devices, every group is offered.
+            auto declared = false;
+            auto const offered = OfferedGroups(send.Fields.DeviceName.value_or(std::wstring{}), declared);
+            auto const sendGroup = send.Fields.GroupIndex;
+
+            ManySendGroupCombo().Items().Clear();
+            m_manySendGroupChoices.clear();
+
+            ManySendGroupCombo().Items().Append(box_value(resources::GetString(L"GroupAll")));
+            m_manySendGroupChoices.push_back(glass::AllGroups);
+
+            auto sendGroupIndex = sendGroup == glass::AllGroups ? 0 : -1;
+
+            for (int32_t group = 0; group < glass::MaximumGroupCount; ++group)
+            {
+                if (!offered[static_cast<size_t>(group)] && sendGroup != group)
+                {
+                    continue;
+                }
+
+                ManySendGroupCombo().Items().Append(box_value(
+                    resources::FormatString(L"GroupNumberFormat", std::to_wstring(group + 1))));
+
+                m_manySendGroupChoices.push_back(group);
+
+                if (sendGroup == group)
+                {
+                    sendGroupIndex = static_cast<int32_t>(m_manySendGroupChoices.size()) - 1;
+                }
+            }
+
+            ManySendGroupCombo().SelectedIndex(sendGroupIndex);
+
+            ManySendChannelCombo().SelectedIndex(send.Fields.ChannelIndex.has_value()
+                ? std::clamp(*send.Fields.ChannelIndex, 0, 15)
+                : -1);
+
+            show(ManySendChannelLabel(), send.ChannelRows > 0);
+            show(ManySendChannelCombo(), send.ChannelRows > 0);
+
+            // ---- where they listen ----
+
+            auto const listen = m_editor.SharedListenDestination(targets);
+
+            ManyListenCaption().Text(listen.DeviceRows == 0
+                ? resources::GetString(L"ManyListenNothing")
+                : listen.DeviceRows == 1
+                    ? resources::GetString(L"ManyListenCaptionOne")
+                    : resources::FormatString(L"ManyListenCaptionFormat", std::to_wstring(listen.DeviceRows)));
+
+            show(ManyListenFields(), listen.DeviceRows > 0);
+
+            ManyListenDeviceCombo().Items().Clear();
+            m_manyListenDeviceNames.clear();
+
+            ManyListenDeviceCombo().Items().Append(box_value(resources::GetString(L"FeedbackAnyDevice")));
+            m_manyListenDeviceNames.push_back({});
+
+            auto listenDevice = listen.Fields.DeviceName == std::wstring{} ? 0 : -1;
+
+            for (auto const& device : devices)
+            {
+                if (listen.Fields.DeviceName == device.Name)
+                {
+                    listenDevice = static_cast<int32_t>(m_manyListenDeviceNames.size());
+                }
+
+                ManyListenDeviceCombo().Items().Append(box_value(winrt::hstring{ device.Name }));
+                m_manyListenDeviceNames.push_back(device.Name);
+            }
+
+            ManyListenDeviceCombo().SelectedIndex(listenDevice);
+
+            auto const listenGroup = listen.Fields.GroupIndex;
+
+            ManyListenGroupCombo().SelectedIndex(!listenGroup.has_value()
+                ? -1
+                : *listenGroup == glass::AllGroups
+                    ? 0
+                    : std::clamp(*listenGroup, 0, glass::MaximumGroupCount - 1) + 1);
+
+            ManyListenChannelCombo().SelectedIndex(listen.Fields.ChannelIndex.has_value()
+                ? std::clamp(*listen.Fields.ChannelIndex, 0, 15)
+                : -1);
+
+            show(ManyListenChannelLabel(), listen.ChannelRows > 0);
+            show(ManyListenChannelCombo(), listen.ChannelRows > 0);
+
+            m_updatingInspector = previous;
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to show where the selected controls send and listen.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnManySendChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const combo = sender.try_as<controls::ComboBox>();
+
+            if (combo == nullptr || combo.SelectedIndex() < 0)
+            {
+                return;
+            }
+
+            auto const index = static_cast<size_t>(combo.SelectedIndex());
+
+            glass::DestinationFields change{};
+
+            if (combo == ManySendDeviceCombo())
+            {
+                auto const& devices = m_editor.Document().Devices;
+
+                if (index >= devices.size())
+                {
+                    return;
+                }
+
+                change.DeviceName = devices[index].Name;
+            }
+            else if (combo == ManySendGroupCombo())
+            {
+                if (index >= m_manySendGroupChoices.size())
+                {
+                    return;
+                }
+
+                change.GroupIndex = m_manySendGroupChoices[index];
+            }
+            else if (combo == ManySendChannelCombo())
+            {
+                change.ChannelIndex = static_cast<int32_t>(index);
+            }
+            else
+            {
+                return;
+            }
+
+            if (m_editor.SetSendDestination(EditTargets(), change))
+            {
+                MarkChanged();
+            }
+
+            // The groups on offer follow the device, so the panel is filled in again either way.
+            RefreshManyDestinations();
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to change where the selected controls send.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnManyListenChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const combo = sender.try_as<controls::ComboBox>();
+
+            if (combo == nullptr || combo.SelectedIndex() < 0)
+            {
+                return;
+            }
+
+            auto const index = static_cast<size_t>(combo.SelectedIndex());
+
+            glass::DestinationFields change{};
+
+            if (combo == ManyListenDeviceCombo())
+            {
+                if (index >= m_manyListenDeviceNames.size())
+                {
+                    return;
+                }
+
+                change.DeviceName = m_manyListenDeviceNames[index];
+            }
+            else if (combo == ManyListenGroupCombo())
+            {
+                // The first entry is "any group", which the model writes as -1.
+                change.GroupIndex = index == 0 ? glass::AllGroups : static_cast<int32_t>(index) - 1;
+            }
+            else if (combo == ManyListenChannelCombo())
+            {
+                change.ChannelIndex = static_cast<int32_t>(index);
+            }
+            else
+            {
+                return;
+            }
+
+            if (m_editor.SetListenDestination(EditTargets(), change))
+            {
+                RebuildSurface();
+                MarkChanged();
+            }
+
+            RefreshManyDestinations();
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to change where the selected controls listen.")
     }
 
     // The position and size boxes and nothing else, for the pointer-move path.
@@ -605,13 +926,35 @@ namespace winrt::midiglass::implementation
 
             if (control == nullptr)
             {
-                InspectorKindText().Text(resources::GetString(L"InspectorManySelected"));
-                InspectorTitleText().Text(
-                    resources::FormatString(L"EditorSelectedFormat", std::to_wstring(selectedCount)));
-                InspectorTitleText().PlaceholderText(L"");
+                auto const groupId = m_editor.SelectedGroupId();
 
-                // "11 selected" is a count, not a name. Nothing to rename, so nothing to type in.
-                InspectorTitleText().IsReadOnly(true);
+                if (!groupId.empty())
+                {
+                    // A whole group is what one click on the canvas picks, and it has a name of
+                    // its own, typed into the heading the way a control's is.
+                    InspectorKindText().Text(
+                        resources::FormatString(L"InspectorGroupSelectedFormat", std::to_wstring(selectedCount)));
+                    InspectorTitleText().Text(winrt::hstring{ m_editor.GroupName(groupId) });
+                    InspectorTitleText().PlaceholderText(
+                        resources::FormatString(L"OutlineGroupFormat", std::to_wstring(m_editor.GroupNumber(groupId))));
+                    InspectorTitleText().IsReadOnly(false);
+
+                    xaml::Automation::AutomationProperties::SetName(
+                        InspectorTitleText(), resources::GetString(L"InspectorTitleGroupAccessibleName"));
+                }
+                else
+                {
+                    InspectorKindText().Text(resources::GetString(L"InspectorManySelected"));
+                    InspectorTitleText().Text(
+                        resources::FormatString(L"EditorSelectedFormat", std::to_wstring(selectedCount)));
+                    InspectorTitleText().PlaceholderText(L"");
+
+                    // "11 selected" is a count, not a name. Nothing to rename, so nothing to type in.
+                    InspectorTitleText().IsReadOnly(true);
+
+                    xaml::Automation::AutomationProperties::SetName(
+                        InspectorTitleText(), resources::GetString(L"InspectorTitleControlAccessibleName"));
+                }
 
                 m_preview.Teardown();
 
@@ -624,14 +967,29 @@ namespace winrt::midiglass::implementation
 
                 if (many)
                 {
-                    LookPane().IsEnabled(true);
+                    // What several share: how they look, and where they send and listen. The
+                    // rest belongs to one control at a time.
+                    auto const selected = m_editor.SelectedControls();
 
-                    if (m_inspectorTab != 0)
+                    auto const listens = std::any_of(selected.begin(), selected.end(),
+                        [](glass::Control const* candidate) { return !IsPassive(candidate->Kind); });
+
+                    MidiTab().IsEnabled(m_editor.SharedSendDestination(EditTargets()).DeviceRows > 0);
+                    MidiInTab().IsEnabled(listens);
+
+                    LookPane().IsEnabled(true);
+                    MidiPane().IsEnabled(true);
+                    MidiInPane().IsEnabled(true);
+
+                    if (m_inspectorTab == 3 ||
+                        (m_inspectorTab == 1 && !MidiTab().IsEnabled()) ||
+                        (m_inspectorTab == 2 && !MidiInTab().IsEnabled()))
                     {
                         SelectInspectorTab(0);
                     }
 
                     RefreshCommonProperties();
+                    RefreshManyDestinations();
 
                     m_updatingInspector = previous;
                     return;
@@ -668,10 +1026,19 @@ namespace winrt::midiglass::implementation
 
             InspectorTitleText().IsReadOnly(false);
 
+            xaml::Automation::AutomationProperties::SetName(
+                InspectorTitleText(), resources::GetString(L"InspectorTitleControlAccessibleName"));
+
             BoundsX().Text(winrt::hstring{ FormatNumber(control->X) });
             BoundsY().Text(winrt::hstring{ FormatNumber(control->Y) });
             BoundsWidth().Text(winrt::hstring{ FormatNumber(control->Width) });
             BoundsHeight().Text(winrt::hstring{ FormatNumber(control->Height) });
+
+            // A locked control keeps its place, so its numbers are shown and not taken.
+            for (auto const& box : { BoundsX(), BoundsY(), BoundsWidth(), BoundsHeight() })
+            {
+                box.IsEnabled(!control->Locked);
+            }
 
             AspectLockToggle().IsChecked(control->AspectLocked);
 
@@ -707,7 +1074,13 @@ namespace winrt::midiglass::implementation
 
             SendOnStartSwitch().IsOn(control->SendsValueOnStart);
             DefaultValueSlider().Value(control->DefaultValue * 100.0);
+            DefaultValueYSlider().Value(control->DefaultValueY * 100.0);
             ReturnsToDefaultSwitch().IsOn(control->ReturnsToDefault);
+            LightsFromCenterSwitch().IsOn(control->LightsFromCenter);
+            LightsFromCenterPanel().Visibility(
+                control->Kind == glass::ControlKind::Knob || control->Kind == glass::ControlKind::Fader
+                    ? xaml::Visibility::Visible
+                    : xaml::Visibility::Collapsed);
             SendIntervalBox().Value(control->SendIntervalMilliseconds);
             KeyboardOrderBox().Value(control->KeyboardOrder);
 
@@ -718,11 +1091,7 @@ namespace winrt::midiglass::implementation
 
             // The mirror of that: text, a picture and a frame are not driven by anything, and
             // nothing about them changes over time either.
-            auto const passive =
-                control->Kind == glass::ControlKind::Label ||
-                control->Kind == glass::ControlKind::Image ||
-                control->Kind == glass::ControlKind::Panel ||
-                control->Kind == glass::ControlKind::Line;
+            auto const passive = IsPassive(control->Kind);
 
             MidiInTab().IsEnabled(!passive);
             BehaviorTab().IsEnabled(!passive);
@@ -780,6 +1149,31 @@ namespace winrt::midiglass::implementation
                     message.DeviceName.empty()
                         ? std::wstring{ resources::GetString(L"MessageNoDevice") }
                         : message.DeviceName);
+
+                // A page change has no number and no device, so its row names the page instead.
+                if (message.Kind == glass::MessageKind::GoToPage)
+                {
+                    auto const* const page = m_editor.Document().FindPage(message.TargetPageId);
+
+                    text = resources::FormatString(
+                        L"MessageRowPageFormat",
+                        resources::GetString(TriggerResourceKeys[IndexOf(TriggerOrder, message.Trigger)]),
+                        page == nullptr
+                            ? std::wstring{ resources::GetString(L"StepNoPage") }
+                            : page->Name);
+                }
+
+                // A Mackie Control row is its function, and a row that has none yet says so.
+                if (message.Kind == glass::MessageKind::MackieControl ||
+                    RowProtocol(m_editor.Document(), message) == glass::DeviceProtocol::MackieControl)
+                {
+                    text = resources::FormatString(
+                        L"MessageRowMackieFormat",
+                        message.Kind == glass::MessageKind::MackieControl
+                            ? MackieFunctionName(message.Number)
+                            : resources::GetString(L"MessageRowPickFunction"),
+                        message.DeviceName);
+                }
 
                 // Every row of a switch otherwise reads the same. The position is the difference.
                 if (control->Kind == glass::ControlKind::Switch && message.Position >= 0)
@@ -853,6 +1247,8 @@ namespace winrt::midiglass::implementation
             GroupCombo().IsEnabled(valid);
             ChannelCombo().IsEnabled(valid);
             MessageNumberBox().IsEnabled(valid);
+            MessageValueBox().IsEnabled(valid);
+            MessageSecondValueBox().IsEnabled(valid);
 
             if (!valid)
             {
@@ -861,6 +1257,7 @@ namespace winrt::midiglass::implementation
                 RawWordsPanel().Visibility(xaml::Visibility::Collapsed);
                 SequencePanel().Visibility(xaml::Visibility::Collapsed);
                 TargetPagePanel().Visibility(xaml::Visibility::Collapsed);
+                MessageProtocolText().Visibility(xaml::Visibility::Collapsed);
 
                 m_updatingInspector = previous;
                 return;
@@ -894,7 +1291,7 @@ namespace winrt::midiglass::implementation
             }
 
             TriggerCombo().SelectedIndex(IndexOf(TriggerOrder, message.Trigger));
-            KindMessageCombo().SelectedIndex(IndexOf(MessageKindOrder, message.Kind));
+            RefreshWhatChoices(*control, message);
 
             auto deviceIndex = -1;
 
@@ -917,27 +1314,22 @@ namespace winrt::midiglass::implementation
             ParameterBankBox().Value(glass::ControllerBank(message.Number));
             ParameterIndexBox().Value(glass::ControllerIndex(message.Number));
 
-            RefreshMessageKindFields(message);
+            RefreshMessageKindFields(*control);
 
             m_updatingInspector = previous;
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to refresh the message fields.")
     }
 
-    // The groups this message could sensibly go to. A device that declares four of them has
-    // twelve that go nowhere, and a control pointed at one of those is a control that silently
-    // does nothing. The group the message already uses is always offered, so opening a layout
-    // built against other hardware never quietly rewrites it.
     _Use_decl_annotations_
-    void EditorWindow::RefreshGroupChoices(std::wstring const& deviceName, int32_t selectedGroup)
+    std::array<bool, glass::MaximumGroupCount> EditorWindow::OfferedGroups(
+        std::wstring const& deviceName,
+        bool& declared) const
     {
-        auto const previous = m_updatingInspector;
-        m_updatingInspector = true;
-
         std::array<bool, glass::MaximumGroupCount> offered{};
         offered.fill(true);
 
-        auto declared = false;
+        declared = false;
 
         if (!m_showAllGroups)
         {
@@ -953,6 +1345,22 @@ namespace winrt::midiglass::implementation
                 }
             }
         }
+
+        return offered;
+    }
+
+    // The groups this message could sensibly go to. A device that declares four of them has
+    // twelve that go nowhere, and a control pointed at one of those is a control that silently
+    // does nothing. The group the message already uses is always offered, so opening a layout
+    // built against other hardware never quietly rewrites it.
+    _Use_decl_annotations_
+    void EditorWindow::RefreshGroupChoices(std::wstring const& deviceName, int32_t selectedGroup)
+    {
+        auto const previous = m_updatingInspector;
+        m_updatingInspector = true;
+
+        auto declared = false;
+        auto const offered = OfferedGroups(deviceName, declared);
 
         GroupCombo().Items().Clear();
         m_groupChoices.clear();
@@ -1022,7 +1430,46 @@ namespace winrt::midiglass::implementation
             return;
         }
 
-        RefreshMessageKindFields(control.Messages[static_cast<size_t>(m_messageIndex)]);
+        auto const& message = control.Messages[static_cast<size_t>(m_messageIndex)];
+
+        RefreshMessageKindFields(message);
+        RefreshValueFields(control, message);
+
+        auto const show = [](xaml::UIElement const& element, bool visible)
+            {
+                element.Visibility(visible ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            };
+
+        // A Mackie Control function decides its own message, so every field that would say what
+        // the message is goes away, and the caption says what the function does instead.
+        auto const mackie = RowProtocol(m_editor.Document(), message) == glass::DeviceProtocol::MackieControl;
+
+        show(MessageWhenLabel(), !mackie);
+        show(TriggerCombo(), !mackie);
+
+        if (mackie)
+        {
+            for (auto const& element : std::initializer_list<xaml::UIElement>{
+                MessageChannelLabel(), ChannelCombo(), MessageNumberLabel(), MessageNumberBox(),
+                MessageParameterLabel(), ParameterPanel(), DetentPanel(), SysExPanel(), RawWordsPanel(),
+                SequencePanel(), TargetPagePanel() })
+            {
+                show(element, false);
+            }
+
+            auto const picked = message.Kind == glass::MessageKind::MackieControl
+                ? glass::ShapeOfMackieFunction(message.Number)
+                : glass::MackieShape::None;
+
+            MessageProtocolText().Text(resources::GetString(
+                glass::MackiePickerFor(control.Kind).empty() ? L"MackieNothingForThisControl" :
+                picked == glass::MackieShape::Button ? L"MackieButtonCaption" :
+                picked == glass::MackieShape::Fader ? L"MackieFaderCaption" :
+                picked == glass::MackieShape::Encoder ? L"MackieEncoderCaption" :
+                L"MackiePickCaption"));
+
+            show(MessageProtocolText(), true);
+        }
 
         // A clock generates its own stream. Its row is there so it knows where to send, and
         // asking somebody to type the words it will send would be a question with no answer.
@@ -1158,6 +1605,200 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
+    void EditorWindow::RefreshWhatChoices(glass::Control const& control, glass::ControlMessage const& message)
+    {
+        auto const protocol = RowProtocol(m_editor.Document(), message);
+
+        // MIDI 1.0 has no per-note controller, but a row that already is one keeps it on offer so
+        // the list still shows what it is.
+        auto const offersPerNote =
+            protocol != glass::DeviceProtocol::Midi1 || message.Kind == glass::MessageKind::PerNoteController;
+
+        auto const key = protocol == glass::DeviceProtocol::MackieControl
+            ? L"mackie:" + std::to_wstring(static_cast<int32_t>(control.Kind))
+            : std::wstring{ offersPerNote ? L"all" : L"midi1" };
+
+        if (key != m_whatListKey)
+        {
+            m_whatListKey = key;
+            m_whatChoices.clear();
+            KindMessageCombo().Items().Clear();
+
+            if (protocol == glass::DeviceProtocol::MackieControl)
+            {
+                for (auto const& entry : glass::MackiePickerFor(control.Kind))
+                {
+                    if (entry.HeadingKey != nullptr)
+                    {
+                        controls::ComboBoxItem heading{};
+                        heading.Content(box_value(resources::GetString(entry.HeadingKey)));
+                        heading.IsEnabled(false);
+
+                        KindMessageCombo().Items().Append(heading);
+                    }
+                    else
+                    {
+                        KindMessageCombo().Items().Append(box_value(MackieFunctionName(entry.Function)));
+                    }
+
+                    m_whatChoices.emplace_back(glass::MessageKind::MackieControl, entry.Function);
+                }
+
+                // What a button can do inside the layout does not depend on the device.
+                for (auto const kind : { glass::MessageKind::Sequence, glass::MessageKind::GoToPage })
+                {
+                    KindMessageCombo().Items().Append(box_value(
+                        resources::GetString(MessageKindResourceKeys[IndexOf(MessageKindOrder, kind)])));
+
+                    m_whatChoices.emplace_back(kind, 0u);
+                }
+            }
+            else
+            {
+                for (size_t index = 0; index < std::size(MessageKindOrder); ++index)
+                {
+                    if (MessageKindOrder[index] == glass::MessageKind::PerNoteController && !offersPerNote)
+                    {
+                        continue;
+                    }
+
+                    KindMessageCombo().Items().Append(box_value(resources::GetString(MessageKindResourceKeys[index])));
+                    m_whatChoices.emplace_back(MessageKindOrder[index], 0u);
+                }
+            }
+        }
+
+        auto selected = -1;
+
+        for (size_t index = 0; index < m_whatChoices.size(); ++index)
+        {
+            auto const& [kind, function] = m_whatChoices[index];
+
+            if (kind == message.Kind &&
+                (kind != glass::MessageKind::MackieControl ||
+                    (function == message.Number && function != glass::MackieNoFunction)))
+            {
+                selected = static_cast<int32_t>(index);
+                break;
+            }
+        }
+
+        KindMessageCombo().SelectedIndex(selected);
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::RefreshValueFields(glass::Control const& control, glass::ControlMessage const& message)
+    {
+        UNREFERENCED_PARAMETER(control);
+
+        auto const show = [](xaml::UIElement const& element, bool visible)
+            {
+                element.Visibility(visible ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            };
+
+        auto const kind = message.Kind;
+        auto const protocol = RowProtocol(m_editor.Document(), message);
+
+        auto const note = kind == glass::MessageKind::Note;
+
+        auto const ranged =
+            kind == glass::MessageKind::ControlChange ||
+            kind == glass::MessageKind::PitchBend ||
+            kind == glass::MessageKind::ChannelPressure ||
+            kind == glass::MessageKind::PerNoteController ||
+            kind == glass::MessageKind::RegisteredController ||
+            kind == glass::MessageKind::AssignedController;
+
+        if (protocol == glass::DeviceProtocol::MackieControl || (!note && !ranged))
+        {
+            for (auto const& element : std::initializer_list<xaml::UIElement>{
+                MessageValueLabel(), MessageValueBox(), MessageSecondValueLabel(), MessageSecondValueBox(),
+                MessageProtocolText() })
+            {
+                show(element, false);
+            }
+
+            return;
+        }
+
+        // A row sent when the control lands on something sends the top of its range, and one
+        // sent when it lets go sends the bottom. One that follows the control sends both.
+        auto const landsOn =
+            message.Position >= 0 ||
+            message.Trigger == glass::MessageTrigger::TurnsOn ||
+            message.Trigger == glass::MessageTrigger::Touched;
+
+        auto const letsGo =
+            message.Trigger == glass::MessageTrigger::TurnsOff ||
+            message.Trigger == glass::MessageTrigger::Released;
+
+        wchar_t const* firstKey{ nullptr };
+        wchar_t const* secondKey{ nullptr };
+
+        if (note)
+        {
+            firstKey = letsGo ? L"ValueReleaseVelocity" : L"ValueVelocity";
+            m_valueEditsMaximum = !letsGo;
+
+            if (!landsOn && !letsGo)
+            {
+                secondKey = L"ValueReleaseVelocity";
+                m_secondValueEditsMaximum = false;
+            }
+        }
+        else if (landsOn || letsGo)
+        {
+            firstKey = L"ValueValue";
+            m_valueEditsMaximum = landsOn;
+        }
+        else
+        {
+            firstKey = L"ValueFrom";
+            m_valueEditsMaximum = false;
+            secondKey = L"ValueTo";
+            m_secondValueEditsMaximum = true;
+        }
+
+        auto const raw = glass::RawValueMaximum(message, protocol);
+
+        auto const configure = [&](controls::TextBlock const& label, controls::NumberBox const& box, wchar_t const* labelKey, bool editsMaximum)
+            {
+                auto const name = resources::GetString(labelKey);
+
+                label.Text(raw > 0 ? name : resources::FormatString(L"ValuePercentLabelFormat", name));
+
+                // A MIDI 1.0 note on at velocity 0 is a note off, so a note plays at 1 or more.
+                auto const lowest = note && editsMaximum && raw > 0 ? 1 : 0;
+
+                box.Minimum(static_cast<double>(lowest));
+                box.Maximum(raw > 0 ? static_cast<double>(raw) : 100.0);
+                box.SmallChange(1.0);
+                box.LargeChange(raw > 127 ? 1024.0 : 10.0);
+                box.Value(glass::ShownValue(editsMaximum ? message.Maximum : message.Minimum, message, protocol));
+
+                xaml::Automation::AutomationProperties::SetName(box, raw > 0
+                    ? resources::FormatString(L"ValueRawNameFormat", name, std::to_wstring(lowest), std::to_wstring(raw))
+                    : resources::FormatString(L"ValuePercentNameFormat", name));
+            };
+
+        configure(MessageValueLabel(), MessageValueBox(), firstKey, m_valueEditsMaximum);
+
+        show(MessageValueLabel(), true);
+        show(MessageValueBox(), true);
+
+        if (secondKey != nullptr)
+        {
+            configure(MessageSecondValueLabel(), MessageSecondValueBox(), secondKey, m_secondValueEditsMaximum);
+        }
+
+        show(MessageSecondValueLabel(), secondKey != nullptr);
+        show(MessageSecondValueBox(), secondKey != nullptr);
+
+        MessageProtocolText().Text(resources::GetString(raw > 0 ? L"ValueUnitsMidi1" : L"ValueUnitsMidi2"));
+        show(MessageProtocolText(), true);
+    }
+
+    _Use_decl_annotations_
     void EditorWindow::RefreshSequenceChoices(std::wstring const& selectedName)
     {
         SequenceCombo().Items().Clear();
@@ -1181,6 +1822,7 @@ namespace winrt::midiglass::implementation
         auto const* const sequence = m_editor.Document().FindSequence(selectedName);
 
         EditSequenceButton().IsEnabled(sequence != nullptr);
+        DeleteSequenceButton().IsEnabled(sequence != nullptr);
 
         SequenceCaption().Text(sequence == nullptr
             ? resources::GetString(L"SequenceNoneChosen")
@@ -1284,10 +1926,20 @@ namespace winrt::midiglass::implementation
 
         auto const* const control = SingleSelectedControl();
 
-        // The heading is only shown for one control or for a count of several, and a count is
+        // Without one control, the heading names a whole group or counts several, and a count is
         // read only. A page is renamed from the page rail.
         if (control == nullptr)
         {
+            auto const groupId = m_editor.SelectedGroupId();
+
+            if (fromTitle &&
+                !groupId.empty() &&
+                m_editor.SetGroupName(groupId, std::wstring{ InspectorTitleText().Text() }))
+            {
+                RebuildOutline();
+                MarkChanged();
+            }
+
             return;
         }
 
@@ -1842,8 +2494,14 @@ namespace winrt::midiglass::implementation
             m_preview.Build(PreviewCanvas(), single, m_theme, 0);
             m_preview.SetValue(0, control.DefaultValue > 0.0 ? control.DefaultValue : 0.62);
 
+            // The wall and its texture under the control, the glass over it.
             glass::ApplyDeckOverlay(
-                PreviewCanvas(), m_theme, single.PageWidth, single.PageHeight, 1.0);
+                PreviewDeck(), m_theme, single.PageWidth, single.PageHeight, 1.0,
+                glass::DeckOverlayLayer::BeneathControls);
+
+            glass::ApplyDeckOverlay(
+                PreviewCanvas(), m_theme, single.PageWidth, single.PageHeight, 1.0,
+                glass::DeckOverlayLayer::AboveControls);
 
             if (auto const element = m_preview.ElementAt(0))
             {
@@ -1985,17 +2643,6 @@ namespace winrt::midiglass::implementation
                 message.Trigger = TriggerOrder[triggerIndex];
             }
 
-            if (kindIndex >= 0 && kindIndex < static_cast<int32_t>(std::size(MessageKindOrder)))
-            {
-                message.Kind = MessageKindOrder[kindIndex];
-
-                // An RPN or NRPN number goes up to 16383; every other kind stops at 127.
-                if (!glass::HasBankAndIndex(message.Kind))
-                {
-                    message.Number = (std::min)(message.Number, 127u);
-                }
-            }
-
             if (deviceIndex >= 0 && deviceIndex < static_cast<int32_t>(m_editor.Document().Devices.size()))
             {
                 message.DeviceName = m_editor.Document().Devices[static_cast<size_t>(deviceIndex)].Name;
@@ -2020,6 +2667,31 @@ namespace winrt::midiglass::implementation
                 if (positionIndex >= 0)
                 {
                     message.Position = positionIndex - 1;
+                }
+            }
+
+            if (kindIndex >= 0 && kindIndex < static_cast<int32_t>(m_whatChoices.size()))
+            {
+                auto const [kind, function] = m_whatChoices[static_cast<size_t>(kindIndex)];
+
+                if (kind != glass::MessageKind::MackieControl)
+                {
+                    message.Kind = kind;
+
+                    // An RPN or NRPN number goes up to 16383; every other kind stops at 127.
+                    if (!glass::HasBankAndIndex(message.Kind))
+                    {
+                        message.Number = (std::min)(message.Number, 127u);
+                    }
+                }
+                else if (function != glass::MackieNoFunction)
+                {
+                    // A function is the whole message, so it is sent whenever the control moves.
+                    message.Kind = kind;
+                    message.Number = function;
+                    message.Trigger = glass::MessageTrigger::Changes;
+                    message.ChannelIndex = 0;
+                    message.Position = -1;
                 }
             }
 
@@ -2074,6 +2746,54 @@ namespace winrt::midiglass::implementation
         if (m_editor.SetMessage(id, index, message))
         {
             RefreshMessageList();
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnMessageValueChanged(
+        controls::NumberBox const& sender,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr ||
+            m_messageIndex < 0 ||
+            m_messageIndex >= static_cast<int32_t>(control->Messages.size()))
+        {
+            return;
+        }
+
+        auto const shown = sender.Value();
+
+        if (!std::isfinite(shown))
+        {
+            return;
+        }
+
+        auto message = control->Messages[static_cast<size_t>(m_messageIndex)];
+
+        auto const editsMaximum = sender == MessageSecondValueBox()
+            ? m_secondValueEditsMaximum
+            : m_valueEditsMaximum;
+
+        auto const value = glass::ValueFromShown(shown, message, RowProtocol(m_editor.Document(), message));
+
+        (editsMaximum ? message.Maximum : message.Minimum) = value;
+
+        auto const id = control->Id;
+        auto const index = static_cast<size_t>(m_messageIndex);
+
+        // The list is left alone so the field keeps focus while somebody types or spins it.
+        if (m_editor.SetMessage(id, index, message))
+        {
             MarkChanged();
         }
     }
@@ -2174,6 +2894,30 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
+    void EditorWindow::OnLightsFromCenterToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control != nullptr &&
+            m_editor.SetControlLightsFromCenter(control->Id, LightsFromCenterSwitch().IsOn()))
+        {
+            // Turning it on can move the starting value to the middle, so the whole inspector
+            // is read again rather than only the switch.
+            RebuildSurface();
+            RefreshInspector();
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
     void EditorWindow::OnDefaultValueChanged(
         foundation::IInspectable const& sender,
         controls::Primitives::RangeBaseValueChangedEventArgs const& args)
@@ -2190,6 +2934,28 @@ namespace winrt::midiglass::implementation
 
         if (control != nullptr &&
             m_editor.SetControlDefaultValue(control->Id, DefaultValueSlider().Value() / 100.0))
+        {
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnDefaultValueYChanged(
+        foundation::IInspectable const& sender,
+        controls::Primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control != nullptr &&
+            m_editor.SetControlDefaultValueY(control->Id, DefaultValueYSlider().Value() / 100.0))
         {
             MarkChanged();
         }
@@ -2526,6 +3292,85 @@ namespace winrt::midiglass::implementation
         if (!name.empty())
         {
             ShowSequenceDialog(name);
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnDeleteSequenceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr ||
+            m_messageIndex < 0 ||
+            m_messageIndex >= static_cast<int32_t>(control->Messages.size()))
+        {
+            return;
+        }
+
+        auto const name = control->Messages[static_cast<size_t>(m_messageIndex)].SequenceName;
+
+        if (m_editor.Document().FindSequence(name) != nullptr)
+        {
+            DeleteSequenceWithConfirmation(name);
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget EditorWindow::DeleteSequenceWithConfirmation(std::wstring sequenceName)
+    {
+        auto strong = get_strong();
+        auto asked = false;
+
+        try
+        {
+            auto const users = m_editor.CountControlsUsingSequence(sequenceName);
+
+            if (users > 1)
+            {
+                if (m_openDialog != nullptr)
+                {
+                    co_return;
+                }
+
+                controls::TextBlock body{};
+                body.TextWrapping(xaml::TextWrapping::Wrap);
+                body.Width(360.0);
+                body.Text(resources::FormatString(
+                    L"DeleteSequenceInUseFormat", sequenceName, std::to_wstring(users)));
+
+                controls::ContentDialog dialog{};
+                dialog.XamlRoot(RootGrid().XamlRoot());
+                dialog.Title(box_value(resources::GetString(L"DeleteSequenceTitle")));
+                dialog.PrimaryButtonText(resources::GetString(L"DeleteSequenceAccept"));
+                dialog.CloseButtonText(resources::GetString(L"DialogCancel"));
+                dialog.DefaultButton(controls::ContentDialogButton::Close);
+                dialog.Content(body);
+
+                asked = true;
+                m_openDialog = dialog.ShowAsync();
+                auto const result = co_await m_openDialog;
+                m_openDialog = nullptr;
+
+                if (result != controls::ContentDialogResult::Primary)
+                {
+                    co_return;
+                }
+            }
+
+            if (m_editor.RemoveSequence(sequenceName))
+            {
+                RefreshInspector();
+                MarkChanged();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to delete the sequence.")
+
+        if (asked)
+        {
+            m_openDialog = nullptr;
         }
     }
 
