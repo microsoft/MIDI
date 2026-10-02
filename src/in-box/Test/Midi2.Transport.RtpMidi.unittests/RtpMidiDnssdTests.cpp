@@ -37,14 +37,15 @@ namespace
         struct Repeat
         {
             uint64_t Tick{ 0 };
+            GUID AdapterId{};
             std::vector<std::string> Records;
         };
 
         auto Sender()
         {
-            return [this](std::vector<std::vector<uint8_t>> const& packets)
+            return [this](std::vector<std::vector<uint8_t>> const& packets, GUID const& adapterId)
             {
-                Repeat repeat{ GetTickCount64(), {} };
+                Repeat repeat{ GetTickCount64(), adapterId, {} };
 
                 for (auto const& packet : packets)
                 {
@@ -102,6 +103,16 @@ void RtpMidiDnssdTests::TestHostNameForAddress()
 
     VERIFY_IS_TRUE(RtpMidiMdns::FindHostNameForAddress({ mac, stale }, At(L"192.168.1.183", 0)).empty(),
         L"none when two different hosts list the same address");
+
+    // the browser names the adapter a link-local address was seen on
+    MidiDnssdService scoped{};
+    scoped.HostName = L"Scoped-Mac.local";
+    scoped.IPv6Addresses = { L"fe80::cec:e610:74fd:7d8e%21" };
+
+    VERIFY_IS_TRUE(RtpMidiMdns::FindHostNameForAddress({ scoped }, At(L"fe80::cec:e610:74fd:7d8e", 21)) == L"Scoped-Mac.local",
+        L"a link-local address advertised with the same scope");
+    VERIFY_IS_TRUE(RtpMidiMdns::FindHostNameForAddress({ scoped }, At(L"fe80::cec:e610:74fd:7d8e", 27)).empty(),
+        L"none for the same link-local address on another adapter, which is another device");
 }
 
 void RtpMidiDnssdTests::TestAnnouncementPacket()
@@ -228,4 +239,28 @@ void RtpMidiDnssdTests::TestAnnouncerSendsNothingOnceStopped()
 
     Sleep(700);
     VERIFY_IS_TRUE(recorder.Repeats().empty(), L"nothing is sent once it has stopped");
+}
+
+void RtpMidiDnssdTests::TestAnnouncerSendsALimitedHostOnlyOnItsAdapter()
+{
+    // {6B29FC40-CA47-1067-B31D-00DD010662DA}
+    GUID const wired{ 0x6b29fc40, 0xca47, 0x1067, { 0xb3, 0x1d, 0x00, 0xdd, 0x01, 0x06, 0x62, 0xda } };
+
+    Recorder recorder;
+    MidiDnssdFollowUpAnnouncer announcer;
+    announcer.Start(ServiceType, nullptr, recorder.Sender(), 150, 450);
+
+    announcer.AddRegistration(L"Everywhere");
+    announcer.AddRegistration(L"Only Wired", wired);
+
+    VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]() { return recorder.Repeats().size() >= 4; }, 3000), L"two sends in each of the two repeats");
+
+    auto const repeats = recorder.Repeats();
+
+    VERIFY_IS_TRUE(IsEqualGUID(repeats[0].AdapterId, GUID_NULL) &&
+        repeats[0].Records == std::vector<std::string>{ "-> Everywhere._apple-midi._udp.local" },
+        L"the host on every adapter goes everywhere");
+    VERIFY_IS_TRUE(IsEqualGUID(repeats[1].AdapterId, wired) &&
+        repeats[1].Records == std::vector<std::string>{ "-> Only Wired._apple-midi._udp.local" },
+        L"the limited host only goes to its own adapter");
 }

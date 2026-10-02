@@ -56,7 +56,35 @@ private:
         std::shared_ptr<RtpMidiNode> Node;
         HRESULT LastError{ S_OK };
         uint64_t NextAttemptTick{ 0 };
+
+        // Where the running node is: one adapter, or GUID_NULL for every adapter, and whether
+        // that is because its own adapter is missing
+        GUID NetworkAdapterId{};
+        bool NetworkAdapterFallbackUsed{ false };
+
+        // Not running because its adapter is missing and it may not fall back
+        bool WaitingForNetworkAdapter{ false };
     };
+
+    // Where a host should run, given the adapters there are now
+    struct HostPlacement
+    {
+        GUID NetworkAdapterId{};
+        std::vector<uint32_t> Interfaces;
+        uint32_t InterfaceIndex{ 0 };
+        bool FallbackUsed{ false };
+        bool Wait{ false };
+    };
+
+    struct HostStart
+    {
+        RtpMidiHostDefinition Definition{};
+        HostPlacement Placement{};
+    };
+
+    static HostPlacement PlaceHost(
+        _In_ RtpMidiHostDefinition const& definition,
+        _In_ std::vector<WindowsMidiServicesInternal::MidiNetworkAdapterInfo> const& adapters);
 
     struct ClientRuntime
     {
@@ -135,6 +163,15 @@ private:
     // Repeats this PC's announcements, which the DNS client gets wrong. A host is withdrawn from
     // it before its registration is.
     WindowsMidiServicesInternal::MidiDnssdFollowUpAnnouncer m_announcer;
+
+    // Wakes the worker when an adapter gains or loses an address, so a host limited to one
+    // follows it. Read and cleared by the worker.
+    WindowsMidiServicesInternal::MidiNetworkChangeMonitor m_networkChangeMonitor;
+    std::atomic<bool> m_networkAdaptersChanged{ false };
+    uint64_t m_nextNetworkAdapterCheckTick{ 0 };
+
+    // Tells the notifications app when a host starts or stops waiting for its adapter
+    RtpMidiNotificationSignal m_notificationSignal;
 
     std::jthread m_worker;
 };

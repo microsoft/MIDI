@@ -51,6 +51,18 @@ namespace Windows.Devices.Midi2.Transports.Rtp
 
         [noexcept] Boolean SendRecoveryJournal{ get; };
 
+        // The network adapter the host is limited to, or an empty GUID for every adapter, and the
+        // name it had when it was chosen
+        [noexcept] Guid NetworkAdapterId{ get; };
+        [noexcept] String NetworkAdapterName{ get; };
+        [noexcept] Boolean AllowNetworkAdapterFallback{ get; };
+
+        // True when the host's adapter is missing. With HasStarted the host is running on every
+        // adapter until it is back, which UsedNetworkAdapterFallback also says. Without it the
+        // host is waiting for the adapter and starts by itself when it is back.
+        [noexcept] Boolean IsNetworkAdapterMissing{ get; };
+        [noexcept] Boolean UsedNetworkAdapterFallback{ get; };
+
         [noexcept] MidiRtpRemoteClientPolicy RemoteClientPolicy{ get; };
 
         // The decisions the service remembers for this host across a restart. Save these through

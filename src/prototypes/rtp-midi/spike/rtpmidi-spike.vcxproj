@@ -76,6 +76,8 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="spike_winrt.cpp" />
+    <!-- the DNS-SD browser follows network adapters as they come and go -->
+    <ClCompile Include="..\..\..\in-box\Inc\midi_network_adapters.cpp" />
     <ClCompile Include="spike_sdk_check.cpp" Condition="'$(RtpSdkCheck)'=='true'" />
     <ClCompile Include="spike_service.cpp" Condition="'$(RtpSdkCheck)'=='true'" />
   </ItemGroup>

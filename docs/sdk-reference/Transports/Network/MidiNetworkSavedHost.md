@@ -24,6 +24,9 @@ A Network MIDI 2.0 host saved in the configuration file. The service starts it e
 | `AllowPortFallback` | True when the host may start on another port if its own is taken |
 | `Advertise` | True when the host advertises itself on the network |
 | `RemoteClientPolicy` | What the host does when a remote client it hasn't decided about asks to connect |
+| `NetworkAdapterId` | The network adapter the host is limited to, or an empty GUID for every adapter. This includes any change saved later with `MidiNetworkHostUpdateConfig` |
+| `NetworkAdapterName` | That adapter's name, from when it was chosen |
+| `AllowNetworkAdapterFallback` | True when the host runs on every adapter while its own adapter is missing |
 | `KnownRemoteClients` | Every saved allow and deny decision, as [MidiNetworkKnownRemoteClient]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkKnownRemoteClient/) objects |
 
 ## Remarks

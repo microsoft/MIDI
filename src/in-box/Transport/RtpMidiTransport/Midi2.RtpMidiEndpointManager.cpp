@@ -15,7 +15,10 @@ namespace
             left.Port == right.Port &&
             left.AllowPortFallback == right.AllowPortFallback &&
             left.Advertise == right.Advertise &&
-            left.SendRecoveryJournal == right.SendRecoveryJournal;
+            left.SendRecoveryJournal == right.SendRecoveryJournal &&
+            IsEqualGUID(left.NetworkAdapterId, right.NetworkAdapterId) &&
+            left.NetworkAdapterPhysicalAddress == right.NetworkAdapterPhysicalAddress &&
+            left.AllowNetworkAdapterFallback == right.AllowNetworkAdapterFallback;
     }
 
     // The endpoint name and the reconnect choice apply without dropping the connection
@@ -188,6 +191,27 @@ CMidi2RtpMidiEndpointManager::Initialize(
         m_worker = std::jthread([this](std::stop_token stopToken) { WorkerLoop(stopToken); });
         SetThreadDescription(m_worker.native_handle(), L"rtpMIDI endpoint worker");
 
+        // A host limited to one adapter follows it as Wi-Fi is turned off, a USB adapter is
+        // unplugged, or an adapter comes up after the service started. Without the notification
+        // the worker still looks every so often, just later.
+        if (!m_networkChangeMonitor.Start(
+            [this]()
+            {
+                m_networkAdaptersChanged = true;
+                WakeWorker();
+            },
+            MIDI_RTP_NETWORK_ADAPTER_SETTLE_MS))
+        {
+            TraceLoggingWrite(
+                MidiRtpMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Unable to watch for network adapter changes. Hosts limited to an adapter will follow it more slowly.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+        }
+
         return S_OK;
     }
     CATCH_RETURN();
@@ -237,6 +261,9 @@ CMidi2RtpMidiEndpointManager::Shutdown()
         if (!m_initialized.exchange(false)) return S_OK;
 
         m_browser.Stop();
+
+        // before the worker it wakes
+        m_networkChangeMonitor.Stop();
 
         m_worker.request_stop();
         WakeWorker();
@@ -367,14 +394,80 @@ CMidi2RtpMidiEndpointManager::ProcessEndpointWork()
 
 
 _Use_decl_annotations_
+CMidi2RtpMidiEndpointManager::HostPlacement
+CMidi2RtpMidiEndpointManager::PlaceHost(
+    RtpMidiHostDefinition const& definition,
+    std::vector<WindowsMidiServicesInternal::MidiNetworkAdapterInfo> const& adapters)
+{
+    HostPlacement placement{};
+
+    if (!definition.IsLimitedToNetworkAdapter()) return placement;
+
+    WindowsMidiServicesInternal::MidiNetworkAdapterInfo found{};
+
+    if (WindowsMidiServicesInternal::TryFindUsableMidiNetworkAdapter(adapters, definition.NetworkAdapterId, definition.NetworkAdapterPhysicalAddress, found))
+    {
+        placement.NetworkAdapterId = found.Id;
+        placement.InterfaceIndex = found.InterfaceIndex();
+
+        if (found.IPv4InterfaceIndex != 0) placement.Interfaces.push_back(found.IPv4InterfaceIndex);
+        if (found.IPv6InterfaceIndex != 0 && found.IPv6InterfaceIndex != found.IPv4InterfaceIndex) placement.Interfaces.push_back(found.IPv6InterfaceIndex);
+    }
+    else if (definition.AllowNetworkAdapterFallback)
+    {
+        placement.FallbackUsed = true;
+    }
+    else
+    {
+        placement.Wait = true;
+    }
+
+    return placement;
+}
+
+
+_Use_decl_annotations_
 void
 CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
 {
     auto const definitions = TransportState::Current().GetHostDefinitions();
     auto const now = GetTickCount64();
 
+    // Adapters only matter to a host limited to one, so most machines never list them. One with
+    // such a host lists them after a change, while a host is away from its adapter, and now and
+    // then in case a change came and went unseen.
+    std::vector<WindowsMidiServicesInternal::MidiNetworkAdapterInfo> adapters{};
+    bool adaptersKnown{ false };
+
+    if (std::any_of(definitions.begin(), definitions.end(),
+        [](RtpMidiHostDefinition const& definition) { return definition.Enabled && definition.IsLimitedToNetworkAdapter(); }))
+    {
+        bool unsettled{ false };
+
+        {
+            auto lock = std::scoped_lock{ m_runtimeLock };
+
+            for (auto const& definition : definitions)
+            {
+                if (!definition.Enabled || !definition.IsLimitedToNetworkAdapter()) continue;
+
+                auto const it = m_hosts.find(definition.EntryId);
+
+                if (it == m_hosts.end() || it->second.Node == nullptr || it->second.NetworkAdapterFallbackUsed) unsettled = true;
+            }
+        }
+
+        if (m_networkAdaptersChanged.exchange(false) || unsettled || now >= m_nextNetworkAdapterCheckTick)
+        {
+            adapters = WindowsMidiServicesInternal::GetMidiNetworkAdapters();
+            adaptersKnown = true;
+            m_nextNetworkAdapterCheckTick = now + MIDI_RTP_NETWORK_ADAPTER_CHECK_INTERVAL_MS;
+        }
+    }
+
     std::vector<std::shared_ptr<RtpMidiNode>> toStop;
-    std::vector<RtpMidiHostDefinition> toStart;
+    std::vector<HostStart> toStart;
+    bool waitingChanged{ false };
 
     {
         auto lock = std::scoped_lock{ m_runtimeLock };
@@ -387,6 +480,8 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
             if (definition == definitions.end())
             {
                 if (it->second.Node != nullptr) toStop.push_back(std::move(it->second.Node));
+                if (it->second.WaitingForNetworkAdapter) waitingChanged = true;
+
                 it = m_hosts.erase(it);
                 continue;
             }
@@ -398,6 +493,34 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
                 it->second.NextAttemptTick = 0;
                 it->second.LastError = S_OK;
             }
+            else if (it->second.Node != nullptr && adaptersKnown && definition->IsLimitedToNetworkAdapter())
+            {
+                // its adapter went away or came back, or it came back as a new adapter
+                auto const placement = PlaceHost(*definition, adapters);
+
+                if (placement.Wait ||
+                    !IsEqualGUID(placement.NetworkAdapterId, it->second.NetworkAdapterId) ||
+                    placement.FallbackUsed != it->second.NetworkAdapterFallbackUsed)
+                {
+                    TraceLoggingWrite(
+                        MidiRtpMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"The host's network adapter changed. Restarting the host where it should be now.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(definition->Name.c_str(), "name"),
+                        TraceLoggingGuid(it->second.NetworkAdapterId, "running on"),
+                        TraceLoggingGuid(placement.NetworkAdapterId, "moving to"),
+                        TraceLoggingBool(placement.Wait, "waiting")
+                    );
+
+                    toStop.push_back(std::move(it->second.Node));
+                    it->second.Node = nullptr;
+                    it->second.NextAttemptTick = 0;
+                    it->second.LastError = S_OK;
+                }
+            }
 
             ++it;
         }
@@ -407,11 +530,43 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
             auto& runtime = m_hosts[definition.EntryId];
             runtime.Definition = definition;
 
-            if (!definition.Enabled || runtime.Node != nullptr || now < runtime.NextAttemptTick) continue;
+            if (!definition.Enabled || runtime.Node != nullptr)
+            {
+                if (runtime.WaitingForNetworkAdapter)
+                {
+                    runtime.WaitingForNetworkAdapter = false;
+                    waitingChanged = true;
+                }
+
+                continue;
+            }
+
+            // A limited host without a node always has a fresh list of adapters by now
+            auto const placement = definition.IsLimitedToNetworkAdapter() ? PlaceHost(definition, adapters) : HostPlacement{};
+
+            if (placement.Wait != runtime.WaitingForNetworkAdapter)
+            {
+                runtime.WaitingForNetworkAdapter = placement.Wait;
+                waitingChanged = true;
+            }
+
+            // It starts by itself once the adapter is back
+            if (placement.Wait)
+            {
+                runtime.LastError = HRESULT_FROM_WIN32(ERROR_DEV_NOT_EXIST);
+                continue;
+            }
+
+            if (now < runtime.NextAttemptTick) continue;
 
             runtime.NextAttemptTick = now + MIDI_RTP_CLIENT_RETRY_INTERVAL_MS;
-            toStart.push_back(definition);
+            toStart.push_back(HostStart{ definition, placement });
         }
+    }
+
+    if (waitingChanged)
+    {
+        m_notificationSignal.SignalHostNetworkAdapterChanged();
     }
 
     // withdrawn from the announcer first, so no repeat can follow the goodbye
@@ -423,8 +578,11 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
 
     toStop.clear();
 
-    for (auto const& definition : toStart)
+    for (auto const& start : toStart)
     {
+        auto const& definition = start.Definition;
+        auto const& placement = start.Placement;
+
         // a stopping service should not wait for hosts it is about to stop again
         if (stopToken.stop_requested()) break;
 
@@ -447,17 +605,17 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
             ranges.emplace_back(static_cast<uint16_t>(MIDI_RTP_SECONDARY_FALLBACK_FIRST_PORT), static_cast<uint16_t>(MIDI_RTP_SECONDARY_FALLBACK_LAST_PORT));
         }
 
-        auto const startHr = node->Start(preferredPort, ranges);
+        auto const startHr = node->Start(preferredPort, ranges, placement.Interfaces);
 
         // A host which cannot be advertised can still be reached by address, so it stays up
         HRESULT advertiseHr{ S_OK };
         if (SUCCEEDED(startHr) && definition.Advertise)
         {
-            advertiseHr = node->Advertise(definition.EffectiveServiceInstanceName(), stopToken);
+            advertiseHr = node->Advertise(definition.EffectiveServiceInstanceName(), stopToken, placement.InterfaceIndex);
             LOG_IF_FAILED(advertiseHr);
 
             // added even if the host is not kept below, because its registration still flushed the others
-            if (SUCCEEDED(advertiseHr)) m_announcer.AddRegistration(node->AdvertisedLabel());
+            if (SUCCEEDED(advertiseHr)) m_announcer.AddRegistration(node->AdvertisedLabel(), placement.NetworkAdapterId);
         }
 
         bool keep{ false };
@@ -475,6 +633,8 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
                 if (SUCCEEDED(startHr))
                 {
                     it->second.Node = node;
+                    it->second.NetworkAdapterId = placement.NetworkAdapterId;
+                    it->second.NetworkAdapterFallbackUsed = placement.FallbackUsed;
                     keep = true;
                 }
             }
@@ -490,6 +650,8 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
             TraceLoggingWideString(definition.Name.c_str(), "name"),
             TraceLoggingHResult(startHr, "start result"),
             TraceLoggingHResult(advertiseHr, "advertise result"),
+            TraceLoggingGuid(placement.NetworkAdapterId, "network adapter"),
+            TraceLoggingBool(placement.FallbackUsed, "network adapter fallback used"),
             TraceLoggingBool(keep, "kept")
         );
 
@@ -1383,13 +1545,24 @@ CMidi2RtpMidiEndpointManager::BuildHostsStatusJson()
         RtpMidiHostDefinition Definition{};
         std::shared_ptr<RtpMidiNode> Node;
         HRESULT LastError{ S_OK };
+        bool NetworkAdapterFallbackUsed{ false };
+        bool WaitingForNetworkAdapter{ false };
     };
 
     std::vector<HostView> views;
 
     {
         auto lock = std::scoped_lock{ m_runtimeLock };
-        for (auto const& entry : m_hosts) views.push_back(HostView{ entry.second.Definition, entry.second.Node, entry.second.LastError });
+
+        for (auto const& entry : m_hosts)
+        {
+            views.push_back(HostView{
+                entry.second.Definition,
+                entry.second.Node,
+                entry.second.LastError,
+                entry.second.NetworkAdapterFallbackUsed,
+                entry.second.WaitingForNetworkAdapter });
+        }
     }
 
     // defined, and not reached by the worker yet
@@ -1419,6 +1592,13 @@ CMidi2RtpMidiEndpointManager::BuildHostsStatusJson()
             JsonString(definition.Port == 0 ? std::wstring{ MIDI_CONFIG_JSON_RTP_MIDI_PORT_VALUE_AUTO } : std::to_wstring(definition.Port)));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_HAS_STARTED_KEY, JsonBoolean(running));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_LAST_ERROR_KEY, JsonHresult(view.LastError));
+
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_ID_KEY, JsonString(WindowsMidiServicesInternal::MidiNetworkAdapterIdToString(definition.NetworkAdapterId)));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_NAME_KEY, JsonString(definition.NetworkAdapterName));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY, JsonBoolean(definition.AllowNetworkAdapterFallback));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_MISSING_KEY,
+            JsonBoolean(view.WaitingForNetworkAdapter || (running && view.NetworkAdapterFallbackUsed)));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_FALLBACK_USED_KEY, JsonBoolean(running && view.NetworkAdapterFallbackUsed));
 
         if (running)
         {

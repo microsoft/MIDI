@@ -20,6 +20,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         winrt::guid TransportId() const noexcept { return internal::StringToGuid(MIDI_RTP_TRANSPORT_ID); }
 
         winrt::guid HostId() const noexcept { return m_hostId; }
+        void HostId(_In_ winrt::guid const& value) noexcept { m_hostId = value; }
 
         winrt::hstring Name() const noexcept { return m_name; }
         void Name(_In_ winrt::hstring const& value) noexcept { m_name = internal::TrimmedHStringCopy(value); }
@@ -45,6 +46,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool SendRecoveryJournal() const noexcept { return m_sendRecoveryJournal; }
         void SendRecoveryJournal(_In_ bool const value) noexcept { m_sendRecoveryJournal = value; }
 
+        winrt::guid NetworkAdapterId() const noexcept { return m_networkAdapterId; }
+        void NetworkAdapterId(_In_ winrt::guid const& value) noexcept;
+
+        winrt::hstring NetworkAdapterName() const noexcept { return m_networkAdapterName; }
+        void NetworkAdapterName(_In_ winrt::hstring const& value) noexcept { m_networkAdapterName = internal::TrimmedHStringCopy(value); }
+
+        bool AllowNetworkAdapterFallback() const noexcept { return m_allowNetworkAdapterFallback; }
+        void AllowNetworkAdapterFallback(_In_ bool const value) noexcept { m_allowNetworkAdapterFallback = value; }
+
         json::JsonObject ConfigJson() const noexcept;
 
     private:
@@ -57,6 +67,14 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool m_advertise{ true };
         rtp::MidiRtpRemoteClientPolicy m_remoteClientPolicy{ rtp::MidiRtpRemoteClientPolicy::AllowAny };
         bool m_sendRecoveryJournal{ true };
+
+        winrt::guid m_networkAdapterId{};
+        winrt::hstring m_networkAdapterName{};
+
+        // Not exposed. It is how the service finds the adapter again under a new GUID.
+        winrt::hstring m_networkAdapterPhysicalAddress{};
+
+        bool m_allowNetworkAdapterFallback{ true };
     };
 }
 

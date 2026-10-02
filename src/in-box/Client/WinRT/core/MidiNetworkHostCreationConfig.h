@@ -57,6 +57,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring ManuallyAssignedPort() const noexcept { return m_manuallyAssignedPort; }
         void ManuallyAssignedPort(_In_ winrt::hstring const& value) noexcept { m_manuallyAssignedPort = internal::TrimmedHStringCopy(value); }
 
+        winrt::guid NetworkAdapterId() const noexcept { return m_networkAdapterId; }
+        void NetworkAdapterId(_In_ winrt::guid const& value) noexcept;
+
+        winrt::hstring NetworkAdapterName() const noexcept { return m_networkAdapterName; }
+        void NetworkAdapterName(_In_ winrt::hstring const& value) noexcept { m_networkAdapterName = internal::TrimmedHStringCopy(value); }
+
+        bool AllowNetworkAdapterFallback() const noexcept { return m_allowNetworkAdapterFallback; }
+        void AllowNetworkAdapterFallback(_In_ bool const value) noexcept { m_allowNetworkAdapterFallback = value; }
+
         bool Advertise() const noexcept { return m_advertise; }
         void Advertise(_In_ bool const value) noexcept { m_advertise = value; }
 
@@ -80,6 +89,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool m_allowPortFallback{ true };
         winrt::hstring m_manuallyAssignedPort{};
         bool m_advertise{ true };
+
+        winrt::guid m_networkAdapterId{};
+        winrt::hstring m_networkAdapterName{};
+
+        // Not exposed. It is how the service finds the adapter again when it comes back with a
+        // new GUID, which a USB adapter does when it is plugged into a different port.
+        winrt::hstring m_networkAdapterPhysicalAddress{};
+
+        bool m_allowNetworkAdapterFallback{ true };
 
         network::MidiNetworkRemoteClientPolicy m_remoteClientPolicy{ network::MidiNetworkRemoteClientPolicy::AllowAny };
 

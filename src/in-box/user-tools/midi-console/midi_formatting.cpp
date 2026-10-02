@@ -61,6 +61,18 @@ namespace midi2console
         return ToUtf8(winrt::to_hstring(value));
     }
 
+    std::string FormatNetworkAdapter(_In_ winrt::guid const& id, _In_ winrt::hstring const& name, _In_ bool isMissing)
+    {
+        if (id == winrt::guid{})
+        {
+            return ResourceString(IDS_NET_ADAPTER_EVERY);
+        }
+
+        auto const shownName = name.empty() ? ResourceString(IDS_NET_ADAPTER_UNKNOWN) : ToUtf8(name);
+
+        return isMissing ? FormatResourceString(IDS_NET_ADAPTER_MISSING_FORMAT, shownName) : shownName;
+    }
+
     winrt::guid ParseGuid(_In_ std::string_view value, _Out_ bool& succeeded)
     {
         succeeded = false;

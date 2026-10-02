@@ -60,7 +60,7 @@ Not every device produced this marker on earlier versions of Windows: some model
 Automatic picks **new style** when either of these is true, and **legacy** otherwise:
 
 1. The endpoint has **no legacy equivalent** — its ports did not exist before Windows MIDI Services, so there is no older name to stay compatible with. Network MIDI 2.0, Bluetooth LE MIDI, loopbacks and app-created endpoints are all in this group. Each transport declares this for the endpoints it creates, so transports from outside Microsoft make the same choice for themselves.
-2. The device **told us something useful about its individual ports** — a jack name, a per-port driver name, a per-port filter name, a group terminal block or a function block.
+2. The device **told us something useful about its individual ports** — a jack name, a per-port driver name, a filter name that isn't just the product name, a group terminal block or a function block.
 
 The second rule follows from a single principle: *change a port's name only when the new name carries information the old one did not.* When a device names its jacks, the new name says something real and the change earns its cost. When a device says nothing, a new-style name would be a string Windows invented — it breaks applications that match on names and gives nothing back.
 
@@ -120,9 +120,9 @@ The first of these that says something the endpoint name does not:
 | 4 | **Group Terminal Block name** | For devices using the MIDI 2.0 driver, and for transports that synthesize blocks. |
 | 5 | **Function block name** | See section 7. |
 
-A value is discarded when it is empty; when it is `MIDI`, which is what the Windows USB and KS stack inserts for a jack the device did not name; when it is the filter name with a bracketed index appended (`SoftStep [0]`), which Windows also generates; when it is one of the unhelpful values manufacturers commonly supply, such as `In`, `Out`, `IO`, `Port` or `Port 2`; or when it says nothing the endpoint name does not already say.
+A value is discarded when it is empty; when a jack name is just `MIDI`, which is what the Windows USB and KS stack inserts for a jack the device did not name; when a jack name is the filter name with a bracketed index appended (`SoftStep [0]`), which Windows also generates; or when it is just the endpoint name again.
 
-A name is kept even if it looks generic when the other ports on the same endpoint and direction carry different names — whatever tells the ports apart is by definition meaningful.
+Everything else is used exactly as the device supplied it, generic words included. A jack named `Out` becomes `<endpoint name> Out`, because the endpoint name goes in front of it. Windows never adds words to a filter name, so a filter named `Acme DR-1 MIDI IN` is used as it is.
 
 ## 3. Putting the two together
 
@@ -256,12 +256,14 @@ Any part of a name that Windows supplies rather than the device — `group`, and
 | Steinberg CMC-QC | No jack names; filters named `Yamaha USB-MIDI-1..3`; per-filter driver names `Steinberg CMC-QC-1..3` | `Steinberg CMC-QC` | `Steinberg CMC-QC-1`, `-2`, `-3` | new style |
 | MOTU Express 128 | No jack names; eight filters named `Express  128: Port 1..8`; device description is the driver's | `Express  128` | `Express  128: Port 1` … `Port 8` | new style |
 | RME HDSPe MADI FX | No jack names; four filters named `HDSPe FX MADI1 MIDI` etc. | `RME HDSPe MADI FX` | `HDSPe FX MADI1 MIDI`, `HDSPe FX MIDI`, `HDSPe FX MADI2 MIDI`, `HDSPe FX MADI3 MIDI` | new style |
+| A device with one filter per port | No jack names; filters named `Acme DR-1`, `Acme DR-1 CTRL`, `Acme DR-1 MIDI IN` | `Acme DR-1` | `Acme DR-1`, `Acme DR-1 CTRL`, `Acme DR-1 MIDI IN` | new style |
+| NI KOMPLETE KONTROL M32 | No jack names; interface named `KOMPLETE KONTROL M32 MIDI`; `iProduct` = `KOMPLETE KONTROL M32` | `KOMPLETE KONTROL M32` | `KOMPLETE KONTROL M32 MIDI` | new style, which is the same name legacy gives |
+| A device with jacks named `In` and `Out` | Jack names only; device `Acme Box` | `Acme Box` | `Acme Box In`, `Acme Box Out` | new style |
 | Blokas Midihub, ports renamed on the device | Jack names `RENAMED USB A IN`, `B RENAMED IN`, `CCC INPUT`, `D INPUT` | `Midihub MH-3MDTRP0` | the jack names, exactly as the customer set them | new style |
 | teVirtualMIDI / loopMIDI | Four filters named `loopMIDI Port`, `MIDI A`, `MIDI B`, `MIDI C` | `teVirtualMIDI - Virtual MIDI Driver x64` | `loopMIDI Port`, `MIDI A`, `MIDI B`, `MIDI C` | new style |
 | MIDI 2.0 synthesizer, block `Synth` over groups 1-2 | One block, two groups | `Iridium` | `Iridium Synth group 1`, `Iridium Synth group 2` | new style |
 | MIDI 2.0 synthesizer, blocks `Piano` and `Drums`, one group each | Two single-group blocks | `Acme Synth` | `Acme Synth Piano`, `Acme Synth Drums` | new style |
 | Roland UM-ONE | Jack names are the filter name plus an index, so nothing usable | `UM-ONE` | `UM-ONE` | **legacy** — `UM-ONE`, `MIDIOUT2 (UM-ONE)` |
-| NI KOMPLETE KONTROL M32 | Nothing usable; `iProduct` = `KOMPLETE KONTROL M32` | `KOMPLETE KONTROL M32` | `KOMPLETE KONTROL M32` | **legacy** — `KOMPLETE KONTROL M32 MIDI` |
 | ESI M8U eX, two units | Nothing usable; 16 ports each way | `ESI M8U eX` and `ESI M8U eX (2)` | `ESI M8U eX group 1..16` and `ESI M8U eX (2) group 1..16` | **legacy** — `ESI M8U eX`, `MIDIIN2 (ESI M8U eX)` …, and for the second unit `2- ESI M8U eX`, `MIDIIN2 (2- ESI M8U eX)` … |
 | Network MIDI 2.0 host, no function blocks | Endpoint name only | `My Bome Box` | `My Bome Box group 1` … `group 16` | new style — no legacy equivalent |
 | Network MIDI 2.0 host with a long name | Endpoint name only | `Renamed Port Creation Test` | `Renamed Port Creation Test 1` … `Test 16` | new style — the word `group` would not fit |

@@ -27,3 +27,8 @@
 // Bumped when a remote starts or stops waiting for a decision on one of this PC's RTP-MIDI hosts
 #define MIDI_RTP_NOTIFICATION_PENDING_APPROVAL_VALUE \
     L"RtpMidiPendingApprovalChangeCount"
+
+// Bumped when one of this PC's RTP-MIDI hosts starts or stops waiting for its network adapter,
+// because the adapter is missing and the host may not fall back to the others
+#define MIDI_RTP_NOTIFICATION_HOST_ADAPTER_VALUE \
+    L"RtpMidiHostAdapterChangeCount"

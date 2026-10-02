@@ -50,6 +50,7 @@ namespace winrt::midisettings::implementation
         void OnNotificationsEnabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNotificationsNetworkToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNotificationsLoopbackFeedbackToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnNotificationsHostAdapterToggled(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnNotificationsStartupToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNotificationsAllUsersToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNotificationsRestartElevatedClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);

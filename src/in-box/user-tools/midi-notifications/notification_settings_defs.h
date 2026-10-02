@@ -22,6 +22,9 @@
 #define MIDI_NOTIFICATIONS_VALUE_NETWORK_APPROVAL       L"NetworkApprovalEnabled"
 #define MIDI_NOTIFICATIONS_VALUE_LOOPBACK_FEEDBACK      L"LoopbackFeedbackEnabled"
 
+// a Network MIDI 2.0 or RTP-MIDI host cannot start because its network adapter is missing
+#define MIDI_NOTIFICATIONS_VALUE_NETWORK_HOST_ADAPTER   L"NetworkHostAdapterEnabled"
+
 // The identity the app publishes toasts under. It has to match the AppUserModelID on the Start
 // Menu shortcut the installer writes, or the notification platform will not accept a toast.
 #define MIDI_NOTIFICATIONS_AUMID \

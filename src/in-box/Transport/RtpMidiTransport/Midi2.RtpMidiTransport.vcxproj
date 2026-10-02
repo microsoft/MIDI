@@ -98,6 +98,9 @@
     <ClCompile Include="RtpMidiNode.cpp" />
     <ClCompile Include="RtpMidiNotificationSignal.cpp" />
     <ClCompile Include="TransportState.cpp" />
+    <ClCompile Include="$(SolutionDir)inc\midi_network_adapters.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rtpmidi_journal.h" />

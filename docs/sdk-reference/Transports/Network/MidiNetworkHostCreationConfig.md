@@ -40,7 +40,14 @@ Describes a host for remote clients to connect to. Pass to `MidiNetworkTransport
 | `Advertise` | When true, the host is advertised over mDNS so remote devices can find it. When false, it can only be reached by direct address |
 | `RemoteClientPolicy` | How this host handles unknown remote clients. `AllowAny` accepts them unless they've been denied. `RequireApproval` keeps them waiting until they're approved or denied |
 | `AuthenticationType` | The authentication this host requires. Only `NoAuthentication` is accepted right now. Anything else is rejected when the host is configured. See `MidiNetworkAuthenticationType` |
+| `NetworkAdapterId` | The network adapter the host is limited to, as the GUID Windows gives it. It's the same value as `Windows.Networking.Connectivity.NetworkAdapter.NetworkAdapterId` and .NET's `NetworkInterface.Id`. Leave it empty, the default, to run the host on every adapter. Setting it also fills in `NetworkAdapterName` |
+| `NetworkAdapterName` | The adapter's name, like `Ethernet 3`. It's only shown to people, so they can tell which adapter a host is waiting for |
+| `AllowNetworkAdapterFallback` | What the host does while its adapter is missing. When true, the default, it runs on every adapter until the adapter is back. When false, it doesn't run until the adapter is back |
 
 ## Remarks
 
 `Name` and `ProductInstanceId` are checked against the byte limits in the MIDI 2.0 specification, not character counts, so a name with non-ASCII characters can hold fewer characters than you might expect. Going over either limit fails creation with `EndpointNameTooLong` or `ProductInstanceIdTooLong`, instead of quietly shortening the value.
+
+A host limited to one network adapter only advertises itself there, and only answers devices that reach it through that adapter. The service also remembers the adapter's hardware address, so a USB network adapter that comes back with a new GUID after being plugged into another port is still found.
+
+If the adapter is missing and `AllowNetworkAdapterFallback` is false, `CreateNetworkHostAsync` reports `NetworkAdapterNotAvailable`. The host is still created, and it starts by itself when the adapter is back, so save the configuration as usual.

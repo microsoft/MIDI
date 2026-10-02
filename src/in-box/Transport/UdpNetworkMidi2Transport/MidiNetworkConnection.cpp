@@ -20,6 +20,7 @@ MidiNetworkConnection::Initialize(
     winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
     winrt::Windows::Networking::HostName const& hostName,
     winrt::hstring const& port,
+    winrt::Windows::Networking::HostName const& localHostName,
     std::wstring const& thisEndpointName,
     std::wstring const& thisProductInstanceId,
     uint16_t const retransmitBufferMaxCommandPacketCount,
@@ -98,7 +99,7 @@ MidiNetworkConnection::Initialize(
         }
         else
         {
-            RETURN_IF_FAILED(m_writer->Initialize(socket.GetOutputStreamAsync(hostName, port).get()));
+            RETURN_IF_FAILED(m_writer->Initialize(GetReplyOutputStream(socket, localHostName, hostName, port)));
         }
     }
     catch (...)
@@ -134,6 +135,39 @@ MidiNetworkConnection::Initialize(
     );
 
     return S_OK;
+}
+
+_Use_decl_annotations_
+winrt::Windows::Storage::Streams::IOutputStream
+MidiNetworkConnection::GetReplyOutputStream(
+    winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
+    winrt::Windows::Networking::HostName const& localHostName,
+    winrt::Windows::Networking::HostName const& remoteHostName,
+    winrt::hstring const& remotePort)
+{
+    if (localHostName != nullptr)
+    {
+        try
+        {
+            return socket.GetOutputStreamAsync(
+                winrt::Windows::Networking::EndpointPair(localHostName, L"", remoteHostName, remotePort)).get();
+        }
+        catch (...)
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingWideString(L"Unable to reply from the address the remote sent to. Windows will choose the source address.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(localHostName.CanonicalName().c_str(), "local address"),
+                TraceLoggingWideString(remoteHostName != nullptr ? remoteHostName.CanonicalName().c_str() : L"", "remote address"),
+                TraceLoggingHResult(wil::ResultFromCaughtException(), MIDI_TRACE_EVENT_HRESULT_FIELD)
+            );
+        }
+    }
+
+    return socket.GetOutputStreamAsync(remoteHostName, remotePort).get();
 }
 
 

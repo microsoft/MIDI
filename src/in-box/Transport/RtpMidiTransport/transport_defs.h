@@ -62,6 +62,16 @@
 // twelve second invitation cycle, so two cycles never overlap.
 #define MIDI_RTP_CLIENT_RETRY_INTERVAL_MS                       15000
 
+// A host limited to a network adapter follows it as it comes and goes. Changes are noticed when
+// they happen, and once in this long anyway in case one came and went unseen.
+#define MIDI_RTP_NETWORK_ADAPTER_CHECK_INTERVAL_MS              20000
+
+// An adapter coming up changes several addresses in a row. The worker looks once they settle.
+#define MIDI_RTP_NETWORK_ADAPTER_SETTLE_MS                      2000
+
+// Longer than any hardware address Windows reports
+#define MIDI_RTP_NETWORK_ADAPTER_PHYSICAL_ADDRESS_MAX_CHARS     64
+
 // How often the measured latency is written to the endpoint for the outbound scheduler, and the
 // smallest change worth a device property write.
 #define MIDI_RTP_LATENCY_PROPERTY_INTERVAL_MS                   5000

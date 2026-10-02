@@ -22,3 +22,13 @@
 #define MIDI_NETWORK_SETUP_PROTOCOL_URI_PENDING L"ms-midi-network-setup:pending"
 
 #define MIDI_NETWORK_SETUP_PROTOCOL_PATH_PENDING L"pending"
+
+// Show this PC's Network MIDI 2.0 hosts, for example when one cannot start.
+#define MIDI_NETWORK_SETUP_PROTOCOL_URI_HOSTS   L"ms-midi-network-setup:hosts"
+
+#define MIDI_NETWORK_SETUP_PROTOCOL_PATH_HOSTS  L"hosts"
+
+// Show this PC's RTP-MIDI hosts.
+#define MIDI_NETWORK_SETUP_PROTOCOL_URI_RTP_HOSTS   L"ms-midi-network-setup:rtp-hosts"
+
+#define MIDI_NETWORK_SETUP_PROTOCOL_PATH_RTP_HOSTS  L"rtp-hosts"

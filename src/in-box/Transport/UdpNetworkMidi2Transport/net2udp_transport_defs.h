@@ -131,6 +131,15 @@ enum MidiNetworkRemoteClientDecision
 // thread that is not stuck.
 #define MIDI_NETWORK_NEGOTIATION_THREAD_EXIT_TIMEOUT_MILLISECONDS       2000
 
+// An adapter coming up or going away changes several addresses in a row. Hosts limited to an
+// adapter are moved once they settle, rather than restarted for each one.
+#define MIDI_NETWORK_ADAPTER_CHANGE_SETTLE_MILLISECONDS                 2000
+
+// The configuration file is writable by any user, so what it holds about an adapter is capped.
+// Both are far longer than anything Windows produces.
+#define MIDI_NETWORK_ADAPTER_NAME_MAX_CHARS                             256
+#define MIDI_NETWORK_ADAPTER_PHYSICAL_ADDRESS_MAX_CHARS                 64
+
 #define MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT                           2
 #define MIDI_NETWORK_FEC_PACKET_COUNT_UPPER_BOUND                       10
 #define MIDI_NETWORK_FEC_PACKET_COUNT_LOWER_BOUND                       0

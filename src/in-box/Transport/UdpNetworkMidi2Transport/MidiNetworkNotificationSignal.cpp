@@ -10,21 +10,33 @@
 _Use_decl_annotations_
 void MidiNetworkNotificationSignal::SignalPendingApprovalChanged() noexcept
 {
+    Queue(m_pendingApprovalWriteQueued, MIDI_NOTIFICATION_NETWORK_PENDING_APPROVAL_VALUE);
+}
+
+_Use_decl_annotations_
+void MidiNetworkNotificationSignal::SignalHostNetworkAdapterChanged() noexcept
+{
+    Queue(m_hostNetworkAdapterWriteQueued, MIDI_NOTIFICATION_NETWORK_HOST_ADAPTER_VALUE);
+}
+
+_Use_decl_annotations_
+void MidiNetworkNotificationSignal::Queue(std::atomic<uint32_t>& queued, PCWSTR const valueName) noexcept
+{
     // Already queued, and the write which is coming will cover this change too.
-    if (m_pendingApprovalWriteQueued.exchange(1) != 0)
+    if (queued.exchange(1) != 0)
     {
         return;
     }
 
     try
     {
-        m_work.Submit([this]()
+        m_work.Submit([&queued, valueName]()
             {
                 // Cleared first. A change arriving during the write queues a fresh one, which is
                 // what keeps the last change from being lost.
-                m_pendingApprovalWriteQueued.store(0);
+                queued.store(0);
 
-                BumpCounter(MIDI_NOTIFICATION_NETWORK_PENDING_APPROVAL_VALUE);
+                BumpCounter(valueName);
             });
     }
     catch (...)
@@ -32,7 +44,7 @@ void MidiNetworkNotificationSignal::SignalPendingApprovalChanged() noexcept
         // Queuing allocates. Letting that escape a noexcept function on the socket receive path
         // would end the process, and the process is the MIDI service for the whole machine. A
         // customer losing a notification is the correct price.
-        m_pendingApprovalWriteQueued.store(0);
+        queued.store(0);
 
         LOG_CAUGHT_EXCEPTION();
     }

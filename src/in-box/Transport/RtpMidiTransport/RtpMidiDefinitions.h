@@ -43,6 +43,20 @@ struct RtpMidiHostDefinition
     // Changing it never restarts the host, so connections already made stay up
     RtpMidiRemoteClientPolicy RemoteClientPolicy{ RtpMidiRemoteClientPolicy::AllowAny };
 
+    // The adapter the host is limited to, or GUID_NULL for every adapter. Found by its id, then
+    // by its hardware address. The name is only shown while the adapter is missing.
+    GUID NetworkAdapterId{};
+    std::wstring NetworkAdapterName;
+    std::wstring NetworkAdapterPhysicalAddress;
+
+    // When the adapter is missing: run on every adapter until it is back, instead of waiting
+    bool AllowNetworkAdapterFallback{ true };
+
+    bool IsLimitedToNetworkAdapter() const noexcept
+    {
+        return !IsEqualGUID(NetworkAdapterId, GUID_NULL) || !NetworkAdapterPhysicalAddress.empty();
+    }
+
     std::wstring EffectiveServiceInstanceName() const
     {
         return ServiceInstanceName.empty() ? Name : ServiceInstanceName;

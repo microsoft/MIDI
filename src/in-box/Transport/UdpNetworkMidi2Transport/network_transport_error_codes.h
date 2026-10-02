@@ -22,6 +22,10 @@
 #define NETWORK_ERROR_CODE_UNABLE_TO_START_HOST                     0x00000023
 #define NETWORK_ERROR_CODE_UNABLE_TO_STOP_HOST                      0x00000024
 
+// The host is limited to a network adapter which is missing, and may not fall back to the others.
+// It starts by itself when the adapter comes back.
+#define NETWORK_ERROR_CODE_NETWORK_ADAPTER_NOT_AVAILABLE            0x00000025
+
 // entry identifiers
 #define NETWORK_ERROR_CODE_MISSING_ENTRY_IDENTIFIER                 0x00000031
 #define NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER                 0x00000032

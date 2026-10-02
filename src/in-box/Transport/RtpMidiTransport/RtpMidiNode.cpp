@@ -90,7 +90,8 @@ _Use_decl_annotations_
 HRESULT
 RtpMidiNode::Start(
     uint16_t const preferredControlPort,
-    std::vector<std::pair<uint16_t, uint16_t>> const& fallbackRanges)
+    std::vector<std::pair<uint16_t, uint16_t>> const& fallbackRanges,
+    std::vector<uint32_t> const& interfaces)
 {
     try
     {
@@ -98,6 +99,9 @@ RtpMidiNode::Start(
 
         RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ADDRESS_ALREADY_ASSOCIATED),
             !m_ports.Bind(preferredControlPort, fallbackRanges, m_usedPortFallback));
+
+        // Bound on every address either way. The sockets drop what arrives on other adapters.
+        m_ports.LimitToInterfaces(interfaces);
 
         RtpMidi::SessionConfig config{};
         config.LocalName = NameForTheWire(m_localName);
@@ -160,14 +164,14 @@ RtpMidiNode::Start(
 
 _Use_decl_annotations_
 HRESULT
-RtpMidiNode::Advertise(std::wstring const& instanceLabel, std::stop_token const& stopToken)
+RtpMidiNode::Advertise(std::wstring const& instanceLabel, std::stop_token const& stopToken, uint32_t const interfaceIndex)
 try
 {
     RETURN_HR_IF(E_ILLEGAL_METHOD_CALL, m_role != Role::Host);
     RETURN_HR_IF(E_ILLEGAL_STATE_CHANGE, !m_running.load());
     RETURN_HR_IF(E_INVALIDARG, instanceLabel.empty());
 
-    RETURN_IF_FAILED(m_advertiser.Register(instanceLabel, m_ports.Control().Port(), 10000, stopToken));
+    RETURN_IF_FAILED(m_advertiser.Register(instanceLabel, m_ports.Control().Port(), 10000, stopToken, interfaceIndex));
 
     m_advertised = true;
 

@@ -27,10 +27,17 @@ Returned by `MidiNetworkTransportManager.GetConfiguredHosts()`.
 | `ServiceInstanceNameWasChanged` | True when that happened. The host works, but other devices see a different name than the one set up, so it's worth showing people |
 | `CreateMidi1Ports` | True if MIDI 1.0 ports are created with the UMP endpoints |
 | `RemoteClientPolicy` | What this host does when an unknown remote client asks to connect. See `MidiNetworkRemoteClientPolicy` |
+| `NetworkAdapterId` | The network adapter the host is limited to, or an empty GUID for every adapter |
+| `NetworkAdapterName` | That adapter's name, from when it was chosen |
+| `AllowNetworkAdapterFallback` | True when the host runs on every adapter while its own adapter is missing |
+| `IsNetworkAdapterMissing` | True when the host's adapter is missing. If `HasStarted` is also true, the host is running on every adapter until the adapter is back. If not, the host is waiting, and starts by itself when the adapter is back |
+| `UsedNetworkAdapterFallback` | True when the host is running on every adapter because its own adapter is missing |
 | `Connections` | The remote clients that have reached this host right now, including clients waiting for approval |
 
 ## Remarks
 
 `ActualPort` is the port the host is really using. Show it when the host was created with `UseAutomaticPortAllocation`.
+
+A host whose adapter is missing is worth showing people. It's either not running at all, or running on networks it was set up to stay off.
 
 `Connections` is a copy taken when you asked, not a list that updates itself. Call `GetConfiguredHosts()` again to refresh it.

@@ -162,13 +162,21 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
             }
         }
 
-        bool HostHasStarted(_In_ winrt::guid const& hostId) noexcept
+        bool HostHasStarted(_In_ winrt::guid const& hostId, _Out_ bool& waitingForNetworkAdapter) noexcept
         {
+            waitingForNetworkAdapter = false;
+
             try
             {
                 for (auto const& host : MidiRtpTransportManager::GetConfiguredHosts())
                 {
-                    if (host.HostId() == hostId) return host.HasStarted();
+                    if (host.HostId() == hostId)
+                    {
+                        // limited to an adapter which is missing, and not allowed to fall back
+                        waitingForNetworkAdapter = !host.HasStarted() && host.IsNetworkAdapterMissing();
+
+                        return host.HasStarted();
+                    }
                 }
             }
             catch (...)
@@ -223,7 +231,19 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         // Returning now would hand back a host the caller cannot use yet
         for (uint32_t attempt = 0; attempt < HostStartPollAttempts; attempt++)
         {
-            if (HostHasStarted(hostId)) co_return *result;
+            bool waitingForNetworkAdapter{ false };
+
+            if (HostHasStarted(hostId, waitingForNetworkAdapter)) co_return *result;
+
+            // It starts when the adapter is back, which may be a long time from now
+            if (waitingForNetworkAdapter)
+            {
+                result->InternalSetError(
+                    rtp::MidiRtpHostCreationErrorCode::NetworkAdapterNotAvailable,
+                    internal::ResourceGetHString(IDS_RTP_ERROR_NETWORK_ADAPTER_NOT_AVAILABLE));
+
+                co_return *result;
+            }
 
             co_await winrt::resume_after(HostStartPollInterval);
         }

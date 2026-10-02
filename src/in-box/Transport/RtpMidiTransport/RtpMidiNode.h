@@ -50,13 +50,17 @@ public:
     using AdmissionCheck = std::function<RtpMidi::Admission(std::wstring const& remoteName, std::wstring const& remoteAddress)>;
     void SetAdmissionCheck(_In_ AdmissionCheck check) { m_admissionCheck = std::move(check); }
 
+    // A host limited to one network adapter passes that adapter's interfaces, and hears nothing
+    // which arrives on any other. Empty is every interface.
     HRESULT Start(
         _In_ uint16_t const preferredControlPort,
-        _In_ std::vector<std::pair<uint16_t, uint16_t>> const& fallbackRanges);
+        _In_ std::vector<std::pair<uint16_t, uint16_t>> const& fallbackRanges,
+        _In_ std::vector<uint32_t> const& interfaces = {});
 
     // Host only. Blocks while the DNS client probes the name, which takes most of a second, and
-    // gives up early when stopToken is signaled.
-    HRESULT Advertise(_In_ std::wstring const& instanceLabel, _In_ std::stop_token const& stopToken);
+    // gives up early when stopToken is signaled. A non-zero interface index advertises on that
+    // adapter only.
+    HRESULT Advertise(_In_ std::wstring const& instanceLabel, _In_ std::stop_token const& stopToken, _In_ uint32_t const interfaceIndex = 0);
 
     // Says goodbye to every participant, then stops the threads and withdraws the advertisement.
     // Never call from a listener callback.

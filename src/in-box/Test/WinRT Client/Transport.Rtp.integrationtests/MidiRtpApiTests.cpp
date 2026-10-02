@@ -808,3 +808,220 @@ void MidiRtpApiTests::TestSavedClientFollowsSavedChanges()
 
     VERIFY_IS_TRUE(FindSavedClient(clientId) == nullptr, L"and forgets the saved client");
 }
+
+
+// ------------------------------------------------------------------------------------
+// Limiting a host to one network adapter
+// ------------------------------------------------------------------------------------
+
+#include <winrt/Windows.Networking.Connectivity.h>
+
+namespace
+{
+    MidiRtpHostCreationConfig MakeAdapterTestHostConfig(
+        _In_ std::wstring const& name,
+        _In_ winrt::guid const& adapterId,
+        _In_ bool const allowFallback)
+    {
+        MidiRtpHostCreationConfig config;
+
+        config.Name(winrt::hstring{ TestHostNamePrefix + name });
+        config.Advertise(false);
+        config.NetworkAdapterId(adapterId);
+        config.AllowNetworkAdapterFallback(allowFallback);
+
+        return config;
+    }
+
+    json::JsonObject CreatedHostEntry(_In_ MidiRtpHostCreationConfig const& config)
+    {
+        return OnlyEntry(TransportSection(config.ConfigJson()).GetNamedObject(L"create").GetNamedObject(L"hosts"), config.HostId());
+    }
+}
+
+void MidiRtpApiTests::TestHostCreationConfigNetworkAdapterJson()
+{
+    MidiRtpHostCreationConfig config;
+
+    VERIFY_IS_TRUE(config.NetworkAdapterId() == winrt::guid{}, L"every adapter unless set");
+    VERIFY_IS_TRUE(config.AllowNetworkAdapterFallback());
+
+    auto host = CreatedHostEntry(config);
+
+    // written even for every adapter, so replacing a host which was limited to one undoes it
+    VERIFY_IS_TRUE(std::wstring{ host.GetNamedString(L"networkAdapterId") }.empty());
+    VERIFY_IS_TRUE(host.GetNamedBoolean(L"allowNetworkAdapterFallback"));
+
+    // no PC has this adapter, so looking it up leaves the name for the test to set
+    auto const adapterId = foundation::GuidHelper::CreateNewGuid();
+
+    config.NetworkAdapterId(adapterId);
+    config.NetworkAdapterName(L"MidiApiTest Adapter");
+    config.AllowNetworkAdapterFallback(false);
+
+    host = CreatedHostEntry(config);
+
+    VERIFY_IS_TRUE(winrt::guid{ std::wstring_view{ host.GetNamedString(L"networkAdapterId") } } == adapterId);
+    VERIFY_IS_TRUE(std::wstring{ host.GetNamedString(L"networkAdapterName") } == L"MidiApiTest Adapter");
+    VERIFY_IS_FALSE(host.GetNamedBoolean(L"allowNetworkAdapterFallback"));
+
+    // the id of a host which exists makes this a change to that host
+    auto const existingId = foundation::GuidHelper::CreateNewGuid();
+
+    config.HostId(existingId);
+
+    VERIFY_IS_TRUE(config.HostId() == existingId);
+    VERIFY_IS_NOT_NULL(CreatedHostEntry(config));
+}
+
+void MidiRtpApiTests::TestSavedHostKeepsItsNetworkAdapter()
+{
+    if (!ConfigFileRegisteredOrSkip()) return;
+
+    auto const adapterId = foundation::GuidHelper::CreateNewGuid();
+
+    auto config = MakeAdapterTestHostConfig(L"Saved Adapter", adapterId, false);
+    config.NetworkAdapterName(L"MidiApiTest Adapter");
+
+    auto const hostId = config.HostId();
+
+    auto removeEntry = wil::scope_exit([&] { RemoveSavedHost(hostId); });
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config), L"saving the host works");
+
+    auto saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_IS_TRUE(saved.NetworkAdapterId() == adapterId, L"with its adapter");
+    VERIFY_IS_TRUE(saved.NetworkAdapterName() == L"MidiApiTest Adapter", L"the adapter's name");
+    VERIFY_IS_FALSE(saved.AllowNetworkAdapterFallback(), L"and whether it may use the others");
+
+    // saving it again for every adapter replaces the limit
+    config.NetworkAdapterId(winrt::guid{});
+    config.AllowNetworkAdapterFallback(true);
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config), L"saving the change works");
+
+    saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_IS_TRUE(saved.NetworkAdapterId() == winrt::guid{}, L"it is on every adapter");
+    VERIFY_IS_TRUE(saved.NetworkAdapterName().empty(), L"with no adapter name left over");
+    VERIFY_IS_TRUE(saved.AllowNetworkAdapterFallback());
+}
+
+// A host which may not use the other adapters is still created when its own is missing. It waits,
+// says why, and starts once it is replaced with one on every adapter.
+void MidiRtpApiTests::TestHostWaitsForAMissingNetworkAdapter()
+{
+    SKIP_IF_NO_RTP_TRANSPORT();
+
+    auto const adapterId = foundation::GuidHelper::CreateNewGuid();
+
+    auto config = MakeAdapterTestHostConfig(L"Waiting", adapterId, false);
+    auto const hostId = config.HostId();
+
+    m_createdHosts.push_back(hostId);
+
+    auto const response = MidiRtpTransportManager::CreateRtpHostAsync(config).get();
+
+    VERIFY_IS_TRUE(response != nullptr);
+    VERIFY_IS_FALSE(response.Success(), L"the host cannot start");
+    VERIFY_IS_TRUE(response.ErrorCode() == MidiRtpHostCreationErrorCode::NetworkAdapterNotAvailable, L"because its adapter is missing");
+    VERIFY_IS_FALSE(response.ErrorMessage().empty(), L"and it says so");
+
+    VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]() { auto h = FindHost(hostId); return h != nullptr && h.IsNetworkAdapterMissing(); }, ServiceWaitMilliseconds), L"the host is still created");
+
+    auto host = FindHost(hostId);
+
+    VERIFY_IS_TRUE(host != nullptr);
+    VERIFY_IS_TRUE(host.IsEnabled(), L"it is switched on");
+    VERIFY_IS_FALSE(host.HasStarted(), L"but is not running");
+    VERIFY_IS_FALSE(host.UsedNetworkAdapterFallback());
+    VERIFY_IS_TRUE(host.NetworkAdapterId() == adapterId);
+    VERIFY_IS_FALSE(host.AllowNetworkAdapterFallback());
+
+    config.NetworkAdapterId(winrt::guid{});
+
+    auto const replaced = MidiRtpTransportManager::CreateRtpHostAsync(config).get();
+
+    VERIFY_IS_TRUE(replaced != nullptr);
+    VERIFY_IS_TRUE(replaced.Success(), replaced.ErrorMessage().c_str());
+
+    VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]() { auto h = FindHost(hostId); return h != nullptr && h.HasStarted() && !h.IsNetworkAdapterMissing(); }, ServiceWaitMilliseconds), L"moved to every adapter, it starts");
+
+    host = FindHost(hostId);
+
+    VERIFY_IS_TRUE(host != nullptr);
+    VERIFY_IS_TRUE(host.NetworkAdapterId() == winrt::guid{});
+}
+
+void MidiRtpApiTests::TestHostFallsBackWhenItsNetworkAdapterIsMissing()
+{
+    SKIP_IF_NO_RTP_TRANSPORT();
+
+    auto config = MakeAdapterTestHostConfig(L"Fallback", foundation::GuidHelper::CreateNewGuid(), true);
+    auto const hostId = config.HostId();
+
+    m_createdHosts.push_back(hostId);
+
+    auto const response = MidiRtpTransportManager::CreateRtpHostAsync(config).get();
+
+    VERIFY_IS_TRUE(response != nullptr);
+    VERIFY_IS_TRUE(response.Success(), response.ErrorMessage().c_str());
+
+    VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]() { auto h = FindHost(hostId); return h != nullptr && h.HasStarted() && h.UsedNetworkAdapterFallback(); }, ServiceWaitMilliseconds), L"the host runs on every adapter");
+
+    auto const host = FindHost(hostId);
+
+    VERIFY_IS_TRUE(host != nullptr);
+    VERIFY_IS_TRUE(host.IsNetworkAdapterMissing(), L"and says its adapter is missing");
+}
+
+void MidiRtpApiTests::TestHostStartsOnItsNetworkAdapter()
+{
+    SKIP_IF_NO_RTP_TRANSPORT();
+
+    winrt::guid adapterId{};
+
+    try
+    {
+        auto const profile = winrt::Windows::Networking::Connectivity::NetworkInformation::GetInternetConnectionProfile();
+
+        if (profile != nullptr && profile.NetworkAdapter() != nullptr)
+        {
+            adapterId = profile.NetworkAdapter().NetworkAdapterId();
+        }
+    }
+    catch (...)
+    {
+    }
+
+    if (adapterId == winrt::guid{})
+    {
+        Log::Result(TestResults::Skipped, L"This PC has no network connection to limit a host to.");
+        return;
+    }
+
+    auto config = MakeAdapterTestHostConfig(L"On Adapter", adapterId, false);
+    auto const hostId = config.HostId();
+
+    VERIFY_IS_FALSE(config.NetworkAdapterName().empty(), L"choosing an adapter which is here fills in its name");
+
+    m_createdHosts.push_back(hostId);
+
+    auto const response = MidiRtpTransportManager::CreateRtpHostAsync(config).get();
+
+    VERIFY_IS_TRUE(response != nullptr);
+    VERIFY_IS_TRUE(response.Success(), response.ErrorMessage().c_str());
+
+    VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]() { auto h = FindHost(hostId); return h != nullptr && h.HasStarted(); }, ServiceWaitMilliseconds), L"the host starts");
+
+    auto const host = FindHost(hostId);
+
+    VERIFY_IS_TRUE(host != nullptr);
+    VERIFY_IS_FALSE(host.IsNetworkAdapterMissing(), L"its adapter is here");
+    VERIFY_IS_FALSE(host.UsedNetworkAdapterFallback());
+    VERIFY_IS_TRUE(host.NetworkAdapterId() == adapterId);
+    VERIFY_IS_TRUE(host.NetworkAdapterName() == config.NetworkAdapterName());
+}

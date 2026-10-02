@@ -31,6 +31,7 @@ MidiNetworkClientConnection::Initialize(
         socket,
         remoteHostHostName,
         remotePort,
+        winrt::Windows::Networking::HostName{ nullptr },
         thisEndpointName,
         thisProductInstanceId,
         retransmitBufferMaxCommandPacketCount,

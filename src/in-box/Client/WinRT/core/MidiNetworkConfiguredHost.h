@@ -27,6 +27,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool AllowPortFallback() const noexcept { return m_allowPortFallback; }
         bool UsedPortFallback() const noexcept { return m_usedPortFallback; }
 
+        winrt::guid NetworkAdapterId() const noexcept { return m_networkAdapterId; }
+        winrt::hstring NetworkAdapterName() const noexcept { return m_networkAdapterName; }
+        bool AllowNetworkAdapterFallback() const noexcept { return m_allowNetworkAdapterFallback; }
+        bool IsNetworkAdapterMissing() const noexcept { return m_isNetworkAdapterMissing; }
+        bool UsedNetworkAdapterFallback() const noexcept { return m_usedNetworkAdapterFallback; }
+
         winrt::hstring UmpEndpointName() const noexcept { return m_umpEndpointName; }
         winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
 
@@ -85,6 +91,20 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             }
         }
 
+        void InternalSetNetworkAdapter(
+            _In_ winrt::guid const& networkAdapterId,
+            _In_ winrt::hstring const& networkAdapterName,
+            _In_ bool const allowNetworkAdapterFallback,
+            _In_ bool const isNetworkAdapterMissing,
+            _In_ bool const usedNetworkAdapterFallback) noexcept
+        {
+            m_networkAdapterId = networkAdapterId;
+            m_networkAdapterName = networkAdapterName;
+            m_allowNetworkAdapterFallback = allowNetworkAdapterFallback;
+            m_isNetworkAdapterMissing = isNetworkAdapterMissing;
+            m_usedNetworkAdapterFallback = usedNetworkAdapterFallback;
+        }
+
     private:
         bool m_isEnabled{ false };
         winrt::guid m_hostId{};
@@ -99,6 +119,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring m_configuredPort{};
         bool m_allowPortFallback{ true };
         bool m_usedPortFallback{ false };
+        winrt::guid m_networkAdapterId{};
+        winrt::hstring m_networkAdapterName{};
+        bool m_allowNetworkAdapterFallback{ true };
+        bool m_isNetworkAdapterMissing{ false };
+        bool m_usedNetworkAdapterFallback{ false };
         bool m_createMidi1Ports{ false };
         network::MidiNetworkRemoteClientPolicy m_remoteClientPolicy{ network::MidiNetworkRemoteClientPolicy::AllowAny };
 

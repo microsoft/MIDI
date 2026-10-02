@@ -762,6 +762,14 @@ namespace winrt::midinetworksetup::implementation
         bool HasStarted() const noexcept { return m_hasStarted; }
         bool CreatesMidi1Ports() const noexcept { return m_createsMidi1Ports; }
 
+        winrt::hstring NetworkAdapterText() const noexcept { return m_networkAdapterText; }
+        winrt::hstring NetworkAdapterWarningText() const noexcept { return m_networkAdapterWarningText; }
+        bool IsNetworkAdapterWarningOpen() const noexcept { return !m_networkAdapterWarningText.empty(); }
+
+        winrt::hstring NetworkAdapterId() const noexcept { return m_networkAdapterId; }
+        winrt::hstring NetworkAdapterName() const noexcept { return m_networkAdapterName; }
+        bool AllowNetworkAdapterFallback() const noexcept { return m_allowNetworkAdapterFallback; }
+
         bool IsBusy() const noexcept { return m_isBusy; }
         void IsBusy(bool const value) noexcept { UpdateField(m_isBusy, value, L"IsBusy"); }
 
@@ -827,6 +835,27 @@ namespace winrt::midinetworksetup::implementation
             UpdateField(m_createsMidi1Ports, createsMidi1Ports, L"CreatesMidi1Ports");
         }
 
+        void InternalUpdateNetworkAdapter(
+            _In_ winrt::hstring const& networkAdapterId,
+            _In_ winrt::hstring const& networkAdapterName,
+            _In_ bool const allowNetworkAdapterFallback,
+            _In_ winrt::hstring const& networkAdapterText,
+            _In_ winrt::hstring const& networkAdapterWarningText) noexcept
+        {
+            UpdateField(m_networkAdapterId, networkAdapterId, L"NetworkAdapterId");
+            UpdateField(m_networkAdapterName, networkAdapterName, L"NetworkAdapterName");
+            UpdateField(m_allowNetworkAdapterFallback, allowNetworkAdapterFallback, L"AllowNetworkAdapterFallback");
+            UpdateField(m_networkAdapterText, networkAdapterText, L"NetworkAdapterText");
+
+            if (m_networkAdapterWarningText != networkAdapterWarningText)
+            {
+                m_networkAdapterWarningText = networkAdapterWarningText;
+
+                RaisePropertyChanged(L"NetworkAdapterWarningText");
+                RaisePropertyChanged(L"IsNetworkAdapterWarningOpen");
+            }
+        }
+
         // the empty state placeholders are computed from the collections, so they only change
         // when something is added or removed
         void InternalRaiseEmptyStateChanged() noexcept
@@ -850,6 +879,12 @@ namespace winrt::midinetworksetup::implementation
         bool m_hasStarted{ false };
         bool m_createsMidi1Ports{ false };
         bool m_isBusy{ false };
+
+        winrt::hstring m_networkAdapterId{};
+        winrt::hstring m_networkAdapterName{};
+        bool m_allowNetworkAdapterFallback{ true };
+        winrt::hstring m_networkAdapterText{};
+        winrt::hstring m_networkAdapterWarningText{};
 
         winrt::Windows::Foundation::Collections::IObservableVector<midinetworksetup::HostConnectionItem> m_connections{
             winrt::single_threaded_observable_vector<midinetworksetup::HostConnectionItem>() };

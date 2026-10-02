@@ -62,6 +62,20 @@ namespace Windows.Devices.Midi2.Transports.Network
         // did through MidiNetworkConfiguredHost.UsedPortFallback.
         [noexcept] Boolean AllowPortFallback;
 
+        // The network adapter the host is limited to, by the GUID Windows gives it. This is the
+        // same value as Windows.Networking.Connectivity.NetworkAdapter.NetworkAdapterId and the
+        // .NET NetworkInterface.Id. The default, an empty GUID, runs the host on every adapter.
+        // Setting it also fills in NetworkAdapterName from Windows.
+        [noexcept] Guid NetworkAdapterId;
+
+        // Only shown, so a customer can tell which adapter a host is waiting for
+        [noexcept] String NetworkAdapterName;
+
+        // When the adapter is missing, the host runs on every adapter until it is back, instead
+        // of not running at all. It reports that it did through
+        // MidiNetworkConfiguredHost.UsedNetworkAdapterFallback. True by default.
+        [noexcept] Boolean AllowNetworkAdapterFallback;
+
         [noexcept] Boolean Advertise;
 
         // what the host does when a remote client which is on neither list asks to connect

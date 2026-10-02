@@ -176,6 +176,16 @@ namespace midinetworksetup
         Boolean IsBusy;
         Boolean CreatesMidi1Ports{ get; };
 
+        // Which network adapter the host is limited to, as shown, and a warning when it is missing
+        String NetworkAdapterText{ get; };
+        String NetworkAdapterWarningText{ get; };
+        Boolean IsNetworkAdapterWarningOpen{ get; };
+
+        // What is configured, for changing it. An empty id is every adapter.
+        String NetworkAdapterId{ get; };
+        String NetworkAdapterName{ get; };
+        Boolean AllowNetworkAdapterFallback{ get; };
+
         Microsoft.UI.Xaml.Visibility NoConnectionsVisibility{ get; };
         Microsoft.UI.Xaml.Visibility NoKnownClientsVisibility{ get; };
         Microsoft.UI.Xaml.Visibility KnownClientsVisibility{ get; };

@@ -68,6 +68,11 @@ namespace winrt::midinetworksetup::implementation
         void OnCreateHostFieldChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
         void OnCreateHostPortModeChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        // every network adapter picker: falling back only means something once one is chosen
+        void OnNetworkAdapterChoiceChanged(
+            _In_ foundation::IInspectable const& sender,
+            _In_ controls::SelectionChangedEventArgs const& args);
+
         // By value, not by reference: this is a coroutine, and a reference parameter is not kept
         // in the coroutine frame, so it dangles once the first co_await returns control to XAML.
         winrt::fire_and_forget OnCreateHostPrimaryButtonClick(
@@ -76,6 +81,7 @@ namespace winrt::midinetworksetup::implementation
 
         winrt::fire_and_forget OnStartStopHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnDeleteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnChangeHostAdapterClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         winrt::fire_and_forget OnDisconnectRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnBlockRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -99,6 +105,7 @@ namespace winrt::midinetworksetup::implementation
         void OnCreateRtpHostPortModeChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnStartStopRtpHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnDeleteRtpHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnChangeRtpHostAdapterClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         winrt::fire_and_forget OnDisconnectRtpRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnBlockRtpRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -209,6 +216,10 @@ namespace winrt::midinetworksetup::implementation
 
         // yes / cancel confirmation, used before anything destructive
         foundation::IAsyncOperation<bool> ConfirmAsync(winrt::hstring const& title, winrt::hstring const& message);
+
+        // Asks which network adapter a host should use. True when the customer saved a change,
+        // which is then read from the dialog's controls. By value, because this is a coroutine.
+        foundation::IAsyncOperation<bool> ShowChangeHostAdapterDialogAsync(_In_ midinetworksetup::LocalHostItem const item);
 
         winrt::fire_and_forget AnswerInvitationAsync(            midinetworksetup::PendingInvitationItem const item,
             bool const approve,

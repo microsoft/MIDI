@@ -185,6 +185,10 @@
     <ClCompile Include="..\midi-app-shared\MonitorLauncher.cpp" />
     <ClCompile Include="..\midi-app-shared\SettingsAppLauncher.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
+    <!-- needs winsock2.h ahead of windows.h, so it cannot use this app's precompiled header -->
+    <ClCompile Include="$(SolutionDir)inc\midi_network_adapters.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>

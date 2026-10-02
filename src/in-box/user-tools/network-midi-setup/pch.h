@@ -139,6 +139,9 @@ namespace appshared = ::winrt::MidiAppShared;
 
 #include "network_setup_protocol_defs.h"
 
+// the adapters a host can be limited to, shared with both transports and the SDK
+#include "midi_network_adapters.h"
+
 // The notifications app is what raises a toast when a remote is waiting for an answer. This app
 // only needs to know whether it is running, and how to send the customer to its settings.
 #include "..\midi-notifications\notification_settings_defs.h"

@@ -647,6 +647,16 @@ try
         internal::SetConfigurationResponseObjectSuccess(responseObject);
         return S_OK;
     }
+    else if (host->IsWaitingForNetworkAdapter())
+    {
+        // Not a failure the caller can fix by trying again. It starts when the adapter is back.
+        internal::SetConfigurationResponseObjectFailWithErrorCode(
+            responseObject,
+            NETWORK_ERROR_CODE_NETWORK_ADAPTER_NOT_AVAILABLE,
+            internal::ResourceGetWString(IDS_ERROR_NETWORK_ADAPTER_NOT_AVAILABLE));
+
+        return S_OK;
+    }
     else
     {
         internal::SetConfigurationResponseObjectFailWithErrorCode(
@@ -1717,6 +1727,26 @@ namespace
             json::JsonValue::CreateBooleanValue(host->PortFallbackUsed()));
 
         hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NETWORK_ADAPTER_ID_KEY,
+            json::JsonValue::CreateStringValue(winrt::hstring{ ::WindowsMidiServicesInternal::MidiNetworkAdapterIdToString(definition.NetworkAdapterId) }));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NETWORK_ADAPTER_NAME_KEY,
+            json::JsonValue::CreateStringValue(definition.NetworkAdapterName));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY,
+            json::JsonValue::CreateBooleanValue(definition.AllowNetworkAdapterFallback));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NETWORK_ADAPTER_MISSING_KEY,
+            json::JsonValue::CreateBooleanValue(host->IsWaitingForNetworkAdapter() || host->NetworkAdapterFallbackUsed()));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NETWORK_ADAPTER_FALLBACK_USED_KEY,
+            json::JsonValue::CreateBooleanValue(host->NetworkAdapterFallbackUsed()));
+
+        hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_ADDRESS_KEY,
             json::JsonValue::CreateStringValue(host->ActualAddress()));
 
@@ -2523,7 +2553,9 @@ namespace
     // identity, the port, the advertisement and the authentication settings all decide how the
     // connection is built in the first place, and honoring them in an update would record a
     // change which nothing acts on until the entry is rebuilt. Changing one of those means
-    // removing the entry and adding it back.
+    // removing the entry and adding it back. A host's network adapter is the exception: the
+    // endpoint worker moves a running host when it changes, the same way it does when the
+    // adapter itself comes or goes.
     void ApplyEntrySettings(
         _In_ json::JsonObject const& entry,
         _Inout_ MidiNetworkClientDefinition& definition) noexcept
@@ -2568,6 +2600,38 @@ namespace
             definition.FallbackMidi1PortCount,
             MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
             MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+
+        // An empty id is every adapter. One which is not a GUID is ignored.
+        GUID networkAdapterId{};
+
+        if (::WindowsMidiServicesInternal::TryParseMidiNetworkAdapterId(
+                std::wstring{ SafeGetNamedString(
+                    entry,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_ID_KEY,
+                    winrt::hstring{ ::WindowsMidiServicesInternal::MidiNetworkAdapterIdToString(definition.NetworkAdapterId) }) },
+                networkAdapterId))
+        {
+            definition.NetworkAdapterId = networkAdapterId;
+        }
+
+        std::wstring networkAdapterName{ internal::TrimmedHStringCopy(
+            SafeGetNamedString(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_NAME_KEY, definition.NetworkAdapterName)) };
+
+        if (networkAdapterName.size() > MIDI_NETWORK_ADAPTER_NAME_MAX_CHARS) networkAdapterName.resize(MIDI_NETWORK_ADAPTER_NAME_MAX_CHARS);
+
+        definition.NetworkAdapterName = winrt::hstring{ networkAdapterName };
+
+        std::wstring physicalAddress{ internal::TrimmedHStringCopy(
+            SafeGetNamedString(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_PHYSICAL_ADDRESS_KEY, definition.NetworkAdapterPhysicalAddress)) };
+
+        if (physicalAddress.size() > MIDI_NETWORK_ADAPTER_PHYSICAL_ADDRESS_MAX_CHARS) physicalAddress.clear();
+
+        definition.NetworkAdapterPhysicalAddress = winrt::hstring{ physicalAddress };
+
+        definition.AllowNetworkAdapterFallback = SafeGetNamedBoolean(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY,
+            definition.AllowNetworkAdapterFallback);
     }
 }
 
@@ -2654,6 +2718,10 @@ try
                     stored.CustomEndpointName = definition->CustomEndpointName;
                     stored.CreateMidi1Ports = definition->CreateMidi1Ports;
                     stored.FallbackMidi1PortCount = definition->FallbackMidi1PortCount;
+                    stored.NetworkAdapterId = definition->NetworkAdapterId;
+                    stored.NetworkAdapterName = definition->NetworkAdapterName;
+                    stored.NetworkAdapterPhysicalAddress = definition->NetworkAdapterPhysicalAddress;
+                    stored.AllowNetworkAdapterFallback = definition->AllowNetworkAdapterFallback;
                 }));
 
             // A running host has its own copy, taken when it started
@@ -2661,6 +2729,19 @@ try
             {
                 host->SetFallbackMidi1PortCount(definition->FallbackMidi1PortCount);
                 host->SetCreateMidi1Ports(definition->CreateMidi1Ports);
+
+                host->SetNetworkAdapter(
+                    definition->NetworkAdapterId,
+                    definition->NetworkAdapterName,
+                    definition->NetworkAdapterPhysicalAddress,
+                    definition->AllowNetworkAdapterFallback);
+
+                // Moves the host if the change means it belongs somewhere else. A host which is
+                // already where it should be is left alone, so its connections stay up.
+                if (endpointManager != nullptr)
+                {
+                    endpointManager->RequestNetworkAdapterReconcile();
+                }
             }
         }
     }
@@ -2901,7 +2982,8 @@ CMidi2NetworkMidiConfigurationManager::TryReadHostDefinition(
         return false;
     }
 
-    // TODO: User should be able to specify the adapter, host name, etc.
+    // A host's .local name, for its DNS-SD registration. Which adapters it runs on is the
+    // networkAdapterId setting, read with the other settings an update can change.
     for (auto const& host : winrt::Windows::Networking::Connectivity::NetworkInformation::GetHostNames())
     {
         if ((host.Type() == HostNameType::DomainName) &&

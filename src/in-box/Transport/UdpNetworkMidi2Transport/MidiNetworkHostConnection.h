@@ -20,6 +20,7 @@ public:
         _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
         _In_ winrt::Windows::Networking::HostName const& remoteClientHostName,
         _In_ winrt::hstring const& remotePort,
+        _In_ winrt::Windows::Networking::HostName const& localHostName,
         _In_ std::wstring const& thisEndpointName,
         _In_ std::wstring const& thisProductInstanceId,
         _In_ uint16_t const retransmitBufferMaxCommandPacketCount,

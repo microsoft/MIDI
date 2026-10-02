@@ -22,6 +22,11 @@ bool AppSettings::LoopbackFeedbackNotificationsEnabled() noexcept
     return ReadFlag(MIDI_NOTIFICATIONS_VALUE_LOOPBACK_FEEDBACK, true);
 }
 
+bool AppSettings::NetworkHostAdapterNotificationsEnabled() noexcept
+{
+    return ReadFlag(MIDI_NOTIFICATIONS_VALUE_NETWORK_HOST_ADAPTER, true);
+}
+
 _Use_decl_annotations_
 bool AppSettings::ReadFlag(PCWSTR const valueName, bool const defaultValue) noexcept
 {

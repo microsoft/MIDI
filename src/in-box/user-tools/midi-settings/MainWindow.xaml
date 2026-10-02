@@ -1548,6 +1548,18 @@
                                            TextWrapping="Wrap"
                                            Style="{StaticResource PropertyLabelStyle}" />
 
+                                <ToggleSwitch x:Name="NotificationsHostAdapterToggle"
+                                              x:Uid="NotificationsHostAdapterToggle"
+                                              Header="Network hosts missing their network adapter"
+                                              OnContent="On"
+                                              OffContent="Off"
+                                              Toggled="OnNotificationsHostAdapterToggled" />
+
+                                <TextBlock x:Uid="NotificationsHostAdapterHelp"
+                                           Text="Tells you when a Network MIDI 2.0 or RTP-MIDI host on this PC can't start, because the network adapter it uses is missing. Choosing another adapter is done in Network MIDI Setup."
+                                           TextWrapping="Wrap"
+                                           Style="{StaticResource PropertyLabelStyle}" />
+
                                 <ToggleSwitch x:Name="NotificationsLoopbackFeedbackToggle"
                                               x:Uid="NotificationsLoopbackFeedbackToggle"
                                               Header="Loopbacks muted because of feedback"
