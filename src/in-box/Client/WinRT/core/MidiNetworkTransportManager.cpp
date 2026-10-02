@@ -16,6 +16,7 @@
 #include "MidiNetworkTransportSettings.h"
 
 #include "midi_network_port_picker.h"
+#include "midi_network_adapters.h"
 
 #include "MidiNetworkHostCreationConfig.h"
 #include "MidiNetworkHostCreationResponse.h"
@@ -136,6 +137,28 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 if (host != nullptr && host.HostId() == hostId)
                 {
                     return host.HasStarted();
+                }
+            }
+
+            return false;
+        }
+
+        // Limited to an adapter which is missing, and not allowed to fall back. It starts when the
+        // adapter is back, which may be a long time from now.
+        bool ConfiguredHostIsWaitingForNetworkAdapter(
+            _In_ collections::IVectorView<network::MidiNetworkConfiguredHost> const& hosts,
+            _In_ winrt::guid const& hostId) noexcept
+        {
+            if (hosts == nullptr)
+            {
+                return false;
+            }
+
+            for (auto const& host : hosts)
+            {
+                if (host != nullptr && host.HostId() == hostId)
+                {
+                    return !host.HasStarted() && host.IsNetworkAdapterMissing();
                 }
             }
 
@@ -550,6 +573,23 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                 RemoteClientPolicyFromString(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_REMOTE_CLIENT_POLICY_KEY, L""))
                             );
 
+                            // An older service reports none of these, which reads as every adapter
+                            GUID networkAdapterId{};
+
+                            if (!::WindowsMidiServicesInternal::TryParseMidiNetworkAdapterId(
+                                    std::wstring{ entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NETWORK_ADAPTER_ID_KEY, L"") },
+                                    networkAdapterId))
+                            {
+                                networkAdapterId = GUID{};
+                            }
+
+                            host->InternalSetNetworkAdapter(
+                                networkAdapterId,
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NETWORK_ADAPTER_NAME_KEY, L""),
+                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY, true),
+                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NETWORK_ADAPTER_MISSING_KEY, false),
+                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NETWORK_ADAPTER_FALLBACK_USED_KEY, false));
+
                             // remote clients on this host. The service reports an empty array when
                             // nothing has connected, so an older service simply yields no entries.
                             if (entryObject.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONNECTIONS_ARRAY_KEY))
@@ -940,12 +980,21 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 // The update call only queues the definition. Returning here would hand back a
                 // host the caller cannot yet use, so wait for the service to bring it up.
                 bool started{ false };
+                bool waitingForNetworkAdapter{ false };
 
                 for (uint32_t attempt = 0; attempt < HostStartPollAttempts; attempt++)
                 {
-                    if (ConfiguredHostHasStarted(GetConfiguredHosts(), config.HostId()))
+                    auto const hosts = GetConfiguredHosts();
+
+                    if (ConfiguredHostHasStarted(hosts, config.HostId()))
                     {
                         started = true;
+                        break;
+                    }
+
+                    if (ConfiguredHostIsWaitingForNetworkAdapter(hosts, config.HostId()))
+                    {
+                        waitingForNetworkAdapter = true;
                         break;
                     }
 
@@ -955,6 +1004,23 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 if (started)
                 {
                     result->InternalSetSuccess();
+                }
+                else if (waitingForNetworkAdapter)
+                {
+                    // Asking it to start gets the service's own explanation, and starts it if the
+                    // adapter has come back in the meantime
+                    auto const startResponse = co_await StartNetworkHostAsync(config.HostId());
+
+                    if (startResponse != nullptr && startResponse.Success())
+                    {
+                        result->InternalSetSuccess();
+                    }
+                    else
+                    {
+                        result->InternalSetError(
+                            network::MidiNetworkHostCreationErrorCode::NetworkAdapterNotAvailable,
+                            startResponse != nullptr ? startResponse.ErrorMessage() : winrt::hstring{});
+                    }
                 }
                 else
                 {

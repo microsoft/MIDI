@@ -243,6 +243,21 @@ Two things behave differently when you change them:
 
 The difference is not arbitrary. Whether an endpoint has MIDI 1.0 ports at all is settled when the endpoint is built and cannot be changed underneath a running one; how many ports it has is driven by properties the service watches, so that can be rewritten live.
 
+## Network adapters
+
+A PC can be on several networks at once. A host can run on all of them, which is the default, or be limited to one network adapter. A host limited to one adapter advertises itself only on that adapter, and only answers devices that reach it through that adapter.
+
+Windows knows each adapter by a GUID. A USB network adapter often gets a new GUID when it's plugged into a different USB port, so the adapter's hardware address is remembered too. When no adapter has the GUID anymore, the adapter with that hardware address is used instead.
+
+An adapter counts as missing when it's gone, turned off, or doesn't have an IP address yet. What the host does then depends on its fallback setting:
+
+| Fallback | While the adapter is missing |
+|---|---|
+| On, the default | The host runs on every adapter, and moves back to its own adapter when it's back |
+| Off | The host doesn't run. It starts by itself when the adapter is back |
+
+A host that's waiting for its adapter shows a warning in [Network MIDI Setup]({{ site.baseurl }}/tools/midinetworksetup/#choosing-a-network-adapter), and MIDI Notifications tells you about it. Changing a host's adapter restarts the host, which ends its connections.
+
 ## Approval
 
 When a host uses `requireApproval`, an unknown device is held pending until somebody answers. A decision has a scope:

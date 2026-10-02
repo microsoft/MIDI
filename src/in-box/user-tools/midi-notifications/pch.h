@@ -32,6 +32,7 @@
 
 #include <winrt/Windows.Devices.Midi2.h>
 #include <winrt/Windows.Devices.Midi2.Transports.Network.h>
+#include <winrt/Windows.Devices.Midi2.Transports.Rtp.h>
 #include <winrt/Windows.Devices.Midi2.Transports.Loopback.h>
 #include <winrt/Windows.Devices.Midi2.Transports.BasicLoopback.h>
 
@@ -48,4 +49,5 @@
 #include "ToastSender.h"
 #include "RegistryChangeWatcher.h"
 #include "NetworkApprovalNotifier.h"
+#include "NetworkHostAdapterNotifier.h"
 #include "LoopbackFeedbackNotifier.h"

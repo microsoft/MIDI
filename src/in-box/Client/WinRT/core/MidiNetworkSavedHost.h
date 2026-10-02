@@ -30,6 +30,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring ManuallyAssignedPort() const noexcept { return m_manuallyAssignedPort; }
         bool AllowPortFallback() const noexcept { return m_allowPortFallback; }
 
+        winrt::guid NetworkAdapterId() const noexcept { return m_networkAdapterId; }
+        winrt::hstring NetworkAdapterName() const noexcept { return m_networkAdapterName; }
+        bool AllowNetworkAdapterFallback() const noexcept { return m_allowNetworkAdapterFallback; }
+
         bool Advertise() const noexcept { return m_advertise; }
 
         network::MidiNetworkRemoteClientPolicy RemoteClientPolicy() const noexcept { return m_remoteClientPolicy; }
@@ -57,6 +61,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool m_useAutomaticPortAllocation{ true };
         winrt::hstring m_manuallyAssignedPort{};
         bool m_allowPortFallback{ true };
+
+        winrt::guid m_networkAdapterId{};
+        winrt::hstring m_networkAdapterName{};
+        bool m_allowNetworkAdapterFallback{ true };
 
         bool m_advertise{ true };
 

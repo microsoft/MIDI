@@ -13,6 +13,8 @@
 #include "MidiRtpSdkJson.h"
 #include "MidiRtpKnownRemoteClient.h"
 
+#include "midi_network_adapters.h"
+
 namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 {
     // Read the way the transport reads a host entry, including its defaults for what is missing
@@ -33,6 +35,19 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
             m_advertise = MidiRtpSdkJson::Boolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_ADVERTISE_KEY, true);
             m_allowPortFallback = MidiRtpSdkJson::Boolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_ALLOW_PORT_FALLBACK_KEY, true);
             m_sendRecoveryJournal = MidiRtpSdkJson::Boolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, true);
+
+            // An id which is not a GUID is ignored, as the service ignores it
+            GUID networkAdapterId{};
+
+            if (::WindowsMidiServicesInternal::TryParseMidiNetworkAdapterId(
+                    std::wstring{ MidiRtpSdkJson::String(entry, MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_ID_KEY) },
+                    networkAdapterId))
+            {
+                m_networkAdapterId = networkAdapterId;
+            }
+
+            m_networkAdapterName = MidiRtpSdkJson::String(entry, MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_NAME_KEY);
+            m_allowNetworkAdapterFallback = MidiRtpSdkJson::Boolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY, true);
 
             uint16_t port{ 0 };
             bool isAuto{ false };

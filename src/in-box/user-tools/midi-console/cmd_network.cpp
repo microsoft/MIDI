@@ -180,6 +180,10 @@ namespace midi2console
                     ToUtf8(host.ConfiguredPort()), warningTextStyle);
             }
 
+            WriteField(ResourceString(IDS_NET_LABEL_NETWORK_ADAPTER),
+                FormatNetworkAdapter(host.NetworkAdapterId(), host.NetworkAdapterName(), host.IsNetworkAdapterMissing()),
+                host.IsNetworkAdapterMissing() ? warningTextStyle : fieldValueTextStyle);
+
             WriteField(ResourceString(IDS_NET_LABEL_SERVICE_INSTANCE),
                 ToUtf8(host.ActualServiceInstanceName()), fieldValueTextStyle);
             WriteField(ResourceString(IDS_NET_LABEL_PRODUCT_INSTANCE_ID),
@@ -193,12 +197,30 @@ namespace midi2console
                     FormatBoolean(host.CreateMidi1Ports()), BooleanStyle(host.CreateMidi1Ports()));
                 WriteField(ResourceString(IDS_NET_LABEL_USED_PORT_FALLBACK),
                     FormatBoolean(host.UsedPortFallback()), BooleanStyle(!host.UsedPortFallback()));
+
+                if (host.NetworkAdapterId() != winrt::guid{})
+                {
+                    WriteField(ResourceString(IDS_NET_LABEL_ALLOW_ADAPTER_FALLBACK),
+                        FormatBoolean(host.AllowNetworkAdapterFallback()), BooleanStyle(host.AllowNetworkAdapterFallback()));
+                }
             }
 
             if (host.UsedPortFallback())
             {
                 WriteBlankLine();
                 WriteWarningLine(ResourceString(IDS_NET_PORT_FALLBACK_NOTE));
+            }
+
+            if (host.IsNetworkAdapterMissing())
+            {
+                auto const adapterName = host.NetworkAdapterName().empty() ?
+                    ResourceString(IDS_NET_ADAPTER_UNKNOWN) :
+                    ToUtf8(host.NetworkAdapterName());
+
+                WriteBlankLine();
+                WriteWarningLine(FormatResourceString(
+                    host.HasStarted() ? IDS_NET_ADAPTER_FALLBACK_NOTE : IDS_NET_ADAPTER_WAITING_NOTE,
+                    adapterName));
             }
 
             WriteBlankLine();

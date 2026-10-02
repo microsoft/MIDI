@@ -112,10 +112,12 @@ namespace winrt::midisettings::implementation
             NotificationsEnabledToggle().IsOn(enabled);
             NotificationsNetworkToggle().IsOn(native::NotificationSettings::NetworkApprovalEnabled());
             NotificationsLoopbackFeedbackToggle().IsOn(native::NotificationSettings::LoopbackFeedbackEnabled());
+            NotificationsHostAdapterToggle().IsOn(native::NotificationSettings::NetworkHostAdapterEnabled());
 
             // The categories are meaningless while nothing is being shown at all.
             NotificationsNetworkToggle().IsEnabled(enabled);
             NotificationsLoopbackFeedbackToggle().IsEnabled(enabled);
+            NotificationsHostAdapterToggle().IsEnabled(enabled);
 
             auto const elevated = ::winrt::midisettings::implementation::App::IsElevated();
             auto const forEveryone = native::NotificationSettings::StartsForAllUsers();
@@ -138,6 +140,7 @@ namespace winrt::midisettings::implementation
                 NotificationsEnabledToggle().IsEnabled(false);
                 NotificationsNetworkToggle().IsEnabled(false);
                 NotificationsLoopbackFeedbackToggle().IsEnabled(false);
+                NotificationsHostAdapterToggle().IsEnabled(false);
                 NotificationsStartupToggle().IsEnabled(false);
                 NotificationsAllUsersToggle().IsEnabled(false);
 
@@ -191,6 +194,7 @@ namespace winrt::midisettings::implementation
 
             NotificationsNetworkToggle().IsEnabled(enabled);
             NotificationsLoopbackFeedbackToggle().IsEnabled(enabled);
+            NotificationsHostAdapterToggle().IsEnabled(enabled);
 
             if (enabled)
             {
@@ -227,6 +231,21 @@ namespace winrt::midisettings::implementation
         try
         {
             native::NotificationSettings::LoopbackFeedbackEnabled(NotificationsLoopbackFeedbackToggle().IsOn());
+        }
+        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to change the notification setting.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnNotificationsHostAdapterToggled(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        if (m_updatingNotificationToggles)
+        {
+            return;
+        }
+
+        try
+        {
+            native::NotificationSettings::NetworkHostAdapterEnabled(NotificationsHostAdapterToggle().IsOn());
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to change the notification setting.")
     }

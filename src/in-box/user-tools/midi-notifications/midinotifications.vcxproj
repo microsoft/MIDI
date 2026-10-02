@@ -113,6 +113,7 @@
     <ClInclude Include="..\midi-app-shared\SingleInstance.h" />
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="NetworkApprovalNotifier.h" />
+    <ClInclude Include="NetworkHostAdapterNotifier.h" />
     <ClInclude Include="LoopbackFeedbackNotifier.h" />
     <ClInclude Include="notification_settings_defs.h" />
     <ClInclude Include="pch.h" />
@@ -125,6 +126,7 @@
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NetworkApprovalNotifier.cpp" />
+    <ClCompile Include="NetworkHostAdapterNotifier.cpp" />
     <ClCompile Include="LoopbackFeedbackNotifier.cpp" />
     <ClCompile Include="RegistryChangeWatcher.cpp" />
     <ClCompile Include="ToastSender.cpp" />

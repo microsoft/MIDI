@@ -24,6 +24,7 @@
     <ClCompile Include="..\midi-app-shared\MonitorLauncher.cpp" />
     <ClCompile Include="..\midi-app-shared\SettingsAppLauncher.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
+    <ClCompile Include="$(SolutionDir)inc\midi_network_adapters.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>

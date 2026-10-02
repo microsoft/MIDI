@@ -10,8 +10,33 @@
 #include "MidiRtpHostCreationConfig.h"
 #include "Transports.Rtp.MidiRtpHostCreationConfig.g.cpp"
 
+#include "midi_network_adapters.h"
+
 namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 {
+    _Use_decl_annotations_
+    void MidiRtpHostCreationConfig::NetworkAdapterId(winrt::guid const& value) noexcept
+    {
+        m_networkAdapterId = value;
+        m_networkAdapterName = winrt::hstring{};
+        m_networkAdapterPhysicalAddress = winrt::hstring{};
+
+        try
+        {
+            ::WindowsMidiServicesInternal::MidiNetworkAdapterInfo adapter{};
+
+            if (::WindowsMidiServicesInternal::TryGetMidiNetworkAdapter(value, adapter))
+            {
+                m_networkAdapterName = winrt::hstring{ adapter.Name };
+                m_networkAdapterPhysicalAddress = winrt::hstring{ adapter.PhysicalAddress };
+            }
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception looking up a network adapter.");
+        }
+    }
+
     // An empty name is left out, so the service uses this PC's name
     json::JsonObject MidiRtpHostCreationConfig::ConfigJson() const noexcept
     {
@@ -41,6 +66,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
                 m_remoteClientPolicy == rtp::MidiRtpRemoteClientPolicy::AllowAny ?
                 MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENT_POLICY_VALUE_ALLOW_ANY :
                 MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENT_POLICY_VALUE_REQUIRE_APPROVAL));
+
+            // Written even for every adapter, so replacing a host limited to one undoes the limit
+            host.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_ID_KEY, json::JsonValue::CreateStringValue(
+                winrt::hstring{ ::WindowsMidiServicesInternal::MidiNetworkAdapterIdToString(m_networkAdapterId) }));
+            host.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_NAME_KEY, json::JsonValue::CreateStringValue(m_networkAdapterName));
+            host.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_PHYSICAL_ADDRESS_KEY, json::JsonValue::CreateStringValue(m_networkAdapterPhysicalAddress));
+            host.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY, json::JsonValue::CreateBooleanValue(m_allowNetworkAdapterFallback));
 
             json::JsonObject hosts;
             hosts.SetNamedValue(MidiRtpSdkJson::EntryKey(m_hostId), host);

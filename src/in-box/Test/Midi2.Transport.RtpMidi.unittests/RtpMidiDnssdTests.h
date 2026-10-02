@@ -30,4 +30,5 @@ public:
     TEST_METHOD(TestAnnouncerNeverRepeatsAWithdrawnHost);
     TEST_METHOD(TestAnnouncerTimesABurstOfRegistrations);
     TEST_METHOD(TestAnnouncerSendsNothingOnceStopped);
+    TEST_METHOD(TestAnnouncerSendsALimitedHostOnlyOnItsAdapter);
 };

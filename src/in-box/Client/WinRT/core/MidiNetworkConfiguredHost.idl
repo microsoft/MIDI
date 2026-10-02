@@ -39,6 +39,20 @@ namespace Windows.Devices.Midi2.Transports.Network
         // The host is working, but not where the user asked it to be, so this is worth surfacing.
         [noexcept] Boolean UsedPortFallback{ get; };
 
+        // The network adapter the host is limited to, or an empty GUID for every adapter, and the
+        // name it had when it was chosen
+        [noexcept] Guid NetworkAdapterId{ get; };
+        [noexcept] String NetworkAdapterName{ get; };
+
+        [noexcept] Boolean AllowNetworkAdapterFallback{ get; };
+
+        // True when the host's adapter is missing. With HasStarted the host is running on every
+        // adapter until it is back, which UsedNetworkAdapterFallback also says. Without it the
+        // host is waiting for the adapter and starts by itself when it is back. Either way it is
+        // not where the customer asked it to be, so this is worth showing.
+        [noexcept] Boolean IsNetworkAdapterMissing{ get; };
+        [noexcept] Boolean UsedNetworkAdapterFallback{ get; };
+
         [noexcept] String UmpEndpointName{ get; };
         [noexcept] String ProductInstanceId{ get; };
 

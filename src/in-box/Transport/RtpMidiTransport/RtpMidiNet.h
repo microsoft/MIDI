@@ -9,6 +9,10 @@
 
 #pragma once
 
+#include <array>
+#include <compare>
+#include <shared_mutex>
+
 namespace RtpMidiText
 {
     inline std::wstring Utf8ToWide(_In_ std::string const& text)
@@ -179,8 +183,9 @@ namespace RtpMidiNet
         return {};
     }
 
-    // Prefers routable IPv4. A link-local IPv6 address from the shared browser carries no
-    // interface index, so it cannot be reached and is never chosen.
+    // Prefers routable IPv4, then link-local IPv4, then routable IPv6, then link-local IPv6. A
+    // link-local IPv6 address can only be reached through the adapter it was seen on, so one
+    // without a %scope naming that adapter is never chosen.
     inline bool ChooseServiceAddress(
         _In_ WindowsMidiServicesInternal::MidiDnssdService const& service,
         _Out_ RtpMidi::PeerAddress& chosen)
@@ -211,13 +216,27 @@ namespace RtpMidiNet
             return true;
         }
 
+        RtpMidi::PeerAddress linkLocalV6{};
+        bool haveLinkLocalV6 = false;
+
         for (auto const& text : service.IPv6Addresses)
         {
             RtpMidi::PeerAddress address{};
             if (!TryParseAddress(text, service.Port, address)) continue;
-            if (address.Bytes[0] == 0xFE && (address.Bytes[1] & 0xC0) == 0x80) continue;
+
+            if (address.Bytes[0] == 0xFE && (address.Bytes[1] & 0xC0) == 0x80)
+            {
+                if (!haveLinkLocalV6 && address.ScopeId != 0) { linkLocalV6 = address; haveLinkLocalV6 = true; }
+                continue;
+            }
 
             chosen = address;
+            return true;
+        }
+
+        if (haveLinkLocalV6)
+        {
+            chosen = linkLocalV6;
             return true;
         }
 
@@ -262,6 +281,23 @@ namespace RtpMidiNet
             int receiveBufferBytes = 1024 * 1024;
             setsockopt(socket, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<char const*>(&receiveBufferBytes), sizeof(receiveBufferBytes));
 
+            // Which address and adapter each datagram arrived on. Both levels, because this is a
+            // dual-stack socket and IPv4 arrivals report at the IPv4 level. Measured: IPv4 and
+            // link-local IPv6 both report the adapter, and a reply sent with the address set
+            // goes out from it.
+            DWORD packetInfo = 1;
+            setsockopt(socket, IPPROTO_IP, IP_PKTINFO, reinterpret_cast<char const*>(&packetInfo), sizeof(packetInfo));
+            setsockopt(socket, IPPROTO_IPV6, IPV6_PKTINFO, reinterpret_cast<char const*>(&packetInfo), sizeof(packetInfo));
+
+            GUID receiveMessageId = WSAID_WSARECVMSG;
+            DWORD functionBytes = 0;
+
+            if (WSAIoctl(socket, SIO_GET_EXTENSION_FUNCTION_POINTER, &receiveMessageId, sizeof(receiveMessageId),
+                &m_receiveMessage, sizeof(m_receiveMessage), &functionBytes, nullptr, nullptr) == SOCKET_ERROR)
+            {
+                m_receiveMessage = nullptr;
+            }
+
             sockaddr_in6 local{};
             local.sin6_family = AF_INET6;
             local.sin6_addr = in6addr_any;
@@ -284,6 +320,10 @@ namespace RtpMidiNet
 
         uint16_t Port() const noexcept { return m_port; }
 
+        // Before StartReceiving. A datagram arriving on any other interface is dropped, as though
+        // nothing were listening. Empty means every interface.
+        void LimitToInterfaces(_In_ std::vector<uint32_t> interfaces) { m_interfaces = std::move(interfaces); }
+
         HRESULT StartReceiving(_In_ ReceiveHandler handler, _In_ PCWSTR const threadName) noexcept
         {
             try
@@ -305,6 +345,17 @@ namespace RtpMidiNet
             if (socket == INVALID_SOCKET || datagram.empty()) return false;
 
             auto const address = ToSockaddr(to);
+
+            // From the address the remote reached this PC on. The socket is bound to every
+            // address, so otherwise Windows picks one, and a remote which only accepts its peer's
+            // address drops the reply. RFC 1122 4.1.3.5 asks for this.
+            LocalAddress local{};
+
+            if (TryGetReplySource(to, local))
+            {
+                if (SendFrom(socket, address, datagram, local)) return true;
+            }
+
             auto const sent = sendto(socket, reinterpret_cast<char const*>(datagram.data()), static_cast<int>(datagram.size()), 0,
                 reinterpret_cast<sockaddr const*>(&address), sizeof(address));
 
@@ -327,6 +378,177 @@ namespace RtpMidiNet
         }
 
     private:
+        // Where a datagram arrived: the local address and the interface it came in on
+        struct LocalAddress
+        {
+            int Family{ 0 };
+            IN_ADDR IPv4{};
+            IN6_ADDR IPv6{};
+            ULONG InterfaceIndex{ 0 };
+
+            bool operator==(_In_ LocalAddress const& other) const noexcept
+            {
+                return Family == other.Family && InterfaceIndex == other.InterfaceIndex &&
+                    memcmp(&IPv4, &other.IPv4, sizeof(IPv4)) == 0 && memcmp(&IPv6, &other.IPv6, sizeof(IPv6)) == 0;
+            }
+        };
+
+        struct PeerKey
+        {
+            uint8_t Family{ 0 };
+            std::array<uint8_t, 16> Bytes{};
+            uint16_t Port{ 0 };
+            uint32_t ScopeId{ 0 };
+
+            auto operator<=>(_In_ PeerKey const&) const = default;
+        };
+
+        static PeerKey KeyFor(_In_ RtpMidi::PeerAddress const& address) noexcept
+        {
+            PeerKey key{};
+            key.Family = static_cast<uint8_t>(address.Family);
+            memcpy(key.Bytes.data(), address.Bytes.data(), (std::min)(key.Bytes.size(), address.Bytes.size()));
+            key.Port = address.Port;
+            key.ScopeId = address.ScopeId;
+
+            return key;
+        }
+
+        // Anyone can send to a host, so the table of who reached it where is capped. A remote left
+        // out of it is answered from whatever address Windows picks, as before.
+        static constexpr size_t MaxReplySources = 1024;
+
+        void RememberReplySource(_In_ RtpMidi::PeerAddress const& from, _In_ LocalAddress const& local) noexcept
+        {
+            try
+            {
+                auto const key = KeyFor(from);
+
+                {
+                    auto lock = std::shared_lock{ m_replySourcesLock };
+
+                    auto const it = m_replySources.find(key);
+                    if (it != m_replySources.end() && it->second == local) return;
+                }
+
+                auto lock = std::unique_lock{ m_replySourcesLock };
+
+                if (m_replySources.size() >= MaxReplySources && m_replySources.find(key) == m_replySources.end()) return;
+
+                m_replySources[key] = local;
+            }
+            catch (...)
+            {
+                // only costs the reply address
+            }
+        }
+
+        bool TryGetReplySource(_In_ RtpMidi::PeerAddress const& to, _Out_ LocalAddress& local) noexcept
+        {
+            local = LocalAddress{};
+
+            try
+            {
+                auto lock = std::shared_lock{ m_replySourcesLock };
+
+                auto const it = m_replySources.find(KeyFor(to));
+                if (it == m_replySources.end()) return false;
+
+                local = it->second;
+                return true;
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
+
+        static bool SendFrom(
+            _In_ SOCKET const socket,
+            _In_ sockaddr_in6 const& to,
+            _In_ std::vector<uint8_t> const& datagram,
+            _In_ LocalAddress const& local) noexcept
+        {
+            char control[WSA_CMSG_SPACE(sizeof(IN6_PKTINFO))]{};
+
+            WSABUF buffer{ static_cast<ULONG>(datagram.size()), reinterpret_cast<char*>(const_cast<uint8_t*>(datagram.data())) };
+
+            WSAMSG message{};
+            message.name = reinterpret_cast<sockaddr*>(const_cast<sockaddr_in6*>(&to));
+            message.namelen = sizeof(to);
+            message.lpBuffers = &buffer;
+            message.dwBufferCount = 1;
+            message.Control.buf = control;
+
+            auto const header = reinterpret_cast<WSACMSGHDR*>(control);
+
+            // an IPv4 remote on this dual-stack socket takes the IPv4 form
+            if (local.Family == AF_INET)
+            {
+                IN_PKTINFO info{};
+                info.ipi_addr = local.IPv4;
+                info.ipi_ifindex = local.InterfaceIndex;
+
+                header->cmsg_level = IPPROTO_IP;
+                header->cmsg_type = IP_PKTINFO;
+                header->cmsg_len = WSA_CMSG_LEN(sizeof(info));
+                memcpy(WSA_CMSG_DATA(header), &info, sizeof(info));
+
+                message.Control.len = WSA_CMSG_SPACE(sizeof(info));
+            }
+            else
+            {
+                IN6_PKTINFO info{};
+                info.ipi6_addr = local.IPv6;
+                info.ipi6_ifindex = local.InterfaceIndex;
+
+                header->cmsg_level = IPPROTO_IPV6;
+                header->cmsg_type = IPV6_PKTINFO;
+                header->cmsg_len = WSA_CMSG_LEN(sizeof(info));
+                memcpy(WSA_CMSG_DATA(header), &info, sizeof(info));
+
+                message.Control.len = WSA_CMSG_SPACE(sizeof(info));
+            }
+
+            DWORD sent{ 0 };
+
+            return WSASendMsg(socket, &message, 0, &sent, nullptr, nullptr) == 0 && sent == datagram.size();
+        }
+
+        static bool TryReadLocalAddress(_In_ WSAMSG& message, _Out_ LocalAddress& local) noexcept
+        {
+            local = LocalAddress{};
+
+            for (auto header = WSA_CMSG_FIRSTHDR(&message); header != nullptr; header = WSA_CMSG_NXTHDR(&message, header))
+            {
+                if (header->cmsg_level == IPPROTO_IP && header->cmsg_type == IP_PKTINFO)
+                {
+                    IN_PKTINFO info{};
+                    memcpy(&info, WSA_CMSG_DATA(header), sizeof(info));
+
+                    local.Family = AF_INET;
+                    local.IPv4 = info.ipi_addr;
+                    local.InterfaceIndex = info.ipi_ifindex;
+
+                    return true;
+                }
+
+                if (header->cmsg_level == IPPROTO_IPV6 && header->cmsg_type == IPV6_PKTINFO)
+                {
+                    IN6_PKTINFO info{};
+                    memcpy(&info, WSA_CMSG_DATA(header), sizeof(info));
+
+                    local.Family = AF_INET6;
+                    local.IPv6 = info.ipi6_addr;
+                    local.InterfaceIndex = info.ipi6_ifindex;
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         void ReceiveLoop() noexcept
         {
             try
@@ -340,9 +562,38 @@ namespace RtpMidiNet
 
                     sockaddr_storage from{};
                     int fromLength = sizeof(from);
+                    int received{ SOCKET_ERROR };
 
-                    auto const received = recvfrom(socket, reinterpret_cast<char*>(buffer.data()), static_cast<int>(buffer.size()), 0,
-                        reinterpret_cast<sockaddr*>(&from), &fromLength);
+                    LocalAddress local{};
+                    bool knowLocal{ false };
+
+                    if (m_receiveMessage != nullptr)
+                    {
+                        char control[256]{};
+
+                        WSABUF data{ static_cast<ULONG>(buffer.size()), reinterpret_cast<char*>(buffer.data()) };
+
+                        WSAMSG message{};
+                        message.name = reinterpret_cast<sockaddr*>(&from);
+                        message.namelen = fromLength;
+                        message.lpBuffers = &data;
+                        message.dwBufferCount = 1;
+                        message.Control.buf = control;
+                        message.Control.len = sizeof(control);
+
+                        DWORD bytes{ 0 };
+
+                        if (m_receiveMessage(socket, &message, &bytes, nullptr, nullptr) == 0)
+                        {
+                            received = static_cast<int>(bytes);
+                            knowLocal = TryReadLocalAddress(message, local);
+                        }
+                    }
+                    else
+                    {
+                        received = recvfrom(socket, reinterpret_cast<char*>(buffer.data()), static_cast<int>(buffer.size()), 0,
+                            reinterpret_cast<sockaddr*>(&from), &fromLength);
+                    }
 
                     if (received == SOCKET_ERROR)
                     {
@@ -351,12 +602,24 @@ namespace RtpMidiNet
                         break;
                     }
 
+                    // A host limited to one adapter does not hear what arrives on the others. One
+                    // which cannot tell where a datagram arrived does not answer it either.
+                    if (!m_interfaces.empty() &&
+                        (!knowLocal || std::find(m_interfaces.begin(), m_interfaces.end(), local.InterfaceIndex) == m_interfaces.end()))
+                    {
+                        continue;
+                    }
+
                     if (received > 0 && m_handler)
                     {
+                        auto const peer = FromSockaddr(from);
+
+                        if (knowLocal) RememberReplySource(peer, local);
+
                         // one datagram that fails must not stop the socket for every connection on it
                         try
                         {
-                            m_handler(FromSockaddr(from), buffer.data(), static_cast<size_t>(received));
+                            m_handler(peer, buffer.data(), static_cast<size_t>(received));
                         }
                         CATCH_LOG();
                     }
@@ -369,6 +632,12 @@ namespace RtpMidiNet
         uint16_t m_port{ 0 };
         ReceiveHandler m_handler;
         std::thread m_thread;
+
+        LPFN_WSARECVMSG m_receiveMessage{ nullptr };
+        std::vector<uint32_t> m_interfaces;
+
+        std::shared_mutex m_replySourcesLock;
+        std::map<PeerKey, LocalAddress> m_replySources;
     };
 
     // AppleMIDI puts the data port at the control port plus one
@@ -404,6 +673,13 @@ namespace RtpMidiNet
 
         UdpSocket& Control() noexcept { return m_control; }
         UdpSocket& Data() noexcept { return m_data; }
+
+        // Before either starts receiving. Empty is every interface.
+        void LimitToInterfaces(_In_ std::vector<uint32_t> const& interfaces)
+        {
+            m_control.LimitToInterfaces(interfaces);
+            m_data.LimitToInterfaces(interfaces);
+        }
 
         void Close() noexcept
         {
@@ -445,12 +721,13 @@ namespace RtpMidiNet
         DnssdAdvertiser& operator=(_In_ DnssdAdvertiser const&) = delete;
 
         // Waits for the DNS client to finish probing the name, and gives up early when stopToken
-        // is signaled
+        // is signaled. A non-zero interface index advertises on that adapter only.
         HRESULT Register(
             _In_ std::wstring const& instanceLabel,
             _In_ uint16_t const port,
             _In_ DWORD const timeoutMilliseconds,
-            _In_ std::stop_token const& stopToken) noexcept
+            _In_ std::stop_token const& stopToken,
+            _In_ uint32_t const interfaceIndex = 0) noexcept
         {
             try
             {
@@ -474,7 +751,7 @@ namespace RtpMidiNet
                 RETURN_LAST_ERROR_IF_NULL(registration->Instance);
 
                 registration->Request.Version = DNS_QUERY_REQUEST_VERSION1;
-                registration->Request.InterfaceIndex = 0;
+                registration->Request.InterfaceIndex = interfaceIndex;
                 registration->Request.pServiceInstance = registration->Instance;
                 registration->Request.pRegisterCompletionCallback = &DnssdAdvertiser::Completed;
                 registration->Request.pQueryContext = registration.get();

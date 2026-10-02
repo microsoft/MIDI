@@ -121,6 +121,9 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "network_transport_error_codes.h"
 #include "MidiSequenceNumber.h"
 
+// The adapters a host can be limited to, shared with the SDK and the setup app
+#include "midi_network_adapters.h"
+
 class CMidi2NetworkMidiEndpointManager;
 class CMidi2NetworkMidiConfigurationManager;
 class MidiNetworkAdvertiser;

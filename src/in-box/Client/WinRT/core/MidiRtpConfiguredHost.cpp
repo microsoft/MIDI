@@ -13,6 +13,8 @@
 #include "MidiRtpConnection.h"
 #include "MidiRtpKnownRemoteClient.h"
 
+#include "midi_network_adapters.h"
+
 namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 {
     _Use_decl_annotations_
@@ -35,6 +37,21 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
             m_usedPortFallback = MidiRtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_PORT_FALLBACK_USED_KEY);
             m_sendRecoveryJournal = MidiRtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY);
             m_lastErrorCode = MidiRtpSdkJson::Hresult(source, MIDI_CONFIG_JSON_RTP_MIDI_LAST_ERROR_KEY);
+
+            // An older service reports none of these, which reads as every adapter
+            GUID networkAdapterId{};
+
+            if (::WindowsMidiServicesInternal::TryParseMidiNetworkAdapterId(
+                    std::wstring{ MidiRtpSdkJson::String(source, MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_ID_KEY) },
+                    networkAdapterId))
+            {
+                m_networkAdapterId = networkAdapterId;
+            }
+
+            m_networkAdapterName = MidiRtpSdkJson::String(source, MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_NAME_KEY);
+            m_allowNetworkAdapterFallback = MidiRtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY, true);
+            m_isNetworkAdapterMissing = MidiRtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_MISSING_KEY);
+            m_usedNetworkAdapterFallback = MidiRtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_FALLBACK_USED_KEY);
 
             // missing means anyone may connect, as it does in the configuration file
             auto const policy = MidiRtpSdkJson::String(source, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENT_POLICY_KEY);

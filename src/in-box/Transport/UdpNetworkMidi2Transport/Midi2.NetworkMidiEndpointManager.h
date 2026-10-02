@@ -125,12 +125,24 @@ public:
         _Inout_ std::wstring& createdNewDeviceInstanceId);
 
     // A host's DNS-SD registration, for the repeated announcements in midi_dnssd_announcer.h.
-    // The label is the one actually on the network. Withdraw it before the registration is.
-    void OnHostRegistered(_In_ std::wstring_view const serviceInstanceLabel);
+    // The label is the one actually on the network, and a host limited to one adapter passes it
+    // so the repeats stay on that adapter. Withdraw it before the registration is.
+    void OnHostRegistered(_In_ std::wstring_view const serviceInstanceLabel, _In_ winrt::guid const& networkAdapterId);
     void OnHostRegistrationEnding(_In_ std::wstring_view const serviceInstanceLabel) noexcept;
+
+    // A host's adapter setting changed. The creator worker moves it on its next pass.
+    void RequestNetworkAdapterReconcile() noexcept;
 
 
 private:
+    // Moves each host limited to an adapter onto it, onto every adapter, or into waiting, to
+    // match the adapters there are now. Only EndpointCreatorWorker calls this.
+    void ReconcileHostNetworkAdapters();
+
+    // Set by an adapter gaining or losing an address, and by a changed adapter setting
+    std::atomic<bool> m_networkAdapterReconcileRequested{ false };
+    ::WindowsMidiServicesInternal::MidiNetworkChangeMonitor m_networkChangeMonitor;
+
     // Only EndpointCreatorWorker may call this, so two callers can't build the same client.
     HRESULT StartNewClient(
         _In_ MidiNetworkClientDefinition const& clientDefinition,

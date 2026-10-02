@@ -25,6 +25,10 @@
 #define RTP_MIDI_ERROR_CODE_TOO_MANY_REMOTE_CLIENT_DECISIONS 16
 #define RTP_MIDI_ERROR_CODE_CONNECTION_NOT_FOUND            17
 
+// The host is limited to a network adapter which is missing, and may not fall back to the others.
+// It starts by itself when the adapter is back.
+#define RTP_MIDI_ERROR_CODE_NETWORK_ADAPTER_NOT_AVAILABLE   18
+
 // Raised in the SDK, never by the transport
 #define RTP_MIDI_ERROR_CODE_CLIENT_API_SERVICE_UNAVAILABLE  1000
 #define RTP_MIDI_ERROR_CODE_CLIENT_API_TIMEOUT              1001

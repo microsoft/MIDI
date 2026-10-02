@@ -39,3 +39,8 @@
 // Bumped when a remote client starts waiting for a decision on one of this PC's network hosts.
 #define MIDI_NOTIFICATION_NETWORK_PENDING_APPROVAL_VALUE \
     L"NetworkPendingApprovalChangeCount"
+
+// Bumped when one of this PC's network hosts starts or stops waiting for its network adapter,
+// because the adapter is missing and the host may not fall back to the others.
+#define MIDI_NOTIFICATION_NETWORK_HOST_ADAPTER_VALUE \
+    L"NetworkHostAdapterChangeCount"

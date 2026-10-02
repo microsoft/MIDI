@@ -331,6 +331,10 @@ namespace midi2console
                 WriteField(ResourceString(IDS_NET_LABEL_CONFIGURED_PORT), ToUtf8(host.ConfiguredPort()), fieldValueTextStyle);
             }
 
+            WriteField(ResourceString(IDS_NET_LABEL_NETWORK_ADAPTER),
+                FormatNetworkAdapter(host.NetworkAdapterId(), host.NetworkAdapterName(), host.IsNetworkAdapterMissing()),
+                host.IsNetworkAdapterMissing() ? warningTextStyle : fieldValueTextStyle);
+
             WriteField(ResourceString(IDS_NET_LABEL_SERVICE_INSTANCE),
                 !host.Advertise() ?
                     ResourceString(IDS_RTP_NOT_ADVERTISED) :
@@ -354,12 +358,30 @@ namespace midi2console
                     FormatBoolean(host.UsedPortFallback()), BooleanStyle(!host.UsedPortFallback()));
                 WriteField(ResourceString(IDS_RTP_LABEL_RECOVERY_JOURNAL),
                     FormatBoolean(host.SendRecoveryJournal()), BooleanStyle(host.SendRecoveryJournal()));
+
+                if (host.NetworkAdapterId() != winrt::guid{})
+                {
+                    WriteField(ResourceString(IDS_NET_LABEL_ALLOW_ADAPTER_FALLBACK),
+                        FormatBoolean(host.AllowNetworkAdapterFallback()), BooleanStyle(host.AllowNetworkAdapterFallback()));
+                }
             }
 
             if (host.UsedPortFallback())
             {
                 WriteBlankLine();
                 WriteWarningLine(FormatResourceString(IDS_RTP_PORT_FALLBACK_NOTE, WantedPort(host), fmt::format("{}", host.ActualPort())));
+            }
+
+            if (host.IsNetworkAdapterMissing())
+            {
+                auto const adapterName = host.NetworkAdapterName().empty() ?
+                    ResourceString(IDS_NET_ADAPTER_UNKNOWN) :
+                    ToUtf8(host.NetworkAdapterName());
+
+                WriteBlankLine();
+                WriteWarningLine(FormatResourceString(
+                    host.HasStarted() ? IDS_NET_ADAPTER_FALLBACK_NOTE : IDS_NET_ADAPTER_WAITING_NOTE,
+                    adapterName));
             }
 
             if (host.Advertise() && host.ServiceInstanceNameWasChanged())

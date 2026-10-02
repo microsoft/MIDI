@@ -39,6 +39,12 @@ namespace Windows.Devices.Midi2.Transports.Network
 
         [noexcept] Boolean AllowPortFallback{ get; };
 
+        // These include changes saved later with MidiNetworkHostUpdateConfig. An empty GUID is
+        // every adapter.
+        [noexcept] Guid NetworkAdapterId{ get; };
+        [noexcept] String NetworkAdapterName{ get; };
+        [noexcept] Boolean AllowNetworkAdapterFallback{ get; };
+
         [noexcept] Boolean Advertise{ get; };
 
         [noexcept] MidiNetworkRemoteClientPolicy RemoteClientPolicy{ get; };

@@ -94,6 +94,14 @@ public:
     winrt::Windows::Networking::HostName GetRemoteHostName() { return m_remoteHostName; }
     std::wstring GetRemotePort() { return m_remotePort; }
 
+    // Replies from the address the remote sent to (RFC 1122 4.1.3.5). A remote whose socket is
+    // connected drops a reply from any other address, and an IPv6 host usually has several.
+    static winrt::Windows::Storage::Streams::IOutputStream GetReplyOutputStream(
+        _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
+        _In_ winrt::Windows::Networking::HostName const& localHostName,
+        _In_ winrt::Windows::Networking::HostName const& remoteHostName,
+        _In_ winrt::hstring const& remotePort);
+
     // True once a session existed and has now ended. The owner releases the connection at that
     // point instead of leaving it to the idle reaper: a remote normally reconnects from a new
     // ephemeral port, so the old entry would otherwise hold a slot and two threads for nothing.
@@ -193,6 +201,8 @@ protected:
         _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
         _In_ winrt::hstring const& remotePort,
+        // host role: the address the remote sent to. Null for a client, whose socket is connected.
+        _In_ winrt::Windows::Networking::HostName const& localHostName,
         _In_ std::wstring const& thisEndpointName,
         _In_ std::wstring const& thisProductInstanceId,
         _In_ uint16_t const retransmitBufferMaxCommandPacketCount,

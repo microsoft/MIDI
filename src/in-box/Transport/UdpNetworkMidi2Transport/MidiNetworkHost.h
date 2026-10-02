@@ -39,6 +39,20 @@ struct MidiNetworkHostDefinition
     // Only consulted when a specific port was configured.
     bool AllowPortFallback{ true };
 
+    // The adapter the host is limited to, or a null GUID for every adapter. Found by its id, then
+    // by its hardware address. The name is only shown while the adapter is missing.
+    winrt::guid NetworkAdapterId{};
+    winrt::hstring NetworkAdapterName;
+    winrt::hstring NetworkAdapterPhysicalAddress;
+
+    // When the adapter is missing: run on every adapter until it comes back, instead of waiting
+    bool AllowNetworkAdapterFallback{ true };
+
+    bool IsLimitedToNetworkAdapter() const noexcept
+    {
+        return NetworkAdapterId != winrt::guid{} || !NetworkAdapterPhysicalAddress.empty();
+    }
+
     winrt::hstring UmpEndpointName;
     winrt::hstring ProductInstanceId;
 
@@ -93,6 +107,26 @@ public:
     // True when the configured port was unavailable and the host started on an allocated one.
     bool PortFallbackUsed() { return m_portFallbackUsed; }
 
+    // True when the host is limited to an adapter which is missing, and is running on every
+    // adapter until it comes back.
+    bool NetworkAdapterFallbackUsed() { return m_networkAdapterFallbackUsed; }
+
+    // True when the host is limited to an adapter which is missing and may not fall back, so it
+    // is not running. It starts by itself when the adapter comes back.
+    bool IsWaitingForNetworkAdapter() { return m_waitingForNetworkAdapter; }
+
+    // A configuration update. Takes effect at the next ReconcileNetworkAdapter.
+    void SetNetworkAdapter(
+        _In_ winrt::guid const& id,
+        _In_ winrt::hstring const& name,
+        _In_ winrt::hstring const& physicalAddress,
+        _In_ bool const allowFallback);
+
+    // Moves the host to where its adapter setting says it should be now: onto the adapter when
+    // it is there, onto every adapter or into waiting when it is not. Leaves a host the customer
+    // stopped alone.
+    HRESULT ReconcileNetworkAdapter(_In_ std::vector<::WindowsMidiServicesInternal::MidiNetworkAdapterInfo> const& adapters);
+
     // True when a DNS-SD collision made the responder advertise this host under a different
     // instance label than the one it was configured with.
     bool ServiceInstanceNameWasChanged();
@@ -140,6 +174,8 @@ public:
 private:
     bool m_enabled{ true };
     std::atomic<bool> m_portFallbackUsed{ false };
+    std::atomic<bool> m_networkAdapterFallbackUsed{ false };
+    std::atomic<bool> m_waitingForNetworkAdapter{ false };
     std::atomic<bool> m_started{ false };
     std::atomic<bool> m_createUmpEndpointsOnly{ true };
     std::atomic<uint8_t> m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
@@ -193,16 +229,35 @@ private:
     // Binds the configured port, or an automatic one when the configuration allows falling back.
     HRESULT BindSocket(_In_ DatagramSocket const& socket, _Out_ uint16_t& boundPort);
 
-    // Registers the host with DNS-SD and publishes the advertiser only once that succeeded.
+    // Registers the host with DNS-SD and publishes the advertiser only once that succeeded. A
+    // non-null adapter limits the advertisement to it.
     HRESULT StartAdvertising(
         _In_ DatagramSocket const& socket,
         _In_ HostName const& hostName,
-        _In_ uint16_t const boundPort);
+        _In_ uint16_t const boundPort,
+        _In_ winrt::Windows::Networking::Connectivity::NetworkAdapter const& adapter);
+
+    // Where Start should run the host. False, with waiting set, when it has to wait for its
+    // adapter. A null adapter id means every adapter.
+    bool ChooseNetworkAdapter(
+        _Out_ winrt::guid& adapterId,
+        _Out_ winrt::Windows::Networking::Connectivity::NetworkAdapter& adapter,
+        _Out_ bool& fallbackUsed);
+
+    // Records a change, and tells the notifications app so it can say why the host is not running
+    void SetWaitingForNetworkAdapter(_In_ bool const waiting) noexcept;
+
+    // False for a datagram which arrived on any adapter but the one the host is limited to
+    bool ArrivedOnActiveNetworkAdapter(_In_ DatagramSocketMessageReceivedEventArgs const& args);
 
     DatagramSocket m_socket{ nullptr };
 
     // Stop() replaces this while receive and configuration threads are still reading it.
     wil::critical_section m_socketLock;
+
+    // The adapter the running host is limited to, or a null GUID for every adapter. Guarded by
+    // m_socketLock, because a receive handler from a socket being replaced can still read it.
+    winrt::guid m_activeNetworkAdapterId{};
 
     DatagramSocket GetSocket()
     {
@@ -214,6 +269,7 @@ private:
     HRESULT CreateNetworkConnection(
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
         _In_ winrt::hstring const& remotePort,
+        _In_ winrt::Windows::Networking::HostName const& localHostName,
         _Out_ std::shared_ptr<MidiNetworkConnection>& connection);
 
     // Spec 6.4: the first command from a client which has no session must be an invitation.
@@ -226,6 +282,7 @@ private:
     HRESULT SendUnconnectedBye(
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
         _In_ winrt::hstring const& remotePort,
+        _In_ winrt::Windows::Networking::HostName const& localHostName,
         _In_ MidiNetworkCommandByeReason const reason,
         _In_ std::wstring const& message);
 

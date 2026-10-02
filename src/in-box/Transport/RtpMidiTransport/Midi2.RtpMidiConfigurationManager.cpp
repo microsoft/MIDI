@@ -172,6 +172,22 @@ namespace
         definition.SendRecoveryJournal = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, true);
         definition.RemoteClientPolicy = ReadRemoteClientPolicy(entry);
 
+        // An empty id is every adapter, and one which is not a GUID is ignored. The rest is only
+        // carried, and capped because anyone can edit the file.
+        GUID networkAdapterId{};
+        if (WindowsMidiServicesInternal::TryParseMidiNetworkAdapterId(RtpMidiJson::GetString(entry, MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_ID_KEY), networkAdapterId))
+        {
+            definition.NetworkAdapterId = networkAdapterId;
+        }
+
+        definition.NetworkAdapterName = RtpMidiJson::GetString(entry, MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_NAME_KEY);
+        if (definition.NetworkAdapterName.size() > MIDI_RTP_CONFIG_TEXT_MAX_CHARS) definition.NetworkAdapterName.resize(MIDI_RTP_CONFIG_TEXT_MAX_CHARS);
+
+        definition.NetworkAdapterPhysicalAddress = RtpMidiJson::GetString(entry, MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_PHYSICAL_ADDRESS_KEY);
+        if (definition.NetworkAdapterPhysicalAddress.size() > MIDI_RTP_NETWORK_ADAPTER_PHYSICAL_ADDRESS_MAX_CHARS) definition.NetworkAdapterPhysicalAddress.clear();
+
+        definition.AllowNetworkAdapterFallback = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY, true);
+
         if (!TryReadName(entry, definition.Name, errorCode, messageId)) return false;
         if (!IsValidName(definition.Name, false, errorCode, messageId)) return false;
 

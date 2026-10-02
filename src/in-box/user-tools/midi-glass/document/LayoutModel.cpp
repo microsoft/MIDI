@@ -18,24 +18,6 @@
 namespace glass
 {
     _Use_decl_annotations_
-    ControlGroup* Page::FindGroup(std::wstring const& id) noexcept
-    {
-        auto it = std::find_if(Groups.begin(), Groups.end(),
-            [&id](ControlGroup const& group) { return group.Id == id; });
-
-        return it == Groups.end() ? nullptr : &(*it);
-    }
-
-    _Use_decl_annotations_
-    ControlGroup const* Page::FindGroup(std::wstring const& id) const noexcept
-    {
-        auto it = std::find_if(Groups.begin(), Groups.end(),
-            [&id](ControlGroup const& group) { return group.Id == id; });
-
-        return it == Groups.end() ? nullptr : &(*it);
-    }
-
-    _Use_decl_annotations_
     Page* LayoutDocument::FindPage(std::wstring const& id) noexcept
     {
         auto it = std::find_if(Pages.begin(), Pages.end(),
@@ -94,14 +76,6 @@ namespace glass
             [&name](DeviceEntry const& d) { return d.Name == name; });
 
         return it == Devices.end() ? nullptr : &(*it);
-    }
-
-    _Use_decl_annotations_
-    DeviceProtocol LayoutDocument::ProtocolOf(std::wstring const& deviceName) const noexcept
-    {
-        auto const* const device = FindDevice(deviceName);
-
-        return device == nullptr ? DeviceProtocol::Midi2 : device->Protocol;
     }
 
     _Use_decl_annotations_
@@ -394,162 +368,6 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    bool SendsToADevice(MessageKind kind) noexcept
-    {
-        return kind != MessageKind::Sequence &&
-            kind != MessageKind::GoToPage &&
-            kind != MessageKind::HoldLayer;
-    }
-
-    _Use_decl_annotations_
-    bool CarriesAChannel(MessageKind kind) noexcept
-    {
-        switch (kind)
-        {
-        case MessageKind::Note:
-        case MessageKind::ControlChange:
-        case MessageKind::ProgramChange:
-        case MessageKind::PitchBend:
-        case MessageKind::ChannelPressure:
-        case MessageKind::PerNoteController:
-        case MessageKind::RegisteredController:
-        case MessageKind::AssignedController:
-            return true;
-
-        default:
-            return false;
-        }
-    }
-
-    _Use_decl_annotations_
-    bool SendsAsMidi1(ControlMessage const& message, DeviceProtocol protocol) noexcept
-    {
-        switch (message.Kind)
-        {
-        case MessageKind::Note:
-        case MessageKind::ControlChange:
-        case MessageKind::ProgramChange:
-        case MessageKind::PitchBend:
-        case MessageKind::ChannelPressure:
-            return message.UseMidi1Protocol || protocol != DeviceProtocol::Midi2;
-
-        default:
-            return false;
-        }
-    }
-
-    _Use_decl_annotations_
-    int32_t RawValueMaximum(ControlMessage const& message, DeviceProtocol protocol) noexcept
-    {
-        if (protocol == DeviceProtocol::Midi2 && !message.UseMidi1Protocol)
-        {
-            return 0;
-        }
-
-        switch (message.Kind)
-        {
-        case MessageKind::Note:
-        case MessageKind::ControlChange:
-        case MessageKind::ChannelPressure:
-            return 127;
-
-        case MessageKind::PitchBend:
-        case MessageKind::RegisteredController:
-        case MessageKind::AssignedController:
-            return 16383;
-
-        default:
-            return 0;
-        }
-    }
-
-    namespace
-    {
-        // The largest number the field this row's value lands in can hold on the wire.
-        double WireMaximum(_In_ ControlMessage const& message, _In_ DeviceProtocol protocol) noexcept
-        {
-            if (SendsAsMidi1(message, protocol))
-            {
-                return message.Kind == MessageKind::PitchBend ? 16383.0 : 127.0;
-            }
-
-            return message.Kind == MessageKind::Note ? 65535.0 : 4294967295.0;
-        }
-
-        double ShareOf(
-            _In_ double value,
-            _In_ ValueScaling scaling,
-            _In_ ControlMessage const& message,
-            _In_ DeviceProtocol protocol) noexcept
-        {
-            if (!std::isfinite(value))
-            {
-                return 0.0;
-            }
-
-            auto const share = scaling == ValueScaling::Absolute
-                ? value / WireMaximum(message, protocol)
-                : value;
-
-            return std::clamp(share, 0.0, 1.0);
-        }
-    }
-
-    _Use_decl_annotations_
-    double ShownValue(MessageValue const& end, ControlMessage const& message, DeviceProtocol protocol) noexcept
-    {
-        auto const share = ShareOf(end.Value, end.Scaling, message, protocol);
-        auto const raw = RawValueMaximum(message, protocol);
-
-        return raw > 0
-            ? std::round(share * raw)
-            : std::round(share * 1000.0) / 10.0;
-    }
-
-    _Use_decl_annotations_
-    MessageValue ValueFromShown(double shown, ControlMessage const& message, DeviceProtocol protocol) noexcept
-    {
-        if (!std::isfinite(shown))
-        {
-            shown = 0.0;
-        }
-
-        auto const raw = RawValueMaximum(message, protocol);
-
-        auto const share = raw > 0
-            ? std::round(shown) / raw
-            : shown / 100.0;
-
-        return { std::clamp(share, 0.0, 1.0), ValueScaling::Fraction };
-    }
-
-    _Use_decl_annotations_
-    void ShareExactValues(ControlMessage& message, DeviceProtocol protocol) noexcept
-    {
-        for (auto* const end : { &message.Minimum, &message.Maximum })
-        {
-            if (end->Scaling == ValueScaling::Absolute)
-            {
-                *end = { ShareOf(end->Value, ValueScaling::Absolute, message, protocol), ValueScaling::Fraction };
-            }
-        }
-
-        auto& detents = message.Detents;
-
-        if (detents.Scaling == ValueScaling::Absolute)
-        {
-            detents.Step = ShareOf(detents.Step, ValueScaling::Absolute, message, protocol);
-
-            for (auto& stop : detents.Stops)
-            {
-                stop = ShareOf(stop, ValueScaling::Absolute, message, protocol);
-            }
-
-            detents.Scaling = ValueScaling::Fraction;
-        }
-    }
-
-    _Use_decl_annotations_
     int32_t DetentStopCount(Control const& control) noexcept
     {
         int32_t highest{ 0 };
@@ -824,7 +642,7 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    std::vector<std::pair<std::wstring, std::wstring>> RegroupCopies(std::vector<Control>& copies)
+    void RegroupCopies(std::vector<Control>& copies)
     {
         std::vector<std::pair<std::wstring, std::wstring>> renamed{};
 
@@ -857,105 +675,6 @@ namespace glass
                 copy.GroupId.clear();
             }
         }
-
-        std::erase_if(renamed, [&copies](auto const& pair)
-            {
-                return std::none_of(copies.begin(), copies.end(),
-                    [&pair](Control const& copy) { return copy.GroupId == pair.second; });
-            });
-
-        return renamed;
-    }
-
-    _Use_decl_annotations_
-    std::wstring NameForCopiedGroup(std::wstring const& name, Page const& page)
-    {
-        auto const taken = [&page](std::wstring const& candidate)
-            {
-                return std::any_of(page.Groups.begin(), page.Groups.end(),
-                    [&candidate](ControlGroup const& group) { return group.Name == candidate; });
-            };
-
-        if (name.empty() || !taken(name))
-        {
-            return name;
-        }
-
-        auto digits = name.size();
-
-        while (digits > 0 && name[digits - 1] >= L'0' && name[digits - 1] <= L'9')
-        {
-            --digits;
-        }
-
-        std::wstring base{ name };
-        uint64_t number{ 1 };
-
-        // Nine digits is more than anybody numbers a bank with, and cannot overflow.
-        if (digits < name.size() && name.size() - digits <= 9)
-        {
-            base = name.substr(0, digits);
-            number = 0;
-
-            for (auto index = digits; index < name.size(); ++index)
-            {
-                number = number * 10 + static_cast<uint64_t>(name[index] - L'0');
-            }
-        }
-        else
-        {
-            base += L' ';
-        }
-
-        // A page holds fewer groups than this, so one of these is always free.
-        for (uint64_t next = number + 1; next <= number + MaximumControlsPerPage + 1; ++next)
-        {
-            auto candidate = base + std::to_wstring(next);
-
-            if (candidate.size() > MaximumStringLength)
-            {
-                break;
-            }
-
-            if (!taken(candidate))
-            {
-                return candidate;
-            }
-        }
-
-        return name;
-    }
-
-    _Use_decl_annotations_
-    void NameCopiedGroups(
-        Page& page,
-        std::vector<ControlGroup> originals,
-        std::vector<std::pair<std::wstring, std::wstring>> const& regrouped)
-    {
-        for (auto const& [from, to] : regrouped)
-        {
-            auto const original = std::find_if(originals.begin(), originals.end(),
-                [&from](ControlGroup const& group) { return group.Id == from; });
-
-            if (original == originals.end() || page.FindGroup(to) != nullptr)
-            {
-                continue;
-            }
-
-            page.Groups.push_back({ to, NameForCopiedGroup(original->Name, page), original->Unknown });
-        }
-    }
-
-    _Use_decl_annotations_
-    void PruneControlGroups(Page& page) noexcept
-    {
-        std::erase_if(page.Groups, [&page](ControlGroup const& group)
-            {
-                return group.Id.empty() ||
-                    (group.Name.empty() && group.Unknown == nullptr) ||
-                    std::none_of(page.Controls.begin(), page.Controls.end(),
-                        [&group](Control const& control) { return control.GroupId == group.Id; });
-            });
     }
 
     namespace
@@ -1289,45 +1008,5 @@ namespace glass
         }
 
         return PrintSurface::Deck;
-    }
-
-    _Use_decl_annotations_
-    std::wstring PageTabTarget(Control const& control)
-    {
-        for (auto const& message : control.Messages)
-        {
-            if (message.Kind == MessageKind::GoToPage && !message.TargetPageId.empty())
-            {
-                return message.TargetPageId;
-            }
-        }
-
-        return {};
-    }
-
-    _Use_decl_annotations_
-    bool IsSafeFontFamilyName(std::wstring_view name) noexcept
-    {
-        // Longer than any family name on a PC, and short enough that nobody can use it to carry
-        // anything else.
-        constexpr size_t MaximumFontFamilyLength = 128;
-
-        if (name.empty() || name.size() > MaximumFontFamilyLength)
-        {
-            return false;
-        }
-
-        // A path, a link or a font file is written with these, and a comma makes a list of
-        // families. None of them is part of a family's own name.
-        for (auto const ch : name)
-        {
-            if (ch < L' ' || ch == L'\\' || ch == L'/' || ch == L':' || ch == L'#' || ch == L',' ||
-                ch == L'%' || ch == L'?' || ch == L'*' || ch == L'"' || ch == L'<' || ch == L'>' || ch == L'|')
-            {
-                return false;
-            }
-        }
-
-        return name.find_first_not_of(L' ') != std::wstring_view::npos;
     }
 }

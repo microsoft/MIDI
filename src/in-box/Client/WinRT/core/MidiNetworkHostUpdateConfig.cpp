@@ -13,24 +13,82 @@
 // when this component goes in-box, move the json defs to the common json_defs.h
 #include "..\..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
+#include "midi_network_adapters.h"
+
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
+    _Use_decl_annotations_
+    void MidiNetworkHostUpdateConfig::NetworkAdapterId(winrt::guid const& value) noexcept
+    {
+        m_networkAdapterId = value;
+        m_networkAdapterName = winrt::hstring{};
+        m_networkAdapterPhysicalAddress = winrt::hstring{};
+
+        try
+        {
+            ::WindowsMidiServicesInternal::MidiNetworkAdapterInfo adapter{};
+
+            if (::WindowsMidiServicesInternal::TryGetMidiNetworkAdapter(value, adapter))
+            {
+                m_networkAdapterName = winrt::hstring{ adapter.Name };
+                m_networkAdapterPhysicalAddress = winrt::hstring{ adapter.PhysicalAddress };
+            }
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception looking up a network adapter.");
+        }
+    }
+
     // The same host entry shape as MidiNetworkHostCreationConfig, under the "update" key. Only the
-    // named properties are touched: the merge into the configuration file cannot delete a key, so
-    // the rest of the entry, including the port and the service instance name, is left alone.
+    // properties the caller set are written: the merge into the configuration file cannot delete a
+    // key, so the rest of the entry, including the port and the service instance name, is left alone.
     json::JsonObject MidiNetworkHostUpdateConfig::ConfigJson() const noexcept
     {
         try
         {
             json::JsonObject hostObject{};
 
-            hostObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
-                json::JsonValue::CreateBooleanValue(CreateMidi1Ports()));
+            if (m_createMidi1Ports.has_value())
+            {
+                hostObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
+                    json::JsonValue::CreateBooleanValue(*m_createMidi1Ports));
+            }
 
-            hostObject.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
-                json::JsonValue::CreateNumberValue(FallbackMidi1PortCount()));
+            if (m_fallbackMidi1PortCount.has_value())
+            {
+                hostObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
+                    json::JsonValue::CreateNumberValue(*m_fallbackMidi1PortCount));
+            }
+
+            // The id and the hardware address go together, or the service could match an old
+            // adapter's hardware address against the new id
+            if (m_networkAdapterId.has_value())
+            {
+                hostObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_ID_KEY,
+                    json::JsonValue::CreateStringValue(winrt::hstring{ ::WindowsMidiServicesInternal::MidiNetworkAdapterIdToString(*m_networkAdapterId) }));
+
+                hostObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_PHYSICAL_ADDRESS_KEY,
+                    json::JsonValue::CreateStringValue(m_networkAdapterPhysicalAddress));
+            }
+
+            if (m_networkAdapterName.has_value())
+            {
+                hostObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_NAME_KEY,
+                    json::JsonValue::CreateStringValue(*m_networkAdapterName));
+            }
+
+            if (m_allowNetworkAdapterFallback.has_value())
+            {
+                hostObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY,
+                    json::JsonValue::CreateBooleanValue(*m_allowNetworkAdapterFallback));
+            }
 
             json::JsonObject hostsContainer{};
             hostsContainer.SetNamedValue(

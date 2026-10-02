@@ -50,7 +50,7 @@ The one part that benefits from something running is approvals, and only if you'
 
 ### MIDI Notifications
 
-That's what MIDI Notifications is for. It's a small app that sits in the notification area, watches for devices waiting on your permission, and tells you when there is one. Select the notification and Network MIDI Setup opens on the waiting device, so you can allow or deny it.
+That's what MIDI Notifications is for. It's a small app that sits in the notification area, watches for devices waiting on your permission, and tells you when there is one. Select the notification and Network MIDI Setup opens on the waiting device, so you can allow or deny it. It also tells you when a host on this PC can't start because the network adapter it uses is missing. See [Choosing a network adapter](#choosing-a-network-adapter).
 
 It doesn't carry any MIDI data either, and it isn't required. Turn it on or off, and choose whether it starts with Windows, on the **Notifications** page of the [MIDI Settings]({{ site.baseurl }}/tools/settings/) app. Without it nothing is broken: a device that asks to connect waits, and you answer it the next time you open this app. And if your hosts are set to **Let any device connect**, there's nothing to approve and nothing to be notified about.
 
@@ -191,6 +191,23 @@ Each host lists the devices currently connected to it, with the same round trip 
 **Remembered decisions** appears when you've used **Always allow** or **Block**, and lets you undo those choices. If a device is being turned away and you can't work out why, look here first.
 
 **Stop** takes a host off the network without deleting it, and **Delete** removes it entirely.
+
+### Choosing a network adapter
+
+A PC can be on more than one network at a time, like a wired network for your MIDI gear and Wi-Fi for everything else. A host is on all of them unless you say otherwise. To keep a host on just one, open **Advanced** when you create it, and pick the adapter under **Network adapter**. To change it later, open **Details** on the host and select **Change** next to **Network adapter**. RTP-MIDI hosts have the same choice.
+
+A host on one adapter only advertises itself there, and only answers devices that reach it through that adapter. That's handy at a show or in a studio, where you want your MIDI on the wired network and nothing else.
+
+**If this adapter is missing, use every adapter until it is back** decides what happens when the adapter goes away, like when a USB network adapter is unplugged or Wi-Fi is turned off:
+
+- **On**, which is the default, keeps the host running on every adapter. When the adapter comes back, the host moves back to it on its own.
+- **Off** keeps the host off your other networks. The host stops and waits, and starts on its own when the adapter comes back.
+
+Either way, the host shows a warning that its adapter is missing, with a **Choose adapter** button so you can pick another one. If [MIDI Notifications](#midi-notifications) is running, it also tells you when a host is waiting, so you're not left wondering why nothing can connect.
+
+USB network adapters often show up as a new adapter when you plug them into a different USB port. Windows remembers the adapter's hardware address too, so moving it to another port doesn't count as missing.
+
+Changing a host's adapter restarts the host, so the devices connected to it are disconnected. Most devices connect again on their own.
 
 ## Transport settings
 

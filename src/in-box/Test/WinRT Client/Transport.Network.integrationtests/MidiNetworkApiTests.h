@@ -171,6 +171,10 @@ public:
     // removable. Removing one used to report "client not found".
     TEST_METHOD(TestDisconnectRemovesTheConfiguredClientEntry);
 
+    // A client only accepts replies from the address it invited, so a host with several addresses
+    // on one network, which is usual for IPv6, has to answer from that one.
+    TEST_METHOD(TestHostRepliesFromTheAddressTheClientInvited);
+
     // Ending one remote client's session with a host on this PC.
     TEST_METHOD(TestRemoteClientDisconnectConfigRoundTrip);
     TEST_METHOD(TestDisconnectRemoteClientWithEmptyIdentityFailsWithoutCallingService);
@@ -191,6 +195,13 @@ public:
     TEST_METHOD(TestHostCreationConfigManualPortRoundTrip);
     TEST_METHOD(TestHostCreationConfigAuthenticationTypeRoundTrip);
     TEST_METHOD(TestTransportManagerDnsSdConstantsAreUsable);
+
+    // Limiting a host to one network adapter, and what it does while that adapter is missing
+    TEST_METHOD(TestHostUpdateConfigWritesOnlyWhatWasSet);
+    TEST_METHOD(TestSavedHostKeepsItsNetworkAdapter);
+    TEST_METHOD(TestHostWaitsForAMissingNetworkAdapter);
+    TEST_METHOD(TestHostFallsBackWhenItsNetworkAdapterIsMissing);
+    TEST_METHOD(TestHostStartsOnItsNetworkAdapter);
 
 private:
 

@@ -10,27 +10,41 @@
 void
 RtpMidiNotificationSignal::SignalPendingApprovalChanged() noexcept
 {
-    if (m_writeQueued.exchange(1) != 0) return;
+    Queue(m_pendingApprovalWriteQueued, MIDI_RTP_NOTIFICATION_PENDING_APPROVAL_VALUE);
+}
+
+void
+RtpMidiNotificationSignal::SignalHostNetworkAdapterChanged() noexcept
+{
+    Queue(m_hostNetworkAdapterWriteQueued, MIDI_RTP_NOTIFICATION_HOST_ADAPTER_VALUE);
+}
+
+_Use_decl_annotations_
+void
+RtpMidiNotificationSignal::Queue(std::atomic<uint32_t>& queued, PCWSTR const valueName) noexcept
+{
+    if (queued.exchange(1) != 0) return;
 
     try
     {
-        m_work.Submit([this]()
+        m_work.Submit([&queued, valueName]()
             {
-                m_writeQueued.store(0);
-                BumpCounter();
+                queued.store(0);
+                BumpCounter(valueName);
             });
     }
     catch (...)
     {
         // Queuing allocates, and this runs on the data path of the MIDI service for the whole
         // machine. Losing a notification is the right price.
-        m_writeQueued.store(0);
+        queued.store(0);
         LOG_CAUGHT_EXCEPTION();
     }
 }
 
+_Use_decl_annotations_
 void
-RtpMidiNotificationSignal::BumpCounter() noexcept
+RtpMidiNotificationSignal::BumpCounter(PCWSTR const valueName) noexcept
 {
     try
     {
@@ -88,7 +102,7 @@ RtpMidiNotificationSignal::BumpCounter() noexcept
         DWORD valueSize{ sizeof(currentValue) };
         DWORD valueType{ 0 };
 
-        if (::RegQueryValueExW(key.get(), MIDI_RTP_NOTIFICATION_PENDING_APPROVAL_VALUE, nullptr, &valueType,
+        if (::RegQueryValueExW(key.get(), valueName, nullptr, &valueType,
                 reinterpret_cast<LPBYTE>(&currentValue), &valueSize) != ERROR_SUCCESS || valueType != REG_DWORD)
         {
             currentValue = 0;
@@ -97,7 +111,7 @@ RtpMidiNotificationSignal::BumpCounter() noexcept
         // wrapping is fine: readers only look for a change
         DWORD const newValue{ currentValue + 1 };
 
-        LOG_IF_WIN32_ERROR(::RegSetValueExW(key.get(), MIDI_RTP_NOTIFICATION_PENDING_APPROVAL_VALUE, 0, REG_DWORD,
+        LOG_IF_WIN32_ERROR(::RegSetValueExW(key.get(), valueName, 0, REG_DWORD,
             reinterpret_cast<BYTE const*>(&newValue), sizeof(newValue)));
     }
     catch (...)

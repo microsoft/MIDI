@@ -17,14 +17,16 @@ namespace Windows.Devices.Midi2.Transports.Rtp
     [contract(MidiTransportsRtpApiContract, 1)]
 
     // Send with MidiRtpTransportManager.CreateRtpHostAsync, and save with
-    // MidiServiceTransportPluginConfigManager.SaveUpdate to keep it after a restart
+    // MidiServiceTransportPluginConfigManager.SaveUpdate to keep it after a restart. Sent with the
+    // HostId of a host which exists, it replaces that host's settings and restarts it.
     [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpHostCreationConfig", UUID_IMidiRtpHostCreationConfig)]
     runtimeclass MidiRtpHostCreationConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         // with a new HostId
         MidiRtpHostCreationConfig();
 
-        [noexcept] Guid HostId{ get; };
+        // A new one by default. Set it to an existing host's to change that host.
+        [noexcept] Guid HostId;
 
         // What remote devices show for this PC. Empty for this PC's name. At most 63 bytes in UTF-8.
         [noexcept] String Name;
@@ -50,5 +52,18 @@ namespace Windows.Devices.Midi2.Transports.Rtp
 
         // So a remote can repair a lost Note Off. Only turn off for a device which cannot parse it.
         [noexcept] Boolean SendRecoveryJournal;
+
+        // The network adapter the host is limited to, by the GUID Windows gives it. This is the
+        // same value as Windows.Networking.Connectivity.NetworkAdapter.NetworkAdapterId and the
+        // .NET NetworkInterface.Id. The default, an empty GUID, runs the host on every adapter.
+        // Setting it also fills in NetworkAdapterName from Windows.
+        [noexcept] Guid NetworkAdapterId;
+
+        // Only shown, so a customer can tell which adapter a host is waiting for
+        [noexcept] String NetworkAdapterName;
+
+        // When the adapter is missing, the host runs on every adapter until it is back, instead
+        // of not running at all. True by default.
+        [noexcept] Boolean AllowNetworkAdapterFallback;
     }
 }

@@ -15,6 +15,7 @@
 
 #include "MidiNetworkKnownRemoteClient.h"
 #include "midi_saved_config_json.h"
+#include "midi_network_adapters.h"
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
@@ -67,6 +68,30 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
                 MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
 
+            // An id which is not a GUID is ignored, as the service ignores it
+            auto const readNetworkAdapter = [this](json::JsonObject const& source)
+                {
+                    GUID id{};
+
+                    if (::WindowsMidiServicesInternal::TryParseMidiNetworkAdapterId(
+                            std::wstring{ MidiSavedConfigJson::String(
+                                source,
+                                MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_ID_KEY,
+                                winrt::hstring{ ::WindowsMidiServicesInternal::MidiNetworkAdapterIdToString(m_networkAdapterId) }) },
+                            id))
+                    {
+                        m_networkAdapterId = id;
+                    }
+
+                    m_networkAdapterName = internal::TrimmedHStringCopy(
+                        MidiSavedConfigJson::String(source, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_NAME_KEY, m_networkAdapterName));
+
+                    m_allowNetworkAdapterFallback = MidiSavedConfigJson::Boolean(
+                        source, MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY, m_allowNetworkAdapterFallback);
+                };
+
+            readNetworkAdapter(entry);
+
             // a value missing from a change leaves what came before it
             for (auto const& update : updates)
             {
@@ -78,6 +103,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                     fallbackMidi1PortCount,
                     MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
                     MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+
+                readNetworkAdapter(update);
             }
 
             m_createOnlyUmpEndpoints = !createMidi1Ports;

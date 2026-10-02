@@ -7,7 +7,8 @@
 
 #pragma once
 
-// Nudges user-session apps when a remote starts or stops waiting. See rtp_notification_defs.h.
+// Nudges user-session apps when something needs the customer's attention. See
+// rtp_notification_defs.h.
 class RtpMidiNotificationSignal
 {
 public:
@@ -15,11 +16,17 @@ public:
     // runs collapse into one, so a burst of invitations costs a single write.
     void SignalPendingApprovalChanged() noexcept;
 
+    // A host started or stopped waiting for a missing network adapter. Deferred the same way.
+    void SignalHostNetworkAdapterChanged() noexcept;
+
 private:
-    static void BumpCounter() noexcept;
+    void Queue(_Inout_ std::atomic<uint32_t>& queued, _In_ PCWSTR const valueName) noexcept;
+
+    static void BumpCounter(_In_ PCWSTR const valueName) noexcept;
 
     ThreadpoolWork m_work{ };
 
     // cleared by the work item before it writes, so a change during the write queues another
-    std::atomic<uint32_t> m_writeQueued{ 0 };
+    std::atomic<uint32_t> m_pendingApprovalWriteQueued{ 0 };
+    std::atomic<uint32_t> m_hostNetworkAdapterWriteQueued{ 0 };
 };

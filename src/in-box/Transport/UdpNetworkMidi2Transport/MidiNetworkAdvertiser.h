@@ -21,13 +21,15 @@ class MidiNetworkAdvertiser
 public:
     HRESULT Initialize();
 
+    // A null adapter advertises on every adapter
     HRESULT Advertise(
         _In_ winrt::hstring const& serviceInstanceNameWithoutSuffix,
         _In_ HostName const& hostName,
         _In_ DatagramSocket const& boundSocket,
         _In_ uint16_t const port,
         _In_ winrt::hstring const& midiEndpointName,
-        _In_ winrt::hstring const& midiProductInstanceId
+        _In_ winrt::hstring const& midiProductInstanceId,
+        _In_ winrt::Windows::Networking::Connectivity::NetworkAdapter const& adapter
     );
 
     HRESULT Shutdown();

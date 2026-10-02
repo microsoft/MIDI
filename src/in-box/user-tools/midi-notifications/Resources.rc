@@ -38,4 +38,20 @@ BEGIN
 
     IDS_NOTIFICATION_LOOPBACK_ATTRIBUTION   "MIDI loopbacks"
     IDS_NOTIFICATION_OPEN_LOOPBACK_SETUP_BUTTON "Open Loopback Setup"
+
+    IDS_NOTIFICATION_NETWORK_HOST_ADAPTER_TITLE         "Unable to start a Network MIDI 2.0 host"
+    IDS_NOTIFICATION_NETWORK_HOST_ADAPTER_TITLE_MANY    "Unable to start Network MIDI 2.0 hosts"
+    IDS_NOTIFICATION_RTP_HOST_ADAPTER_TITLE             "Unable to start an RTP-MIDI host"
+    IDS_NOTIFICATION_RTP_HOST_ADAPTER_TITLE_MANY        "Unable to start RTP-MIDI hosts"
+
+    // The first %s is the host's name and the second is the network adapter's name, such as
+    // Ethernet 3. Both are sanitized before they get here.
+    IDS_NOTIFICATION_HOST_ADAPTER_ONE   "The host %s uses the network adapter %s, which is missing. It starts by itself when the adapter is back, or you can choose another one."
+
+    // %s is a count of hosts.
+    IDS_NOTIFICATION_HOST_ADAPTER_MANY  "%s hosts use network adapters which are missing. They start by themselves when the adapters are back, or you can choose other ones."
+
+    IDS_NOTIFICATION_RTP_ATTRIBUTION    "RTP-MIDI"
+    IDS_NOTIFICATION_HOST_UNNAMED       "(no name)"
+    IDS_NOTIFICATION_ADAPTER_UNNAMED    "(unknown)"
 END

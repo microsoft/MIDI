@@ -30,6 +30,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool AllowPortFallback() const noexcept { return m_allowPortFallback; }
         bool UsedPortFallback() const noexcept { return m_usedPortFallback; }
         bool SendRecoveryJournal() const noexcept { return m_sendRecoveryJournal; }
+        winrt::guid NetworkAdapterId() const noexcept { return m_networkAdapterId; }
+        winrt::hstring NetworkAdapterName() const noexcept { return m_networkAdapterName; }
+        bool AllowNetworkAdapterFallback() const noexcept { return m_allowNetworkAdapterFallback; }
+        bool IsNetworkAdapterMissing() const noexcept { return m_isNetworkAdapterMissing; }
+        bool UsedNetworkAdapterFallback() const noexcept { return m_usedNetworkAdapterFallback; }
         rtp::MidiRtpRemoteClientPolicy RemoteClientPolicy() const noexcept { return m_remoteClientPolicy; }
         collections::IVectorView<rtp::MidiRtpKnownRemoteClient> KnownRemoteClients() const noexcept { return m_knownRemoteClients.GetView(); }
         int32_t LastErrorCode() const noexcept { return m_lastErrorCode; }
@@ -52,6 +57,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool m_allowPortFallback{ false };
         bool m_usedPortFallback{ false };
         bool m_sendRecoveryJournal{ false };
+        winrt::guid m_networkAdapterId{};
+        winrt::hstring m_networkAdapterName{};
+        bool m_allowNetworkAdapterFallback{ true };
+        bool m_isNetworkAdapterMissing{ false };
+        bool m_usedNetworkAdapterFallback{ false };
         rtp::MidiRtpRemoteClientPolicy m_remoteClientPolicy{ rtp::MidiRtpRemoteClientPolicy::AllowAny };
         collections::IVector<rtp::MidiRtpKnownRemoteClient> m_knownRemoteClients{ winrt::single_threaded_vector<rtp::MidiRtpKnownRemoteClient>() };
         int32_t m_lastErrorCode{ 0 };

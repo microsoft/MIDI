@@ -53,6 +53,13 @@ public:
     TEST_METHOD(TestSavingKnownClientsForUnsavedHostIsRefused);
     TEST_METHOD(TestSavedClientFollowsSavedChanges);
 
+    // Limiting a host to one network adapter, and what it does while that adapter is missing
+    TEST_METHOD(TestHostCreationConfigNetworkAdapterJson);
+    TEST_METHOD(TestSavedHostKeepsItsNetworkAdapter);
+    TEST_METHOD(TestHostWaitsForAMissingNetworkAdapter);
+    TEST_METHOD(TestHostFallsBackWhenItsNetworkAdapterIsMissing);
+    TEST_METHOD(TestHostStartsOnItsNetworkAdapter);
+
 private:
     MidiTest::DeviceNodeTracker m_deviceNodeTracker{};
     std::vector<winrt::guid> m_createdHosts{};

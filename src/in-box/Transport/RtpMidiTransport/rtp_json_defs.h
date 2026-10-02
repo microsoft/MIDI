@@ -41,6 +41,15 @@
 // Chapter N recovery journal on outgoing packets, so a peer can repair a lost Note Off
 #define MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY             L"sendRecoveryJournal"
 
+// The network adapter a host is limited to. Same keys and meaning as Network MIDI 2.0: an empty
+// or missing id is every adapter, the hardware address finds the adapter again under a new GUID,
+// the name is only shown, and fallback (default true) runs the host on every adapter while its
+// own is missing instead of waiting for it.
+#define MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_ID_KEY                L"networkAdapterId"
+#define MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_NAME_KEY              L"networkAdapterName"
+#define MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_PHYSICAL_ADDRESS_KEY  L"networkAdapterPhysicalAddress"
+#define MIDI_CONFIG_JSON_RTP_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY    L"allowNetworkAdapterFallback"
+
 // Who may connect to a host. Same key and values as Network MIDI 2.0. Missing means allowAny,
 // and any other value means requireApproval, so a damaged entry never opens a host up.
 #define MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENT_POLICY_KEY              L"remoteClientPolicy"
@@ -96,6 +105,10 @@
 #define MIDI_CONFIG_JSON_RTP_MIDI_SERVICE_INSTANCE_NAME_CHANGED_KEY     L"serviceInstanceNameChanged"
 #define MIDI_CONFIG_JSON_RTP_MIDI_LAST_ERROR_KEY                        L"lastError"
 #define MIDI_CONFIG_JSON_RTP_MIDI_CONNECTIONS_KEY                       L"connections"
+
+// The host's adapter is missing: it is waiting for it, or with fallback, on every adapter
+#define MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_MISSING_KEY           L"networkAdapterMissing"
+#define MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_FALLBACK_USED_KEY     L"networkAdapterFallbackUsed"
 
 #define MIDI_CONFIG_JSON_RTP_MIDI_IS_DIRECT_KEY                         L"isDirectConnection"
 #define MIDI_CONFIG_JSON_RTP_MIDI_ENTRY_STATE_KEY                       L"entryState"

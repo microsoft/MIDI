@@ -19,6 +19,7 @@ Returned in `MidiRtpHostCreationResponse.ErrorCode`.
 | `NameTooLong` | `9` | `Name` or `ServiceInstanceName` is longer than 63 bytes in UTF-8 |
 | `InvalidPort` | `10` | `ManuallyAssignedPort` isn't between 1024 and 65534 |
 | `InvalidName` | `12` | A name couldn't be used. A name that's advertised can't have a period in it |
+| `NetworkAdapterNotAvailable` | `18` | The host is limited to a network adapter that's missing, and isn't allowed to use the others. The host is still created, and starts by itself when the adapter is back |
 | `ServiceUnavailable` | `1000` | The request never reached the transport, because the MIDI service isn't running, or the RTP-MIDI transport isn't installed |
 | `TimedOutWaitingForHostToStart` | `1001` | The service accepted the host, but the host didn't start in time |
 | `InvalidArgument` | `1002` | Your code passed a null configuration |

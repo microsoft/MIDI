@@ -625,6 +625,13 @@
 #define IDS_NET_STATUS_TITLE                            51899
 #define IDS_NET_LABEL_HOST_NAME                         51900
 #define IDS_NET_LABEL_DEVICE_NAME                       51901
+#define IDS_NET_LABEL_NETWORK_ADAPTER                   51902
+#define IDS_NET_LABEL_ALLOW_ADAPTER_FALLBACK            51903
+#define IDS_NET_ADAPTER_EVERY                           51904
+#define IDS_NET_ADAPTER_UNKNOWN                         51905
+#define IDS_NET_ADAPTER_MISSING_FORMAT                  51906
+#define IDS_NET_ADAPTER_WAITING_NOTE                    51907
+#define IDS_NET_ADAPTER_FALLBACK_NOTE                   51908
 
 // ---------------------------------------------------------------- bluetooth status 51920
 #define IDS_CMD_BT_STATUS                               51920

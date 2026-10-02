@@ -30,6 +30,8 @@ namespace
 
     NetworkApprovalNotifier g_networkNotifier{ };
     LoopbackFeedbackNotifier g_loopbackFeedbackNotifier{ };
+    NetworkHostAdapterNotifier g_networkHostAdapterNotifier{ NetworkHostAdapterNotifier::Transport::NetworkMidi2 };
+    NetworkHostAdapterNotifier g_rtpHostAdapterNotifier{ NetworkHostAdapterNotifier::Transport::RtpMidi };
     RegistryChangeWatcher g_signalWatcher{ };
     RegistryChangeWatcher g_settingsWatcher{ };
 
@@ -176,6 +178,8 @@ namespace
 
                 g_networkNotifier.Evaluate();
                 g_loopbackFeedbackNotifier.Evaluate();
+                g_networkHostAdapterNotifier.Evaluate();
+                g_rtpHostAdapterNotifier.Evaluate();
             }
             return 0;
 

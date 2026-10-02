@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -42,11 +43,25 @@ namespace RtpMidiMdns
 
             auto const& listed = address.Family == 4 ? service.IPv4Addresses : service.IPv6Addresses;
 
-            // advertised addresses carry no scope, so a link-local match ignores the connection's
+            // A link-local address names its adapter with a %scope. The same address seen on
+            // another adapter belongs to another device, so two scopes have to agree. One missing
+            // still matches, for an advertisement that carries none.
             bool const matches = std::any_of(listed.begin(), listed.end(), [&](std::wstring const& text)
             {
+                std::wstring literal{ text };
+                uint32_t scope{ 0 };
+
+                auto const percent = literal.find(L'%');
+                if (percent != std::wstring::npos)
+                {
+                    scope = static_cast<uint32_t>(wcstoul(literal.c_str() + percent + 1, nullptr, 10));
+                    literal.resize(percent);
+                }
+
+                if (scope != 0 && address.ScopeId != 0 && scope != address.ScopeId) return false;
+
                 std::array<uint8_t, 16> bytes{};
-                return InetPtonW(family, text.c_str(), bytes.data()) == 1 && memcmp(bytes.data(), address.Bytes.data(), length) == 0;
+                return InetPtonW(family, literal.c_str(), bytes.data()) == 1 && memcmp(bytes.data(), address.Bytes.data(), length) == 0;
             });
 
             if (!matches) continue;

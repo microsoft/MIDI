@@ -106,6 +106,17 @@ namespace midisettings
         WriteFlag(MIDI_NOTIFICATIONS_VALUE_LOOPBACK_FEEDBACK, value);
     }
 
+    bool NotificationSettings::NetworkHostAdapterEnabled() noexcept
+    {
+        return ReadFlag(MIDI_NOTIFICATIONS_VALUE_NETWORK_HOST_ADAPTER, true);
+    }
+
+    _Use_decl_annotations_
+    void NotificationSettings::NetworkHostAdapterEnabled(bool const value) noexcept
+    {
+        WriteFlag(MIDI_NOTIFICATIONS_VALUE_NETWORK_HOST_ADAPTER, value);
+    }
+
     std::wstring NotificationSettings::AppPath() noexcept
     {
         try

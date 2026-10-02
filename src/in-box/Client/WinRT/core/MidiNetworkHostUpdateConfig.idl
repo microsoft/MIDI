@@ -15,9 +15,10 @@ import "IMidiServiceTransportPluginConfig.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
-    // Changes to an existing host entry, applied without taking the host down. Send it through
-    // MidiServiceTransportPluginConfigManager.SendUpdate to apply it to the running service, and
-    // SaveUpdate to keep it across restarts.
+    // Changes to an existing host entry, applied without taking the host down unless the adapter
+    // changes. Send it through MidiServiceTransportPluginConfigManager.SendUpdate to apply it to
+    // the running service, and SaveUpdate to keep it across restarts. Only the properties you set
+    // are changed. The rest of the entry stays as it is.
     [contract(MidiTransportsNetworkApiContract, 1)]
     [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostUpdateConfig", UUID_IMidiNetworkHostUpdateConfig)]
     [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostUpdateConfigFactory", UUID_IMidiNetworkHostUpdateConfigFactory)]
@@ -37,5 +38,16 @@ namespace Windows.Devices.Midi2.Transports.Network
         // declares no function blocks. Applied to endpoints which are already up. Ignored for a
         // client which does describe itself, because its function blocks say how many to create.
         [noexcept] UInt8 FallbackMidi1PortCount;
+
+        // Moves the host to another network adapter, or to every adapter with an empty GUID. The
+        // host restarts on it, which ends the connections it has. Setting it also fills in
+        // NetworkAdapterName from Windows.
+        [noexcept] Guid NetworkAdapterId;
+
+        // Only shown, so a customer can tell which adapter a host is waiting for
+        [noexcept] String NetworkAdapterName;
+
+        // When the adapter is missing: run on every adapter until it is back, or wait for it
+        [noexcept] Boolean AllowNetworkAdapterFallback;
     }
 }

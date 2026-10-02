@@ -106,6 +106,23 @@ CMidi2NetworkMidiEndpointManager::Initialize(
     RETURN_IF_FAILED(StartBackgroundNegotiation());
     RETURN_IF_FAILED(StartBackgroundEndpointWorker());
 
+    // A host limited to one adapter has to move when that adapter goes or comes back: Wi-Fi
+    // turned off, a USB adapter unplugged, or simply an adapter which comes up after the service
+    // has started. Without the notification the next scan still catches it, just later.
+    if (!m_networkChangeMonitor.Start(
+        [this]() { RequestNetworkAdapterReconcile(); },
+        MIDI_NETWORK_ADAPTER_CHANGE_SETTLE_MILLISECONDS))
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unable to watch for network adapter changes. Hosts limited to an adapter will follow it at each scan instead.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+    }
+
     // start the device watcher so we see new hosts come online
     RETURN_IF_FAILED(StartRemoteHostWatcher());
 
@@ -1213,6 +1230,8 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
             StartPendingHosts();
             StartPendingClients();
 
+            ReconcileHostNetworkAdapters();
+
             // wait for notification of new hosts online or new entries added via config
             // the most time we wait is the DirectConnectionScanInterval
             m_backgroundEndpointCreatorThreadWakeup.wait(TransportState::Current().TransportSettings.DirectConnectionScanInterval);
@@ -1310,6 +1329,44 @@ CMidi2NetworkMidiEndpointManager::StartPendingHosts()
     }
 }
 
+void
+CMidi2NetworkMidiEndpointManager::ReconcileHostNetworkAdapters()
+{
+    auto const requested = m_networkAdapterReconcileRequested.exchange(false);
+
+    auto const hosts = TransportState::Current().GetHosts();
+
+    // Every scan also looks again at a host which is waiting or has fallen back, in case a
+    // change came and went without a notification. A host which is where it should be costs
+    // nothing until something changes.
+    bool const anyAway = std::any_of(hosts.begin(), hosts.end(), [](std::shared_ptr<MidiNetworkHost> const& host)
+        {
+            return host != nullptr && (host->IsWaitingForNetworkAdapter() || host->NetworkAdapterFallbackUsed());
+        });
+
+    if (!requested && !anyAway)
+    {
+        return;
+    }
+
+    auto const adapters = ::WindowsMidiServicesInternal::GetMidiNetworkAdapters();
+
+    for (auto const& host : hosts)
+    {
+        if (host == nullptr) continue;
+
+        LOG_IF_FAILED(host->ReconcileNetworkAdapter(adapters));
+    }
+}
+
+void
+CMidi2NetworkMidiEndpointManager::RequestNetworkAdapterReconcile() noexcept
+{
+    m_networkAdapterReconcileRequested = true;
+
+    LOG_IF_FAILED(WakeupBackgroundEndpointCreatorThread());
+}
+
 // Client definitions aren't clients. They are what is needed to connect to a host once it can be
 // reached, so each pass only connects the ones whose remote can be found.
 void
@@ -1395,7 +1452,15 @@ CMidi2NetworkMidiEndpointManager::TryResolveClientTarget(
         }
         else if (!advertisedHost.IPv6Addresses.empty())
         {
-            hostNameOrIPAddress = winrt::hstring{ advertisedHost.IPv6Addresses.front() };
+            // A routable address first. A link-local one, in fe80::/10, carries the %scope of the
+            // adapter it was seen on, which is what makes it reachable at all.
+            auto const routable = std::find_if(advertisedHost.IPv6Addresses.begin(), advertisedHost.IPv6Addresses.end(),
+                [](std::wstring const& address)
+                {
+                    return !(address.size() > 3 && _wcsnicmp(address.c_str(), L"fe", 2) == 0 && wcschr(L"89abAB", address[2]) != nullptr);
+                });
+
+            hostNameOrIPAddress = winrt::hstring{ routable != advertisedHost.IPv6Addresses.end() ? *routable : advertisedHost.IPv6Addresses.front() };
         }
         else if (!advertisedHost.HostName.empty())
         {
@@ -2444,9 +2509,9 @@ CMidi2NetworkMidiEndpointManager::FindMatchingInstantiatedEndpoint(
 
 _Use_decl_annotations_
 void
-CMidi2NetworkMidiEndpointManager::OnHostRegistered(std::wstring_view const serviceInstanceLabel)
+CMidi2NetworkMidiEndpointManager::OnHostRegistered(std::wstring_view const serviceInstanceLabel, winrt::guid const& networkAdapterId)
 {
-    m_dnssdAnnouncer.AddRegistration(serviceInstanceLabel);
+    m_dnssdAnnouncer.AddRegistration(serviceInstanceLabel, networkAdapterId);
 }
 
 _Use_decl_annotations_
@@ -2470,6 +2535,9 @@ CMidi2NetworkMidiEndpointManager::Shutdown()
     );
 
     m_browser.Stop();
+
+    // Before the creator thread stops, so a change arriving now cannot wake a thread that is gone
+    m_networkChangeMonitor.Stop();
 
     // Before the hosts below withdraw their registrations, so no repeat can follow a goodbye
     m_dnssdAnnouncer.Stop();

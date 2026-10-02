@@ -22,6 +22,9 @@ An RTP-MIDI host saved in the configuration file. The service starts it every ti
 | `Advertise` | True when the host advertises itself on the network |
 | `RemoteClientPolicy` | What the host does when a remote device it hasn't decided about asks to connect |
 | `SendRecoveryJournal` | True when the host sends the recovery journal, so a remote device can repair a lost Note Off |
+| `NetworkAdapterId` | The network adapter the host is limited to, or an empty GUID for every adapter |
+| `NetworkAdapterName` | That adapter's name, from when it was chosen |
+| `AllowNetworkAdapterFallback` | True when the host runs on every adapter while its own adapter is missing |
 | `KnownRemoteClients` | Every saved allow and deny decision, as [MidiRtpKnownRemoteClient]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpKnownRemoteClient/) objects |
 
 ## Remarks

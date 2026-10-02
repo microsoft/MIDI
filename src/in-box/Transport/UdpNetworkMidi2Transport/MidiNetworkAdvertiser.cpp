@@ -62,8 +62,8 @@ MidiNetworkAdvertiser::Advertise(
     DatagramSocket const& boundSocket,
     uint16_t const port,
     winrt::hstring const& midiEndpointName,
-    winrt::hstring const& midiProductInstanceId
-
+    winrt::hstring const& midiProductInstanceId,
+    winrt::Windows::Networking::Connectivity::NetworkAdapter const& adapter
 )
 {
     // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
@@ -93,8 +93,11 @@ MidiNetworkAdvertiser::Advertise(
         m_serviceInstance.TextAttributes().Insert(L"UMPEndpointName", midiEndpointName);
         m_serviceInstance.TextAttributes().Insert(L"ProductInstanceId", midiProductInstanceId);
 
-        // register with the socket that's bound to the port
-        auto registration = m_serviceInstance.RegisterDatagramSocketAsync(boundSocket).get();
+        // register with the socket that's bound to the port, on the one adapter when the host
+        // is limited to it, so devices on other networks are not shown a host they cannot reach
+        auto registration = adapter != nullptr ?
+            m_serviceInstance.RegisterDatagramSocketAsync(boundSocket, adapter).get() :
+            m_serviceInstance.RegisterDatagramSocketAsync(boundSocket).get();
 
         switch (registration.Status())
         {

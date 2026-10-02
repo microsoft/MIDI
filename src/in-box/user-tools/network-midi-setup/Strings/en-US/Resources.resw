@@ -1002,4 +1002,70 @@
   <data name="RtpHostSendRecoveryJournalHelp.Text" xml:space="preserve">
     <value>Each packet carries a short summary of recent notes, so a device which misses a packet can still end a note that would otherwise hang. Turn this off only for a device which cannot handle it.</value>
   </data>
+  <data name="HostNetworkAdapterComboBox.Header" xml:space="preserve">
+    <value>Network adapter</value>
+  </data>
+  <data name="HostNetworkAdapterHelp.Text" xml:space="preserve">
+    <value>Choose one adapter to keep this host on one network, like the wired network at a show. Most people can leave this on every adapter.</value>
+  </data>
+  <data name="HostNetworkAdapterFallbackCheckBox.Content" xml:space="preserve">
+    <value>If this adapter is missing, use every adapter until it is back</value>
+  </data>
+  <data name="HostNetworkAdapterFallbackHelp.Text" xml:space="preserve">
+    <value>Turn this off to keep the host off your other networks. It waits instead, and starts by itself when the adapter is back.</value>
+  </data>
+  <data name="NetworkAdapterEvery" xml:space="preserve">
+    <value>Every network adapter</value>
+  </data>
+  <data name="NetworkAdapterChoiceFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+    <comment>{0} is the adapter name Windows shows, such as Ethernet 3. {1} is one of its IP addresses.</comment>
+  </data>
+  <data name="NetworkAdapterMissingFormat" xml:space="preserve">
+    <value>{0} (missing)</value>
+    <comment>{0} is a network adapter name, such as Ethernet 3.</comment>
+  </data>
+  <data name="NetworkAdapterUnknown" xml:space="preserve">
+    <value>Unknown adapter</value>
+  </data>
+  <data name="NetworkAdapterFallbackWarningFormat" xml:space="preserve">
+    <value>The network adapter {0} is missing, so this host is using every adapter until it is back.</value>
+  </data>
+  <data name="NetworkAdapterWaitingWarningFormat" xml:space="preserve">
+    <value>Unable to start this host, because its network adapter {0} is missing. It starts by itself when the adapter is back, or you can choose another one.</value>
+  </data>
+  <data name="HostWaitingForNetworkAdapter" xml:space="preserve">
+    <value>Waiting for its network adapter</value>
+  </data>
+  <data name="ChooseHostAdapterButton.Content" xml:space="preserve">
+    <value>Choose adapter</value>
+  </data>
+  <data name="HostNetworkAdapterLabel.Text" xml:space="preserve">
+    <value>Network adapter</value>
+  </data>
+  <data name="ChangeHostAdapterLink.Content" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="ChangeHostAdapterLink.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Change network adapter</value>
+  </data>
+  <data name="ChangeHostAdapterDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="ChangeHostAdapterDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ChangeHostAdapterTitleFormat" xml:space="preserve">
+    <value>Network adapter for {0}</value>
+    <comment>{0} is the name of a host on this PC.</comment>
+  </data>
+  <data name="ChangeHostAdapterIntro.Text" xml:space="preserve">
+    <value>Choose the network this host uses. If you change it, the host restarts, and the devices connected to it are disconnected.</value>
+  </data>
+  <data name="HostNetworkAdapterChangedFormat" xml:space="preserve">
+    <value>The network adapter for {0} was saved.</value>
+  </data>
+  <data name="HostCreatedWaitingForAdapterFormat" xml:space="preserve">
+    <value>{0} was created. It starts when its network adapter is back.</value>
+  </data>
 </root>

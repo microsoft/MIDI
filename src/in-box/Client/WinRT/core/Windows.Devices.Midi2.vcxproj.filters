@@ -51,6 +51,9 @@
     <ClCompile Include="$(SolutionDir)inc\midi_network_port_picker.cpp">
       <Filter>SDK\Transports\Network</Filter>
     </ClCompile>
+    <ClCompile Include="$(SolutionDir)inc\midi_network_adapters.cpp">
+      <Filter>SDK\Transports\Network</Filter>
+    </ClCompile>
     <ClCompile Include="$(SolutionDir)inc\midi_file_sequence.cpp">
       <Filter>SDK\Utilities\Files</Filter>
     </ClCompile>

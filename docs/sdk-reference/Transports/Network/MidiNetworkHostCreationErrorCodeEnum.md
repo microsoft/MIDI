@@ -30,6 +30,7 @@ Returned in `MidiNetworkHostCreationResponse.ErrorCode`.
 | `InvalidOrMissingCredentialIdentifier` | `0x00000051` | Authentication was asked for, but no credential id was supplied |
 | `MalformedCredentialIdentifier` | `0x00000052` | The credential id isn't valid |
 | `AuthenticationNotImplemented` | `0x00000053` | Authentication isn't built yet. Set up the host with no authentication |
+| `NetworkAdapterNotAvailable` | `0x00000025` | The host is limited to a network adapter that's missing, and isn't allowed to use the others. The host is still created, and starts by itself when the adapter is back |
 | `InvalidArgument` | `0x11000055` | Your code passed an argument that isn't valid |
 | `ClientApiException` | `0x11002011` | An exception happened in the client API |
 | `TimedOutWaitingForHostToStart` | `0x110005B4` | The service accepted the host, but the host didn't start in time |

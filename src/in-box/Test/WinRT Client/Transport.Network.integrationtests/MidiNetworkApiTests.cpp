@@ -2086,6 +2086,118 @@ void MidiNetworkApiTests::TestDisconnectRemovesTheConfiguredClientEntry()
         L"A disconnected entry is removed rather than left reporting as unavailable");
 }
 
+void MidiNetworkApiTests::TestHostRepliesFromTheAddressTheClientInvited()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // The client invites 127.0.0.2 from 127.0.0.1, and Windows' own choice of source address for
+    // the reply is 127.0.0.1. The same shape as an IPv6 host with several addresses on one network.
+    constexpr wchar_t SecondLoopbackAddress[] = L"127.0.0.2";
+
+    // Windows only accepts a loopback alias as a source address once something has bound to it
+    try
+    {
+        winrt::Windows::Networking::Sockets::DatagramSocket socket;
+        socket.BindEndpointAsync(winrt::Windows::Networking::HostName{ SecondLoopbackAddress }, L"").get();
+        socket.Close();
+    }
+    catch (...)
+    {
+        Log::Result(TestResults::Skipped, L"This PC does not accept a second loopback address.");
+        return;
+    }
+
+    auto const suffix = MakeUniqueSuffix();
+    auto const hostId = CreateTestHost(L"Reply_" + suffix);
+    auto const clientId = foundation::GuidHelper::CreateNewGuid();
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            RemoveTestClient(clientId);
+            RemoveTestHost(hostId);
+        });
+
+    VERIFY_IS_TRUE(hostId != winrt::guid{}, L"The test host was created");
+
+    if (hostId == winrt::guid{})
+    {
+        return;
+    }
+
+    winrt::hstring hostPort{};
+
+    for (auto const& host : MidiNetworkTransportManager::GetConfiguredHosts())
+    {
+        if (host != nullptr && host.HostId() == hostId)
+        {
+            hostPort = host.ActualPort();
+            break;
+        }
+    }
+
+    VERIFY_IS_FALSE(hostPort.empty(), L"The host reports the port it is bound to");
+
+    if (hostPort.empty())
+    {
+        return;
+    }
+
+    MidiNetworkClientMatchCriteria criteria;
+    criteria.DirectHostNameOrIPAddress(SecondLoopbackAddress);
+    criteria.DirectPort(static_cast<uint16_t>(std::stoul(std::wstring{ hostPort })));
+
+    MidiNetworkClientConnectConfig config;
+    config.ClientId(clientId);
+    config.UmpEndpointName(winrt::hstring{ L"MidiApiTest_ReplyClient_" + suffix });
+    config.CreateOnlyUmpEndpoints(true);
+    config.MatchCriteria(criteria);
+
+    auto const response = MidiNetworkTransportManager::ConnectNetworkClientAsync(config).get();
+
+    VERIFY_IS_TRUE(response != nullptr && response.Success(), L"The connect request was accepted");
+
+    if (response == nullptr || !response.Success())
+    {
+        return;
+    }
+
+    // The client gives up after five unanswered invitations, one per ping interval
+    bool sessionActive{ false };
+    MidiNetworkClientEntryState lastState{ MidiNetworkClientEntryState::Pending };
+
+    for (int attempt = 0; attempt < 120 && !sessionActive; attempt++)
+    {
+        for (auto const& client : MidiNetworkTransportManager::GetConfiguredClients())
+        {
+            if (client != nullptr && client.ClientId() == clientId)
+            {
+                sessionActive = client.IsSessionActive();
+                lastState = client.EntryState();
+                break;
+            }
+        }
+
+        if (lastState == MidiNetworkClientEntryState::Unavailable || lastState == MidiNetworkClientEntryState::Failed)
+        {
+            break;
+        }
+
+        if (!sessionActive)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        }
+    }
+
+    Log::Comment(String().Format(
+        L"Client to %s port %s: session active=%s, entry state=%d",
+        SecondLoopbackAddress,
+        hostPort.c_str(),
+        sessionActive ? L"true" : L"false",
+        static_cast<int>(lastState)));
+
+    VERIFY_IS_TRUE(sessionActive, L"The host answered the invitation from the address it was sent to");
+}
+
 
 // ------------------------------------------------------------------------------
 // Disconnecting a remote client from one of our hosts
@@ -2990,4 +3102,282 @@ void MidiNetworkApiTests::TestSavedClientFollowsSavedChanges()
         L"saving a disconnect works");
 
     VERIFY_IS_TRUE(FindSavedClient(clientId) == nullptr, L"and forgets the saved client");
+}
+
+
+// ------------------------------------------------------------------------------------
+// Limiting a host to one network adapter
+// ------------------------------------------------------------------------------------
+
+#include <algorithm>
+#include <functional>
+
+#include "midi_network_adapters.h"
+#include "..\..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
+
+namespace
+{
+    MidiNetworkHostCreationConfig MakeAdapterTestHostConfig(_In_ winrt::guid const& adapterId, _In_ bool const allowFallback)
+    {
+        auto const suffix = MakeUniqueSuffix();
+
+        MidiNetworkHostCreationConfig config;
+        config.Name(winrt::hstring{ TestHostNamePrefix + suffix });
+        config.ServiceInstanceName(winrt::hstring{ TestHostNamePrefix + suffix });
+        config.ProductInstanceId(winrt::hstring{ (TestHostNamePrefix + suffix).substr(0, 42) });
+        config.UseAutomaticPortAllocation(true);
+        config.CreateOnlyUmpEndpoints(true);
+        config.Advertise(false);
+        config.NetworkAdapterId(adapterId);
+        config.AllowNetworkAdapterFallback(allowFallback);
+
+        return config;
+    }
+
+    // The service applies changes on its own threads, so this polls. nullptr when the host never
+    // matched.
+    MidiNetworkConfiguredHost WaitForConfiguredHost(
+        _In_ winrt::guid const& hostId,
+        _In_ std::function<bool(MidiNetworkConfiguredHost const&)> const& condition)
+    {
+        for (int attempt = 0; attempt < 100; attempt++)     // up to 10 seconds
+        {
+            for (auto const& host : MidiNetworkTransportManager::GetConfiguredHosts())
+            {
+                if (host != nullptr && host.HostId() == hostId && condition(host))
+                {
+                    return host;
+                }
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+
+        return nullptr;
+    }
+
+    // The host entry an update config sends, or nullptr
+    json::JsonObject UpdatedHostEntry(_In_ MidiNetworkHostUpdateConfig const& update)
+    {
+        for (auto const& transport : update.ConfigJson().GetNamedObject(L"endpointTransportPluginSettings"))
+        {
+            if (winrt::guid(transport.Key()) != MidiNetworkTransportManager::TransportId())
+            {
+                continue;
+            }
+
+            auto const hosts = transport.Value().GetObject()
+                .GetNamedObject(MIDI_CONFIG_JSON_NETWORK_MIDI_UPDATE_ENTRIES_KEY)
+                .GetNamedObject(MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY);
+
+            for (auto const& host : hosts)
+            {
+                if (winrt::guid(host.Key()) == update.HostId())
+                {
+                    return host.Value().GetObject();
+                }
+            }
+        }
+
+        return nullptr;
+    }
+}
+
+// An update is merged into what is saved, so a property the caller did not set must not be sent,
+// or it would reset that setting
+void MidiNetworkApiTests::TestHostUpdateConfigWritesOnlyWhatWasSet()
+{
+    MidiNetworkHostUpdateConfig update(foundation::GuidHelper::CreateNewGuid());
+
+    update.FallbackMidi1PortCount(4);
+
+    auto entry = UpdatedHostEntry(update);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_IS_TRUE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY));
+    VERIFY_IS_FALSE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY), L"a property which was not set is not sent");
+    VERIFY_IS_FALSE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_ID_KEY));
+    VERIFY_IS_FALSE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY));
+
+    // An empty id is a value of its own: it moves the host to every adapter
+    update.NetworkAdapterId(winrt::guid{});
+    update.AllowNetworkAdapterFallback(false);
+
+    entry = UpdatedHostEntry(update);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_IS_TRUE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_ID_KEY));
+    VERIFY_IS_TRUE(entry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_ID_KEY).empty());
+    VERIFY_IS_TRUE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY));
+    VERIFY_IS_FALSE(entry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY));
+}
+
+void MidiNetworkApiTests::TestSavedHostKeepsItsNetworkAdapter()
+{
+    if (!ConfigFileRegisteredOrSkip())
+    {
+        return;
+    }
+
+    // no PC has this adapter, so looking it up leaves the name for the test to set
+    auto const adapterId = foundation::GuidHelper::CreateNewGuid();
+
+    auto config = MakeAdapterTestHostConfig(adapterId, false);
+    config.NetworkAdapterName(L"MidiApiTest Adapter");
+
+    auto const hostId = config.HostId();
+
+    auto removeEntry = wil::scope_exit([&] { RemoveSavedHost(hostId); });
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config), L"saving the host works");
+
+    auto saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_IS_TRUE(saved.NetworkAdapterId() == adapterId, L"with its adapter");
+    VERIFY_IS_TRUE(saved.NetworkAdapterName() == L"MidiApiTest Adapter", L"the adapter's name");
+    VERIFY_IS_FALSE(saved.AllowNetworkAdapterFallback(), L"and whether it may use the others");
+
+    MidiNetworkHostUpdateConfig update(hostId);
+    update.AllowNetworkAdapterFallback(true);
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(update), L"saving a change works");
+
+    saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_IS_TRUE(saved.AllowNetworkAdapterFallback(), L"the change is applied on top");
+    VERIFY_IS_TRUE(saved.NetworkAdapterId() == adapterId, L"and the adapter is left alone");
+    VERIFY_IS_TRUE(saved.NetworkAdapterName() == L"MidiApiTest Adapter");
+
+    MidiNetworkHostUpdateConfig everyAdapter(hostId);
+    everyAdapter.NetworkAdapterId(winrt::guid{});
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(everyAdapter), L"moving it to every adapter works");
+
+    saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_IS_TRUE(saved.NetworkAdapterId() == winrt::guid{}, L"it is on every adapter");
+    VERIFY_IS_TRUE(saved.NetworkAdapterName().empty(), L"with no adapter name left over");
+}
+
+// A host which may not use the other adapters is still created when its own is missing. It waits,
+// says why, and starts once it is moved to an adapter which is here.
+void MidiNetworkApiTests::TestHostWaitsForAMissingNetworkAdapter()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto const adapterId = foundation::GuidHelper::CreateNewGuid();
+
+    auto config = MakeAdapterTestHostConfig(adapterId, false);
+    auto const hostId = config.HostId();
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    auto const response = MidiNetworkTransportManager::CreateNetworkHostAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_FALSE(response.Success(), L"the host cannot start");
+    VERIFY_IS_TRUE(response.ErrorCode() == MidiNetworkHostCreationErrorCode::NetworkAdapterNotAvailable, L"because its adapter is missing");
+    VERIFY_IS_FALSE(response.ErrorMessage().empty(), L"and it says so");
+
+    auto host = WaitForConfiguredHost(hostId, [](MidiNetworkConfiguredHost const& h) { return h.IsNetworkAdapterMissing(); });
+
+    VERIFY_IS_TRUE(host != nullptr, L"the host is still created");
+    VERIFY_IS_FALSE(host.HasStarted(), L"but is not running");
+    VERIFY_IS_FALSE(host.UsedNetworkAdapterFallback());
+    VERIFY_IS_TRUE(host.NetworkAdapterId() == adapterId);
+    VERIFY_IS_FALSE(host.AllowNetworkAdapterFallback());
+
+    auto const start = MidiNetworkTransportManager::StartNetworkHostAsync(hostId).get();
+
+    VERIFY_IS_NOT_NULL(start);
+    VERIFY_IS_FALSE(start.Success(), L"asking it to start does not help");
+    VERIFY_IS_TRUE(start.ErrorCode() == MidiNetworkHostUpdateErrorCode::NetworkAdapterNotAvailable);
+
+    MidiNetworkHostUpdateConfig update(hostId);
+    update.NetworkAdapterId(winrt::guid{});
+
+    auto const updated = MidiNetworkTransportManager::UpdateNetworkHostAsync(update).get();
+
+    VERIFY_IS_NOT_NULL(updated);
+    VERIFY_IS_TRUE(updated.Success(), L"moving it to every adapter works");
+
+    host = WaitForConfiguredHost(hostId, [](MidiNetworkConfiguredHost const& h) { return h.HasStarted(); });
+
+    VERIFY_IS_TRUE(host != nullptr, L"and it starts by itself");
+    VERIFY_IS_FALSE(host.IsNetworkAdapterMissing());
+    VERIFY_IS_TRUE(host.NetworkAdapterId() == winrt::guid{});
+}
+
+void MidiNetworkApiTests::TestHostFallsBackWhenItsNetworkAdapterIsMissing()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto config = MakeAdapterTestHostConfig(foundation::GuidHelper::CreateNewGuid(), true);
+    auto const hostId = config.HostId();
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    auto const response = MidiNetworkTransportManager::CreateNetworkHostAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_TRUE(response.Success(), L"the host starts anyway");
+
+    auto const host = WaitForConfiguredHost(hostId, [](MidiNetworkConfiguredHost const& h) { return h.HasStarted(); });
+
+    VERIFY_IS_TRUE(host != nullptr);
+    VERIFY_IS_TRUE(host.IsNetworkAdapterMissing(), L"its adapter is reported missing");
+    VERIFY_IS_TRUE(host.UsedNetworkAdapterFallback(), L"and it is running on every adapter");
+}
+
+void MidiNetworkApiTests::TestHostStartsOnItsNetworkAdapter()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto adapters = ::WindowsMidiServicesInternal::GetMidiNetworkAdapters();
+
+    // the one Windows prefers, which is the most likely to be a real network
+    std::stable_sort(adapters.begin(), adapters.end(),
+        [](auto const& left, auto const& right) { return left.Metric < right.Metric; });
+
+    auto const adapter = std::find_if(adapters.begin(), adapters.end(),
+        [](::WindowsMidiServicesInternal::MidiNetworkAdapterInfo const& candidate) { return candidate.IsUsable(); });
+
+    if (adapter == adapters.end())
+    {
+        Log::Result(TestResults::Skipped, L"This PC has no network adapter with an address.");
+        return;
+    }
+
+    Log::Comment(String().Format(L"Adapter: %s", adapter->Name.c_str()));
+
+    auto config = MakeAdapterTestHostConfig(winrt::guid{ adapter->Id }, false);
+
+    VERIFY_IS_TRUE(config.NetworkAdapterName() == winrt::hstring{ adapter->Name }, L"choosing the adapter fills in its name");
+
+    auto const hostId = config.HostId();
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    auto const response = MidiNetworkTransportManager::CreateNetworkHostAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+
+    if (!response.Success())
+    {
+        Log::Comment(String().Format(L"Host creation failed. code=0x%08X message='%s'",
+            static_cast<uint32_t>(response.ErrorCode()), response.ErrorMessage().c_str()));
+    }
+
+    VERIFY_IS_TRUE(response.Success());
+
+    auto const host = WaitForConfiguredHost(hostId, [](MidiNetworkConfiguredHost const& h) { return h.HasStarted(); });
+
+    VERIFY_IS_TRUE(host != nullptr);
+    VERIFY_IS_FALSE(host.IsNetworkAdapterMissing(), L"its adapter is here");
+    VERIFY_IS_FALSE(host.UsedNetworkAdapterFallback());
+    VERIFY_IS_TRUE(host.NetworkAdapterId() == winrt::guid{ adapter->Id });
+    VERIFY_IS_TRUE(host.NetworkAdapterName() == winrt::hstring{ adapter->Name });
 }

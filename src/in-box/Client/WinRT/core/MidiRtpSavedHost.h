@@ -32,6 +32,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 
         bool SendRecoveryJournal() const noexcept { return m_sendRecoveryJournal; }
 
+        winrt::guid NetworkAdapterId() const noexcept { return m_networkAdapterId; }
+        winrt::hstring NetworkAdapterName() const noexcept { return m_networkAdapterName; }
+        bool AllowNetworkAdapterFallback() const noexcept { return m_allowNetworkAdapterFallback; }
+
         collections::IVectorView<rtp::MidiRtpKnownRemoteClient> KnownRemoteClients() const noexcept { return m_knownRemoteClients.GetView(); }
 
         // The saved entry, and the decisions saved for it, which are kept beside it in the file
@@ -57,6 +61,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         rtp::MidiRtpRemoteClientPolicy m_remoteClientPolicy{ rtp::MidiRtpRemoteClientPolicy::AllowAny };
 
         bool m_sendRecoveryJournal{ true };
+
+        winrt::guid m_networkAdapterId{};
+        winrt::hstring m_networkAdapterName{};
+        bool m_allowNetworkAdapterFallback{ true };
 
         collections::IVector<rtp::MidiRtpKnownRemoteClient> m_knownRemoteClients{ winrt::single_threaded_vector<rtp::MidiRtpKnownRemoteClient>() };
     };

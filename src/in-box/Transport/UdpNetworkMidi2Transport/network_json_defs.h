@@ -29,9 +29,20 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_DIRECT_CONNECTION_SCAN_INTERVAL_KEY       L"directConnectionScanInterval"
 
 
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_INTERFACE_KEY                             L"networkInterface"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_KEY                      L"networkProtocol"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP                L"udp"                      // UDP is only protocol currently supported
+
+// The network adapter a host is limited to, by its interface GUID. Missing or empty means every
+// adapter. The hardware address finds the same adapter again when it comes back with a new GUID,
+// which a USB adapter does when it is plugged into a different port. The name is only shown, so
+// the customer can tell which adapter is missing.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_ID_KEY                    L"networkAdapterId"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_NAME_KEY                  L"networkAdapterName"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_PHYSICAL_ADDRESS_KEY      L"networkAdapterPhysicalAddress"
+
+// When the adapter is missing, the host runs on every adapter until it comes back, rather than
+// waiting for it without running at all.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY        L"allowNetworkAdapterFallback"  // boolean, default true
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY                        L"advertise"                // boolean
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY                               L"enabled"                  // boolean
@@ -204,6 +215,14 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIGURED_PORT_KEY       L"configuredPort"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PORT_FALLBACK_USED_KEY    L"portFallbackUsed"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ALLOW_PORT_FALLBACK_KEY   L"allowPortFallback"
+
+// The adapter the host was limited to, and what became of it. Missing means the host is waiting
+// for the adapter, or with fallback allowed, running on every adapter until it comes back.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NETWORK_ADAPTER_ID_KEY                MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_ID_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NETWORK_ADAPTER_NAME_KEY              MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_NAME_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY    MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NETWORK_ADAPTER_MISSING_KEY           L"networkAdapterMissing"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NETWORK_ADAPTER_FALLBACK_USED_KEY     L"networkAdapterFallbackUsed"
 
 // The DNS-SD instance label actually on the network, and whether the responder had to rename it
 // because something else was already using the configured one.

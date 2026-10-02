@@ -15,6 +15,7 @@
 #include "StringResources.h"
 
 #include "..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
+#include "..\..\Transport\RtpMidiTransport\rtp_json_defs.h"
 
 namespace native = ::midinetworksetup;
 namespace res = ::midinetworksetup::resources;
@@ -70,6 +71,28 @@ namespace winrt::midinetworksetup::implementation
                 }
 
                 return element.DataContext().try_as<TItem>();
+            }
+            catch (...)
+            {
+                return nullptr;
+            }
+        }
+
+        // A button handed to another control, like an InfoBar's action button, may not inherit
+        // the row as its data context, so those buttons also carry the row in their Tag
+        template <typename TItem>
+        TItem ItemOrTagOf(_In_ foundation::IInspectable const& sender) noexcept
+        {
+            if (auto item = ItemOf<TItem>(sender); item != nullptr)
+            {
+                return item;
+            }
+
+            try
+            {
+                auto const element = sender.try_as<xaml::FrameworkElement>();
+
+                return element == nullptr ? nullptr : element.Tag().try_as<TItem>();
             }
             catch (...)
             {
@@ -213,6 +236,101 @@ namespace winrt::midinetworksetup::implementation
             catch (...)
             {
                 return false;
+            }
+        }
+
+        // The adapter chosen in an adapter picker, or an empty GUID for every adapter
+        winrt::guid SelectedNetworkAdapterId(_In_ controls::ComboBox const& comboBox) noexcept
+        {
+            try
+            {
+                auto const choice = comboBox.SelectedItem().try_as<controls::ComboBoxItem>();
+
+                GUID id{};
+
+                if (choice != nullptr &&
+                    ::WindowsMidiServicesInternal::TryParseMidiNetworkAdapterId(
+                        std::wstring{ winrt::unbox_value_or<winrt::hstring>(choice.Tag(), winrt::hstring{}) },
+                        id))
+                {
+                    return winrt::guid{ id };
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return winrt::guid{};
+        }
+
+        // Every adapter first, then each adapter a host can use now, best first. A selected
+        // adapter which is missing goes last, so the customer can see what the host is waiting for.
+        void FillNetworkAdapterChoices(
+            _In_ controls::ComboBox const& comboBox,
+            _In_ winrt::guid const& selectedId,
+            _In_ winrt::hstring const& selectedName) noexcept
+        {
+            try
+            {
+                auto const items = comboBox.Items();
+
+                items.Clear();
+
+                auto const addChoice = [&items](_In_ winrt::hstring const& text, _In_ winrt::guid const& id)
+                    {
+                        controls::ComboBoxItem choice{};
+
+                        choice.Content(winrt::box_value(text));
+                        choice.Tag(winrt::box_value(winrt::hstring{ ::WindowsMidiServicesInternal::MidiNetworkAdapterIdToString(id) }));
+
+                        items.Append(choice);
+                    };
+
+                addChoice(res::GetString(L"NetworkAdapterEvery"), winrt::guid{});
+
+                int32_t selectedIndex{ 0 };
+
+                auto adapters = ::WindowsMidiServicesInternal::GetMidiNetworkAdapters();
+
+                std::stable_sort(adapters.begin(), adapters.end(),
+                    [](auto const& left, auto const& right) { return left.Metric < right.Metric; });
+
+                for (auto const& adapter : adapters)
+                {
+                    if (!adapter.IsUsable())
+                    {
+                        continue;
+                    }
+
+                    if (winrt::guid{ adapter.Id } == selectedId)
+                    {
+                        selectedIndex = static_cast<int32_t>(items.Size());
+                    }
+
+                    // the address tells apart two adapters with similar names
+                    addChoice(
+                        res::FormatString(
+                            L"NetworkAdapterChoiceFormat",
+                            adapter.Name,
+                            !adapter.IPv4Addresses.empty() ? adapter.IPv4Addresses.front() : adapter.IPv6Addresses.front()),
+                        winrt::guid{ adapter.Id });
+                }
+
+                if (selectedId != winrt::guid{} && selectedIndex == 0)
+                {
+                    selectedIndex = static_cast<int32_t>(items.Size());
+
+                    addChoice(
+                        res::FormatString(
+                            L"NetworkAdapterMissingFormat",
+                            selectedName.empty() ? res::GetString(L"NetworkAdapterUnknown") : selectedName),
+                        selectedId);
+                }
+
+                comboBox.SelectedIndex(selectedIndex);
+            }
+            catch (...)
+            {
             }
         }
 
@@ -1995,6 +2113,89 @@ namespace winrt::midinetworksetup::implementation
         }
     }
 
+    _Use_decl_annotations_
+    void MainWindow::OnNetworkAdapterChoiceChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const&)
+    {
+        if (!m_loaded)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const comboBox = sender.try_as<controls::ComboBox>();
+
+            if (comboBox == nullptr)
+            {
+                return;
+            }
+
+            auto const limited = SelectedNetworkAdapterId(comboBox) != winrt::guid{};
+
+            if (comboBox == HostNetworkAdapterComboBox())
+            {
+                HostNetworkAdapterFallbackCheckBox().IsEnabled(limited);
+            }
+            else if (comboBox == RtpHostNetworkAdapterComboBox())
+            {
+                RtpHostNetworkAdapterFallbackCheckBox().IsEnabled(limited);
+            }
+            else if (comboBox == ChangeHostAdapterComboBox())
+            {
+                ChangeHostAdapterFallbackCheckBox().IsEnabled(limited);
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<bool> MainWindow::ShowChangeHostAdapterDialogAsync(midinetworksetup::LocalHostItem const item)
+    {
+        auto strongThis = get_strong();
+
+        if (m_openDialog != nullptr || item == nullptr)
+        {
+            co_return false;
+        }
+
+        winrt::guid currentId{};
+
+        try
+        {
+            GUID parsed{};
+
+            if (::WindowsMidiServicesInternal::TryParseMidiNetworkAdapterId(std::wstring{ item.NetworkAdapterId() }, parsed))
+            {
+                currentId = parsed;
+            }
+
+            FillNetworkAdapterChoices(ChangeHostAdapterComboBox(), currentId, item.NetworkAdapterName());
+
+            ChangeHostAdapterFallbackCheckBox().IsChecked(item.AllowNetworkAdapterFallback());
+            ChangeHostAdapterFallbackCheckBox().IsEnabled(currentId != winrt::guid{});
+
+            ChangeHostAdapterDialog().Title(winrt::box_value(res::FormatString(L"ChangeHostAdapterTitleFormat", item.DisplayName())));
+            ChangeHostAdapterDialog().XamlRoot(Content().XamlRoot());
+        }
+        catch (...)
+        {
+            co_return false;
+        }
+
+        m_openDialog = ChangeHostAdapterDialog();
+
+        auto const result = co_await ChangeHostAdapterDialog().ShowAsync();
+
+        m_openDialog = nullptr;
+
+        // nothing to send when nothing changed
+        co_return result == controls::ContentDialogResult::Primary &&
+            (SelectedNetworkAdapterId(ChangeHostAdapterComboBox()) != currentId ||
+             IsCheckBoxChecked(ChangeHostAdapterFallbackCheckBox()) != item.AllowNetworkAdapterFallback());
+    }
+
     void MainWindow::UpdateCreateHostButtonState() noexcept
     {
         if (!m_loaded)
@@ -2072,6 +2273,10 @@ namespace winrt::midinetworksetup::implementation
         HostPolicyAskRadio().IsChecked(true);
         CreateHostStatusText().Text(L"");
 
+        FillNetworkAdapterChoices(HostNetworkAdapterComboBox(), winrt::guid{}, winrt::hstring{});
+        HostNetworkAdapterFallbackCheckBox().IsChecked(config.AllowNetworkAdapterFallback());
+        HostNetworkAdapterFallbackCheckBox().IsEnabled(false);
+
         UpdateCreateHostButtonState();
 
         CreateHostDialog().XamlRoot(Content().XamlRoot());
@@ -2117,6 +2322,9 @@ namespace winrt::midinetworksetup::implementation
                 askFirst != nullptr && askFirst.Value() ?
                 midi2net::MidiNetworkRemoteClientPolicy::RequireApproval :
                 midi2net::MidiNetworkRemoteClientPolicy::AllowAny);
+
+            config.NetworkAdapterId(SelectedNetworkAdapterId(HostNetworkAdapterComboBox()));
+            config.AllowNetworkAdapterFallback(IsCheckBoxChecked(HostNetworkAdapterFallbackCheckBox()));
         }
         catch (...)
         {
@@ -2137,13 +2345,18 @@ namespace winrt::midinetworksetup::implementation
         {
             auto const response = co_await midi2net::MidiNetworkTransportManager::CreateNetworkHostAsync(config);
 
-            if (response != nullptr && response.Success())
+            // The adapter can go away while the dialog is open. The host is still created, and
+            // starts by itself when the adapter is back.
+            auto const waiting = response != nullptr &&
+                response.ErrorCode() == midi2net::MidiNetworkHostCreationErrorCode::NetworkAdapterNotAvailable;
+
+            if (response != nullptr && (response.Success() || waiting))
             {
                 auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
 
-                message = saved != nullptr && saved.Success() ?
-                    res::FormatString(L"HostCreatedFormat", hostName) :
-                    NotSavedMessage(saved);
+                message = saved == nullptr || !saved.Success() ? NotSavedMessage(saved) :
+                    waiting ? res::FormatString(L"HostCreatedWaitingForAdapterFormat", hostName) :
+                    res::FormatString(L"HostCreatedFormat", hostName);
             }
             else
             {
@@ -2288,6 +2501,100 @@ namespace winrt::midinetworksetup::implementation
 
                 message = saved != nullptr && saved.Success() ?
                     res::FormatString(L"HostDeletedFormat", displayName) :
+                    NotSavedMessage(saved);
+            }
+            else
+            {
+                message = response == nullptr ?
+                    res::GetString(L"HostChangeFailedGeneral") :
+                    res::FormatString(L"HostChangeFailedFormat", response.ErrorMessage());
+            }
+        }
+        catch (...)
+        {
+            message = res::GetString(L"HostChangeFailedGeneral");
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, item, message]()
+                {
+                    item.IsBusy(false);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetLocalStatus(message);
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnChangeHostAdapterClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto item = ItemOrTagOf<midinetworksetup::LocalHostItem>(sender);
+
+        winrt::guid hostId{};
+
+        if (item == nullptr || !TryParseKey(item.HostId(), hostId))
+        {
+            co_return;
+        }
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        if (!co_await ShowChangeHostAdapterDialogAsync(item))
+        {
+            co_return;
+        }
+
+        midi2net::MidiNetworkHostUpdateConfig config{ nullptr };
+
+        try
+        {
+            config = midi2net::MidiNetworkHostUpdateConfig{ hostId };
+
+            GUID configuredId{};
+            (void)::WindowsMidiServicesInternal::TryParseMidiNetworkAdapterId(std::wstring{ item.NetworkAdapterId() }, configuredId);
+
+            auto const adapterId = SelectedNetworkAdapterId(ChangeHostAdapterComboBox());
+
+            // Only a new adapter is sent. Looking up a missing one again finds nothing, and its
+            // saved name and hardware address would be lost.
+            if (adapterId != winrt::guid{ configuredId })
+            {
+                config.NetworkAdapterId(adapterId);
+            }
+
+            config.AllowNetworkAdapterFallback(IsCheckBoxChecked(ChangeHostAdapterFallbackCheckBox()));
+        }
+        catch (...)
+        {
+            SetLocalStatus(res::GetString(L"HostChangeFailedGeneral"));
+
+            co_return;
+        }
+
+        auto const displayName = item.DisplayName();
+
+        item.IsBusy(true);
+
+        co_await winrt::resume_background();
+
+        winrt::hstring message{};
+
+        try
+        {
+            auto const response = co_await midi2net::MidiNetworkTransportManager::UpdateNetworkHostAsync(config);
+
+            if (response != nullptr && response.Success())
+            {
+                auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                message = saved != nullptr && saved.Success() ?
+                    res::FormatString(L"HostNetworkAdapterChangedFormat", displayName) :
                     NotSavedMessage(saved);
             }
             else
@@ -3130,6 +3437,10 @@ namespace winrt::midinetworksetup::implementation
             RtpHostSendRecoveryJournalCheckBox().IsChecked(true);
             RtpCreateHostStatusText().Text(L"");
 
+            FillNetworkAdapterChoices(RtpHostNetworkAdapterComboBox(), winrt::guid{}, winrt::hstring{});
+            RtpHostNetworkAdapterFallbackCheckBox().IsChecked(true);
+            RtpHostNetworkAdapterFallbackCheckBox().IsEnabled(false);
+
             UpdateCreateRtpHostButtonState();
 
             CreateRtpHostDialog().XamlRoot(Content().XamlRoot());
@@ -3186,6 +3497,9 @@ namespace winrt::midinetworksetup::implementation
 
             config.SendRecoveryJournal(IsCheckBoxChecked(RtpHostSendRecoveryJournalCheckBox()));
 
+            config.NetworkAdapterId(SelectedNetworkAdapterId(RtpHostNetworkAdapterComboBox()));
+            config.AllowNetworkAdapterFallback(IsCheckBoxChecked(RtpHostNetworkAdapterFallbackCheckBox()));
+
             auto const askFirst = RtpHostPolicyAskRadio().IsChecked();
 
             config.RemoteClientPolicy(
@@ -3214,9 +3528,13 @@ namespace winrt::midinetworksetup::implementation
             auto const response = co_await midi2rtp::MidiRtpTransportManager::CreateRtpHostAsync(config);
 
             // A host which is slow to start is still created, and the service keeps trying, so it
-            // is saved like any other and its row says why it has not started.
+            // is saved like any other and its row says why it has not started. So is one whose
+            // adapter went away while the dialog was open.
+            auto const waiting = response != nullptr &&
+                response.ErrorCode() == midi2rtp::MidiRtpHostCreationErrorCode::NetworkAdapterNotAvailable;
+
             auto const created = response != nullptr &&
-                (response.Success() ||
+                (response.Success() || waiting ||
                  response.ErrorCode() == midi2rtp::MidiRtpHostCreationErrorCode::TimedOutWaitingForHostToStart);
 
             if (created)
@@ -3229,8 +3547,8 @@ namespace winrt::midinetworksetup::implementation
                 }
                 else
                 {
-                    message = response.Success() ?
-                        res::FormatString(L"HostCreatedFormat", hostName) :
+                    message = response.Success() ? res::FormatString(L"HostCreatedFormat", hostName) :
+                        waiting ? res::FormatString(L"HostCreatedWaitingForAdapterFormat", hostName) :
                         res::FormatString(L"RtpHostCreatedNotStartedFormat", hostName);
                 }
             }
@@ -3373,6 +3691,177 @@ namespace winrt::midinetworksetup::implementation
                 message = response == nullptr ?
                     res::GetString(L"HostChangeFailedGeneral") :
                     res::FormatString(L"HostChangeFailedFormat", response.ErrorMessage());
+            }
+        }
+        catch (...)
+        {
+            message = res::GetString(L"HostChangeFailedGeneral");
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, item, message]()
+                {
+                    item.IsBusy(false);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetRtpLocalStatus(message);
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
+    }
+
+    // RTP-MIDI has no verb for changing a host. Creating one with the id of a host which exists
+    // replaces its settings and restarts it, so everything else is copied from what was saved.
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnChangeRtpHostAdapterClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto item = ItemOrTagOf<midinetworksetup::LocalHostItem>(sender);
+
+        winrt::guid hostId{};
+
+        if (item == nullptr || !TryParseKey(item.HostId(), hostId))
+        {
+            co_return;
+        }
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        if (!co_await ShowChangeHostAdapterDialogAsync(item))
+        {
+            co_return;
+        }
+
+        auto const adapterId = SelectedNetworkAdapterId(ChangeHostAdapterComboBox());
+        auto const allowFallback = IsCheckBoxChecked(ChangeHostAdapterFallbackCheckBox());
+        auto const displayName = item.DisplayName();
+
+        // read here, because a refresh rewrites them on this thread
+        GUID configuredAdapterId{};
+        (void)::WindowsMidiServicesInternal::TryParseMidiNetworkAdapterId(std::wstring{ item.NetworkAdapterId() }, configuredAdapterId);
+        auto const configuredAdapterName = item.NetworkAdapterName();
+
+        item.IsBusy(true);
+
+        co_await winrt::resume_background();
+
+        winrt::hstring message{};
+
+        try
+        {
+            midi2rtp::MidiRtpConfiguredHost current{ nullptr };
+
+            for (auto const& host : midi2rtp::MidiRtpTransportManager::GetConfiguredHosts())
+            {
+                if (host != nullptr && host.HostId() == hostId)
+                {
+                    current = host;
+                    break;
+                }
+            }
+
+            midi2rtp::MidiRtpSavedHost saved{ nullptr };
+
+            for (auto const& host : midi2rtp::MidiRtpTransportManager::GetSavedHosts())
+            {
+                if (host != nullptr && host.HostId() == hostId)
+                {
+                    saved = host;
+                    break;
+                }
+            }
+
+            if (current == nullptr && saved == nullptr)
+            {
+                message = res::GetString(L"HostChangeFailedGeneral");
+            }
+            else
+            {
+                midi2rtp::MidiRtpHostCreationConfig config{};
+
+                config.HostId(hostId);
+
+                if (saved != nullptr)
+                {
+                    // What was asked for rather than what it runs with, so an empty name still
+                    // means this PC's name after the PC is renamed
+                    config.Name(saved.Name());
+                    config.ServiceInstanceName(saved.ServiceInstanceName());
+                    config.Advertise(saved.Advertise());
+                    config.RemoteClientPolicy(saved.RemoteClientPolicy());
+                    config.SendRecoveryJournal(saved.SendRecoveryJournal());
+
+                    // a saved port which cannot be used reads as zero
+                    auto const automaticPort = saved.UseAutomaticPortAllocation() || saved.ManuallyAssignedPort() == 0;
+
+                    config.UseAutomaticPortAllocation(automaticPort);
+
+                    if (!automaticPort)
+                    {
+                        config.ManuallyAssignedPort(saved.ManuallyAssignedPort());
+                        config.AllowPortFallback(saved.AllowPortFallback());
+                    }
+                }
+                else
+                {
+                    config.Name(current.Name());
+                    config.ServiceInstanceName(current.ServiceInstanceName());
+                    config.Advertise(current.Advertise());
+                    config.RemoteClientPolicy(current.RemoteClientPolicy());
+                    config.SendRecoveryJournal(current.SendRecoveryJournal());
+
+                    // the service reports "auto" or the port number
+                    auto const automaticPort = current.ConfiguredPort() == MIDI_CONFIG_JSON_RTP_MIDI_PORT_VALUE_AUTO;
+
+                    config.UseAutomaticPortAllocation(automaticPort);
+
+                    if (!automaticPort)
+                    {
+                        config.ManuallyAssignedPort(static_cast<uint16_t>(std::stoul(std::wstring{ current.ConfiguredPort() })));
+                        config.AllowPortFallback(current.AllowPortFallback());
+                    }
+                }
+
+                config.NetworkAdapterId(adapterId);
+
+                // Looking up a missing adapter finds nothing, so the name it had is kept
+                if (adapterId == winrt::guid{ configuredAdapterId } && config.NetworkAdapterName().empty())
+                {
+                    config.NetworkAdapterName(configuredAdapterName);
+                }
+
+                config.AllowNetworkAdapterFallback(allowFallback);
+
+                auto const response = co_await midi2rtp::MidiRtpTransportManager::CreateRtpHostAsync(config);
+
+                auto const replaced = response != nullptr &&
+                    (response.Success() ||
+                     response.ErrorCode() == midi2rtp::MidiRtpHostCreationErrorCode::NetworkAdapterNotAvailable ||
+                     response.ErrorCode() == midi2rtp::MidiRtpHostCreationErrorCode::TimedOutWaitingForHostToStart);
+
+                if (replaced)
+                {
+                    // replacing a host switches it on, so one which was stopped is stopped again
+                    if (current != nullptr && !current.IsEnabled())
+                    {
+                        (void)co_await midi2rtp::MidiRtpTransportManager::StopRtpHostAsync(hostId);
+                    }
+
+                    auto const savedResponse = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                    message = savedResponse != nullptr && savedResponse.Success() ?
+                        res::FormatString(L"HostNetworkAdapterChangedFormat", displayName) :
+                        NotSavedMessage(savedResponse);
+                }
+                else
+                {
+                    message = response == nullptr ?
+                        res::GetString(L"HostChangeFailedGeneral") :
+                        res::FormatString(L"HostChangeFailedFormat", response.ErrorMessage());
+                }
             }
         }
         catch (...)

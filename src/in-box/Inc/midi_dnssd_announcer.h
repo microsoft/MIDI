@@ -16,6 +16,8 @@
 // twice, without the flush bit. Only the PTR records: the SRV, TXT and address records are
 // unique, the DNS client owns them and answers for them correctly, and a copy that differed from
 // its own in any byte would flush the real one.
+//
+// A host limited to one network adapter is only announced on that adapter.
 // ============================================================================
 
 #pragma once
@@ -288,8 +290,11 @@ namespace WindowsMidiServicesInternal
     }
 
     // Multicasts the packets on every interface that is up and carries multicast, over IPv4 and
-    // IPv6. Winsock must already be started.
-    inline MidiDnssdAnnouncementResult SendDnssdAnnouncements(_In_ std::vector<std::vector<uint8_t>> const& packets)
+    // IPv6, or only on the one adapter when adapterId is not an empty GUID. Winsock must already
+    // be started.
+    inline MidiDnssdAnnouncementResult SendDnssdAnnouncements(
+        _In_ std::vector<std::vector<uint8_t>> const& packets,
+        _In_ GUID const& adapterId = GUID{})
     {
         MidiDnssdAnnouncementResult result{};
         if (packets.empty()) return result;
@@ -322,6 +327,12 @@ namespace WindowsMidiServicesInternal
             if (adapter->IfType == IF_TYPE_SOFTWARE_LOOPBACK || adapter->IfType == IF_TYPE_TUNNEL || adapter->IfType == IF_TYPE_PPP) continue;
             if ((adapter->Flags & IP_ADAPTER_NO_MULTICAST) != 0) continue;
 
+            if (!IsEqualGUID(adapterId, GUID{}))
+            {
+                GUID id{};
+                if (ConvertInterfaceLuidToGuid(&adapter->Luid, &id) != NO_ERROR || !IsEqualGUID(id, adapterId)) continue;
+            }
+
             bool haveIPv4{ false };
             bool haveIPv6{ false };
 
@@ -349,7 +360,9 @@ namespace WindowsMidiServicesInternal
     class MidiDnssdFollowUpAnnouncer
     {
     public:
-        using Sender = std::function<MidiDnssdAnnouncementResult(std::vector<std::vector<uint8_t>> const&)>;
+        // Called once for each adapter that has hosts limited to it, and once with GUID_NULL for
+        // the hosts on every adapter
+        using Sender = std::function<MidiDnssdAnnouncementResult(std::vector<std::vector<uint8_t>> const&, GUID const& adapterId)>;
         using SentHandler = std::function<void(size_t hostCount, size_t packetCount, MidiDnssdAnnouncementResult const& result)>;
 
         MidiDnssdFollowUpAnnouncer() = default;
@@ -428,8 +441,9 @@ namespace WindowsMidiServicesInternal
             if (winsockStarted) WSACleanup();
         }
 
-        // After a registration completes, with the label the DNS client actually registered
-        void AddRegistration(_In_ std::wstring_view const instanceLabel)
+        // After a registration completes, with the label the DNS client actually registered. A
+        // host limited to one adapter passes that adapter, and is only announced there.
+        void AddRegistration(_In_ std::wstring_view const instanceLabel, _In_ GUID const& adapterId = GUID{})
         {
             if (instanceLabel.empty()) return;
 
@@ -438,7 +452,10 @@ namespace WindowsMidiServicesInternal
 
                 if (!m_running) return;
 
-                if (FindLabel(instanceLabel) == m_labels.end()) m_labels.emplace_back(instanceLabel);
+                auto const existing = FindLabel(instanceLabel);
+
+                if (existing == m_labels.end()) m_labels.push_back(Registration{ std::wstring{ instanceLabel }, adapterId });
+                else existing->AdapterId = adapterId;
 
                 auto const now = GetTickCount64();
 
@@ -464,12 +481,18 @@ namespace WindowsMidiServicesInternal
         }
 
     private:
-        std::vector<std::wstring>::iterator FindLabel(_In_ std::wstring_view const instanceLabel) noexcept
+        struct Registration
+        {
+            std::wstring Label;
+            GUID AdapterId{};
+        };
+
+        std::vector<Registration>::iterator FindLabel(_In_ std::wstring_view const instanceLabel) noexcept
         {
             // DNS names compare without regard to case
-            return std::find_if(m_labels.begin(), m_labels.end(), [&](std::wstring const& label)
+            return std::find_if(m_labels.begin(), m_labels.end(), [&](Registration const& registration)
             {
-                return CompareStringOrdinal(label.data(), static_cast<int>(label.size()),
+                return CompareStringOrdinal(registration.Label.data(), static_cast<int>(registration.Label.size()),
                     instanceLabel.data(), static_cast<int>(instanceLabel.size()), TRUE) == CSTR_EQUAL;
             });
         }
@@ -509,16 +532,40 @@ namespace WindowsMidiServicesInternal
 
                     try
                     {
-                        std::vector<std::string> labels;
-                        for (auto const& label : m_labels) labels.push_back(MidiDnssdToUtf8(label));
+                        // the hosts on every adapter first, then each adapter's own, in the order they came
+                        std::vector<GUID> adapters{ GUID{} };
 
-                        auto const packets = BuildDnssdPtrAnnouncements(
-                            m_serviceType, labels, MidiDnssdAnnouncedPtrTtlSeconds, MidiDnssdAnnouncementMaxPacketBytes);
+                        for (auto const& registration : m_labels)
+                        {
+                            if (std::none_of(adapters.begin(), adapters.end(), [&](GUID const& id) { return IsEqualGUID(id, registration.AdapterId) != FALSE; }))
+                            {
+                                adapters.push_back(registration.AdapterId);
+                            }
+                        }
 
-                        packetCount = packets.size();
+                        for (auto const& adapterId : adapters)
+                        {
+                            std::vector<std::string> labels;
 
-                        // sent with the lock held, which is what makes RemoveRegistration wait for it
-                        result = m_sender ? m_sender(packets) : SendDnssdAnnouncements(packets);
+                            for (auto const& registration : m_labels)
+                            {
+                                if (IsEqualGUID(registration.AdapterId, adapterId)) labels.push_back(MidiDnssdToUtf8(registration.Label));
+                            }
+
+                            if (labels.empty()) continue;
+
+                            auto const packets = BuildDnssdPtrAnnouncements(
+                                m_serviceType, labels, MidiDnssdAnnouncedPtrTtlSeconds, MidiDnssdAnnouncementMaxPacketBytes);
+
+                            packetCount += packets.size();
+
+                            // sent with the lock held, which is what makes RemoveRegistration wait for it
+                            auto const sent = m_sender ? m_sender(packets, adapterId) : SendDnssdAnnouncements(packets, adapterId);
+
+                            result.IPv4Interfaces += sent.IPv4Interfaces;
+                            result.IPv6Interfaces += sent.IPv6Interfaces;
+                            if (sent.LastError != 0) result.LastError = sent.LastError;
+                        }
                     }
                     catch (...)
                     {
@@ -551,7 +598,7 @@ namespace WindowsMidiServicesInternal
         uint64_t m_firstDelayMilliseconds{ MidiDnssdFirstRepeatDelayMilliseconds };
         uint64_t m_secondDelayMilliseconds{ MidiDnssdSecondRepeatDelayMilliseconds };
 
-        std::vector<std::wstring> m_labels;
+        std::vector<Registration> m_labels;
         uint64_t m_firstRepeatDue{ 0 };
         uint64_t m_lastRepeatDue{ 0 };
         uint64_t m_generation{ 0 };

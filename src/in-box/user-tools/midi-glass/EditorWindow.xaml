@@ -71,12 +71,11 @@
                 <Grid Height="32"
                       Margin="{x:Bind Indent}"
                       ColumnSpacing="8"
-                      AutomationProperties.Name="{x:Bind AccessibleName}">
+                      AutomationProperties.Name="{x:Bind DisplayName}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
@@ -108,13 +107,6 @@
                               VerticalAlignment="Center"
                               Visibility="{x:Bind OutsideVisibility}"
                               Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
-
-                    <FontIcon Grid.Column="4"
-                              Glyph="&#xE72E;"
-                              FontSize="12"
-                              VerticalAlignment="Center"
-                              Visibility="{x:Bind LockedVisibility}"
-                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                 </Grid>
             </DataTemplate>
         </Grid.Resources>
@@ -129,7 +121,6 @@
             <KeyboardAccelerator Key="V" Modifiers="Control" Invoked="OnPasteAccelerator" />
             <KeyboardAccelerator Key="G" Modifiers="Control" Invoked="OnGroupAccelerator" />
             <KeyboardAccelerator Key="G" Modifiers="Control,Shift" Invoked="OnUngroupAccelerator" />
-            <KeyboardAccelerator Key="F2" Invoked="OnRenameAccelerator" />
             <KeyboardAccelerator Key="A" Modifiers="Control" Invoked="OnSelectAllAccelerator" />
             <KeyboardAccelerator Key="Delete" Invoked="OnDeleteAccelerator" />
 
@@ -396,13 +387,13 @@
                         <FontIcon x:Name="GroupButtonGlyph" Glyph="&#xE71D;" FontSize="14" />
                     </Button>
 
-                    <!-- Lock what is picked, or Unlock once all of it is locked. -->
+                    <!-- In the comp and not built yet. Shown so the shape of the toolbar is the
+                         shape that was agreed, and disabled so it is not a promise. -->
                     <Button x:Name="LockButton"
                             x:Uid="EditorLockButton"
                             Style="{StaticResource EditorIconButtonStyle}"
-                            IsEnabled="False"
-                            Click="OnLockClick">
-                        <FontIcon x:Name="LockButtonGlyph" Glyph="&#xE72E;" FontSize="14" />
+                            IsEnabled="False">
+                        <FontIcon Glyph="&#xE72E;" FontSize="14" />
                     </Button>
                 </StackPanel>
 
@@ -449,7 +440,7 @@
                                 <MenuFlyoutItem x:Uid="LayoutMenuPageSize" Text="Page size…" Click="OnPageSizeClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE740;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
-                                <MenuFlyoutItem x:Uid="LayoutMenuBackground" Text="Background image…" Click="OnBackgroundClick">
+                                <MenuFlyoutItem x:Uid="LayoutMenuBackground" Text="Background picture…" Click="OnBackgroundClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xEB9F;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutItem x:Uid="LayoutMenuRename" Text="Rename layout…" Click="OnRenameLayoutClick">
@@ -628,7 +619,6 @@
                                         Grid.Row="2"
                                         Margin="0,0,0,8"
                                         HorizontalAlignment="Stretch"
-                                        IsEnabled="False"
                                         Style="{StaticResource EditorSmallButtonStyle}"
                                         Click="OnAddToPageClick">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -644,30 +634,15 @@
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
-                                <!-- Shift and Ctrl pick several rows, so the outline can make a
-                                     group as well as show one. -->
                                 <ListView x:Name="OutlineList"
                                           x:Uid="OutlineList"
                                           Grid.Row="0"
-                                          SelectionMode="Extended"
+                                          SelectionMode="Single"
                                           ItemTemplate="{StaticResource OutlineTemplate}"
-                                          SelectionChanged="OnOutlineSelectionChanged"
-                                          ContextRequested="OnOutlineContextRequested">
+                                          SelectionChanged="OnOutlineSelectionChanged">
                                     <ListView.ItemContainerTransitions>
                                         <TransitionCollection />
                                     </ListView.ItemContainerTransitions>
-                                    <ListView.ContextFlyout>
-                                        <MenuFlyout x:Name="OutlineMenu" Opening="OnOutlineMenuOpening">
-                                            <MenuFlyoutItem x:Name="OutlineRenameItem" x:Uid="OutlineMenuRename" Text="Rename" Click="OnRenameMenuClick">
-                                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon>
-                                            </MenuFlyoutItem>
-                                            <MenuFlyoutSeparator />
-                                            <MenuFlyoutItem x:Name="OutlineGroupItem" x:Uid="OutlineMenuGroup" Text="Group" Click="OnGroupMenuClick">
-                                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE71D;" /></MenuFlyoutItem.Icon>
-                                            </MenuFlyoutItem>
-                                            <MenuFlyoutItem x:Name="OutlineUngroupItem" x:Uid="OutlineMenuUngroup" Text="Ungroup" Click="OnUngroupMenuClick" />
-                                        </MenuFlyout>
-                                    </ListView.ContextFlyout>
                                 </ListView>
 
                                 <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6" Margin="0,0,0,8">
@@ -716,7 +691,6 @@
                                   VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollMode="Auto"
                                   VerticalScrollMode="Auto"
-                                  PreviewKeyDown="OnCanvasPreviewKeyDown"
                                   SizeChanged="OnCanvasSizeChanged">
                         <ScrollViewer.ContextFlyout>
                             <MenuFlyout x:Name="CanvasMenu" Opening="OnCanvasMenuOpening" Closed="OnCanvasMenuClosed">
@@ -733,9 +707,6 @@
                                 <MenuFlyoutItem x:Name="CanvasDuplicateItem" x:Uid="CanvasMenuDuplicate" Text="Duplicate" Click="OnDuplicateSelectionClick" />
                                 <MenuFlyoutItem x:Name="CanvasDeleteItem" x:Uid="CanvasMenuDelete" Text="Delete" Click="OnDeleteSelectionClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon>
-                                </MenuFlyoutItem>
-                                <MenuFlyoutItem x:Name="CanvasRenameItem" x:Uid="CanvasMenuRename" Text="Rename" Click="OnRenameMenuClick">
-                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutSeparator />
                                 <MenuFlyoutItem x:Name="CanvasGroupItem" x:Uid="CanvasMenuGroup" Text="Group" Click="OnGroupMenuClick">
@@ -781,10 +752,6 @@
                                         PointerReleased="OnCanvasPointerReleased"
                                         PointerCaptureLost="OnCanvasPointerCaptureLost" />
 
-                                <!-- The spacing pills, which are buttons. No background, so it
-                                     only takes the pointer where a pill is. -->
-                                <Canvas x:Name="SpacingCanvas" />
-
                                 <!-- Holds the box a label is typed into after a double click.
                                      No background, so it only takes the pointer where the box is. -->
                                 <Canvas x:Name="LabelEditCanvas" />
@@ -806,38 +773,8 @@
                                        FontFamily="Cascadia Mono, Consolas"
                                        FontSize="10"
                                        VerticalAlignment="Center"
+                                       Margin="0,0,4,0"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-
-                            <!-- The zoom, which a double click turns into a box to type one into. -->
-                            <Grid VerticalAlignment="Center" Margin="0,0,4,0">
-                                <ContentControl x:Name="ZoomPercentHost"
-                                                x:Uid="ZoomPercentHost"
-                                                IsTabStop="True"
-                                                UseSystemFocusVisuals="True"
-                                                VerticalAlignment="Center"
-                                                DoubleTapped="OnZoomPercentDoubleTapped"
-                                                KeyDown="OnZoomPercentKeyDown">
-                                    <TextBlock x:Name="ZoomPercentText"
-                                               FontFamily="Cascadia Mono, Consolas"
-                                               FontSize="10"
-                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                </ContentControl>
-
-                                <TextBox x:Name="ZoomPercentBox"
-                                         x:Uid="ZoomPercentBox"
-                                         Visibility="Collapsed"
-                                         Width="54"
-                                         Height="22"
-                                         MinWidth="0"
-                                         MinHeight="0"
-                                         Padding="5,1,5,1"
-                                         MaxLength="8"
-                                         FontFamily="Cascadia Mono, Consolas"
-                                         FontSize="10"
-                                         VerticalAlignment="Center"
-                                         KeyDown="OnZoomPercentBoxKeyDown"
-                                         LostFocus="OnZoomPercentBoxLostFocus" />
-                            </Grid>
 
                             <Button x:Name="ZoomOutButton"
                                     x:Uid="ZoomOutButton"
@@ -1414,7 +1351,7 @@
                                         <TextBox x:Name="LabelBox" x:Uid="LabelBox" Grid.Row="0" Grid.Column="1"
                                                  Style="{StaticResource RowFieldStyle}" TextChanged="OnLabelChanged" />
 
-                                        <TextBlock x:Uid="InspectorLabelPlacedLabel" Grid.Row="1" Grid.Column="0" Text="Placement" Style="{StaticResource RowLabelStyle}" />
+                                        <TextBlock x:Uid="InspectorLabelPlacedLabel" Grid.Row="1" Grid.Column="0" Text="Placed" Style="{StaticResource RowLabelStyle}" />
                                         <ComboBox x:Name="LabelPlacedCombo" x:Uid="LabelPlacedCombo" Grid.Row="1" Grid.Column="1"
                                                   Style="{StaticResource RowComboStyle}" SelectionChanged="OnLabelPlacedChanged" />
 
@@ -1498,7 +1435,7 @@
 
                                         <CheckBox x:Name="ShowDetentValuesCheck"
                                                   x:Uid="ShowDetentValuesCheck"
-                                                  Content="Show stop values"
+                                                  Content="Print the value at each stop"
                                                   Margin="0,6,0,0"
                                                   Checked="OnShowDetentValuesChanged"
                                                   Unchecked="OnShowDetentValuesChanged" />
@@ -1512,7 +1449,7 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock x:Uid="InspectorPictureHeading" Text="Image or video" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                            <TextBlock x:Uid="InspectorPictureHeading" Text="Picture or Video" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
                                             <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
                                         </Grid>
 
@@ -1603,7 +1540,7 @@
                                                          stops, and the line is where it is now. The
                                                          two boxes under it do the same by number, and
                                                          are what a keyboard or a screen reader uses. -->
-                                                    <TextBlock x:Uid="PictureVideoRangeLabel" Text="Playback range" Margin="0,10,0,0" />
+                                                    <TextBlock x:Uid="PictureVideoRangeLabel" Text="Start and Stop Points" Margin="0,10,0,0" />
 
                                                     <Grid x:Name="PictureTimeline"
                                                           Height="34"
@@ -1650,20 +1587,20 @@
 
                                                     <CheckBox x:Name="PictureLoopsCheck"
                                                               x:Uid="PictureLoopsCheck"
-                                                              Content="Loop"
+                                                              Content="Loop between start/stop points"
                                                               Margin="0,6,0,0"
                                                               Checked="OnPictureLoopsChanged"
                                                               Unchecked="OnPictureLoopsChanged" />
 
                                                     <CheckBox x:Name="PictureAutoPlayCheck"
                                                               x:Uid="PictureAutoPlayCheck"
-                                                              Content="Autoplay"
+                                                              Content="Start playing with layout start"
                                                               Checked="OnPictureVideoFlagChanged"
                                                               Unchecked="OnPictureVideoFlagChanged" />
 
                                                     <CheckBox x:Name="PictureClickToPlayCheck"
                                                               x:Uid="PictureClickToPlayCheck"
-                                                              Content="Click to play"
+                                                              Content="Click to start/stop"
                                                               Checked="OnPictureVideoFlagChanged"
                                                               Unchecked="OnPictureVideoFlagChanged" />
 
@@ -1727,7 +1664,7 @@
                                                         ValueChanged="OnPictureZoomChanged" />
 
                                                 <TextBlock x:Uid="PictureCropCaption"
-                                                           Text="The buttons push the picture to an edge or a corner. To crop, zoom in and drag the box to the part you want. Scaling set to Fill crops too."
+                                                           Text="The buttons push the picture to an edge or a corner. To crop, zoom in and drag the box to the part you want. Fill in Scale and Stretch crops too."
                                                            FontSize="11"
                                                            TextWrapping="Wrap"
                                                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
@@ -1868,7 +1805,7 @@
                                             <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
                                         </Grid>
 
-                                        <TextBlock x:Uid="KeyCountLabel" Text="Number of keys" Style="{StaticResource InspectorLabelStyle}" />
+                                        <TextBlock x:Uid="KeyCountLabel" Text="How many keys" Style="{StaticResource InspectorLabelStyle}" />
                                         <NumberBox x:Name="KeyCountBox"
                                                    x:Uid="KeyCountBox"
                                                    Minimum="5"
@@ -1877,7 +1814,7 @@
                                                    SpinButtonPlacementMode="Compact"
                                                    ValueChanged="OnKeyCountChanged" />
 
-                                        <TextBlock x:Uid="LowestNoteLabel" Text="Lowest note" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+                                        <TextBlock x:Uid="LowestNoteLabel" Text="Lowest key plays" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
                                         <NumberBox x:Name="LowestNoteBox"
                                                    x:Uid="LowestNoteBox"
                                                    Minimum="0"
@@ -1937,7 +1874,7 @@
 
                                         <CheckBox x:Name="KeyVelocityCheck"
                                                   x:Uid="KeyVelocityCheck"
-                                                  Content="Velocity by touch position"
+                                                  Content="Velocity from where the key is touched"
                                                   Margin="0,6,0,0"
                                                   Checked="OnKeyVelocityChanged"
                                                   Unchecked="OnKeyVelocityChanged" />
@@ -2137,7 +2074,7 @@
                                                        ValueChanged="OnPadGridNumberChanged" />
                                         </Grid>
 
-                                        <TextBlock x:Uid="PadGlideHeading" Text="Glide" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <TextBlock x:Uid="PadGlideHeading" Text="Sliding from pad to pad" Style="{StaticResource InspectorHeadingStyle}" />
 
                                         <ComboBox x:Name="PadGlideCombo"
                                                   x:Uid="PadGlideCombo"
@@ -2180,11 +2117,9 @@
                             </ScrollViewer>
 
                             <ScrollViewer x:Name="MidiPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
-                                <!-- One control's messages, or where several controls send. -->
-                                <Grid>
                                 <StackPanel x:Name="MidiPanel" Margin="8,0,16,16" Spacing="4">
 
-                                    <TextBlock x:Uid="InspectorMessagesHeading" Text="Action list" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <TextBlock x:Uid="InspectorMessagesHeading" Text="What it sends" Style="{StaticResource InspectorHeadingStyle}" />
                                     <ListView x:Name="MessageList"
                                               x:Uid="MessageList"
                                               SelectionMode="Single"
@@ -2205,7 +2140,7 @@
                                          which kind of message and which number. Capturing only the
                                          number is why remapping a controller is usually an hour of
                                          typing. -->
-                                    <TextBlock x:Uid="LearnHeading" Text="MIDI Learn" Style="{StaticResource InspectorHeadingStyle}" Margin="0,12,0,0" />
+                                    <TextBlock x:Uid="LearnHeading" Text="Learn from your hardware" Style="{StaticResource InspectorHeadingStyle}" Margin="0,12,0,0" />
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <ToggleButton x:Name="LearnOneToggle"
                                                       x:Uid="LearnOneToggle"
@@ -2242,7 +2177,7 @@
                                         <CheckBox x:Name="LearnAcceptDevice" x:Uid="LearnAcceptDevice" IsChecked="True" MinWidth="0" FontSize="11" Content="Device" />
                                         <CheckBox x:Name="LearnAcceptGroup" x:Uid="LearnAcceptGroup" IsChecked="True" MinWidth="0" FontSize="11" Content="Group" />
                                         <CheckBox x:Name="LearnAcceptChannel" x:Uid="LearnAcceptChannel" IsChecked="True" MinWidth="0" FontSize="11" Content="Channel" />
-                                        <CheckBox x:Name="LearnAcceptKind" x:Uid="LearnAcceptKind" IsChecked="True" MinWidth="0" FontSize="11" Content="Type" />
+                                        <CheckBox x:Name="LearnAcceptKind" x:Uid="LearnAcceptKind" IsChecked="True" MinWidth="0" FontSize="11" Content="What" />
                                         <CheckBox x:Name="LearnAcceptNumber" x:Uid="LearnAcceptNumber" IsChecked="True" MinWidth="0" FontSize="11" Content="Number" />
                                     </StackPanel>
 
@@ -2269,15 +2204,13 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
 
-                                        <TextBlock x:Name="MessageWhenLabel" x:Uid="MessageWhenLabel" Grid.Row="0" Grid.Column="0" Text="Trigger" Style="{StaticResource InspectorLabelStyle}" />
+                                        <TextBlock x:Uid="MessageWhenLabel" Grid.Row="0" Grid.Column="0" Text="When" Style="{StaticResource InspectorLabelStyle}" />
                                         <ComboBox x:Name="TriggerCombo" x:Uid="TriggerCombo" Grid.Row="0" Grid.Column="1"
                                                   HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
 
-                                        <TextBlock x:Uid="MessageWhatLabel" Grid.Row="1" Grid.Column="0" Text="Type" Style="{StaticResource InspectorLabelStyle}" />
+                                        <TextBlock x:Uid="MessageWhatLabel" Grid.Row="1" Grid.Column="0" Text="What" Style="{StaticResource InspectorLabelStyle}" />
                                         <ComboBox x:Name="KindMessageCombo" x:Uid="KindMessageCombo" Grid.Row="1" Grid.Column="1"
                                                   HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
 
@@ -2352,29 +2285,7 @@
                                                        Minimum="0" Maximum="127" SpinButtonPlacementMode="Compact"
                                                        ValueChanged="OnMessageParameterChanged" />
                                         </Grid>
-
-                                        <!-- The one or two values a row sends, in the units its
-                                             device is set to: exact MIDI 1.0 numbers, or a
-                                             percentage. Labeled in code, because a note's
-                                             velocity and a fader's range are not the same question. -->
-                                        <TextBlock x:Name="MessageValueLabel" Grid.Row="6" Grid.Column="0" Text="Value"
-                                                   Style="{StaticResource InspectorLabelStyle}" Visibility="Collapsed" />
-                                        <NumberBox x:Name="MessageValueBox" Grid.Row="6" Grid.Column="1"
-                                                   Minimum="0" Maximum="127" SpinButtonPlacementMode="Compact" Visibility="Collapsed"
-                                                   ValueChanged="OnMessageValueChanged" />
-
-                                        <TextBlock x:Name="MessageSecondValueLabel" Grid.Row="7" Grid.Column="0" Text="Value"
-                                                   Style="{StaticResource InspectorLabelStyle}" Visibility="Collapsed" />
-                                        <NumberBox x:Name="MessageSecondValueBox" Grid.Row="7" Grid.Column="1"
-                                                   Minimum="0" Maximum="127" SpinButtonPlacementMode="Compact" Visibility="Collapsed"
-                                                   ValueChanged="OnMessageValueChanged" />
                                     </Grid>
-
-                                    <TextBlock x:Name="MessageProtocolText"
-                                               FontSize="11"
-                                               TextWrapping="Wrap"
-                                               Visibility="Collapsed"
-                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
                                     <!-- Stops, so a control does not have to be smooth. A six
                                          position mode switch and a volume fader are the same
@@ -2431,7 +2342,7 @@
                                          a dump has no controller number, so showing both at once
                                          would be asking for a number nobody can answer. -->
                                     <StackPanel x:Name="SysExPanel" Visibility="Collapsed" Spacing="6" Margin="0,10,0,0">
-                                        <TextBlock x:Uid="SysExHeading" Text="Data" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <TextBlock x:Uid="SysExHeading" Text="The bytes to send" Style="{StaticResource InspectorHeadingStyle}" />
                                         <TextBox x:Name="SysExBox"
                                                  x:Uid="SysExBox"
                                                  AcceptsReturn="True"
@@ -2462,7 +2373,7 @@
                                     </StackPanel>
 
                                     <StackPanel x:Name="RawWordsPanel" Visibility="Collapsed" Spacing="6" Margin="0,10,0,0">
-                                        <TextBlock x:Uid="RawWordsHeading" Text="UMP words" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <TextBlock x:Uid="RawWordsHeading" Text="The words to send" Style="{StaticResource InspectorHeadingStyle}" />
                                         <TextBox x:Name="RawWordsBox"
                                                  x:Uid="RawWordsBox"
                                                  FontFamily="Cascadia Mono, Consolas"
@@ -2476,7 +2387,7 @@
                                     </StackPanel>
 
                                     <StackPanel x:Name="SequencePanel" Visibility="Collapsed" Spacing="6" Margin="0,10,0,0">
-                                        <TextBlock x:Uid="SequenceHeading" Text="Sequence" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <TextBlock x:Uid="SequenceHeading" Text="Which sequence" Style="{StaticResource InspectorHeadingStyle}" />
                                         <ComboBox x:Name="SequenceCombo"
                                                   x:Uid="SequenceCombo"
                                                   HorizontalAlignment="Stretch"
@@ -2494,12 +2405,6 @@
                                                     <TextBlock x:Uid="EditSequenceLabel" Text="Edit steps…" FontSize="11" />
                                                 </StackPanel>
                                             </Button>
-                                            <Button x:Name="DeleteSequenceButton" x:Uid="DeleteSequenceButton" FontSize="11" Click="OnDeleteSequenceClick">
-                                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <FontIcon Glyph="&#xE74D;" FontSize="11" />
-                                                    <TextBlock x:Uid="DeleteSequenceLabel" Text="Delete" FontSize="11" />
-                                                </StackPanel>
-                                            </Button>
                                         </StackPanel>
                                         <TextBlock x:Name="SequenceCaption"
                                                    FontSize="11"
@@ -2508,69 +2413,24 @@
                                     </StackPanel>
 
                                     <StackPanel x:Name="TargetPagePanel" Visibility="Collapsed" Spacing="6" Margin="0,10,0,0">
-                                        <TextBlock x:Uid="TargetPageHeading" Text="Page" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <TextBlock x:Uid="TargetPageHeading" Text="Which page" Style="{StaticResource InspectorHeadingStyle}" />
                                         <ComboBox x:Name="TargetPageCombo"
                                                   x:Uid="TargetPageCombo"
                                                   HorizontalAlignment="Stretch"
                                                   SelectionChanged="OnTargetPageChanged" />
                                     </StackPanel>
                                 </StackPanel>
-
-                                <!-- Moving a strip of controls to another synth is one change
-                                     here rather than one per message. A box they disagree on is
-                                     blank until something is picked for all of them. -->
-                                <StackPanel x:Name="ManySendPanel" Margin="8,0,16,16" Spacing="4" Visibility="Collapsed">
-                                    <TextBlock x:Uid="ManySendHeading" Text="Destination" Style="{StaticResource InspectorHeadingStyle}" />
-                                    <TextBlock x:Name="ManySendCaption"
-                                               FontSize="11"
-                                               TextWrapping="Wrap"
-                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-
-                                    <Grid ColumnSpacing="8" RowSpacing="6" Margin="0,8,0,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions>
-
-                                        <TextBlock x:Uid="ManySendDeviceLabel" Grid.Row="0" Grid.Column="0" Text="To" Style="{StaticResource InspectorLabelStyle}" />
-                                        <StackPanel Grid.Row="0" Grid.Column="1" Spacing="3">
-                                            <ComboBox x:Name="ManySendDeviceCombo" x:Uid="ManySendDeviceCombo"
-                                                      HorizontalAlignment="Stretch" SelectionChanged="OnManySendChanged" />
-                                            <HyperlinkButton x:Uid="ManySendDevicesLink"
-                                                             Padding="0"
-                                                             FontSize="11"
-                                                             Content="Set up devices…"
-                                                             Click="OnLayoutSettingsClick" />
-                                        </StackPanel>
-
-                                        <TextBlock x:Uid="ManySendGroupLabel" Grid.Row="1" Grid.Column="0" Text="Group" Style="{StaticResource InspectorLabelStyle}" />
-                                        <ComboBox x:Name="ManySendGroupCombo" x:Uid="ManySendGroupCombo" Grid.Row="1" Grid.Column="1"
-                                                  HorizontalAlignment="Stretch" SelectionChanged="OnManySendChanged" />
-
-                                        <TextBlock x:Name="ManySendChannelLabel" x:Uid="ManySendChannelLabel" Grid.Row="2" Grid.Column="0" Text="Channel" Style="{StaticResource InspectorLabelStyle}" />
-                                        <ComboBox x:Name="ManySendChannelCombo" x:Uid="ManySendChannelCombo" Grid.Row="2" Grid.Column="1"
-                                                  HorizontalAlignment="Stretch" SelectionChanged="OnManySendChanged" />
-                                    </Grid>
-                                </StackPanel>
-                                </Grid>
                             </ScrollViewer>
 
                             <!-- What the control listens for. A meter and a lamp do nothing else;
                                  a fader can both lead and follow, which is why this is its own
                                  tab rather than a section at the bottom of the sends one. -->
                             <ScrollViewer x:Name="MidiInPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
-                                <!-- What one control listens for, or where several listen. -->
-                                <Grid>
                                 <StackPanel x:Name="MidiInPanel" Margin="8,0,16,16" Spacing="4">
 
                                     <ToggleSwitch x:Name="FeedbackEnabledSwitch"
                                                   x:Uid="FeedbackEnabledSwitch"
-                                                  Header="MIDI follow"
+                                                  Header="Follow what arrives"
                                                   Toggled="OnFeedbackEnabledToggled" />
                                     <TextBlock x:Uid="FeedbackEnabledCaption"
                                                Text="The control moves or lights when the device sends, instead of only when a finger does."
@@ -2586,7 +2446,7 @@
                                                     HorizontalAlignment="Stretch">
                                         <StackPanel Spacing="4">
 
-                                        <TextBlock x:Uid="FeedbackModeHeading" Text="Follow mode" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <TextBlock x:Uid="FeedbackModeHeading" Text="What to listen for" Style="{StaticResource InspectorHeadingStyle}" />
                                         <ComboBox x:Name="FeedbackModeCombo"
                                                   x:Uid="FeedbackModeCombo"
                                                   HorizontalAlignment="Stretch"
@@ -2616,13 +2476,13 @@
 
                                         <CheckBox x:Name="FeedbackMatchChannelCheck"
                                                   x:Uid="FeedbackMatchChannelCheck"
-                                                  Content="Match channel"
+                                                  Content="Only that channel"
                                                   Margin="0,4,0,0"
                                                   Checked="OnFeedbackMatchChannelChanged"
                                                   Unchecked="OnFeedbackMatchChannelChanged" />
 
                                         <StackPanel x:Name="FeedbackMessagePanel" Spacing="4">
-                                            <TextBlock x:Uid="FeedbackKindHeading" Text="Message" Style="{StaticResource InspectorHeadingStyle}" />
+                                            <TextBlock x:Uid="FeedbackKindHeading" Text="Which message" Style="{StaticResource InspectorHeadingStyle}" />
                                             <ComboBox x:Name="FeedbackKindCombo"
                                                       x:Uid="FeedbackKindCombo"
                                                       HorizontalAlignment="Stretch"
@@ -2636,7 +2496,7 @@
                                         </StackPanel>
 
                                         <StackPanel x:Name="FeedbackTempoPanel" Spacing="4" Visibility="Collapsed">
-                                            <TextBlock x:Uid="FeedbackTempoHeading" Text="Beat source" Style="{StaticResource InspectorHeadingStyle}" />
+                                            <TextBlock x:Uid="FeedbackTempoHeading" Text="Whose beat" Style="{StaticResource InspectorHeadingStyle}" />
                                             <ComboBox x:Name="FeedbackTempoCombo"
                                                       x:Uid="FeedbackTempoCombo"
                                                       HorizontalAlignment="Stretch"
@@ -2648,7 +2508,7 @@
                                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                         </StackPanel>
 
-                                        <TextBlock x:Uid="FeedbackHoldHeading" Text="Light duration" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <TextBlock x:Uid="FeedbackHoldHeading" Text="Stays lit for" Style="{StaticResource InspectorHeadingStyle}" />
                                         <NumberBox x:Name="FeedbackHoldBox"
                                                    x:Uid="FeedbackHoldBox"
                                                    Minimum="0"
@@ -2663,42 +2523,6 @@
                                         </StackPanel>
                                     </ContentControl>
                                 </StackPanel>
-
-                                <!-- Only the controls that follow what arrives are changed.
-                                     Turning that on is still done one control at a time, because
-                                     what each one listens for is its own. -->
-                                <StackPanel x:Name="ManyListenPanel" Margin="8,0,16,16" Spacing="4" Visibility="Collapsed">
-                                    <TextBlock x:Uid="ManyListenHeading" Text="Source" Style="{StaticResource InspectorHeadingStyle}" />
-                                    <TextBlock x:Name="ManyListenCaption"
-                                               FontSize="11"
-                                               TextWrapping="Wrap"
-                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-
-                                    <Grid x:Name="ManyListenFields" ColumnSpacing="8" RowSpacing="6" Margin="0,8,0,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions>
-
-                                        <TextBlock x:Uid="ManyListenDeviceLabel" Grid.Row="0" Grid.Column="0" Text="From" Style="{StaticResource InspectorLabelStyle}" />
-                                        <ComboBox x:Name="ManyListenDeviceCombo" x:Uid="ManyListenDeviceCombo" Grid.Row="0" Grid.Column="1"
-                                                  HorizontalAlignment="Stretch" SelectionChanged="OnManyListenChanged" />
-
-                                        <TextBlock x:Uid="ManyListenGroupLabel" Grid.Row="1" Grid.Column="0" Text="Group" Style="{StaticResource InspectorLabelStyle}" />
-                                        <ComboBox x:Name="ManyListenGroupCombo" x:Uid="ManyListenGroupCombo" Grid.Row="1" Grid.Column="1"
-                                                  HorizontalAlignment="Stretch" SelectionChanged="OnManyListenChanged" />
-
-                                        <TextBlock x:Name="ManyListenChannelLabel" x:Uid="ManyListenChannelLabel" Grid.Row="2" Grid.Column="0" Text="Channel" Style="{StaticResource InspectorLabelStyle}" />
-                                        <ComboBox x:Name="ManyListenChannelCombo" x:Uid="ManyListenChannelCombo" Grid.Row="2" Grid.Column="1"
-                                                  HorizontalAlignment="Stretch" SelectionChanged="OnManyListenChanged" />
-                                    </Grid>
-                                </StackPanel>
-                                </Grid>
                             </ScrollViewer>
 
                             <ScrollViewer x:Name="BehaviorPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
@@ -2707,7 +2531,7 @@
                                     <TextBlock x:Uid="InspectorStartHeading" Text="When the layout opens" Style="{StaticResource InspectorHeadingStyle}" />
                                     <ToggleSwitch x:Name="SendOnStartSwitch"
                                                   x:Uid="SendOnStartSwitch"
-                                                  Header="Send value"
+                                                  Header="Send this control's value"
                                                   Toggled="OnSendOnStartToggled" />
                                     <TextBlock x:Uid="SendOnStartCaption"
                                                Text="A layout whose faders sit at zero, pushed to a live desk on load, mutes the show. Off unless this control genuinely has to put something into a known state."
@@ -2723,16 +2547,6 @@
                                             StepFrequency="1"
                                             ValueChanged="OnDefaultValueChanged" />
 
-                                    <!-- An XY pad and a joystick also start somewhere up and down. -->
-                                    <Slider x:Name="DefaultValueYSlider"
-                                            x:Uid="DefaultValueYSlider"
-                                            Header="Y"
-                                            Minimum="0"
-                                            Maximum="100"
-                                            StepFrequency="1"
-                                            Visibility="Collapsed"
-                                            ValueChanged="OnDefaultValueYChanged" />
-
                                     <!-- A toggle is on or off, so it starts one way or the other rather than
                                          somewhere along a percentage. -->
                                     <ToggleSwitch x:Name="StartsOnSwitch"
@@ -2741,22 +2555,9 @@
                                                   Visibility="Collapsed"
                                                   Toggled="OnStartsOnToggled" />
 
-                                    <!-- A pan control: rests in the middle and lights either way from it. -->
-                                    <StackPanel x:Name="LightsFromCenterPanel" Visibility="Collapsed" Spacing="4" Margin="0,0,0,10">
-                                        <ToggleSwitch x:Name="LightsFromCenterSwitch"
-                                                      x:Uid="LightsFromCenterSwitch"
-                                                      Header="Bipolar"
-                                                      Toggled="OnLightsFromCenterToggled" />
-                                        <TextBlock x:Uid="LightsFromCenterCaption"
-                                                   Text="Rests in the middle, and lights only the part it has moved away from the middle, to either side."
-                                                   FontSize="11"
-                                                   TextWrapping="Wrap"
-                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                                    </StackPanel>
-
                                     <ToggleSwitch x:Name="ReturnsToDefaultSwitch"
                                                   x:Uid="ReturnsToDefaultSwitch"
-                                                  Header="Spring back"
+                                                  Header="Springs back when released"
                                                   Toggled="OnReturnsToDefaultToggled" />
                                     <TextBlock x:Uid="ReturnsToDefaultCaption"
                                                Text="What makes a pitch wheel a pitch wheel. The control goes back to its starting value the moment the finger comes off, and that value is sent."
@@ -2771,23 +2572,23 @@
                                               SelectionChanged="OnSpringTargetChanged" />
 
                                     <StackPanel x:Name="DragAxisPanel" Visibility="Collapsed">
-                                        <TextBlock x:Uid="InspectorDragHeading" Text="Drag direction" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <TextBlock x:Uid="InspectorDragHeading" Text="Which way to drag" Style="{StaticResource InspectorHeadingStyle}" />
                                         <ComboBox x:Name="DragAxisCombo"
                                                   x:Uid="DragAxisCombo"
                                                   HorizontalAlignment="Stretch"
                                                   SelectionChanged="OnDragAxisChanged" />
                                         <TextBlock x:Uid="DragAxisCaption"
-                                                   Text="Up is more, or right is more for a row of knobs in a narrow strip. Circular turns it like a real knob: clockwise is more, and it turns from where it is instead of jumping to your finger. It works best on a big knob."
+                                                   Text="A circle is hard to trace on glass, so a knob is dragged in a straight line instead. Up is more, or right is more for a row of knobs in a narrow strip."
                                                    FontSize="11"
                                                    TextWrapping="Wrap"
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                     </StackPanel>
 
                                     <StackPanel x:Name="PadVelocityPanel" Visibility="Collapsed">
-                                        <TextBlock x:Uid="InspectorPadVelocityHeading" Text="Velocity" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <TextBlock x:Uid="InspectorPadVelocityHeading" Text="How hard it was hit" Style="{StaticResource InspectorHeadingStyle}" />
                                         <CheckBox x:Name="PadVelocityCheck"
                                                   x:Uid="PadVelocityCheck"
-                                                  Content="Pressure sensitive"
+                                                  Content="Use pen or touch pressure for the value"
                                                   Checked="OnPadVelocityChanged"
                                                   Unchecked="OnPadVelocityChanged" />
                                         <TextBlock x:Uid="PadVelocityCaption"
@@ -2806,7 +2607,7 @@
                                                    SpinButtonPlacementMode="Compact"
                                                    ValueChanged="OnClockBpmChanged" />
 
-                                        <TextBlock x:Uid="ClockSourceLabel" Text="Tempo source" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+                                        <TextBlock x:Uid="ClockSourceLabel" Text="Take the tempo from" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
                                         <ComboBox x:Name="ClockSourceCombo"
                                                   x:Uid="ClockSourceCombo"
                                                   HorizontalAlignment="Stretch"
@@ -2836,19 +2637,19 @@
 
                                         <CheckBox x:Name="ClockStartsRunningCheck"
                                                   x:Uid="ClockStartsRunningCheck"
-                                                  Content="Start on open"
+                                                  Content="Running when the layout opens"
                                                   Margin="0,6,0,0"
                                                   Checked="OnClockFlagChanged"
                                                   Unchecked="OnClockFlagChanged" />
                                         <CheckBox x:Name="ClockSendsTransportCheck"
                                                   x:Uid="ClockSendsTransportCheck"
-                                                  Content="Send start/stop"
+                                                  Content="Send start and stop as well"
                                                   Checked="OnClockFlagChanged"
                                                   Unchecked="OnClockFlagChanged" />
                                     </StackPanel>
 
                                     <StackPanel x:Name="LfoPanel" Visibility="Collapsed">
-                                        <TextBlock x:Uid="InspectorLfoHeading" Text="LFO" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <TextBlock x:Uid="InspectorLfoHeading" Text="Sweep" Style="{StaticResource InspectorHeadingStyle}" />
 
                                         <ComboBox x:Name="LfoWaveCombo"
                                                   x:Uid="LfoWaveCombo"
@@ -2888,7 +2689,7 @@
                                                    TextWrapping="Wrap"
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
-                                        <TextBlock x:Uid="LfoUpdateLabel" Text="Update interval" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+                                        <TextBlock x:Uid="LfoUpdateLabel" Text="Send a value every" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
                                         <NumberBox x:Name="LfoUpdateBox"
                                                    x:Uid="LfoUpdateBox"
                                                    Minimum="5"
@@ -2904,18 +2705,18 @@
 
                                         <CheckBox x:Name="LfoLatchingCheck"
                                                   x:Uid="LfoLatchingCheck"
-                                                  Content="Latch"
+                                                  Content="Press to start, press again to stop"
                                                   Margin="0,6,0,0"
                                                   Checked="OnLfoFlagChanged"
                                                   Unchecked="OnLfoFlagChanged" />
                                         <CheckBox x:Name="LfoStartsRunningCheck"
                                                   x:Uid="LfoStartsRunningCheck"
-                                                  Content="Start on open"
+                                                  Content="Running when the layout opens"
                                                   Checked="OnLfoFlagChanged"
                                                   Unchecked="OnLfoFlagChanged" />
                                         <CheckBox x:Name="LfoReturnsToRestCheck"
                                                   x:Uid="LfoReturnsToRestCheck"
-                                                  Content="Return to center on stop"
+                                                  Content="Go back to the middle when it stops"
                                                   Checked="OnLfoFlagChanged"
                                                   Unchecked="OnLfoFlagChanged" />
                                     </StackPanel>
@@ -2956,13 +2757,13 @@
 
                                         <CheckBox x:Name="StepsLatchingCheck"
                                                   x:Uid="StepsLatchingCheck"
-                                                  Content="Latch"
+                                                  Content="Press to start, press again to stop"
                                                   Margin="0,6,0,0"
                                                   Checked="OnStepsFlagChanged"
                                                   Unchecked="OnStepsFlagChanged" />
                                         <CheckBox x:Name="StepsStartsRunningCheck"
                                                   x:Uid="StepsStartsRunningCheck"
-                                                  Content="Start on open"
+                                                  Content="Running when the layout opens"
                                                   Checked="OnStepsFlagChanged"
                                                   Unchecked="OnStepsFlagChanged" />
 
@@ -3005,13 +2806,13 @@
 
                                         <CheckBox x:Name="TurntableGripCheck"
                                                   x:Uid="TurntableGripCheck"
-                                                  Content="Show grip ridges"
+                                                  Content="Show the ridges around the edge"
                                                   Margin="0,6,0,0"
                                                   Checked="OnTurntableGripChanged"
                                                   Unchecked="OnTurntableGripChanged" />
                                     </StackPanel>
 
-                                    <TextBlock x:Uid="InspectorThrottleHeading" Text="Minimum send interval" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <TextBlock x:Uid="InspectorThrottleHeading" Text="Least time between sends" Style="{StaticResource InspectorHeadingStyle}" />
                                     <NumberBox x:Name="SendIntervalBox"
                                                x:Uid="SendIntervalBox"
                                                Minimum="0"
@@ -3266,7 +3067,7 @@
                         </Grid.ColumnDefinitions>
 
                         <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Padding="18,14,18,18">
-                            <StackPanel Spacing="0" MaxWidth="820" HorizontalAlignment="Left">
+                            <StackPanel Spacing="0" MaxWidth="620" HorizontalAlignment="Left">
                                 <TextBlock x:Uid="ThemeHeading"
                                            Text="Theme"
                                            Style="{StaticResource SettingsHeadingStyle}" />
@@ -3277,12 +3078,8 @@
                                            Margin="0,0,0,9" />
 
                                 <!-- Filled in code: a theme card is a painted miniature of its own
-                                     deck, because a row of swatches cannot say what a theme is.
-                                     Five across, fewer on a narrow window. The width above leaves
-                                     room for five at any display scale. -->
-                                <VariableSizedWrapGrid x:Name="ThemeGallery"
-                                                       Orientation="Horizontal"
-                                                       HorizontalAlignment="Left" />
+                                     deck, because a row of swatches cannot say what a theme is. -->
+                                <Grid x:Name="ThemeGallery" HorizontalAlignment="Left" />
 
                                 <TextBlock x:Uid="ThemeColorsHeading"
                                            Text="Colors"
@@ -3318,7 +3115,7 @@
                                 </Border>
 
                                 <TextBlock x:Uid="ThemeOwnHeading"
-                                           Text="Custom themes"
+                                           Text="Your own themes"
                                            Style="{StaticResource SettingsHeadingStyle}"
                                            Margin="0,18,0,2" />
 
@@ -3334,7 +3131,7 @@
                                             Click="OnSaveThemeClick">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <FontIcon Glyph="&#xE74E;" FontSize="12" />
-                                            <TextBlock x:Uid="SaveThemeLabel" Text="Save as theme…" />
+                                            <TextBlock x:Uid="SaveThemeLabel" Text="Save these colors as a theme…" />
                                         </StackPanel>
                                     </Button>
 
@@ -3376,61 +3173,45 @@
                             </StackPanel>
                         </ScrollViewer>
 
-                        <!-- The preview and every number the theme is made of. Only the numbers
-                             scroll, so the preview is in view whenever one of them changes. -->
+                        <!-- The preview and every number the theme is made of. -->
                         <Border Grid.Column="1"
-                                Width="436"
+                                Width="316"
                                 BorderThickness="1,0,0,0"
                                 BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,14,16,18">
+                                <StackPanel Spacing="0">
+                                    <TextBlock x:Uid="ThemePreviewHeading"
+                                               Text="Live preview"
+                                               Style="{StaticResource SettingsHeadingStyle}"
+                                               Margin="0,0,0,7" />
 
-                                <Border Grid.Row="0"
-                                        BorderThickness="0,0,0,1"
-                                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
-                                    <StackPanel Padding="16,14,16,12">
-                                        <TextBlock x:Uid="ThemePreviewHeading"
-                                                   Text="Live preview"
-                                                   Style="{StaticResource SettingsHeadingStyle}"
-                                                   Margin="0,0,0,7" />
+                                    <Grid x:Name="ThemePreviewHost"
+                                          Height="236"
+                                          CornerRadius="8">
+                                        <Rectangle x:Name="ThemePreviewDeck" RadiusX="8" RadiusY="8" />
+                                        <Canvas x:Name="ThemePreviewCanvas" IsHitTestVisible="False" />
+                                        <Rectangle RadiusX="8" RadiusY="8" StrokeThickness="1"
+                                                   UseLayoutRounding="False"
+                                                   IsHitTestVisible="False"
+                                                   Stroke="{ThemeResource CardStrokeColorDefaultBrush}" />
+                                    </Grid>
 
-                                        <Grid x:Name="ThemePreviewHost"
-                                              Height="227"
-                                              CornerRadius="8">
-                                            <Rectangle x:Name="ThemePreviewDeck" RadiusX="8" RadiusY="8" />
-                                            <Canvas x:Name="ThemePreviewCanvas" IsHitTestVisible="False" />
-                                            <Rectangle RadiusX="8" RadiusY="8" StrokeThickness="1"
-                                                       UseLayoutRounding="False"
-                                                       IsHitTestVisible="False"
-                                                       Stroke="{ThemeResource CardStrokeColorDefaultBrush}" />
-                                        </Grid>
-                                    </StackPanel>
-                                </Border>
+                                    <TextBlock x:Name="ThemeCautionText"
+                                               Visibility="Collapsed"
+                                               FontSize="11"
+                                               LineHeight="16"
+                                               TextWrapping="Wrap"
+                                               Margin="0,8,0,0"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
-                                <ScrollViewer Grid.Row="1"
-                                              VerticalScrollBarVisibility="Auto"
-                                              Padding="16,12,16,18">
-                                    <StackPanel Spacing="0">
-                                        <TextBlock x:Name="ThemeCautionText"
-                                                   Visibility="Collapsed"
-                                                   FontSize="11"
-                                                   LineHeight="16"
-                                                   TextWrapping="Wrap"
-                                                   Margin="0,0,0,14"
-                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-
-                                        <!-- Every property the theme has, grouped the way somebody
-                                             changing one would look for it. Built in code: the list
-                                             is long, the rows are all the same four shapes, and a
-                                             theme property that had no row here would be a property
-                                             nobody could reach. -->
-                                        <StackPanel x:Name="ThemePropertyPanel" Spacing="0" />
-                                    </StackPanel>
-                                </ScrollViewer>
-                            </Grid>
+                                    <!-- Every property the theme has, grouped the way somebody
+                                         changing one would look for it. Built in code: the list
+                                         is long, the rows are all the same four shapes, and a
+                                         theme property that had no row here would be a property
+                                         nobody could reach. -->
+                                    <StackPanel x:Name="ThemePropertyPanel" Spacing="0" Margin="0,14,0,0" />
+                                </StackPanel>
+                            </ScrollViewer>
                         </Border>
                     </Grid>
 
@@ -3501,7 +3282,7 @@
 
                                 <TextBlock x:Uid="LayoutSettingsDevicesHeader"
                                            Grid.Column="0"
-                                           Text="MIDI devices"
+                                           Text="Devices this layout uses"
                                            FontSize="14"
                                            FontWeight="SemiBold"
                                            VerticalAlignment="Center" />

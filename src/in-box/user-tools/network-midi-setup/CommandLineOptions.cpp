@@ -95,13 +95,25 @@ namespace midinetworksetup
                     // An unrecognized path is not an error. It only means a newer notification
                     // asked for a page this build does not have, and opening the app is still
                     // the useful thing to do.
-                    if (::CompareStringOrdinal(
-                            protocolPath.data(), static_cast<int>(protocolPath.size()),
-                            MIDI_NETWORK_SETUP_PROTOCOL_PATH_PENDING,
-                            static_cast<int>(wcslen(MIDI_NETWORK_SETUP_PROTOCOL_PATH_PENDING)),
-                            TRUE) == CSTR_EQUAL)
+                    auto const isPath = [&protocolPath](_In_z_ wchar_t const* const name)
+                        {
+                            return ::CompareStringOrdinal(
+                                protocolPath.data(), static_cast<int>(protocolPath.size()),
+                                name, static_cast<int>(wcslen(name)),
+                                TRUE) == CSTR_EQUAL;
+                        };
+
+                    if (isPath(MIDI_NETWORK_SETUP_PROTOCOL_PATH_PENDING))
                     {
                         options.ShowPendingApprovals = true;
+                    }
+                    else if (isPath(MIDI_NETWORK_SETUP_PROTOCOL_PATH_HOSTS))
+                    {
+                        options.ShowLocalHosts = true;
+                    }
+                    else if (isPath(MIDI_NETWORK_SETUP_PROTOCOL_PATH_RTP_HOSTS))
+                    {
+                        options.ShowRtpLocalHosts = true;
                     }
 
                     continue;

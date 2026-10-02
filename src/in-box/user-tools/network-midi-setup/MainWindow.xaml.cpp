@@ -136,6 +136,52 @@ namespace winrt::midinetworksetup::implementation
             }
         }
 
+        // What a host card says about its network adapter. A host on every adapter has nothing to
+        // warn about. hasStarted tells a host running on every adapter in the meantime from one
+        // which is waiting.
+        void ApplyHostNetworkAdapter(
+            _Inout_ LocalHostItem& row,
+            _In_ winrt::guid const& adapterId,
+            _In_ winrt::hstring const& adapterName,
+            _In_ bool const allowFallback,
+            _In_ bool const isMissing,
+            _In_ bool const hasStarted) noexcept
+        {
+            try
+            {
+                winrt::hstring adapterText{};
+                winrt::hstring warningText{};
+
+                if (adapterId == winrt::guid{})
+                {
+                    adapterText = res::GetString(L"NetworkAdapterEvery");
+                }
+                else
+                {
+                    auto const shownName = adapterName.empty() ? res::GetString(L"NetworkAdapterUnknown") : adapterName;
+
+                    adapterText = isMissing ? res::FormatString(L"NetworkAdapterMissingFormat", shownName) : shownName;
+
+                    if (isMissing)
+                    {
+                        warningText = hasStarted ?
+                            res::FormatString(L"NetworkAdapterFallbackWarningFormat", shownName) :
+                            res::FormatString(L"NetworkAdapterWaitingWarningFormat", shownName);
+                    }
+                }
+
+                row.InternalUpdateNetworkAdapter(
+                    winrt::hstring{ ::WindowsMidiServicesInternal::MidiNetworkAdapterIdToString(adapterId) },
+                    adapterName,
+                    allowFallback,
+                    adapterText,
+                    warningText);
+            }
+            catch (...)
+            {
+            }
+        }
+
         // The service has no discovery based connect verb, so a discovered host has to be
         // invited at a resolved address. A routable IPv4 address is the most likely to work:
         // an automatic private address only works on the same link, and a link local IPv6
@@ -265,9 +311,11 @@ namespace winrt::midinetworksetup::implementation
                 // The pending invitations bar sits above every page, so a notification does not
                 // need to navigate anywhere to show it. Landing on this PC is context: it is this
                 // PC's hosts the remote is asking to join.
-                auto startupPage = options.ShowPendingApprovals ?
-                    native::AppSettings::PageIndexLocalHosts :
-                    native::AppSettings::Current().SelectedPageIndex();
+                auto startupPage = options.ShowRtpLocalHosts ?
+                    native::AppSettings::PageIndexRtpLocalHosts :
+                    (options.ShowPendingApprovals || options.ShowLocalHosts) ?
+                        native::AppSettings::PageIndexLocalHosts :
+                        native::AppSettings::Current().SelectedPageIndex();
 
                 auto const isRtpPage =
                     startupPage == native::AppSettings::PageIndexRtpRemoteHosts ||
@@ -1480,19 +1528,16 @@ namespace winrt::midinetworksetup::implementation
                 target += hostName.CanonicalName();
             }
 
-            // IPv4 is what people are asked for by almost every device, so IPv6 is only offered
-            // when there is no IPv4 address to give.
-            if (!ipv4.empty())
-            {
-                return winrt::hstring{ ipv4 };
-            }
+            // The host listens on every address, so IPv6 is listed too. IPv4 goes first because it
+            // is what almost every device asks for.
+            auto addresses = ipv4;
 
             if (!ipv6.empty())
             {
-                return winrt::hstring{ ipv6 };
+                addresses += addresses.empty() ? ipv6 : L", " + ipv6;
             }
 
-            return actualAddress;
+            return addresses.empty() ? actualAddress : winrt::hstring{ addresses };
         }
         catch (...)
         {
@@ -1675,10 +1720,11 @@ namespace winrt::midinetworksetup::implementation
                         created.Key = matchKey;
                         created.Advertised = false;
 
-                        // the name saved with the entry, or failing that the name it matches on
+                        // The name the customer gave the device, or failing that the name it
+                        // matches on. The saved UmpEndpointName is the name this PC announces.
                         if (isSaved)
                         {
-                            created.DisplayName = saved->second.UmpEndpointName();
+                            created.DisplayName = saved->second.CustomEndpointName();
 
                             if (created.DisplayName.empty())
                             {
@@ -1986,6 +2032,9 @@ namespace winrt::midinetworksetup::implementation
                     auto const connections = host.Connections();
                     auto const connectionCount = connections == nullptr ? 0u : connections.Size();
 
+                    // A host waiting for its adapter is still switched on, so it offers Stop
+                    auto const waitingForAdapter = !host.HasStarted() && host.IsNetworkAdapterMissing();
+
                     self->InternalUpdate(
                         host.UmpEndpointName().empty() ? host.ServiceInstanceName() : host.UmpEndpointName(),
                         // What other devices actually see, which is not the configured name if a
@@ -2001,16 +2050,24 @@ namespace winrt::midinetworksetup::implementation
                             (host.UsedPortFallback() ?
                                 res::FormatString(L"HostStartedPortFallbackFormat", host.ActualPort(), host.ConfiguredPort()) :
                                 res::FormatString(L"HostStartedFormat", host.ActualPort())) :
-                            res::GetString(L"HostStopped"),
+                            (waitingForAdapter ? res::GetString(L"HostWaitingForNetworkAdapter") : res::GetString(L"HostStopped")),
                         host.RemoteClientPolicy() == midi2net::MidiNetworkRemoteClientPolicy::RequireApproval ?
                             res::GetString(L"HostPolicyRequireApproval") :
                             res::GetString(L"HostPolicyAllowAny"),
                         connectionCount == 0 ?
                             res::GetString(L"HostNoConnections") :
                             res::FormatString(L"HostConnectionCountFormat", connectionCount),
-                        host.HasStarted() ? res::GetString(L"StopHostButton") : res::GetString(L"StartHostButton"),
-                        host.HasStarted(),
+                        host.HasStarted() || waitingForAdapter ? res::GetString(L"StopHostButton") : res::GetString(L"StartHostButton"),
+                        host.HasStarted() || waitingForAdapter,
                         host.CreateMidi1Ports());
+
+                    ApplyHostNetworkAdapter(
+                        *self,
+                        host.NetworkAdapterId(),
+                        host.NetworkAdapterName(),
+                        host.AllowNetworkAdapterFallback(),
+                        host.IsNetworkAdapterMissing(),
+                        host.HasStarted());
 
                     // connected remote clients
                     std::vector<winrt::hstring> connectionKeys{};
@@ -2803,6 +2860,10 @@ namespace winrt::midinetworksetup::implementation
                             res::FormatString(L"HostStartedPortFallbackFormat", host.ActualPort(), wantedPort) :
                             res::FormatString(L"HostStartedFormat", host.ActualPort());
                     }
+                    else if (host.IsNetworkAdapterMissing())
+                    {
+                        status = res::GetString(L"HostWaitingForNetworkAdapter");
+                    }
                     else if (host.LastErrorCode() != 0)
                     {
                         status = res::FormatString(
@@ -2841,6 +2902,14 @@ namespace winrt::midinetworksetup::implementation
                         host.IsEnabled() ? res::GetString(L"StopHostButton") : res::GetString(L"StartHostButton"),
                         host.IsEnabled(),
                         true);
+
+                    ApplyHostNetworkAdapter(
+                        *self,
+                        host.NetworkAdapterId(),
+                        host.NetworkAdapterName(),
+                        host.AllowNetworkAdapterFallback(),
+                        host.IsNetworkAdapterMissing(),
+                        host.HasStarted());
 
                     std::vector<winrt::hstring> connectionKeys{};
 

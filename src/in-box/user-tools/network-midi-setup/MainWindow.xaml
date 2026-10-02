@@ -748,6 +748,19 @@
                                             </StackPanel>
                                         </Grid>
 
+                                        <!-- Stays until the adapter is back or another is chosen, so it cannot be closed -->
+                                        <InfoBar Severity="Warning"
+                                                 IsClosable="False"
+                                                 IsOpen="{x:Bind IsNetworkAdapterWarningOpen, Mode=OneWay}"
+                                                 Message="{x:Bind NetworkAdapterWarningText, Mode=OneWay}">
+                                            <InfoBar.ActionButton>
+                                                <Button x:Uid="ChooseHostAdapterButton"
+                                                        Content="Choose adapter"
+                                                        Tag="{x:Bind}"
+                                                        Click="OnChangeHostAdapterClick" />
+                                            </InfoBar.ActionButton>
+                                        </InfoBar>
+
                                         <StackPanel Spacing="4">
                                             <TextBlock x:Uid="NoConnectedDevicesText"
                                                        Text="No devices are connected to this host."
@@ -919,6 +932,7 @@
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
                                                 </Grid.RowDefinitions>
 
                                                 <TextBlock x:Uid="ServiceInstanceNameLabel"
@@ -963,6 +977,26 @@
                                                            Text="{x:Bind PolicyText, Mode=OneWay}"
                                                            TextWrapping="Wrap"
                                                            Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                <TextBlock x:Uid="HostNetworkAdapterLabel"
+                                                           Grid.Row="4" Grid.Column="0"
+                                                           Text="Network adapter"
+                                                           VerticalAlignment="Center"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <StackPanel Grid.Row="4" Grid.Column="1"
+                                                            Orientation="Horizontal"
+                                                            Spacing="4">
+                                                    <TextBlock Text="{x:Bind NetworkAdapterText, Mode=OneWay}"
+                                                               VerticalAlignment="Center"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                    <HyperlinkButton x:Uid="ChangeHostAdapterLink"
+                                                                     Content="Change"
+                                                                     Padding="4,0,4,0"
+                                                                     FontSize="12"
+                                                                     VerticalAlignment="Center"
+                                                                     Click="OnChangeHostAdapterClick" />
+                                                </StackPanel>
                                             </Grid>
                                         </Expander>
                                     </StackPanel>
@@ -1643,6 +1677,19 @@
                                             </StackPanel>
                                         </Grid>
 
+                                        <!-- Stays until the adapter is back or another is chosen, so it cannot be closed -->
+                                        <InfoBar Severity="Warning"
+                                                 IsClosable="False"
+                                                 IsOpen="{x:Bind IsNetworkAdapterWarningOpen, Mode=OneWay}"
+                                                 Message="{x:Bind NetworkAdapterWarningText, Mode=OneWay}">
+                                            <InfoBar.ActionButton>
+                                                <Button x:Uid="ChooseHostAdapterButton"
+                                                        Content="Choose adapter"
+                                                        Tag="{x:Bind}"
+                                                        Click="OnChangeRtpHostAdapterClick" />
+                                            </InfoBar.ActionButton>
+                                        </InfoBar>
+
                                         <StackPanel Spacing="4">
                                             <TextBlock x:Uid="NoConnectedDevicesText"
                                                        Text="No devices are connected to this host."
@@ -1811,6 +1858,7 @@
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
                                                 </Grid.RowDefinitions>
 
                                                 <TextBlock x:Uid="RtpAdvertisedNameLabel"
@@ -1844,6 +1892,26 @@
                                                            Text="{x:Bind PolicyText, Mode=OneWay}"
                                                            TextWrapping="Wrap"
                                                            Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                <TextBlock x:Uid="HostNetworkAdapterLabel"
+                                                           Grid.Row="3" Grid.Column="0"
+                                                           Text="Network adapter"
+                                                           VerticalAlignment="Center"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <StackPanel Grid.Row="3" Grid.Column="1"
+                                                            Orientation="Horizontal"
+                                                            Spacing="4">
+                                                    <TextBlock Text="{x:Bind NetworkAdapterText, Mode=OneWay}"
+                                                               VerticalAlignment="Center"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                    <HyperlinkButton x:Uid="ChangeHostAdapterLink"
+                                                                     Content="Change"
+                                                                     Padding="4,0,4,0"
+                                                                     FontSize="12"
+                                                                     VerticalAlignment="Center"
+                                                                     Click="OnChangeRtpHostAdapterClick" />
+                                                </StackPanel>
                                             </Grid>
                                         </Expander>
                                     </StackPanel>
@@ -1949,6 +2017,29 @@
                               HorizontalAlignment="Stretch"
                               HorizontalContentAlignment="Stretch">
                         <StackPanel Spacing="12" Margin="0,4,0,4">
+                            <StackPanel Spacing="4">
+                                <ComboBox x:Name="HostNetworkAdapterComboBox"
+                                          x:Uid="HostNetworkAdapterComboBox"
+                                          Header="Network adapter"
+                                          HorizontalAlignment="Stretch"
+                                          SelectionChanged="OnNetworkAdapterChoiceChanged" />
+                                <TextBlock x:Uid="HostNetworkAdapterHelp"
+                                           Text="Choose one adapter to keep this host on one network, like the wired network at a show. Most people can leave this on every adapter."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <CheckBox x:Name="HostNetworkAdapterFallbackCheckBox"
+                                          x:Uid="HostNetworkAdapterFallbackCheckBox"
+                                          Content="If this adapter is missing, use every adapter until it is back"
+                                          IsChecked="True"
+                                          IsEnabled="False" />
+                                <TextBlock x:Uid="HostNetworkAdapterFallbackHelp"
+                                           Text="Turn this off to keep the host off your other networks. It waits instead, and starts by itself when the adapter is back."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+
                             <StackPanel Spacing="4">
                                 <TextBox x:Name="HostProductInstanceIdTextBox"
                                          x:Uid="HostProductInstanceIdTextBox"
@@ -2063,6 +2154,29 @@
                               HorizontalContentAlignment="Stretch">
                         <StackPanel Spacing="12" Margin="0,4,0,4">
                             <StackPanel Spacing="4">
+                                <ComboBox x:Name="RtpHostNetworkAdapterComboBox"
+                                          x:Uid="HostNetworkAdapterComboBox"
+                                          Header="Network adapter"
+                                          HorizontalAlignment="Stretch"
+                                          SelectionChanged="OnNetworkAdapterChoiceChanged" />
+                                <TextBlock x:Uid="HostNetworkAdapterHelp"
+                                           Text="Choose one adapter to keep this host on one network, like the wired network at a show. Most people can leave this on every adapter."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <CheckBox x:Name="RtpHostNetworkAdapterFallbackCheckBox"
+                                          x:Uid="HostNetworkAdapterFallbackCheckBox"
+                                          Content="If this adapter is missing, use every adapter until it is back"
+                                          IsChecked="True"
+                                          IsEnabled="False" />
+                                <TextBlock x:Uid="HostNetworkAdapterFallbackHelp"
+                                           Text="Turn this off to keep the host off your other networks. It waits instead, and starts by itself when the adapter is back."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="4">
                                 <CheckBox x:Name="RtpHostAutomaticPortCheckBox"
                                           x:Uid="RtpHostAutomaticPortCheckBox"
                                           Content="Let Windows choose the port"
@@ -2133,6 +2247,34 @@
                        CloseButtonText="Cancel"
                        DefaultButton="Close">
             <TextBlock x:Name="ConfirmDialogText" TextWrapping="Wrap" MaxWidth="420" />
+        </ContentDialog>
+
+        <!-- Used for hosts of both transports. The title names the host, so it is set in code. -->
+        <ContentDialog x:Name="ChangeHostAdapterDialog"
+                       x:Uid="ChangeHostAdapterDialog"
+                       PrimaryButtonText="Save"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <StackPanel Spacing="12" Width="440" Margin="0,4,4,4">
+                <TextBlock x:Uid="ChangeHostAdapterIntro"
+                           Text="Choose the network this host uses. If you change it, the host restarts, and the devices connected to it are disconnected."
+                           TextWrapping="Wrap" />
+                <ComboBox x:Name="ChangeHostAdapterComboBox"
+                          x:Uid="HostNetworkAdapterComboBox"
+                          Header="Network adapter"
+                          HorizontalAlignment="Stretch"
+                          SelectionChanged="OnNetworkAdapterChoiceChanged" />
+                <StackPanel Spacing="4">
+                    <CheckBox x:Name="ChangeHostAdapterFallbackCheckBox"
+                              x:Uid="HostNetworkAdapterFallbackCheckBox"
+                              Content="If this adapter is missing, use every adapter until it is back" />
+                    <TextBlock x:Uid="HostNetworkAdapterFallbackHelp"
+                               Text="Turn this off to keep the host off your other networks. It waits instead, and starts by itself when the adapter is back."
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </StackPanel>
         </ContentDialog>
 
         <ContentDialog x:Name="ConnectNameDialog"

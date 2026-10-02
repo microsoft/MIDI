@@ -19,6 +19,10 @@ namespace midi2console
     std::string FormatGuid(_In_ winrt::guid const& value);
     winrt::guid ParseGuid(_In_ std::string_view value, _Out_ bool& succeeded);
 
+    // The network adapter a Network MIDI 2.0 or RTP-MIDI host is limited to: every adapter for
+    // an empty id, otherwise the adapter's name, marked when it is missing
+    std::string FormatNetworkAdapter(_In_ winrt::guid const& id, _In_ winrt::hstring const& name, _In_ bool isMissing);
+
     std::string FormatNumberWithSeparators(_In_ uint64_t value);
     std::string FormatDecimal(_In_ double value, _In_ int decimalPlaces);
 

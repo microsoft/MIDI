@@ -43,6 +43,11 @@ namespace Windows.Devices.Midi2.Transports.Rtp
 
         [noexcept] Boolean SendRecoveryJournal{ get; };
 
+        // An empty GUID is every adapter
+        [noexcept] Guid NetworkAdapterId{ get; };
+        [noexcept] String NetworkAdapterName{ get; };
+        [noexcept] Boolean AllowNetworkAdapterFallback{ get; };
+
         // Every saved allow and deny decision. To change one, save a MidiRtpHostKnownClientsConfig
         // holding this whole list with the change made.
         [noexcept] Windows.Foundation.Collections.IVectorView<MidiRtpKnownRemoteClient> KnownRemoteClients{ get; };
