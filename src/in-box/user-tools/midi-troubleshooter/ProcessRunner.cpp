@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "ProcessRunner.h"
+#include "StringResources.h"
 
 namespace miditroubleshooter
 {
@@ -47,7 +48,7 @@ namespace miditroubleshooter
             {
             }
 
-            return std::format(L"Error 0x{:08X}", error);
+            return std::wstring{ resources::FormatString(L"SystemErrorCodeFormat", error) };
         }
 
         // The console tools switch stdout to UTF-8 when they detect redirection, so that is
@@ -153,12 +154,18 @@ namespace miditroubleshooter
             return commandLine;
         }
 
+        // maximumRawBytes is 0 for text output. Otherwise the output is the contents of a file:
+        // it's kept as bytes, standard error is thrown away so that it can't mix in, and the
+        // program is stopped as soon as it has written more than that many bytes. An empty
+        // working folder means this process's own.
         ProcessResult Run(
             _In_ std::wstring const& executablePath,
             _In_ std::wstring const& arguments,
+            _In_ std::wstring const& workingFolder,
             _In_ std::chrono::seconds const timeout,
             _In_ bool const captureOutput,
-            _In_ OutputReceivedHandler const& onOutputReceived) noexcept
+            _In_ OutputReceivedHandler const& onOutputReceived,
+            _In_ size_t const maximumRawBytes) noexcept
         {
             ProcessResult result{};
 
@@ -166,7 +173,7 @@ namespace miditroubleshooter
             {
                 if (executablePath.empty())
                 {
-                    result.ErrorMessage = L"No path was supplied for the program to run.";
+                    result.ErrorMessage = resources::GetString(L"ProcessErrorNoPath");
                     return result;
                 }
 
@@ -193,6 +200,28 @@ namespace miditroubleshooter
                     }
                 }
 
+                auto const rawOutputWanted = captureOutput && maximumRawBytes > 0;
+
+                wil::unique_hfile discardedErrors;
+
+                if (rawOutputWanted)
+                {
+                    discardedErrors.reset(::CreateFileW(
+                        L"NUL",
+                        GENERIC_WRITE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        &securityAttributes,
+                        OPEN_EXISTING,
+                        0,
+                        nullptr));
+
+                    if (!discardedErrors)
+                    {
+                        result.ErrorMessage = FormatSystemError(::GetLastError());
+                        return result;
+                    }
+                }
+
                 STARTUPINFOW startupInfo{};
                 startupInfo.cb = sizeof(startupInfo);
                 startupInfo.dwFlags = STARTF_USESHOWWINDOW;
@@ -202,7 +231,7 @@ namespace miditroubleshooter
                 {
                     startupInfo.dwFlags |= STARTF_USESTDHANDLES;
                     startupInfo.hStdOutput = writePipe.get();
-                    startupInfo.hStdError = writePipe.get();
+                    startupInfo.hStdError = rawOutputWanted ? discardedErrors.get() : writePipe.get();
                     startupInfo.hStdInput = nullptr;
                 }
 
@@ -218,7 +247,7 @@ namespace miditroubleshooter
                     captureOutput ? TRUE : FALSE,
                     CREATE_NO_WINDOW,
                     nullptr,
-                    nullptr,
+                    workingFolder.empty() ? nullptr : workingFolder.c_str(),
                     &startupInfo,
                     &processInformation);
 
@@ -284,6 +313,12 @@ namespace miditroubleshooter
 
                             rawOutput.append(buffer.data(), bytesRead);
 
+                            if (rawOutputWanted && rawOutput.size() > maximumRawBytes)
+                            {
+                                result.OutputLimitReached = true;
+                                break;
+                            }
+
                             if (streaming)
                             {
                                 streaming = DeliverOutput(rawOutput, delivered, onOutputReceived);
@@ -304,7 +339,7 @@ namespace miditroubleshooter
                     }
                 }
 
-                if (!result.TimedOut)
+                if (!result.TimedOut && !result.OutputLimitReached)
                 {
                     auto const remaining = deadline - std::chrono::steady_clock::now();
 
@@ -317,7 +352,7 @@ namespace miditroubleshooter
                     }
                 }
 
-                if (result.TimedOut)
+                if (result.TimedOut || result.OutputLimitReached)
                 {
                     // A tool that will not finish is worse than no output at all, and leaving
                     // it running would hold the pipe and the trace session open.
@@ -332,7 +367,14 @@ namespace miditroubleshooter
                     result.ExitCode = exitCode;
                 }
 
-                result.Output = Utf8ToWide(rawOutput);
+                if (rawOutputWanted)
+                {
+                    result.RawOutput = std::move(rawOutput);
+                }
+                else
+                {
+                    result.Output = Utf8ToWide(rawOutput);
+                }
             }
             catch (winrt::hresult_error const& ex)
             {
@@ -341,7 +383,7 @@ namespace miditroubleshooter
             }
             catch (...)
             {
-                result.ErrorMessage = L"An unexpected error occurred while running the program.";
+                result.ErrorMessage = resources::GetString(L"ProcessErrorRunUnexpected");
                 MIDI_TSHOOT_LOG_GENERAL_EXCEPTION(L"Unable to run an external program.");
             }
 
@@ -355,7 +397,7 @@ namespace miditroubleshooter
         std::wstring const& arguments,
         std::chrono::seconds timeout) noexcept
     {
-        return Run(executablePath, arguments, timeout, true, {});
+        return Run(executablePath, arguments, {}, timeout, true, {}, 0);
     }
 
     _Use_decl_annotations_
@@ -365,7 +407,28 @@ namespace miditroubleshooter
         std::chrono::seconds timeout,
         OutputReceivedHandler const& onOutputReceived) noexcept
     {
-        return Run(executablePath, arguments, timeout, true, onOutputReceived);
+        return Run(executablePath, arguments, {}, timeout, true, onOutputReceived, 0);
+    }
+
+    _Use_decl_annotations_
+    ProcessResult RunCaptureIn(
+        std::wstring const& executablePath,
+        std::wstring const& arguments,
+        std::wstring const& workingFolder,
+        std::chrono::seconds timeout) noexcept
+    {
+        return Run(executablePath, arguments, workingFolder, timeout, true, {}, 0);
+    }
+
+    _Use_decl_annotations_
+    ProcessResult RunCaptureBytes(
+        std::wstring const& executablePath,
+        std::wstring const& arguments,
+        std::wstring const& workingFolder,
+        std::chrono::seconds timeout,
+        size_t maximumBytes) noexcept
+    {
+        return Run(executablePath, arguments, workingFolder, timeout, true, {}, std::max<size_t>(maximumBytes, 1));
     }
 
     _Use_decl_annotations_
@@ -374,7 +437,7 @@ namespace miditroubleshooter
         std::wstring const& arguments,
         std::chrono::seconds timeout) noexcept
     {
-        return Run(executablePath, arguments, timeout, false, {});
+        return Run(executablePath, arguments, {}, timeout, false, {}, 0);
     }
 
     _Use_decl_annotations_
@@ -389,7 +452,7 @@ namespace miditroubleshooter
         {
             if (executablePath.empty())
             {
-                result.ErrorMessage = L"No path was supplied for the program to run.";
+                result.ErrorMessage = resources::GetString(L"ProcessErrorNoPath");
                 return result;
             }
 
@@ -449,7 +512,7 @@ namespace miditroubleshooter
         }
         catch (...)
         {
-            result.ErrorMessage = L"An unexpected error occurred while starting the program.";
+            result.ErrorMessage = resources::GetString(L"ProcessErrorStartUnexpected");
             MIDI_TSHOOT_LOG_GENERAL_EXCEPTION(L"Unable to start an external program.");
         }
 

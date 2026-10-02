@@ -23,6 +23,17 @@
 #include <iostream>
 #include <chrono>
 #include <format>
+#include <map>
+#include <functional>
+#include <optional>
+#include <mutex>
+#include <thread>
+#include <condition_variable>
+#include <stop_token>
+#include <tuple>
+
+#include <oleauto.h>
+#include <winevt.h>
 
 #undef GetObject
 
@@ -41,7 +52,7 @@ namespace collections = winrt::Windows::Foundation::Collections;
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.Legacy.h>
 #include <winrt/Windows.Devices.Midi2.Reporting.h>
-//#include <winrt/Windows.Devices.Midi2.ServiceConfig.h>
+#include <winrt/Windows.Devices.Midi2.ServiceConfig.h>
 
 
 namespace midi2 = winrt::Windows::Devices::Midi2;
@@ -49,7 +60,7 @@ namespace diag = winrt::Windows::Devices::Midi2::Diagnostics;
 namespace midi2enum = winrt::Windows::Devices::Midi2::Enumeration;
 namespace legacy = winrt::Windows::Devices::Midi2::Enumeration::Legacy;
 namespace rept = winrt::Windows::Devices::Midi2::Reporting;
-//namespace svc = winrt::Windows::Devices::Midi2::ServiceConfig;
+namespace svc = winrt::Windows::Devices::Midi2::ServiceConfig;
 
 
 
@@ -65,6 +76,7 @@ namespace rept = winrt::Windows::Devices::Midi2::Reporting;
 #include <wil/common.h>
 #include <wil/com.h>
 #include <wil/registry.h>
+#include <wil/resource.h>
 
 #include <WindowsMidiServicesVersion.h>
 #include "WindowsMidiServices.h"

@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="miditroubleshooter.ReportViewerWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:miditroubleshooter"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <!-- The report itself is built in code, a section at a time as each one is opened, because
+         which fields a section has depends on the report. The styles it uses are here, so the
+         colors follow the theme when the customer changes it in the main window. -->
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.Resources>
+            <Style x:Key="ReportCardStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="16,12,16,14" />
+            </Style>
+
+            <Style x:Key="ReportCardTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
+                <Setter Property="Margin" Value="0,0,0,8" />
+            </Style>
+
+            <Style x:Key="ReportSectionTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}" />
+
+            <Style x:Key="ReportSecondaryTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
+            <Style x:Key="ReportBodyTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="IsTextSelectionEnabled" Value="True" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
+            <Style x:Key="ReportFieldLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="MaxWidth" Value="320" />
+                <Setter Property="Margin" Value="0,0,24,0" />
+            </Style>
+
+            <Style x:Key="ReportFieldValueStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="IsTextSelectionEnabled" Value="True" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
+            <Style x:Key="ReportEmptyValueStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+            </Style>
+
+            <Style x:Key="ReportGroupCaptionStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Margin" Value="0,10,0,4" />
+            </Style>
+
+            <Style x:Key="ReportTableHeaderStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="MaxWidth" Value="160" />
+                <Setter Property="HorizontalAlignment" Value="Left" />
+            </Style>
+
+            <!-- Nothing in a table is cut short. A value in an ordinary column wraps past this
+                 width, so one long value can't push the rest of the table off the window. -->
+            <Style x:Key="ReportTableCellStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="IsTextSelectionEnabled" Value="True" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="MaxWidth" Value="300" />
+                <Setter Property="HorizontalAlignment" Value="Left" />
+            </Style>
+
+            <!-- The column with the longest values takes the rest of the window and wraps there. -->
+            <Style x:Key="ReportTableWideCellStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="IsTextSelectionEnabled" Value="True" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
+            <Style x:Key="ReportErrorTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+                <Setter Property="IsTextSelectionEnabled" Value="True" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
+            <Style x:Key="ReportErrorGlyphStyle" TargetType="FontIcon">
+                <Setter Property="Glyph" Value="&#xEA39;" />
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="VerticalAlignment" Value="Top" />
+                <Setter Property="Margin" Value="0,2,0,0" />
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+                <Setter Property="AutomationProperties.AccessibilityView" Value="Raw" />
+            </Style>
+
+            <Style x:Key="ReportFindingGlyphStyle" TargetType="FontIcon">
+                <Setter Property="Glyph" Value="&#xE7BA;" />
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="VerticalAlignment" Value="Top" />
+                <Setter Property="Margin" Value="0,2,0,0" />
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCautionBrush}" />
+                <Setter Property="AutomationProperties.AccessibilityView" Value="Raw" />
+            </Style>
+
+            <Style x:Key="ReportSuccessGlyphStyle" TargetType="FontIcon">
+                <Setter Property="Glyph" Value="&#xE73E;" />
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="VerticalAlignment" Value="Top" />
+                <Setter Property="Margin" Value="0,2,0,0" />
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorSuccessBrush}" />
+                <Setter Property="AutomationProperties.AccessibilityView" Value="Raw" />
+            </Style>
+
+            <Style x:Key="ReportDividerStyle" TargetType="Rectangle">
+                <Setter Property="Height" Value="1" />
+                <Setter Property="Margin" Value="0,6,0,6" />
+                <Setter Property="Fill" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            </Style>
+
+            <Style x:Key="ReportExpanderStyle" TargetType="Expander">
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            </Style>
+
+            <!-- A pill is a shape, not a Border: a Border snaps its corner radius to whole pixels
+                 along with its bounds, so at 125% scaling the arc comes out stepped. The glyph
+                 says the same thing as the color, so the color is never the only signal. -->
+            <Style x:Key="ReportPillShapeStyle" TargetType="Rectangle">
+                <Setter Property="RadiusX" Value="11" />
+                <Setter Property="RadiusY" Value="11" />
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="UseLayoutRounding" Value="False" />
+            </Style>
+
+            <Style x:Key="ReportPillPanelStyle" TargetType="StackPanel">
+                <Setter Property="Orientation" Value="Horizontal" />
+                <Setter Property="Spacing" Value="6" />
+                <Setter Property="Height" Value="22" />
+                <Setter Property="Padding" Value="9,0,9,0" />
+            </Style>
+
+            <Style x:Key="ReportPillTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="ReportPillGlyphStyle" TargetType="FontIcon">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="AutomationProperties.AccessibilityView" Value="Raw" />
+            </Style>
+
+            <Style x:Key="ReportSuccessPillShapeStyle" TargetType="Rectangle" BasedOn="{StaticResource ReportPillShapeStyle}">
+                <Setter Property="Fill" Value="{ThemeResource SystemFillColorSuccessBackgroundBrush}" />
+                <Setter Property="Stroke" Value="{ThemeResource SystemFillColorSuccessBrush}" />
+            </Style>
+
+            <Style x:Key="ReportSuccessPillGlyphStyle" TargetType="FontIcon" BasedOn="{StaticResource ReportPillGlyphStyle}">
+                <Setter Property="Glyph" Value="&#xE73E;" />
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorSuccessBrush}" />
+            </Style>
+
+            <Style x:Key="ReportSuccessPillTextStyle" TargetType="TextBlock" BasedOn="{StaticResource ReportPillTextStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorSuccessBrush}" />
+            </Style>
+
+            <Style x:Key="ReportCautionPillShapeStyle" TargetType="Rectangle" BasedOn="{StaticResource ReportPillShapeStyle}">
+                <Setter Property="Fill" Value="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
+                <Setter Property="Stroke" Value="{ThemeResource SystemFillColorCautionBrush}" />
+            </Style>
+
+            <Style x:Key="ReportCautionPillGlyphStyle" TargetType="FontIcon" BasedOn="{StaticResource ReportPillGlyphStyle}">
+                <Setter Property="Glyph" Value="&#xE7BA;" />
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCautionBrush}" />
+            </Style>
+
+            <Style x:Key="ReportCautionPillTextStyle" TargetType="TextBlock" BasedOn="{StaticResource ReportPillTextStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCautionBrush}" />
+            </Style>
+
+            <Style x:Key="ReportCriticalPillShapeStyle" TargetType="Rectangle" BasedOn="{StaticResource ReportPillShapeStyle}">
+                <Setter Property="Fill" Value="{ThemeResource SystemFillColorCriticalBackgroundBrush}" />
+                <Setter Property="Stroke" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+            </Style>
+
+            <Style x:Key="ReportCriticalPillGlyphStyle" TargetType="FontIcon" BasedOn="{StaticResource ReportPillGlyphStyle}">
+                <Setter Property="Glyph" Value="&#xEA39;" />
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+            </Style>
+
+            <Style x:Key="ReportCriticalPillTextStyle" TargetType="TextBlock" BasedOn="{StaticResource ReportPillTextStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+            </Style>
+        </Grid.Resources>
+
+        <!-- hidden when a system backdrop is in use, so the material shows through -->
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <Border x:Name="WindowTint"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Visibility="Collapsed" />
+
+        <!-- ============================ Title bar drag region ============================ -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <!-- Hidden when this is not a preview build; see midi-app-shared\PreviewBuild.h. -->
+            <Grid x:Name="PreviewChiclet"
+                  Grid.Column="0"
+                  Grid.ColumnSpan="4"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Height="18"
+                  IsHitTestVisible="False">
+                <Rectangle RadiusX="9"
+                           RadiusY="9"
+                           StrokeThickness="1"
+                           UseLayoutRounding="False"
+                           Stroke="{ThemeResource SystemFillColorCautionBrush}"
+                           Fill="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
+                <TextBlock x:Uid="PreviewChicletText"
+                           Text="PREVIEW"
+                           FontSize="10"
+                           FontWeight="SemiBold"
+                           Margin="9,0,9,0"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+            </Grid>
+        </Grid>
+
+        <!-- ================================== Toolbar ================================== -->
+        <Grid Grid.Row="1" Margin="16,4,16,8" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="OpenReportButton" x:Uid="OpenReportButton" Grid.Column="0"
+                    Content="Open..." Click="OnOpenReportClick" />
+            <Button x:Name="ExpandAllButton" x:Uid="ExpandAllButton" Grid.Column="1"
+                    Content="Expand all" IsEnabled="False" Click="OnExpandAllClick" />
+            <Button x:Name="CollapseAllButton" x:Uid="CollapseAllButton" Grid.Column="2"
+                    Content="Collapse all" IsEnabled="False" Click="OnCollapseAllClick" />
+            <TextBlock x:Name="ReportSourceText" Grid.Column="3"
+                       VerticalAlignment="Center" Margin="8,0,0,0"
+                       TextTrimming="CharacterEllipsis"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </Grid>
+
+        <InfoBar x:Name="LoadErrorInfoBar" Grid.Row="2" Margin="16,0,16,8"
+                 Severity="Error" IsOpen="False" IsClosable="True" />
+
+        <!-- ================================== Report =================================== -->
+        <TextBlock x:Name="EmptyReportText" x:Uid="EmptyReportText" Grid.Row="3"
+                   Margin="16,8,16,16"
+                   Text="Open a mididiag report, or a zip file with one in it, to see it here."
+                   TextWrapping="Wrap"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+        <ScrollViewer x:Name="ReportScrollViewer" Grid.Row="3"
+                      Visibility="Collapsed"
+                      HorizontalScrollMode="Disabled"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="ReportPanel" Margin="16,0,16,16" Spacing="8" />
+        </ScrollViewer>
+    </Grid>
+</Window>

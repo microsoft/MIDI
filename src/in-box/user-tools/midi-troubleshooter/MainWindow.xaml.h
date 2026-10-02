@@ -12,6 +12,7 @@
 #include "AppSettings.h"
 #include "DriverTools.h"
 #include "RegistryRepair.h"
+#include "ReportFile.h"
 #include "ReproLog.h"
 #include "ServiceControl.h"
 #include "SystemInfo.h"
@@ -49,7 +50,10 @@ namespace winrt::miditroubleshooter::implementation
         void OnCopyMidiDiagClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCopyMidiKsInfoClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnSaveMidiDiagClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnSaveMidiDiagZipClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnViewMidiDiagReportClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnSaveMidiKsInfoClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnSaveServiceDumpClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         // Capture
         winrt::fire_and_forget OnStartCaptureClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -168,6 +172,9 @@ namespace winrt::miditroubleshooter::implementation
         // busy while either report is running
         void UpdateDiagnosticsCursor() noexcept;
 
+        // Opens the report viewer on this report, or shows it in the viewer that's already open.
+        void ShowReportViewer(_In_ ::miditroubleshooter::LoadedReport report) noexcept;
+
         // The Win32 save dialog rather than Windows.Storage.Pickers: the WinRT picker never
         // completes in an elevated process, and this tool normally runs elevated. Blocks until
         // the dialog is dismissed, and returns an empty string when the customer cancels.
@@ -259,6 +266,9 @@ namespace winrt::miditroubleshooter::implementation
 
         winrt::hstring m_midiDiagOutput{};
         winrt::hstring m_midiKsInfoOutput{};
+
+        // At most one, closed when this window closes.
+        miditroubleshooter::ReportViewerWindow m_reportViewer{ nullptr };
 
         bool m_midiDiagRunning{ false };
         bool m_midiKsInfoRunning{ false };

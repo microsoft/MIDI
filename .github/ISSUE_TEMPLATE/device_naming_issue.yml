@@ -79,9 +79,9 @@ body:
 - type: textarea
   id: mididiag-output
   attributes:
-    label: Output from the MIDI Diagnostics Tool
-    description: Use the MIDI settings app from https://aka.ms/midi, open the MIDI Settings app, and go to the troubleshooting page. Capture the resulting MIDI system information and paste the entire text here.
-    placeholder: mididiag output
+    label: MIDI diagnostics report (mididiag)
+    description: Install the Windows MIDI Services tools from https://aka.ms/midi and open the MIDI Troubleshooting and Repair app. On the Diagnostics page, select Run mididiag, then Save as zip, and drag the zip file into this box. The full report is usually too long to paste into an issue. Without the app, run `mididiag > mididiag.txt` in a command prompt, zip the file, and attach the zip.
+    placeholder: Drag the mididiag zip file here
   validations:
     required: true
   

@@ -36,6 +36,11 @@ namespace miditroubleshooter
         std::wstring LastCaptureFolder() const noexcept { return m_lastCaptureFolder; }
         void LastCaptureFolder(std::wstring const& value) noexcept;
 
+        // The report viewer keeps its own window placement. Sharing the main window's would
+        // move the main window to wherever the viewer was last closed.
+        WindowPlacementInfo const& ReportViewerPlacement() const noexcept { return m_reportViewerPlacement; }
+        void ReportViewerPlacement(_In_ WindowPlacementInfo const& value) noexcept;
+
         static constexpr uint32_t MinimumRefreshIntervalSeconds = 1;
         static constexpr uint32_t MaximumRefreshIntervalSeconds = 60;
         static constexpr uint32_t DefaultRefreshIntervalSeconds = 3;
@@ -57,5 +62,6 @@ namespace miditroubleshooter
         uint32_t m_refreshIntervalSeconds{ DefaultRefreshIntervalSeconds };
         uint32_t m_selectedPageIndex{ PageIndexApiMode };
         std::wstring m_lastCaptureFolder{};
+        WindowPlacementInfo m_reportViewerPlacement{};
     };
 }

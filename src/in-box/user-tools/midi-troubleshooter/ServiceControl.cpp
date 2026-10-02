@@ -7,7 +7,12 @@
 
 #include "pch.h"
 #include "ServiceControl.h"
+#include "StringResources.h"
 #include "SystemInfo.h"
+
+#include <dbghelp.h>
+
+#pragma comment(lib, "dbghelp.lib")
 
 namespace miditroubleshooter
 {
@@ -44,7 +49,7 @@ namespace miditroubleshooter
             {
             }
 
-            return std::format(L"Error 0x{:08X}", error);
+            return std::wstring{ resources::FormatString(L"SystemErrorCodeFormat", error) };
         }
 
         ServiceState StateFromWin32(_In_ DWORD const state) noexcept
@@ -347,7 +352,7 @@ namespace miditroubleshooter
 
                 if (!WaitForState(service.get(), SERVICE_STOPPED, std::chrono::seconds{ 30 }))
                 {
-                    result.ErrorMessage = L"The service did not stop in time.";
+                    result.ErrorMessage = resources::GetString(L"ServiceErrorStopTimedOut");
                     return result;
                 }
             }
@@ -365,7 +370,7 @@ namespace miditroubleshooter
 
             if (!WaitForState(service.get(), SERVICE_RUNNING, std::chrono::seconds{ 30 }))
             {
-                result.ErrorMessage = L"The service did not start in time.";
+                result.ErrorMessage = resources::GetString(L"ServiceErrorStartTimedOut");
                 return result;
             }
 
@@ -378,7 +383,7 @@ namespace miditroubleshooter
         }
         catch (...)
         {
-            result.ErrorMessage = L"An unexpected error occurred.";
+            result.ErrorMessage = resources::GetString(L"ServiceErrorUnexpected");
             MIDI_TSHOOT_LOG_GENERAL_EXCEPTION(L"Unable to restart the MIDI service.");
         }
 
@@ -436,8 +441,94 @@ namespace miditroubleshooter
         }
         catch (...)
         {
-            result.ErrorMessage = L"An unexpected error occurred.";
+            result.ErrorMessage = resources::GetString(L"ServiceErrorUnexpected");
             MIDI_TSHOOT_LOG_GENERAL_EXCEPTION(L"Unable to change the MIDI service start mode.");
+        }
+
+        return result;
+    }
+
+    _Use_decl_annotations_
+    ServiceOperationResult WriteMidiServiceDump(std::wstring const& dumpPath) noexcept
+    {
+        ServiceOperationResult result{};
+
+        try
+        {
+            auto const service = QueryMidiServiceStatus();
+
+            if (service.ProcessId == 0)
+            {
+                result.ErrorMessage = FormatSystemError(ERROR_SERVICE_NOT_ACTIVE);
+                return result;
+            }
+
+            // An administrator holds the debug privilege, but it starts switched off, and the
+            // service runs as another account. If this fails, OpenProcess says so below.
+            {
+                wil::unique_handle token{};
+
+                if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, token.put()))
+                {
+                    TOKEN_PRIVILEGES privileges{};
+                    privileges.PrivilegeCount = 1;
+                    privileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+                    if (::LookupPrivilegeValueW(nullptr, SE_DEBUG_NAME, &privileges.Privileges[0].Luid))
+                    {
+                        ::AdjustTokenPrivileges(token.get(), FALSE, &privileges, sizeof(privileges), nullptr, nullptr);
+                    }
+                }
+            }
+
+            wil::unique_handle process{ ::OpenProcess(
+                PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_DUP_HANDLE, FALSE, service.ProcessId) };
+
+            if (!process)
+            {
+                result.ErrorMessage = FormatSystemError(::GetLastError());
+                return result;
+            }
+
+            wil::unique_hfile file{ ::CreateFileW(
+                dumpPath.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr) };
+
+            if (!file)
+            {
+                result.ErrorMessage = FormatSystemError(::GetLastError());
+                return result;
+            }
+
+            // where every thread is and what it holds, which is what a stuck service needs
+            auto const dumpType = static_cast<MINIDUMP_TYPE>(
+                MiniDumpWithFullMemory |
+                MiniDumpWithFullMemoryInfo |
+                MiniDumpWithHandleData |
+                MiniDumpWithThreadInfo |
+                MiniDumpWithUnloadedModules);
+
+            if (!::MiniDumpWriteDump(process.get(), service.ProcessId, file.get(), dumpType, nullptr, nullptr, nullptr))
+            {
+                auto const error = ::GetLastError();
+
+                file.reset();
+                ::DeleteFileW(dumpPath.c_str());
+
+                result.ErrorMessage = FormatSystemError(error);
+                return result;
+            }
+
+            result.Succeeded = true;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            result.ErrorMessage = ex.message();
+            MIDI_TSHOOT_LOG_HRESULT_EXCEPTION(ex, L"Unable to write a memory dump of the MIDI service.");
+        }
+        catch (...)
+        {
+            result.ErrorMessage = FormatSystemError(ERROR_GEN_FAILURE);
+            MIDI_TSHOOT_LOG_GENERAL_EXCEPTION(L"Unable to write a memory dump of the MIDI service.");
         }
 
         return result;

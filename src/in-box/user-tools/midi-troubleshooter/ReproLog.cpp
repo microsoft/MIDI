@@ -231,7 +231,7 @@ namespace miditroubleshooter
             wcscpy_s(computerName, L"PC");
         }
 
-        return std::format(L"MIDI Capture {}_{}.zip", computerName, Timestamp());
+        return std::wstring{ res::FormatString(L"CaptureSuggestedFileNameFormat", std::wstring{ computerName }, Timestamp()) };
     }
 
     _Use_decl_annotations_

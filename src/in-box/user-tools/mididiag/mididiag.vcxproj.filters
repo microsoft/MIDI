@@ -21,6 +21,12 @@
     <ClInclude Include="mididiag_field_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="mididiag_output.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mididiag_sections.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
@@ -30,6 +36,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mididiag_main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mididiag_output.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mididiag_system.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mididiag_transports.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

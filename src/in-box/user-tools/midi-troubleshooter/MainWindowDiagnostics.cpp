@@ -7,9 +7,11 @@
 
 #include "pch.h"
 #include "MainWindow.xaml.h"
+#include "ReportViewerWindow.xaml.h"
 
 #include "BackgroundWork.h"
 #include "ProcessRunner.h"
+#include "ReportFile.h"
 #include "StringResources.h"
 #include "ToolPaths.h"
 
@@ -123,6 +125,130 @@ namespace winrt::miditroubleshooter::implementation
                 return false;
             }
         }
+
+        // what mididiag returns when it had to stop a report early
+        constexpr DWORD MidiDiagServiceNotResponding{ 5 };
+        constexpr DWORD MidiDiagSectionTimedOut{ 6 };
+
+        // a memory dump of a busy service can be several hundred megabytes before compression
+        constexpr std::chrono::seconds ZipTimeout{ 900 };
+
+        // a folder of its own under the temp folder, so the zip holds only the one file
+        std::wstring CreateWorkFolder(_In_ std::wstring_view const prefix) noexcept
+        {
+            try
+            {
+                wchar_t tempFolder[MAX_PATH + 1]{};
+
+                if (::GetTempPathW(ARRAYSIZE(tempFolder), tempFolder) == 0)
+                {
+                    return {};
+                }
+
+                // the temp path already ends with a backslash
+                auto const folder = std::format(L"{}{}-{}-{}", tempFolder, prefix, ::GetCurrentProcessId(), ::GetTickCount64());
+
+                return ::CreateDirectoryW(folder.c_str(), nullptr) ? folder : std::wstring{};
+            }
+            catch (...)
+            {
+                return {};
+            }
+        }
+
+        void DeleteWorkFolder(_In_ std::wstring const& folder, _In_ std::wstring_view const fileName) noexcept
+        {
+            try
+            {
+                if (!folder.empty())
+                {
+                    ::DeleteFileW(std::format(L"{}\\{}", folder, fileName).c_str());
+                    ::RemoveDirectoryW(folder.c_str());
+                }
+            }
+            catch (...)
+            {
+            }
+        }
+
+        // bsdtar has been in Windows since 1803 and is the only in-box way to write a zip. It
+        // can't open a path with a character outside the system's ANSI code page, so it runs in
+        // the work folder and is given plain names, and the zip is moved into place afterward.
+        bool ZipOneFile(_In_ std::wstring const& folder, _In_ std::wstring_view const fileName, _In_ std::wstring const& zipPath) noexcept
+        {
+            try
+            {
+                constexpr std::wstring_view workZipName{ L"archive.zip" };
+
+                auto const tarPath = native::GetNativeSystem32Folder() + L"\\tar.exe";
+
+                if (!native::FileExists(tarPath))
+                {
+                    return false;
+                }
+
+                auto const workZipPath = std::format(L"{}\\{}", folder, workZipName);
+
+                auto const removeWorkZip = wil::scope_exit([&workZipPath]() noexcept
+                    {
+                        ::DeleteFileW(workZipPath.c_str());
+                    });
+
+                auto const run = native::RunCaptureIn(tarPath,
+                    std::format(L"-a -c -f \"{}\" \"{}\"", workZipName, fileName), folder, ZipTimeout);
+
+                if (!run.Started || run.TimedOut || run.ExitCode != 0 || !native::FileExists(workZipPath))
+                {
+                    return false;
+                }
+
+                // the folder the customer picked can be on another drive
+                return ::MoveFileExW(workZipPath.c_str(), zipPath.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED) != FALSE;
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
+
+        // The dump can hold private information, so it never stays behind in the temp folder.
+        native::ServiceOperationResult SaveServiceDumpAsZip(_In_ std::wstring const& zipPath) noexcept
+        {
+            native::ServiceOperationResult result{};
+
+            try
+            {
+                constexpr std::wstring_view dumpName{ L"midisrv.dmp" };
+
+                auto const folder = CreateWorkFolder(L"midisrv-dump");
+
+                if (folder.empty())
+                {
+                    result.ErrorMessage = std::wstring{ res::GetString(L"ServiceDumpNoWorkFolder") };
+                    return result;
+                }
+
+                auto const cleanup = wil::scope_exit([&folder, dumpName]() noexcept
+                    {
+                        DeleteWorkFolder(folder, dumpName);
+                    });
+
+                result = native::WriteMidiServiceDump(std::format(L"{}\\{}", folder, dumpName));
+
+                if (result.Succeeded && !ZipOneFile(folder, dumpName, zipPath))
+                {
+                    result.Succeeded = false;
+                    result.ErrorMessage = std::wstring{ res::GetString(L"ServiceDumpZipFailed") };
+                }
+            }
+            catch (...)
+            {
+                result.Succeeded = false;
+                result.ErrorMessage = std::wstring{ res::GetString(L"ServiceDumpZipFailed") };
+            }
+
+            return result;
+        }
     }
 
     _Use_decl_annotations_
@@ -161,6 +287,7 @@ namespace winrt::miditroubleshooter::implementation
             auto const runButton = isMidiDiag ? RunMidiDiagButton() : RunMidiKsInfoButton();
             auto const copyButton = isMidiDiag ? CopyMidiDiagButton() : CopyMidiKsInfoButton();
             auto const saveButton = isMidiDiag ? SaveMidiDiagButton() : SaveMidiKsInfoButton();
+            auto const zipButton = isMidiDiag ? SaveMidiDiagZipButton() : controls::Button{ nullptr };
             auto const statusText = isMidiDiag ? MidiDiagStatusText() : MidiKsInfoStatusText();
             auto const outputBox = isMidiDiag ? MidiDiagOutputBox() : MidiKsInfoOutputBox();
 
@@ -175,7 +302,7 @@ namespace winrt::miditroubleshooter::implementation
 
             // Runs on the closing and the exception paths too, so a report that goes wrong
             // cannot leave the buttons dead or the pointer busy for the rest of the session.
-            auto const restoreUi = wil::scope_exit([this, &output, &running, runButton, copyButton, saveButton]() noexcept
+            auto const restoreUi = wil::scope_exit([this, &output, &running, runButton, copyButton, saveButton, zipButton]() noexcept
                 {
                     try
                     {
@@ -186,6 +313,11 @@ namespace winrt::miditroubleshooter::implementation
                             runButton.IsEnabled(true);
                             copyButton.IsEnabled(!output.empty());
                             saveButton.IsEnabled(!output.empty());
+
+                            if (zipButton)
+                            {
+                                zipButton.IsEnabled(!output.empty());
+                            }
 
                             UpdateDiagnosticsCursor();
                         }
@@ -202,6 +334,16 @@ namespace winrt::miditroubleshooter::implementation
             runButton.IsEnabled(false);
             copyButton.IsEnabled(false);
             saveButton.IsEnabled(false);
+
+            if (zipButton)
+            {
+                zipButton.IsEnabled(false);
+            }
+
+            if (isMidiDiag)
+            {
+                MidiServiceStuckInfoBar().IsOpen(false);
+            }
 
             statusText.Text(res::GetString(L"DiagnosticsRunning"));
 
@@ -296,6 +438,22 @@ namespace winrt::miditroubleshooter::implementation
             {
                 statusText.Text(res::FormatString(L"DiagnosticsStoppedUnexpectedlyFormat", exitCode));
             }
+            else if (isMidiDiag && result.ExitCode == MidiDiagServiceNotResponding)
+            {
+                statusText.Text(res::GetString(L"DiagnosticsServiceNotResponding"));
+
+                auto const banner = MidiServiceStuckInfoBar();
+
+                banner.Severity(controls::InfoBarSeverity::Warning);
+                banner.Title(res::GetString(L"ServiceStuckTitle"));
+                banner.Message(res::GetString(L"ServiceStuckMessage"));
+                SaveServiceDumpButton().IsEnabled(true);
+                banner.IsOpen(true);
+            }
+            else if (isMidiDiag && result.ExitCode == MidiDiagSectionTimedOut)
+            {
+                statusText.Text(res::GetString(L"DiagnosticsSectionTimedOut"));
+            }
             else
             {
                 statusText.Text(res::GetString(L"DiagnosticsComplete"));
@@ -372,6 +530,209 @@ namespace winrt::miditroubleshooter::implementation
         SaveTextAsync(L"midiksinfo.txt", m_midiKsInfoOutput);
 
         co_return;
+    }
+
+    // The report is often larger than a GitHub issue can hold, and a zip can be attached instead.
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnSaveMidiDiagZipClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        auto lifetime = get_strong();
+
+        auto const contents = std::wstring{ m_midiDiagOutput };
+
+        try
+        {
+            auto const path = ShowSaveFileDialog(
+                std::wstring{ res::GetString(L"SaveZipFileType") }, L"zip", L"mididiag.zip");
+
+            if (path.empty())
+            {
+                co_return;
+            }
+
+            bool written{ false };
+
+            co_await native::RunOnBackgroundAsync([&written, &path, &contents]()
+                {
+                    constexpr std::wstring_view reportName{ L"mididiag.txt" };
+
+                    auto const folder = CreateWorkFolder(L"mididiag");
+
+                    if (folder.empty())
+                    {
+                        return;
+                    }
+
+                    auto const cleanup = wil::scope_exit([&folder, reportName]() noexcept
+                        {
+                            DeleteWorkFolder(folder, reportName);
+                        });
+
+                    written = WriteUtf8TextFile(std::format(L"{}\\{}", folder, reportName), contents) &&
+                        ZipOneFile(folder, reportName, path);
+                });
+
+            if (m_closing || written)
+            {
+                co_return;
+            }
+
+            MidiDiagStatusText().Text(res::GetString(L"DiagnosticsZipFailed"));
+        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to save the report as a zip file.")
+    }
+
+    // The report this page just ran, when there is one. Otherwise a report file the customer
+    // picks, such as the zip somebody attached to an issue.
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnViewMidiDiagReportClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        auto lifetime = get_strong();
+
+        try
+        {
+            if (!m_midiDiagOutput.empty())
+            {
+                auto loaded = native::LoadReportText(m_midiDiagOutput);
+
+                // mididiag can fail before it writes a report, and then a file is the only choice
+                if (loaded.Error == native::ReportLoadError::None)
+                {
+                    ShowReportViewer(std::move(loaded));
+                    co_return;
+                }
+            }
+
+            auto const path = native::ShowOpenReportDialog(WindowHandle());
+
+            if (path.empty() || m_closing)
+            {
+                co_return;
+            }
+
+            native::LoadedReport loaded{};
+
+            co_await native::RunOnBackgroundAsync([&loaded, &path]()
+                {
+                    loaded = native::LoadReportFile(path);
+                });
+
+            if (m_closing)
+            {
+                co_return;
+            }
+
+            if (loaded.Error != native::ReportLoadError::None)
+            {
+                MidiDiagStatusText().Text(native::ReportLoadErrorMessage(loaded.Error));
+                co_return;
+            }
+
+            ShowReportViewer(std::move(loaded));
+        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to show a report in the viewer.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::ShowReportViewer(native::LoadedReport report) noexcept
+    {
+        try
+        {
+            if (m_reportViewer == nullptr)
+            {
+                auto viewer = winrt::make_self<ReportViewerWindow>();
+
+                // sized and placed before the first paint, so it doesn't visibly jump
+                viewer->RestoreWindowPlacement();
+                viewer->ShowReport(std::move(report));
+
+                m_reportViewer = viewer.as<miditroubleshooter::ReportViewerWindow>();
+
+                m_reportViewer.Closed([weak = get_weak()](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->m_reportViewer = nullptr;
+                        }
+                    });
+
+                m_reportViewer.Activate();
+
+                return;
+            }
+
+            auto* const viewer = winrt::get_self<ReportViewerWindow>(m_reportViewer);
+
+            viewer->ShowReport(std::move(report));
+            viewer->BringToFront();
+        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to open the report viewer.")
+    }
+
+    // Offered when mididiag found the service stuck. A dump taken now shows the developers where
+    // it is stuck, and restarting the PC, which is what clears it, would lose that.
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnSaveServiceDumpClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        auto lifetime = get_strong();
+
+        try
+        {
+            if (!RequireElevation())
+            {
+                co_return;
+            }
+
+            SYSTEMTIME now{};
+            ::GetLocalTime(&now);
+
+            auto const suggestedName = std::format(L"midisrv-dump-{:04}{:02}{:02}-{:02}{:02}{:02}.zip",
+                now.wYear, now.wMonth, now.wDay, now.wHour, now.wMinute, now.wSecond);
+
+            auto const path = ShowSaveFileDialog(
+                std::wstring{ res::GetString(L"SaveZipFileType") }, L"zip", suggestedName);
+
+            if (path.empty())
+            {
+                co_return;
+            }
+
+            auto const banner = MidiServiceStuckInfoBar();
+            auto const button = SaveServiceDumpButton();
+
+            button.IsEnabled(false);
+            banner.Message(res::GetString(L"ServiceDumpSaving"));
+
+            native::ServiceOperationResult result{};
+
+            co_await native::RunOnBackgroundAsync([&result, &path]()
+                {
+                    result = SaveServiceDumpAsZip(path);
+                });
+
+            if (m_closing)
+            {
+                co_return;
+            }
+
+            if (result.Succeeded)
+            {
+                banner.Severity(controls::InfoBarSeverity::Success);
+                banner.Title(res::GetString(L"ServiceDumpSavedTitle"));
+                banner.Message(res::FormatString(L"ServiceDumpSavedFormat", winrt::hstring{ path }));
+            }
+            else
+            {
+                // the service may still be stuck, so another try is allowed
+                banner.Severity(controls::InfoBarSeverity::Error);
+                banner.Title(res::GetString(L"ServiceDumpFailedTitle"));
+                banner.Message(winrt::hstring{ result.ErrorMessage });
+                button.IsEnabled(true);
+            }
+
+            banner.IsOpen(true);
+        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to save a memory dump of the MIDI service.")
     }
 
     _Use_decl_annotations_

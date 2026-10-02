@@ -11,6 +11,7 @@
 
 #include "App.xaml.h"
 #include "Elevation.h"
+#include "ReportViewerWindow.xaml.h"
 #include "StringResources.h"
 #include "ToolPaths.h"
 #include "resource.h"
@@ -118,6 +119,17 @@ namespace winrt::miditroubleshooter::implementation
                         strong->StopRefreshTimer();
                         strong->m_chrome.SavePlacement();
                         strong->m_chrome.Shutdown();
+
+                        // The viewer belongs to this window. Left open, it would keep the app
+                        // running with no main window to come back to.
+                        if (auto const viewer = std::exchange(strong->m_reportViewer, nullptr))
+                        {
+                            try
+                            {
+                                viewer.Close();
+                            }
+                            MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to close the report viewer.")
+                        }
                     }
                 });
 
@@ -399,6 +411,11 @@ namespace winrt::miditroubleshooter::implementation
             native::AppSettings::Current().AlwaysOnTop(isChecked != nullptr && isChecked.Value());
 
             m_chrome.ApplyAlwaysOnTop();
+
+            if (m_reportViewer != nullptr)
+            {
+                winrt::get_self<ReportViewerWindow>(m_reportViewer)->ApplyAlwaysOnTop();
+            }
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to change the always on top setting.")
     }
@@ -483,6 +500,11 @@ namespace winrt::miditroubleshooter::implementation
                     if (auto strong = weak.get())
                     {
                         strong->m_chrome.ApplyTheme();
+
+                        if (strong->m_reportViewer != nullptr)
+                        {
+                            winrt::get_self<ReportViewerWindow>(strong->m_reportViewer)->ApplyAppearance();
+                        }
                     }
                 },
                 extra);

@@ -20,6 +20,7 @@
     <ClCompile Include="Elevation.cpp" />
     <ClCompile Include="ProcessRunner.cpp" />
     <ClCompile Include="RegistryRepair.cpp" />
+    <ClCompile Include="ReportFile.cpp" />
     <ClCompile Include="ReproLog.cpp" />
     <ClCompile Include="ServiceControl.cpp" />
     <ClCompile Include="StringResources.cpp" />
@@ -30,6 +31,7 @@
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
+    <ClCompile Include="..\mididiag\mididiag_report_parser.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -41,6 +43,7 @@
     <ClInclude Include="Elevation.h" />
     <ClInclude Include="ProcessRunner.h" />
     <ClInclude Include="RegistryRepair.h" />
+    <ClInclude Include="ReportFile.h" />
     <ClInclude Include="ReproLog.h" />
     <ClInclude Include="ServiceControl.h" />
     <ClInclude Include="StringResources.h" />
@@ -52,6 +55,8 @@
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\mididiag\mididiag_report_parser.h" />
+    <ClInclude Include="..\mididiag\mididiag_field_defs.h" />
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
     </ClInclude>
@@ -62,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="MainWindow.xaml" />
+    <Page Include="ReportViewerWindow.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">

@@ -12,164 +12,81 @@
 #include "pch.h"
 
 #include "console_tools_shared.h"
+#include "mididiag_output.h"
+#include "mididiag_sections.h"
 
-void OutputFieldSeparator()
-{
-    fmt::print(L"{}", Styled(MIDIDIAG_FIELD_SEPARATOR, separatorTextStyle));
-}
+#include <aclapi.h>
+#include <mmddk.h>
+
+// Every line of the report goes through mididiag_output.cpp, which lays it out, cleans what
+// devices supply and keeps user names out. These keep the names the sections below were
+// written with.
 
 void OutputSectionHeader(_In_ std::wstring const& headerText)
 {
-    const auto sectionHeaderSeparator = std::wstring(MIDIDIAG_SEPARATOR_REPEATING_CHAR_COUNT_PER_LINE, MIDIDIAG_SECTION_HEADER_SEPARATOR_CHAR);
-
-    fmt::println(L"{}", Styled(sectionHeaderSeparator, separatorTextStyle));
-    fmt::println(L"{}", Styled(headerText, infoTextStyle));
-    fmt::println(L"{}", Styled(sectionHeaderSeparator, separatorTextStyle));
-    fmt::println(L"");
-
-    // redirected output is buffered, so send the last section and this header before a crash can lose them
-    fflush(stdout);
+    mididiag::WriteSection(headerText);
 }
 
+// a blank line between the records in a section
 void OutputItemSeparator()
 {
-    const auto itemSeparator = std::wstring(MIDIDIAG_SEPARATOR_REPEATING_CHAR_COUNT_PER_LINE, MIDIDIAG_ITEM_SEPARATOR_CHAR);
-
-    fmt::println(L"{}", Styled(itemSeparator, separatorTextStyle));
+    mididiag::WriteRecordBreak();
 }
 
 void OutputHeader(_In_ std::wstring const& headerText)
 {
-    std::wcout
-        /*<< hue::aqua*/
-        << headerText
-        << std::endl;
-}
-
-void OutputFieldLabel(_In_ std::wstring const& fieldName)
-{
-    fmt::print(L"{:<36}", Styled(fieldName, fieldLabelTextStyle));
-
+    mididiag::WriteLine(headerText);
 }
 
 void OutputEntityNameField(_In_ std::wstring const& fieldName, _In_ winrt::hstring const& value)
 {
-    OutputFieldLabel(fieldName);
-    OutputFieldSeparator();
-
-    fmt::println(L"{}", Styled(std::wstring{ value.c_str() }, entityNameFieldValueTextStyle));
+    mididiag::WriteStyledField(fieldName, value, entityNameFieldValueTextStyle);
 }
 
 void OutputEntityIdentifierField(_In_ std::wstring const& fieldName, _In_ winrt::hstring const& value)
 {
-    OutputFieldLabel(fieldName);
-    OutputFieldSeparator();
-
-    fmt::println(L"{}", Styled(std::wstring{ value.c_str() }, entityIdentifierFieldValueTextStyle));
+    mididiag::WriteStyledField(fieldName, value, entityIdentifierFieldValueTextStyle);
 }
-
-void OutputPortNumberField(_In_ std::wstring const& fieldName, _In_ uint32_t const& value)
-{
-    OutputFieldLabel(fieldName);
-    OutputFieldSeparator();
-
-    fmt::println(L"{}", Styled(value, portNumberFieldValueTextStyle));
-}
-
-
-void OutputCompactMidi1PortInfo(_In_ std::wstring const& fieldName, _In_ uint32_t const& portNumber, _In_ winrt::hstring const& portName, _In_ winrt::hstring const& portDeviceId)
-{
-    OutputFieldLabel(fieldName);
-    OutputFieldSeparator();
-
-    fmt::println(L"{:<3} - {:<31} - {}",
-        Styled(portNumber, portNumberFieldValueTextStyle),
-        Styled(std::wstring{ portName.c_str() }, entityNameFieldValueTextStyle),
-        Styled(std::wstring{ portDeviceId.c_str() }, entityIdentifierFieldValueTextStyle));
-}
-
-
-
 
 void OutputStringField(_In_ std::wstring const& fieldName, _In_ winrt::hstring const& value)
 {
-    OutputFieldLabel(fieldName);
-    OutputFieldSeparator();
-
-    fmt::println(L"{}", Styled(std::wstring{ value.c_str() }, fieldValueTextStyle));
+    mididiag::WriteField(fieldName, value);
 }
 
 void OutputStringField(_In_ std::wstring const& fieldName, _In_ std::wstring const& value)
 {
-    OutputFieldLabel(fieldName);
-    OutputFieldSeparator();
+    mididiag::WriteField(fieldName, value);
+}
 
-    fmt::println(L"{}", Styled(value, fieldValueTextStyle));
+// most names and descriptions are empty, and a line with nothing on it only makes the report longer
+void OutputStringFieldIfNotEmpty(_In_ std::wstring const& fieldName, _In_ std::wstring_view const value)
+{
+    if (!value.empty())
+    {
+        mididiag::WriteField(fieldName, value);
+    }
 }
 
 void OutputBooleanField(_In_ std::wstring const& fieldName, _In_ bool const& value)
 {
-    OutputFieldLabel(fieldName);
-    OutputFieldSeparator();
-
-    // TODO
-
-    std::wcout
-        << std::boolalpha
-        << value
-        << std::endl;
+    mididiag::WriteBoolField(fieldName, value);
 }
 
 void OutputGuidField(_In_ std::wstring const& fieldName, _In_ winrt::guid const& value)
 {
-    //OutputStringField(fieldName, internal::GuidToString(value));
-    OutputEntityIdentifierField(fieldName, winrt::hstring{ internal::GuidToString(value) });
+    mididiag::WriteStyledField(fieldName, internal::GuidToString(value), entityIdentifierFieldValueTextStyle);
 }
-
-
 
 void OutputTimestampField(_In_ std::wstring const& fieldName, _In_ uint64_t const value)
 {
-    OutputFieldLabel(fieldName);
-    OutputFieldSeparator();
-
-    fmt::println(L"{}", Styled(value, fieldValueTextStyle));
+    mididiag::WriteNumberField(fieldName, value);
 }
 
 void OutputDateTimeField(_In_ std::wstring const& fieldName, _In_ foundation::DateTime const& value)
 {
-    OutputFieldLabel(fieldName);
-    OutputFieldSeparator();
+    auto const formatted = mididiag::FormatLocalTime(value);
 
-    // The SDK hands back the Unix epoch for a time the service did not send, and 1601 for an unset one
-    if (value.time_since_epoch().count() == 0 ||
-        value == winrt::clock::from_sys(std::chrono::system_clock::time_point{}))
-    {
-        fmt::println(L"{}", Styled(std::wstring{ L"Not reported" }, fieldValueTextStyle));
-        return;
-    }
-
-    auto const fileTimeValue = winrt::clock::to_file_time(value).value;
-
-    FILETIME utcFileTime{};
-    utcFileTime.dwLowDateTime = static_cast<DWORD>(fileTimeValue & 0xFFFFFFFF);
-    utcFileTime.dwHighDateTime = static_cast<DWORD>(fileTimeValue >> 32);
-
-    SYSTEMTIME utcSystemTime{};
-    SYSTEMTIME localSystemTime{};
-
-    if (!FileTimeToSystemTime(&utcFileTime, &utcSystemTime) ||
-        !SystemTimeToTzSpecificLocalTime(nullptr, &utcSystemTime, &localSystemTime))
-    {
-        fmt::println(L"{}", Styled(std::wstring{ L"INVALID VALUE" }, fieldValueTextStyle));
-        return;
-    }
-
-    auto const formatted = fmt::format(L"{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
-        localSystemTime.wYear, localSystemTime.wMonth, localSystemTime.wDay,
-        localSystemTime.wHour, localSystemTime.wMinute, localSystemTime.wSecond);
-
-    fmt::println(L"{}", Styled(formatted, fieldValueTextStyle));
+    mididiag::WriteField(fieldName, formatted.empty() ? std::wstring{ L"Not reported" } : formatted);
 }
 
 void OutputCurrentTime()
@@ -179,133 +96,28 @@ void OutputCurrentTime()
 
 void OutputNumericField(_In_ std::wstring const& fieldName, _In_ uint32_t const value)
 {
-    OutputFieldLabel(fieldName);
-    OutputFieldSeparator();
-
-    // TODO
-
-    std::wcout
-        << std::dec
-        << value
-        << std::endl;
-}
-
-void OutputDoubleField(_In_ std::wstring const& fieldName, _In_ double const value, _In_ uint32_t precision)
-{
-    OutputFieldLabel(fieldName);
-    OutputFieldSeparator();
-
-    // TODO
-
-    std::wcout
-        << std::dec
-        << std::setprecision(precision)
-        << value
-        << std::endl;
+    mididiag::WriteNumberField(fieldName, value);
 }
 
 void OutputDecimalMillisecondsField(_In_ std::wstring const& fieldName, _In_ double const value, _In_ uint32_t precision)
 {
-    OutputFieldLabel(fieldName);
-    OutputFieldSeparator();
-
-    // TODO
-
-    std::wcout
-        << std::dec
-        << std::setprecision(precision)
-        << std::fixed
-        << value
-        << L" ms"
-        << std::endl;
+    mididiag::WriteField(fieldName, std::format(L"{:.{}f} ms", value, precision));
 }
-
-
 
 void OutputHexNumericField(_In_ std::wstring const& fieldName, _In_ uint32_t const value)
 {
-    OutputFieldLabel(fieldName);
-    OutputFieldSeparator();
-
-    // TODO
-
-    std::wcout
-        << L"0x"
-        << std::hex
-        << value
-        << std::endl;
-}
-
-
-bool OutputFileVersion(_In_ std::wstring const& fieldName, _In_ std::wstring const& fileName)
-{
-    DWORD handle{ 0 };
-
-    if (DWORD bufferSize = GetFileVersionInfoSize(fileName.c_str(), &handle); bufferSize > 0)
-    {
-        std::vector<byte> buffer;
-        buffer.resize(bufferSize);
-
-        if (GetFileVersionInfo(fileName.c_str(), 0, bufferSize, buffer.data()))
-        {
-            LPBYTE verInfoBuffer{ nullptr };
-            UINT verInfoBufferSize{ 0 };
-
-            if (VerQueryValue(buffer.data(), L"\\", (LPVOID*)&verInfoBuffer, &verInfoBufferSize))
-            {
-                if (verInfoBufferSize > 0 && verInfoBufferSize >= sizeof(VS_FIXEDFILEINFO))
-                {
-                    VS_FIXEDFILEINFO* verInfo = (VS_FIXEDFILEINFO*)(verInfoBuffer);
-
-                    OutputFieldLabel(fieldName);
-                    OutputFieldSeparator();
-
-                    // major.minor.build.revision format
-                    std::wcout
-                        << std::dec
-                        << static_cast<uint16_t>((verInfo->dwFileVersionMS >> 16) & 0xffff)
-                        << L"."
-                        << static_cast<uint16_t>((verInfo->dwFileVersionMS) & 0xffff)
-                        << L"."
-                        << static_cast<uint16_t>((verInfo->dwFileVersionLS >> 16) & 0xffff)
-                        << L"."
-                        << static_cast<uint16_t>((verInfo->dwFileVersionLS) & 0xffff)
-                        << std::endl;
-                }
-            }
-        }
-    }
-
-    return false;
+    mididiag::WriteField(fieldName, std::format(L"0x{:x}", value));
 }
 
 
 void OutputError(_In_ winrt::hresult_error const& error)
 {
-    OutputFieldLabel(MIDIDIAG_FIELD_LABEL_ERROR);
-    OutputFieldSeparator();
-
-    std::wcout
-        << std::hex
-        << error.code()
-        << L" : ";
-
-    std::wcout
-        /*<< hue::light_red*/
-        << error.message().c_str()
-        << std::endl;
-
+    mididiag::WriteError(mididiag::FormatHResult(error.code()) + L" : " + std::wstring{ error.message() });
 }
 
 void OutputError(_In_ std::wstring const& errorMessage)
 {
-    OutputFieldLabel(MIDIDIAG_FIELD_LABEL_ERROR);
-    OutputFieldSeparator();
-
-    std::wcout 
-        /*<< hue::light_red*/
-        << errorMessage
-        << std::endl;
+    mididiag::WriteError(errorMessage);
 }
 
 void OutputRegStringValue(std::wstring label, HKEY const key, std::wstring value)
@@ -349,27 +161,220 @@ void OutputRegDWordNumericValue(std::wstring label, HKEY const key, std::wstring
 }
 
 
-void OutputCOMComponentInfo(std::wstring const dllNameFieldName, std::wstring const classid)
+namespace
 {
-    // InprocServer32 Value
-
-    std::wstring inprocServerKeyLocation = std::wstring{ L"CLSID\\" } + classid + std::wstring{ L"\\InprocServer32" };
-    wil::unique_hkey pathKey{ };    // the path is the "(default)" entry
-
-    if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_CLASSES_ROOT, inprocServerKeyLocation.c_str(), pathKey, wil::reg::key_access::read)))
+    // What the registry section found, so the transport section can name a transport that is
+    // registered and enabled but that the service did not report
+    struct RegisteredTransport
     {
-        auto path = wil::reg::try_get_value_string(pathKey.get(), nullptr);
+        std::wstring KeyName{};
+        std::wstring ClassId{};
+        bool Expected{ true };
+    };
 
-        if (path.has_value())
+    std::vector<RegisteredTransport> g_registeredTransports{};
+
+    // "{0F273B18-...}" and "0f273b18-..." are the same id
+    std::wstring NormalizedGuidText(_In_ std::wstring_view const text)
+    {
+        std::wstring normalized{};
+
+        for (auto const ch : text)
         {
-            OutputStringField(dllNameFieldName, path.value());
-            OutputFileVersion(MIDIDIAG_FIELD_LABEL_FILE_VERSION, path.value());
+            if (ch != L'{' && ch != L'}' && !::iswspace(ch))
+            {
+                normalized += static_cast<wchar_t>(::towlower(ch));
+            }
+        }
+
+        return normalized;
+    }
+
+    std::wstring ExpandedPath(_In_ std::wstring const& path)
+    {
+        if (path.find(L'%') == std::wstring::npos)
+        {
+            return path;
+        }
+
+        auto const required = ::ExpandEnvironmentStringsW(path.c_str(), nullptr, 0);
+
+        if (required == 0)
+        {
+            return path;
+        }
+
+        std::wstring expanded(required, L'\0');
+
+        if (::ExpandEnvironmentStringsW(path.c_str(), expanded.data(), required) == 0)
+        {
+            return path;
+        }
+
+        expanded.resize(required - 1);
+
+        return expanded;
+    }
+
+    // the DLL a class id loads, or empty when it is not registered
+    std::wstring GetInprocServerPath(_In_ std::wstring const& classId)
+    {
+        auto const location = std::wstring{ L"CLSID\\" } + classId + L"\\InprocServer32";
+
+        wil::unique_hkey key{};
+
+        if (FAILED(wil::reg::open_unique_key_nothrow(HKEY_CLASSES_ROOT, location.c_str(), key, wil::reg::key_access::read)))
+        {
+            return {};
+        }
+
+        // the path is the "(default)" value, which an installer can write either way
+        try
+        {
+            if (auto const path = wil::reg::try_get_value_string(key.get(), nullptr); path.has_value())
+            {
+                return ExpandedPath(path.value());
+            }
+        }
+        catch (...)
+        {
+        }
+
+        try
+        {
+            return wil::reg::try_get_value_expanded_string(key.get(), nullptr).value_or(std::wstring{});
+        }
+        catch (...)
+        {
+            return {};
         }
     }
-    else
+
+    // adds version= and dll= for a class id, or dll="" when nothing is registered for it
+    bool AddComponentFile(_Inout_ mididiag::KeyValueText& values, _In_ std::wstring const& classId)
     {
-        OutputStringField(dllNameFieldName, std::wstring{ L"ERROR" });
-        OutputError(internal::ResourceGetWString(IDS_ERROR_NO_INPROC_SERVER));
+        auto const path = GetInprocServerPath(classId);
+
+        if (path.empty())
+        {
+            values.Add(L"dll", L"");
+            return false;
+        }
+
+        auto const version = FileVersionString(path);
+
+        values.Add(L"version", version.empty() ? std::wstring{ L"unknown" } : version)
+            .Add(L"dll", path);
+
+        return true;
+    }
+
+    // The service runs as Local Service. A transport key that account cannot read keeps the
+    // transport from loading, and nothing else says why. This checks the key's own permissions
+    // for the groups the service is always in. When it cannot tell, it says yes.
+    bool LocalServiceCanRead(_In_ HKEY const key)
+    {
+        PACL dacl{ nullptr };
+        PSECURITY_DESCRIPTOR descriptor{ nullptr };
+
+        if (::GetSecurityInfo(key, SE_REGISTRY_KEY, DACL_SECURITY_INFORMATION, nullptr, nullptr, &dacl, nullptr, &descriptor) != ERROR_SUCCESS)
+        {
+            return true;
+        }
+
+        wil::unique_hlocal_security_descriptor const freeDescriptor{ descriptor };
+
+        // no DACL at all lets everyone in
+        if (dacl == nullptr)
+        {
+            return true;
+        }
+
+        std::vector<std::vector<BYTE>> serviceSids{};
+
+        for (auto const type : { WinWorldSid, WinAuthenticatedUserSid, WinBuiltinUsersSid, WinLocalServiceSid, WinServiceSid, WinLocalSid })
+        {
+            std::vector<BYTE> sid(SECURITY_MAX_SID_SIZE);
+            DWORD size{ static_cast<DWORD>(sid.size()) };
+
+            if (::CreateWellKnownSid(type, nullptr, sid.data(), &size))
+            {
+                serviceSids.push_back(std::move(sid));
+            }
+        }
+
+        // the service's own SID, NT SERVICE\midisrv
+        {
+            std::vector<BYTE> sid(SECURITY_MAX_SID_SIZE);
+            DWORD sidSize{ static_cast<DWORD>(sid.size()) };
+            wchar_t domain[256]{};
+            DWORD domainSize{ ARRAYSIZE(domain) };
+            SID_NAME_USE use{};
+
+            if (::LookupAccountNameW(nullptr, L"NT SERVICE\\midisrv", sid.data(), &sidSize, domain, &domainSize, &use))
+            {
+                serviceSids.push_back(std::move(sid));
+            }
+        }
+
+        GENERIC_MAPPING mapping{ KEY_READ, KEY_WRITE, KEY_EXECUTE, KEY_ALL_ACCESS };
+        ACCESS_MASK allowed{ 0 };
+        ACCESS_MASK denied{ 0 };
+
+        for (DWORD i = 0; i < dacl->AceCount; i++)
+        {
+            ACE_HEADER* header{ nullptr };
+
+            // an inherit-only entry is for subkeys, not this key
+            if (!::GetAce(dacl, i, reinterpret_cast<LPVOID*>(&header)) || header == nullptr ||
+                (header->AceFlags & INHERIT_ONLY_ACE) != 0)
+            {
+                continue;
+            }
+
+            PSID aceSid{ nullptr };
+            ACCESS_MASK mask{ 0 };
+
+            if (header->AceType == ACCESS_ALLOWED_ACE_TYPE)
+            {
+                auto const ace = reinterpret_cast<ACCESS_ALLOWED_ACE*>(header);
+                aceSid = &ace->SidStart;
+                mask = ace->Mask;
+            }
+            else if (header->AceType == ACCESS_DENIED_ACE_TYPE)
+            {
+                auto const ace = reinterpret_cast<ACCESS_DENIED_ACE*>(header);
+                aceSid = &ace->SidStart;
+                mask = ace->Mask;
+            }
+            else
+            {
+                continue;
+            }
+
+            bool const applies = std::any_of(serviceSids.begin(), serviceSids.end(), [aceSid](std::vector<BYTE> const& sid)
+                {
+                    return ::EqualSid(aceSid, const_cast<BYTE*>(sid.data())) != FALSE;
+                });
+
+            if (!applies)
+            {
+                continue;
+            }
+
+            ::MapGenericMask(&mask, &mapping);
+
+            if (header->AceType == ACCESS_ALLOWED_ACE_TYPE)
+            {
+                allowed |= mask;
+            }
+            else
+            {
+                denied |= mask;
+            }
+        }
+
+        return ((allowed & ~denied) & KEY_QUERY_VALUE) == KEY_QUERY_VALUE;
     }
 }
 
@@ -408,6 +413,9 @@ bool DoSectionDrivers32WOWRegistryEntries(_In_ bool const verbose)
                         if (valueData.name == L"midi0")
                         {
                             OutputError(internal::ResourceGetWString(IDS_ERROR_MIDI0_ENTRY_INVALID));
+
+                            mididiag::AddFinding(L"drivers32_midi0",
+                                mididiag::FormatResourceString(IDS_FINDING_DRIVERS32_MIDI0, L"HKLM\\" + drivers32KeyLocation));
                         }
                         else if (internal::ToLowerTrimmedWStringCopy(val.value()) == L"wdmaud2.drv")
                         {
@@ -429,6 +437,13 @@ bool DoSectionDrivers32WOWRegistryEntries(_In_ bool const verbose)
 
             if (!wdmaud2drvFound)
             {
+                // Legacy API mode does not use wdmaud2.drv, so its absence changes nothing there
+                if (!mididiag::Context().LegacyApiMode)
+                {
+                    mididiag::AddFinding(L"drivers32_no_wdmaud2",
+                        mididiag::FormatResourceString(IDS_FINDING_NO_WDMAUD2, L"HKLM\\" + drivers32KeyLocation));
+                }
+
                 OutputError(internal::ResourceGetWString(IDS_ERROR_NO_WDMAUD2_ENTRY) + drivers32KeyLocation + L".");
                 OutputError(internal::ResourceGetWString(IDS_ERROR_NO_WDMAUD2_ENTRY_TYPICAL));
                 OutputError(internal::ResourceGetWString(IDS_ERROR_NO_WDMAUD2_ENTRY_REMEDY));
@@ -489,6 +504,9 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
                         if (valueData.name == L"midi0")
                         {
                             OutputError(internal::ResourceGetWString(IDS_ERROR_MIDI0_ENTRY_INVALID));
+
+                            mididiag::AddFinding(L"drivers32_midi0",
+                                mididiag::FormatResourceString(IDS_FINDING_DRIVERS32_MIDI0, L"HKLM\\" + drivers32KeyLocation));
                         }
                         else if (internal::ToLowerTrimmedWStringCopy(val.value()) == L"wdmaud2.drv")
                         {
@@ -519,6 +537,13 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
 
             if (!wdmaud2drvFound)
             {
+                // Legacy API mode does not use wdmaud2.drv, so its absence changes nothing there
+                if (!mididiag::Context().LegacyApiMode)
+                {
+                    mididiag::AddFinding(L"drivers32_no_wdmaud2",
+                        mididiag::FormatResourceString(IDS_FINDING_NO_WDMAUD2, L"HKLM\\" + drivers32KeyLocation));
+                }
+
                 OutputError(internal::ResourceGetWString(IDS_ERROR_NO_WDMAUD2_ENTRY) + drivers32KeyLocation + L".");
                 OutputError(internal::ResourceGetWString(IDS_ERROR_NO_WDMAUD2_ENTRY_TYPICAL));
                 OutputError(internal::ResourceGetWString(IDS_ERROR_NO_WDMAUD2_ENTRY_REMEDY));
@@ -592,6 +617,44 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
             OutputRegDWordNumericValue(MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_DISCOVERY_TIMEOUT, rootKey.get(), MIDI_DISCOVERY_TIMEOUT_REG_VALUE);
             OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_USE_MMCSS, rootKey.get(), MIDI_USE_MMCSS_REG_VALUE);
 
+            // the MIDI 1.0 port naming every endpoint uses unless it has its own setting
+            try
+            {
+                if (auto const naming = wil::reg::try_get_value_dword(rootKey.get(), L"DefaultMidi1PortNaming"); naming.has_value())
+                {
+                    mididiag::WriteField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_NAME_TABLE_SELECTION, mididiag::KeyValueText{}
+                        .AddNumber(L"value", naming.value())
+                        .Add(L"meaning", naming.value() == 0 ?
+                            std::wstring{ L"Use the built-in default" } :
+                            GetDisplayValueFromNamingSelection(static_cast<midi2enum::Midi1PortNamingApproach>(naming.value()))));
+                }
+                else
+                {
+                    OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_NAME_TABLE_SELECTION, std::wstring{ L"Not present" });
+                }
+            }
+            catch (...)
+            {
+                OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_NAME_TABLE_SELECTION, std::wstring{ L"INVALID VALUE" });
+            }
+
+            // Without it nothing can be saved, and until recently only MIDI Settings created it
+            std::optional<std::wstring> configFile{};
+
+            try
+            {
+                configFile = wil::reg::try_get_value_string(rootKey.get(), MIDI_CONFIG_FILE_REG_VALUE);
+            }
+            catch (...)
+            {
+            }
+
+            if (!mididiag::Context().LegacyApiMode &&
+                (!configFile.has_value() || internal::TrimmedWStringCopy(configFile.value()).empty()))
+            {
+                mididiag::AddFinding(L"config_not_registered", internal::ResourceGetWString(IDS_FINDING_CONFIG_NOT_REGISTERED));
+            }
+
             OutputItemSeparator();
         }
         else
@@ -611,7 +674,6 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
                 if (midisrvImagePath.has_value())
                 {
                     OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_MIDISRV_EXENAME, midisrvImagePath.value());
-               //     OutputFileVersion(MIDIDIAG_FIELD_LABEL_FILE_VERSION, midisrvImagePath.value());
                 }
                 else
                 {
@@ -631,60 +693,98 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
 
         OutputItemSeparator();
 
-        //  List midisrvtransport info, even though it is not in the Windows MIDI Services registry key
+        // Transports. The Midisrv transport loads in the app, not the service, so it is not
+        // under Transport Plugins, and the diagnostics transport is built in.
+        for (auto const& [name, classId] : std::initializer_list<std::pair<PCWSTR, PCWSTR>>{
+            { L"(Midisrv Transport)", L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}" },
+            { L"(Diagnostics Transport)", L"{ac9b5417-3fe0-4e62-960f-034ee4235a1a}" } })
+        {
+            mididiag::KeyValueText values{};
+            values.Add(L"key", name).Add(L"clsid", classId);
 
-        std::wstring midisrvTransportClsidString{ L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}" };
-        OutputEntityNameField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME, winrt::hstring{ L"(Midisrv Transport)" });
-        OutputEntityIdentifierField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID, winrt::hstring{ midisrvTransportClsidString });
-        OutputCOMComponentInfo(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_DLLNAME, midisrvTransportClsidString);
-        OutputItemSeparator();
+            bool const registered = AddComponentFile(values, classId);
 
+            mididiag::WriteField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT, values);
 
-        std::wstring diagnosticsTransportClsidString{ L"{ac9b5417-3fe0-4e62-960f-034ee4235a1a}" };
-        OutputEntityNameField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME, winrt::hstring{ L"(Diagnostics Transport)" });
-        OutputEntityIdentifierField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID, winrt::hstring{ diagnosticsTransportClsidString });
-        OutputCOMComponentInfo(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_DLLNAME, diagnosticsTransportClsidString);
-        OutputItemSeparator();
-
-
-        //  TODO: List diagnostics transport info, even though it is not in the Windows MIDI Services registry key
-
-        // TODO: list all values under message processing plugins
-
-
-
-        // list all values under transport plugins
+            if (!registered)
+            {
+                OutputError(internal::ResourceGetWString(IDS_ERROR_NO_INPROC_SERVER));
+            }
+        }
 
         wil::unique_hkey transportPluginsKey{ };
         if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY, transportPluginsKey)))
         {
             for (const auto& keyData : wil::make_range(wil::reg::key_iterator{ transportPluginsKey.get() }, wil::reg::key_iterator{}))
             {
-                // name of the transport in the registry (this doesn't really mean anything)
-                OutputEntityNameField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME, winrt::hstring{ keyData.name });
+                mididiag::KeyValueText values{};
+                values.Add(L"key", keyData.name);
 
                 wil::unique_hkey key{ };
-                if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, std::wstring(std::wstring(MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY) + L"\\" + keyData.name).c_str(), key)))
+                auto const openResult = wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE,
+                    std::wstring(std::wstring(MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY) + L"\\" + keyData.name).c_str(), key, wil::reg::key_access::read);
+
+                if (FAILED(openResult))
                 {
-                    OutputRegStringValue(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID, key.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
-                    OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_ENABLED, key.get(), MIDI_PLUGIN_ENABLED_REG_VALUE);
+                    values.AddBool(L"readable", false).Add(L"error", mididiag::FormatHResult(openResult));
+                    mididiag::WriteField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT, values);
 
-                    // resolve the DLL path for the transport
+                    mididiag::AddFinding(L"transport_key_unreadable",
+                        mididiag::FormatResourceString(IDS_FINDING_TRANSPORT_KEY_UNREADABLE, keyData.name));
 
-                    auto midiClsid = wil::reg::try_get_value_string(key.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
-
-                    if (midiClsid.has_value())
-                    {
-                        OutputCOMComponentInfo(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_DLLNAME, midiClsid.value());
-                    }
-                    else
-                    {
-                        OutputError(internal::ResourceGetWString(IDS_ERROR_NO_TRANSPORT_CLSID));
-                    }
-
+                    continue;
                 }
 
-                OutputItemSeparator();
+                // missing or of the wrong type reads as enabled, the way the service reads it
+                bool enabled{ true };
+
+                try
+                {
+                    if (auto const value = wil::reg::try_get_value_dword(key.get(), MIDI_PLUGIN_ENABLED_REG_VALUE); value.has_value())
+                    {
+                        enabled = value.value() != 0;
+                    }
+                }
+                catch (...)
+                {
+                }
+
+                std::wstring classId{};
+
+                try
+                {
+                    classId = wil::reg::try_get_value_string(key.get(), MIDI_PLUGIN_CLSID_REG_VALUE).value_or(std::wstring{});
+                }
+                catch (...)
+                {
+                }
+
+                values.AddBool(L"enabled", enabled).Add(L"clsid", classId);
+
+                if (!classId.empty())
+                {
+                    AddComponentFile(values, classId);
+                }
+
+                bool const serviceCanRead = LocalServiceCanRead(key.get());
+
+                if (!serviceCanRead)
+                {
+                    values.AddBool(L"service_can_read", false);
+
+                    mididiag::AddFinding(L"transport_key_service_cant_read",
+                        mididiag::FormatResourceString(IDS_FINDING_TRANSPORT_KEY_SERVICE_CANT_READ, keyData.name));
+                }
+
+                mididiag::WriteField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT, values);
+
+                if (classId.empty())
+                {
+                    OutputError(internal::ResourceGetWString(IDS_ERROR_NO_TRANSPORT_CLSID));
+                }
+
+                // one the service cannot read already has its own finding
+                g_registeredTransports.push_back({ keyData.name, classId, enabled && serviceCanRead });
             }
         }
         else
@@ -714,23 +814,44 @@ bool DoSectionTransports(_In_ bool const verbose)
 
         auto transports = rept::MidiReporting::GetInstalledTransportPlugins();
 
-        if (transports != nullptr && transports.Size() > 0)
-        {
-            for (auto const& transport : transports)
-            {
-                OutputEntityNameField(MIDIDIAG_FIELD_LABEL_TRANSPORT_NAME, transport.Name());
-                OutputGuidField(MIDIDIAG_FIELD_LABEL_TRANSPORT_ID, transport.TransportId());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_CODE, transport.TransportCode());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_VERSION, transport.Version());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_AUTHOR, transport.Author());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_DESCRIPTION, transport.Description());
-                OutputItemSeparator();
-            }
-        }
-        else
+        if (transports == nullptr || transports.Size() == 0)
         {
             OutputError(internal::ResourceGetWString(IDS_ERROR_NO_TRANSPORTS_FOUND));
             return false;
+        }
+
+        std::vector<std::wstring> reportedIds{};
+
+        for (auto const& transport : transports)
+        {
+            mididiag::WriteField(MIDIDIAG_FIELD_LABEL_TRANSPORT, mididiag::KeyValueText{}
+                .Add(L"code", transport.TransportCode())
+                .Add(L"id", internal::GuidToString(transport.TransportId()))
+                .Add(L"version", transport.Version())
+                .Add(L"author", transport.Author())
+                .Add(L"name", transport.Name()));
+
+            OutputTransportCapabilities(transport.TransportId(), transport.TransportCode());
+
+            reportedIds.push_back(NormalizedGuidText(internal::GuidToString(transport.TransportId())));
+        }
+
+        // The service builds this list from the registry each time it is asked, so a transport
+        // that is registered and enabled but missing here failed to load or to describe itself.
+        for (auto const& registered : g_registeredTransports)
+        {
+            if (!registered.Expected || registered.ClassId.empty() ||
+                std::find(reportedIds.begin(), reportedIds.end(), NormalizedGuidText(registered.ClassId)) != reportedIds.end())
+            {
+                continue;
+            }
+
+            mididiag::WriteField(MIDIDIAG_FIELD_LABEL_TRANSPORT_NOT_REPORTED, mididiag::KeyValueText{}
+                .Add(L"key", registered.KeyName)
+                .Add(L"clsid", registered.ClassId));
+
+            mididiag::AddFinding(L"transport_not_reported",
+                mididiag::FormatResourceString(IDS_FINDING_TRANSPORT_NOT_REPORTED, registered.KeyName));
         }
     }
     catch (...)
@@ -743,8 +864,108 @@ bool DoSectionTransports(_In_ bool const verbose)
 }
 
 
+namespace
+{
+    std::wstring LowerId(_In_ std::wstring_view const id)
+    {
+        std::wstring lower{ id };
+
+        for (auto& ch : lower)
+        {
+            ch = static_cast<wchar_t>(::towlower(ch));
+        }
+
+        return lower;
+    }
+
+    uint8_t GroupIndex(_In_ midi2::MidiGroup const& group)
+    {
+        return group == nullptr ? 0 : group.Index();
+    }
+
+    uint8_t GroupNumber(_In_ midi2::MidiGroup const& group)
+    {
+        return group == nullptr ? 0 : group.DisplayValue();
+    }
+
+    PCWSTR DirectionName(_In_ midi2enum::MidiGroupTerminalBlockDirection const direction)
+    {
+        switch (direction)
+        {
+        case midi2enum::MidiGroupTerminalBlockDirection::BlockInput:    return L"destination";
+        case midi2enum::MidiGroupTerminalBlockDirection::BlockOutput:   return L"source";
+        default:                                                        return L"bidirectional";
+        }
+    }
+
+    PCWSTR DirectionName(_In_ midi2enum::MidiFunctionBlockDirection const direction)
+    {
+        switch (direction)
+        {
+        case midi2enum::MidiFunctionBlockDirection::BlockInput:     return L"destination";
+        case midi2enum::MidiFunctionBlockDirection::BlockOutput:    return L"source";
+        case midi2enum::MidiFunctionBlockDirection::Bidirectional:  return L"bidirectional";
+        default:                                                    return L"undefined";
+        }
+    }
+
+    PCWSTR Midi10ConnectionName(_In_ midi2enum::MidiFunctionBlockRepresentsMidi10Connection const connection)
+    {
+        switch (connection)
+        {
+        case midi2enum::MidiFunctionBlockRepresentsMidi10Connection::Not10:                     return L"no";
+        case midi2enum::MidiFunctionBlockRepresentsMidi10Connection::YesBandwidthUnrestricted:  return L"unrestricted";
+        case midi2enum::MidiFunctionBlockRepresentsMidi10Connection::YesBandwidthRestricted:    return L"restricted";
+        default:                                                                                return L"reserved";
+        }
+    }
+
+    PCWSTR Midi1PortFlowName(_In_ midi2enum::Midi1PortFlow const flow)
+    {
+        return flow == midi2enum::Midi1PortFlow::MidiMessageSource ? L"in" : L"out";
+    }
+
+    PCWSTR ProtocolName(_In_ midi2enum::MidiProtocol const protocol)
+    {
+        switch (protocol)
+        {
+        case midi2enum::MidiProtocol::Midi1:    return L"midi1";
+        case midi2enum::MidiProtocol::Midi2:    return L"midi2";
+        default:                                return L"default";
+        }
+    }
+
+    PCWSTR PurposeName(_In_ midi2enum::MidiEndpointDevicePurpose const purpose)
+    {
+        switch (purpose)
+        {
+        case midi2enum::MidiEndpointDevicePurpose::VirtualDeviceResponder:  return L"virtual_device_responder";
+        case midi2enum::MidiEndpointDevicePurpose::InBoxGeneralMidiSynth:   return L"general_midi_synth";
+        case midi2enum::MidiEndpointDevicePurpose::DiagnosticLoopback:      return L"diagnostic_loopback";
+        case midi2enum::MidiEndpointDevicePurpose::DiagnosticPing:          return L"diagnostic_ping";
+        default:                                                            return L"normal";
+        }
+    }
+
+    // 00-21-09
+    std::wstring HexBytes(_In_ winrt::com_array<uint8_t> const& bytes)
+    {
+        std::wstring text{};
+
+        for (auto const byte : bytes)
+        {
+            text += text.empty() ? L"" : L"-";
+            text += std::format(L"{:02X}", byte);
+        }
+
+        return text;
+    }
+}
+
 bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
 {
+    UNREFERENCED_PARAMETER(verbose);
+
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_MIDI2_API_ENDPOINTS);
 
     // list devices
@@ -769,6 +990,23 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
         return false;
     }
 
+    // every MIDI 1.0 port at once, grouped by the endpoint it belongs to
+    std::map<std::wstring, std::vector<legacy::MidiLegacyPortDeviceInformation>> portsByEndpoint{};
+
+    try
+    {
+        for (auto const& port : legacy::MidiLegacyPortDeviceInformation::FindAll())
+        {
+            portsByEndpoint[LowerId(port.AssociatedEndpointDeviceId())].push_back(port);
+        }
+    }
+    catch (...)
+    {
+        // the endpoints are still worth listing without their ports
+    }
+
+    auto& context = mididiag::Context();
+
     if (devices != nullptr && devices.Size() > 0)
     {
         for (uint32_t i = 0; i < devices.Size(); i++)
@@ -784,6 +1022,10 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
             auto transportInfo = device.GetTransportSuppliedInfo();
             auto userInfo = device.GetUserSuppliedInfo();
             auto endpointInfo = device.GetDeclaredEndpointInfo();
+            auto const endpointKey = LowerId(device.EndpointDeviceId());
+
+            // the sessions section uses these to name what each app has open
+            context.EndpointNames[endpointKey] = std::wstring{ device.Name() };
 
             // These names should not be localized because customers may parse these output fields
 
@@ -791,18 +1033,34 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
             OutputEntityNameField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_NAME, device.Name());
             OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_CODE, transportInfo.TransportCode());
 
-            if (verbose)
+            if (device.EndpointPurpose() != midi2enum::MidiEndpointDevicePurpose::NormalMessageEndpoint)
             {
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_NAME, userInfo.Name());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ENDPOINT_SUPPLIED_NAME, endpointInfo.Name());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_NAME, transportInfo.Name());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_DESC, userInfo.Description());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_DESC, transportInfo.Description());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PURPOSE, std::wstring{ PurposeName(device.EndpointPurpose()) });
             }
 
+            OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_NAME, userInfo.Name());
+            OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ENDPOINT_SUPPLIED_NAME, endpointInfo.Name());
+            OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_NAME, transportInfo.Name());
+            OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_DESC, userInfo.Description());
+            OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_DESC, transportInfo.Description());
+            OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_MANUFACTURER, transportInfo.ManufacturerName());
+
+            auto const nativeFormat = transportInfo.NativeDataFormat();
+            bool const isUmpNative = nativeFormat == midi2enum::MidiEndpointNativeDataFormat::UniversalMidiPacketFormat;
+
+            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_NATIVE_DATA_FORMAT, std::wstring{ isUmpNative ? L"ump" :
+                nativeFormat == midi2enum::MidiEndpointNativeDataFormat::Midi1ByteFormat ? L"midi1_bytestream" : L"unknown" });
+
+            OutputBooleanField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_MULTI_CLIENT, transportInfo.SupportsMultiClient());
             OutputBooleanField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_MUTED, device.IsMuted());
             OutputBooleanField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_DISCOVERY_COMPLETE, device.IsEndpointDiscoveryComplete());
 
+            if (device.ContainerId() != winrt::guid{})
+            {
+                OutputGuidField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_CONTAINER_ID, device.ContainerId());
+            }
+
+            OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_DRIVER_DEVICE_INTERFACE, transportInfo.DriverDeviceInterfaceId());
 
             if (device.EndpointPurpose() == midi2enum::MidiEndpointDevicePurpose::DiagnosticLoopback ||
                 device.EndpointPurpose() == midi2enum::MidiEndpointDevicePurpose::DiagnosticPing)
@@ -811,159 +1069,195 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
                 continue;
             }
 
-            // show any GTBs. This is needed to help debug some winmm enumeration issues
+            // what a UMP endpoint said about itself when it was discovered
+            if (isUmpNative)
+            {
+                mididiag::WriteField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_DECLARED_ENDPOINT, mididiag::KeyValueText{}
+                    .Add(L"ump_version", std::format(L"{}.{}", endpointInfo.SpecificationVersionMajor(), endpointInfo.SpecificationVersionMinor()))
+                    .AddBool(L"midi1", endpointInfo.SupportsMidi10Protocol())
+                    .AddBool(L"midi2", endpointInfo.SupportsMidi20Protocol())
+                    .AddBool(L"jr_receive", endpointInfo.SupportsReceivingJitterReductionTimestamps())
+                    .AddBool(L"jr_send", endpointInfo.SupportsSendingJitterReductionTimestamps())
+                    .AddBool(L"static_function_blocks", endpointInfo.HasStaticFunctionBlocks())
+                    .AddNumber(L"function_blocks", endpointInfo.DeclaredFunctionBlockCount())
+                    .AddIfNotEmpty(L"product_instance_id", endpointInfo.ProductInstanceId()));
+
+                if (auto const identity = device.GetDeclaredDeviceIdentity(); identity != nullptr)
+                {
+                    auto const sysExId = identity.SystemExclusiveId();
+                    auto const revision = identity.SoftwareRevisionLevel();
+
+                    bool const anyIdentity =
+                        std::any_of(sysExId.begin(), sysExId.end(), [](uint8_t const b) { return b != 0; }) ||
+                        identity.DeviceFamilyLsb() != 0 || identity.DeviceFamilyMsb() != 0 ||
+                        identity.DeviceFamilyModelNumberLsb() != 0 || identity.DeviceFamilyModelNumberMsb() != 0;
+
+                    // bytes in the order the device sends them, least significant first
+                    if (anyIdentity)
+                    {
+                        mididiag::WriteField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_DECLARED_DEVICE_IDENTITY, mididiag::KeyValueText{}
+                            .Add(L"sysex_id", HexBytes(sysExId))
+                            .Add(L"family", std::format(L"{:02X}-{:02X}", identity.DeviceFamilyLsb(), identity.DeviceFamilyMsb()))
+                            .Add(L"model", std::format(L"{:02X}-{:02X}", identity.DeviceFamilyModelNumberLsb(), identity.DeviceFamilyModelNumberMsb()))
+                            .Add(L"revision", HexBytes(revision)));
+                    }
+                }
+
+                if (auto const stream = device.GetDeclaredStreamConfiguration(); stream != nullptr)
+                {
+                    mididiag::WriteField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_STREAM_CONFIGURATION, mididiag::KeyValueText{}
+                        .Add(L"protocol", ProtocolName(stream.Protocol()))
+                        .AddBool(L"jr_receive", stream.ReceiveJitterReductionTimestamps())
+                        .AddBool(L"jr_send", stream.SendJitterReductionTimestamps()));
+                }
+            }
+
+            // the customer's own settings that change what is sent to the device
+            if (userInfo.RequiresNoteOffTranslation())
+            {
+                OutputBooleanField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_NOTE_OFF_TRANSLATION, true);
+            }
+
+            if (userInfo.SupportsMidiPolyphonicExpression())
+            {
+                OutputBooleanField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_SUPPORTS_MPE, true);
+            }
+
+            if (userInfo.RecommendedControlChangeAutomationIntervalMilliseconds() != 0)
+            {
+                OutputNumericField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_RECOMMENDED_CC_INTERVAL, userInfo.RecommendedControlChangeAutomationIntervalMilliseconds());
+            }
+
+            if (userInfo.UseCustomMidiOutgoingLatencyTicksForScheduling() ||
+                userInfo.CustomMidiOutgoingLatencyTicks() != 0 ||
+                userInfo.CalculatedMidiOutgoingLatencyTicks() != 0)
+            {
+                mididiag::WriteField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_OUTGOING_LATENCY, mididiag::KeyValueText{}
+                    .AddBool(L"use_custom", userInfo.UseCustomMidiOutgoingLatencyTicksForScheduling())
+                    .AddSignedNumber(L"custom_ticks", userInfo.CustomMidiOutgoingLatencyTicks())
+                    .AddSignedNumber(L"calculated_ticks", userInfo.CalculatedMidiOutgoingLatencyTicks()));
+            }
+
+            // blocks decide which MIDI 1.0 ports exist and what they are called
 
             for (auto const& gtb : device.GetGroupTerminalBlocks())
             {
-                WriteBlankLine();
-
-                OutputPortNumberField(MIDIDIAG_FIELD_LABEL_GTB_NUMBER, gtb.Number());
-                OutputEntityNameField(MIDIDIAG_FIELD_LABEL_GTB_NAME, gtb.Name());
-                OutputNumericField(MIDIDIAG_FIELD_LABEL_GTB_FIRST_GROUP, gtb.FirstGroup().DisplayValue());
-                OutputNumericField(MIDIDIAG_FIELD_LABEL_GTB_GROUP_COUNT, gtb.GroupCount());
-
-                std::wstring gtbDirection{};
-
-                if (gtb.Direction() == midi2enum::MidiGroupTerminalBlockDirection::Bidirectional)
-                {
-                    gtbDirection = L"Bidirectional";
-                }
-                else if (gtb.Direction() == midi2enum::MidiGroupTerminalBlockDirection::BlockInput)
-                {
-                    gtbDirection = L"Message Destination";
-                }
-                else if (gtb.Direction() == midi2enum::MidiGroupTerminalBlockDirection::BlockOutput)
-                {
-                    gtbDirection = L"Message Source";
-                }
-
-                OutputStringField(MIDIDIAG_FIELD_LABEL_GTB_DIRECTION, gtbDirection);
+                mididiag::WriteField(MIDIDIAG_FIELD_LABEL_GTB, mididiag::KeyValueText{}
+                    .AddNumber(L"number", gtb.Number())
+                    .Add(L"direction", DirectionName(gtb.Direction()))
+                    .AddNumber(L"first_group", GroupNumber(gtb.FirstGroup()))
+                    .AddNumber(L"groups", gtb.GroupCount())
+                    .Add(L"name", gtb.Name()));
             }
-
-            if (device.GetGroupTerminalBlocks().Size() > 0)
-            {
-                WriteBlankLine();
-            }
-
-
-            // Show function blocks. Necessary especially for MIDI 2.0 devices which have no GTBs. Also helps decide if a port should be created
 
             for (auto const& fb : device.GetDeclaredFunctionBlocks())
             {
-                WriteBlankLine();
-
-                OutputPortNumberField(MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_NUMBER, fb.Number());
-                OutputEntityNameField(MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_NAME, fb.Name());
-                OutputNumericField(MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_FIRST_GROUP, fb.FirstGroup().DisplayValue());
-                OutputNumericField(MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_GROUP_COUNT, fb.GroupCount());
-                OutputBooleanField(MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_ACTIVE, fb.IsActive());
-
-                std::wstring gtbDirection{};
-
-                if (fb.Direction() == midi2enum::MidiFunctionBlockDirection::Bidirectional)
-                {
-                    gtbDirection = L"Bidirectional";
-                }
-                else if (fb.Direction() == midi2enum::MidiFunctionBlockDirection::BlockInput)
-                {
-                    gtbDirection = L"Message Destination";
-                }
-                else if (fb.Direction() == midi2enum::MidiFunctionBlockDirection::BlockOutput)
-                {
-                    gtbDirection = L"Message Source";
-                }
-
-                OutputStringField(MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_DIRECTION, gtbDirection);
+                mididiag::WriteField(MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK, mididiag::KeyValueText{}
+                    .AddNumber(L"number", fb.Number())
+                    .AddBool(L"active", fb.IsActive())
+                    .Add(L"direction", DirectionName(fb.Direction()))
+                    .AddNumber(L"first_group", GroupNumber(fb.FirstGroup()))
+                    .AddNumber(L"groups", fb.GroupCount())
+                    .Add(L"midi1", Midi10ConnectionName(fb.RepresentsMidi10Connection()))
+                    .Add(L"name", fb.Name()));
             }
 
-            if (device.GetDeclaredFunctionBlocks().Size() > 0)
+            // MIDI 1.0 ports, outputs first, with the other names each one could have had
+            OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_SELECTION, GetDisplayValueFromNamingSelection(device.Midi1PortNamingApproach()));
+
+            auto const nameEntries = device.GetNameTable();
+            uint32_t const nameEntryCount = nameEntries == nullptr ? 0 : nameEntries.Size();
+            std::vector<bool> nameEntryShown(nameEntryCount, false);
+
+            std::vector<legacy::MidiLegacyPortDeviceInformation> ports{};
+
+            if (auto const found = portsByEndpoint.find(endpointKey); found != portsByEndpoint.end())
             {
-                WriteBlankLine();
+                ports = found->second;
             }
 
-
-            // Show associated MIDI 1.0 endpoints
-
-
-
-            // MIDI 1.0 outputs
-            for (auto const& port : legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(device.EndpointDeviceId(), midi2enum::Midi1PortFlow::MidiMessageDestination))
-            {
-                OutputCompactMidi1PortInfo(MIDIDIAG_FIELD_LABEL_MIDI1_PORT_OUT, port.Number(), port.Name(), port.PortDeviceId());
-            }
-
-            // MIDI 1.0 inputs
-            for (auto const& port : legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(device.EndpointDeviceId(), midi2enum::Midi1PortFlow::MidiMessageSource))
-            {
-                OutputCompactMidi1PortInfo(MIDIDIAG_FIELD_LABEL_MIDI1_PORT_IN, port.Number(), port.Name(), port.PortDeviceId());
-            }
-
-
-            // TODO: Get the reg keys that set the global defaults (move this up to the registry section)
-
-
-
-            std::wstring namingApproach {};
-            
-            switch (device.Midi1PortNamingApproach())
-            {
-            case midi2enum::Midi1PortNamingApproach::Default:
-                namingApproach = L"Use global default from registry";
-                break;
-            case midi2enum::Midi1PortNamingApproach::UseClassicCompatible:
-                namingApproach = L"Use WinMM Compatible";
-                break;
-            case midi2enum::Midi1PortNamingApproach::UseNewStyle:
-                namingApproach = L"Use New Style";
-                break;
-            default:
-                namingApproach = L"UNKNOWN";
-            }
-
-            OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_SELECTION, namingApproach);
-            WriteBlankLine();
-
-            // Show the full MIDI 1 port name table
-
-            auto nameEntries = device.GetNameTable();
-
-            if (nameEntries != nullptr)
-            {
-                if (nameEntries.Size() == 0)
+            std::sort(ports.begin(), ports.end(), [](legacy::MidiLegacyPortDeviceInformation const& a, legacy::MidiLegacyPortDeviceInformation const& b)
                 {
-                    OutputError(internal::ResourceGetWString(IDS_ERROR_NO_NAMING_TABLE));
-                }
-                else
-                {
-                    for (auto const& nameEntry : nameEntries)
+                    bool const aIsInput = a.Flow() == midi2enum::Midi1PortFlow::MidiMessageSource;
+                    bool const bIsInput = b.Flow() == midi2enum::Midi1PortFlow::MidiMessageSource;
+
+                    if (aIsInput != bIsInput)
                     {
-                        OutputNumericField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_GROUP_NUMBER, nameEntry.Group().DisplayValue());
-
-                        switch (nameEntry.Flow())
-                        {
-                        case midi2::Enumeration::Midi1PortFlow::MidiMessageSource:
-                            OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_DATA_FLOW, std::wstring(L"MIDI In Port (Message Source)"));
-                            break;
-                        case midi2::Enumeration::Midi1PortFlow::MidiMessageDestination:
-                            OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_DATA_FLOW, std::wstring(L"MIDI Out Port (Message Destination)"));
-                            break;
-                        default:
-                            OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_DATA_FLOW, std::wstring(L"INVALID VALUE"));
-                            break;
-                        }
-
-                        auto customName = std::wstring{ nameEntry.CustomName() };
-                        auto legacyWinMMName = std::wstring{ nameEntry.LegacyCompatibleName() };
-                        auto newStyleName = std::wstring{ nameEntry.NewStyleName() };
-
-                        OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_CUSTOM_NAME, customName);
-                        OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_LEGACY_WINMM_NAME, legacyWinMMName);
-                        OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_NEW_STYLE_NAME, newStyleName);
-                        WriteBlankLine();
+                        return !aIsInput;
                     }
+
+                    return GroupIndex(a.Group()) < GroupIndex(b.Group());
+                });
+
+            for (auto const& port : ports)
+            {
+                auto const flow = Midi1PortFlowName(port.Flow());
+                auto const portName = std::wstring{ port.Name() };
+
+                mididiag::KeyValueText values{};
+                values.Add(L"flow", flow)
+                    .AddNumber(L"number", port.Number())
+                    .AddNumber(L"group", GroupNumber(port.Group()));
+
+                for (uint32_t n = 0; n < nameEntryCount; n++)
+                {
+                    auto const entry = nameEntries.GetAt(n);
+
+                    if (entry.Flow() != port.Flow() || GroupIndex(entry.Group()) != GroupIndex(port.Group()))
+                    {
+                        continue;
+                    }
+
+                    nameEntryShown[n] = true;
+
+                    // only the names that differ from the one in use
+                    auto const legacyName = std::wstring{ entry.LegacyCompatibleName() };
+                    auto const newStyleName = std::wstring{ entry.NewStyleName() };
+
+                    values.AddIfNotEmpty(L"custom_name", entry.CustomName());
+
+                    if (legacyName != portName)
+                    {
+                        values.Add(L"legacy_name", legacyName);
+                    }
+
+                    if (newStyleName != portName)
+                    {
+                        values.Add(L"new_style_name", newStyleName);
+                    }
+
+                    break;
                 }
+
+                values.Add(L"name", portName);
+
+                mididiag::WriteField(MIDIDIAG_FIELD_LABEL_MIDI1_PORT, values);
+
+                context.Midi1Ports[LowerId(port.PortDeviceId())] = mididiag::Midi1PortSummary{ flow, port.Number(), portName };
             }
 
+            if (nameEntries != nullptr && nameEntryCount == 0 && !ports.empty())
+            {
+                OutputError(internal::ResourceGetWString(IDS_ERROR_NO_NAMING_TABLE));
+            }
+
+            // rows with no port behind them still show what Windows would call one
+            for (uint32_t n = 0; n < nameEntryCount; n++)
+            {
+                if (nameEntryShown[n])
+                {
+                    continue;
+                }
+
+                auto const entry = nameEntries.GetAt(n);
+
+                mididiag::WriteField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_ENTRY, mididiag::KeyValueText{}
+                    .Add(L"flow", Midi1PortFlowName(entry.Flow()))
+                    .AddNumber(L"group", GroupNumber(entry.Group()))
+                    .AddIfNotEmpty(L"custom_name", entry.CustomName())
+                    .Add(L"legacy_name", entry.LegacyCompatibleName())
+                    .Add(L"new_style_name", entry.NewStyleName()));
+            }
 
             // Parent device
 
@@ -975,18 +1269,12 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
                 OutputEntityNameField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_NAME, parent.Name());
 
                 // The SDK leaves these at zero when the parent is not a USB device
-                std::wstring usbVendorId{};
-                std::wstring usbProductId{};
-
                 if (parent.UsbVendorId() != 0 || parent.UsbProductId() != 0)
                 {
-                    usbVendorId = fmt::format(L"0x{:04X}", parent.UsbVendorId());
-                    usbProductId = fmt::format(L"0x{:04X}", parent.UsbProductId());
+                    OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_USB_VID, std::format(L"0x{:04X}", parent.UsbVendorId()));
+                    OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_USB_PID, std::format(L"0x{:04X}", parent.UsbProductId()));
+                    OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_USB_SERIAL, parent.UsbSerialNumber());
                 }
-
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_USB_VID, usbVendorId);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_USB_PID, usbProductId);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_USB_SERIAL, parent.UsbSerialNumber());
 
                 // Driver properties come from the &MI_xx media interface when there is one, not from the composite parent
                 auto driverDeviceId = parent.RelatedParentMediaDriverDeviceInstanceId();
@@ -996,11 +1284,31 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
                     driverDeviceId = parent.Id();
                 }
 
+                auto const details = GetParentDeviceDetails(std::wstring{ parent.Id() }, std::wstring{ driverDeviceId });
+
+                // the hubs between the device and the PC, where a lot of connection trouble starts
+                if (!details.UsbLocationPath.empty())
+                {
+                    mididiag::WriteField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_USB_LOCATION, mididiag::KeyValueText{}
+                        .AddNumber(L"hubs", details.UsbHubCount)
+                        .Add(L"path", details.UsbLocationPath));
+                }
+
+                OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_LAST_ARRIVAL, details.LastArrival);
+                OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_LAST_REMOVAL, details.LastRemoval);
+
+                if (details.ProblemCode != 0)
+                {
+                    OutputNumericField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_PROBLEM, details.ProblemCode);
+                }
+
                 OutputEntityIdentifierField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_DRIVER_DEVICE_ID, driverDeviceId);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_ENUMERATOR_NAME, parent.EnumeratorName());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_SERVICE_NAME, parent.ServiceName());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_DRIVER_INF_PATH, parent.DriverInfPath());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_DRIVER_VERSION, parent.DriverVersion());
+                OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_ENUMERATOR_NAME, parent.EnumeratorName());
+                OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_SERVICE_NAME, parent.ServiceName());
+                OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_DRIVER_INF_PATH, parent.DriverInfPath());
+                OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_DRIVER_PROVIDER, parent.DriverProvider());
+                OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_DRIVER_VERSION, parent.DriverVersion());
+                OutputStringFieldIfNotEmpty(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_DRIVER_DATE, details.DriverDate);
             }
             else
             {
@@ -1027,6 +1335,10 @@ bool DoSectionSessions(_In_ bool const verbose)
 
     try
     {
+        auto const& context = mididiag::Context();
+        auto const servicePid = static_cast<uint64_t>(MidiServiceProcessId());
+        auto const thisPid = static_cast<uint64_t>(::GetCurrentProcessId());
+
         auto sessions = rept::MidiReporting::GetActiveSessions();
         uint32_t const sessionCount = sessions == nullptr ? 0 : sessions.Size();
 
@@ -1041,6 +1353,17 @@ bool DoSectionSessions(_In_ bool const verbose)
             OutputEntityNameField(MIDIDIAG_FIELD_LABEL_SESSION_NAME, session.SessionName());
             OutputStringField(MIDIDIAG_FIELD_LABEL_SESSION_PROCESS_NAME, session.ProcessName());
             OutputStringField(MIDIDIAG_FIELD_LABEL_SESSION_PROCESS_ID, std::to_wstring(session.ProcessId()));
+
+            // the service's own sessions and this report's are not apps the customer is running
+            if (servicePid != 0 && session.ProcessId() == servicePid)
+            {
+                OutputStringField(MIDIDIAG_FIELD_LABEL_SESSION_OWNER, std::wstring{ L"service" });
+            }
+            else if (session.ProcessId() == thisPid)
+            {
+                OutputStringField(MIDIDIAG_FIELD_LABEL_SESSION_OWNER, std::wstring{ L"this_report" });
+            }
+
             OutputDateTimeField(MIDIDIAG_FIELD_LABEL_SESSION_START_TIME, session.StartTime());
 
             auto connections = session.Connections();
@@ -1051,12 +1374,28 @@ bool DoSectionSessions(_In_ bool const verbose)
             for (uint32_t j = 0; j < connectionCount; j++)
             {
                 auto connection = connections.GetAt(j);
+                auto const deviceId = std::wstring{ connection.EndpointOrPortDeviceId() };
+                auto const key = LowerId(deviceId);
 
-                WriteBlankLine();
+                mididiag::KeyValueText values{};
+                values.AddNumber(L"instances", connection.InstanceCount())
+                    .AddIfNotEmpty(L"since", mididiag::FormatLocalTime(connection.EarliestConnectionTime()));
 
-                OutputEntityIdentifierField(MIDIDIAG_FIELD_LABEL_SESSION_CONNECTION_DEVICE_ID, connection.EndpointOrPortDeviceId());
-                OutputNumericField(MIDIDIAG_FIELD_LABEL_SESSION_CONNECTION_INSTANCE_COUNT, connection.InstanceCount());
-                OutputDateTimeField(MIDIDIAG_FIELD_LABEL_SESSION_CONNECTION_EARLIEST_TIME, connection.EarliestConnectionTime());
+                // what the id is, from the endpoint section
+                if (auto const endpoint = context.EndpointNames.find(key); endpoint != context.EndpointNames.end())
+                {
+                    values.Add(L"endpoint", endpoint->second);
+                }
+                else if (auto const port = context.Midi1Ports.find(key); port != context.Midi1Ports.end())
+                {
+                    values.Add(L"port_flow", port->second.Flow)
+                        .AddNumber(L"port_number", port->second.Number)
+                        .Add(L"port_name", port->second.Name);
+                }
+
+                values.Add(L"id", deviceId);
+
+                mididiag::WriteField(MIDIDIAG_FIELD_LABEL_SESSION_CONNECTION, values);
             }
         }
     }
@@ -1074,62 +1413,33 @@ bool DoSectionWinRTMidi1ApiEndpoints(_In_ bool const verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
-    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_MIDI1_API_INPUT_ENDPOINTS);
+    bool succeeded{ true };
 
-    try
+    for (bool const inputs : { true, false })
     {
-        // inputs
-        auto midi1Inputs = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
-            winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector()).get();
+        OutputSectionHeader(inputs ? MIDIDIAG_SECTION_LABEL_MIDI1_API_INPUT_ENDPOINTS : MIDIDIAG_SECTION_LABEL_MIDI1_API_OUTPUT_ENDPOINTS);
 
-        for (uint32_t i = 0; i < midi1Inputs.Size(); i++)
+        try
         {
-            auto device = midi1Inputs.GetAt(i);
+            auto const selector = inputs ?
+                winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector() :
+                winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector();
 
-            OutputEntityIdentifierField(MIDIDIAG_FIELD_LABEL_MIDI1_ENDPOINT_ID, device.Id());
-            OutputEntityNameField(MIDIDIAG_FIELD_LABEL_MIDI1_ENDPOINT_NAME, device.Name());
-
-            if (i != midi1Inputs.Size() - 1)
+            for (auto const& device : winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(selector).get())
             {
-                OutputItemSeparator();
+                mididiag::WriteField(MIDIDIAG_FIELD_LABEL_WINRT_MIDI1_PORT, mididiag::KeyValueText{}
+                    .Add(L"name", device.Name())
+                    .Add(L"id", device.Id()));
             }
         }
-    }
-    catch (...)
-    {
-        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_WINRT_MIDI1));
-
-        return false;
-    }
-
-    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_MIDI1_API_OUTPUT_ENDPOINTS);
-
-    try
-    {// outputs
-        auto midi1Outputs = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
-            winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector()).get();
-
-        for (uint32_t i = 0; i < midi1Outputs.Size(); i++)
+        catch (...)
         {
-            auto device = midi1Outputs.GetAt(i);
-
-            OutputEntityIdentifierField(MIDIDIAG_FIELD_LABEL_MIDI1_ENDPOINT_ID, device.Id());
-            OutputEntityNameField(MIDIDIAG_FIELD_LABEL_MIDI1_ENDPOINT_NAME, device.Name());
-
-            if (i != midi1Outputs.Size() - 1)
-            {
-                OutputItemSeparator();
-            }
+            OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_WINRT_MIDI1));
+            succeeded = false;
         }
     }
-    catch (...)
-    {
-        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_WINRT_MIDI1));
 
-        return false;
-    }
-
-    return true;
+    return succeeded;
 }
 
 void DisplayWinMMGetDevCapsErrorResult(MMRESULT result)
@@ -1159,101 +1469,268 @@ void DisplayWinMMGetDevCapsErrorResult(MMRESULT result)
     }
 }
 
+namespace
+{
+    // What Windows MIDI Services says a MIDI 1.0 port is, to compare with what WinMM says
+    struct ExpectedWinMMPort
+    {
+        std::wstring NameLower{};
+        std::wstring InterfaceLower{};
+        uint32_t Number{ 0 };
+    };
+
+    constexpr ULONG MaxDeviceInterfaceBytes{ 4096 };
+
+    std::vector<ExpectedWinMMPort> GetExpectedWinMMPorts(_In_ midi2enum::Midi1PortFlow const flow)
+    {
+        std::vector<ExpectedWinMMPort> ports{};
+
+        // the service is off in Legacy API mode, and WinMM uses other drivers
+        if (mididiag::Context().LegacyApiMode)
+        {
+            return ports;
+        }
+
+        try
+        {
+            for (auto const& port : legacy::MidiLegacyPortDeviceInformation::FindAll(flow))
+            {
+                // WinMM keeps only the first MAXPNAMELEN - 1 characters of a name
+                auto const name = std::wstring{ port.Name() }.substr(0, MAXPNAMELEN - 1);
+
+                ports.push_back({ LowerId(name), LowerId(port.DriverDeviceInterfaceId()), port.Number() });
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return ports;
+    }
+
+    // DRV_QUERYDEVICEINTERFACE: the device interface the driver says is behind a WinMM port
+    std::wstring InputDeviceInterface(_In_ uint32_t const index)
+    {
+        auto const handle = reinterpret_cast<HMIDIIN>(static_cast<UINT_PTR>(index));
+        ULONG size{ 0 };
+
+        if (::midiInMessage(handle, DRV_QUERYDEVICEINTERFACESIZE, reinterpret_cast<DWORD_PTR>(&size), 0) != MMSYSERR_NOERROR ||
+            size < sizeof(wchar_t) || size > MaxDeviceInterfaceBytes)
+        {
+            return {};
+        }
+
+        std::vector<wchar_t> buffer(size / sizeof(wchar_t) + 1, L'\0');
+
+        if (::midiInMessage(handle, DRV_QUERYDEVICEINTERFACE, reinterpret_cast<DWORD_PTR>(buffer.data()), size) != MMSYSERR_NOERROR)
+        {
+            return {};
+        }
+
+        return std::wstring{ buffer.data() };
+    }
+
+    std::wstring OutputDeviceInterface(_In_ uint32_t const index)
+    {
+        auto const handle = reinterpret_cast<HMIDIOUT>(static_cast<UINT_PTR>(index));
+        ULONG size{ 0 };
+
+        if (::midiOutMessage(handle, DRV_QUERYDEVICEINTERFACESIZE, reinterpret_cast<DWORD_PTR>(&size), 0) != MMSYSERR_NOERROR ||
+            size < sizeof(wchar_t) || size > MaxDeviceInterfaceBytes)
+        {
+            return {};
+        }
+
+        std::vector<wchar_t> buffer(size / sizeof(wchar_t) + 1, L'\0');
+
+        if (::midiOutMessage(handle, DRV_QUERYDEVICEINTERFACE, reinterpret_cast<DWORD_PTR>(buffer.data()), size) != MMSYSERR_NOERROR)
+        {
+            return {};
+        }
+
+        return std::wstring{ buffer.data() };
+    }
+
+    PCWSTR OutputTechnologyName(_In_ WORD const technology)
+    {
+        switch (technology)
+        {
+        case MOD_MIDIPORT:  return L"port";
+        case MOD_SYNTH:     return L"synth";
+        case MOD_SQSYNTH:   return L"square_wave_synth";
+        case MOD_FMSYNTH:   return L"fm_synth";
+        case MOD_MAPPER:    return L"mapper";
+        case MOD_WAVETABLE: return L"wavetable";
+        case MOD_SWSYNTH:   return L"software_synth";
+        default:            return L"unknown";
+        }
+    }
+
+    // major.minor, from the low word
+    std::wstring DriverVersionText(_In_ MMVERSION const version)
+    {
+        return std::format(L"{}.{}", HIBYTE(LOWORD(version)), LOBYTE(LOWORD(version)));
+    }
+}
+
 bool DoSectionWinMMMidi1ApiEndpoints(_In_ bool const verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
-    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_WINMM_API_INPUT_ENDPOINTS);
+    bool succeeded{ true };
 
-    try
+    for (bool const inputs : { true, false })
     {
-        // inputs
-        uint32_t errorCount{ 0 };
+        OutputSectionHeader(inputs ? MIDIDIAG_SECTION_LABEL_WINMM_API_INPUT_ENDPOINTS : MIDIDIAG_SECTION_LABEL_WINMM_API_OUTPUT_ENDPOINTS);
 
-        auto inputDeviceCount = midiInGetNumDevs();
-
-        OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_COUNT, inputDeviceCount);
-        OutputItemSeparator();
-
-        for (uint32_t i = 0; i < inputDeviceCount; i++)
+        try
         {
-            MIDIINCAPSW inputCaps{};
+            auto const expected = GetExpectedWinMMPorts(inputs ?
+                midi2enum::Midi1PortFlow::MidiMessageSource :
+                midi2enum::Midi1PortFlow::MidiMessageDestination);
 
-            auto result = midiInGetDevCaps(i, &inputCaps, sizeof(inputCaps));
+            uint32_t errorCount{ 0 };
+            std::map<int64_t, uint32_t> offsetCounts{};
+            std::map<std::wstring, uint32_t> nameCounts{};
 
-            OutputPortNumberField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_ID, i);
-            OutputEntityNameField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_NAME, winrt::hstring{ inputCaps.szPname });
+            uint32_t const deviceCount = inputs ? ::midiInGetNumDevs() : ::midiOutGetNumDevs();
 
-            DisplayWinMMGetDevCapsErrorResult(result);
+            OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_COUNT, deviceCount);
 
-            if (result != MMSYSERR_NOERROR)
+            for (uint32_t i = 0; i < deviceCount; i++)
             {
-                errorCount++;
+                mididiag::KeyValueText values{};
+                values.AddNumber(L"index", i);
+
+                std::wstring name{};
+                std::wstring deviceInterface{};
+                MMRESULT result{ MMSYSERR_NOERROR };
+
+                if (inputs)
+                {
+                    MIDIINCAPSW caps{};
+                    result = ::midiInGetDevCapsW(i, &caps, sizeof(caps));
+
+                    if (result == MMSYSERR_NOERROR)
+                    {
+                        name = caps.szPname;
+                        values.AddNumber(L"mid", caps.wMid)
+                            .AddNumber(L"pid", caps.wPid)
+                            .Add(L"version", DriverVersionText(caps.vDriverVersion));
+                    }
+
+                    deviceInterface = InputDeviceInterface(i);
+                }
+                else
+                {
+                    MIDIOUTCAPSW caps{};
+                    result = ::midiOutGetDevCapsW(i, &caps, sizeof(caps));
+
+                    if (result == MMSYSERR_NOERROR)
+                    {
+                        name = caps.szPname;
+                        values.Add(L"technology", OutputTechnologyName(caps.wTechnology))
+                            .AddNumber(L"mid", caps.wMid)
+                            .AddNumber(L"pid", caps.wPid)
+                            .Add(L"version", DriverVersionText(caps.vDriverVersion));
+                    }
+
+                    deviceInterface = OutputDeviceInterface(i);
+                }
+
+                bool matched{ false };
+
+                if (result != MMSYSERR_NOERROR)
+                {
+                    values.AddNumber(L"error", result);
+                    errorCount++;
+                }
+                else
+                {
+                    auto const nameLower = LowerId(name);
+                    nameCounts[nameLower]++;
+
+                    // the port Windows MIDI Services expects here: same name, and same device interface when names repeat
+                    std::vector<ExpectedWinMMPort const*> candidates{};
+
+                    for (auto const& port : expected)
+                    {
+                        if (port.NameLower == nameLower)
+                        {
+                            candidates.push_back(&port);
+                        }
+                    }
+
+                    if (candidates.size() > 1 && !deviceInterface.empty())
+                    {
+                        auto const interfaceLower = LowerId(deviceInterface);
+
+                        std::erase_if(candidates, [&interfaceLower](ExpectedWinMMPort const* port) { return port->InterfaceLower != interfaceLower; });
+                    }
+
+                    if (candidates.size() == 1)
+                    {
+                        matched = true;
+                        values.AddNumber(L"sdk_number", candidates.front()->Number);
+                        offsetCounts[static_cast<int64_t>(i) - static_cast<int64_t>(candidates.front()->Number)]++;
+                    }
+                }
+
+                // only when it helps explain a port Windows MIDI Services could not match
+                if (!matched)
+                {
+                    values.AddIfNotEmpty(L"interface", deviceInterface);
+                }
+
+                values.Add(L"name", name);
+
+                mididiag::WriteField(MIDIDIAG_FIELD_LABEL_WINMM_PORT, values);
+
+                DisplayWinMMGetDevCapsErrorResult(result);
             }
 
-            if (i < inputDeviceCount - 1)
+            OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ERROR_COUNT, errorCount);
+
+            // the shift most ports share is the one that matters
+            if (!offsetCounts.empty())
             {
-                OutputItemSeparator();
+                auto const common = std::max_element(offsetCounts.begin(), offsetCounts.end(),
+                    [](auto const& a, auto const& b) { return a.second < b.second; });
+
+                if (common->first != 0)
+                {
+                    mididiag::AddFinding(inputs ? L"winmm_input_offset" : L"winmm_output_offset",
+                        mididiag::FormatResourceString(inputs ? IDS_FINDING_WINMM_INPUT_OFFSET : IDS_FINDING_WINMM_OUTPUT_OFFSET, common->first));
+                }
+            }
+
+            uint32_t duplicateCount{ 0 };
+
+            for (auto const& [nameLower, count] : nameCounts)
+            {
+                if (count > 1)
+                {
+                    duplicateCount += count;
+                }
+            }
+
+            if (duplicateCount > 0)
+            {
+                mididiag::AddFinding(inputs ? L"winmm_input_duplicate_names" : L"winmm_output_duplicate_names",
+                    mididiag::FormatResourceString(inputs ? IDS_FINDING_WINMM_INPUT_DUPLICATE_NAMES : IDS_FINDING_WINMM_OUTPUT_DUPLICATE_NAMES, duplicateCount));
             }
         }
-
-        OutputItemSeparator();
-        OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ERROR_COUNT, errorCount);
-
-    }
-    catch (...)
-    {
-        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_WINMM_INPUTS));
-
-        return false;
-    }
-
-    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_WINMM_API_OUTPUT_ENDPOINTS);
-
-    try
-    {
-        // outputs
-        uint32_t errorCount{ 0 };
-
-        auto outputDeviceCount = midiOutGetNumDevs();
-
-        OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_COUNT, outputDeviceCount);
-        OutputItemSeparator();
-
-        for (uint32_t i = 0; i < outputDeviceCount; i++)
+        catch (...)
         {
-            MIDIOUTCAPSW outputCaps{};
+            OutputError(internal::ResourceGetWString(inputs ?
+                IDS_ERROR_EXCEPTION_ENUMERATING_WINMM_INPUTS :
+                IDS_ERROR_EXCEPTION_ENUMERATING_WINMM_OUTPUTS));
 
-            auto result = midiOutGetDevCaps(i, &outputCaps, sizeof(outputCaps));
-
-            OutputPortNumberField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_ID, i);
-            OutputEntityNameField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_NAME, winrt::hstring{ outputCaps.szPname });
-
-            DisplayWinMMGetDevCapsErrorResult(result);
-
-            if (result != MMSYSERR_NOERROR)
-            {
-                errorCount++;
-            }
-
-            if (i < outputDeviceCount - 1)
-            {
-                OutputItemSeparator();
-            }
+            succeeded = false;
         }
-
-        OutputItemSeparator();
-        OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ERROR_COUNT, errorCount);
-
-    }
-    catch (...)
-    {
-        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_WINMM_OUTPUTS));
-
-        return false;
     }
 
-    return true;
+    return succeeded;
 }
 
 
@@ -1290,22 +1767,21 @@ bool DoSectionPingTest(_In_ bool const verbose, _In_ uint8_t const pingCount)
             {
                 OutputError(internal::ResourceGetWString(IDS_ERROR_PING_FAILED));
                 OutputStringField(MIDIDIAG_FIELD_LABEL_PING_FAILURE_REASON, pingResult.FailureReason());
-
-                return false;
             }
         }
         else
         {
             OutputError(internal::ResourceGetWString(IDS_ERROR_PING_FAILED_NULL_RESULT));
-            return false;
         }
     }
     catch (...)
     {
         OutputError(internal::ResourceGetWString(IDS_ERROR_PING_FAILED_EXCEPTION));
-
-        return false;
     }
+
+    mididiag::AddFinding(L"ping_failed", internal::ResourceGetWString(IDS_FINDING_PING_FAILED));
+
+    return false;
 
 }
 
@@ -1359,15 +1835,22 @@ std::wstring GetOSVersion()
 
             if (rtlGetVersion != nullptr)
             {
-                return std::wstring(
-                    std::to_wstring(versionInfo.dwMajorVersion) +
-                    L"." +
-                    std::to_wstring(versionInfo.dwMinorVersion) +
-                    L"." +
-                    std::to_wstring(versionInfo.dwBuildNumber) +
-                    L" " +
-                    versionInfo.szCSDVersion
-                );
+                auto version = std::format(L"{}.{}.{}", versionInfo.dwMajorVersion, versionInfo.dwMinorVersion, versionInfo.dwBuildNumber);
+
+                // the update revision, which tells one monthly update from the next
+                try
+                {
+                    if (auto const revision = wil::reg::try_get_value_dword(HKEY_LOCAL_MACHINE,
+                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"UBR"); revision.has_value())
+                    {
+                        version += std::format(L".{}", revision.value());
+                    }
+                }
+                catch (...)
+                {
+                }
+
+                return version;
             }
 
         }
@@ -1512,6 +1995,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_OS);
     OutputStringField(MIDIDIAG_FIELD_LABEL_OS_VERSION, GetOSVersion());
+    OutputOperatingSystemFields();
 
 
     // if running under emulation on Arm64, this is going to return the emulated sys info
@@ -1523,15 +2007,10 @@ bool DoSectionSystemInfo(_In_ bool verbose)
     SYSTEM_INFO sysinfoNative;
     ::GetNativeSystemInfo(&sysinfoNative);
     OutputSystemInfo(sysinfoNative);
-
-    OutputItemSeparator();
     OutputProcessAndNativeMachine();
-    OutputItemSeparator();
 
     TIMECAPS timecaps;
     auto tcresult = ::timeGetDevCaps(&timecaps, sizeof(timecaps));
-
-    WriteBlankLine();
 
     if (tcresult == MMSYSERR_NOERROR)
     {
@@ -1556,7 +2035,6 @@ bool DoSectionSystemInfo(_In_ bool verbose)
         double actualResolutionMilliseconds = (double)actualResolution / 10000.0;   // actualResolution is in 100 nanosecond units
 
         // results here are in 100ns units
-        WriteBlankLine();
         OutputDecimalMillisecondsField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMER_RESOLUTION_MIN_MS, minResolutionMilliseconds, 3);
         OutputDecimalMillisecondsField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMER_RESOLUTION_MAX_MS, maxResolutionMilliseconds, 3);
         OutputDecimalMillisecondsField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMER_RESOLUTION_CURRENT_MS, actualResolutionMilliseconds, 3);
@@ -1697,95 +2175,187 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
 
 
 
-int __cdecl main()
+namespace
+{
+    // These sections read Windows itself, but a busy PC with many devices can still be slow
+    constexpr std::chrono::seconds LocalSectionTimeout{ 60 };
+
+    // A section waiting on a stuck service never finishes. This is how long a customer waits
+    // before the report says so.
+    constexpr std::chrono::seconds ServiceSectionTimeout{ 60 };
+
+    constexpr uint8_t PingCount{ 10 };
+
+    void OutputUsage()
+    {
+        mididiag::WriteLine(internal::ResourceGetWString(IDS_USAGE_SYNTAX));
+        mididiag::WriteLine(internal::ResourceGetWString(IDS_USAGE_OPTION_WINRT_MIDI1));
+        mididiag::WriteLine(internal::ResourceGetWString(IDS_USAGE_OPTION_HELP));
+    }
+}
+
+int __cdecl wmain(_In_ int argc, _In_reads_(argc) wchar_t* argv[])
 {
     if (!TrySetConsoleTextMode())
     {
         return RETURN_ERROR_SETTING_CONSOLE_MODE;
     }
 
+    auto& context = mididiag::Context();
+
+    for (int i = 1; i < argc; i++)
+    {
+        std::wstring const argument{ argv[i] == nullptr ? L"" : argv[i] };
+
+        if (_wcsicmp(argument.c_str(), L"--include-winrt-midi1") == 0)
+        {
+            context.IncludeWinRTMidi1 = true;
+        }
+        else if (argument == L"--help" || argument == L"-h" || argument == L"-?" || argument == L"/?")
+        {
+            OutputUsage();
+            return RETURN_SUCCESS;
+        }
+        else
+        {
+            mididiag::WriteError(mididiag::FormatResourceString(IDS_ERROR_UNKNOWN_OPTION, argument));
+            OutputUsage();
+            return RETURN_INVALID_MODE;
+        }
+    }
+
     winrt::init_apartment();
 
-    bool verbose = true;
-    bool pingTest = true;
-    bool midiClock = true;
+    // before anything below can start the service by asking it something
+    CaptureServiceStateBeforeReport();
+    context.Elevated = CheckForAdminPermissions();
 
-    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_HEADER);
+    mididiag::SetReportPhase(mididiag::ReportPhase::Local, LocalSectionTimeout);
+    mididiag::StartWatchdog();
 
+    bool const verbose = true;
+    bool runSucceeded = true;
+
+    // free text for people, before the first section
     OutputHeader(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
     OutputHeader(internal::ResourceGetWString(IDS_BANNER_COPYRIGHT));
     OutputHeader(internal::ResourceGetWString(IDS_BANNER_INFO_URL));
-    WriteBlankLine();
     OutputHeader(MIDIDIAG_PRODUCT_NAME);
-    WriteBlankLine();
+
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_HEADER);
+    OutputNumericField(MIDIDIAG_FIELD_LABEL_REPORT_FORMAT_VERSION, MIDIDIAG_REPORT_FORMAT_VERSION);
+    OutputStringField(MIDIDIAG_HEADER_FIELD_LABEL_VERSION_BUILD_SOURCE, std::wstring{ WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE });
+    OutputStringField(MIDIDIAG_HEADER_FIELD_LABEL_VERSION_NAME, std::wstring{ WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME });
+    OutputStringField(MIDIDIAG_HEADER_FIELD_LABEL_VERSION_FULL, std::wstring{ WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL });
     OutputCurrentTime();
+    OutputBooleanField(MIDIDIAG_FIELD_LABEL_RUNNING_ELEVATED, context.Elevated);
+
+    if (context.IncludeWinRTMidi1)
+    {
+        OutputStringField(MIDIDIAG_FIELD_LABEL_OPTIONS, std::wstring{ L"--include-winrt-midi1" });
+    }
 
     try
     {
-        // do anything which doesn't rely on the service or SDK
+        // Everything in this phase reads Windows itself and never calls the MIDI service, so it
+        // is all in the report even when the service is stuck.
         DoSectionSystemInfo(verbose);
-
         DoSectionDevMode(verbose);
+        DoSectionApiMode();
+        DoSectionComponentVersions();
+        DoSectionServiceStatus();
+        DoSectionServiceHistory();
+        DoSectionFeatureEnablement(verbose);
+        DoSectionDrivers32RegistryEntries(verbose);
+        DoSectionDrivers32WOWRegistryEntries(verbose);
+        DoSectionMidi2RegistryEntries(verbose);
+        DoSectionDeviceNodes();
+        DoSectionNetwork();
 
-        // try to get all the classic MIDI 1.0 info up-front, so there's
-        // some level of info available even if Windows MIDI Services is not installed
-
-        DoSectionFeatureEnablement(verbose); // don't bail if fails
-
-        DoSectionDrivers32RegistryEntries(verbose); // don't bail if fails
-
-        DoSectionDrivers32WOWRegistryEntries(verbose); // don't bail if fails
-
-        DoSectionWinRTMidi1ApiEndpoints(verbose);  // we don't bail if this fails
-
-        DoSectionWinMMMidi1ApiEndpoints(verbose);  // we don't bail if this fails
-
-        DoSectionMidi2RegistryEntries(verbose);     // don't bail if fails
-
-        // only show midi clock info if the sdk init has worked
-        if (midiClock)
+        if (context.IncludeWinRTMidi1)
         {
-            if (!DoSectionClock(verbose)) goto abort_run;
+            DoSectionWinRTMidi1ApiEndpoints(verbose);
         }
 
-        auto transportsWorked = DoSectionTransports(verbose);
+        // From here on a call can wait on the service. If it never answers, the watchdog ends the report.
+        mididiag::SetReportPhase(mididiag::ReportPhase::Service, ServiceSectionTimeout);
 
-        if (transportsWorked)
+        bool serviceAvailable{ false };
+
+        if (context.LegacyApiMode || !context.ServiceInstalled || context.ServiceDisabled)
         {
-            if (!DoSectionMidi2ApiEndpoints(verbose)) goto abort_run;
+            // asking the service anything would start it, which Legacy API mode must not do
+            OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SERVICE_RESPONSE);
+            OutputStringField(MIDIDIAG_FIELD_LABEL_SERVICE_SECTIONS_SKIPPED, std::wstring{
+                context.LegacyApiMode ? L"legacy_api_mode" :
+                !context.ServiceInstalled ? L"service_not_installed" : L"service_disabled" });
+        }
+        else
+        {
+            serviceAvailable = DoSectionServiceResponse();
+        }
 
-            // before the ping test, so the ping's own session is not listed
-            DoSectionSessions(verbose);     // don't bail if fails
-
-            // ping the service
-            if (pingTest)
+        if (serviceAvailable)
+        {
+            if (!DoSectionClock(verbose) || !DoSectionTransports(verbose) || !DoSectionMidi2ApiEndpoints(verbose))
             {
-                const uint8_t pingCount = 10;
-
-                if (!DoSectionPingTest(verbose, pingCount)) goto abort_run;
+                runSucceeded = false;
             }
+        }
+
+        // most apps use WinMM, so its ports are worth listing even when the service sections were skipped
+        DoSectionWinMMMidi1ApiEndpoints(verbose);
+
+        if (serviceAvailable)
+        {
+            DoSectionBluetooth();
+            DoSectionNetworkMidi2();
+            DoSectionRtpMidi();
+            DoSectionLoopback();
+            DoSectionBasicLoopback();
+            DoSectionEndpointCustomizations();
+
+            // before the ping test and the connection timing, so their own sessions are not listed
+            DoSectionSessions(verbose);
+
+            if (!DoSectionPingTest(verbose, PingCount))
+            {
+                runSucceeded = false;
+            }
+
+            DoSectionConnectionTiming();
         }
     }
     catch (...)
     {
         OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_GATHERING_INFORMATION));
-        OutputSectionHeader(MIDIDIAG_SECTION_LABEL_END_OF_FILE);
-
-        return RETURN_GENERAL_FAILURE;
+        runSucceeded = false;
     }
 
+    try
+    {
+        mididiag::StopWatchdog();
+    }
+    catch (...)
+    {
+    }
+
+    mididiag::WriteFindingsSection();
+    mididiag::WriteSectionTimingSection();
+
     // don't localize
-    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SUCCESSFUL_RUN);
-    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_END_OF_FILE);
+    if (runSucceeded)
+    {
+        mididiag::WriteClosingSection(MIDIDIAG_SECTION_LABEL_SUCCESSFUL_RUN);
+    }
+    else
+    {
+        mididiag::WriteClosingSection(MIDIDIAG_SECTION_LABEL_ABORTED_RUN);
+        OutputError(internal::ResourceGetWString(IDS_ERROR_ABORTING_RUN));
+    }
 
-    return RETURN_SUCCESS;
+    mididiag::WriteClosingSection(MIDIDIAG_SECTION_LABEL_END_OF_FILE);
+    fflush(stdout);
 
-abort_run:
-
-    // don't localize
-    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_ABORTED_RUN);
-    OutputError(internal::ResourceGetWString(IDS_ERROR_ABORTING_RUN));
-    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_END_OF_FILE);
-
-    return RETURN_GENERAL_FAILURE;
+    return runSucceeded ? RETURN_SUCCESS : RETURN_GENERAL_FAILURE;
 }
