@@ -48,6 +48,8 @@ On this page:
 
 Ask these before you write anything. Put them in one message, in plain words, and offer a sensible answer for each so the customer can just say yes.
 
+If the customer pasted a prompt from **Ask an AI assistant…** in MIDI Glass, it already lists the MIDI devices and the themes on their PC. Use those names exactly. You still need to ask which device the layout is for.
+
 | Ask | Why it matters |
 | --- | --- |
 | What will the layout control? Get each device's name exactly as Windows shows it, for example in MIDI Settings or in the **Send to** list in MIDI Glass's **New layout** dialog. | The file finds devices by name. A name that's only close doesn't match. |

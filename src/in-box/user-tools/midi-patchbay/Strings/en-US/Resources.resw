@@ -113,6 +113,53 @@
   <data name="ImportPatchFilter" xml:space="preserve">
     <value>MIDI Patchbay patches</value>
   </data>
+  <data name="AssistantButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Ask an AI assistant</value>
+  </data>
+  <data name="AssistantButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Copy a starting prompt for the AI assistant you use. It can plan a patch and give you a file to import.</value>
+  </data>
+  <data name="AssistantText.Text" xml:space="preserve">
+    <value>Ask an AI assistant…</value>
+  </data>
+  <data name="AssistantTitle" xml:space="preserve">
+    <value>Ask an AI assistant</value>
+  </data>
+  <data name="AssistantMessage" xml:space="preserve">
+    <value>Copy this and paste it into the AI assistant you use, such as a chat in your web browser. Then tell it what you want the patch to do. When it gives you a patch file, select Import patch… to bring it in. This includes the names of the MIDI devices on this PC, so the patch can find them. Patchbay doesn't send anything itself.</value>
+  </data>
+  <data name="AssistantPromptHeader" xml:space="preserve">
+    <value>What gets copied</value>
+  </data>
+  <data name="AssistantGuideLink" xml:space="preserve">
+    <value>Read the guide the assistant will use</value>
+  </data>
+  <data name="AssistantCopy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="AssistantCopied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="AssistantCopyFailed" xml:space="preserve">
+    <value>Couldn't copy. Try again</value>
+  </data>
+  <data name="AssistantClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <!-- The prompt the customer pastes into an AI assistant. Any language works, so translate it like other text. -->
+  <data name="AssistantPromptIntroFormat" xml:space="preserve">
+    <value>I want to make a patch for Windows MIDI Patchbay. Before you start, read the whole guide at {0} and follow it. Ask me what you need to know. Then give me a .midipatch file that I can import.</value>
+    <comment>{0} is the address of the guide, a web link</comment>
+  </data>
+  <data name="AssistantPromptDevices" xml:space="preserve">
+    <value>These are the MIDI devices on my PC, with the names Windows shows for them:</value>
+  </data>
+  <data name="AssistantPromptNoDevices" xml:space="preserve">
+    <value>I couldn't list the MIDI devices on my PC, so ask me for their names.</value>
+  </data>
+  <data name="AssistantPromptRequest" xml:space="preserve">
+    <value>Here's what I want the patch to do:</value>
+  </data>
   <data name="PatchesHeaderText.Text" xml:space="preserve">
     <value>Patches</value>
   </data>
@@ -1249,6 +1296,12 @@
   </data>
   <data name="SettingWarnAboutLoops" xml:space="preserve">
     <value>Feedback loop warnings</value>
+  </data>
+  <data name="SettingAssistant" xml:space="preserve">
+    <value>Ask an AI assistant</value>
+  </data>
+  <data name="SettingAssistantHint" xml:space="preserve">
+    <value>Shows the Ask an AI assistant button. It copies a starting prompt for the AI assistant you use. Patchbay doesn't send anything itself.</value>
   </data>
 
   <!-- ============================================================= notification area -->

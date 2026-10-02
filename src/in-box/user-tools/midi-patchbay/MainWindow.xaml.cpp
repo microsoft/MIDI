@@ -160,6 +160,7 @@ namespace winrt::midipatchbay::implementation
 
             InitializeWindowChrome();
             InitializeStaticText();
+            ApplyAssistantVisibility();
 
             m_canvas.Initialize(
                 CanvasScroller(),
@@ -537,6 +538,17 @@ namespace winrt::midipatchbay::implementation
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to set the static text.")
     }
 
+    void MainWindow::ApplyAssistantVisibility() noexcept
+    {
+        try
+        {
+            AssistantButton().Visibility(patchbay::AppSettings::Current().ShowAssistant()
+                ? xaml::Visibility::Visible
+                : xaml::Visibility::Collapsed);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show or hide Ask an AI assistant.")
+    }
+
     _Use_decl_annotations_
     void MainWindow::OnAppearanceButtonClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
     {
@@ -697,6 +709,20 @@ namespace winrt::midipatchbay::implementation
                 {},
                 patchbay::AppSettings::Current().WarnAboutLoops(),
                 [](bool value) { patchbay::AppSettings::Current().WarnAboutLoops(value); });
+
+            addToggle(
+                resources::GetString(L"SettingAssistant"),
+                resources::GetString(L"SettingAssistantHint"),
+                patchbay::AppSettings::Current().ShowAssistant(),
+                [weak](bool value)
+                {
+                    patchbay::AppSettings::Current().ShowAssistant(value);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->ApplyAssistantVisibility();
+                    }
+                });
 
             return panel;
         }

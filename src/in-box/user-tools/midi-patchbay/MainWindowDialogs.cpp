@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 
+#include "AssistantPrompt.h"
 #include "BackgroundWork.h"
 #include "StringResources.h"
 
@@ -38,6 +39,9 @@ namespace winrt::midipatchbay::implementation
         constexpr wchar_t MonitorExeName[] = L"midi2monitor.exe";
         constexpr wchar_t KeyboardExeName[] = L"midikeyboard.exe";
         constexpr wchar_t ScratchPadExeName[] = L"midiscratchpad.exe";
+
+        // A short link, so the guide can move without changing the app.
+        constexpr wchar_t AssistantGuideUrl[] = L"https://aka.ms/AgentGuideMidiPatchbay";
 
         std::wstring ExecutableFolder() noexcept
         {
@@ -296,6 +300,62 @@ namespace winrt::midipatchbay::implementation
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to import the patches.")
 
         return false;
+    }
+
+    // ------------------------------------------------------ ask an AI assistant
+
+    _Use_decl_annotations_
+    void MainWindow::OnAssistantClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ShowAssistantDialogAsync();
+    }
+
+    winrt::fire_and_forget MainWindow::ShowAssistantDialogAsync()
+    {
+        auto strong = get_strong();
+
+        try
+        {
+            std::wstring const guide{ AssistantGuideUrl };
+            auto const devices = midiapp::FormatPromptList(midiapp::EndpointNamesForPrompt());
+
+            std::wstring prompt{ resources::FormatString(L"AssistantPromptIntroFormat", guide) };
+            prompt += L"\r\n\r\n";
+
+            if (devices.empty())
+            {
+                prompt += resources::GetString(L"AssistantPromptNoDevices");
+            }
+            else
+            {
+                prompt += resources::GetString(L"AssistantPromptDevices");
+                prompt += L"\r\n";
+                prompt += devices;
+            }
+
+            prompt += L"\r\n\r\n";
+            prompt += resources::GetString(L"AssistantPromptRequest");
+
+            // The customer types their request straight after it.
+            prompt += L" ";
+
+            midiapp::AssistantPromptStrings strings{};
+            strings.Title = resources::GetString(L"AssistantTitle");
+            strings.Message = resources::GetString(L"AssistantMessage");
+            strings.PromptHeader = resources::GetString(L"AssistantPromptHeader");
+            strings.GuideLink = resources::GetString(L"AssistantGuideLink");
+            strings.CopyButton = resources::GetString(L"AssistantCopy");
+            strings.CopiedButton = resources::GetString(L"AssistantCopied");
+            strings.CopyFailedButton = resources::GetString(L"AssistantCopyFailed");
+            strings.CloseButton = resources::GetString(L"AssistantClose");
+
+            co_await midiapp::ShowAssistantPromptAsync(
+                Content().XamlRoot(), strings, winrt::hstring{ prompt }, foundation::Uri{ guide });
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the AI assistant prompt.")
     }
 
     // -------------------------------------------------------------- patch menu

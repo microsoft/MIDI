@@ -52,6 +52,10 @@ namespace midiglass
         bool ShowAllFonts() const noexcept { return m_showAllFonts; }
         void ShowAllFonts(_In_ bool value) noexcept;
 
+        // Whether Ask an AI assistant is offered. Some customers want no AI in their tools at all.
+        bool ShowAssistant() const noexcept { return m_showAssistant; }
+        void ShowAssistant(_In_ bool value) noexcept;
+
         // When a layout was last opened, as a FILETIME, or 0. Kept here rather than in the layout
         // file because "when did I last use this" is about this PC, and because writing the file
         // every time it opened would make every run look like an edit.
@@ -91,6 +95,7 @@ namespace midiglass
         bool m_libraryShowsList{ false };
         bool m_keepAwakeWhileRunning{ false };
         bool m_showAllFonts{ false };
+        bool m_showAssistant{ true };
 
         WindowPlacementInfo m_editorPlacement{};
 

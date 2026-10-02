@@ -2211,6 +2211,56 @@
   <data name="LibraryMenuKeepAwake.Text" xml:space="preserve">
     <value>Keep this PC awake while a layout runs</value>
   </data>
+  <data name="LibraryMenuAssistant.Text" xml:space="preserve">
+    <value>Ask an AI assistant…</value>
+  </data>
+  <data name="AssistantTitle" xml:space="preserve">
+    <value>Ask an AI assistant</value>
+  </data>
+  <data name="AssistantMessage" xml:space="preserve">
+    <value>Copy this and paste it into the AI assistant you use, such as a chat in your web browser. Then tell it what you want the layout to do. When it gives you a layout file, select Open a file… to try it. This includes the names of the MIDI devices on this PC, so the layout can find them. MIDI Glass doesn't send anything itself.</value>
+  </data>
+  <data name="AssistantPromptHeader" xml:space="preserve">
+    <value>What gets copied</value>
+  </data>
+  <data name="AssistantGuideLink" xml:space="preserve">
+    <value>Read the guide the assistant will use</value>
+  </data>
+  <data name="AssistantCopy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="AssistantCopied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="AssistantCopyFailed" xml:space="preserve">
+    <value>Couldn't copy. Try again</value>
+  </data>
+  <!-- The prompt the customer pastes into an AI assistant. Any language works, so translate it like other text. -->
+  <data name="AssistantPromptIntroFormat" xml:space="preserve">
+    <value>I want to make a layout for Windows MIDI Glass. Before you start, read the whole guide at {0} and follow it. Ask me what you need to know. Then give me a .midilayout file.</value>
+    <comment>{0} is the address of the guide, a web link</comment>
+  </data>
+  <data name="AssistantPromptDevices" xml:space="preserve">
+    <value>These are the MIDI devices on my PC, with the names Windows shows for them:</value>
+  </data>
+  <data name="AssistantPromptNoDevices" xml:space="preserve">
+    <value>I couldn't list the MIDI devices on my PC, so ask me for their names.</value>
+  </data>
+  <data name="AssistantPromptThemes" xml:space="preserve">
+    <value>These are the themes in MIDI Glass on my PC. Use one of them, by its exact name:</value>
+  </data>
+  <data name="AssistantPromptRequest" xml:space="preserve">
+    <value>Here's what I want the layout to do:</value>
+  </data>
+  <data name="SettingsSectionHeading" xml:space="preserve">
+    <value>MIDI Glass</value>
+  </data>
+  <data name="SettingAssistant" xml:space="preserve">
+    <value>Ask an AI assistant</value>
+  </data>
+  <data name="SettingAssistantHint" xml:space="preserve">
+    <value>Shows Ask an AI assistant in the More options menu. It copies a starting prompt for the AI assistant you use. MIDI Glass doesn't send anything itself.</value>
+  </data>
   <data name="PackageSaveTitle" xml:space="preserve">
     <value>Save the layout package</value>
   </data>
@@ -3093,6 +3143,9 @@
   </data>
   <data name="DialogCancel" xml:space="preserve">
     <value>Cancel</value>
+  </data>
+  <data name="DialogClose" xml:space="preserve">
+    <value>Close</value>
   </data>
   <data name="DialogSave" xml:space="preserve">
     <value>Save</value>

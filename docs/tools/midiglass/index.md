@@ -24,8 +24,8 @@ MIDI Glass opens to the **library**, where all your layouts are.
 2. **Each card is a layout.** Click a card to run it. Point at a card to see **Run**, **Edit** and **…** for more options. You can also right-click a card for the same options.
 3. **The status chip** on each card says whether the devices that layout sends to are connected right now.
 4. **Search, sort and view.** Type to find a layout. Sort by last used, by name or by last changed. Switch between cards and a list.
-5. **Open a file…** runs a layout from any folder. **…** (More options) imports a layout package, opens the backups folder, and can keep the PC awake while a layout runs.
-6. **Appearance and settings** sets the app's light or dark theme and its window background.
+5. **Open a file…** runs a layout from any folder. **…** (More options) has **Ask an AI assistant…**, imports a layout package, opens the backups folder, and can keep the PC awake while a layout runs.
+6. **Appearance and settings** sets the app's light or dark theme and its window background, and turns **Ask an AI assistant** on or off.
 7. **The status bar** shows how many layouts you have and where they're saved. The chip on the right says whether the MIDI service is running.
 
 ### Make your first layout
@@ -208,7 +208,7 @@ Layouts are saved in **Documents › MIDI Layouts**, one file per layout. The fi
 - **Package for another PC…** makes one file that holds the layout and its pictures. Copy it to the other PC, and in the library there, select **…** (More options), then **Import a layout package…**.
 - **Duplicate** makes a copy to try ideas on, and **Add to favorites** puts the layout in a **Favorites** section at the top of the library.
 
-To have an AI assistant build a layout for you, give it the link to [MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/) and ask it to read the whole page first.
+To have an AI assistant build a layout for you, select **…** (More options), then **Ask an AI assistant…**. It shows a starting prompt to paste into the AI assistant you use, such as a chat in your web browser. The prompt has the link to [MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/), the names of your MIDI devices, and the themes you have, so the layout the assistant makes can find your devices. MIDI Glass doesn't send anything itself. If you'd rather not see it, open **Appearance and settings** and turn off **Ask an AI assistant**.
 
 ## Keyboard and screen readers
 

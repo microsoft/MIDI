@@ -689,6 +689,11 @@
                         Style="{StaticResource SubtleToolbarButtonStyle}">
                     <Button.Flyout>
                         <MenuFlyout>
+                            <!-- Copies a starting prompt for the customer's own AI assistant. Nothing is sent from here. -->
+                            <MenuFlyoutItem x:Name="AssistantMenuItem" x:Uid="LibraryMenuAssistant" Text="Ask an AI assistant…" Click="OnAssistantClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8F2;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator x:Name="AssistantMenuSeparator" />
                             <MenuFlyoutItem x:Uid="LibraryMenuImport" Text="Import a layout package…" Click="OnImportPackageClick">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B5;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>

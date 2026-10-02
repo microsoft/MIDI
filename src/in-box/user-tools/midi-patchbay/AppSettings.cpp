@@ -20,6 +20,7 @@ namespace midipatchbay
         constexpr wchar_t ValueWarnAboutLoops[] = L"WarnAboutLoops";
         constexpr wchar_t ValueConfirmCanvasRemove[] = L"ConfirmCanvasRemove";
         constexpr wchar_t ValueActivateSavedPatches[] = L"ActivateSavedPatchesAtStartup";
+        constexpr wchar_t ValueShowAssistant[] = L"ShowAssistant";
 
         constexpr wchar_t RunKeyPath[] = LR"(Software\Microsoft\Windows\CurrentVersion\Run)";
         constexpr wchar_t RunValueName[] = L"WindowsMidiServicesPatchbay";
@@ -74,6 +75,7 @@ namespace midipatchbay
         m_warnAboutLoops = ReadDword(ValueWarnAboutLoops, 1) != 0;
         m_confirmCanvasRemove = ReadDword(ValueConfirmCanvasRemove, 1) != 0;
         m_activateSavedPatchesAtStartup = ReadDword(ValueActivateSavedPatches, 1) != 0;
+        m_showAssistant = ReadDword(ValueShowAssistant, 1) != 0;
     }
 
     _Use_decl_annotations_
@@ -116,6 +118,13 @@ namespace midipatchbay
     {
         m_activateSavedPatchesAtStartup = value;
         WriteDword(ValueActivateSavedPatches, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::ShowAssistant(bool value) noexcept
+    {
+        m_showAssistant = value;
+        WriteDword(ValueShowAssistant, value ? 1u : 0u);
     }
 
     bool AppSettings::StartsWithWindows() noexcept
