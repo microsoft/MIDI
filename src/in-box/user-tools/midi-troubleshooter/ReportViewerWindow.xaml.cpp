@@ -11,6 +11,8 @@
 
 #include "..\mididiag\mididiag_field_defs.h"
 
+#include <cmath>
+
 #include "AppSettings.h"
 #include "BackgroundWork.h"
 #include "StringResources.h"
@@ -26,8 +28,12 @@ namespace miditroubleshooter
 {
     namespace
     {
-        // A value longer than this is cut short in a table, so its tooltip shows all of it.
-        constexpr size_t TooltipValueLength{ 48 };
+        // A column whose longest value is at least this long takes the rest of the table's width,
+        // and its values wrap there. Measured on real reports: finding text, device ids and paths.
+        constexpr size_t WideColumnLength{ 48 };
+
+        // The least a wide column gets. A window narrower than that scrolls the table sideways.
+        constexpr double MinimumWideColumnWidth{ 240 };
 
         // One item with more parts than this reads better down the page than across it.
         constexpr size_t MaximumPartsAcross{ 7 };
@@ -1002,19 +1008,34 @@ namespace miditroubleshooter
     _Use_decl_annotations_
     xaml::UIElement ReportPresenter::BuildTable(std::span<rpt::Field const> const rows)
     {
-        // every key any row has, in the order they first appear
+        // every key any row has, in the order they first appear, and the longest value of each
         std::vector<std::wstring_view> keys{};
+        std::vector<size_t> longest{};
 
         for (auto const& row : rows)
         {
             for (auto const& part : row.Parts)
             {
-                if (std::find(keys.begin(), keys.end(), part.Key) == keys.end())
+                auto const found = std::find(keys.begin(), keys.end(), part.Key);
+                auto const column = static_cast<size_t>(found - keys.begin());
+
+                if (found == keys.end())
                 {
                     keys.push_back(part.Key);
+                    longest.push_back(0);
                 }
+
+                longest[column] = std::max(longest[column], part.Value.size());
             }
         }
+
+        auto const widest = std::max_element(longest.begin(), longest.end());
+
+        auto const wideColumn = (widest != longest.end() && *widest >= WideColumnLength) ?
+            static_cast<uint32_t>(widest - longest.begin()) :
+            static_cast<uint32_t>(keys.size());
+
+        auto const hasWideColumn = wideColumn < keys.size();
 
         controls::Grid table{};
         table.ColumnSpacing(20);
@@ -1026,7 +1047,7 @@ namespace miditroubleshooter
         for (size_t column = 0; column < keys.size(); ++column)
         {
             controls::ColumnDefinition definition{};
-            definition.Width(AutoLength());
+            definition.Width(column == wideColumn ? StarLength() : AutoLength());
             table.ColumnDefinitions().Append(definition);
         }
 
@@ -1058,12 +1079,8 @@ namespace miditroubleshooter
                     continue;
                 }
 
-                auto cell = MakeText(winrt::hstring{ *value }, L"ReportTableCellStyle");
-
-                if (value->size() > TooltipValueLength)
-                {
-                    controls::ToolTipService::SetToolTip(cell, winrt::box_value(winrt::hstring{ *value }));
-                }
+                auto cell = MakeText(winrt::hstring{ *value },
+                    column == wideColumn ? L"ReportTableWideCellStyle" : L"ReportTableCellStyle");
 
                 controls::Grid::SetRow(cell, static_cast<int32_t>(row + 1));
                 controls::Grid::SetColumn(cell, static_cast<int32_t>(column));
@@ -1078,6 +1095,41 @@ namespace miditroubleshooter
         scroller.VerticalScrollMode(controls::ScrollMode::Disabled);
         scroller.VerticalScrollBarVisibility(controls::ScrollBarVisibility::Disabled);
         scroller.Content(table);
+
+        // A sideways scroller gives its content unlimited width, so nothing in it would wrap.
+        // A table with a wide column is made exactly as wide as the window instead, and only
+        // wider when its other columns leave the wide one less than its minimum.
+        if (hasWideColumn)
+        {
+            scroller.SizeChanged([table, wideColumn](foundation::IInspectable const&, xaml::SizeChangedEventArgs const& args)
+                {
+                    try
+                    {
+                        auto const columns = table.ColumnDefinitions();
+
+                        auto needed = MinimumWideColumnWidth +
+                            table.ColumnSpacing() * static_cast<double>(columns.Size() - 1);
+
+                        for (uint32_t column = 0; column < columns.Size(); ++column)
+                        {
+                            if (column != wideColumn)
+                            {
+                                needed += columns.GetAt(column).ActualWidth();
+                            }
+                        }
+
+                        auto const width = std::max(static_cast<double>(args.NewSize().Width), needed);
+                        auto const current = table.Width();
+
+                        // set only on a real change, or each height change from wrapping would loop
+                        if (std::isnan(current) || std::abs(current - width) > 0.5)
+                        {
+                            table.Width(width);
+                        }
+                    }
+                    MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to fit a report table to the window.")
+                });
+        }
 
         return scroller;
     }

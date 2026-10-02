@@ -68,16 +68,24 @@
             <Style x:Key="ReportTableHeaderStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
                 <Setter Property="FontWeight" Value="SemiBold" />
                 <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
-                <Setter Property="TextWrapping" Value="NoWrap" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="MaxWidth" Value="160" />
+                <Setter Property="HorizontalAlignment" Value="Left" />
             </Style>
 
-            <!-- Long values, such as a driver path, are cut short here. The whole value is in the
-                 tooltip, and selecting the text copies all of it. -->
+            <!-- Nothing in a table is cut short. A value in an ordinary column wraps past this
+                 width, so one long value can't push the rest of the table off the window. -->
             <Style x:Key="ReportTableCellStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
                 <Setter Property="IsTextSelectionEnabled" Value="True" />
-                <Setter Property="TextWrapping" Value="NoWrap" />
-                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                <Setter Property="MaxWidth" Value="440" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="MaxWidth" Value="300" />
+                <Setter Property="HorizontalAlignment" Value="Left" />
+            </Style>
+
+            <!-- The column with the longest values takes the rest of the window and wraps there. -->
+            <Style x:Key="ReportTableWideCellStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="IsTextSelectionEnabled" Value="True" />
+                <Setter Property="TextWrapping" Value="Wrap" />
             </Style>
 
             <Style x:Key="ReportErrorTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
