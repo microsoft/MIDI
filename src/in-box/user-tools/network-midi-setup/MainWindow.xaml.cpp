@@ -1812,19 +1812,26 @@ namespace winrt::midinetworksetup::implementation
                         }
                     }
 
+                    auto const problem = DescribeNetworkClientProblem(client.LastErrorCode());
+
                     // "Connecting" is not what is happening when the device cannot be seen at
                     // all. Nothing is attempted until it announces itself, so somebody looking at
                     // a device which is switched off should be told that, rather than watching a
                     // connect which is not being tried.
-                    auto const notConnectedStatus = [&client, &row]()
+                    auto const notConnectedStatus = [&client, &row, &problem]()
                         {
-                            if (row->Advertised)
+                            if (!row->Advertised && client.ConfiguredDirectAddress().empty())
                             {
-                                return res::GetString(L"RemoteHostTryingToConnect");
+                                return res::GetString(L"RemoteHostWaitingToAppear");
                             }
 
-                            return client.ConfiguredDirectAddress().empty() ?
-                                res::GetString(L"RemoteHostWaitingToAppear") :
+                            if (!problem.empty())
+                            {
+                                return res::FormatString(L"NetworkRemoteHostRetryingFormat", problem);
+                            }
+
+                            return row->Advertised ?
+                                res::GetString(L"RemoteHostTryingToConnect") :
                                 res::GetString(L"RemoteHostWaitingToAnswer");
                         };
 
@@ -1837,7 +1844,9 @@ namespace winrt::midinetworksetup::implementation
                         break;
 
                     case midi2net::MidiNetworkClientEntryState::Failed:
-                        row->Status = res::GetString(L"RemoteHostFailed");
+                        row->Status = problem.empty() ?
+                            res::GetString(L"RemoteHostFailed") :
+                            res::FormatString(L"NetworkRemoteHostStoppedFormat", problem);
                         break;
 
                     case midi2net::MidiNetworkClientEntryState::Unavailable:
@@ -2345,6 +2354,37 @@ namespace winrt::midinetworksetup::implementation
         }
 
         return false;
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring MainWindow::DescribeNetworkClientProblem(midi2net::MidiNetworkClientConnectErrorCode const lastErrorCode) noexcept
+    {
+        switch (lastErrorCode)
+        {
+        case midi2net::MidiNetworkClientConnectErrorCode::NoErrorInformationAvailable:
+            return {};
+
+        case midi2net::MidiNetworkClientConnectErrorCode::NoReplyToInvitation:
+            return res::GetString(L"NetworkRemoteHostNoAnswer");
+
+        case midi2net::MidiNetworkClientConnectErrorCode::InvitationNotApproved:
+            return res::GetString(L"NetworkRemoteHostNotApproved");
+
+        case midi2net::MidiNetworkClientConnectErrorCode::HostBusy:
+            return res::GetString(L"NetworkRemoteHostBusy");
+
+        case midi2net::MidiNetworkClientConnectErrorCode::InvitationRefused:
+            return res::GetString(L"NetworkRemoteHostRefused");
+
+        case midi2net::MidiNetworkClientConnectErrorCode::AuthenticationRequired:
+            return res::GetString(L"NetworkRemoteHostNeedsPassword");
+
+        case midi2net::MidiNetworkClientConnectErrorCode::InvitationEndedByHost:
+            return res::GetString(L"NetworkRemoteHostEnded");
+
+        default:
+            return res::GetString(L"RemoteHostFailed");
+        }
     }
 
     _Use_decl_annotations_

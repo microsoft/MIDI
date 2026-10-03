@@ -183,13 +183,15 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_ADDRESS_KEY      L"configuredDirectAddress"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_PORT_KEY         L"configuredDirectPort"
 
-// Where the entry is in its life. "unavailable" means a direct connection gave up and will only
-// be tried again on a fresh connect command.
+// Where the entry is in its life. The service does not report "unavailable" at present.
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_ENTRY_STATE_KEY         L"entryState"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_PENDING                     L"pending"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_LIVE                        L"live"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_FAILED                      L"failed"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_UNAVAILABLE                 L"unavailable"
+
+// A NETWORK_ERROR_CODE_* saying why the last invitation did not open a session, or 0
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LAST_ERROR_CODE_KEY     L"lastErrorCode"
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CURRENT_LATENCY_KEY                   L"currentLatencyTicks"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_COUNT_KEY            L"totalRetransmitCount"

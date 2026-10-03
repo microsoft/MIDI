@@ -35,6 +35,13 @@ namespace NetworkMidiTest
         // included, so the tests do not depend on the transport's private headers.
         constexpr uint32_t DefaultDirectConnectionScanInterval{ 20000 };
 
+        // NETWORK_ERROR_CODE_* values the service reports as lastErrorCode, restated the same way
+        constexpr uint32_t NoReplyToInvitationErrorCode{ 0x71 };
+        constexpr uint32_t InvitationNotApprovedErrorCode{ 0x72 };
+        constexpr uint32_t HostBusyErrorCode{ 0x75 };
+        constexpr uint32_t InvitationRefusedErrorCode{ 0x76 };
+        constexpr uint32_t AuthenticationRequiredErrorCode{ 0x77 };
+
         bool g_serviceAvailable{ false };
 
 
@@ -326,6 +333,34 @@ namespace NetworkMidiTest
             }
 
             return state;
+        }
+
+
+        // Returns the last value seen, so a failure can say what it was instead
+        uint32_t WaitForClientLastErrorCode(
+            _In_ std::wstring const& entryIdentifier,
+            _In_ uint32_t const wanted,
+            _In_ std::chrono::milliseconds const timeout)
+        {
+            auto deadline = std::chrono::steady_clock::now() + timeout;
+            uint32_t errorCode{ 0 };
+
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                if (auto entry = FindClientEntry(entryIdentifier); entry.has_value())
+                {
+                    errorCode = static_cast<uint32_t>(entry->GetNamedNumber(L"lastErrorCode", 0));
+
+                    if (errorCode == wanted)
+                    {
+                        break;
+                    }
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(250));
+            }
+
+            return errorCode;
         }
 
 
@@ -793,6 +828,9 @@ namespace NetworkMidiTest
 
         VERIFY_IS_TRUE(state == L"pending", L"A busy host leaves the entry waiting to try again, not live.");
 
+        VERIFY_ARE_EQUAL(HostBusyErrorCode, WaitForClientLastErrorCode(client.EntryIdentifier(), HostBusyErrorCode, ShortTimeout),
+            L"The entry says the host was busy.");
+
         // the host has room now
         client.Host().SetInvitationBehavior(FakeHostInvitationBehavior::Accept);
 
@@ -825,6 +863,9 @@ namespace NetworkMidiTest
 
         VERIFY_IS_TRUE(state == L"failed", L"An entry the host refused is reported as failed, not live.");
 
+        VERIFY_ARE_EQUAL(InvitationRefusedErrorCode, WaitForClientLastErrorCode(client.EntryIdentifier(), InvitationRefusedErrorCode, ShortTimeout),
+            L"The entry says the host turned it down.");
+
         // longer than the wait after a busy host, at the 1 s scan interval set in ClassSetup
         auto const before = client.Host().CountReceived(CommandCode::Invitation);
         std::this_thread::sleep_for(std::chrono::milliseconds(12000));
@@ -834,9 +875,9 @@ namespace NetworkMidiTest
     }
 
 
-    // Spec 6.6, then 6.4: the client gives up on a host which never approves it. The entry has to
-    // say so rather than stay live with no session.
-    void ClientTests::ClientEntryIsParkedWhenHostNeverApproves()
+    // Spec 6.6, then 6.4: the client gives up on a host which never approves it. The entry says
+    // why, and asks again after the scan interval, like a host which never answered.
+    void ClientTests::ClientAsksAgainWhenHostNeverApproves()
     {
         if (!RequireService()) return;
 
@@ -853,11 +894,15 @@ namespace NetworkMidiTest
         VERIFY_IS_TRUE(client.Host().WaitForCommand(CommandCode::Bye, InvitationTimeout).has_value(),
             L"The client gave up waiting for approval.");
 
-        auto const state = WaitForClientEntryState(client.EntryIdentifier(), L"unavailable", ShortTimeout);
+        auto const invitations = client.Host().CountReceived(CommandCode::Invitation);
+        auto const errorCode = WaitForClientLastErrorCode(client.EntryIdentifier(), InvitationNotApprovedErrorCode, ShortTimeout);
 
-        Log::Comment(String().Format(L"Entry state after giving up: %s", state.c_str()));
+        Log::Comment(String().Format(L"Last error code after giving up: 0x%02X", errorCode));
 
-        VERIFY_IS_TRUE(state == L"unavailable", L"A direct entry nobody approved is parked, like one which never answered.");
+        VERIFY_ARE_EQUAL(InvitationNotApprovedErrorCode, errorCode, L"The entry says nobody approved it.");
+
+        VERIFY_IS_TRUE(client.Host().WaitForCommandCount(CommandCode::Invitation, invitations + 1, InvitationTimeout).has_value(),
+            L"The client asked again on its own.");
     }
 
 
@@ -880,6 +925,9 @@ namespace NetworkMidiTest
 
         VERIFY_IS_TRUE(state == L"failed", L"An entry the host wants authentication for is reported as failed.");
 
+        VERIFY_ARE_EQUAL(AuthenticationRequiredErrorCode, WaitForClientLastErrorCode(client.EntryIdentifier(), AuthenticationRequiredErrorCode, ShortTimeout),
+            L"The entry says the host wants authentication.");
+
         // longer than a full round of invitations
         auto const before = client.Host().CountReceived(CommandCode::Invitation);
         std::this_thread::sleep_for(std::chrono::milliseconds(12000));
@@ -891,12 +939,17 @@ namespace NetworkMidiTest
 
         VERIFY_ARE_EQUAL(static_cast<size_t>(1), client.Host().CountReceived(CommandCode::Bye),
             L"The client withdraws once.");
+
+        // a failed entry waits for the app
+        VERIFY_IS_TRUE(ConnectDirectClient(client.EntryIdentifier(), FakeNetworkHost::Address(), client.Host().Port()).IsSuccess(),
+            L"A connect command for the failed entry was accepted.");
+
+        VERIFY_IS_TRUE(client.Host().WaitForCommandCount(CommandCode::Invitation, after + 1, InvitationTimeout).has_value(),
+            L"Connecting again tries the host again.");
     }
 
 
-    // A host name is looked up again on every attempt, so a direct entry given as one is tried
-    // again after the scan interval. An IP address is still parked: see
-    // ClientConnectsToHostWhichComesOnlineLater.
+    // The same for a direct entry given as a name, which is looked up again on every try
     void ClientTests::ClientTriesAHostNameAgainAfterNoAnswer()
     {
         if (!RequireService()) return;
@@ -927,21 +980,23 @@ namespace NetworkMidiTest
         VERIFY_IS_TRUE(host.WaitForCommand(CommandCode::Bye, InvitationTimeout).has_value(),
             L"The client gave up on the first round.");
 
+        auto const errorCode = WaitForClientLastErrorCode(entryIdentifier, NoReplyToInvitationErrorCode, ShortTimeout);
+
+        Log::Comment(String().Format(L"Last error code after the first round: 0x%02X", errorCode));
+
+        VERIFY_ARE_EQUAL(NoReplyToInvitationErrorCode, errorCode, L"The entry says the host did not answer.");
+
         // the host is back, and nothing tells the client so
         host.SetInvitationBehavior(FakeHostInvitationBehavior::Accept);
-
-        // A parked entry shows as unavailable straight away
-        auto const state = WaitForClientEntryState(entryIdentifier, L"unavailable", std::chrono::milliseconds(3000));
-
-        Log::Comment(String().Format(L"Entry state after the first round: %s", state.c_str()));
-
-        VERIFY_IS_TRUE(state != L"unavailable", L"A direct entry given as a name is not parked.");
 
         auto const data = host.WaitForCommand(CommandCode::UmpData, SessionTimeout);
 
         Log::Comment(String().Format(L"Invitations received: %zu", host.CountReceived(CommandCode::Invitation)));
 
         VERIFY_IS_TRUE(data.has_value(), L"The client tried the name again on its own, and the session established.");
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(0), WaitForClientLastErrorCode(entryIdentifier, 0, ShortTimeout),
+            L"The reason is cleared once a session opens.");
     }
 
 
@@ -1182,8 +1237,8 @@ namespace NetworkMidiTest
     }
 
 
-    // Nothing announces that a direct address has come online, so the service stops inviting it
-    // rather than putting invitations on the wire forever for every dead address configured.
+    // Nothing announces that a direct address has come online, so the service tries it again
+    // after the scan interval, with no command from the app.
     void ClientTests::ClientConnectsToHostWhichComesOnlineLater()
     {
         if (!RequireService()) return;
@@ -1212,29 +1267,15 @@ namespace NetworkMidiTest
         client.Host().SetRelatchOnInvitation(true);
         client.Host().ClearHistory();
 
-        // Several scan intervals, shortened to 1s in ClassSetup
-        std::this_thread::sleep_for(std::chrono::milliseconds(8000));
-
-        VERIFY_ARE_EQUAL(static_cast<size_t>(0), client.Host().CountReceived(CommandCode::Invitation),
-            L"A direct connection which gave up must not keep inviting on its own.");
-
-        // The app telling the service the remote is reachable now
-        auto connectResult = ConnectDirectClient(
-            client.EntryIdentifier(),
-            FakeNetworkHost::Address(),
-            client.Host().Port());
-
-        VERIFY_IS_TRUE(connectResult.IsSuccess(),
-            L"A connect command for an existing entry must be accepted.");
-
+        // the scan interval is 1 s, set in ClassSetup
         auto invitation = client.Host().WaitForCommand(CommandCode::Invitation, InvitationTimeout);
 
         VERIFY_IS_TRUE(invitation.has_value(),
-            L"A connect command must make the service try the direct address again.");
+            L"A direct connection which gave up is tried again on its own.");
 
         auto data = client.Host().WaitForCommand(CommandCode::UmpData, SessionTimeout);
 
-        VERIFY_IS_TRUE(data.has_value(), L"The session did not establish after the connect command.");
+        VERIFY_IS_TRUE(data.has_value(), L"The session did not establish once the host answered.");
     }
 
 

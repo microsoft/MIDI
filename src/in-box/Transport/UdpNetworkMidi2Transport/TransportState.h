@@ -157,20 +157,28 @@ public:
     // definition remains, which is how a user-requested disconnect avoids being reconnected.
     HRESULT MarkClientDefinitionForReconnect(_In_ winrt::guid const& clientConfigEntryIdentifier);
 
-    // The remote never answered an invitation. An advertised host is retried when it advertises
-    // again, which costs nothing while it is absent. A direct host name is tried again after the
-    // direct connection scan interval, because it is looked up again each time. A direct IP
-    // address has no such signal, so it is parked as unavailable rather than retried on a timer.
-    // Returns S_OK when it will be retried, S_FALSE when it was parked.
-    HRESULT MarkClientDefinitionUnavailableOrRetry(_In_ winrt::guid const& clientConfigEntryIdentifier);
+    // The remote never answered, nobody approved the invitation, or the host ended it with a Bye
+    // this client can do nothing about. An advertised host is tried again while it advertises,
+    // which costs nothing while it is absent. Nothing announces a direct host's return, so it is
+    // tried again after the direct connection scan interval. Returns S_OK when it will be
+    // retried, S_FALSE when there is no enabled entry.
+    HRESULT MarkClientDefinitionForRetry(
+        _In_ winrt::guid const& clientConfigEntryIdentifier,
+        _In_ uint32_t const errorCode);
 
     // The remote host said it was busy. Tried again, direct or advertised, once the delay passes.
     HRESULT MarkClientDefinitionForRetryAfter(
         _In_ winrt::guid const& clientConfigEntryIdentifier,
-        _In_ uint32_t const delayMilliseconds);
+        _In_ uint32_t const delayMilliseconds,
+        _In_ uint32_t const errorCode);
 
     // The remote host refused the connection. Not tried again until the app asks.
-    HRESULT MarkClientDefinitionFailed(_In_ winrt::guid const& clientConfigEntryIdentifier);
+    HRESULT MarkClientDefinitionFailed(
+        _In_ winrt::guid const& clientConfigEntryIdentifier,
+        _In_ uint32_t const errorCode);
+
+    // A session opened, so the reason the last attempt failed no longer applies
+    HRESULT ClearClientDefinitionLastErrorCode(_In_ winrt::guid const& clientConfigEntryIdentifier);
 
     // The app asking to connect an entry which is already configured: "it is available now, try
     // again". Returns S_FALSE when there is no such definition.

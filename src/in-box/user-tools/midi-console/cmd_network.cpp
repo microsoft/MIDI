@@ -53,6 +53,23 @@ namespace midi2console
             }
         }
 
+        // Empty when the last invitation did not fail
+        std::string DescribeClientProblem(_In_ midi2net::MidiNetworkClientConnectErrorCode const lastErrorCode)
+        {
+            switch (lastErrorCode)
+            {
+            case midi2net::MidiNetworkClientConnectErrorCode::NoErrorInformationAvailable: return {};
+            case midi2net::MidiNetworkClientConnectErrorCode::NoReplyToInvitation:         return ResourceString(IDS_NET_PROBLEM_NO_ANSWER);
+            case midi2net::MidiNetworkClientConnectErrorCode::InvitationNotApproved:       return ResourceString(IDS_NET_PROBLEM_NOT_APPROVED);
+            case midi2net::MidiNetworkClientConnectErrorCode::HostBusy:                    return ResourceString(IDS_NET_PROBLEM_BUSY);
+            case midi2net::MidiNetworkClientConnectErrorCode::InvitationRefused:           return ResourceString(IDS_NET_PROBLEM_REFUSED);
+            case midi2net::MidiNetworkClientConnectErrorCode::AuthenticationRequired:      return ResourceString(IDS_NET_PROBLEM_NEEDS_PASSWORD);
+            case midi2net::MidiNetworkClientConnectErrorCode::InvitationEndedByHost:       return ResourceString(IDS_NET_PROBLEM_ENDED);
+            default:
+                return FormatResourceString(IDS_NET_PROBLEM_OTHER, fmt::format("0x{:08X}", static_cast<uint32_t>(lastErrorCode)));
+            }
+        }
+
         std::string FormatEndpointOrEmpty(_In_ winrt::hstring const& value)
         {
             auto const text = ToUtf8(value);
@@ -264,6 +281,14 @@ namespace midi2console
             table.AddCell(FormatLatency(client.CurrentLatencyTicks()));
             table.AddCell(fmt::format("{} / {}",
                 client.TotalCountNetworkPacketsReceived(), client.TotalCountNetworkPacketsSent()));
+
+            if (!client.IsSessionActive())
+            {
+                if (auto const problem = DescribeClientProblem(client.LastErrorCode()); !problem.empty())
+                {
+                    table.AddRowDetail(problem, warningTextStyle);
+                }
+            }
 
             if (!client.EndpointDeviceId().empty())
             {

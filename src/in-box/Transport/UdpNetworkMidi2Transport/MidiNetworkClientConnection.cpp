@@ -137,7 +137,9 @@ MidiNetworkClientConnection::OnWatchdogTick()
         // Nobody decided, which is treated like no answer at all
         if (!m_shuttingDown)
         {
-            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionUnavailableOrRetry(m_configIdentifier));
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionForRetry(
+                m_configIdentifier,
+                NETWORK_ERROR_CODE_INVITATION_NOT_APPROVED));
         }
 
         return S_OK;
@@ -164,12 +166,12 @@ MidiNetworkClientConnection::OnWatchdogTick()
             }));
 
         // The host may simply not be switched on yet. An advertised host is picked up again when
-        // it advertises, and a host name is tried again after the scan interval, because it is
-        // looked up each time. An IP address is parked until the app asks for it again, because
-        // nothing announces its return and every configured dead address would be retried.
+        // it advertises, and a direct one after the scan interval.
         if (!m_shuttingDown)
         {
-            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionUnavailableOrRetry(m_configIdentifier));
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionForRetry(
+                m_configIdentifier,
+                NETWORK_ERROR_CODE_NO_REPLY_TO_INVITATION));
         }
 
         return S_OK;
@@ -212,20 +214,30 @@ MidiNetworkClientConnection::OnByeReceived(MidiNetworkCommandByeReason const rea
         case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_TooManyOpenSessions:
             LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionForRetryAfter(
                 m_configIdentifier,
-                MIDI_NETWORK_CLIENT_BUSY_RETRY_DELAY_MILLISECONDS));
+                MIDI_NETWORK_CLIENT_BUSY_RETRY_DELAY_MILLISECONDS,
+                NETWORK_ERROR_CODE_HOST_BUSY));
             break;
 
-        // The host's owner said no, or it wants authentication this client cannot give
-        case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationWithAuthRejectedMissingPriorAttempt:
         case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationRejectedUserDidNotAccept:
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionFailed(
+                m_configIdentifier,
+                NETWORK_ERROR_CODE_INVITATION_REFUSED));
+            break;
+
+        // it wants authentication this client cannot give
+        case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationWithAuthRejectedMissingPriorAttempt:
         case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationRejectedAuthFailed:
         case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationRejectedUsernameNotFound:
         case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_NoMatchingAuthenticationMethod:
-            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionFailed(m_configIdentifier));
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionFailed(
+                m_configIdentifier,
+                NETWORK_ERROR_CODE_AUTHENTICATION_REQUIRED));
             break;
 
         default:
-            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionUnavailableOrRetry(m_configIdentifier));
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionForRetry(
+                m_configIdentifier,
+                NETWORK_ERROR_CODE_INVITATION_ENDED_BY_HOST));
             break;
         }
     }
@@ -332,6 +344,8 @@ MidiNetworkClientConnection::HandleIncomingInvitationReplyAccepted(
         m_sessionActive = true;
         m_sessionEverEstablished = true;
     }
+
+    LOG_IF_FAILED(TransportState::Current().ClearClientDefinitionLastErrorCode(m_configIdentifier));
 
     // Creating the endpoint blocks on the service, and this is the socket receive callback
     auto queueHr = endpointManager->QueueClientEndpointCreation(
@@ -535,7 +549,9 @@ MidiNetworkClientConnection::HandleIncomingInvitationReplyAuthenticationRequired
     // Asking again gets the same answer
     if (!m_shuttingDown)
     {
-        LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionFailed(m_configIdentifier));
+        LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionFailed(
+            m_configIdentifier,
+            NETWORK_ERROR_CODE_AUTHENTICATION_REQUIRED));
     }
 
     return S_OK;

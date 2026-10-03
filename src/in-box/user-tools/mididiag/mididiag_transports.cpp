@@ -457,6 +457,7 @@ bool DoSectionNetworkMidi2()
                 .AddNumber(L"retransmit_requests", client.RetransmitRequestCount())
                 .AddNumber(L"packets_out", client.TotalCountNetworkPacketsSent())
                 .AddNumber(L"packets_in", client.TotalCountNetworkPacketsReceived())
+                .AddNumber(L"last_error", static_cast<uint32_t>(client.LastErrorCode()))
                 .AddIfNotEmpty(L"match", client.MatchDeviceId()));
         }
 

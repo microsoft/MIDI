@@ -10,6 +10,7 @@
 import "MidiApiContracts.idl";
 
 import "MidiNetworkClientEntryStateEnum.idl";
+import "MidiNetworkClientConnectErrorCodeEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
@@ -47,6 +48,10 @@ namespace Windows.Devices.Midi2.Transports.Network
         [noexcept] UInt64 CurrentLatencyTicks{ get; };             // latency in ticks, for telemetry and debugging purposes
         [noexcept] UInt64 TotalCountNetworkPacketsSent{ get; };
         [noexcept] UInt64 TotalCountNetworkPacketsReceived{ get; };
+
+        // Why the last invitation did not open a session, such as NoReplyToInvitation or
+        // AuthenticationRequired. NoErrorInformationAvailable once a session opens.
+        [noexcept] MidiNetworkClientConnectErrorCode LastErrorCode{ get; };
 
     };
 }

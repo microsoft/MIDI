@@ -29,4 +29,4 @@ Pass to `MidiNetworkTransportManager.ConnectNetworkClientAsync`.
 
 ## Remarks
 
-Calling `ConnectNetworkClientAsync` with a `ClientId` that already exists doesn't create a copy. It starts the existing entry trying again, which is how you retry a direct connection marked `Unavailable`.
+Calling `ConnectNetworkClientAsync` with a `ClientId` that already exists doesn't create a copy. It starts the existing entry trying again right away, which is how you bring back an entry marked `Failed`.

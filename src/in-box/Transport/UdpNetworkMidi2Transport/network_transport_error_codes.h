@@ -60,6 +60,12 @@
 #define NETWORK_ERROR_CODE_MISSING_REMOTE_CLIENT_IDENTITY           0x00000073
 #define NETWORK_ERROR_CODE_PENDING_REMOTE_CLIENT_NOT_FOUND          0x00000074
 
+// why a client's last invitation did not open a session, with the two above it
+#define NETWORK_ERROR_CODE_HOST_BUSY                                0x00000075
+#define NETWORK_ERROR_CODE_INVITATION_REFUSED                       0x00000076
+#define NETWORK_ERROR_CODE_AUTHENTICATION_REQUIRED                  0x00000077
+#define NETWORK_ERROR_CODE_INVITATION_ENDED_BY_HOST                 0x00000078
+
 // lookup failures
 #define NETWORK_ERROR_CODE_HOST_NOT_FOUND                           0x00001065
 #define NETWORK_ERROR_CODE_CLIENT_NOT_FOUND                         0x00001066

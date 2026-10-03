@@ -50,7 +50,7 @@ Every property above has a matching pair of static properties with its supported
 
 Lowering `MaxHostConnections` doesn't disconnect clients that are already connected. It only affects invitations that arrive later.
 
-`DirectConnectionScanIntervalMilliseconds` is how long the service waits before it tries a direct client set up by host name again, after the host stopped answering. It's also the longest the service waits between looks at clients that are waiting to connect. A direct client set up by IP address isn't tried again on a timer. See [Reconnection behavior]({{ site.baseurl }}/sdk-reference/Transports/Network/#reconnection-behavior).
+`DirectConnectionScanIntervalMilliseconds` is how long the service waits before it tries a direct client again, after the host stopped answering. It's also the longest the service waits between looks at clients that are waiting to connect. See [Reconnection behavior]({{ site.baseurl }}/sdk-reference/Transports/Network/#reconnection-behavior).
 
 ## See also
 

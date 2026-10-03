@@ -275,6 +275,9 @@ namespace winrt::midinetworksetup::implementation
         // Which RTP-MIDI error an entry last hit, as something a person can act on
         static winrt::hstring DescribeRtpClientProblem(_In_ int32_t const lastErrorCode) noexcept;
 
+        // Why a Network MIDI 2.0 entry's last invitation did not open a session. Empty when it did.
+        static winrt::hstring DescribeNetworkClientProblem(_In_ midi2net::MidiNetworkClientConnectErrorCode const lastErrorCode) noexcept;
+
         static winrt::hstring DescribeLatency(uint64_t const ticks) noexcept;
         static winrt::hstring JoinAddresses(collections::IVectorView<winrt::hstring> const& addresses) noexcept;
 

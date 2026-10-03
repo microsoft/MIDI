@@ -710,6 +710,13 @@ IDS_NET_ADAPTER_UNKNOWN                     L"Unknown adapter"
 IDS_NET_ADAPTER_MISSING_FORMAT              L"{0} (missing)"
 IDS_NET_ADAPTER_WAITING_NOTE                L"The network adapter {0} is missing, so this host is not running. It starts by itself when the adapter is back, or you can choose another adapter in Network MIDI Setup."
 IDS_NET_ADAPTER_FALLBACK_NOTE               L"The network adapter {0} is missing, so this host is using every adapter until it is back."
+IDS_NET_PROBLEM_NO_ANSWER                   L"The device did not answer."
+IDS_NET_PROBLEM_NOT_APPROVED                L"Nobody approved the connection on the device."
+IDS_NET_PROBLEM_BUSY                        L"The device is busy."
+IDS_NET_PROBLEM_REFUSED                     L"The device turned down the connection."
+IDS_NET_PROBLEM_NEEDS_PASSWORD              L"The device asks for a password, which Windows does not support yet."
+IDS_NET_PROBLEM_ENDED                       L"The device ended the connection attempt."
+IDS_NET_PROBLEM_OTHER                       L"The last attempt failed with error {0}."
 
 // ---- rtp
 

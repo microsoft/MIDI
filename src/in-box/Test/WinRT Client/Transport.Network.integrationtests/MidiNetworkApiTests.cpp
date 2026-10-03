@@ -2199,6 +2199,75 @@ void MidiNetworkApiTests::TestHostRepliesFromTheAddressTheClientInvited()
 }
 
 
+void MidiNetworkApiTests::TestConfiguredClientSaysWhyItIsNotConnected()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // bound, so the invitations land somewhere, and never answered
+    winrt::Windows::Networking::Sockets::DatagramSocket silentHost;
+    silentHost.MessageReceived([](auto const&, auto const&) {});
+    silentHost.BindEndpointAsync(winrt::Windows::Networking::HostName{ L"127.0.0.1" }, L"").get();
+
+    auto const port = static_cast<uint16_t>(std::stoul(std::wstring{ silentHost.Information().LocalPort() }));
+    auto const clientId = foundation::GuidHelper::CreateNewGuid();
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            RemoveTestClient(clientId);
+            silentHost.Close();
+        });
+
+    MidiNetworkClientMatchCriteria criteria;
+    criteria.DirectHostNameOrIPAddress(L"127.0.0.1");
+    criteria.DirectPort(port);
+
+    MidiNetworkClientConnectConfig config;
+    config.ClientId(clientId);
+    config.UmpEndpointName(winrt::hstring{ L"MidiApiTest_SilentHostClient_" + MakeUniqueSuffix() });
+    config.CreateOnlyUmpEndpoints(true);
+    config.MatchCriteria(criteria);
+
+    auto const response = MidiNetworkTransportManager::ConnectNetworkClientAsync(config).get();
+
+    VERIFY_IS_TRUE(response != nullptr && response.Success(), L"The connect request was accepted");
+
+    if (response == nullptr || !response.Success())
+    {
+        return;
+    }
+
+    // five unanswered invitations, one per ping interval, then the client gives up on that try
+    auto errorCode = MidiNetworkClientConnectErrorCode::NoErrorInformationAvailable;
+    auto state = MidiNetworkClientEntryState::Pending;
+
+    for (int attempt = 0; attempt < 120 && errorCode != MidiNetworkClientConnectErrorCode::NoReplyToInvitation; attempt++)
+    {
+        for (auto const& client : MidiNetworkTransportManager::GetConfiguredClients())
+        {
+            if (client != nullptr && client.ClientId() == clientId)
+            {
+                errorCode = client.LastErrorCode();
+                state = client.EntryState();
+                break;
+            }
+        }
+
+        if (errorCode != MidiNetworkClientConnectErrorCode::NoReplyToInvitation)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        }
+    }
+
+    Log::Comment(String().Format(
+        L"Last error code 0x%08X, entry state %d",
+        static_cast<uint32_t>(errorCode),
+        static_cast<int>(state)));
+
+    VERIFY_ARE_EQUAL(MidiNetworkClientConnectErrorCode::NoReplyToInvitation, errorCode, L"The entry says the host did not answer");
+    VERIFY_ARE_NOT_EQUAL(MidiNetworkClientEntryState::Unavailable, state, L"A direct entry is tried again rather than parked");
+}
+
+
 // ------------------------------------------------------------------------------
 // Disconnecting a remote client from one of our hosts
 // ------------------------------------------------------------------------------

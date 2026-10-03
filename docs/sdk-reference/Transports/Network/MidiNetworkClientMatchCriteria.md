@@ -34,4 +34,4 @@ It's worth setting `ProductInstanceId` and `UmpEndpointName` as well as `DeviceI
 
 ## Remarks
 
-Set `DeviceId` for a discovered host, or `DirectHostNameOrIPAddress` and `DirectPort` for a direct one. Your choice decides what the service does when the host can't be reached. A discovered host is tried again whenever it advertises. A direct IP address is tried once, and then marked unavailable. A direct host name is tried again after the retry interval, because the service looks it up again each time. See the [namespace overview]({{ site.baseurl }}/sdk-reference/Transports/Network/) for the full table.
+Set `DeviceId` for a discovered host, or `DirectHostNameOrIPAddress` and `DirectPort` for a direct one. Your choice decides what the service does when the host can't be reached. A discovered host is tried again whenever it advertises. A direct one is tried again after the retry interval, and a host name is looked up again each time. See the [namespace overview]({{ site.baseurl }}/sdk-reference/Transports/Network/) for the full table.

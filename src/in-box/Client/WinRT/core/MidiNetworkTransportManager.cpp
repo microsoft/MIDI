@@ -738,7 +738,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_DIRECT_KEY, false),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_ADDRESS_KEY, L""),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_PORT_KEY, L""),
-                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_MDNS_MATCH_ID_KEY, L"")
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_MDNS_MATCH_ID_KEY, L""),
+                                static_cast<network::MidiNetworkClientConnectErrorCode>(static_cast<uint32_t>(
+                                    entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LAST_ERROR_CODE_KEY, 0)))
                                 );
 
                             results.Append(*client);

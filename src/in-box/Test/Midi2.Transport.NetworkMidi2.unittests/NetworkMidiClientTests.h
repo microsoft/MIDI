@@ -52,7 +52,7 @@ namespace NetworkMidiTest
         // with no session, and never try again.
         TEST_METHOD(ClientTriesAgainLaterWhenHostIsBusy);
         TEST_METHOD(ClientEntryFailsWhenHostRefuses);
-        TEST_METHOD(ClientEntryIsParkedWhenHostNeverApproves);
+        TEST_METHOD(ClientAsksAgainWhenHostNeverApproves);
         TEST_METHOD(ClientEntryFailsWhenHostRequiresAuthentication);
         TEST_METHOD(ClientTriesAHostNameAgainAfterNoAnswer);
 

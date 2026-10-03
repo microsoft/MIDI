@@ -373,7 +373,7 @@ Get-MidiNetworkAdvertisedHost | Format-Table -AutoSize
 
 ### Connect-MidiNetworkHost
 
-Connects to a remote host, either one which was discovered, or one at a fixed address and port. A discovered host is matched on its advertisement, so the connection survives it moving to a new address. A host name is looked up again on every try, so it is tried again on its own if it stops answering. An IP address cannot do either, and is not retried automatically if it stops answering.
+Connects to a remote host, either one which was discovered, or one at a fixed address and port. A discovered host is matched on its advertisement, so the connection survives it moving to a new address. A fixed address is tried again on its own if it stops answering, and a host name is looked up again each time. `LastErrorCode` on the client entry says why it is not connected.
 
 ```pwsh
 # connect to something which was discovered

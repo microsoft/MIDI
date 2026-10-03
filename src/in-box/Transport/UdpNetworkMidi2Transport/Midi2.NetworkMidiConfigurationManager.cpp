@@ -725,8 +725,8 @@ try
 
     RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
 
-    // The same entry arriving again is the app saying the remote is available now. A direct IP
-    // address which gave up earlier is only ever revived here.
+    // The same entry arriving again is the app saying the remote is available now. A failed
+    // entry is only ever revived here, and one waiting to retry goes straight away.
     if (TransportState::Current().RearmClientDefinition(configEntryId) == S_OK)
     {
         LOG_IF_FAILED(endpointManager->WakeupBackgroundEndpointCreatorThread());
@@ -1418,6 +1418,10 @@ namespace
         clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_ENTRY_STATE_KEY,
             json::JsonValue::CreateStringValue(EntryStateToString(definition.State)));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LAST_ERROR_CODE_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(definition.LastErrorCode)));
 
         clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,

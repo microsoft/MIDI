@@ -34,6 +34,13 @@ namespace Windows.Devices.Midi2.Transports.Network
         NoReplyToInvitation =                   NETWORK_ERROR_CODE_NO_REPLY_TO_INVITATION,
         InvitationNotApproved =                 NETWORK_ERROR_CODE_INVITATION_NOT_APPROVED,
 
+        // With the two above, why a client's last invitation did not open a session. Reported by
+        // MidiNetworkConfiguredClient.LastErrorCode, not by ConnectNetworkClientAsync.
+        HostBusy =                              NETWORK_ERROR_CODE_HOST_BUSY,
+        InvitationRefused =                     NETWORK_ERROR_CODE_INVITATION_REFUSED,
+        AuthenticationRequired =                NETWORK_ERROR_CODE_AUTHENTICATION_REQUIRED,
+        InvitationEndedByHost =                 NETWORK_ERROR_CODE_INVITATION_ENDED_BY_HOST,
+
         InvalidArgument =                       NETWORK_ERROR_CODE_CLIENT_API_INVALID_ARGUMENT,
         ClientApiException =                    NETWORK_ERROR_CODE_CLIENT_API_EXCEPTION,
     };

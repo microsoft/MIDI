@@ -12,8 +12,12 @@ struct MidiNetworkClientDefinition
 {
     MidiNetworkEntryState State{ MidiNetworkEntryState::Pending };
 
-    // GetTickCount64 value before which a host which said it was busy is not invited again
+    // GetTickCount64 value before which the entry is not tried again: after a busy host, and
+    // after a direct host which did not answer
     uint64_t RetryNotBeforeTickCount{ 0 };
+
+    // NETWORK_ERROR_CODE_* saying why the last invitation did not open a session, or 0
+    uint32_t LastErrorCode{ 0 };
 
     winrt::guid EntryIdentifier;            // internal
     bool Enabled{ true };
@@ -60,39 +64,6 @@ struct MidiNetworkClientDefinition
             MatchProductInstanceId.empty() &&
             MatchUmpEndpointName.empty() &&
             !MatchDirectPort.empty();
-    }
-
-    // A direct entry given as a host name rather than an IP address. The name is looked up again
-    // on every attempt, so it can find the remote after the remote's address changes. That is
-    // what makes trying it again on a timer worth the traffic.
-    bool IsDirectConnectionByName() const
-    {
-        if (!IsDirectConnection())
-        {
-            return false;
-        }
-
-        std::wstring_view address{ MatchDirectHostNameOrIPAddress };
-
-        // the other ways an IPv6 address is written: [2001:db8::1] and fe80::1%12
-        if (address.size() > 2 && address.front() == L'[' && address.back() == L']')
-        {
-            address = address.substr(1, address.size() - 2);
-        }
-
-        if (auto const scope = address.find(L'%'); scope != std::wstring_view::npos)
-        {
-            address = address.substr(0, scope);
-        }
-
-        std::wstring const text{ address };
-
-        IN_ADDR ipv4{ };
-        IN6_ADDR ipv6{ };
-
-        return !text.empty() &&
-            InetPtonW(AF_INET, text.c_str(), &ipv4) != 1 &&
-            InetPtonW(AF_INET6, text.c_str(), &ipv6) != 1;
     }
 };
 

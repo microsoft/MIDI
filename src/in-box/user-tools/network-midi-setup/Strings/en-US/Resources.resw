@@ -125,7 +125,7 @@
     <value>How often to retry a device which is not answering</value>
   </data>
   <data name="SettingScanIntervalDescription.Text" xml:space="preserve">
-    <value>How often this PC tries again, in milliseconds, to reach a device you connected to by host name while it is not answering. A device you connected to by IP address waits until you connect it again.</value>
+    <value>How often this PC tries again, in milliseconds, to reach a device you connected to by address while it is not answering.</value>
   </data>
   <data name="SettingEffectNextScan.Text" xml:space="preserve">
     <value>Takes effect within one retry, so up to the old interval from now.</value>
@@ -353,6 +353,33 @@
   <data name="RemoteHostUnavailable" xml:space="preserve">
     <value>Not answering. Connect again to retry.</value>
   </data>
+  <data name="NetworkRemoteHostNoAnswer" xml:space="preserve">
+    <value>The device did not answer.</value>
+  </data>
+  <data name="NetworkRemoteHostNotApproved" xml:space="preserve">
+    <value>Nobody approved the connection on the device.</value>
+  </data>
+  <data name="NetworkRemoteHostBusy" xml:space="preserve">
+    <value>The device is busy.</value>
+    <comment>The device has no room for another connection. A Windows PC also says this for about 10 seconds after a connection to it drops.</comment>
+  </data>
+  <data name="NetworkRemoteHostRefused" xml:space="preserve">
+    <value>The device turned down the connection.</value>
+  </data>
+  <data name="NetworkRemoteHostNeedsPassword" xml:space="preserve">
+    <value>The device asks for a password, which Windows does not support yet.</value>
+  </data>
+  <data name="NetworkRemoteHostEnded" xml:space="preserve">
+    <value>The device ended the connection attempt.</value>
+  </data>
+  <data name="NetworkRemoteHostRetryingFormat" xml:space="preserve">
+    <value>{0} Windows will keep trying.</value>
+    <comment>{0} is a sentence saying what went wrong.</comment>
+  </data>
+  <data name="NetworkRemoteHostStoppedFormat" xml:space="preserve">
+    <value>{0} Connect again to retry.</value>
+    <comment>{0} is a sentence saying what went wrong. "Connect" is the label of the button beside it.</comment>
+  </data>
   <data name="RemoteHostNotFound" xml:space="preserve">
     <value>Not found on the network</value>
   </data>
@@ -421,10 +448,6 @@
   </data>
   <data name="ManualConnectDescription.Text" xml:space="preserve">
     <value>Use this when a device is not advertised on your network. Windows will keep the entry and try again later if the device is not answering now.</value>
-  </data>
-  <data name="NetworkManualConnectDescription.Text" xml:space="preserve">
-    <value>Use this when a device is not advertised on your network. Windows will keep the entry. A host name is tried again on its own while the device is not answering. An IP address is not, so connect again when the device is back.</value>
-    <comment>Network MIDI 2.0 page. A host name is looked up again on every try, so it is retried on a timer; an IP address is tried once.</comment>
   </data>
   <data name="ManualAddressTextBox.Header" xml:space="preserve">
     <value>Host name or IP address</value>

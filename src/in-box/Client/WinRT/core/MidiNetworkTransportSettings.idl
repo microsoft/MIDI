@@ -52,9 +52,9 @@ namespace Windows.Devices.Midi2.Transports.Network
         // disconnect clients which are already connected.
         UInt32 MaxHostConnections;
 
-        // How long the transport waits before it tries a direct connection by host name again,
-        // after the host stopped answering. A direct IP address is not retried on a timer.
-        // Read at the top of each scan, so a change takes effect within one scan.
+        // How long the transport waits before it tries a direct connection again, after the host
+        // stopped answering. Read at the top of each scan, so a change takes effect within one
+        // scan.
         UInt32 DirectConnectionScanIntervalMilliseconds;
 
         static UInt32 MinMaxForwardErrorCorrectionCommandPackets{ get; };
