@@ -7,10 +7,11 @@
 //
 // Export of the full capture, including messages that are filtered out of the display.
 //
-// Three shapes, because they are wanted for three different reasons. The text file is for
+// Four shapes, because they are wanted for four different reasons. The text file is for
 // reading. The comma separated file is for a script or a spreadsheet, so its column names are
 // fixed English and its times are plain numbers. The Standard MIDI File is for playing the
-// capture back, or loading it into a sequencer.
+// capture back, or loading it into a sequencer. The binary file is for a hex editor, so it holds
+// the UMP words alone, in the PC's native byte order.
 //
 
 #include "pch.h"
@@ -31,6 +32,7 @@ namespace winrt::midi2monitor::implementation
     namespace
     {
         constexpr size_t ExportFlushThresholdCharacters = 1u << 16;
+        constexpr size_t ExportFlushThresholdWords = 1u << 14;
 
         // Ticks per quarter note for the Standard MIDI File, at a fixed 120 beats per minute, so
         // one tick is a little over half a millisecond. This is the division nearly every
@@ -44,7 +46,8 @@ namespace winrt::midi2monitor::implementation
         {
             Text,
             CommaSeparated,
-            StandardMidiFile
+            StandardMidiFile,
+            Binary
         };
 
         ExportFormat FormatFromFileType(winrt::hstring const& fileType) noexcept
@@ -62,6 +65,11 @@ namespace winrt::midi2monitor::implementation
             if (extension == L".mid" || extension == L".midi")
             {
                 return ExportFormat::StandardMidiFile;
+            }
+
+            if (extension == L".bin")
+            {
+                return ExportFormat::Binary;
             }
 
             return ExportFormat::Text;
@@ -305,6 +313,63 @@ namespace winrt::midi2monitor::implementation
             CATCH_RETURN();
         }
 
+        bool WriteWords(_In_ HANDLE file, _In_ std::vector<uint32_t> const& words) noexcept
+        {
+            if (words.empty())
+            {
+                return true;
+            }
+
+            auto const byteCount = static_cast<DWORD>(words.size() * sizeof(uint32_t));
+            DWORD written{ 0 };
+
+            return ::WriteFile(file, words.data(), byteCount, &written, nullptr) != FALSE && written == byteCount;
+        }
+
+        // Runs on a background thread. Each word is written exactly as it sits in memory, with no
+        // header, times or comments around it.
+        HRESULT WriteBinaryExportFile(
+            _In_ winrt::hstring const& path,
+            _In_ std::vector<native::MessageRecord> const& records,
+            _Out_ size_t& messageCount) noexcept
+        {
+            messageCount = 0;
+
+            try
+            {
+                wil::unique_hfile file{ ::CreateFileW(path.c_str(), GENERIC_WRITE, 0, nullptr,
+                    CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr) };
+
+                RETURN_LAST_ERROR_IF(!file);
+
+                std::vector<uint32_t> buffer{};
+
+                for (auto const& record : records)
+                {
+                    if (record.Kind != native::RecordKind::MidiMessage || record.WordCount == 0)
+                    {
+                        continue;
+                    }
+
+                    auto const count = record.WordCount > 4 ? uint8_t{ 4 } : record.WordCount;
+
+                    buffer.insert(buffer.end(), record.Words.data(), record.Words.data() + count);
+                    messageCount++;
+
+                    if (buffer.size() >= ExportFlushThresholdWords)
+                    {
+                        RETURN_HR_IF(E_FAIL, !WriteWords(file.get(), buffer));
+                        buffer.clear();
+                    }
+                }
+
+                RETURN_HR_IF(E_FAIL, !WriteWords(file.get(), buffer));
+
+                return S_OK;
+            }
+            CATCH_RETURN();
+        }
+
         // Builds a sequence from the capture and hands it to the SDK's file writer, which is the
         // same path any other application would take.
         sequencing::MidiSequence BuildSequenceFromCapture(
@@ -430,6 +495,9 @@ namespace winrt::midi2monitor::implementation
             picker.FileTypeChoices().Insert(
                 res::GetString(L"ExportFileTypeStandardMidiFile"),
                 winrt::single_threaded_vector<winrt::hstring>({ L".mid" }));
+            picker.FileTypeChoices().Insert(
+                res::GetString(L"ExportFileTypeBinary"),
+                winrt::single_threaded_vector<winrt::hstring>({ L".bin" }));
 
             auto const file = co_await picker.PickSaveFileAsync();
 
@@ -474,6 +542,13 @@ namespace winrt::midi2monitor::implementation
                 {
                     LOG_CAUGHT_EXCEPTION();
                 }
+            }
+            else if (format == ExportFormat::Binary)
+            {
+                size_t messageCount{ 0 };
+
+                result = WriteBinaryExportFile(path, records, messageCount);
+                savedCount = messageCount;
             }
             else
             {

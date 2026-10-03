@@ -467,6 +467,10 @@
                                             x:Uid="CopyUmpWordsMenuItem"
                                             Text="Copy as UMP words"
                                             Click="OnCopyUmpWordsClick" />
+                            <MenuFlyoutItem x:Name="CopyBinaryDataMenuItem"
+                                            x:Uid="CopyBinaryDataMenuItem"
+                                            Text="Copy as binary data"
+                                            Click="OnCopyBinaryDataClick" />
                             <MenuFlyoutItem x:Name="CopyMidi1BytesMenuItem"
                                             x:Uid="CopyMidi1BytesMenuItem"
                                             Text="Copy as MIDI 1.0 bytes"

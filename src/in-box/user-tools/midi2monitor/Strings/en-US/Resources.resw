@@ -199,6 +199,9 @@
   <data name="CopyUmpWordsMenuItem.Text" xml:space="preserve">
     <value>Copy as UMP words</value>
   </data>
+  <data name="CopyBinaryDataMenuItem.Text" xml:space="preserve">
+    <value>Copy as binary data</value>
+  </data>
   <data name="CopyMidi1BytesMenuItem.Text" xml:space="preserve">
     <value>Copy as MIDI 1.0 bytes</value>
   </data>
@@ -417,6 +420,9 @@ Examples
   </data>
   <data name="ExportFileTypeStandardMidiFile" xml:space="preserve">
     <value>Standard MIDI File</value>
+  </data>
+  <data name="ExportFileTypeBinary" xml:space="preserve">
+    <value>Binary UMP words</value>
   </data>
   <data name="ExportSequenceDefaultTrackName" xml:space="preserve">
     <value>MIDI capture</value>
