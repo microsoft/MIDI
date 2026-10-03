@@ -100,6 +100,10 @@ public:
     // addresses. An IPv6 host has several, and can lose the one a remote was using.
     TEST_METHOD(HostRepliesFromTheAddressARemoteInvitesAgain);
 
+    // With reduceSendSpeedAutomatically, a remote which keeps asking for data again is sent to
+    // more slowly, and the speed comes back once it stops. Without it, nothing changes.
+    TEST_METHOD(HostSlowsDownWhileARemoteAsksForDataAgain);
+
     // https://github.com/microsoft/MIDI/issues/1149. Releasing the name inside the service is
     // not the same as taking the advertisement off the network. These ask mDNS directly, so a
     // pass means the record is really gone from the wire rather than just out of a local cache.
