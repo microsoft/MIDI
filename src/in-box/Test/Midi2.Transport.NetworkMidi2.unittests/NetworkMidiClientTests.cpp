@@ -301,6 +301,34 @@ namespace NetworkMidiTest
         }
 
 
+        // Returns the last state seen, so a failure can say what it was instead
+        std::wstring WaitForClientEntryState(
+            _In_ std::wstring const& entryIdentifier,
+            _In_ std::wstring const& wanted,
+            _In_ std::chrono::milliseconds const timeout)
+        {
+            auto deadline = std::chrono::steady_clock::now() + timeout;
+            std::wstring state{ };
+
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                if (auto entry = FindClientEntry(entryIdentifier); entry.has_value())
+                {
+                    state = std::wstring{ entry->GetNamedString(L"entryState", L"") };
+
+                    if (state == wanted)
+                    {
+                        break;
+                    }
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(250));
+            }
+
+            return state;
+        }
+
+
         uint64_t ReadClientLatency(_In_ std::wstring const& entryIdentifier)
         {
             auto entry = FindClientEntry(entryIdentifier);
@@ -741,6 +769,95 @@ namespace NetworkMidiTest
         auto after = client.Host().CountReceived(CommandCode::Invitation);
 
         VERIFY_ARE_EQUAL(before, after, L"The client must stop inviting once the host has said Bye.");
+    }
+
+
+    // Bye 0x40 means "not now". A Windows host also sends it while it still holds this PC's
+    // previous session, which is what reconnecting after an address change runs into.
+    void ClientTests::ClientTriesAgainLaterWhenHostIsBusy()
+    {
+        if (!RequireService()) return;
+
+        ClientUnderTest client;
+        client.Host().SetByeReason(ByeReason::TooManyOpenSessions);
+        client.Host().SetRelatchOnInvitation(true);
+
+        VERIFY_IS_TRUE(client.Start(FakeHostInvitationBehavior::RejectWithBye));
+
+        VERIFY_IS_TRUE(client.Host().WaitForCommand(CommandCode::ByeReply, InvitationTimeout).has_value(),
+            L"The client answered the refusal.");
+
+        auto const state = WaitForClientEntryState(client.EntryIdentifier(), L"pending", ShortTimeout);
+
+        Log::Comment(String().Format(L"Entry state after the refusal: %s", state.c_str()));
+
+        VERIFY_IS_TRUE(state == L"pending", L"A busy host leaves the entry waiting to try again, not live.");
+
+        // the host has room now
+        client.Host().SetInvitationBehavior(FakeHostInvitationBehavior::Accept);
+
+        auto const started = std::chrono::steady_clock::now();
+        auto const data = client.Host().WaitForCommand(CommandCode::UmpData, SessionTimeout);
+
+        Log::Comment(String().Format(L"Session after %lld ms",
+            static_cast<long long>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - started).count())));
+
+        VERIFY_IS_TRUE(data.has_value(), L"The client tried again on its own and the session established.");
+    }
+
+
+    // Asking again cannot change a refusal like this one, the host's owner saying no
+    void ClientTests::ClientEntryFailsWhenHostRefuses()
+    {
+        if (!RequireService()) return;
+
+        ClientUnderTest client;
+        client.Host().SetByeReason(ByeReason::UserDidNotAccept);
+
+        VERIFY_IS_TRUE(client.Start(FakeHostInvitationBehavior::RejectWithBye));
+
+        VERIFY_IS_TRUE(client.Host().WaitForCommand(CommandCode::ByeReply, InvitationTimeout).has_value(),
+            L"The client answered the refusal.");
+
+        auto const state = WaitForClientEntryState(client.EntryIdentifier(), L"failed", ShortTimeout);
+
+        Log::Comment(String().Format(L"Entry state after the refusal: %s", state.c_str()));
+
+        VERIFY_IS_TRUE(state == L"failed", L"An entry the host refused is reported as failed, not live.");
+
+        // longer than the wait after a busy host, at the 1 s scan interval set in ClassSetup
+        auto const before = client.Host().CountReceived(CommandCode::Invitation);
+        std::this_thread::sleep_for(std::chrono::milliseconds(12000));
+
+        VERIFY_ARE_EQUAL(before, client.Host().CountReceived(CommandCode::Invitation),
+            L"The client does not ask again on its own after being refused.");
+    }
+
+
+    // Spec 6.6, then 6.4: the client gives up on a host which never approves it. The entry has to
+    // say so rather than stay live with no session.
+    void ClientTests::ClientEntryIsParkedWhenHostNeverApproves()
+    {
+        if (!RequireService()) return;
+
+        VERIFY_IS_TRUE(
+            SetRawTransportSettings(L"\"directConnectionScanInterval\":1000,\"invitationPendingTimeout\":2000").IsSuccess(),
+            L"The approval wait was shortened.");
+
+        // back to what ClassSetup set, which also restores the default approval wait
+        auto restore = wil::scope_exit([]() { SetDirectConnectionScanInterval(1000); });
+
+        ClientUnderTest client;
+        VERIFY_IS_TRUE(client.Start(FakeHostInvitationBehavior::PendingForever));
+
+        VERIFY_IS_TRUE(client.Host().WaitForCommand(CommandCode::Bye, InvitationTimeout).has_value(),
+            L"The client gave up waiting for approval.");
+
+        auto const state = WaitForClientEntryState(client.EntryIdentifier(), L"unavailable", ShortTimeout);
+
+        Log::Comment(String().Format(L"Entry state after giving up: %s", state.c_str()));
+
+        VERIFY_IS_TRUE(state == L"unavailable", L"A direct entry nobody approved is parked, like one which never answered.");
     }
 
 

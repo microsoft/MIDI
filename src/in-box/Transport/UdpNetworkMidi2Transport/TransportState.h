@@ -163,6 +163,14 @@ public:
     // retried, S_FALSE when it was parked.
     HRESULT MarkClientDefinitionUnavailableOrRetry(_In_ winrt::guid const& clientConfigEntryIdentifier);
 
+    // The remote host said it was busy. Tried again, direct or advertised, once the delay passes.
+    HRESULT MarkClientDefinitionForRetryAfter(
+        _In_ winrt::guid const& clientConfigEntryIdentifier,
+        _In_ uint32_t const delayMilliseconds);
+
+    // The remote host refused the connection. Not tried again until the app asks.
+    HRESULT MarkClientDefinitionFailed(_In_ winrt::guid const& clientConfigEntryIdentifier);
+
     // The app asking to connect an entry which is already configured: "it is available now, try
     // again". Returns S_FALSE when there is no such definition.
     HRESULT RearmClientDefinition(_In_ winrt::guid const& clientConfigEntryIdentifier);

@@ -84,6 +84,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="RtpMidiDnssdTests.h" />
     <ClInclude Include="RtpMidiProtocolTests.h" />
+    <ClInclude Include="RtpMidiReplySourceTests.h" />
     <ClInclude Include="RtpMidiTestJson.h" />
     <ClInclude Include="RtpMidiTestMdns.h" />
     <ClInclude Include="RtpMidiTestMocks.h" />
@@ -98,6 +99,7 @@
     <ClCompile Include="RtpMidiApprovalTests.cpp" />
     <ClCompile Include="RtpMidiDnssdTests.cpp" />
     <ClCompile Include="RtpMidiProtocolTests.cpp" />
+    <ClCompile Include="RtpMidiReplySourceTests.cpp" />
     <ClCompile Include="RtpMidiTransportTests.cpp" />
   </ItemGroup>
   <ItemGroup>

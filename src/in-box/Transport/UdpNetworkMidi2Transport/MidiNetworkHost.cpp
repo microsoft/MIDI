@@ -1034,6 +1034,16 @@ void MidiNetworkHost::OnMessageReceived(
         {
             conn = AdmitNewRemote(args, firstCommandHeader);
         }
+        else if (IsSessionOpeningCommand(firstCommandHeader.HeaderData.CommandCode) &&
+            conn->ConfigIdentifier() == m_entryIdentifier &&
+            ArrivedOnActiveNetworkAdapter(args))
+        {
+            // An IPv6 host has several addresses and can lose the one a remote was using
+            if (auto socket = GetSocket(); socket != nullptr)
+            {
+                LOG_IF_FAILED(conn->FollowReplySource(socket, args.LocalAddress()));
+            }
+        }
 
         if (conn != nullptr)
         {

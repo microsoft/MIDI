@@ -722,6 +722,57 @@ TransportState::MarkClientDefinitionUnavailableOrRetry(winrt::guid const& client
 
 _Use_decl_annotations_
 HRESULT
+TransportState::MarkClientDefinitionForRetryAfter(
+    winrt::guid const& clientConfigEntryIdentifier,
+    uint32_t const delayMilliseconds)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            if (!definition.Enabled)
+            {
+                return S_FALSE;
+            }
+
+            definition.State = MidiNetworkEntryState::Pending;
+            definition.RetryNotBeforeTickCount = GetTickCount64() + delayMilliseconds;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::MarkClientDefinitionFailed(winrt::guid const& clientConfigEntryIdentifier)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            if (!definition.Enabled)
+            {
+                return S_FALSE;
+            }
+
+            definition.State = MidiNetworkEntryState::Failed;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
+HRESULT
 TransportState::RearmClientDefinition(winrt::guid const& clientConfigEntryIdentifier)
 {
     auto lock = m_stateLock.lock_exclusive();
@@ -732,6 +783,7 @@ TransportState::RearmClientDefinition(winrt::guid const& clientConfigEntryIdenti
         {
             definition.State = MidiNetworkEntryState::Pending;
             definition.Enabled = true;
+            definition.RetryNotBeforeTickCount = 0;
 
             return S_OK;
         }

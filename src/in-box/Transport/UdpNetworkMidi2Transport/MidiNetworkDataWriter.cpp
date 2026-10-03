@@ -173,6 +173,40 @@ MidiNetworkDataWriter::Initialize(
 
 _Use_decl_annotations_
 HRESULT
+MidiNetworkDataWriter::ReplaceStream(
+    winrt::Windows::Storage::Streams::IOutputStream const& stream
+)
+{
+    try
+    {
+        RETURN_HR_IF_NULL(E_INVALIDARG, stream);
+
+        winrt::Windows::Storage::Streams::DataWriter writer(stream);
+        writer.ByteOrder(winrt::Windows::Storage::Streams::ByteOrder::BigEndian);
+
+        auto lock = m_dataWriterLock.lock();
+
+        if (m_dataWriter != nullptr)
+        {
+            // As in Shutdown: the old stream belongs to the socket, so it is detached, not closed
+            try
+            {
+                m_dataWriter.DetachStream();
+                m_dataWriter.Close();
+            }
+            CATCH_LOG();
+        }
+
+        m_stream = stream;
+        m_dataWriter = writer;
+
+        return S_OK;
+    }
+    CATCH_RETURN()
+}
+
+_Use_decl_annotations_
+HRESULT
 MidiNetworkDataWriter::WriteCommandPing(uint32_t pingId)
 {
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);

@@ -12,6 +12,9 @@ struct MidiNetworkClientDefinition
 {
     MidiNetworkEntryState State{ MidiNetworkEntryState::Pending };
 
+    // GetTickCount64 value before which a host which said it was busy is not invited again
+    uint64_t RetryNotBeforeTickCount{ 0 };
+
     winrt::guid EntryIdentifier;            // internal
     bool Enabled{ true };
 
@@ -74,6 +77,9 @@ public:
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
         _In_ winrt::hstring const& remotePort
     );
+
+    // Separate from Start so the entry is registered before any answer can arrive to change it
+    HRESULT SendFirstInvitation();
 
     HRESULT Shutdown();
 

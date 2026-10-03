@@ -17,6 +17,9 @@ class MidiNetworkDataWriter
 public:
     HRESULT Initialize(_In_ winrt::Windows::Storage::Streams::IOutputStream stream);
 
+    // Sends go to this stream from now on. The count of packets sent carries over.
+    HRESULT ReplaceStream(_In_ winrt::Windows::Storage::Streams::IOutputStream const& stream);
+
     HRESULT WriteUdpPacketHeader();
     HRESULT Send();
 

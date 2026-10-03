@@ -134,6 +134,12 @@ MidiNetworkClientConnection::OnWatchdogTick()
                 return S_OK;
             }));
 
+        // Nobody decided, which is treated like no answer at all
+        if (!m_shuttingDown)
+        {
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionUnavailableOrRetry(m_configIdentifier));
+        }
+
         return S_OK;
 
     case MidiNetworkInvitationAction::CancelNoReply:
@@ -175,6 +181,54 @@ void
 MidiNetworkClientConnection::OnSessionEndedByRemote()
 {
     LOG_IF_FAILED(RequestReconnect());
+}
+
+_Use_decl_annotations_
+void
+MidiNetworkClientConnection::OnByeReceived(MidiNetworkCommandByeReason const reason) noexcept
+{
+    // Only a Bye which ends our own invitation says anything about trying again
+    if (!m_invitation.Answered() || m_shuttingDown)
+    {
+        return;
+    }
+
+    try
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Remote host refused the invitation with a Bye.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt8(reason, "bye reason"),
+            TraceLoggingGuid(m_configIdentifier, "entry identifier")
+        );
+
+        switch (reason)
+        {
+        case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_TooManyOpenSessions:
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionForRetryAfter(
+                m_configIdentifier,
+                MIDI_NETWORK_CLIENT_BUSY_RETRY_DELAY_MILLISECONDS));
+            break;
+
+        // The host's owner said no, or it wants authentication this client cannot give
+        case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationWithAuthRejectedMissingPriorAttempt:
+        case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationRejectedUserDidNotAccept:
+        case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationRejectedAuthFailed:
+        case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationRejectedUsernameNotFound:
+        case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_NoMatchingAuthenticationMethod:
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionFailed(m_configIdentifier));
+            break;
+
+        default:
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionUnavailableOrRetry(m_configIdentifier));
+            break;
+        }
+    }
+    CATCH_LOG();
 }
 
 HRESULT

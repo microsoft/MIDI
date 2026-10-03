@@ -114,6 +114,10 @@ enum MidiNetworkRemoteClientDecision
 #define MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_UPPER_BOUND             600000
 #define MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_LOWER_BOUND             1000
 
+// Bye 0x40, Too Many Open Sessions, means "not now". Windows also sends it while it still holds
+// this PC's previous session, which it drops after five missed pings.
+#define MIDI_NETWORK_CLIENT_BUSY_RETRY_DELAY_MILLISECONDS               10000
+
 // Spec 6.16: "The Bye Command should be sent repeatedly until a Bye Reply Command is received,
 // or until a timeout occurs." Only the user-initiated disconnect path does this. Shutdown paths
 // send once and move on, because waiting there runs against the service stop timeout and, with
@@ -160,8 +164,8 @@ enum class MidiNetworkEntryState
     // built and registered
     Live,
 
-    // The definition itself is bad, so retrying can only fail the same way. Terminal until the
-    // configuration changes.
+    // The definition itself is bad, or the remote refused it, so retrying can only fail the same
+    // way. Terminal until the configuration changes or the app asks again.
     Failed,
 
     // Reachability gave out and nothing will announce its return, so it is only retried when the

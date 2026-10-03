@@ -2529,3 +2529,169 @@ void NetworkMidiApprovalTests::CreateThenImmediatelyRemoveLeavesNoHostBehind()
             L"A removed host does not appear in the enumeration");
     }
 }
+
+
+namespace
+{
+    // One socket on 127.0.0.1 which can reach a host at either of two addresses, and says which
+    // address each reply came from. UdpTestClient keeps one remote and does not say.
+    class ReturningRemote
+    {
+    public:
+        ReturningRemote() = default;
+        ~ReturningRemote() { if (m_socket != INVALID_SOCKET) closesocket(m_socket); }
+
+        ReturningRemote(_In_ ReturningRemote const&) = delete;
+        ReturningRemote& operator=(_In_ ReturningRemote const&) = delete;
+
+        bool Open()
+        {
+            m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+            if (m_socket == INVALID_SOCKET) return false;
+
+            sockaddr_in local{};
+            local.sin_family = AF_INET;
+            local.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+            if (bind(m_socket, reinterpret_cast<sockaddr const*>(&local), sizeof(local)) != 0) return false;
+
+            DWORD receiveTimeoutMilliseconds{ 250 };
+
+            return setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO,
+                reinterpret_cast<char const*>(&receiveTimeoutMilliseconds), sizeof(receiveTimeoutMilliseconds)) == 0;
+        }
+
+        bool SendTo(_In_ std::string const& address, _In_ uint16_t const port, _In_ PacketBuilder const& packet)
+        {
+            sockaddr_in to{};
+            to.sin_family = AF_INET;
+            to.sin_port = htons(port);
+
+            if (inet_pton(AF_INET, address.c_str(), &to.sin_addr) != 1) return false;
+
+            auto const& bytes = packet.Bytes();
+
+            return sendto(m_socket, reinterpret_cast<char const*>(bytes.data()), static_cast<int>(bytes.size()), 0,
+                reinterpret_cast<sockaddr const*>(&to), sizeof(to)) == static_cast<int>(bytes.size());
+        }
+
+        // The address the command came from, or empty. Answers the host's pings meanwhile, as a
+        // real client does.
+        std::string WaitForCommandFrom(_In_ CommandCode const code, _In_ std::chrono::milliseconds const timeout)
+        {
+            auto const deadline = std::chrono::steady_clock::now() + timeout;
+            std::vector<uint8_t> buffer(2048);
+
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                sockaddr_in from{};
+                int fromLength = sizeof(from);
+
+                auto const received = recvfrom(m_socket, reinterpret_cast<char*>(buffer.data()), static_cast<int>(buffer.size()), 0,
+                    reinterpret_cast<sockaddr*>(&from), &fromLength);
+
+                if (received <= 0) continue;
+
+                char text[INET_ADDRSTRLEN]{};
+                inet_ntop(AF_INET, &from.sin_addr, text, sizeof(text));
+
+                auto const packet = ParsePacket(buffer.data(), static_cast<size_t>(received));
+
+                if (auto const ping = packet.Find(CommandCode::Ping); ping != nullptr)
+                {
+                    PacketBuilder reply;
+                    reply.StartPacket().AddPingReply(ping->GetPayloadUInt32(0));
+
+                    SendTo(text, ntohs(from.sin_port), reply);
+                }
+
+                if (packet.Contains(code)) return text;
+            }
+
+            return {};
+        }
+
+    private:
+        SOCKET m_socket{ INVALID_SOCKET };
+    };
+}
+
+
+// The host answered from the address a connection first came in on, for the life of the
+// connection. A remote which looked the host up again and invited its new address from the same
+// address and port was answered from the old one, and a remote whose socket is connected drops that.
+void NetworkMidiApprovalTests::HostRepliesFromTheAddressARemoteInvitesAgain()
+{
+    std::string const firstAddress{ "127.0.0.1" };
+    std::string const secondAddress{ "127.0.0.2" };
+
+    // Windows only accepts a loopback alias as a source address once something has bound to it
+    {
+        auto const probe = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+        sockaddr_in alias{};
+        alias.sin_family = AF_INET;
+        inet_pton(AF_INET, secondAddress.c_str(), &alias.sin_addr);
+
+        auto const bound = probe != INVALID_SOCKET &&
+            bind(probe, reinterpret_cast<sockaddr const*>(&alias), sizeof(alias)) == 0;
+
+        if (probe != INVALID_SOCKET) closesocket(probe);
+
+        if (!bound)
+        {
+            Log::Result(TestResults::Skipped, L"This PC does not accept a second loopback address.");
+            return;
+        }
+    }
+
+    auto const entryIdentifier = MakeEntryIdentifier();
+
+    VERIFY_IS_TRUE(
+        CreateHost(entryIdentifier, L"Returning Remote Host", L"RETURNINGHOST", MakeUniqueServiceInstanceName(L"returning"), false).IsSuccess(),
+        L"Host created");
+
+    auto removeHost = wil::scope_exit([&entryIdentifier]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(WaitForHostStarted(entryIdentifier, PendingPollTimeout), L"Host started");
+
+    auto const port = ReadActualPort(entryIdentifier);
+
+    VERIFY_IS_TRUE(port.has_value(), L"The host reports its port");
+
+    if (!port.has_value()) return;
+
+    ReturningRemote remote;
+    VERIFY_IS_TRUE(remote.Open(), L"Test socket bound to 127.0.0.1");
+
+    auto& context = ProtocolTestContext::Current();
+
+    PacketBuilder invitation;
+    invitation.StartPacket().AddInvitation(
+        context.MakeUniqueEndpointName("Returning"),
+        context.MakeUniqueProductInstanceId("Returning"));
+
+    VERIFY_IS_TRUE(remote.SendTo(firstAddress, port.value(), invitation), L"First invitation sent");
+
+    auto const firstReplyFrom = remote.WaitForCommandFrom(CommandCode::InvitationReplyAccepted, PendingPollTimeout);
+
+    Log::Comment(String().Format(L"Invited %S, accepted from '%S'", firstAddress.c_str(), firstReplyFrom.c_str()));
+
+    VERIFY_IS_TRUE(firstReplyFrom == firstAddress, L"The first invitation is accepted from the address it was sent to");
+
+    // the same address and port, as a remote which looked this host up again has
+    VERIFY_IS_TRUE(remote.SendTo(secondAddress, port.value(), invitation), L"Second invitation sent");
+
+    auto const secondReplyFrom = remote.WaitForCommandFrom(CommandCode::InvitationReplyAccepted, ReplyTimeout);
+
+    Log::Comment(String().Format(L"Invited %S, accepted from '%S'", secondAddress.c_str(), secondReplyFrom.c_str()));
+
+    VERIFY_IS_TRUE(secondReplyFrom == secondAddress, L"The reply comes from the address the remote invited this time");
+
+    PacketBuilder bye;
+    bye.StartPacket().AddBye(ByeReason::UserTerminated, "done");
+
+    remote.SendTo(secondAddress, port.value(), bye);
+    remote.WaitForCommandFrom(CommandCode::ByeReply, std::chrono::milliseconds(2000));
+}

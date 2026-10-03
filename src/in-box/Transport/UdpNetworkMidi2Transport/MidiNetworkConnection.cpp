@@ -100,6 +100,8 @@ MidiNetworkConnection::Initialize(
         else
         {
             RETURN_IF_FAILED(m_writer->Initialize(GetReplyOutputStream(socket, localHostName, hostName, port)));
+
+            m_replySourceHostName = localHostName;
         }
     }
     catch (...)
@@ -168,6 +170,68 @@ MidiNetworkConnection::GetReplyOutputStream(
     }
 
     return socket.GetOutputStreamAsync(remoteHostName, remotePort).get();
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::FollowReplySource(
+    winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
+    winrt::Windows::Networking::HostName const& localHostName)
+{
+    // Declared HRESULT, and called on the socket receive callback, so it must not throw.
+    try
+    {
+        RETURN_HR_IF(S_FALSE, m_role != MidiNetworkConnectionRole::ConnectionWindowsIsHost);
+        RETURN_HR_IF_NULL(S_FALSE, socket);
+        RETURN_HR_IF_NULL(S_FALSE, localHostName);
+
+        winrt::Windows::Networking::HostName previous{ nullptr };
+
+        {
+            auto lock = m_socketWriterLock.lock();
+
+            if (m_writer == nullptr ||
+                (m_replySourceHostName != nullptr && m_replySourceHostName.IsEqual(localHostName)))
+            {
+                return S_FALSE;
+            }
+
+            previous = m_replySourceHostName;
+        }
+
+        // Outside the lock, because obtaining the stream waits on the socket
+        auto stream = GetReplyOutputStream(socket, localHostName, m_remoteHostName, winrt::hstring{ m_remotePort });
+
+        {
+            auto lock = m_socketWriterLock.lock();
+
+            // torn down meanwhile
+            if (m_writer == nullptr)
+            {
+                return S_FALSE;
+            }
+
+            RETURN_IF_FAILED(m_writer->ReplaceStream(stream));
+
+            m_replySourceHostName = localHostName;
+        }
+
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"The remote invited this host at another of its addresses. Replying from that address now.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(previous != nullptr ? previous.CanonicalName().c_str() : L"", "previous local address"),
+            TraceLoggingWideString(localHostName.CanonicalName().c_str(), "local address"),
+            TraceLoggingWideString(m_remoteHostName != nullptr ? m_remoteHostName.CanonicalName().c_str() : L"", "remote address"),
+            TraceLoggingWideString(m_remotePort.c_str(), "remote port")
+        );
+
+        return S_OK;
+    }
+    CATCH_RETURN()
 }
 
 
@@ -824,8 +888,9 @@ MidiNetworkConnection::HandleIncomingByeReply()
     return S_OK;
 }
 
+_Use_decl_annotations_
 HRESULT
-MidiNetworkConnection::HandleIncomingBye()
+MidiNetworkConnection::HandleIncomingBye(MidiNetworkCommandByeReason const reason)
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -833,11 +898,12 @@ MidiNetworkConnection::HandleIncomingBye()
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt8(reason, "bye reason")
     );
 
     // whatever the outcome, the remote has answered us
-    OnInvitationAnswered();
+    OnByeReceived(reason);
 
     bool sessionWasActive{ false };
 
@@ -1552,7 +1618,7 @@ MidiNetworkConnection::DispatchIncomingCommand(
         break;
 
     case CommandCommon_Bye:
-        LOG_IF_FAILED(HandleIncomingBye());
+        LOG_IF_FAILED(HandleIncomingBye(static_cast<MidiNetworkCommandByeReason>(commandHeader.HeaderData.CommandSpecificData.AsBytes.Byte1)));
         break;
 
     case CommandCommon_ByeReply:

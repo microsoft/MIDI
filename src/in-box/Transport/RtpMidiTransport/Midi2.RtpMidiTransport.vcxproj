@@ -123,6 +123,7 @@
     <ClInclude Include="RtpMidiEndpointProperties.h" />
     <ClInclude Include="RtpMidiMdns.h" />
     <ClInclude Include="RtpMidiNet.h" />
+    <ClInclude Include="RtpMidiReplySources.h" />
     <ClInclude Include="RtpMidiNode.h" />
     <ClInclude Include="RtpMidiNotificationSignal.h" />
   </ItemGroup>

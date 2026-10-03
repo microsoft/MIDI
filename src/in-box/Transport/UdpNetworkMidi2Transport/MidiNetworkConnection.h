@@ -102,6 +102,12 @@ public:
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
         _In_ winrt::hstring const& remotePort);
 
+    // Host role. A remote inviting again from the same address and port may have found this host
+    // at another of its addresses, so replies go out from that one from then on.
+    HRESULT FollowReplySource(
+        _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
+        _In_ winrt::Windows::Networking::HostName const& localHostName);
+
     // True once a session existed and has now ended. The owner releases the connection at that
     // point instead of leaving it to the idle reaper: a remote normally reconnects from a new
     // ephemeral port, so the old entry would otherwise hold a slot and two threads for nothing.
@@ -251,8 +257,8 @@ protected:
     // A Bye arrived with no session, so anything queued for this remote is pointless.
     virtual void OnSessionEndedBeforeEndpointCreated() noexcept { }
 
-    // The remote answered our invitation, whatever the answer was.
-    virtual void OnInvitationAnswered() noexcept { }
+    // A Bye arrived. For a client with an invitation out, it is the host's answer to it.
+    virtual void OnByeReceived(_In_ MidiNetworkCommandByeReason const reason) noexcept { UNREFERENCED_PARAMETER(reason); }
 
     HRESULT SendQueuedMidiMessagesToNetwork();
 
@@ -392,6 +398,9 @@ protected:
 
     std::shared_ptr<MidiNetworkDataWriter> m_writer{ nullptr };
 
+    // Host role: the local address m_writer replies from. Guarded by m_socketWriterLock.
+    winrt::Windows::Networking::HostName m_replySourceHostName{ nullptr };
+
 
     HRESULT ReadUtf8String(
         _In_ winrt::Windows::Storage::Streams::DataReader const& reader,
@@ -408,7 +417,7 @@ protected:
     // reflects why. The already-attached reason differs per role.
     HRESULT RefuseSessionForEndpointCreationFailure(_In_ HRESULT const creationResult);
 
-    HRESULT HandleIncomingBye();
+    HRESULT HandleIncomingBye(_In_ MidiNetworkCommandByeReason const reason);
     HRESULT HandleIncomingByeReply();
 
     HRESULT HandleIncomingNAK(

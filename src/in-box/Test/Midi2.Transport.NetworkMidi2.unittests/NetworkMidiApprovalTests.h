@@ -96,6 +96,10 @@ public:
     // still there from the host it replaces.
     TEST_METHOD(HostRecreatedUnderTheSameServiceInstanceNameAcceptsInvitations);
 
+    // A remote which keeps its address and port can find this host again at another of its
+    // addresses. An IPv6 host has several, and can lose the one a remote was using.
+    TEST_METHOD(HostRepliesFromTheAddressARemoteInvitesAgain);
+
     // https://github.com/microsoft/MIDI/issues/1149. Releasing the name inside the service is
     // not the same as taking the advertisement off the network. These ask mDNS directly, so a
     // pass means the record is really gone from the wire rather than just out of a local cache.

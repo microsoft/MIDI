@@ -48,6 +48,12 @@ namespace NetworkMidiTest
         // Host rejection
         TEST_METHOD(ClientAcceptsByeInsteadOfInvitationReply);
 
+        // What the entry does after its invitation ends without a session. It used to stay live,
+        // with no session, and never try again.
+        TEST_METHOD(ClientTriesAgainLaterWhenHostIsBusy);
+        TEST_METHOD(ClientEntryFailsWhenHostRefuses);
+        TEST_METHOD(ClientEntryIsParkedWhenHostNeverApproves);
+
         // Liveness, spec 6.14
         TEST_METHOD(ClientAnswersHostPingWithMatchingId);
         TEST_METHOD(ClientSendsPingsWhenSessionIdle);

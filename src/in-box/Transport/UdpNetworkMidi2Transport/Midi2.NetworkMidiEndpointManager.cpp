@@ -1179,6 +1179,9 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
 
             LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionLive(definition.EntryIdentifier));
 
+            // Only now. A host can answer within a millisecond, and its answer can change the entry.
+            LOG_IF_FAILED(client->SendFirstInvitation());
+
             return S_OK;
         }
 
@@ -1375,6 +1378,12 @@ CMidi2NetworkMidiEndpointManager::StartPendingClients()
     for (auto const& definition : TransportState::Current().GetClientDefinitions())
     {
         if (definition.State != MidiNetworkEntryState::Pending || !definition.Enabled)
+        {
+            continue;
+        }
+
+        // a host which said it was busy is given time
+        if (GetTickCount64() < definition.RetryNotBeforeTickCount)
         {
             continue;
         }

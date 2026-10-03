@@ -62,8 +62,13 @@ Once a client is set up, the service manages the connection for you. What it doe
 | Host not present at startup | Connects when the host advertises | One attempt, then marked `Unavailable` |
 | Host goes away and returns | Reconnects when it advertises again | One further attempt, then `Unavailable` |
 | Never answered | Retried whenever it advertises | Marked `Unavailable` |
+| Asked for permission, and nobody answered in time | Retried whenever it advertises | Marked `Unavailable` |
+| Said it's busy | Tried again after 10 to 30 seconds | Tried again after 10 to 30 seconds |
+| Turned the connection down | Marked `Failed` | Marked `Failed` |
 
 A direct address is never retried on a timer. Nothing announces that a fixed IP address is back, so retrying on a timer would keep sending invitations over the network forever, for every address in the configuration that can't be reached. To retry one, call `ConnectNetworkClientAsync` again with the same `ClientId`. For an entry that already exists, this means "it's reachable now, try again."
+
+A busy host is the exception, because it did answer. A Windows host says it's busy while it still holds this PC's previous session, which it lets go after about 10 seconds without an answer. So this is what a reconnect runs into when a connection drops, for example because either PC's network address changed. A host turns a connection down when its owner refuses it, or when it wants authentication, which isn't built yet. Asking again won't change that, so the service waits for you to call `ConnectNetworkClientAsync` again.
 
 Use [MidiNetworkConfiguredClient]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkConfiguredClient/).`EntryState` to show this in your app. See [MidiNetworkClientEntryState]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkClientEntryStateEnum/).
 
