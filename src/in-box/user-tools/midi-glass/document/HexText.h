@@ -37,4 +37,11 @@ namespace glass
 
     // Up to maximumWords 32 bit words. Anything unreadable gives nothing back.
     std::vector<uint32_t> ParseHexWords(_In_ std::wstring_view text, _In_ size_t maximumWords) noexcept;
+
+    // One number, with or without 0x. Empty is zero. False for anything unreadable or above the
+    // maximum, so a typo leaves a field as it was rather than turning it into zero.
+    bool TryParseHexNumber(_In_ std::wstring_view text, _In_ uint32_t maximum, _Out_ uint32_t& value) noexcept;
+
+    // Zero padded to this many digits, from one to eight: "02", "1A2B".
+    std::wstring FormatHexNumber(_In_ uint32_t value, _In_ uint32_t digits) noexcept;
 }

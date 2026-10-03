@@ -12,6 +12,7 @@
 
 #include "LfoShape.h"
 #include "InputRules.h"
+#include "ClockTempo.h"
 
 #include <cmath>
 
@@ -292,4 +293,116 @@ void GeneratorTests::TheMiddleOfAKnobDoesNotTurnIt()
     VERIFY_IS_TRUE(glass::IsFarEnoughToTurn(60.0, 200.0, 30.0, 88.0));
 
     VERIFY_IS_FALSE(glass::IsFarEnoughToTurn(0.0, 0.0, 0.0, 0.0));
+}
+
+namespace
+{
+    // 125 beats a minute is a clock message every 20 milliseconds exactly, which keeps the
+    // arithmetic in these tests free of rounding.
+    constexpr uint64_t TickAt125 = 20'000;
+    constexpr uint64_t TickAt100 = 25'000;
+
+    // Feeds a steady clock and hands back the last tempo it reported, or zero if none.
+    double FeedClock(
+        _Inout_ glass::ClockTempoMeter& meter,
+        _Inout_ uint64_t& now,
+        _In_ uint64_t interval,
+        _In_ int count)
+    {
+        double reported{ 0.0 };
+
+        for (int i = 0; i < count; ++i)
+        {
+            now += interval;
+
+            if (auto const tempo = meter.Tick(now); tempo.has_value())
+            {
+                reported = *tempo;
+            }
+        }
+
+        return reported;
+    }
+}
+
+void GeneratorTests::AClocksTempoIsMeasuredFromHalfABeat()
+{
+    glass::ClockTempoMeter meter{};
+
+    uint64_t now{ 1'000'000 };
+
+    // Twelve messages are not yet half a beat: half a beat is twelve gaps, so thirteen messages.
+    for (size_t i = 1; i < glass::MinimumClockTicksForTempo; ++i)
+    {
+        now += TickAt125;
+        VERIFY_IS_FALSE(meter.Tick(now).has_value());
+    }
+
+    now += TickAt125;
+
+    auto const tempo = meter.Tick(now);
+
+    VERIFY_IS_TRUE(tempo.has_value());
+    VERIFY_ARE_EQUAL(125.0, *tempo);
+
+    // A clock that keeps the same tempo says nothing more.
+    VERIFY_ARE_EQUAL(0.0, FeedClock(meter, now, TickAt125, 48));
+    VERIFY_ARE_EQUAL(125.0, meter.BeatsPerMinute());
+}
+
+void GeneratorTests::JitterOnEachClockMessageDoesNotMoveTheTempo()
+{
+    glass::ClockTempoMeter meter{};
+
+    uint64_t now{ 1'000'000 };
+
+    VERIFY_ARE_EQUAL(125.0, FeedClock(meter, now, TickAt125, 30));
+
+    // Each message half a millisecond early or late, as a cable and a busy PC will do.
+    for (int i = 0; i < 48; ++i)
+    {
+        now += (i % 2) == 0 ? TickAt125 + 500 : TickAt125 - 500;
+        VERIFY_IS_FALSE(meter.Tick(now).has_value());
+    }
+
+    VERIFY_ARE_EQUAL(125.0, meter.BeatsPerMinute());
+}
+
+void GeneratorTests::AClockThatSlowsDownIsFollowed()
+{
+    glass::ClockTempoMeter meter{};
+
+    uint64_t now{ 1'000'000 };
+
+    VERIFY_ARE_EQUAL(125.0, FeedClock(meter, now, TickAt125, 30));
+
+    // A beat later the whole window is at the new tempo, and that is what it settles on.
+    FeedClock(meter, now, TickAt100, glass::ClockTicksPerQuarterNote);
+
+    VERIFY_ARE_EQUAL(100.0, meter.BeatsPerMinute());
+}
+
+void GeneratorTests::AStoppedClockKeepsItsTempoUntilItComesBack()
+{
+    glass::ClockTempoMeter meter{};
+
+    uint64_t now{ 1'000'000 };
+
+    VERIFY_ARE_EQUAL(125.0, FeedClock(meter, now, TickAt125, 30));
+
+    // Two seconds of nothing is a stop, not one very slow beat.
+    now += 2 * glass::ClockGapMicroseconds;
+
+    VERIFY_IS_FALSE(meter.Tick(now).has_value());
+    VERIFY_ARE_EQUAL(125.0, meter.BeatsPerMinute());
+
+    // When it comes back it is measured afresh, half a beat on.
+    VERIFY_ARE_EQUAL(0.0, FeedClock(meter, now, TickAt100, static_cast<int>(glass::MinimumClockTicksForTempo) - 2));
+    VERIFY_ARE_EQUAL(125.0, meter.BeatsPerMinute());
+
+    VERIFY_ARE_EQUAL(100.0, FeedClock(meter, now, TickAt100, 1));
+
+    // Time going backwards is a different clock too, not a fast one.
+    VERIFY_IS_FALSE(meter.Tick(now - 1).has_value());
+    VERIFY_ARE_EQUAL(100.0, meter.BeatsPerMinute());
 }

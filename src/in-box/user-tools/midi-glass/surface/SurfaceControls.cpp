@@ -17,6 +17,7 @@
 #include "SurfaceRenderer.h"
 #include "LayoutStore.h"
 #include "LfoShape.h"
+#include "PadGrid.h"
 #include "StepPattern.h"
 #include "ThemeStore.h"
 
@@ -82,6 +83,11 @@ namespace glass
 
         // How strongly a natural key is outlined in the dark key color.
         constexpr double KeyOutlineStrength = 0.40;
+
+        // The same rule MIDI Keyboard uses: below this the names are unreadable and only make the
+        // keys look dirty.
+        constexpr float MinimumNamedWhiteKeyWidth = 22.0f;
+        constexpr float MinimumNamedKeyboardHeight = 70.0f;
 
         // A well: the field of a display, sunk into its plate.
         constexpr float WellCornerRadius = 2.0f;
@@ -989,6 +995,121 @@ namespace glass
         }
     }
 
+    _Use_decl_annotations_
+    void SurfaceRenderer::LayoutKeyNames(size_t itemIndex, Control const& control)
+    {
+        if (itemIndex >= m_padNames.size() || itemIndex >= m_visuals.size() || m_host == nullptr)
+        {
+            return;
+        }
+
+        auto const& spec = control.Keyboard;
+        auto const& visual = m_visuals[itemIndex];
+
+        if (!spec.ShowNoteNames || visual.KeyShapes.empty())
+        {
+            return;
+        }
+
+        auto& names = m_padNames[itemIndex];
+
+        try
+        {
+            auto const width = static_cast<float>(std::max(control.Width, 4.0));
+            auto const height = static_cast<float>(std::max(control.Height, 4.0));
+
+            auto const keys = std::clamp(spec.KeyCount, MinimumKeyboardKeys, MaximumKeyboardKeys);
+            auto const lowest = std::clamp(spec.LowestNote, 0, 127);
+            auto const whiteCount = std::max(1, WhiteKeysBelow(lowest, lowest + keys));
+
+            auto const whiteWidth = width / static_cast<float>(whiteCount);
+            auto const blackWidth = whiteWidth * BlackKeyWidthFraction;
+            auto const blackHeight = height * BlackKeyLengthFraction;
+
+            if (whiteWidth < MinimumNamedWhiteKeyWidth || height < MinimumNamedKeyboardHeight)
+            {
+                return;
+            }
+
+            auto const fontSize = std::clamp(whiteWidth * 0.26f, 6.0f, 13.0f);
+
+            controls::Canvas host{};
+
+            host.IsHitTestVisible(false);
+            host.Width(width);
+            host.Height(height);
+
+            // The keyboard is one control to a screen reader. A name read out for every key would be noise.
+            xaml::Automation::AutomationProperties::SetAccessibilityView(
+                host, xaml::Automation::Peers::AccessibilityView::Raw);
+
+            media::Brush const whiteInk = media::SolidColorBrush{ ToWindowsColor(visual.KeyWhiteInk) };
+            media::Brush const blackInk = media::SolidColorBrush{ ToWindowsColor(visual.KeyBlackInk) };
+            media::Brush const pressedInk = media::SolidColorBrush{ ToWindowsColor(visual.KeyPressedInk) };
+
+            auto const unbounded = winrt::Windows::Foundation::Size{
+                std::numeric_limits<float>::infinity(),
+                std::numeric_limits<float>::infinity() };
+
+            names.Texts.assign(static_cast<size_t>(keys), nullptr);
+            names.RestInks.assign(static_cast<size_t>(keys), nullptr);
+            names.LitInks.assign(static_cast<size_t>(keys), nullptr);
+
+            for (int32_t index = 0; index < keys; ++index)
+            {
+                auto const note = lowest + index;
+
+                if (note > 127)
+                {
+                    break;
+                }
+
+                auto const black = IsBlackKey(note);
+                auto const whitesBelow = static_cast<float>(WhiteKeysBelow(lowest, note));
+
+                controls::TextBlock text{};
+
+                // The name over the number, as MIDI Keyboard prints them.
+                text.Text(winrt::hstring{ PadNoteName(note, false) + L"\n" + std::to_wstring(note) });
+                text.FontSize(fontSize);
+                text.FontFamily(media::FontFamily{ L"Segoe UI Variable Text" });
+                text.TextAlignment(xaml::TextAlignment::Center);
+                text.IsHitTestVisible(false);
+                text.Foreground(index == visual.PressedKey ? pressedInk : (black ? blackInk : whiteInk));
+
+                text.Measure(unbounded);
+
+                auto const measured = text.DesiredSize();
+
+                auto const keyLeft = black ? whitesBelow * whiteWidth - blackWidth * 0.5f : whitesBelow * whiteWidth;
+                auto const keyWidth = black ? blackWidth : whiteWidth;
+                auto const keyBottom = black ? blackHeight : height;
+
+                controls::Canvas::SetLeft(text, keyLeft + (keyWidth - measured.Width) * 0.5f);
+                controls::Canvas::SetTop(text, keyBottom - measured.Height - (black ? 6.0f : 8.0f));
+
+                // Black keys sit over the white ones, and so do their names.
+                controls::Canvas::SetZIndex(text, black ? 1 : 0);
+
+                host.Children().Append(text);
+
+                names.Texts[static_cast<size_t>(index)] = text;
+                names.RestInks[static_cast<size_t>(index)] = black ? blackInk : whiteInk;
+                names.LitInks[static_cast<size_t>(index)] = pressedInk;
+            }
+
+            controls::Canvas::SetLeft(host, control.X);
+            controls::Canvas::SetTop(host, control.Y);
+
+            m_host.Children().Append(host);
+            names.Host = host;
+        }
+        catch (...)
+        {
+            names = PadNameTexts{};
+        }
+    }
+
     // ------------------------------------------------------------------ two axis
 
     _Use_decl_annotations_
@@ -1449,6 +1570,10 @@ namespace glass
 
         visual.KeyPressedBrush = BrushFor(compositor, pressed);
 
+        visual.KeyWhiteInk = ReadableInk(white);
+        visual.KeyBlackInk = ReadableInk(black);
+        visual.KeyPressedInk = ReadableInk(pressed);
+
         auto const corner = std::min(3.0f, whiteWidth * 0.25f);
 
         // White keys first so the black ones land on top of them. Both are kept in one list in
@@ -1817,6 +1942,17 @@ namespace glass
                     shape.FillBrush(down
                         ? visual.KeyPressedBrush
                         : visual.KeyRestBrushes[static_cast<size_t>(which)]);
+
+                    if (itemIndex < m_padNames.size())
+                    {
+                        auto const& names = m_padNames[itemIndex];
+                        auto const at = static_cast<size_t>(which);
+
+                        if (at < names.Texts.size() && names.Texts[at] != nullptr)
+                        {
+                            names.Texts[at].Foreground(down ? names.LitInks[at] : names.RestInks[at]);
+                        }
+                    }
                 };
 
             paint(visual.PressedKey, false);

@@ -68,6 +68,10 @@ namespace winrt::midiglass::implementation
             foundation::IInspectable const& sender,
             xaml::SizeChangedEventArgs const& args);
 
+        void OnLayoutContainerContentChanging(
+            _In_ controls::ListViewBase const& sender,
+            _In_ controls::ContainerContentChangingEventArgs const& args);
+
         // ---- the cards ----
 
         void OnLayoutItemClick(

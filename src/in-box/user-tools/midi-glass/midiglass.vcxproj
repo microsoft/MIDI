@@ -201,6 +201,7 @@
     <ClInclude Include="document\HexText.h" />
     <ClInclude Include="binding\MonitorFormat.h" />
     <ClInclude Include="binding\ValueThrottle.h" />
+    <ClInclude Include="binding\ClockTempo.h" />
     <ClInclude Include="binding\PadVoices.h" />
     <ClInclude Include="editor\ArrangeOps.h" />
     <ClInclude Include="editor\ControlFactory.h" />
@@ -330,6 +331,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="binding\ValueThrottle.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="binding\ClockTempo.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="binding\PadVoices.cpp">

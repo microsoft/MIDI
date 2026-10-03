@@ -55,6 +55,7 @@ namespace glass
             binding.RestValue = renderer.RestValueAt(i);
             binding.RestValueY = renderer.RestValueYAt(i);
             binding.Drag = renderer.DragAxisAt(i);
+            binding.Pickup = renderer.PickupAt(i);
             binding.Keyboard = renderer.KeyboardAt(i);
             binding.VelocityFromTouch = renderer.VelocityFromTouchAt(i);
 
@@ -359,6 +360,14 @@ namespace glass
 
         binding.Element.Focus(xaml::FocusState::Pointer);
 
+        // A device, a sequence or the engine may have moved it since it was last touched.
+        binding.Value = binding.Element.SurfaceValue();
+
+        if (m_renderer != nullptr)
+        {
+            binding.ValueY = m_renderer->ValueYAt(binding.ItemIndex);
+        }
+
         if (TouchChanged)
         {
             TouchChanged(binding.ItemIndex, true);
@@ -425,6 +434,7 @@ namespace glass
         }
 
         binding.StartValue = binding.Value;
+        binding.StartValueY = binding.ValueY;
         binding.StartY = point.Position().Y;
         binding.StartX = point.Position().X;
 
@@ -479,18 +489,129 @@ namespace glass
 
         if (UsesAbsolutePosition(binding.Kind))
         {
-            Publish(binding, PositionToValue(
-                binding.Kind,
-                binding.Element.ActualWidth(),
-                binding.Element.ActualHeight(),
-                point.Position().X,
-                point.Position().Y), false);
+            PressAbsolute(binding, point.Position().X, point.Position().Y);
+        }
+    }
 
-            if (UsesTwoAxes(binding.Kind))
+    _Use_decl_annotations_
+    void InputRouter::PressAbsolute(Binding& binding, double x, double y)
+    {
+        auto const width = binding.Element.ActualWidth();
+        auto const height = binding.Element.ActualHeight();
+        auto const twoAxes = UsesTwoAxes(binding.Kind);
+
+        // A control with one axis has no second one to catch.
+        binding.Caught = true;
+        binding.CaughtY = twoAxes;
+
+        switch (binding.Pickup)
+        {
+        case PickupMode::Relative:
+            // Nothing moves until the finger does.
+            return;
+
+        case PickupMode::Catch:
+        {
+            auto const finger = PositionToValue(binding.Kind, width, height, x, y);
+
+            binding.CatchOffset = finger - binding.Value;
+            binding.Caught = std::abs(binding.CatchOffset) <= CatchTolerance;
+
+            if (binding.Caught)
             {
-                PublishY(binding, PositionToValueY(
-                    binding.Element.ActualHeight(), point.Position().Y), false);
+                Publish(binding, finger, false);
             }
+
+            if (twoAxes)
+            {
+                auto const fingerY = PositionToValueY(height, y);
+
+                binding.CatchOffsetY = fingerY - binding.ValueY;
+                binding.CaughtY = std::abs(binding.CatchOffsetY) <= CatchTolerance;
+
+                if (binding.CaughtY)
+                {
+                    PublishY(binding, fingerY, false);
+                }
+            }
+
+            return;
+        }
+
+        default:
+            Publish(binding, PositionToValue(binding.Kind, width, height, x, y), false);
+
+            if (twoAxes)
+            {
+                PublishY(binding, PositionToValueY(height, y), false);
+            }
+
+            return;
+        }
+    }
+
+    _Use_decl_annotations_
+    void InputRouter::MoveAbsolute(Binding& binding, double x, double y)
+    {
+        auto const width = binding.Element.ActualWidth();
+        auto const height = binding.Element.ActualHeight();
+        auto const twoAxes = UsesTwoAxes(binding.Kind);
+
+        switch (binding.Pickup)
+        {
+        case PickupMode::Relative:
+            Publish(binding, RelativeValue(
+                binding.Kind, width, height, binding.StartValue, binding.StartX, binding.StartY, x, y), false);
+
+            if (twoAxes)
+            {
+                PublishY(binding, RelativeValueY(height, binding.StartValueY, binding.StartY, y), false);
+            }
+
+            return;
+
+        case PickupMode::Catch:
+        {
+            // Nothing is sent and nothing moves until the finger reaches the value.
+            auto const finger = PositionToValue(binding.Kind, width, height, x, y);
+
+            if (!binding.Caught && HasCaughtValue(binding.CatchOffset, finger, binding.Value))
+            {
+                binding.Caught = true;
+            }
+
+            if (binding.Caught)
+            {
+                Publish(binding, finger, false);
+            }
+
+            if (twoAxes)
+            {
+                auto const fingerY = PositionToValueY(height, y);
+
+                if (!binding.CaughtY && HasCaughtValue(binding.CatchOffsetY, fingerY, binding.ValueY))
+                {
+                    binding.CaughtY = true;
+                }
+
+                if (binding.CaughtY)
+                {
+                    PublishY(binding, fingerY, false);
+                }
+            }
+
+            return;
+        }
+
+        default:
+            Publish(binding, PositionToValue(binding.Kind, width, height, x, y), false);
+
+            if (twoAxes)
+            {
+                PublishY(binding, PositionToValueY(height, y), false);
+            }
+
+            return;
         }
     }
 
@@ -590,19 +711,7 @@ namespace glass
 
         if (UsesAbsolutePosition(binding.Kind))
         {
-            Publish(binding, PositionToValue(
-                binding.Kind,
-                binding.Element.ActualWidth(),
-                binding.Element.ActualHeight(),
-                point.Position().X,
-                point.Position().Y), false);
-
-            if (UsesTwoAxes(binding.Kind))
-            {
-                PublishY(binding, PositionToValueY(
-                    binding.Element.ActualHeight(), point.Position().Y), false);
-            }
-
+            MoveAbsolute(binding, point.Position().X, point.Position().Y);
             return;
         }
 
@@ -782,6 +891,11 @@ namespace glass
         {
             binding.Value = binding.RestValue;
             binding.ValueY = binding.RestValueY;
+        }
+        else if (!binding.Caught && !binding.CaughtY)
+        {
+            // A catch that never reached the value moved nothing, so it sends nothing.
+            return;
         }
 
         if (UsesTwoAxes(binding.Kind))

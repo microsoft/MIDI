@@ -56,8 +56,6 @@ namespace winrt::midiglass::implementation
                 L"StepAddSetControl", L'\uE8AB' },
             { glass::SequenceStepKind::GoToPage, glass::MessageKind::GoToPage,
                 L"StepAddGoToPage", L'\uE80A' },
-            { glass::SequenceStepKind::HoldLayer, glass::MessageKind::ControlChange,
-                L"StepAddHoldLayer", L'\uE72E' },
         };
 
         wchar_t const* GlyphKeyForStep(_In_ glass::SequenceStep const& step) noexcept
@@ -68,7 +66,6 @@ namespace winrt::midiglass::implementation
             case glass::SequenceStepKind::SendSystemExclusive: return L"StepAddSystemExclusive";
             case glass::SequenceStepKind::SetControlValue:  return L"StepAddSetControl";
             case glass::SequenceStepKind::GoToPage:         return L"StepAddGoToPage";
-            case glass::SequenceStepKind::HoldLayer:        return L"StepAddHoldLayer";
             case glass::SequenceStepKind::RepeatBlockStart: return L"StepAddRepeat";
             case glass::SequenceStepKind::RepeatBlockEnd:   return L"StepAddRepeat";
             default:
@@ -96,9 +93,6 @@ namespace winrt::midiglass::implementation
 
             case glass::SequenceStepKind::RepeatBlockEnd:
                 return std::wstring{ resources::GetString(L"StepRepeatEnd") };
-
-            case glass::SequenceStepKind::HoldLayer:
-                return std::wstring{ resources::GetString(L"StepHoldLayerText") };
 
             case glass::SequenceStepKind::SetControlValue:
             {

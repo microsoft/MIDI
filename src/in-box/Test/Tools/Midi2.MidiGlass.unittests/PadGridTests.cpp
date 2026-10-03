@@ -410,9 +410,13 @@ void PadGridTests::FlatKeysAreWrittenWithFlats()
     VERIFY_IS_FALSE(glass::KeyUsesFlats(2, glass::MusicalScale::Dorian));
     VERIFY_IS_FALSE(glass::KeyUsesFlats(7, glass::MusicalScale::Mixolydian));
 
-    VERIFY_ARE_EQUAL(std::wstring{ L"B\u266D4" }, glass::PadNoteName(70, true));
-    VERIFY_ARE_EQUAL(std::wstring{ L"C\u266F4" }, glass::PadNoteName(61, false));
-    VERIFY_ARE_EQUAL(std::wstring{ L"C3" }, glass::PadNoteName(48, false));
+    // Middle C is C3, the way the SDK's MidiMessageHelper names it by default.
+    VERIFY_ARE_EQUAL(std::wstring{ L"B\u266D3" }, glass::PadNoteName(70, true));
+    VERIFY_ARE_EQUAL(std::wstring{ L"C\u266F3" }, glass::PadNoteName(61, false));
+    VERIFY_ARE_EQUAL(std::wstring{ L"C3" }, glass::PadNoteName(60, false));
+    VERIFY_ARE_EQUAL(std::wstring{ L"C2" }, glass::PadNoteName(48, false));
+    VERIFY_ARE_EQUAL(std::wstring{ L"C-2" }, glass::PadNoteName(0, false));
+    VERIFY_ARE_EQUAL(std::wstring{ L"G8" }, glass::PadNoteName(127, false));
     VERIFY_IS_TRUE(glass::PadNoteName(128, false).empty());
 }
 

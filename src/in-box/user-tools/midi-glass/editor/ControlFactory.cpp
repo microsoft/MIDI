@@ -337,7 +337,7 @@ namespace glass
             control.LabelPlaced = LabelPlacementOverride::Above;
         }
 
-        // Something to hear on the first press: a minor arpeggio from C3, up and back down.
+        // Something to hear on the first press: a minor arpeggio from C2, up and back down.
         if (kind == ControlKind::Steps)
         {
             FillStarterPattern(control.Steps, 48);

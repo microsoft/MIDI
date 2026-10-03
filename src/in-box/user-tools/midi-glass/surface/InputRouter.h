@@ -110,10 +110,19 @@ namespace glass
             double RestValueY{ 0.0 };
 
             double StartValue{ 0.0 };
+            double StartValueY{ 0.0 };
             double StartY{ 0.0 };
             double StartX{ 0.0 };
             double Value{ 0.0 };
             double ValueY{ 0.0 };
+
+            // What a touch away from the value does on a fader, a ribbon or a pad. In catch, how
+            // far from the value the finger landed, and whether it has reached the value since.
+            PickupMode Pickup{ PickupMode::Jump };
+            double CatchOffset{ 0.0 };
+            double CatchOffsetY{ 0.0 };
+            bool Caught{ true };
+            bool CaughtY{ true };
 
             // A platter, or a knob turned round and round: where the finger is on its face, and
             // how far it has pushed it round since it landed.
@@ -170,6 +179,11 @@ namespace glass
 
         void Publish(_In_ Binding& binding, _In_ double value, _In_ bool isFinal);
         void PublishY(_In_ Binding& binding, _In_ double value, _In_ bool isFinal);
+
+        // A fader, a ribbon or a pad touched and dragged, as its pickup mode says: jump to the
+        // finger, wait until the finger reaches the value, or move by as far as the finger does.
+        void PressAbsolute(_In_ Binding& binding, _In_ double x, _In_ double y);
+        void MoveAbsolute(_In_ Binding& binding, _In_ double x, _In_ double y);
 
         // A touch anywhere on a keyboard, and the same when it moves: sliding off one key and
         // onto the next releases the first and plays the second, the way a finger dragged along

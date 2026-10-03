@@ -93,6 +93,27 @@ void LearnCaptureTests::LearnsARegisteredController()
     VERIFY_ARE_EQUAL(uint32_t{ (5u << 7) | 9u }, learned.Number);
 }
 
+void LearnCaptureTests::LearnsAPerNoteControllerAndWhichOne()
+{
+    // 40003C4A is registered per-note controller 74 on note 60; 40103CC8 is assignable 200.
+    auto const registered = Learn({ 0x40003C4A, 0xFFFFFFFF });
+
+    VERIFY_IS_TRUE(registered.Kind == glass::MessageKind::PerNoteController);
+    VERIFY_ARE_EQUAL(60u, registered.Number);
+    VERIFY_ARE_EQUAL(74u, registered.Controller);
+
+    auto const assignable = Learn({ 0x40103CC8, 0x80000000 });
+
+    VERIFY_IS_TRUE(assignable.Kind == glass::MessageKind::AssignablePerNoteController);
+    VERIFY_ARE_EQUAL(200u, assignable.Controller);
+
+    glass::ControlMessage message{};
+    glass::ApplyLearned(assignable, glass::LearnAcceptance{}, message);
+
+    VERIFY_ARE_EQUAL(60u, message.Number);
+    VERIFY_ARE_EQUAL(200u, message.Controller);
+}
+
 void LearnCaptureTests::TakesTheGroupAndTheChannelToo()
 {
     // Capturing only the number is why remapping a controller is usually an hour of typing.

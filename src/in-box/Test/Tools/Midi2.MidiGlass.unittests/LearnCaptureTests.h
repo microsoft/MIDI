@@ -24,6 +24,7 @@ public:
     TEST_METHOD(LearnsANote);
     TEST_METHOD(LearnsPitchBend);
     TEST_METHOD(LearnsARegisteredController);
+    TEST_METHOD(LearnsAPerNoteControllerAndWhichOne);
     TEST_METHOD(TakesTheGroupAndTheChannelToo);
     TEST_METHOD(IgnoresWhatCannotBeBound);
 

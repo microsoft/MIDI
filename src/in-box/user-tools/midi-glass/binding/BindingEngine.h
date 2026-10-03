@@ -58,6 +58,13 @@ namespace glass
         uint8_t ChannelIndex{ 0 };
         uint16_t Number{ 0 };
 
+        // Which per-note controller. Number is the note.
+        uint8_t Controller{ 0 };
+
+        // A MIDI 2.0 note's attribute. Type 0 is none, and then no data goes out either.
+        uint8_t AttributeType{ 0 };
+        uint16_t AttributeData{ 0 };
+
         MessageValue Minimum{ 0.0, ValueScaling::Fraction };
         MessageValue Maximum{ 1.0, ValueScaling::Fraction };
 

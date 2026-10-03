@@ -617,6 +617,7 @@ namespace winrt::midiglass::implementation
         keyboard.BlackKeyColor = std::wstring{ BlackKeyColorBox().Text() };
         keyboard.PressedKeyColor = std::wstring{ PressedKeyColorBox().Text() };
         keyboard.VelocityFromKeyPosition = KeyVelocityCheck().IsChecked().GetBoolean();
+        keyboard.ShowNoteNames = KeyNamesCheck().IsChecked().GetBoolean();
 
         ApplyControlEdit(control->Id, [&](std::wstring const& id)
             { return m_editor.SetControlKeyboard(id, keyboard); });
@@ -657,6 +658,17 @@ namespace winrt::midiglass::implementation
 
     _Use_decl_annotations_
     void EditorWindow::OnKeyVelocityChanged(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyKeyboardEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnKeyNamesChanged(
         foundation::IInspectable const& sender,
         xaml::RoutedEventArgs const& args)
     {

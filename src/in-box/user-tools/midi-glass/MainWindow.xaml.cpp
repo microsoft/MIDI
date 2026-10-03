@@ -23,7 +23,9 @@
 
 #include <commctrl.h>
 
+#include <cmath>
 #include <filesystem>
+#include <limits>
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -148,9 +150,27 @@ namespace winrt::midiglass::implementation
 
             m_updatingChrome = true;
 
-            SortSelector().Items().Append(box_value(resources::GetString(L"SortByLastUsed")));
-            SortSelector().Items().Append(box_value(resources::GetString(L"SortByName")));
-            SortSelector().Items().Append(box_value(resources::GetString(L"SortByLastChanged")));
+            auto widestSort = 0.0;
+
+            for (auto const key : { L"SortByLastUsed", L"SortByName", L"SortByLastChanged" })
+            {
+                auto const text = resources::GetString(key);
+
+                SortSelector().Items().Append(box_value(text));
+
+                controls::TextBlock probe{};
+                probe.Text(text);
+                probe.FontSize(SortSelector().FontSize());
+                probe.Measure({ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() });
+
+                widestSort = std::max(widestSort, static_cast<double>(probe.DesiredSize().Width));
+            }
+
+            // The longest choice plus the padding and the arrow, so changing the order never moves the buttons beside it.
+            constexpr double SortChromeWidth = 60.0;
+
+            SortSelector().MinWidth(std::max(SortSelector().MinWidth(), std::ceil(widestSort) + SortChromeWidth));
+
             SortSelector().SelectedIndex(
                 static_cast<int32_t>(::midiglass::AppSettings::Current().LibrarySortOrder()));
 
@@ -361,8 +381,7 @@ namespace winrt::midiglass::implementation
                 ? xaml::Visibility::Visible
                 : xaml::Visibility::Collapsed;
 
-            AssistantMenuItem().Visibility(visibility);
-            AssistantMenuSeparator().Visibility(visibility);
+            AssistantButton().Visibility(visibility);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show or hide Ask an AI assistant.")
     }

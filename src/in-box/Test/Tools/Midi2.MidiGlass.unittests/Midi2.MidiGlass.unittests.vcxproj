@@ -137,6 +137,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\HexText.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\binding\MonitorFormat.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\binding\ValueThrottle.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\binding\ClockTempo.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\binding\PadVoices.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\editor\ArrangeOps.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\editor\ControlFactory.h" />
@@ -191,6 +192,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\HexText.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\binding\MonitorFormat.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\binding\ValueThrottle.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\binding\ClockTempo.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\binding\PadVoices.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\ArrangeOps.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\ControlFactory.cpp" />

@@ -48,6 +48,7 @@ public:
     TEST_METHOD(KeepsFieldsFromANewerVersion);
     TEST_METHOD(SaysWhenAFileIsFromANewerVersion);
     TEST_METHOD(UnknownFieldsSurviveAtEveryLevel);
+    TEST_METHOD(SettingsThatNeverWorkedAreDroppedWhenRead);
 
     // ---- untrusted input ----
     TEST_METHOD(RejectsSomethingThatIsNotJson);
@@ -81,10 +82,19 @@ public:
     TEST_METHOD(SomethingThatIsNotHexIsRefusedWhole);
     TEST_METHOD(HexIsBounded);
     TEST_METHOD(HexWordsRoundTrip);
+    TEST_METHOD(OneHexNumberReadsAndWrites);
 
     // ---- RPN and NRPN ----
     TEST_METHOD(AnRpnOrNrpnNumberIsABankAndAnIndex);
     TEST_METHOD(AnNrpnAbove127SurvivesARoundTrip);
+
+    // ---- per-note controllers and note attributes ----
+    TEST_METHOD(APerNoteControllerAndAnAttributeSurviveARoundTrip);
+    TEST_METHOD(NoControllerAndNoAttributeStayOutOfTheFile);
+    TEST_METHOD(AnAttributeGoesOnlyOnAMidi2Note);
+
+    // ---- the band that is on every page ----
+    TEST_METHOD(TheBandIsNotAPageToGoTo);
 
     // ---- how a knob is turned ----
 

@@ -294,6 +294,11 @@ namespace glass
         comp::CompositionBrush KeyPressedBrush{ nullptr };
         int32_t PressedKey{ -1 };
 
+        // What a note name is printed in on each kind of key, and on the key under the finger.
+        ThemeColor KeyWhiteInk{};
+        ThemeColor KeyBlackInk{};
+        ThemeColor KeyPressedInk{};
+
         // ---- note pads and hex pads ----
 
         // One shape per pad, in the order the pads flow, painted from the brushes beside it.
@@ -339,11 +344,14 @@ namespace glass
     {
     public:
         // Builds one page. The host is in page coordinates; scaling is the window's business.
+        // A running layout also draws every page marked always on screen, after the page's own
+        // controls; the editor and the thumbnails draw the page alone.
         void Build(
             _In_ controls::Canvas const& host,
             _In_ LayoutDocument const& document,
             _In_ Theme const& theme,
-            _In_ size_t pageIndex);
+            _In_ size_t pageIndex,
+            _In_ bool withSharedBand = false);
 
         void Teardown();
 
@@ -374,6 +382,7 @@ namespace glass
         // rather than being looked up in the document, because input runs on the hot path and
         // the document can be edited underneath a gesture.
         DragAxis DragAxisAt(_In_ size_t itemIndex) const noexcept;
+        PickupMode PickupAt(_In_ size_t itemIndex) const noexcept;
         KeyboardSpec const& KeyboardAt(_In_ size_t itemIndex) const noexcept;
 
         // Whether this control takes its velocity from how hard it was hit.
@@ -962,6 +971,9 @@ namespace glass
         // names on a pad grid, because a control is one or the other.
         void LayoutSwitchLabels(_In_ size_t itemIndex, _In_ Control const& control);
 
+        // The note on each key of a keyboard, in the same slot, when the keyboard asks for them.
+        void LayoutKeyNames(_In_ size_t itemIndex, _In_ Control const& control);
+
         // Puts a two axis control's puck and crosshair where its two values say, and a ribbon's
         // light where its one value says.
         void MovePuck(_In_ size_t itemIndex) noexcept;
@@ -1053,6 +1065,7 @@ namespace glass
         std::vector<double> m_restValuesY{};
         std::vector<bool> m_returnsToRest{};
         std::vector<DragAxis> m_dragAxes{};
+        std::vector<PickupMode> m_pickups{};
         std::vector<KeyboardSpec> m_keyboards{};
         std::vector<PadGridSpec> m_padGrids{};
         std::vector<bool> m_velocityFromTouch{};

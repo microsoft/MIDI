@@ -762,7 +762,34 @@ namespace winrt::midiglass::implementation
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
+        // Also raised by a grid the first time it is shown, which is the first moment its panel
+        // exists to be sized. Favorites start hidden, so that is how their first card gets its width.
         ApplyItemWidths();
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnLayoutContainerContentChanging(
+        controls::ListViewBase const& sender,
+        controls::ContainerContentChangingEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+
+        try
+        {
+            if (args.InRecycleQueue())
+            {
+                return;
+            }
+
+            // Rows sit half as far apart as cards.
+            auto const gap = ::midiglass::AppSettings::Current().LibraryShowsList() ? CardGap / 2.0 : CardGap;
+
+            if (auto const container = args.ItemContainer())
+            {
+                container.Margin(xaml::ThicknessHelper::FromLengths(0.0, 0.0, CardGap, gap));
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to space the library items.")
     }
 
     void MainWindow::UpdateStatusBar()

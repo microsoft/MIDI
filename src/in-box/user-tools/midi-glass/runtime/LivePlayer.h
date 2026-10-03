@@ -13,12 +13,14 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
 #include "LayoutModel.h"
 #include "BindingEngine.h"
 #include "ActionPlan.h"
+#include "ClockTempo.h"
 #include "LearnCapture.h"
 #include "ValueThrottle.h"
 #include "DeviceCatalog.h"
@@ -256,8 +258,20 @@ namespace glass
         // On a service callback thread. Resolves what moved and marshals only the answer.
         void OnFeedbackWords(
             _In_ std::wstring const& endpointDeviceId,
+            _In_ uint64_t timestamp,
             _In_ uint32_t wordCount,
             _In_reads_(wordCount) uint32_t const* words);
+
+        // Which device the layout takes its tempo from, worked out again after the document
+        // changed. The measurement starts over only when that is a different device.
+        void FollowTempoSource();
+
+        // The tempo LFOs and step sequencers run at: the one the incoming clock gave, while the
+        // layout follows one and has heard it, and the layout's own otherwise.
+        double LayoutTempo() const noexcept;
+
+        // The incoming clock settled on a new tempo. On the UI thread.
+        void ApplyFollowedTempo(_In_ double beatsPerMinute);
 
         // Everything on the layout that said it follows this clock control's beat.
         void PulseTempoFollowers(
@@ -392,6 +406,19 @@ namespace glass
         // Read on a service callback thread and written on the UI thread, so it is atomic rather
         // than a plain bool.
         std::atomic<bool> m_learning{ false };
+
+        // The entry in the device table whose clock sets the layout's tempo, or -1 when the
+        // layout keeps its own. Read on the service's callback thread, so it is atomic.
+        std::atomic<int32_t> m_tempoDeviceIndex{ -1 };
+
+        // Only touched under its lock. Messages from one device can come in on more than one
+        // callback thread.
+        std::mutex m_clockMeterLock{};
+        ClockTempoMeter m_clockMeter{};
+
+        // The tempo the incoming clock gave last, kept when it stops. Zero until one is heard.
+        // UI thread only.
+        double m_followedBeatsPerMinute{ 0.0 };
 
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcher{ nullptr };
     };

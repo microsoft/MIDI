@@ -221,6 +221,63 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool HasCaughtValue(double offsetAtPress, double finger, double value) noexcept
+    {
+        if (!std::isfinite(offsetAtPress) || !std::isfinite(finger) || !std::isfinite(value))
+        {
+            return false;
+        }
+
+        auto const offset = finger - value;
+
+        if (std::abs(offset) <= CatchTolerance)
+        {
+            return true;
+        }
+
+        return (offsetAtPress < 0.0) != (offset < 0.0);
+    }
+
+    _Use_decl_annotations_
+    double RelativeValue(
+        ControlKind kind,
+        double width,
+        double height,
+        double startValue,
+        double startX,
+        double startY,
+        double x,
+        double y) noexcept
+    {
+        if (width <= 0.0 || height <= 0.0)
+        {
+            return std::clamp(startValue, 0.0, 1.0);
+        }
+
+        // Across for a two axis control, and along the long side for a fader or a ribbon, decided
+        // the way PositionToValue decides it.
+        auto const across = UsesTwoAxes(kind) ||
+            (kind == ControlKind::Ribbon ? width >= height : width > height);
+
+        auto const moved = across
+            ? (x - startX) / width
+            : (startY - y) / height;
+
+        return std::clamp(startValue + moved, 0.0, 1.0);
+    }
+
+    _Use_decl_annotations_
+    double RelativeValueY(double height, double startValue, double startY, double y) noexcept
+    {
+        if (height <= 0.0)
+        {
+            return std::clamp(startValue, 0.0, 1.0);
+        }
+
+        return std::clamp(startValue + (startY - y) / height, 0.0, 1.0);
+    }
+
+    _Use_decl_annotations_
     double SwitchValueAtPoint(double width, double height, double x, double y, int32_t positions) noexcept
     {
         auto const count = std::max(positions, MinimumSwitchPositions);

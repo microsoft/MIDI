@@ -397,8 +397,7 @@ namespace glass
     bool SendsToADevice(MessageKind kind) noexcept
     {
         return kind != MessageKind::Sequence &&
-            kind != MessageKind::GoToPage &&
-            kind != MessageKind::HoldLayer;
+            kind != MessageKind::GoToPage;
     }
 
     _Use_decl_annotations_
@@ -412,6 +411,7 @@ namespace glass
         case MessageKind::PitchBend:
         case MessageKind::ChannelPressure:
         case MessageKind::PerNoteController:
+        case MessageKind::AssignablePerNoteController:
         case MessageKind::RegisteredController:
         case MessageKind::AssignedController:
             return true;
@@ -419,6 +419,20 @@ namespace glass
         default:
             return false;
         }
+    }
+
+    _Use_decl_annotations_
+    bool IsPerNoteController(MessageKind kind) noexcept
+    {
+        return kind == MessageKind::PerNoteController || kind == MessageKind::AssignablePerNoteController;
+    }
+
+    _Use_decl_annotations_
+    bool SendsNoteAttribute(ControlMessage const& message, DeviceProtocol protocol) noexcept
+    {
+        return message.Kind == MessageKind::Note &&
+            protocol != DeviceProtocol::MackieControl &&
+            !SendsAsMidi1(message, protocol);
     }
 
     _Use_decl_annotations_
@@ -1303,6 +1317,30 @@ namespace glass
         }
 
         return {};
+    }
+
+    _Use_decl_annotations_
+    std::vector<size_t> PagesToChooseFrom(LayoutDocument const& document)
+    {
+        std::vector<size_t> pages{};
+
+        for (size_t index = 0; index < document.Pages.size(); ++index)
+        {
+            if (!document.Pages[index].IsSharedBand)
+            {
+                pages.push_back(index);
+            }
+        }
+
+        if (pages.empty())
+        {
+            for (size_t index = 0; index < document.Pages.size(); ++index)
+            {
+                pages.push_back(index);
+            }
+        }
+
+        return pages;
     }
 
     _Use_decl_annotations_

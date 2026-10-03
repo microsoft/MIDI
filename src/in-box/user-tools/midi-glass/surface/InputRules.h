@@ -91,6 +91,32 @@ namespace glass
         _In_ double height,
         _In_ double y) noexcept;
 
+    // How near the value a touch has to land to take hold of it at once, in catch pickup.
+    constexpr double CatchTolerance = 0.02;
+
+    // Catch pickup: whether a finger that landed this far from the value (finger minus value)
+    // has now reached it, by coming within the tolerance or by crossing to its other side.
+    bool HasCaughtValue(_In_ double offsetAtPress, _In_ double finger, _In_ double value) noexcept;
+
+    // Relative pickup: the value moved by as far as the finger has moved along the control,
+    // whose own length is the whole range. The axis follows the rectangle, the way a fader's does.
+    double RelativeValue(
+        _In_ ControlKind kind,
+        _In_ double width,
+        _In_ double height,
+        _In_ double startValue,
+        _In_ double startX,
+        _In_ double startY,
+        _In_ double x,
+        _In_ double y) noexcept;
+
+    // The same for the second axis of a two axis control: up is more.
+    double RelativeValueY(
+        _In_ double height,
+        _In_ double startValue,
+        _In_ double startY,
+        _In_ double y) noexcept;
+
     // The value of the switch position under a point: equal slices along the long side, the
     // first on the left, or at the top of an upright switch, the way a list reads.
     double SwitchValueAtPoint(

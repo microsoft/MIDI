@@ -357,6 +357,38 @@ void RuntimeSurfaceTests::AKnobIsNudgedRatherThanSet()
     VERIFY_IS_TRUE(glass::UsesAbsolutePosition(glass::ControlKind::Fader));
 }
 
+void RuntimeSurfaceTests::CatchWaitsForTheFingerToReachTheValue()
+{
+    // The DAW left the fader at 0.7 and the finger landed at 0.2: nothing until it gets there.
+    auto const offset = 0.2 - 0.7;
+
+    VERIFY_IS_FALSE(glass::HasCaughtValue(offset, 0.4, 0.7));
+    VERIFY_IS_FALSE(glass::HasCaughtValue(offset, 0.67, 0.7));
+
+    // Close enough, or past it in one fast move, both count.
+    VERIFY_IS_TRUE(glass::HasCaughtValue(offset, 0.69, 0.7));
+    VERIFY_IS_TRUE(glass::HasCaughtValue(offset, 0.9, 0.7));
+
+    // From above, the same the other way.
+    VERIFY_IS_FALSE(glass::HasCaughtValue(0.9 - 0.3, 0.5, 0.3));
+    VERIFY_IS_TRUE(glass::HasCaughtValue(0.9 - 0.3, 0.1, 0.3));
+}
+
+void RuntimeSurfaceTests::RelativeMovesByHowFarTheFingerMoves()
+{
+    // An upright fader 200 high at 0.5: a finger dragged up 50 adds a quarter, wherever it landed.
+    VERIFY_ARE_EQUAL(0.75, glass::RelativeValue(glass::ControlKind::Fader, 48, 200, 0.5, 24, 180, 24, 130));
+    VERIFY_ARE_EQUAL(0.25, glass::RelativeValue(glass::ControlKind::Fader, 48, 200, 0.5, 24, 20, 24, 70));
+
+    // A fader on its side reads across, and the ends hold.
+    VERIFY_ARE_EQUAL(1.0, glass::RelativeValue(glass::ControlKind::Fader, 200, 48, 0.5, 0, 24, 150, 24));
+    VERIFY_ARE_EQUAL(0.0, glass::RelativeValue(glass::ControlKind::Fader, 200, 48, 0.5, 150, 24, 0, 24));
+
+    // A pad reads its first axis across and its second up.
+    VERIFY_ARE_EQUAL(0.75, glass::RelativeValue(glass::ControlKind::XYPad, 100, 100, 0.5, 10, 10, 35, 90));
+    VERIFY_ARE_EQUAL(0.25, glass::RelativeValueY(100, 0.5, 10, 35));
+}
+
 void RuntimeSurfaceTests::ADisplayOnlyControlTakesNoInput()
 {
     VERIFY_IS_FALSE(glass::IsInteractive(glass::ControlKind::Meter));

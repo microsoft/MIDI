@@ -110,6 +110,9 @@ namespace glass
                 message.GroupIndex == AllGroups ? 0 : (message.GroupIndex & 0x0F));
             prepared.ChannelIndex = static_cast<uint8_t>(message.ChannelIndex & 0x0F);
             prepared.Number = static_cast<uint16_t>(message.Number);
+            prepared.Controller = static_cast<uint8_t>((std::min)(message.Controller, MaximumPerNoteController));
+            prepared.AttributeType = static_cast<uint8_t>((std::min)(message.AttributeType, MaximumAttributeType));
+            prepared.AttributeData = static_cast<uint16_t>((std::min)(message.AttributeData, MaximumAttributeData));
             prepared.Minimum = message.Minimum;
             prepared.Maximum = message.Maximum;
             prepared.Detents = message.Detents;
@@ -407,7 +410,6 @@ namespace glass
                 }
 
                 case SequenceStepKind::RepeatBlockEnd:
-                case SequenceStepKind::HoldLayer:
                 default:
                     ++index;
                     break;

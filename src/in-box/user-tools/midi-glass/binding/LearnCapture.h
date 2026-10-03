@@ -33,6 +33,9 @@ namespace glass
         int32_t ChannelIndex{ 0 };
         uint32_t Number{ 0 };
 
+        // Which per-note controller, when Kind is one. Taken along with Number.
+        uint32_t Controller{ 0 };
+
         // Where the control was when it arrived, 0 to 1. Not part of the binding; it is what
         // lets the editor show the value moving while somebody wiggles the right knob.
         double Value{ 0.0 };

@@ -51,6 +51,8 @@ public:
     TEST_METHOD(AHorizontalFaderReadsLeftToRight);
     TEST_METHOD(AKnobIsNudgedRatherThanSet);
     TEST_METHOD(ADisplayOnlyControlTakesNoInput);
+    TEST_METHOD(CatchWaitsForTheFingerToReachTheValue);
+    TEST_METHOD(RelativeMovesByHowFarTheFingerMoves);
 
     // ---- colors ----
 

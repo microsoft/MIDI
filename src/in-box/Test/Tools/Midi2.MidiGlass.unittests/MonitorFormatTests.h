@@ -36,6 +36,8 @@ public:
     TEST_METHOD(AMidi2NoteOnKeepsItsSixteenBitVelocity);
     TEST_METHOD(AMidi2ControlChangeAtFullScaleIsOne);
     TEST_METHOD(ARegisteredControllerNamesBothHalves);
+    TEST_METHOD(APerNoteControllerNamesItsNote);
+    TEST_METHOD(ANoteShowsItsAttribute);
 
     // ---- group and channel ----
 

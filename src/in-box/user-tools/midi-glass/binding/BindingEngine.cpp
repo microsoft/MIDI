@@ -28,6 +28,7 @@ namespace glass
         constexpr uint8_t StatusRegisteredController = 0x2;
         constexpr uint8_t StatusAssignedController = 0x3;
         constexpr uint8_t StatusPerNoteController = 0x0;
+        constexpr uint8_t StatusAssignablePerNoteController = 0x1;
         constexpr uint8_t StatusPerNotePitchBend = 0x6;
 
         // Portamento Control: the note the next note on glides from.
@@ -58,6 +59,7 @@ namespace glass
             case MessageKind::PitchBend:
             case MessageKind::ChannelPressure:
             case MessageKind::PerNoteController:
+            case MessageKind::AssignablePerNoteController:
             case MessageKind::RegisteredController:
             case MessageKind::AssignedController:
                 return true;
@@ -65,6 +67,12 @@ namespace glass
             default:
                 return false;
             }
+        }
+
+        // The low half of a MIDI 2.0 note's second word. A note with no attribute type carries none.
+        uint32_t AttributeDataOf(_In_ PreparedMessage const& message) noexcept
+        {
+            return message.AttributeType == 0 ? 0u : message.AttributeData;
         }
 
         // The number that goes into a field of this width, for a control sitting at this position.
@@ -298,8 +306,8 @@ namespace glass
             auto const status = on ? StatusNoteOn : StatusNoteOff;
 
             BuildMidi2ChannelVoice(group, status, channel,
-                static_cast<uint8_t>(message.Number & 0x7F), 0,
-                FieldValue(message, value, 16) << 16, words);
+                static_cast<uint8_t>(message.Number & 0x7F), message.AttributeType,
+                (FieldValue(message, value, 16) << 16) | AttributeDataOf(message), words);
             return 2;
         }
 
@@ -338,8 +346,11 @@ namespace glass
         }
 
         case MessageKind::PerNoteController:
-            BuildMidi2ChannelVoice(group, StatusPerNoteController, channel,
-                static_cast<uint8_t>(message.Number & 0x7F), 0, FieldValue(message, value, 32), words);
+        case MessageKind::AssignablePerNoteController:
+            BuildMidi2ChannelVoice(group,
+                message.Kind == MessageKind::PerNoteController ? StatusPerNoteController : StatusAssignablePerNoteController,
+                channel, static_cast<uint8_t>(message.Number & 0x7F), message.Controller,
+                FieldValue(message, value, 32), words);
             return 2;
 
         default:
@@ -444,7 +455,8 @@ namespace glass
             sixteen = QuietestNoteOn;
         }
 
-        BuildMidi2ChannelVoice(message.GroupIndex, status, message.ChannelIndex, note, 0, sixteen << 16, words);
+        BuildMidi2ChannelVoice(message.GroupIndex, status, message.ChannelIndex, note, message.AttributeType,
+            (sixteen << 16) | AttributeDataOf(message), words);
         return 2;
     }
 
@@ -516,6 +528,9 @@ namespace glass
                             message.GroupIndex == AllGroups ? 0 : (message.GroupIndex & 0x0F));
                         entry.ChannelIndex = static_cast<uint8_t>(message.ChannelIndex & 0x0F);
                         entry.Number = static_cast<uint16_t>(message.Number);
+                        entry.Controller = static_cast<uint8_t>((std::min)(message.Controller, MaximumPerNoteController));
+                        entry.AttributeType = static_cast<uint8_t>((std::min)(message.AttributeType, MaximumAttributeType));
+                        entry.AttributeData = static_cast<uint16_t>((std::min)(message.AttributeData, MaximumAttributeData));
                         entry.Minimum = message.Minimum;
                         entry.Maximum = message.Maximum;
                         entry.Detents = message.Detents;

@@ -222,16 +222,9 @@ namespace winrt::midiglass::implementation
         }
 
         // The note a number plays, written the way this app writes notes everywhere else.
-        std::wstring NoteName(_In_ int32_t note) noexcept
+        std::wstring NoteName(_In_ int32_t note)
         {
-            static wchar_t const* const names[]
-            {
-                L"C", L"C#", L"D", L"D#", L"E", L"F", L"F#", L"G", L"G#", L"A", L"A#", L"B"
-            };
-
-            auto const clamped = std::clamp(note, 0, 127);
-
-            return std::wstring{ names[clamped % 12] } + std::to_wstring((clamped / 12) - 1);
+            return glass::PadNoteName(std::clamp(note, 0, 127), false);
         }
 
         // Which kinds show which panel. Written once, because a panel that appears for the
@@ -542,6 +535,7 @@ namespace winrt::midiglass::implementation
                 BlackKeyColorBox().Text(winrt::hstring{ spec.BlackKeyColor });
                 PressedKeyColorBox().Text(winrt::hstring{ spec.PressedKeyColor });
                 KeyVelocityCheck().IsChecked(spec.VelocityFromKeyPosition);
+                KeyNamesCheck().IsChecked(spec.ShowNoteNames);
 
                 auto const highest = std::clamp(spec.LowestNote + spec.KeyCount - 1, 0, 127);
 

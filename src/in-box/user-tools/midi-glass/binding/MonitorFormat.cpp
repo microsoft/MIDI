@@ -38,6 +38,24 @@ namespace glass
             return std::to_wstring(value);
         }
 
+        // A MIDI 2.0 note's attribute, in the hex the editor takes it in. Nothing when there is none.
+        std::wstring Attribute(_In_ uint8_t type, _In_ uint32_t second)
+        {
+            if (type == 0)
+            {
+                return {};
+            }
+
+            std::wstring text{ L", attribute " };
+
+            AppendByte(text, type);
+            text.push_back(L' ');
+            AppendByte(text, static_cast<uint8_t>((second >> 8) & 0xFF));
+            AppendByte(text, static_cast<uint8_t>(second & 0xFF));
+
+            return text;
+        }
+
         // Three decimals, because a fader moving by a thousandth is a real difference on a 32 bit
         // field and rounding it away would make consecutive rows look identical.
         std::wstring Fraction(_In_ double value)
@@ -155,12 +173,12 @@ namespace glass
                 {
                 case 0x8:
                     result.Meaning = L"Note off " + Number(byte2 & 0x7F) + L" = " +
-                        Number(static_cast<int32_t>((second >> 16) & 0xFFFF));
+                        Number(static_cast<int32_t>((second >> 16) & 0xFFFF)) + Attribute(byte3, second);
                     break;
 
                 case 0x9:
                     result.Meaning = L"Note on " + Number(byte2 & 0x7F) + L" = " +
-                        Number(static_cast<int32_t>((second >> 16) & 0xFFFF));
+                        Number(static_cast<int32_t>((second >> 16) & 0xFFFF)) + Attribute(byte3, second);
                     break;
 
                 case 0xA:
@@ -185,6 +203,12 @@ namespace glass
 
                 case 0x6:
                     result.Meaning = L"Per-note bend " + Number(byte2 & 0x7F) + L" = " + asFraction;
+                    break;
+
+                case 0x0:
+                case 0x1:
+                    result.Meaning = std::wstring{ status == 0x0 ? L"Per-note controller " : L"Assignable per-note controller " } +
+                        Number(byte3) + L" on note " + Number(byte2 & 0x7F) + L" = " + asFraction;
                     break;
 
                 case 0x2:

@@ -205,4 +205,55 @@ namespace glass
             return {};
         }
     }
+
+    _Use_decl_annotations_
+    bool TryParseHexNumber(std::wstring_view text, uint32_t maximum, uint32_t& value) noexcept
+    {
+        value = 0;
+
+        std::wstring digits{};
+
+        // Nine digits or more cannot fit in 32 bits, so it is a typo rather than a number.
+        if (!StripToDigits(text, digits) || digits.size() > 8)
+        {
+            return false;
+        }
+
+        uint64_t parsed{ 0 };
+
+        for (auto const ch : digits)
+        {
+            parsed = (parsed << 4) | static_cast<uint64_t>(Nibble(ch));
+        }
+
+        if (parsed > maximum)
+        {
+            return false;
+        }
+
+        value = static_cast<uint32_t>(parsed);
+        return true;
+    }
+
+    _Use_decl_annotations_
+    std::wstring FormatHexNumber(uint32_t value, uint32_t digits) noexcept
+    {
+        try
+        {
+            auto const count = digits < 1 ? 1u : (digits > 8 ? 8u : digits);
+
+            std::wstring text{};
+
+            for (auto shift = static_cast<int32_t>(count - 1) * 4; shift >= 0; shift -= 4)
+            {
+                text += Digits[(value >> shift) & 0x0F];
+            }
+
+            return text;
+        }
+        catch (...)
+        {
+            return {};
+        }
+    }
 }
