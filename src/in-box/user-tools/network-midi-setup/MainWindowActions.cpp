@@ -895,6 +895,7 @@ namespace winrt::midinetworksetup::implementation
         auto const deviceId = item.DeviceId();
         auto const displayName = item.DisplayName();
         auto const productInstanceId = item.ProductInstanceId();
+        auto const clientKey = item.ClientId();
 
         // re-arming an entry the service already knows about keeps its identifier, so the
         // configuration file entry stays the one the customer already has
@@ -905,7 +906,7 @@ namespace winrt::midinetworksetup::implementation
             // re-associating: the entry being kept is not the one supplying the match criteria
             clientId = explicitClientId;
         }
-        else if (!reuseExistingEntry || !TryParseKey(item.ClientId(), clientId))
+        else if (!reuseExistingEntry || !TryParseKey(clientKey, clientId))
         {
             clientId = foundation::GuidHelper::CreateNewGuid();
         }
@@ -916,31 +917,64 @@ namespace winrt::midinetworksetup::implementation
 
         try
         {
-            midi2net::MidiNetworkClientMatchCriteria criteria{};
-
-            // Matched on the device id it was discovered with, so the service re-resolves the
-            // address from the advertisement every time. That is what lets the connection
-            // survive the device moving to a new address or picking a new port.
-            criteria.DeviceId(deviceId);
-
-            // The device's own identity, so the entry still resolves if its DNS-SD instance
-            // label changes. A responder renames a colliding label, and a firmware update or a
-            // user can change it outright.
-            criteria.ProductInstanceId(productInstanceId);
-            criteria.UmpEndpointName(displayName);
-
             midi2net::MidiNetworkClientConnectConfig config{};
             config.ClientId(clientId);
 
-            // Deliberately not set: UmpEndpointName here is the name THIS PC announces to the
-            // remote, not the remote's name. Leaving it empty lets the service derive it from the
-            // machine name, which is what a config file created entry also gets.
-            config.CustomEndpointName(customEndpointName);
-            config.MatchCriteria(criteria);
+            // Trying a saved entry again uses what it was saved with. A direct entry's row has no
+            // device id to rebuild its match criteria from.
+            auto savedEntry = (reuseExistingEntry && explicitClientId == winrt::guid{}) ?
+                FindSavedClient(clientKey) :
+                midi2net::MidiNetworkSavedClient{ nullptr };
+
+            auto const savedCriteria = savedEntry != nullptr ?
+                savedEntry.MatchCriteria() :
+                midi2net::MidiNetworkClientMatchCriteria{ nullptr };
+
+            // the connect request carries a device id or an address, and nothing else
+            if (savedCriteria == nullptr ||
+                (savedCriteria.DeviceId().empty() && savedCriteria.DirectHostNameOrIPAddress().empty()))
+            {
+                savedEntry = nullptr;
+            }
+
+            if (savedEntry != nullptr)
+            {
+                config.MatchCriteria(savedCriteria);
+                config.UmpEndpointName(savedEntry.UmpEndpointName());
+                config.CustomEndpointName(savedEntry.CustomEndpointName());
+                config.CreateOnlyUmpEndpoints(savedEntry.CreateOnlyUmpEndpoints());
+                config.FallbackMidi1PortCount(savedEntry.FallbackMidi1PortCount());
+            }
+            else
+            {
+                midi2net::MidiNetworkClientMatchCriteria criteria{};
+
+                // Matched on the device id it was discovered with, so the service re-resolves the
+                // address from the advertisement every time. That is what lets the connection
+                // survive the device moving to a new address or picking a new port.
+                criteria.DeviceId(deviceId);
+
+                // The device's own identity, so the entry still resolves if its DNS-SD instance
+                // label changes. A responder renames a colliding label, and a firmware update or a
+                // user can change it outright.
+                criteria.ProductInstanceId(productInstanceId);
+                criteria.UmpEndpointName(displayName);
+
+                // Deliberately no UmpEndpointName: that is the name THIS PC announces to the
+                // remote, not the remote's name. Leaving it empty lets the service derive it from
+                // the machine name, which is what a config file created entry also gets.
+                config.CustomEndpointName(customEndpointName);
+                config.MatchCriteria(criteria);
+            }
 
             auto const response = co_await midi2net::MidiNetworkTransportManager::ConnectNetworkClientAsync(config);
 
-            if (response != nullptr && response.Success())
+            if (response != nullptr && response.Success() && savedEntry != nullptr)
+            {
+                // nothing about the saved entry changed
+                message = res::FormatString(L"ConnectRequestedFormat", displayName);
+            }
+            else if (response != nullptr && response.Success())
             {
                 auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
 

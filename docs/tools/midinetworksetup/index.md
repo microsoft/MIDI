@@ -79,7 +79,7 @@ If the connection sits at **Connecting** and doesn't complete, that's the first 
 
 Devices that let anything connect will simply connect straight away.
 
-When a connection doesn't work, the device's row says why, for example **The device did not answer. Windows will keep trying.** A device that turns the connection down, or asks for a password, which Windows doesn't support yet, isn't tried again until you select **Connect**.
+When a connection doesn't work, the device's row says why, for example **The device did not answer. Windows will keep trying.** A device that turns the connection down, or asks for a password, which Windows doesn't support yet, isn't tried again until you select **Try again**.
 
 ### Watching a connection
 

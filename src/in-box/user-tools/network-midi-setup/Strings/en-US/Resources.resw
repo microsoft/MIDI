@@ -377,8 +377,8 @@
     <comment>{0} is a sentence saying what went wrong.</comment>
   </data>
   <data name="NetworkRemoteHostStoppedFormat" xml:space="preserve">
-    <value>{0} Connect again to retry.</value>
-    <comment>{0} is a sentence saying what went wrong. "Connect" is the label of the button beside it.</comment>
+    <value>{0} Select Try again to connect.</value>
+    <comment>{0} is a sentence saying what went wrong. "Try again" is the label of the button beside it.</comment>
   </data>
   <data name="RemoteHostNotFound" xml:space="preserve">
     <value>Not found on the network</value>
