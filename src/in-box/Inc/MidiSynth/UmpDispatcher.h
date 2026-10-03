@@ -108,10 +108,10 @@ namespace MidiSynth
         // Supplying an output lets the dispatcher answer an Identity Request.
         void SetOutput(_In_opt_ IUmpOutput* output, _In_ const SynthIdentity& identity) noexcept;
 
-        // What this endpoint answers UMP Stream Endpoint Discovery with. Both are UTF-8 and are
-        // truncated rather than refused, because a name that is too long is still worth reporting.
-        // An empty product instance id suppresses that notification, which is how a device says it
-        // does not have one.
+        // What this endpoint answers UMP Stream Endpoint Discovery with, and MIDI-CI Inquiry:
+        // Endpoint too. Both are UTF-8 and are truncated rather than refused, because a name that is
+        // too long is still worth reporting. An empty product instance id suppresses that
+        // notification and refuses the inquiry, which is how a device says it does not have one.
         void SetEndpointIdentity(
             _In_opt_z_ const char* endpointName,
             _In_opt_z_ const char* productInstanceId) noexcept;

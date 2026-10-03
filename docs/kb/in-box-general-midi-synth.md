@@ -254,13 +254,13 @@ These are the messages it acts on. Anything addressed to another device's MUID i
 | --- | --- |
 | `0x70` Discovery | Yes, answered with `0x71` Discovery Reply |
 | `0x7E` Invalidate MUID | Yes, in both directions. Aimed at this device it withdraws and replaces the MUID; aimed at another device it drops whatever was being held for that initiator, including any subscription |
+| `0x72` Inquiry: Endpoint | Yes. Status `0x00` (product instance ID) is answered with `0x73` carrying `GM1`, the same ID as the Product Instance ID Notification. Any other status is answered with a NAK |
 | `0x30` Inquiry: Property Exchange Capabilities | Yes, answered with `0x31` |
 | `0x34` Inquiry: Get Property Data | Yes, answered with `0x35` |
 | `0x38` Subscription | Yes, answered with `0x39` |
 | `0x36` Inquiry: Set Property Data | No, answered with a NAK |
 | `0x20` Profile Inquiry, `0x22` Set Profile On, `0x23` Set Profile Off, `0x28` Profile Details Inquiry | No, answered with a NAK |
 | `0x40` Inquiry: Process Inquiry Capabilities, `0x42` MIDI Message Report | No, answered with a NAK |
-| `0x72` Endpoint Inquiry | No, answered with a NAK |
 | Profile reports, process inquiry replies, and anything else that is not an inquiry | Ignored |
 
 **It always answers an inquiry.** One it doesn't implement gets a NAK with status `0x01`, "MIDI-CI message not supported", rather than silence, so an initiator doesn't spend a three second timeout on every message. Replies, reports, ACK, NAK, and Invalidate MUID are not NAKed, because nothing is waiting on an answer to those and answering them can start a loop.

@@ -82,7 +82,8 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         // Not projected. The virtual device owns this responder and drives it.
         void InternalAttach(
             _In_ midi2::MidiEndpointConnection const& connection,
-            _In_ midi2enum::MidiDeclaredDeviceIdentity const& identity) noexcept;
+            _In_ midi2enum::MidiDeclaredDeviceIdentity const& identity,
+            _In_ winrt::hstring const& productInstanceId) noexcept;
 
         void InternalDetach() noexcept;
 
@@ -103,6 +104,9 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         void HandlePropertyGet(_In_ ci::MidiCapabilityInquiryMessage const& message, _In_ midi2::MidiGroup const& group) noexcept;
         void HandleSubscription(_In_ ci::MidiCapabilityInquiryMessage const& message, _In_ midi2::MidiGroup const& group) noexcept;
         void HandleProfileInquiry(_In_ ci::MidiCapabilityInquiryMessage const& message, _In_ midi2::MidiGroup const& group) noexcept;
+
+        // Returns false for a status it cannot answer, which leaves that inquiry to the application.
+        bool HandleEndpointInquiry(_In_ ci::MidiCapabilityInquiryMessage const& message, _In_ midi2::MidiGroup const& group) noexcept;
 
         // What to chunk an outgoing message against. An initiator we have not heard a Discovery
         // from gets the minimum every implementation must accept.
@@ -134,6 +138,7 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         midi2::MidiEndpointConnection m_connection{ nullptr };
         midi2enum::MidiDeclaredDeviceIdentity m_identity{ nullptr };
+        winrt::hstring m_productInstanceId{};
 
         mutable std::mutex m_lock;
 

@@ -165,12 +165,14 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
     _Use_decl_annotations_
     void MidiCapabilityInquiryDeviceResponder::InternalAttach(
         midi2::MidiEndpointConnection const& connection,
-        midi2enum::MidiDeclaredDeviceIdentity const& identity) noexcept
+        midi2enum::MidiDeclaredDeviceIdentity const& identity,
+        winrt::hstring const& productInstanceId) noexcept
     {
         std::lock_guard<std::mutex> guard(m_lock);
 
         m_connection = connection;
         m_identity = identity;
+        m_productInstanceId = productInstanceId;
     }
 
     void MidiCapabilityInquiryDeviceResponder::InternalDetach() noexcept
@@ -689,6 +691,10 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 handled = true;
                 break;
 
+            case ci::MidiCapabilityInquiryMessageType::EndpointInquiry:
+                handled = HandleEndpointInquiry(message, group);
+                break;
+
             default:
                 break;
             }
@@ -808,6 +814,57 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         catch (...)
         {
             LOG_CAUGHT_EXCEPTION();
+        }
+    }
+
+    _Use_decl_annotations_
+    bool MidiCapabilityInquiryDeviceResponder::HandleEndpointInquiry(
+        ci::MidiCapabilityInquiryMessage const& message,
+        midi2::MidiGroup const& group) noexcept
+    {
+        try
+        {
+            if (!message.HasEndpointFields() ||
+                message.EndpointStatus() != native::EndpointStatusProductInstanceId)
+            {
+                return false;
+            }
+
+            winrt::hstring productInstanceId{};
+
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+                productInstanceId = m_productInstanceId;
+            }
+
+            // Encoded exactly as the Product Instance Id Notification encodes it, so the two agree.
+            auto const id = internal::Utf8FromWString(internal::TruncateToUtf8ByteCount(
+                std::wstring{ productInstanceId }, native::ProductInstanceIdMaximumByteCount));
+
+            auto information = winrt::single_threaded_vector<uint8_t>();
+
+            for (auto const character : id)
+            {
+                information.Append(static_cast<uint8_t>(character));
+            }
+
+            // Empty when the id is not one the specification allows.
+            auto const reply = MidiCapabilityInquiryMessageBuilder::BuildEndpointReply(
+                0, group, MuidForReply(), message.SourceMuid(), native::EndpointStatusProductInstanceId, information);
+
+            if (reply == nullptr || reply.Size() == 0)
+            {
+                return false;
+            }
+
+            Send(reply);
+
+            return true;
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+            return false;
         }
     }
 

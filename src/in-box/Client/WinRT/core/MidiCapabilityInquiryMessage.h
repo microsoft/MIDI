@@ -59,6 +59,10 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         foundation::Collections::IVector<uint8_t> StatusDetails() const noexcept { return m_statusDetails; }
         winrt::hstring StatusMessage() const noexcept { return m_statusMessage; }
 
+        bool HasEndpointFields() const noexcept { return m_hasEndpointFields; }
+        uint8_t EndpointStatus() const noexcept { return m_endpointStatus; }
+        foundation::Collections::IVector<uint8_t> EndpointInformation() const noexcept { return m_endpointInformation; }
+
         static ci::MidiCapabilityInquiryMessage FromSystemExclusiveData(
             _In_ foundation::Collections::IIterable<uint8_t> const& data) noexcept;
 
@@ -124,6 +128,12 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
             { winrt::single_threaded_vector<uint8_t>() };
 
         winrt::hstring m_statusMessage{};
+
+        bool m_hasEndpointFields{ false };
+        uint8_t m_endpointStatus{ 0 };
+
+        foundation::Collections::IVector<uint8_t> m_endpointInformation
+            { winrt::single_threaded_vector<uint8_t>() };
     };
 }
 

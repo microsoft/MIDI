@@ -1657,6 +1657,83 @@ void MidiSynthUmpTests::TestMidiCiDiscovery()
 }
 
 
+// Both inquiries arrive through the same entry point the transport feeds.
+void MidiSynthUmpTests::TestMidiCiInquiriesAreAnswered()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    SynthEngine engine;
+    UmpDispatcher dispatcher;
+    FreshEngine(*collection, engine, dispatcher, 0);
+
+    CaptureOutput output;
+    dispatcher.SetOutput(&output, SynthIdentity{});
+
+    // Same order as the transport: the product instance id arrives after the responder is set up.
+    dispatcher.SetEndpointIdentity("Test Synthesizer", "GM1");
+
+    // Worked out by hand from M2-101-UM, from initiator MUID 0x42 to TestMuid.
+    SendSysExPayload(dispatcher, std::vector<uint8_t>
+    {
+        0x7E, 0x7F, 0x0D, 0x30, 0x02,
+        0x42, 0x00, 0x00, 0x00,
+        0x56, 0x68, 0x48, 0x00,
+        0x04,                               // the initiator takes four requests at once
+        0x00, 0x00
+    });
+
+    const auto capabilities = DecodeSysEx7(output.Words);
+
+    Log::Comment(String().Format(L"capabilities: %zu bytes, sub id 2 0x%02X",
+        capabilities.size(), capabilities.size() > 3 ? capabilities[3] : 0));
+
+    const std::vector<uint8_t> expectedCapabilities
+    {
+        0x7E, 0x7F, 0x0D, 0x31, 0x02,
+        0x56, 0x68, 0x48, 0x00,
+        0x42, 0x00, 0x00, 0x00,
+        0x01,                               // the synthesizer takes one
+        0x00, 0x00                          // property exchange version 0.0
+    };
+
+    VERIFY_IS_TRUE(capabilities == expectedCapabilities,
+        L"Inquiry: Property Exchange Capabilities is answered");
+
+    output.Words.clear();
+
+    SendSysExPayload(dispatcher, std::vector<uint8_t>
+    {
+        0x7E, 0x7F, 0x0D, 0x72, 0x02,
+        0x42, 0x00, 0x00, 0x00,
+        0x56, 0x68, 0x48, 0x00,
+        0x00                                // status: product instance id
+    });
+
+    const auto endpoint = DecodeSysEx7(output.Words);
+
+    Log::Comment(String().Format(L"endpoint: %zu bytes, sub id 2 0x%02X",
+        endpoint.size(), endpoint.size() > 3 ? endpoint[3] : 0));
+
+    const std::vector<uint8_t> expectedEndpoint
+    {
+        0x7E, 0x7F, 0x0D, 0x73, 0x02,
+        0x56, 0x68, 0x48, 0x00,
+        0x42, 0x00, 0x00, 0x00,
+        0x00,                               // status echoed
+        0x03, 0x00,                         // three bytes follow
+        0x47, 0x4D, 0x31                    // "GM1", the id UMP Stream declares
+    };
+
+    VERIFY_IS_TRUE(endpoint == expectedEndpoint,
+        L"Inquiry: Endpoint is answered with the product instance id");
+}
+
+
 // General MIDI 2 requires master volume and master tuning.
 void MidiSynthUmpTests::TestMasterVolume()
 {

@@ -29,6 +29,7 @@ namespace
         MidiVirtualDevice Device{ nullptr };
         MidiEndpointConnection DeviceConnection{ nullptr };
         MidiEndpointConnection ClientConnection{ nullptr };
+        std::wstring ProductInstanceId{};
 
         ~VirtualDeviceUnderTest()
         {
@@ -61,9 +62,11 @@ namespace
 
         auto result = std::make_unique<VirtualDeviceUnderTest>();
 
+        result->ProductInstanceId = MakeUniqueProductInstanceId();
+
         MidiDeclaredEndpointInfo declaredEndpointInfo{};
         declaredEndpointInfo.Name(winrt::hstring{ name });
-        declaredEndpointInfo.ProductInstanceId(winrt::hstring{ MakeUniqueProductInstanceId() });
+        declaredEndpointInfo.ProductInstanceId(winrt::hstring{ result->ProductInstanceId });
         declaredEndpointInfo.SpecificationVersionMajor(1);
         declaredEndpointInfo.SpecificationVersionMinor(1);
         declaredEndpointInfo.SupportsMidi10Protocol(true);
@@ -306,6 +309,144 @@ void MidiCapabilityInquirySessionTests::TestVirtualDeviceAnswersProfilesAndUnkno
 
     VERIFY_ARE_EQUAL((int)missing.Status(), (int)MidiCapabilityInquiryStatus::NegativeAcknowledgment);
     VERIFY_ARE_EQUAL(missing.ResourceStatus(), 404);
+
+    session.Close();
+}
+
+// The device already declares its product instance id in endpoint discovery, and capability
+// inquiry has to report the same one.
+void MidiCapabilityInquirySessionTests::TestVirtualDeviceAnswersEndpointInquiry()
+{
+    auto const device = CreateVirtualDevice(L"CI Endpoint Device");
+
+    auto responder = device->Device.CapabilityInquiry();
+    responder.IsEnabled(true);
+
+    auto session = MidiCapabilityInquirySession::Create(device->ClientConnection);
+    session.ResponseTimeoutMilliseconds(3000);
+
+    auto const found = session.DiscoverAsync().get();
+    VERIFY_ARE_EQUAL(found.Size(), (uint32_t)1);
+
+    auto const responderMuid = found.GetAt(0).Muid().AsCombined28BitValue();
+    auto const initiatorMuid = session.SourceMuid().AsCombined28BitValue();
+
+    wil::unique_event_nothrow replyReceived;
+    replyReceived.create();
+
+    std::vector<uint8_t> reply{};
+    uint8_t replyStatus{ 0xFF };
+    std::vector<uint8_t> replyInformation{};
+
+    auto const replyToken = session.MessageReceived([&](auto&&, MidiCapabilityInquiryMessageReceivedEventArgs const& args)
+        {
+            if (args.Message().MessageType() == MidiCapabilityInquiryMessageType::EndpointInquiryReply)
+            {
+                reply.clear();
+
+                for (auto const value : args.Message().Data())
+                {
+                    reply.push_back(value);
+                }
+
+                replyStatus = args.Message().EndpointStatus();
+                replyInformation.clear();
+
+                for (auto const value : args.Message().EndpointInformation())
+                {
+                    replyInformation.push_back(value);
+                }
+
+                replyReceived.SetEvent();
+            }
+        });
+
+    wil::unique_event_nothrow handedToApplication;
+    handedToApplication.create();
+
+    std::mutex handedLock;
+    std::vector<uint8_t> handedStatuses{};
+
+    auto const unansweredToken = responder.MessageReceived([&](auto&&, MidiCapabilityInquiryMessageReceivedEventArgs const& args)
+        {
+            if (args.Message().MessageType() == MidiCapabilityInquiryMessageType::EndpointInquiry)
+            {
+                {
+                    std::lock_guard<std::mutex> guard(handedLock);
+                    handedStatuses.push_back(args.Message().EndpointStatus());
+                }
+
+                handedToApplication.SetEvent();
+            }
+        });
+
+    auto const writeMuid = [](std::vector<uint8_t>& bytes, uint32_t const muid)
+        {
+            bytes.push_back(static_cast<uint8_t>(muid & 0x7F));
+            bytes.push_back(static_cast<uint8_t>((muid >> 7) & 0x7F));
+            bytes.push_back(static_cast<uint8_t>((muid >> 14) & 0x7F));
+            bytes.push_back(static_cast<uint8_t>((muid >> 21) & 0x7F));
+        };
+
+    auto const sendInquiry = [&](uint8_t const status)
+        {
+            auto const messages = MidiCapabilityInquiryMessageBuilder::BuildEndpointInquiry(
+                0, MidiGroup((uint8_t)0), session.SourceMuid(), found.GetAt(0).Muid(), status);
+
+            auto packets = winrt::single_threaded_vector<IMidiUniversalPacket>();
+
+            for (auto const& message : messages)
+            {
+                packets.Append(message);
+            }
+
+            VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(
+                device->ClientConnection.SendMultipleMessagesPacketList(packets)));
+        };
+
+    sendInquiry(0x00);
+
+    VERIFY_IS_TRUE(replyReceived.wait(3000), L"Inquiry: Endpoint is answered");
+
+    // Worked out from the message table: the status echoed, a two byte length, then the id.
+    std::vector<uint8_t> expected{ 0x7E, 0x7F, 0x0D, 0x73, 0x02 };
+
+    writeMuid(expected, responderMuid);
+    writeMuid(expected, initiatorMuid);
+
+    expected.push_back(0x00);
+    expected.push_back(static_cast<uint8_t>(device->ProductInstanceId.size() & 0x7F));
+    expected.push_back(static_cast<uint8_t>((device->ProductInstanceId.size() >> 7) & 0x7F));
+
+    for (auto const character : device->ProductInstanceId)
+    {
+        expected.push_back(static_cast<uint8_t>(character));
+    }
+
+    VERIFY_ARE_EQUAL(reply.size(), expected.size());
+    VERIFY_IS_TRUE(reply == expected, L"the reply carries the product instance id the device declares");
+
+    VERIFY_ARE_EQUAL(replyStatus, (uint8_t)0x00);
+    VERIFY_IS_TRUE(
+        replyInformation == std::vector<uint8_t>(expected.begin() + 16, expected.end()),
+        L"the decoded message hands back the same id");
+
+    // No other status is defined, so the responder leaves it to the application.
+    sendInquiry(0x05);
+
+    VERIFY_IS_TRUE(handedToApplication.wait(3000), L"an undefined status reaches the application");
+
+    {
+        // Messages are handled in order, so the first inquiry would be here already if it had been
+        // handed on as well as answered.
+        std::lock_guard<std::mutex> guard(handedLock);
+
+        VERIFY_ARE_EQUAL(handedStatuses.size(), (size_t)1);
+        VERIFY_ARE_EQUAL(handedStatuses[0], (uint8_t)0x05);
+    }
+
+    session.MessageReceived(replyToken);
+    responder.MessageReceived(unansweredToken);
 
     session.Close();
 }

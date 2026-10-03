@@ -213,7 +213,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
             // The responder answers on this device's behalf and declares the same identity the
             // device declares through endpoint discovery, so the two cannot disagree.
             winrt::get_self<ci::implementation::MidiCapabilityInquiryDeviceResponder>(m_capabilityInquiry)
-                ->InternalAttach(m_endpointConnection, m_declaredDeviceIdentity);
+                ->InternalAttach(m_endpointConnection, m_declaredDeviceIdentity, m_declaredEndpointInfo.ProductInstanceId());
         }
         catch (winrt::hresult_error const& ex)
         {

@@ -52,6 +52,10 @@ public:
     TEST_METHOD(TestBuildAcknowledgmentParsesBack);
     TEST_METHOD(TestBuildDiscoveryBytes);
     TEST_METHOD(TestBuildInvalidateMuidParsesBack);
+    TEST_METHOD(TestParseEndpointInquiry);
+    TEST_METHOD(TestBuildEndpointInquiryBytes);
+    TEST_METHOD(TestBuildEndpointReplyBytes);
+    TEST_METHOD(TestEndpointReplyLengthCannotExceedBuffer);
 
 private:
 

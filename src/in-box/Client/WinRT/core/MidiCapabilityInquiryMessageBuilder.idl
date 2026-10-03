@@ -75,6 +75,26 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
             MidiUniqueId sourceMuid,
             MidiUniqueId muidToInvalidate);
 
+        // Asks for one piece of information about the UMP Endpoint that a function block belongs
+        // to. The status says which; 0x00 is the product instance id, the only one defined so far.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildEndpointInquiry(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            UInt8 status);
+
+        // Answers Inquiry: Endpoint, echoing its status. For status 0x00 the information is the
+        // product instance id the endpoint declares in UMP Stream, which the specification limits
+        // to printable ASCII of at most 42 bytes. One that breaks those rules is refused.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildEndpointReply(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            UInt8 status,
+            Windows.Foundation.Collections.IIterable<UInt8> information);
+
         // The status message is shown to the person using the application, so it is worth writing.
         // It is seven bit text on the wire; anything outside that is refused rather than mangled.
         [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildAck(

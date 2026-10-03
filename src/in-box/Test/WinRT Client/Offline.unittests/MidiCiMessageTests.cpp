@@ -254,7 +254,7 @@ void MidiCiMessageTests::TestFuzzedMessagesNeverReportOffsetsPastTheBuffer()
     std::mt19937 generator{ 20260915 };
     std::uniform_int_distribution<int> byteValue{ 0, 255 };
     std::uniform_int_distribution<size_t> totalLength{ 13, 64 };
-    std::uniform_int_distribution<int> shape{ 0, 9 };
+    std::uniform_int_distribution<int> shape{ 0, 11 };
 
     // Lengths that straddle what is really left in the buffer, so the boundary itself gets hit
     // constantly rather than by luck.
@@ -279,7 +279,7 @@ void MidiCiMessageTests::TestFuzzedMessagesNeverReportOffsetsPastTheBuffer()
         // reads a count off the wire gets a share of them.
         const int thisShape = shape(generator);
 
-        if (thisShape < 8)
+        if (thisShape < 9)
         {
             buffer[0] = 0x7E;
             buffer[2] = 0x0D;
@@ -336,9 +336,19 @@ void MidiCiMessageTests::TestFuzzedMessagesNeverReportOffsetsPastTheBuffer()
                         buffer + 18, static_cast<uint32_t>(claimedLength(generator)));
                 }
             }
-            else
+            else if (thisShape < 8)
             {
                 buffer[3] = 0x7F;
+            }
+            else
+            {
+                // Reply to Inquiry: Endpoint, whose information length follows the status.
+                buffer[3] = 0x73;
+
+                if (length >= 16)
+                {
+                    WriteFourteenBitValue(buffer + 14, static_cast<uint16_t>(claimedLength(generator)));
+                }
             }
         }
 
@@ -380,6 +390,13 @@ void MidiCiMessageTests::TestFuzzedMessagesNeverReportOffsetsPastTheBuffer()
             {
                 VERIFY_IS_LESS_THAN_OR_EQUAL(
                     (size_t)parsed.Acknowledgment.MessageTextOffset + parsed.Acknowledgment.MessageTextByteCount,
+                    length);
+            }
+
+            if (parsed.HasEndpointFields)
+            {
+                VERIFY_IS_LESS_THAN_OR_EQUAL(
+                    (size_t)parsed.Endpoint.InformationOffset + parsed.Endpoint.InformationByteCount,
                     length);
             }
         }
@@ -1320,4 +1337,118 @@ void MidiCiMessageTests::TestPropertyExchangeCapabilitiesParseBack()
     fields.Type = MessageType::PropertyGetDataInquiry;
 
     VERIFY_IS_GREATER_THAN(BuildPropertyExchangeMessage(fields, buffer, sizeof(buffer)), (size_t)0);
+}
+
+void MidiCiMessageTests::TestParseEndpointInquiry()
+{
+    // A status no version of the specification defines yet. It still has to be read, so that a
+    // responder can refuse it rather than answer as if product instance id had been asked for.
+    const uint8_t message[]
+    {
+        0x7E, 0x7F, 0x0D, 0x72, 0x02,       // to the function block, inquiry: endpoint, version 2
+        0x01, 0x00, 0x00, 0x00,             // source muid 1
+        0x02, 0x00, 0x00, 0x00,             // destination muid 2
+        0x05                                // status
+    };
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(message, sizeof(message), parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::EndpointInquiry);
+    VERIFY_IS_TRUE(parsed.HasEndpointFields);
+    VERIFY_ARE_EQUAL(parsed.Endpoint.Status, (uint8_t)0x05);
+
+    // Stopping before the status is still an inquiry, just one there is nothing to answer for.
+    VERIFY_ARE_EQUAL((int)Parse(message, sizeof(message) - 1, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::EndpointInquiry);
+    VERIFY_IS_FALSE(parsed.HasEndpointFields);
+}
+
+void MidiCiMessageTests::TestBuildEndpointInquiryBytes()
+{
+    uint8_t buffer[64]{};
+
+    const auto written = BuildEndpointInquiry(1, 2, EndpointStatusProductInstanceId, buffer, sizeof(buffer));
+
+    // Worked out from the message table, not from the builder.
+    const uint8_t expected[]
+    {
+        0x7E, 0x7F, 0x0D, 0x72, 0x02,       // to the function block, inquiry: endpoint, version 2
+        0x01, 0x00, 0x00, 0x00,             // source muid 1
+        0x02, 0x00, 0x00, 0x00,             // destination muid 2
+        0x00                                // status: product instance id
+    };
+
+    VERIFY_ARE_EQUAL(written, sizeof(expected));
+    VERIFY_ARE_EQUAL(memcmp(buffer, expected, sizeof(expected)), 0);
+
+    VERIFY_ARE_EQUAL(BuildEndpointInquiry(1, 2, 0, buffer, sizeof(expected) - 1), (size_t)0);
+}
+
+void MidiCiMessageTests::TestBuildEndpointReplyBytes()
+{
+    const uint8_t productInstanceId[]{ 'G', 'M', '1' };
+
+    uint8_t buffer[64]{};
+
+    const auto written = BuildEndpointReply(
+        1, 2, EndpointStatusProductInstanceId,
+        productInstanceId, (uint16_t)sizeof(productInstanceId),
+        buffer, sizeof(buffer));
+
+    // Worked out from the message table, not from the builder.
+    const uint8_t expected[]
+    {
+        0x7E, 0x7F, 0x0D, 0x73, 0x02,       // from the function block, reply to endpoint, version 2
+        0x01, 0x00, 0x00, 0x00,             // source muid 1
+        0x02, 0x00, 0x00, 0x00,             // destination muid 2
+        0x00,                               // status echoed: product instance id
+        0x03, 0x00,                         // three bytes follow
+        0x47, 0x4D, 0x31                    // "GM1"
+    };
+
+    VERIFY_ARE_EQUAL(written, sizeof(expected));
+    VERIFY_ARE_EQUAL(memcmp(buffer, expected, sizeof(expected)), 0);
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(buffer, written, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::EndpointReply);
+    VERIFY_IS_TRUE(parsed.HasEndpointFields);
+    VERIFY_ARE_EQUAL(parsed.Endpoint.Status, (uint8_t)0x00);
+    VERIFY_ARE_EQUAL(parsed.Endpoint.InformationByteCount, (uint16_t)sizeof(productInstanceId));
+    VERIFY_ARE_EQUAL(memcmp(buffer + parsed.Endpoint.InformationOffset, productInstanceId, sizeof(productInstanceId)), 0);
+
+    VERIFY_ARE_EQUAL(
+        BuildEndpointReply(1, 2, 0, productInstanceId, (uint16_t)sizeof(productInstanceId),
+            buffer, sizeof(expected) - 1),
+        (size_t)0);
+
+    // A byte with its high bit set cannot travel inside system exclusive.
+    const uint8_t highBit[]{ 'G', 0xC9, '1' };
+
+    VERIFY_ARE_EQUAL(
+        BuildEndpointReply(1, 2, 0, highBit, (uint16_t)sizeof(highBit), buffer, sizeof(buffer)),
+        (size_t)0);
+}
+
+void MidiCiMessageTests::TestEndpointReplyLengthCannotExceedBuffer()
+{
+    // The information length is the last attacker controlled field in the message.
+    const uint8_t overlong[]
+    {
+        0x7E, 0x7F, 0x0D, 0x73, 0x02,
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x00,
+        0x7F, 0x7F,                         // claims 16383 bytes
+        0x47
+    };
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(overlong, sizeof(overlong), parsed), (int)ParseStatus::LengthFieldExceedsBuffer);
+
+    // A reply that stops inside its length field cannot say how much information it carries.
+    VERIFY_ARE_EQUAL((int)Parse(overlong, 15, parsed), (int)ParseStatus::TooShort);
 }

@@ -118,6 +118,10 @@ namespace MidiSynth
 
         copy(m_endpointName, sizeof(m_endpointName), endpointName);
         copy(m_productInstanceId, sizeof(m_productInstanceId), productInstanceId);
+
+        // MIDI-CI Inquiry: Endpoint answers with the same product instance id, so rebuild the
+        // responder that holds it.
+        ConfigureResponder(m_responder.Muid());
     }
 
     _Use_decl_annotations_
@@ -545,7 +549,8 @@ namespace MidiSynth
             ci::DiscoveryReplyByteCount,
             ci::InvalidateMuidByteCount,
             ci::AcknowledgmentFixedByteCount,
-            ci::PropertyExchangeCapabilitiesByteCount })]{};
+            ci::PropertyExchangeCapabilitiesByteCount,
+            ci::EndpointReplyFixedByteCount + ci::ProductInstanceIdMaximumByteCount })]{};
 
         size_t replyBytes{ 0 };
 
@@ -686,6 +691,16 @@ namespace MidiSynth
         config.ReceivableMaximumSysExSize = MaxSysExBytes;
         config.FunctionBlockNumber = SynthEndpoint::FunctionBlockNumber;
         config.SupportsPropertyExchange = true;
+
+        const size_t productInstanceIdBytes =
+            strnlen(m_productInstanceId, ci::ProductInstanceIdMaximumByteCount);
+
+        for (size_t i = 0; i < productInstanceIdBytes; i++)
+        {
+            config.ProductInstanceId[i] = static_cast<uint8_t>(m_productInstanceId[i]);
+        }
+
+        config.ProductInstanceIdByteCount = static_cast<uint8_t>(productInstanceIdBytes);
 
         m_responder.Initialize(config);
     }

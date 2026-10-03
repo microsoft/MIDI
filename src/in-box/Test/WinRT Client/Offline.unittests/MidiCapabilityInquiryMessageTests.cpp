@@ -533,3 +533,62 @@ void MidiCapabilityInquiryMessageTests::TestBuilderRefusesAMessageTypeItCannotBu
 
     VERIFY_ARE_EQUAL(messages.Size(), (uint32_t)0);
 }
+
+void MidiCapabilityInquiryMessageTests::TestEndpointInquiryAndReplyRoundTrip()
+{
+    auto const inquiry = DecodeOne(
+        ci::MidiCapabilityInquiryMessageBuilder::BuildEndpointInquiry(
+            0, TestGroup(), ci::MidiUniqueId(1000), ci::MidiUniqueId(2000), 0x00));
+
+    VERIFY_IS_TRUE(inquiry.IsValid());
+    VERIFY_ARE_EQUAL((int)inquiry.MessageType(), (int)ci::MidiCapabilityInquiryMessageType::EndpointInquiry);
+    VERIFY_ARE_EQUAL(inquiry.SourceMuid().AsCombined28BitValue(), (uint32_t)1000);
+    VERIFY_ARE_EQUAL(inquiry.DestinationMuid().AsCombined28BitValue(), (uint32_t)2000);
+    VERIFY_IS_TRUE(inquiry.HasEndpointFields());
+    VERIFY_ARE_EQUAL(inquiry.EndpointStatus(), (uint8_t)0x00);
+    VERIFY_ARE_EQUAL(inquiry.EndpointInformation().Size(), (uint32_t)0);
+
+    auto const reply = DecodeOne(
+        ci::MidiCapabilityInquiryMessageBuilder::BuildEndpointReply(
+            0, TestGroup(), ci::MidiUniqueId(2000), ci::MidiUniqueId(1000), 0x00,
+            ToByteVector({ 'G', 'M', '1' })));
+
+    VERIFY_IS_TRUE(reply.IsValid());
+    VERIFY_ARE_EQUAL((int)reply.MessageType(), (int)ci::MidiCapabilityInquiryMessageType::EndpointInquiryReply);
+    VERIFY_ARE_EQUAL(reply.SourceMuid().AsCombined28BitValue(), (uint32_t)2000);
+    VERIFY_ARE_EQUAL(reply.DestinationMuid().AsCombined28BitValue(), (uint32_t)1000);
+    VERIFY_IS_TRUE(reply.HasEndpointFields());
+    VERIFY_ARE_EQUAL(reply.EndpointStatus(), (uint8_t)0x00);
+    VERIFY_ARE_EQUAL(reply.EndpointInformation().Size(), (uint32_t)3);
+    VERIFY_ARE_EQUAL(reply.EndpointInformation().GetAt(2), (uint8_t)'1');
+
+    // Only status 0x00 has rules for its information. Anything else is carried as given.
+    auto const otherStatus = DecodeOne(
+        ci::MidiCapabilityInquiryMessageBuilder::BuildEndpointReply(
+            0, TestGroup(), ci::MidiUniqueId(2000), ci::MidiUniqueId(1000), 0x05,
+            ToByteVector({ 0x00, 0x7F })));
+
+    VERIFY_ARE_EQUAL(otherStatus.EndpointStatus(), (uint8_t)0x05);
+    VERIFY_ARE_EQUAL(otherStatus.EndpointInformation().Size(), (uint32_t)2);
+    VERIFY_ARE_EQUAL(otherStatus.EndpointInformation().GetAt(1), (uint8_t)0x7F);
+}
+
+void MidiCapabilityInquiryMessageTests::TestEndpointReplyRefusesAnInvalidProductInstanceId()
+{
+    auto const build = [](uint8_t const status, std::vector<uint8_t> const& information)
+        {
+            return ci::MidiCapabilityInquiryMessageBuilder::BuildEndpointReply(
+                0, TestGroup(), ci::MidiUniqueId(2000), ci::MidiUniqueId(1000), status,
+                ToByteVector(information));
+        };
+
+    // The specification allows printable ASCII only, up to 42 bytes, and requires the id itself.
+    VERIFY_ARE_EQUAL(build(0x00, { 'G', 0x09, '1' }).Size(), (uint32_t)0);
+    VERIFY_ARE_EQUAL(build(0x00, std::vector<uint8_t>(43, 'A')).Size(), (uint32_t)0);
+    VERIFY_ARE_EQUAL(build(0x00, {}).Size(), (uint32_t)0);
+
+    VERIFY_IS_GREATER_THAN(build(0x00, std::vector<uint8_t>(42, 'A')).Size(), (uint32_t)0);
+
+    // Every status still has to fit in seven bit system exclusive.
+    VERIFY_ARE_EQUAL(build(0x05, { 0x80 }).Size(), (uint32_t)0);
+}

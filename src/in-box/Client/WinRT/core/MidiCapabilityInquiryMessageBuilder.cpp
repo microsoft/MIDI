@@ -452,6 +452,71 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
     _Use_decl_annotations_
     foundation::Collections::IVector<midi2::MidiMessage64>
+    MidiCapabilityInquiryMessageBuilder::BuildEndpointInquiry(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        ci::MidiUniqueId const& sourceMuid,
+        ci::MidiUniqueId const& destinationMuid,
+        uint8_t const status) noexcept
+    {
+        try
+        {
+            uint8_t buffer[native::EndpointInquiryByteCount]{};
+
+            auto const written = native::BuildEndpointInquiry(
+                MuidValue(sourceMuid), MuidValue(destinationMuid), status, buffer, sizeof(buffer));
+
+            return ToUmpMessages(timestamp, group, buffer, written);
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+            return EmptyMessageList();
+        }
+    }
+
+    _Use_decl_annotations_
+    foundation::Collections::IVector<midi2::MidiMessage64>
+    MidiCapabilityInquiryMessageBuilder::BuildEndpointReply(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        ci::MidiUniqueId const& sourceMuid,
+        ci::MidiUniqueId const& destinationMuid,
+        uint8_t const status,
+        foundation::Collections::IIterable<uint8_t> const& information) noexcept
+    {
+        try
+        {
+            auto const data = ToByteVector(information);
+
+            if (data.size() > 0x3FFF)
+            {
+                return EmptyMessageList();
+            }
+
+            if (status == native::EndpointStatusProductInstanceId &&
+                !native::ProductInstanceIdIsValid(data.data(), data.size()))
+            {
+                return EmptyMessageList();
+            }
+
+            std::vector<uint8_t> buffer(native::EndpointReplyFixedByteCount + data.size());
+
+            auto const written = native::BuildEndpointReply(
+                MuidValue(sourceMuid), MuidValue(destinationMuid), status,
+                data.data(), static_cast<uint16_t>(data.size()), buffer.data(), buffer.size());
+
+            return ToUmpMessages(timestamp, group, buffer.data(), written);
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+            return EmptyMessageList();
+        }
+    }
+
+    _Use_decl_annotations_
+    foundation::Collections::IVector<midi2::MidiMessage64>
     MidiCapabilityInquiryMessageBuilder::BuildAck(
         internal::MidiTimestamp const timestamp,
         midi2::MidiGroup const& group,

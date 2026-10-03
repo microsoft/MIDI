@@ -8,7 +8,7 @@ description: A capability inquiry message that arrived, decoded far enough to ac
 
 You can read any capability inquiry message with this class, even one this API has no special type for. You can still read its type and who it's addressed to, and its data arrives complete, so your application can handle messages the API doesn't.
 
-The properties come in groups. The common ones below always have values. The property exchange, profile, and acknowledgment groups have values only when the matching `Has...` property is true, and that depends on what kind of message arrived.
+The properties come in groups. The common ones below always have values. The property exchange, profile, acknowledgment, and endpoint inquiry groups have values only when the matching `Has...` property is true, and that depends on what kind of message arrived.
 
 ## Properties
 
@@ -59,6 +59,14 @@ The properties come in groups. The common ones below always have values. The pro
 | `StatusData` | Extra information for status codes that need it |
 | `StatusDetails` | Five bytes whose meaning depends on the kind of message this answers. For a profile message, it's the profile id. For property exchange, it's the request id followed by the chunk number |
 | `StatusMessage` | Text the device sent to explain. The specification says to show it to the person using your application |
+
+## Endpoint Inquiry
+
+| Property | Description |
+| -------- | ----------- |
+| `HasEndpointFields` | True for an endpoint inquiry and the reply to it |
+| `EndpointStatus` | Which piece of endpoint information is asked for or given. `0x00` is the product instance ID, and it's the only one defined so far |
+| `EndpointInformation` | What a reply carries. For status `0x00`, it's the product instance ID as ASCII text |
 
 ## Static Methods
 
