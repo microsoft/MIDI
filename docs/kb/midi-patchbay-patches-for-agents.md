@@ -39,6 +39,8 @@ On this page:
 - A patch has **endpoints**: the devices on its canvas. A keyboard, a synth, a drum machine, or a loopback that leads to an app.
 - A patch has **connections**. Each one takes what arrives from one endpoint's **Out** and sends it to another endpoint's **In**.
 - Each connection can have a **filter**, which decides what gets through, and a **transform**, which changes what gets through. The filter runs first, then the transform, on the copy going to that one destination. Nothing on one connection affects another.
+- Each connection can also have a **sending speed**, which slows it down for a device that loses data when a lot arrives at once. It's the last step, after the filter and the transform.
+- A patch can **wait for send complete**. Then each message waits until the device's driver has taken the one before it. It covers every connection in the patch.
 - **Routing only happens while Patchbay is running.** Patchbay receives the messages and sends them on itself.
 - Several patches can route at the same time, and a patch can route without being the one on screen.
 
@@ -67,6 +69,7 @@ If the customer pasted a prompt from **Ask an AI assistant…** in Patchbay, it 
 | How should playing feel? Too hard to play loudly, too easy, or every note the same? | That's a velocity change. |
 | Does a pedal or a wheel work backwards, or not reach its ends? | That's a controller value change. |
 | Should anything be kept out, such as clock, active sensing, or program changes? | That's a filter. |
+| Does any device lose messages when a lot arrives at once, such as during a SysEx dump? | That's a sending speed on each connection into it. Keeping out what it doesn't use, with a filter, helps too. |
 | Should the patch start by itself whenever Patchbay starts? | The customer turns that on in Patchbay. Tell them where. |
 
 ### 2. Plan the connections
@@ -90,6 +93,8 @@ Write the plan down as a list before you write the file, and check it for loops:
 | Harder to play loud | A transform with `"velocityCurve": 1`. |
 | Every note at velocity 100 | A transform with `"velocityCurve": 3, "fixedVelocityPercent": 78.74`. |
 | Program 1 on the keyboard picks program 41 on the synth | A transform with `"programMap": [ { "from": 0, "to": 40 } ]`. |
+| A device loses messages when a lot arrives at once | `"sendSpeedLimit": 1` on each connection into it. That's MIDI 1.0 wire speed. |
+| Each message reaches the device's driver before the next one goes | `"waitForSendComplete": true` at the top level. It covers every connection in the patch. |
 
 The numbers are explained in [Filters](#filters) and [Transforms](#transforms).
 
@@ -129,6 +134,7 @@ $problems = [Collections.Generic.List[string]]::new()
 function Test-Range($Value, [int]$Lowest, [int]$Highest) { $null -eq $Value -or ($Value -ge $Lowest -and $Value -le $Highest) }
 
 if ($patch.activateAtStartup -ne $false) { $problems.Add('activateAtStartup isn''t false. If this file is put in the patches folder without being imported, it can start routing when Patchbay starts.') }
+if ($null -ne $patch.waitForSendComplete -and $patch.waitForSendComplete -isnot [bool]) { $problems.Add('waitForSendComplete isn''t true or false, so Patchbay ignores it.') }
 
 $ids = @($patch.endpoints | ForEach-Object { $_.id })
 foreach ($id in ($ids | Group-Object -CaseSensitive | Where-Object Count -gt 1).Name) { $problems.Add("Two endpoints have the id '$id'. Patchbay keeps only the first.") }
@@ -147,6 +153,8 @@ foreach ($c in $patch.connections) {
     if (-not (Test-Range $c.sourceGroup -1 15) -or -not (Test-Range $c.destinationGroup -1 15)) { $problems.Add("$where has a group outside -1 to 15. The file counts groups from 0, and -1 is all groups.") }
     if (-not $pairs.Add("$($c.sourceEndpointId)|$($c.sourceGroup ?? -1)|$($c.destinationEndpointId)|$($c.destinationGroup ?? -1)")) { $problems.Add("$where repeats another connection between the same points, so Patchbay keeps only the first.") }
     if ($c.muted -eq $true) { $problems.Add("$where is muted, so it passes nothing.") }
+    $speed = $c.sendSpeedLimit
+    if ($null -ne $speed -and -not (($speed -is [long] -or $speed -is [int]) -and $speed -in 0, 1, 2, 4, 8, 16, 32)) { $problems.Add("$where has a sendSpeedLimit that isn't 0, 1, 2, 4, 8, 16, or 32.") }
     $from = $c.sourceGroup ?? -1; $to = $c.destinationGroup ?? -1
     if ($c.sourceEndpointId -ceq $c.destinationEndpointId -and ($from -eq $to -or $from -eq -1 -or $to -eq -1)) { $problems.Add("$where sends the endpoint's output straight back into its own input.") }
 
@@ -230,6 +238,7 @@ Tell the customer about these before they find out on their own.
 - **It can't route by velocity.** There are no velocity splits or velocity layers.
 - **No timing.** No delays, echoes, arpeggios, chords, or clock of its own.
 - **It doesn't look inside system exclusive.** A filter lets it through or keeps it out.
+- **A sending speed belongs to one connection.** Two connections into the same device can together send it more than either one's speed.
 - **A filter's channels and note range only apply to messages that carry them.** Clock, for example, passes a channel filter.
 - **It only sees its own connections.** A cable between two devices, or another routing app, can close a loop Patchbay can't see.
 
@@ -278,6 +287,7 @@ The tables below list every setting. **If left out** is what Patchbay uses when 
 | `name` | text | the file name | The patch's name in Patchbay. |
 | `description` | text | empty | One line about what the patch is for. |
 | `activateAtStartup` | `true`, `false` | `true` | Starts routing whenever Patchbay starts. Write `false`. Importing sets it to `false` anyway, and the customer turns it on in Patchbay. |
+| `waitForSendComplete` | `true`, `false` | `false` | Each message waits until the device's driver has taken the one before it, the way older apps that use WinMM always send. It covers every connection in the patch. Write `true` only for a device that loses data when a lot arrives at once. |
 | `created`, `modified` | numbers | 0 | Kept by the app. Write 0 or leave them out. |
 | `endpoints` | list, up to 64 | none | The devices on the canvas. |
 | `connections` | list, up to 512 | none | The routes. |
@@ -316,6 +326,7 @@ Patchbay compares the name in `match` with each device's own name and with the n
 | `muted` | `true`, `false` | `false` | A muted connection passes nothing. Write `false`. |
 | `filter` | object | lets everything through | See [Filters](#filters). |
 | `transform` | object | changes nothing | See [Transforms](#transforms). |
+| `sendSpeedLimit` | 0, 1, 2, 4, 8, 16, 32 | 0 | How fast this connection sends, as a multiple of MIDI 1.0 wire speed, which is the speed of a 5-pin DIN cable. 0 is no limit. A single message is never held back: after a quiet moment, 64 bytes for each multiple go out at once, and only what comes after that is spaced out. Applies after the filter and the transform. |
 
 A connection that names an endpoint the patch doesn't have is left out, and so is a second connection between the same two points with the same groups.
 
@@ -454,5 +465,6 @@ Patchbay reads a patch up to 4 megabytes, with up to 64 endpoints and 512 connec
 > - `activateAtStartup` is left out and the file is put straight into the patches folder, so it can start routing as soon as Patchbay starts.
 > - A connection sends a device's output back to its own input, directly or through other devices, which floods them.
 > - A filter keeps out control changes, which also keeps out a MIDI 1.0 device's sustain pedal, mod wheel, RPNs, and NRPNs.
+> - `sendSpeedLimit` is put on the connection out of the device that loses data, instead of on the connections into it.
 > - A connection is supposed to reach an app, but the patch names a loopback that doesn't exist yet.
 > - The patch depends on something in [What Patchbay can't do](#what-patchbay-cant-do).

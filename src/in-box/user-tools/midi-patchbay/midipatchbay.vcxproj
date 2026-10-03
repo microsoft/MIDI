@@ -137,6 +137,7 @@
     <ClInclude Include="PatchModel.h" />
     <ClInclude Include="PatchStore.h" />
     <ClInclude Include="RouteEngine.h" />
+    <ClInclude Include="SendQueue.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="ThemeBrushes.h" />
@@ -179,6 +180,7 @@
     <ClCompile Include="PatchModel.cpp" />
     <ClCompile Include="PatchStore.cpp" />
     <ClCompile Include="RouteEngine.cpp" />
+    <ClCompile Include="SendQueue.cpp" />
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="ThemeBrushes.cpp" />
     <ClCompile Include="TrayIcon.cpp" />

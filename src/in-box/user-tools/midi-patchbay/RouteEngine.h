@@ -8,6 +8,7 @@
 #pragma once
 
 #include "PatchModel.h"
+#include "SendQueue.h"
 
 namespace midipatchbay
 {
@@ -24,12 +25,24 @@ namespace midipatchbay
 
         MessageFilter Filter{};
         MessageTransform Transform{};
+
+        // A multiple of MIDI 1.0 wire speed, 0 for no limit
+        uint32_t SendSpeedLimit{ 0 };
+
+        // From the patch: each send waits until the service has taken it
+        bool WaitForSendComplete{ false };
     };
 
     struct RouteStats
     {
         uint64_t MessagesForwarded{ 0 };
         uint64_t SendFailures{ 0 };
+
+        // Only a connection with a sending speed, or in a patch that waits for each send to
+        // complete, holds messages back
+        uint64_t MessagesWaiting{ 0 };
+        uint64_t MessagesDropped{ 0 };
+
         bool IsActive{ false };
     };
 
@@ -40,12 +53,18 @@ namespace midipatchbay
     // The timestamp the service delivered is the timestamp sent on, so a message scheduled for
     // the future stays scheduled rather than being flattened to "now" by the hop.
     //
+    // The exception is a connection that has to hold messages back: one with a sending speed, or
+    // in a patch that waits for each send to complete. The callback thread must not wait for
+    // either, so it queues them, and a send thread for that destination sends them on.
+    //
     // Everything here must be called from a background thread. The SDK's session and connection
     // calls block on the service, and blocking the STA UI thread hangs the app.
     class RouteEngine
     {
     public:
         static RouteEngine& Current() noexcept;
+
+        ~RouteEngine() noexcept;
 
         // Replaces the whole routing table. A plan identical to the running one is a no-op, so
         // an unrelated device arriving does not interrupt connections that did not change.
@@ -70,6 +89,8 @@ namespace midipatchbay
     private:
         RouteEngine() noexcept = default;
 
+        struct DestinationSender;
+
         struct Target
         {
             winrt::com_ptr<IMidiEndpointConnectionRaw> Destination{ nullptr };
@@ -86,12 +107,23 @@ namespace midipatchbay
             // Sized when the plan is applied, then only touched by the callback thread.
             std::vector<uint32_t> SendBuffer{};
             size_t SendBufferUsed{ 0 };
+            uint32_t SendBufferMessages{ 0 };
+
+            // Set when this connection holds messages back. The callback thread adds to the
+            // queue, and the sender takes from it.
+            std::unique_ptr<SendQueue> Queue{};
+            DestinationSender* Sender{ nullptr };
 
             std::atomic<uint64_t> MessagesForwarded{ 0 };
             std::atomic<uint64_t> SendFailures{ 0 };
+            std::atomic<uint64_t> MessagesDropped{ 0 };
         };
 
         struct SourceHub;
+
+        // A destination connection, and whether its sends wait to complete. Each patch's setting
+        // gets connections of its own, so one patch's setting never changes another's.
+        using ConnectionKey = std::pair<std::wstring, bool>;
 
         void TearDownLocked() noexcept;
 
@@ -101,11 +133,13 @@ namespace midipatchbay
 
         midi2::MidiSession m_session{ nullptr };
 
-        // Keyed by lowercased endpoint device id, so one endpoint is only ever opened once even
-        // when several patches use it.
-        std::map<std::wstring, midi2::MidiEndpointConnection> m_connections{};
+        // Keyed by lowercased endpoint device id, so one endpoint is only ever opened once for
+        // each setting even when several patches use it.
+        std::map<ConnectionKey, midi2::MidiEndpointConnection> m_connections{};
 
         std::vector<winrt::com_ptr<SourceHub>> m_hubs{};
+
+        std::vector<std::unique_ptr<DestinationSender>> m_senders{};
 
         std::wstring m_signature{};
         winrt::hstring m_lastError{};

@@ -401,6 +401,41 @@ namespace winrt::midipatchbay::implementation
 
             menu.Items().Append(routingItem);
 
+            // A patch setting rather than a connection setting, because it is how Patchbay
+            // connects to each device
+            controls::ToggleMenuFlyoutItem waitItem{};
+            waitItem.Text(resources::GetString(L"MenuWaitForSendComplete"));
+            waitItem.IsChecked(patch->WaitForSendComplete);
+            controls::ToolTipService::SetToolTip(waitItem,
+                winrt::box_value(resources::GetString(L"MenuWaitForSendCompleteTip")));
+
+            waitItem.Click([weak, key](foundation::IInspectable const& s, auto&&)
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr)
+                    {
+                        return;
+                    }
+
+                    auto const item = s.try_as<controls::ToggleMenuFlyoutItem>();
+                    auto* current = strong->CurrentPatch();
+
+                    // The menu belongs to the patch that was on screen when it opened
+                    if (item == nullptr || current == nullptr || strong->PatchKey(*current) != key ||
+                        current->WaitForSendComplete == item.IsChecked())
+                    {
+                        return;
+                    }
+
+                    current->WaitForSendComplete = item.IsChecked();
+
+                    strong->MarkDirty();
+                    strong->ApplyRouting();
+                });
+
+            menu.Items().Append(waitItem);
+
             controls::MenuFlyoutSeparator separator{};
             menu.Items().Append(separator);
 

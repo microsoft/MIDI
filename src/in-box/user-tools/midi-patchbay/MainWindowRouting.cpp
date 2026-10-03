@@ -317,6 +317,8 @@ namespace winrt::midipatchbay::implementation
                     entry.DestinationGroupIndex = connection.DestinationGroupIndex;
                     entry.Filter = connection.Filter;
                     entry.Transform = connection.Transform;
+                    entry.SendSpeedLimit = connection.SendSpeedLimit;
+                    entry.WaitForSendComplete = patch.WaitForSendComplete;
 
                     plan.push_back(std::move(entry));
                 }
