@@ -57,16 +57,18 @@ Neither one stops the host or disconnects the client. A setting that can change 
 
 Once a client is set up, the service manages the connection for you. What it does when a remote host goes away depends on how the client was set up, because each way gives the service different information to work with.
 
-| Situation | Discovered (mDNS) client | Direct address client |
-| --------- | ------------------------ | --------------------- |
-| Host not present at startup | Connects when the host advertises | One attempt, then marked `Unavailable` |
-| Host goes away and returns | Reconnects when it advertises again | One further attempt, then `Unavailable` |
-| Never answered | Retried whenever it advertises | Marked `Unavailable` |
-| Asked for permission, and nobody answered in time | Retried whenever it advertises | Marked `Unavailable` |
-| Said it's busy | Tried again after 10 to 30 seconds | Tried again after 10 to 30 seconds |
-| Turned the connection down | Marked `Failed` | Marked `Failed` |
+| Situation | Discovered (mDNS) client | Direct client, by host name | Direct client, by IP address |
+| --------- | ------------------------ | --------------------------- | ---------------------------- |
+| Host not present at startup | Connects when the host advertises | Tried again after the retry interval | One attempt, then marked `Unavailable` |
+| Host goes away and returns | Reconnects when it advertises again | Tried again right away, then after each retry interval | One further attempt, then `Unavailable` |
+| Never answered | Retried whenever it advertises | Tried again after the retry interval | Marked `Unavailable` |
+| Asked for permission, and nobody answered in time | Retried whenever it advertises | Tried again after the retry interval | Marked `Unavailable` |
+| Said it's busy | Tried again after 10 to 30 seconds | Tried again after 10 to 30 seconds | Tried again after 10 to 30 seconds |
+| Turned the connection down, or asked for authentication | Marked `Failed` | Marked `Failed` | Marked `Failed` |
 
-A direct address is never retried on a timer. Nothing announces that a fixed IP address is back, so retrying on a timer would keep sending invitations over the network forever, for every address in the configuration that can't be reached. To retry one, call `ConnectNetworkClientAsync` again with the same `ClientId`. For an entry that already exists, this means "it's reachable now, try again."
+A direct IP address is never retried on a timer. Nothing announces that a fixed IP address is back, so retrying on a timer would keep sending invitations over the network forever, for every address in the configuration that can't be reached. To retry one, call `ConnectNetworkClientAsync` again with the same `ClientId`. For an entry that already exists, this means "it's reachable now, try again."
+
+A host name is different. The service looks the name up again on every try, so it can find the host even after the host's address changes. That's worth some traffic, so a direct client set up by host name is tried again after the retry interval, which is `DirectConnectionScanIntervalMilliseconds` in [MidiNetworkTransportSettings]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkTransportSettings/) and 20 seconds by default. Each try is up to five invitations over about 10 seconds. A name that's gone for good keeps being tried until you disconnect the client.
 
 A busy host is the exception, because it did answer. A Windows host says it's busy while it still holds this PC's previous session, which it lets go after about 10 seconds without an answer. So this is what a reconnect runs into when a connection drops, for example because either PC's network address changed. A host turns a connection down when its owner refuses it, or when it wants authentication, which isn't built yet. Asking again won't change that, so the service waits for you to call `ConnectNetworkClientAsync` again.
 

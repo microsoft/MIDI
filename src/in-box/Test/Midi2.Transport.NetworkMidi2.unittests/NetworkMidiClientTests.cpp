@@ -861,6 +861,90 @@ namespace NetworkMidiTest
     }
 
 
+    // This client offers no authentication method, so a host which asks for one anyway gets the
+    // same answer every time. The client used to withdraw and invite again until it ran out of
+    // attempts.
+    void ClientTests::ClientEntryFailsWhenHostRequiresAuthentication()
+    {
+        if (!RequireService()) return;
+
+        ClientUnderTest client;
+        VERIFY_IS_TRUE(client.Start(FakeHostInvitationBehavior::RequireAuthentication));
+
+        VERIFY_IS_TRUE(client.Host().WaitForCommand(CommandCode::Bye, InvitationTimeout).has_value(),
+            L"The client withdrew its invitation.");
+
+        auto const state = WaitForClientEntryState(client.EntryIdentifier(), L"failed", ShortTimeout);
+
+        Log::Comment(String().Format(L"Entry state after the challenge: %s", state.c_str()));
+
+        VERIFY_IS_TRUE(state == L"failed", L"An entry the host wants authentication for is reported as failed.");
+
+        // longer than a full round of invitations
+        auto const before = client.Host().CountReceived(CommandCode::Invitation);
+        std::this_thread::sleep_for(std::chrono::milliseconds(12000));
+        auto const after = client.Host().CountReceived(CommandCode::Invitation);
+
+        Log::Comment(String().Format(L"Invitations: %zu when it withdrew, %zu twelve seconds later", before, after));
+
+        VERIFY_ARE_EQUAL(before, after, L"The client stops inviting once the host has asked for authentication.");
+
+        VERIFY_ARE_EQUAL(static_cast<size_t>(1), client.Host().CountReceived(CommandCode::Bye),
+            L"The client withdraws once.");
+    }
+
+
+    // A host name is looked up again on every attempt, so a direct entry given as one is tried
+    // again after the scan interval. An IP address is still parked: see
+    // ClientConnectsToHostWhichComesOnlineLater.
+    void ClientTests::ClientTriesAHostNameAgainAfterNoAnswer()
+    {
+        if (!RequireService()) return;
+
+        // A client given "localhost" connects to ::1. Each attempt comes from a new socket, so
+        // from a new port.
+        FakeNetworkHost host;
+        host.SetListenOnIPv6Loopback(true);
+        host.SetRelatchOnInvitation(true);
+        host.SetInvitationBehavior(FakeHostInvitationBehavior::Ignore);
+
+        if (!host.Start())
+        {
+            Log::Result(TestResults::Skipped, L"This PC has no IPv6 loopback address.");
+            return;
+        }
+
+        auto const entryIdentifier = MakeEntryIdentifier();
+        auto const created = CreateDirectClient(entryIdentifier, L"localhost", host.Port());
+
+        VERIFY_IS_TRUE(created.CallSucceeded, L"Client created");
+
+        if (!created.CallSucceeded) return;
+
+        auto removeClient = wil::scope_exit([&entryIdentifier]() { DisconnectClient(entryIdentifier); });
+
+        // five unanswered invitations, then Bye 0x80
+        VERIFY_IS_TRUE(host.WaitForCommand(CommandCode::Bye, InvitationTimeout).has_value(),
+            L"The client gave up on the first round.");
+
+        // the host is back, and nothing tells the client so
+        host.SetInvitationBehavior(FakeHostInvitationBehavior::Accept);
+
+        // A parked entry shows as unavailable straight away
+        auto const state = WaitForClientEntryState(entryIdentifier, L"unavailable", std::chrono::milliseconds(3000));
+
+        Log::Comment(String().Format(L"Entry state after the first round: %s", state.c_str()));
+
+        VERIFY_IS_TRUE(state != L"unavailable", L"A direct entry given as a name is not parked.");
+
+        auto const data = host.WaitForCommand(CommandCode::UmpData, SessionTimeout);
+
+        Log::Comment(String().Format(L"Invitations received: %zu", host.CountReceived(CommandCode::Invitation)));
+
+        VERIFY_IS_TRUE(data.has_value(), L"The client tried the name again on its own, and the session established.");
+    }
+
+
     // ------------------------------------------------------------------------------
     // Liveness
     // ------------------------------------------------------------------------------

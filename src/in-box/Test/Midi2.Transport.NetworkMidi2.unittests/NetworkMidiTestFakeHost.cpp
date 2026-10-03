@@ -30,6 +30,21 @@ namespace NetworkMidiTest
 
             return std::string{ buffer };
         }
+
+        uint16_t PortOf(_In_ sockaddr_storage const& address)
+        {
+            if (address.ss_family == AF_INET6)
+            {
+                return ntohs(reinterpret_cast<sockaddr_in6 const*>(&address)->sin6_port);
+            }
+
+            if (address.ss_family == AF_INET)
+            {
+                return ntohs(reinterpret_cast<sockaddr_in const*>(&address)->sin_port);
+            }
+
+            return 0;
+        }
     }
 
 
@@ -56,7 +71,7 @@ namespace NetworkMidiTest
             m_productInstanceId = "fh" + MakeUniqueSuffix();
         }
 
-        m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        m_socket = socket(m_listenOnIPv6Loopback ? AF_INET6 : AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
         if (m_socket == INVALID_SOCKET)
         {
@@ -64,12 +79,25 @@ namespace NetworkMidiTest
             return false;
         }
 
-        sockaddr_in local{ };
-        local.sin_family = AF_INET;
-        local.sin_port = 0;                                 // ephemeral
-        InetPtonW(AF_INET, L"127.0.0.1", &local.sin_addr);
+        // port 0 in both, so the port is ephemeral
+        sockaddr_storage local{ };
+        int localLength{ sizeof(sockaddr_in) };
 
-        if (bind(m_socket, reinterpret_cast<sockaddr*>(&local), sizeof(local)) == SOCKET_ERROR)
+        if (m_listenOnIPv6Loopback)
+        {
+            auto& v6 = reinterpret_cast<sockaddr_in6&>(local);
+            v6.sin6_family = AF_INET6;
+            v6.sin6_addr = in6addr_loopback;
+            localLength = sizeof(sockaddr_in6);
+        }
+        else
+        {
+            auto& v4 = reinterpret_cast<sockaddr_in&>(local);
+            v4.sin_family = AF_INET;
+            InetPtonW(AF_INET, L"127.0.0.1", &v4.sin_addr);
+        }
+
+        if (bind(m_socket, reinterpret_cast<sockaddr*>(&local), localLength) == SOCKET_ERROR)
         {
             Log::Error(String().Format(L"FakeNetworkHost: bind() failed with %d", WSAGetLastError()));
             closesocket(m_socket);
@@ -77,7 +105,7 @@ namespace NetworkMidiTest
             return false;
         }
 
-        sockaddr_in bound{ };
+        sockaddr_storage bound{ };
         int boundLength = sizeof(bound);
 
         if (getsockname(m_socket, reinterpret_cast<sockaddr*>(&bound), &boundLength) == SOCKET_ERROR)
@@ -88,7 +116,7 @@ namespace NetworkMidiTest
             return false;
         }
 
-        m_port = ntohs(bound.sin_port);
+        m_port = PortOf(bound);
 
         // so the receive loop can notice the stop request
         DWORD receiveTimeout{ 250 };
@@ -97,7 +125,8 @@ namespace NetworkMidiTest
         m_receiverThread = std::jthread([this](std::stop_token stopToken) { ReceiverLoop(stopToken); });
 
         Log::Comment(String().Format(
-            L"FakeNetworkHost listening on 127.0.0.1:%u as '%S' / '%S'",
+            L"FakeNetworkHost listening on %s:%u as '%S' / '%S'",
+            m_listenOnIPv6Loopback ? L"[::1]" : L"127.0.0.1",
             m_port,
             m_endpointName.c_str(),
             m_productInstanceId.c_str()));
@@ -171,11 +200,7 @@ namespace NetworkMidiTest
                 m_remoteAddress = from;
                 m_remoteAddressLength = fromLength;
                 m_remoteKnown = true;
-
-                if (from.ss_family == AF_INET)
-                {
-                    m_remotePort = ntohs(reinterpret_cast<sockaddr_in const*>(&from)->sin_port);
-                }
+                m_remotePort = PortOf(from);
             }
             else if (from.ss_family == AF_INET && m_remoteAddress.ss_family == AF_INET)
             {
@@ -185,6 +210,15 @@ namespace NetworkMidiTest
                 fromLatchedRemote =
                     incoming->sin_port == latched->sin_port &&
                     incoming->sin_addr.S_un.S_addr == latched->sin_addr.S_un.S_addr;
+            }
+            else if (from.ss_family == AF_INET6 && m_remoteAddress.ss_family == AF_INET6)
+            {
+                auto const* incoming = reinterpret_cast<sockaddr_in6 const*>(&from);
+                auto const* latched = reinterpret_cast<sockaddr_in6 const*>(&m_remoteAddress);
+
+                fromLatchedRemote =
+                    incoming->sin6_port == latched->sin6_port &&
+                    memcmp(&incoming->sin6_addr, &latched->sin6_addr, sizeof(incoming->sin6_addr)) == 0;
             }
 
             auto packet = ParsePacket(buffer.data(), static_cast<size_t>(received));
@@ -208,11 +242,7 @@ namespace NetworkMidiTest
                 m_remoteKnown = true;
                 m_sessionAccepted = false;
                 m_pendingReplySent = false;
-
-                if (from.ss_family == AF_INET)
-                {
-                    m_remotePort = ntohs(reinterpret_cast<sockaddr_in const*>(&from)->sin_port);
-                }
+                m_remotePort = PortOf(from);
 
                 fromLatchedRemote = true;
             }

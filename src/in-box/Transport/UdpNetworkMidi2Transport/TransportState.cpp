@@ -704,6 +704,17 @@ TransportState::MarkClientDefinitionUnavailableOrRetry(winrt::guid const& client
                 return S_FALSE;
             }
 
+            // The name is looked up again on the next attempt, so it can lead to the remote even
+            // at a new address. A name which is gone for good costs one round of invitations
+            // per scan interval.
+            if (definition.IsDirectConnectionByName())
+            {
+                definition.State = MidiNetworkEntryState::Pending;
+                definition.RetryNotBeforeTickCount = GetTickCount64() + TransportSettings.DirectConnectionScanInterval;
+
+                return S_OK;
+            }
+
             if (definition.IsDirectConnection())
             {
                 definition.State = MidiNetworkEntryState::Unavailable;

@@ -2533,8 +2533,8 @@ void NetworkMidiApprovalTests::CreateThenImmediatelyRemoveLeavesNoHostBehind()
 
 namespace
 {
-    // One socket on 127.0.0.1 which can reach a host at either of two addresses, and says which
-    // address each reply came from. UdpTestClient keeps one remote and does not say.
+    // One socket which can reach a host at either of two addresses, and says which address each
+    // reply came from. UdpTestClient keeps one remote and does not say.
     class ReturningRemote
     {
     public:
@@ -2544,7 +2544,7 @@ namespace
         ReturningRemote(_In_ ReturningRemote const&) = delete;
         ReturningRemote& operator=(_In_ ReturningRemote const&) = delete;
 
-        bool Open()
+        bool Open(_In_ std::string const& localAddress)
         {
             m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -2552,7 +2552,8 @@ namespace
 
             sockaddr_in local{};
             local.sin_family = AF_INET;
-            local.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+            if (inet_pton(AF_INET, localAddress.c_str(), &local.sin_addr) != 1) return false;
 
             if (bind(m_socket, reinterpret_cast<sockaddr const*>(&local), sizeof(local)) != 0) return false;
 
@@ -2623,28 +2624,11 @@ namespace
 // address and port was answered from the old one, and a remote whose socket is connected drops that.
 void NetworkMidiApprovalTests::HostRepliesFromTheAddressARemoteInvitesAgain()
 {
-    std::string const firstAddress{ "127.0.0.1" };
-    std::string const secondAddress{ "127.0.0.2" };
-
-    // Windows only accepts a loopback alias as a source address once something has bound to it
-    {
-        auto const probe = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-        sockaddr_in alias{};
-        alias.sin_family = AF_INET;
-        inet_pton(AF_INET, secondAddress.c_str(), &alias.sin_addr);
-
-        auto const bound = probe != INVALID_SOCKET &&
-            bind(probe, reinterpret_cast<sockaddr const*>(&alias), sizeof(alias)) == 0;
-
-        if (probe != INVALID_SOCKET) closesocket(probe);
-
-        if (!bound)
-        {
-            Log::Result(TestResults::Skipped, L"This PC does not accept a second loopback address.");
-            return;
-        }
-    }
+    // The remote sits on 127.0.0.2. Windows sends to 127.0.0.2 from either loopback address, but a
+    // socket bound to every address cannot send from 127.0.0.2 to 127.0.0.1.
+    std::string const remoteAddress{ "127.0.0.2" };
+    std::string const firstAddress{ "127.0.0.2" };
+    std::string const secondAddress{ "127.0.0.1" };
 
     auto const entryIdentifier = MakeEntryIdentifier();
 
@@ -2663,7 +2647,12 @@ void NetworkMidiApprovalTests::HostRepliesFromTheAddressARemoteInvitesAgain()
     if (!port.has_value()) return;
 
     ReturningRemote remote;
-    VERIFY_IS_TRUE(remote.Open(), L"Test socket bound to 127.0.0.1");
+
+    if (!remote.Open(remoteAddress))
+    {
+        Log::Result(TestResults::Skipped, L"This PC does not accept a second loopback address.");
+        return;
+    }
 
     auto& context = ProtocolTestContext::Current();
 

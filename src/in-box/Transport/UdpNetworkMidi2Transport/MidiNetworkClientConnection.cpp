@@ -164,7 +164,8 @@ MidiNetworkClientConnection::OnWatchdogTick()
             }));
 
         // The host may simply not be switched on yet. An advertised host is picked up again when
-        // it advertises; a direct address is parked until the app asks for it again, because
+        // it advertises, and a host name is tried again after the scan interval, because it is
+        // looked up each time. An IP address is parked until the app asks for it again, because
         // nothing announces its return and every configured dead address would be retried.
         if (!m_shuttingDown)
         {
@@ -514,9 +515,30 @@ MidiNetworkClientConnection::HandleIncomingInvitationReplyAuthenticationRequired
         TraceLoggingUInt8(header.HeaderData.CommandCode, "Command Code")
     );
 
+    // Only the first answer counts. The host answers every copy of the invitation that was
+    // already on its way, and a session or a timeout may have ended the invitation first.
+    if (!m_invitation.Answered())
+    {
+        return S_OK;
+    }
+
     // A client which supports authentication answers the challenge here instead of withdrawing.
     // See MidiNetworkCredentials.h.
-    return RefuseInvitationForAuthentication(MidiNetworkCommandByeReason::CommandByeReasonClientToHost_InvitationCanceled);
+    //
+    // Spec 6.4: a client which gives up on its invitation ends it with Bye 0x80 Invitation
+    // Canceled. The spec has no client reason for "authentication not supported". A host which
+    // follows it does not ask this client at all, because the invitation offers no
+    // authentication method. It sends Bye 0x45 No Matching Authentication Method instead, which
+    // OnByeReceived turns into the same failed entry.
+    LOG_IF_FAILED(RefuseInvitationForAuthentication(MidiNetworkCommandByeReason::CommandByeReasonClientToHost_InvitationCanceled));
+
+    // Asking again gets the same answer
+    if (!m_shuttingDown)
+    {
+        LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionFailed(m_configIdentifier));
+    }
+
+    return S_OK;
 }
 
 HRESULT

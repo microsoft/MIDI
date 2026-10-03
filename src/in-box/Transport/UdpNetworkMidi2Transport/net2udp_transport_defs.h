@@ -169,7 +169,7 @@ enum class MidiNetworkEntryState
     Failed,
 
     // Reachability gave out and nothing will announce its return, so it is only retried when the
-    // app asks again. Direct connections only.
+    // app asks again. Direct connections by IP address only. A host name goes back to Pending.
     Unavailable,
 };
 #define MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_LOWER_BOUND         0
@@ -178,7 +178,7 @@ enum class MidiNetworkEntryState
 #define MIDI_NETWORK_OUTBOUND_PING_INTERVAL_UPPER_BOUND                 120000
 #define MIDI_NETWORK_OUTBOUND_PING_INTERVAL_LOWER_BOUND                 250
 
-#define MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT            20000       // how frequently we try to open a remote IP and port
+#define MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT            20000       // longest wait between scans, and the wait before a direct host name is tried again
 #define MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_UPPER_BOUND        300000
 #define MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_LOWER_BOUND        250
 

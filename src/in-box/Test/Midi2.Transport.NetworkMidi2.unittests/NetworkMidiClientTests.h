@@ -53,6 +53,8 @@ namespace NetworkMidiTest
         TEST_METHOD(ClientTriesAgainLaterWhenHostIsBusy);
         TEST_METHOD(ClientEntryFailsWhenHostRefuses);
         TEST_METHOD(ClientEntryIsParkedWhenHostNeverApproves);
+        TEST_METHOD(ClientEntryFailsWhenHostRequiresAuthentication);
+        TEST_METHOD(ClientTriesAHostNameAgainAfterNoAnswer);
 
         // Liveness, spec 6.14
         TEST_METHOD(ClientAnswersHostPingWithMatchingId);

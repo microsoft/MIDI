@@ -221,10 +221,10 @@ A configured client is in one of four states:
 
 | State | Meaning |
 |---|---|
-| `pending` | Configured, waiting for the service to connect. Also where an entry waits after a host said it was busy |
+| `pending` | Configured, waiting for the service to connect. Also where an entry waits after a host said it was busy, and where a direct connection by host name waits between tries |
 | `live` | Connected, endpoint created |
 | `failed` | The entry itself is not valid, or the host turned the connection down, so retrying cannot help |
-| `unavailable` | A direct connection stopped answering, or nobody approved it in time. Nothing will announce its return, so it is retried only when an app asks again |
+| `unavailable` | A direct connection by IP address stopped answering, or nobody approved it in time. Nothing will announce its return, so it is retried only when an app asks again |
 
 ## MIDI 1.0 ports
 

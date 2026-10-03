@@ -583,8 +583,8 @@
                               HorizontalAlignment="Stretch"
                               HorizontalContentAlignment="Stretch">
                         <StackPanel Spacing="8" Margin="0,4,0,4">
-                            <TextBlock x:Uid="ManualConnectDescription"
-                                       Text="Use this when a device is not advertised on your network. Windows will keep the entry and try again later if the device is not answering now."
+                            <TextBlock x:Uid="NetworkManualConnectDescription"
+                                       Text="Use this when a device is not advertised on your network. Windows will keep the entry. A host name is tried again on its own while the device is not answering. An IP address is not, so connect again when the device is back."
                                        TextWrapping="Wrap"
                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -1109,7 +1109,7 @@
                                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                 <TextBlock x:Name="DirectConnectionScanIntervalDescriptionText"
                                            x:Uid="SettingScanIntervalDescription"
-                                           Text="How often this PC tries a device you connected to by address again after it stops answering, in milliseconds."
+                                           Text="How often this PC tries again, in milliseconds, to reach a device you connected to by host name while it is not answering. A device you connected to by IP address waits until you connect it again."
                                            TextWrapping="Wrap"
                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />

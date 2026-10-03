@@ -725,8 +725,8 @@ try
 
     RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
 
-    // The same entry arriving again is the app saying the remote is available now. A direct
-    // connection which gave up earlier is only ever revived here.
+    // The same entry arriving again is the app saying the remote is available now. A direct IP
+    // address which gave up earlier is only ever revived here.
     if (TransportState::Current().RearmClientDefinition(configEntryId) == S_OK)
     {
         LOG_IF_FAILED(endpointManager->WakeupBackgroundEndpointCreatorThread());

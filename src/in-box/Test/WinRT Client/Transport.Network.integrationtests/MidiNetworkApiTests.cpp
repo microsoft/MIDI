@@ -2094,7 +2094,7 @@ void MidiNetworkApiTests::TestHostRepliesFromTheAddressTheClientInvited()
     // the reply is 127.0.0.1. The same shape as an IPv6 host with several addresses on one network.
     constexpr wchar_t SecondLoopbackAddress[] = L"127.0.0.2";
 
-    // Windows only accepts a loopback alias as a source address once something has bound to it
+    // Skipped on a PC which does not accept a second loopback address
     try
     {
         winrt::Windows::Networking::Sockets::DatagramSocket socket;

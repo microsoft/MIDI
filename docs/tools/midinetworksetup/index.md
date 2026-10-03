@@ -219,7 +219,7 @@ The defaults suit almost every network. Change them only if you have a reason to
 |---|---|---|
 | **Most devices allowed at once** | How many remote devices any one host on this PC will accept at the same time | Right away. Devices already connected are not disconnected |
 | **How long to wait for your permission** | How long a device asking to connect stays in the waiting list before it is dropped | The next device which asks. Devices already waiting keep the old timeout |
-| **How often to retry a device which is not answering** | How often this PC retries a device you connected to by address after it stops answering | Within one retry, so up to the old interval from now |
+| **How often to retry a device which is not answering** | How often this PC tries again to reach a device you connected to by host name while it is not answering. A device you connected to by IP address waits until you connect it again | Within one retry, so up to the old interval from now |
 | **How often to check a quiet connection** | How often a connection with nothing to send checks the other end is still there. Shorter notices a dropped device sooner and sends slightly more traffic | Reaches open connections within one interval |
 | **Repeated messages per packet** | How many recently sent messages are repeated in each packet, so a lost packet can be recovered without asking again. Higher copes better with an unreliable network and makes each packet larger | New connections. Reconnect a device for it to apply there |
 | **Messages kept for resending** | How many sent messages are held in case the other end asks for them again. Higher recovers from longer gaps and uses more memory per connection | New connections. Reconnect a device for it to apply there |

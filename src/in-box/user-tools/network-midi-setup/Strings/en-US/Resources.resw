@@ -125,7 +125,7 @@
     <value>How often to retry a device which is not answering</value>
   </data>
   <data name="SettingScanIntervalDescription.Text" xml:space="preserve">
-    <value>How often this PC tries a device you connected to by address again after it stops answering, in milliseconds.</value>
+    <value>How often this PC tries again, in milliseconds, to reach a device you connected to by host name while it is not answering. A device you connected to by IP address waits until you connect it again.</value>
   </data>
   <data name="SettingEffectNextScan.Text" xml:space="preserve">
     <value>Takes effect within one retry, so up to the old interval from now.</value>
@@ -421,6 +421,10 @@
   </data>
   <data name="ManualConnectDescription.Text" xml:space="preserve">
     <value>Use this when a device is not advertised on your network. Windows will keep the entry and try again later if the device is not answering now.</value>
+  </data>
+  <data name="NetworkManualConnectDescription.Text" xml:space="preserve">
+    <value>Use this when a device is not advertised on your network. Windows will keep the entry. A host name is tried again on its own while the device is not answering. An IP address is not, so connect again when the device is back.</value>
+    <comment>Network MIDI 2.0 page. A host name is looked up again on every try, so it is retried on a timer; an IP address is tried once.</comment>
   </data>
   <data name="ManualAddressTextBox.Header" xml:space="preserve">
     <value>Host name or IP address</value>
