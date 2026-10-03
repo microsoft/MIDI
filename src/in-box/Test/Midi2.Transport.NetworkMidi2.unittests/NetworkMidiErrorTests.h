@@ -47,4 +47,5 @@ public:
 
     // Retransmit as a responder, spec 7.2
     TEST_METHOD(RetransmitRequestForUnknownSequenceIsAnswered);
+    TEST_METHOD(RepeatedRetransmitRequestsForMissingDataAreNotEachAnswered);
 };

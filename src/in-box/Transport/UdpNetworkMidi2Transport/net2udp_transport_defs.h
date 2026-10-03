@@ -148,8 +148,36 @@ enum MidiNetworkRemoteClientDecision
 #define MIDI_NETWORK_FEC_PACKET_COUNT_UPPER_BOUND                       10
 #define MIDI_NETWORK_FEC_PACKET_COUNT_LOWER_BOUND                       0
 
-#define MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT             50
+#define MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT             250
 #define MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_UPPER_BOUND         1000
+
+// However many commands the setting allows, the buffer never holds more than this per connection
+#define MIDI_NETWORK_RETRANSMIT_BUFFER_MAX_BYTES                        (256 * 1024)
+
+// Spec 7.2.3: a request repeated before it has been served may be ignored. Past this many waiting,
+// further ones are too, and the remote asks again.
+#define MIDI_NETWORK_MAX_PENDING_RETRANSMIT_REQUESTS                    16
+
+// A remote asking again and again for data which is gone gets one Retransmit Error for the same
+// sequence number in this time, and no more than so many a second in all
+#define MIDI_NETWORK_RETRANSMIT_ERROR_REPEAT_MILLISECONDS               250
+#define MIDI_NETWORK_RETRANSMIT_ERROR_MAX_PER_SECOND                    20
+
+// With a speed limit, the send queue holds about this much time at that speed before senders
+// wait for room, so a message sent behind a burst is not held up behind a long queue
+#define MIDI_NETWORK_SEND_QUEUE_PACED_MILLISECONDS                      100
+#define MIDI_NETWORK_SEND_QUEUE_PACED_MINIMUM_WIRE_BYTES                256
+
+// Without one, senders only wait when the socket itself has fallen this far behind
+#define MIDI_NETWORK_SEND_QUEUE_UNLIMITED_MAX_WORDS                     (64 * 1024)
+
+// A sender waits for room at most this long, then its messages are queued anyway. Kept under the
+// 1 second an app's side of the service pipe waits, so the app never sees a stall.
+#define MIDI_NETWORK_SEND_QUEUE_WAIT_LIMIT_MILLISECONDS                 900
+#define MIDI_NETWORK_SEND_QUEUE_WAIT_SLICE_MILLISECONDS                 50
+
+// Only reached when nothing is draining the queue. Messages past this are dropped, with a trace.
+#define MIDI_NETWORK_SEND_QUEUE_HARD_MAX_WORDS                          (256 * 1024)
 
 
 // Where a configured host or client entry is in its life. This replaced a bare "Created" flag,

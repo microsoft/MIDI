@@ -1095,4 +1095,57 @@
   <data name="HostCreatedWaitingForAdapterFormat" xml:space="preserve">
     <value>{0} was created. It starts when its network adapter is back.</value>
   </data>
+  <data name="SendSpeedLimitComboBox.Header" xml:space="preserve">
+    <value>Sending speed</value>
+  </data>
+  <data name="SendSpeedLimitHelp.Text" xml:space="preserve">
+    <value>Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back.</value>
+  </data>
+  <data name="ReduceSendSpeedCheckBox.Content" xml:space="preserve">
+    <value>Slow down when a device misses data</value>
+  </data>
+  <data name="ReduceSendSpeedHelp.Text" xml:space="preserve">
+    <value>When a device asks for data again, Windows sends more slowly, down to MIDI 1.0 wire speed. It speeds back up once the device stops asking.</value>
+  </data>
+  <data name="SendSpeedLimitUnlimited" xml:space="preserve">
+    <value>Unlimited</value>
+  </data>
+  <data name="SendSpeedLimitWireSpeed" xml:space="preserve">
+    <value>MIDI 1.0 wire speed</value>
+    <comment>The speed of a MIDI 1.0 DIN cable, 31,250 bits a second.</comment>
+  </data>
+  <data name="SendSpeedLimitMultipleFormat" xml:space="preserve">
+    <value>{0}× MIDI 1.0 wire speed</value>
+    <comment>{0} is a whole number: 2, 4, 8, 16 or 32. The speed of a MIDI 1.0 DIN cable is 31,250 bits a second.</comment>
+  </data>
+  <data name="SendSpeedReducesAutomaticallyFormat" xml:space="preserve">
+    <value>{0}, and slows down when a device misses data</value>
+    <comment>{0} is a sending speed, such as Unlimited or 4× MIDI 1.0 wire speed.</comment>
+  </data>
+  <data name="SendSpeedSlowedFormat" xml:space="preserve">
+    <value>{0}. Sending at {1} for now, because it missed data.</value>
+    <comment>{0} is the connection status, such as Connected. {1} is a sending speed, such as 2× MIDI 1.0 wire speed.</comment>
+  </data>
+  <data name="HostSendSpeedLabel.Text" xml:space="preserve">
+    <value>Sending speed</value>
+  </data>
+  <data name="ChangeHostSendSpeedLink.Content" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="ChangeHostSendSpeedLink.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Change sending speed</value>
+  </data>
+  <data name="ChangeSendSpeedDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="ChangeSendSpeedDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ChangeSendSpeedTitleFormat" xml:space="preserve">
+    <value>Sending speed for {0}</value>
+    <comment>{0} is the name of a host on this PC.</comment>
+  </data>
+  <data name="HostSendSpeedChangedFormat" xml:space="preserve">
+    <value>The sending speed for {0} was saved.</value>
+  </data>
 </root>

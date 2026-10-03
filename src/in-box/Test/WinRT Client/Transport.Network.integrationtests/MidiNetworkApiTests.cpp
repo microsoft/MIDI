@@ -2269,6 +2269,205 @@ void MidiNetworkApiTests::TestConfiguredClientSaysWhyItIsNotConnected()
 
 
 // ------------------------------------------------------------------------------
+// The send speed limit
+// ------------------------------------------------------------------------------
+
+// Windows to Windows on this PC: a client limited to MIDI 1.0 wire speed sends a 3,000 byte SysEx
+// to a host here, which receives it at about the speed of a DIN cable
+void MidiNetworkApiTests::TestClientSendSpeedLimitPacesASysExDump()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto const suffix = MakeUniqueSuffix();
+    auto const hostId = CreateTestHost(L"Speed_" + suffix);
+    auto const clientId = foundation::GuidHelper::CreateNewGuid();
+    auto const clientName = winrt::hstring{ L"MidiApiTest_SpeedClient_" + suffix.substr(0, 20) };
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            RemoveTestClient(clientId);
+            RemoveTestHost(hostId);
+        });
+
+    VERIFY_IS_TRUE(hostId != winrt::guid{}, L"The test host was created");
+
+    if (hostId == winrt::guid{})
+    {
+        return;
+    }
+
+    winrt::hstring hostPort{};
+
+    for (auto const& host : MidiNetworkTransportManager::GetConfiguredHosts())
+    {
+        if (host != nullptr && host.HostId() == hostId)
+        {
+            hostPort = host.ActualPort();
+            break;
+        }
+    }
+
+    VERIFY_IS_FALSE(hostPort.empty(), L"The host reports the port it is bound to");
+
+    if (hostPort.empty())
+    {
+        return;
+    }
+
+    MidiNetworkClientMatchCriteria criteria;
+    criteria.DirectHostNameOrIPAddress(L"127.0.0.1");
+    criteria.DirectPort(static_cast<uint16_t>(std::stoul(std::wstring{ hostPort })));
+
+    MidiNetworkClientConnectConfig config;
+    config.ClientId(clientId);
+    config.UmpEndpointName(clientName);
+    config.CreateOnlyUmpEndpoints(true);
+    config.MatchCriteria(criteria);
+    config.SendSpeedLimit(MidiNetworkSendSpeedLimit::Midi1WireSpeed);
+
+    auto const response = MidiNetworkTransportManager::ConnectNetworkClientAsync(config).get();
+
+    VERIFY_IS_TRUE(response != nullptr && response.Success(), L"The connect request was accepted");
+
+    if (response == nullptr || !response.Success())
+    {
+        return;
+    }
+
+    // both ends of the connection, as endpoints
+    winrt::hstring sendingEndpointId{};
+    winrt::hstring receivingEndpointId{};
+    MidiNetworkConfiguredClient client{ nullptr };
+
+    for (int attempt = 0; attempt < 120 && (sendingEndpointId.empty() || receivingEndpointId.empty()); attempt++)
+    {
+        for (auto const& candidate : MidiNetworkTransportManager::GetConfiguredClients())
+        {
+            if (candidate != nullptr && candidate.ClientId() == clientId && candidate.IsSessionActive())
+            {
+                client = candidate;
+                sendingEndpointId = candidate.EndpointDeviceId();
+            }
+        }
+
+        for (auto const& host : MidiNetworkTransportManager::GetConfiguredHosts())
+        {
+            if (host == nullptr || host.HostId() != hostId)
+            {
+                continue;
+            }
+
+            for (auto const& connection : host.Connections())
+            {
+                if (connection.IsSessionActive() && connection.UmpEndpointName() == clientName)
+                {
+                    receivingEndpointId = connection.EndpointDeviceId();
+                }
+            }
+        }
+
+        if (sendingEndpointId.empty() || receivingEndpointId.empty())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        }
+    }
+
+    VERIFY_IS_FALSE(sendingEndpointId.empty(), L"The client's endpoint was created");
+    VERIFY_IS_FALSE(receivingEndpointId.empty(), L"The host's endpoint for the client was created");
+
+    if (sendingEndpointId.empty() || receivingEndpointId.empty())
+    {
+        return;
+    }
+
+    VERIFY_IS_TRUE(client.SendSpeedLimit() == MidiNetworkSendSpeedLimit::Midi1WireSpeed, L"The client reports its limit");
+    VERIFY_IS_TRUE(client.CurrentSendSpeedLimit() == MidiNetworkSendSpeedLimit::Midi1WireSpeed, L"and is sending at it");
+    VERIFY_IS_FALSE(client.ReduceSendSpeedAutomatically());
+
+    // 500 packets of 6 bytes: 3,002 bytes on a MIDI 1.0 cable, about 0.96 s at wire speed
+    constexpr uint32_t PacketCount{ 500 };
+
+    // declared before the session, so the session is closed before these go away
+    std::atomic<uint32_t> received{ 0 };
+    std::chrono::steady_clock::time_point firstArrival{};
+    std::chrono::steady_clock::time_point lastArrival{};
+    wil::slim_event_manual_reset allReceived;
+
+    auto session = MidiSession::Create(L"MidiApiTest send speed limit");
+    VERIFY_IS_NOT_NULL(session);
+
+    if (session == nullptr)
+    {
+        return;
+    }
+
+    auto closeSession = wil::scope_exit([&] { session.Close(); });
+
+    auto sender = session.CreateEndpointConnection(sendingEndpointId);
+    auto receiver = session.CreateEndpointConnection(receivingEndpointId);
+
+    receiver.MessageReceived([&](auto const&, MidiMessageReceivedEventArgs const& args)
+        {
+            if (args.MessageType() != MidiMessageType::DataMessage64)
+            {
+                return;
+            }
+
+            auto const now = std::chrono::steady_clock::now();
+            auto const count = received.fetch_add(1) + 1;
+
+            if (count == 1)
+            {
+                firstArrival = now;
+            }
+
+            lastArrival = now;
+
+            if (count == PacketCount)
+            {
+                allReceived.SetEvent();
+            }
+        });
+
+    VERIFY_IS_TRUE(receiver.Open(), L"The host's endpoint opens");
+    VERIFY_IS_TRUE(sender.Open(), L"The client's endpoint opens");
+
+    auto const sendStart = std::chrono::steady_clock::now();
+    uint32_t refused{ 0 };
+
+    for (uint32_t packet = 0; packet < PacketCount; packet++)
+    {
+        // SysEx7 start, continue and end, six data bytes each
+        uint32_t const status = packet == 0 ? 0x1u : packet == PacketCount - 1 ? 0x3u : 0x2u;
+        uint32_t const word0 = 0x30000000u | (status << 20) | (6u << 16) | 0x0102u;
+        uint32_t const word1 = 0x03040506u;
+
+        if (!MidiEndpointConnection::SendMessageSucceeded(sender.SendSingleMessageWords(0, word0, word1)))
+        {
+            refused++;
+        }
+    }
+
+    auto const sendMilliseconds = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - sendStart).count();
+
+    auto const arrived = allReceived.wait(10000);
+
+    closeSession.reset();
+
+    auto const spreadMilliseconds = std::chrono::duration<double, std::milli>(lastArrival - firstArrival).count();
+
+    Log::Comment(String().Format(
+        L"%u of %u packets arrived, %u refused. Sending took %.0f ms. First to last arrival: %.0f ms.",
+        received.load(), PacketCount, refused, sendMilliseconds, spreadMilliseconds));
+
+    VERIFY_ARE_EQUAL(refused, (uint32_t)0, L"Every packet is accepted");
+    VERIFY_IS_TRUE(arrived, L"Every packet arrives");
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(spreadMilliseconds, 800.0, L"About as long as on a MIDI 1.0 cable");
+    VERIFY_IS_LESS_THAN(spreadMilliseconds, 5000.0, L"And not much longer");
+}
+
+
+// ------------------------------------------------------------------------------
 // Disconnecting a remote client from one of our hosts
 // ------------------------------------------------------------------------------
 
@@ -3018,6 +3217,8 @@ void MidiNetworkApiTests::TestSavedHostFollowsSavedChanges()
     config.CreateOnlyUmpEndpoints(true);
     config.FallbackMidi1PortCount(3);
     config.RemoteClientPolicy(MidiNetworkRemoteClientPolicy::RequireApproval);
+    config.SendSpeedLimit(MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes4);
+    config.ReduceSendSpeedAutomatically(true);
 
     auto const hostId = config.HostId();
 
@@ -3041,6 +3242,8 @@ void MidiNetworkApiTests::TestSavedHostFollowsSavedChanges()
     VERIFY_IS_TRUE(saved.CreateOnlyUmpEndpoints());
     VERIFY_ARE_EQUAL(saved.FallbackMidi1PortCount(), (uint8_t)3);
     VERIFY_IS_TRUE(saved.RemoteClientPolicy() == MidiNetworkRemoteClientPolicy::RequireApproval, L"and its policy");
+    VERIFY_IS_TRUE(saved.SendSpeedLimit() == MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes4, L"its send speed limit");
+    VERIFY_IS_TRUE(saved.ReduceSendSpeedAutomatically(), L"and that it slows down by itself");
     VERIFY_ARE_EQUAL(saved.KnownRemoteClients().Size(), (uint32_t)0);
 
     MidiNetworkHostKnownClientsConfig knownClients(hostId);
@@ -3061,6 +3264,21 @@ void MidiNetworkApiTests::TestSavedHostFollowsSavedChanges()
     VERIFY_IS_FALSE(saved.CreateOnlyUmpEndpoints(), L"a change saved later is applied on top");
     VERIFY_ARE_EQUAL(saved.FallbackMidi1PortCount(), (uint8_t)5);
     VERIFY_IS_TRUE(saved.Name() == config.Name(), L"and the rest is left alone");
+    VERIFY_IS_TRUE(saved.SendSpeedLimit() == MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes4, L"including a speed limit the change did not set");
+    VERIFY_IS_TRUE(saved.ReduceSendSpeedAutomatically());
+
+    MidiNetworkHostUpdateConfig speedUpdate(hostId);
+    speedUpdate.SendSpeedLimit(MidiNetworkSendSpeedLimit::Midi1WireSpeed);
+    speedUpdate.ReduceSendSpeedAutomatically(false);
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(speedUpdate), L"saving a speed change works");
+
+    saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_IS_TRUE(saved.SendSpeedLimit() == MidiNetworkSendSpeedLimit::Midi1WireSpeed, L"the new speed limit is saved");
+    VERIFY_IS_FALSE(saved.ReduceSendSpeedAutomatically());
+    VERIFY_ARE_EQUAL(saved.FallbackMidi1PortCount(), (uint8_t)5, L"and the earlier change is left alone");
 
     VERIFY_ARE_EQUAL(saved.KnownRemoteClients().Size(), (uint32_t)2);
 
@@ -3132,6 +3350,7 @@ void MidiNetworkApiTests::TestSavedClientFollowsSavedChanges()
     connect.CreateOnlyUmpEndpoints(false);
     connect.FallbackMidi1PortCount(2);
     connect.MatchCriteria(match);
+    connect.SendSpeedLimit(MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes2);
 
     VERIFY_IS_TRUE(FindSavedClient(clientId) == nullptr, L"not saved to begin with");
 
@@ -3152,6 +3371,8 @@ void MidiNetworkApiTests::TestSavedClientFollowsSavedChanges()
     VERIFY_ARE_EQUAL(saved.MatchCriteria().DirectPort(), (uint16_t)5504);
     VERIFY_IS_TRUE(saved.MatchCriteria().ProductInstanceId() == match.ProductInstanceId(), L"and what it matches on");
     VERIFY_IS_TRUE(saved.MatchCriteria().UmpEndpointName() == match.UmpEndpointName());
+    VERIFY_IS_TRUE(saved.SendSpeedLimit() == MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes2, L"its send speed limit");
+    VERIFY_IS_FALSE(saved.ReduceSendSpeedAutomatically());
 
     MidiNetworkClientUpdateConfig update(clientId);
     update.CreateMidi1Ports(false);
@@ -3165,6 +3386,19 @@ void MidiNetworkApiTests::TestSavedClientFollowsSavedChanges()
     VERIFY_IS_TRUE(saved.CreateOnlyUmpEndpoints(), L"a change saved later is applied on top");
     VERIFY_ARE_EQUAL(saved.FallbackMidi1PortCount(), (uint8_t)4);
     VERIFY_IS_TRUE(saved.CustomEndpointName() == connect.CustomEndpointName(), L"and the rest is left alone");
+    VERIFY_IS_TRUE(saved.SendSpeedLimit() == MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes2, L"including a speed limit the change did not set");
+
+    MidiNetworkClientUpdateConfig speedUpdate(clientId);
+    speedUpdate.SendSpeedLimit(MidiNetworkSendSpeedLimit::Unlimited);
+    speedUpdate.ReduceSendSpeedAutomatically(true);
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(speedUpdate), L"saving a speed change works");
+
+    saved = FindSavedClient(clientId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_IS_TRUE(saved.SendSpeedLimit() == MidiNetworkSendSpeedLimit::Unlimited, L"the new speed limit is saved");
+    VERIFY_IS_TRUE(saved.ReduceSendSpeedAutomatically());
 
     VerifySaved(
         svc::MidiServiceTransportPluginConfigManager::SaveUpdate(MidiNetworkClientDisconnectConfig(clientId)),
@@ -3267,6 +3501,19 @@ void MidiNetworkApiTests::TestHostUpdateConfigWritesOnlyWhatWasSet()
     VERIFY_IS_FALSE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY), L"a property which was not set is not sent");
     VERIFY_IS_FALSE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_ID_KEY));
     VERIFY_IS_FALSE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY));
+    VERIFY_IS_FALSE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY));
+    VERIFY_IS_FALSE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY));
+
+    // Unlimited is a value of its own too: it takes a limit away
+    update.SendSpeedLimit(MidiNetworkSendSpeedLimit::Unlimited);
+    update.ReduceSendSpeedAutomatically(false);
+
+    entry = UpdatedHostEntry(update);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_IS_TRUE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY));
+    VERIFY_ARE_EQUAL(entry.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY), 0.0);
+    VERIFY_IS_TRUE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY));
 
     // An empty id is a value of its own: it moves the host to every adapter
     update.NetworkAdapterId(winrt::guid{});
@@ -3279,6 +3526,59 @@ void MidiNetworkApiTests::TestHostUpdateConfigWritesOnlyWhatWasSet()
     VERIFY_IS_TRUE(entry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_ADAPTER_ID_KEY).empty());
     VERIFY_IS_TRUE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY));
     VERIFY_IS_FALSE(entry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY));
+}
+
+namespace
+{
+    // The client entry an update config sends, or nullptr
+    json::JsonObject UpdatedClientEntry(_In_ MidiNetworkClientUpdateConfig const& update)
+    {
+        for (auto const& transport : update.ConfigJson().GetNamedObject(L"endpointTransportPluginSettings"))
+        {
+            if (winrt::guid(transport.Key()) != MidiNetworkTransportManager::TransportId())
+            {
+                continue;
+            }
+
+            auto const clients = transport.Value().GetObject()
+                .GetNamedObject(MIDI_CONFIG_JSON_NETWORK_MIDI_UPDATE_ENTRIES_KEY)
+                .GetNamedObject(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY);
+
+            for (auto const& client : clients)
+            {
+                if (winrt::guid(client.Key()) == update.ClientId())
+                {
+                    return client.Value().GetObject();
+                }
+            }
+        }
+
+        return nullptr;
+    }
+}
+
+// The speed limit came later than the other client update properties, so a caller which sets only
+// those must not reset a limit the customer chose
+void MidiNetworkApiTests::TestClientUpdateConfigSendsTheSpeedLimitOnlyWhenSet()
+{
+    MidiNetworkClientUpdateConfig update(foundation::GuidHelper::CreateNewGuid());
+
+    update.FallbackMidi1PortCount(2);
+
+    auto entry = UpdatedClientEntry(update);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_IS_FALSE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY), L"a speed limit which was not set is not sent");
+    VERIFY_IS_FALSE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY));
+
+    update.SendSpeedLimit(MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes16);
+    update.ReduceSendSpeedAutomatically(true);
+
+    entry = UpdatedClientEntry(update);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_ARE_EQUAL(entry.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY, -1), 16.0, L"a speed limit which was set is sent as the multiple");
+    VERIFY_IS_TRUE(entry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false));
 }
 
 void MidiNetworkApiTests::TestSavedHostKeepsItsNetworkAdapter()

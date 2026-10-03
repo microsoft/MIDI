@@ -154,6 +154,13 @@ namespace midi2console
                     table.AddRowDetail(ResourceString(IDS_NET_LABEL_PENDING_APPROVAL), warningTextStyle);
                 }
 
+                // only differs from the host's own limit while it is slowed down after losses
+                if (connection.IsSessionActive() && connection.CurrentSendSpeedLimit() != host.SendSpeedLimit())
+                {
+                    table.AddRowDetail(FormatResourceString(IDS_NET_SEND_SPEED_SLOWED_FORMAT,
+                        FormatSendSpeedLimit(static_cast<uint32_t>(connection.CurrentSendSpeedLimit()))), warningTextStyle);
+                }
+
                 if (!connection.EndpointDeviceId().empty())
                 {
                     table.AddRowDetail(ToUtf8(connection.EndpointDeviceId()), endpointIdTextStyle);
@@ -207,6 +214,12 @@ namespace midi2console
                 ToUtf8(host.ProductInstanceId()), fieldValueTextStyle);
             WriteField(ResourceString(IDS_NET_LABEL_REMOTE_POLICY),
                 FormatRemoteClientPolicy(host.RemoteClientPolicy()), fieldValueTextStyle);
+
+            auto const sendSpeed = FormatSendSpeedLimit(static_cast<uint32_t>(host.SendSpeedLimit()));
+
+            WriteField(ResourceString(IDS_NET_LABEL_SEND_SPEED),
+                host.ReduceSendSpeedAutomatically() ? FormatResourceString(IDS_NET_SEND_SPEED_AUTOMATIC_FORMAT, sendSpeed) : sendSpeed,
+                fieldValueTextStyle);
 
             if (options.Verbose)
             {
@@ -289,6 +302,11 @@ namespace midi2console
                     table.AddRowDetail(problem, warningTextStyle);
                 }
             }
+            else if (client.CurrentSendSpeedLimit() != client.SendSpeedLimit())
+            {
+                table.AddRowDetail(FormatResourceString(IDS_NET_SEND_SPEED_SLOWED_FORMAT,
+                    FormatSendSpeedLimit(static_cast<uint32_t>(client.CurrentSendSpeedLimit()))), warningTextStyle);
+            }
 
             if (!client.EndpointDeviceId().empty())
             {
@@ -327,6 +345,12 @@ namespace midi2console
                 FormatAddressAndPort(client.ConnectedLocalAddress(), client.ConnectedLocalPort()), fieldValueTextStyle);
             WriteField(ResourceString(IDS_NET_LABEL_RETRANSMITS),
                 fmt::format("{} / {}", client.RetransmitCount(), client.RetransmitRequestCount()), numberTextStyle);
+
+            auto const sendSpeed = FormatSendSpeedLimit(static_cast<uint32_t>(client.SendSpeedLimit()));
+
+            WriteField(ResourceString(IDS_NET_LABEL_SEND_SPEED),
+                client.ReduceSendSpeedAutomatically() ? FormatResourceString(IDS_NET_SEND_SPEED_AUTOMATIC_FORMAT, sendSpeed) : sendSpeed,
+                fieldValueTextStyle);
         }
 
         return 0;

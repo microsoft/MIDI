@@ -30,6 +30,9 @@ Returned by `MidiNetworkTransportManager.GetConfiguredClients()`.
 | `TotalCountNetworkPacketsSent` | The total number of network packets sent on this connection |
 | `TotalCountNetworkPacketsReceived` | The total number of network packets received on this connection |
 | `LastErrorCode` | Why the last invitation didn't open a session, such as `NoReplyToInvitation` or `AuthenticationRequired`. `NoErrorInformationAvailable` once a session opens. See `MidiNetworkClientConnectErrorCode` |
+| `SendSpeedLimit` | How fast this PC is set up to send to the remote host. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |
+| `ReduceSendSpeedAutomatically` | True when the connection sends more slowly while the remote host keeps asking for data again |
+| `CurrentSendSpeedLimit` | How fast the connection is sending right now. It's lower than `SendSpeedLimit` while the connection has slowed down by itself, which is worth showing people |
 
 ## Remarks
 

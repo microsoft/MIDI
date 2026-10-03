@@ -360,6 +360,14 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             json::JsonValue::CreateNumberValue(FallbackMidi1PortCount()));
 
         hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<uint32_t>(SendSpeedLimit())));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
+            json::JsonValue::CreateBooleanValue(ReduceSendSpeedAutomatically()));
+
+        hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY,
             json::JsonValue::CreateBooleanValue(Advertise()));
 

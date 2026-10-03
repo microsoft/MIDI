@@ -25,6 +25,8 @@ Returned by `MidiRtpTransportManager.GetConfiguredHosts()`.
 | `AllowPortFallback` | True when the host was allowed to start on another port if the one it was set up with was in use |
 | `UsedPortFallback` | True when the host couldn't have the port it wanted, so it started on another one. For a host set to `auto`, that means port 5004 was already in use, often by other RTP-MIDI software on the same PC. The host works, but not on the port that was asked for, so it's worth showing people |
 | `SendRecoveryJournal` | True if the host sends a recovery journal with each packet |
+| `SendSpeedLimit` | How fast the host is set up to send to each connected device. See [MidiRtpSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpSendSpeedLimitEnum/) |
+| `CurrentSendSpeedLimit` | How fast the running host is sending. It's only different from `SendSpeedLimit` for a moment after a change |
 | `NetworkAdapterId` | The network adapter the host is limited to, or an empty GUID for every adapter |
 | `NetworkAdapterName` | That adapter's name, from when it was chosen |
 | `AllowNetworkAdapterFallback` | True when the host runs on every adapter while its own adapter is missing |

@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "midi_send_pacer.h"
+
 // Reads entries saved in the configuration file. The file can be edited by hand, so every read
 // checks the type first, and a value of the wrong type is treated as missing, as the service does.
 namespace MidiSavedConfigJson
@@ -180,6 +182,24 @@ namespace MidiSavedConfigJson
         }
 
         return static_cast<uint8_t>(number);
+    }
+
+    // A send speed limit, a multiple of MIDI 1.0 wire speed, read the way the network transports
+    // read it: 0 and anything faster than the fastest limit are no limit, and a value which is
+    // not a speed at all is treated as missing
+    inline uint32_t SendSpeedLimit(
+        _In_ json::JsonObject const& parent,
+        _In_ std::wstring_view const key,
+        _In_ uint32_t const defaultValue) noexcept
+    {
+        double number{ 0 };
+
+        if (!TryNumber(parent, key, number) || !(number >= 0))
+        {
+            return defaultValue;
+        }
+
+        return number > ::WindowsMidiServicesInternal::MidiSendSpeedMaxMultiple ? 0 : static_cast<uint32_t>(number);
     }
 
     // Digits only, as a port is written. False for anything else, including a value too large.

@@ -23,6 +23,8 @@ Returned by `MidiRtpTransportManager.GetConfiguredClients()`.
 | `AutoReconnect` | True if the service connects again whenever a try or a connection ends |
 | `IsEnabled` | True if the entry is turned on in the service |
 | `SendRecoveryJournal` | True if this PC sends a recovery journal with each packet |
+| `SendSpeedLimit` | How fast this PC is set up to send to the remote device. See [MidiRtpSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpSendSpeedLimitEnum/) |
+| `CurrentSendSpeedLimit` | How fast the running client is sending. It's only different from `SendSpeedLimit` for a moment after a change |
 | `LastErrorCode` | The HRESULT from the last try, or `0`. See the table below |
 | `Connection` | The [MidiRtpConnection]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpConnection/), or null when there isn't one |
 

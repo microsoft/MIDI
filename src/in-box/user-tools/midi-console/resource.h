@@ -806,3 +806,11 @@
 #define IDS_RTP_LABEL_TRANSPORT_ID                      52249
 #define IDS_RTP_LABEL_DECISION                          52250
 #define IDS_RTP_LABEL_REQUESTED                         52251
+
+// ---------------------------------------------------------------- send speed limit 52260
+#define IDS_NET_LABEL_SEND_SPEED                        52260
+#define IDS_NET_SEND_SPEED_UNLIMITED                    52261
+#define IDS_NET_SEND_SPEED_WIRE                         52262
+#define IDS_NET_SEND_SPEED_MULTIPLE_FORMAT              52263
+#define IDS_NET_SEND_SPEED_AUTOMATIC_FORMAT             52264
+#define IDS_NET_SEND_SPEED_SLOWED_FORMAT                52265

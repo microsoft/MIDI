@@ -385,6 +385,12 @@ Get-MidiNetworkAdvertisedHost |
 Connect-MidiNetworkHost -HostNameOrAddress 192.168.1.243 -Port 33327 -SaveToConfiguration
 ```
 
+For a device that loses data when a lot of it arrives at once, like a long SysEx dump, add `-SendSpeedLimit` with a speed such as `Midi1WireSpeed`, the speed of a MIDI 1.0 cable, or `Midi1WireSpeedTimes4`. A single message is never held back. Add `-ReduceSendSpeedAutomatically` to send more slowly while the device keeps asking for data again. See [Sending speed]({{ site.baseurl }}/kb/network-midi2-transport/#sending-speed).
+
+```pwsh
+Connect-MidiNetworkHost -HostNameOrAddress 192.168.1.243 -Port 33327 -SendSpeedLimit Midi1WireSpeedTimes4 -ReduceSendSpeedAutomatically
+```
+
 ### Disconnect-MidiNetworkHost
 
 Disconnects by client identifier, by the device id of the host it was matched to, or by address and port.
@@ -432,6 +438,8 @@ Get-MidiRtpAdvertisedHost |
 # connect to a fixed address
 Connect-MidiRtpHost -HostNameOrAddress 192.168.1.167 -Port 5006
 ```
+
+`-SendSpeedLimit` works the same way as for Network MIDI 2.0. RTP-MIDI devices can't say when they miss data, so there's no option to slow down by itself.
 
 ### Disconnect-MidiRtpHost
 

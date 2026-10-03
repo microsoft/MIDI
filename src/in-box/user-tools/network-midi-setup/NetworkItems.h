@@ -770,6 +770,10 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring NetworkAdapterName() const noexcept { return m_networkAdapterName; }
         bool AllowNetworkAdapterFallback() const noexcept { return m_allowNetworkAdapterFallback; }
 
+        winrt::hstring SendSpeedText() const noexcept { return m_sendSpeedText; }
+        uint32_t SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+
         bool IsBusy() const noexcept { return m_isBusy; }
         void IsBusy(bool const value) noexcept { UpdateField(m_isBusy, value, L"IsBusy"); }
 
@@ -856,6 +860,16 @@ namespace winrt::midinetworksetup::implementation
             }
         }
 
+        void InternalUpdateSendSpeed(
+            _In_ uint32_t const sendSpeedLimit,
+            _In_ bool const reduceSendSpeedAutomatically,
+            _In_ winrt::hstring const& sendSpeedText) noexcept
+        {
+            UpdateField(m_sendSpeedLimit, sendSpeedLimit, L"SendSpeedLimit");
+            UpdateField(m_reduceSendSpeedAutomatically, reduceSendSpeedAutomatically, L"ReduceSendSpeedAutomatically");
+            UpdateField(m_sendSpeedText, sendSpeedText, L"SendSpeedText");
+        }
+
         // the empty state placeholders are computed from the collections, so they only change
         // when something is added or removed
         void InternalRaiseEmptyStateChanged() noexcept
@@ -885,6 +899,10 @@ namespace winrt::midinetworksetup::implementation
         bool m_allowNetworkAdapterFallback{ true };
         winrt::hstring m_networkAdapterText{};
         winrt::hstring m_networkAdapterWarningText{};
+
+        winrt::hstring m_sendSpeedText{};
+        uint32_t m_sendSpeedLimit{ 0 };
+        bool m_reduceSendSpeedAutomatically{ false };
 
         winrt::Windows::Foundation::Collections::IObservableVector<midinetworksetup::HostConnectionItem> m_connections{
             winrt::single_threaded_observable_vector<midinetworksetup::HostConnectionItem>() };

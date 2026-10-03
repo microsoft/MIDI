@@ -590,6 +590,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NETWORK_ADAPTER_MISSING_KEY, false),
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NETWORK_ADAPTER_FALLBACK_USED_KEY, false));
 
+                            // an older service reports neither, which reads as no limit
+                            host->InternalSetSendSpeed(
+                                static_cast<network::MidiNetworkSendSpeedLimit>(static_cast<int32_t>(
+                                    entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SEND_SPEED_LIMIT_KEY, 0))),
+                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false));
+
                             // remote clients on this host. The service reports an empty array when
                             // nothing has connected, so an older service simply yields no entries.
                             if (entryObject.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONNECTIONS_ARRAY_KEY))
@@ -621,6 +627,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                         static_cast<uint32_t>(connectionObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY, 0)),
                                         static_cast<uint64_t>(connectionObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_NETWORK_PACKETS_SENT_KEY, 0)),
                                         static_cast<uint64_t>(connectionObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_NETWORK_PACKETS_RECEIVED_KEY, 0)));
+
+                                    connection->InternalSetCurrentSendSpeedLimit(
+                                        static_cast<network::MidiNetworkSendSpeedLimit>(static_cast<int32_t>(
+                                            connectionObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_CURRENT_SEND_SPEED_LIMIT_KEY, 0))));
 
                                     host->InternalAddConnection(*connection);
                                 }
@@ -742,6 +752,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                 static_cast<network::MidiNetworkClientConnectErrorCode>(static_cast<uint32_t>(
                                     entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LAST_ERROR_CODE_KEY, 0)))
                                 );
+
+                            auto const sendSpeedLimit = static_cast<network::MidiNetworkSendSpeedLimit>(static_cast<int32_t>(
+                                entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_SEND_SPEED_LIMIT_KEY, 0)));
+
+                            // only reported while the client is running
+                            client->InternalSetSendSpeed(
+                                sendSpeedLimit,
+                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false),
+                                static_cast<network::MidiNetworkSendSpeedLimit>(static_cast<int32_t>(
+                                    entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CURRENT_SEND_SPEED_LIMIT_KEY, static_cast<double>(sendSpeedLimit)))));
 
                             results.Append(*client);
                         }
@@ -1260,6 +1280,18 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             cmd.Arguments().Insert(
                 MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
                 creationConfig.CreateOnlyUmpEndpoints() ? L"false" : L"true");
+
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
+                winrt::to_hstring(static_cast<uint32_t>(creationConfig.FallbackMidi1PortCount())));
+
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY,
+                winrt::to_hstring(static_cast<int32_t>(creationConfig.SendSpeedLimit())));
+
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
+                creationConfig.ReduceSendSpeedAutomatically() ? L"true" : L"false");
 
             co_await winrt::resume_background();
 

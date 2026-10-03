@@ -668,6 +668,9 @@
     <Midl Include="MidiNetworkRemoteClientPolicyEnum.idl">
       <Filter>SDK\Transports\Network</Filter>
     </Midl>
+    <Midl Include="MidiNetworkSendSpeedLimitEnum.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
     <Midl Include="MidiBluetoothAddressTypeEnum.idl">
       <Filter>SDK\Transports\Bluetooth</Filter>
     </Midl>
@@ -921,6 +924,9 @@
       <Filter>SDK\Transports\Rtp</Filter>
     </Midl>
     <Midl Include="MidiRtpRemoteClientPolicyEnum.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpSendSpeedLimitEnum.idl">
       <Filter>SDK\Transports\Rtp</Filter>
     </Midl>
     <Midl Include="MidiRtpAdvertisedHost.idl">

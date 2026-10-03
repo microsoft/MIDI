@@ -11,6 +11,7 @@ import "MidiApiContracts.idl";
 
 import "MidiNetworkKnownRemoteClient.idl";
 import "MidiNetworkRemoteClientPolicyEnum.idl";
+import "MidiNetworkSendSpeedLimitEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
@@ -52,5 +53,9 @@ namespace Windows.Devices.Midi2.Transports.Network
         // Every saved allow and deny decision. To change one, save a
         // MidiNetworkHostKnownClientsConfig holding this whole list with the change made.
         [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkKnownRemoteClient> KnownRemoteClients{ get; };
+
+        // These include changes saved later with MidiNetworkHostUpdateConfig
+        [noexcept] MidiNetworkSendSpeedLimit SendSpeedLimit{ get; };
+        [noexcept] Boolean ReduceSendSpeedAutomatically{ get; };
     };
 }

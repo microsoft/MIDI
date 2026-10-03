@@ -80,3 +80,19 @@
 // Engine timer resolution. AppleMIDI timers are in hundreds of milliseconds, so this only has to
 // be fine enough for invitation retries and clock sync to be on time.
 #define MIDI_RTP_TICK_INTERVAL_MS                               10
+
+// With a send speed limit, a connection's queue holds about this much time at that speed before
+// senders wait for room, so a message sent behind a burst is not held up behind a long queue
+#define MIDI_RTP_SEND_QUEUE_PACED_MILLISECONDS                  100
+#define MIDI_RTP_SEND_QUEUE_PACED_MINIMUM_BYTES                 256
+
+// Without one, nothing stays in the queue for long, so this is only for safety
+#define MIDI_RTP_SEND_QUEUE_UNLIMITED_MAX_BYTES                 (256 * 1024)
+
+// A sender waits for room at most this long, then its messages are queued anyway. Kept under the
+// 1 second an app's side of the service pipe waits, so the app never sees a stall.
+#define MIDI_RTP_SEND_QUEUE_WAIT_LIMIT_MILLISECONDS             900
+#define MIDI_RTP_SEND_QUEUE_WAIT_SLICE_MILLISECONDS             50
+
+// Only reached when nothing is draining the queue. Messages past this are dropped, with a trace.
+#define MIDI_RTP_SEND_QUEUE_HARD_MAX_BYTES                      (1024 * 1024)

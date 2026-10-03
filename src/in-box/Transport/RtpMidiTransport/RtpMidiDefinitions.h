@@ -40,6 +40,10 @@ struct RtpMidiHostDefinition
     bool Enabled{ true };
     bool SendRecoveryJournal{ true };
 
+    // What this host sends to each remote, as a multiple of MIDI 1.0 wire speed. 0 is no limit.
+    // Changing it never restarts the host.
+    uint32_t SendSpeedLimit{ 0 };
+
     // Changing it never restarts the host, so connections already made stay up
     RtpMidiRemoteClientPolicy RemoteClientPolicy{ RtpMidiRemoteClientPolicy::AllowAny };
 
@@ -83,6 +87,10 @@ struct RtpMidiClientDefinition
     bool AutoReconnect{ true };
     bool Enabled{ true };
     bool SendRecoveryJournal{ true };
+
+    // What this PC sends to the remote, as a multiple of MIDI 1.0 wire speed. 0 is no limit.
+    // Changing it never drops the connection.
+    uint32_t SendSpeedLimit{ 0 };
 
     bool IsDirect() const noexcept { return !RemoteAddress.empty(); }
 };
@@ -257,6 +265,30 @@ namespace RtpMidiJson
         catch (...)
         {
             return false;
+        }
+    }
+
+    // A multiple of MIDI 1.0 wire speed. 0, anything faster than the fastest limit, and anything
+    // which is not a speed at all are no limit.
+    inline uint32_t GetSendSpeedLimit(
+        _In_ json::JsonObject const& parent,
+        _In_ std::wstring_view const key) noexcept
+    {
+        try
+        {
+            json::IJsonValue found{ nullptr };
+            if (!TryGetValue(parent, key, json::JsonValueType::Number, found)) return 0;
+
+            auto const number = found.GetNumber();
+
+            // also false for NaN
+            if (!(number >= 0) || number > WindowsMidiServicesInternal::MidiSendSpeedMaxMultiple) return 0;
+
+            return static_cast<uint32_t>(number);
+        }
+        catch (...)
+        {
+            return 0;
         }
     }
 

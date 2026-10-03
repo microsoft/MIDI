@@ -57,6 +57,8 @@ If you need to keep other devices off a host, put it on a network you control, o
 
 **MIDI 1.0 ports are created by default.** Alongside the modern UMP endpoint, Windows creates classic MIDI 1.0 ports so that older software, which does not understand the newer combined API, can use the device. Most apps today fall into that category. This applies in both directions: to devices this PC connects out to, and to devices that connect in to a host here. You can turn it off per entry if you only want the UMP endpoint.
 
+**A device that loses data can be sent to more slowly.** Some devices can't keep up when a lot of data arrives at once, like a long SysEx dump. Set a sending speed for the host or the device in Network MIDI Setup. A single note is never held back. See [Sending speed](#sending-speed).
+
 ---
 
 ## Details
@@ -111,7 +113,7 @@ A few rules apply to the whole file:
       "_comment": "Network MIDI 2.0 (UDP)",
       "transportSettings": {
         "maxForwardErrorCorrectionCommandPackets": 2,
-        "maxRetransmitBufferCommandPackets": 50,
+        "maxRetransmitBufferCommandPackets": 250,
         "outboundPingInterval": 2000,
         "invitationPendingTimeout": 120000,
         "maxHostConnections": 64,
@@ -132,6 +134,8 @@ A few rules apply to the whole file:
             "remoteClientPolicy": "requireApproval",
             "createMidi1Ports": true,
             "fallbackMidi1PortCount": 1,
+            "sendSpeedLimit": 0,
+            "reduceSendSpeedAutomatically": false,
             "allowedClients": [
               { "umpEndpointName": "Bome BomeBox", "productInstanceId": "kb7C5D0A_1" }
             ],
@@ -143,6 +147,8 @@ A few rules apply to the whole file:
             "networkProtocol": "udp",
             "createMidi1Ports": true,
             "fallbackMidi1PortCount": 1,
+            "sendSpeedLimit": 4,
+            "reduceSendSpeedAutomatically": true,
             "match": {
               "directHostNameOrIP": "192.168.1.253",
               "directPort": "5004"
@@ -162,7 +168,7 @@ These apply to the transport as a whole rather than to one host or client.
 | Key | Default | Range | When it takes effect |
 |---|---|---|---|
 | `maxForwardErrorCorrectionCommandPackets` | 2 | 0 – 10 | New connections |
-| `maxRetransmitBufferCommandPackets` | 50 | 0 – 1000 | New connections |
+| `maxRetransmitBufferCommandPackets` | 250 | 0 – 1000 | New connections |
 | `outboundPingInterval` | 2000 ms | 250 – 120000 | Within one interval, including open sessions |
 | `invitationPendingTimeout` | 120000 ms | 1000 – 600000 | Invitations from that point on |
 | `maxHostConnections` | 64 | 1 – 512 | Immediately, checked per invitation |
@@ -175,6 +181,8 @@ Two behaviors are worth knowing:
 **Sending a partial `transportSettings` object resets the keys you left out.** Parsing starts from the defaults each time; it is not a merge. Read the current settings, change what you need, and send the whole object back.
 
 Lowering `maxHostConnections` does not disconnect clients that are already connected.
+
+`maxRetransmitBufferCommandPackets` is how many recent packets each connection keeps, so it can send one again when the other device missed it. Each connection also keeps no more than 256 KB of them, so a connection sending large SysEx keeps fewer.
 
 ### Host entries
 
@@ -192,6 +200,8 @@ Lowering `maxHostConnections` does not disconnect clients that are already conne
 | `remoteClientPolicy` | string | `"allowAny"` or `"requireApproval"` |
 | `createMidi1Ports` | boolean | Default true. Create classic MIDI 1.0 ports for connected devices |
 | `fallbackMidi1PortCount` | number | Default 1, range 1 – 16. Source and destination ports to create for a device that declares no function blocks. See [MIDI 1.0 ports](#midi-10-ports) |
+| `sendSpeedLimit` | number | Default 0, no limit. How fast this host sends to each connected device, as a multiple of MIDI 1.0 wire speed: 1, 2, 4, 8, 16 or 32. See [Sending speed](#sending-speed) |
+| `reduceSendSpeedAutomatically` | boolean | Default false. Send more slowly while a device keeps asking for data again. See [Slowing down by itself](#slowing-down-by-itself) |
 | `allowedClients` | array | Identity objects that may connect without asking |
 | `deniedClients` | array | Identity objects that are refused without asking |
 
@@ -204,6 +214,8 @@ A client identity is `{ "umpEndpointName": "...", "productInstanceId": "..." }`.
 | `networkProtocol` | string | Only `"udp"` |
 | `createMidi1Ports` | boolean | Default true. Create classic MIDI 1.0 ports for this device |
 | `fallbackMidi1PortCount` | number | Default 1, range 1 – 16. Source and destination ports to create when the device declares no function blocks. See [MIDI 1.0 ports](#midi-10-ports) |
+| `sendSpeedLimit` | number | Default 0, no limit. How fast this PC sends to the device, as a multiple of MIDI 1.0 wire speed: 1, 2, 4, 8, 16 or 32. See [Sending speed](#sending-speed) |
+| `reduceSendSpeedAutomatically` | boolean | Default false. Send more slowly while the device keeps asking for data again. See [Slowing down by itself](#slowing-down-by-itself) |
 | `match` | object | How to find the device |
 
 `match` carries either an advertised identity or a direct address:
@@ -242,6 +254,36 @@ Two things behave differently when you change them:
 | `createMidi1Ports` | The next time the endpoint is created, so disconnect and reconnect, or restart the service |
 
 The difference is not arbitrary. Whether an endpoint has MIDI 1.0 ports at all is settled when the endpoint is built and cannot be changed underneath a running one; how many ports it has is driven by properties the service watches, so that can be rewritten live.
+
+## Sending speed
+
+Some devices lose data when a lot of it arrives at once. A hardware synth taking a long SysEx dump, or a network to DIN bridge with a small buffer, may have been built for the speed of a MIDI 1.0 cable. A network is many times faster than that.
+
+Every host and every client entry has a sending speed. It limits how fast this PC sends to the other device. It doesn't change what this PC receives.
+
+| `sendSpeedLimit` | Speed |
+|---|---|
+| `0` | No limit. This is the default |
+| `1` | MIDI 1.0 wire speed: 31,250 bits a second, the speed of a DIN cable |
+| `2`, `4`, `8`, `16`, `32` | That many times MIDI 1.0 wire speed. `32` is about 1 megabit a second |
+
+A number above 32 means no limit. The speed is measured in the bytes the same messages would take on a MIDI 1.0 cable, so at `1` a SysEx dump takes about as long as it would over a cable.
+
+**A single message is never held back.** After a quiet moment, a short burst goes out at once: 64 bytes at wire speed, and 64 more for each step up. Only what comes after that is spaced out. So somebody playing a keyboard won't notice a limit, while a 3,000 byte SysEx dump at wire speed takes about a second, as it would on a cable.
+
+**Nothing is dropped to keep to the limit.** Windows holds the extra messages and sends them as fast as the limit allows. If an app keeps sending faster than that, its sends slow down to match.
+
+**A change applies right away**, including to connections that are already up, without disconnecting them.
+
+### Slowing down by itself
+
+When a device misses a packet, it asks for it again. With `reduceSendSpeedAutomatically` turned on, Windows takes that as a sign the device can't keep up:
+
+- Each time the device asks again, the connection halves its speed, down to MIDI 1.0 wire speed. A connection with no limit drops to 32 times wire speed first. Requests that arrive together count once.
+- After 10 seconds without a request, it tries the next speed up, until it's back to `sendSpeedLimit`.
+- If the faster speed causes trouble again, it waits twice as long before the next try, up to about 5 minutes. After 10 minutes without trouble, it goes back to waiting 10 seconds.
+
+Each connection keeps its own speed. Network MIDI Setup shows when a connection has slowed down, and so does `CurrentSendSpeedLimit` in the API.
 
 ## Network adapters
 

@@ -84,6 +84,8 @@ MidiNetworkHost::Initialize(
 
     m_createUmpEndpointsOnly = !hostDefinition.CreateMidi1Ports;
     m_fallbackMidi1PortCount = hostDefinition.FallbackMidi1PortCount;
+    m_sendSpeedLimit = hostDefinition.SendSpeedLimit;
+    m_reduceSendSpeedAutomatically = hostDefinition.ReduceSendSpeedAutomatically;
 
     m_hostEndpointName = hostDefinition.UmpEndpointName;
     m_hostProductInstanceId = hostDefinition.ProductInstanceId;
@@ -324,6 +326,8 @@ MidiNetworkHost::CreateNetworkConnection(
             m_createUmpEndpointsOnly,
             m_fallbackMidi1PortCount
         ));
+
+        conn->SetSendSpeedLimit(m_sendSpeedLimit, m_reduceSendSpeedAutomatically);
 
         // Another thread pool thread may have created one for this same remote while we were
         // initializing. Whichever landed in the map first wins, and the loser is torn down.

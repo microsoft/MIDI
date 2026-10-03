@@ -38,6 +38,11 @@ struct MidiNetworkClientDefinition
     // Only used when the remote declares no function blocks. See the constant for why.
     uint8_t FallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
 
+    // What this client sends to the remote host, as a multiple of MIDI 1.0 wire speed. 0 is no
+    // limit. See MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY.
+    uint32_t SendSpeedLimit{ 0 };
+    bool ReduceSendSpeedAutomatically{ false };
+
 
     // protocol
 //    MidiNetworkHostProtocol NetworkProtocol{ MidiNetworkHostProtocol::ProtocolDefault };
@@ -100,6 +105,17 @@ public:
     // place by the configuration manager.
     void SetFallbackMidi1PortCount(_In_ uint8_t const value) noexcept { m_fallbackMidi1PortCount = value; }
 
+    // Used the next time this client builds a connection. A connection already up is updated in
+    // place by the configuration manager.
+    void SetSendSpeedLimit(_In_ uint32_t const speedMultiple, _In_ bool const reduceAutomatically) noexcept
+    {
+        m_sendSpeedLimit = speedMultiple;
+        m_reduceSendSpeedAutomatically = reduceAutomatically;
+    }
+
+    // What the connection sends at right now, which automatic reduction may have lowered
+    uint32_t GetCurrentSendSpeedLimit() { auto conn = GetConnection(); return conn ? conn->GetCurrentSendSpeedLimit() : m_sendSpeedLimit.load(); }
+
     winrt::hstring RemoteAddress() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().RemoteAddress().DisplayName() : L""; }
     winrt::hstring RemotePort() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().RemotePort() : L""; }
 
@@ -143,6 +159,8 @@ private:
 
     bool m_createUmpEndpointsOnly{ true };
     uint8_t m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
+    std::atomic<uint32_t> m_sendSpeedLimit{ 0 };
+    std::atomic<bool> m_reduceSendSpeedAutomatically{ false };
 
     wil::critical_section m_connectionLock;
     std::shared_ptr<MidiNetworkClientConnection> m_networkConnection{ nullptr };

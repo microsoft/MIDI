@@ -71,6 +71,14 @@ public:
 
     bool SendMidi(_In_ uint32_t const participantId, _In_reads_(count) uint8_t const* bytes, _In_ size_t const count);
 
+    // Everything this node sends, as a multiple of MIDI 1.0 wire speed, 0 for no limit. Takes
+    // effect from the next message, without dropping a connection.
+    void SetSendSpeedLimit(_In_ uint32_t const speedMultiple) noexcept;
+    uint32_t SendSpeedLimit() const noexcept { return m_sendSpeedLimit.load(); }
+
+    // A connection has messages waiting for the speed limit. The timer thread sends them.
+    void WakeForPacedSend() noexcept;
+
     std::vector<RtpMidi::Participant> Snapshot();
     bool TrySnapshot(_In_ uint32_t const participantId, _Out_ RtpMidi::Participant& snapshot);
     std::vector<std::shared_ptr<RtpMidiConnection>> Connections();
@@ -116,6 +124,11 @@ private:
 
     void OnDatagram(_In_ bool const isControlPort, _In_ RtpMidi::PeerAddress const& from, _In_reads_(size) uint8_t const* data, _In_ size_t const size);
     void TickLoop(_In_ std::stop_token stopToken);
+
+    // What each connection's speed limit lets go now. MIDI timestamp ticks until more may go, or
+    // 0 when nothing is waiting.
+    uint64_t SendPacedMidi();
+    void ArmPacedSendTimer(_In_ uint64_t const ticks) noexcept;
     void DeliverPending();
     std::shared_ptr<RtpMidiConnection> FindConnection(_In_ uint32_t const participantId);
 
@@ -142,5 +155,13 @@ private:
     bool m_usedPortFallback{ false };
     std::atomic<bool> m_advertised{ false };
     std::atomic<bool> m_running{ false };
+
+    std::atomic<uint32_t> m_sendSpeedLimit{ 0 };
+
+    // Wake the timer thread early: for a stop, or for messages waiting on the speed limit.
+    // Declared before the thread, so they outlive it.
+    wil::unique_event_nothrow m_tickWakeEvent;
+    wil::unique_handle m_pacedSendTimer;
+
     std::jthread m_ticker;
 };

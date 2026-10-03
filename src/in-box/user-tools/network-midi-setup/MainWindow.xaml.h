@@ -82,6 +82,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::fire_and_forget OnStartStopHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnDeleteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnChangeHostAdapterClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnChangeHostSendSpeedClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         winrt::fire_and_forget OnDisconnectRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnBlockRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -106,10 +107,14 @@ namespace winrt::midinetworksetup::implementation
         winrt::fire_and_forget OnStartStopRtpHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnDeleteRtpHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnChangeRtpHostAdapterClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnChangeRtpHostSendSpeedClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         winrt::fire_and_forget OnDisconnectRtpRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnBlockRtpRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnForgetRtpKnownClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        // A send speed limit as the customer reads it. 0 is no limit.
+        static winrt::hstring SendSpeedLimitText(_In_ uint32_t const multiple) noexcept;
 
     private:
         // everything the service knows, gathered off the UI thread in one pass
@@ -220,6 +225,23 @@ namespace winrt::midinetworksetup::implementation
         // Asks which network adapter a host should use. True when the customer saved a change,
         // which is then read from the dialog's controls. By value, because this is a coroutine.
         foundation::IAsyncOperation<bool> ShowChangeHostAdapterDialogAsync(_In_ midinetworksetup::LocalHostItem const item);
+
+        // Asks how fast a host should send. True when the customer saved a change, which is then
+        // read from the dialog's controls. RTP-MIDI cannot tell that a device missed data, so it
+        // does not offer to slow down by itself.
+        foundation::IAsyncOperation<bool> ShowChangeSendSpeedDialogAsync(
+            _In_ midinetworksetup::LocalHostItem const item,
+            _In_ bool const offerReduceAutomatically);
+
+        // RTP-MIDI has no verb for changing a host, so this creates it again with the same id and
+        // the given adapter and speed, copying everything else from what was saved.
+        winrt::fire_and_forget ReplaceRtpHostAsync(
+            _In_ midinetworksetup::LocalHostItem const item,
+            _In_ winrt::guid const hostId,
+            _In_ winrt::guid const adapterId,
+            _In_ bool const allowAdapterFallback,
+            _In_ uint32_t const sendSpeedLimit,
+            _In_ winrt::hstring const doneMessage);
 
         winrt::fire_and_forget AnswerInvitationAsync(            midinetworksetup::PendingInvitationItem const item,
             bool const approve,

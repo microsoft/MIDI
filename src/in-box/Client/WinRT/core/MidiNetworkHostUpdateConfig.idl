@@ -12,6 +12,7 @@ import "MidiApiContracts.idl";
 
 
 import "IMidiServiceTransportPluginConfig.idl";
+import "MidiNetworkSendSpeedLimitEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
@@ -49,5 +50,13 @@ namespace Windows.Devices.Midi2.Transports.Network
 
         // When the adapter is missing: run on every adapter until it is back, or wait for it
         [noexcept] Boolean AllowNetworkAdapterFallback;
+
+        // How fast the host sends to each remote client. Applied straight away to the remote
+        // clients already connected, without dropping them.
+        [noexcept] MidiNetworkSendSpeedLimit SendSpeedLimit;
+
+        // Send more slowly while a remote client keeps asking for data again. Applied straight
+        // away, without dropping a connection.
+        [noexcept] Boolean ReduceSendSpeedAutomatically;
     }
 }

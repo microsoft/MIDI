@@ -530,6 +530,9 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
             auto& runtime = m_hosts[definition.EntryId];
             runtime.Definition = definition;
 
+            // applies to a running host straight away, without dropping its connections
+            if (runtime.Node != nullptr) runtime.Node->SetSendSpeedLimit(definition.SendSpeedLimit);
+
             if (!definition.Enabled || runtime.Node != nullptr)
             {
                 if (runtime.WaitingForNetworkAdapter)
@@ -588,6 +591,8 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
 
         auto node = std::make_shared<RtpMidiNode>(
             RtpMidiNode::Role::Host, definition.EntryId, definition.Name, definition.SendRecoveryJournal, this);
+
+        node->SetSendSpeedLimit(definition.SendSpeedLimit);
 
         node->SetAdmissionCheck([hostId = definition.EntryId](std::wstring const& remoteName, std::wstring const& remoteAddress)
             {
@@ -708,6 +713,9 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
             auto& runtime = m_clients[definition.EntryId];
             runtime.Definition = definition;
 
+            // applies to a running client straight away, without dropping its connection
+            if (runtime.Node != nullptr) runtime.Node->SetSendSpeedLimit(definition.SendSpeedLimit);
+
             if (!definition.Enabled) continue;
             if (runtime.State == ClientEntryState::Live || runtime.State == ClientEntryState::Unavailable) continue;
             if (runtime.InvitationOutstanding || now < runtime.NextAttemptTick) continue;
@@ -759,6 +767,8 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
         {
             node = std::make_shared<RtpMidiNode>(
                 RtpMidiNode::Role::Client, definition.EntryId, definition.Name, definition.SendRecoveryJournal, this);
+
+            node->SetSendSpeedLimit(definition.SendSpeedLimit);
 
             std::vector<std::pair<uint16_t, uint16_t>> const ranges
             {
@@ -1588,10 +1598,13 @@ CMidi2RtpMidiEndpointManager::BuildHostsStatusJson()
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ADVERTISE_KEY, JsonBoolean(definition.Advertise));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ALLOW_PORT_FALLBACK_KEY, JsonBoolean(definition.AllowPortFallback));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, JsonBoolean(definition.SendRecoveryJournal));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY, JsonNumber(definition.SendSpeedLimit));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CONFIGURED_PORT_KEY,
             JsonString(definition.Port == 0 ? std::wstring{ MIDI_CONFIG_JSON_RTP_MIDI_PORT_VALUE_AUTO } : std::to_wstring(definition.Port)));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_HAS_STARTED_KEY, JsonBoolean(running));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_LAST_ERROR_KEY, JsonHresult(view.LastError));
+
+        if (running) item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CURRENT_SEND_SPEED_LIMIT_KEY, JsonNumber(view.Node->SendSpeedLimit()));
 
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_ID_KEY, JsonString(WindowsMidiServicesInternal::MidiNetworkAdapterIdToString(definition.NetworkAdapterId)));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_NETWORK_ADAPTER_NAME_KEY, JsonString(definition.NetworkAdapterName));
@@ -1697,10 +1710,12 @@ CMidi2RtpMidiEndpointManager::BuildClientsStatusJson()
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_AUTO_RECONNECT_KEY, JsonBoolean(definition.AutoReconnect));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ENABLED_KEY, JsonBoolean(definition.Enabled));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, JsonBoolean(definition.SendRecoveryJournal));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY, JsonNumber(definition.SendSpeedLimit));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ENTRY_STATE_KEY, JsonString(state));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_LAST_ERROR_KEY, JsonHresult(view.LastError));
 
         if (running) item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_LOCAL_PORT_KEY, JsonNumber(view.Node->ControlPort()));
+        if (running) item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CURRENT_SEND_SPEED_LIMIT_KEY, JsonNumber(view.Node->SendSpeedLimit()));
 
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CONNECTIONS_KEY, running ? BuildConnectionsJson(view.Node) : json::JsonArray{});
 

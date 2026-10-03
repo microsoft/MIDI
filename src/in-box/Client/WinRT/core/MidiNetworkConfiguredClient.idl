@@ -11,6 +11,7 @@ import "MidiApiContracts.idl";
 
 import "MidiNetworkClientEntryStateEnum.idl";
 import "MidiNetworkClientConnectErrorCodeEnum.idl";
+import "MidiNetworkSendSpeedLimitEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
@@ -52,6 +53,14 @@ namespace Windows.Devices.Midi2.Transports.Network
         // Why the last invitation did not open a session, such as NoReplyToInvitation or
         // AuthenticationRequired. NoErrorInformationAvailable once a session opens.
         [noexcept] MidiNetworkClientConnectErrorCode LastErrorCode{ get; };
+
+        // What the entry is configured to send at
+        [noexcept] MidiNetworkSendSpeedLimit SendSpeedLimit{ get; };
+        [noexcept] Boolean ReduceSendSpeedAutomatically{ get; };
+
+        // What the connection sends at right now. Lower than SendSpeedLimit while
+        // ReduceSendSpeedAutomatically has slowed it down.
+        [noexcept] MidiNetworkSendSpeedLimit CurrentSendSpeedLimit{ get; };
 
     };
 }

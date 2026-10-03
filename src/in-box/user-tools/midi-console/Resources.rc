@@ -773,6 +773,15 @@ IDS_RTP_LABEL_TRANSPORT_ID                  L"Transport Id"
 IDS_RTP_LABEL_DECISION                      L"Decision"
 IDS_RTP_LABEL_REQUESTED                     L"Asked At"
 
+// ---- send speed limit, Network MIDI 2.0 and RTP-MIDI
+
+IDS_NET_LABEL_SEND_SPEED                    L"Sending Speed"
+IDS_NET_SEND_SPEED_UNLIMITED                L"Unlimited"
+IDS_NET_SEND_SPEED_WIRE                     L"MIDI 1.0 wire speed"
+IDS_NET_SEND_SPEED_MULTIPLE_FORMAT          L"{0}x MIDI 1.0 wire speed"
+IDS_NET_SEND_SPEED_AUTOMATIC_FORMAT         L"{0}, and slows down when a device misses data"
+IDS_NET_SEND_SPEED_SLOWED_FORMAT            L"Sending at {0} for now, because it missed data."
+
 // ---- bluetooth status
 
 IDS_CMD_BT_STATUS                           L"Report the state of the Bluetooth radio and the MIDI Bluetooth transport"

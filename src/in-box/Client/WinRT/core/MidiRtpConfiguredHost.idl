@@ -12,6 +12,7 @@ import "MidiApiContracts.idl";
 import "MidiRtpConnection.idl";
 import "MidiRtpKnownRemoteClient.idl";
 import "MidiRtpRemoteClientPolicyEnum.idl";
+import "MidiRtpSendSpeedLimitEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Rtp
 {
@@ -73,5 +74,10 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         [noexcept] Int32 LastErrorCode{ get; };
 
         [noexcept] Windows.Foundation.Collections.IVectorView<MidiRtpConnection> Connections{ get; };
+
+        // What the host is configured to send at, and what the running host is using. They
+        // differ only for a moment after a change.
+        [noexcept] MidiRtpSendSpeedLimit SendSpeedLimit{ get; };
+        [noexcept] MidiRtpSendSpeedLimit CurrentSendSpeedLimit{ get; };
     }
 }

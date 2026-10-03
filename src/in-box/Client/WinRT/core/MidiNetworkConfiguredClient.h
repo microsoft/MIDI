@@ -41,6 +41,20 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         network::MidiNetworkClientConnectErrorCode LastErrorCode() const noexcept { return m_lastErrorCode; }
 
+        network::MidiNetworkSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+        network::MidiNetworkSendSpeedLimit CurrentSendSpeedLimit() const noexcept { return m_currentSendSpeedLimit; }
+
+        void InternalSetSendSpeed(
+            _In_ network::MidiNetworkSendSpeedLimit const sendSpeedLimit,
+            _In_ bool const reduceSendSpeedAutomatically,
+            _In_ network::MidiNetworkSendSpeedLimit const currentSendSpeedLimit) noexcept
+        {
+            m_sendSpeedLimit = sendSpeedLimit;
+            m_reduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
+            m_currentSendSpeedLimit = currentSendSpeedLimit;
+        }
+
 
         void InternalInitialize(
             _In_ winrt::guid const& clientId,
@@ -108,5 +122,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring m_matchDeviceId{};
 
         network::MidiNetworkClientConnectErrorCode m_lastErrorCode{ network::MidiNetworkClientConnectErrorCode::NoErrorInformationAvailable };
+
+        network::MidiNetworkSendSpeedLimit m_sendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
+        bool m_reduceSendSpeedAutomatically{ false };
+        network::MidiNetworkSendSpeedLimit m_currentSendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
     };
 }

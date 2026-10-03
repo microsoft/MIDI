@@ -21,7 +21,7 @@ This class implements [IMidiServiceTransportPluginConfig]({{ site.baseurl }}/sdk
 | Property | Default | Range | When a change takes effect |
 | -------- | ------- | ----- | -------------------------- |
 | `MaxForwardErrorCorrectionCommandPackets` | 2 | 0 – 10 | Read when a connection is created, so existing sessions pick it up only when they reconnect |
-| `MaxRetransmitBufferCommandPackets` | 50 | 0 – 1000 | Read when a connection is created |
+| `MaxRetransmitBufferCommandPackets` | 250 | 0 – 1000 | Read when a connection is created |
 | `OutboundPingIntervalMilliseconds` | 2000 | 250 – 120000 | Read on each pass of the connection watcher, so it reaches open sessions within one interval |
 | `InvitationPendingTimeoutMilliseconds` | 120000 | 1000 – 600000 | Applies to invitations from that point on |
 | `MaxHostConnections` | 64 | 1 – 512 | Immediately. Checked as each invitation arrives |

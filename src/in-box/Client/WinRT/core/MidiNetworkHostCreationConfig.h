@@ -77,6 +77,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         network::MidiNetworkAuthenticationType AuthenticationType() noexcept { return m_authenticationType; }
         void AuthenticationType(_In_ network::MidiNetworkAuthenticationType const& value) noexcept { m_authenticationType = value; }
 
+        network::MidiNetworkSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        void SendSpeedLimit(_In_ network::MidiNetworkSendSpeedLimit const& value) noexcept { m_sendSpeedLimit = value; }
+
+        bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+        void ReduceSendSpeedAutomatically(_In_ bool const value) noexcept { m_reduceSendSpeedAutomatically = value; }
+
 
     private:
         winrt::guid m_id{ foundation::GuidHelper::CreateNewGuid() };
@@ -102,6 +108,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         network::MidiNetworkRemoteClientPolicy m_remoteClientPolicy{ network::MidiNetworkRemoteClientPolicy::AllowAny };
 
         network::MidiNetworkAuthenticationType m_authenticationType{ network::MidiNetworkAuthenticationType::NoAuthentication };
+
+        network::MidiNetworkSendSpeedLimit m_sendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
+        bool m_reduceSendSpeedAutomatically{ false };
 
         //collections::IVector<winrt::Windows::Networking::HostName> m_allowedClientConnectionList{
         //    winrt::multi_threaded_vector<winrt::Windows::Networking::HostName>() };

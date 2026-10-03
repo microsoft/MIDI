@@ -228,6 +228,7 @@ void MidiRtpApiTests::TestHostCreationConfigDefaults()
     VERIFY_IS_TRUE(first.Advertise());
     VERIFY_IS_TRUE(first.RemoteClientPolicy() == MidiRtpRemoteClientPolicy::AllowAny, L"the same default as Network MIDI 2.0");
     VERIFY_IS_TRUE(first.SendRecoveryJournal());
+    VERIFY_IS_TRUE(first.SendSpeedLimit() == MidiRtpSendSpeedLimit::Unlimited, L"no speed limit unless set");
 
     MidiRtpClientConnectConfig client;
 
@@ -235,6 +236,7 @@ void MidiRtpApiTests::TestHostCreationConfigDefaults()
     VERIFY_IS_TRUE(client.MatchCriteria() == nullptr);
     VERIFY_IS_TRUE(client.AutoReconnect());
     VERIFY_IS_TRUE(client.SendRecoveryJournal());
+    VERIFY_IS_TRUE(client.SendSpeedLimit() == MidiRtpSendSpeedLimit::Unlimited);
 
     MidiRtpClientMatchCriteria match;
     VERIFY_IS_TRUE(match.DirectPort() == 5004, L"the port RTP-MIDI devices use unless told otherwise");
@@ -254,6 +256,7 @@ void MidiRtpApiTests::TestHostCreationConfigJson()
     VERIFY_IS_TRUE(host.GetNamedBoolean(L"enabled"));
     VERIFY_IS_TRUE(host.GetNamedBoolean(L"sendRecoveryJournal"));
     VERIFY_IS_TRUE(std::wstring{ host.GetNamedString(L"remoteClientPolicy") } == L"allowAny");
+    VERIFY_ARE_EQUAL(host.GetNamedNumber(L"sendSpeedLimit", -1), 0.0, L"unlimited");
 
     config.Name(L"  Studio PC  ");
     config.ServiceInstanceName(L"Studio");
@@ -261,6 +264,7 @@ void MidiRtpApiTests::TestHostCreationConfigJson()
     config.ManuallyAssignedPort(5010);
     config.Advertise(false);
     config.RemoteClientPolicy(MidiRtpRemoteClientPolicy::RequireApproval);
+    config.SendSpeedLimit(MidiRtpSendSpeedLimit::Midi1WireSpeedTimes8);
 
     host = OnlyEntry(TransportSection(config.ConfigJson()).GetNamedObject(L"create").GetNamedObject(L"hosts"), config.HostId());
 
@@ -269,6 +273,7 @@ void MidiRtpApiTests::TestHostCreationConfigJson()
     VERIFY_IS_TRUE(std::wstring{ host.GetNamedString(L"port") } == L"5010");
     VERIFY_IS_FALSE(host.GetNamedBoolean(L"advertise"));
     VERIFY_IS_TRUE(std::wstring{ host.GetNamedString(L"remoteClientPolicy") } == L"requireApproval");
+    VERIFY_ARE_EQUAL(host.GetNamedNumber(L"sendSpeedLimit", -1), 8.0, L"the speed limit is written as the multiple");
 }
 
 void MidiRtpApiTests::TestClientConnectConfigJson()
@@ -290,6 +295,7 @@ void MidiRtpApiTests::TestClientConnectConfigJson()
     VERIFY_IS_TRUE(std::wstring{ client.GetNamedString(L"customEndpointName") } == L"Mac");
     VERIFY_IS_TRUE(client.GetNamedBoolean(L"autoReconnect"));
     VERIFY_IS_TRUE(client.GetNamedBoolean(L"enabled"));
+    VERIFY_ARE_EQUAL(client.GetNamedNumber(L"sendSpeedLimit", -1), 0.0, L"unlimited");
 
     MidiRtpClientMatchCriteria direct;
     direct.DirectHostNameOrIPAddress(L" 192.168.1.20 ");
@@ -297,6 +303,7 @@ void MidiRtpApiTests::TestClientConnectConfigJson()
 
     config.MatchCriteria(direct);
     config.AutoReconnect(false);
+    config.SendSpeedLimit(MidiRtpSendSpeedLimit::Midi1WireSpeed);
 
     client = OnlyEntry(TransportSection(config.ConfigJson()).GetNamedObject(L"create").GetNamedObject(L"clients"), config.ClientId());
 
@@ -304,6 +311,7 @@ void MidiRtpApiTests::TestClientConnectConfigJson()
     VERIFY_IS_TRUE(std::wstring{ client.GetNamedString(L"remoteAddress") } == L"192.168.1.20", L"trimmed");
     VERIFY_IS_TRUE(client.GetNamedNumber(L"remotePort") == 5008.0);
     VERIFY_IS_FALSE(client.GetNamedBoolean(L"autoReconnect"));
+    VERIFY_ARE_EQUAL(client.GetNamedNumber(L"sendSpeedLimit", -1), 1.0, L"MIDI 1.0 wire speed");
 }
 
 void MidiRtpApiTests::TestRemovalConfigJson()
@@ -442,6 +450,53 @@ void MidiRtpApiTests::TestHostWithNoNameUsesThisPcName()
     auto const expected = ThisPcName();
     VERIFY_IS_FALSE(expected.empty());
     VERIFY_IS_TRUE(std::wstring{ host.Name() } == expected, String().Format(L"host name '%s', PC name '%s'", host.Name().c_str(), expected.c_str()));
+}
+
+void MidiRtpApiTests::TestHostSendSpeedLimitChangesWhileRunning()
+{
+    SKIP_IF_NO_RTP_TRANSPORT();
+
+    MidiRtpHostCreationConfig config;
+    config.Name(winrt::hstring{ std::wstring{ TestHostNamePrefix } + L"Speed" });
+    config.Advertise(false);
+    config.SendSpeedLimit(MidiRtpSendSpeedLimit::Midi1WireSpeedTimes4);
+
+    auto const created = MidiRtpTransportManager::CreateRtpHostAsync(config).get();
+    if (created.Success()) m_createdHosts.push_back(config.HostId());
+
+    VERIFY_IS_TRUE(created.Success(), created.ErrorMessage().c_str());
+
+    auto host = FindHost(config.HostId());
+    VERIFY_IS_TRUE(host != nullptr);
+
+    if (host == nullptr) return;
+
+    VERIFY_IS_TRUE(host.HasStarted());
+    VERIFY_IS_TRUE(host.SendSpeedLimit() == MidiRtpSendSpeedLimit::Midi1WireSpeedTimes4, L"the host reports its limit");
+    VERIFY_IS_TRUE(host.CurrentSendSpeedLimit() == MidiRtpSendSpeedLimit::Midi1WireSpeedTimes4, L"and is sending at it");
+
+    auto const port = host.ActualPort();
+
+    // a create for the same id replaces the entry
+    config.SendSpeedLimit(MidiRtpSendSpeedLimit::Midi1WireSpeed);
+
+    auto const changed = MidiRtpTransportManager::CreateRtpHostAsync(config).get();
+    VERIFY_IS_TRUE(changed.Success(), changed.ErrorMessage().c_str());
+
+    VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]()
+        {
+            auto const h = FindHost(config.HostId());
+            return h != nullptr && h.CurrentSendSpeedLimit() == MidiRtpSendSpeedLimit::Midi1WireSpeed;
+        }, ServiceWaitMilliseconds), L"the new limit applies");
+
+    host = FindHost(config.HostId());
+    VERIFY_IS_TRUE(host != nullptr);
+
+    if (host == nullptr) return;
+
+    VERIFY_IS_TRUE(host.SendSpeedLimit() == MidiRtpSendSpeedLimit::Midi1WireSpeed);
+    VERIFY_IS_TRUE(host.HasStarted());
+    VERIFY_ARE_EQUAL(host.ActualPort(), port, L"without restarting the host");
 }
 
 void MidiRtpApiTests::TestEntriesWhichDoNotExistAreReported()
@@ -702,6 +757,7 @@ void MidiRtpApiTests::TestSavedHostFollowsSavedChanges()
     config.Advertise(false);
     config.RemoteClientPolicy(MidiRtpRemoteClientPolicy::RequireApproval);
     config.SendRecoveryJournal(false);
+    config.SendSpeedLimit(MidiRtpSendSpeedLimit::Midi1WireSpeedTimes2);
 
     auto const hostId = config.HostId();
 
@@ -723,6 +779,7 @@ void MidiRtpApiTests::TestSavedHostFollowsSavedChanges()
     VERIFY_IS_FALSE(saved.Advertise());
     VERIFY_IS_TRUE(saved.RemoteClientPolicy() == MidiRtpRemoteClientPolicy::RequireApproval, L"its policy");
     VERIFY_IS_FALSE(saved.SendRecoveryJournal());
+    VERIFY_IS_TRUE(saved.SendSpeedLimit() == MidiRtpSendSpeedLimit::Midi1WireSpeedTimes2, L"its send speed limit");
     VERIFY_ARE_EQUAL(saved.KnownRemoteClients().Size(), 0u);
 
     MidiRtpHostKnownClientsConfig knownClients(hostId);
@@ -782,6 +839,7 @@ void MidiRtpApiTests::TestSavedClientFollowsSavedChanges()
     connect.MatchCriteria(match);
     connect.AutoReconnect(false);
     connect.SendRecoveryJournal(false);
+    connect.SendSpeedLimit(MidiRtpSendSpeedLimit::Midi1WireSpeedTimes32);
 
     auto const clientId = connect.ClientId();
 
@@ -802,6 +860,7 @@ void MidiRtpApiTests::TestSavedClientFollowsSavedChanges()
     VERIFY_IS_TRUE(saved.MatchCriteria().ServiceInstanceName().empty());
     VERIFY_IS_FALSE(saved.AutoReconnect());
     VERIFY_IS_FALSE(saved.SendRecoveryJournal());
+    VERIFY_IS_TRUE(saved.SendSpeedLimit() == MidiRtpSendSpeedLimit::Midi1WireSpeedTimes32, L"its send speed limit");
     VERIFY_IS_TRUE(saved.IsEnabled());
 
     VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(MidiRtpClientDisconnectConfig(clientId)), L"saving a disconnect works");

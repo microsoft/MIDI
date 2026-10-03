@@ -41,6 +41,15 @@
 // Chapter N recovery journal on outgoing packets, so a peer can repair a lost Note Off
 #define MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY             L"sendRecoveryJournal"
 
+// What this PC sends, as a multiple of MIDI 1.0 wire speed (31,250 bits a second). 0 is no limit,
+// and so is anything above 32. Same key and meaning as Network MIDI 2.0. A device which passes
+// rtpMIDI on to a 5-pin DIN cable can only take it that fast. Changing it drops no connection.
+#define MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY                  L"sendSpeedLimit"
+
+// Response only: the speed limit the running host or client is using. Same key as Network MIDI
+// 2.0. A change reaches a running entry within a moment, without dropping its connections.
+#define MIDI_CONFIG_JSON_RTP_MIDI_CURRENT_SEND_SPEED_LIMIT_KEY          L"currentSendSpeedLimit"
+
 // The network adapter a host is limited to. Same keys and meaning as Network MIDI 2.0: an empty
 // or missing id is every adapter, the hardware address finds the adapter again under a new GUID,
 // the name is only shown, and fallback (default true) runs the host on every adapter while its

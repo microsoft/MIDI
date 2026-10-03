@@ -92,6 +92,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
             readNetworkAdapter(entry);
 
+            auto sendSpeedLimit = MidiSavedConfigJson::SendSpeedLimit(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY, 0);
+            auto reduceSendSpeedAutomatically = MidiSavedConfigJson::Boolean(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false);
+
             // a value missing from a change leaves what came before it
             for (auto const& update : updates)
             {
@@ -104,11 +107,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                     MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
                     MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
 
+                sendSpeedLimit = MidiSavedConfigJson::SendSpeedLimit(update, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY, sendSpeedLimit);
+                reduceSendSpeedAutomatically = MidiSavedConfigJson::Boolean(update, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, reduceSendSpeedAutomatically);
+
                 readNetworkAdapter(update);
             }
 
             m_createOnlyUmpEndpoints = !createMidi1Ports;
             m_fallbackMidi1PortCount = fallbackMidi1PortCount;
+            m_sendSpeedLimit = static_cast<network::MidiNetworkSendSpeedLimit>(sendSpeedLimit);
+            m_reduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
 
             // The service ignores a decision missing either half of the identity, so it is left out
             auto const addKnownClients = [this, &entry](std::wstring_view const key, bool const isAllowed)

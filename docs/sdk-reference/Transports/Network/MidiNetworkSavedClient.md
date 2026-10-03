@@ -20,6 +20,8 @@ A Network MIDI 2.0 client saved in the configuration file. The service connects 
 | `UmpEndpointName` | The name this PC announces to the remote device. Empty means the machine name |
 | `CustomEndpointName` | The name the customer chose for the endpoint. Empty when the endpoint uses the name the remote device announces |
 | `MatchCriteria` | A [MidiNetworkClientMatchCriteria]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkClientMatchCriteria/) saying which remote device to connect to |
+| `SendSpeedLimit` | How fast this PC sends to the remote device. This includes any change saved later with `MidiNetworkClientUpdateConfig` |
+| `ReduceSendSpeedAutomatically` | True when the connection sends more slowly while the remote device keeps asking for data again. This includes any change saved later with `MidiNetworkClientUpdateConfig` |
 
 ## Remarks
 

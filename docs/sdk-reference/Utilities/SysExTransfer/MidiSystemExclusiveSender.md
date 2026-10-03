@@ -35,6 +35,8 @@ The data in `dataSource` must be MIDI 1.0 bytestream System Exclusive data, not 
 
 All the arguments are required. The operation fails if any of them is null, or if `destinationConnection` isn't open.
 
+When the outgoing buffer to the service is full, the transfer waits and tries again instead of failing. That happens when the destination takes data more slowly than the file is read, like a network connection with a sending speed limit. A message that can't be sent for 30 seconds fails the transfer.
+
 ## Example
 
 ```cs

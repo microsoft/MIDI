@@ -1453,6 +1453,22 @@ namespace winrt::midinetworksetup::implementation
         }
     }
 
+    _Use_decl_annotations_
+    winrt::hstring MainWindow::SendSpeedLimitText(uint32_t const multiple) noexcept
+    {
+        if (multiple == 0)
+        {
+            return res::GetString(L"SendSpeedLimitUnlimited");
+        }
+
+        if (multiple == 1)
+        {
+            return res::GetString(L"SendSpeedLimitWireSpeed");
+        }
+
+        return res::FormatString(L"SendSpeedLimitMultipleFormat", multiple);
+    }
+
     winrt::hstring MainWindow::JoinAddresses(collections::IVectorView<winrt::hstring> const& addresses) noexcept
     {
         try
@@ -1841,6 +1857,14 @@ namespace winrt::midinetworksetup::implementation
                         row->Status = client.IsSessionActive() ?
                             res::GetString(L"RemoteHostConnected") :
                             notConnectedStatus();
+
+                        if (client.IsSessionActive() && client.CurrentSendSpeedLimit() != client.SendSpeedLimit())
+                        {
+                            row->Status = res::FormatString(
+                                L"SendSpeedSlowedFormat",
+                                row->Status,
+                                SendSpeedLimitText(static_cast<uint32_t>(client.CurrentSendSpeedLimit())));
+                        }
                         break;
 
                     case midi2net::MidiNetworkClientEntryState::Failed:
@@ -2078,6 +2102,15 @@ namespace winrt::midinetworksetup::implementation
                         host.IsNetworkAdapterMissing(),
                         host.HasStarted());
 
+                    auto const sendSpeedLimit = static_cast<uint32_t>(host.SendSpeedLimit());
+
+                    self->InternalUpdateSendSpeed(
+                        sendSpeedLimit,
+                        host.ReduceSendSpeedAutomatically(),
+                        host.ReduceSendSpeedAutomatically() ?
+                            res::FormatString(L"SendSpeedReducesAutomaticallyFormat", SendSpeedLimitText(sendSpeedLimit)) :
+                            SendSpeedLimitText(sendSpeedLimit));
+
                     // connected remote clients
                     std::vector<winrt::hstring> connectionKeys{};
 
@@ -2117,11 +2150,20 @@ namespace winrt::midinetworksetup::implementation
                                 self->Connections().Append(connectionItem);
                             }
 
-                            auto const status = connection.IsPendingApproval() ?
+                            auto status = connection.IsPendingApproval() ?
                                 res::GetString(L"ConnectionPendingApproval") :
                                 (connection.IsSessionActive() ?
                                     res::FormatString(L"ConnectionActiveFormat", connection.RemoteAddress(), connection.RemotePort()) :
                                     res::FormatString(L"ConnectionInactiveFormat", connection.RemoteAddress(), connection.RemotePort()));
+
+                            if (connection.IsSessionActive() &&
+                                static_cast<uint32_t>(connection.CurrentSendSpeedLimit()) != sendSpeedLimit)
+                            {
+                                status = res::FormatString(
+                                    L"SendSpeedSlowedFormat",
+                                    status,
+                                    SendSpeedLimitText(static_cast<uint32_t>(connection.CurrentSendSpeedLimit())));
+                            }
 
                             winrt::get_self<HostConnectionItem>(connectionItem)->InternalUpdate(
                                 connection.UmpEndpointName().empty() ?
@@ -2950,6 +2992,11 @@ namespace winrt::midinetworksetup::implementation
                         host.AllowNetworkAdapterFallback(),
                         host.IsNetworkAdapterMissing(),
                         host.HasStarted());
+
+                    self->InternalUpdateSendSpeed(
+                        static_cast<uint32_t>(host.SendSpeedLimit()),
+                        false,
+                        SendSpeedLimitText(static_cast<uint32_t>(host.SendSpeedLimit())));
 
                     std::vector<winrt::hstring> connectionKeys{};
 

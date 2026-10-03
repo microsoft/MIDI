@@ -69,6 +69,11 @@ struct MidiNetworkHostDefinition
     // Only used when the remote client declares no function blocks. See the constant for why.
     uint8_t FallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
 
+    // What this host sends to each remote client, as a multiple of MIDI 1.0 wire speed. 0 is no
+    // limit. See MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY.
+    uint32_t SendSpeedLimit{ 0 };
+    bool ReduceSendSpeedAutomatically{ false };
+
     // connection rules
     MidiNetworkRemoteClientPolicy RemoteClientPolicy{ MidiNetworkRemoteClientPolicy::PolicyAllowAny };
 
@@ -154,6 +159,14 @@ public:
     // Used for the next remote client which connects. An endpoint already up keeps what it has.
     void SetCreateMidi1Ports(_In_ bool const value) noexcept { m_createUmpEndpointsOnly = !value; }
 
+    // Used for the next remote client which connects. The ones already connected are updated in
+    // place by the configuration manager.
+    void SetSendSpeedLimit(_In_ uint32_t const speedMultiple, _In_ bool const reduceAutomatically) noexcept
+    {
+        m_sendSpeedLimit = speedMultiple;
+        m_reduceSendSpeedAutomatically = reduceAutomatically;
+    }
+
     winrt::hstring ActualPort() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().LocalPort() : L""; }
     winrt::hstring ActualAddress() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().LocalAddress().DisplayName() : L""; }
 
@@ -179,6 +192,8 @@ private:
     std::atomic<bool> m_started{ false };
     std::atomic<bool> m_createUmpEndpointsOnly{ true };
     std::atomic<uint8_t> m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
+    std::atomic<uint32_t> m_sendSpeedLimit{ 0 };
+    std::atomic<bool> m_reduceSendSpeedAutomatically{ false };
 
     winrt::guid m_entryIdentifier{ };
 

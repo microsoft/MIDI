@@ -14,6 +14,9 @@ struct MidiRetransmitBufferEntry
 {
     MidiSequenceNumber SequenceNumber{ 0 };
     std::vector<uint32_t> Words{ };
+
+    // what these messages take on a MIDI 1.0 cable, which is what a resend costs the speed limit
+    uint32_t WireByteCount{ 0 };
 };
 
 struct MidiOutgoingPingTrackingEntry
@@ -78,6 +81,17 @@ public:
     // held for the session, and dropped if no session comes of it.
     void BeginEndpointCreation() noexcept;
     void EndEndpointCreation() noexcept;
+
+    // A multiple of MIDI 1.0 wire speed, 0 for no limit. Takes effect at once, in a live session
+    // too. Reducing automatically lets the connection go slower than this while the remote keeps
+    // asking for lost data, but never slower than wire speed.
+    void SetSendSpeedLimit(_In_ uint32_t const speedMultiple, _In_ bool const reduceAutomatically) noexcept;
+
+    uint32_t GetSendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+    bool GetReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+
+    // What the connection sends at now. Below the limit while reduced automatically.
+    uint32_t GetCurrentSendSpeedLimit() const noexcept { return m_currentSendSpeed; }
 
     // if this was created from a host here
     winrt::guid ConfigIdentifier() { return m_configIdentifier; }
@@ -260,8 +274,6 @@ protected:
     // A Bye arrived. For a client with an invitation out, it is the host's answer to it.
     virtual void OnByeReceived(_In_ MidiNetworkCommandByeReason const reason) noexcept { UNREFERENCED_PARAMETER(reason); }
 
-    HRESULT SendQueuedMidiMessagesToNetwork();
-
     HRESULT StartOutboundMidiMessageProcessingThread();
     HRESULT StartConnectionWatchdogThread();
     HRESULT StopAndJoinWorkerThreads();
@@ -340,13 +352,69 @@ protected:
         
     wil::critical_section m_incomingMessageLock;
 
-    wil::slim_event_manual_reset m_newMessagesInQueueEvent;
+    // Wakes the send thread for new messages, a resend request, a speed change or a stop. Auto
+    // reset, so a wake which arrives while the thread is busy is still there when it next waits.
+    wil::unique_event_nothrow m_sendWakeEvent;
+
+    // Wakes the send thread when the speed limit lets the next message go
+    wil::unique_handle m_sendPaceTimer;
+
+    void WakeSendThread() noexcept;
+    void ArmSendPaceTimer(_In_ uint64_t const ticks) noexcept;
+
     wil::critical_section m_outgoingUmpMessageQueueLock;
+
+    // Words before m_outgoingReadIndex have been taken by the send thread
     std::vector<uint32_t> m_outgoingUmpMessages{};
+    size_t m_outgoingReadIndex{ 0 };
+
+    // What the queued messages take on a MIDI 1.0 cable
+    uint64_t m_outgoingQueuedWireBytes{ 0 };
+
+    // Changes whenever the send thread takes from the queue or the queue is emptied. A sender
+    // waiting for room waits on its address. Written under m_outgoingUmpMessageQueueLock.
+    volatile ULONG m_outgoingQueueGeneration{ 0 };
+
+    // Needs m_outgoingUmpMessageQueueLock
+    bool OutgoingQueueHasRoom() const noexcept;
+    void ClearOutgoingQueue() noexcept;
+    void WakeSendersWaitingForRoom() noexcept;
 
     // written under m_outgoingUmpMessageQueueLock
     std::atomic<bool> m_endpointBeingCreated{ false };
     HRESULT OutboundProcessingThreadWorker(_In_ std::stop_token stopToken);
+
+    // One pass of the send thread: resends first, then queued messages, as far as the speed
+    // limit allows. waitTicks is how long until it allows more, or zero.
+    HRESULT SendWhatIsAllowed(_Out_ uint64_t& waitTicks, _Out_ bool& sentData);
+    HRESULT SendRequestedRetransmits(_Inout_ uint64_t& now, _Out_ uint64_t& waitTicks, _Inout_ bool& sentData);
+    HRESULT SendQueuedMessages(_Inout_ uint64_t& now, _Out_ uint64_t& waitTicks, _Inout_ bool& sentData);
+
+    // One datagram of new messages, each command numbered after the last one sent
+    HRESULT SendUmpDataCommands(_In_ std::vector<uint32_t> const& words);
+
+    // Spec 7.2.1: nothing to send, so a zero length UMP Data command says so
+    HRESULT SendKeepAlive();
+
+    // Send thread only
+    ::WindowsMidiServicesInternal::MidiSendPacer m_sendPacer{};
+    uint32_t m_sendPacerMultiple{ 0 };
+    void UpdateSendPacer(_In_ uint64_t const now);
+
+    // The customer's choice
+    std::atomic<uint32_t> m_sendSpeedLimit{ 0 };
+    std::atomic<bool> m_reduceSendSpeedAutomatically{ false };
+
+    // What the connection sends at now. Read by senders to size the queue.
+    std::atomic<uint32_t> m_currentSendSpeed{ 0 };
+
+    // Guards m_automaticSendSpeed, which the receive thread changes on loss and the send thread
+    // on its ticks. Never held across anything else.
+    wil::critical_section m_sendSpeedLock;
+    ::WindowsMidiServicesInternal::MidiAutomaticSendSpeed m_automaticSendSpeed{};
+
+    // The remote asked for data again
+    void NoteRemoteLoss() noexcept;
 
     bool m_createUmpEndpointsOnly{ true };
     uint8_t m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
@@ -501,6 +569,32 @@ protected:
 
     // guarded by m_socketWriterLock
     boost::circular_buffer<MidiRetransmitBufferEntry> m_retransmitBuffer {};
+    size_t m_retransmitBufferWordCount{ 0 };
+
+    // Fixed by Initialize. Zero means the remote is told this side does not resend at all.
+    size_t m_retransmitBufferCapacity{ 0 };
+
+    // Retransmit requests waiting for the send thread, which serves them ahead of new data.
+    struct ResendRequest
+    {
+        MidiSequenceNumber StartingSequenceNumber{ 0 };
+
+        // 0 is everything held from the starting sequence number on
+        uint16_t CommandCount{ 0 };
+    };
+
+    wil::critical_section m_resendRequestsLock;
+    std::deque<ResendRequest> m_resendRequests{};
+
+    void ClearResendRequests() noexcept;
+
+    // Send thread only. Limits the Retransmit Errors a remote can provoke.
+    MidiSequenceNumber m_lastRetransmitErrorSequenceNumber{ 0 };
+    uint64_t m_lastRetransmitErrorTimestamp{ 0 };
+    uint64_t m_retransmitErrorWindowStart{ 0 };
+    uint32_t m_retransmitErrorsInWindow{ 0 };
+
+    HRESULT SendRetransmitErrorIfAllowed(_In_ MidiSequenceNumber const requestedSequenceNumber, _In_ uint64_t const now);
 
     // Retransmit request state. Only touched while parsing, so m_incomingMessageLock covers it.
     // A remote that cannot or will not retransmit must never be able to stall the session.
@@ -519,7 +613,6 @@ protected:
     // we may eventually want these to be configurable. For now, they are const
     const uint16_t m_outgoingUmpEmptyPacketMaxIntervalMilliseconds{ 2000 };
     const uint16_t m_outgoingUmpEmptyPacketStartingIntervalMilliseconds{ 200 };
-    uint16_t m_outgoingUmpEmptyPacketIntervalMilliseconds{ m_outgoingUmpEmptyPacketStartingIntervalMilliseconds };
     const uint16_t m_outgoingPingMaxIgnoredBeforeDisconnect{ 5 };
     const uint16_t m_outgoingPingTrackingMaxEntries{ 10 };
 
@@ -546,11 +639,9 @@ protected:
     // host went away on its own. Deliberate teardowns do not call this.
     HRESULT RequestClientReconnect();
 
-    HRESULT AddUmpPacketToRetransmitBuffer(_In_ MidiSequenceNumber const sequenceNumber, _In_ std::vector<uint32_t> const& words);
-
     HRESULT AddUmpPacketToRetransmitBuffer(
         _In_ MidiSequenceNumber const sequenceNumber,
-        _In_reads_(wordCount) uint32_t const* words,
+        _In_reads_opt_(wordCount) uint32_t const* words,
         _In_ size_t const wordCount);
 
     // Number of words starting at position which form whole UMP messages and fit within maxWords.
@@ -571,12 +662,6 @@ protected:
     // The newest retransmit buffer entries which fit in the budget, oldest first, for forward
     // error correction. Needs m_socketWriterLock.
     std::vector<size_t> ChooseForwardErrorCorrectionPackets(_Inout_ size_t& budgetBytes);
-
-    // Whole messages from the outbound queue which fit in the budget, each numbered after the
-    // last one sent. Moves position past what it took. Needs both queue and writer locks.
-    std::vector<OutboundUmpChunk> TakeOutboundChunks(
-        _Inout_ size_t& position,
-        _Inout_ size_t& budgetBytes);
 
     // The endpoint worker can start the send thread while a host stop, on another thread, stops
     // and joins it. Declared before the threads so it outlives them.

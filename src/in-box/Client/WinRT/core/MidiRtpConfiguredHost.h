@@ -30,6 +30,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool AllowPortFallback() const noexcept { return m_allowPortFallback; }
         bool UsedPortFallback() const noexcept { return m_usedPortFallback; }
         bool SendRecoveryJournal() const noexcept { return m_sendRecoveryJournal; }
+        rtp::MidiRtpSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        rtp::MidiRtpSendSpeedLimit CurrentSendSpeedLimit() const noexcept { return m_currentSendSpeedLimit; }
         winrt::guid NetworkAdapterId() const noexcept { return m_networkAdapterId; }
         winrt::hstring NetworkAdapterName() const noexcept { return m_networkAdapterName; }
         bool AllowNetworkAdapterFallback() const noexcept { return m_allowNetworkAdapterFallback; }
@@ -57,6 +59,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool m_allowPortFallback{ false };
         bool m_usedPortFallback{ false };
         bool m_sendRecoveryJournal{ false };
+        rtp::MidiRtpSendSpeedLimit m_sendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
+        rtp::MidiRtpSendSpeedLimit m_currentSendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
         winrt::guid m_networkAdapterId{};
         winrt::hstring m_networkAdapterName{};
         bool m_allowNetworkAdapterFallback{ true };

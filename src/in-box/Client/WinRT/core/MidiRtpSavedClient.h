@@ -26,6 +26,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool AutoReconnect() const noexcept { return m_autoReconnect; }
         bool SendRecoveryJournal() const noexcept { return m_sendRecoveryJournal; }
         bool IsEnabled() const noexcept { return m_isEnabled; }
+        rtp::MidiRtpSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
 
         void InternalInitialize(
             _In_ winrt::guid const& clientId,
@@ -45,5 +46,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool m_autoReconnect{ true };
         bool m_sendRecoveryJournal{ true };
         bool m_isEnabled{ true };
+        rtp::MidiRtpSendSpeedLimit m_sendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
     };
 }

@@ -11,6 +11,7 @@ import "MidiApiContracts.idl";
 
 import "IMidiServiceTransportPluginConfig.idl";
 import "MidiRtpClientMatchCriteria.idl";
+import "MidiRtpSendSpeedLimitEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Rtp
 {
@@ -43,5 +44,10 @@ namespace Windows.Devices.Midi2.Transports.Rtp
 
         // So the remote can repair a lost Note Off. Only turn off for a device which cannot parse it.
         [noexcept] Boolean SendRecoveryJournal;
+
+        // How fast this PC sends to the remote. Set a limit when the remote passes what it
+        // receives on to a 5-pin DIN cable and loses data in large SysEx dumps. Unlimited by
+        // default. Changing only this on an existing client does not drop its connection.
+        [noexcept] MidiRtpSendSpeedLimit SendSpeedLimit;
     }
 }

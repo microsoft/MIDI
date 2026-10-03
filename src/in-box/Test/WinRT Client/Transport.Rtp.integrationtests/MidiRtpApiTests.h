@@ -48,6 +48,9 @@ public:
     TEST_METHOD(TestApproveOnceThenDisconnectTheRemote);
     TEST_METHOD(TestDenyAlwaysIsAKnownClientUntilForgotten);
 
+    // A new send speed limit applies to a running host without restarting it
+    TEST_METHOD(TestHostSendSpeedLimitChangesWhileRunning);
+
     // What is saved in the configuration file. Saved only, never sent to the service.
     TEST_METHOD(TestSavedHostFollowsSavedChanges);
     TEST_METHOD(TestSavingKnownClientsForUnsavedHostIsRefused);

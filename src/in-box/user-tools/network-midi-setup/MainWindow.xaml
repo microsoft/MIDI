@@ -933,6 +933,7 @@
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
                                                 </Grid.RowDefinitions>
 
                                                 <TextBlock x:Uid="ServiceInstanceNameLabel"
@@ -996,6 +997,26 @@
                                                                      FontSize="12"
                                                                      VerticalAlignment="Center"
                                                                      Click="OnChangeHostAdapterClick" />
+                                                </StackPanel>
+
+                                                <TextBlock x:Uid="HostSendSpeedLabel"
+                                                           Grid.Row="5" Grid.Column="0"
+                                                           Text="Sending speed"
+                                                           VerticalAlignment="Center"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <StackPanel Grid.Row="5" Grid.Column="1"
+                                                            Orientation="Horizontal"
+                                                            Spacing="4">
+                                                    <TextBlock Text="{x:Bind SendSpeedText, Mode=OneWay}"
+                                                               VerticalAlignment="Center"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                    <HyperlinkButton x:Uid="ChangeHostSendSpeedLink"
+                                                                     Content="Change"
+                                                                     Padding="4,0,4,0"
+                                                                     FontSize="12"
+                                                                     VerticalAlignment="Center"
+                                                                     Click="OnChangeHostSendSpeedClick" />
                                                 </StackPanel>
                                             </Grid>
                                         </Expander>
@@ -1859,6 +1880,7 @@
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
                                                 </Grid.RowDefinitions>
 
                                                 <TextBlock x:Uid="RtpAdvertisedNameLabel"
@@ -1911,6 +1933,26 @@
                                                                      FontSize="12"
                                                                      VerticalAlignment="Center"
                                                                      Click="OnChangeRtpHostAdapterClick" />
+                                                </StackPanel>
+
+                                                <TextBlock x:Uid="HostSendSpeedLabel"
+                                                           Grid.Row="4" Grid.Column="0"
+                                                           Text="Sending speed"
+                                                           VerticalAlignment="Center"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <StackPanel Grid.Row="4" Grid.Column="1"
+                                                            Orientation="Horizontal"
+                                                            Spacing="4">
+                                                    <TextBlock Text="{x:Bind SendSpeedText, Mode=OneWay}"
+                                                               VerticalAlignment="Center"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                    <HyperlinkButton x:Uid="ChangeHostSendSpeedLink"
+                                                                     Content="Change"
+                                                                     Padding="4,0,4,0"
+                                                                     FontSize="12"
+                                                                     VerticalAlignment="Center"
+                                                                     Click="OnChangeRtpHostSendSpeedClick" />
                                                 </StackPanel>
                                             </Grid>
                                         </Expander>
@@ -2017,6 +2059,26 @@
                               HorizontalAlignment="Stretch"
                               HorizontalContentAlignment="Stretch">
                         <StackPanel Spacing="12" Margin="0,4,0,4">
+                            <StackPanel Spacing="4">
+                                <ComboBox x:Name="HostSendSpeedLimitComboBox"
+                                          x:Uid="SendSpeedLimitComboBox"
+                                          Header="Sending speed"
+                                          HorizontalAlignment="Stretch" />
+                                <TextBlock x:Uid="SendSpeedLimitHelp"
+                                           Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <CheckBox x:Name="HostReduceSendSpeedCheckBox"
+                                          x:Uid="ReduceSendSpeedCheckBox"
+                                          Content="Slow down when a device misses data" />
+                                <TextBlock x:Uid="ReduceSendSpeedHelp"
+                                           Text="When a device asks for data again, Windows sends more slowly, down to MIDI 1.0 wire speed. It speeds back up once the device stops asking."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+
                             <StackPanel Spacing="4">
                                 <ComboBox x:Name="HostNetworkAdapterComboBox"
                                           x:Uid="HostNetworkAdapterComboBox"
@@ -2154,6 +2216,18 @@
                               HorizontalContentAlignment="Stretch">
                         <StackPanel Spacing="12" Margin="0,4,0,4">
                             <StackPanel Spacing="4">
+                                <ComboBox x:Name="RtpHostSendSpeedLimitComboBox"
+                                          x:Uid="SendSpeedLimitComboBox"
+                                          Header="Sending speed"
+                                          HorizontalAlignment="Stretch" />
+                                <TextBlock x:Uid="SendSpeedLimitHelp"
+                                           Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="4">
                                 <ComboBox x:Name="RtpHostNetworkAdapterComboBox"
                                           x:Uid="HostNetworkAdapterComboBox"
                                           Header="Network adapter"
@@ -2270,6 +2344,39 @@
                               Content="If this adapter is missing, use every adapter until it is back" />
                     <TextBlock x:Uid="HostNetworkAdapterFallbackHelp"
                                Text="Turn this off to keep the host off your other networks. It waits instead, and starts by itself when the adapter is back."
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </StackPanel>
+        </ContentDialog>
+
+        <!-- Used for hosts of both transports. The title names the host, so it is set in code. -->
+        <ContentDialog x:Name="ChangeSendSpeedDialog"
+                       x:Uid="ChangeSendSpeedDialog"
+                       PrimaryButtonText="Save"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <StackPanel Spacing="12" Width="440" Margin="0,4,4,4">
+                <StackPanel Spacing="4">
+                    <ComboBox x:Name="ChangeSendSpeedLimitComboBox"
+                              x:Uid="SendSpeedLimitComboBox"
+                              Header="Sending speed"
+                              HorizontalAlignment="Stretch" />
+                    <TextBlock x:Uid="SendSpeedLimitHelp"
+                               Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+
+                <!-- Network MIDI 2.0 only. RTP-MIDI cannot tell that a device missed data. -->
+                <StackPanel x:Name="ChangeReduceSendSpeedPanel" Spacing="4">
+                    <CheckBox x:Name="ChangeReduceSendSpeedCheckBox"
+                              x:Uid="ReduceSendSpeedCheckBox"
+                              Content="Slow down when a device misses data" />
+                    <TextBlock x:Uid="ReduceSendSpeedHelp"
+                               Text="When a device asks for data again, Windows sends more slowly, down to MIDI 1.0 wire speed. It speeds back up once the device stops asking."
                                TextWrapping="Wrap"
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -2411,6 +2518,31 @@
                                    SpinButtonPlacementMode="Compact" />
                         <TextBlock x:Uid="CustomizeFallbackMidi1PortCountHint"
                                    Text="Most devices say how many ports they have, and this is not used for them. It is only for a device that never tells us."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Only for a device this PC connects to. A host's speed is set on the host. -->
+                <StackPanel x:Name="CustomizeSendSpeedPanel" Spacing="4">
+                    <ComboBox x:Name="CustomizeSendSpeedLimitComboBox"
+                              x:Uid="SendSpeedLimitComboBox"
+                              Header="Sending speed"
+                              HorizontalAlignment="Stretch" />
+                    <TextBlock x:Uid="SendSpeedLimitHelp"
+                               Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                    <!-- Network MIDI 2.0 only. RTP-MIDI cannot tell that a device missed data. -->
+                    <StackPanel x:Name="CustomizeReduceSendSpeedPanel" Spacing="4">
+                        <CheckBox x:Name="CustomizeReduceSendSpeedCheckBox"
+                                  x:Uid="ReduceSendSpeedCheckBox"
+                                  Content="Slow down when a device misses data" />
+                        <TextBlock x:Uid="ReduceSendSpeedHelp"
+                                   Text="When a device asks for data again, Windows sends more slowly, down to MIDI 1.0 wire speed. It speeds back up once the device stops asking."
                                    TextWrapping="Wrap"
                                    Style="{ThemeResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />

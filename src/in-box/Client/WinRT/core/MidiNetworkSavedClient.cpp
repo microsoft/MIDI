@@ -67,6 +67,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
                 MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
 
+            auto sendSpeedLimit = MidiSavedConfigJson::SendSpeedLimit(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY, 0);
+            auto reduceSendSpeedAutomatically = MidiSavedConfigJson::Boolean(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false);
+
             // a value missing from a change leaves what came before it
             for (auto const& update : updates)
             {
@@ -79,11 +82,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                     fallbackMidi1PortCount,
                     MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
                     MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+
+                sendSpeedLimit = MidiSavedConfigJson::SendSpeedLimit(update, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY, sendSpeedLimit);
+                reduceSendSpeedAutomatically = MidiSavedConfigJson::Boolean(update, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, reduceSendSpeedAutomatically);
             }
 
             m_customEndpointName = internal::TrimmedHStringCopy(customEndpointName);
             m_createOnlyUmpEndpoints = !createMidi1Ports;
             m_fallbackMidi1PortCount = fallbackMidi1PortCount;
+            m_sendSpeedLimit = static_cast<network::MidiNetworkSendSpeedLimit>(sendSpeedLimit);
+            m_reduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
 
             auto const match = MidiSavedConfigJson::Object(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_OBJECT_KEY);
 

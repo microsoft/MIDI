@@ -40,6 +40,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool AllowNetworkAdapterFallback() const noexcept { return m_allowNetworkAdapterFallback.value_or(true); }
         void AllowNetworkAdapterFallback(_In_ bool const value) noexcept { m_allowNetworkAdapterFallback = value; }
 
+        network::MidiNetworkSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit.value_or(network::MidiNetworkSendSpeedLimit::Unlimited); }
+        void SendSpeedLimit(_In_ network::MidiNetworkSendSpeedLimit const& value) noexcept { m_sendSpeedLimit = value; }
+
+        bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically.value_or(false); }
+        void ReduceSendSpeedAutomatically(_In_ bool const value) noexcept { m_reduceSendSpeedAutomatically = value; }
+
         json::JsonObject ConfigJson() const noexcept;
 
     private:
@@ -52,6 +58,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         std::optional<winrt::guid> m_networkAdapterId{};
         std::optional<winrt::hstring> m_networkAdapterName{};
         std::optional<bool> m_allowNetworkAdapterFallback{};
+        std::optional<network::MidiNetworkSendSpeedLimit> m_sendSpeedLimit{};
+        std::optional<bool> m_reduceSendSpeedAutomatically{};
 
         // Set with the id, and how the service finds the adapter again under a new GUID
         winrt::hstring m_networkAdapterPhysicalAddress{};

@@ -1,0 +1,36 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    // How fast a host or client sends, as a multiple of MIDI 1.0 wire speed (31,250 bits a
+    // second). A device which passes what it receives on to a 5-pin DIN cable can only take it
+    // that fast. A message on a quiet connection is never held back. The limit only spaces out
+    // data which comes faster than it allows, such as a large SysEx dump. The service also
+    // accepts any whole multiple from 1 through 32, and treats anything above 32 as Unlimited.
+    [contract(MidiTransportsRtpApiContract, 1)]
+    enum MidiRtpSendSpeedLimit
+    {
+        // As fast as the network takes it. The default.
+        Unlimited = 0,
+
+        // 31,250 bits a second, the speed of a MIDI 1.0 DIN cable
+        Midi1WireSpeed = 1,
+
+        Midi1WireSpeedTimes2 = 2,
+        Midi1WireSpeedTimes4 = 4,
+        Midi1WireSpeedTimes8 = 8,
+        Midi1WireSpeedTimes16 = 16,
+
+        // About a megabit a second
+        Midi1WireSpeedTimes32 = 32,
+    };
+}

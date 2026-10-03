@@ -11,6 +11,7 @@ import "MidiApiContracts.idl";
 
 import "MidiNetworkHostConnection.idl";
 import "MidiNetworkRemoteClientPolicyEnum.idl";
+import "MidiNetworkSendSpeedLimitEnum.idl";
 
 
 // TODO: Change to runtimeclass
@@ -72,6 +73,10 @@ namespace Windows.Devices.Midi2.Transports.Network
 
         // remote clients which have reached this host, including any waiting for user approval
         [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkHostConnection> Connections{ get; };
+
+        // What the host is configured to send at. Each connection reports what it sends at now.
+        [noexcept] MidiNetworkSendSpeedLimit SendSpeedLimit{ get; };
+        [noexcept] Boolean ReduceSendSpeedAutomatically{ get; };
     };
 }
 

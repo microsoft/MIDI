@@ -19,6 +19,7 @@ An RTP-MIDI client saved in the configuration file. The service connects it ever
 | `MatchCriteria` | A [MidiRtpClientMatchCriteria]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpClientMatchCriteria/) saying which remote device to connect to |
 | `AutoReconnect` | False when the client connects once, and stays disconnected after the connection ends |
 | `SendRecoveryJournal` | True when the client sends the recovery journal, so the remote device can repair a lost Note Off |
+| `SendSpeedLimit` | How fast this PC sends to the remote device. See [MidiRtpSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpSendSpeedLimitEnum/) |
 | `IsEnabled` | False when the service shouldn't connect the client |
 
 ## Remarks

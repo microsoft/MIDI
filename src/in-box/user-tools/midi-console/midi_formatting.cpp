@@ -73,6 +73,21 @@ namespace midi2console
         return isMissing ? FormatResourceString(IDS_NET_ADAPTER_MISSING_FORMAT, shownName) : shownName;
     }
 
+    std::string FormatSendSpeedLimit(_In_ uint32_t multiple)
+    {
+        if (multiple == 0)
+        {
+            return ResourceString(IDS_NET_SEND_SPEED_UNLIMITED);
+        }
+
+        if (multiple == 1)
+        {
+            return ResourceString(IDS_NET_SEND_SPEED_WIRE);
+        }
+
+        return FormatResourceString(IDS_NET_SEND_SPEED_MULTIPLE_FORMAT, multiple);
+    }
+
     winrt::guid ParseGuid(_In_ std::string_view value, _Out_ bool& succeeded)
     {
         succeeded = false;

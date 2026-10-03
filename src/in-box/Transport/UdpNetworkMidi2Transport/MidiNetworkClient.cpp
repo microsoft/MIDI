@@ -31,6 +31,8 @@ MidiNetworkClient::Initialize(
 
     m_createUmpEndpointsOnly = !clientDefinition.CreateMidi1Ports;
     m_fallbackMidi1PortCount = clientDefinition.FallbackMidi1PortCount;
+    m_sendSpeedLimit = clientDefinition.SendSpeedLimit;
+    m_reduceSendSpeedAutomatically = clientDefinition.ReduceSendSpeedAutomatically;
 
     m_thisEndpointName = clientDefinition.LocalEndpointName;
     m_thisProductInstanceId = clientDefinition.LocalProductInstanceId;
@@ -249,6 +251,8 @@ MidiNetworkClient::Start(
         m_createUmpEndpointsOnly,
         m_fallbackMidi1PortCount
     ));
+
+    conn->SetSendSpeedLimit(m_sendSpeedLimit, m_reduceSendSpeedAutomatically);
 
     TransportState::Current().AddNetworkConnection(remoteHostName, remotePort, conn);
 

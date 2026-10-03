@@ -58,6 +58,13 @@ public:
     TEST_METHOD(TestApprovalCommandsCheckTheirArguments);
     TEST_METHOD(TestNamesDefaultToThisPcName);
 
+    // the send speed limit, in RtpMidiSendSpeedTests.cpp
+    TEST_METHOD(TestSendSpeedLimitPacesALargeSysEx);
+    TEST_METHOD(TestSendSpeedLimitNeverDelaysAQuietConnection);
+    TEST_METHOD(TestSendSpeedLimitChangesWithoutReconnecting);
+    TEST_METHOD(TestSendSpeedLimitSlowsAFastSenderWithoutLosingAnything);
+    TEST_METHOD(TestSendSpeedLimitReadsAnythingAboveTheMaximumAsUnlimited);
+
 private:
     winrt::Windows::Data::Json::JsonObject Send(std::wstring const& text, HRESULT* result = nullptr);
     winrt::Windows::Data::Json::JsonObject FindHost(std::wstring const& hostId);

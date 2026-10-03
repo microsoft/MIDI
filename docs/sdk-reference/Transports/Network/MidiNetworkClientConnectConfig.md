@@ -26,6 +26,8 @@ Pass to `MidiNetworkTransportManager.ConnectNetworkClientAsync`.
 | `UmpEndpointName` | The UMP Endpoint Name to use for this PC's end of the connection |
 | `CustomEndpointName` | The name the person chose for the MIDI endpoint this connection creates. It's applied before the endpoint is turned on, so the endpoint and its MIDI 1.0 ports never appear under the remote device's own name first. Leave it empty to use the name the remote device announces |
 | `MatchCriteria` | A `MidiNetworkClientMatchCriteria` that says which remote host to connect to |
+| `SendSpeedLimit` | How fast this PC sends to the remote host. `Unlimited` by default. Choose a slower speed for a device that loses data when a lot of it arrives at once, like a long SysEx dump. A lone message is never delayed. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |
+| `ReduceSendSpeedAutomatically` | When true, the connection sends more slowly while the remote host keeps asking for data again, and speeds back up to `SendSpeedLimit` once it stops. False by default. See [How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/#sending-speed) |
 
 ## Remarks
 

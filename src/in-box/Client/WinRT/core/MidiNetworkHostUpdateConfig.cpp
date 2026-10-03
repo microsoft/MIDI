@@ -90,6 +90,20 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                     json::JsonValue::CreateBooleanValue(*m_allowNetworkAdapterFallback));
             }
 
+            if (m_sendSpeedLimit.has_value())
+            {
+                hostObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY,
+                    json::JsonValue::CreateNumberValue(static_cast<uint32_t>(*m_sendSpeedLimit)));
+            }
+
+            if (m_reduceSendSpeedAutomatically.has_value())
+            {
+                hostObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
+                    json::JsonValue::CreateBooleanValue(*m_reduceSendSpeedAutomatically));
+            }
+
             json::JsonObject hostsContainer{};
             hostsContainer.SetNamedValue(
                 winrt::to_hstring(HostId()),

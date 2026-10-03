@@ -72,6 +72,29 @@ MidiNetworkConnection::Initialize(
         RETURN_IF_FAILED(E_OUTOFMEMORY);
     }
 
+    m_retransmitBufferCapacity = m_retransmitBuffer.capacity();
+    m_retransmitBufferWordCount = 0;
+
+    RETURN_IF_FAILED(m_sendWakeEvent.create(wil::EventOptions::None));
+
+    // Half a millisecond of resolution without touching the global timer rate. A normal timer
+    // still works if the flag is refused, only less precisely.
+    m_sendPaceTimer.reset(CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS));
+
+    if (!m_sendPaceTimer)
+    {
+        m_sendPaceTimer.reset(CreateWaitableTimerExW(nullptr, nullptr, 0, TIMER_ALL_ACCESS));
+    }
+
+    RETURN_LAST_ERROR_IF_NULL(m_sendPaceTimer.get());
+
+    {
+        auto lock = m_sendSpeedLock.lock();
+
+        m_automaticSendSpeed.Configure(m_sendSpeedLimit, m_reduceSendSpeedAutomatically);
+        m_currentSendSpeed = m_automaticSendSpeed.CurrentMultiple();
+    }
+
     try
     {
         m_outgoingPingTracking.set_capacity(m_outgoingPingTrackingMaxEntries);
@@ -366,11 +389,13 @@ MidiNetworkConnection::StartOutboundMidiMessageProcessingThread()
     if (m_outboundProcessingThread.joinable())
     {
         m_outboundProcessingThread.request_stop();
-        m_newMessagesInQueueEvent.SetEvent();
+        WakeSendThread();
         m_outboundProcessingThread.join();
     }
 
-    m_newMessagesInQueueEvent.ResetEvent();
+    // A new session starts with the whole allowance and nothing left to resend
+    m_sendPacer.Reset();
+    ClearResendRequests();
 
     // The stop token must come from jthread itself, not from reading the member back out of
     // the object we are in the middle of assigning to.
@@ -387,9 +412,9 @@ MidiNetworkConnection::StartOutboundMidiMessageProcessingThread()
     {
         auto queueLock = m_outgoingUmpMessageQueueLock.lock();
 
-        if (!m_outgoingUmpMessages.empty())
+        if (m_outgoingReadIndex < m_outgoingUmpMessages.size())
         {
-            m_newMessagesInQueueEvent.SetEvent();
+            WakeSendThread();
         }
     }
 
@@ -457,7 +482,7 @@ MidiNetworkConnection::StopAndJoinWorkerThreads()
 
     // wake both workers so they see the stop request instead of sleeping out their intervals
     m_connectionTimeoutEvent.SetEvent();
-    m_newMessagesInQueueEvent.SetEvent();
+    WakeSendThread();
 
     // A worker can reach here indirectly (session teardown on the watchdog thread), and joining
     // ourselves would deadlock. The remaining teardown is safe against a still-running worker.
@@ -566,14 +591,18 @@ MidiNetworkConnection::BeginEndpointCreation() noexcept
 void
 MidiNetworkConnection::EndEndpointCreation() noexcept
 {
-    auto queueLock = m_outgoingUmpMessageQueueLock.lock();
-
-    m_endpointBeingCreated = false;
-
-    if (!m_sessionActive)
     {
-        m_outgoingUmpMessages.clear();
+        auto queueLock = m_outgoingUmpMessageQueueLock.lock();
+
+        m_endpointBeingCreated = false;
+
+        if (!m_sessionActive)
+        {
+            ClearOutgoingQueue();
+        }
     }
+
+    WakeSendersWaitingForRoom();
 }
 
 
@@ -667,6 +696,7 @@ MidiNetworkConnection::ResetSequenceNumbers()
 
     // clear out retransmit buffer
     m_retransmitBuffer.clear();
+    m_retransmitBufferWordCount = 0;
 
     return S_OK;
 }
@@ -737,11 +767,14 @@ MidiNetworkConnection::EndActiveSession(bool respondWithByeReply)
     auto callback = DetachCallback();
     callback.reset();
 
-    // clear the outbound queue
+    // clear the outbound queue. Anything still waiting to be queued gives up.
     {
         auto queueLock = m_outgoingUmpMessageQueueLock.lock();
-        m_outgoingUmpMessages.clear();
+        ClearOutgoingQueue();
     }
+
+    WakeSendersWaitingForRoom();
+    ClearResendRequests();
 
     {
         auto lock = m_socketWriterLock.lock();
@@ -1121,6 +1154,8 @@ MidiNetworkConnection::HandleIncomingSessionReset()
         LOG_IF_FAILED(ResetSequenceNumbers());
     }
 
+    // what was asked for refers to sequence numbers which no longer exist
+    ClearResendRequests();
     ResetRetransmitRequestState();
 
     // spec 6.13: the reset is only complete once we have acknowledged it
@@ -1151,6 +1186,7 @@ MidiNetworkConnection::HandleIncomingSessionResetReply()
         LOG_IF_FAILED(ResetSequenceNumbers());
     }
 
+    ClearResendRequests();
     ResetRetransmitRequestState();
 
     return S_OK;
@@ -1936,13 +1972,6 @@ MidiNetworkConnection::ReplyCommandNotSupported(
 
 _Use_decl_annotations_
 HRESULT
-MidiNetworkConnection::AddUmpPacketToRetransmitBuffer(MidiSequenceNumber const sequenceNumber, std::vector<uint32_t> const& words)
-{
-    return AddUmpPacketToRetransmitBuffer(sequenceNumber, words.data(), words.size());
-}
-
-_Use_decl_annotations_
-HRESULT
 MidiNetworkConnection::AddUmpPacketToRetransmitBuffer(
     MidiSequenceNumber const sequenceNumber,
     uint32_t const* words,
@@ -1953,15 +1982,43 @@ MidiNetworkConnection::AddUmpPacketToRetransmitBuffer(
         return S_OK;
     }
 
-    MidiRetransmitBufferEntry entry;
-    entry.SequenceNumber = sequenceNumber;
-
-    if (wordCount > 0 && words != nullptr)
+    try
     {
-        entry.Words.assign(words, words + wordCount);
-    }
+        MidiRetransmitBufferEntry entry;
+        entry.SequenceNumber = sequenceNumber;
 
-    m_retransmitBuffer.push_back(std::move(entry));
+        if (wordCount > 0 && words != nullptr)
+        {
+            entry.Words.assign(words, words + wordCount);
+
+            // what a resend of it costs against the speed limit
+            for (size_t index = 0; index < wordCount; )
+            {
+                size_t const messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(words[index]);
+
+                if (messageWordCount == 0 || index + messageWordCount > wordCount)
+                {
+                    break;
+                }
+
+                entry.WireByteCount += ::WindowsMidiServicesInternal::EstimateMidi1WireByteCount(words[index], static_cast<uint32_t>(messageWordCount));
+                index += messageWordCount;
+            }
+        }
+
+        // The oldest go first, whether the buffer is out of entries or out of bytes
+        while (!m_retransmitBuffer.empty() &&
+            (m_retransmitBuffer.full() ||
+             (m_retransmitBufferWordCount + entry.Words.size()) * sizeof(uint32_t) > MIDI_NETWORK_RETRANSMIT_BUFFER_MAX_BYTES))
+        {
+            m_retransmitBufferWordCount -= m_retransmitBuffer.front().Words.size();
+            m_retransmitBuffer.pop_front();
+        }
+
+        m_retransmitBufferWordCount += entry.Words.size();
+        m_retransmitBuffer.push_back(std::move(entry));
+    }
+    CATCH_RETURN();
 
     return S_OK;
 }
@@ -2021,12 +2078,9 @@ MidiNetworkConnection::HandleIncomingRetransmitRequest(
     // remote had to ask, not how often we were able to answer.
     m_retransmitRequestCount++;
 
-    // the retransmit buffer is guarded by the socket writer lock
-    auto lock = m_socketWriterLock.lock();
-
     // Spec 7.2.3: if we don't implement retransmit at all, the answer is a NAK rather than a
     // retransmit error, and the remote is expected to stop asking.
-    if (m_retransmitBuffer.capacity() == 0)
+    if (m_retransmitBufferCapacity == 0)
     {
         RETURN_IF_FAILED(SendToNetwork([&header](MidiNetworkDataWriter& writer)
             {
@@ -2041,74 +2095,34 @@ MidiNetworkConnection::HandleIncomingRetransmitRequest(
         return S_OK;
     }
 
-    // find the starting sequence number in the circular buffer
-    auto firstPacket = std::find_if(m_retransmitBuffer.begin(), m_retransmitBuffer.end(), [&](const MidiRetransmitBufferEntry& s) { return s.SequenceNumber == startingSequenceNumber; });
+    bool queued{ false };
 
-    if (firstPacket == m_retransmitBuffer.end())
     {
-        // Send a retransmit error
+        auto lock = m_resendRequestsLock.lock();
 
-        auto earliestAvailable = m_retransmitBuffer.size() > 0 ? m_retransmitBuffer.begin()->SequenceNumber : MidiSequenceNumber(0);
+        // Spec 7.2.3: a request repeated before it has been served may be ignored
+        auto const alreadyWaiting = std::any_of(m_resendRequests.begin(), m_resendRequests.end(),
+            [startingSequenceNumber](ResendRequest const& request) { return request.StartingSequenceNumber == MidiSequenceNumber(startingSequenceNumber); });
 
-        RETURN_IF_FAILED(SendToNetwork([&earliestAvailable](MidiNetworkDataWriter& writer)
-            {
-                RETURN_IF_FAILED(writer.WriteCommandRetransmitError(earliestAvailable, MidiNetworkCommandRetransmitErrorReason::RetransmitErrorReason_DataNotAvailable));
-
-                return S_OK;
-            }));
-    }
-    else
-    {
-        // A count larger than what we hold, or the "send everything" value of zero, is clamped
-        // to what is actually in the buffer. Advancing the iterator past end() is undefined.
-        size_t const availableCount = static_cast<size_t>(std::distance(firstPacket, m_retransmitBuffer.end()));
-        size_t countRemaining = (retransmitPacketCount == 0) ? availableCount : min(static_cast<size_t>(retransmitPacketCount), availableCount);
-
-        auto it = firstPacket;
-
-        // Spread the reply across as many datagrams as it takes. DontFragment is set, so one
-        // oversized datagram would simply be dropped and the remote would ask again forever.
-        while (countRemaining > 0)
+        if (!alreadyWaiting && m_resendRequests.size() < MIDI_NETWORK_MAX_PENDING_RETRANSMIT_REQUESTS)
         {
-            size_t budgetBytes{ MIDI_NETWORK_MAX_UDP_PAYLOAD_BYTES - sizeof(uint32_t) };
-            size_t countThisDatagram{ 0 };
-
-            for (auto probe = it; countThisDatagram < countRemaining && probe != m_retransmitBuffer.end(); probe++)
+            try
             {
-                size_t cost = sizeof(uint32_t) + (probe->Words.size() * sizeof(uint32_t));
-
-                if (cost > budgetBytes)
-                {
-                    break;
-                }
-
-                budgetBytes -= cost;
-                countThisDatagram++;
+                m_resendRequests.push_back({ MidiSequenceNumber(startingSequenceNumber), retransmitPacketCount });
+                queued = true;
             }
-
-            if (countThisDatagram == 0)
-            {
-                // a single stored packet larger than a whole datagram should be impossible
-                break;
-            }
-
-            RETURN_IF_FAILED(SendToNetwork([&it, &countThisDatagram](MidiNetworkDataWriter& writer)
-                {
-                    auto writeIterator = it;
-
-                    for (size_t i = 0; i < countThisDatagram; i++, writeIterator++)
-                    {
-                        RETURN_IF_FAILED(writer.WriteCommandUmpMessages(writeIterator->SequenceNumber, writeIterator->Words.data(), static_cast<uint8_t>(writeIterator->Words.size())));
-                    }
-
-                    return S_OK;
-                }));
-
-            std::advance(it, countThisDatagram);
-            countRemaining -= countThisDatagram;
-
-            m_retransmitCount += static_cast<uint32_t>(countThisDatagram);
+            CATCH_LOG();
         }
+    }
+
+    if (queued)
+    {
+        // A repeat of a request which is still waiting says nothing new about loss
+        NoteRemoteLoss();
+
+        // Served by the send thread, ahead of new messages. Answering here would wait on whatever
+        // it is sending, and every remote of a host shares this receive thread.
+        WakeSendThread();
     }
 
     TraceLoggingWrite(
@@ -2185,55 +2199,63 @@ MidiNetworkConnection::OutboundProcessingThreadWorker(std::stop_token stopToken)
         TraceLoggingBoolean(m_sessionActive, "Session active")
     );
 
-    // loop until we're told not to
-    while (!m_shuttingDown && !stopToken.stop_requested()/* && m_sessionActive */)
+    // Spec 7.2.1: with nothing to send, a zero length UMP Data command goes out at growing
+    // intervals, so the remote can tell the last of a burst was not lost
+    uint64_t lastUmpDataTime{ GetTickCount64() };
+    DWORD keepAliveIntervalMilliseconds{ m_outgoingUmpEmptyPacketStartingIntervalMilliseconds };
+
+    HANDLE const waitHandles[]{ m_sendWakeEvent.get(), m_sendPaceTimer.get() };
+
+    while (!m_shuttingDown && !stopToken.stop_requested())
     {
-        // if no new outbound MIDI messages, and it has been longer than the
-        // amount of time we currently have set for min midi message interval,
-        // call function to send midi messages with an empty vector
-        // then double the time for this type of message until we reach a
-        // maximum interval
+        auto const sinceLastUmpData = GetTickCount64() - lastUmpDataTime;
+        DWORD const timeout = (sinceLastUmpData >= keepAliveIntervalMilliseconds) ? 0 : static_cast<DWORD>(keepAliveIntervalMilliseconds - sinceLastUmpData);
 
-        // consider using std::condition_variable_any for the waits here
-        // https://www.nextptr.com/tutorial/ta1588653702/stdjthread-and-cooperative-cancellation-with-stop-token
-        // https://en.cppreference.com/w/cpp/thread/condition_variable_any
+        auto const waitResult = WaitForMultipleObjects(ARRAYSIZE(waitHandles), waitHandles, FALSE, timeout);
 
-        // wait for the minimum transmit interval, or a signal that we have new outbound UMPs
-        if (!stopToken.stop_requested() && !m_newMessagesInQueueEvent.is_signaled())
+        if (waitResult == WAIT_FAILED)
         {
-            m_newMessagesInQueueEvent.wait(m_outgoingUmpEmptyPacketIntervalMilliseconds);
+            // never spin on a broken handle
+            LOG_LAST_ERROR();
+            break;
+        }
+
+        if (m_shuttingDown || stopToken.stop_requested())
+        {
+            break;
         }
 
         // we only send messages if there's an active session
-        if (!stopToken.stop_requested() && m_sessionActive)
+        if (!m_sessionActive)
         {
-            if (m_outgoingUmpMessages.empty())
-            {
-                // increase the empty packet interval until we get to the max interval value
-                m_outgoingUmpEmptyPacketIntervalMilliseconds = min(m_outgoingUmpEmptyPacketIntervalMilliseconds + 200, m_outgoingUmpEmptyPacketMaxIntervalMilliseconds);
-            }
-            else
-            {
-                // reset the interval
-                m_outgoingUmpEmptyPacketIntervalMilliseconds = m_outgoingUmpEmptyPacketStartingIntervalMilliseconds;
-            }
+            lastUmpDataTime = GetTickCount64();
+            keepAliveIntervalMilliseconds = m_outgoingUmpEmptyPacketStartingIntervalMilliseconds;
 
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Sending Message", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
-
-            LOG_IF_FAILED(SendQueuedMidiMessagesToNetwork());
+            continue;
         }
 
-        // we're done processing, so reset the event for the next round
-        if (!stopToken.stop_requested())
+        uint64_t waitTicks{ 0 };
+        bool sentData{ false };
+
+        LOG_IF_FAILED(SendWhatIsAllowed(waitTicks, sentData));
+
+        // the speed limit lets more go later
+        if (waitTicks > 0)
         {
-            m_newMessagesInQueueEvent.ResetEvent();
+            ArmSendPaceTimer(waitTicks);
+        }
+
+        if (sentData)
+        {
+            lastUmpDataTime = GetTickCount64();
+            keepAliveIntervalMilliseconds = m_outgoingUmpEmptyPacketStartingIntervalMilliseconds;
+        }
+        else if (waitTicks == 0 && GetTickCount64() - lastUmpDataTime >= keepAliveIntervalMilliseconds)
+        {
+            LOG_IF_FAILED(SendKeepAlive());
+
+            lastUmpDataTime = GetTickCount64();
+            keepAliveIntervalMilliseconds = (std::min)(keepAliveIntervalMilliseconds + 200, static_cast<DWORD>(m_outgoingUmpEmptyPacketMaxIntervalMilliseconds));
         }
     }
 
@@ -2285,152 +2307,712 @@ MidiNetworkConnection::ChooseForwardErrorCorrectionPackets(size_t& budgetBytes)
     return indexes;
 }
 
-_Use_decl_annotations_
-std::vector<MidiNetworkConnection::OutboundUmpChunk>
-MidiNetworkConnection::TakeOutboundChunks(size_t& position, size_t& budgetBytes)
+void
+MidiNetworkConnection::WakeSendThread() noexcept
 {
-    constexpr size_t commandHeaderBytes{ sizeof(uint32_t) };
-
-    std::vector<OutboundUmpChunk> chunks;
-    auto nextSequenceNumber = m_lastSentUmpCommandSequenceNumber;
-
-    while (position < m_outgoingUmpMessages.size() && budgetBytes > commandHeaderBytes)
+    if (m_sendWakeEvent.is_valid())
     {
-        size_t maxWordsForBudget = (budgetBytes - commandHeaderBytes) / sizeof(uint32_t);
-        size_t maxWords = min(maxWordsForBudget, static_cast<size_t>(MIDI_MAX_UMP_WORDS_PER_PACKET));
-
-        size_t wordCount = CalculateWholeUmpMessageWordCount(m_outgoingUmpMessages, position, maxWords);
-
-        if (wordCount == 0)
-        {
-            // Either the next message needs a fresh datagram, or the tail of the queue is a
-            // partial message we can never send. Only the latter can stall the loop.
-            if (maxWords >= MIDI_MAX_UMP_WORDS_PER_PACKET)
-            {
-                TraceLoggingWrite(
-                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_WARNING,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Incomplete UMP message at the end of the outbound queue. Discarding it.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingUInt64(static_cast<uint64_t>(m_outgoingUmpMessages.size() - position), "words discarded")
-                );
-
-                position = m_outgoingUmpMessages.size();
-            }
-
-            break;
-        }
-
-        nextSequenceNumber = nextSequenceNumber + 1;
-
-        chunks.push_back({ position, wordCount, nextSequenceNumber });
-
-        budgetBytes -= commandHeaderBytes + (wordCount * sizeof(uint32_t));
-        position += wordCount;
+        m_sendWakeEvent.SetEvent();
     }
-
-    return chunks;
 }
 
-HRESULT
-MidiNetworkConnection::SendQueuedMidiMessagesToNetwork()
+_Use_decl_annotations_
+void
+MidiNetworkConnection::ArmSendPaceTimer(uint64_t const ticks) noexcept
 {
+    auto const frequency = internal::GetMidiTimestampFrequency();
+
+    if (!m_sendPaceTimer || frequency == 0)
+    {
+        return;
+    }
+
+    // relative, in 100 nanosecond units, and never zero
+    LARGE_INTEGER dueTime{};
+    dueTime.QuadPart = -static_cast<LONGLONG>((std::max)((ticks * 10'000'000ull) / frequency, 1ull));
+
+    // If this fails, the keep-alive interval still wakes the thread, only later
+    LOG_IF_WIN32_BOOL_FALSE(SetWaitableTimer(m_sendPaceTimer.get(), &dueTime, 0, nullptr, nullptr, FALSE));
+}
+
+_Use_decl_annotations_
+void
+MidiNetworkConnection::SetSendSpeedLimit(uint32_t const speedMultiple, bool const reduceAutomatically) noexcept
+{
+    auto const multiple = ::WindowsMidiServicesInternal::ClampMidiSendSpeedMultiple(speedMultiple);
+
+    {
+        auto lock = m_sendSpeedLock.lock();
+
+        // The same settings again would throw away what automatic reduction has learned
+        if (multiple == m_sendSpeedLimit && reduceAutomatically == m_reduceSendSpeedAutomatically)
+        {
+            return;
+        }
+
+        m_sendSpeedLimit = multiple;
+        m_reduceSendSpeedAutomatically = reduceAutomatically;
+
+        m_automaticSendSpeed.Configure(multiple, reduceAutomatically);
+        m_currentSendSpeed = m_automaticSendSpeed.CurrentMultiple();
+    }
+
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        TraceLoggingWideString(L"Send speed limit changed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(multiple, "multiple of MIDI 1.0 wire speed, 0 for no limit"),
+        TraceLoggingBoolean(reduceAutomatically, "reduce automatically")
     );
 
-    if (m_shuttingDown)
+    // Senders waiting for room may have more of it now
     {
-        return S_OK;
+        auto queueLock = m_outgoingUmpMessageQueueLock.lock();
+        m_outgoingQueueGeneration = m_outgoingQueueGeneration + 1;
     }
 
-    auto queueLock = m_outgoingUmpMessageQueueLock.lock();
-    auto lock = m_socketWriterLock.lock();
+    WakeSendersWaitingForRoom();
+    WakeSendThread();
+}
 
-    HRESULT hr = S_OK;
-    size_t position{ 0 };
-    bool sentAtLeastOneDatagram{ false };
+void
+MidiNetworkConnection::NoteRemoteLoss() noexcept
+{
+    bool changed{ false };
+    uint32_t current{ 0 };
 
-    // Fill datagrams with as many whole UMP messages as fit, and keep going until the queue is
-    // drained. An empty queue still produces one datagram, which is the keep-alive.
-    while (SUCCEEDED(hr) && !m_shuttingDown && (position < m_outgoingUmpMessages.size() || !sentAtLeastOneDatagram))
     {
-        size_t budgetBytes{ MIDI_NETWORK_MAX_UDP_PAYLOAD_BYTES - sizeof(uint32_t) };   // less the UDP packet header
+        auto lock = m_sendSpeedLock.lock();
 
-        auto forwardErrorCorrectionIndexes = ChooseForwardErrorCorrectionPackets(budgetBytes);
-        auto chunks = TakeOutboundChunks(position, budgetBytes);
+        changed = m_automaticSendSpeed.OnLoss(internal::GetCurrentMidiTimestamp(), internal::GetMidiTimestampFrequency());
+        current = m_automaticSendSpeed.CurrentMultiple();
 
-        if (chunks.empty())
+        if (changed)
         {
-            if (sentAtLeastOneDatagram)
+            m_currentSendSpeed = current;
+        }
+    }
+
+    if (changed)
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"The remote is losing data. Sending more slowly.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(current, "multiple of MIDI 1.0 wire speed")
+        );
+
+        WakeSendThread();
+    }
+}
+
+_Use_decl_annotations_
+void
+MidiNetworkConnection::UpdateSendPacer(uint64_t const now)
+{
+    bool raised{ false };
+    uint32_t current{ 0 };
+
+    {
+        auto lock = m_sendSpeedLock.lock();
+
+        raised = m_automaticSendSpeed.OnTick(now, internal::GetMidiTimestampFrequency());
+        current = m_automaticSendSpeed.CurrentMultiple();
+
+        if (raised)
+        {
+            m_currentSendSpeed = current;
+        }
+    }
+
+    if (raised)
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"No lost data for a while. Sending faster again.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(current, "multiple of MIDI 1.0 wire speed, 0 for no limit")
+        );
+
+        // senders waiting for room may have more of it now
+        WakeSendersWaitingForRoom();
+    }
+
+    if (current != m_sendPacerMultiple)
+    {
+        m_sendPacer.Configure(current, internal::GetMidiTimestampFrequency());
+        m_sendPacerMultiple = current;
+    }
+}
+
+void
+MidiNetworkConnection::ClearResendRequests() noexcept
+{
+    auto lock = m_resendRequestsLock.lock();
+
+    m_resendRequests.clear();
+}
+
+bool
+MidiNetworkConnection::OutgoingQueueHasRoom() const noexcept
+{
+    auto const queuedWords = m_outgoingUmpMessages.size() - m_outgoingReadIndex;
+
+    if (queuedWords >= MIDI_NETWORK_SEND_QUEUE_UNLIMITED_MAX_WORDS)
+    {
+        return false;
+    }
+
+    auto const multiple = m_currentSendSpeed.load();
+
+    if (multiple == 0)
+    {
+        return true;
+    }
+
+    // About the same time at any speed
+    auto const pacedLimit = (std::max)(
+        (static_cast<uint64_t>(multiple) * ::WindowsMidiServicesInternal::MidiWireSpeedBytesPerSecond * MIDI_NETWORK_SEND_QUEUE_PACED_MILLISECONDS) / 1000,
+        static_cast<uint64_t>(MIDI_NETWORK_SEND_QUEUE_PACED_MINIMUM_WIRE_BYTES));
+
+    return m_outgoingQueuedWireBytes < pacedLimit;
+}
+
+void
+MidiNetworkConnection::ClearOutgoingQueue() noexcept
+{
+    m_outgoingUmpMessages.clear();
+    m_outgoingReadIndex = 0;
+    m_outgoingQueuedWireBytes = 0;
+    m_outgoingQueueGeneration = m_outgoingQueueGeneration + 1;
+}
+
+void
+MidiNetworkConnection::WakeSendersWaitingForRoom() noexcept
+{
+    WakeByAddressAll(const_cast<ULONG*>(&m_outgoingQueueGeneration));
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::SendRetransmitErrorIfAllowed(MidiSequenceNumber const requestedSequenceNumber, uint64_t const now)
+{
+    auto const frequency = internal::GetMidiTimestampFrequency();
+
+    // A remote asking again and again for data which is gone does not get an answer every time
+    if (m_lastRetransmitErrorTimestamp != 0 &&
+        m_lastRetransmitErrorSequenceNumber == requestedSequenceNumber &&
+        now - m_lastRetransmitErrorTimestamp < (frequency * MIDI_NETWORK_RETRANSMIT_ERROR_REPEAT_MILLISECONDS) / 1000)
+    {
+        return S_FALSE;
+    }
+
+    if (now - m_retransmitErrorWindowStart >= frequency)
+    {
+        m_retransmitErrorWindowStart = now;
+        m_retransmitErrorsInWindow = 0;
+    }
+
+    if (m_retransmitErrorsInWindow >= MIDI_NETWORK_RETRANSMIT_ERROR_MAX_PER_SECOND)
+    {
+        return S_FALSE;
+    }
+
+    m_retransmitErrorsInWindow++;
+    m_lastRetransmitErrorSequenceNumber = requestedSequenceNumber;
+    m_lastRetransmitErrorTimestamp = now;
+
+    // Spec 7.2.4: the error carries the first sequence number still held
+    MidiSequenceNumber earliestAvailable{ 0 };
+
+    {
+        auto lock = m_socketWriterLock.lock();
+
+        if (!m_retransmitBuffer.empty())
+        {
+            earliestAvailable = m_retransmitBuffer.front().SequenceNumber;
+        }
+    }
+
+    RETURN_IF_FAILED(SendToNetwork([&earliestAvailable](MidiNetworkDataWriter& writer)
+        {
+            RETURN_IF_FAILED(writer.WriteCommandRetransmitError(earliestAvailable, MidiNetworkCommandRetransmitErrorReason::RetransmitErrorReason_DataNotAvailable));
+
+            return S_OK;
+        }));
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::SendWhatIsAllowed(uint64_t& waitTicks, bool& sentData)
+{
+    waitTicks = 0;
+    sentData = false;
+
+    try
+    {
+        auto now = internal::GetCurrentMidiTimestamp();
+
+        UpdateSendPacer(now);
+
+        while (!m_shuttingDown && m_sessionActive)
+        {
+            // The remote cannot pass on anything after a gap until the gap is filled, so resends
+            // go ahead of new messages
+            LOG_IF_FAILED(SendRequestedRetransmits(now, waitTicks, sentData));
+
+            if (waitTicks > 0)
             {
-                // nothing left that we can send
                 break;
             }
 
-            // keep-alive: a UMP Data command with no words, which still advances the sequence
-            chunks.push_back({ 0, 0, m_lastSentUmpCommandSequenceNumber + 1 });
+            // S_FALSE when it stopped to let a resend request go first
+            auto const hr = SendQueuedMessages(now, waitTicks, sentData);
+            LOG_IF_FAILED(hr);
+
+            if (hr != S_FALSE)
+            {
+                break;
+            }
+        }
+    }
+    CATCH_RETURN();
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::SendRequestedRetransmits(uint64_t& now, uint64_t& waitTicks, bool& sentData)
+{
+    waitTicks = 0;
+
+    while (!m_shuttingDown && m_sessionActive)
+    {
+        ResendRequest request{};
+
+        {
+            auto lock = m_resendRequestsLock.lock();
+
+            if (m_resendRequests.empty())
+            {
+                break;
+            }
+
+            request = m_resendRequests.front();
         }
 
-        hr = SendToNetwork([&](MidiNetworkDataWriter& writer)
-            {
-                for (auto const& index : forwardErrorCorrectionIndexes)
-                {
-                    auto const& entry = m_retransmitBuffer.at(index);
+        bool unavailable{ false };
+        bool finished{ false };
+        size_t sentCount{ 0 };
+        MidiSequenceNumber nextStart{ request.StartingSequenceNumber };
 
-                    RETURN_IF_FAILED(writer.WriteCommandUmpMessages(entry.SequenceNumber, entry.Words.data(), static_cast<uint8_t>(entry.Words.size())));
-                }
-
-                for (auto const& chunk : chunks)
-                {
-                    RETURN_IF_FAILED(writer.WriteCommandUmpMessages(
-                        chunk.SequenceNumber,
-                        chunk.WordCount > 0 ? m_outgoingUmpMessages.data() + chunk.Offset : nullptr,
-                        static_cast<uint8_t>(chunk.WordCount)));
-                }
-
-                return S_OK;
-            });
-
-        if (hr == S_OK)
         {
-            // only committed once the datagram is actually on the wire
-            for (auto const& chunk : chunks)
-            {
-                m_lastSentUmpCommandSequenceNumber = chunk.SequenceNumber;
+            // the retransmit buffer is guarded by the socket writer lock
+            auto lock = m_socketWriterLock.lock();
 
-                LOG_IF_FAILED(AddUmpPacketToRetransmitBuffer(
-                    chunk.SequenceNumber,
-                    chunk.WordCount > 0 ? m_outgoingUmpMessages.data() + chunk.Offset : nullptr,
-                    chunk.WordCount));
+            auto first = std::find_if(m_retransmitBuffer.begin(), m_retransmitBuffer.end(),
+                [&request](MidiRetransmitBufferEntry const& entry) { return entry.SequenceNumber == request.StartingSequenceNumber; });
+
+            if (first == m_retransmitBuffer.end())
+            {
+                unavailable = true;
+            }
+            else
+            {
+                // A count larger than what we hold, or the "send everything" value of zero, is
+                // clamped to what is actually in the buffer
+                size_t const available = static_cast<size_t>(std::distance(first, m_retransmitBuffer.end()));
+                size_t const wanted = (request.CommandCount == 0) ? available : (std::min)(static_cast<size_t>(request.CommandCount), available);
+
+                // One datagram at a time, and only as much as the speed limit allows. DontFragment
+                // is set, so an oversized datagram would simply be dropped.
+                size_t budgetBytes{ MIDI_NETWORK_MAX_UDP_PAYLOAD_BYTES - sizeof(uint32_t) };
+                size_t count{ 0 };
+
+                for (auto probe = first; count < wanted && probe != m_retransmitBuffer.end(); probe++)
+                {
+                    size_t const cost = sizeof(uint32_t) + (probe->Words.size() * sizeof(uint32_t));
+
+                    if (cost > budgetBytes)
+                    {
+                        break;
+                    }
+
+                    // one command at a time, charged as it is taken
+                    auto const allowedIn = m_sendPacer.TicksUntilAllowed(probe->WireByteCount, now);
+
+                    if (allowedIn > 0)
+                    {
+                        if (count == 0)
+                        {
+                            waitTicks = allowedIn;
+                        }
+
+                        break;
+                    }
+
+                    m_sendPacer.Charge(probe->WireByteCount, now);
+
+                    budgetBytes -= cost;
+                    count++;
+                }
+
+                if (count > 0)
+                {
+                    LOG_IF_FAILED(SendToNetwork([&first, count](MidiNetworkDataWriter& writer)
+                        {
+                            auto writeIterator = first;
+
+                            for (size_t i = 0; i < count; i++, writeIterator++)
+                            {
+                                RETURN_IF_FAILED(writer.WriteCommandUmpMessages(writeIterator->SequenceNumber, writeIterator->Words.data(), static_cast<uint8_t>(writeIterator->Words.size())));
+                            }
+
+                            return S_OK;
+                        }));
+
+                    m_retransmitCount += static_cast<uint32_t>(count);
+                    sentData = true;
+
+                    auto last = first;
+                    std::advance(last, count - 1);
+
+                    sentCount = count;
+                    nextStart = last->SequenceNumber + 1;
+                    finished = (count >= wanted);
+                }
+                else if (waitTicks == 0)
+                {
+                    // Nothing could go and nothing to wait for. Cannot happen, but the request
+                    // must never sit at the front for good.
+                    finished = true;
+                }
             }
         }
 
-        sentAtLeastOneDatagram = true;
+        if (unavailable)
+        {
+            LOG_IF_FAILED(SendRetransmitErrorIfAllowed(request.StartingSequenceNumber, now));
+            finished = true;
+        }
+
+        if (!finished && sentCount == 0)
+        {
+            // the speed limit holds it, still ahead of new messages
+            break;
+        }
+
+        {
+            auto lock = m_resendRequestsLock.lock();
+
+            // a session reset may have emptied the list meanwhile
+            if (!m_resendRequests.empty() && m_resendRequests.front().StartingSequenceNumber == request.StartingSequenceNumber)
+            {
+                if (finished)
+                {
+                    m_resendRequests.pop_front();
+                }
+                else
+                {
+                    auto& front = m_resendRequests.front();
+
+                    front.StartingSequenceNumber = nextStart;
+
+                    if (request.CommandCount != 0)
+                    {
+                        front.CommandCount = static_cast<uint16_t>(request.CommandCount - sentCount);
+                    }
+                }
+            }
+        }
+
+        now = internal::GetCurrentMidiTimestamp();
     }
 
-    // The queue is drained either way. Holding on to messages we could not send would let an
-    // unreachable remote grow it without bound.
-    m_outgoingUmpMessages.clear();
+    return S_OK;
+}
 
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::SendQueuedMessages(uint64_t& now, uint64_t& waitTicks, bool& sentData)
+{
+    waitTicks = 0;
+
+    constexpr size_t commandHeaderBytes{ sizeof(uint32_t) };
+    constexpr size_t datagramBudgetBytes{ MIDI_NETWORK_MAX_UDP_PAYLOAD_BYTES - sizeof(uint32_t) };   // less the UDP packet header
+
+    // Forward error correction copies never take the room the largest UMP message needs, or a
+    // high correction setting could leave no room for new messages at all
+    constexpr size_t correctionBudgetBytes{ datagramBudgetBytes - (commandHeaderBytes + (4 * sizeof(uint32_t))) };
+
+    // Taken words are removed from the front of the queue in bulk, not a datagram at a time
+    constexpr size_t compactAfterWords{ 16 * 1024 };
+
+    while (!m_shuttingDown && m_sessionActive)
+    {
+        // Room the forward error correction copies take. Only this thread adds to the
+        // retransmit buffer, so they can only take less when the datagram is written.
+        size_t forwardErrorCorrectionBytes{ 0 };
+
+        {
+            auto lock = m_socketWriterLock.lock();
+
+            size_t remaining{ correctionBudgetBytes };
+            ChooseForwardErrorCorrectionPackets(remaining);
+            forwardErrorCorrectionBytes = correctionBudgetBytes - remaining;
+        }
+
+        size_t const budgetBytes{ datagramBudgetBytes - forwardErrorCorrectionBytes };
+
+        std::vector<uint32_t> words{};
+        uint64_t wireBytes{ 0 };
+        bool tookFromQueue{ false };
+
+        {
+            auto queueLock = m_outgoingUmpMessageQueueLock.lock();
+
+            size_t const start{ m_outgoingReadIndex };
+            size_t position{ start };
+            size_t datagramBytes{ 0 };
+            size_t wordsInCommand{ 0 };
+            bool discardRest{ false };
+
+            while (position < m_outgoingUmpMessages.size())
+            {
+                size_t const messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(m_outgoingUmpMessages[position]);
+
+                if (messageWordCount == 0 || position + messageWordCount > m_outgoingUmpMessages.size())
+                {
+                    // a partial message can never be sent, and would hold up everything behind it
+                    TraceLoggingWrite(
+                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Incomplete UMP message at the end of the outbound queue. Discarding it.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingUInt64(static_cast<uint64_t>(m_outgoingUmpMessages.size() - position), "words discarded")
+                    );
+
+                    discardRest = true;
+                    break;
+                }
+
+                // Whole messages only, up to 64 words to a command, each command with its own header
+                bool const startsCommand = (wordsInCommand == 0 || wordsInCommand + messageWordCount > MIDI_MAX_UMP_WORDS_PER_PACKET);
+                size_t const addedBytes = (startsCommand ? commandHeaderBytes : 0) + (messageWordCount * sizeof(uint32_t));
+
+                if (datagramBytes + addedBytes > budgetBytes)
+                {
+                    break;
+                }
+
+                auto const cost = ::WindowsMidiServicesInternal::EstimateMidi1WireByteCount(m_outgoingUmpMessages[position], static_cast<uint32_t>(messageWordCount));
+
+                // one message at a time, charged as it is taken
+                auto const allowedIn = m_sendPacer.TicksUntilAllowed(cost, now);
+
+                if (allowedIn > 0)
+                {
+                    if (position == start)
+                    {
+                        waitTicks = allowedIn;
+                    }
+
+                    break;
+                }
+
+                m_sendPacer.Charge(cost, now);
+
+                datagramBytes += addedBytes;
+                wordsInCommand = startsCommand ? messageWordCount : wordsInCommand + messageWordCount;
+                wireBytes += cost;
+                position += messageWordCount;
+            }
+
+            if (position > start)
+            {
+                words.assign(m_outgoingUmpMessages.begin() + start, m_outgoingUmpMessages.begin() + position);
+            }
+
+            m_outgoingReadIndex = discardRest ? m_outgoingUmpMessages.size() : position;
+            m_outgoingQueuedWireBytes = (m_outgoingQueuedWireBytes > wireBytes) ? m_outgoingQueuedWireBytes - wireBytes : 0;
+
+            if (m_outgoingReadIndex >= m_outgoingUmpMessages.size())
+            {
+                m_outgoingUmpMessages.clear();
+                m_outgoingReadIndex = 0;
+                m_outgoingQueuedWireBytes = 0;
+            }
+            else if (m_outgoingReadIndex >= compactAfterWords && m_outgoingReadIndex * 2 >= m_outgoingUmpMessages.size())
+            {
+                m_outgoingUmpMessages.erase(m_outgoingUmpMessages.begin(), m_outgoingUmpMessages.begin() + m_outgoingReadIndex);
+                m_outgoingReadIndex = 0;
+            }
+
+            tookFromQueue = (position > start) || discardRest;
+
+            if (tookFromQueue)
+            {
+                m_outgoingQueueGeneration = m_outgoingQueueGeneration + 1;
+            }
+        }
+
+        if (tookFromQueue)
+        {
+            WakeSendersWaitingForRoom();
+        }
+
+        if (words.empty())
+        {
+            // empty, or the speed limit holds the rest
+            break;
+        }
+
+        // Once taken, the messages are gone whether or not this works. Holding on to them would
+        // let an unreachable remote grow the queue without bound.
+        LOG_IF_FAILED(SendUmpDataCommands(words));
+
+        sentData = true;
+
+        now = internal::GetCurrentMidiTimestamp();
+
+        // a resend request which came in meanwhile goes first
+        {
+            auto lock = m_resendRequestsLock.lock();
+
+            if (!m_resendRequests.empty())
+            {
+                return S_FALSE;
+            }
+        }
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::SendUmpDataCommands(std::vector<uint32_t> const& words)
+{
+    auto lock = m_socketWriterLock.lock();
+
+    std::vector<OutboundUmpChunk> chunks{};
+    auto sequenceNumber = m_lastSentUmpCommandSequenceNumber;
+    size_t chunkBytes{ 0 };
+
+    for (size_t position = 0; position < words.size(); )
+    {
+        auto const wordCount = CalculateWholeUmpMessageWordCount(words, position, MIDI_MAX_UMP_WORDS_PER_PACKET);
+
+        if (wordCount == 0)
+        {
+            // only whole messages are taken from the queue
+            break;
+        }
+
+        sequenceNumber = sequenceNumber + 1;
+        chunks.push_back({ position, wordCount, sequenceNumber });
+
+        chunkBytes += sizeof(uint32_t) + (wordCount * sizeof(uint32_t));
+        position += wordCount;
+    }
+
+    if (chunks.empty())
+    {
+        return S_FALSE;
+    }
+
+    size_t budgetBytes{ MIDI_NETWORK_MAX_UDP_PAYLOAD_BYTES - sizeof(uint32_t) };   // less the UDP packet header
+    budgetBytes = (budgetBytes > chunkBytes) ? budgetBytes - chunkBytes : 0;
+
+    auto const forwardErrorCorrectionIndexes = ChooseForwardErrorCorrectionPackets(budgetBytes);
+
+    auto const hr = SendToNetwork([&](MidiNetworkDataWriter& writer)
+        {
+            for (auto const& index : forwardErrorCorrectionIndexes)
+            {
+                auto const& entry = m_retransmitBuffer.at(index);
+
+                RETURN_IF_FAILED(writer.WriteCommandUmpMessages(entry.SequenceNumber, entry.Words.data(), static_cast<uint8_t>(entry.Words.size())));
+            }
+
+            for (auto const& chunk : chunks)
+            {
+                RETURN_IF_FAILED(writer.WriteCommandUmpMessages(chunk.SequenceNumber, words.data() + chunk.Offset, static_cast<uint8_t>(chunk.WordCount)));
+            }
+
+            return S_OK;
+        });
+
+    if (hr == S_OK)
+    {
+        // only committed once the datagram is actually on the wire
+        for (auto const& chunk : chunks)
+        {
+            m_lastSentUmpCommandSequenceNumber = chunk.SequenceNumber;
+
+            LOG_IF_FAILED(AddUmpPacketToRetransmitBuffer(chunk.SequenceNumber, words.data() + chunk.Offset, chunk.WordCount));
+        }
+    }
 
     return hr;
 }
+
+HRESULT
+MidiNetworkConnection::SendKeepAlive()
+{
+    auto lock = m_socketWriterLock.lock();
+
+    // called straight from the send thread, so nothing may escape
+    std::vector<size_t> forwardErrorCorrectionIndexes{};
+
+    try
+    {
+        size_t budgetBytes{ MIDI_NETWORK_MAX_UDP_PAYLOAD_BYTES - sizeof(uint32_t) - sizeof(uint32_t) };   // less the UDP packet header and this command's header
+        forwardErrorCorrectionIndexes = ChooseForwardErrorCorrectionPackets(budgetBytes);
+    }
+    CATCH_RETURN();
+
+    // a UMP Data command with no words, which still advances the sequence
+    auto const sequenceNumber = m_lastSentUmpCommandSequenceNumber + 1;
+
+    auto const hr = SendToNetwork([&](MidiNetworkDataWriter& writer)
+        {
+            for (auto const& index : forwardErrorCorrectionIndexes)
+            {
+                auto const& entry = m_retransmitBuffer.at(index);
+
+                RETURN_IF_FAILED(writer.WriteCommandUmpMessages(entry.SequenceNumber, entry.Words.data(), static_cast<uint8_t>(entry.Words.size())));
+            }
+
+            RETURN_IF_FAILED(writer.WriteCommandUmpMessages(sequenceNumber, nullptr, 0));
+
+            return S_OK;
+        });
+
+    if (hr == S_OK)
+    {
+        m_lastSentUmpCommandSequenceNumber = sequenceNumber;
+
+        LOG_IF_FAILED(AddUmpPacketToRetransmitBuffer(sequenceNumber, nullptr, 0));
+    }
+
+    return hr;
+}
+
 
 
 _Use_decl_annotations_
@@ -2448,20 +3030,84 @@ MidiNetworkConnection::QueueMidiMessagesToSendToNetwork(
         TraceLoggingUInt32(static_cast<uint32_t>(words.size()), "Word count")
     );
 
-    auto lock = m_outgoingUmpMessageQueueLock.lock();
+    // what these take on a MIDI 1.0 cable, for the speed limit
+    uint64_t wireBytes{ 0 };
 
-    // Under the queue lock, so nothing is added after a session's queue has been cleared
-    if (!m_sessionActive && !m_endpointBeingCreated)
+    for (size_t index = 0; index < words.size(); )
     {
-        return S_OK;
+        size_t const messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(words[index]);
+
+        if (messageWordCount == 0 || index + messageWordCount > words.size())
+        {
+            // the send thread discards it
+            break;
+        }
+
+        wireBytes += ::WindowsMidiServicesInternal::EstimateMidi1WireByteCount(words[index], static_cast<uint32_t>(messageWordCount));
+        index += messageWordCount;
     }
 
-    m_outgoingUmpMessages.insert(m_outgoingUmpMessages.end(), words.begin(), words.end());
+    // While the queue is over its limit, the sender waits for room, so an app sending faster than
+    // the connection carries is slowed down rather than having its messages dropped. Never for
+    // longer than the app's side of the service pipe waits, though: past that, the messages are
+    // queued anyway.
+    auto const waitDeadline = GetTickCount64() + MIDI_NETWORK_SEND_QUEUE_WAIT_LIMIT_MILLISECONDS;
 
-    lock.reset();
+    while (true)
+    {
+        ULONG observedGeneration{ 0 };
 
-    // wakeup sender thread
-    m_newMessagesInQueueEvent.SetEvent();
+        {
+            auto lock = m_outgoingUmpMessageQueueLock.lock();
+
+            // Under the queue lock, so nothing is added after a session's queue has been cleared
+            if (m_shuttingDown || (!m_sessionActive && !m_endpointBeingCreated))
+            {
+                return S_OK;
+            }
+
+            // Before the session starts, nothing drains the queue, so there is nothing to wait for
+            if (!m_sessionActive || OutgoingQueueHasRoom() || GetTickCount64() >= waitDeadline)
+            {
+                if ((m_outgoingUmpMessages.size() - m_outgoingReadIndex) + words.size() > MIDI_NETWORK_SEND_QUEUE_HARD_MAX_WORDS)
+                {
+                    TraceLoggingWrite(
+                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Outbound queue is full and not draining. Dropping messages.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingUInt32(static_cast<uint32_t>(words.size()), "Word count")
+                    );
+
+                    return S_OK;
+                }
+
+                // can throw, and nothing may escape into the service
+                try
+                {
+                    m_outgoingUmpMessages.insert(m_outgoingUmpMessages.end(), words.begin(), words.end());
+                }
+                CATCH_RETURN();
+
+                m_outgoingQueuedWireBytes += wireBytes;
+
+                break;
+            }
+
+            observedGeneration = m_outgoingQueueGeneration;
+        }
+
+        // Woken when the send thread takes from the queue, and checks again at least this often
+        auto const nowTicks = GetTickCount64();
+        auto const remaining = (waitDeadline > nowTicks) ? waitDeadline - nowTicks : 0;
+
+        WaitOnAddress(&m_outgoingQueueGeneration, &observedGeneration, sizeof(observedGeneration),
+            static_cast<DWORD>((std::min)(remaining, static_cast<uint64_t>(MIDI_NETWORK_SEND_QUEUE_WAIT_SLICE_MILLISECONDS))));
+    }
+
+    WakeSendThread();
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -2500,7 +3146,12 @@ MidiNetworkConnection::QueueMidiMessagesToSendToNetwork(
     uint32_t* wordPointer{ static_cast<uint32_t*>(bytes) };
     size_t wordCount{ byteCount / sizeof(uint32_t) };
 
-    words.insert(words.end(), wordPointer, wordPointer + wordCount);
+    // can throw, and nothing may escape into the service
+    try
+    {
+        words.insert(words.end(), wordPointer, wordPointer + wordCount);
+    }
+    CATCH_RETURN();
 
     // TODO: Can optimize this to not create the temporary vector and instead
     // insert directly into m_outgoingUmpMessages. Duplicates some code.
@@ -2550,6 +3201,7 @@ MidiNetworkConnection::Shutdown()
         auto lock = m_socketWriterLock.lock();
 
         m_retransmitBuffer.clear();
+        m_retransmitBufferWordCount = 0;
 
         if (m_writer != nullptr)
         {
@@ -2560,8 +3212,11 @@ MidiNetworkConnection::Shutdown()
 
     {
         auto queueLock = m_outgoingUmpMessageQueueLock.lock();
-        m_outgoingUmpMessages.clear();
+        ClearOutgoingQueue();
     }
+
+    WakeSendersWaitingForRoom();
+    ClearResendRequests();
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),

@@ -160,6 +160,49 @@ namespace
         }
     }
 
+    // A multiple of MIDI 1.0 wire speed. 0, or anything faster than the fastest limit, is no
+    // limit at all. Only something which is not a speed at all is treated as absent.
+    uint32_t SafeGetNamedSendSpeedLimit(
+        _In_ json::JsonObject const& parent,
+        _In_ winrt::hstring const& name,
+        _In_ uint32_t const defaultValue) noexcept
+    {
+        try
+        {
+            if (parent == nullptr || !parent.HasKey(name))
+            {
+                return defaultValue;
+            }
+
+            auto value = parent.Lookup(name);
+
+            if (value == nullptr || value.ValueType() != json::JsonValueType::Number)
+            {
+                TraceWrongJsonType(name, L"number");
+                return defaultValue;
+            }
+
+            auto const number = value.GetNumber();
+
+            // also false for NaN
+            if (!(number >= 0))
+            {
+                return defaultValue;
+            }
+
+            if (number > ::WindowsMidiServicesInternal::MidiSendSpeedMaxMultiple)
+            {
+                return 0;
+            }
+
+            return static_cast<uint32_t>(number);
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
     json::JsonArray SafeGetNamedArray(_In_ json::JsonObject const& parent, _In_ winrt::hstring const& name) noexcept
     {
         try
@@ -695,6 +738,8 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectDirect(
     winrt::hstring const& customEndpointName,
     bool const createMidi1Ports,
     uint8_t const fallbackMidi1PortCount,
+    uint32_t const sendSpeedLimit,
+    bool const reduceSendSpeedAutomatically,
     json::JsonObject& responseObject) noexcept
 try
 {
@@ -740,6 +785,8 @@ try
 
     clientDefinition.CreateMidi1Ports = createMidi1Ports;
     clientDefinition.FallbackMidi1PortCount = fallbackMidi1PortCount;
+    clientDefinition.SendSpeedLimit = ::WindowsMidiServicesInternal::ClampMidiSendSpeedMultiple(sendSpeedLimit);
+    clientDefinition.ReduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
     clientDefinition.EntryIdentifier = configEntryId;
     clientDefinition.MatchDirectHostNameOrIPAddress = remoteAddress;
     clientDefinition.MatchDirectPort = remotePort;
@@ -784,6 +831,8 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectMdns(
     winrt::hstring const& customEndpointName,
     bool const createMidi1Ports,
     uint8_t const fallbackMidi1PortCount,
+    uint32_t const sendSpeedLimit,
+    bool const reduceSendSpeedAutomatically,
     json::JsonObject& responseObject) noexcept
 try
 {
@@ -812,6 +861,8 @@ try
 
     clientDefinition.CreateMidi1Ports = createMidi1Ports;
     clientDefinition.FallbackMidi1PortCount = fallbackMidi1PortCount;
+    clientDefinition.SendSpeedLimit = ::WindowsMidiServicesInternal::ClampMidiSendSpeedMultiple(sendSpeedLimit);
+    clientDefinition.ReduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
     clientDefinition.EntryIdentifier = configEntryId;
     clientDefinition.MatchId = matchId;
     clientDefinition.LocalEndpointName = umpEndpointName;
@@ -1432,6 +1483,14 @@ namespace
             json::JsonValue::CreateNumberValue(definition.FallbackMidi1PortCount));
 
         clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_SEND_SPEED_LIMIT_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(definition.SendSpeedLimit)));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
+            json::JsonValue::CreateBooleanValue(definition.ReduceSendSpeedAutomatically));
+
+        clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY,
             json::JsonValue::CreateBooleanValue(client != nullptr && client->IsSessionActive()));
 
@@ -1482,6 +1541,10 @@ namespace
         clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY,
             json::JsonValue::CreateNumberValue(static_cast<double>(client->GetRetransmitRequestCount())));     // need to ensure we don't overflow here with uint32_t
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CURRENT_SEND_SPEED_LIMIT_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(client->GetCurrentSendSpeedLimit())));
 
         return clientObject;
     }
@@ -1690,6 +1753,10 @@ namespace
             MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY,
             json::JsonValue::CreateNumberValue(static_cast<double>(connection->GetRetransmitRequestCount())));
 
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_CURRENT_SEND_SPEED_LIMIT_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(connection->GetCurrentSendSpeedLimit())));
+
         return connectionObject;
     }
 
@@ -1769,6 +1836,14 @@ namespace
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_FALLBACK_MIDI1_PORT_COUNT_KEY,
             json::JsonValue::CreateNumberValue(definition.FallbackMidi1PortCount));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SEND_SPEED_LIMIT_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(definition.SendSpeedLimit)));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
+            json::JsonValue::CreateBooleanValue(definition.ReduceSendSpeedAutomatically));
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY,
@@ -1934,6 +2009,36 @@ namespace
         catch (...)
         {
             return defaultValue;
+        }
+    }
+
+    // A send speed limit, as SafeGetNamedSendSpeedLimit reads one from configuration. Absent or
+    // unreadable is no limit, the default.
+    uint32_t OptionalCommandArgumentSendSpeedLimit(
+        _In_ internal::MidiTransportCommandHelper& commandHelper,
+        _In_ std::wstring const& key)
+    {
+        auto arg = commandHelper.Arguments()->find(key);
+
+        if (arg == commandHelper.Arguments()->end())
+        {
+            return 0;
+        }
+
+        try
+        {
+            auto const value = std::stoll(internal::TrimmedWStringCopy(arg->second));
+
+            if (value < 0 || value > ::WindowsMidiServicesInternal::MidiSendSpeedMaxMultiple)
+            {
+                return 0;
+            }
+
+            return static_cast<uint32_t>(value);
+        }
+        catch (...)
+        {
+            return 0;
         }
     }
 
@@ -2312,6 +2417,8 @@ try
                     OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY),
                     OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT),
                     OptionalCommandArgumentByte(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM),
+                    OptionalCommandArgumentSendSpeedLimit(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY),
+                    OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false),
                     responseObject);
             }
         },
@@ -2338,6 +2445,8 @@ try
                     OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY),
                     OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT),
                     OptionalCommandArgumentByte(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM),
+                    OptionalCommandArgumentSendSpeedLimit(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY),
+                    OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false),
                     responseObject);
             }
         },
@@ -2480,7 +2589,7 @@ catch (...)
 //    "transportSettings" :
 //    {
 //        "maxForwardErrorCorrectionCommandPackets": 2,
-//        "maxRetransmitBufferCommandPackets": 50,
+//        "maxRetransmitBufferCommandPackets": 250,
 //        "outboundPingInterval": 2000,
 //        "directConnectionScanInterval": 20000,
 //        "maxHostConnections": 64,
@@ -2581,6 +2690,16 @@ namespace
             definition.FallbackMidi1PortCount,
             MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
             MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+
+        definition.SendSpeedLimit = SafeGetNamedSendSpeedLimit(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY,
+            definition.SendSpeedLimit);
+
+        definition.ReduceSendSpeedAutomatically = SafeGetNamedBoolean(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
+            definition.ReduceSendSpeedAutomatically);
     }
 
     void ApplyEntrySettings(
@@ -2604,6 +2723,16 @@ namespace
             definition.FallbackMidi1PortCount,
             MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
             MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+
+        definition.SendSpeedLimit = SafeGetNamedSendSpeedLimit(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY,
+            definition.SendSpeedLimit);
+
+        definition.ReduceSendSpeedAutomatically = SafeGetNamedBoolean(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
+            definition.ReduceSendSpeedAutomatically);
 
         // An empty id is every adapter. One which is not a GUID is ignored.
         GUID networkAdapterId{};
@@ -2722,6 +2851,8 @@ try
                     stored.CustomEndpointName = definition->CustomEndpointName;
                     stored.CreateMidi1Ports = definition->CreateMidi1Ports;
                     stored.FallbackMidi1PortCount = definition->FallbackMidi1PortCount;
+                    stored.SendSpeedLimit = definition->SendSpeedLimit;
+                    stored.ReduceSendSpeedAutomatically = definition->ReduceSendSpeedAutomatically;
                     stored.NetworkAdapterId = definition->NetworkAdapterId;
                     stored.NetworkAdapterName = definition->NetworkAdapterName;
                     stored.NetworkAdapterPhysicalAddress = definition->NetworkAdapterPhysicalAddress;
@@ -2733,6 +2864,7 @@ try
             {
                 host->SetFallbackMidi1PortCount(definition->FallbackMidi1PortCount);
                 host->SetCreateMidi1Ports(definition->CreateMidi1Ports);
+                host->SetSendSpeedLimit(definition->SendSpeedLimit, definition->ReduceSendSpeedAutomatically);
 
                 host->SetNetworkAdapter(
                     definition->NetworkAdapterId,
@@ -2745,6 +2877,16 @@ try
                 if (endpointManager != nullptr)
                 {
                     endpointManager->RequestNetworkAdapterReconcile();
+                }
+            }
+
+            // The remote clients already connected change speed straight away. One whose speed
+            // is unchanged keeps what automatic reduction has learned.
+            for (auto const& connection : TransportState::Current().GetHostConnectionsForHost(entryIdentifier))
+            {
+                if (connection != nullptr)
+                {
+                    connection->SetSendSpeedLimit(definition->SendSpeedLimit, definition->ReduceSendSpeedAutomatically);
                 }
             }
         }
@@ -2789,11 +2931,22 @@ try
                     stored.CustomEndpointName = definition->CustomEndpointName;
                     stored.CreateMidi1Ports = definition->CreateMidi1Ports;
                     stored.FallbackMidi1PortCount = definition->FallbackMidi1PortCount;
+                    stored.SendSpeedLimit = definition->SendSpeedLimit;
+                    stored.ReduceSendSpeedAutomatically = definition->ReduceSendSpeedAutomatically;
                 }));
 
             if (auto client = TransportState::Current().GetClient(entryIdentifier); client != nullptr)
             {
                 client->SetFallbackMidi1PortCount(definition->FallbackMidi1PortCount);
+                client->SetSendSpeedLimit(definition->SendSpeedLimit, definition->ReduceSendSpeedAutomatically);
+            }
+
+            for (auto const& connection : TransportState::Current().GetAllNetworkConnectionsForClient(entryIdentifier))
+            {
+                if (connection != nullptr)
+                {
+                    connection->SetSendSpeedLimit(definition->SendSpeedLimit, definition->ReduceSendSpeedAutomatically);
+                }
             }
         }
     }
