@@ -306,6 +306,20 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                     MIDI_CONFIG_JSON_RTP_MIDI_HOSTS_KEY,
                     internal::GuidToString(rtpKnownClients.HostId()) });
             }
+            else if (auto const networkRemoteClientSettings = configUpdate.try_as<network::MidiNetworkHostRemoteClientSettingsConfig>())
+            {
+                requiredEntryPaths.push_back({
+                    MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY,
+                    internal::GuidToString(networkRemoteClientSettings.HostId()) });
+            }
+            else if (auto const rtpRemoteClientSettings = configUpdate.try_as<rtp::MidiRtpHostRemoteClientSettingsConfig>())
+            {
+                requiredEntryPaths.push_back({
+                    MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
+                    MIDI_CONFIG_JSON_RTP_MIDI_HOSTS_KEY,
+                    internal::GuidToString(rtpRemoteClientSettings.HostId()) });
+            }
 
             return InternalSaveUpdate(configUpdate.TransportId(), configUpdate.ConfigJson(), requiredEntryPaths);
         }

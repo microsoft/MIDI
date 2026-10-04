@@ -96,6 +96,11 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY                  L"umpEndpointName"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY   L"productInstanceId"
 
+// Remote clients of a host with their own sendSpeedLimit and reduceSendSpeedAutomatically, used
+// for them instead of the host's. An array of objects with the identity keys above. Always the
+// whole list: an update replaces it rather than adding to it.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_SETTINGS_KEY                L"remoteClientSettings"
+
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_KEY                   L"authentication"        // password, user, none
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE            L"none"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_PASSWORD        L"password"              // global password
@@ -272,6 +277,12 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_RETRANSMIT_COUNT_KEY         MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_COUNT_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_CURRENT_SEND_SPEED_LIMIT_KEY       MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CURRENT_SEND_SPEED_LIMIT_KEY
+
+// What the host sends to this remote client: its own settings when the host has them, otherwise
+// the host's, and which of the two it is.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_SEND_SPEED_LIMIT_KEY               MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_USES_REMOTE_CLIENT_SETTINGS_KEY    L"usesRemoteClientSettings"
 
 
 // getPendingRemoteClients response. This is what the settings app polls, so each entry carries

@@ -148,7 +148,7 @@
   </data>
   <!-- The prompt the customer pastes into an AI assistant. Any language works, so translate it like other text. -->
   <data name="AssistantPromptIntroFormat" xml:space="preserve">
-    <value>I want to make a patch for Windows MIDI Patchbay. Before you start, read the whole guide at {0} and follow it. Ask me what you need to know. Then give me a .midipatch file that I can import.</value>
+    <value>I want to make a patch for Windows MIDI Patchbay. Before you start, read the whole guide at {0} and follow it. If you can't open the guide, tell me and stop. Don't guess the file format: a guessed file opens without an error but doesn't do what I asked. Ask me what you need to know. Then give me a .midipatch file that I can import.</value>
     <comment>{0} is the address of the guide, a web link</comment>
   </data>
   <data name="AssistantPromptDevices" xml:space="preserve">

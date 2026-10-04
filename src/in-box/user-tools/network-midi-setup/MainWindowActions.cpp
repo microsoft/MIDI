@@ -417,6 +417,33 @@ namespace winrt::midinetworksetup::implementation
                 response == nullptr ? winrt::hstring{} : response.ErrorMessage());
         }
 
+        // Makes a speed change in the running service and, once the service has taken it, saves
+        // it. Returns what to tell the customer: doneMessage, or why it did not happen.
+        winrt::hstring SendAndSaveSpeedChange(
+            _In_ midi2svc::IMidiServiceTransportPluginConfig const& config,
+            _In_ winrt::hstring const& doneMessage) noexcept
+        {
+            try
+            {
+                auto const response = midi2svc::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+
+                if (response == nullptr || response.Status() != midi2svc::MidiServiceConfigResponseStatus::Success)
+                {
+                    return (response == nullptr || response.ServiceErrorMessage().empty()) ?
+                        res::GetString(L"SendSpeedChangeFailedGeneral") :
+                        res::FormatString(L"SendSpeedChangeFailedFormat", response.ServiceErrorMessage());
+                }
+
+                auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                return (saved != nullptr && saved.Success()) ? doneMessage : NotSavedMessage(saved);
+            }
+            catch (...)
+            {
+                return res::GetString(L"SendSpeedChangeFailedGeneral");
+            }
+        }
+
         // The saved Network MIDI 2.0 client with this entry identifier, or nullptr when there is none
         midi2net::MidiNetworkSavedClient FindSavedClient(_In_ winrt::hstring const& clientKey) noexcept
         {
@@ -444,6 +471,29 @@ namespace winrt::midinetworksetup::implementation
             return nullptr;
         }
 
+        // A remote client's name or product instance id, compared the way the service compares
+        // them: without case, and ignoring spaces at either end.
+        bool IsSameRemoteClientText(_In_ winrt::hstring const& left, _In_ winrt::hstring const& right) noexcept
+        {
+            auto const trimmed = [](std::wstring_view const value) noexcept
+                {
+                    auto const first = value.find_first_not_of(L" \t\r\n");
+
+                    return first == std::wstring_view::npos ?
+                        std::wstring_view{} :
+                        value.substr(first, value.find_last_not_of(L" \t\r\n") - first + 1);
+                };
+
+            auto const a = trimmed(left);
+            auto const b = trimmed(right);
+
+            return a.size() == b.size() &&
+                (a.empty() || ::CompareStringOrdinal(
+                    a.data(), static_cast<int>(a.size()),
+                    b.data(), static_cast<int>(b.size()),
+                    TRUE) == CSTR_EQUAL);
+        }
+
         // The service keys a remote client on its name and product instance id together, compared
         // without case, so the saved lists are matched the same way.
         bool IsSameRemoteClient(
@@ -451,30 +501,9 @@ namespace winrt::midinetworksetup::implementation
             _In_ winrt::hstring const& name,
             _In_ winrt::hstring const& productInstanceId) noexcept
         {
-            auto const same = [](winrt::hstring const& left, winrt::hstring const& right) noexcept
-                {
-                    auto const trimmed = [](std::wstring_view const value) noexcept
-                        {
-                            auto const first = value.find_first_not_of(L" \t\r\n");
-
-                            return first == std::wstring_view::npos ?
-                                std::wstring_view{} :
-                                value.substr(first, value.find_last_not_of(L" \t\r\n") - first + 1);
-                        };
-
-                    auto const a = trimmed(left);
-                    auto const b = trimmed(right);
-
-                    return a.size() == b.size() &&
-                        (a.empty() || ::CompareStringOrdinal(
-                            a.data(), static_cast<int>(a.size()),
-                            b.data(), static_cast<int>(b.size()),
-                            TRUE) == CSTR_EQUAL);
-                };
-
             return
-                same(known.RemoteClientName(), name) &&
-                same(known.RemoteClientProductInstanceId(), productInstanceId);
+                IsSameRemoteClientText(known.RemoteClientName(), name) &&
+                IsSameRemoteClientText(known.RemoteClientProductInstanceId(), productInstanceId);
         }
 
         // Saves the allow or deny decision about one remote client of a Network MIDI 2.0 host, or
@@ -598,14 +627,16 @@ namespace winrt::midinetworksetup::implementation
     }
 
 
-    // Asks for an optional display name before connecting. Returns false if the user canceled.
-    // The name is left empty when they accept without typing one, which means "use the name the
-    // device reports".
+    // Asks for an optional display name and the sending speed before connecting. Returns false if
+    // the user canceled. The name is left empty when they accept without typing one, which means
+    // "use the name the device reports".
+    _Use_decl_annotations_
     foundation::IAsyncOperation<bool> MainWindow::PromptForConnectNameAsync(
         winrt::hstring const deviceName,
-        std::shared_ptr<winrt::hstring> customName)
+        bool const offerReduceAutomatically,
+        std::shared_ptr<ConnectChoices> choices)
     {
-        if (m_openDialog != nullptr)
+        if (m_openDialog != nullptr || choices == nullptr)
         {
             co_return false;
         }
@@ -614,6 +645,12 @@ namespace winrt::midinetworksetup::implementation
         {
             ConnectNameDialogText().Text(res::FormatString(L"ConnectNamePromptFormat", deviceName));
             ConnectNameDialogTextBox().Text(L"");
+
+            // a new connection starts with no limit, like one made any other way
+            FillSendSpeedLimitChoices(ConnectSendSpeedLimitComboBox(), 0);
+            ConnectReduceSendSpeedCheckBox().IsChecked(false);
+            ConnectReduceSendSpeedPanel().Visibility(offerReduceAutomatically ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
             ConnectNameDialog().XamlRoot(Content().XamlRoot());
 
             m_openDialog = ConnectNameDialog();
@@ -627,7 +664,9 @@ namespace winrt::midinetworksetup::implementation
                 co_return false;
             }
 
-            *customName = TextOf(ConnectNameDialogTextBox());
+            choices->CustomName = TextOf(ConnectNameDialogTextBox());
+            choices->SendSpeedLimit = SelectedSendSpeedLimit(ConnectSendSpeedLimitComboBox());
+            choices->ReduceSendSpeedAutomatically = offerReduceAutomatically && IsCheckBoxChecked(ConnectReduceSendSpeedCheckBox());
 
             co_return true;
         }
@@ -656,14 +695,19 @@ namespace winrt::midinetworksetup::implementation
                 co_return;
             }
 
-            auto customName = std::make_shared<winrt::hstring>();
+            auto choices = std::make_shared<ConnectChoices>();
 
-            if (!co_await PromptForConnectNameAsync(item.DisplayName(), customName))
+            if (!co_await PromptForConnectNameAsync(item.DisplayName(), true, choices))
             {
                 co_return;
             }
 
-            ConnectRemoteHostAsync(item, false, *customName);
+            ConnectRemoteHostAsync(
+                item,
+                false,
+                choices->CustomName,
+                choices->SendSpeedLimit,
+                choices->ReduceSendSpeedAutomatically);
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to start connecting to a remote device.")
     }
@@ -741,7 +785,19 @@ namespace winrt::midinetworksetup::implementation
     {
         try
         {
-            ConnectRemoteHostAsync(ItemOf<midinetworksetup::RemoteHostItem>(sender), true, winrt::hstring{});
+            auto const item = ItemOf<midinetworksetup::RemoteHostItem>(sender);
+
+            // A saved entry is tried again with what it was saved with. The speed here is what the
+            // service is running the entry at, used only if the entry has to be made again.
+            if (item != nullptr)
+            {
+                ConnectRemoteHostAsync(
+                    item,
+                    true,
+                    winrt::hstring{},
+                    item.SendSpeedLimit(),
+                    item.ReduceSendSpeedAutomatically());
+            }
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to retry a remote device.")
 
@@ -856,6 +912,15 @@ namespace winrt::midinetworksetup::implementation
         auto const savedClient = FindSavedClient(item.ClientId());
         auto const savedCustomName = savedClient != nullptr ? savedClient.CustomEndpointName() : winrt::hstring{};
 
+        // the sending speed is carried over too, for the same reason
+        auto const savedSendSpeedLimit = savedClient != nullptr ?
+            static_cast<uint32_t>(savedClient.SendSpeedLimit()) :
+            item.SendSpeedLimit();
+
+        auto const savedReduceSendSpeed = savedClient != nullptr ?
+            savedClient.ReduceSendSpeedAutomatically() :
+            item.ReduceSendSpeedAutomatically();
+
         auto target = std::make_shared<midinetworksetup::RemoteHostItem>(nullptr);
 
         if (!co_await PromptForReassociateTargetAsync(entryName, target) || *target == nullptr)
@@ -899,7 +964,7 @@ namespace winrt::midinetworksetup::implementation
 
         if (queue != nullptr)
         {
-            queue.TryEnqueue([weak, item, target, entryName, savedCustomName, clientId, removed]()
+            queue.TryEnqueue([weak, item, target, entryName, savedCustomName, savedSendSpeedLimit, savedReduceSendSpeed, clientId, removed]()
                 {
                     item.IsBusy(false);
 
@@ -918,7 +983,13 @@ namespace winrt::midinetworksetup::implementation
 
                     // Whatever name the customer had chosen is carried over, which is the thing
                     // they would otherwise have to set up again.
-                    strong->ConnectRemoteHostAsync(*target, false, savedCustomName, clientId);
+                    strong->ConnectRemoteHostAsync(
+                        *target,
+                        false,
+                        savedCustomName,
+                        savedSendSpeedLimit,
+                        savedReduceSendSpeed,
+                        clientId);
                 });
         }
     }
@@ -928,6 +999,8 @@ namespace winrt::midinetworksetup::implementation
         midinetworksetup::RemoteHostItem const item,
         bool const reuseExistingEntry,
         winrt::hstring const customEndpointName,
+        uint32_t const sendSpeedLimit,
+        bool const reduceSendSpeedAutomatically,
         winrt::guid const explicitClientId)
     {
         if (item == nullptr)
@@ -1016,6 +1089,9 @@ namespace winrt::midinetworksetup::implementation
                 // the machine name, which is what a config file created entry also gets.
                 config.CustomEndpointName(customEndpointName);
                 config.MatchCriteria(criteria);
+
+                config.SendSpeedLimit(static_cast<midi2net::MidiNetworkSendSpeedLimit>(sendSpeedLimit));
+                config.ReduceSendSpeedAutomatically(reduceSendSpeedAutomatically);
             }
 
             auto const response = co_await midi2net::MidiNetworkTransportManager::ConnectNetworkClientAsync(config);
@@ -1466,6 +1542,103 @@ namespace winrt::midinetworksetup::implementation
             RequestRefreshAsync();
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to report the result of customizing a device.")
+    }
+
+    // Changes the speed of an entry this PC connects with, without disconnecting it
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnChangeRemoteHostSendSpeedClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto strongThis = get_strong();
+
+        auto item = ItemOf<midinetworksetup::RemoteHostItem>(sender);
+
+        winrt::guid clientId{};
+
+        if (item == nullptr || !TryParseKey(item.ClientId(), clientId))
+        {
+            co_return;
+        }
+
+        // A change always carries the MIDI 1.0 port choices with it, and only the saved entry
+        // records those. Changing an entry which is not saved would quietly reset them.
+        auto const savedClient = FindSavedClient(item.ClientId());
+
+        if (savedClient == nullptr)
+        {
+            SetRemoteStatus(res::FormatString(L"SendSpeedNeedsSavedEntryFormat", item.DisplayName()));
+
+            co_return;
+        }
+
+        auto const currentSendSpeedLimit = item.SendSpeedLimit();
+        auto const currentReduceAutomatically = item.ReduceSendSpeedAutomatically();
+
+        if (!co_await ShowChangeSendSpeedDialogAsync(
+            item.DisplayName(),
+            currentSendSpeedLimit,
+            currentReduceAutomatically,
+            true,
+            winrt::hstring{},
+            false))
+        {
+            co_return;
+        }
+
+        midi2net::MidiNetworkClientUpdateConfig update{ nullptr };
+
+        try
+        {
+            update = midi2net::MidiNetworkClientUpdateConfig{};
+
+            update.ClientId(clientId);
+            update.CreateMidi1Ports(!savedClient.CreateOnlyUmpEndpoints());
+            update.FallbackMidi1PortCount(savedClient.FallbackMidi1PortCount());
+
+            auto const sendSpeedLimit = SelectedSendSpeedLimit(ChangeSendSpeedLimitComboBox());
+            auto const reduceAutomatically = IsCheckBoxChecked(ChangeReduceSendSpeedCheckBox());
+
+            // only what changed, so a speed set some other way is left alone
+            if (sendSpeedLimit != currentSendSpeedLimit)
+            {
+                update.SendSpeedLimit(static_cast<midi2net::MidiNetworkSendSpeedLimit>(sendSpeedLimit));
+            }
+
+            if (reduceAutomatically != currentReduceAutomatically)
+            {
+                update.ReduceSendSpeedAutomatically(reduceAutomatically);
+            }
+        }
+        catch (...)
+        {
+            SetRemoteStatus(res::GetString(L"SendSpeedChangeFailedGeneral"));
+
+            co_return;
+        }
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        auto const doneMessage = res::FormatString(L"HostSendSpeedChangedFormat", item.DisplayName());
+
+        item.IsBusy(true);
+
+        co_await winrt::resume_background();
+
+        auto const message = SendAndSaveSpeedChange(update, doneMessage);
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, item, message]()
+                {
+                    item.IsBusy(false);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetRemoteStatus(message);
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
     }
 
     _Use_decl_annotations_
@@ -2000,6 +2173,9 @@ namespace winrt::midinetworksetup::implementation
 
         auto const customName = TextOf(ManualCustomNameTextBox());
 
+        auto const sendSpeedLimit = SelectedSendSpeedLimit(ManualSendSpeedLimitComboBox());
+        auto const reduceSendSpeed = IsCheckBoxChecked(ManualReduceSendSpeedCheckBox());
+
         ManualConnectButton().IsEnabled(false);
         SetRemoteStatus(res::FormatString(L"ConnectingToDeviceFormat", address));
 
@@ -2018,6 +2194,8 @@ namespace winrt::midinetworksetup::implementation
             config.UmpEndpointName(name);
             config.CustomEndpointName(customName);
             config.MatchCriteria(criteria);
+            config.SendSpeedLimit(static_cast<midi2net::MidiNetworkSendSpeedLimit>(sendSpeedLimit));
+            config.ReduceSendSpeedAutomatically(reduceSendSpeed);
 
             auto const response = co_await midi2net::MidiNetworkTransportManager::ConnectNetworkClientAsync(config);
 
@@ -2835,24 +3013,40 @@ namespace winrt::midinetworksetup::implementation
 
     _Use_decl_annotations_
     foundation::IAsyncOperation<bool> MainWindow::ShowChangeSendSpeedDialogAsync(
-        midinetworksetup::LocalHostItem const item,
-        bool const offerReduceAutomatically)
+        winrt::hstring const name,
+        uint32_t const currentSendSpeedLimit,
+        bool const currentReduceAutomatically,
+        bool const offerReduceAutomatically,
+        winrt::hstring const hostSendSpeedText,
+        bool const currentUsesHostSpeed)
     {
         auto strongThis = get_strong();
 
-        if (m_openDialog != nullptr || item == nullptr)
+        if (m_openDialog != nullptr)
         {
             co_return false;
         }
 
+        auto const offerHostSpeed = !hostSendSpeedText.empty();
+        auto const startsOnHostSpeed = offerHostSpeed && currentUsesHostSpeed;
+
         try
         {
-            FillSendSpeedLimitChoices(ChangeSendSpeedLimitComboBox(), item.SendSpeedLimit());
+            FillSendSpeedLimitChoices(ChangeSendSpeedLimitComboBox(), currentSendSpeedLimit);
 
-            ChangeReduceSendSpeedCheckBox().IsChecked(item.ReduceSendSpeedAutomatically());
+            ChangeReduceSendSpeedCheckBox().IsChecked(currentReduceAutomatically);
             ChangeReduceSendSpeedPanel().Visibility(offerReduceAutomatically ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
-            ChangeSendSpeedDialog().Title(winrt::box_value(res::FormatString(L"ChangeSendSpeedTitleFormat", item.DisplayName())));
+            ChangeSendSpeedDevicePanel().Visibility(offerHostSpeed ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            ChangeSendSpeedUseHostCheckBox().Content(winrt::box_value(res::FormatString(L"ChangeSendSpeedUseHostFormat", hostSendSpeedText)));
+            ChangeSendSpeedUseHostCheckBox().IsChecked(startsOnHostSpeed);
+
+            // Set here as well as by the check box, which raises nothing when it is already in
+            // the state asked for
+            ChangeSendSpeedLimitComboBox().IsEnabled(!startsOnHostSpeed);
+            ChangeReduceSendSpeedCheckBox().IsEnabled(!startsOnHostSpeed);
+
+            ChangeSendSpeedDialog().Title(winrt::box_value(res::FormatString(L"ChangeSendSpeedTitleFormat", name)));
             ChangeSendSpeedDialog().XamlRoot(Content().XamlRoot());
         }
         catch (...)
@@ -2866,10 +3060,39 @@ namespace winrt::midinetworksetup::implementation
 
         m_openDialog = nullptr;
 
-        // nothing to send when nothing changed
-        co_return result == controls::ContentDialogResult::Primary &&
-            (SelectedSendSpeedLimit(ChangeSendSpeedLimitComboBox()) != item.SendSpeedLimit() ||
-             (offerReduceAutomatically && IsCheckBoxChecked(ChangeReduceSendSpeedCheckBox()) != item.ReduceSendSpeedAutomatically()));
+        if (result != controls::ContentDialogResult::Primary)
+        {
+            co_return false;
+        }
+
+        auto const usesHostSpeed = offerHostSpeed && IsCheckBoxChecked(ChangeSendSpeedUseHostCheckBox());
+
+        if (usesHostSpeed != startsOnHostSpeed)
+        {
+            co_return true;
+        }
+
+        // nothing to send when nothing changed, and the choices below mean nothing while the
+        // device stays on the host's speed
+        co_return !usesHostSpeed &&
+            (SelectedSendSpeedLimit(ChangeSendSpeedLimitComboBox()) != currentSendSpeedLimit ||
+             (offerReduceAutomatically && IsCheckBoxChecked(ChangeReduceSendSpeedCheckBox()) != currentReduceAutomatically));
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnChangeSendSpeedUseHostChanged(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            // the choices below describe a speed of the device's own
+            auto const ownSpeed = !IsCheckBoxChecked(ChangeSendSpeedUseHostCheckBox());
+
+            ChangeSendSpeedLimitComboBox().IsEnabled(ownSpeed);
+            ChangeReduceSendSpeedCheckBox().IsEnabled(ownSpeed);
+        }
+        catch (...)
+        {
+        }
     }
 
     // Applies to the devices already connected too, without disconnecting them
@@ -2888,7 +3111,13 @@ namespace winrt::midinetworksetup::implementation
         auto weak = get_weak();
         auto queue = DispatcherQueue();
 
-        if (!co_await ShowChangeSendSpeedDialogAsync(item, true))
+        if (!co_await ShowChangeSendSpeedDialogAsync(
+            item.DisplayName(),
+            item.SendSpeedLimit(),
+            item.ReduceSendSpeedAutomatically(),
+            true,
+            winrt::hstring{},
+            false))
         {
             co_return;
         }
@@ -2965,6 +3194,297 @@ namespace winrt::midinetworksetup::implementation
                     }
                 });
         }
+    }
+
+
+    // ------------------------------------------------------------------------------------
+    // one device's speed on a host on this PC, for both transports
+    // ------------------------------------------------------------------------------------
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::EditRemoteClientSendSpeedAsync(
+        winrt::hstring const hostKey,
+        winrt::hstring const remoteName,
+        winrt::hstring const remoteProductInstanceId,
+        bool const isRtpMidi,
+        bool const hasOwnSpeed,
+        uint32_t const ownSendSpeedLimit,
+        bool const ownReduceAutomatically)
+    {
+        auto strongThis = get_strong();
+
+        // The host's speed is offered to go back to, and is where a device which has no speed of
+        // its own starts from.
+        midinetworksetup::LocalHostItem host{ nullptr };
+
+        try
+        {
+            for (auto const& candidate : isRtpMidi ? m_rtpLocalHosts : m_localHosts)
+            {
+                if (candidate != nullptr && candidate.HostId() == hostKey)
+                {
+                    host = candidate;
+                    break;
+                }
+            }
+        }
+        catch (...)
+        {
+            host = nullptr;
+        }
+
+        if (host == nullptr)
+        {
+            co_return;
+        }
+
+        auto const hostReduceAutomatically = !isRtpMidi && host.ReduceSendSpeedAutomatically();
+
+        if (!co_await ShowChangeSendSpeedDialogAsync(
+            remoteName.empty() ? res::GetString(L"UnnamedDevice") : remoteName,
+            hasOwnSpeed ? ownSendSpeedLimit : host.SendSpeedLimit(),
+            hasOwnSpeed ? ownReduceAutomatically : hostReduceAutomatically,
+            !isRtpMidi,
+            SendSpeedValueText(host.SendSpeedLimit(), hostReduceAutomatically),
+            !hasOwnSpeed))
+        {
+            co_return;
+        }
+
+        ChangeRemoteClientSendSpeedAsync(
+            hostKey,
+            remoteName,
+            remoteProductInstanceId,
+            isRtpMidi,
+            IsCheckBoxChecked(ChangeSendSpeedUseHostCheckBox()),
+            SelectedSendSpeedLimit(ChangeSendSpeedLimitComboBox()),
+            !isRtpMidi && IsCheckBoxChecked(ChangeReduceSendSpeedCheckBox()));
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::ChangeRemoteClientSendSpeedAsync(
+        winrt::hstring const hostKey,
+        winrt::hstring const remoteName,
+        winrt::hstring const remoteProductInstanceId,
+        bool const isRtpMidi,
+        bool const useHostSpeed,
+        uint32_t const sendSpeedLimit,
+        bool const reduceAutomatically)
+    {
+        winrt::guid hostId{};
+
+        if (!TryParseKey(hostKey, hostId))
+        {
+            co_return;
+        }
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        auto const displayName = remoteName.empty() ? res::GetString(L"UnnamedDevice") : remoteName;
+
+        auto const doneMessage = useHostSpeed ?
+            res::FormatString(L"RemoteClientSendSpeedResetFormat", displayName) :
+            res::FormatString(L"RemoteClientSendSpeedChangedFormat", displayName);
+
+        co_await winrt::resume_background();
+
+        winrt::hstring message{};
+
+        try
+        {
+            // Each list replaces the host's whole list, so it starts from what the service holds
+            // now. A host which could not be read must not be written as one with no device
+            // speeds at all.
+            bool found{ false };
+
+            if (isRtpMidi)
+            {
+                midi2rtp::MidiRtpHostRemoteClientSettingsConfig config{ hostId };
+
+                if (auto const hosts = midi2rtp::MidiRtpTransportManager::GetConfiguredHosts())
+                {
+                    for (auto const& host : hosts)
+                    {
+                        if (host == nullptr || host.HostId() != hostId)
+                        {
+                            continue;
+                        }
+
+                        found = true;
+
+                        if (auto const settings = host.RemoteClientSettings())
+                        {
+                            for (auto const& entry : settings)
+                            {
+                                // this device's old entry is replaced, or dropped for the host's speed
+                                if (entry != nullptr && !IsSameRemoteClientText(entry.RemoteClientName(), remoteName))
+                                {
+                                    config.RemoteClientSettings().Append(entry);
+                                }
+                            }
+                        }
+
+                        break;
+                    }
+                }
+
+                if (found && !useHostSpeed)
+                {
+                    midi2rtp::MidiRtpRemoteClientSettings settings{ remoteName };
+                    settings.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
+
+                    config.RemoteClientSettings().Append(settings);
+                }
+
+                message = found ?
+                    SendAndSaveSpeedChange(config, doneMessage) :
+                    res::GetString(L"SendSpeedChangeFailedGeneral");
+            }
+            else
+            {
+                midi2net::MidiNetworkHostRemoteClientSettingsConfig config{ hostId };
+
+                if (auto const hosts = midi2net::MidiNetworkTransportManager::GetConfiguredHosts())
+                {
+                    for (auto const& host : hosts)
+                    {
+                        if (host == nullptr || host.HostId() != hostId)
+                        {
+                            continue;
+                        }
+
+                        found = true;
+
+                        if (auto const settings = host.RemoteClientSettings())
+                        {
+                            for (auto const& entry : settings)
+                            {
+                                if (entry != nullptr &&
+                                    !(IsSameRemoteClientText(entry.RemoteClientName(), remoteName) &&
+                                      IsSameRemoteClientText(entry.RemoteClientProductInstanceId(), remoteProductInstanceId)))
+                                {
+                                    config.RemoteClientSettings().Append(entry);
+                                }
+                            }
+                        }
+
+                        break;
+                    }
+                }
+
+                if (found && !useHostSpeed)
+                {
+                    midi2net::MidiNetworkRemoteClientSettings settings{ remoteName, remoteProductInstanceId };
+                    settings.SendSpeedLimit(static_cast<midi2net::MidiNetworkSendSpeedLimit>(sendSpeedLimit));
+                    settings.ReduceSendSpeedAutomatically(reduceAutomatically);
+
+                    config.RemoteClientSettings().Append(settings);
+                }
+
+                message = found ?
+                    SendAndSaveSpeedChange(config, doneMessage) :
+                    res::GetString(L"SendSpeedChangeFailedGeneral");
+            }
+        }
+        catch (...)
+        {
+            message = res::GetString(L"SendSpeedChangeFailedGeneral");
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, isRtpMidi, message]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        if (isRtpMidi)
+                        {
+                            strong->SetRtpLocalStatus(message);
+                        }
+                        else
+                        {
+                            strong->SetLocalStatus(message);
+                        }
+
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnChangeRemoteClientSendSpeedClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto const item = ItemOf<midinetworksetup::HostConnectionItem>(sender);
+
+            if (item == nullptr)
+            {
+                return;
+            }
+
+            auto const self = winrt::get_self<HostConnectionItem>(item);
+
+            EditRemoteClientSendSpeedAsync(
+                item.HostId(),
+                self->RemoteName(),
+                item.ProductInstanceId(),
+                self->IsRtpMidi(),
+                self->UsesOwnSendSpeed(),
+                self->SendSpeedLimit(),
+                self->ReduceSendSpeedAutomatically());
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to change the sending speed for a connected device.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnChangeRemoteClientSpeedEntryClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto const item = ItemOf<midinetworksetup::RemoteClientSpeedItem>(sender);
+
+            if (item == nullptr)
+            {
+                return;
+            }
+
+            EditRemoteClientSendSpeedAsync(
+                item.HostId(),
+                winrt::get_self<RemoteClientSpeedItem>(item)->RemoteName(),
+                item.ProductInstanceId(),
+                item.IsRtpMidi(),
+                true,
+                item.SendSpeedLimit(),
+                item.ReduceSendSpeedAutomatically());
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to change a device's own sending speed.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnUseHostSpeedForRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto const item = ItemOf<midinetworksetup::RemoteClientSpeedItem>(sender);
+
+            if (item == nullptr)
+            {
+                return;
+            }
+
+            ChangeRemoteClientSendSpeedAsync(
+                item.HostId(),
+                winrt::get_self<RemoteClientSpeedItem>(item)->RemoteName(),
+                item.ProductInstanceId(),
+                item.IsRtpMidi(),
+                true,
+                0,
+                false);
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to put a device back on the host's sending speed.")
     }
 
 
@@ -3264,14 +3784,14 @@ namespace winrt::midinetworksetup::implementation
                 co_return;
             }
 
-            auto customName = std::make_shared<winrt::hstring>();
+            auto choices = std::make_shared<ConnectChoices>();
 
-            if (!co_await PromptForConnectNameAsync(item.DisplayName(), customName))
+            if (!co_await PromptForConnectNameAsync(item.DisplayName(), false, choices))
             {
                 co_return;
             }
 
-            ConnectRtpRemoteHostAsync(item, *customName);
+            ConnectRtpRemoteHostAsync(item, choices->CustomName, choices->SendSpeedLimit);
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to start connecting to an RTP-MIDI device.")
     }
@@ -3279,7 +3799,8 @@ namespace winrt::midinetworksetup::implementation
     _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::ConnectRtpRemoteHostAsync(
         midinetworksetup::RtpRemoteHostItem const item,
-        winrt::hstring const customEndpointName)
+        winrt::hstring const customEndpointName,
+        uint32_t const sendSpeedLimit)
     {
         if (item == nullptr)
         {
@@ -3308,6 +3829,7 @@ namespace winrt::midinetworksetup::implementation
             midi2rtp::MidiRtpClientConnectConfig config{};
             config.CustomEndpointName(customEndpointName);
             config.MatchCriteria(criteria);
+            config.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
 
             auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(config);
 
@@ -3522,6 +4044,124 @@ namespace winrt::midinetworksetup::implementation
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to report the result of customizing an RTP-MIDI device.")
     }
 
+    // RTP-MIDI has no verb for changing a client entry. Creating it again with the same id
+    // replaces it, and a new speed alone does not disconnect the device.
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnChangeRtpRemoteHostSendSpeedClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto strongThis = get_strong();
+
+        auto item = ItemOf<midinetworksetup::RtpRemoteHostItem>(sender);
+
+        winrt::guid clientId{};
+
+        if (item == nullptr || !TryParseKey(item.ClientId(), clientId))
+        {
+            co_return;
+        }
+
+        // everything else in the entry is copied from what was saved
+        midi2rtp::MidiRtpSavedClient savedClient{ nullptr };
+
+        try
+        {
+            for (auto const& saved : midi2rtp::MidiRtpTransportManager::GetSavedClients())
+            {
+                if (saved != nullptr && saved.ClientId() == clientId)
+                {
+                    savedClient = saved;
+                    break;
+                }
+            }
+        }
+        catch (...)
+        {
+            savedClient = nullptr;
+        }
+
+        // creating it again would also switch on an entry which is switched off
+        if (savedClient == nullptr || !savedClient.IsEnabled())
+        {
+            SetRtpRemoteStatus(res::FormatString(L"SendSpeedNeedsSavedEntryFormat", item.DisplayName()));
+
+            co_return;
+        }
+
+        auto const currentSendSpeedLimit = static_cast<uint32_t>(savedClient.SendSpeedLimit());
+
+        if (!co_await ShowChangeSendSpeedDialogAsync(
+            item.DisplayName(),
+            currentSendSpeedLimit,
+            false,
+            false,
+            winrt::hstring{},
+            false))
+        {
+            co_return;
+        }
+
+        auto const sendSpeedLimit = SelectedSendSpeedLimit(ChangeSendSpeedLimitComboBox());
+        auto const displayName = item.DisplayName();
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        item.IsBusy(true);
+
+        co_await winrt::resume_background();
+
+        winrt::hstring message{};
+
+        try
+        {
+            midi2rtp::MidiRtpClientConnectConfig replacement{};
+
+            replacement.ClientId(clientId);
+            replacement.Comment(savedClient.Comment());
+            replacement.Name(savedClient.Name());
+            replacement.CustomEndpointName(savedClient.CustomEndpointName());
+            replacement.MatchCriteria(savedClient.MatchCriteria());
+            replacement.AutoReconnect(savedClient.AutoReconnect());
+            replacement.SendRecoveryJournal(savedClient.SendRecoveryJournal());
+            replacement.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
+
+            auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(replacement);
+
+            if (response != nullptr && response.Success())
+            {
+                auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(replacement);
+
+                message = saved != nullptr && saved.Success() ?
+                    res::FormatString(L"HostSendSpeedChangedFormat", displayName) :
+                    NotSavedMessage(saved);
+            }
+            else
+            {
+                message = (response == nullptr || response.ErrorMessage().empty()) ?
+                    res::GetString(L"SendSpeedChangeFailedGeneral") :
+                    res::FormatString(L"SendSpeedChangeFailedFormat", response.ErrorMessage());
+            }
+        }
+        catch (...)
+        {
+            message = res::GetString(L"SendSpeedChangeFailedGeneral");
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, item, message]()
+                {
+                    item.IsBusy(false);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetRtpRemoteStatus(message);
+                        strong->RequestRefreshAsync();
+                    }
+                });
+        }
+    }
+
     _Use_decl_annotations_
     void MainWindow::OnCopyRtpEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
     {
@@ -3619,6 +4259,19 @@ namespace winrt::midinetworksetup::implementation
         }
     }
 
+    // A new connection starts with no limit, like one made any other way
+    void MainWindow::InitializeSendSpeedPickers() noexcept
+    {
+        try
+        {
+            FillSendSpeedLimitChoices(ManualSendSpeedLimitComboBox(), 0);
+            FillSendSpeedLimitChoices(RtpManualSendSpeedLimitComboBox(), 0);
+        }
+        catch (...)
+        {
+        }
+    }
+
     _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::OnRtpManualConnectClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
@@ -3637,6 +4290,7 @@ namespace winrt::midinetworksetup::implementation
         // empty means this PC's name
         auto const name = TextOf(RtpManualNameTextBox());
         auto const customName = TextOf(RtpManualCustomNameTextBox());
+        auto const sendSpeedLimit = SelectedSendSpeedLimit(RtpManualSendSpeedLimitComboBox());
 
         if (IsNetworkMidi2Machine(address) && !co_await ConfirmRtpAlongsideNetworkMidi2Async(address))
         {
@@ -3660,6 +4314,7 @@ namespace winrt::midinetworksetup::implementation
             config.Name(name);
             config.CustomEndpointName(customName);
             config.MatchCriteria(criteria);
+            config.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
 
             auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(config);
 
@@ -4264,7 +4919,13 @@ namespace winrt::midinetworksetup::implementation
             co_return;
         }
 
-        if (!co_await ShowChangeSendSpeedDialogAsync(item, false))
+        if (!co_await ShowChangeSendSpeedDialogAsync(
+            item.DisplayName(),
+            item.SendSpeedLimit(),
+            false,
+            false,
+            winrt::hstring{},
+            false))
         {
             co_return;
         }

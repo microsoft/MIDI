@@ -96,6 +96,7 @@ Hosts, clients, and decisions made with this API change the running service only
 - To keep a host or a client, save its `MidiRtpHostCreationConfig` or `MidiRtpClientConnectConfig`
 - To take one out of the configuration, save a `MidiRtpHostRemovalConfig` or `MidiRtpClientDisconnectConfig`
 - To keep a host's allow and deny decisions, save a [MidiRtpHostKnownClientsConfig]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpHostKnownClientsConfig/). The service reads those lists when it starts, but never saves them itself
+- To give one device on a host a sending speed of its own, send a [MidiRtpHostRemoteClientSettingsConfig]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpHostRemoteClientSettingsConfig/) with `SendUpdate`, and save it with `SaveUpdate` to keep it. Start from `MidiRtpConfiguredHost.RemoteClientSettings`, because the list replaces the host's whole list
 - To see what's saved, call `GetSavedHosts` and `GetSavedClients`. They read the configuration file, so they work even when the service isn't running
 
 ## The same device on Network MIDI 2.0

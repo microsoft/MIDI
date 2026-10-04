@@ -1126,9 +1126,6 @@
     <value>{0}. Sending at {1} for now, because it missed data.</value>
     <comment>{0} is the connection status, such as Connected. {1} is a sending speed, such as 2× MIDI 1.0 wire speed.</comment>
   </data>
-  <data name="HostSendSpeedLabel.Text" xml:space="preserve">
-    <value>Sending speed</value>
-  </data>
   <data name="ChangeHostSendSpeedLink.Content" xml:space="preserve">
     <value>Change</value>
   </data>
@@ -1143,9 +1140,66 @@
   </data>
   <data name="ChangeSendSpeedTitleFormat" xml:space="preserve">
     <value>Sending speed for {0}</value>
-    <comment>{0} is the name of a host on this PC.</comment>
+    <comment>{0} is the name of a host on this PC, or of a device.</comment>
   </data>
   <data name="HostSendSpeedChangedFormat" xml:space="preserve">
     <value>The sending speed for {0} was saved.</value>
+    <comment>{0} is the name of a host on this PC, or of a device.</comment>
+  </data>
+  <data name="SendSpeedLineFormat" xml:space="preserve">
+    <value>Sending speed: {0}</value>
+    <comment>{0} is a sending speed, such as Unlimited or 4× MIDI 1.0 wire speed.</comment>
+  </data>
+  <data name="ConnectionSendSpeedHostFormat" xml:space="preserve">
+    <value>Sending speed: {0} (the host's speed)</value>
+    <comment>Shown for a device connected to a host on this PC. {0} is a sending speed, such as Unlimited or 4× MIDI 1.0 wire speed.</comment>
+  </data>
+  <data name="ConnectionSendSpeedOwnFormat" xml:space="preserve">
+    <value>Sending speed: {0} (set for this device)</value>
+    <comment>Shown for a device connected to a host on this PC. {0} is a sending speed, such as Unlimited or 4× MIDI 1.0 wire speed.</comment>
+  </data>
+  <data name="ChangeSendSpeedLink.Content" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="ChangeSendSpeedLink.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Change sending speed</value>
+  </data>
+  <data name="ChangeSendSpeedDeviceIntro.Text" xml:space="preserve">
+    <value>This changes only how fast this host sends to this device. Windows remembers it, and uses it again the next time the device connects.</value>
+  </data>
+  <data name="ChangeSendSpeedUseHostFormat" xml:space="preserve">
+    <value>Use the host's speed: {0}</value>
+    <comment>{0} is the host's sending speed, such as Unlimited or 4× MIDI 1.0 wire speed.</comment>
+  </data>
+  <data name="RemoteClientSpeedsExpander.Header" xml:space="preserve">
+    <value>Devices with their own sending speed</value>
+  </data>
+  <data name="RemoteClientSpeedChangeButton.Content" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="RemoteClientSpeedChangeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Change sending speed</value>
+  </data>
+  <data name="RemoteClientSpeedUseHostButton.Content" xml:space="preserve">
+    <value>Use the host's speed</value>
+  </data>
+  <data name="RemoteClientSendSpeedChangedFormat" xml:space="preserve">
+    <value>{0} now has its own sending speed.</value>
+    <comment>{0} is the name of a device which connects to a host on this PC.</comment>
+  </data>
+  <data name="RemoteClientSendSpeedResetFormat" xml:space="preserve">
+    <value>{0} now uses the host's sending speed.</value>
+    <comment>{0} is the name of a device which connects to a host on this PC.</comment>
+  </data>
+  <data name="SendSpeedChangeFailedGeneral" xml:space="preserve">
+    <value>Windows could not change the sending speed.</value>
+  </data>
+  <data name="SendSpeedChangeFailedFormat" xml:space="preserve">
+    <value>Windows could not change the sending speed. {0}</value>
+    <comment>{0} is the reason the MIDI service gave.</comment>
+  </data>
+  <data name="SendSpeedNeedsSavedEntryFormat" xml:space="preserve">
+    <value>Windows could not change the sending speed for {0}, because this PC's connection to it is not saved. Forget it, then connect again.</value>
+    <comment>{0} is the name of a device this PC connects to.</comment>
   </data>
 </root>

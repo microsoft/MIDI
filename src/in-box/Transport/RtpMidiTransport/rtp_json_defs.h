@@ -72,6 +72,15 @@
 #define MIDI_CONFIG_JSON_RTP_MIDI_ALLOWED_CLIENTS_KEY                   L"allowedClients"
 #define MIDI_CONFIG_JSON_RTP_MIDI_DENIED_CLIENTS_KEY                    L"deniedClients"
 
+// Remotes with their own settings on a host, used for them instead of the host's. Under create
+// and keyed by host entry identifier like the decisions, each holding an array of objects with
+// remoteName and sendSpeedLimit. The array is always the whole list, so it replaces the one before.
+#define MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENT_SETTINGS_KEY            L"remoteClientSettings"
+#define MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENTS_KEY                    L"remoteClients"
+
+// Response only, on each connection: true when its speed is the remote's own setting
+#define MIDI_CONFIG_JSON_RTP_MIDI_USES_REMOTE_CLIENT_SETTINGS_KEY       L"usesRemoteClientSettings"
+
 
 // Commands
 #define MIDI_CONFIG_JSON_RTP_MIDI_COMMAND_VERB_ENUMERATE_HOSTS          L"enumerateHosts"

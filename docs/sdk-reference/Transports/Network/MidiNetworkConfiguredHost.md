@@ -34,6 +34,7 @@ Returned by `MidiNetworkTransportManager.GetConfiguredHosts()`.
 | `UsedNetworkAdapterFallback` | True when the host is running on every adapter because its own adapter is missing |
 | `SendSpeedLimit` | How fast the host is set up to send to each connected device. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |
 | `ReduceSendSpeedAutomatically` | True when a connection sends more slowly while the device keeps asking for data again. Each connection's speed right now is in `MidiNetworkHostConnection.CurrentSendSpeedLimit` |
+| `RemoteClientSettings` | The remote clients this host sends to at a speed of their own instead of the host's, as [MidiNetworkRemoteClientSettings]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkRemoteClientSettings/) entries. This is the list the running service holds, whether or not the clients are connected |
 | `Connections` | The remote clients that have reached this host right now, including clients waiting for approval |
 
 ## Remarks
@@ -41,5 +42,7 @@ Returned by `MidiNetworkTransportManager.GetConfiguredHosts()`.
 `ActualPort` is the port the host is really using. Show it when the host was created with `UseAutomaticPortAllocation`.
 
 A host whose adapter is missing is worth showing people. It's either not running at all, or running on networks it was set up to stay off.
+
+To change a client's own speed, start from `RemoteClientSettings`, change it, and send a [MidiNetworkHostRemoteClientSettingsConfig]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkHostRemoteClientSettingsConfig/) holding the whole list.
 
 `Connections` is a copy taken when you asked, not a list that updates itself. Call `GetConfiguredHosts()` again to refresh it.

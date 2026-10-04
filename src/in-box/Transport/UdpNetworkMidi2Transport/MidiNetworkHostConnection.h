@@ -53,6 +53,18 @@ public:
         return MidiNetworkRemoteClientIdentity{ m_remoteEndpointName, m_remoteProductInstanceId };
     }
 
+    // What the host sends to this remote client. One whose speed is unchanged keeps what
+    // automatic reduction has learned.
+    void ApplySendSpeed(_In_ MidiNetworkRemoteClientSendSpeed const& speed) noexcept
+    {
+        SetSendSpeedLimit(speed.SendSpeedLimit, speed.ReduceSendSpeedAutomatically);
+
+        m_usesRemoteClientSettings = speed.UsesRemoteClientSettings;
+    }
+
+    // True when the speed is the remote client's own setting rather than the host's
+    bool UsesRemoteClientSettings() const noexcept { return m_usesRemoteClientSettings; }
+
     // The remote has been answered with an Invitation Reply Pending and is waiting on a user
     // decision.
     bool IsAwaitingUserApproval() { return m_awaitingUserApproval; }
@@ -135,6 +147,8 @@ private:
     // The remote has been told its invitation is pending and is waiting for a user to approve or
     // deny it. No endpoint exists yet.
     std::atomic<bool> m_awaitingUserApproval{ false };
+
+    std::atomic<bool> m_usesRemoteClientSettings{ false };
 
     // When that wait started, so a user deciding later can see how long something has been
     // asking. Set on the transition into the pending state only.

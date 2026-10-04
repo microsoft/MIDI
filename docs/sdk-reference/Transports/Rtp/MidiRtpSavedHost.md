@@ -27,9 +27,10 @@ An RTP-MIDI host saved in the configuration file. The service starts it every ti
 | `NetworkAdapterName` | That adapter's name, from when it was chosen |
 | `AllowNetworkAdapterFallback` | True when the host runs on every adapter while its own adapter is missing |
 | `KnownRemoteClients` | Every saved allow and deny decision, as [MidiRtpKnownRemoteClient]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpKnownRemoteClient/) objects |
+| `RemoteClientSettings` | Every saved remote device with a sending speed of its own, as [MidiRtpRemoteClientSettings]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpRemoteClientSettings/) objects |
 
 ## Remarks
 
 This comes from the configuration file, not from the service. It tells you what the service starts the next time it starts, and it works even when the service isn't running. A missing value reads as the default the service uses.
 
-To change a saved decision, start from `KnownRemoteClients`, make the change, and save a [MidiRtpHostKnownClientsConfig]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpHostKnownClientsConfig/) holding the whole list.
+To change a saved decision, start from `KnownRemoteClients`, make the change, and save a [MidiRtpHostKnownClientsConfig]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpHostKnownClientsConfig/) holding the whole list. A remote device's own speed works the same way, with `RemoteClientSettings` and a [MidiRtpHostRemoteClientSettingsConfig]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpHostRemoteClientSettingsConfig/).

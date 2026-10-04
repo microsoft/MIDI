@@ -46,7 +46,7 @@ Most tools send first, and save only if the send worked.
 
 `SaveUpdate` won't store something that was never meant to be kept. Transport commands are rejected with `ErrorNotPersistable`, because a command tells the service to do something now, and there's nothing in it to store. Configurations that only mean something to the app that made them, such as creating a virtual device, are never saved either. A removal, such as `MidiServiceEndpointCustomizationRemovalConfig`, deletes the entry it names and isn't stored itself.
 
-Some configurations change an entry that's already saved, instead of describing a new one. These are `MidiLoopbackUpdateConfig`, `MidiBasicLoopbackUpdateConfig`, `MidiNetworkHostKnownClientsConfig` and `MidiRtpHostKnownClientsConfig`. If the entry isn't saved, `SaveUpdate` returns `ErrorEntryNotSaved` and writes nothing, so half an entry is never left in the file.
+Some configurations change an entry that's already saved, instead of describing a new one. These are `MidiLoopbackUpdateConfig`, `MidiBasicLoopbackUpdateConfig`, `MidiNetworkHostKnownClientsConfig`, `MidiRtpHostKnownClientsConfig`, `MidiNetworkHostRemoteClientSettingsConfig` and `MidiRtpHostRemoteClientSettingsConfig`. If the entry isn't saved, `SaveUpdate` returns `ErrorEntryNotSaved` and writes nothing, so half an entry is never left in the file.
 
 ## Reading what's saved
 

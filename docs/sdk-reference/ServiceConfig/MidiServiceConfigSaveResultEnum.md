@@ -16,7 +16,7 @@ Sending a configuration to the service and saving it are separate steps. [`MidiS
 | --- | --- | --- |
 | `Success` | `0x00000000` | The configuration was saved |
 | `ErrorNotPersistable` | `0x00000064` | This kind of configuration is never saved. Transport commands, and configurations that only mean something to the app that made them, are applied but not stored |
-| `ErrorEntryNotSaved` | `0x00000065` | The change is to an entry that isn't saved, so there's nothing to apply it to. Save the entry first. Update configs, such as `MidiLoopbackUpdateConfig`, and known client lists, such as `MidiNetworkHostKnownClientsConfig`, return this for an entry that only exists in the running service |
+| `ErrorEntryNotSaved` | `0x00000065` | The change is to an entry that isn't saved, so there's nothing to apply it to. Save the entry first. Update configs, such as `MidiLoopbackUpdateConfig`, known client lists, such as `MidiNetworkHostKnownClientsConfig`, and remote client speeds, such as `MidiNetworkHostRemoteClientSettingsConfig`, return this for an entry that only exists in the running service |
 | `ErrorConfigJsonNullOrEmpty` | `0x00000258` | The configuration JSON is missing |
 | `ErrorProcessingConfigJson` | `0x00000259` | There's an error in the configuration JSON |
 | `ErrorNoConfigFileRegistered` | `0x000002BC` | This PC has no configuration file registered, so there's nowhere to save it |

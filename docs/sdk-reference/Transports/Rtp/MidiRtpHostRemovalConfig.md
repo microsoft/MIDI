@@ -24,6 +24,6 @@ Pass it to `MidiRtpTransportManager.RemoveRtpHostAsync` to remove a host from th
 
 ## Remarks
 
-Removing a host ends every connection to it, stops advertising it, and frees its ports. Saving the removal also takes the host's saved allow and deny decisions out of the configuration.
+Removing a host ends every connection to it, stops advertising it, and frees its ports. Saving the removal also takes the host's saved allow and deny decisions, and its devices' own sending speeds, out of the configuration.
 
 `RemoveRtpHostAsync` only changes the running service, and `SaveUpdate` only changes the configuration. To remove a host for good, do both.

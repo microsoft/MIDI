@@ -74,6 +74,35 @@ struct MidiNetworkHostDefinition
     uint32_t SendSpeedLimit{ 0 };
     bool ReduceSendSpeedAutomatically{ false };
 
+    // Remote clients with their own settings, used for them instead of the two above
+    std::vector<MidiNetworkRemoteClientSettings> RemoteClientSettings{};
+
+    // The entry for this remote client, or nullptr when it has none
+    MidiNetworkRemoteClientSettings const* FindRemoteClientSettings(_In_ MidiNetworkRemoteClientIdentity const& identity) const
+    {
+        if (!identity.IsValid()) return nullptr;
+
+        auto const key = identity.Key();
+
+        for (auto const& settings : RemoteClientSettings)
+        {
+            if (settings.Identity.Key() == key) return &settings;
+        }
+
+        return nullptr;
+    }
+
+    // What this host sends to one remote client. One not identified yet gets the host's.
+    MidiNetworkRemoteClientSendSpeed SendSpeedFor(_In_ MidiNetworkRemoteClientIdentity const& identity) const
+    {
+        if (auto const settings = FindRemoteClientSettings(identity); settings != nullptr)
+        {
+            return { settings->SendSpeedLimit, settings->ReduceSendSpeedAutomatically, true };
+        }
+
+        return { SendSpeedLimit, ReduceSendSpeedAutomatically, false };
+    }
+
     // connection rules
     MidiNetworkRemoteClientPolicy RemoteClientPolicy{ MidiNetworkRemoteClientPolicy::PolicyAllowAny };
 
@@ -166,6 +195,14 @@ public:
         m_sendSpeedLimit = speedMultiple;
         m_reduceSendSpeedAutomatically = reduceAutomatically;
     }
+
+    // Used for the remote clients which identify themselves from now on. The ones already
+    // connected are updated in place by the configuration manager.
+    void SetRemoteClientSettings(_In_ std::vector<MidiNetworkRemoteClientSettings> const& settings);
+
+    // What this host sends to one remote client: its own settings when the host has them,
+    // otherwise the host's
+    MidiNetworkRemoteClientSendSpeed GetSendSpeedForRemoteClient(_In_ MidiNetworkRemoteClientIdentity const& identity) noexcept;
 
     winrt::hstring ActualPort() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().LocalPort() : L""; }
     winrt::hstring ActualAddress() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().LocalAddress().DisplayName() : L""; }

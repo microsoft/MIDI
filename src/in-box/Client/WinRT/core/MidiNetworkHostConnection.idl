@@ -45,5 +45,13 @@ namespace Windows.Devices.Midi2.Transports.Network
         // What the host sends to this client at right now. Lower than the host's SendSpeedLimit
         // while ReduceSendSpeedAutomatically has slowed the connection down.
         [noexcept] MidiNetworkSendSpeedLimit CurrentSendSpeedLimit{ get; };
+
+        // What the host is configured to send to this client: the client's own settings when the
+        // host has them, otherwise the host's
+        [noexcept] MidiNetworkSendSpeedLimit SendSpeedLimit{ get; };
+        [noexcept] Boolean ReduceSendSpeedAutomatically{ get; };
+
+        // True when the two above come from the host's RemoteClientSettings for this client
+        [noexcept] Boolean UsesRemoteClientSettings{ get; };
     };
 }

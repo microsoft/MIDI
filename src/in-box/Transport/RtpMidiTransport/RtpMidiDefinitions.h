@@ -95,6 +95,16 @@ struct RtpMidiClientDefinition
     bool IsDirect() const noexcept { return !RemoteAddress.empty(); }
 };
 
+// One remote's own settings on a host, used for it instead of the host's. A remote is known by the
+// name it sends, ignoring case, the same way remembered decisions know it.
+struct RtpMidiRemoteClientSettings
+{
+    std::wstring RemoteName;
+
+    // a multiple of MIDI 1.0 wire speed, 0 for no limit
+    uint32_t SendSpeedLimit{ 0 };
+};
+
 
 // The configuration file is writable by a standard user and commands come from any client, so
 // everything read here is untrusted. The WinRT JSON "default" accessors only cover a missing key:

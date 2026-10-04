@@ -60,6 +60,7 @@ To change what's saved, pass a configuration object to `MidiServiceTransportPlug
 | Save a host | `MidiNetworkHostCreationConfig` |
 | Change a saved host's MIDI 1.0 port settings | `MidiNetworkHostUpdateConfig` |
 | Change a saved host's allow and deny decisions | `MidiNetworkHostKnownClientsConfig`, starting from `MidiNetworkSavedHost.KnownRemoteClients` |
+| Change the speed a saved host uses for one remote client | `MidiNetworkHostRemoteClientSettingsConfig`, starting from `MidiNetworkSavedHost.RemoteClientSettings` |
 | Remove a saved host | `MidiNetworkHostRemovalConfig` |
 | Save a client | `MidiNetworkClientConnectConfig` |
 | Change a saved client's MIDI 1.0 port settings | `MidiNetworkClientUpdateConfig` |

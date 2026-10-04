@@ -36,6 +36,7 @@ public:
     TEST_METHOD(TestClientConnectConfigJson);
     TEST_METHOD(TestRemovalConfigJson);
     TEST_METHOD(TestKnownClientsConfigWritesBothLists);
+    TEST_METHOD(TestRemoteClientSettingsConfigJson);
     TEST_METHOD(TestCommandConfigsHaveNothingToSave);
     TEST_METHOD(TestNullConfigsAreRejected);
 
@@ -54,6 +55,9 @@ public:
     // What is saved in the configuration file. Saved only, never sent to the service.
     TEST_METHOD(TestSavedHostFollowsSavedChanges);
     TEST_METHOD(TestSavingKnownClientsForUnsavedHostIsRefused);
+    TEST_METHOD(TestSavedHostFollowsSavedRemoteClientSettings);
+    TEST_METHOD(TestSavingRemoteClientSettingsForUnsavedHostIsRefused);
+    TEST_METHOD(TestHostRemoteClientSettingsReachTheRunningHost);
     TEST_METHOD(TestSavedClientFollowsSavedChanges);
 
     // Limiting a host to one network adapter, and what it does while that adapter is missing

@@ -782,7 +782,7 @@ Reports on Network MIDI 2.0. These commands only show information. To set up con
 
 | Command | Aliases | What it shows |
 | ----- | ----- | ----- |
-| `network list-hosts` | `hosts` | The hosts on this PC, which let other devices connect to it |
+| `network list-hosts` | `hosts` | The hosts on this PC, which let other devices connect to it. Each one lists the devices connected to it, and the devices that have their own sending speed. |
 | `network list-clients` | `clients` | The clients on this PC, which connect it to other devices |
 | `network browse` | `advertised`, `mdns` | The hosts announcing themselves on the network |
 | `network pending` | | Devices waiting for your permission to connect to this PC |
@@ -803,7 +803,7 @@ The same reports for RTP-MIDI, the older network MIDI protocol that Apple device
 
 | Command | Aliases | What it shows |
 | ----- | ----- | ----- |
-| `rtp list-hosts` | `hosts` | The RTP-MIDI hosts on this PC |
+| `rtp list-hosts` | `hosts` | The RTP-MIDI hosts on this PC. Each one lists the devices connected to it, and the devices that have their own sending speed. |
 | `rtp list-clients` | `clients` | The RTP-MIDI clients on this PC |
 | `rtp browse` | `advertised`, `mdns` | The RTP-MIDI hosts announcing themselves on the network |
 | `rtp pending` | | Devices waiting for permission to connect to an RTP-MIDI host on this PC |

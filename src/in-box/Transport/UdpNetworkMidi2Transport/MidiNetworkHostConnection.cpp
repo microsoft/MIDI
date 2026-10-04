@@ -401,6 +401,12 @@ MidiNetworkHostConnection::HandleIncomingInvitation(
 
     auto host = TransportState::Current().GetHost(m_configIdentifier);
 
+    // Before anything can be sent, so a remote client with its own speed never gets the host's
+    if (host != nullptr)
+    {
+        ApplySendSpeed(host->GetSendSpeedForRemoteClient(identity));
+    }
+
     // No host means it was stopped between the datagram arriving and now. Nothing can
     // approve this, so it is refused rather than accepted by default.
     auto decision = host != nullptr

@@ -12,6 +12,7 @@
 
 #include "MidiRtpConnection.h"
 #include "MidiRtpKnownRemoteClient.h"
+#include "MidiRtpRemoteClientSettings.h"
 
 #include "midi_network_adapters.h"
 
@@ -87,8 +88,19 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
             for (auto const& entry : MidiRtpSdkJson::Objects(MidiRtpSdkJson::Array(source, MIDI_CONFIG_JSON_RTP_MIDI_CONNECTIONS_KEY)))
             {
                 auto connection = winrt::make_self<MidiRtpConnection>();
-                connection->InternalInitialize(entry);
+                connection->InternalInitialize(entry, m_sendSpeedLimit);
                 m_connections.Append(*connection);
+            }
+
+            for (auto const& entry : MidiRtpSdkJson::Objects(MidiRtpSdkJson::Array(source, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENT_SETTINGS_KEY)))
+            {
+                auto const name = MidiRtpSdkJson::String(entry, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_NAME_KEY);
+                if (name.empty()) continue;
+
+                auto settings = winrt::make_self<MidiRtpRemoteClientSettings>(name);
+                settings->SendSpeedLimit(static_cast<rtp::MidiRtpSendSpeedLimit>(MidiRtpSdkJson::SendSpeedLimit(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY)));
+
+                m_remoteClientSettings.Append(*settings);
             }
 
             return true;

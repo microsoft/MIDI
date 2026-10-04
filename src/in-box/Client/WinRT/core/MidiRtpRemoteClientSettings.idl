@@ -1,0 +1,33 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiRtpSendSpeedLimitEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // One remote's own settings on a host, used for it instead of the host's. RTP-MIDI carries
+    // nothing else that stays the same from one connection to the next, so a remote is known by
+    // the name it sends, ignoring case, the same way remembered decisions know it.
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpRemoteClientSettings", UUID_IMidiRtpRemoteClientSettings)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpRemoteClientSettingsFactory", UUID_IMidiRtpRemoteClientSettingsFactory)]
+    runtimeclass MidiRtpRemoteClientSettings
+    {
+        MidiRtpRemoteClientSettings();
+        MidiRtpRemoteClientSettings(String remoteClientName);
+
+        [noexcept] String RemoteClientName{ get; set; };
+
+        // How fast the host sends to this remote. Unlimited by default.
+        [noexcept] MidiRtpSendSpeedLimit SendSpeedLimit{ get; set; };
+    }
+}

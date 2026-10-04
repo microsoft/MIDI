@@ -326,6 +326,7 @@ void MidiRtpApiTests::TestRemovalConfigJson()
     auto const hostRemove = hostSection.GetNamedObject(L"remove");
     VERIFY_ARE_EQUAL(OnlyEntry(hostRemove.GetNamedObject(L"hosts"), hostId).Size(), 0u);
     VERIFY_ARE_EQUAL(OnlyEntry(hostRemove.GetNamedObject(L"remoteClientDecisions"), hostId).Size(), 0u, L"the host's saved decisions go with it");
+    VERIFY_ARE_EQUAL(OnlyEntry(hostRemove.GetNamedObject(L"remoteClientSettings"), hostId).Size(), 0u, L"and so do the speeds of its remotes");
 
     auto const clientRemove = TransportSection(MidiRtpClientDisconnectConfig(clientId).ConfigJson()).GetNamedObject(L"remove");
     VERIFY_ARE_EQUAL(OnlyEntry(clientRemove.GetNamedObject(L"clients"), clientId).Size(), 0u);
@@ -361,6 +362,44 @@ void MidiRtpApiTests::TestKnownClientsConfigWritesBothLists()
     // if both are written the same way. This is the one place the text form matters.
     auto const hostKey = OnlyKey(TransportSection(creation.ConfigJson()).GetNamedObject(L"create").GetNamedObject(L"hosts"));
     VERIFY_IS_TRUE(OnlyKey(decisions) == hostKey, L"decisions and host share the same key text");
+}
+
+void MidiRtpApiTests::TestRemoteClientSettingsConfigJson()
+{
+    MidiRtpRemoteClientSettings defaults;
+    VERIFY_IS_TRUE(defaults.SendSpeedLimit() == MidiRtpSendSpeedLimit::Unlimited, L"a new entry has no limit");
+
+    MidiRtpRemoteClientSettings slow(L"Pete's iPad");
+    slow.SendSpeedLimit(MidiRtpSendSpeedLimit::Midi1WireSpeed);
+    VERIFY_IS_TRUE(std::wstring{ slow.RemoteClientName() } == L"Pete's iPad");
+    VERIFY_IS_TRUE(slow.SendSpeedLimit() == MidiRtpSendSpeedLimit::Midi1WireSpeed);
+
+    MidiRtpHostCreationConfig creation;
+    MidiRtpHostRemoteClientSettingsConfig config(creation.HostId());
+
+    VERIFY_IS_TRUE(config.HostId() == creation.HostId());
+    VERIFY_IS_TRUE(config.TransportId() == MidiRtpTransportManager::TransportId());
+
+    auto entry = OnlyEntry(TransportSection(config.ConfigJson()).GetNamedObject(L"create").GetNamedObject(L"remoteClientSettings"), creation.HostId());
+
+    // the file merge replaces lists, so an empty list has to be written to clear a saved one
+    VERIFY_ARE_EQUAL(entry.GetNamedArray(L"remoteClients").Size(), 0u);
+
+    config.RemoteClientSettings().Append(slow);
+    config.RemoteClientSettings().Append(defaults);
+
+    auto const settings = TransportSection(config.ConfigJson()).GetNamedObject(L"create").GetNamedObject(L"remoteClientSettings");
+    entry = OnlyEntry(settings, creation.HostId());
+
+    auto const remoteClients = entry.GetNamedArray(L"remoteClients");
+
+    VERIFY_ARE_EQUAL(remoteClients.Size(), 1u, L"a remote with no name is left out");
+    VERIFY_IS_TRUE(std::wstring{ remoteClients.GetObjectAt(0).GetNamedString(L"remoteName") } == L"Pete's iPad");
+    VERIFY_ARE_EQUAL(remoteClients.GetObjectAt(0).GetNamedNumber(L"sendSpeedLimit"), 1.0, L"MIDI 1.0 wire speed");
+
+    // as with the decisions, the speeds only land beside their host if both keys are written the same way
+    auto const hostKey = OnlyKey(TransportSection(creation.ConfigJson()).GetNamedObject(L"create").GetNamedObject(L"hosts"));
+    VERIFY_IS_TRUE(OnlyKey(settings) == hostKey, L"speeds and host share the same key text");
 }
 
 void MidiRtpApiTests::TestCommandConfigsHaveNothingToSave()
@@ -821,6 +860,149 @@ void MidiRtpApiTests::TestSavingKnownClientsForUnsavedHostIsRefused()
     VERIFY_IS_TRUE(response != nullptr);
     VERIFY_IS_FALSE(response.Success(), L"decisions for a host which is not saved are not saved");
     VERIFY_IS_TRUE(response.Result() == svc::MidiServiceConfigSaveResult::ErrorEntryNotSaved, L"and it says why");
+}
+
+
+void MidiRtpApiTests::TestSavedHostFollowsSavedRemoteClientSettings()
+{
+    if (!ConfigFileRegisteredOrSkip()) return;
+
+    MidiRtpHostCreationConfig config;
+    config.Name(winrt::hstring{ std::wstring{ TestHostNamePrefix } + L"Saved Speeds" });
+    config.Advertise(false);
+    config.SendSpeedLimit(MidiRtpSendSpeedLimit::Midi1WireSpeedTimes8);
+
+    auto const hostId = config.HostId();
+
+    auto removeEntry = wil::scope_exit([&] { RemoveSavedHost(hostId); });
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config), L"saving the host works");
+
+    auto saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr, L"it is listed once saved");
+    VERIFY_ARE_EQUAL(saved.RemoteClientSettings().Size(), 0u, L"a new host has no remote with a speed of its own");
+
+    MidiRtpRemoteClientSettings slow(L"MidiApiTest Slow");
+    slow.SendSpeedLimit(MidiRtpSendSpeedLimit::Midi1WireSpeed);
+
+    MidiRtpRemoteClientSettings faster(L"MidiApiTest Faster");
+    faster.SendSpeedLimit(MidiRtpSendSpeedLimit::Midi1WireSpeedTimes4);
+
+    MidiRtpHostRemoteClientSettingsConfig settings(hostId);
+    settings.RemoteClientSettings().Append(slow);
+    settings.RemoteClientSettings().Append(faster);
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(settings), L"saving the speeds of the host's remotes works");
+
+    saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_ARE_EQUAL(saved.RemoteClientSettings().Size(), 2u, L"both are saved");
+
+    for (auto const& entry : saved.RemoteClientSettings())
+    {
+        auto const expected = std::wstring{ entry.RemoteClientName() } == L"MidiApiTest Slow" ?
+            MidiRtpSendSpeedLimit::Midi1WireSpeed :
+            MidiRtpSendSpeedLimit::Midi1WireSpeedTimes4;
+
+        VERIFY_IS_TRUE(entry.SendSpeedLimit() == expected, L"each with its own speed");
+    }
+
+    VERIFY_IS_TRUE(saved.SendSpeedLimit() == MidiRtpSendSpeedLimit::Midi1WireSpeedTimes8, L"the host keeps its own speed");
+
+    // a later list replaces the earlier one rather than adding to it
+    MidiRtpHostRemoteClientSettingsConfig shorter(hostId);
+    shorter.RemoteClientSettings().Append(faster);
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(shorter), L"saving a shorter list works");
+
+    saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_ARE_EQUAL(saved.RemoteClientSettings().Size(), 1u, L"the list is replaced whole");
+    VERIFY_IS_TRUE(std::wstring{ saved.RemoteClientSettings().GetAt(0).RemoteClientName() } == L"MidiApiTest Faster");
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(MidiRtpHostRemovalConfig(hostId)), L"removing the host works");
+
+    VERIFY_IS_TRUE(FindSavedHost(hostId) == nullptr, L"a removed host is no longer listed");
+}
+
+
+// The speeds only mean something while their host is saved
+void MidiRtpApiTests::TestSavingRemoteClientSettingsForUnsavedHostIsRefused()
+{
+    if (!ConfigFileRegisteredOrSkip()) return;
+
+    auto const hostId = foundation::GuidHelper::CreateNewGuid();
+
+    auto removeEntry = wil::scope_exit([&] { RemoveSavedHost(hostId); });
+
+    MidiRtpHostRemoteClientSettingsConfig settings(hostId);
+    settings.RemoteClientSettings().Append(MidiRtpRemoteClientSettings(L"MidiApiTest Slow"));
+
+    auto const response = svc::MidiServiceTransportPluginConfigManager::SaveUpdate(settings);
+
+    VERIFY_IS_TRUE(response != nullptr);
+    VERIFY_IS_FALSE(response.Success(), L"speeds for a host which is not saved are not saved");
+    VERIFY_IS_TRUE(response.Result() == svc::MidiServiceConfigSaveResult::ErrorEntryNotSaved, L"and it says why");
+}
+
+
+void MidiRtpApiTests::TestHostRemoteClientSettingsReachTheRunningHost()
+{
+    SKIP_IF_NO_RTP_TRANSPORT();
+
+    MidiRtpHostCreationConfig creation;
+    creation.Name(winrt::hstring{ std::wstring{ TestHostNamePrefix } + L"Device Speeds" });
+    creation.Advertise(false);
+
+    auto const created = MidiRtpTransportManager::CreateRtpHostAsync(creation).get();
+    if (created.Success()) m_createdHosts.push_back(creation.HostId());
+
+    VERIFY_IS_TRUE(created.Success(), created.ErrorMessage().c_str());
+
+    MidiRtpRemoteClientSettings remote(L"MidiApiTest Remote");
+    remote.SendSpeedLimit(MidiRtpSendSpeedLimit::Midi1WireSpeedTimes2);
+
+    MidiRtpHostRemoteClientSettingsConfig settings(creation.HostId());
+    settings.RemoteClientSettings().Append(remote);
+
+    auto const sent = svc::MidiServiceTransportPluginConfigManager::SendUpdate(settings);
+
+    VERIFY_IS_TRUE(sent != nullptr && sent.Status() == svc::MidiServiceConfigResponseStatus::Success, L"the service takes the speeds");
+
+    auto host = FindHost(creation.HostId());
+
+    VERIFY_IS_TRUE(host != nullptr);
+
+    if (host == nullptr) return;
+
+    VERIFY_ARE_EQUAL(host.RemoteClientSettings().Size(), 1u, L"the running host lists them");
+
+    if (host.RemoteClientSettings().Size() == 1)
+    {
+        VERIFY_IS_TRUE(std::wstring{ host.RemoteClientSettings().GetAt(0).RemoteClientName() } == L"MidiApiTest Remote");
+        VERIFY_IS_TRUE(host.RemoteClientSettings().GetAt(0).SendSpeedLimit() == MidiRtpSendSpeedLimit::Midi1WireSpeedTimes2);
+    }
+
+    // a create for the same id replaces the host, and its remotes keep their speeds
+    creation.SendSpeedLimit(MidiRtpSendSpeedLimit::Midi1WireSpeedTimes8);
+
+    auto const changed = MidiRtpTransportManager::CreateRtpHostAsync(creation).get();
+    VERIFY_IS_TRUE(changed.Success(), changed.ErrorMessage().c_str());
+
+    host = FindHost(creation.HostId());
+
+    VERIFY_IS_TRUE(host != nullptr && host.RemoteClientSettings().Size() == 1, L"changing the host keeps the speeds of its remotes");
+
+    auto const cleared = svc::MidiServiceTransportPluginConfigManager::SendUpdate(MidiRtpHostRemoteClientSettingsConfig(creation.HostId()));
+
+    VERIFY_IS_TRUE(cleared != nullptr && cleared.Status() == svc::MidiServiceConfigResponseStatus::Success, L"the service takes an empty list");
+
+    host = FindHost(creation.HostId());
+
+    VERIFY_IS_TRUE(host != nullptr && host.RemoteClientSettings().Size() == 0, L"which clears it");
 }
 
 

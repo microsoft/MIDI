@@ -9,6 +9,8 @@
 #include "..\..\..\Inc\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
+import "MidiRtpSendSpeedLimitEnum.idl";
+
 namespace Windows.Devices.Midi2.Transports.Rtp
 {
     [contract(MidiTransportsRtpApiContract, 1)]
@@ -58,5 +60,15 @@ namespace Windows.Devices.Midi2.Transports.Rtp
 
         [noexcept] UInt64 TotalCountMessagesSent{ get; };
         [noexcept] UInt64 TotalCountMessagesReceived{ get; };
+
+        // What this PC is configured to send to the remote, and what it sends at now. They differ
+        // only for a moment after a change. On a host, the speed is the remote's own setting when
+        // the host has one for it, otherwise the host's.
+        [noexcept] MidiRtpSendSpeedLimit SendSpeedLimit{ get; };
+        [noexcept] MidiRtpSendSpeedLimit CurrentSendSpeedLimit{ get; };
+
+        // True when the speed comes from the host's RemoteClientSettings for this remote. Always
+        // false on a client's connection.
+        [noexcept] Boolean UsesRemoteClientSettings{ get; };
     }
 }

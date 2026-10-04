@@ -33,6 +33,9 @@ public:
     // Ends every connection a remote of this name made to the host. Returns how many.
     size_t EndConnectionsFromRemote(_In_ GUID const& hostId, _In_ std::wstring const& remoteName);
 
+    // Gives each remote connected to the host its own speed, or the host's when it has none
+    void ApplyRemoteClientSettings(_In_ GUID const& hostId);
+
     std::shared_ptr<RtpMidiConnection> FindConnectionByEndpointDeviceInterfaceId(_In_ std::wstring const& endpointDeviceInterfaceId);
 
     // Lets a customization reach an endpoint which already exists
@@ -125,7 +128,7 @@ private:
     bool TryResolveClientTarget(_In_ RtpMidiClientDefinition const& definition, _In_ std::stop_token const& stopToken, _Out_ RtpMidi::PeerAddress& target);
 
     std::vector<std::shared_ptr<RtpMidiNode>> RunningNodes();
-    json::JsonArray BuildConnectionsJson(_In_ std::shared_ptr<RtpMidiNode> const& node);
+    json::JsonArray BuildConnectionsJson(_In_ std::shared_ptr<RtpMidiNode> const& node, _In_ uint32_t const entrySendSpeedLimit);
 
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;

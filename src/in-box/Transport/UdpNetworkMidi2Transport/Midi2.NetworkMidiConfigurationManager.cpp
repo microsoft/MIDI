@@ -1757,6 +1757,18 @@ namespace
             MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_CURRENT_SEND_SPEED_LIMIT_KEY,
             json::JsonValue::CreateNumberValue(static_cast<double>(connection->GetCurrentSendSpeedLimit())));
 
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_SEND_SPEED_LIMIT_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(connection->GetSendSpeedLimit())));
+
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
+            json::JsonValue::CreateBooleanValue(connection->GetReduceSendSpeedAutomatically()));
+
+        connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_USES_REMOTE_CLIENT_SETTINGS_KEY,
+            json::JsonValue::CreateBooleanValue(connection->UsesRemoteClientSettings()));
+
         return connectionObject;
     }
 
@@ -1844,6 +1856,35 @@ namespace
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
             json::JsonValue::CreateBooleanValue(definition.ReduceSendSpeedAutomatically));
+
+        json::JsonArray remoteClientSettingsArray;
+
+        for (auto const& settings : definition.RemoteClientSettings)
+        {
+            json::JsonObject settingsObject;
+
+            settingsObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
+                json::JsonValue::CreateStringValue(settings.Identity.UmpEndpointName));
+
+            settingsObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY,
+                json::JsonValue::CreateStringValue(settings.Identity.ProductInstanceId));
+
+            settingsObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY,
+                json::JsonValue::CreateNumberValue(static_cast<double>(settings.SendSpeedLimit)));
+
+            settingsObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
+                json::JsonValue::CreateBooleanValue(settings.ReduceSendSpeedAutomatically));
+
+            remoteClientSettingsArray.Append(settingsObject);
+        }
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_SETTINGS_KEY,
+            remoteClientSettingsArray);
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY,
@@ -2656,6 +2697,56 @@ catch (...)
 
 namespace
 {
+    // The remote clients of a host with their own settings. An array present replaces the list
+    // whole, so an empty one clears it, and an absent one leaves it alone. An entry missing half
+    // its identity could never match anything, so it is skipped, as is a second one for a client.
+    void ReadRemoteClientSettingsList(
+        _In_ json::JsonObject const& entry,
+        _Inout_ std::vector<MidiNetworkRemoteClientSettings>& settingsList) noexcept
+    {
+        try
+        {
+            auto const items = SafeGetNamedArray(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_SETTINGS_KEY);
+
+            if (items == nullptr) return;
+
+            std::vector<MidiNetworkRemoteClientSettings> result{};
+            std::vector<std::wstring> keys{};
+
+            for (uint32_t i = 0; i < items.Size() && result.size() < MIDI_NETWORK_HOST_MAX_REMOTE_CLIENT_SETTINGS; i++)
+            {
+                auto const element = items.GetAt(i);
+
+                // windows.h renames IJsonValue::GetObject, so objects come from GetObjectAt
+                if (element == nullptr || element.ValueType() != json::JsonValueType::Object) continue;
+
+                auto const item = items.GetObjectAt(i);
+
+                if (item == nullptr) continue;
+
+                MidiNetworkRemoteClientSettings settings{};
+
+                settings.Identity.UmpEndpointName = internal::TrimmedWStringCopy(std::wstring{ SafeGetNamedString(item, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY, L"") });
+                settings.Identity.ProductInstanceId = internal::TrimmedWStringCopy(std::wstring{ SafeGetNamedString(item, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY, L"") });
+
+                if (!settings.Identity.IsValid()) continue;
+
+                auto key = settings.Identity.Key();
+
+                if (std::find(keys.begin(), keys.end(), key) != keys.end()) continue;
+
+                settings.SendSpeedLimit = SafeGetNamedSendSpeedLimit(item, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY, 0);
+                settings.ReduceSendSpeedAutomatically = SafeGetNamedBoolean(item, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false);
+
+                keys.push_back(std::move(key));
+                result.push_back(std::move(settings));
+            }
+
+            settingsList = std::move(result);
+        }
+        CATCH_LOG();
+    }
+
     // The settings which mean the same thing whether an entry is being made or changed. Create
     // calls these on a freshly built definition, so a key the entry does not mention takes the
     // definition's own default; update calls them on the definition already held, so the same
@@ -2765,6 +2856,8 @@ namespace
             entry,
             MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_NETWORK_ADAPTER_FALLBACK_KEY,
             definition.AllowNetworkAdapterFallback);
+
+        ReadRemoteClientSettingsList(entry, definition.RemoteClientSettings);
     }
 }
 
@@ -2853,6 +2946,7 @@ try
                     stored.FallbackMidi1PortCount = definition->FallbackMidi1PortCount;
                     stored.SendSpeedLimit = definition->SendSpeedLimit;
                     stored.ReduceSendSpeedAutomatically = definition->ReduceSendSpeedAutomatically;
+                    stored.RemoteClientSettings = definition->RemoteClientSettings;
                     stored.NetworkAdapterId = definition->NetworkAdapterId;
                     stored.NetworkAdapterName = definition->NetworkAdapterName;
                     stored.NetworkAdapterPhysicalAddress = definition->NetworkAdapterPhysicalAddress;
@@ -2865,6 +2959,7 @@ try
                 host->SetFallbackMidi1PortCount(definition->FallbackMidi1PortCount);
                 host->SetCreateMidi1Ports(definition->CreateMidi1Ports);
                 host->SetSendSpeedLimit(definition->SendSpeedLimit, definition->ReduceSendSpeedAutomatically);
+                host->SetRemoteClientSettings(definition->RemoteClientSettings);
 
                 host->SetNetworkAdapter(
                     definition->NetworkAdapterId,
@@ -2880,13 +2975,14 @@ try
                 }
             }
 
-            // The remote clients already connected change speed straight away. One whose speed
-            // is unchanged keeps what automatic reduction has learned.
+            // The remote clients already connected change speed straight away, each to its own
+            // setting or the host's. One whose speed is unchanged keeps what automatic reduction
+            // has learned.
             for (auto const& connection : TransportState::Current().GetHostConnectionsForHost(entryIdentifier))
             {
                 if (connection != nullptr)
                 {
-                    connection->SetSendSpeedLimit(definition->SendSpeedLimit, definition->ReduceSendSpeedAutomatically);
+                    connection->ApplySendSpeed(definition->SendSpeedFor(connection->GetRemoteClientIdentity()));
                 }
             }
         }

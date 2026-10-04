@@ -12,6 +12,7 @@
 
 #include "MidiRtpSdkJson.h"
 #include "MidiRtpKnownRemoteClient.h"
+#include "MidiRtpRemoteClientSettings.h"
 
 #include "midi_network_adapters.h"
 
@@ -22,7 +23,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
     void MidiRtpSavedHost::InternalInitialize(
         winrt::guid const& hostId,
         json::JsonObject const& entry,
-        std::vector<json::JsonObject> const& decisions) noexcept
+        std::vector<json::JsonObject> const& decisions,
+        std::vector<json::JsonObject> const& remoteClientSettings) noexcept
     {
         try
         {
@@ -90,6 +92,25 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 
                         m_knownRemoteClients.Append(winrt::make<MidiRtpKnownRemoteClient>(name, isAllowed));
                     }
+                }
+            }
+
+            // the same rule: a remote without a name never matches
+            for (auto const& saved : remoteClientSettings)
+            {
+                for (auto const& client : MidiRtpSdkJson::Objects(MidiRtpSdkJson::Array(saved, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENTS_KEY)))
+                {
+                    auto const name = MidiRtpSdkJson::String(client, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_NAME_KEY);
+
+                    if (name.empty())
+                    {
+                        continue;
+                    }
+
+                    auto settings = winrt::make_self<MidiRtpRemoteClientSettings>(name);
+                    settings->SendSpeedLimit(static_cast<rtp::MidiRtpSendSpeedLimit>(MidiRtpSdkJson::SendSpeedLimit(client, MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY)));
+
+                    m_remoteClientSettings.Append(*settings);
                 }
             }
         }

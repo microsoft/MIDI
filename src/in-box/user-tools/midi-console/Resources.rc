@@ -781,6 +781,8 @@ IDS_NET_SEND_SPEED_WIRE                     L"MIDI 1.0 wire speed"
 IDS_NET_SEND_SPEED_MULTIPLE_FORMAT          L"{0}x MIDI 1.0 wire speed"
 IDS_NET_SEND_SPEED_AUTOMATIC_FORMAT         L"{0}, and slows down when a device misses data"
 IDS_NET_SEND_SPEED_SLOWED_FORMAT            L"Sending at {0} for now, because it missed data."
+IDS_NET_SEND_SPEED_OWN_FORMAT               L"Sending speed set for this device: {0}"
+IDS_NET_REMOTE_CLIENT_SPEEDS_TABLE_TITLE    L"Devices With Their Own Sending Speed"
 
 // ---- bluetooth status
 

@@ -11,6 +11,7 @@
 #include "RemoteHostItem.g.h"
 #include "HostConnectionItem.g.h"
 #include "KnownClientItem.g.h"
+#include "RemoteClientSpeedItem.g.h"
 #include "LocalHostItem.g.h"
 #include "RtpRemoteHostItem.g.h"
 
@@ -416,6 +417,18 @@ namespace winrt::midinetworksetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
         }
 
+        winrt::hstring SendSpeedText() const noexcept { return m_sendSpeedText; }
+        uint32_t SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+
+        // the text is only filled in for a device this PC has an entry for
+        winrt::Microsoft::UI::Xaml::Visibility SendSpeedVisibility() const noexcept
+        {
+            return m_sendSpeedText.empty() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
         winrt::Microsoft::UI::Xaml::Visibility LatencyGraphVisibility() const noexcept
         {
             return m_latency.HasSamples() ?
@@ -438,6 +451,20 @@ namespace winrt::midinetworksetup::implementation
         void InternalInitialize(_In_ winrt::hstring const& matchKey) noexcept
         {
             m_matchKey = matchKey;
+        }
+
+        void InternalUpdateSendSpeed(
+            _In_ uint32_t const sendSpeedLimit,
+            _In_ bool const reduceSendSpeedAutomatically,
+            _In_ winrt::hstring const& sendSpeedText) noexcept
+        {
+            UpdateField(m_sendSpeedLimit, sendSpeedLimit, L"SendSpeedLimit");
+            UpdateField(m_reduceSendSpeedAutomatically, reduceSendSpeedAutomatically, L"ReduceSendSpeedAutomatically");
+
+            if (UpdateField(m_sendSpeedText, sendSpeedText, L"SendSpeedText"))
+            {
+                RaisePropertyChanged(L"SendSpeedVisibility");
+            }
         }
 
         void InternalUpdate(
@@ -565,6 +592,10 @@ namespace winrt::midinetworksetup::implementation
         bool m_isAdvertised{ false };
         bool m_isBusy{ false };
 
+        winrt::hstring m_sendSpeedText{};
+        uint32_t m_sendSpeedLimit{ 0 };
+        bool m_reduceSendSpeedAutomatically{ false };
+
         MIDI_NETSETUP_OBSERVABLE_ITEM()
     };
 
@@ -577,8 +608,27 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring HostId() const noexcept { return m_hostId; }
         uint32_t ConnectionId() const noexcept { return m_connectionId; }
 
-        // RTP-MIDI only: the name the remote sent, which may be empty where DisplayName is not
+        // The name the remote sent, which may be empty where DisplayName is not. The host keys
+        // remembered decisions and speeds on it.
         winrt::hstring RemoteName() const noexcept { return m_remoteName; }
+
+        // which transport's host the connection belongs to
+        bool IsRtpMidi() const noexcept { return m_isRtpMidi; }
+
+        // What the host sends to this device at, and whether that was set for this device rather
+        // than taken from the host. Read to fill in the speed dialog.
+        uint32_t SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+        bool UsesOwnSendSpeed() const noexcept { return m_usesOwnSendSpeed; }
+
+        winrt::hstring SendSpeedText() const noexcept { return m_sendSpeedText; }
+
+        winrt::Microsoft::UI::Xaml::Visibility ChangeSendSpeedVisibility() const noexcept
+        {
+            return m_canChangeSendSpeed ?
+                winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
 
         winrt::hstring DisplayName() const noexcept { return m_displayName; }
         winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
@@ -632,13 +682,34 @@ namespace winrt::midinetworksetup::implementation
             _In_ winrt::hstring const& hostId,
             _In_ winrt::hstring const& productInstanceId,
             _In_ uint32_t const connectionId = 0,
-            _In_ winrt::hstring const& remoteName = {}) noexcept
+            _In_ winrt::hstring const& remoteName = {},
+            _In_ bool const isRtpMidi = false) noexcept
         {
             m_matchKey = matchKey;
             m_hostId = hostId;
             m_productInstanceId = productInstanceId;
             m_connectionId = connectionId;
             m_remoteName = remoteName;
+            m_isRtpMidi = isRtpMidi;
+        }
+
+        void InternalUpdateSendSpeed(
+            _In_ uint32_t const sendSpeedLimit,
+            _In_ bool const reduceSendSpeedAutomatically,
+            _In_ bool const usesOwnSendSpeed,
+            _In_ bool const canChangeSendSpeed,
+            _In_ winrt::hstring const& sendSpeedText) noexcept
+        {
+            m_sendSpeedLimit = sendSpeedLimit;
+            m_reduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
+            m_usesOwnSendSpeed = usesOwnSendSpeed;
+
+            UpdateField(m_sendSpeedText, sendSpeedText, L"SendSpeedText");
+
+            if (UpdateField(m_canChangeSendSpeed, canChangeSendSpeed, L"CanChangeSendSpeed"))
+            {
+                RaisePropertyChanged(L"ChangeSendSpeedVisibility");
+            }
         }
 
         void InternalUpdate(
@@ -697,6 +768,13 @@ namespace winrt::midinetworksetup::implementation
         bool m_isPendingApproval{ false };
         bool m_isSessionActive{ false };
         bool m_isBusy{ false };
+        bool m_isRtpMidi{ false };
+
+        winrt::hstring m_sendSpeedText{};
+        uint32_t m_sendSpeedLimit{ 0 };
+        bool m_reduceSendSpeedAutomatically{ false };
+        bool m_usesOwnSendSpeed{ false };
+        bool m_canChangeSendSpeed{ false };
 
         MIDI_NETSETUP_OBSERVABLE_ITEM()
     };
@@ -738,6 +816,62 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring m_productInstanceId{};
         winrt::hstring m_decisionText{};
         bool m_isAllowed{ true };
+
+        MIDI_NETSETUP_OBSERVABLE_ITEM()
+    };
+
+
+    struct RemoteClientSpeedItem : RemoteClientSpeedItemT<RemoteClientSpeedItem>
+    {
+        RemoteClientSpeedItem() = default;
+
+        winrt::hstring MatchKey() const noexcept { return m_matchKey; }
+        winrt::hstring HostId() const noexcept { return m_hostId; }
+
+        winrt::hstring DisplayName() const noexcept { return m_displayName; }
+        winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
+        winrt::hstring SendSpeedText() const noexcept { return m_sendSpeedText; }
+
+        uint32_t SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+
+        bool IsRtpMidi() const noexcept { return m_isRtpMidi; }
+
+        // the name the setting is keyed on, which may be empty where DisplayName is not
+        winrt::hstring RemoteName() const noexcept { return m_remoteName; }
+
+        void InternalInitialize(
+            _In_ winrt::hstring const& matchKey,
+            _In_ winrt::hstring const& hostId,
+            _In_ winrt::hstring const& remoteName,
+            _In_ winrt::hstring const& displayName,
+            _In_ winrt::hstring const& productInstanceId,
+            _In_ uint32_t const sendSpeedLimit,
+            _In_ bool const reduceSendSpeedAutomatically,
+            _In_ winrt::hstring const& sendSpeedText,
+            _In_ bool const isRtpMidi) noexcept
+        {
+            m_matchKey = matchKey;
+            m_hostId = hostId;
+            m_remoteName = remoteName;
+            m_displayName = displayName;
+            m_productInstanceId = productInstanceId;
+            m_sendSpeedLimit = sendSpeedLimit;
+            m_reduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
+            m_sendSpeedText = sendSpeedText;
+            m_isRtpMidi = isRtpMidi;
+        }
+
+    private:
+        winrt::hstring m_matchKey{};
+        winrt::hstring m_hostId{};
+        winrt::hstring m_remoteName{};
+        winrt::hstring m_displayName{};
+        winrt::hstring m_productInstanceId{};
+        winrt::hstring m_sendSpeedText{};
+        uint32_t m_sendSpeedLimit{ 0 };
+        bool m_reduceSendSpeedAutomatically{ false };
+        bool m_isRtpMidi{ false };
 
         MIDI_NETSETUP_OBSERVABLE_ITEM()
     };
@@ -798,6 +932,13 @@ namespace winrt::midinetworksetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Visible;
         }
 
+        winrt::Microsoft::UI::Xaml::Visibility RemoteClientSpeedsVisibility() const noexcept
+        {
+            return m_remoteClientSpeeds.Size() == 0 ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
         winrt::Windows::Foundation::Collections::IObservableVector<midinetworksetup::HostConnectionItem> Connections() const noexcept
         {
             return m_connections;
@@ -806,6 +947,11 @@ namespace winrt::midinetworksetup::implementation
         winrt::Windows::Foundation::Collections::IObservableVector<midinetworksetup::KnownClientItem> KnownClients() const noexcept
         {
             return m_knownClients;
+        }
+
+        winrt::Windows::Foundation::Collections::IObservableVector<midinetworksetup::RemoteClientSpeedItem> RemoteClientSpeeds() const noexcept
+        {
+            return m_remoteClientSpeeds;
         }
 
         void InternalInitialize(_In_ winrt::hstring const& hostId) noexcept
@@ -877,6 +1023,7 @@ namespace winrt::midinetworksetup::implementation
             RaisePropertyChanged(L"NoConnectionsVisibility");
             RaisePropertyChanged(L"NoKnownClientsVisibility");
             RaisePropertyChanged(L"KnownClientsVisibility");
+            RaisePropertyChanged(L"RemoteClientSpeedsVisibility");
         }
 
     private:
@@ -909,6 +1056,9 @@ namespace winrt::midinetworksetup::implementation
 
         winrt::Windows::Foundation::Collections::IObservableVector<midinetworksetup::KnownClientItem> m_knownClients{
             winrt::single_threaded_observable_vector<midinetworksetup::KnownClientItem>() };
+
+        winrt::Windows::Foundation::Collections::IObservableVector<midinetworksetup::RemoteClientSpeedItem> m_remoteClientSpeeds{
+            winrt::single_threaded_observable_vector<midinetworksetup::RemoteClientSpeedItem>() };
 
         MIDI_NETSETUP_OBSERVABLE_ITEM()
     };
@@ -1004,6 +1154,27 @@ namespace winrt::midinetworksetup::implementation
         winrt::Microsoft::UI::Xaml::Visibility CustomizeVisibility() const noexcept
         {
             return VisibleIf(!m_endpointDeviceId.empty() && !m_isBusy);
+        }
+
+        winrt::hstring SendSpeedText() const noexcept { return m_sendSpeedText; }
+        uint32_t SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+
+        // the text is only filled in for a session this PC has an entry for
+        winrt::Microsoft::UI::Xaml::Visibility SendSpeedVisibility() const noexcept
+        {
+            return VisibleIf(!m_sendSpeedText.empty());
+        }
+
+        void InternalUpdateSendSpeed(
+            _In_ uint32_t const sendSpeedLimit,
+            _In_ winrt::hstring const& sendSpeedText) noexcept
+        {
+            UpdateField(m_sendSpeedLimit, sendSpeedLimit, L"SendSpeedLimit");
+
+            if (UpdateField(m_sendSpeedText, sendSpeedText, L"SendSpeedText"))
+            {
+                RaisePropertyChanged(L"SendSpeedVisibility");
+            }
         }
 
         winrt::Microsoft::UI::Xaml::Visibility LatencyGraphVisibility() const noexcept
@@ -1134,6 +1305,9 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring m_clientId{};
         winrt::hstring m_disconnectLabel{};
 
+        winrt::hstring m_sendSpeedText{};
+        uint32_t m_sendSpeedLimit{ 0 };
+
         LatencyHistory m_latency{};
 
         bool m_isConnected{ false };
@@ -1152,6 +1326,7 @@ namespace winrt::midinetworksetup::factory_implementation
     struct RemoteHostItem : RemoteHostItemT<RemoteHostItem, implementation::RemoteHostItem> {};
     struct HostConnectionItem : HostConnectionItemT<HostConnectionItem, implementation::HostConnectionItem> {};
     struct KnownClientItem : KnownClientItemT<KnownClientItem, implementation::KnownClientItem> {};
+    struct RemoteClientSpeedItem : RemoteClientSpeedItemT<RemoteClientSpeedItem, implementation::RemoteClientSpeedItem> {};
     struct LocalHostItem : LocalHostItemT<LocalHostItem, implementation::LocalHostItem> {};
     struct RtpRemoteHostItem : RtpRemoteHostItemT<RtpRemoteHostItem, implementation::RtpRemoteHostItem> {};
 }

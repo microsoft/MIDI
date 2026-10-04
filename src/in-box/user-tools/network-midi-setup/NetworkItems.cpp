@@ -12,6 +12,7 @@
 #include "RemoteHostItem.g.cpp"
 #include "HostConnectionItem.g.cpp"
 #include "KnownClientItem.g.cpp"
+#include "RemoteClientSpeedItem.g.cpp"
 #include "LocalHostItem.g.cpp"
 #include "RtpRemoteHostItem.g.cpp"
 
@@ -30,6 +31,14 @@ namespace winrt::midinetworksetup::implementation
             });
 
         m_knownClients.VectorChanged([weak = get_weak()](auto&&, auto&&)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->InternalRaiseEmptyStateChanged();
+                }
+            });
+
+        m_remoteClientSpeeds.VectorChanged([weak = get_weak()](auto&&, auto&&)
             {
                 if (auto strong = weak.get())
                 {

@@ -52,6 +52,19 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         network::MidiNetworkSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
         bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
 
+        winrt::Windows::Foundation::Collections::IVectorView<network::MidiNetworkRemoteClientSettings> RemoteClientSettings() const noexcept
+        {
+            return m_remoteClientSettings.GetView();
+        }
+
+        void InternalAddRemoteClientSettings(_In_ network::MidiNetworkRemoteClientSettings const& settings) noexcept
+        {
+            if (settings != nullptr)
+            {
+                m_remoteClientSettings.Append(settings);
+            }
+        }
+
         void InternalSetSendSpeed(
             _In_ network::MidiNetworkSendSpeedLimit const sendSpeedLimit,
             _In_ bool const reduceSendSpeedAutomatically) noexcept
@@ -143,5 +156,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         winrt::Windows::Foundation::Collections::IVector<network::MidiNetworkHostConnection> m_connections{
             winrt::single_threaded_vector<network::MidiNetworkHostConnection>() };
+
+        winrt::Windows::Foundation::Collections::IVector<network::MidiNetworkRemoteClientSettings> m_remoteClientSettings{
+            winrt::single_threaded_vector<network::MidiNetworkRemoteClientSettings>() };
     };
 }

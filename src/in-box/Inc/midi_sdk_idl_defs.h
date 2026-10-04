@@ -459,6 +459,11 @@
 #define UUID_IMidiNetworkSavedHost                              8087b303-0519-c0de-31d1-dd00F0321000
 #define UUID_IMidiNetworkSavedClient                            8087b303-0519-c0de-31d1-dd00F0322000
 
+#define UUID_IMidiNetworkRemoteClientSettings                   8087b303-0519-c0de-31d1-dd00F0323000
+#define UUID_IMidiNetworkRemoteClientSettingsFactory            8087b303-0519-c0de-31d1-ff00F0323000
+#define UUID_IMidiNetworkHostRemoteClientSettingsConfig         8087b303-0519-c0de-31d1-dd00F0324000
+#define UUID_IMidiNetworkHostRemoteClientSettingsConfigFactory  8087b303-0519-c0de-31d1-ff00F0324000
+
 // ============================================================================
 // Windows.Devices.Midi2.Transports.Virtual : Interface number 00F04
 
@@ -570,6 +575,10 @@
 #define UUID_IMidiRtpHostKnownClientsConfigFactory              8087b303-0519-c0de-31d1-ff00F0718000
 #define UUID_IMidiRtpSavedHost                                  8087b303-0519-c0de-31d1-dd00F0719000
 #define UUID_IMidiRtpSavedClient                                8087b303-0519-c0de-31d1-dd00F071A000
+#define UUID_IMidiRtpRemoteClientSettings                       8087b303-0519-c0de-31d1-dd00F071B000
+#define UUID_IMidiRtpRemoteClientSettingsFactory                8087b303-0519-c0de-31d1-ff00F071B000
+#define UUID_IMidiRtpHostRemoteClientSettingsConfig             8087b303-0519-c0de-31d1-dd00F071C000
+#define UUID_IMidiRtpHostRemoteClientSettingsConfigFactory      8087b303-0519-c0de-31d1-ff00F071C000
 
 
 #endif

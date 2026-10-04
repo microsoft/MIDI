@@ -13,7 +13,7 @@
 namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 {
     _Use_decl_annotations_
-    void MidiRtpConnection::InternalInitialize(json::JsonObject const& source) noexcept
+    void MidiRtpConnection::InternalInitialize(json::JsonObject const& source, rtp::MidiRtpSendSpeedLimit const entrySendSpeedLimit) noexcept
     {
         m_connectionId = MidiRtpSdkJson::Unsigned<uint32_t>(source, MIDI_CONFIG_JSON_RTP_MIDI_CONNECTION_ID_KEY);
         m_remoteName = MidiRtpSdkJson::String(source, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_NAME_KEY);
@@ -33,5 +33,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         m_noteOffsRecovered = MidiRtpSdkJson::Unsigned<uint64_t>(source, MIDI_CONFIG_JSON_RTP_MIDI_TOTAL_NOTES_ENDED_KEY);
         m_messagesSent = MidiRtpSdkJson::Unsigned<uint64_t>(source, MIDI_CONFIG_JSON_RTP_MIDI_TOTAL_MESSAGES_SENT_KEY);
         m_messagesReceived = MidiRtpSdkJson::Unsigned<uint64_t>(source, MIDI_CONFIG_JSON_RTP_MIDI_TOTAL_MESSAGES_RECEIVED_KEY);
+
+        auto const speedOrEntry = [&source, entrySendSpeedLimit](wchar_t const* const key)
+            {
+                return MidiRtpSdkJson::Find(source, key, json::JsonValueType::Number) != nullptr ?
+                    static_cast<rtp::MidiRtpSendSpeedLimit>(MidiRtpSdkJson::SendSpeedLimit(source, key)) :
+                    entrySendSpeedLimit;
+            };
+
+        m_sendSpeedLimit = speedOrEntry(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY);
+        m_currentSendSpeedLimit = speedOrEntry(MIDI_CONFIG_JSON_RTP_MIDI_CURRENT_SEND_SPEED_LIMIT_KEY);
+        m_usesRemoteClientSettings = MidiRtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_USES_REMOTE_CLIENT_SETTINGS_KEY);
     }
 }

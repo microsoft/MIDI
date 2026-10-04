@@ -104,6 +104,12 @@ public:
     // more slowly, and the speed comes back once it stops. Without it, nothing changes.
     TEST_METHOD(HostSlowsDownWhileARemoteAsksForDataAgain);
 
+    // A remote can have a speed of its own on a host, kept by its name and product instance id
+    // and matched without case. It is used instead of the host's speed, changes without the
+    // remote reconnecting, and is used from the start when a remote which has one connects.
+    TEST_METHOD(HostUsesARemoteClientsOwnSendSpeed);
+    TEST_METHOD(HostAppliesARemoteClientsOwnSendSpeedWhenItConnects);
+
     // https://github.com/microsoft/MIDI/issues/1149. Releasing the name inside the service is
     // not the same as taking the advertisement off the network. These ask mDNS directly, so a
     // pass means the record is really gone from the wire rather than just out of a local cache.

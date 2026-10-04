@@ -96,6 +96,13 @@ namespace midinetworksetup
         // Only once there is an endpoint, because that is what a customization is keyed on.
         Microsoft.UI.Xaml.Visibility CustomizeVisibility{ get; };
 
+        // How fast this PC sends to the device, as shown, and what is configured, for changing
+        // it. Only for a device this PC has an entry for.
+        String SendSpeedText{ get; };
+        UInt32 SendSpeedLimit{ get; };
+        Boolean ReduceSendSpeedAutomatically{ get; };
+        Microsoft.UI.Xaml.Visibility SendSpeedVisibility{ get; };
+
         // Round trip latency over the last several polls, newest at the right. Rendered as a
         // filled sparkline, so the geometry is produced here rather than in the template.
         Microsoft.UI.Xaml.Visibility LatencyGraphVisibility{ get; };
@@ -128,6 +135,12 @@ namespace midinetworksetup
         Boolean IsPendingApproval{ get; };
         Boolean IsBusy;
 
+        // How fast the host sends to this device, and whether that is the host's speed or one
+        // set for this device. Changing it needs the device's identity, which a device does not
+        // always send.
+        String SendSpeedText{ get; };
+        Microsoft.UI.Xaml.Visibility ChangeSendSpeedVisibility{ get; };
+
         Microsoft.UI.Xaml.Visibility MonitorVisibility{ get; };
 
         // matches the remote host rows: round trip latency over a rolling window
@@ -152,6 +165,28 @@ namespace midinetworksetup
         String DecisionText{ get; };
 
         Boolean IsAllowed{ get; };
+    }
+
+    // A device which a host on this PC sends to at a speed of its own instead of the host's.
+    // Listed whether or not the device is connected, so a speed for a device which is away can
+    // still be changed or removed.
+    [default_interface]
+    runtimeclass RemoteClientSpeedItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        RemoteClientSpeedItem();
+
+        String MatchKey{ get; };
+        String HostId{ get; };
+
+        String DisplayName{ get; };
+        String ProductInstanceId{ get; };
+        String SendSpeedText{ get; };
+
+        UInt32 SendSpeedLimit{ get; };
+        Boolean ReduceSendSpeedAutomatically{ get; };
+
+        // which transport's host the setting belongs to
+        Boolean IsRtpMidi{ get; };
     }
 
     // One Network MIDI 2.0 host running on this PC.
@@ -195,9 +230,11 @@ namespace midinetworksetup
         Microsoft.UI.Xaml.Visibility NoConnectionsVisibility{ get; };
         Microsoft.UI.Xaml.Visibility NoKnownClientsVisibility{ get; };
         Microsoft.UI.Xaml.Visibility KnownClientsVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility RemoteClientSpeedsVisibility{ get; };
 
         Windows.Foundation.Collections.IObservableVector<HostConnectionItem> Connections{ get; };
         Windows.Foundation.Collections.IObservableVector<KnownClientItem> KnownClients{ get; };
+        Windows.Foundation.Collections.IObservableVector<RemoteClientSpeedItem> RemoteClientSpeeds{ get; };
     }
 
     // One remote RTP-MIDI session. Folded together with this PC's client entry for it, the same
@@ -248,6 +285,11 @@ namespace midinetworksetup
         Microsoft.UI.Xaml.Visibility EndpointDeviceIdVisibility{ get; };
         Microsoft.UI.Xaml.Visibility ImageVisibility{ get; };
         Microsoft.UI.Xaml.Visibility CustomizeVisibility{ get; };
+
+        // how fast this PC sends to the session, for an entry this PC has
+        String SendSpeedText{ get; };
+        UInt32 SendSpeedLimit{ get; };
+        Microsoft.UI.Xaml.Visibility SendSpeedVisibility{ get; };
 
         Microsoft.UI.Xaml.Visibility LatencyGraphVisibility{ get; };
         Microsoft.UI.Xaml.Media.PointCollection LatencyLinePoints{ get; };

@@ -287,9 +287,11 @@ try
 
             RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), m_pacedSendClosed || !node->IsRunning());
 
-            if (HasRoomLocked(node->SendSpeedLimit()) || GetTickCount64() >= waitDeadline)
+            auto const speedMultiple = EffectiveSendSpeedLimit(*node);
+
+            if (HasRoomLocked(speedMultiple) || GetTickCount64() >= waitDeadline)
             {
-                if (m_pacedMessageSizes.empty() && node->SendSpeedLimit() == 0)
+                if (m_pacedMessageSizes.empty() && speedMultiple == 0)
                 {
                     // no limit and nothing ahead of it, so straight out as before
                     participantReady = node->SendMidi(m_participantId, bytes.data(), bytes.size());
@@ -391,7 +393,7 @@ RtpMidiConnection::SendAllowedLocked(
     waitTicks = 0;
     messagesTaken = 0;
 
-    auto const multiple = node->SendSpeedLimit();
+    auto const multiple = EffectiveSendSpeedLimit(*node);
 
     if (multiple != m_sendPacerMultiple)
     {
@@ -472,6 +474,49 @@ RtpMidiConnection::ClosePacedSend()
     }
 
     WakeSendersWaitingForRoom();
+}
+
+
+_Use_decl_annotations_
+void
+RtpMidiConnection::SetOwnSendSpeedLimit(std::optional<uint32_t> const speedMultiple) noexcept
+{
+    auto const value = speedMultiple.has_value() ?
+        static_cast<int64_t>(WindowsMidiServicesInternal::ClampMidiSendSpeedMultiple(*speedMultiple)) :
+        int64_t{ -1 };
+
+    if (m_ownSendSpeedLimit.exchange(value) == value) return;
+
+    TraceLoggingWrite(
+        MidiRtpMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Connection send speed limit changed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_remoteName.c_str(), "remote name"),
+        TraceLoggingInt64(value, "multiple of MIDI 1.0 wire speed, 0 for no limit, -1 for the entry's")
+    );
+
+    // a sender waiting for room may have more of it now, and what is queued may go sooner
+    {
+        auto lock = std::scoped_lock{ m_pacedLock };
+        m_pacedGeneration = m_pacedGeneration + 1;
+    }
+
+    WakeSendersWaitingForRoom();
+
+    if (auto node = m_node.lock()) node->WakeForPacedSend();
+}
+
+
+_Use_decl_annotations_
+uint32_t
+RtpMidiConnection::EffectiveSendSpeedLimit(RtpMidiNode const& node) const noexcept
+{
+    auto const own = m_ownSendSpeedLimit.load();
+
+    return own >= 0 ? static_cast<uint32_t>(own) : node.SendSpeedLimit();
 }
 
 
