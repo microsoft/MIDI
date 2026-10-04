@@ -284,6 +284,36 @@ MidiNetworkHost::ForgetRemoteClient(MidiNetworkRemoteClientIdentity const& ident
 }
 
 _Use_decl_annotations_
+void
+MidiNetworkHost::SetRemoteClientSettings(std::vector<MidiNetworkRemoteClientSettings> const& settings)
+{
+    auto lock = m_remoteClientListsLock.lock();
+
+    m_hostDefinition.RemoteClientSettings = settings;
+}
+
+_Use_decl_annotations_
+MidiNetworkRemoteClientSendSpeed
+MidiNetworkHost::GetSendSpeedForRemoteClient(MidiNetworkRemoteClientIdentity const& identity) noexcept
+{
+    // the definition only has the host's own speed as it was created, so it comes from here
+    MidiNetworkRemoteClientSendSpeed speed{ m_sendSpeedLimit, m_reduceSendSpeedAutomatically, false };
+
+    try
+    {
+        auto lock = m_remoteClientListsLock.lock();
+
+        if (auto const settings = m_hostDefinition.FindRemoteClientSettings(identity); settings != nullptr)
+        {
+            speed = { settings->SendSpeedLimit, settings->ReduceSendSpeedAutomatically, true };
+        }
+    }
+    CATCH_LOG();
+
+    return speed;
+}
+
+_Use_decl_annotations_
 HRESULT
 MidiNetworkHost::CreateNetworkConnection(
     HostName const& remoteHostName, 

@@ -52,6 +52,14 @@ public:
     // The participant is gone. Drops what is waiting and releases senders waiting for room.
     void ClosePacedSend();
 
+    // A speed for this connection alone, used instead of its host's or client's. Empty to go back
+    // to that one. Takes effect at once and drops nothing.
+    void SetOwnSendSpeedLimit(_In_ std::optional<uint32_t> const speedMultiple) noexcept;
+    bool HasOwnSendSpeedLimit() const noexcept { return m_ownSendSpeedLimit.load() >= 0; }
+
+    // What this connection sends at now: its own speed, or its node's
+    uint32_t EffectiveSendSpeedLimit(_In_ RtpMidiNode const& node) const noexcept;
+
     uint64_t MessagesReceived() const noexcept { return m_messagesReceived.load(); }
     uint64_t MessagesSent() const noexcept { return m_messagesSent.load(); }
 
@@ -104,6 +112,9 @@ private:
     WindowsMidiServicesInternal::MidiSendPacer m_sendPacer{};
     uint32_t m_sendPacerMultiple{ 0 };
     bool m_pacedSendClosed{ false };
+
+    // -1 when the connection uses its node's speed
+    std::atomic<int64_t> m_ownSendSpeedLimit{ -1 };
 
     // Changes whenever messages leave the queue. A sender waiting for room waits on its address.
     // Written under m_pacedLock.

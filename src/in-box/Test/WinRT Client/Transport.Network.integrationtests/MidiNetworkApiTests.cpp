@@ -593,6 +593,87 @@ void MidiNetworkApiTests::TestDisconnectConfigJsonIsNotNull()
     VERIFY_IS_NOT_NULL(config.ConfigJson());
 }
 
+void MidiNetworkApiTests::TestRemoteClientSettingsConfigSkipsEntriesWithoutAnIdentity()
+{
+    MidiNetworkRemoteClientSettings defaults;
+
+    VERIFY_IS_TRUE(defaults.SendSpeedLimit() == MidiNetworkSendSpeedLimit::Unlimited, L"a new entry has no limit");
+    VERIFY_IS_FALSE(defaults.ReduceSendSpeedAutomatically(), L"and does not slow down by itself");
+
+    MidiNetworkRemoteClientSettings complete(L"MidiApiTest Speed", L"SPEED1");
+    complete.SendSpeedLimit(MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes2);
+    complete.ReduceSendSpeedAutomatically(true);
+
+    VERIFY_IS_TRUE(complete.RemoteClientName() == L"MidiApiTest Speed");
+    VERIFY_IS_TRUE(complete.RemoteClientProductInstanceId() == L"SPEED1");
+    VERIFY_IS_TRUE(complete.SendSpeedLimit() == MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes2);
+    VERIFY_IS_TRUE(complete.ReduceSendSpeedAutomatically());
+
+    auto const hostId = foundation::GuidHelper::CreateNewGuid();
+
+    MidiNetworkHostRemoteClientSettingsConfig config(hostId);
+
+    VERIFY_ARE_EQUAL(hostId, config.HostId());
+    VERIFY_ARE_EQUAL(MidiNetworkTransportManager::TransportId(), config.TransportId());
+
+    // the service needs both the name and the product instance id to recognize a remote
+    config.RemoteClientSettings().Append(complete);
+    config.RemoteClientSettings().Append(MidiNetworkRemoteClientSettings(L"MidiApiTest Speed", L""));
+    config.RemoteClientSettings().Append(MidiNetworkRemoteClientSettings(L"   ", L"SPEED2"));
+    config.RemoteClientSettings().Append(defaults);
+
+    auto const findList = [&](json::JsonObject const& configJson) -> json::JsonArray
+    {
+        VERIFY_IS_NOT_NULL(configJson);
+
+        Log::Comment(String().Format(L"Remote client settings config json: %s", configJson.Stringify().c_str()));
+
+        json::JsonObject transportObject{ nullptr };
+
+        for (auto const& pair : configJson.GetNamedObject(L"endpointTransportPluginSettings"))
+        {
+            if (winrt::guid(pair.Key()) == MidiNetworkTransportManager::TransportId())
+            {
+                transportObject = pair.Value().GetObject();
+                break;
+            }
+        }
+
+        VERIFY_IS_NOT_NULL(transportObject);
+
+        json::JsonObject hostObject{ nullptr };
+
+        for (auto const& pair : transportObject.GetNamedObject(L"updateEntries").GetNamedObject(L"hosts"))
+        {
+            if (winrt::guid(pair.Key()) == hostId)
+            {
+                hostObject = pair.Value().GetObject();
+                break;
+            }
+        }
+
+        VERIFY_IS_NOT_NULL(hostObject, L"the list is a change to the host");
+
+        return hostObject.GetNamedArray(L"remoteClientSettings");
+    };
+
+    auto const listed = findList(config.ConfigJson());
+
+    VERIFY_ARE_EQUAL(listed.Size(), 1u, L"only the entry with a whole identity is written");
+
+    auto const entry = listed.GetObjectAt(0);
+
+    VERIFY_IS_TRUE(entry.GetNamedString(L"umpEndpointName") == L"MidiApiTest Speed");
+    VERIFY_IS_TRUE(entry.GetNamedString(L"productInstanceId") == L"SPEED1");
+    VERIFY_ARE_EQUAL(entry.GetNamedNumber(L"sendSpeedLimit"), 2.0);
+    VERIFY_IS_TRUE(entry.GetNamedBoolean(L"reduceSendSpeedAutomatically"));
+
+    // a saved list is replaced rather than added to, so an empty one has to be written to clear it
+    config.RemoteClientSettings().Clear();
+
+    VERIFY_ARE_EQUAL(findList(config.ConfigJson()).Size(), 0u, L"an empty list is still written");
+}
+
 
 void MidiNetworkApiTests::TestCreateThenRemoveHost()
 {
@@ -1967,6 +2048,8 @@ void MidiNetworkApiTests::TestConnectByDeviceIdCreatesAnMdnsMatchedEntry()
     config.UmpEndpointName(L"MidiApiTest Device Id Match");
     config.MatchCriteria(criteria);
 
+    auto cleanup = wil::scope_exit([&] { RemoveTestClient(clientId); });
+
     auto response = MidiNetworkTransportManager::ConnectNetworkClientAsync(config).get();
 
     VERIFY_IS_NOT_NULL(response);
@@ -1987,6 +2070,8 @@ void MidiNetworkApiTests::TestConnectByDeviceIdCreatesAnMdnsMatchedEntry()
         return;
     }
 
+    VERIFY_IS_TRUE(response.ClientId() == clientId, L"The response names the entry it made");
+
     auto entry = FindConfiguredClient(clientId);
 
     VERIFY_IS_NOT_NULL(entry);
@@ -1996,8 +2081,6 @@ void MidiNetworkApiTests::TestConnectByDeviceIdCreatesAnMdnsMatchedEntry()
         VERIFY_ARE_EQUAL(deviceId, entry.MatchDeviceId(), L"The entry matches on the device id it was given");
         VERIFY_IS_FALSE(entry.IsDirectConnection(), L"A device id match is not a direct connection");
     }
-
-    RemoveTestClient(clientId);
 }
 
 void MidiNetworkApiTests::TestConnectWithNoMatchCriteriaValuesFailsCleanly()
@@ -2022,6 +2105,8 @@ void MidiNetworkApiTests::TestConnectWithNoMatchCriteriaValuesFailsCleanly()
         MidiNetworkClientConnectErrorCode::InvalidOrMissingMatchCriteria,
         response.ErrorCode(),
         L"Criteria with neither a device id nor an address are rejected as such");
+
+    VERIFY_IS_TRUE(response.ClientId() == config.ClientId(), L"A refused request still names the entry it was for");
 }
 
 void MidiNetworkApiTests::TestConnectByDeviceIdEntryCanBeDisconnected()
@@ -3324,6 +3409,178 @@ void MidiNetworkApiTests::TestSavingKnownClientsForUnsavedHostIsRefused()
     VERIFY_IS_TRUE(response.Result() == svc::MidiServiceConfigSaveResult::ErrorEntryNotSaved, L"and it says why");
 
     VERIFY_IS_TRUE(FindSavedHost(hostId) == nullptr, L"and no partial host is left in the file");
+}
+
+
+void MidiNetworkApiTests::TestSavedHostFollowsSavedRemoteClientSettings()
+{
+    if (!ConfigFileRegisteredOrSkip())
+    {
+        return;
+    }
+
+    auto const suffix = winrt::to_hstring(MidiClock::Now());
+
+    MidiNetworkHostCreationConfig config;
+    config.Name(winrt::hstring{ TestHostNamePrefix } + L"Speeds" + suffix);
+    config.ServiceInstanceName(L"MidiApiTestSpeeds" + suffix);
+    config.ProductInstanceId(L"MidiApiTestSpeeds");
+    config.Advertise(false);
+    config.SendSpeedLimit(MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes8);
+
+    auto const hostId = config.HostId();
+
+    auto removeEntry = wil::scope_exit([&] { RemoveSavedHost(hostId); });
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config), L"saving the host works");
+
+    auto saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr, L"it is listed once saved");
+    VERIFY_ARE_EQUAL(saved.RemoteClientSettings().Size(), (uint32_t)0, L"a new host has no remote with a speed of its own");
+
+    MidiNetworkRemoteClientSettings slow(L"MidiApiTest Slow", L"SLOW1");
+    slow.SendSpeedLimit(MidiNetworkSendSpeedLimit::Midi1WireSpeed);
+
+    MidiNetworkRemoteClientSettings careful(L"MidiApiTest Careful", L"CAREFUL1");
+    careful.SendSpeedLimit(MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes4);
+    careful.ReduceSendSpeedAutomatically(true);
+
+    MidiNetworkHostRemoteClientSettingsConfig settings(hostId);
+    settings.RemoteClientSettings().Append(slow);
+    settings.RemoteClientSettings().Append(careful);
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(settings), L"saving the speeds of the host's remotes works");
+
+    saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_ARE_EQUAL(saved.RemoteClientSettings().Size(), (uint32_t)2, L"both are saved");
+
+    for (auto const& entry : saved.RemoteClientSettings())
+    {
+        if (entry.RemoteClientProductInstanceId() == L"SLOW1")
+        {
+            VERIFY_IS_TRUE(entry.RemoteClientName() == L"MidiApiTest Slow");
+            VERIFY_IS_TRUE(entry.SendSpeedLimit() == MidiNetworkSendSpeedLimit::Midi1WireSpeed, L"one at wire speed");
+            VERIFY_IS_FALSE(entry.ReduceSendSpeedAutomatically());
+        }
+        else
+        {
+            VERIFY_IS_TRUE(entry.RemoteClientProductInstanceId() == L"CAREFUL1");
+            VERIFY_IS_TRUE(entry.SendSpeedLimit() == MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes4, L"one at four times wire speed");
+            VERIFY_IS_TRUE(entry.ReduceSendSpeedAutomatically(), L"which slows down by itself");
+        }
+    }
+
+    VERIFY_IS_TRUE(saved.SendSpeedLimit() == MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes8, L"the host keeps its own speed");
+
+    // a later list replaces the earlier one rather than adding to it
+    MidiNetworkHostRemoteClientSettingsConfig shorter(hostId);
+    shorter.RemoteClientSettings().Append(careful);
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(shorter), L"saving a shorter list works");
+
+    saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_ARE_EQUAL(saved.RemoteClientSettings().Size(), (uint32_t)1, L"the list is replaced whole");
+    VERIFY_IS_TRUE(saved.RemoteClientSettings().GetAt(0).RemoteClientProductInstanceId() == L"CAREFUL1");
+
+    VerifySaved(
+        svc::MidiServiceTransportPluginConfigManager::SaveUpdate(MidiNetworkHostRemoteClientSettingsConfig(hostId)),
+        L"saving an empty list works");
+
+    saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_ARE_EQUAL(saved.RemoteClientSettings().Size(), (uint32_t)0, L"an empty list clears it");
+}
+
+
+// The speeds sit with the host's entry, so saving them alone would leave half a host
+void MidiNetworkApiTests::TestSavingRemoteClientSettingsForUnsavedHostIsRefused()
+{
+    if (!ConfigFileRegisteredOrSkip())
+    {
+        return;
+    }
+
+    auto const hostId = foundation::GuidHelper::CreateNewGuid();
+
+    auto removeEntry = wil::scope_exit([&] { RemoveSavedHost(hostId); });
+
+    MidiNetworkHostRemoteClientSettingsConfig settings(hostId);
+    settings.RemoteClientSettings().Append(MidiNetworkRemoteClientSettings(L"MidiApiTest Slow", L"SLOW1"));
+
+    auto const response = svc::MidiServiceTransportPluginConfigManager::SaveUpdate(settings);
+
+    VERIFY_IS_TRUE(response != nullptr);
+    VERIFY_IS_FALSE(response.Success(), L"speeds for a host which is not saved are not saved");
+    VERIFY_IS_TRUE(response.Result() == svc::MidiServiceConfigSaveResult::ErrorEntryNotSaved, L"and it says why");
+
+    VERIFY_IS_TRUE(FindSavedHost(hostId) == nullptr, L"and no partial host is left in the file");
+}
+
+
+void MidiNetworkApiTests::TestHostRemoteClientSettingsReachTheRunningHost()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto const hostId = CreateTestHost(MakeUniqueSuffix());
+
+    VERIFY_IS_FALSE(hostId == winrt::guid{}, L"the host is created");
+
+    if (hostId == winrt::guid{}) return;
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    auto const findHost = [&]() -> MidiNetworkConfiguredHost
+    {
+        for (auto const& host : MidiNetworkTransportManager::GetConfiguredHosts())
+        {
+            if (host != nullptr && host.HostId() == hostId) return host;
+        }
+
+        return nullptr;
+    };
+
+    MidiNetworkRemoteClientSettings remote(L"MidiApiTest Remote", L"REMOTE1");
+    remote.SendSpeedLimit(MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes2);
+    remote.ReduceSendSpeedAutomatically(true);
+
+    MidiNetworkHostRemoteClientSettingsConfig settings(hostId);
+    settings.RemoteClientSettings().Append(remote);
+
+    auto const sent = svc::MidiServiceTransportPluginConfigManager::SendUpdate(settings);
+
+    VERIFY_IS_TRUE(sent != nullptr && sent.Status() == svc::MidiServiceConfigResponseStatus::Success, L"the service takes the speeds");
+
+    auto host = findHost();
+
+    VERIFY_IS_TRUE(host != nullptr);
+
+    if (host == nullptr) return;
+
+    VERIFY_ARE_EQUAL(host.RemoteClientSettings().Size(), 1u, L"the running host lists them");
+
+    if (host.RemoteClientSettings().Size() == 1)
+    {
+        auto const entry = host.RemoteClientSettings().GetAt(0);
+
+        VERIFY_IS_TRUE(entry.RemoteClientName() == L"MidiApiTest Remote");
+        VERIFY_IS_TRUE(entry.RemoteClientProductInstanceId() == L"REMOTE1");
+        VERIFY_IS_TRUE(entry.SendSpeedLimit() == MidiNetworkSendSpeedLimit::Midi1WireSpeedTimes2);
+        VERIFY_IS_TRUE(entry.ReduceSendSpeedAutomatically());
+    }
+
+    auto const cleared = svc::MidiServiceTransportPluginConfigManager::SendUpdate(MidiNetworkHostRemoteClientSettingsConfig(hostId));
+
+    VERIFY_IS_TRUE(cleared != nullptr && cleared.Status() == svc::MidiServiceConfigResponseStatus::Success, L"the service takes an empty list");
+
+    host = findHost();
+
+    VERIFY_IS_TRUE(host != nullptr && host.RemoteClientSettings().Size() == 0, L"which clears it");
 }
 
 

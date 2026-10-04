@@ -30,6 +30,9 @@ Found in `MidiRtpConfiguredHost.Connections` and `MidiRtpConfiguredClient.Connec
 | `TotalCountNoteOffsRecovered` | How many Note Off messages were put back after a loss, so no note was left hanging |
 | `TotalCountMessagesSent` | The number of MIDI messages sent to the remote device |
 | `TotalCountMessagesReceived` | The number of MIDI messages received from the remote device |
+| `SendSpeedLimit` | How fast this PC is set up to send to the remote device. On a host, that's the device's own speed when `UsesRemoteClientSettings` is true, and the host's speed otherwise. On a client, it's the client entry's speed. See [MidiRtpSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpSendSpeedLimitEnum/) |
+| `CurrentSendSpeedLimit` | How fast this PC is sending to the remote device right now. It's only different from `SendSpeedLimit` for a moment after a change |
+| `UsesRemoteClientSettings` | True when the host has a sending speed of this device's own, in `MidiRtpConfiguredHost.RemoteClientSettings`, and uses it instead of the host's. Always false on a client |
 
 ## Remarks
 

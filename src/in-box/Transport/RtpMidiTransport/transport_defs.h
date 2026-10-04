@@ -46,6 +46,7 @@
 // Anyone on the network can send an invitation, so what they can make this PC remember is bounded
 #define MIDI_RTP_MAX_PENDING_REMOTE_CLIENTS_PER_HOST            16
 #define MIDI_RTP_MAX_REMOTE_CLIENT_DECISIONS_PER_HOST           256
+#define MIDI_RTP_MAX_REMOTE_CLIENT_SETTINGS_PER_HOST            256
 #define MIDI_RTP_REMOTE_CLIENT_NAME_MAX_CHARS                   255
 
 // The configuration file is written by customers and tools, so text that only this PC uses, like a

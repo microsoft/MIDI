@@ -36,7 +36,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         uint64_t TotalCountMessagesSent() const noexcept { return m_messagesSent; }
         uint64_t TotalCountMessagesReceived() const noexcept { return m_messagesReceived; }
 
-        void InternalInitialize(_In_ json::JsonObject const& source) noexcept;
+        rtp::MidiRtpSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        rtp::MidiRtpSendSpeedLimit CurrentSendSpeedLimit() const noexcept { return m_currentSendSpeedLimit; }
+        bool UsesRemoteClientSettings() const noexcept { return m_usesRemoteClientSettings; }
+
+        // The entry's speed stands in for anything an older service does not report
+        void InternalInitialize(_In_ json::JsonObject const& source, _In_ rtp::MidiRtpSendSpeedLimit const entrySendSpeedLimit) noexcept;
 
     private:
         uint32_t m_connectionId{ 0 };
@@ -57,5 +62,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         uint64_t m_noteOffsRecovered{ 0 };
         uint64_t m_messagesSent{ 0 };
         uint64_t m_messagesReceived{ 0 };
+        rtp::MidiRtpSendSpeedLimit m_sendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
+        rtp::MidiRtpSendSpeedLimit m_currentSendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
+        bool m_usesRemoteClientSettings{ false };
     };
 }

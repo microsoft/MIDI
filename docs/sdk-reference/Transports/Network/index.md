@@ -53,6 +53,16 @@ A host set to require approval answers an unknown remote device with "pending," 
 
 Neither one stops the host or disconnects the client. A setting that can change on a running session, such as `FallbackMidi1PortCount`, takes effect right away. A setting that's decided when an endpoint is built, such as `CreateMidi1Ports`, is saved for the next connection. `Success` means the service accepted the settings, not that each one changed something you can see.
 
+**Giving one device on a host a sending speed of its own**
+
+A host sends to every connected device at the host's speed. When one device needs a different speed, like a hardware synth that loses data during a long SysEx dump, give it a speed of its own:
+
+1. Read the list the running host holds from [MidiNetworkConfiguredHost]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkConfiguredHost/).`RemoteClientSettings`
+2. Fill in a [MidiNetworkHostRemoteClientSettingsConfig]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkHostRemoteClientSettingsConfig/) with that list, with the device added or changed
+3. Pass it to `MidiServiceTransportPluginConfigManager.SendUpdate`, and then to `SaveUpdate` to keep it
+
+The device is recognized by its name and product instance id, so it gets the same speed every time it connects. A device that's already connected changes speed right away.
+
 ## Reconnection behavior
 
 Once a client is set up, the service manages the connection for you. What it does when a remote host goes away depends on how the client was set up, because each way gives the service different information to work with.

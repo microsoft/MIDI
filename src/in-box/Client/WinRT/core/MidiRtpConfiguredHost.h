@@ -41,6 +41,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         collections::IVectorView<rtp::MidiRtpKnownRemoteClient> KnownRemoteClients() const noexcept { return m_knownRemoteClients.GetView(); }
         int32_t LastErrorCode() const noexcept { return m_lastErrorCode; }
         collections::IVectorView<rtp::MidiRtpConnection> Connections() const noexcept { return m_connections.GetView(); }
+        collections::IVectorView<rtp::MidiRtpRemoteClientSettings> RemoteClientSettings() const noexcept { return m_remoteClientSettings.GetView(); }
 
         // false when the entry has no usable identifier
         bool InternalInitialize(_In_ json::JsonObject const& source) noexcept;
@@ -70,5 +71,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         collections::IVector<rtp::MidiRtpKnownRemoteClient> m_knownRemoteClients{ winrt::single_threaded_vector<rtp::MidiRtpKnownRemoteClient>() };
         int32_t m_lastErrorCode{ 0 };
         collections::IVector<rtp::MidiRtpConnection> m_connections{ winrt::single_threaded_vector<rtp::MidiRtpConnection>() };
+        collections::IVector<rtp::MidiRtpRemoteClientSettings> m_remoteClientSettings{ winrt::single_threaded_vector<rtp::MidiRtpRemoteClientSettings>() };
     };
 }

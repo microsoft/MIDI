@@ -2847,3 +2847,271 @@ void NetworkMidiApprovalTests::HostSlowsDownWhileARemoteAsksForDataAgain()
         WaitForCurrentSendSpeedLimit(entryIdentifier, name, productInstanceId, 32, std::chrono::milliseconds(20000)),
         L"It speeds up again once the remote stops asking");
 }
+
+
+namespace
+{
+    // One host as enumerateHosts reports it, or null when it is not listed
+    json::JsonObject FindHostObject(_In_ std::wstring const& entryIdentifier)
+    {
+        auto response = ParseResponse(EnumerateHosts());
+
+        if (!response.has_value()) return nullptr;
+
+        auto hosts = response->GetNamedArray(L"hosts", nullptr);
+
+        if (hosts == nullptr) return nullptr;
+
+        for (uint32_t i = 0; i < hosts.Size(); i++)
+        {
+            auto host = hosts.GetObjectAt(i);
+
+            if (_wcsicmp(std::wstring{ host.GetNamedString(L"entryIdentifier", L"") }.c_str(), entryIdentifier.c_str()) == 0)
+            {
+                return host;
+            }
+        }
+
+        return nullptr;
+    }
+
+    // One remote's connection to a host, or null when it is not listed
+    json::JsonObject FindHostConnection(
+        _In_ std::wstring const& entryIdentifier,
+        _In_ std::string const& umpEndpointName,
+        _In_ std::string const& productInstanceId)
+    {
+        auto host = FindHostObject(entryIdentifier);
+
+        if (host == nullptr) return nullptr;
+
+        auto connections = host.GetNamedArray(L"connections", nullptr);
+
+        if (connections == nullptr) return nullptr;
+
+        for (uint32_t i = 0; i < connections.Size(); i++)
+        {
+            auto connection = connections.GetObjectAt(i);
+
+            if (std::wstring{ connection.GetNamedString(L"umpEndpointName", L"") } == Widen(umpEndpointName) &&
+                std::wstring{ connection.GetNamedString(L"productInstanceId", L"") } == Widen(productInstanceId))
+            {
+                return connection;
+            }
+        }
+
+        return nullptr;
+    }
+
+    // Waits until a remote is sent to at this speed, and whether that is a speed of its own
+    bool WaitForConnectionSendSpeed(
+        _In_ std::wstring const& entryIdentifier,
+        _In_ std::string const& umpEndpointName,
+        _In_ std::string const& productInstanceId,
+        _In_ double const sendSpeedLimit,
+        _In_ bool const usesRemoteClientSettings,
+        _In_ std::chrono::milliseconds const timeout)
+    {
+        auto const deadline = std::chrono::steady_clock::now() + timeout;
+        json::JsonObject connection{ nullptr };
+
+        do
+        {
+            connection = FindHostConnection(entryIdentifier, umpEndpointName, productInstanceId);
+
+            if (connection != nullptr &&
+                connection.GetNamedNumber(L"sendSpeedLimit", -1) == sendSpeedLimit &&
+                connection.GetNamedNumber(L"currentSendSpeedLimit", -1) == sendSpeedLimit &&
+                connection.GetNamedBoolean(L"usesRemoteClientSettings", !usesRemoteClientSettings) == usesRemoteClientSettings)
+            {
+                return true;
+            }
+
+            std::this_thread::sleep_for(PendingPollInterval);
+
+        } while (std::chrono::steady_clock::now() < deadline);
+
+        Log::Comment(String().Format(L"Waited for %.0f (its own speed: %s), last saw %s",
+            sendSpeedLimit,
+            usesRemoteClientSettings ? L"yes" : L"no",
+            connection == nullptr ? L"no connection" : connection.Stringify().c_str()));
+
+        return false;
+    }
+
+    // A host's whole list of remote clients with their own settings, as an update to the host
+    std::wstring RemoteClientSettingsUpdate(_In_ std::wstring const& entryIdentifier, _In_ std::wstring const& settings)
+    {
+        return L"{\"updateEntries\":{\"hosts\":{\"" + entryIdentifier + L"\":{\"remoteClientSettings\":[" + settings + L"]}}}}";
+    }
+
+    std::wstring RemoteClientSpeed(
+        _In_ std::wstring const& umpEndpointName,
+        _In_ std::wstring const& productInstanceId,
+        _In_ uint32_t const sendSpeedLimit,
+        _In_ bool const reduceAutomatically)
+    {
+        return L"{\"umpEndpointName\":\"" + umpEndpointName +
+            L"\",\"productInstanceId\":\"" + productInstanceId +
+            L"\",\"sendSpeedLimit\":" + std::to_wstring(sendSpeedLimit) +
+            L",\"reduceSendSpeedAutomatically\":" + (reduceAutomatically ? L"true" : L"false") + L"}";
+    }
+
+    std::wstring Uppercase(_In_ std::wstring value)
+    {
+        for (auto& ch : value) ch = towupper(ch);
+
+        return value;
+    }
+}
+
+void NetworkMidiApprovalTests::HostUsesARemoteClientsOwnSendSpeed()
+{
+    auto const entryIdentifier = MakeEntryIdentifier();
+
+    VERIFY_IS_TRUE(
+        CreateHost(entryIdentifier, L"Device Speed Host", L"DEVICESPEEDHOST", MakeUniqueServiceInstanceName(L"devspeed"), false).IsSuccess(),
+        L"Host created");
+
+    auto removeHost = wil::scope_exit([&entryIdentifier]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(WaitForHostStarted(entryIdentifier, PendingPollTimeout), L"Host started");
+
+    auto const port = ReadActualPort(entryIdentifier);
+
+    VERIFY_IS_TRUE(port.has_value(), L"The host reports its port");
+
+    if (!port.has_value()) return;
+
+    HostEndpointAddress address{ };
+    address.HostNameOrAddress = L"127.0.0.1";
+    address.Port = port.value();
+    address.DiscoveredVia = L"created by the device speed test";
+
+    UdpTestClient client;
+
+    VERIFY_IS_TRUE(client.Open(address), L"Client socket opened");
+
+    auto& context = ProtocolTestContext::Current();
+    auto const name = context.MakeUniqueEndpointName("DeviceSpeed");
+    auto const productInstanceId = context.MakeUniqueProductInstanceId("DeviceSpeed");
+
+    VERIFY_IS_TRUE(EstablishSession(client, name, productInstanceId), L"Session established");
+
+    auto endSession = wil::scope_exit([&client]() { EndSession(client); });
+
+    client.DrainPending();
+
+    VERIFY_IS_TRUE(
+        WaitForConnectionSendSpeed(entryIdentifier, name, productInstanceId, 0, false, ReplyTimeout),
+        L"The remote starts on the host's speed, which is no limit");
+
+    // named in another case, the way the allow and deny lists match a remote
+    auto const ownSpeed = SendNetworkTransportConfig(RemoteClientSettingsUpdate(
+        entryIdentifier,
+        RemoteClientSpeed(Uppercase(Widen(name)), Uppercase(Widen(productInstanceId)), 2, false)));
+
+    VERIFY_IS_TRUE(ownSpeed.IsSuccess(), L"The service accepted a speed for the remote");
+
+    VERIFY_IS_TRUE(
+        WaitForConnectionSendSpeed(entryIdentifier, name, productInstanceId, 2, true, ReplyTimeout),
+        L"The connected remote takes its own speed straight away");
+
+    auto const host = FindHostObject(entryIdentifier);
+    auto const listed = host != nullptr ? host.GetNamedArray(L"remoteClientSettings", nullptr) : nullptr;
+
+    VERIFY_IS_TRUE(listed != nullptr && listed.Size() == 1, L"The host lists the remote's speed");
+
+    // the host's own speed changes, and a remote with a speed of its own keeps that
+    auto const hostSpeed = SendNetworkTransportConfig(
+        L"{\"updateEntries\":{\"hosts\":{\"" + entryIdentifier + L"\":{\"sendSpeedLimit\":8}}}}");
+
+    VERIFY_IS_TRUE(hostSpeed.IsSuccess(), L"The service accepted a new speed for the host");
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    VERIFY_IS_TRUE(
+        WaitForConnectionSendSpeed(entryIdentifier, name, productInstanceId, 2, true, ReplyTimeout),
+        L"A new host speed does not change a remote which has its own");
+
+    auto const removed = SendNetworkTransportConfig(RemoteClientSettingsUpdate(entryIdentifier, L""));
+
+    VERIFY_IS_TRUE(removed.IsSuccess(), L"The service accepted an empty list");
+
+    VERIFY_IS_TRUE(
+        WaitForConnectionSendSpeed(entryIdentifier, name, productInstanceId, 8, false, ReplyTimeout),
+        L"Without a speed of its own, the remote goes to the host's speed");
+
+    VERIFY_IS_TRUE(
+        FindHostConnection(entryIdentifier, name, productInstanceId) != nullptr,
+        L"The remote stayed connected throughout");
+}
+
+void NetworkMidiApprovalTests::HostAppliesARemoteClientsOwnSendSpeedWhenItConnects()
+{
+    auto const entryIdentifier = MakeEntryIdentifier();
+
+    VERIFY_IS_TRUE(
+        CreateHost(entryIdentifier, L"Waiting Speed Host", L"WAITINGSPEEDHOST", MakeUniqueServiceInstanceName(L"waitspeed"), false).IsSuccess(),
+        L"Host created");
+
+    auto removeHost = wil::scope_exit([&entryIdentifier]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(WaitForHostStarted(entryIdentifier, PendingPollTimeout), L"Host started");
+
+    auto& context = ProtocolTestContext::Current();
+    auto const name = context.MakeUniqueEndpointName("WaitingSpeed");
+    auto const productInstanceId = context.MakeUniqueProductInstanceId("WaitingSpeed");
+
+    // Set before the remote has ever connected. An entry missing half its identity could never
+    // match anything, and a second entry for the same remote is not kept either.
+    auto const settings = SendNetworkTransportConfig(RemoteClientSettingsUpdate(
+        entryIdentifier,
+        RemoteClientSpeed(Widen(name), Widen(productInstanceId), 4, true) + L"," +
+        RemoteClientSpeed(Widen(name), L"", 1, false) + L"," +
+        RemoteClientSpeed(Uppercase(Widen(name)), Widen(productInstanceId), 1, false)));
+
+    VERIFY_IS_TRUE(settings.IsSuccess(), L"The service accepted speeds for a remote which is not connected");
+
+    auto const host = FindHostObject(entryIdentifier);
+    auto const listed = host != nullptr ? host.GetNamedArray(L"remoteClientSettings", nullptr) : nullptr;
+
+    VERIFY_IS_TRUE(listed != nullptr && listed.Size() == 1, L"Only the first usable entry for the remote is kept");
+
+    if (listed != nullptr && listed.Size() == 1)
+    {
+        VERIFY_ARE_EQUAL(listed.GetObjectAt(0).GetNamedNumber(L"sendSpeedLimit", -1), 4.0, L"with its speed");
+        VERIFY_IS_TRUE(listed.GetObjectAt(0).GetNamedBoolean(L"reduceSendSpeedAutomatically", false), L"and whether it slows down by itself");
+    }
+
+    auto const port = ReadActualPort(entryIdentifier);
+
+    VERIFY_IS_TRUE(port.has_value(), L"The host reports its port");
+
+    if (!port.has_value()) return;
+
+    HostEndpointAddress address{ };
+    address.HostNameOrAddress = L"127.0.0.1";
+    address.Port = port.value();
+    address.DiscoveredVia = L"created by the device speed test";
+
+    UdpTestClient client;
+
+    VERIFY_IS_TRUE(client.Open(address), L"Client socket opened");
+
+    VERIFY_IS_TRUE(EstablishSession(client, name, productInstanceId), L"Session established");
+
+    auto endSession = wil::scope_exit([&client]() { EndSession(client); });
+
+    client.DrainPending();
+
+    VERIFY_IS_TRUE(
+        WaitForConnectionSendSpeed(entryIdentifier, name, productInstanceId, 4, true, ReplyTimeout),
+        L"The remote is sent to at its own speed from the moment it connects");
+
+    auto const connection = FindHostConnection(entryIdentifier, name, productInstanceId);
+
+    VERIFY_IS_TRUE(
+        connection != nullptr && connection.GetNamedBoolean(L"reduceSendSpeedAutomatically", false),
+        L"and slows down by itself, as its own setting says");
+}

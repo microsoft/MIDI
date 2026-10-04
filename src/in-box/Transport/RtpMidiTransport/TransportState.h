@@ -36,6 +36,14 @@ public:
     // Who may connect to each host. A host's state lives exactly as long as its definition.
     RtpMidiApprovals& Approvals() noexcept { return m_approvals; }
 
+    // Each host's remotes with their own settings. Kept apart from the definition, so creating a
+    // host again with the same id keeps them, and removed with the definition.
+    void SetRemoteClientSettings(_In_ GUID const& hostId, _In_ std::vector<RtpMidiRemoteClientSettings> const& settings);
+    std::vector<RtpMidiRemoteClientSettings> GetRemoteClientSettings(_In_ GUID const& hostId);
+
+    // The speed this remote has of its own on the host, if it has one
+    std::optional<uint32_t> FindRemoteClientSendSpeedLimit(_In_ GUID const& hostId, _In_ std::wstring const& remoteName);
+
 private:
     TransportState() = default;
     ~TransportState() = default;
@@ -47,6 +55,7 @@ private:
     std::mutex m_definitionsLock;
     std::map<GUID, RtpMidiHostDefinition, GuidLess> m_hosts;
     std::map<GUID, RtpMidiClientDefinition, GuidLess> m_clients;
+    std::map<GUID, std::vector<RtpMidiRemoteClientSettings>, GuidLess> m_remoteClientSettings;
 
     RtpMidiApprovals m_approvals;
 };

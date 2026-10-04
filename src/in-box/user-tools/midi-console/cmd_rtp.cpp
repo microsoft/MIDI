@@ -242,6 +242,12 @@ namespace midi2console
                 table.AddCell(FormatLatency(connection.CurrentLatencyTicks()));
                 table.AddCell(FormatPackets(connection));
 
+                if (connection.UsesRemoteClientSettings())
+                {
+                    table.AddRowDetail(FormatResourceString(IDS_NET_SEND_SPEED_OWN_FORMAT,
+                        FormatSendSpeedLimit(static_cast<uint32_t>(connection.SendSpeedLimit()))), fieldValueTextStyle);
+                }
+
                 if (!connection.EndpointDeviceId().empty())
                 {
                     table.AddRowDetail(ToUtf8(connection.EndpointDeviceId()), endpointIdTextStyle);
@@ -283,6 +289,37 @@ namespace midi2console
                 table.AddCell(
                     ResourceString(client.IsAllowed() ? IDS_RTP_DECISION_ALLOWED : IDS_RTP_DECISION_BLOCKED),
                     client.IsAllowed() ? successTextStyle : warningTextStyle);
+            }
+
+            table.Render();
+        }
+
+        // Listed whether or not the device is connected right now
+        void WriteRemoteClientSpeeds(_In_ midi2rtp::MidiRtpConfiguredHost const& host)
+        {
+            auto const settingsList = host.RemoteClientSettings();
+
+            if (settingsList == nullptr || settingsList.Size() == 0)
+            {
+                return;
+            }
+
+            ConsoleTable table{ ResourceString(IDS_NET_REMOTE_CLIENT_SPEEDS_TABLE_TITLE) };
+
+            table.AddColumn(ResourceString(IDS_LABEL_NAME), ColumnAlignment::Left, endpointNameTextStyle);
+            table.SetLastColumnShrinkable();
+            table.AddColumn(ResourceString(IDS_NET_LABEL_SEND_SPEED), ColumnAlignment::Left, fieldValueTextStyle);
+
+            for (auto const& settings : settingsList)
+            {
+                if (settings == nullptr)
+                {
+                    continue;
+                }
+
+                table.BeginRow();
+                table.AddCell(ToUtf8(settings.RemoteClientName()));
+                table.AddCell(FormatSendSpeedLimit(static_cast<uint32_t>(settings.SendSpeedLimit())));
             }
 
             table.Render();
@@ -397,6 +434,7 @@ namespace midi2console
 
             WriteHostConnections(host, options.Verbose);
             WriteKnownClients(host);
+            WriteRemoteClientSpeeds(host);
         }
 
         return 0;

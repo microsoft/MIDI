@@ -139,6 +139,47 @@ namespace
         return names;
     }
 
+    // Entries without a usable remote name are skipped, and so is a second entry for the same remote
+    std::vector<RtpMidiRemoteClientSettings> ReadRemoteClientSettings(_In_ json::JsonObject const& entry)
+    {
+        std::vector<RtpMidiRemoteClientSettings> settings;
+
+        json::JsonArray list{ nullptr };
+        if (!RtpMidiJson::TryGetArray(entry, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENTS_KEY, list)) return settings;
+
+        for (uint32_t i = 0; i < list.Size() && settings.size() < MIDI_RTP_MAX_REMOTE_CLIENT_SETTINGS_PER_HOST; i++)
+        {
+            try
+            {
+                auto const element = list.GetAt(i);
+                if (element == nullptr || element.ValueType() != json::JsonValueType::Object) continue;
+
+                RtpMidiRemoteClientSettings remote{};
+                remote.RemoteName = RtpMidiJson::GetString(element.GetObject(), MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_NAME_KEY);
+
+                if (remote.RemoteName.empty() || remote.RemoteName.size() > MIDI_RTP_REMOTE_CLIENT_NAME_MAX_CHARS) continue;
+
+                bool const duplicate = std::any_of(settings.begin(), settings.end(),
+                    [&remote](RtpMidiRemoteClientSettings const& existing)
+                    {
+                        return CompareStringOrdinal(
+                            existing.RemoteName.c_str(), static_cast<int>(existing.RemoteName.size()),
+                            remote.RemoteName.c_str(), static_cast<int>(remote.RemoteName.size()),
+                            TRUE) == CSTR_EQUAL;
+                    });
+
+                if (duplicate) continue;
+
+                remote.SendSpeedLimit = RtpMidiJson::GetSendSpeedLimit(element.GetObject(), MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY);
+
+                settings.push_back(std::move(remote));
+            }
+            CATCH_LOG();
+        }
+
+        return settings;
+    }
+
     // ISO 8601 UTC with the full FILETIME precision, for example 2026-09-27T22:14:05.1234567Z
     std::wstring ToIso8601(_In_ FILETIME const& time)
     {
@@ -627,6 +668,39 @@ CMidi2RtpMidiConfigurationManager::ProcessCreateSection(json::JsonObject const& 
                 hostId,
                 ReadRemoteClientNames(entry, MIDI_CONFIG_JSON_RTP_MIDI_ALLOWED_CLIENTS_KEY),
                 ReadRemoteClientNames(entry, MIDI_CONFIG_JSON_RTP_MIDI_DENIED_CLIENTS_KEY));
+        }
+    }
+
+    // also after the hosts, for the same reason
+    json::JsonObject remoteClientSettings{ nullptr };
+    if (RtpMidiJson::TryGetObject(createSection, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENT_SETTINGS_KEY, remoteClientSettings))
+    {
+        for (auto const& pair : remoteClientSettings)
+        {
+            auto const key = pair.Key();
+
+            GUID hostId{};
+            if (!RtpMidiJson::TryParseEntryIdentifier(internal::TrimmedWStringCopy(std::wstring{ key }), hostId))
+            {
+                reportFailure(key, RTP_MIDI_ERROR_CODE_INVALID_ENTRY_IDENTIFIER, IDS_RTP_ERROR_INVALID_ENTRY_IDENTIFIER);
+                continue;
+            }
+
+            json::JsonObject entry{ nullptr };
+            if (!RtpMidiJson::TryGetObject(remoteClientSettings, key, entry))
+            {
+                reportFailure(key, RTP_MIDI_ERROR_CODE_INVALID_ENTRY, IDS_RTP_ERROR_INVALID_ENTRY);
+                continue;
+            }
+
+            // ignored for a host which is gone
+            TransportState::Current().SetRemoteClientSettings(hostId, ReadRemoteClientSettings(entry));
+
+            // the remotes already connected change speed straight away, without being dropped
+            if (auto endpointManager = TransportState::Current().GetEndpointManager())
+            {
+                endpointManager->ApplyRemoteClientSettings(hostId);
+            }
         }
     }
 }

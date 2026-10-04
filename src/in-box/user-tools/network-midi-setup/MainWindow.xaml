@@ -368,6 +368,30 @@
                                                 <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
                                                            TextWrapping="Wrap"
                                                            Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                <!-- The value and the way to change it sit together on the row,
+                                                     so the speed is not hidden in Details -->
+                                                <Grid HorizontalAlignment="Left"
+                                                      ColumnSpacing="4"
+                                                      Visibility="{x:Bind SendSpeedVisibility, Mode=OneWay}">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="{x:Bind SendSpeedText, Mode=OneWay}"
+                                                               TextWrapping="Wrap"
+                                                               VerticalAlignment="Center"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <HyperlinkButton x:Uid="ChangeSendSpeedLink"
+                                                                     Grid.Column="1"
+                                                                     Content="Change"
+                                                                     Padding="4,0,4,0"
+                                                                     FontSize="12"
+                                                                     VerticalAlignment="Center"
+                                                                     Click="OnChangeRemoteHostSendSpeedClick" />
+                                                </Grid>
                                             </StackPanel>
 
                                             <!-- Latency history. The geometry is generated against a
@@ -599,6 +623,8 @@
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
                                 <TextBox x:Name="ManualAddressTextBox"
@@ -639,6 +665,25 @@
                                         Style="{ThemeResource AccentButtonStyle}"
                                         IsEnabled="False"
                                         Click="OnManualConnectClick" />
+
+                                <ComboBox x:Name="ManualSendSpeedLimitComboBox"
+                                          x:Uid="SendSpeedLimitComboBox"
+                                          Grid.Row="1" Grid.Column="0"
+                                          Header="Sending speed"
+                                          HorizontalAlignment="Stretch" />
+
+                                <CheckBox x:Name="ManualReduceSendSpeedCheckBox"
+                                          x:Uid="ReduceSendSpeedCheckBox"
+                                          Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2"
+                                          VerticalAlignment="Bottom"
+                                          Content="Slow down when a device misses data" />
+
+                                <TextBlock x:Uid="SendSpeedLimitHelp"
+                                           Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5"
+                                           Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             </Grid>
                         </StackPanel>
                     </Expander>
@@ -731,6 +776,27 @@
                                                            TextWrapping="Wrap"
                                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                                <!-- On the card rather than in Details, so it is easy to find -->
+                                                <Grid HorizontalAlignment="Left" ColumnSpacing="4">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="{x:Bind SendSpeedText, Mode=OneWay}"
+                                                               TextWrapping="Wrap"
+                                                               VerticalAlignment="Center"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <HyperlinkButton x:Uid="ChangeHostSendSpeedLink"
+                                                                     Grid.Column="1"
+                                                                     Content="Change"
+                                                                     Padding="4,0,4,0"
+                                                                     FontSize="12"
+                                                                     VerticalAlignment="Center"
+                                                                     Click="OnChangeHostSendSpeedClick" />
+                                                </Grid>
                                             </StackPanel>
 
                                             <StackPanel Grid.Column="2"
@@ -806,6 +872,26 @@
                                                                            TextWrapping="Wrap"
                                                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                <Grid HorizontalAlignment="Left" ColumnSpacing="4">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*" />
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0"
+                                                                               Text="{x:Bind SendSpeedText, Mode=OneWay}"
+                                                                               TextWrapping="Wrap"
+                                                                               VerticalAlignment="Center"
+                                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                    <HyperlinkButton x:Uid="ChangeSendSpeedLink"
+                                                                                     Grid.Column="1"
+                                                                                     Content="Change"
+                                                                                     Padding="4,0,4,0"
+                                                                                     FontSize="12"
+                                                                                     VerticalAlignment="Center"
+                                                                                     Visibility="{x:Bind ChangeSendSpeedVisibility, Mode=OneWay}"
+                                                                                     Click="OnChangeRemoteClientSendSpeedClick" />
+                                                                </Grid>
                                                             </StackPanel>
 
                                                             <!-- Latency history. The geometry is generated against a
@@ -914,6 +1000,54 @@
                                             </StackPanel>
                                         </Expander>
 
+                                        <!-- Kept like the decisions above, so a device which is away
+                                             keeps its speed and can still be changed here -->
+                                        <Expander x:Uid="RemoteClientSpeedsExpander"
+                                                  Header="Devices with their own sending speed"
+                                                  HorizontalAlignment="Stretch"
+                                                  HorizontalContentAlignment="Stretch"
+                                                  Visibility="{x:Bind RemoteClientSpeedsVisibility, Mode=OneWay}"
+                                                  Background="Transparent"
+                                                  BorderThickness="0">
+                                            <StackPanel Spacing="4" Margin="0,4,0,4">
+                                                <ItemsControl ItemsSource="{x:Bind RemoteClientSpeeds, Mode=OneWay}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="local:RemoteClientSpeedItem">
+                                                            <Grid ColumnSpacing="12" Margin="0,4,0,4"
+                                                                  AutomationProperties.Name="{x:Bind DisplayName}">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" MinWidth="120" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{x:Bind DisplayName}"
+                                                                               TextWrapping="NoWrap"
+                                                                               TextTrimming="CharacterEllipsis" />
+                                                                    <TextBlock Text="{x:Bind SendSpeedText}"
+                                                                               TextWrapping="Wrap"
+                                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                </StackPanel>
+
+                                                                <StackPanel Grid.Column="1"
+                                                                            Orientation="Horizontal"
+                                                                            Spacing="8"
+                                                                            VerticalAlignment="Center">
+                                                                    <Button x:Uid="RemoteClientSpeedChangeButton"
+                                                                            Content="Change"
+                                                                            Click="OnChangeRemoteClientSpeedEntryClick" />
+                                                                    <Button x:Uid="RemoteClientSpeedUseHostButton"
+                                                                            Content="Use host's speed"
+                                                                            Click="OnUseHostSpeedForRemoteClientClick" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Expander>
+
                                         <Expander x:Uid="HostDetailsExpander"
                                                   Header="Details"
                                                   HorizontalAlignment="Stretch"
@@ -928,7 +1062,6 @@
                                                     <ColumnDefinition Width="*" />
                                                 </Grid.ColumnDefinitions>
                                                 <Grid.RowDefinitions>
-                                                    <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
@@ -997,26 +1130,6 @@
                                                                      FontSize="12"
                                                                      VerticalAlignment="Center"
                                                                      Click="OnChangeHostAdapterClick" />
-                                                </StackPanel>
-
-                                                <TextBlock x:Uid="HostSendSpeedLabel"
-                                                           Grid.Row="5" Grid.Column="0"
-                                                           Text="Sending speed"
-                                                           VerticalAlignment="Center"
-                                                           Style="{ThemeResource CaptionTextBlockStyle}"
-                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                                <StackPanel Grid.Row="5" Grid.Column="1"
-                                                            Orientation="Horizontal"
-                                                            Spacing="4">
-                                                    <TextBlock Text="{x:Bind SendSpeedText, Mode=OneWay}"
-                                                               VerticalAlignment="Center"
-                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
-                                                    <HyperlinkButton x:Uid="ChangeHostSendSpeedLink"
-                                                                     Content="Change"
-                                                                     Padding="4,0,4,0"
-                                                                     FontSize="12"
-                                                                     VerticalAlignment="Center"
-                                                                     Click="OnChangeHostSendSpeedClick" />
                                                 </StackPanel>
                                             </Grid>
                                         </Expander>
@@ -1327,6 +1440,27 @@
                                                 <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
                                                            TextWrapping="Wrap"
                                                            Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                <Grid HorizontalAlignment="Left"
+                                                      ColumnSpacing="4"
+                                                      Visibility="{x:Bind SendSpeedVisibility, Mode=OneWay}">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="{x:Bind SendSpeedText, Mode=OneWay}"
+                                                               TextWrapping="Wrap"
+                                                               VerticalAlignment="Center"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <HyperlinkButton x:Uid="ChangeSendSpeedLink"
+                                                                     Grid.Column="1"
+                                                                     Content="Change"
+                                                                     Padding="4,0,4,0"
+                                                                     FontSize="12"
+                                                                     VerticalAlignment="Center"
+                                                                     Click="OnChangeRtpRemoteHostSendSpeedClick" />
+                                                </Grid>
                                                 <TextBlock x:Uid="RtpAlsoNetworkMidi2Text"
                                                            Text="This device also offers Network MIDI 2.0, which is the better choice when a device supports both."
                                                            TextWrapping="Wrap"
@@ -1549,6 +1683,11 @@
                                     <ColumnDefinition Width="2*" MinWidth="140" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
 
                                 <TextBox x:Name="RtpManualAddressTextBox"
                                          x:Uid="ManualAddressTextBox"
@@ -1589,6 +1728,21 @@
                                         Style="{ThemeResource AccentButtonStyle}"
                                         IsEnabled="False"
                                         Click="OnRtpManualConnectClick" />
+
+                                <!-- RTP-MIDI cannot tell that a device missed data, so there is
+                                     no choice to slow down by itself -->
+                                <ComboBox x:Name="RtpManualSendSpeedLimitComboBox"
+                                          x:Uid="SendSpeedLimitComboBox"
+                                          Grid.Row="1" Grid.Column="0"
+                                          Header="Sending speed"
+                                          HorizontalAlignment="Stretch" />
+
+                                <TextBlock x:Uid="SendSpeedLimitHelp"
+                                           Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5"
+                                           Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             </Grid>
                         </StackPanel>
                     </Expander>
@@ -1681,6 +1835,27 @@
                                                            TextWrapping="Wrap"
                                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                                <!-- On the card rather than in Details, so it is easy to find -->
+                                                <Grid HorizontalAlignment="Left" ColumnSpacing="4">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="{x:Bind SendSpeedText, Mode=OneWay}"
+                                                               TextWrapping="Wrap"
+                                                               VerticalAlignment="Center"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <HyperlinkButton x:Uid="ChangeHostSendSpeedLink"
+                                                                     Grid.Column="1"
+                                                                     Content="Change"
+                                                                     Padding="4,0,4,0"
+                                                                     FontSize="12"
+                                                                     VerticalAlignment="Center"
+                                                                     Click="OnChangeRtpHostSendSpeedClick" />
+                                                </Grid>
                                             </StackPanel>
 
                                             <StackPanel Grid.Column="2"
@@ -1754,6 +1929,26 @@
                                                                                TextWrapping="Wrap"
                                                                                Style="{ThemeResource CaptionTextBlockStyle}"
                                                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                    <Grid HorizontalAlignment="Left" ColumnSpacing="4">
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="*" />
+                                                                            <ColumnDefinition Width="Auto" />
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Grid.Column="0"
+                                                                                   Text="{x:Bind SendSpeedText, Mode=OneWay}"
+                                                                                   TextWrapping="Wrap"
+                                                                                   VerticalAlignment="Center"
+                                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                        <HyperlinkButton x:Uid="ChangeSendSpeedLink"
+                                                                                         Grid.Column="1"
+                                                                                         Content="Change"
+                                                                                         Padding="4,0,4,0"
+                                                                                         FontSize="12"
+                                                                                         VerticalAlignment="Center"
+                                                                                         Visibility="{x:Bind ChangeSendSpeedVisibility, Mode=OneWay}"
+                                                                                         Click="OnChangeRemoteClientSendSpeedClick" />
+                                                                    </Grid>
                                                                 </StackPanel>
 
                                                                 <!-- The geometry is generated against a fixed 240x32 box in
@@ -1862,6 +2057,52 @@
                                             </StackPanel>
                                         </Expander>
 
+                                        <Expander x:Uid="RemoteClientSpeedsExpander"
+                                                  Header="Devices with their own sending speed"
+                                                  HorizontalAlignment="Stretch"
+                                                  HorizontalContentAlignment="Stretch"
+                                                  Visibility="{x:Bind RemoteClientSpeedsVisibility, Mode=OneWay}"
+                                                  Background="Transparent"
+                                                  BorderThickness="0">
+                                            <StackPanel Spacing="4" Margin="0,4,0,4">
+                                                <ItemsControl ItemsSource="{x:Bind RemoteClientSpeeds, Mode=OneWay}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="local:RemoteClientSpeedItem">
+                                                            <Grid ColumnSpacing="12" Margin="0,4,0,4"
+                                                                  AutomationProperties.Name="{x:Bind DisplayName}">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" MinWidth="120" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{x:Bind DisplayName}"
+                                                                               TextWrapping="NoWrap"
+                                                                               TextTrimming="CharacterEllipsis" />
+                                                                    <TextBlock Text="{x:Bind SendSpeedText}"
+                                                                               TextWrapping="Wrap"
+                                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                </StackPanel>
+
+                                                                <StackPanel Grid.Column="1"
+                                                                            Orientation="Horizontal"
+                                                                            Spacing="8"
+                                                                            VerticalAlignment="Center">
+                                                                    <Button x:Uid="RemoteClientSpeedChangeButton"
+                                                                            Content="Change"
+                                                                            Click="OnChangeRemoteClientSpeedEntryClick" />
+                                                                    <Button x:Uid="RemoteClientSpeedUseHostButton"
+                                                                            Content="Use host's speed"
+                                                                            Click="OnUseHostSpeedForRemoteClientClick" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Expander>
+
                                         <Expander x:Uid="HostDetailsExpander"
                                                   Header="Details"
                                                   HorizontalAlignment="Stretch"
@@ -1876,7 +2117,6 @@
                                                     <ColumnDefinition Width="*" />
                                                 </Grid.ColumnDefinitions>
                                                 <Grid.RowDefinitions>
-                                                    <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
@@ -1933,26 +2173,6 @@
                                                                      FontSize="12"
                                                                      VerticalAlignment="Center"
                                                                      Click="OnChangeRtpHostAdapterClick" />
-                                                </StackPanel>
-
-                                                <TextBlock x:Uid="HostSendSpeedLabel"
-                                                           Grid.Row="4" Grid.Column="0"
-                                                           Text="Sending speed"
-                                                           VerticalAlignment="Center"
-                                                           Style="{ThemeResource CaptionTextBlockStyle}"
-                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                                <StackPanel Grid.Row="4" Grid.Column="1"
-                                                            Orientation="Horizontal"
-                                                            Spacing="4">
-                                                    <TextBlock Text="{x:Bind SendSpeedText, Mode=OneWay}"
-                                                               VerticalAlignment="Center"
-                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
-                                                    <HyperlinkButton x:Uid="ChangeHostSendSpeedLink"
-                                                                     Content="Change"
-                                                                     Padding="4,0,4,0"
-                                                                     FontSize="12"
-                                                                     VerticalAlignment="Center"
-                                                                     Click="OnChangeRtpHostSendSpeedClick" />
                                                 </StackPanel>
                                             </Grid>
                                         </Expander>
@@ -2054,31 +2274,31 @@
                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                     </StackPanel>
 
+                    <StackPanel Spacing="4">
+                        <ComboBox x:Name="HostSendSpeedLimitComboBox"
+                                  x:Uid="SendSpeedLimitComboBox"
+                                  Header="Sending speed"
+                                  HorizontalAlignment="Stretch" />
+                        <TextBlock x:Uid="SendSpeedLimitHelp"
+                                   Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <CheckBox x:Name="HostReduceSendSpeedCheckBox"
+                                  x:Uid="ReduceSendSpeedCheckBox"
+                                  Content="Slow down when a device misses data" />
+                        <TextBlock x:Uid="ReduceSendSpeedHelp"
+                                   Text="When a device asks for data again, Windows sends more slowly, down to MIDI 1.0 wire speed. It speeds back up once the device stops asking."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
                     <Expander x:Uid="HostAdvancedExpander"
                               Header="Advanced"
                               HorizontalAlignment="Stretch"
                               HorizontalContentAlignment="Stretch">
                         <StackPanel Spacing="12" Margin="0,4,0,4">
-                            <StackPanel Spacing="4">
-                                <ComboBox x:Name="HostSendSpeedLimitComboBox"
-                                          x:Uid="SendSpeedLimitComboBox"
-                                          Header="Sending speed"
-                                          HorizontalAlignment="Stretch" />
-                                <TextBlock x:Uid="SendSpeedLimitHelp"
-                                           Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
-                                           TextWrapping="Wrap"
-                                           Style="{ThemeResource CaptionTextBlockStyle}"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <CheckBox x:Name="HostReduceSendSpeedCheckBox"
-                                          x:Uid="ReduceSendSpeedCheckBox"
-                                          Content="Slow down when a device misses data" />
-                                <TextBlock x:Uid="ReduceSendSpeedHelp"
-                                           Text="When a device asks for data again, Windows sends more slowly, down to MIDI 1.0 wire speed. It speeds back up once the device stops asking."
-                                           TextWrapping="Wrap"
-                                           Style="{ThemeResource CaptionTextBlockStyle}"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            </StackPanel>
-
                             <StackPanel Spacing="4">
                                 <ComboBox x:Name="HostNetworkAdapterComboBox"
                                           x:Uid="HostNetworkAdapterComboBox"
@@ -2210,23 +2430,23 @@
                               Content="Advertise this host on the network"
                               IsChecked="True" />
 
+                    <StackPanel Spacing="4">
+                        <ComboBox x:Name="RtpHostSendSpeedLimitComboBox"
+                                  x:Uid="SendSpeedLimitComboBox"
+                                  Header="Sending speed"
+                                  HorizontalAlignment="Stretch" />
+                        <TextBlock x:Uid="SendSpeedLimitHelp"
+                                   Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
                     <Expander x:Uid="HostAdvancedExpander"
                               Header="Advanced"
                               HorizontalAlignment="Stretch"
                               HorizontalContentAlignment="Stretch">
                         <StackPanel Spacing="12" Margin="0,4,0,4">
-                            <StackPanel Spacing="4">
-                                <ComboBox x:Name="RtpHostSendSpeedLimitComboBox"
-                                          x:Uid="SendSpeedLimitComboBox"
-                                          Header="Sending speed"
-                                          HorizontalAlignment="Stretch" />
-                                <TextBlock x:Uid="SendSpeedLimitHelp"
-                                           Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
-                                           TextWrapping="Wrap"
-                                           Style="{ThemeResource CaptionTextBlockStyle}"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            </StackPanel>
-
                             <StackPanel Spacing="4">
                                 <ComboBox x:Name="RtpHostNetworkAdapterComboBox"
                                           x:Uid="HostNetworkAdapterComboBox"
@@ -2351,13 +2571,25 @@
             </StackPanel>
         </ContentDialog>
 
-        <!-- Used for hosts of both transports. The title names the host, so it is set in code. -->
+        <!-- Used for hosts and for one device on a host, on both transports. The title names
+             what is being changed, so it is set in code. -->
         <ContentDialog x:Name="ChangeSendSpeedDialog"
                        x:Uid="ChangeSendSpeedDialog"
                        PrimaryButtonText="Save"
                        CloseButtonText="Cancel"
                        DefaultButton="Primary">
             <StackPanel Spacing="12" Width="440" Margin="0,4,4,4">
+                <!-- Only for one device on a host. The check box text names the host's speed,
+                     so it is set in code. -->
+                <StackPanel x:Name="ChangeSendSpeedDevicePanel" Spacing="8">
+                    <TextBlock x:Uid="ChangeSendSpeedDeviceIntro"
+                               Text="This changes only how fast this host sends to this device. Windows remembers it, and uses it again the next time the device connects."
+                               TextWrapping="Wrap" />
+                    <CheckBox x:Name="ChangeSendSpeedUseHostCheckBox"
+                              Checked="OnChangeSendSpeedUseHostChanged"
+                              Unchecked="OnChangeSendSpeedUseHostChanged" />
+                </StackPanel>
+
                 <StackPanel Spacing="4">
                     <ComboBox x:Name="ChangeSendSpeedLimitComboBox"
                               x:Uid="SendSpeedLimitComboBox"
@@ -2401,6 +2633,30 @@
                            TextWrapping="Wrap"
                            Style="{ThemeResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                <StackPanel Spacing="4" Margin="0,8,0,0">
+                    <ComboBox x:Name="ConnectSendSpeedLimitComboBox"
+                              x:Uid="SendSpeedLimitComboBox"
+                              Header="Sending speed"
+                              HorizontalAlignment="Stretch" />
+                    <TextBlock x:Uid="SendSpeedLimitHelp"
+                               Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+
+                <!-- Network MIDI 2.0 only. RTP-MIDI cannot tell that a device missed data. -->
+                <StackPanel x:Name="ConnectReduceSendSpeedPanel" Spacing="4">
+                    <CheckBox x:Name="ConnectReduceSendSpeedCheckBox"
+                              x:Uid="ReduceSendSpeedCheckBox"
+                              Content="Slow down when a device misses data" />
+                    <TextBlock x:Uid="ReduceSendSpeedHelp"
+                               Text="When a device asks for data again, Windows sends more slowly, down to MIDI 1.0 wire speed. It speeds back up once the device stops asking."
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
             </StackPanel>
         </ContentDialog>
         <ContentDialog x:Name="ReassociateDialog"

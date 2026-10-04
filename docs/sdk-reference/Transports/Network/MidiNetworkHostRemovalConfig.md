@@ -24,4 +24,4 @@ Pass to `MidiNetworkTransportManager.RemoveNetworkHostAsync`.
 
 ## Remarks
 
-Removing a host disconnects every remote client connected to it, and frees its UDP port and mDNS advertisement.
+Removing a host disconnects every remote client connected to it, and frees its UDP port and mDNS advertisement. Its clients' own sending speeds go with it.

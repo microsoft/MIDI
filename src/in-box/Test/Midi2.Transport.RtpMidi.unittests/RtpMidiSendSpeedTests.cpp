@@ -16,6 +16,7 @@ using namespace WEX::Common;
 using namespace WEX::Logging;
 using namespace WEX::TestExecution;
 
+using RtpMidiTest::FindConnection;
 using RtpMidiTest::IsSuccess;
 using RtpMidiTest::NewGuidText;
 using RtpMidiTest::Peer;
@@ -345,4 +346,249 @@ void RtpMidiTransportTests::TestSendSpeedLimitReadsAnythingAboveTheMaximumAsUnli
 
         VERIFY_ARE_EQUAL(reported, testCase.Expected, String().Format(L"%s: %s reads as %.0f", testCase.What, testCase.Value.c_str(), testCase.Expected));
     }
+}
+
+
+namespace
+{
+    // One host's speeds for its remotes, as the create section a configuration change sends
+    std::wstring RemoteClientSettingsSection(_In_ std::wstring const& hostId, _In_ std::wstring const& remoteClients)
+    {
+        return L"{\"create\":{\"remoteClientSettings\":{\"" + hostId + L"\":{\"remoteClients\":[" + remoteClients + L"]}}}}";
+    }
+
+    std::wstring RemoteClientSpeed(_In_ std::wstring const& remoteName, _In_ std::wstring const& sendSpeedLimit)
+    {
+        return L"{\"remoteName\":\"" + remoteName + L"\",\"sendSpeedLimit\":" + sendSpeedLimit + L"}";
+    }
+
+    // A different 3,000 byte SysEx for each seed, so one arriving cannot be mistaken for another
+    std::vector<uint8_t> LargeSysExData(_In_ uint8_t const seed)
+    {
+        std::vector<uint8_t> data(3000);
+        for (size_t i = 0; i < data.size(); i++) data[i] = static_cast<uint8_t>((i + seed) % 0x80);
+        return data;
+    }
+
+    // How long a large SysEx takes to reach the remote, or a negative number if it never does
+    double MillisecondsToDeliver(_In_ RtpMidiTest::OpenedEndpoint& opened, _In_ Peer& remote, _In_ uint8_t const seed)
+    {
+        auto const data = LargeSysExData(seed);
+        auto const words = SysEx7Words(data);
+        auto const expected = AsMidi1(data);
+
+        auto const start = std::chrono::steady_clock::now();
+
+        if (FAILED(opened.Send(words.data(), static_cast<UINT>(words.size() * sizeof(uint32_t))))) return -1;
+        if (!WaitFor([&]() { return ContainsSequence(remote.Received(), expected); }, 5000)) return -1;
+
+        return MillisecondsSince(start);
+    }
+}
+
+void RtpMidiTransportTests::TestRemoteClientSpeedIsUsedInsteadOfTheHostSpeed()
+{
+    // the host itself has no limit
+    uint16_t port{ 0 };
+    auto const hostId = CreateHost(L"\"name\":\"Device Speed Host\"", port);
+    AtExit removeHost([&]() { RemoveHost(hostId); });
+
+    VERIFY_IS_TRUE(IsSuccess(Send(RemoteClientSettingsSection(hostId, RemoteClientSpeed(L"Slow Peer", L"1")))),
+        L"one remote is given a speed of its own");
+
+    auto const host = FindHost(hostId);
+    VERIFY_IS_TRUE(host != nullptr && host.HasKey(L"remoteClientSettings"), L"the host lists the speeds of its remotes");
+
+    auto const listed = host.GetNamedArray(L"remoteClientSettings");
+    VERIFY_ARE_EQUAL(listed.Size(), 1u, L"one of them");
+    VERIFY_IS_TRUE(std::wstring{ listed.GetObjectAt(0).GetNamedString(L"remoteName", L"") } == L"Slow Peer", L"for the remote it names");
+    VERIFY_ARE_EQUAL(listed.GetObjectAt(0).GetNamedNumber(L"sendSpeedLimit", -1), 1.0, L"at wire speed");
+
+    auto const baseline = m_deviceManager->Endpoints().size();
+
+    // one at a time, so each endpoint is known to belong to the remote just connected
+    Peer slow("Slow Peer", false);
+    VERIFY_IS_TRUE(slow.Start(), L"the first remote binds a loopback port pair");
+    slow.Invite(port);
+    VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints().size() == baseline + 1; }, 5000), L"the remote with its own speed gets an endpoint");
+    VERIFY_IS_TRUE(m_deviceManager->Endpoints()[baseline].EndpointName == L"Slow Peer");
+
+    Peer fast("Fast Peer", false);
+    VERIFY_IS_TRUE(fast.Start(), L"the second remote binds a loopback port pair");
+    fast.Invite(port);
+    VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints().size() == baseline + 2; }, 5000), L"the other remote gets an endpoint");
+    VERIFY_IS_TRUE(m_deviceManager->Endpoints()[baseline + 1].EndpointName == L"Fast Peer");
+
+    auto const connected = FindHost(hostId);
+    auto const slowConnection = FindConnection(connected, L"Slow Peer");
+    auto const fastConnection = FindConnection(connected, L"Fast Peer");
+
+    VERIFY_IS_TRUE(slowConnection != nullptr && fastConnection != nullptr, L"the host lists both connections");
+
+    VERIFY_IS_TRUE(slowConnection.GetNamedBoolean(L"usesRemoteClientSettings", false), L"the first remote uses its own speed");
+    VERIFY_ARE_EQUAL(slowConnection.GetNamedNumber(L"sendSpeedLimit", -1), 1.0, L"which is wire speed");
+    VERIFY_ARE_EQUAL(slowConnection.GetNamedNumber(L"currentSendSpeedLimit", -1), 1.0, L"and it is sent to at that speed");
+
+    VERIFY_IS_FALSE(fastConnection.GetNamedBoolean(L"usesRemoteClientSettings", true), L"the other uses the host's speed");
+    VERIFY_ARE_EQUAL(fastConnection.GetNamedNumber(L"sendSpeedLimit", -1), 0.0, L"which is no limit");
+    VERIFY_ARE_EQUAL(fastConnection.GetNamedNumber(L"currentSendSpeedLimit", -1), 0.0, L"and it is sent to without one");
+
+    RtpMidiTest::OpenedEndpoint slowEndpoint(m_transport, m_deviceManager->Endpoints()[baseline].InterfaceId, 70);
+    RtpMidiTest::OpenedEndpoint fastEndpoint(m_transport, m_deviceManager->Endpoints()[baseline + 1].InterfaceId, 71);
+    VERIFY_IS_TRUE(slowEndpoint.IsOpen() && fastEndpoint.IsOpen(), L"the service opens both endpoints");
+
+    auto const slowMilliseconds = MillisecondsToDeliver(slowEndpoint, slow, 1);
+    auto const fastMilliseconds = MillisecondsToDeliver(fastEndpoint, fast, 2);
+
+    Log::Comment(String().Format(L"3,002 bytes took %.0f ms to the remote with its own speed, and %.0f ms to the other.",
+        slowMilliseconds, fastMilliseconds));
+
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(slowMilliseconds, 800.0, L"the remote with its own speed is sent to at about wire speed");
+    VERIFY_IS_LESS_THAN(slowMilliseconds, 3000.0, L"and not much slower");
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(fastMilliseconds, 0.0, L"the other remote gets its SysEx");
+    VERIFY_IS_LESS_THAN(fastMilliseconds, 500.0, L"without being slowed down");
+}
+
+void RtpMidiTransportTests::TestRemoteClientSpeedChangesWithoutReconnecting()
+{
+    uint16_t port{ 0 };
+    auto const hostId = CreateHost(L"\"name\":\"Changing Device Speed Host\"", port);
+    AtExit removeHost([&]() { RemoveHost(hostId); });
+
+    auto const baseline = m_deviceManager->Endpoints().size();
+
+    Peer remote("Changing Device Peer", false);
+    VERIFY_IS_TRUE(remote.Start(), L"the remote binds a loopback port pair");
+    remote.Invite(port);
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints().size() == baseline + 1; }, 5000), L"the remote gets an endpoint");
+
+    RtpMidiTest::OpenedEndpoint opened(m_transport, m_deviceManager->Endpoints()[baseline].InterfaceId, 72);
+    VERIFY_IS_TRUE(opened.IsOpen(), L"the service opens the endpoint");
+
+    auto const connectionReports = [&](bool const usesOwnSpeed, double const currentSendSpeedLimit)
+    {
+        auto const connection = FindConnection(FindHost(hostId), L"Changing Device Peer");
+
+        return connection != nullptr &&
+            connection.GetNamedBoolean(L"usesRemoteClientSettings", !usesOwnSpeed) == usesOwnSpeed &&
+            connection.GetNamedNumber(L"currentSendSpeedLimit", -1) == currentSendSpeedLimit;
+    };
+
+    VERIFY_IS_TRUE(connectionReports(false, 0), L"the remote starts on the host's speed");
+
+    // named without matching case, the way a remembered decision is matched
+    VERIFY_IS_TRUE(IsSuccess(Send(RemoteClientSettingsSection(hostId, RemoteClientSpeed(L"changing device peer", L"1")))),
+        L"the connected remote is given a speed of its own");
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return connectionReports(true, 1); }, 3000), L"the connection takes it straight away");
+
+    auto const pacedMilliseconds = MillisecondsToDeliver(opened, remote, 3);
+
+    VERIFY_IS_TRUE(IsSuccess(Send(RemoteClientSettingsSection(hostId, L""))), L"the remote's own speed is removed");
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return connectionReports(false, 0); }, 3000), L"the connection goes back to the host's speed");
+
+    auto const unpacedMilliseconds = MillisecondsToDeliver(opened, remote, 4);
+
+    Log::Comment(String().Format(L"With its own speed, 3,002 bytes took %.0f ms. Back on the host's speed, %.0f ms.",
+        pacedMilliseconds, unpacedMilliseconds));
+
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(pacedMilliseconds, 800.0, L"its own speed paced the SysEx");
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(unpacedMilliseconds, 0.0, L"the second SysEx arrives");
+    VERIFY_IS_LESS_THAN(unpacedMilliseconds, 500.0, L"and the host's speed did not pace it");
+
+    VERIFY_IS_TRUE(remote.Ended().empty(), L"the connection was never dropped");
+    VERIFY_IS_FALSE(m_deviceManager->Endpoints()[baseline].Removed, L"and the endpoint stayed");
+    VERIFY_ARE_EQUAL(m_deviceManager->Endpoints().size(), baseline + 1, L"no new endpoint was made");
+}
+
+void RtpMidiTransportTests::TestRemoteClientSpeedsAreCheckedAndKeptWithTheHost()
+{
+    auto const hostId = NewGuidText();
+
+    auto const createHost = [&](std::wstring const& extraFields)
+    {
+        return Send(L"{\"create\":{\"hosts\":{\"" + hostId +
+            L"\":{\"name\":\"Kept Speeds Host\",\"port\":\"auto\",\"advertise\":false,\"enabled\":false" + extraFields + L"}}}}");
+    };
+
+    auto const reported = [&]()
+    {
+        std::vector<std::pair<std::wstring, double>> speeds;
+
+        auto const host = FindHost(hostId);
+        if (host == nullptr || !host.HasKey(L"remoteClientSettings")) return speeds;
+
+        auto const listed = host.GetNamedArray(L"remoteClientSettings");
+
+        for (uint32_t i = 0; i < listed.Size(); i++)
+        {
+            auto const entry = listed.GetObjectAt(i);
+            speeds.emplace_back(std::wstring{ entry.GetNamedString(L"remoteName", L"") }, entry.GetNamedNumber(L"sendSpeedLimit", -1));
+        }
+
+        return speeds;
+    };
+
+    VERIFY_IS_TRUE(IsSuccess(createHost(L"")), L"the host is accepted");
+    AtExit removeHost([&]() { RemoveHost(hostId); });
+
+    std::wstring const tooLong(256, L'n');
+
+    auto const list =
+        RemoteClientSpeed(L"Kept Peer", L"2") + L"," +
+        RemoteClientSpeed(L"KEPT PEER", L"8") + L"," +         // the same remote again
+        RemoteClientSpeed(L"", L"4") + L"," +                  // no name
+        L"42," +                                                // not an entry at all
+        L"{\"sendSpeedLimit\":4}," +                            // no name either
+        RemoteClientSpeed(tooLong, L"4") + L"," +               // longer than any name a remote sends
+        RemoteClientSpeed(L"Too Fast Peer", L"1000");           // past the fastest limit
+
+    VERIFY_IS_TRUE(IsSuccess(Send(RemoteClientSettingsSection(hostId, list))), L"the list is accepted");
+
+    auto speeds = reported();
+    VERIFY_ARE_EQUAL(speeds.size(), static_cast<size_t>(2), L"only the usable entries are kept");
+
+    if (speeds.size() == 2)
+    {
+        VERIFY_IS_TRUE(speeds[0].first == L"Kept Peer" && speeds[0].second == 2.0, L"the first entry for a remote is the one kept");
+        VERIFY_IS_TRUE(speeds[1].first == L"Too Fast Peer" && speeds[1].second == 0.0, L"a speed past the fastest limit reads as no limit");
+    }
+
+    // a host is changed by creating it again with the same id
+    VERIFY_IS_TRUE(IsSuccess(createHost(L",\"sendSpeedLimit\":4")), L"the host is changed");
+    VERIFY_ARE_EQUAL(reported().size(), static_cast<size_t>(2), L"changing the host keeps the speeds of its remotes");
+
+    std::wstring many;
+
+    for (size_t i = 0; i < 300; i++)
+    {
+        if (!many.empty()) many += L",";
+        many += RemoteClientSpeed(L"Peer " + std::to_wstring(i), L"1");
+    }
+
+    VERIFY_IS_TRUE(IsSuccess(Send(RemoteClientSettingsSection(hostId, many))), L"a very long list is accepted");
+    VERIFY_ARE_EQUAL(reported().size(), static_cast<size_t>(256), L"but only the first 256 are kept");
+
+    RemoveHost(hostId);
+
+    VERIFY_IS_TRUE(IsSuccess(createHost(L"")), L"a host with the same id is created again");
+    VERIFY_ARE_EQUAL(reported().size(), static_cast<size_t>(0), L"removing the host removed the speeds of its remotes");
+
+    // speeds for a host which does not exist yet are not kept for one created later
+    auto const laterHostId = NewGuidText();
+
+    VERIFY_IS_TRUE(IsSuccess(Send(RemoteClientSettingsSection(laterHostId, RemoteClientSpeed(L"Early Peer", L"1")))),
+        L"speeds for a host which is not there are accepted");
+
+    VERIFY_IS_TRUE(IsSuccess(Send(L"{\"create\":{\"hosts\":{\"" + laterHostId +
+        L"\":{\"name\":\"Later Host\",\"port\":\"auto\",\"advertise\":false,\"enabled\":false}}}}")), L"the host is created after them");
+
+    auto const laterHost = FindHost(laterHostId);
+
+    RemoveHost(laterHostId);
+
+    VERIFY_IS_TRUE(laterHost != nullptr && laterHost.GetNamedArray(L"remoteClientSettings").Size() == 0,
+        L"and starts with no speeds for its remotes");
 }

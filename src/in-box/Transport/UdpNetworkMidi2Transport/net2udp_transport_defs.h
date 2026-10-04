@@ -34,6 +34,25 @@ struct MidiNetworkRemoteClientIdentity
     }
 };
 
+// One remote client's own settings on a host, used for it instead of the host's. Matched on the
+// identity the same way the allow and deny lists are.
+struct MidiNetworkRemoteClientSettings
+{
+    MidiNetworkRemoteClientIdentity Identity{};
+
+    // a multiple of MIDI 1.0 wire speed, 0 for no limit
+    uint32_t SendSpeedLimit{ 0 };
+    bool ReduceSendSpeedAutomatically{ false };
+};
+
+// What a host sends to one remote client, and whether that came from the client's own settings
+struct MidiNetworkRemoteClientSendSpeed
+{
+    uint32_t SendSpeedLimit{ 0 };
+    bool ReduceSendSpeedAutomatically{ false };
+    bool UsesRemoteClientSettings{ false };
+};
+
 enum MidiNetworkRemoteClientPolicy
 {
     // accept any remote client without asking anyone
@@ -235,6 +254,9 @@ enum class MidiNetworkEntryState
 #define MIDI_NETWORK_HOST_MAX_CONNECTIONS_DEFAULT                       64
 #define MIDI_NETWORK_HOST_MAX_CONNECTIONS_LOWER_BOUND                   1
 #define MIDI_NETWORK_HOST_MAX_CONNECTIONS_ABSOLUTE_MAX                  512
+
+// Remote clients one host keeps their own settings for. The list comes from a file anyone can edit.
+#define MIDI_NETWORK_HOST_MAX_REMOTE_CLIENT_SETTINGS                    256
 
 // A connection with no session and no traffic for this long is reclaimed. Remote clients
 // normally reconnect from a new ephemeral source port, so without this the connection map grows

@@ -261,6 +261,8 @@ Some devices lose data when a lot of it arrives at once. A hardware synth taking
 
 Every host and every client entry has a sending speed. It limits how fast this PC sends to the other device. It doesn't change what this PC receives.
 
+A host can also give one device a speed of its own. The host uses that speed for the device instead of its own, so a slow synth can get MIDI 1.0 wire speed while a computer connected to the same host gets no limit. The host knows the device by its name and product instance id, ignoring uppercase and lowercase differences, the same way it remembers whether to let the device in. So the device gets its own speed every time it connects, and right away if it's already connected. Network MIDI Setup shows each connected device's speed under its host, with a **Change** link. In PowerShell, use [`Set-MidiNetworkRemoteClientSendSpeed`]({{ site.baseurl }}/tools/powershell/#set-midinetworkremoteclientsendspeed-and-remove-midinetworkremoteclientsendspeed).
+
 | `sendSpeedLimit` | Speed |
 |---|---|
 | `0` | No limit. This is the default |

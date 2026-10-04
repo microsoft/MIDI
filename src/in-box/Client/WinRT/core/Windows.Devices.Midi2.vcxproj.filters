@@ -779,6 +779,12 @@
     <Midl Include="MidiNetworkKnownRemoteClient.idl">
       <Filter>SDK\Transports\Network</Filter>
     </Midl>
+    <Midl Include="MidiNetworkRemoteClientSettings.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostRemoteClientSettingsConfig.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
     <Midl Include="MidiNetworkSavedHost.idl">
       <Filter>SDK\Transports\Network</Filter>
     </Midl>
@@ -975,6 +981,12 @@
       <Filter>SDK\Transports\Rtp</Filter>
     </Midl>
     <Midl Include="MidiRtpKnownRemoteClient.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpRemoteClientSettings.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiRtpHostRemoteClientSettingsConfig.idl">
       <Filter>SDK\Transports\Rtp</Filter>
     </Midl>
     <Midl Include="MidiRtpSavedHost.idl">

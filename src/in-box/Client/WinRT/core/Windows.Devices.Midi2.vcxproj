@@ -803,6 +803,12 @@
     <ClInclude Include="MidiNetworkKnownRemoteClient.h">
       <DependentUpon>MidiNetworkKnownRemoteClient.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiNetworkRemoteClientSettings.h">
+      <DependentUpon>MidiNetworkRemoteClientSettings.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkHostRemoteClientSettingsConfig.h">
+      <DependentUpon>MidiNetworkHostRemoteClientSettingsConfig.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiNetworkHostRemovalConfig.h">
       <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
     </ClInclude>
@@ -855,6 +861,12 @@
     </ClInclude>
     <ClInclude Include="MidiRtpKnownRemoteClient.h">
       <DependentUpon>MidiRtpKnownRemoteClient.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpRemoteClientSettings.h">
+      <DependentUpon>MidiRtpRemoteClientSettings.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRtpHostRemoteClientSettingsConfig.h">
+      <DependentUpon>MidiRtpHostRemoteClientSettingsConfig.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiRtpPendingRemoteClient.h">
       <DependentUpon>MidiRtpPendingRemoteClient.idl</DependentUpon>
@@ -1397,6 +1409,12 @@
     <ClCompile Include="MidiNetworkKnownRemoteClient.cpp">
       <DependentUpon>MidiNetworkKnownRemoteClient.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiNetworkRemoteClientSettings.cpp">
+      <DependentUpon>MidiNetworkRemoteClientSettings.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkHostRemoteClientSettingsConfig.cpp">
+      <DependentUpon>MidiNetworkHostRemoteClientSettingsConfig.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiNetworkHostRemovalConfig.cpp">
       <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
     </ClCompile>
@@ -1480,6 +1498,12 @@
     </ClCompile>
     <ClCompile Include="MidiRtpKnownRemoteClient.cpp">
       <DependentUpon>MidiRtpKnownRemoteClient.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpRemoteClientSettings.cpp">
+      <DependentUpon>MidiRtpRemoteClientSettings.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRtpHostRemoteClientSettingsConfig.cpp">
+      <DependentUpon>MidiRtpHostRemoteClientSettingsConfig.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiRtpPendingRemoteClient.cpp">
       <DependentUpon>MidiRtpPendingRemoteClient.idl</DependentUpon>
@@ -1762,6 +1786,8 @@
     <Midl Include="MidiNetworkHostCreationResponse.idl" />
     <Midl Include="MidiNetworkHostKnownClientsConfig.idl" />
     <Midl Include="MidiNetworkKnownRemoteClient.idl" />
+    <Midl Include="MidiNetworkRemoteClientSettings.idl" />
+    <Midl Include="MidiNetworkHostRemoteClientSettingsConfig.idl" />
     <Midl Include="MidiNetworkHostRemovalConfig.idl" />
     <Midl Include="MidiNetworkHostUpdateConfig.idl" />
     <Midl Include="MidiNetworkClientUpdateConfig.idl" />
@@ -1793,6 +1819,8 @@
     <Midl Include="MidiRtpHostRemovalResponse.idl" />
     <Midl Include="MidiRtpHostUpdateResponse.idl" />
     <Midl Include="MidiRtpKnownRemoteClient.idl" />
+    <Midl Include="MidiRtpRemoteClientSettings.idl" />
+    <Midl Include="MidiRtpHostRemoteClientSettingsConfig.idl" />
     <Midl Include="MidiRtpPendingRemoteClient.idl" />
     <Midl Include="MidiRtpRemoteClientApprovalConfig.idl" />
     <Midl Include="MidiRtpRemoteClientApprovalResponse.idl" />

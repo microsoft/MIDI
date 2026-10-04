@@ -483,6 +483,10 @@
   <data name="HostDisconnectFailed" xml:space="preserve">
     <value>Unable to disconnect the host.</value>
   </data>
+  <data name="HostNotFoundFormat" xml:space="preserve">
+    <value>No host on this PC has the id {0}.</value>
+    <comment>{0} is the host id the caller gave, a GUID.</comment>
+  </data>
   <data name="NetworkClientNotFoundFormat" xml:space="preserve">
     <value>No configured network MIDI client matches {0}.</value>
     <comment>{0} is what the caller asked for: a client id, a service instance name, or an address and port.</comment>
@@ -492,6 +496,27 @@
   </data>
   <data name="NetworkDisconnectAction" xml:space="preserve">
     <value>Disconnect network MIDI host</value>
+  </data>
+  <data name="RemoteClientSpeedNotApplied" xml:space="preserve">
+    <value>The sending speed was not changed.</value>
+  </data>
+  <data name="RemoteClientSpeedNotAppliedFormat" xml:space="preserve">
+    <value>The sending speed was not changed: {0}</value>
+    <comment>{0} is the reason, an English status name.</comment>
+  </data>
+  <data name="RemoteClientSpeedNotFoundFormat" xml:space="preserve">
+    <value>{0} has no sending speed of its own on this host.</value>
+    <comment>{0} is the device. For Network MIDI 2.0 it is the device name followed by its product instance id in parentheses, and for RTP-MIDI it is the device name.</comment>
+  </data>
+  <data name="RemoteClientSpeedRemoveAction" xml:space="preserve">
+    <value>Use the host's sending speed</value>
+  </data>
+  <data name="RemoteClientSpeedSetAction" xml:space="preserve">
+    <value>Give the device its own sending speed</value>
+  </data>
+  <data name="RemoteClientSpeedTransient" xml:space="preserve">
+    <value>This sending speed will be lost when the service restarts. Use -SaveToConfiguration to keep it.</value>
+    <comment>-SaveToConfiguration is a parameter name. Do not translate it.</comment>
   </data>
   <data name="RtpClientNotFoundFormat" xml:space="preserve">
     <value>No configured RTP-MIDI client matches {0}.</value>

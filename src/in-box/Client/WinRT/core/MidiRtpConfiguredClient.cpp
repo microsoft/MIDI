@@ -52,7 +52,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
             if (!connections.empty())
             {
                 auto connection = winrt::make_self<MidiRtpConnection>();
-                connection->InternalInitialize(connections.front());
+                connection->InternalInitialize(connections.front(), m_sendSpeedLimit);
                 m_connection = *connection;
             }
 

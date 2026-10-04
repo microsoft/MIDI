@@ -65,6 +65,11 @@ public:
     TEST_METHOD(TestSendSpeedLimitSlowsAFastSenderWithoutLosingAnything);
     TEST_METHOD(TestSendSpeedLimitReadsAnythingAboveTheMaximumAsUnlimited);
 
+    // a speed of a remote's own on a host, also in RtpMidiSendSpeedTests.cpp
+    TEST_METHOD(TestRemoteClientSpeedIsUsedInsteadOfTheHostSpeed);
+    TEST_METHOD(TestRemoteClientSpeedChangesWithoutReconnecting);
+    TEST_METHOD(TestRemoteClientSpeedsAreCheckedAndKeptWithTheHost);
+
 private:
     winrt::Windows::Data::Json::JsonObject Send(std::wstring const& text, HRESULT* result = nullptr);
     winrt::Windows::Data::Json::JsonObject FindHost(std::wstring const& hostId);

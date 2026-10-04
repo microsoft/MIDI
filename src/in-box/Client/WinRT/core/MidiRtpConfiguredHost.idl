@@ -12,6 +12,7 @@ import "MidiApiContracts.idl";
 import "MidiRtpConnection.idl";
 import "MidiRtpKnownRemoteClient.idl";
 import "MidiRtpRemoteClientPolicyEnum.idl";
+import "MidiRtpRemoteClientSettings.idl";
 import "MidiRtpSendSpeedLimitEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Rtp
@@ -79,5 +80,10 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         // differ only for a moment after a change.
         [noexcept] MidiRtpSendSpeedLimit SendSpeedLimit{ get; };
         [noexcept] MidiRtpSendSpeedLimit CurrentSendSpeedLimit{ get; };
+
+        // The remotes with their own settings, used for them instead of the host's. To change
+        // one, send and save a MidiRtpHostRemoteClientSettingsConfig holding this whole list with
+        // the change made.
+        [noexcept] Windows.Foundation.Collections.IVectorView<MidiRtpRemoteClientSettings> RemoteClientSettings{ get; };
     }
 }

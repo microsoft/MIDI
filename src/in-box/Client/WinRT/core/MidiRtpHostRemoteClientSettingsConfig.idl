@@ -1,0 +1,37 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+import "MidiRtpRemoteClientSettings.idl";
+
+namespace Windows.Devices.Midi2.Transports.Rtp
+{
+    [contract(MidiTransportsRtpApiContract, 1)]
+
+    // The remotes of a host which have their own settings. Send it through
+    // MidiServiceTransportPluginConfigManager.SendUpdate to apply it to the remotes already
+    // connected, without disconnecting them, and SaveUpdate to keep it after a restart. Saving
+    // needs the host to be saved.
+    [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpHostRemoteClientSettingsConfig", UUID_IMidiRtpHostRemoteClientSettingsConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpHostRemoteClientSettingsConfigFactory", UUID_IMidiRtpHostRemoteClientSettingsConfigFactory)]
+    runtimeclass MidiRtpHostRemoteClientSettingsConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiRtpHostRemoteClientSettingsConfig();
+        MidiRtpHostRemoteClientSettingsConfig(Guid hostId);
+
+        [noexcept] Guid HostId{ get; set; };
+
+        // Replaces the host's whole list, so it must be the complete set. A remote left out of it
+        // goes back to the host's settings. MidiRtpConfiguredHost.RemoteClientSettings is the list
+        // the service holds now. A host keeps settings for up to 256 remotes.
+        [noexcept] Windows.Foundation.Collections.IVector<MidiRtpRemoteClientSettings> RemoteClientSettings{ get; };
+    }
+}

@@ -11,6 +11,7 @@ import "MidiApiContracts.idl";
 
 import "MidiNetworkKnownRemoteClient.idl";
 import "MidiNetworkRemoteClientPolicyEnum.idl";
+import "MidiNetworkRemoteClientSettings.idl";
 import "MidiNetworkSendSpeedLimitEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
@@ -57,5 +58,9 @@ namespace Windows.Devices.Midi2.Transports.Network
         // These include changes saved later with MidiNetworkHostUpdateConfig
         [noexcept] MidiNetworkSendSpeedLimit SendSpeedLimit{ get; };
         [noexcept] Boolean ReduceSendSpeedAutomatically{ get; };
+
+        // The remote clients with their own settings, as last saved with
+        // MidiNetworkHostRemoteClientSettingsConfig
+        [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkRemoteClientSettings> RemoteClientSettings{ get; };
     };
 }

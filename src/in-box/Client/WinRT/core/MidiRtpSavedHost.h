@@ -40,11 +40,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 
         collections::IVectorView<rtp::MidiRtpKnownRemoteClient> KnownRemoteClients() const noexcept { return m_knownRemoteClients.GetView(); }
 
-        // The saved entry, and the decisions saved for it, which are kept beside it in the file
+        collections::IVectorView<rtp::MidiRtpRemoteClientSettings> RemoteClientSettings() const noexcept { return m_remoteClientSettings.GetView(); }
+
+        // The saved entry, and the decisions and remote settings saved for it, which are kept
+        // beside it in the file
         void InternalInitialize(
             _In_ winrt::guid const& hostId,
             _In_ json::JsonObject const& entry,
-            _In_ std::vector<json::JsonObject> const& decisions) noexcept;
+            _In_ std::vector<json::JsonObject> const& decisions,
+            _In_ std::vector<json::JsonObject> const& remoteClientSettings) noexcept;
 
     private:
         winrt::guid m_hostId{};
@@ -71,5 +75,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool m_allowNetworkAdapterFallback{ true };
 
         collections::IVector<rtp::MidiRtpKnownRemoteClient> m_knownRemoteClients{ winrt::single_threaded_vector<rtp::MidiRtpKnownRemoteClient>() };
+        collections::IVector<rtp::MidiRtpRemoteClientSettings> m_remoteClientSettings{ winrt::single_threaded_vector<rtp::MidiRtpRemoteClientSettings>() };
     };
 }

@@ -409,6 +409,24 @@ Get-MidiNetworkConfiguredHost | Format-Table -AutoSize
 Get-MidiNetworkConfiguredClient | Format-Table -AutoSize
 ```
 
+### Set-MidiNetworkRemoteClientSendSpeed and Remove-MidiNetworkRemoteClientSendSpeed
+
+A host on this PC sends to every device that connects to it at the host's sending speed. `Set-MidiNetworkRemoteClientSendSpeed` gives one device its own speed instead, so one slow device doesn't hold back the others. The host knows the device by the name and product instance id it announces, so the speed is used again the next time it connects. A device that's already connected changes speed right away. Add `-ReduceSendSpeedAutomatically` to send more slowly to that device while it keeps asking for data again. `Remove-MidiNetworkRemoteClientSendSpeed` puts the device back on the host's speed.
+
+The change lasts until the service restarts unless you add `-SaveToConfiguration`, and that only works for a host that's saved. Saving writes the host's whole list of device speeds as it is at that moment. `RemoteClientSettings` on the host lists the devices with their own speed, including ones that aren't connected.
+
+```pwsh
+$studioHost = Get-MidiNetworkConfiguredHost | Where-Object { $_.UmpEndpointName -eq 'Studio PC' }
+
+# what each connected device is called, and the speed it gets now
+$studioHost.Connections | Format-Table UmpEndpointName, ProductInstanceId, SendSpeedLimit, UsesRemoteClientSettings
+
+Set-MidiNetworkRemoteClientSendSpeed -HostId $studioHost.HostId -RemoteClientName 'BomeBox' -RemoteClientProductInstanceId 'BB1234' -SendSpeedLimit Midi1WireSpeed -SaveToConfiguration
+
+# back to the host's speed
+Remove-MidiNetworkRemoteClientSendSpeed -HostId $studioHost.HostId -RemoteClientName 'BomeBox' -RemoteClientProductInstanceId 'BB1234' -SaveToConfiguration
+```
+
 ## RTP-MIDI cmdlets
 
 RTP-MIDI is the network MIDI 1.0 protocol that macOS, iOS and many MIDI interfaces use. These cmdlets work the same way as the Network MIDI 2.0 ones.
@@ -457,6 +475,17 @@ Hosts are what this PC offers for other devices to connect to. Clients are the c
 ```pwsh
 Get-MidiRtpConfiguredHost | Format-Table -AutoSize
 Get-MidiRtpConfiguredClient | Format-Table -AutoSize
+```
+
+### Set-MidiRtpRemoteClientSendSpeed and Remove-MidiRtpRemoteClientSendSpeed
+
+These work like the Network MIDI 2.0 ones. An RTP-MIDI device gives only a name when it connects, so that's all the host knows it by. It's the `RemoteName` of the device's connection.
+
+```pwsh
+$studioHost = Get-MidiRtpConfiguredHost | Where-Object { $_.Name -eq 'Studio PC' }
+
+Set-MidiRtpRemoteClientSendSpeed -HostId $studioHost.HostId -RemoteClientName 'Studio Mac' -SendSpeedLimit Midi1WireSpeedTimes2 -SaveToConfiguration
+Remove-MidiRtpRemoteClientSendSpeed -HostId $studioHost.HostId -RemoteClientName 'Studio Mac' -SaveToConfiguration
 ```
 
 ## General MIDI synthesizer cmdlets

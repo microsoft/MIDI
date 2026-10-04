@@ -94,10 +94,12 @@ CmdletsToExport = @(
     # Network MIDI 2.0
     'Get-MidiNetworkAdvertisedHost', 'Get-MidiNetworkConfiguredHost', 'Get-MidiNetworkConfiguredClient',
     'Connect-MidiNetworkHost', 'Disconnect-MidiNetworkHost',
+    'Set-MidiNetworkRemoteClientSendSpeed', 'Remove-MidiNetworkRemoteClientSendSpeed',
 
     # RTP-MIDI
     'Get-MidiRtpAdvertisedHost', 'Get-MidiRtpConfiguredHost', 'Get-MidiRtpConfiguredClient',
     'Connect-MidiRtpHost', 'Disconnect-MidiRtpHost',
+    'Set-MidiRtpRemoteClientSendSpeed', 'Remove-MidiRtpRemoteClientSendSpeed',
 
     # built-in General MIDI synthesizer
     'Get-MidiSynth', 'Get-MidiSynthEndpointDeviceId', 'Set-MidiSynth',

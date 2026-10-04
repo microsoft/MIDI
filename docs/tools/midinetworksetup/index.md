@@ -60,11 +60,13 @@ Devices that advertise themselves on your network appear on the **Network device
 
 Each device shows its name, where it is on the network, and whether you're connected to it.
 
-To connect, select **Connect**. You'll be asked what to call the MIDI Endpoint for this device in Windows.
+To connect, select **Connect**. You'll be asked what to call the MIDI Endpoint for this device in Windows, and how fast to send to it.
 
 ![Naming a device as you connect to it]({{ site.baseurl }}/assets/images/midinetworksetup-connect-name.png)
 
 Leave the box empty and Windows uses whatever name the device reports for itself. Fill it in and that name is what you'll see everywhere in Windows, including in your DAW's device list. This is worth doing if you have several similar units, or if the device's own name is cryptic.
+
+**Sending speed** starts at **Unlimited**, which suits almost every device. Choose a slower speed for a device that loses data when a lot arrives at once. See [Choosing a sending speed](#choosing-a-sending-speed). Once you're connected, the device's row shows its sending speed, with a **Change** link next to it.
 
 ### The other device may be waiting for you too
 
@@ -132,7 +134,7 @@ Some devices don't announce themselves on the network, or are on a part of the n
 
 ![Connecting to a device by address]({{ site.baseurl }}/assets/images/midinetworksetup-by-address.png)
 
-Enter the host name or IP address and the port, and optionally the two names: **Name that device will see** is how this PC introduces itself, and **Name to show in Windows** is what you'll call the device here.
+Enter the host name or IP address and the port, and optionally the two names: **Name that device will see** is how this PC introduces itself, and **Name to show in Windows** is what you'll call the device here. You can also choose a **Sending speed**.
 
 Windows keeps the entry and keeps trying, so if the device isn't switched on yet it will connect later when it appears.
 
@@ -192,7 +194,11 @@ Each host lists the devices currently connected to it, with the same round trip 
 
 **Disconnect** ends the connection but doesn't stop the device reconnecting. **Block** ends it and refuses that device in future.
 
+Each connected device also shows how fast the host sends to it, and whether that's the host's speed or one set for that device. Select **Change** next to it to give the device a speed of its own. See [Choosing a sending speed](#choosing-a-sending-speed).
+
 **Remembered decisions** appears when you've used **Always allow** or **Block**, and lets you undo those choices. If a device is being turned away and you can't work out why, look here first.
+
+**Devices with their own sending speed** appears when you've given a device a speed of its own. It lists those devices even when they aren't connected, so you can change a speed, or select **Use the host's speed** to remove it.
 
 **Stop** takes a host off the network without deleting it, and **Delete** removes it entirely.
 
@@ -217,8 +223,9 @@ Changing a host's adapter restarts the host, so the devices connected to it are 
 
 A network is much faster than a MIDI 1.0 cable, and some devices can't keep up when a lot of data arrives at once. A hardware synth taking a long SysEx dump is the usual example, and so is a network to DIN bridge. If a device misses messages, give it a slower sending speed.
 
-- For a host, open **Advanced** when you create it, and pick a **Sending speed**. To change it later, open **Details** on the host and select **Change** next to **Sending speed**. The speed applies to every device connected to that host.
-- For a device this PC connects to, select **Customize** under the device.
+- For a host, pick a **Sending speed** when you create it. To change it later, select **Change** next to the host's sending speed. The speed applies to every device connected to that host, except a device with a speed of its own.
+- For one device connected to a host, select **Change** next to that device's sending speed, under the host. Clear **Use the host's speed** and choose a speed for just that device. Windows remembers it, and uses it every time that device connects. The other devices on the host keep the host's speed.
+- For a device this PC connects to, choose a speed when you connect, or select **Change** next to the sending speed on the device's row. **Customize** has the same setting.
 
 The choices are **Unlimited**, which is the default, **MIDI 1.0 wire speed**, which is the speed of a DIN cable, and 2, 4, 8, 16 or 32 times that. Start with MIDI 1.0 wire speed for a device that was built for a cable, and go faster if it copes.
 

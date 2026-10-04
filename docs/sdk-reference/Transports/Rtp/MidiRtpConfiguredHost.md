@@ -34,12 +34,15 @@ Returned by `MidiRtpTransportManager.GetConfiguredHosts()`.
 | `UsedNetworkAdapterFallback` | True when the host is running on every adapter because its own adapter is missing |
 | `RemoteClientPolicy` | What the host does when a remote device it hasn't been told about asks to connect. See `MidiRtpRemoteClientPolicy` |
 | `KnownRemoteClients` | The remote devices this host has been told to allow or deny for good, as `MidiRtpKnownRemoteClient` entries |
+| `RemoteClientSettings` | The remote devices this host sends to at a speed of their own instead of the host's, as [MidiRtpRemoteClientSettings]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpRemoteClientSettings/) entries. This is the list the running service holds, whether or not the devices are connected |
 | `LastErrorCode` | The HRESULT from the last try to start or advertise the host, or `0` |
 | `Connections` | The remote devices connected to this host right now, as [MidiRtpConnection]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpConnection/) entries |
 
 ## Remarks
 
 `KnownRemoteClients` has every decision the service holds for this host that isn't limited to a single request, including ones made with `ApproveOrDenyRemoteClientConnectRequestAsync` since the service started. The service doesn't save them. To keep them after a restart, put this list in a [MidiRtpHostKnownClientsConfig]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpHostKnownClientsConfig/), change it if you need to, and save it.
+
+To change a remote device's own speed, start from `RemoteClientSettings`, change it, and send a [MidiRtpHostRemoteClientSettingsConfig]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpHostRemoteClientSettingsConfig/) holding the whole list.
 
 A remote device waiting for approval isn't connected, so it isn't in `Connections`. Use `GetPendingRemoteClients()` to find those.
 

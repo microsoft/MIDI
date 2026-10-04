@@ -1,0 +1,35 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "IMidiServiceTransportPluginConfig.idl";
+import "MidiNetworkRemoteClientSettings.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    // The remote clients of a host which have their own settings. Send it through
+    // MidiServiceTransportPluginConfigManager.SendUpdate to apply it to the remote clients already
+    // connected, without disconnecting them, and SaveUpdate to keep it after a restart. Saving
+    // needs the host to be saved.
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostRemoteClientSettingsConfig", UUID_IMidiNetworkHostRemoteClientSettingsConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostRemoteClientSettingsConfigFactory", UUID_IMidiNetworkHostRemoteClientSettingsConfigFactory)]
+    runtimeclass MidiNetworkHostRemoteClientSettingsConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiNetworkHostRemoteClientSettingsConfig();
+        MidiNetworkHostRemoteClientSettingsConfig(Guid hostId);
+
+        [noexcept] Guid HostId { get; set; };
+
+        // Replaces the host's whole list, so it must be the complete set and not only what
+        // changed. A remote client left out of it goes back to the host's settings.
+        // MidiNetworkConfiguredHost.RemoteClientSettings is the list the service holds now.
+        [noexcept] Windows.Foundation.Collections.IVector<MidiNetworkRemoteClientSettings> RemoteClientSettings { get; };
+    }
+}

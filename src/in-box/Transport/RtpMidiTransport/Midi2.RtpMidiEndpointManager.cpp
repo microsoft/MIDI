@@ -1274,6 +1274,13 @@ CMidi2RtpMidiEndpointManager::OnConnectionUp(std::shared_ptr<RtpMidiConnection> 
 {
     if (connection == nullptr) return;
 
+    // before its endpoint exists, so nothing is ever sent to the remote at the host's speed first
+    if (connection->ThisPcIsHost())
+    {
+        connection->SetOwnSendSpeedLimit(
+            TransportState::Current().FindRemoteClientSendSpeedLimit(connection->EntryId(), connection->RemoteName()));
+    }
+
     if (!connection->ThisPcIsHost())
     {
         auto const node = connection->Node();
@@ -1449,6 +1456,29 @@ CMidi2RtpMidiEndpointManager::EndConnectionsFromRemote(GUID const& hostId, std::
 
 
 _Use_decl_annotations_
+void
+CMidi2RtpMidiEndpointManager::ApplyRemoteClientSettings(GUID const& hostId)
+{
+    std::shared_ptr<RtpMidiNode> node{ nullptr };
+
+    {
+        auto lock = std::scoped_lock{ m_runtimeLock };
+        if (auto const host = m_hosts.find(hostId); host != m_hosts.end()) node = host->second.Node;
+    }
+
+    if (node == nullptr) return;
+
+    for (auto const& connection : node->Connections())
+    {
+        if (connection == nullptr || !connection->ThisPcIsHost()) continue;
+
+        connection->SetOwnSendSpeedLimit(
+            TransportState::Current().FindRemoteClientSendSpeedLimit(hostId, connection->RemoteName()));
+    }
+}
+
+
+_Use_decl_annotations_
 std::shared_ptr<RtpMidiConnection>
 CMidi2RtpMidiEndpointManager::FindConnectionByEndpointDeviceInterfaceId(std::wstring const& endpointDeviceInterfaceId)
 {
@@ -1497,7 +1527,7 @@ CMidi2RtpMidiEndpointManager::FindMatchingInstantiatedEndpoint(WindowsMidiServic
 
 _Use_decl_annotations_
 json::JsonArray
-CMidi2RtpMidiEndpointManager::BuildConnectionsJson(std::shared_ptr<RtpMidiNode> const& node)
+CMidi2RtpMidiEndpointManager::BuildConnectionsJson(std::shared_ptr<RtpMidiNode> const& node, uint32_t const entrySendSpeedLimit)
 {
     json::JsonArray connections;
     if (node == nullptr) return connections;
@@ -1536,6 +1566,15 @@ CMidi2RtpMidiEndpointManager::BuildConnectionsJson(std::shared_ptr<RtpMidiNode> 
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_TOTAL_NOTES_ENDED_KEY, JsonNumber(participant.Stats.RecoveredNoteOffs));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_TOTAL_MESSAGES_SENT_KEY, JsonNumber(haveConnection ? (*connection)->MessagesSent() : 0));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_TOTAL_MESSAGES_RECEIVED_KEY, JsonNumber(participant.Stats.MessagesReceived));
+
+        // A remote with a speed of its own is configured to that. The rest follow their entry.
+        bool const usesOwnSpeed = haveConnection && (*connection)->HasOwnSendSpeedLimit();
+
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_USES_REMOTE_CLIENT_SETTINGS_KEY, JsonBoolean(usesOwnSpeed));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY,
+            JsonNumber(usesOwnSpeed ? (*connection)->EffectiveSendSpeedLimit(*node) : entrySendSpeedLimit));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CURRENT_SEND_SPEED_LIMIT_KEY,
+            JsonNumber(haveConnection ? (*connection)->EffectiveSendSpeedLimit(*node) : node->SendSpeedLimit()));
 
         connections.Append(item);
     }
@@ -1624,7 +1663,7 @@ CMidi2RtpMidiEndpointManager::BuildHostsStatusJson()
             }
         }
 
-        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CONNECTIONS_KEY, running ? BuildConnectionsJson(view.Node) : json::JsonArray{});
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CONNECTIONS_KEY, running ? BuildConnectionsJson(view.Node, definition.SendSpeedLimit) : json::JsonArray{});
 
         auto& approvals = TransportState::Current().Approvals();
 
@@ -1647,6 +1686,19 @@ CMidi2RtpMidiEndpointManager::BuildHostsStatusJson()
 
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ALLOWED_CLIENTS_KEY, allowed);
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_DENIED_CLIENTS_KEY, denied);
+
+        json::JsonArray remoteClientSettings;
+
+        for (auto const& settings : TransportState::Current().GetRemoteClientSettings(definition.EntryId))
+        {
+            json::JsonObject settingsItem;
+            settingsItem.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_NAME_KEY, JsonString(settings.RemoteName));
+            settingsItem.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY, JsonNumber(settings.SendSpeedLimit));
+
+            remoteClientSettings.Append(settingsItem);
+        }
+
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENT_SETTINGS_KEY, remoteClientSettings);
 
         hosts.Append(item);
     }
@@ -1714,7 +1766,7 @@ CMidi2RtpMidiEndpointManager::BuildClientsStatusJson()
         if (running) item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_LOCAL_PORT_KEY, JsonNumber(view.Node->ControlPort()));
         if (running) item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CURRENT_SEND_SPEED_LIMIT_KEY, JsonNumber(view.Node->SendSpeedLimit()));
 
-        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CONNECTIONS_KEY, running ? BuildConnectionsJson(view.Node) : json::JsonArray{});
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CONNECTIONS_KEY, running ? BuildConnectionsJson(view.Node, definition.SendSpeedLimit) : json::JsonArray{});
 
         clients.Append(item);
     }

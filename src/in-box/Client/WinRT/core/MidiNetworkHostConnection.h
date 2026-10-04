@@ -35,6 +35,20 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         network::MidiNetworkSendSpeedLimit CurrentSendSpeedLimit() const noexcept { return m_currentSendSpeedLimit; }
         void InternalSetCurrentSendSpeedLimit(_In_ network::MidiNetworkSendSpeedLimit const value) noexcept { m_currentSendSpeedLimit = value; }
 
+        network::MidiNetworkSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+        bool UsesRemoteClientSettings() const noexcept { return m_usesRemoteClientSettings; }
+
+        void InternalSetSendSpeed(
+            _In_ network::MidiNetworkSendSpeedLimit const sendSpeedLimit,
+            _In_ bool const reduceSendSpeedAutomatically,
+            _In_ bool const usesRemoteClientSettings) noexcept
+        {
+            m_sendSpeedLimit = sendSpeedLimit;
+            m_reduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
+            m_usesRemoteClientSettings = usesRemoteClientSettings;
+        }
+
         void InternalInitialize(
             _In_ winrt::hstring const& umpEndpointName,
             _In_ winrt::hstring const& productInstanceId,
@@ -79,5 +93,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         uint64_t m_totalCountNetworkPacketsReceived{ 0 };
 
         network::MidiNetworkSendSpeedLimit m_currentSendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
+        network::MidiNetworkSendSpeedLimit m_sendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
+        bool m_reduceSendSpeedAutomatically{ false };
+        bool m_usesRemoteClientSettings{ false };
     };
 }

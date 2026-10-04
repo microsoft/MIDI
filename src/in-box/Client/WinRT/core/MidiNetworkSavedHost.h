@@ -43,6 +43,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         network::MidiNetworkSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
         bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
 
+        collections::IVectorView<network::MidiNetworkRemoteClientSettings> RemoteClientSettings() const noexcept { return m_remoteClientSettings.GetView(); }
+
         // The saved entry, then each saved change to it in the order the service applies them
         void InternalInitialize(
             _In_ winrt::guid const& hostId,
@@ -77,5 +79,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool m_reduceSendSpeedAutomatically{ false };
 
         collections::IVector<network::MidiNetworkKnownRemoteClient> m_knownRemoteClients{ winrt::single_threaded_vector<network::MidiNetworkKnownRemoteClient>() };
+        collections::IVector<network::MidiNetworkRemoteClientSettings> m_remoteClientSettings{ winrt::single_threaded_vector<network::MidiNetworkRemoteClientSettings>() };
     };
 }

@@ -121,6 +121,15 @@ namespace midi2console
             return fmt::format("{}:{}", addressText, port);
         }
 
+        std::string FormatSendSpeed(
+            _In_ midi2net::MidiNetworkSendSpeedLimit const limit,
+            _In_ bool const reduceAutomatically)
+        {
+            auto const speed = FormatSendSpeedLimit(static_cast<uint32_t>(limit));
+
+            return reduceAutomatically ? FormatResourceString(IDS_NET_SEND_SPEED_AUTOMATIC_FORMAT, speed) : speed;
+        }
+
         void WriteHostConnections(_In_ midi2net::MidiNetworkConfiguredHost const& host)
         {
             auto const connections = host.Connections();
@@ -154,8 +163,14 @@ namespace midi2console
                     table.AddRowDetail(ResourceString(IDS_NET_LABEL_PENDING_APPROVAL), warningTextStyle);
                 }
 
-                // only differs from the host's own limit while it is slowed down after losses
-                if (connection.IsSessionActive() && connection.CurrentSendSpeedLimit() != host.SendSpeedLimit())
+                if (connection.UsesRemoteClientSettings())
+                {
+                    table.AddRowDetail(FormatResourceString(IDS_NET_SEND_SPEED_OWN_FORMAT,
+                        FormatSendSpeed(connection.SendSpeedLimit(), connection.ReduceSendSpeedAutomatically())), fieldValueTextStyle);
+                }
+
+                // only differs from the connection's own limit while it is slowed down after losses
+                if (connection.IsSessionActive() && connection.CurrentSendSpeedLimit() != connection.SendSpeedLimit())
                 {
                     table.AddRowDetail(FormatResourceString(IDS_NET_SEND_SPEED_SLOWED_FORMAT,
                         FormatSendSpeedLimit(static_cast<uint32_t>(connection.CurrentSendSpeedLimit()))), warningTextStyle);
@@ -165,6 +180,40 @@ namespace midi2console
                 {
                     table.AddRowDetail(ToUtf8(connection.EndpointDeviceId()), endpointIdTextStyle);
                 }
+            }
+
+            table.Render();
+        }
+
+        // Listed whether or not the device is connected right now
+        void WriteRemoteClientSpeeds(_In_ midi2net::MidiNetworkConfiguredHost const& host)
+        {
+            auto const settingsList = host.RemoteClientSettings();
+
+            if (settingsList == nullptr || settingsList.Size() == 0)
+            {
+                return;
+            }
+
+            ConsoleTable table{ ResourceString(IDS_NET_REMOTE_CLIENT_SPEEDS_TABLE_TITLE) };
+
+            table.AddColumn(ResourceString(IDS_LABEL_NAME), ColumnAlignment::Left, endpointNameTextStyle);
+            table.SetLastColumnShrinkable();
+            table.AddColumn(ResourceString(IDS_NET_LABEL_PRODUCT_INSTANCE_ID), ColumnAlignment::Left, fieldValueTextStyle);
+            table.SetLastColumnShrinkable();
+            table.AddColumn(ResourceString(IDS_NET_LABEL_SEND_SPEED), ColumnAlignment::Left, fieldValueTextStyle);
+
+            for (auto const& settings : settingsList)
+            {
+                if (settings == nullptr)
+                {
+                    continue;
+                }
+
+                table.BeginRow();
+                table.AddCell(ToUtf8(settings.RemoteClientName()));
+                table.AddCell(ToUtf8(settings.RemoteClientProductInstanceId()));
+                table.AddCell(FormatSendSpeed(settings.SendSpeedLimit(), settings.ReduceSendSpeedAutomatically()));
             }
 
             table.Render();
@@ -256,6 +305,7 @@ namespace midi2console
             WriteBlankLine();
 
             WriteHostConnections(host);
+            WriteRemoteClientSpeeds(host);
         }
 
         return 0;

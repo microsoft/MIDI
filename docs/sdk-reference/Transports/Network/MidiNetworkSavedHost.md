@@ -30,11 +30,12 @@ A Network MIDI 2.0 host saved in the configuration file. The service starts it e
 | `SendSpeedLimit` | How fast the host sends to each connected device. This includes any change saved later with `MidiNetworkHostUpdateConfig` |
 | `ReduceSendSpeedAutomatically` | True when a connection sends more slowly while the device keeps asking for data again. This includes any change saved later with `MidiNetworkHostUpdateConfig` |
 | `KnownRemoteClients` | Every saved allow and deny decision, as [MidiNetworkKnownRemoteClient]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkKnownRemoteClient/) objects |
+| `RemoteClientSettings` | Every saved remote client with a sending speed of its own, as [MidiNetworkRemoteClientSettings]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkRemoteClientSettings/) objects |
 
 ## Remarks
 
 This comes from the configuration file, not from the service. It tells you what the service starts the next time it starts, and it works even when the service isn't running. A missing value reads as the default the service uses.
 
-To change a saved decision, start from `KnownRemoteClients`, make the change, and save a [MidiNetworkHostKnownClientsConfig]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkHostKnownClientsConfig/) holding the whole list.
+To change a saved decision, start from `KnownRemoteClients`, make the change, and save a [MidiNetworkHostKnownClientsConfig]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkHostKnownClientsConfig/) holding the whole list. A client's own speed works the same way, with `RemoteClientSettings` and a [MidiNetworkHostRemoteClientSettingsConfig]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkHostRemoteClientSettingsConfig/).
 
-A decision saved without both a name and a product instance id is left out, because the service can't match it to a remote client.
+A decision or a speed saved without both a name and a product instance id is left out, because the service can't match it to a remote client.

@@ -76,11 +76,59 @@ TransportState::RemoveHostDefinition(GUID const& entryId)
     {
         auto lock = std::scoped_lock{ m_definitionsLock };
         removed = m_hosts.erase(entryId) > 0;
+
+        if (removed) m_remoteClientSettings.erase(entryId);
     }
 
     if (removed) m_approvals.RemoveHost(entryId);
 
     return removed;
+}
+
+_Use_decl_annotations_
+void
+TransportState::SetRemoteClientSettings(GUID const& hostId, std::vector<RtpMidiRemoteClientSettings> const& settings)
+{
+    auto lock = std::scoped_lock{ m_definitionsLock };
+
+    // left over from a host which is gone
+    if (m_hosts.find(hostId) == m_hosts.end()) return;
+
+    m_remoteClientSettings.insert_or_assign(hostId, settings);
+}
+
+_Use_decl_annotations_
+std::vector<RtpMidiRemoteClientSettings>
+TransportState::GetRemoteClientSettings(GUID const& hostId)
+{
+    auto lock = std::scoped_lock{ m_definitionsLock };
+
+    auto const it = m_remoteClientSettings.find(hostId);
+
+    return it == m_remoteClientSettings.end() ? std::vector<RtpMidiRemoteClientSettings>{} : it->second;
+}
+
+_Use_decl_annotations_
+std::optional<uint32_t>
+TransportState::FindRemoteClientSendSpeedLimit(GUID const& hostId, std::wstring const& remoteName)
+{
+    auto lock = std::scoped_lock{ m_definitionsLock };
+
+    auto const it = m_remoteClientSettings.find(hostId);
+    if (it == m_remoteClientSettings.end()) return std::nullopt;
+
+    for (auto const& settings : it->second)
+    {
+        if (CompareStringOrdinal(
+                settings.RemoteName.c_str(), static_cast<int>(settings.RemoteName.size()),
+                remoteName.c_str(), static_cast<int>(remoteName.size()),
+                TRUE) == CSTR_EQUAL)
+        {
+            return settings.SendSpeedLimit;
+        }
+    }
+
+    return std::nullopt;
 }
 
 _Use_decl_annotations_

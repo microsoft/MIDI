@@ -38,6 +38,7 @@
 
 #include "MidiNetworkConfiguredHost.h"
 #include "MidiNetworkHostConnection.h"
+#include "MidiNetworkRemoteClientSettings.h"
 #include "MidiNetworkConfiguredClient.h"
 #include "MidiNetworkPendingRemoteClient.h"
 
@@ -632,7 +633,44 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                         static_cast<network::MidiNetworkSendSpeedLimit>(static_cast<int32_t>(
                                             connectionObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_CURRENT_SEND_SPEED_LIMIT_KEY, 0))));
 
+                                    // an older service reports none of these, which reads as the host's own
+                                    connection->InternalSetSendSpeed(
+                                        static_cast<network::MidiNetworkSendSpeedLimit>(static_cast<int32_t>(
+                                            connectionObject.GetNamedNumber(
+                                                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_SEND_SPEED_LIMIT_KEY,
+                                                static_cast<double>(static_cast<int32_t>(host->SendSpeedLimit()))))),
+                                        connectionObject.GetNamedBoolean(
+                                            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
+                                            host->ReduceSendSpeedAutomatically()),
+                                        connectionObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_USES_REMOTE_CLIENT_SETTINGS_KEY, false));
+
                                     host->InternalAddConnection(*connection);
+                                }
+                            }
+
+                            // an older service reports none, which reads as no client having its own
+                            if (entryObject.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_SETTINGS_KEY))
+                            {
+                                for (auto const& settingsEntry : entryObject.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_SETTINGS_KEY))
+                                {
+                                    auto settingsObject = settingsEntry.GetObject();
+
+                                    if (settingsObject == nullptr)
+                                    {
+                                        continue;
+                                    }
+
+                                    auto settings = winrt::make_self<MidiNetworkRemoteClientSettings>(
+                                        settingsObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY, L""),
+                                        settingsObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY, L""));
+
+                                    settings->SendSpeedLimit(static_cast<network::MidiNetworkSendSpeedLimit>(static_cast<int32_t>(
+                                        settingsObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY, 0))));
+
+                                    settings->ReduceSendSpeedAutomatically(
+                                        settingsObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false));
+
+                                    host->InternalAddRemoteClientSettings(*settings);
                                 }
                             }
 
@@ -1222,6 +1260,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
                 co_return *result;
             }
+
+            result->InternalSetClientId(creationConfig.ClientId());
 
             auto matchCriteria = creationConfig.MatchCriteria();
 

@@ -481,12 +481,19 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
             auto const decisions = MidiSavedConfigJson::Entries(
                 MidiSavedConfigJson::Object(create, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENT_DECISIONS_KEY));
 
+            auto const remoteClientSettings = MidiSavedConfigJson::Entries(
+                MidiSavedConfigJson::Object(create, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENT_SETTINGS_KEY));
+
             for (auto const& [hostId, entry] : MidiSavedConfigJson::Entries(
                 MidiSavedConfigJson::Object(create, MIDI_CONFIG_JSON_RTP_MIDI_HOSTS_KEY)))
             {
                 auto host = winrt::make_self<MidiRtpSavedHost>();
 
-                host->InternalInitialize(hostId, entry, MidiSavedConfigJson::EntriesFor(decisions, hostId));
+                host->InternalInitialize(
+                    hostId,
+                    entry,
+                    MidiSavedConfigJson::EntriesFor(decisions, hostId),
+                    MidiSavedConfigJson::EntriesFor(remoteClientSettings, hostId));
 
                 results.Append(*host);
             }
