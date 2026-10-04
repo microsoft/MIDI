@@ -718,6 +718,17 @@ namespace winrt::midiclock::implementation
     {
         try
         {
+            // A button or check box on the tile does not mark the tap handled, so it arrives here too.
+            for (auto element = args.OriginalSource().try_as<xaml::DependencyObject>();
+                element != nullptr && element != sender;
+                element = media::VisualTreeHelper::GetParent(element))
+            {
+                if (element.try_as<controls::Primitives::ButtonBase>() != nullptr)
+                {
+                    return;
+                }
+            }
+
             auto const item = ItemFromSender(sender);
 
             if (item == nullptr)
