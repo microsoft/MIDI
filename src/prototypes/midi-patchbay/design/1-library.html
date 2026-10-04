@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Patchbay Preview 11 - 1 - library</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="v2.css">
+<script src="mock2.js" defer></script>
+</head>
+<body>
+<div class="page lib">
+
+<div class="caption-above"><b>1. The library.</b> The window Patchbay opens with. Every patch is a tile with a map of its devices and blocks, whether all of its devices are here, and a switch that starts and stops its routing without opening it.</div>
+
+<div class="window lib">
+
+  <div class="titlebar">
+    <img src="appicon.png" alt="">
+    <div class="title">Windows MIDI Patchbay</div>
+    <div class="preview-chiclet">PREVIEW</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="ltoolbar">
+    <div class="btn accent"><span class="gl">&#xE710;</span>New patch</div>
+    <div class="btn"><span class="gl">&#xE71B;</span>New quick patch</div>
+    <div class="sep"></div>
+    <div class="field" style="width:250px"><span class="ph">Search patches</span><span class="spacer"></span><span class="gl">&#xE721;</span></div>
+    <div class="field combo" style="width:196px">Sorted by last changed<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <div class="seg"><div class="sel gl">&#xE80A;</div><div class="gl">&#xE8FD;</div></div>
+    <div class="spacer"></div>
+    <div class="btn subtle"><span class="gl">&#xE8F2;</span>Ask an AI assistant&hellip;</div>
+    <div class="btn subtle"><span class="gl">&#xE8B5;</span>Import patch&hellip;</div>
+    <div class="btn subtle icon"><span class="gl">&#xE712;</span></div>
+  </div>
+
+  <div class="libbody">
+
+    <div class="sectionhead">
+      <h2>Patches</h2><span class="count">6</span>
+      <div class="spacer"></div>
+      <div class="seg small"><div class="sel">All</div><div>Routing &middot; 3</div><div>Not routing &middot; 3</div><div>Needs attention &middot; 2</div></div>
+    </div>
+
+    <div class="libgrid">
+
+      <!-- Studio Rig: routing, hovered -->
+      <div class="ptcard routing hovered">
+        <div class="thumb">
+          <div style="position:absolute; inset:0" data-map='{"boxes":[[24,90,372,175,"endpoint"],[24,640,318,140,"endpoint"],[434,170,184,80,"filter"],[656,80,184,70,"filter"],[878,72,184,80,"transform"],[656,330,184,70,"filter"],[878,470,184,80,"flow"],[1100,40,336,140,"endpoint"],[1100,430,300,140,"endpoint"]],"links":[[0,2],[2,3],[2,5],[3,4],[4,7],[5,6],[1,6],[6,8]]}'></div>
+          <div class="live"><i></i>212 a second</div>
+          <div class="hoverbar">
+            <div class="btn small"><span class="gl">&#xE70F;</span>Edit</div>
+            <div class="spacer" style="flex:1"></div>
+            <div class="btn small icon"><span class="gl">&#xE712;</span></div>
+          </div>
+        </div>
+        <div class="meta">
+          <div class="namerow"><div class="lname">Studio Rig</div><div class="toggle-sw"></div></div>
+          <div class="ldesc">Keys over two synths, the DAW into the bass</div>
+          <div class="lfoot">
+            <span class="chip on"><span class="gl">&#xE73E;</span>4 devices ready</span>
+            <span class="gl auto" title="Starts automatically">&#xE7E8;</span>
+            <span class="when">2 hours ago</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Keyboard split: routing -->
+      <div class="ptcard routing">
+        <div class="thumb">
+          <div style="position:absolute; inset:0" data-map='{"boxes":[[0,100,300,150,"endpoint"],[380,40,180,70,"filter"],[380,220,180,70,"filter"],[620,220,180,70,"transform"],[880,20,280,120,"endpoint"],[880,200,280,120,"endpoint"]],"links":[[0,1],[0,2],[1,4],[2,3],[3,5]]}'></div>
+          <div class="live"><i></i>18 a second</div>
+        </div>
+        <div class="meta">
+          <div class="namerow"><div class="lname">Keyboard split</div><div class="toggle-sw"></div></div>
+          <div class="ldesc">Bass below middle C, pad from middle C up</div>
+          <div class="lfoot">
+            <span class="chip on"><span class="gl">&#xE73E;</span>3 devices ready</span>
+            <span class="gl auto" title="Starts automatically">&#xE7E8;</span>
+            <span class="when">Yesterday</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drum pads to DAW: routing, loop muted -->
+      <div class="ptcard routing">
+        <div class="thumb">
+          <div style="position:absolute; inset:0" data-map='{"boxes":[[0,40,280,140,"endpoint"],[360,60,180,70,"transform"],[600,60,180,70,"filter"],[860,40,300,140,"endpoint"]],"links":[[0,1],[1,2],[2,3]]}'></div>
+          <div class="live"><i></i>0 a second</div>
+        </div>
+        <div class="meta">
+          <div class="namerow"><div class="lname">Drum pads to DAW</div><div class="toggle-sw"></div></div>
+          <div class="ldesc">Pad notes remapped for the drum rack</div>
+          <div class="lfoot">
+            <span class="chip err"><span class="gl">&#xE7BA;</span>Loop found, 1 muted</span>
+            <span class="when">Sunday</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Iridium layers: device missing -->
+      <div class="ptcard">
+        <div class="thumb">
+          <div style="position:absolute; inset:0" data-map='{"boxes":[[0,60,300,150,"endpoint"],[380,0,180,70,"transform"],[380,170,180,70,"transform"],[640,60,300,140,"missing"]],"links":[[0,1],[0,2],[1,3],[2,3]]}'></div>
+        </div>
+        <div class="meta">
+          <div class="namerow"><div class="lname">Iridium layers</div><div class="toggle-sw off"></div></div>
+          <div class="ldesc">Two channels of the Iridium from one keyboard</div>
+          <div class="lfoot">
+            <span class="chip warn"><span class="gl">&#xE7BA;</span>1 device missing</span>
+            <span class="when">Sep 30</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- quick patch, not saved -->
+      <div class="ptcard">
+        <div class="thumb">
+          <div style="position:absolute; inset:0" data-map='{"boxes":[[0,0,300,150,"endpoint"],[520,0,300,120,"endpoint"]],"links":[[0,1]]}'></div>
+        </div>
+        <div class="meta">
+          <div class="namerow"><div class="lname">Impact LX Mini to General MIDI Synth</div><div class="toggle-sw off"></div></div>
+          <div class="ldesc">No description</div>
+          <div class="lfoot">
+            <span class="chip on"><span class="gl">&#xE73E;</span>2 devices ready</span>
+            <span class="chip draft">Not saved</span>
+            <span class="when">Just now</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Twister to Moog One -->
+      <div class="ptcard">
+        <div class="thumb">
+          <div style="position:absolute; inset:0" data-map='{"boxes":[[0,30,280,150,"endpoint"],[360,50,180,70,"transform"],[600,50,180,70,"transform"],[860,30,300,140,"endpoint"]],"links":[[0,1],[1,2],[2,3]]}'></div>
+        </div>
+        <div class="meta">
+          <div class="namerow"><div class="lname">Twister to Moog One</div><div class="toggle-sw off"></div></div>
+          <div class="ldesc">Knobs moved to the filter controls, slower curves</div>
+          <div class="lfoot">
+            <span class="chip on"><span class="gl">&#xE73E;</span>2 devices ready</span>
+            <span class="when">Sep 28</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="newtile">
+        <div class="gl">&#xE710;</div>
+        <div class="t">New patch</div>
+        <div class="s">Start empty, or pick two devices for a quick patch</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <span><span class="gl">&#xE8B7;</span>6 patches in Documents &rsaquo; MIDI Patchbay</span>
+    <span class="spacer"></span>
+    <span>3 routing &middot; 230 messages a second</span>
+    <span class="chip on"><span class="gl">&#xE73E;</span>MIDI service running</span>
+  </div>
+
+  <div class="pin" style="left:296px; top:296px;">1</div>
+  <div class="pin" style="left:1090px; top:329px;">2</div>
+  <div class="pin" style="left:896px; top:115px;">3</div>
+  <div class="pin" style="left:136px; top:42px;">4</div>
+  <div class="pin" style="left:1096px; top:42px;">5</div>
+</div>
+
+<div class="notes">
+  <div class="n"><div class="pin">1</div><div><b>The tile's switch starts and stops routing.</b> A green edge and the live count show what's routing. Starts automatically is the power mark beside the device count. Double-click a tile, or select Edit, to open the patch in its own window. Several patches can be open at once.</div></div>
+  <div class="n"><div class="pin">2</div><div><b>Device presence on every tile.</b> "4 devices ready", "1 device missing" (the missing one is dashed red on the map), "Loop found, 1 muted". The same words MIDI Glass uses for its layouts.</div></div>
+  <div class="n"><div class="pin">3</div><div><b>Show only what matters right now.</b> Routing, Not routing, and Needs attention, which is any patch with a missing device or a loop.</div></div>
+  <div class="n"><div class="pin">4</div><div><b>New patch and New quick patch</b> move here from today's left pane. A quick patch still asks for two devices and opens with them already connected.</div></div>
+  <div class="n"><div class="pin">5</div><div><b>Ask an AI assistant and Import patch</b> sit where MIDI Glass has them. Settings (start with Windows, notification area, start patches automatically) stay behind the gear in the title bar.</div></div>
+  <div class="n"><div class="pin" style="background:#666">i</div><div><b>The library is the main window.</b> With Run in notification area on, closing it hides it and routing goes on, like today. The notification area menu still starts and stops each patch.</div></div>
+</div>
+
+</div>
+</body>
+</html>

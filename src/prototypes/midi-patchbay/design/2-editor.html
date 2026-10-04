@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Patchbay Preview 11 - 2 - patch editor</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="v2.css">
+<script src="mock2.js" defer></script>
+<style>
+    .ptile .ico { font-size: 13px; font-weight: 700; letter-spacing: .02em; height: 18px; display: flex; align-items: center; }
+    .ptile.filter .ico { color: var(--filter); }
+    .ptile.transform .ico { color: var(--transform); }
+    .ptile.flow .ico { color: var(--flow); }
+    .bicon.t { font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; font-size: 9.5px; font-weight: 700; width: auto; min-width: 24px; padding: 0 4px; }
+    .ihead .bicon.t { font-size: 11px; }
+    .tip { position: absolute; z-index: 70; }
+</style>
+</head>
+<body>
+<div class="page wide">
+
+<div class="caption-above"><b>2. A patch in its own editor window.</b> Pete's example: the Impact LX Mini plays the General MIDI Synth above C3 and a bass synth below B3, with real-time messages kept out of both. An app on a loopback also plays the bass synth, through the same sending speed. The velocity block is selected, so the inspector holds its settings and nothing else.</div>
+
+<div class="window wide">
+
+  <div class="titlebar">
+    <img src="appicon.png" alt="">
+    <div class="title">Studio Rig &mdash; Windows MIDI Patchbay</div>
+    <div class="preview-chiclet">PREVIEW</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="etoolbar">
+    <div class="btn subtle"><span class="gl">&#xE72B;</span>Library</div>
+    <div class="sep"></div>
+    <div class="btn toggled"><span class="gl">&#xE768;</span>Routing</div>
+    <div class="switch-label" style="margin-left:6px"><div class="toggle-sw"></div>Start automatically</div>
+    <div class="sep"></div>
+    <div class="btn subtle icon"><span class="gl">&#xE7A7;</span></div>
+    <div class="btn subtle icon"><span class="gl">&#xE7A6;</span></div>
+    <div class="sep"></div>
+    <div class="btn subtle"><span class="gl">&#xE895;</span>Create loopback</div>
+    <div class="btn subtle"><span class="gl">&#xF0E2;</span>Auto arrange</div>
+    <div class="btn subtle"><span class="gl">&#xE9D9;</span>Test<span class="gl chev">&#xE70D;</span></div>
+    <div class="spacer"></div>
+    <div class="chip on"><span class="gl">&#xE73E;</span>Saved</div>
+    <div class="btn subtle icon"><span class="gl">&#xE712;</span></div>
+  </div>
+
+  <div class="shell" style="position:relative">
+
+    <!-- ============================================================== palette -->
+    <div class="palette">
+      <div class="ptabs">
+        <div class="tab sel">Blocks</div>
+        <div class="tab">Endpoints</div>
+        <div class="spacer"></div>
+        <div class="gl">&#xE76B;</div>
+      </div>
+      <div class="psearch">Find a block<span class="gl">&#xE721;</span></div>
+
+      <div class="pscroll">
+        <div class="psection"><span class="swatch" style="background:var(--filter)"></span>Filters</div>
+        <div class="ptiles">
+          <div class="ptile filter"><div class="ico">UMP</div>Message type</div>
+          <div class="ptile filter"><div class="ico">GRP</div>Group</div>
+          <div class="ptile filter"><div class="ico">CH</div>Channel</div>
+          <div class="ptile filter hovered"><div class="ico">&#x266A;</div>Note</div>
+          <div class="ptile filter"><div class="ico">CC</div>Control change</div>
+          <div class="ptile filter"><div class="ico mono">01</div>Message mask</div>
+        </div>
+
+        <div class="psection"><span class="swatch" style="background:var(--transform)"></span>Transforms</div>
+        <div class="ptiles">
+          <div class="ptile transform"><div class="ico">CH</div>Channel map</div>
+          <div class="ptile transform"><div class="ico">GRP</div>Group map</div>
+          <div class="ptile transform"><div class="ico">&#x266A;</div>Note map</div>
+          <div class="ptile transform"><div class="ico">&plusmn;</div>Transpose</div>
+          <div class="ptile transform"><div class="ico">VEL</div>Velocity</div>
+          <div class="ptile transform"><div class="ico">AT</div>Aftertouch</div>
+          <div class="ptile transform"><div class="ico">CC#</div>CC number</div>
+          <div class="ptile transform"><div class="ico">CC~</div>CC value</div>
+          <div class="ptile transform"><div class="ico">PGM</div>Program and bank</div>
+        </div>
+
+        <div class="psection"><span class="swatch" style="background:var(--flow)"></span>Sending</div>
+        <div class="ptiles">
+          <div class="ptile flow"><div class="ico">1&times;</div>Throttle</div>
+        </div>
+      </div>
+
+      <div class="pfoot"><div class="btn"><span class="gl">&#xE710;</span>Add to patch</div></div>
+    </div>
+
+    <!-- =============================================================== canvas -->
+    <div class="ecanvas" id="canvas">
+
+      <i data-conn data-from="kbd-out-1" data-to="mt:in"></i>
+      <i data-conn data-from="mt:out" data-to="nhi:in"></i>
+      <i data-conn data-from="mt:out" data-to="nlo:in"></i>
+      <i data-conn data-from="nhi:out" data-to="vel:in" data-state="hot"></i>
+      <i data-conn data-from="vel:out" data-to="gm-in-1" data-state="hot"></i>
+      <i data-conn data-from="nlo:out" data-to="thr:in"></i>
+      <i data-conn data-from="daw-out-all" data-to="thr:in"></i>
+      <i data-conn data-from="thr:out" data-to="bass-in-1"></i>
+
+      <div class="surface" id="surface" style="transform:scale(.8); width:1460px; height:1020px;">
+
+        <!-- Impact LX Mini -->
+        <div class="node" id="kbd" style="left:24px; top:90px; width:372px">
+          <div class="node-head">
+            <div class="node-art">&#xE765;</div>
+            <div class="txt"><div class="nm">Impact LX Mini</div><div class="sub">Nektar &middot; KSA</div></div>
+            <div class="status-dot"></div>
+          </div>
+          <div class="port-cols">
+            <div class="port-col left">
+              <div class="col-head">In</div>
+              <div class="port all" id="kbd-in-any"><div class="dot"></div><div class="port-label">Any group</div></div>
+              <div class="port" id="kbd-in-1"><div class="dot"></div><div class="port-label">1 - Impact LX Mini MIDI1</div></div>
+              <div class="port" id="kbd-in-2"><div class="dot"></div><div class="port-label">2 - Impact LX Mini MIDI2</div></div>
+            </div>
+            <div class="port-col right">
+              <div class="col-head">Out</div>
+              <div class="port all" id="kbd-out-all"><div class="dot"></div><div class="port-label">All groups</div></div>
+              <div class="port" id="kbd-out-1"><div class="dot linked"></div><div class="port-label">1 - Impact LX Mini MIDI1</div></div>
+              <div class="port" id="kbd-out-2"><div class="dot"></div><div class="port-label">2 - Impact LX Mini MIDI2</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAW loopback -->
+        <div class="node" id="daw" style="left:24px; top:640px; width:318px">
+          <div class="node-head">
+            <div class="node-art loop">&#xE895;</div>
+            <div class="txt"><div class="nm">DAW Loopback (A)</div><div class="sub">LOOP</div></div>
+            <div class="status-dot"></div>
+          </div>
+          <div class="port-cols">
+            <div class="port-col left">
+              <div class="col-head">In</div>
+              <div class="port all" id="daw-in-any"><div class="dot"></div><div class="port-label">Any group</div></div>
+              <div class="port" id="daw-in-1"><div class="dot"></div><div class="port-label">1 - DAW Loopback (A)</div></div>
+            </div>
+            <div class="port-col right">
+              <div class="col-head">Out</div>
+              <div class="port all" id="daw-out-all"><div class="dot linked"></div><div class="port-label">All groups</div></div>
+              <div class="port" id="daw-out-1"><div class="dot"></div><div class="port-label">1 - DAW Loopback (A)</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- blocks -->
+        <div class="block filter" id="mt" style="left:434px; top:170px; width:184px">
+          <div class="bhead"><div class="bicon t">UMP</div><div class="bname">Message type filter</div></div>
+          <div class="bdesc">Keeps out system real-time messages</div>
+          <div class="bport in"></div><div class="bport out"></div>
+        </div>
+
+        <div class="block filter" id="nhi" style="left:656px; top:80px; width:184px">
+          <div class="bhead"><div class="bicon t">&#x266A;</div><div class="bname">Note filter</div></div>
+          <div class="bdesc">Lets C3 to A4 through</div>
+          <div class="bport in"></div><div class="bport out"></div>
+        </div>
+
+        <div class="block transform selected" id="vel" style="left:878px; top:72px; width:184px">
+          <div class="bhead"><div class="bicon t">VEL</div><div class="bname">Velocity rescaler</div></div>
+          <div class="bdesc">Curved to linear, 50% to 100%</div>
+          <div class="bport in"></div><div class="bport out"></div>
+        </div>
+
+        <div class="block filter" id="nlo" style="left:656px; top:330px; width:184px">
+          <div class="bhead"><div class="bicon t">&#x266A;</div><div class="bname">Note filter</div></div>
+          <div class="bdesc">Lets C1 to B3 through</div>
+          <div class="bport in"></div><div class="bport out"></div>
+        </div>
+
+        <div class="block flow" id="thr" style="left:878px; top:470px; width:184px">
+          <div class="bhead"><div class="bicon t">1&times;</div><div class="bname">Message throttler</div></div>
+          <div class="bdesc">Sends at MIDI 1.0 wire speed</div>
+          <div class="bport in"></div><div class="bport out"></div>
+        </div>
+
+        <!-- General MIDI Synth -->
+        <div class="node" id="gm" style="left:1100px; top:40px; width:336px">
+          <div class="node-head">
+            <div class="node-art">&#xE8D6;</div>
+            <div class="txt"><div class="nm">General MIDI Synth</div><div class="sub">Microsoft &middot; GMSYNTH</div></div>
+            <div class="status-dot"></div>
+          </div>
+          <div class="port-cols">
+            <div class="port-col left">
+              <div class="col-head">In</div>
+              <div class="port all" id="gm-in-any"><div class="dot"></div><div class="port-label">Any group</div></div>
+              <div class="port" id="gm-in-1"><div class="dot linked"></div><div class="port-label">1 - General MIDI Synth</div></div>
+            </div>
+            <div class="port-col right">
+              <div class="col-head">Out</div>
+              <div class="port all" id="gm-out-all"><div class="dot"></div><div class="port-label">All groups</div></div>
+              <div class="port" id="gm-out-1"><div class="dot"></div><div class="port-label">1 - General MIDI Synth</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bass Station II -->
+        <div class="node" id="bass" style="left:1100px; top:430px; width:300px">
+          <div class="node-head">
+            <div class="node-art">&#xE8D6;</div>
+            <div class="txt"><div class="nm">Bass Station II</div><div class="sub">Novation &middot; KSA</div></div>
+            <div class="status-dot"></div>
+          </div>
+          <div class="port-cols">
+            <div class="port-col left">
+              <div class="col-head">In</div>
+              <div class="port all" id="bass-in-any"><div class="dot"></div><div class="port-label">Any group</div></div>
+              <div class="port" id="bass-in-1"><div class="dot linked"></div><div class="port-label">1 - Bass Station II</div></div>
+            </div>
+            <div class="port-col right">
+              <div class="col-head">Out</div>
+              <div class="port all" id="bass-out-all"><div class="dot"></div><div class="port-label">All groups</div></div>
+              <div class="port" id="bass-out-1"><div class="dot"></div><div class="port-label">1 - Bass Station II</div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="minimap" data-surface="surface"></div>
+      <div class="zoombar"><span class="z">80%</span><span class="gl">&#xE71F;</span><span class="gl">&#xE8A3;</span><span class="fit">Fit</span></div>
+    </div>
+
+    <!-- ============================================================ inspector -->
+    <div class="einspector">
+      <div class="ihead transform">
+        <div class="bicon t">VEL</div>
+        <div class="txt"><div class="kind">Transform</div><div class="title">Velocity rescaler</div></div>
+        <div class="gl more">&#xE712;</div>
+      </div>
+      <div class="ibody">
+        <div class="isec">
+          <div class="ilabel">Name</div>
+          <div class="field">Velocity rescaler</div>
+        </div>
+
+        <div class="isec">
+          <div class="ilabel">Value format</div>
+          <div class="seg small full"><div>0 to 127</div><div class="sel">Percentage</div></div>
+        </div>
+
+        <div class="isec" style="gap:0">
+          <div class="ilabel" style="margin-bottom:4px">Note on velocity</div>
+          <div class="radio"><div class="rb"></div><div class="t">Unchanged</div></div>
+          <div class="radio"><div class="rb"></div><div class="t">Linear to curved<div class="sub">Harder to play loud</div></div></div>
+          <div class="radio on"><div class="rb"></div><div class="t">Curved to linear<div class="sub">Easier to play loud</div></div></div>
+          <div class="radio"><div class="rb"></div><div class="t">Fixed<div class="sub">Every note at one velocity</div></div></div>
+        </div>
+
+        <div class="curve">
+          <svg viewBox="0 0 270 130" preserveAspectRatio="none">
+            <line x1="14" y1="118" x2="256" y2="12" stroke="rgba(255,255,255,.28)" stroke-width="1" stroke-dasharray="4 4"/>
+            <line x1="14" y1="65" x2="256" y2="65" stroke="rgba(255,255,255,.10)" stroke-width="1"/>
+            <polyline fill="none" stroke="#B4A7FF" stroke-width="2.2" points="14,65 26,53 38,48 50,45 62,42 74,39 86,37 98,34 110,32 122,30 134,28 146,26 158,25 170,23 182,21 194,20 206,18 218,17 230,15 242,14 256,12"/>
+            <text x="18" y="80" fill="rgba(255,255,255,.45)" font-size="9" font-family="Segoe UI">50%</text>
+            <text x="18" y="24" fill="rgba(255,255,255,.45)" font-size="9" font-family="Segoe UI">100%</text>
+          </svg>
+        </div>
+
+        <div class="isec">
+          <div class="check on"><div class="cb">&#xE73E;</div><div>Rescale range</div></div>
+          <div class="irow">
+            <div style="flex:1"><div class="ilabel" style="margin-bottom:4px">Quietest</div><div class="numbox">50%<div class="spin"><div class="gl">&#xE70E;</div><div class="gl">&#xE70D;</div></div></div></div>
+            <div style="flex:1"><div class="ilabel" style="margin-bottom:4px">Loudest</div><div class="numbox">100%<div class="spin"><div class="gl">&#xE70E;</div><div class="gl">&#xE70D;</div></div></div></div>
+          </div>
+          <div class="ihelp">A note played at 25% leaves at 75%. Only note on messages are touched.</div>
+        </div>
+
+        <div class="isec">
+          <div class="ilabel">Activity</div>
+          <div class="stat"><div><b>1,284</b>notes in</div><div><b>1,284</b>notes out</div></div>
+        </div>
+
+        <div class="irow" style="margin-top:auto">
+          <div class="btn"><span class="gl">&#xE8D8;</span>Bypass</div>
+          <div class="btn"><span class="gl">&#xE74D;</span>Remove</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- pins -->
+    <div class="pin" style="left:146px; top:6px;">1</div>
+    <div class="pin" style="left:576px; top:118px;">2</div>
+    <div class="pin" style="left:968px; top:356px;">3</div>
+    <div class="pin" style="left:318px; top:137px;">4</div>
+    <div class="pin" style="left:1600px; top:14px;">5</div>
+  </div>
+
+  <div class="statusbar">
+    <span>4 endpoints</span><span>5 blocks</span><span>8 connections</span><span>212 messages a second</span>
+    <span class="spacer"></span>
+    <span>No loops detected</span>
+  </div>
+
+  <div class="pin" style="left:108px; top:58px;">6</div>
+</div>
+
+<div class="notes">
+  <div class="n"><div class="pin">1</div><div><b>Palette, like MIDI Glass.</b> Filters, transforms and sending are separate sections. Drag a block onto the canvas, or onto a connection to put it in the middle of that connection. <b>Add to patch</b> does the same from the keyboard. The <b>Endpoints</b> tab lists the MIDI endpoints on this PC, and replaces the Add endpoint menu.</div></div>
+  <div class="n"><div class="pin">2</div><div><b>Blocks don't look like endpoints.</b> One input and one output instead of a row per group, a colored edge for the kind of block (amber filters, violet transforms, green sending), a name, and a line that says what it does right now.</div></div>
+  <div class="n"><div class="pin">3</div><div><b>Fan in and fan out.</b> Anything can feed a block, and a block can feed anything. The message type filter feeds both note filters. The throttler takes the lower keys and the loopback, and paces them together, because both go to the same synth.</div></div>
+  <div class="n"><div class="pin">4</div><div><b>"Any group" on the In side.</b> A connection into Any group keeps each message's own group. A connection into a numbered group moves every message onto that group. The Out side still says All groups.</div></div>
+  <div class="n"><div class="pin">5</div><div><b>The inspector holds one block.</b> Short settings sit right here. Long ones, like the note keyboard or a mapping table, open that block's own dialog. Bypass passes everything through untouched, so a block can be compared with and without.</div></div>
+  <div class="n"><div class="pin">6</div><div><b>Each patch has its own window.</b> Routing and Start automatically are per patch, at the top. Library brings the library forward. Undo and redo are new, because a patch now has many more pieces to get wrong.</div></div>
+</div>
+
+</div>
+</body>
+</html>

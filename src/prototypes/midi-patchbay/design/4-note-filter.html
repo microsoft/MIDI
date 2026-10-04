@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Patchbay Preview 11 - 4 - note filter</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="v2.css">
+<script src="mock2.js" defer></script>
+<style>
+    .window.dlgwin { height: 846px; }
+    .backdrop { flex: 1; position: relative; background: linear-gradient(160deg, #262626, #1F1F1F); }
+    .notecols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .learn .field { width: 132px; }
+</style>
+</head>
+<body>
+<div class="page lib">
+
+<div class="caption-above"><b>4. The note filter's own dialog.</b> Today's note range, plus one note or a list of notes, and a choice between letting them through and keeping them out. <b>Press a key</b> listens to whatever feeds this block and takes the next note it hears.</div>
+
+<div class="window dlgwin">
+  <div class="titlebar">
+    <img src="appicon.png" alt="">
+    <div class="title">Studio Rig &mdash; Windows MIDI Patchbay</div>
+    <div class="preview-chiclet">PREVIEW</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+  <div class="backdrop">
+    <div class="scrim"></div>
+
+    <div class="dialog wide">
+      <div class="dlg-body">
+        <h2>Note filter</h2>
+        <div class="dlg-sub">Lets notes through, or keeps them out, by note number. That covers note on, note off, poly pressure and the MIDI 2.0 per-note messages. Messages that aren't notes go through untouched.</div>
+
+        <div class="notecols">
+          <div class="dlg-card">
+            <div class="h">Which notes</div>
+            <div class="seg small full"><div class="sel">A range</div><div>One note</div><div>A list</div></div>
+          </div>
+          <div class="dlg-card">
+            <div class="h">These notes are</div>
+            <div class="seg small full"><div class="sel">Let through</div><div>Kept out</div></div>
+          </div>
+        </div>
+
+        <div class="dlg-card">
+          <div class="h">Range</div>
+          <div class="s">Click a key to set the lowest note, and Shift+click to set the highest, the same as today.</div>
+          <div class="keys" id="keys"></div>
+          <div class="keylabels" id="keylabels"></div>
+
+          <div class="notecols" style="margin-top:6px">
+            <div>
+              <div class="ilabel" style="margin-bottom:5px">Lowest note</div>
+              <div class="learn">
+                <div class="field combo">C3 &middot; 60<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+                <div class="btn"><span class="gl">&#xE765;</span>Press a key</div>
+              </div>
+            </div>
+            <div>
+              <div class="ilabel" style="margin-bottom:5px">Highest note</div>
+              <div class="learn">
+                <div class="field combo">A4 &middot; 81<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+                <div class="btn listening"><div class="pulse"></div>Listening&hellip; press a key</div>
+              </div>
+            </div>
+          </div>
+          <div class="ihelp">Listening to Impact LX Mini, through the Message type filter. Press Esc to stop listening.</div>
+        </div>
+
+        <div class="summarybar">This filter lets C3 to A4 through (notes 60 to 81). Every other note is kept out. Messages that aren't notes go through untouched.</div>
+      </div>
+      <div class="dlg-foot">
+        <div class="btn accent">Apply</div>
+        <div class="btn">Reset</div>
+        <div class="btn">Cancel</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="notes">
+  <div class="n"><div class="pin" style="background:#666">i</div><div><b>One block, one dialog.</b> The note range moves out of today's big Filters dialog into this one. The control change filter gets the same layout: one controller or a list, let through or kept out, and <b>Turn a control</b> to pick it up from the device.</div></div>
+  <div class="n"><div class="pin" style="background:#666">i</div><div><b>One note and A list</b> swap the range for a single picker, or for a list where each key on the keyboard toggles. Press a key works in all three.</div></div>
+  <div class="n"><div class="pin" style="background:#666">i</div><div><b>Listening needs a source.</b> If nothing is connected to the block yet, Press a key is turned off and says why. Listening works whether or not the patch is routing, and never sends anything on.</div></div>
+</div>
+
+</div>
+
+<script>
+    // 128 keys, 75 white. Notes 60 to 81 (C3 to A4, with 60 named C3) are in the range.
+    (function () {
+        const keys = document.getElementById("keys");
+        const labels = document.getElementById("keylabels");
+        const low = 60;
+        const high = 81;
+        const whiteWidth = keys.clientWidth / 75;
+        const blacks = [];
+        let white = 0;
+
+        for (let note = 0; note < 128; note++) {
+            const pitchClass = note % 12;
+            const isBlack = [1, 3, 6, 8, 10].includes(pitchClass);
+            const inRange = note >= low && note <= high;
+
+            if (isBlack) {
+                blacks.push({ x: white * whiteWidth - whiteWidth * 0.32, inRange });
+                continue;
+            }
+
+            const key = document.createElement("div");
+            key.className = "w" + (inRange ? " in" : "");
+            key.style.left = (white * whiteWidth) + "px";
+            key.style.width = whiteWidth + "px";
+            keys.appendChild(key);
+
+            if (pitchClass === 0 || note === high) {
+                const label = document.createElement("span");
+                label.textContent = pitchClass === 0 ? "C" + (Math.floor(note / 12) - 2) : "A4";
+                label.style.left = (white * whiteWidth) + "px";
+
+                if (note === low || note === high) {
+                    label.className = "hot";
+                }
+
+                labels.appendChild(label);
+            }
+
+            white++;
+        }
+
+        for (const black of blacks) {
+            const key = document.createElement("div");
+            key.className = "b" + (black.inRange ? " in" : "");
+            key.style.left = black.x + "px";
+            key.style.width = (whiteWidth * 0.64) + "px";
+            keys.appendChild(key);
+        }
+    })();
+</script>
+</body>
+</html>

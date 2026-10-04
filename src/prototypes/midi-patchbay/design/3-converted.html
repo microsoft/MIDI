@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Patchbay Preview 11 - 3 - a Preview 10 patch, opened</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="v2.css">
+<script src="mock2.js" defer></script>
+<style>
+    .pairrow { display: flex; gap: 22px; align-items: flex-start; }
+    .window.old { width: 340px; height: 600px; }
+    .window.new { width: 1080px; height: 600px; }
+    .arrow { align-self: center; font-family: "Segoe Fluent Icons"; font-size: 22px; color: var(--text3); margin: 0 -8px; }
+    .oldhead { padding: 12px 16px; border-bottom: 1px solid var(--divider); display: flex; align-items: center; }
+    .oldhead .t { font-size: 14px; font-weight: 600; flex: 1; }
+    .bicon.t { font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; font-size: 9.5px; font-weight: 700; width: auto; min-width: 24px; padding: 0 4px; }
+    .rules { font-size: 12px; color: var(--text3); line-height: 1.55; width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 30px; }
+    .rules b { color: var(--text2); }
+</style>
+</head>
+<body>
+<div class="page pair">
+
+<div class="caption-above"><b>3. A Preview 10 patch, opened in Preview 11.</b> Left: today, one connection holds a filter, a transform and a sending speed, and the canvas shows only a line. Right: the same connection after it's opened. Each part that does something becomes a block, in the order Patchbay has always run them, so the patch does exactly what it did.</div>
+
+<div class="pairrow">
+
+  <!-- ================================================= Preview 10 inspector -->
+  <div class="window old">
+    <div class="titlebar">
+      <img src="appicon.png" alt="">
+      <div class="title">Preview 10</div>
+      <div class="spacer"></div>
+    </div>
+    <div class="oldhead"><div class="t">Connection</div><div class="gl" style="font-size:11px;color:var(--text3)">&#xE711;</div></div>
+    <div class="insp-body">
+      <div class="card" style="display:flex;flex-direction:column;gap:6px">
+        <div class="insp-label">From</div>
+        <div style="font-size:13px">Impact LX Mini</div>
+        <div style="font-size:12px;color:var(--text3)">1 - Impact LX Mini MIDI1</div>
+        <div class="insp-label" style="margin-top:6px">To</div>
+        <div style="font-size:13px">General MIDI Synth</div>
+        <div style="font-size:12px;color:var(--text3)">1 - General MIDI Synth</div>
+      </div>
+      <div class="insp-section">
+        <div class="insp-label">Filters</div>
+        <div class="card" style="font-size:12.5px;line-height:1.5;color:var(--text2)">No timing clock, start, continue, stop, active sensing, reset. Notes C3 to A4 only.<div class="btn" style="margin-top:10px;width:100%;justify-content:center">Edit filters&hellip;</div></div>
+      </div>
+      <div class="insp-section">
+        <div class="insp-label">Transforms</div>
+        <div class="card" style="font-size:12.5px;line-height:1.5;color:var(--text2)">Velocity curved to linear. Velocity 50% to 100%.<div class="btn" style="margin-top:10px;width:100%;justify-content:center">Edit transforms&hellip;</div></div>
+      </div>
+      <div class="insp-section">
+        <div class="insp-label">Sending speed</div>
+        <div class="field combo">Unlimited<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">&#xE72A;</div>
+
+  <!-- =================================================== Preview 11 editor -->
+  <div class="window new">
+    <div class="titlebar">
+      <img src="appicon.png" alt="">
+      <div class="title">Keyboard to synth &mdash; Windows MIDI Patchbay</div>
+      <div class="spacer"></div>
+      <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+    </div>
+
+    <div class="infobar info" style="margin:8px 12px 8px 12px">
+      <div class="gl">&#xE946;</div>
+      <div class="bd"><div class="tt">This patch is from an earlier version of MIDI Patchbay</div>Each connection's filters, transforms and sending speed are now blocks on the canvas, in the order they always ran. The patch routes exactly as it did. A copy of the original file is in Earlier versions.</div>
+      <div class="btn small">Got it</div>
+    </div>
+
+    <div class="ecanvas" id="canvas" style="flex:1">
+      <i data-conn data-from="kbd-out-1" data-to="mt:in"></i>
+      <i data-conn data-from="mt:out" data-to="nf:in"></i>
+      <i data-conn data-from="nf:out" data-to="vel:in"></i>
+      <i data-conn data-from="vel:out" data-to="gm-in-1"></i>
+
+      <div class="surface" id="surface" style="transform:scale(.7); width:1480px; height:620px;">
+        <div class="node" id="kbd" style="left:24px; top:70px; width:372px">
+          <div class="node-head">
+            <div class="node-art">&#xE765;</div>
+            <div class="txt"><div class="nm">Impact LX Mini</div><div class="sub">Nektar &middot; KSA</div></div>
+            <div class="status-dot"></div>
+          </div>
+          <div class="port-cols">
+            <div class="port-col left">
+              <div class="col-head">In</div>
+              <div class="port all" id="kbd-in-any"><div class="dot"></div><div class="port-label">Any group</div></div>
+              <div class="port" id="kbd-in-1"><div class="dot"></div><div class="port-label">1 - Impact LX Mini MIDI1</div></div>
+              <div class="port" id="kbd-in-2"><div class="dot"></div><div class="port-label">2 - Impact LX Mini MIDI2</div></div>
+            </div>
+            <div class="port-col right">
+              <div class="col-head">Out</div>
+              <div class="port all" id="kbd-out-all"><div class="dot"></div><div class="port-label">All groups</div></div>
+              <div class="port" id="kbd-out-1"><div class="dot linked"></div><div class="port-label">1 - Impact LX Mini MIDI1</div></div>
+              <div class="port" id="kbd-out-2"><div class="dot"></div><div class="port-label">2 - Impact LX Mini MIDI2</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="block filter" id="mt" style="left:438px; top:160px; width:184px">
+          <div class="bhead"><div class="bicon t">UMP</div><div class="bname">Message type filter</div></div>
+          <div class="bdesc">Keeps out system real-time messages</div>
+          <div class="bport in"></div><div class="bport out"></div>
+        </div>
+
+        <div class="block filter" id="nf" style="left:664px; top:160px; width:184px">
+          <div class="bhead"><div class="bicon t">&#x266A;</div><div class="bname">Note filter</div></div>
+          <div class="bdesc">Lets C3 to A4 through</div>
+          <div class="bport in"></div><div class="bport out"></div>
+        </div>
+
+        <div class="block transform" id="vel" style="left:890px; top:160px; width:184px">
+          <div class="bhead"><div class="bicon t">VEL</div><div class="bname">Velocity rescaler</div></div>
+          <div class="bdesc">Curved to linear, 50% to 100%</div>
+          <div class="bport in"></div><div class="bport out"></div>
+        </div>
+
+        <div class="node" id="gm" style="left:1116px; top:110px; width:336px">
+          <div class="node-head">
+            <div class="node-art">&#xE8D6;</div>
+            <div class="txt"><div class="nm">General MIDI Synth</div><div class="sub">Microsoft &middot; GMSYNTH</div></div>
+            <div class="status-dot"></div>
+          </div>
+          <div class="port-cols">
+            <div class="port-col left">
+              <div class="col-head">In</div>
+              <div class="port all" id="gm-in-any"><div class="dot"></div><div class="port-label">Any group</div></div>
+              <div class="port" id="gm-in-1"><div class="dot linked"></div><div class="port-label">1 - General MIDI Synth</div></div>
+            </div>
+            <div class="port-col right">
+              <div class="col-head">Out</div>
+              <div class="port all" id="gm-out-all"><div class="dot"></div><div class="port-label">All groups</div></div>
+              <div class="port" id="gm-out-1"><div class="dot"></div><div class="port-label">1 - General MIDI Synth</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="rules">
+  <div><b>Plain connections stay plain.</b> A connection that filters nothing, changes nothing and has no sending speed is still one line from Out to In.</div>
+  <div><b>Blocks come out in the order Patchbay always ran them.</b> Filters first (message types, channels, notes), then channel map, note map, transpose, velocity, aftertouch, control change number, program and bank, control change value, and the throttler last.</div>
+  <div><b>Groups stay where they were.</b> The chain starts at the same Out group and ends at the same In group, so a group move works as before.</div>
+  <div><b>Only parts that do something become blocks.</b> An untouched filter or transform makes no block. A muted connection becomes a muted first link.</div>
+  <div><b>One case needs care.</b> Today a note map is a list of exceptions to the transpose. That converts to a note map, then a transpose, with each mapped note moved back by the transpose amount. A mapped note that would land outside 0 to 127 is listed for the customer to check.</div>
+  <div><b>The original is kept.</b> Preview 10 can't read the new format, and would drop the blocks if it saved one, so the first conversion copies the old file into Earlier versions. (Decision for Pete.)</div>
+</div>
+
+</div>
+</body>
+</html>
