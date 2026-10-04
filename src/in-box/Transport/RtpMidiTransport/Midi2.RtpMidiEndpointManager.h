@@ -130,7 +130,6 @@ private:
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
 
-    GUID m_containerId{};
     std::wstring m_parentDeviceId;
     std::wstring m_localDnsHostName;
     std::atomic<bool> m_initialized{ false };

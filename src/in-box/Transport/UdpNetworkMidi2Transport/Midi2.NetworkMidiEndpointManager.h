@@ -233,7 +233,6 @@ private:
 
     bool m_initialized{ false };
 
-    GUID m_containerId{};
     GUID m_transportId{ };
     std::wstring m_clientParentDeviceInstanceId{};
 

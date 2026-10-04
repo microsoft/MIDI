@@ -143,8 +143,6 @@ CMidi2RtpMidiEndpointManager::Initialize(
         RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
         RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
 
-        m_containerId = TRANSPORT_LAYER_GUID;
-
         WSADATA wsaData{};
         auto const wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
         RETURN_HR_IF(HRESULT_FROM_WIN32(wsaResult), wsaResult != 0);
@@ -231,7 +229,6 @@ CMidi2RtpMidiEndpointManager::CreateParentDevice()
     createInfo.pszInstanceId = parentDeviceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
     createInfo.pszDeviceDescription = parentDeviceName.c_str();
-    createInfo.pContainerId = &m_containerId;
 
     wil::unique_cotaskmem_string newDeviceId;
 

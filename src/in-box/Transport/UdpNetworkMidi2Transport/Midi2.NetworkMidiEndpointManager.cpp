@@ -74,7 +74,6 @@ CMidi2NetworkMidiEndpointManager::Initialize(
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
 
     m_transportId = TRANSPORT_LAYER_GUID;   // this is needed so MidiSrv can instantiate the correct transport
-    m_containerId = m_transportId;                           // we use the transport ID as the container ID for convenience
 
     RETURN_IF_FAILED(CreateParentDeviceForClients());
 
@@ -1552,7 +1551,6 @@ CMidi2NetworkMidiEndpointManager::CreateParentDeviceForClients()
         createInfo.pszInstanceId = parentDeviceInstanceId.c_str();
         createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
         createInfo.pszDeviceDescription = parentDeviceName.c_str();
-        createInfo.pContainerId = &m_containerId;
 
         wil::unique_cotaskmem_string newParentDeviceId;
 
@@ -1632,7 +1630,6 @@ CMidi2NetworkMidiEndpointManager::CreateParentDeviceForHost(
         createInfo.pszInstanceId = parentDeviceId.c_str();
         createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
         createInfo.pszDeviceDescription = parentName.c_str();
-        createInfo.pContainerId = &m_containerId;
 
         RETURN_IF_FAILED(m_midiDeviceManager->ActivateVirtualParentDevice(
             0,
