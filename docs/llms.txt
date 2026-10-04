@@ -6,13 +6,13 @@ If someone asks you to make a MIDI Glass layout, a MIDI Glass theme, or a MIDI P
 
 ## Guides for AI agents
 
-- [MIDI Glass layout files, a guide for AI agents](https://microsoft.github.io/midi/kb/midi-glass-layouts-for-agents/): How to design a `.midilayout` file for MIDI Glass. What to ask, the file format, the built-in themes, and how to show the customer a mockup.
-- [MIDI Patchbay patch files, a guide for AI agents](https://microsoft.github.io/midi/kb/midi-patchbay-patches-for-agents/): How to plan a `.midipatch` file for MIDI Patchbay. What to ask, the file format, and how to show the customer the plan.
-- [How MIDI Glass themes work](https://microsoft.github.io/midi/kb/midi-glass-themes/): The `.miditheme` file format, the built-in themes, and how to design a theme for someone.
+- [MIDI Glass layout files, a guide for AI agents](https://microsoft.github.io/MIDI/kb/midi-glass-layouts-for-agents/): How to design a `.midilayout` file for MIDI Glass. What to ask, the file format, the built-in themes, and how to show the customer a mockup.
+- [MIDI Patchbay patch files, a guide for AI agents](https://microsoft.github.io/MIDI/kb/midi-patchbay-patches-for-agents/): How to plan a `.midipatch` file for MIDI Patchbay. What to ask, the file format, and how to show the customer the plan.
+- [How MIDI Glass themes work](https://microsoft.github.io/MIDI/kb/midi-glass-themes/): The `.miditheme` file format, the built-in themes, and how to design a theme for someone.
 
 ## The same guides as markdown
 
-Links inside these files start with `{{ site.baseurl }}`, which stands for `https://microsoft.github.io/midi`.
+Links inside these files start with `{{ site.baseurl }}`, which stands for `https://microsoft.github.io/MIDI`.
 
 - [MIDI Glass layout guide](https://raw.githubusercontent.com/microsoft/MIDI/main/docs/kb/midi-glass-layouts-for-agents.md)
 - [MIDI Patchbay patch guide](https://raw.githubusercontent.com/microsoft/MIDI/main/docs/kb/midi-patchbay-patches-for-agents.md)
@@ -20,7 +20,7 @@ Links inside these files start with `{{ site.baseurl }}`, which stands for `http
 
 ## Optional
 
-- [MIDI Glass](https://microsoft.github.io/midi/tools/midiglass/): The app's documentation for customers.
-- [MIDI Patchbay](https://microsoft.github.io/midi/tools/midipatchbay/): The app's documentation for customers.
-- [Knowledge base](https://microsoft.github.io/midi/kb/): Every article, for customers and developers.
-- [WinRT API reference](https://microsoft.github.io/midi/sdk-reference/): For developers writing apps that use MIDI on Windows.
+- [MIDI Glass](https://microsoft.github.io/MIDI/tools/midiglass/): The app's documentation for customers.
+- [MIDI Patchbay](https://microsoft.github.io/MIDI/tools/midipatchbay/): The app's documentation for customers.
+- [Knowledge base](https://microsoft.github.io/MIDI/kb/): Every article, for customers and developers.
+- [WinRT API reference](https://microsoft.github.io/MIDI/sdk-reference/): For developers writing apps that use MIDI on Windows.

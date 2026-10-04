@@ -164,7 +164,7 @@ foreach ($c in $patch.connections) {
         foreach ($key in 'messageTypes', 'channels', 'channelVoiceStatuses') { if (-not (Test-Range $f.$key 0 65535)) { $problems.Add("$where has $key outside 0 to 65535.") } }
         if (-not (Test-Range $f.systemMessages 0 1023)) { $problems.Add("$where has systemMessages outside 0 to 1023.") }
         if ($f.limitNoteRange -and ($null -eq $f.lowestNote -or $null -eq $f.highestNote -or -not (Test-Range $f.lowestNote 0 127) -or -not (Test-Range $f.highestNote 0 127))) { $problems.Add("$where limits notes but needs lowestNote and highestNote from 0 to 127.") }
-        if ($null -ne $f.lowestNote -and -not $f.limitNoteRange) { $problems.Add("$where has a note range but limitNoteRange isn't true, so every note gets through.") }
+        if (-not $f.limitNoteRange -and (($f.lowestNote ?? 0) -gt 0 -or ($f.highestNote ?? 127) -lt 127)) { $problems.Add("$where has a note range but limitNoteRange isn't true, so every note gets through.") }
     }
 
     $t = $c.transform
