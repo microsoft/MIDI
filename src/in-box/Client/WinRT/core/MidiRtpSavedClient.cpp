@@ -49,6 +49,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 
             m_autoReconnect = MidiRtpSdkJson::Boolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_AUTO_RECONNECT_KEY, true);
             m_sendRecoveryJournal = MidiRtpSdkJson::Boolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, true);
+            m_sendSpeedLimit = static_cast<rtp::MidiRtpSendSpeedLimit>(MidiRtpSdkJson::SendSpeedLimit(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY));
             m_isEnabled = MidiRtpSdkJson::Boolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_ENABLED_KEY, true);
 
             m_matchServiceInstanceName = MidiRtpSdkJson::String(entry, MIDI_CONFIG_JSON_RTP_MIDI_SERVICE_INSTANCE_NAME_KEY);

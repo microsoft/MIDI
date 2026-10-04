@@ -504,3 +504,96 @@ void MidiCiResponderTests::TestUnsupportedInquiryIsRefused()
         (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
         (int)ResponderAction::Ignored);
 }
+
+
+// M2-101-UM section 5.8: a device that has the information replies with it, and one that does not
+// sends a NAK.
+void MidiCiResponderTests::TestEndpointInquiryReturnsProductInstanceId()
+{
+    ResponderConfig config{};
+
+    config.Muid = OurMuid;
+    config.ManufacturerSysExId[2] = 0x41;
+    config.ProductInstanceId[0] = 'G';
+    config.ProductInstanceId[1] = 'M';
+    config.ProductInstanceId[2] = '1';
+    config.ProductInstanceIdByteCount = 3;
+
+    Responder responder;
+    responder.Initialize(config);
+
+    ParsedMessage message{};
+
+    message.Type = MessageType::EndpointInquiry;
+    message.DeviceId = DeviceIdFunctionBlock;
+    message.VersionFormat = 0x02;
+    message.SourceMuid = TheirMuid;
+    message.DestinationMuid = OurMuid;
+    message.HasEndpointFields = true;
+    message.Endpoint.Status = 0x00;
+
+    uint8_t reply[64]{};
+    size_t replyBytes{ 0 };
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+
+    // Worked out by hand from the message format table, not from the builder.
+    const uint8_t expected[]
+    {
+        0x7E, 0x7F, 0x0D, 0x73, 0x02,
+        0x56, 0x68, 0x48, 0x00,             // source muid 0x0123456
+        0x42, 0x00, 0x00, 0x00,             // destination muid 0x42
+        0x00,                               // status echoed: product instance id
+        0x03, 0x00,                         // three bytes follow
+        0x47, 0x4D, 0x31                    // "GM1"
+    };
+
+    VERIFY_ARE_EQUAL(replyBytes, sizeof(expected));
+    VERIFY_ARE_EQUAL(memcmp(reply, expected, sizeof(expected)), 0);
+
+    // Product instance id is the only status defined.
+    message.Endpoint.Status = 0x01;
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+
+    VERIFY_IS_TRUE(IsNakFor(reply, replyBytes, MessageType::EndpointInquiry),
+        L"a status that is not defined is refused");
+
+    message.Endpoint.Status = 0x00;
+    message.HasEndpointFields = false;
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+
+    VERIFY_IS_TRUE(IsNakFor(reply, replyBytes, MessageType::EndpointInquiry),
+        L"an inquiry that stopped before its status is refused");
+
+    message.HasEndpointFields = true;
+
+    auto withoutId = MakeResponder();
+
+    VERIFY_ARE_EQUAL(
+        (int)withoutId.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+
+    VERIFY_IS_TRUE(IsNakFor(reply, replyBytes, MessageType::EndpointInquiry),
+        L"a device with no product instance id says so");
+
+    // The specification allows printable ASCII only.
+    config.ProductInstanceId[1] = 0x09;
+
+    Responder unprintable;
+    unprintable.Initialize(config);
+
+    VERIFY_ARE_EQUAL(
+        (int)unprintable.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+
+    VERIFY_IS_TRUE(IsNakFor(reply, replyBytes, MessageType::EndpointInquiry),
+        L"an id the specification does not allow is refused rather than sent");
+}

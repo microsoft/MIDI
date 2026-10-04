@@ -33,6 +33,7 @@ public:
     TEST_METHOD(TestInitializeKeepsChannelState);
     TEST_METHOD(TestIdentityReply);
     TEST_METHOD(TestMidiCiDiscovery);
+    TEST_METHOD(TestMidiCiInquiriesAreAnswered);
     TEST_METHOD(TestMasterVolume);
     TEST_METHOD(TestMasterTuning);
     TEST_METHOD(TestActiveSensing);

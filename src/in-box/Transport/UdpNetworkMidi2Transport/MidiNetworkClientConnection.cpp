@@ -134,6 +134,14 @@ MidiNetworkClientConnection::OnWatchdogTick()
                 return S_OK;
             }));
 
+        // Nobody decided, which is treated like no answer at all
+        if (!m_shuttingDown)
+        {
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionForRetry(
+                m_configIdentifier,
+                NETWORK_ERROR_CODE_INVITATION_NOT_APPROVED));
+        }
+
         return S_OK;
 
     case MidiNetworkInvitationAction::CancelNoReply:
@@ -158,11 +166,12 @@ MidiNetworkClientConnection::OnWatchdogTick()
             }));
 
         // The host may simply not be switched on yet. An advertised host is picked up again when
-        // it advertises; a direct address is parked until the app asks for it again, because
-        // nothing announces its return and every configured dead address would be retried.
+        // it advertises, and a direct one after the scan interval.
         if (!m_shuttingDown)
         {
-            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionUnavailableOrRetry(m_configIdentifier));
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionForRetry(
+                m_configIdentifier,
+                NETWORK_ERROR_CODE_NO_REPLY_TO_INVITATION));
         }
 
         return S_OK;
@@ -175,6 +184,64 @@ void
 MidiNetworkClientConnection::OnSessionEndedByRemote()
 {
     LOG_IF_FAILED(RequestReconnect());
+}
+
+_Use_decl_annotations_
+void
+MidiNetworkClientConnection::OnByeReceived(MidiNetworkCommandByeReason const reason) noexcept
+{
+    // Only a Bye which ends our own invitation says anything about trying again
+    if (!m_invitation.Answered() || m_shuttingDown)
+    {
+        return;
+    }
+
+    try
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Remote host refused the invitation with a Bye.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt8(reason, "bye reason"),
+            TraceLoggingGuid(m_configIdentifier, "entry identifier")
+        );
+
+        switch (reason)
+        {
+        case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_TooManyOpenSessions:
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionForRetryAfter(
+                m_configIdentifier,
+                MIDI_NETWORK_CLIENT_BUSY_RETRY_DELAY_MILLISECONDS,
+                NETWORK_ERROR_CODE_HOST_BUSY));
+            break;
+
+        case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationRejectedUserDidNotAccept:
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionFailed(
+                m_configIdentifier,
+                NETWORK_ERROR_CODE_INVITATION_REFUSED));
+            break;
+
+        // it wants authentication this client cannot give
+        case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationWithAuthRejectedMissingPriorAttempt:
+        case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationRejectedAuthFailed:
+        case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_InvitationRejectedUsernameNotFound:
+        case MidiNetworkCommandByeReason::CommandByeReasonHostToClient_NoMatchingAuthenticationMethod:
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionFailed(
+                m_configIdentifier,
+                NETWORK_ERROR_CODE_AUTHENTICATION_REQUIRED));
+            break;
+
+        default:
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionForRetry(
+                m_configIdentifier,
+                NETWORK_ERROR_CODE_INVITATION_ENDED_BY_HOST));
+            break;
+        }
+    }
+    CATCH_LOG();
 }
 
 HRESULT
@@ -277,6 +344,8 @@ MidiNetworkClientConnection::HandleIncomingInvitationReplyAccepted(
         m_sessionActive = true;
         m_sessionEverEstablished = true;
     }
+
+    LOG_IF_FAILED(TransportState::Current().ClearClientDefinitionLastErrorCode(m_configIdentifier));
 
     // Creating the endpoint blocks on the service, and this is the socket receive callback
     auto queueHr = endpointManager->QueueClientEndpointCreation(
@@ -460,9 +529,32 @@ MidiNetworkClientConnection::HandleIncomingInvitationReplyAuthenticationRequired
         TraceLoggingUInt8(header.HeaderData.CommandCode, "Command Code")
     );
 
+    // Only the first answer counts. The host answers every copy of the invitation that was
+    // already on its way, and a session or a timeout may have ended the invitation first.
+    if (!m_invitation.Answered())
+    {
+        return S_OK;
+    }
+
     // A client which supports authentication answers the challenge here instead of withdrawing.
     // See MidiNetworkCredentials.h.
-    return RefuseInvitationForAuthentication(MidiNetworkCommandByeReason::CommandByeReasonClientToHost_InvitationCanceled);
+    //
+    // Spec 6.4: a client which gives up on its invitation ends it with Bye 0x80 Invitation
+    // Canceled. The spec has no client reason for "authentication not supported". A host which
+    // follows it does not ask this client at all, because the invitation offers no
+    // authentication method. It sends Bye 0x45 No Matching Authentication Method instead, which
+    // OnByeReceived turns into the same failed entry.
+    LOG_IF_FAILED(RefuseInvitationForAuthentication(MidiNetworkCommandByeReason::CommandByeReasonClientToHost_InvitationCanceled));
+
+    // Asking again gets the same answer
+    if (!m_shuttingDown)
+    {
+        LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionFailed(
+            m_configIdentifier,
+            NETWORK_ERROR_CODE_AUTHENTICATION_REQUIRED));
+    }
+
+    return S_OK;
 }
 
 HRESULT

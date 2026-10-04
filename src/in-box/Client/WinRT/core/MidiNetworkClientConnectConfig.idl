@@ -11,6 +11,7 @@ import "MidiApiContracts.idl";
 
 
 import "MidiNetworkClientMatchCriteria.idl";
+import "MidiNetworkSendSpeedLimitEnum.idl";
 import "IMidiServiceTransportPluginConfig.idl";
 import "MidiGroup.idl";
 
@@ -53,7 +54,15 @@ namespace Windows.Devices.Midi2.Transports.Network
 
 		//TODO: do we need to specify protocol here?
 
+		// How fast this PC sends to the remote. Set a limit when the remote passes what it
+		// receives on to a 5-pin DIN cable and loses data in large SysEx dumps. Unlimited by
+		// default.
+		[noexcept] MidiNetworkSendSpeedLimit SendSpeedLimit;
 
+		// While the remote keeps asking for data again, send more slowly, halving the speed each
+		// time down to MIDI 1.0 wire speed, then go back up to SendSpeedLimit once it stops. Off
+		// by default.
+		[noexcept] Boolean ReduceSendSpeedAutomatically;
     }
 }
 

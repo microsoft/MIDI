@@ -32,6 +32,8 @@ Returned by `MidiNetworkTransportManager.GetConfiguredHosts()`.
 | `AllowNetworkAdapterFallback` | True when the host runs on every adapter while its own adapter is missing |
 | `IsNetworkAdapterMissing` | True when the host's adapter is missing. If `HasStarted` is also true, the host is running on every adapter until the adapter is back. If not, the host is waiting, and starts by itself when the adapter is back |
 | `UsedNetworkAdapterFallback` | True when the host is running on every adapter because its own adapter is missing |
+| `SendSpeedLimit` | How fast the host is set up to send to each connected device. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |
+| `ReduceSendSpeedAutomatically` | True when a connection sends more slowly while the device keeps asking for data again. Each connection's speed right now is in `MidiNetworkHostConnection.CurrentSendSpeedLimit` |
 | `Connections` | The remote clients that have reached this host right now, including clients waiting for approval |
 
 ## Remarks

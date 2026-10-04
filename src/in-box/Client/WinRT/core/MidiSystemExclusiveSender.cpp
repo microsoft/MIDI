@@ -15,6 +15,10 @@
 #define DEFAULT_TRANSFER_SPACING_MILLISECONDS 100
 #define DEFAULT_PREFERRED_SINGLE_TRANSFER_MESSAGE_COUNT 1000    // todo, this should be based on the max transfer as declared by the service/xproc
 
+// A full buffer is retried this often, and given up on after this long without any room
+#define BUFFER_FULL_RETRY_MILLISECONDS 10
+#define BUFFER_FULL_GIVE_UP_MILLISECONDS 30000
+
 namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer::implementation
 {
     _Use_decl_annotations_
@@ -121,8 +125,28 @@ namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer::implementati
                 // Type 3 messages are 64 bit. If we have a complete 64 bit message, then send it
                 if (wordIndex == 1)
                 {
-                    if (midi2::MidiEndpointConnection::SendMessageSucceeded(
-                        destinationConnection.SendSingleMessageWordArray(0, 0, _countof(umpWords), umpWords)))
+                    auto result = destinationConnection.SendSingleMessageWordArray(0, 0, _countof(umpWords), umpWords);
+
+                    // The service's buffer fills while a slow device, or a network connection with a
+                    // send speed limit, drains it. That is a reason to wait and try again, not to
+                    // give up on the transfer.
+                    auto const giveUpAt = GetTickCount64() + BUFFER_FULL_GIVE_UP_MILLISECONDS;
+
+                    while (!midi2::MidiEndpointConnection::SendMessageSucceeded(result) &&
+                        (result & midi2::MidiSendMessageResults::BufferFull) == midi2::MidiSendMessageResults::BufferFull &&
+                        GetTickCount64() < giveUpAt)
+                    {
+                        if (cancel())
+                        {
+                            co_return false;
+                        }
+
+                        co_await winrt::resume_after(std::chrono::milliseconds(BUFFER_FULL_RETRY_MILLISECONDS));
+
+                        result = destinationConnection.SendSingleMessageWordArray(0, 0, _countof(umpWords), umpWords);
+                    }
+
+                    if (midi2::MidiEndpointConnection::SendMessageSucceeded(result))
                     {
                         progressUpdate->InternalIncrementCountMessagesSent();
 

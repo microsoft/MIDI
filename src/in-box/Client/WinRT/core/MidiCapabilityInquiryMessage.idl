@@ -111,6 +111,15 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
         // person using the application.
         String StatusMessage{ get; };
 
+        // Inquiry: Endpoint and the reply to it. The status says which piece of endpoint
+        // information is asked for or given; 0x00 is the product instance id, the only one so far.
+        [noexcept] Boolean HasEndpointFields{ get; };
+        [noexcept] UInt8 EndpointStatus{ get; };
+
+        // What a reply to Inquiry: Endpoint carries. For status 0x00 it is the product instance id
+        // as ASCII text.
+        Windows.Foundation.Collections.IVector<UInt8> EndpointInformation{ get; };
+
         // Decodes from the assembled system exclusive payload, excluding the 0xF0 and 0xF7 markers.
         [noexcept] static MidiCapabilityInquiryMessage FromSystemExclusiveData(
             Windows.Foundation.Collections.IIterable<UInt8> data);

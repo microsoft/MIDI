@@ -724,3 +724,58 @@ void NetworkMidiErrorTests::RetransmitRequestForUnknownSequenceIsAnswered()
 
     EndSession(client);
 }
+
+
+void NetworkMidiErrorTests::RepeatedRetransmitRequestsForMissingDataAreNotEachAnswered()
+{
+    SKIP_IF_NO_HOST();
+
+    LogSpecRequirement(L"7.2.3 - A request repeated before it has been served may be ignored. A remote asking again and again for data which is gone must not make the host send a Retransmit Error for every request.");
+
+    auto& context = ProtocolTestContext::Current();
+
+    UdpTestClient client;
+
+    VERIFY_IS_TRUE(EstablishSession(
+        client,
+        context.MakeUniqueEndpointName("AskAgain"),
+        context.MakeUniqueProductInstanceId("AA")));
+
+    client.DrainPending();
+
+    // the same impossible request, twenty times, as fast as it can go
+    constexpr uint32_t RequestCount{ 20 };
+
+    for (uint32_t i = 0; i < RequestCount; i++)
+    {
+        PacketBuilder builder;
+        builder.StartPacket().AddRetransmitRequest(50000, 4);
+
+        VERIFY_IS_TRUE(client.Send(builder));
+    }
+
+    size_t errors{ 0 };
+    size_t naks{ 0 };
+
+    auto const deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(1500);
+
+    while (std::chrono::steady_clock::now() < deadline)
+    {
+        auto packet = client.ReceivePacket(std::chrono::milliseconds(200));
+
+        if (!packet.has_value())
+        {
+            continue;
+        }
+
+        errors += packet->Count(CommandCode::RetransmitError);
+        naks += packet->Count(CommandCode::Nak);
+    }
+
+    Log::Comment(String().Format(L"%u requests drew %zu Retransmit Errors and %zu NAKs", RequestCount, errors, naks));
+
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(errors + naks, static_cast<size_t>(1), L"the request is answered");
+    VERIFY_IS_LESS_THAN_OR_EQUAL(errors + naks, static_cast<size_t>(3), L"but not once for every repeat");
+
+    EndSession(client);
+}

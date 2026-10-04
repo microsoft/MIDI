@@ -53,6 +53,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
             client.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_AUTO_RECONNECT_KEY, json::JsonValue::CreateBooleanValue(m_autoReconnect));
             client.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ENABLED_KEY, json::JsonValue::CreateBooleanValue(true));
             client.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, json::JsonValue::CreateBooleanValue(m_sendRecoveryJournal));
+            client.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY, json::JsonValue::CreateNumberValue(static_cast<uint32_t>(m_sendSpeedLimit)));
 
             json::JsonObject clients;
             clients.SetNamedValue(MidiRtpSdkJson::EntryKey(m_clientId), client);

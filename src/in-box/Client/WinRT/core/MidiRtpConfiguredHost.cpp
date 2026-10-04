@@ -36,6 +36,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
             m_allowPortFallback = MidiRtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_ALLOW_PORT_FALLBACK_KEY);
             m_usedPortFallback = MidiRtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_PORT_FALLBACK_USED_KEY);
             m_sendRecoveryJournal = MidiRtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY);
+            m_sendSpeedLimit = static_cast<rtp::MidiRtpSendSpeedLimit>(MidiRtpSdkJson::SendSpeedLimit(source, MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY));
+
+            // only reported while the host is running
+            m_currentSendSpeedLimit = MidiRtpSdkJson::Find(source, MIDI_CONFIG_JSON_RTP_MIDI_CURRENT_SEND_SPEED_LIMIT_KEY, json::JsonValueType::Number) != nullptr ?
+                static_cast<rtp::MidiRtpSendSpeedLimit>(MidiRtpSdkJson::SendSpeedLimit(source, MIDI_CONFIG_JSON_RTP_MIDI_CURRENT_SEND_SPEED_LIMIT_KEY)) :
+                m_sendSpeedLimit;
+
             m_lastErrorCode = MidiRtpSdkJson::Hresult(source, MIDI_CONFIG_JSON_RTP_MIDI_LAST_ERROR_KEY);
 
             // An older service reports none of these, which reads as every adapter

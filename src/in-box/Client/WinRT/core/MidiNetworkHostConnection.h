@@ -32,6 +32,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         uint64_t TotalCountNetworkPacketsSent() const noexcept { return m_totalCountNetworkPacketsSent; }
         uint64_t TotalCountNetworkPacketsReceived() const noexcept { return m_totalCountNetworkPacketsReceived; }
 
+        network::MidiNetworkSendSpeedLimit CurrentSendSpeedLimit() const noexcept { return m_currentSendSpeedLimit; }
+        void InternalSetCurrentSendSpeedLimit(_In_ network::MidiNetworkSendSpeedLimit const value) noexcept { m_currentSendSpeedLimit = value; }
+
         void InternalInitialize(
             _In_ winrt::hstring const& umpEndpointName,
             _In_ winrt::hstring const& productInstanceId,
@@ -74,5 +77,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         uint32_t m_retransmitRequestCount{ 0 };
         uint64_t m_totalCountNetworkPacketsSent{ 0 };
         uint64_t m_totalCountNetworkPacketsReceived{ 0 };
+
+        network::MidiNetworkSendSpeedLimit m_currentSendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
     };
 }

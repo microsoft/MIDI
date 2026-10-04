@@ -34,7 +34,6 @@ namespace winrt::midiglass::implementation
         // Settings the file can hold but the runtime does not act on yet. Each stays out of this
         // pane until its switch is turned on, so nobody sets something that does nothing.
         constexpr bool VirtualDeviceIsBuilt = false;
-        constexpr bool IncomingClockIsBuilt = false;
 
         media::SolidColorBrush PaneBrush(_In_ wchar_t const* key)
         {
@@ -363,58 +362,141 @@ namespace winrt::midiglass::implementation
                     });
             }
 
-            // ---- MIDI clock source ----
+            // ---- tempo, and the clock it can follow ----
 
             heading(L"BehaviorHeadingTempo", false);
-            caption(IncomingClockIsBuilt ? L"BehaviorCaptionTempo" : L"BehaviorCaptionTempoInternal");
+            caption(L"BehaviorCaptionTempo");
 
             {
-                if constexpr (IncomingClockIsBuilt)
+                // Which device the clock comes from. Only the layout's own devices, because that
+                // is all the runtime opens; shown only while the tempo follows a clock.
+                controls::ComboBox device{};
+
+                std::vector<std::wstring> deviceNames{};
+
+                for (auto const& entry : document.Devices)
                 {
-                    controls::ComboBox source{};
-
-                    source.Header(box_value(resources::GetString(L"BehaviorTempoSourceLabel")));
-                    source.MinWidth(220.0);
-                    source.FontSize(12.0);
-                    source.Margin({ 0, 0, 0, 8 });
-
-                    for (auto const* key : { L"TempoInternal", L"TempoFollowIncoming" })
-                    {
-                        source.Items().Append(box_value(resources::GetString(key)));
-                    }
-
-                    source.SelectedIndex(static_cast<int32_t>(document.Tempo.Kind));
-
-                    automation::AutomationProperties::SetName(
-                        source, resources::GetString(L"BehaviorTempoSourceLabel"));
-
-                    source.SelectionChanged([weak = get_weak()](foundation::IInspectable const& sender, auto&&)
-                        {
-                            auto strong = weak.get();
-
-                            if (strong == nullptr || strong->m_updatingSettings)
-                            {
-                                return;
-                            }
-
-                            auto const index = sender.as<controls::ComboBox>().SelectedIndex();
-
-                            if (index < 0)
-                            {
-                                return;
-                            }
-
-                            auto tempo = strong->m_editor.Document().Tempo;
-                            tempo.Kind = static_cast<glass::TempoSourceKind>(index);
-
-                            if (strong->m_editor.SetTempoSource(tempo))
-                            {
-                                strong->MarkChanged();
-                            }
-                        });
-
-                    SettingsBehaviorPanel().Children().Append(source);
+                    deviceNames.push_back(entry.Name);
+                    device.Items().Append(box_value(winrt::hstring{ entry.Name }));
                 }
+
+                device.Header(box_value(resources::GetString(L"BehaviorTempoDeviceLabel")));
+                device.PlaceholderText(resources::GetString(
+                    deviceNames.empty() ? L"BehaviorTempoNoDevices" : L"BehaviorTempoDevicePlaceholder"));
+                device.IsEnabled(!deviceNames.empty());
+                device.MinWidth(220.0);
+                device.FontSize(12.0);
+                device.Margin({ 0, 0, 0, 8 });
+
+                auto const named = std::find(deviceNames.begin(), deviceNames.end(), document.Tempo.DeviceName);
+
+                device.SelectedIndex(named == deviceNames.end()
+                    ? -1
+                    : static_cast<int32_t>(named - deviceNames.begin()));
+
+                device.Visibility(document.Tempo.Kind == glass::TempoSourceKind::FollowIncomingClock
+                    ? xaml::Visibility::Visible
+                    : xaml::Visibility::Collapsed);
+
+                automation::AutomationProperties::SetName(
+                    device, resources::GetString(L"BehaviorTempoDeviceLabel"));
+
+                device.SelectionChanged([weak = get_weak(), deviceNames](foundation::IInspectable const& sender, auto&&)
+                    {
+                        auto strong = weak.get();
+
+                        if (strong == nullptr || strong->m_updatingSettings)
+                        {
+                            return;
+                        }
+
+                        auto const index = sender.as<controls::ComboBox>().SelectedIndex();
+
+                        if (index < 0 || static_cast<size_t>(index) >= deviceNames.size())
+                        {
+                            return;
+                        }
+
+                        auto tempo = strong->m_editor.Document().Tempo;
+                        tempo.DeviceName = deviceNames[static_cast<size_t>(index)];
+
+                        if (strong->m_editor.SetTempoSource(tempo))
+                        {
+                            strong->MarkChanged();
+                        }
+                    });
+
+                controls::ComboBox source{};
+
+                source.Header(box_value(resources::GetString(L"BehaviorTempoSourceLabel")));
+                source.MinWidth(220.0);
+                source.FontSize(12.0);
+                source.Margin({ 0, 0, 0, 8 });
+
+                for (auto const* key : { L"TempoInternal", L"TempoFollowIncoming" })
+                {
+                    source.Items().Append(box_value(resources::GetString(key)));
+                }
+
+                source.SelectedIndex(static_cast<int32_t>(document.Tempo.Kind));
+
+                automation::AutomationProperties::SetName(
+                    source, resources::GetString(L"BehaviorTempoSourceLabel"));
+
+                source.SelectionChanged([weak = get_weak(), deviceNames, deviceRef = winrt::make_weak(device)](
+                    foundation::IInspectable const& sender, auto&&)
+                    {
+                        auto strong = weak.get();
+
+                        if (strong == nullptr || strong->m_updatingSettings)
+                        {
+                            return;
+                        }
+
+                        auto const index = sender.as<controls::ComboBox>().SelectedIndex();
+
+                        if (index < 0)
+                        {
+                            return;
+                        }
+
+                        auto tempo = strong->m_editor.Document().Tempo;
+                        tempo.Kind = static_cast<glass::TempoSourceKind>(index);
+
+                        auto const follows = tempo.Kind == glass::TempoSourceKind::FollowIncomingClock;
+
+                        // A clock from nowhere is a setting that does nothing. The first device
+                        // is a better start than none, and the list is right there to change it.
+                        auto const pickFirst = follows && !deviceNames.empty() &&
+                            std::find(deviceNames.begin(), deviceNames.end(), tempo.DeviceName) == deviceNames.end();
+
+                        if (pickFirst)
+                        {
+                            tempo.DeviceName = deviceNames.front();
+                        }
+
+                        if (strong->m_editor.SetTempoSource(tempo))
+                        {
+                            strong->MarkChanged();
+                        }
+
+                        if (auto picker = deviceRef.get())
+                        {
+                            strong->m_updatingSettings = true;
+
+                            if (pickFirst)
+                            {
+                                picker.SelectedIndex(0);
+                            }
+
+                            picker.Visibility(follows ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+                            strong->m_updatingSettings = false;
+                        }
+                    });
+
+                SettingsBehaviorPanel().Children().Append(source);
+                SettingsBehaviorPanel().Children().Append(device);
 
                 controls::NumberBox beats{};
 
@@ -422,6 +504,7 @@ namespace winrt::midiglass::implementation
                 beats.Minimum(1.0);
                 beats.Maximum(999.0);
                 beats.Value(document.Tempo.BeatsPerMinute);
+                beats.FontSize(12.0);
                 beats.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
                 beats.Width(160.0);
                 beats.HorizontalAlignment(xaml::HorizontalAlignment::Left);

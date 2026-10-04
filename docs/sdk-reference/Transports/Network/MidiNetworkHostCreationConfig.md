@@ -43,6 +43,8 @@ Describes a host for remote clients to connect to. Pass to `MidiNetworkTransport
 | `NetworkAdapterId` | The network adapter the host is limited to, as the GUID Windows gives it. It's the same value as `Windows.Networking.Connectivity.NetworkAdapter.NetworkAdapterId` and .NET's `NetworkInterface.Id`. Leave it empty, the default, to run the host on every adapter. Setting it also fills in `NetworkAdapterName` |
 | `NetworkAdapterName` | The adapter's name, like `Ethernet 3`. It's only shown to people, so they can tell which adapter a host is waiting for |
 | `AllowNetworkAdapterFallback` | What the host does while its adapter is missing. When true, the default, it runs on every adapter until the adapter is back. When false, it doesn't run until the adapter is back |
+| `SendSpeedLimit` | How fast the host sends to each connected device. `Unlimited` by default. Choose a slower speed for a device that loses data when a lot of it arrives at once, like a long SysEx dump. A lone message is never delayed. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |
+| `ReduceSendSpeedAutomatically` | When true, a connection sends more slowly while the device keeps asking for data again, and speeds back up to `SendSpeedLimit` once it stops. False by default. See [How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/#sending-speed) |
 
 ## Remarks
 

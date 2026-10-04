@@ -116,7 +116,9 @@ void LayoutDocumentTests::ReadsTheDeviceTableThroughTheSharedMatchCriteria()
     auto const* desk = document.FindDevice(L"Desk");
     VERIFY_IS_NOT_NULL(desk);
     VERIFY_IS_TRUE(desk->MatchMode == midiapp::EndpointMatchMode::UsbVendorAndProduct);
-    VERIFY_IS_TRUE(desk->SendsBeatClock);
+
+    // The file still says sendsBeatClock. It never did anything, so it is not kept.
+    VERIFY_IS_TRUE(desk->Unknown == nullptr || !desk->Unknown.HasKey(L"sendsBeatClock"));
 
     // The criteria come back through the shipped service configuration type, which is the whole
     // point of storing them in its shape rather than in one of our own.
@@ -511,6 +513,44 @@ void LayoutDocumentTests::UnknownFieldsSurviveAtEveryLevel()
 
     auto const twice = glass::WriteLayoutToJson(again.Document);
     VERIFY_ARE_EQUAL(text, twice);
+}
+
+void LayoutDocumentTests::SettingsThatNeverWorkedAreDroppedWhenRead()
+{
+    // Every layout saved before carries the first two, so they must not travel on as unknown keys.
+    auto const result = glass::ReadLayoutFromJson(LR"({
+        "fileVersion": 1,
+        "name": "Old",
+        "preferredDisplayId": "DISPLAY1",
+        "devices": [ { "name": "Synth", "sendsBeatClock": true } ],
+        "pages": [ { "id": "p", "name": "Page", "controls": [
+            { "id": "k", "kind": "knob", "label": "Knob", "messages": [
+                { "kind": "holdLayer", "targetLayer": "shift" },
+                { "kind": "controlChange", "device": "Synth", "number": 7 } ] } ] } ],
+        "sequences": [ { "name": "Steps", "steps": [
+            { "kind": "holdLayer", "message": { "kind": "controlChange", "targetLayer": "shift" } },
+            { "kind": "sendMessage", "message": { "kind": "holdLayer" } },
+            { "kind": "wait", "waitMilliseconds": 10 } ] } ] })");
+
+    VERIFY_IS_TRUE(result.Succeeded);
+
+    // A hold layer row or step did nothing. Read as anything else, it would have sent something.
+    auto const* knob = result.Document.FindControl(L"k");
+    VERIFY_IS_NOT_NULL(knob);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, knob->Messages.size());
+    VERIFY_IS_TRUE(knob->Messages[0].Kind == glass::MessageKind::ControlChange);
+    VERIFY_ARE_EQUAL(uint32_t{ 7 }, knob->Messages[0].Number);
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, result.Document.Sequences.size());
+    VERIFY_ARE_EQUAL(size_t{ 1 }, result.Document.Sequences[0].Steps.size());
+    VERIFY_IS_TRUE(result.Document.Sequences[0].Steps[0].Kind == glass::SequenceStepKind::Wait);
+
+    auto const text = glass::WriteLayoutToJson(result.Document);
+
+    VERIFY_IS_TRUE(text.find(L"preferredDisplayId") == std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"sendsBeatClock") == std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"holdLayer") == std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"targetLayer") == std::wstring::npos);
 }
 
 void LayoutDocumentTests::RejectsSomethingThatIsNotJson()
@@ -958,6 +998,29 @@ void LayoutDocumentTests::HexWordsRoundTrip()
     VERIFY_IS_TRUE(glass::ParseHexWords(L"40903C00 FFFF0000 00000000 11111111 22222222", 4).empty());
 }
 
+void LayoutDocumentTests::OneHexNumberReadsAndWrites()
+{
+    uint32_t value{ 99 };
+
+    VERIFY_IS_TRUE(glass::TryParseHexNumber(L"02", 255, value));
+    VERIFY_ARE_EQUAL(2u, value);
+
+    VERIFY_IS_TRUE(glass::TryParseHexNumber(L"0x1a2B", 65535, value));
+    VERIFY_ARE_EQUAL(0x1A2Bu, value);
+
+    // Empty is zero, so clearing a field turns the attribute off.
+    VERIFY_IS_TRUE(glass::TryParseHexNumber(L"", 255, value));
+    VERIFY_ARE_EQUAL(0u, value);
+
+    VERIFY_IS_FALSE(glass::TryParseHexNumber(L"ZZ", 255, value));
+    VERIFY_IS_FALSE(glass::TryParseHexNumber(L"100", 255, value));
+    VERIFY_IS_FALSE(glass::TryParseHexNumber(L"123456789", 0xFFFFFFFF, value));
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"02" }, glass::FormatHexNumber(2, 2));
+    VERIFY_ARE_EQUAL(std::wstring{ L"1A2B" }, glass::FormatHexNumber(0x1A2B, 4));
+    VERIFY_ARE_EQUAL(std::wstring{ L"0000" }, glass::FormatHexNumber(0, 4));
+}
+
 void LayoutDocumentTests::AnRpnOrNrpnNumberIsABankAndAnIndex()
 {
     VERIFY_IS_TRUE(glass::HasBankAndIndex(glass::MessageKind::RegisteredController));
@@ -998,6 +1061,117 @@ void LayoutDocumentTests::AnNrpnAbove127SurvivesARoundTrip()
     VERIFY_ARE_EQUAL(size_t{ 1 }, back.size());
     VERIFY_IS_TRUE(back[0].Kind == glass::MessageKind::AssignedController);
     VERIFY_ARE_EQUAL(uint32_t{ 401 }, back[0].Number);
+}
+
+// ---- per-note controllers and note attributes ----
+
+void LayoutDocumentTests::APerNoteControllerAndAnAttributeSurviveARoundTrip()
+{
+    auto document = MinimalDocument();
+
+    glass::DeviceEntry synth{};
+    synth.Name = L"Synth";
+    document.Devices.push_back(synth);
+
+    glass::ControlMessage controller{};
+    controller.Kind = glass::MessageKind::AssignablePerNoteController;
+    controller.DeviceName = L"Synth";
+    controller.Number = 60;
+    controller.Controller = 200;
+
+    glass::ControlMessage note{};
+    note.Kind = glass::MessageKind::Note;
+    note.DeviceName = L"Synth";
+    note.Number = 62;
+    note.AttributeType = 3;
+    note.AttributeData = 0xABCD;
+
+    document.Pages[0].Controls[0].Messages = { controller, note };
+
+    auto const reread = glass::ReadLayoutFromJson(glass::WriteLayoutToJson(document));
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const& back = reread.Document.Pages[0].Controls[0].Messages;
+    VERIFY_ARE_EQUAL(size_t{ 2 }, back.size());
+    VERIFY_IS_TRUE(back[0].Kind == glass::MessageKind::AssignablePerNoteController);
+    VERIFY_ARE_EQUAL(60u, back[0].Number);
+    VERIFY_ARE_EQUAL(200u, back[0].Controller);
+    VERIFY_ARE_EQUAL(3u, back[1].AttributeType);
+    VERIFY_ARE_EQUAL(0xABCDu, back[1].AttributeData);
+}
+
+void LayoutDocumentTests::NoControllerAndNoAttributeStayOutOfTheFile()
+{
+    auto document = MinimalDocument();
+
+    glass::ControlMessage note{};
+    note.Kind = glass::MessageKind::Note;
+    note.Number = 60;
+    document.Pages[0].Controls[0].Messages.push_back(note);
+
+    auto const json = glass::WriteLayoutToJson(document);
+
+    VERIFY_IS_TRUE(json.find(L"\"controller\"") == std::wstring::npos);
+    VERIFY_IS_TRUE(json.find(L"\"attributeType\"") == std::wstring::npos);
+    VERIFY_IS_TRUE(json.find(L"\"attributeData\"") == std::wstring::npos);
+
+    // A number past what the field holds, from a stranger's file, is read as none.
+    auto patched = json;
+    auto const at = patched.find(L"\"number\"");
+    VERIFY_IS_TRUE(at != std::wstring::npos);
+    patched.insert(at, L"\"controller\": 300, \"attributeType\": 999, \"attributeData\": 70000, ");
+
+    auto const reread = glass::ReadLayoutFromJson(patched);
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const& back = reread.Document.Pages[0].Controls[0].Messages[0];
+    VERIFY_ARE_EQUAL(0u, back.Controller);
+    VERIFY_ARE_EQUAL(0u, back.AttributeType);
+    VERIFY_ARE_EQUAL(0u, back.AttributeData);
+}
+
+void LayoutDocumentTests::AnAttributeGoesOnlyOnAMidi2Note()
+{
+    glass::ControlMessage note{};
+    note.Kind = glass::MessageKind::Note;
+
+    VERIFY_IS_TRUE(glass::SendsNoteAttribute(note, glass::DeviceProtocol::Midi2));
+    VERIFY_IS_FALSE(glass::SendsNoteAttribute(note, glass::DeviceProtocol::Midi1));
+    VERIFY_IS_FALSE(glass::SendsNoteAttribute(note, glass::DeviceProtocol::MackieControl));
+
+    note.UseMidi1Protocol = true;
+    VERIFY_IS_FALSE(glass::SendsNoteAttribute(note, glass::DeviceProtocol::Midi2));
+
+    glass::ControlMessage change{};
+    change.Kind = glass::MessageKind::ControlChange;
+    VERIFY_IS_FALSE(glass::SendsNoteAttribute(change, glass::DeviceProtocol::Midi2));
+
+    VERIFY_IS_TRUE(glass::IsPerNoteController(glass::MessageKind::PerNoteController));
+    VERIFY_IS_TRUE(glass::IsPerNoteController(glass::MessageKind::AssignablePerNoteController));
+    VERIFY_IS_FALSE(glass::IsPerNoteController(glass::MessageKind::AssignedController));
+}
+
+// ---- the band that is on every page ----
+
+void LayoutDocumentTests::TheBandIsNotAPageToGoTo()
+{
+    glass::LayoutDocument document{};
+    document.Pages.resize(3);
+    document.Pages[1].IsSharedBand = true;
+
+    auto const pages = glass::PagesToChooseFrom(document);
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, pages.size());
+    VERIFY_ARE_EQUAL(size_t{ 0 }, pages[0]);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, pages[1]);
+
+    // A layout that is nothing but bands still has a page to show.
+    for (auto& page : document.Pages)
+    {
+        page.IsSharedBand = true;
+    }
+
+    VERIFY_ARE_EQUAL(size_t{ 3 }, glass::PagesToChooseFrom(document).size());
 }
 
 // ---- how a knob is turned ----

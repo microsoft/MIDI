@@ -98,6 +98,9 @@
     <ClInclude Include="RtpMidiNet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RtpMidiReplySources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="RtpMidiNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>

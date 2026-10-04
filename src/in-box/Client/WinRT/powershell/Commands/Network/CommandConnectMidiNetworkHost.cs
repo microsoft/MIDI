@@ -54,6 +54,15 @@ namespace WindowsMidiServices
         [Parameter]
         public SwitchParameter CreateOnlyUmpEndpoints { get; set; }
 
+        // How fast this PC sends to the host. A slower speed helps a device that loses data when a
+        // lot of it arrives at once, like a long SysEx dump. A lone message is never delayed.
+        [Parameter]
+        public MidiNetworkSendSpeedLimit SendSpeedLimit { get; set; } = MidiNetworkSendSpeedLimit.Unlimited;
+
+        // Send more slowly while the host keeps asking for data again
+        [Parameter]
+        public SwitchParameter ReduceSendSpeedAutomatically { get; set; }
+
         [Parameter]
         public SwitchParameter SaveToConfiguration { get; set; }
 
@@ -112,6 +121,8 @@ namespace WindowsMidiServices
                 UmpEndpointName = LocalEndpointName,
                 CustomEndpointName = EndpointName,
                 CreateOnlyUmpEndpoints = CreateOnlyUmpEndpoints.IsPresent,
+                SendSpeedLimit = SendSpeedLimit,
+                ReduceSendSpeedAutomatically = ReduceSendSpeedAutomatically.IsPresent,
                 MatchCriteria = criteria
             };
 

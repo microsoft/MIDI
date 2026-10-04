@@ -48,6 +48,8 @@ On this page:
 
 Ask these before you write anything. Put them in one message, in plain words, and offer a sensible answer for each so the customer can just say yes.
 
+If the customer pasted a prompt from **Ask an AI assistant…** in MIDI Glass, it already lists the MIDI devices and the themes on their PC. Use those names exactly. You still need to ask which device the layout is for.
+
 | Ask | Why it matters |
 | --- | --- |
 | What will the layout control? Get each device's name exactly as Windows shows it, for example in MIDI Settings or in the **Send to** list in MIDI Glass's **New layout** dialog. | The file finds devices by name. A name that's only close doesn't match. |
@@ -75,16 +77,18 @@ Take every number from the manual or a published MIDI implementation chart, and 
 | Control change (CC) 74 | `controlChange`, `number` 74 | |
 | NRPN with MSB 7 and LSB 54, sent as CC 99 = 7 and CC 98 = 54 | `assignedController`, `number` 950 | The number is MSB × 128 + LSB. MIDI Glass sends one MIDI 2.0 message, and Windows turns it into CC 99, CC 98, CC 6 and CC 38 for a MIDI 1.0 device. |
 | RPN 0, pitch bend sensitivity, sent as CC 101 = 0 and CC 100 = 0 | `registeredController`, `number` 0 | The same rule, with CC 101 and CC 100. |
-| Note 36 | `note`, `number` 36 | Go by the note number. Manuals don't agree on note names: note 60, middle C, is C3 in some and C4 in others. MIDI Glass calls it C4. |
+| Note 36 | `note`, `number` 36 | Go by the note number. Manuals don't agree on note names: note 60, middle C, is C3 in some and C4 in others. MIDI Glass calls it C3, the same as the rest of Windows MIDI Services. |
 | Program 1 to 128 | `programChange`, `number` 0 to 127 | The file uses the number sent on the wire, one less than most manuals print. |
 | Bank select, then a program | Two `controlChange` rows (0 and 32), then a `programChange` row, all on the same trigger | Rows on the same trigger go out in the order they're listed. |
 | Pitch bend | `pitchBend` | No number. The middle is 0.5. |
 | Channel pressure, or aftertouch | `channelPressure` | No number. |
+| A MIDI 2.0 per-note controller, such as the volume of one note | `perNoteController`, `number` is the note and `controller` is the controller | Use `assignablePerNoteController` for a controller the device defines itself. See [Per-note controllers and note attributes](#per-note-controllers-and-note-attributes). |
+| A MIDI 2.0 note attribute, such as an articulation | `attributeType` and `attributeData` on a `note` row | See [Per-note controllers and note attributes](#per-note-controllers-and-note-attributes). |
 | A system exclusive message | `systemExclusive`, with the bytes as hexadecimal text | `F0` and `F7` are optional. |
 | Any other single message, in Universal MIDI Packet form | `rawUmp`, with one to four 32-bit words | See [Raw messages](#raw-messages). |
 | A DAW set up for a Mackie Control surface | `mackieControl`, with a `function` name | See [Mackie Control functions](#mackie-control-functions). |
 
-**MIDI 2.0 profiles.** MIDI Glass sends messages. It doesn't use MIDI-CI, so it can't turn a profile on or ask a device what it supports. Check that the device or plug-in already uses the profile, then send the messages the profile describes. Where the profile needs something MIDI Glass can't do, such as attaching an articulation to every note a keyboard plays, say so and offer what it can do instead.
+**MIDI 2.0 profiles.** MIDI Glass sends messages. It doesn't use MIDI-CI, so it can't turn a profile on or ask a device what it supports. Check that the device or plug-in already uses the profile, then send the messages the profile describes. Where the profile needs something MIDI Glass can't do, such as a button that changes the articulation a keyboard plays, say so and offer what it can do instead.
 
 ### 3. Pick a page size and a theme
 
@@ -203,13 +207,14 @@ $problems = [Collections.Generic.List[string]]::new()
 
 $themes = 'Studio Dark', 'Airy System', 'Bigwig', 'Blueprint', 'Bone', 'Cathode', 'Chicago', 'Daylight', 'Five-iSH', 'Good Form', 'Groovy', 'Groovy Dark', 'Hard Sector', 'High contrast', 'Insert Coin', 'Jove', 'Night Drive', 'Off-world Colonies', 'Soft Sector', 'Supersaw', 'Terminal Amber', 'Terminal Green', 'Tonal Dark', 'Tonal Light', 'Visor'
 $controlKinds = 'knob', 'fader', 'pad', 'button', 'toggle', 'xyPad', 'meter', 'lamp', 'readout', 'label', 'image', 'pageTab', 'panel', 'joystick', 'ribbon', 'pianoKeyboard', 'beatClock', 'timeDisplay', 'lfo', 'turntable', 'wheel', 'switch', 'steps', 'line', 'notePads', 'hexPads'
-$messageKinds = 'note', 'controlChange', 'programChange', 'pitchBend', 'channelPressure', 'perNoteController', 'registeredController', 'assignedController', 'systemExclusive', 'rawUmp', 'sequence', 'goToPage', 'mackieControl'
-$numbered = 'note', 'controlChange', 'programChange', 'perNoteController', 'registeredController', 'assignedController'
+$messageKinds = 'note', 'controlChange', 'programChange', 'pitchBend', 'channelPressure', 'perNoteController', 'assignablePerNoteController', 'registeredController', 'assignedController', 'systemExclusive', 'rawUmp', 'sequence', 'goToPage', 'mackieControl'
+$numbered = 'note', 'controlChange', 'programChange', 'perNoteController', 'assignablePerNoteController', 'registeredController', 'assignedController'
 
 $pageWidth = $layout.pageWidth ?? 1280
 $pageHeight = $layout.pageHeight ?? 800
 $devices = @($layout.devices | ForEach-Object { $_.name })
 $pageIds = @($layout.pages | ForEach-Object { $_.id })
+$bandIds = @($layout.pages | Where-Object { $_.sharedBand } | ForEach-Object { $_.id })
 $sequences = @($layout.sequences | ForEach-Object { $_.name })
 $controlIds = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
 
@@ -218,6 +223,7 @@ if ($pageIds.Count -eq 0) { $problems.Add('The layout has no pages.') }
 foreach ($name in ($devices | Group-Object -CaseSensitive | Where-Object Count -gt 1).Name) { $problems.Add("Two devices are named '$name'.") }
 foreach ($id in ($pageIds | Group-Object -CaseSensitive | Where-Object Count -gt 1).Name) { $problems.Add("Two pages have the id '$id'.") }
 foreach ($name in ($sequences | Group-Object -CaseSensitive | Where-Object Count -gt 1).Name) { $problems.Add("Two sequences are named '$name'.") }
+if ($layout.tempo.kind -ceq 'followIncomingClock' -and $layout.tempo.device -cnotin $devices) { $problems.Add("The tempo follows the clock from '$($layout.tempo.device)', which isn't in devices.") }
 
 foreach ($page in $layout.pages) {
     foreach ($c in $page.controls) {
@@ -234,13 +240,27 @@ foreach ($page in $layout.pages) {
             $kind = $m.kind ?? 'controlChange'
             if ($kind -cnotin $messageKinds) { $problems.Add("$where sends '$kind', which isn't a message kind."); continue }
             if (($m.trigger ?? 'changes') -cnotin @('turnsOn', 'turnsOff', 'changes', 'touched', 'released')) { $problems.Add("$where has the trigger '$($m.trigger)'.") }
-            if ($kind -ceq 'goToPage') { if ($m.targetPage -cnotin $pageIds) { $problems.Add("$where goes to a page that isn't in the layout.") }; continue }
+            if ($kind -ceq 'goToPage') {
+                if ($m.targetPage -cnotin $pageIds) { $problems.Add("$where goes to a page that isn't in the layout.") }
+                elseif ($m.targetPage -cin $bandIds) { $problems.Add("$where goes to a band. A band shows on every page, so it isn't somewhere to go.") }
+                continue
+            }
             if ($kind -ceq 'sequence') { if ($m.sequence -cnotin $sequences) { $problems.Add("$where runs a sequence that isn't in the layout.") }; continue }
             if (-not $m.device) { $problems.Add("$where has a row with no device, so the row sends nothing.") }
             elseif ($m.device -cnotin $devices) { $problems.Add("$where sends to '$($m.device)', which isn't in devices.") }
             if (($m.group ?? 0) -notin -1..15 -or ($m.channel ?? 0) -notin 0..15) { $problems.Add("$where has a group or a channel outside 0 to 15. The file counts from 0.") }
             $limit = if ($kind -cin @('registeredController', 'assignedController')) { 16383 } else { 127 }
             if (($kind -cin $numbered) -and ($m.number ?? 0) -notin 0..$limit) { $problems.Add("$where has the number $($m.number), outside 0 to $limit.") }
+            if ($kind -cin @('perNoteController', 'assignablePerNoteController')) {
+                $controller = $m.controller ?? 0
+                if ($controller -isnot [ValueType] -or $controller -lt 0 -or $controller -gt 255) { $problems.Add("$where has the per-note controller $controller, outside 0 to 255.") }
+            }
+            if ($null -ne $m.attributeType -or $null -ne $m.attributeData) {
+                $type = $m.attributeType ?? 0; $data = $m.attributeData ?? 0
+                if ($kind -cne 'note') { $problems.Add("$where has a note attribute on a row that isn't a note, so it's never sent.") }
+                elseif ($type -isnot [ValueType] -or $data -isnot [ValueType] -or $type -lt 0 -or $type -gt 255 -or $data -lt 0 -or $data -gt 65535) { $problems.Add("$where needs attributeType 0 to 255 and attributeData 0 to 65535, as decimal numbers.") }
+                elseif ($type -eq 0 -and $data -ne 0) { $problems.Add("$where has attribute data with attribute type 0, so the data is never sent.") }
+            }
             if ($kind -ceq 'rawUmp' -and $c.kind -cne 'beatClock') {
                 $words = @($m.words)
                 if ($words.Count -notin 1..4 -or @($words | Where-Object { $_ -is [string] -or $_ -lt 0 -or $_ -gt 4294967295 }).Count -gt 0) { $problems.Add("$where needs one to four words, written as decimal numbers.") }
@@ -360,13 +380,13 @@ MIDI Glass keeps its layouts in **Documents › MIDI Layouts**, one `.midilayout
 Tell the customer about these before they find out on their own.
 
 - **A control can't change what another control sends.** There's no "selected articulation" that a keyboard follows, and no shift button that changes what the knobs do. A button can run a sequence that moves another control to a value, and a beat clock can take its tempo from a knob, but that's all. Use more pages, or more controls, instead.
-- **Keyboards and pads play plain notes.** They can't add a MIDI 2.0 note attribute, such as an articulation, to the notes they play. A button can send one complete MIDI 2.0 note on, attribute and all, with a [raw message](#raw-messages), and another to end it.
-- **A per-note controller row always uses controller 0.** For any other per-note controller, use a raw message.
+- **A keyboard plays one attribute.** A keyboard or a pad grid can put a MIDI 2.0 note attribute, such as an articulation, on every note it plays, but it's the same attribute on every key. For two articulations, use two keyboards, or a page for each.
+- **Following a clock follows only its tempo.** A layout that follows incoming MIDI clock takes its speed, but doesn't line its beat up with it, and doesn't start or stop with it.
 - **Nothing shows text from a device.** A readout shows a value, and a meter and a lamp show levels and activity. There's no track name, no patch name, and no list of messages on a running page.
 - **No MIDI-CI.** MIDI Glass can't turn a profile on, or ask a device what it supports.
 - **No logic.** No conditions, no variables, and no scripts.
 - **Mackie Control is partial.** MIDI Glass doesn't speak HUI, doesn't answer the handshake some DAWs use to find a surface, and doesn't show the DAW's meters, V-Pot rings, or display text.
-- **Saved, but not working yet.** These settings are kept in the file but don't do anything yet, so leave them out: a page's `sharedBand`, the layout's `publishesVirtualDevice` and `preferredDisplayId`, a `tempo` that follows incoming clock, a device's `sendsBeatClock`, any `pickup` other than `jump`, `holdLayer` messages and sequence steps, and a keyboard's `showNoteNames`.
+- **Saved, but not working yet.** The layout's `publishesVirtualDevice` is kept in the file but doesn't do anything yet, so leave it out.
 
 ## The layout file
 
@@ -444,7 +464,7 @@ This layout has a section with two knobs, a volume fader, a pitch wheel, a hold 
           ]
         },
         {
-          "id": "middle-c", "kind": "pad", "label": "C4",
+          "id": "middle-c", "kind": "pad", "label": "Middle C",
           "x": 232, "y": 376, "width": 96, "height": 96,
           "hueSlot": 3, "aspectLocked": true, "keyboardOrder": 7,
           "messages": [
@@ -482,7 +502,7 @@ The tables below list every setting. **If left out** is what MIDI Glass uses whe
 | `suppressAllStartupValues` | `true`, `false` | `false` | Stops every control from sending its starting value when the layout opens. |
 | `toolbarWindow`, `alwaysOnTop`, `seeThrough` | `true`, `false` | `false` | For a floating toolbar. See the [floating toolbar article]({{ site.baseurl }}/kb/midi-glass-floating-toolbars/). |
 | `isFavorite` | `true`, `false` | `false` | Puts the layout in the library's **Favorites**. |
-| `tempo` | object | 120 beats a minute | `{ "kind": "internal", "beatsPerMinute": 120 }`. LFO and Steps controls run at this tempo. |
+| `tempo` | object | 120 beats a minute | `{ "kind": "internal", "beatsPerMinute": 120 }`. LFO and Steps controls run at this tempo. A beat clock keeps its own. To follow the MIDI clock a device sends, write `{ "kind": "followIncomingClock", "beatsPerMinute": 120, "device": "DAW" }` with a name from `devices`. They run at `beatsPerMinute` until the clock arrives, then at the clock's tempo, and keep the last tempo if the clock stops. |
 | `devices` | list | none | The device table. See [Devices](#devices). |
 | `pages` | list | none | At least one page. See [Pages](#pages). |
 | `sequences` | list | none | See [Sequences](#sequences). |
@@ -515,7 +535,7 @@ MIDI Glass compares the name in `match` with each device's own name and with the
 | `hueSlot` | -1 to 5 | 0 | The page's color slot. |
 | `controls` | list | none | The controls, drawn in order: the first one is at the back. |
 | `controlGroups` | list | none | Names for groups of controls that select and move together in the editor: `[ { "id": "strip-1", "name": "Strip 1" } ]`. Optional. |
-| `sharedBand` | `true`, `false` | `false` | Leave it out. It doesn't work yet. |
+| `sharedBand` | `true`, `false` | `false` | `true` makes the page a band: while the layout runs, its controls show on top of every other page, so transport buttons, panic, and page tabs only have to be built once. A band isn't in the page list, so don't give it a page tab. Leave room for its controls on every other page. |
 
 ### Controls
 
@@ -547,7 +567,7 @@ These keys work on every kind of control.
 | `messages` | list | none | What the control sends. See [Messages](#messages). |
 | `feedback` | object | none | What the control listens for. See [Listening](#listening). |
 | `style`, `labelPlaced`, `labelStyle`, `showValue` | see [Names and looks](#names-and-looks) | the theme decides | |
-| `pickup` | `jump` | `jump` | Leave it out. |
+| `pickup` | `jump`, `catch`, `relative` | `jump` | What a fader, XY pad, joystick, or ribbon does when a finger lands away from its value. `jump` moves it to the finger. `catch` leaves it until the finger reaches the value, so a fader the DAW moved doesn't jump. `relative` moves it by as far as the finger moves. |
 
 Some kinds have one more block of settings. See [Settings for some kinds of control](#settings-for-some-kinds-of-control).
 
@@ -562,7 +582,9 @@ Each row in `messages` says when the control sends, what it sends, and where.
 | `device` | a name from `devices` | empty | Where it goes. A row with no device sends nothing. |
 | `group` | 0 to 15 | 0 | The group, counted from 0. Group 1 is 0. |
 | `channel` | 0 to 15 | 0 | The channel, counted from 0. Channel 1 is 0, and channel 10 is 9. |
-| `number` | 0 to 127, or 0 to 16383 | 0 | The note, controller, or program. For an RPN or NRPN, MSB × 128 + LSB. |
+| `number` | 0 to 127, or 0 to 16383 | 0 | The note, controller, or program. For an RPN or NRPN, MSB × 128 + LSB. For a per-note controller, the note. |
+| `controller` | 0 to 255 | 0 | For a per-note controller, which controller. |
+| `attributeType`, `attributeData` | 0 to 255, and 0 to 65535 | 0 | For a `note` row sent as MIDI 2.0, the note attribute. See [Per-note controllers and note attributes](#per-note-controllers-and-note-attributes). |
 | `minimum`, `maximum` | `{ "value": 0, "scaling": "fraction" }` | 0 and 1, as fractions | The two ends of what the row sends. See [Values](#values). |
 | `detents` | object | none | Stops along the control's travel. See [Stops](#stops). |
 | `axis` | `x`, `y` | `x` | Which value of an XY pad or a joystick the row follows. `y` is up and down. |
@@ -574,7 +596,7 @@ Each row in `messages` says when the control sends, what it sends, and where.
 | `sequence` | a sequence `name` | none | For `sequence` rows. |
 | `function` | a Mackie Control function | none | For `mackieControl` rows, instead of `number`. |
 
-The message kinds are `note`, `controlChange`, `programChange`, `pitchBend`, `channelPressure`, `perNoteController`, `registeredController` (an RPN), `assignedController` (an NRPN), `systemExclusive`, `rawUmp`, `sequence`, `goToPage`, and `mackieControl`.
+The message kinds are `note`, `controlChange`, `programChange`, `pitchBend`, `channelPressure`, `perNoteController`, `assignablePerNoteController`, `registeredController` (an RPN), `assignedController` (an NRPN), `systemExclusive`, `rawUmp`, `sequence`, `goToPage`, and `mackieControl`.
 
 **When each trigger sends:**
 
@@ -621,6 +643,25 @@ The two ends of a row, `minimum` and `maximum`, are each an object with a `value
 
 `step` and `stops` use the same units as `scaling`.
 
+### Per-note controllers and note attributes
+
+Both are MIDI 2.0 only. A row that goes out as MIDI 1.0 can't carry them.
+
+**A per-note controller** changes one note that's playing, not the whole channel. Its row has two numbers: `number` is the note, and `controller` is which controller, from 0 to 255. Use `perNoteController` for the controllers the MIDI 2.0 specification names, such as 7 for volume and 10 for pan, and `assignablePerNoteController` for ones the device defines itself. Take the numbers from the device's manual.
+
+```json
+{ "trigger": "changes", "kind": "perNoteController", "device": "Synth", "group": 0, "channel": 0, "number": 60, "controller": 7 }
+```
+
+**A note attribute** goes out with a note on or a note off, and tells the device something more about the note, such as which articulation to play. Add `attributeType` and `attributeData` to a `note` row, as decimal numbers. Type 0 is no attribute, 1 is manufacturer specific, 2 is profile specific, and 3 is pitch 7.9. Take the type and the data from the device's manual or the profile's specification. The editor shows both in hexadecimal.
+
+```json
+{ "trigger": "turnsOn", "kind": "note", "device": "Synth", "group": 0, "channel": 0, "number": 60, "attributeType": 2, "attributeData": 1 }
+```
+
+- Each row carries only its own attribute. If the device wants one on the note off too, put it on the `turnsOff` row as well.
+- A keyboard or a pad grid puts its row's attribute on every note it plays, on and off.
+
 ### Listening
 
 A control with a `feedback` block moves or lights up when a device sends something, not only when it's touched. That's how a fader follows a DAW, and how a lamp shows activity.
@@ -649,10 +690,10 @@ A control with a `feedback` block moves or lights up when a device sends somethi
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
 | `keyCount` | 5 to 128 | 25 | How many keys, black and white together. |
-| `lowestNote` | 0 to 127 | 48 | The note of the leftmost key. 48 is C3. |
+| `lowestNote` | 0 to 127 | 48 | The note of the leftmost key. 48 is C2. |
 | `whiteKeyColor`, `blackKeyColor`, `pressedKeyColor` | `#RRGGBB` | the theme's | Leave them out to follow the theme. |
 | `velocityFromKeyPosition` | `true`, `false` | `false` | A key pressed nearer its bottom end plays louder. |
-| `showNoteNames` | `false` | `false` | Leave it out. It isn't drawn yet. |
+| `showNoteNames` | `true`, `false` | `false` | Prints each key's note name and number on it, the way the MIDI Keyboard app does. They only show when they fit: white keys at least 22 pixels wide, on a keyboard at least 70 pixels tall. |
 
 **Note pads and hex pads,** in `pads`:
 
@@ -791,7 +832,7 @@ This button selects bank 0, then program 12 as a manual counts it, then sets the
 
 ### Pages and page tabs
 
-Every page needs a tab for every page, so the customer can get back. A tab's id has to be unique, so the copies on each page need ids of their own.
+Every page needs a tab for every page, so the customer can get back. A tab's id has to be unique, so the copies on each page need ids of their own. Or put the tabs on a [band](#pages) once, and every page shows them.
 
 ```json
 "pages": [
@@ -822,12 +863,12 @@ Write the bytes as hexadecimal text with no spaces, in `systemExclusive`, with o
 
 ### Raw messages
 
-A `rawUmp` row sends one to four 32-bit words exactly as written. It's how a button sends a message MIDI Glass has no row for, such as a MIDI 2.0 note on with an attribute.
+A `rawUmp` row sends one to four 32-bit words exactly as written. It's how a button sends a message MIDI Glass has no row for.
 
 - **The words are decimal numbers.** JSON has no hexadecimal, so `0x40903C02` must be written as `1083194370`. In PowerShell, `[Convert]::ToUInt32('40903C02', 16)` does the conversion.
 - **The words carry their own group and channel.** The row's `group` and `channel` aren't used, but its `device` is.
 
-This pad sends a MIDI 2.0 note on for middle C on group 1 and channel 1, at velocity `C000`, with attribute type `02` and attribute data `0001`, and ends it with a note off. Attribute type `02` means a profile, such as one for orchestral articulations, decides what the data means. Take the attribute type and data from the device's manual or the profile's specification.
+This pad sends a MIDI 2.0 note on for middle C on group 1 and channel 1, at velocity `C000`, with attribute type `02` and attribute data `0001`, and ends it with a note off. It's the same as a `note` row with an [attribute](#per-note-controllers-and-note-attributes), written out by hand to show how the words work.
 
 ```json
 {
@@ -870,6 +911,9 @@ MIDI Glass reads a layout up to 16 megabytes, with up to 64 pages, 1,024 control
 > - The `turnsOn` and `turnsOff` rows of a pair have different notes, channels, or devices, so the note off goes somewhere else and the note keeps playing.
 > - A value for a MIDI 2.0 device is written as an `absolute` 0 to 127, so it's next to nothing.
 > - A hexadecimal number is written in JSON, such as `0x40903C02` or `"40903C02"` in `words`. Only decimal numbers work.
+> - A per-note controller has its two numbers swapped. `number` is the note, and `controller` is the controller.
+> - A note attribute is only on the `turnsOn` row of a pair, when the device wants it on the note off too.
+> - A control on a band sits where it covers a control on another page.
 > - A control hangs off the edge of the page, so it doesn't show.
 > - A Group is listed after the controls it frames, so it's drawn over them.
 > - Two controls share an id, often page tabs copied from one page to the next.

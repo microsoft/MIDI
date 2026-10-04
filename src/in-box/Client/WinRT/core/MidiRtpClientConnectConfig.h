@@ -40,6 +40,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool SendRecoveryJournal() const noexcept { return m_sendRecoveryJournal; }
         void SendRecoveryJournal(_In_ bool const value) noexcept { m_sendRecoveryJournal = value; }
 
+        rtp::MidiRtpSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        void SendSpeedLimit(_In_ rtp::MidiRtpSendSpeedLimit const value) noexcept { m_sendSpeedLimit = value; }
+
         json::JsonObject ConfigJson() const noexcept;
 
     private:
@@ -50,6 +53,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         rtp::MidiRtpClientMatchCriteria m_matchCriteria{ nullptr };
         bool m_autoReconnect{ true };
         bool m_sendRecoveryJournal{ true };
+        rtp::MidiRtpSendSpeedLimit m_sendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
     };
 }
 

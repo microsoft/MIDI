@@ -40,6 +40,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         collections::IVectorView<network::MidiNetworkKnownRemoteClient> KnownRemoteClients() const noexcept { return m_knownRemoteClients.GetView(); }
 
+        network::MidiNetworkSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+
         // The saved entry, then each saved change to it in the order the service applies them
         void InternalInitialize(
             _In_ winrt::guid const& hostId,
@@ -69,6 +72,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool m_advertise{ true };
 
         network::MidiNetworkRemoteClientPolicy m_remoteClientPolicy{ network::MidiNetworkRemoteClientPolicy::AllowAny };
+
+        network::MidiNetworkSendSpeedLimit m_sendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
+        bool m_reduceSendSpeedAutomatically{ false };
 
         collections::IVector<network::MidiNetworkKnownRemoteClient> m_knownRemoteClients{ winrt::single_threaded_vector<network::MidiNetworkKnownRemoteClient>() };
     };

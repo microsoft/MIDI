@@ -170,6 +170,7 @@ namespace
         definition.Advertise = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_ADVERTISE_KEY, true);
         definition.Enabled = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_ENABLED_KEY, true);
         definition.SendRecoveryJournal = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, true);
+        definition.SendSpeedLimit = RtpMidiJson::GetSendSpeedLimit(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY);
         definition.RemoteClientPolicy = ReadRemoteClientPolicy(entry);
 
         // An empty id is every adapter, and one which is not a GUID is ignored. The rest is only
@@ -226,6 +227,7 @@ namespace
         definition.AutoReconnect = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_AUTO_RECONNECT_KEY, true);
         definition.Enabled = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_ENABLED_KEY, true);
         definition.SendRecoveryJournal = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, true);
+        definition.SendSpeedLimit = RtpMidiJson::GetSendSpeedLimit(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY);
 
         if (!TryReadName(entry, definition.Name, errorCode, messageId)) return false;
         if (!IsValidName(definition.Name, false, errorCode, messageId)) return false;

@@ -897,7 +897,8 @@ namespace glass
         controls::Canvas const& host,
         LayoutDocument const& document,
         Theme const& theme,
-        size_t pageIndex)
+        size_t pageIndex,
+        bool withSharedBand)
     {
         Teardown();
 
@@ -923,28 +924,63 @@ namespace glass
 
         BuildBackground(document);
 
-        // The engine counts every control in the document, page by page. The surface shows one
-        // page, so it has to start counting from where that page begins.
-        uint32_t controlIndex{ 0 };
+        // The engine counts every control in the document, page by page, so each page's
+        // controls start counting from where that page begins.
+        std::vector<uint32_t> firstIndexes{};
+        firstIndexes.reserve(document.Pages.size());
 
-        for (size_t i = 0; i < pageIndex; ++i)
+        uint32_t counted{ 0 };
+
+        for (auto const& each : document.Pages)
         {
-            controlIndex += static_cast<uint32_t>(document.Pages[i].Controls.size());
+            firstIndexes.push_back(counted);
+            counted += static_cast<uint32_t>(each.Controls.size());
         }
 
-        auto const& page = document.Pages[pageIndex];
+        // The page, then the band, so the band's controls sit over the page where they meet.
+        std::vector<size_t> shown{ pageIndex };
 
-        m_panels = PanelFootprints(page, theme);
-
-        m_visuals.reserve(page.Controls.size());
-        m_elements.reserve(page.Controls.size());
-        m_controlIndexes.reserve(page.Controls.size());
-        m_kinds.reserve(page.Controls.size());
-
-        for (auto const& control : page.Controls)
+        if (withSharedBand)
         {
-            BuildControl(compositor, control, theme, controlIndex);
-            controlIndex++;
+            for (size_t index = 0; index < document.Pages.size(); ++index)
+            {
+                if (index != pageIndex && document.Pages[index].IsSharedBand)
+                {
+                    shown.push_back(index);
+                }
+            }
+        }
+
+        size_t total{ 0 };
+
+        for (auto const index : shown)
+        {
+            auto footprints = PanelFootprints(document.Pages[index], theme);
+
+            // A panel's order is its place among everything drawn, and the band is drawn after the page.
+            for (auto& footprint : footprints)
+            {
+                footprint.Order += total;
+            }
+
+            m_panels.insert(m_panels.end(), footprints.begin(), footprints.end());
+            total += document.Pages[index].Controls.size();
+        }
+
+        m_visuals.reserve(total);
+        m_elements.reserve(total);
+        m_controlIndexes.reserve(total);
+        m_kinds.reserve(total);
+
+        for (auto const index : shown)
+        {
+            auto controlIndex = firstIndexes[index];
+
+            for (auto const& control : document.Pages[index].Controls)
+            {
+                BuildControl(compositor, control, theme, controlIndex);
+                controlIndex++;
+            }
         }
     }
 
@@ -1140,6 +1176,7 @@ namespace glass
         m_restValuesY.push_back(control.DefaultValueY);
         m_returnsToRest.push_back(control.ReturnsToDefault);
         m_dragAxes.push_back(control.Drag);
+        m_pickups.push_back(control.Pickup);
         m_keyboards.push_back(control.Keyboard);
         m_padGrids.push_back(control.Pads);
         m_velocityFromTouch.push_back(control.VelocityFromTouch);
@@ -4557,6 +4594,7 @@ namespace glass
         m_restValuesY.clear();
         m_returnsToRest.clear();
         m_dragAxes.clear();
+        m_pickups.clear();
         m_keyboards.clear();
         m_padGrids.clear();
         m_velocityFromTouch.clear();
@@ -5990,6 +6028,12 @@ namespace glass
     DragAxis SurfaceRenderer::DragAxisAt(size_t itemIndex) const noexcept
     {
         return itemIndex < m_dragAxes.size() ? m_dragAxes[itemIndex] : DragAxis::Vertical;
+    }
+
+    _Use_decl_annotations_
+    PickupMode SurfaceRenderer::PickupAt(size_t itemIndex) const noexcept
+    {
+        return itemIndex < m_pickups.size() ? m_pickups[itemIndex] : PickupMode::Jump;
     }
 
     _Use_decl_annotations_

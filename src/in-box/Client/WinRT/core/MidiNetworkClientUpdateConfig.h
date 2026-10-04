@@ -31,12 +31,23 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         uint8_t FallbackMidi1PortCount() const noexcept { return m_fallbackMidi1PortCount; }
         void FallbackMidi1PortCount(_In_ uint8_t const value) noexcept { m_fallbackMidi1PortCount = value; }
 
+        network::MidiNetworkSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit.value_or(network::MidiNetworkSendSpeedLimit::Unlimited); }
+        void SendSpeedLimit(_In_ network::MidiNetworkSendSpeedLimit const& value) noexcept { m_sendSpeedLimit = value; }
+
+        bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically.value_or(false); }
+        void ReduceSendSpeedAutomatically(_In_ bool const value) noexcept { m_reduceSendSpeedAutomatically = value; }
+
         json::JsonObject ConfigJson() const noexcept;
 
     private:
         winrt::guid m_clientId{};
         bool m_createMidi1Ports{ MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT };
         uint8_t m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
+
+        // Empty until set. The merge into the configuration file cannot delete a key, and these
+        // came later than the two above, so a caller which never sets them keeps the saved ones.
+        std::optional<network::MidiNetworkSendSpeedLimit> m_sendSpeedLimit{};
+        std::optional<bool> m_reduceSendSpeedAutomatically{};
     };
 }
 namespace winrt::Windows::Devices::Midi2::Transports::Network::factory_implementation

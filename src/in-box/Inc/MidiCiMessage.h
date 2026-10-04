@@ -272,6 +272,16 @@ namespace WindowsMidiServicesCapabilityInquiry
         uint16_t MessageTextOffset{ 0 };
     };
 
+    struct EndpointFields
+    {
+        // Which piece of endpoint information is asked for or given. 0x00 is the product instance id.
+        uint8_t Status{ 0 };
+
+        // The reply only. As with property exchange, the offset is into the caller's buffer.
+        uint16_t InformationByteCount{ 0 };
+        uint16_t InformationOffset{ 0 };
+    };
+
     struct ParsedMessage
     {
         MessageType Type{ MessageType::Unknown };
@@ -290,6 +300,10 @@ namespace WindowsMidiServicesCapabilityInquiry
 
         bool HasAcknowledgmentFields{ false };
         AcknowledgmentFields Acknowledgment{};
+
+        // Inquiry: Endpoint and the reply to it.
+        bool HasEndpointFields{ false };
+        EndpointFields Endpoint{};
 
         // Carried by Invalidate MUID only.
         uint32_t TargetMuid{ 0 };
@@ -349,6 +363,51 @@ namespace WindowsMidiServicesCapabilityInquiry
             {
                 message.OutputPathId = data[29] & 0x7F;
             }
+
+            return ParseStatus::Ok;
+        }
+
+        if (message.Type == MessageType::EndpointInquiry)
+        {
+            // Stopping short of the status leaves nothing to answer, but it is still an inquiry and
+            // still owed a NAK, so it is reported rather than refused here.
+            if (size > CommonHeaderByteCount)
+            {
+                message.Endpoint.Status = data[CommonHeaderByteCount] & 0x7F;
+                message.HasEndpointFields = true;
+            }
+
+            return ParseStatus::Ok;
+        }
+
+        if (message.Type == MessageType::EndpointReply)
+        {
+            // status, then a two byte length of the information that follows
+            size_t offset = CommonHeaderByteCount;
+
+            if (size < offset + 3)
+            {
+                return ParseStatus::TooShort;
+            }
+
+            EndpointFields fields{};
+
+            fields.Status = data[offset] & 0x7F;
+            offset++;
+
+            fields.InformationByteCount = ReadFourteenBitValue(data + offset);
+            offset += 2;
+
+            // Attacker-controlled length. Check it against the real buffer before trusting it.
+            if (offset + fields.InformationByteCount > size)
+            {
+                return ParseStatus::LengthFieldExceedsBuffer;
+            }
+
+            fields.InformationOffset = static_cast<uint16_t>(offset);
+
+            message.Endpoint = fields;
+            message.HasEndpointFields = true;
 
             return ParseStatus::Ok;
         }
@@ -1087,6 +1146,108 @@ namespace WindowsMidiServicesCapabilityInquiry
         {
             buffer[offset++] = fields.OutputPathId & 0x7F;
             buffer[offset++] = fields.FunctionBlockNumber & 0x7F;
+        }
+
+        return offset;
+    }
+
+
+    // Inquiry: Endpoint names what it wants with a status byte. Product Instance Id is the only one
+    // defined so far.
+    inline constexpr uint8_t EndpointStatusProductInstanceId{ 0x00 };
+
+    // Common header, then the status.
+    inline constexpr size_t EndpointInquiryByteCount{ CommonHeaderByteCount + 1 };
+
+    inline size_t BuildEndpointInquiry(
+        _In_ uint32_t const sourceMuid,
+        _In_ uint32_t const destinationMuid,
+        _In_ uint8_t const status,
+        _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
+        _In_ size_t const capacity
+    ) noexcept
+    {
+        if (buffer == nullptr || capacity < EndpointInquiryByteCount)
+        {
+            return 0;
+        }
+
+        size_t offset = WriteCommonHeader(
+            buffer, capacity, DeviceIdFunctionBlock, MessageType::EndpointInquiry,
+            sourceMuid, destinationMuid);
+
+        buffer[offset++] = status & 0x7F;
+
+        return offset;
+    }
+
+    // The UMP Product Instance Id Notification has the same limit, and the two must carry the same id.
+    inline constexpr size_t ProductInstanceIdMaximumByteCount{ 42 };
+
+    // M2-101-UM section 5.8.3.1: printable ASCII, and no longer than the stream notification can carry.
+    inline bool ProductInstanceIdIsValid(
+        _In_reads_opt_(byteCount) uint8_t const* const id,
+        _In_ size_t const byteCount
+    ) noexcept
+    {
+        if (id == nullptr || byteCount == 0 || byteCount > ProductInstanceIdMaximumByteCount)
+        {
+            return false;
+        }
+
+        for (size_t i = 0; i < byteCount; i++)
+        {
+            if (id[i] < 0x20 || id[i] > 0x7E)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Common header, the status echoed back, then the two byte length of the data that follows.
+    inline constexpr size_t EndpointReplyFixedByteCount{ CommonHeaderByteCount + 1 + 2 };
+
+    inline size_t BuildEndpointReply(
+        _In_ uint32_t const sourceMuid,
+        _In_ uint32_t const destinationMuid,
+        _In_ uint8_t const status,
+        _In_reads_opt_(informationByteCount) uint8_t const* const information,
+        _In_ uint16_t const informationByteCount,
+        _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
+        _In_ size_t const capacity,
+        _In_ uint8_t const messageVersion = MessageVersionCurrent
+    ) noexcept
+    {
+        // The length travels as two seven-bit bytes, so anything longer cannot be described.
+        if (buffer == nullptr || informationByteCount > 0x3FFF)
+        {
+            return 0;
+        }
+
+        if (capacity < EndpointReplyFixedByteCount + informationByteCount)
+        {
+            return 0;
+        }
+
+        if (!AllBytesAreSevenBit(information, informationByteCount))
+        {
+            return 0;
+        }
+
+        size_t offset = WriteCommonHeader(
+            buffer, capacity, DeviceIdFunctionBlock, MessageType::EndpointReply,
+            sourceMuid, destinationMuid, messageVersion);
+
+        buffer[offset++] = status & 0x7F;
+
+        WriteFourteenBitValue(buffer + offset, informationByteCount);
+        offset += 2;
+
+        for (uint16_t i = 0; i < informationByteCount; i++)
+        {
+            buffer[offset++] = information[i];
         }
 
         return offset;

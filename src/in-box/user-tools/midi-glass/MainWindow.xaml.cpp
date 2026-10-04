@@ -23,7 +23,9 @@
 
 #include <commctrl.h>
 
+#include <cmath>
 #include <filesystem>
+#include <limits>
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -142,13 +144,33 @@ namespace winrt::midiglass::implementation
             KeepAwakeMenuItem().IsChecked(
                 ::midiglass::AppSettings::Current().KeepAwakeWhileRunning());
 
+            ApplyAssistantVisibility();
+
             m_dispatcher = DispatcherQueue();
 
             m_updatingChrome = true;
 
-            SortSelector().Items().Append(box_value(resources::GetString(L"SortByLastUsed")));
-            SortSelector().Items().Append(box_value(resources::GetString(L"SortByName")));
-            SortSelector().Items().Append(box_value(resources::GetString(L"SortByLastChanged")));
+            auto widestSort = 0.0;
+
+            for (auto const key : { L"SortByLastUsed", L"SortByName", L"SortByLastChanged" })
+            {
+                auto const text = resources::GetString(key);
+
+                SortSelector().Items().Append(box_value(text));
+
+                controls::TextBlock probe{};
+                probe.Text(text);
+                probe.FontSize(SortSelector().FontSize());
+                probe.Measure({ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() });
+
+                widestSort = std::max(widestSort, static_cast<double>(probe.DesiredSize().Width));
+            }
+
+            // The longest choice plus the padding and the arrow, so changing the order never moves the buttons beside it.
+            constexpr double SortChromeWidth = 60.0;
+
+            SortSelector().MinWidth(std::max(SortSelector().MinWidth(), std::ceil(widestSort) + SortChromeWidth));
+
             SortSelector().SelectedIndex(
                 static_cast<int32_t>(::midiglass::AppSettings::Current().LibrarySortOrder()));
 
@@ -286,9 +308,82 @@ namespace winrt::midiglass::implementation
                     {
                         strong->m_chrome.ApplyTheme();
                     }
-                });
+                },
+                BuildAppSettingsPanel());
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the appearance flyout.")
+    }
+
+    xaml::UIElement MainWindow::BuildAppSettingsPanel() noexcept
+    {
+        try
+        {
+            auto const tertiary = xaml::Application::Current().Resources()
+                .Lookup(box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>();
+
+            controls::StackPanel panel{};
+            panel.Spacing(10);
+            panel.Margin({ 0, 12, 0, 0 });
+
+            controls::TextBlock heading{};
+            heading.Text(resources::GetString(L"SettingsSectionHeading"));
+            heading.FontSize(12);
+            heading.Foreground(tertiary);
+            panel.Children().Append(heading);
+
+            controls::ToggleSwitch toggle{};
+            toggle.Header(box_value(resources::GetString(L"SettingAssistant")));
+            toggle.IsOn(::midiglass::AppSettings::Current().ShowAssistant());
+            toggle.OnContent(box_value(winrt::hstring{}));
+            toggle.OffContent(box_value(winrt::hstring{}));
+
+            auto weak = get_weak();
+
+            toggle.Toggled([weak](foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+                {
+                    try
+                    {
+                        if (auto const control = sender.try_as<controls::ToggleSwitch>())
+                        {
+                            ::midiglass::AppSettings::Current().ShowAssistant(control.IsOn());
+                        }
+
+                        if (auto strong = weak.get())
+                        {
+                            strong->ApplyAssistantVisibility();
+                        }
+                    }
+                    MIDI_GLASS_CATCH_AND_LOG(L"Unable to change the AI assistant setting.")
+                });
+
+            panel.Children().Append(toggle);
+
+            controls::TextBlock hint{};
+            hint.Text(resources::GetString(L"SettingAssistantHint"));
+            hint.FontSize(11);
+            hint.TextWrapping(xaml::TextWrapping::Wrap);
+            hint.Margin({ 0, -6, 0, 0 });
+            hint.Foreground(tertiary);
+            panel.Children().Append(hint);
+
+            return panel;
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to build the app settings panel.")
+
+        return nullptr;
+    }
+
+    void MainWindow::ApplyAssistantVisibility() noexcept
+    {
+        try
+        {
+            auto const visibility = ::midiglass::AppSettings::Current().ShowAssistant()
+                ? xaml::Visibility::Visible
+                : xaml::Visibility::Collapsed;
+
+            AssistantButton().Visibility(visibility);
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to show or hide Ask an AI assistant.")
     }
 
     _Use_decl_annotations_

@@ -13,6 +13,8 @@
 #include <compare>
 #include <shared_mutex>
 
+#include "RtpMidiReplySources.h"
+
 namespace RtpMidiText
 {
     inline std::wstring Utf8ToWide(_In_ std::string const& text)
@@ -351,7 +353,7 @@ namespace RtpMidiNet
             // address drops the reply. RFC 1122 4.1.3.5 asks for this.
             LocalAddress local{};
 
-            if (TryGetReplySource(to, local))
+            if (m_replySources.TryGet(to, local))
             {
                 if (SendFrom(socket, address, datagram, local)) return true;
             }
@@ -378,90 +380,8 @@ namespace RtpMidiNet
         }
 
     private:
-        // Where a datagram arrived: the local address and the interface it came in on
-        struct LocalAddress
-        {
-            int Family{ 0 };
-            IN_ADDR IPv4{};
-            IN6_ADDR IPv6{};
-            ULONG InterfaceIndex{ 0 };
-
-            bool operator==(_In_ LocalAddress const& other) const noexcept
-            {
-                return Family == other.Family && InterfaceIndex == other.InterfaceIndex &&
-                    memcmp(&IPv4, &other.IPv4, sizeof(IPv4)) == 0 && memcmp(&IPv6, &other.IPv6, sizeof(IPv6)) == 0;
-            }
-        };
-
-        struct PeerKey
-        {
-            uint8_t Family{ 0 };
-            std::array<uint8_t, 16> Bytes{};
-            uint16_t Port{ 0 };
-            uint32_t ScopeId{ 0 };
-
-            auto operator<=>(_In_ PeerKey const&) const = default;
-        };
-
-        static PeerKey KeyFor(_In_ RtpMidi::PeerAddress const& address) noexcept
-        {
-            PeerKey key{};
-            key.Family = static_cast<uint8_t>(address.Family);
-            memcpy(key.Bytes.data(), address.Bytes.data(), (std::min)(key.Bytes.size(), address.Bytes.size()));
-            key.Port = address.Port;
-            key.ScopeId = address.ScopeId;
-
-            return key;
-        }
-
-        // Anyone can send to a host, so the table of who reached it where is capped. A remote left
-        // out of it is answered from whatever address Windows picks, as before.
+        // Every datagram can name a new remote, so the table is bounded
         static constexpr size_t MaxReplySources = 1024;
-
-        void RememberReplySource(_In_ RtpMidi::PeerAddress const& from, _In_ LocalAddress const& local) noexcept
-        {
-            try
-            {
-                auto const key = KeyFor(from);
-
-                {
-                    auto lock = std::shared_lock{ m_replySourcesLock };
-
-                    auto const it = m_replySources.find(key);
-                    if (it != m_replySources.end() && it->second == local) return;
-                }
-
-                auto lock = std::unique_lock{ m_replySourcesLock };
-
-                if (m_replySources.size() >= MaxReplySources && m_replySources.find(key) == m_replySources.end()) return;
-
-                m_replySources[key] = local;
-            }
-            catch (...)
-            {
-                // only costs the reply address
-            }
-        }
-
-        bool TryGetReplySource(_In_ RtpMidi::PeerAddress const& to, _Out_ LocalAddress& local) noexcept
-        {
-            local = LocalAddress{};
-
-            try
-            {
-                auto lock = std::shared_lock{ m_replySourcesLock };
-
-                auto const it = m_replySources.find(KeyFor(to));
-                if (it == m_replySources.end()) return false;
-
-                local = it->second;
-                return true;
-            }
-            catch (...)
-            {
-                return false;
-            }
-        }
 
         static bool SendFrom(
             _In_ SOCKET const socket,
@@ -614,7 +534,7 @@ namespace RtpMidiNet
                     {
                         auto const peer = FromSockaddr(from);
 
-                        if (knowLocal) RememberReplySource(peer, local);
+                        if (knowLocal) m_replySources.Remember(peer, local, GetTickCount64());
 
                         // one datagram that fails must not stop the socket for every connection on it
                         try
@@ -636,8 +556,7 @@ namespace RtpMidiNet
         LPFN_WSARECVMSG m_receiveMessage{ nullptr };
         std::vector<uint32_t> m_interfaces;
 
-        std::shared_mutex m_replySourcesLock;
-        std::map<PeerKey, LocalAddress> m_replySources;
+        ReplySourceTable m_replySources{ MaxReplySources };
     };
 
     // AppleMIDI puts the data port at the control port plus one

@@ -45,7 +45,6 @@ CMidi2BasicLoopbackMidiEndpointManager::Initialize(
 
 
     m_TransportTransportId = TransportLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport
-    m_ContainerId = m_TransportTransportId;           // we use the transport ID as the container ID for convenience
 
     RETURN_IF_FAILED(CreateParentDevice());
 
@@ -126,7 +125,6 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateParentDevice()
     createInfo.pszInstanceId = parentDeviceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
     createInfo.pszDeviceDescription = parentDeviceName.c_str();
-    createInfo.pContainerId = &m_ContainerId;
 
     wil::unique_cotaskmem_string newDeviceId;
 

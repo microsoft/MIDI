@@ -31,6 +31,8 @@ MidiNetworkClient::Initialize(
 
     m_createUmpEndpointsOnly = !clientDefinition.CreateMidi1Ports;
     m_fallbackMidi1PortCount = clientDefinition.FallbackMidi1PortCount;
+    m_sendSpeedLimit = clientDefinition.SendSpeedLimit;
+    m_reduceSendSpeedAutomatically = clientDefinition.ReduceSendSpeedAutomatically;
 
     m_thisEndpointName = clientDefinition.LocalEndpointName;
     m_thisProductInstanceId = clientDefinition.LocalProductInstanceId;
@@ -250,6 +252,8 @@ MidiNetworkClient::Start(
         m_fallbackMidi1PortCount
     ));
 
+    conn->SetSendSpeedLimit(m_sendSpeedLimit, m_reduceSendSpeedAutomatically);
+
     TransportState::Current().AddNetworkConnection(remoteHostName, remotePort, conn);
 
     {
@@ -257,12 +261,25 @@ MidiNetworkClient::Start(
         m_networkConnection = conn;
     }
 
-    // try to establish connection in-protocol
+    // todo: associate connection with the endpoint id
+
+
+    // todo: initiate discovery
+
+
+    return S_OK;
+}
+
+HRESULT
+MidiNetworkClient::SendFirstInvitation()
+{
+    auto connection = GetConnection();
+
+    // shut down before the invitation went out
+    RETURN_HR_IF_NULL(S_FALSE, connection);
 
     // TODO: Need to wire up other security approaches here
-    // TODO: The invitation send should be in a loop so it's repeated if
-    //       there's no response
-    RETURN_IF_FAILED(conn->SendInvitation());
+    RETURN_IF_FAILED(connection->SendInvitation());
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -271,15 +288,7 @@ MidiNetworkClient::Start(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Invitation sent", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(remoteHostName.ToString().c_str(), "remote hostname"),
-        TraceLoggingWideString(remotePort.c_str(), "remote port"));
-
-
-    // todo: associate connection with the endpoint id
-
-
-    // todo: initiate discovery
-
+        TraceLoggingGuid(m_configIdentifier, "entry identifier"));
 
     return S_OK;
 }

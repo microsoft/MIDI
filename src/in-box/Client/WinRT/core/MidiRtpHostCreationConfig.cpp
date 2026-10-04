@@ -61,6 +61,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
             host.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ADVERTISE_KEY, json::JsonValue::CreateBooleanValue(m_advertise));
             host.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ENABLED_KEY, json::JsonValue::CreateBooleanValue(true));
             host.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, json::JsonValue::CreateBooleanValue(m_sendRecoveryJournal));
+            host.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY, json::JsonValue::CreateNumberValue(static_cast<uint32_t>(m_sendSpeedLimit)));
 
             host.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENT_POLICY_KEY, json::JsonValue::CreateStringValue(
                 m_remoteClientPolicy == rtp::MidiRtpRemoteClientPolicy::AllowAny ?

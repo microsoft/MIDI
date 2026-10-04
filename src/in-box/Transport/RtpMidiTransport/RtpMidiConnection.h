@@ -41,14 +41,35 @@ public:
     // A MIDI 1.0 byte stream piece from the network, stamped in MIDI timestamp ticks
     void DeliverFromNetwork(_In_ std::vector<uint8_t> const& bytes, _In_ uint64_t const midiTimestamp);
 
-    // UMP from the service, translated to a MIDI 1.0 byte stream for the network
+    // UMP from the service, translated to a MIDI 1.0 byte stream for the network. With a send
+    // speed limit, what the limit allows goes now and the rest waits in this connection's queue.
     HRESULT SendToNetwork(_In_reads_bytes_(length) PVOID const data, _In_ UINT const length);
+
+    // Sends what the speed limit allows of the messages waiting for it. Called on the node's timer
+    // thread. MIDI timestamp ticks until more may go, 0 when nothing is waiting.
+    uint64_t SendPacedMidi();
+
+    // The participant is gone. Drops what is waiting and releases senders waiting for room.
+    void ClosePacedSend();
 
     uint64_t MessagesReceived() const noexcept { return m_messagesReceived.load(); }
     uint64_t MessagesSent() const noexcept { return m_messagesSent.load(); }
 
 private:
     HRESULT SendUmpWordsToCallback(_In_reads_(wordCount) uint32_t const* const words, _In_ size_t const wordCount, _In_ uint64_t const timestamp);
+
+    // Sends from the front of the queue as far as the speed limit allows now. Needs m_pacedLock.
+    // False when the participant can no longer take data, which also empties the queue.
+    bool SendAllowedLocked(
+        _In_ std::shared_ptr<RtpMidiNode> const& node,
+        _In_ uint64_t const now,
+        _Out_ uint64_t& waitTicks,
+        _Out_ size_t& messagesTaken);
+
+    // Needs m_pacedLock
+    bool HasRoomLocked(_In_ uint32_t const speedMultiple) const noexcept;
+
+    void WakeSendersWaitingForRoom() noexcept;
 
     std::weak_ptr<RtpMidiNode> m_node;
     GUID m_entryId{};
@@ -73,6 +94,20 @@ private:
 
     std::mutex m_outgoingLock;
     umpToBytestream m_umpToBytestream;
+
+    // Messages held back by the send speed limit, as MIDI 1.0 bytes, with the size of each
+    // message so one is never split. Taken before the node's engine lock, never after it, and
+    // held while sending so what the timer thread sends and what a sender sends never cross.
+    std::mutex m_pacedLock;
+    std::deque<uint8_t> m_pacedBytes;
+    std::deque<uint32_t> m_pacedMessageSizes;
+    WindowsMidiServicesInternal::MidiSendPacer m_sendPacer{};
+    uint32_t m_sendPacerMultiple{ 0 };
+    bool m_pacedSendClosed{ false };
+
+    // Changes whenever messages leave the queue. A sender waiting for room waits on its address.
+    // Written under m_pacedLock.
+    volatile ULONG m_pacedGeneration{ 0 };
 
     std::atomic<uint64_t> m_messagesReceived{ 0 };
     std::atomic<uint64_t> m_messagesSent{ 0 };

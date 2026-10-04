@@ -2529,3 +2529,321 @@ void NetworkMidiApprovalTests::CreateThenImmediatelyRemoveLeavesNoHostBehind()
             L"A removed host does not appear in the enumeration");
     }
 }
+
+
+namespace
+{
+    // One socket which can reach a host at either of two addresses, and says which address each
+    // reply came from. UdpTestClient keeps one remote and does not say.
+    class ReturningRemote
+    {
+    public:
+        ReturningRemote() = default;
+        ~ReturningRemote() { if (m_socket != INVALID_SOCKET) closesocket(m_socket); }
+
+        ReturningRemote(_In_ ReturningRemote const&) = delete;
+        ReturningRemote& operator=(_In_ ReturningRemote const&) = delete;
+
+        bool Open(_In_ std::string const& localAddress)
+        {
+            m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+            if (m_socket == INVALID_SOCKET) return false;
+
+            sockaddr_in local{};
+            local.sin_family = AF_INET;
+
+            if (inet_pton(AF_INET, localAddress.c_str(), &local.sin_addr) != 1) return false;
+
+            if (bind(m_socket, reinterpret_cast<sockaddr const*>(&local), sizeof(local)) != 0) return false;
+
+            DWORD receiveTimeoutMilliseconds{ 250 };
+
+            return setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO,
+                reinterpret_cast<char const*>(&receiveTimeoutMilliseconds), sizeof(receiveTimeoutMilliseconds)) == 0;
+        }
+
+        bool SendTo(_In_ std::string const& address, _In_ uint16_t const port, _In_ PacketBuilder const& packet)
+        {
+            sockaddr_in to{};
+            to.sin_family = AF_INET;
+            to.sin_port = htons(port);
+
+            if (inet_pton(AF_INET, address.c_str(), &to.sin_addr) != 1) return false;
+
+            auto const& bytes = packet.Bytes();
+
+            return sendto(m_socket, reinterpret_cast<char const*>(bytes.data()), static_cast<int>(bytes.size()), 0,
+                reinterpret_cast<sockaddr const*>(&to), sizeof(to)) == static_cast<int>(bytes.size());
+        }
+
+        // The address the command came from, or empty. Answers the host's pings meanwhile, as a
+        // real client does.
+        std::string WaitForCommandFrom(_In_ CommandCode const code, _In_ std::chrono::milliseconds const timeout)
+        {
+            auto const deadline = std::chrono::steady_clock::now() + timeout;
+            std::vector<uint8_t> buffer(2048);
+
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                sockaddr_in from{};
+                int fromLength = sizeof(from);
+
+                auto const received = recvfrom(m_socket, reinterpret_cast<char*>(buffer.data()), static_cast<int>(buffer.size()), 0,
+                    reinterpret_cast<sockaddr*>(&from), &fromLength);
+
+                if (received <= 0) continue;
+
+                char text[INET_ADDRSTRLEN]{};
+                inet_ntop(AF_INET, &from.sin_addr, text, sizeof(text));
+
+                auto const packet = ParsePacket(buffer.data(), static_cast<size_t>(received));
+
+                if (auto const ping = packet.Find(CommandCode::Ping); ping != nullptr)
+                {
+                    PacketBuilder reply;
+                    reply.StartPacket().AddPingReply(ping->GetPayloadUInt32(0));
+
+                    SendTo(text, ntohs(from.sin_port), reply);
+                }
+
+                if (packet.Contains(code)) return text;
+            }
+
+            return {};
+        }
+
+    private:
+        SOCKET m_socket{ INVALID_SOCKET };
+    };
+}
+
+
+// The host answered from the address a connection first came in on, for the life of the
+// connection. A remote which looked the host up again and invited its new address from the same
+// address and port was answered from the old one, and a remote whose socket is connected drops that.
+void NetworkMidiApprovalTests::HostRepliesFromTheAddressARemoteInvitesAgain()
+{
+    // The remote sits on 127.0.0.2. Windows sends to 127.0.0.2 from either loopback address, but a
+    // socket bound to every address cannot send from 127.0.0.2 to 127.0.0.1.
+    std::string const remoteAddress{ "127.0.0.2" };
+    std::string const firstAddress{ "127.0.0.2" };
+    std::string const secondAddress{ "127.0.0.1" };
+
+    auto const entryIdentifier = MakeEntryIdentifier();
+
+    VERIFY_IS_TRUE(
+        CreateHost(entryIdentifier, L"Returning Remote Host", L"RETURNINGHOST", MakeUniqueServiceInstanceName(L"returning"), false).IsSuccess(),
+        L"Host created");
+
+    auto removeHost = wil::scope_exit([&entryIdentifier]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(WaitForHostStarted(entryIdentifier, PendingPollTimeout), L"Host started");
+
+    auto const port = ReadActualPort(entryIdentifier);
+
+    VERIFY_IS_TRUE(port.has_value(), L"The host reports its port");
+
+    if (!port.has_value()) return;
+
+    ReturningRemote remote;
+
+    if (!remote.Open(remoteAddress))
+    {
+        Log::Result(TestResults::Skipped, L"This PC does not accept a second loopback address.");
+        return;
+    }
+
+    auto& context = ProtocolTestContext::Current();
+
+    PacketBuilder invitation;
+    invitation.StartPacket().AddInvitation(
+        context.MakeUniqueEndpointName("Returning"),
+        context.MakeUniqueProductInstanceId("Returning"));
+
+    VERIFY_IS_TRUE(remote.SendTo(firstAddress, port.value(), invitation), L"First invitation sent");
+
+    auto const firstReplyFrom = remote.WaitForCommandFrom(CommandCode::InvitationReplyAccepted, PendingPollTimeout);
+
+    Log::Comment(String().Format(L"Invited %S, accepted from '%S'", firstAddress.c_str(), firstReplyFrom.c_str()));
+
+    VERIFY_IS_TRUE(firstReplyFrom == firstAddress, L"The first invitation is accepted from the address it was sent to");
+
+    // the same address and port, as a remote which looked this host up again has
+    VERIFY_IS_TRUE(remote.SendTo(secondAddress, port.value(), invitation), L"Second invitation sent");
+
+    auto const secondReplyFrom = remote.WaitForCommandFrom(CommandCode::InvitationReplyAccepted, ReplyTimeout);
+
+    Log::Comment(String().Format(L"Invited %S, accepted from '%S'", secondAddress.c_str(), secondReplyFrom.c_str()));
+
+    VERIFY_IS_TRUE(secondReplyFrom == secondAddress, L"The reply comes from the address the remote invited this time");
+
+    PacketBuilder bye;
+    bye.StartPacket().AddBye(ByeReason::UserTerminated, "done");
+
+    remote.SendTo(secondAddress, port.value(), bye);
+    remote.WaitForCommandFrom(CommandCode::ByeReply, std::chrono::milliseconds(2000));
+}
+
+
+namespace
+{
+    // How fast a host sends to one remote right now, as enumerateHosts reports it. Nothing when
+    // the connection is not listed.
+    std::optional<double> ReadCurrentSendSpeedLimit(
+        _In_ std::wstring const& entryIdentifier,
+        _In_ std::string const& umpEndpointName,
+        _In_ std::string const& productInstanceId)
+    {
+        auto response = ParseResponse(EnumerateHosts());
+
+        if (!response.has_value()) return std::nullopt;
+
+        auto hosts = response->GetNamedArray(L"hosts", nullptr);
+
+        if (hosts == nullptr) return std::nullopt;
+
+        for (uint32_t i = 0; i < hosts.Size(); i++)
+        {
+            auto host = hosts.GetObjectAt(i);
+
+            if (_wcsicmp(std::wstring{ host.GetNamedString(L"entryIdentifier", L"") }.c_str(), entryIdentifier.c_str()) != 0) continue;
+
+            auto connections = host.GetNamedArray(L"connections", nullptr);
+
+            if (connections == nullptr) return std::nullopt;
+
+            for (uint32_t j = 0; j < connections.Size(); j++)
+            {
+                auto connection = connections.GetObjectAt(j);
+
+                if (std::wstring{ connection.GetNamedString(L"umpEndpointName", L"") } == Widen(umpEndpointName) &&
+                    std::wstring{ connection.GetNamedString(L"productInstanceId", L"") } == Widen(productInstanceId))
+                {
+                    return connection.GetNamedNumber(L"currentSendSpeedLimit", -1);
+                }
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    bool WaitForCurrentSendSpeedLimit(
+        _In_ std::wstring const& entryIdentifier,
+        _In_ std::string const& umpEndpointName,
+        _In_ std::string const& productInstanceId,
+        _In_ double const expected,
+        _In_ std::chrono::milliseconds const timeout)
+    {
+        auto const deadline = std::chrono::steady_clock::now() + timeout;
+        std::optional<double> current{};
+
+        do
+        {
+            current = ReadCurrentSendSpeedLimit(entryIdentifier, umpEndpointName, productInstanceId);
+
+            if (current.has_value() && current.value() == expected) return true;
+
+            std::this_thread::sleep_for(PendingPollInterval);
+
+        } while (std::chrono::steady_clock::now() < deadline);
+
+        Log::Comment(String().Format(L"Waited for %.0f, last saw %.0f", expected, current.has_value() ? current.value() : -1.0));
+
+        return false;
+    }
+
+    // Asks for data the host never sent. It still tells the host the remote is missing data.
+    void AskForDataAgain(_In_ UdpTestClient& client, _In_ uint16_t const sequenceNumber)
+    {
+        PacketBuilder builder;
+        builder.StartPacket().AddRetransmitRequest(sequenceNumber, 1);
+
+        client.Send(builder);
+    }
+}
+
+void NetworkMidiApprovalTests::HostSlowsDownWhileARemoteAsksForDataAgain()
+{
+    auto const entryIdentifier = MakeEntryIdentifier();
+
+    VERIFY_IS_TRUE(
+        CreateHost(entryIdentifier, L"Send Speed Host", L"SENDSPEEDHOST", MakeUniqueServiceInstanceName(L"speed"), false).IsSuccess(),
+        L"Host created");
+
+    auto removeHost = wil::scope_exit([&entryIdentifier]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(WaitForHostStarted(entryIdentifier, PendingPollTimeout), L"Host started");
+
+    auto const port = ReadActualPort(entryIdentifier);
+
+    VERIFY_IS_TRUE(port.has_value(), L"The host reports its port");
+
+    if (!port.has_value()) return;
+
+    HostEndpointAddress address{ };
+    address.HostNameOrAddress = L"127.0.0.1";
+    address.Port = port.value();
+    address.DiscoveredVia = L"created by the send speed test";
+
+    UdpTestClient client;
+
+    VERIFY_IS_TRUE(client.Open(address), L"Client socket opened");
+
+    auto& context = ProtocolTestContext::Current();
+    auto const name = context.MakeUniqueEndpointName("Speed");
+    auto const productInstanceId = context.MakeUniqueProductInstanceId("Speed");
+
+    VERIFY_IS_TRUE(EstablishSession(client, name, productInstanceId), L"Session established");
+
+    auto endSession = wil::scope_exit([&client]() { EndSession(client); });
+
+    client.DrainPending();
+
+    VERIFY_IS_TRUE(WaitForCurrentSendSpeedLimit(entryIdentifier, name, productInstanceId, 0, ReplyTimeout), L"No limit to begin with");
+
+    // off, which is the default
+    AskForDataAgain(client, 40000);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    auto const unchanged = ReadCurrentSendSpeedLimit(entryIdentifier, name, productInstanceId);
+
+    VERIFY_IS_TRUE(unchanged.has_value() && unchanged.value() == 0, L"Without the setting, asking again changes nothing");
+
+    // turned on while the remote is connected
+    auto const updated = SendNetworkTransportConfig(
+        L"{\"updateEntries\":{\"hosts\":{\"" + entryIdentifier + L"\":{\"reduceSendSpeedAutomatically\":true}}}}");
+
+    if (!updated.IsSuccess())
+    {
+        Log::Comment(String().Format(L"The service refused the setting: %s", updated.Message.c_str()));
+    }
+
+    VERIFY_IS_TRUE(updated.IsSuccess(), L"The service accepted reduceSendSpeedAutomatically");
+
+    // two at once count as one loss
+    AskForDataAgain(client, 40001);
+    AskForDataAgain(client, 40002);
+
+    VERIFY_IS_TRUE(
+        WaitForCurrentSendSpeedLimit(entryIdentifier, name, productInstanceId, 32, ReplyTimeout),
+        L"With no limit, the first step down is to 32 times MIDI 1.0 wire speed");
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    auto const stillOneStep = ReadCurrentSendSpeedLimit(entryIdentifier, name, productInstanceId);
+
+    VERIFY_IS_TRUE(stillOneStep.has_value() && stillOneStep.value() == 32, L"Requests which arrive together slow it down once");
+
+    AskForDataAgain(client, 40003);
+
+    VERIFY_IS_TRUE(
+        WaitForCurrentSendSpeedLimit(entryIdentifier, name, productInstanceId, 16, ReplyTimeout),
+        L"Asking again later halves it");
+
+    // the first step up comes 10 seconds after the last request
+    VERIFY_IS_TRUE(
+        WaitForCurrentSendSpeedLimit(entryIdentifier, name, productInstanceId, 32, std::chrono::milliseconds(20000)),
+        L"It speeds up again once the remote stops asking");
+}

@@ -122,6 +122,19 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 message->m_targetMuid = MakeUniqueId(parsed.TargetMuid);
             }
 
+            if (parsed.HasEndpointFields)
+            {
+                message->m_hasEndpointFields = true;
+                message->m_endpointStatus = parsed.Endpoint.Status;
+
+                for (uint16_t i = 0; i < parsed.Endpoint.InformationByteCount; i++)
+                {
+                    message->m_endpointInformation.Append(bytes[parsed.Endpoint.InformationOffset + i]);
+                }
+
+                return *message;
+            }
+
             if (parsed.HasProfileFields)
             {
                 message->m_hasProfileFields = true;

@@ -186,6 +186,12 @@ namespace midinetworksetup
         String NetworkAdapterName{ get; };
         Boolean AllowNetworkAdapterFallback{ get; };
 
+        // How fast the host sends to each device, as shown, and what is configured, for changing
+        // it. The limit is a multiple of MIDI 1.0 wire speed, and 0 is no limit.
+        String SendSpeedText{ get; };
+        UInt32 SendSpeedLimit{ get; };
+        Boolean ReduceSendSpeedAutomatically{ get; };
+
         Microsoft.UI.Xaml.Visibility NoConnectionsVisibility{ get; };
         Microsoft.UI.Xaml.Visibility NoKnownClientsVisibility{ get; };
         Microsoft.UI.Xaml.Visibility KnownClientsVisibility{ get; };

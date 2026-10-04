@@ -10,6 +10,7 @@
 import "MidiApiContracts.idl";
 
 import "MidiNetworkClientMatchCriteria.idl";
+import "MidiNetworkSendSpeedLimitEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
@@ -38,5 +39,9 @@ namespace Windows.Devices.Midi2.Transports.Network
 
         // A new copy each time, so changing it changes nothing
         [noexcept] MidiNetworkClientMatchCriteria MatchCriteria{ get; };
+
+        // These include changes saved later with MidiNetworkClientUpdateConfig
+        [noexcept] MidiNetworkSendSpeedLimit SendSpeedLimit{ get; };
+        [noexcept] Boolean ReduceSendSpeedAutomatically{ get; };
     };
 }

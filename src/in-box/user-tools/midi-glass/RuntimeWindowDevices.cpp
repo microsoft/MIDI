@@ -96,6 +96,11 @@ namespace winrt::midiglass::implementation
                     return;
                 }
 
+                if (!running)
+                {
+                    strong->RememberValue(controlIndex, 0.0);
+                }
+
                 size_t itemIndex{ 0 };
 
                 if (!strong->m_renderer.TryFindItem(controlIndex, itemIndex))
@@ -238,15 +243,19 @@ namespace winrt::midiglass::implementation
                 }
             }
 
-            auto const& page = m_document.Pages[m_pageIndex];
-
-            for (size_t index = 0; index < page.Controls.size() && index < m_renderer.ItemCount(); ++index)
+            // The page and the band drawn over it, each item by the control it really is.
+            for (size_t item = 0; item < m_renderer.ItemCount(); ++item)
             {
-                auto const& control = page.Controls[index];
+                auto const* const control = m_document.ControlAtIndex(m_renderer.ControlIndexOf(item));
+
+                if (control == nullptr)
+                {
+                    continue;
+                }
 
                 auto unreachable = false;
 
-                for (auto const& message : control.Messages)
+                for (auto const& message : control->Messages)
                 {
                     if (!message.DeviceName.empty() &&
                         std::find(gone.begin(), gone.end(), message.DeviceName) != gone.end())
@@ -256,7 +265,7 @@ namespace winrt::midiglass::implementation
                     }
                 }
 
-                m_renderer.SetUnavailable(index, unreachable);
+                m_renderer.SetUnavailable(item, unreachable);
             }
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to mark the controls whose device is missing.")
@@ -266,6 +275,7 @@ namespace winrt::midiglass::implementation
     void RuntimeWindow::OnControlValueChanged(size_t itemIndex, double value, bool isFinal)
     {
         m_renderer.SetValue(itemIndex, value);
+        RememberValue(m_renderer.ControlIndexOf(itemIndex), value);
 
         if (m_player != nullptr)
         {
@@ -277,6 +287,7 @@ namespace winrt::midiglass::implementation
     void RuntimeWindow::OnControlValueYChanged(size_t itemIndex, double value, bool isFinal)
     {
         m_renderer.SetValueY(itemIndex, value);
+        RememberValueY(m_renderer.ControlIndexOf(itemIndex), value);
 
         if (m_player != nullptr)
         {
@@ -343,6 +354,11 @@ namespace winrt::midiglass::implementation
     {
         m_renderer.SetValue(itemIndex, isOn ? 1.0 : 0.0);
 
+        if (m_renderer.KindAt(itemIndex) != glass::ControlKind::PageTab)
+        {
+            RememberValue(m_renderer.ControlIndexOf(itemIndex), isOn ? 1.0 : 0.0);
+        }
+
         // A tab let go still says which page is showing. The page it goes to lights its own
         // tabs when it is built.
         if (!isOn && m_renderer.KindAt(itemIndex) == glass::ControlKind::PageTab)
@@ -392,6 +408,9 @@ namespace winrt::midiglass::implementation
             return;
         }
 
+        // Kept even when the control is on another page, so that page shows it when it comes back.
+        RememberValue(controlIndex, value);
+
         size_t itemIndex{ 0 };
 
         // A control on another page is still tracked by the engine; it simply has nothing on
@@ -419,6 +438,12 @@ namespace winrt::midiglass::implementation
         if (m_closing)
         {
             return;
+        }
+
+        // A latched light is a state, so a page that comes back shows it the way it was left.
+        if (state != glass::LivePlayer::ListenerState::Blink)
+        {
+            RememberValue(controlIndex, state == glass::LivePlayer::ListenerState::On ? 1.0 : 0.0);
         }
 
         size_t itemIndex{ 0 };

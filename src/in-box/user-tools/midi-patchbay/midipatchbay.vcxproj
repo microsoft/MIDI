@@ -137,6 +137,7 @@
     <ClInclude Include="PatchModel.h" />
     <ClInclude Include="PatchStore.h" />
     <ClInclude Include="RouteEngine.h" />
+    <ClInclude Include="SendQueue.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="ThemeBrushes.h" />
@@ -162,6 +163,7 @@
     <ClInclude Include="..\midi-app-shared\EndpointImageAssets.h" />
     <ClInclude Include="..\midi-app-shared\GeneralMidi.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\midi-app-shared\AssistantPrompt.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -178,6 +180,7 @@
     <ClCompile Include="PatchModel.cpp" />
     <ClCompile Include="PatchStore.cpp" />
     <ClCompile Include="RouteEngine.cpp" />
+    <ClCompile Include="SendQueue.cpp" />
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="ThemeBrushes.cpp" />
     <ClCompile Include="TrayIcon.cpp" />
@@ -210,6 +213,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
+    <ClCompile Include="..\midi-app-shared\AssistantPrompt.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>

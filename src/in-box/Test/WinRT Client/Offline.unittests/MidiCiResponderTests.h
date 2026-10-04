@@ -32,6 +32,7 @@ public:
     TEST_METHOD(TestPropertyExchangeCapabilitiesReply);
     TEST_METHOD(TestMuidCollisionIsResolved);
     TEST_METHOD(TestUnsupportedInquiryIsRefused);
+    TEST_METHOD(TestEndpointInquiryReturnsProductInstanceId);
 
 private:
 

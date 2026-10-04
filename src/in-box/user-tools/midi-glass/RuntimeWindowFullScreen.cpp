@@ -203,8 +203,14 @@ namespace winrt::midiglass::implementation
     {
         pages.Items().Clear();
 
-        for (size_t index = 0; index < m_document.Pages.size(); ++index)
+        // The pages always on screen are on every page already, so they are not a place to go.
+        for (auto const index : m_listedPages)
         {
+            if (index >= m_document.Pages.size())
+            {
+                continue;
+            }
+
             controls::MenuFlyoutItem item{};
 
             item.Text(winrt::hstring{ m_document.Pages[index].Name });
@@ -229,7 +235,7 @@ namespace winrt::midiglass::implementation
             pages.Items().Append(item);
         }
 
-        pages.IsEnabled(m_document.Pages.size() > 1);
+        pages.IsEnabled(m_listedPages.size() > 1);
     }
 
     _Use_decl_annotations_

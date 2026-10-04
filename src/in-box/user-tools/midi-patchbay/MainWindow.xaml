@@ -242,6 +242,27 @@
                         </StackPanel>
                     </Button>
 
+                    <!-- Copies a starting prompt for the customer's own AI assistant. Nothing is sent from here. -->
+                    <Button x:Name="AssistantButton"
+                            x:Uid="AssistantButton"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Height="36"
+                            Padding="12,0,12,0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Click="OnAssistantClick">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <FontIcon Glyph="&#xE8F2;"
+                                      FontSize="15"
+                                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                            <TextBlock x:Name="AssistantText"
+                                       x:Uid="AssistantText"
+                                       Text="Ask an AI assistant…"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
                     <Border Height="1" Margin="12,8,12,2"
                             Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
 

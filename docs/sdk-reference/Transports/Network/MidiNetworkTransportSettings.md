@@ -21,7 +21,7 @@ This class implements [IMidiServiceTransportPluginConfig]({{ site.baseurl }}/sdk
 | Property | Default | Range | When a change takes effect |
 | -------- | ------- | ----- | -------------------------- |
 | `MaxForwardErrorCorrectionCommandPackets` | 2 | 0 – 10 | Read when a connection is created, so existing sessions pick it up only when they reconnect |
-| `MaxRetransmitBufferCommandPackets` | 50 | 0 – 1000 | Read when a connection is created |
+| `MaxRetransmitBufferCommandPackets` | 250 | 0 – 1000 | Read when a connection is created |
 | `OutboundPingIntervalMilliseconds` | 2000 | 250 – 120000 | Read on each pass of the connection watcher, so it reaches open sessions within one interval |
 | `InvitationPendingTimeoutMilliseconds` | 120000 | 1000 – 600000 | Applies to invitations from that point on |
 | `MaxHostConnections` | 64 | 1 – 512 | Immediately. Checked as each invitation arrives |
@@ -49,6 +49,8 @@ Every property above has a matching pair of static properties with its supported
 **What you read is what's really running.** `GetTransportSettings()` reports the values the transport is really using, after any corrections. If the configuration has a value that's out of range, this is how you see what it became.
 
 Lowering `MaxHostConnections` doesn't disconnect clients that are already connected. It only affects invitations that arrive later.
+
+`DirectConnectionScanIntervalMilliseconds` is how long the service waits before it tries a direct client again, after the host stopped answering. It's also the longest the service waits between looks at clients that are waiting to connect. See [Reconnection behavior]({{ site.baseurl }}/sdk-reference/Transports/Network/#reconnection-behavior).
 
 ## See also
 

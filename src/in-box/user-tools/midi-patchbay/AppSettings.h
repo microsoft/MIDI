@@ -53,6 +53,10 @@ namespace midipatchbay
         bool ActivateSavedPatchesAtStartup() const noexcept { return m_activateSavedPatchesAtStartup; }
         void ActivateSavedPatchesAtStartup(_In_ bool value) noexcept;
 
+        // Whether Ask an AI assistant is offered. Some customers want no AI in their tools at all.
+        bool ShowAssistant() const noexcept { return m_showAssistant; }
+        void ShowAssistant(_In_ bool value) noexcept;
+
         // The per-user Run entry. Reads and writes HKCU directly rather than caching, because the
         // customer can change it outside the app.
         static bool StartsWithWindows() noexcept;
@@ -67,5 +71,6 @@ namespace midipatchbay
         bool m_warnAboutLoops{ true };
         bool m_confirmCanvasRemove{ true };
         bool m_activateSavedPatchesAtStartup{ true };
+        bool m_showAssistant{ true };
     };
 }

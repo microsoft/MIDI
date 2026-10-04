@@ -226,6 +226,9 @@ try
     std::vector<uint8_t> bytes;
     bytes.reserve(wordCount * 4);
 
+    // how many of the bytes each message became, so the speed limit never splits one
+    std::vector<uint32_t> messageSizes;
+
     {
         auto lock = std::scoped_lock{ m_outgoingLock };
 
@@ -247,15 +250,18 @@ try
                 m_umpToBytestream.UMPStreamParse(words[index + i]);
             }
 
-            bool producedBytes = false;
+            auto const sizeBefore = bytes.size();
 
             while (m_umpToBytestream.availableBS())
             {
                 bytes.push_back(m_umpToBytestream.readBS());
-                producedBytes = true;
             }
 
-            if (producedBytes) m_messagesSent++;
+            if (bytes.size() > sizeBefore)
+            {
+                m_messagesSent++;
+                messageSizes.push_back(static_cast<uint32_t>(bytes.size() - sizeBefore));
+            }
 
             index += messageWordCount;
         }
@@ -263,8 +269,214 @@ try
 
     if (bytes.empty()) return S_OK;
 
-    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), !node->SendMidi(m_participantId, bytes.data(), bytes.size()));
+    // While the queue is over its limit, the sender waits for room, so an app sending faster than
+    // the limit is slowed down rather than having its messages dropped. Never for longer than the
+    // app's side of the service pipe waits, though: past that, the messages are queued anyway.
+    auto const waitDeadline = GetTickCount64() + MIDI_RTP_SEND_QUEUE_WAIT_LIMIT_MILLISECONDS;
+
+    uint64_t waitTicks{ 0 };
+    size_t messagesTaken{ 0 };
+    bool participantReady{ true };
+
+    while (true)
+    {
+        ULONG observedGeneration{ 0 };
+
+        {
+            auto lock = std::scoped_lock{ m_pacedLock };
+
+            RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), m_pacedSendClosed || !node->IsRunning());
+
+            if (HasRoomLocked(node->SendSpeedLimit()) || GetTickCount64() >= waitDeadline)
+            {
+                if (m_pacedMessageSizes.empty() && node->SendSpeedLimit() == 0)
+                {
+                    // no limit and nothing ahead of it, so straight out as before
+                    participantReady = node->SendMidi(m_participantId, bytes.data(), bytes.size());
+
+                    break;
+                }
+
+                if (m_pacedBytes.size() + bytes.size() > MIDI_RTP_SEND_QUEUE_HARD_MAX_BYTES)
+                {
+                    TraceLoggingWrite(
+                        MidiRtpMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Outbound queue is full and not draining. Dropping messages.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_remoteName.c_str(), "remote name"),
+                        TraceLoggingUInt64(static_cast<uint64_t>(bytes.size()), "byte count")
+                    );
+
+                    return S_OK;
+                }
+
+                m_pacedBytes.insert(m_pacedBytes.end(), bytes.begin(), bytes.end());
+                m_pacedMessageSizes.insert(m_pacedMessageSizes.end(), messageSizes.begin(), messageSizes.end());
+
+                // What the limit allows goes now, on this thread, as everything did before there
+                // was a limit. Without one, that is all of it.
+                participantReady = SendAllowedLocked(node, internal::GetCurrentMidiTimestamp(), waitTicks, messagesTaken);
+
+                break;
+            }
+
+            observedGeneration = m_pacedGeneration;
+        }
+
+        // Woken when messages leave the queue, and checks again at least this often
+        auto const nowTicks = GetTickCount64();
+        auto const remaining = (waitDeadline > nowTicks) ? waitDeadline - nowTicks : 0;
+
+        WaitOnAddress(&m_pacedGeneration, &observedGeneration, sizeof(observedGeneration),
+            static_cast<DWORD>((std::min)(remaining, static_cast<uint64_t>(MIDI_RTP_SEND_QUEUE_WAIT_SLICE_MILLISECONDS))));
+    }
+
+    if (messagesTaken > 0) WakeSendersWaitingForRoom();
+
+    // the rest goes from the node's timer thread
+    if (waitTicks > 0) node->WakeForPacedSend();
+
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), !participantReady);
 
     return S_OK;
 }
 CATCH_RETURN();
+
+
+uint64_t
+RtpMidiConnection::SendPacedMidi()
+{
+    auto node = m_node.lock();
+    if (node == nullptr) return 0;
+
+    uint64_t waitTicks{ 0 };
+    size_t messagesTaken{ 0 };
+
+    {
+        auto lock = std::scoped_lock{ m_pacedLock };
+
+        if (m_pacedSendClosed || m_pacedMessageSizes.empty()) return 0;
+
+        if (!SendAllowedLocked(node, internal::GetCurrentMidiTimestamp(), waitTicks, messagesTaken))
+        {
+            TraceLoggingWrite(
+                MidiRtpMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"The remote can no longer take data. Dropping messages held back by the speed limit.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_remoteName.c_str(), "remote name")
+            );
+        }
+    }
+
+    if (messagesTaken > 0) WakeSendersWaitingForRoom();
+
+    return waitTicks;
+}
+
+
+_Use_decl_annotations_
+bool
+RtpMidiConnection::SendAllowedLocked(
+    std::shared_ptr<RtpMidiNode> const& node,
+    uint64_t const now,
+    uint64_t& waitTicks,
+    size_t& messagesTaken)
+{
+    waitTicks = 0;
+    messagesTaken = 0;
+
+    auto const multiple = node->SendSpeedLimit();
+
+    if (multiple != m_sendPacerMultiple)
+    {
+        m_sendPacer.Configure(multiple, internal::GetMidiTimestampFrequency());
+        m_sendPacerMultiple = multiple;
+    }
+
+    size_t byteCount{ 0 };
+
+    for (auto const size : m_pacedMessageSizes)
+    {
+        // one message at a time, charged as it is taken
+        auto const allowedIn = m_sendPacer.TicksUntilAllowed(size, now);
+
+        if (allowedIn > 0)
+        {
+            if (messagesTaken == 0) waitTicks = allowedIn;
+            break;
+        }
+
+        m_sendPacer.Charge(size, now);
+
+        byteCount += size;
+        messagesTaken++;
+    }
+
+    if (messagesTaken == 0) return true;
+
+    auto const byteEnd = m_pacedBytes.begin() + static_cast<std::ptrdiff_t>(byteCount);
+
+    std::vector<uint8_t> const bytes(m_pacedBytes.begin(), byteEnd);
+
+    m_pacedBytes.erase(m_pacedBytes.begin(), byteEnd);
+    m_pacedMessageSizes.erase(m_pacedMessageSizes.begin(), m_pacedMessageSizes.begin() + static_cast<std::ptrdiff_t>(messagesTaken));
+    m_pacedGeneration = m_pacedGeneration + 1;
+
+    if (!node->SendMidi(m_participantId, bytes.data(), bytes.size()))
+    {
+        // nothing behind these can go either
+        m_pacedBytes.clear();
+        m_pacedMessageSizes.clear();
+
+        return false;
+    }
+
+    return true;
+}
+
+
+_Use_decl_annotations_
+bool
+RtpMidiConnection::HasRoomLocked(uint32_t const speedMultiple) const noexcept
+{
+    if (speedMultiple == 0)
+    {
+        return m_pacedBytes.size() < MIDI_RTP_SEND_QUEUE_UNLIMITED_MAX_BYTES;
+    }
+
+    // about the same time at any speed
+    auto const limit = (std::max)(
+        (static_cast<uint64_t>(speedMultiple) * WindowsMidiServicesInternal::MidiWireSpeedBytesPerSecond * MIDI_RTP_SEND_QUEUE_PACED_MILLISECONDS) / 1000,
+        static_cast<uint64_t>(MIDI_RTP_SEND_QUEUE_PACED_MINIMUM_BYTES));
+
+    return m_pacedBytes.size() < limit;
+}
+
+
+void
+RtpMidiConnection::ClosePacedSend()
+{
+    {
+        auto lock = std::scoped_lock{ m_pacedLock };
+
+        m_pacedSendClosed = true;
+        m_pacedBytes.clear();
+        m_pacedMessageSizes.clear();
+        m_pacedGeneration = m_pacedGeneration + 1;
+    }
+
+    WakeSendersWaitingForRoom();
+}
+
+
+void
+RtpMidiConnection::WakeSendersWaitingForRoom() noexcept
+{
+    WakeByAddressAll(const_cast<ULONG*>(&m_pacedGeneration));
+}

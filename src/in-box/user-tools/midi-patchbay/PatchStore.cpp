@@ -9,6 +9,8 @@
 #include "PatchStore.h"
 #include "StringResources.h"
 
+#include <midi_send_pacer.h>
+
 namespace midipatchbay
 {
     namespace
@@ -21,6 +23,7 @@ namespace midipatchbay
         constexpr wchar_t KeyCreated[] = L"created";
         constexpr wchar_t KeyModified[] = L"modified";
         constexpr wchar_t KeyActivateAtStartup[] = L"activateAtStartup";
+        constexpr wchar_t KeyWaitForSendComplete[] = L"waitForSendComplete";
         constexpr wchar_t KeyEndpoints[] = L"endpoints";
         constexpr wchar_t KeyConnections[] = L"connections";
         constexpr wchar_t KeyId[] = L"id";
@@ -38,6 +41,7 @@ namespace midipatchbay
         constexpr wchar_t KeyMuted[] = L"muted";
         constexpr wchar_t KeyFilter[] = L"filter";
         constexpr wchar_t KeyTransform[] = L"transform";
+        constexpr wchar_t KeySendSpeedLimit[] = L"sendSpeedLimit";
         constexpr wchar_t KeyComment[] = L"_comment";
 
         constexpr wchar_t CommentText[] =
@@ -292,6 +296,20 @@ namespace midipatchbay
             }
 
             return raw;
+        }
+
+        // A multiple of MIDI 1.0 wire speed from 1 through 32. Anything else is no limit, as it is
+        // for the network transports.
+        uint32_t ReadSendSpeedLimit(_In_ json::JsonObject const& parent) noexcept
+        {
+            auto const raw = GetNamedDouble(parent, KeySendSpeedLimit, 0.0);
+
+            if (raw < 1.0 || raw > static_cast<double>(::WindowsMidiServicesInternal::MidiSendSpeedMaxMultiple))
+            {
+                return 0;
+            }
+
+            return static_cast<uint32_t>(raw);
         }
 
         double ClampCoordinate(_In_ double value) noexcept
@@ -552,6 +570,7 @@ namespace midipatchbay
             patch.Name = GetNamedString(root, KeyName);
             patch.Description = GetNamedString(root, KeyDescription);
             patch.ActivateAtStartup = GetNamedBool(root, KeyActivateAtStartup, true);
+            patch.WaitForSendComplete = GetNamedBool(root, KeyWaitForSendComplete, false);
             patch.CreatedTimestamp = static_cast<int64_t>(GetNamedDouble(root, KeyCreated, 0.0));
             patch.ModifiedTimestamp = static_cast<int64_t>(GetNamedDouble(root, KeyModified, 0.0));
 
@@ -636,6 +655,7 @@ namespace midipatchbay
                         connection.Muted = GetNamedBool(item, KeyMuted, false);
                         connection.Filter = FilterFromJson(GetNamedObject(item, KeyFilter));
                         connection.Transform = TransformFromJson(GetNamedObject(item, KeyTransform));
+                        connection.SendSpeedLimit = ReadSendSpeedLimit(item);
 
                         if (connection.Id.empty())
                         {
@@ -869,6 +889,7 @@ namespace midipatchbay
             root.SetNamedValue(KeyCreated, json::JsonValue::CreateNumberValue(static_cast<double>(patch.CreatedTimestamp)));
             root.SetNamedValue(KeyModified, json::JsonValue::CreateNumberValue(static_cast<double>(patch.ModifiedTimestamp)));
             root.SetNamedValue(KeyActivateAtStartup, json::JsonValue::CreateBooleanValue(patch.ActivateAtStartup));
+            root.SetNamedValue(KeyWaitForSendComplete, json::JsonValue::CreateBooleanValue(patch.WaitForSendComplete));
 
             json::JsonArray endpoints{};
 
@@ -912,6 +933,11 @@ namespace midipatchbay
                 if (!connection.Transform.ChangesNothing())
                 {
                     item.SetNamedValue(KeyTransform, TransformToJson(connection.Transform));
+                }
+
+                if (connection.SendSpeedLimit != 0)
+                {
+                    item.SetNamedValue(KeySendSpeedLimit, json::JsonValue::CreateNumberValue(connection.SendSpeedLimit));
                 }
 
                 connections.Append(item);

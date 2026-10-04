@@ -74,7 +74,6 @@ CMidi2NetworkMidiEndpointManager::Initialize(
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
 
     m_transportId = TRANSPORT_LAYER_GUID;   // this is needed so MidiSrv can instantiate the correct transport
-    m_containerId = m_transportId;                           // we use the transport ID as the container ID for convenience
 
     RETURN_IF_FAILED(CreateParentDeviceForClients());
 
@@ -1179,6 +1178,9 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
 
             LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionLive(definition.EntryIdentifier));
 
+            // Only now. A host can answer within a millisecond, and its answer can change the entry.
+            LOG_IF_FAILED(client->SendFirstInvitation());
+
             return S_OK;
         }
 
@@ -1379,6 +1381,12 @@ CMidi2NetworkMidiEndpointManager::StartPendingClients()
             continue;
         }
 
+        // a host which said it was busy is given time
+        if (GetTickCount64() < definition.RetryNotBeforeTickCount)
+        {
+            continue;
+        }
+
         winrt::hstring hostNameOrIPAddress{ };
         uint16_t port{ 0 };
 
@@ -1543,7 +1551,6 @@ CMidi2NetworkMidiEndpointManager::CreateParentDeviceForClients()
         createInfo.pszInstanceId = parentDeviceInstanceId.c_str();
         createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
         createInfo.pszDeviceDescription = parentDeviceName.c_str();
-        createInfo.pContainerId = &m_containerId;
 
         wil::unique_cotaskmem_string newParentDeviceId;
 
@@ -1623,7 +1630,6 @@ CMidi2NetworkMidiEndpointManager::CreateParentDeviceForHost(
         createInfo.pszInstanceId = parentDeviceId.c_str();
         createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
         createInfo.pszDeviceDescription = parentName.c_str();
-        createInfo.pContainerId = &m_containerId;
 
         RETURN_IF_FAILED(m_midiDeviceManager->ActivateVirtualParentDevice(
             0,

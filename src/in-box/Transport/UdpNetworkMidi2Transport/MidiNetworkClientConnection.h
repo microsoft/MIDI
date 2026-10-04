@@ -73,7 +73,8 @@ protected:
     // The remote host ended the session on its own, so this one is worth re-establishing.
     void OnSessionEndedByRemote() override;
 
-    void OnInvitationAnswered() noexcept override { m_invitation.Answered(); }
+    // A Bye in answer to our invitation decides whether, and when, to try again
+    void OnByeReceived(_In_ MidiNetworkCommandByeReason const reason) noexcept override;
 
 private:
     HRESULT SendInvitationCommand();

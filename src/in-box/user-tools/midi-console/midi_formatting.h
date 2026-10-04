@@ -23,6 +23,9 @@ namespace midi2console
     // an empty id, otherwise the adapter's name, marked when it is missing
     std::string FormatNetworkAdapter(_In_ winrt::guid const& id, _In_ winrt::hstring const& name, _In_ bool isMissing);
 
+    // A Network MIDI 2.0 or RTP-MIDI send speed limit, a multiple of MIDI 1.0 wire speed. 0 is no limit.
+    std::string FormatSendSpeedLimit(_In_ uint32_t multiple);
+
     std::string FormatNumberWithSeparators(_In_ uint64_t value);
     std::string FormatDecimal(_In_ double value, _In_ int decimalPlaces);
 

@@ -11,6 +11,7 @@
 // Shared with the transport rather than restated here, so the two cannot drift
 #include "..\..\..\Transport\RtpMidiTransport\rtp_json_defs.h"
 #include "..\..\..\Transport\RtpMidiTransport\rtp_transport_error_codes.h"
+#include "midi_send_pacer.h"
 
 // Fixed by RTP-MIDI itself. Not taken from the transport's transport_defs.h, because its generic
 // macro names are also defined by the Network MIDI 2.0 transport header the SDK includes.
@@ -92,6 +93,13 @@ namespace MidiRtpSdkJson
     inline int32_t Hresult(_In_ json::JsonObject const& parent, _In_ std::wstring_view const key) noexcept
     {
         return static_cast<int32_t>(Unsigned<uint32_t>(parent, key));
+    }
+
+    // A send speed limit, read the way the transport reads one: 0, anything faster than the
+    // fastest limit, and anything which is not a speed at all are no limit
+    inline uint32_t SendSpeedLimit(_In_ json::JsonObject const& parent, _In_ std::wstring_view const key) noexcept
+    {
+        return ::WindowsMidiServicesInternal::ClampMidiSendSpeedMultiple(Unsigned<uint32_t>(parent, key));
     }
 
     inline json::JsonArray Array(_In_ json::JsonObject const& parent, _In_ std::wstring_view const key) noexcept

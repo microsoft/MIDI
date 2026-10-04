@@ -381,7 +381,6 @@ CMidi2BluetoothMidiEndpointManager::Initialize(
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
 
     m_transportId = TRANSPORT_LAYER_GUID;   // this is needed so MidiSrv can instantiate the correct transport
-    m_containerId = m_transportId;          // we use the transport ID as the container ID for convenience
 
     // The flag outlives a single load, so a transport started again in the same process would
     // otherwise abandon every wait immediately.
@@ -3409,7 +3408,6 @@ CMidi2BluetoothMidiEndpointManager::CreateParentDevice()
     createInfo.pszInstanceId = parentDeviceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
     createInfo.pszDeviceDescription = parentDeviceName.c_str();
-    createInfo.pContainerId = &m_containerId;
 
     LPWSTR newDeviceId;
 

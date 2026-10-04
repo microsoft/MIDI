@@ -35,6 +35,11 @@ namespace WindowsMidiServicesCapabilityInquiry
         // One at a time. A responder that parks a single request and drops the rest must say so,
         // or initiators will pipeline requests it silently discards.
         uint8_t SimultaneousPropertyRequests{ 1 };
+
+        // What Inquiry: Endpoint is answered with. It must match the Product Instance Id the UMP
+        // Endpoint declares in its stream notification. Left empty, the inquiry gets a NAK.
+        uint8_t ProductInstanceId[ProductInstanceIdMaximumByteCount]{};
+        uint8_t ProductInstanceIdByteCount{ 0 };
     };
 
     inline constexpr uint8_t CapabilityBitPropertyExchange{ 0x08 };
@@ -248,6 +253,44 @@ namespace WindowsMidiServicesCapabilityInquiry
                         m_config.Muid,
                         message.SourceMuid,
                         m_config.SimultaneousPropertyRequests,
+                        replyBuffer,
+                        replyCapacity,
+                        ReplyVersionFor(message.VersionFormat));
+
+                    if (written == 0)
+                    {
+                        return ResponderAction::ReplyBufferTooSmall;
+                    }
+
+                    if (replyByteCount != nullptr)
+                    {
+                        *replyByteCount = written;
+                    }
+
+                    return ResponderAction::Replied;
+                }
+            }
+            else if (message.Type == MessageType::EndpointInquiry)
+            {
+                // Product Instance Id is the only status defined. Any other, or a device with no id
+                // to give, falls through to the NAK that M2-101-UM section 5.8 asks for.
+                if (m_config.Muid != 0 &&
+                    message.HasEndpointFields &&
+                    message.Endpoint.Status == EndpointStatusProductInstanceId &&
+                    ProductInstanceIdIsValid(m_config.ProductInstanceId, m_config.ProductInstanceIdByteCount))
+                {
+                    if (replyBuffer == nullptr ||
+                        replyCapacity < EndpointReplyFixedByteCount + m_config.ProductInstanceIdByteCount)
+                    {
+                        return ResponderAction::ReplyBufferTooSmall;
+                    }
+
+                    const auto written = BuildEndpointReply(
+                        m_config.Muid,
+                        message.SourceMuid,
+                        message.Endpoint.Status,
+                        m_config.ProductInstanceId,
+                        m_config.ProductInstanceIdByteCount,
                         replyBuffer,
                         replyCapacity,
                         ReplyVersionFor(message.VersionFormat));

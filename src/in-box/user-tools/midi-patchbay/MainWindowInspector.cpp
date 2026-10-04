@@ -81,6 +81,22 @@ namespace winrt::midipatchbay::implementation
 
             return panel;
         }
+
+        // Worded the way Network MIDI Setup words the same choice
+        winrt::hstring SendSpeedText(_In_ uint32_t const multiple) noexcept
+        {
+            if (multiple == 0)
+            {
+                return resources::GetString(L"SendSpeedLimitUnlimited");
+            }
+
+            if (multiple == 1)
+            {
+                return resources::GetString(L"SendSpeedLimitWireSpeed");
+            }
+
+            return resources::FormatString(L"SendSpeedLimitMultipleFormat", multiple);
+        }
     }
 
     void MainWindow::RefreshInspector() noexcept
@@ -162,6 +178,18 @@ namespace winrt::midipatchbay::implementation
             {
                 text = text + winrt::hstring{ L"\n" } +
                     resources::FormatString(L"ConnectionSendFailuresFormat", it->second.SendFailures);
+            }
+
+            if (it->second.MessagesWaiting > 0)
+            {
+                text = text + winrt::hstring{ L"\n" } +
+                    resources::FormatString(L"ConnectionWaitingToSendFormat", it->second.MessagesWaiting);
+            }
+
+            if (it->second.MessagesDropped > 0)
+            {
+                text = text + winrt::hstring{ L"\n" } +
+                    resources::FormatString(L"ConnectionDroppedFormat", it->second.MessagesDropped);
             }
 
             return text;
@@ -702,6 +730,95 @@ namespace winrt::midipatchbay::implementation
                 body.Children().Append(transformButton);
 
                 section.Children().Append(Card(body));
+                InspectorContent().Children().Append(section);
+            }
+
+            // -------------------------------------------------- sending speed
+            {
+                auto const label = resources::GetString(L"InspectorSendingSpeed");
+                auto section = Section(label);
+
+                // The speeds Network MIDI Setup offers, and whatever else a file asked for
+                std::vector<uint32_t> options{ 0, 1, 2, 4, 8, 16, 32 };
+
+                if (std::find(options.begin(), options.end(), connection.SendSpeedLimit) == options.end())
+                {
+                    options.push_back(connection.SendSpeedLimit);
+                }
+
+                auto items = winrt::single_threaded_vector<foundation::IInspectable>();
+
+                int32_t selectedIndex{ 0 };
+
+                for (size_t i = 0; i < options.size(); i++)
+                {
+                    items.Append(winrt::box_value(SendSpeedText(options[i])));
+
+                    if (options[i] == connection.SendSpeedLimit)
+                    {
+                        selectedIndex = static_cast<int32_t>(i);
+                    }
+                }
+
+                controls::ComboBox combo{};
+
+                combo.ItemsSource(items);
+                combo.SelectedIndex(selectedIndex);
+                combo.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+                xaml::Automation::AutomationProperties::SetName(combo, label);
+
+                combo.SelectionChanged([weak, connectionId, options](
+                    foundation::IInspectable const& s, controls::SelectionChangedEventArgs const&)
+                    {
+                        auto strong = weak.get();
+
+                        if (strong == nullptr)
+                        {
+                            return;
+                        }
+
+                        auto const control = s.try_as<controls::ComboBox>();
+
+                        if (control == nullptr)
+                        {
+                            return;
+                        }
+
+                        auto const index = control.SelectedIndex();
+
+                        // -1 happens while the list is being replaced; acting on it would
+                        // rewrite the connection on every refresh
+                        if (index < 0 || static_cast<size_t>(index) >= options.size())
+                        {
+                            return;
+                        }
+
+                        auto* current = strong->CurrentPatch();
+
+                        if (current == nullptr)
+                        {
+                            return;
+                        }
+
+                        auto* target = current->FindConnection(connectionId);
+
+                        if (target == nullptr || target->SendSpeedLimit == options[index])
+                        {
+                            return;
+                        }
+
+                        target->SendSpeedLimit = options[index];
+
+                        strong->MarkDirty();
+                        strong->ApplyRouting();
+                    });
+
+                section.Children().Append(combo);
+
+                auto help = ValueText(resources::GetString(L"InspectorSendingSpeedHelp"), 12, true);
+                help.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
+                section.Children().Append(help);
+
                 InspectorContent().Children().Append(section);
             }
 

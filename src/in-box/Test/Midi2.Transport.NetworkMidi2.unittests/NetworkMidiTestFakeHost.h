@@ -81,6 +81,10 @@ namespace NetworkMidiTest
         uint16_t Port() const { return m_port; }
         static std::wstring Address() { return L"127.0.0.1"; }
 
+        // Listens on ::1 instead, which is where a client given the name "localhost" connects.
+        // Set before Start.
+        void SetListenOnIPv6Loopback(_In_ bool const enabled) { m_listenOnIPv6Loopback = enabled; }
+
         // Identity this host reports in its Invitation Reply. Defaults are unique per instance
         // so concurrently created endpoints do not collide.
         void SetEndpointName(_In_ std::string const& value) { m_endpointName = value; }
@@ -185,6 +189,7 @@ namespace NetworkMidiTest
 
         SOCKET m_socket{ INVALID_SOCKET };
         uint16_t m_port{ 0 };
+        bool m_listenOnIPv6Loopback{ false };
 
         sockaddr_storage m_remoteAddress{ };
         int m_remoteAddressLength{ 0 };

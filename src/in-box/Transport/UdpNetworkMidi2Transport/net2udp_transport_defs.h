@@ -114,6 +114,10 @@ enum MidiNetworkRemoteClientDecision
 #define MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_UPPER_BOUND             600000
 #define MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_LOWER_BOUND             1000
 
+// Bye 0x40, Too Many Open Sessions, means "not now". Windows also sends it while it still holds
+// this PC's previous session, which it drops after five missed pings.
+#define MIDI_NETWORK_CLIENT_BUSY_RETRY_DELAY_MILLISECONDS               10000
+
 // Spec 6.16: "The Bye Command should be sent repeatedly until a Bye Reply Command is received,
 // or until a timeout occurs." Only the user-initiated disconnect path does this. Shutdown paths
 // send once and move on, because waiting there runs against the service stop timeout and, with
@@ -144,8 +148,36 @@ enum MidiNetworkRemoteClientDecision
 #define MIDI_NETWORK_FEC_PACKET_COUNT_UPPER_BOUND                       10
 #define MIDI_NETWORK_FEC_PACKET_COUNT_LOWER_BOUND                       0
 
-#define MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT             50
+#define MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT             250
 #define MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_UPPER_BOUND         1000
+
+// However many commands the setting allows, the buffer never holds more than this per connection
+#define MIDI_NETWORK_RETRANSMIT_BUFFER_MAX_BYTES                        (256 * 1024)
+
+// Spec 7.2.3: a request repeated before it has been served may be ignored. Past this many waiting,
+// further ones are too, and the remote asks again.
+#define MIDI_NETWORK_MAX_PENDING_RETRANSMIT_REQUESTS                    16
+
+// A remote asking again and again for data which is gone gets one Retransmit Error for the same
+// sequence number in this time, and no more than so many a second in all
+#define MIDI_NETWORK_RETRANSMIT_ERROR_REPEAT_MILLISECONDS               250
+#define MIDI_NETWORK_RETRANSMIT_ERROR_MAX_PER_SECOND                    20
+
+// With a speed limit, the send queue holds about this much time at that speed before senders
+// wait for room, so a message sent behind a burst is not held up behind a long queue
+#define MIDI_NETWORK_SEND_QUEUE_PACED_MILLISECONDS                      100
+#define MIDI_NETWORK_SEND_QUEUE_PACED_MINIMUM_WIRE_BYTES                256
+
+// Without one, senders only wait when the socket itself has fallen this far behind
+#define MIDI_NETWORK_SEND_QUEUE_UNLIMITED_MAX_WORDS                     (64 * 1024)
+
+// A sender waits for room at most this long, then its messages are queued anyway. Kept under the
+// 1 second an app's side of the service pipe waits, so the app never sees a stall.
+#define MIDI_NETWORK_SEND_QUEUE_WAIT_LIMIT_MILLISECONDS                 900
+#define MIDI_NETWORK_SEND_QUEUE_WAIT_SLICE_MILLISECONDS                 50
+
+// Only reached when nothing is draining the queue. Messages past this are dropped, with a trace.
+#define MIDI_NETWORK_SEND_QUEUE_HARD_MAX_WORDS                          (256 * 1024)
 
 
 // Where a configured host or client entry is in its life. This replaced a bare "Created" flag,
@@ -160,12 +192,13 @@ enum class MidiNetworkEntryState
     // built and registered
     Live,
 
-    // The definition itself is bad, so retrying can only fail the same way. Terminal until the
-    // configuration changes.
+    // The definition itself is bad, or the remote refused it, so retrying can only fail the same
+    // way. Terminal until the configuration changes or the app asks again.
     Failed,
 
     // Reachability gave out and nothing will announce its return, so it is only retried when the
-    // app asks again. Direct connections only.
+    // app asks again. Not set at present: a direct connection is tried again after the scan
+    // interval instead.
     Unavailable,
 };
 #define MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_LOWER_BOUND         0
@@ -174,7 +207,7 @@ enum class MidiNetworkEntryState
 #define MIDI_NETWORK_OUTBOUND_PING_INTERVAL_UPPER_BOUND                 120000
 #define MIDI_NETWORK_OUTBOUND_PING_INTERVAL_LOWER_BOUND                 250
 
-#define MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT            20000       // how frequently we try to open a remote IP and port
+#define MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT            20000       // longest wait between scans, and the wait before a direct connection is tried again
 #define MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_UPPER_BOUND        300000
 #define MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_LOWER_BOUND        250
 

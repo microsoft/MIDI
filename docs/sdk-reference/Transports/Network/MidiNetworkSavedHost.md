@@ -27,6 +27,8 @@ A Network MIDI 2.0 host saved in the configuration file. The service starts it e
 | `NetworkAdapterId` | The network adapter the host is limited to, or an empty GUID for every adapter. This includes any change saved later with `MidiNetworkHostUpdateConfig` |
 | `NetworkAdapterName` | That adapter's name, from when it was chosen |
 | `AllowNetworkAdapterFallback` | True when the host runs on every adapter while its own adapter is missing |
+| `SendSpeedLimit` | How fast the host sends to each connected device. This includes any change saved later with `MidiNetworkHostUpdateConfig` |
+| `ReduceSendSpeedAutomatically` | True when a connection sends more slowly while the device keeps asking for data again. This includes any change saved later with `MidiNetworkHostUpdateConfig` |
 | `KnownRemoteClients` | Every saved allow and deny decision, as [MidiNetworkKnownRemoteClient]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkKnownRemoteClient/) objects |
 
 ## Remarks

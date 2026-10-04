@@ -44,6 +44,10 @@ namespace winrt::midiglass::implementation
             foundation::IInspectable const& sender,
             xaml::RoutedEventArgs const& args);
 
+        void OnAssistantClick(
+            _In_ foundation::IInspectable const& sender,
+            _In_ xaml::RoutedEventArgs const& args);
+
         void OnSearchTextChanged(
             controls::AutoSuggestBox const& sender,
             controls::AutoSuggestBoxTextChangedEventArgs const& args);
@@ -63,6 +67,10 @@ namespace winrt::midiglass::implementation
         void OnLibrarySizeChanged(
             foundation::IInspectable const& sender,
             xaml::SizeChangedEventArgs const& args);
+
+        void OnLayoutContainerContentChanging(
+            _In_ controls::ListViewBase const& sender,
+            _In_ controls::ContainerContentChangingEventArgs const& args);
 
         // ---- the cards ----
 
@@ -152,6 +160,9 @@ namespace winrt::midiglass::implementation
         void ApplyItemWidths();
         void UpdateStatusBar();
 
+        xaml::UIElement BuildAppSettingsPanel() noexcept;
+        void ApplyAssistantVisibility() noexcept;
+
         // A card that is older than its layout, and what is needed to draw it again.
         struct StaleCard
         {
@@ -213,6 +224,7 @@ namespace winrt::midiglass::implementation
             _In_ std::function<void(glass::LayoutDocument&)> const& change);
 
         foundation::IAsyncAction ShowNewLayoutDialogAsync();
+        foundation::IAsyncAction ShowAssistantDialogAsync();
         foundation::IAsyncAction RenameCardAsync(_In_ midiglass::LayoutCard card);
         foundation::IAsyncAction DescribeCardAsync(_In_ midiglass::LayoutCard card);
         foundation::IAsyncAction DeleteCardAsync(_In_ midiglass::LayoutCard card);

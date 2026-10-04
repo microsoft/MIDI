@@ -64,6 +64,10 @@ namespace glass
         void CancelFor(_In_ uint32_t controlIndex) noexcept;
         void CancelAll() noexcept;
 
+        // The layout's tempo changed. The step already due keeps its time and the ones after it
+        // take the new tempo, so the pattern carries on from where it was.
+        void SetTempo(_In_ double beatsPerMinute) noexcept;
+
     private:
         StepSequencer() = default;
 

@@ -102,6 +102,9 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "midi_dnssd_browser.h"
 #include "midi_dnssd_announcer.h"
 
+// The send speed limit, shared with the Network MIDI 2.0 transport
+#include "midi_send_pacer.h"
+
 #include "Midi2RtpMidiTransport_i.c"
 #include "Midi2RtpMidiTransport.h"
 

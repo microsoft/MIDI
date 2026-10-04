@@ -6,7 +6,9 @@ type: runtimeclass
 description: Answers capability inquiry for a virtual device
 ---
 
-A [`MidiVirtualDevice`]({{ site.baseurl }}/sdk-reference/Transports/Virtual/MidiVirtualDevice) already answers endpoint discovery for you. This class does the same for capability inquiry. Give it the resources you want to publish, and the device answers Discovery, property exchange capability questions, requests for resources, and profile questions on its own.
+A [`MidiVirtualDevice`]({{ site.baseurl }}/sdk-reference/Transports/Virtual/MidiVirtualDevice) already answers endpoint discovery for you. This class does the same for capability inquiry. Give it the resources you want to publish, and the device answers Discovery, property exchange capability questions, requests for resources, profile questions, and requests for its product instance ID on its own.
+
+The product instance ID it gives is the one in the virtual device's declared endpoint information, so endpoint discovery and capability inquiry always report the same ID. The specification allows only printable ASCII characters, up to 42 of them. If your ID doesn't fit that, the request comes to you through `MessageReceived` instead.
 
 You get it from `MidiVirtualDevice.CapabilityInquiry`. It does nothing until you set `IsEnabled`. Answering Discovery tells others that this device supports capability inquiry, so it should only answer when that's true.
 

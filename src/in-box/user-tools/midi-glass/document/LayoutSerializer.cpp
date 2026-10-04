@@ -41,7 +41,6 @@ namespace glass
         constexpr wchar_t KeyScaleMode[] = L"scaleMode";
         constexpr wchar_t KeyCustomScalePercent[] = L"customScalePercent";
         constexpr wchar_t KeyCornerButton[] = L"fullScreenButtonCorner";
-        constexpr wchar_t KeyPreferredDisplay[] = L"preferredDisplayId";
         constexpr wchar_t KeySuppressStartup[] = L"suppressAllStartupValues";
         constexpr wchar_t KeyVirtualDevice[] = L"publishesVirtualDevice";
         constexpr wchar_t KeyToolbarWindow[] = L"toolbarWindow";
@@ -184,6 +183,9 @@ namespace glass
         constexpr wchar_t KeyGroup[] = L"group";
         constexpr wchar_t KeyChannel[] = L"channel";
         constexpr wchar_t KeyNumber[] = L"number";
+        constexpr wchar_t KeyController[] = L"controller";
+        constexpr wchar_t KeyAttributeType[] = L"attributeType";
+        constexpr wchar_t KeyAttributeData[] = L"attributeData";
         constexpr wchar_t KeyOnValue[] = L"onValue";
         constexpr wchar_t KeyOffValue[] = L"offValue";
         constexpr wchar_t KeyMinimum[] = L"minimum";
@@ -199,13 +201,11 @@ namespace glass
         constexpr wchar_t KeyWords[] = L"words";
         constexpr wchar_t KeySequence[] = L"sequence";
         constexpr wchar_t KeyTargetPage[] = L"targetPage";
-        constexpr wchar_t KeyTargetLayer[] = L"targetLayer";
         constexpr wchar_t KeyFunction[] = L"function";
 
         constexpr wchar_t KeyEnabled[] = L"enabled";
         constexpr wchar_t KeyMatch[] = L"match";
         constexpr wchar_t KeyMatchMode[] = L"matchMode";
-        constexpr wchar_t KeySendsBeatClock[] = L"sendsBeatClock";
         constexpr wchar_t KeyProtocol[] = L"protocol";
 
         constexpr wchar_t KeySteps[] = L"steps";
@@ -216,6 +216,14 @@ namespace glass
         constexpr wchar_t KeyTargetControl[] = L"targetControl";
         constexpr wchar_t KeyTargetValue[] = L"targetValue";
         constexpr wchar_t KeyBeatsPerMinute[] = L"beatsPerMinute";
+
+        // Older builds wrote these and never acted on them. Dropped on read, not kept as unknown.
+        constexpr wchar_t RetiredPreferredDisplay[] = L"preferredDisplayId";
+        constexpr wchar_t RetiredSendsBeatClock[] = L"sendsBeatClock";
+        constexpr wchar_t RetiredTargetLayer[] = L"targetLayer";
+
+        // A row or a step of this kind did nothing. Read as any other kind, it would send.
+        constexpr std::wstring_view RetiredHoldLayer{ L"holdLayer" };
 
         // Enums travel as names rather than numbers. A number in a file is unreadable, and it
         // silently means something different the day somebody inserts a value in the middle.
@@ -396,8 +404,8 @@ namespace glass
             { MessageKind::RawUmp, L"rawUmp" },
             { MessageKind::Sequence, L"sequence" },
             { MessageKind::GoToPage, L"goToPage" },
-            { MessageKind::HoldLayer, L"holdLayer" },
             { MessageKind::MackieControl, L"mackieControl" },
+            { MessageKind::AssignablePerNoteController, L"assignablePerNoteController" },
         };
 
         constexpr EnumName<DeviceProtocol> DeviceProtocolNames[]
@@ -499,7 +507,6 @@ namespace glass
             { SequenceStepKind::Wait, L"wait" },
             { SequenceStepKind::SetControlValue, L"setControlValue" },
             { SequenceStepKind::GoToPage, L"goToPage" },
-            { SequenceStepKind::HoldLayer, L"holdLayer" },
             { SequenceStepKind::RepeatBlockStart, L"repeatStart" },
             { SequenceStepKind::RepeatBlockEnd, L"repeatEnd" },
         };
@@ -874,6 +881,12 @@ namespace glass
             message.GroupIndex = ReadInt(object, KeyGroup, 0, AllGroups, MaximumGroupCount - 1);
             message.ChannelIndex = ReadInt(object, KeyChannel, 0, 0, 15);
             message.Number = static_cast<uint32_t>(ReadInt(object, KeyNumber, 0, 0, 0x7FFFFFFF));
+            message.Controller = static_cast<uint32_t>(
+                ReadInt(object, KeyController, 0, 0, static_cast<int32_t>(MaximumPerNoteController)));
+            message.AttributeType = static_cast<uint32_t>(
+                ReadInt(object, KeyAttributeType, 0, 0, static_cast<int32_t>(MaximumAttributeType)));
+            message.AttributeData = static_cast<uint32_t>(
+                ReadInt(object, KeyAttributeData, 0, 0, static_cast<int32_t>(MaximumAttributeData)));
             message.Minimum = ReadMessageValue(object, KeyMinimum, { 0.0, ValueScaling::Fraction });
             message.Maximum = ReadMessageValue(object, KeyMaximum, { 1.0, ValueScaling::Fraction });
             message.Detents = ReadDetents(object);
@@ -882,7 +895,6 @@ namespace glass
             message.UseMidi1Protocol = ReadBool(object, KeyMidi1Protocol, false);
             message.SequenceName = ReadString(object, KeySequence);
             message.TargetPageId = ReadString(object, KeyTargetPage);
-            message.TargetLayerId = ReadString(object, KeyTargetLayer);
             message.Position = ReadInt(object, KeyPosition, -1, -1, MaximumSwitchPositions - 1);
 
             if (auto const words = ReadArray(object, KeyWords))
@@ -906,7 +918,8 @@ namespace glass
             message.Unknown = CaptureUnknown(object,
                 { KeyTrigger, KeyKind, KeyDevice, KeyGroup, KeyChannel, KeyNumber, KeyMinimum,
                   KeyMaximum, KeySystemExclusive, KeyWords, KeySequence, KeyTargetPage,
-                  KeyTargetLayer, KeyMidi1Protocol, KeyDetents, KeyAxis, KeyPosition });
+                  RetiredTargetLayer, KeyMidi1Protocol, KeyDetents, KeyAxis, KeyPosition,
+                  KeyController, KeyAttributeType, KeyAttributeData });
 
             // A function this build does not know stays in the file for the build that does,
             // and the row sends nothing until somebody picks one.
@@ -919,7 +932,8 @@ namespace glass
                     message.Unknown = CaptureUnknown(object,
                         { KeyTrigger, KeyKind, KeyDevice, KeyGroup, KeyChannel, KeyNumber, KeyMinimum,
                           KeyMaximum, KeySystemExclusive, KeyWords, KeySequence, KeyTargetPage,
-                          KeyTargetLayer, KeyMidi1Protocol, KeyDetents, KeyAxis, KeyPosition, KeyFunction });
+                          RetiredTargetLayer, KeyMidi1Protocol, KeyDetents, KeyAxis, KeyPosition, KeyFunction,
+                          KeyController, KeyAttributeType, KeyAttributeData });
                 }
             }
 
@@ -1332,7 +1346,8 @@ namespace glass
                 {
                     auto const value = messages.GetAt(i);
 
-                    if (value != nullptr && value.ValueType() == mjson::JsonValueType::Object)
+                    if (value != nullptr && value.ValueType() == mjson::JsonValueType::Object &&
+                        ReadString(value.GetObject(), KeyKind) != RetiredHoldLayer)
                     {
                         control.Messages.push_back(ReadMessage(value.GetObject()));
                     }
@@ -1425,7 +1440,6 @@ namespace glass
 
             device.MatchMode = ValueOf(MatchModeNames, ReadString(object, KeyMatchMode),
                 midiapp::EndpointMatchMode::EndpointDeviceId);
-            device.SendsBeatClock = ReadBool(object, KeySendsBeatClock, false);
 
             auto const protocolName = ReadString(object, KeyProtocol);
 
@@ -1436,9 +1450,21 @@ namespace glass
                 device.UnrecognizedProtocol = protocolName;
             }
 
-            device.Unknown = CaptureUnknown(object, { KeyName, KeyMatch, KeyMatchMode, KeySendsBeatClock, KeyProtocol });
+            device.Unknown = CaptureUnknown(object, { KeyName, KeyMatch, KeyMatchMode, RetiredSendsBeatClock, KeyProtocol });
 
             return device;
+        }
+
+        bool IsRetiredStep(_In_ mjson::JsonObject const& object) noexcept
+        {
+            if (ReadString(object, KeyKind) == RetiredHoldLayer)
+            {
+                return true;
+            }
+
+            auto const message = ReadObject(object, KeyMessage);
+
+            return message != nullptr && ReadString(message, KeyKind) == RetiredHoldLayer;
         }
 
         SequenceStep ReadStep(_In_ mjson::JsonObject const& object) noexcept
@@ -1499,7 +1525,8 @@ namespace glass
                 {
                     auto const value = steps.GetAt(i);
 
-                    if (value != nullptr && value.ValueType() == mjson::JsonValueType::Object)
+                    if (value != nullptr && value.ValueType() == mjson::JsonValueType::Object &&
+                        !IsRetiredStep(value.GetObject()))
                     {
                         sequence.Steps.push_back(ReadStep(value.GetObject()));
                     }
@@ -1679,7 +1706,6 @@ namespace glass
             document.Scale = ValueOf(ScaleModeNames, ReadString(root, KeyScaleMode), ScaleMode::ActualSize);
             document.CustomScalePercent = std::clamp(ReadNumber(root, KeyCustomScalePercent, 100.0), 10.0, 400.0);
             document.FullScreenButtonCorner = ValueOf(CornerNames, ReadString(root, KeyCornerButton), ScreenCorner::TopRight);
-            document.PreferredDisplayId = ReadString(root, KeyPreferredDisplay);
             document.SuppressAllStartupValues = ReadBool(root, KeySuppressStartup, false);
             document.PublishesVirtualDevice = ReadBool(root, KeyVirtualDevice, false);
             document.ToolbarWindow = ReadBool(root, KeyToolbarWindow, false);
@@ -1739,7 +1765,7 @@ namespace glass
                   KeyPageWidth, KeyPageHeight, KeyCanvasWidth, KeyCanvasHeight, KeyTheme,
                   KeyThemeColors,
                   KeyBackgroundImage, KeyBackgroundFit, KeyBackgroundOpacity,
-                  KeyScaleMode, KeyCustomScalePercent, KeyCornerButton, KeyPreferredDisplay,
+                  KeyScaleMode, KeyCustomScalePercent, KeyCornerButton, RetiredPreferredDisplay,
                   KeySuppressStartup, KeyVirtualDevice, KeyToolbarWindow, KeyAlwaysOnTop, KeySeeThrough,
                   KeyFavorite, KeyTempo, KeyDevices, KeyPages, KeySequences });
 
@@ -1780,6 +1806,18 @@ namespace glass
                 writer.Write(KeyNumber, static_cast<int64_t>(message.Number));
             }
 
+            // Only written when set, so a file with none of these reads exactly as it always did.
+            if (message.Controller != 0)
+            {
+                writer.Write(KeyController, static_cast<int64_t>(message.Controller));
+            }
+
+            if (message.AttributeType != 0 || message.AttributeData != 0)
+            {
+                writer.Write(KeyAttributeType, static_cast<int64_t>(message.AttributeType));
+                writer.Write(KeyAttributeData, static_cast<int64_t>(message.AttributeData));
+            }
+
             WriteMessageValue(writer, KeyMinimum, message.Minimum);
             WriteMessageValue(writer, KeyMaximum, message.Maximum);
             WriteDetents(writer, message.Detents);
@@ -1817,11 +1855,6 @@ namespace glass
             if (!message.TargetPageId.empty())
             {
                 writer.Write(KeyTargetPage, message.TargetPageId);
-            }
-
-            if (!message.TargetLayerId.empty())
-            {
-                writer.Write(KeyTargetLayer, message.TargetLayerId);
             }
 
             if (message.Position >= 0)
@@ -2197,7 +2230,6 @@ namespace glass
             writer.Write(KeyScaleMode, NameOf(ScaleModeNames, document.Scale));
             writer.Write(KeyCustomScalePercent, document.CustomScalePercent);
             writer.Write(KeyCornerButton, NameOf(CornerNames, document.FullScreenButtonCorner));
-            writer.Write(KeyPreferredDisplay, document.PreferredDisplayId);
             writer.Write(KeySuppressStartup, document.SuppressAllStartupValues);
             writer.Write(KeyVirtualDevice, document.PublishesVirtualDevice);
 
@@ -2234,7 +2266,6 @@ namespace glass
                 writer.Write(KeyName, device.Name);
                 writer.WriteRaw(KeyMatch, CanonicalJson(midiapp::MatchToJson(device.Match), writer.Depth()));
                 writer.Write(KeyMatchMode, NameOf(MatchModeNames, device.MatchMode));
-                writer.Write(KeySendsBeatClock, device.SendsBeatClock);
 
                 if (!device.UnrecognizedProtocol.empty())
                 {

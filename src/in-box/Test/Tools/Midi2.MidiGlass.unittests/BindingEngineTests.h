@@ -28,6 +28,10 @@ public:
     TEST_METHOD(BuildsANoteAtSixteenBitVelocity);
     TEST_METHOD(SendsRegisteredControllersForTheServiceToExpand);
     TEST_METHOD(SendsAnNrpnAsOneAssignableControllerMessage);
+    TEST_METHOD(SendsAPerNoteControllerToTheControllerItNames);
+    TEST_METHOD(ANoteCarriesItsAttribute);
+    TEST_METHOD(AnAttributeOfTypeNoneCarriesNoData);
+    TEST_METHOD(AMidi1NoteHasNoAttribute);
     TEST_METHOD(NeverScalesAProgramNumber);
 
     // ---- exact values, for data that is a code rather than a position ----

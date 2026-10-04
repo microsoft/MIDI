@@ -21,7 +21,7 @@ namespace
     // own header has to be made deliberately in both places.
     constexpr uint32_t FecDefault{ 2 };
     constexpr uint32_t FecUpper{ 10 };
-    constexpr uint32_t RetransmitDefault{ 50 };
+    constexpr uint32_t RetransmitDefault{ 250 };
     constexpr uint32_t RetransmitUpper{ 1000 };
     constexpr uint32_t PingDefault{ 2000 };
     constexpr uint32_t PingLower{ 250 };

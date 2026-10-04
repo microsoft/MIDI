@@ -29,6 +29,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         network::MidiNetworkClientMatchCriteria MatchCriteria() const noexcept;
 
+        network::MidiNetworkSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+
         // The saved entry, then each saved change to it in the order the service applies them
         void InternalInitialize(
             _In_ winrt::guid const& clientId,
@@ -53,5 +56,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring m_matchUmpEndpointName{};
         winrt::hstring m_matchDirectHostNameOrIPAddress{};
         uint16_t m_matchDirectPort{ 0 };
+
+        network::MidiNetworkSendSpeedLimit m_sendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
+        bool m_reduceSendSpeedAutomatically{ false };
     };
 }

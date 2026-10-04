@@ -342,6 +342,8 @@ namespace midi2console
                 fieldValueTextStyle);
             WriteField(ResourceString(IDS_NET_LABEL_REMOTE_POLICY),
                 FormatRemoteClientPolicy(host.RemoteClientPolicy()), fieldValueTextStyle);
+            WriteField(ResourceString(IDS_NET_LABEL_SEND_SPEED),
+                FormatSendSpeedLimit(static_cast<uint32_t>(host.SendSpeedLimit())), fieldValueTextStyle);
 
             if (host.LastErrorCode() != 0)
             {
@@ -493,6 +495,8 @@ namespace midi2console
                 FormatBoolean(client.AutoReconnect()), BooleanStyle(client.AutoReconnect()));
             WriteField(ResourceString(IDS_RTP_LABEL_RECOVERY_JOURNAL),
                 FormatBoolean(client.SendRecoveryJournal()), BooleanStyle(client.SendRecoveryJournal()));
+            WriteField(ResourceString(IDS_NET_LABEL_SEND_SPEED),
+                FormatSendSpeedLimit(static_cast<uint32_t>(client.SendSpeedLimit())), fieldValueTextStyle);
 
             if (client.LastErrorCode() != 0)
             {

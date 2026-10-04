@@ -56,6 +56,11 @@ namespace WindowsMidiServices
         [Parameter(ValueFromPipelineByPropertyName = true)]
         public Guid ClientId { get; set; }
 
+        // How fast this PC sends to the remote. A slower speed helps a device that loses data when
+        // a lot of it arrives at once, like a long SysEx dump. A lone message is never delayed.
+        [Parameter]
+        public MidiRtpSendSpeedLimit SendSpeedLimit { get; set; } = MidiRtpSendSpeedLimit.Unlimited;
+
         [Parameter]
         public SwitchParameter SaveToConfiguration { get; set; }
 
@@ -111,6 +116,7 @@ namespace WindowsMidiServices
                 ClientId = reusingClientId ? ClientId : Guid.NewGuid(),
                 Name = LocalEndpointName,
                 CustomEndpointName = EndpointName,
+                SendSpeedLimit = SendSpeedLimit,
                 MatchCriteria = criteria
             };
 

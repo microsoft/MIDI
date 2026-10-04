@@ -122,7 +122,7 @@ namespace glass
     // Whether a key is written with flats. F major and G minor are; G major and E minor are not.
     bool KeyUsesFlats(_In_ int32_t root, _In_ MusicalScale scale) noexcept;
 
-    // A note written the way this app writes notes everywhere else: 48 is C3.
+    // A note written the way every Windows MIDI Services tool writes it: 60 is C3 and 48 is C2.
     std::wstring PadNoteName(_In_ int32_t note, _In_ bool flats);
 
     // The two intervals behind the hexagon layouts somebody might know by name: the step to the

@@ -12,6 +12,7 @@ import "MidiApiContracts.idl";
 
 
 import "IMidiServiceTransportPluginConfig.idl";
+import "MidiNetworkSendSpeedLimitEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
@@ -37,5 +38,13 @@ namespace Windows.Devices.Midi2.Transports.Network
         // declares no function blocks. Applied to an endpoint which is already up. Ignored for a
         // device which does describe itself, because its function blocks say how many to create.
         [noexcept] UInt8 FallbackMidi1PortCount;
+
+        // How fast this PC sends to the remote. Applied straight away, without disconnecting.
+        // Only sent when set, so leaving it alone keeps the saved limit.
+        [noexcept] MidiNetworkSendSpeedLimit SendSpeedLimit;
+
+        // Send more slowly while the remote keeps asking for data again. Applied straight away.
+        // Only sent when set.
+        [noexcept] Boolean ReduceSendSpeedAutomatically;
     }
 }

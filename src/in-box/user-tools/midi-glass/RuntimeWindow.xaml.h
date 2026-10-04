@@ -135,6 +135,12 @@ namespace winrt::midiglass::implementation
         // both go through, so there is one path and one place a page change can go wrong.
         void ShowPage(_In_ size_t pageIndex);
 
+        // Where every control was left, by engine index, so a page comes back the way it was left
+        // and the controls always on screen keep their state from page to page.
+        void RememberValue(_In_ uint32_t controlIndex, _In_ double value) noexcept;
+        void RememberValueY(_In_ uint32_t controlIndex, _In_ double value) noexcept;
+        void RestoreValues() noexcept;
+
         void ApplyScale();
         void UpdateDeckBrush();
         void SetFullScreen(_In_ bool fullScreen);
@@ -217,6 +223,12 @@ namespace winrt::midiglass::implementation
         glass::Theme m_theme{};
 
         size_t m_pageIndex{ 0 };
+
+        // The pages the selector and the menus offer, by page index. Not the always-on-screen ones.
+        std::vector<size_t> m_listedPages{};
+
+        std::vector<double> m_controlValues{};
+        std::vector<double> m_controlValuesY{};
 
         glass::SurfaceRenderer m_renderer{};
         glass::InputRouter m_input{};

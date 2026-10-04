@@ -201,6 +201,7 @@
     <ClInclude Include="document\HexText.h" />
     <ClInclude Include="binding\MonitorFormat.h" />
     <ClInclude Include="binding\ValueThrottle.h" />
+    <ClInclude Include="binding\ClockTempo.h" />
     <ClInclude Include="binding\PadVoices.h" />
     <ClInclude Include="editor\ArrangeOps.h" />
     <ClInclude Include="editor\ControlFactory.h" />
@@ -209,6 +210,7 @@
     <ClInclude Include="editor\RepeatPlan.h" />
     <ClInclude Include="editor\UndoStack.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\midi-app-shared\AssistantPrompt.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -331,6 +333,9 @@
     <ClCompile Include="binding\ValueThrottle.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="binding\ClockTempo.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="binding\PadVoices.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -392,6 +397,7 @@
     <ClCompile Include="thumbnail\ThumbnailRenderer.cpp" />
     <ClCompile Include="thumbnail\SurfaceThumbnail.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
+    <ClCompile Include="..\midi-app-shared\AssistantPrompt.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>

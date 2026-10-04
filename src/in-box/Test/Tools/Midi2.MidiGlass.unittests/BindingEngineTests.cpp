@@ -213,6 +213,109 @@ void BindingEngineTests::SendsAnNrpnAsOneAssignableControllerMessage()
     VERIFY_ARE_EQUAL(0xFFFFFFFFu, sends[0].Words[1]);
 }
 
+void BindingEngineTests::SendsAPerNoteControllerToTheControllerItNames()
+{
+    auto document = OneControlDocument();
+    auto& message = document.Pages[0].Controls[0].Messages[0];
+
+    message.Kind = glass::MessageKind::PerNoteController;
+    message.Number = 60;
+    message.Controller = 74;
+
+    glass::BindingEngine engine{};
+    engine.Prepare(document, DeskOn(glass::DestinationProtocol::Midi2));
+
+    std::array<glass::PreparedSend, glass::MaximumSendsPerEvent> sends{};
+
+    VERIFY_ARE_EQUAL(uint32_t{ 1 }, engine.Evaluate(0, glass::MessageTrigger::Changes, 1.0, sends));
+    VERIFY_ARE_EQUAL(uint32_t{ 2 }, sends[0].WordCount);
+
+    // Registered per-note controller 74 on note 60: the note, then the controller.
+    VERIFY_ARE_EQUAL(0x40003C4Au, sends[0].Words[0]);
+    VERIFY_ARE_EQUAL(0xFFFFFFFFu, sends[0].Words[1]);
+
+    // The assignable kind is status 1, and its numbers go past 127.
+    message.Kind = glass::MessageKind::AssignablePerNoteController;
+    message.Controller = 200;
+
+    engine.Prepare(document, DeskOn(glass::DestinationProtocol::Midi2));
+
+    VERIFY_ARE_EQUAL(uint32_t{ 1 }, engine.Evaluate(0, glass::MessageTrigger::Changes, 0.5, sends));
+    VERIFY_ARE_EQUAL(0x40103CC8u, sends[0].Words[0]);
+    VERIFY_ARE_EQUAL(0x80000000u, sends[0].Words[1]);
+}
+
+void BindingEngineTests::ANoteCarriesItsAttribute()
+{
+    auto document = OneControlDocument();
+    auto& message = document.Pages[0].Controls[0].Messages[0];
+
+    message.Kind = glass::MessageKind::Note;
+    message.Number = 60;
+    message.AttributeType = 2;
+    message.AttributeData = 0x1234;
+
+    glass::BindingEngine engine{};
+    engine.Prepare(document, DeskOn(glass::DestinationProtocol::Midi2));
+
+    std::array<glass::PreparedSend, glass::MaximumSendsPerEvent> sends{};
+
+    // The type is the last byte of the first word; the data sits beside the velocity.
+    engine.Evaluate(0, glass::MessageTrigger::Changes, 1.0, sends);
+    VERIFY_ARE_EQUAL(0x40903C02u, sends[0].Words[0]);
+    VERIFY_ARE_EQUAL(0xFFFF1234u, sends[0].Words[1]);
+
+    engine.Evaluate(0, glass::MessageTrigger::Changes, 0.0, sends);
+    VERIFY_ARE_EQUAL(0x40803C02u, sends[0].Words[0]);
+    VERIFY_ARE_EQUAL(0x00001234u, sends[0].Words[1]);
+
+    // A key or a pad builds its note another way, and the attribute goes with it.
+    VERIFY_ARE_EQUAL(uint32_t{ 1 }, engine.EvaluateNote(0, 64, 1.0, true, sends));
+    VERIFY_ARE_EQUAL(0x40904002u, sends[0].Words[0]);
+    VERIFY_ARE_EQUAL(0xFFFF1234u, sends[0].Words[1]);
+}
+
+void BindingEngineTests::AnAttributeOfTypeNoneCarriesNoData()
+{
+    auto document = OneControlDocument();
+    auto& message = document.Pages[0].Controls[0].Messages[0];
+
+    message.Kind = glass::MessageKind::Note;
+    message.Number = 60;
+    message.AttributeType = 0;
+    message.AttributeData = 0x1234;
+
+    glass::BindingEngine engine{};
+    engine.Prepare(document, DeskOn(glass::DestinationProtocol::Midi2));
+
+    std::array<glass::PreparedSend, glass::MaximumSendsPerEvent> sends{};
+
+    engine.Evaluate(0, glass::MessageTrigger::Changes, 1.0, sends);
+    VERIFY_ARE_EQUAL(0x40903C00u, sends[0].Words[0]);
+    VERIFY_ARE_EQUAL(0xFFFF0000u, sends[0].Words[1]);
+}
+
+void BindingEngineTests::AMidi1NoteHasNoAttribute()
+{
+    auto document = OneControlDocument();
+    auto& message = document.Pages[0].Controls[0].Messages[0];
+
+    message.Kind = glass::MessageKind::Note;
+    message.Number = 60;
+    message.UseMidi1Protocol = true;
+    message.AttributeType = 2;
+    message.AttributeData = 0x1234;
+
+    glass::BindingEngine engine{};
+    engine.Prepare(document, DeskOn(glass::DestinationProtocol::Midi1));
+
+    std::array<glass::PreparedSend, glass::MaximumSendsPerEvent> sends{};
+
+    engine.Evaluate(0, glass::MessageTrigger::Changes, 1.0, sends);
+    VERIFY_ARE_EQUAL(uint32_t{ 1 }, sends[0].WordCount);
+    VERIFY_ARE_EQUAL(0x20903C7Fu, sends[0].Words[0]);
+}
+
 void BindingEngineTests::NeverScalesAProgramNumber()
 {
     auto document = OneControlDocument();

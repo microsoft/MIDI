@@ -1935,6 +1935,13 @@
                                                     VerticalAlignment="Bottom" />
                                         </Grid>
 
+                                        <CheckBox x:Name="KeyNamesCheck"
+                                                  x:Uid="KeyNamesCheck"
+                                                  Content="Show note names"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnKeyNamesChanged"
+                                                  Unchecked="OnKeyNamesChanged" />
+
                                         <CheckBox x:Name="KeyVelocityCheck"
                                                   x:Uid="KeyVelocityCheck"
                                                   Content="Velocity by touch position"
@@ -2271,6 +2278,8 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
 
                                         <TextBlock x:Name="MessageWhenLabel" x:Uid="MessageWhenLabel" Grid.Row="0" Grid.Column="0" Text="Trigger" Style="{StaticResource InspectorLabelStyle}" />
@@ -2353,21 +2362,82 @@
                                                        ValueChanged="OnMessageParameterChanged" />
                                         </Grid>
 
+                                        <!-- Which per-note controller: a number, or one of the ones MIDI 2.0 names, picked from a list. -->
+                                        <TextBlock x:Name="MessageControllerLabel" x:Uid="MessageControllerLabel" Grid.Row="6" Grid.Column="0" Text="Controller"
+                                                   Style="{StaticResource InspectorLabelStyle}" VerticalAlignment="Top" Margin="0,8,0,0" Visibility="Collapsed" />
+                                        <StackPanel x:Name="PerNoteControllerPanel" Grid.Row="6" Grid.Column="1" Spacing="3" Visibility="Collapsed">
+                                            <Grid ColumnSpacing="6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <NumberBox x:Name="PerNoteControllerBox" x:Uid="PerNoteControllerBox"
+                                                           Minimum="0" Maximum="255" SpinButtonPlacementMode="Compact"
+                                                           ValueChanged="OnPerNoteControllerChanged" />
+
+                                                <DropDownButton x:Name="PerNoteControllerPicker" x:Uid="PerNoteControllerPicker" Grid.Column="1"
+                                                                Height="32" Padding="8,0,6,0">
+                                                    <FontIcon Glyph="&#xE8FD;" FontSize="12" />
+                                                    <DropDownButton.Flyout>
+                                                        <MenuFlyout x:Name="PerNoteControllerMenu" Placement="BottomEdgeAlignedRight" />
+                                                    </DropDownButton.Flyout>
+                                                </DropDownButton>
+                                            </Grid>
+
+                                            <TextBlock x:Name="PerNoteControllerCaption"
+                                                       FontSize="11"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                        </StackPanel>
+
                                         <!-- The one or two values a row sends, in the units its
                                              device is set to: exact MIDI 1.0 numbers, or a
                                              percentage. Labeled in code, because a note's
                                              velocity and a fader's range are not the same question. -->
-                                        <TextBlock x:Name="MessageValueLabel" Grid.Row="6" Grid.Column="0" Text="Value"
+                                        <TextBlock x:Name="MessageValueLabel" Grid.Row="7" Grid.Column="0" Text="Value"
                                                    Style="{StaticResource InspectorLabelStyle}" Visibility="Collapsed" />
-                                        <NumberBox x:Name="MessageValueBox" Grid.Row="6" Grid.Column="1"
+                                        <NumberBox x:Name="MessageValueBox" Grid.Row="7" Grid.Column="1"
                                                    Minimum="0" Maximum="127" SpinButtonPlacementMode="Compact" Visibility="Collapsed"
                                                    ValueChanged="OnMessageValueChanged" />
 
-                                        <TextBlock x:Name="MessageSecondValueLabel" Grid.Row="7" Grid.Column="0" Text="Value"
+                                        <TextBlock x:Name="MessageSecondValueLabel" Grid.Row="8" Grid.Column="0" Text="Value"
                                                    Style="{StaticResource InspectorLabelStyle}" Visibility="Collapsed" />
-                                        <NumberBox x:Name="MessageSecondValueBox" Grid.Row="7" Grid.Column="1"
+                                        <NumberBox x:Name="MessageSecondValueBox" Grid.Row="8" Grid.Column="1"
                                                    Minimum="0" Maximum="127" SpinButtonPlacementMode="Compact" Visibility="Collapsed"
                                                    ValueChanged="OnMessageValueChanged" />
+
+                                        <!-- A MIDI 2.0 note's attribute, typed in hex the way the specification prints it. -->
+                                        <TextBlock x:Name="MessageAttributeLabel" x:Uid="MessageAttributeLabel" Grid.Row="9" Grid.Column="0" Text="Attribute"
+                                                   Style="{StaticResource InspectorLabelStyle}" VerticalAlignment="Top" Margin="0,8,0,0" Visibility="Collapsed" />
+                                        <StackPanel x:Name="AttributePanel" Grid.Row="9" Grid.Column="1" Spacing="3" Visibility="Collapsed">
+                                            <Grid ColumnSpacing="6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*" />
+                                                    <ColumnDefinition Width="3*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBox x:Name="AttributeTypeBox" x:Uid="AttributeTypeBox"
+                                                         PlaceholderText="Type"
+                                                         MaxLength="4"
+                                                         FontFamily="Cascadia Mono, Consolas"
+                                                         LostFocus="OnAttributeChanged"
+                                                         KeyDown="OnAttributeKeyDown" />
+
+                                                <TextBox x:Name="AttributeDataBox" x:Uid="AttributeDataBox" Grid.Column="1"
+                                                         PlaceholderText="Data"
+                                                         MaxLength="6"
+                                                         FontFamily="Cascadia Mono, Consolas"
+                                                         LostFocus="OnAttributeChanged"
+                                                         KeyDown="OnAttributeKeyDown" />
+                                            </Grid>
+
+                                            <TextBlock x:Uid="AttributeCaption"
+                                                       Text="The type, then the data, in hexadecimal. Type 00 is none, 01 is the maker's own, 02 is set by a profile, and 03 is Pitch 7.9. It goes out with the note on or note off this row sends."
+                                                       FontSize="11"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                        </StackPanel>
                                     </Grid>
 
                                     <TextBlock x:Name="MessageProtocolText"
@@ -3024,8 +3094,17 @@
                                                TextWrapping="Wrap"
                                                Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
-                                    <TextBlock x:Uid="InspectorPickupHeading" Text="Pickup" Style="{StaticResource InspectorHeadingStyle}" />
-                                    <ComboBox x:Name="PickupCombo" x:Uid="PickupCombo" HorizontalAlignment="Stretch" SelectionChanged="OnPickupChanged" />
+                                    <!-- Only for a control a touch sets outright: a fader, a ribbon, an XY pad and a joystick. -->
+                                    <StackPanel x:Name="PickupPanel">
+                                        <TextBlock x:Uid="InspectorPickupHeading" Text="Pickup" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <ComboBox x:Name="PickupCombo" x:Uid="PickupCombo" HorizontalAlignment="Stretch" SelectionChanged="OnPickupChanged" />
+                                        <TextBlock x:Uid="PickupCaption"
+                                                   Text="What a touch away from the value does. Jump goes straight to the finger. Catch waits until the finger reaches the value, so a fader that follows the DAW never jumps. Relative moves the value by as far as the finger moves."
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
 
                                     <TextBlock x:Uid="InspectorKeyboardOrderHeading" Text="Keyboard order" Style="{StaticResource InspectorHeadingStyle}" />
                                     <NumberBox x:Name="KeyboardOrderBox"
@@ -3166,7 +3245,7 @@
                                 <StackPanel Orientation="Horizontal" Spacing="11">
                                     <FontIcon Glyph="&#xE8A9;" FontSize="15" Width="16"
                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                                    <TextBlock x:Uid="SettingsNavPagesLabel" Text="Pages and layers" />
+                                    <TextBlock x:Uid="SettingsNavPagesLabel" Text="Pages" />
                                 </StackPanel>
                             </ToggleButton>
 
@@ -3434,7 +3513,7 @@
                         </Border>
                     </Grid>
 
-                    <!-- ====================================== Pages and layers -->
+                    <!-- ============================================ Pages -->
                     <ScrollViewer x:Name="PagesPane"
                                   Visibility="Collapsed"
                                   VerticalScrollBarVisibility="Auto"
@@ -3480,7 +3559,7 @@
                                        Margin="0,8,0,0" />
 
                             <TextBlock x:Uid="LayoutSettingsBandCaption"
-                                       Text="A band is pinned to every page, so transport and panic do not have to be rebuilt four times. Turn one on from a page's … menu."
+                                       Text="A band's controls show on every page while the layout runs, so transport buttons and panic don't have to be built again on each page. You don't switch to a band the way you switch pages, so leave room for it on the others. Turn one on from a page's … menu."
                                        FontSize="11"
                                        TextWrapping="Wrap"
                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}" />

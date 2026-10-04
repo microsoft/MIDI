@@ -26,9 +26,12 @@ Describes a remote device for this PC to connect to. Pass it to `MidiRtpTranspor
 | `MatchCriteria` | A [MidiRtpClientMatchCriteria]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpClientMatchCriteria/) that says which remote device to connect to. Required |
 | `AutoReconnect` | When true, the service connects again whenever a try or a connection ends. When false, it connects once, and the entry is marked `Unavailable` when that try or connection ends |
 | `SendRecoveryJournal` | When true, each packet carries a recovery journal, so the remote device can repair a lost Note Off. Only turn it off for a device that can't read one |
+| `SendSpeedLimit` | How fast this PC sends to the remote device. `Unlimited` by default. Choose a slower speed for a device that loses data when a lot of it arrives at once, like a long SysEx dump. A lone message is never delayed. See [MidiRtpSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpSendSpeedLimitEnum/) |
 
 ## Remarks
 
 Calling `ConnectRtpClientAsync` with a `ClientId` that already exists replaces that entry's settings. It doesn't create a copy. Sending the same settings again doesn't make the service try again, so to retry an existing entry without changing it, use `ReconnectRtpClientAsync`.
+
+To change only `SendSpeedLimit`, send the entry's other settings unchanged with the new speed. The new speed applies to the running connection straight away, without disconnecting.
 
 See the [namespace overview]({{ site.baseurl }}/sdk-reference/Transports/Rtp/) for when the service tries again by itself.

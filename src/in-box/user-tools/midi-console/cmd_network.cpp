@@ -53,6 +53,23 @@ namespace midi2console
             }
         }
 
+        // Empty when the last invitation did not fail
+        std::string DescribeClientProblem(_In_ midi2net::MidiNetworkClientConnectErrorCode const lastErrorCode)
+        {
+            switch (lastErrorCode)
+            {
+            case midi2net::MidiNetworkClientConnectErrorCode::NoErrorInformationAvailable: return {};
+            case midi2net::MidiNetworkClientConnectErrorCode::NoReplyToInvitation:         return ResourceString(IDS_NET_PROBLEM_NO_ANSWER);
+            case midi2net::MidiNetworkClientConnectErrorCode::InvitationNotApproved:       return ResourceString(IDS_NET_PROBLEM_NOT_APPROVED);
+            case midi2net::MidiNetworkClientConnectErrorCode::HostBusy:                    return ResourceString(IDS_NET_PROBLEM_BUSY);
+            case midi2net::MidiNetworkClientConnectErrorCode::InvitationRefused:           return ResourceString(IDS_NET_PROBLEM_REFUSED);
+            case midi2net::MidiNetworkClientConnectErrorCode::AuthenticationRequired:      return ResourceString(IDS_NET_PROBLEM_NEEDS_PASSWORD);
+            case midi2net::MidiNetworkClientConnectErrorCode::InvitationEndedByHost:       return ResourceString(IDS_NET_PROBLEM_ENDED);
+            default:
+                return FormatResourceString(IDS_NET_PROBLEM_OTHER, fmt::format("0x{:08X}", static_cast<uint32_t>(lastErrorCode)));
+            }
+        }
+
         std::string FormatEndpointOrEmpty(_In_ winrt::hstring const& value)
         {
             auto const text = ToUtf8(value);
@@ -137,6 +154,13 @@ namespace midi2console
                     table.AddRowDetail(ResourceString(IDS_NET_LABEL_PENDING_APPROVAL), warningTextStyle);
                 }
 
+                // only differs from the host's own limit while it is slowed down after losses
+                if (connection.IsSessionActive() && connection.CurrentSendSpeedLimit() != host.SendSpeedLimit())
+                {
+                    table.AddRowDetail(FormatResourceString(IDS_NET_SEND_SPEED_SLOWED_FORMAT,
+                        FormatSendSpeedLimit(static_cast<uint32_t>(connection.CurrentSendSpeedLimit()))), warningTextStyle);
+                }
+
                 if (!connection.EndpointDeviceId().empty())
                 {
                     table.AddRowDetail(ToUtf8(connection.EndpointDeviceId()), endpointIdTextStyle);
@@ -190,6 +214,12 @@ namespace midi2console
                 ToUtf8(host.ProductInstanceId()), fieldValueTextStyle);
             WriteField(ResourceString(IDS_NET_LABEL_REMOTE_POLICY),
                 FormatRemoteClientPolicy(host.RemoteClientPolicy()), fieldValueTextStyle);
+
+            auto const sendSpeed = FormatSendSpeedLimit(static_cast<uint32_t>(host.SendSpeedLimit()));
+
+            WriteField(ResourceString(IDS_NET_LABEL_SEND_SPEED),
+                host.ReduceSendSpeedAutomatically() ? FormatResourceString(IDS_NET_SEND_SPEED_AUTOMATIC_FORMAT, sendSpeed) : sendSpeed,
+                fieldValueTextStyle);
 
             if (options.Verbose)
             {
@@ -265,6 +295,19 @@ namespace midi2console
             table.AddCell(fmt::format("{} / {}",
                 client.TotalCountNetworkPacketsReceived(), client.TotalCountNetworkPacketsSent()));
 
+            if (!client.IsSessionActive())
+            {
+                if (auto const problem = DescribeClientProblem(client.LastErrorCode()); !problem.empty())
+                {
+                    table.AddRowDetail(problem, warningTextStyle);
+                }
+            }
+            else if (client.CurrentSendSpeedLimit() != client.SendSpeedLimit())
+            {
+                table.AddRowDetail(FormatResourceString(IDS_NET_SEND_SPEED_SLOWED_FORMAT,
+                    FormatSendSpeedLimit(static_cast<uint32_t>(client.CurrentSendSpeedLimit()))), warningTextStyle);
+            }
+
             if (!client.EndpointDeviceId().empty())
             {
                 table.AddRowDetail(ToUtf8(client.EndpointDeviceId()), endpointIdTextStyle);
@@ -302,6 +345,12 @@ namespace midi2console
                 FormatAddressAndPort(client.ConnectedLocalAddress(), client.ConnectedLocalPort()), fieldValueTextStyle);
             WriteField(ResourceString(IDS_NET_LABEL_RETRANSMITS),
                 fmt::format("{} / {}", client.RetransmitCount(), client.RetransmitRequestCount()), numberTextStyle);
+
+            auto const sendSpeed = FormatSendSpeedLimit(static_cast<uint32_t>(client.SendSpeedLimit()));
+
+            WriteField(ResourceString(IDS_NET_LABEL_SEND_SPEED),
+                client.ReduceSendSpeedAutomatically() ? FormatResourceString(IDS_NET_SEND_SPEED_AUTOMATIC_FORMAT, sendSpeed) : sendSpeed,
+                fieldValueTextStyle);
         }
 
         return 0;

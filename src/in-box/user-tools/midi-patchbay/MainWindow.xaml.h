@@ -41,6 +41,7 @@ namespace winrt::midipatchbay::implementation
         void OnNewPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNewQuickPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnImportPatchClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnAssistantClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnNotRoutingStartClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnSortClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSavePatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -101,6 +102,7 @@ namespace winrt::midipatchbay::implementation
         // ---- startup and chrome ----
         void InitializeWindowChrome() noexcept;
         void InitializeStaticText() noexcept;
+        void ApplyAssistantVisibility() noexcept;
         xaml::UIElement BuildAppSettingsPanel() noexcept;
 
         // ---- notification area ----
@@ -210,6 +212,7 @@ namespace winrt::midipatchbay::implementation
         winrt::fire_and_forget ShowCreateLoopbackDialogAsync();
         winrt::fire_and_forget ShowQuickPatchDialogAsync();
         winrt::fire_and_forget ShowDeletePatchDialogAsync();
+        winrt::fire_and_forget ShowAssistantDialogAsync();
 
         // The group lists depend on the endpoint picked above them, so they are filled after it.
         void FillQuickPatchGroups(_In_ bool isSource) noexcept;

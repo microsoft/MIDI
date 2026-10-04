@@ -1590,6 +1590,9 @@
   <data name="PressedKeyColorBox.PlaceholderText" xml:space="preserve">
     <value>the control's own color</value>
   </data>
+  <data name="KeyNamesCheck.Content" xml:space="preserve">
+    <value>Show note names</value>
+  </data>
   <data name="KeyVelocityCheck.Content" xml:space="preserve">
     <value>Velocity by touch position</value>
   </data>
@@ -2211,6 +2214,59 @@
   <data name="LibraryMenuKeepAwake.Text" xml:space="preserve">
     <value>Keep this PC awake while a layout runs</value>
   </data>
+  <data name="AssistantButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Ask an AI assistant</value>
+  </data>
+  <data name="AssistantLabel.Text" xml:space="preserve">
+    <value>Ask an AI assistant…</value>
+  </data>
+  <data name="AssistantTitle" xml:space="preserve">
+    <value>Ask an AI assistant</value>
+  </data>
+  <data name="AssistantMessage" xml:space="preserve">
+    <value>Copy this and paste it into the AI assistant you use, such as a chat in your web browser. Then tell it what you want the layout to do. When it gives you a layout file, select Open a file… to try it. This includes the names of the MIDI devices on this PC, so the layout can find them. MIDI Glass doesn't send anything itself.</value>
+  </data>
+  <data name="AssistantPromptHeader" xml:space="preserve">
+    <value>What gets copied</value>
+  </data>
+  <data name="AssistantGuideLink" xml:space="preserve">
+    <value>Read the guide the assistant will use</value>
+  </data>
+  <data name="AssistantCopy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="AssistantCopied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="AssistantCopyFailed" xml:space="preserve">
+    <value>Couldn't copy. Try again</value>
+  </data>
+  <!-- The prompt the customer pastes into an AI assistant. Any language works, so translate it like other text. -->
+  <data name="AssistantPromptIntroFormat" xml:space="preserve">
+    <value>I want to make a layout for Windows MIDI Glass. Before you start, read the whole guide at {0} and follow it. Ask me what you need to know. Then give me a .midilayout file.</value>
+    <comment>{0} is the address of the guide, a web link</comment>
+  </data>
+  <data name="AssistantPromptDevices" xml:space="preserve">
+    <value>These are the MIDI devices on my PC, with the names Windows shows for them:</value>
+  </data>
+  <data name="AssistantPromptNoDevices" xml:space="preserve">
+    <value>I couldn't list the MIDI devices on my PC, so ask me for their names.</value>
+  </data>
+  <data name="AssistantPromptThemes" xml:space="preserve">
+    <value>These are the themes in MIDI Glass on my PC. Use one of them, by its exact name:</value>
+  </data>
+  <data name="AssistantPromptRequest" xml:space="preserve">
+    <value>Here's what I want the layout to do:</value>
+  </data>
+  <data name="SettingsSectionHeading" xml:space="preserve">
+    <value>MIDI Glass</value>
+  </data>
+  <data name="SettingAssistant" xml:space="preserve">
+    <value>Ask an AI assistant</value>
+  </data>
+  <data name="SettingAssistantHint" xml:space="preserve">
+    <value>Shows Ask an AI assistant on the toolbar. It copies a starting prompt for the AI assistant you use. MIDI Glass doesn't send anything itself.</value>
+  </data>
   <data name="PackageSaveTitle" xml:space="preserve">
     <value>Save the layout package</value>
   </data>
@@ -2665,7 +2721,123 @@
     <value>Channel pressure</value>
   </data>
   <data name="MessagePerNoteController" xml:space="preserve">
-    <value>Per-note controller</value>
+    <value>Per-note controller (registered)</value>
+  </data>
+  <data name="MessageAssignablePerNoteController" xml:space="preserve">
+    <value>Per-note controller (assignable)</value>
+  </data>
+  <data name="MessageRowPerNoteController" xml:space="preserve">
+    <value>Per-note</value>
+    <comment>Short name for a registered per-note controller row in the narrow Sends list.</comment>
+  </data>
+  <data name="MessageRowAssignablePerNoteController" xml:space="preserve">
+    <value>Assignable per-note</value>
+    <comment>Short name for an assignable per-note controller row in the narrow Sends list.</comment>
+  </data>
+  <data name="PerNoteRowNumberFormat" xml:space="preserve">
+    <value>{0} on note {1}</value>
+    <comment>A per-note controller row in the Sends list. {0} is the controller number, {1} the note number.</comment>
+  </data>
+  <data name="MessageNumberNoteLabel" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="MessageNumberPlainLabel" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="MessageControllerLabel.Text" xml:space="preserve">
+    <value>Controller</value>
+  </data>
+  <data name="PerNoteControllerBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Per-note controller number</value>
+  </data>
+  <data name="PerNoteControllerPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pick a per-note controller by name</value>
+  </data>
+  <data name="PerNoteControllerPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Pick by name</value>
+  </data>
+  <data name="PerNoteChoiceFormat" xml:space="preserve">
+    <value>{0} · {1}</value>
+    <comment>An entry in the list of per-note controllers. {0} is its number, {1} its name.</comment>
+  </data>
+  <data name="PerNoteCaptionAssignable" xml:space="preserve">
+    <value>The instrument decides what each assignable number does.</value>
+  </data>
+  <data name="PerNoteCaptionUnnamed" xml:space="preserve">
+    <value>MIDI 2.0 doesn't name this number.</value>
+  </data>
+  <data name="PerNoteModulation" xml:space="preserve">
+    <value>Modulation</value>
+  </data>
+  <data name="PerNoteBreath" xml:space="preserve">
+    <value>Breath</value>
+  </data>
+  <data name="PerNotePitch" xml:space="preserve">
+    <value>Pitch 7.25</value>
+    <comment>A MIDI 2.0 term: the note's pitch as a 7 bit note number and a 25 bit fraction. Keep "7.25".</comment>
+  </data>
+  <data name="PerNoteVolume" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="PerNoteBalance" xml:space="preserve">
+    <value>Balance</value>
+  </data>
+  <data name="PerNotePan" xml:space="preserve">
+    <value>Pan</value>
+  </data>
+  <data name="PerNoteExpression" xml:space="preserve">
+    <value>Expression</value>
+  </data>
+  <data name="PerNoteSoundVariation" xml:space="preserve">
+    <value>Sound variation</value>
+  </data>
+  <data name="PerNoteTimbre" xml:space="preserve">
+    <value>Timbre</value>
+  </data>
+  <data name="PerNoteReleaseTime" xml:space="preserve">
+    <value>Release time</value>
+  </data>
+  <data name="PerNoteAttackTime" xml:space="preserve">
+    <value>Attack time</value>
+  </data>
+  <data name="PerNoteBrightness" xml:space="preserve">
+    <value>Brightness</value>
+  </data>
+  <data name="PerNoteDecayTime" xml:space="preserve">
+    <value>Decay time</value>
+  </data>
+  <data name="PerNoteVibratoRate" xml:space="preserve">
+    <value>Vibrato rate</value>
+  </data>
+  <data name="PerNoteVibratoDepth" xml:space="preserve">
+    <value>Vibrato depth</value>
+  </data>
+  <data name="PerNoteVibratoDelay" xml:space="preserve">
+    <value>Vibrato delay</value>
+  </data>
+  <data name="PerNoteReverb" xml:space="preserve">
+    <value>Reverb send</value>
+  </data>
+  <data name="PerNoteChorus" xml:space="preserve">
+    <value>Chorus send</value>
+  </data>
+  <data name="MessageAttributeLabel.Text" xml:space="preserve">
+    <value>Attribute</value>
+  </data>
+  <data name="AttributeTypeBox.PlaceholderText" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="AttributeTypeBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Attribute type, in hexadecimal</value>
+  </data>
+  <data name="AttributeDataBox.PlaceholderText" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="AttributeDataBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Attribute data, in hexadecimal</value>
+  </data>
+  <data name="AttributeCaption.Text" xml:space="preserve">
+    <value>The type, then the data, in hexadecimal. Type 00 is none, 01 is the maker's own, 02 is set by a profile, and 03 is Pitch 7.9. It goes out with the note on or note off this row sends.</value>
   </data>
   <data name="MessageRegisteredController" xml:space="preserve">
     <value>RPN (registered controller)</value>
@@ -3082,6 +3254,9 @@
   <data name="PickupRelative" xml:space="preserve">
     <value>Relative</value>
   </data>
+  <data name="PickupCaption.Text" xml:space="preserve">
+    <value>What a touch away from the value does. Jump goes straight to the finger. Catch waits until the finger reaches the value, so a fader that follows the DAW never jumps. Relative moves the value by as far as the finger moves.</value>
+  </data>
   <data name="InspectorKeyboardOrderHeading.Text" xml:space="preserve">
     <value>Keyboard order</value>
   </data>
@@ -3093,6 +3268,9 @@
   </data>
   <data name="DialogCancel" xml:space="preserve">
     <value>Cancel</value>
+  </data>
+  <data name="DialogClose" xml:space="preserve">
+    <value>Close</value>
   </data>
   <data name="DialogSave" xml:space="preserve">
     <value>Save</value>
@@ -3167,7 +3345,7 @@
     <value>Always on screen</value>
   </data>
   <data name="LayoutSettingsBandCaption.Text" xml:space="preserve">
-    <value>A band is pinned to every page, so transport and panic do not have to be rebuilt four times. Turn one on from a page's … menu.</value>
+    <value>A band's controls show on every page while the layout runs, so transport buttons and panic don't have to be built again on each page. You don't switch to a band the way you switch pages, so leave room for it on the others. Turn one on from a page's … menu.</value>
   </data>
   <data name="LayoutSettingsDevicesHeader.Text" xml:space="preserve">
     <value>MIDI devices</value>
@@ -3619,6 +3797,9 @@
   <data name="GroupsFromDeviceFormat" xml:space="preserve">
     <value>Showing the {0} groups this device takes messages on.</value>
   </data>
+  <data name="GroupsFromDeviceOne" xml:space="preserve">
+    <value>Showing the one group this device takes messages on.</value>
+  </data>
   <data name="RemoveDeviceTitle" xml:space="preserve">
     <value>Remove this device?</value>
   </data>
@@ -3645,12 +3826,6 @@
   </data>
   <data name="StepDuplicate" xml:space="preserve">
     <value>Duplicate</value>
-  </data>
-  <data name="StepAddHoldLayer" xml:space="preserve">
-    <value>Hold a layer</value>
-  </data>
-  <data name="StepHoldLayerText" xml:space="preserve">
-    <value>Hold a layer</value>
   </data>
   <data name="SequenceWaitsDoNotBlock" xml:space="preserve">
     <value>Waits do not block the surface</value>
@@ -3837,10 +4012,10 @@
     <value>Appearance</value>
   </data>
   <data name="SettingsNavPages.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Pages and layers</value>
+    <value>Pages</value>
   </data>
   <data name="SettingsNavPagesLabel.Text" xml:space="preserve">
-    <value>Pages and layers</value>
+    <value>Pages</value>
   </data>
   <data name="SettingsNavOutputs.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Outputs</value>
@@ -4644,16 +4819,22 @@
     <value>Create virtual MIDI device</value>
   </data>
   <data name="BehaviorHeadingTempo" xml:space="preserve">
-    <value>MIDI clock source</value>
+    <value>Tempo</value>
   </data>
   <data name="BehaviorCaptionTempo" xml:space="preserve">
-    <value>Clocks and LFOs on this layout run from here. Following an incoming clock holds the last tempo if the clock stops, rather than snapping back.</value>
-  </data>
-  <data name="BehaviorCaptionTempoInternal" xml:space="preserve">
-    <value>Clocks and LFOs on this layout run at this tempo.</value>
+    <value>LFOs and step sequencers on this layout run at this tempo. A clock control keeps its own. To follow another device instead, choose Incoming MIDI clock: they take the tempo of the clock that device sends, use the number below until it arrives, and keep the last tempo if it stops.</value>
   </data>
   <data name="BehaviorTempoSourceLabel" xml:space="preserve">
     <value>Tempo source</value>
+  </data>
+  <data name="BehaviorTempoDeviceLabel" xml:space="preserve">
+    <value>Clock comes from</value>
+  </data>
+  <data name="BehaviorTempoDevicePlaceholder" xml:space="preserve">
+    <value>Choose a device</value>
+  </data>
+  <data name="BehaviorTempoNoDevices" xml:space="preserve">
+    <value>Add a device to this layout first</value>
   </data>
   <data name="BehaviorTempoLabel" xml:space="preserve">
     <value>Tempo (BPM)</value>

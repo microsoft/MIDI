@@ -79,6 +79,8 @@ If the connection sits at **Connecting** and doesn't complete, that's the first 
 
 Devices that let anything connect will simply connect straight away.
 
+When a connection doesn't work, the device's row says why, for example **The device did not answer. Windows will keep trying.** A device that turns the connection down, or asks for a password, which Windows doesn't support yet, isn't tried again until you select **Try again**.
+
 ### Watching a connection
 
 Once connected, each device shows a graph of round trip time, which is how long a message takes to get to the device and back.
@@ -120,7 +122,9 @@ Two settings control the MIDI 1.0 ports:
 - **Create MIDI 1.0 ports for this device** turns them on or off. Because the ports are built along with the endpoint, this one takes effect the next time the device connects, not straight away.
 - **MIDI 1.0 ports to create if this device does not describe itself** applies immediately. Most devices tell Windows how many ports they have and this number isn't used for them; it's only for a device that never answers. See [How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/#midi-10-ports) for the detail.
 
-**Reset** clears the name, description and image and goes back to what the device reports. It deliberately leaves the MIDI 1.0 port settings alone, so pressing it to clear a name doesn't take your ports away as a side effect.
+**Sending speed** is how fast this PC sends to the device, and **Slow down when a device misses data** lets Windows pick a slower speed by itself while the device is having trouble. Both apply straight away. See [Choosing a sending speed](#choosing-a-sending-speed).
+
+**Reset** clears the name, description and image and goes back to what the device reports. It deliberately leaves the MIDI 1.0 port settings and the sending speed alone, so pressing it to clear a name doesn't take your ports away as a side effect.
 
 ### Connecting to a device that doesn't advertise itself
 
@@ -209,6 +213,21 @@ USB network adapters often show up as a new adapter when you plug them into a di
 
 Changing a host's adapter restarts the host, so the devices connected to it are disconnected. Most devices connect again on their own.
 
+### Choosing a sending speed
+
+A network is much faster than a MIDI 1.0 cable, and some devices can't keep up when a lot of data arrives at once. A hardware synth taking a long SysEx dump is the usual example, and so is a network to DIN bridge. If a device misses messages, give it a slower sending speed.
+
+- For a host, open **Advanced** when you create it, and pick a **Sending speed**. To change it later, open **Details** on the host and select **Change** next to **Sending speed**. The speed applies to every device connected to that host.
+- For a device this PC connects to, select **Customize** under the device.
+
+The choices are **Unlimited**, which is the default, **MIDI 1.0 wire speed**, which is the speed of a DIN cable, and 2, 4, 8, 16 or 32 times that. Start with MIDI 1.0 wire speed for a device that was built for a cable, and go faster if it copes.
+
+A single note or knob turn is never held back, at any speed. Only a large amount of data sent all at once is spaced out, so at MIDI 1.0 wire speed a SysEx dump takes about as long as it would on a cable. Nothing is dropped to keep to the speed.
+
+For Network MIDI 2.0, **Slow down when a device misses data** lets Windows choose for you. When a device asks for data again, Windows sends to it more slowly, down to MIDI 1.0 wire speed, and speeds back up once the device stops asking. A connection that has slowed down says so in its status. RTP-MIDI devices can't tell this PC when they miss data, so for those, choose the speed yourself.
+
+A new speed applies straight away, and doesn't disconnect anything.
+
 ## Transport settings
 
 The **Transport settings** page, under **Network MIDI 2.0** in the list of pages, is different from the rest of the app. Its settings belong to the MIDI service, not to this app, and they apply to **every** Network MIDI 2.0 host and client on this PC. They stay changed whether or not this app is running.
@@ -219,7 +238,7 @@ The defaults suit almost every network. Change them only if you have a reason to
 |---|---|---|
 | **Most devices allowed at once** | How many remote devices any one host on this PC will accept at the same time | Right away. Devices already connected are not disconnected |
 | **How long to wait for your permission** | How long a device asking to connect stays in the waiting list before it is dropped | The next device which asks. Devices already waiting keep the old timeout |
-| **How often to retry a device which is not answering** | How often this PC retries a device you connected to by address after it stops answering | Within one retry, so up to the old interval from now |
+| **How often to retry a device which is not answering** | How often this PC tries again to reach a device you connected to by address while it is not answering | Within one retry, so up to the old interval from now |
 | **How often to check a quiet connection** | How often a connection with nothing to send checks the other end is still there. Shorter notices a dropped device sooner and sends slightly more traffic | Reaches open connections within one interval |
 | **Repeated messages per packet** | How many recently sent messages are repeated in each packet, so a lost packet can be recovered without asking again. Higher copes better with an unreliable network and makes each packet larger | New connections. Reconnect a device for it to apply there |
 | **Messages kept for resending** | How many sent messages are held in case the other end asks for them again. Higher recovers from longer gaps and uses more memory per connection | New connections. Reconnect a device for it to apply there |
@@ -253,5 +272,7 @@ A few things to check, roughly in order:
 **Try connecting by address.** If the device works when you type its address but never appears in the list, the announcements aren't reaching this PC even though the network path is fine.
 
 **Check whether it's blocked.** If you selected **Block** at some point, the device is refused silently. Look under **Remembered decisions** on the host.
+
+**If it connects but misses messages**, especially during a SysEx transfer, give it a slower sending speed. See [Choosing a sending speed](#choosing-a-sending-speed).
 
 If Network MIDI 2.0 isn't installed or isn't enabled on this PC, the app tells you so when it starts and the rest of the window stays empty. Nothing here will work until that's sorted out.

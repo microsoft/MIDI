@@ -29,9 +29,15 @@ Returned by `MidiNetworkTransportManager.GetConfiguredClients()`.
 | `CurrentLatencyTicks` | The measured latency, in ticks. For troubleshooting. Reading this resets the running average |
 | `TotalCountNetworkPacketsSent` | The total number of network packets sent on this connection |
 | `TotalCountNetworkPacketsReceived` | The total number of network packets received on this connection |
+| `LastErrorCode` | Why the last invitation didn't open a session, such as `NoReplyToInvitation` or `AuthenticationRequired`. `NoErrorInformationAvailable` once a session opens. See `MidiNetworkClientConnectErrorCode` |
+| `SendSpeedLimit` | How fast this PC is set up to send to the remote host. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |
+| `ReduceSendSpeedAutomatically` | True when the connection sends more slowly while the remote host keeps asking for data again |
+| `CurrentSendSpeedLimit` | How fast the connection is sending right now. It's lower than `SendSpeedLimit` while the connection has slowed down by itself, which is worth showing people |
 
 ## Remarks
 
-Every client that's set up is reported, whether or not it's connected, so an entry that has never reached its remote host still shows up. Use `EntryState` to tell the cases apart. When there's no session running, use the `Configured*` properties, not the `Connected*` ones.
+Every client that's set up is reported, whether or not it's connected, so an entry that has never reached its remote host still shows up. Use `EntryState` to tell the cases apart, and `LastErrorCode` to tell the person why. When there's no session running, use the `Configured*` properties, not the `Connected*` ones.
+
+`LastErrorCode` stays set while the service keeps trying. A `Pending` entry with `NoReplyToInvitation` is a host that isn't answering and is being tried again. A `Failed` entry with `AuthenticationRequired` is a host that wants a password, which Windows doesn't support yet. Connecting the entry again clears it.
 
 `CurrentLatencyTicks` is an average that resets each time it's read. If you're graphing it, read it at a steady interval.

@@ -24,6 +24,7 @@ Returned inside `MidiNetworkConfiguredHost.Connections`.
 | `RetransmitRequestCount` | How many requests to send again have come from this client |
 | `TotalCountNetworkPacketsSent` | The total number of network packets sent to this client |
 | `TotalCountNetworkPacketsReceived` | The total number of network packets received from this client |
+| `CurrentSendSpeedLimit` | How fast the host is sending to this client right now. It's lower than the host's `SendSpeedLimit` while the connection has slowed down by itself. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |
 
 ## Remarks
 

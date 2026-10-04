@@ -27,7 +27,7 @@ Start here for anything to do with Network MIDI 2.0. All members are static.
 | `StartNetworkHostAsync(hostId)` | Starts a host that's set up but stopped. Returns a `MidiNetworkHostUpdateResponse` |
 | `StopNetworkHostAsync(hostId)` | Stops a running host without removing its configuration. Returns a `MidiNetworkHostUpdateResponse` |
 | `UpdateNetworkHostAsync(updateConfig)` | Changes settings on an existing host without stopping it. Returns a `MidiNetworkHostUpdateResponse` |
-| `ConnectNetworkClientAsync(connectConfig)` | Connects to a remote host, found by discovery or by direct address. Returns a `MidiNetworkClientConnectResponse`. For a `ClientId` that already exists, this retries an entry that was marked unavailable |
+| `ConnectNetworkClientAsync(connectConfig)` | Connects to a remote host, found by discovery or by direct address. Returns a `MidiNetworkClientConnectResponse`. For a `ClientId` that already exists, this tries the entry again right away, and brings back one marked failed |
 | `DisconnectNetworkClientAsync(disconnectConfig)` | Disconnects a client connection. Returns a `MidiNetworkClientDisconnectResponse`. A client disconnected this way isn't reconnected automatically |
 | `UpdateNetworkClientAsync(updateConfig)` | Changes settings on an existing client connection without disconnecting it. Returns a `MidiNetworkClientUpdateResponse` |
 | `ApproveOrDenyRemoteClientConnectRequestAsync(approvalConfig)` | Approves or denies a remote client that's waiting on a host that requires approval. Returns a `MidiNetworkRemoteClientApprovalResponse` |

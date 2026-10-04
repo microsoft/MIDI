@@ -39,6 +39,22 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         uint64_t TotalCountNetworkPacketsSent() const noexcept { return m_totalCountNetworkPacketsSent; }
         uint64_t TotalCountNetworkPacketsReceived() const noexcept { return m_totalCountNetworkPacketsReceived; }
 
+        network::MidiNetworkClientConnectErrorCode LastErrorCode() const noexcept { return m_lastErrorCode; }
+
+        network::MidiNetworkSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+        network::MidiNetworkSendSpeedLimit CurrentSendSpeedLimit() const noexcept { return m_currentSendSpeedLimit; }
+
+        void InternalSetSendSpeed(
+            _In_ network::MidiNetworkSendSpeedLimit const sendSpeedLimit,
+            _In_ bool const reduceSendSpeedAutomatically,
+            _In_ network::MidiNetworkSendSpeedLimit const currentSendSpeedLimit) noexcept
+        {
+            m_sendSpeedLimit = sendSpeedLimit;
+            m_reduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
+            m_currentSendSpeedLimit = currentSendSpeedLimit;
+        }
+
 
         void InternalInitialize(
             _In_ winrt::guid const& clientId,
@@ -60,7 +76,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             _In_ bool const isDirectConnection,
             _In_ winrt::hstring const& configuredDirectAddress,
             _In_ winrt::hstring const& configuredDirectPort,
-            _In_ winrt::hstring const& matchDeviceId
+            _In_ winrt::hstring const& matchDeviceId,
+            _In_ network::MidiNetworkClientConnectErrorCode const lastErrorCode
         ) noexcept
         {
             m_clientId = clientId;
@@ -80,6 +97,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             m_configuredDirectAddress = configuredDirectAddress;
             m_configuredDirectPort = configuredDirectPort;
             m_matchDeviceId = matchDeviceId;
+            m_lastErrorCode = lastErrorCode;
         }
 
     private:
@@ -102,5 +120,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring m_configuredDirectAddress{};
         winrt::hstring m_configuredDirectPort{};
         winrt::hstring m_matchDeviceId{};
+
+        network::MidiNetworkClientConnectErrorCode m_lastErrorCode{ network::MidiNetworkClientConnectErrorCode::NoErrorInformationAvailable };
+
+        network::MidiNetworkSendSpeedLimit m_sendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
+        bool m_reduceSendSpeedAutomatically{ false };
+        network::MidiNetworkSendSpeedLimit m_currentSendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
     };
 }

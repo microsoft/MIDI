@@ -143,10 +143,14 @@ namespace winrt::midiglass::implementation
             ScaleSelector().Items().Append(box_value(resources::GetString(L"ScaleCustom")));
             ScaleSelector().SelectedIndex(static_cast<int32_t>(m_document.Scale));
 
-            if (m_document.Pages.size() > 1)
+            m_listedPages = glass::PagesToChooseFrom(m_document);
+
+            if (m_listedPages.size() > 1)
             {
-                for (auto const& page : m_document.Pages)
+                for (auto const index : m_listedPages)
                 {
+                    auto const& page = m_document.Pages[index];
+
                     PageSelector().Items().Append(box_value(winrt::hstring{
                         page.Name.empty() ? page.Id : page.Name }));
                 }
@@ -156,6 +160,15 @@ namespace winrt::midiglass::implementation
             }
 
             m_updatingChrome = false;
+
+            for (auto const& page : m_document.Pages)
+            {
+                for (auto const& control : page.Controls)
+                {
+                    m_controlValues.push_back(control.DefaultValue);
+                    m_controlValuesY.push_back(control.DefaultValueY);
+                }
+            }
 
             UpdateDeckBrush();
 
@@ -167,7 +180,7 @@ namespace winrt::midiglass::implementation
             }
             else
             {
-                BuildPage(0);
+                BuildPage(m_listedPages.empty() ? 0 : m_listedPages.front());
             }
 
             StartDevices();
@@ -271,7 +284,8 @@ namespace winrt::midiglass::implementation
         SurfaceCanvas().Width(m_document.PageWidth);
         SurfaceCanvas().Height(m_document.PageHeight);
 
-        m_renderer.Build(SurfaceCanvas(), m_document, m_theme, pageIndex);
+        m_renderer.Build(SurfaceCanvas(), m_document, m_theme, pageIndex, true);
+        RestoreValues();
         m_renderer.ShowCurrentPage(m_document, pageIndex);
 
         auto weak = get_weak();
@@ -402,9 +416,58 @@ namespace winrt::midiglass::implementation
         auto const previous = m_updatingChrome;
         m_updatingChrome = true;
 
-        PageSelector().SelectedIndex(static_cast<int32_t>(pageIndex));
+        auto const listed = std::find(m_listedPages.begin(), m_listedPages.end(), pageIndex);
+
+        PageSelector().SelectedIndex(listed == m_listedPages.end()
+            ? -1
+            : static_cast<int32_t>(listed - m_listedPages.begin()));
 
         m_updatingChrome = previous;
+    }
+
+    _Use_decl_annotations_
+    void RuntimeWindow::RememberValue(uint32_t controlIndex, double value) noexcept
+    {
+        if (controlIndex < m_controlValues.size())
+        {
+            m_controlValues[controlIndex] = value;
+        }
+    }
+
+    _Use_decl_annotations_
+    void RuntimeWindow::RememberValueY(uint32_t controlIndex, double value) noexcept
+    {
+        if (controlIndex < m_controlValuesY.size())
+        {
+            m_controlValuesY[controlIndex] = value;
+        }
+    }
+
+    void RuntimeWindow::RestoreValues() noexcept
+    {
+        try
+        {
+            for (size_t item = 0; item < m_renderer.ItemCount(); ++item)
+            {
+                auto const controlIndex = m_renderer.ControlIndexOf(item);
+
+                // A page tab says which page is showing, and the page being built decides that.
+                if (controlIndex >= m_controlValues.size() ||
+                    m_renderer.KindAt(item) == glass::ControlKind::PageTab)
+                {
+                    continue;
+                }
+
+                m_renderer.SetValue(item, m_controlValues[controlIndex]);
+                m_renderer.SetValueY(item, m_controlValuesY[controlIndex]);
+
+                if (auto const element = m_renderer.ElementAt(item))
+                {
+                    winrt::get_self<implementation::GlassControl>(element)->SetValueDirect(m_controlValues[controlIndex]);
+                }
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to put the controls back where they were.")
     }
 
     void RuntimeWindow::ApplyScale()
@@ -480,11 +543,12 @@ namespace winrt::midiglass::implementation
 
         auto const index = PageSelector().SelectedIndex();
 
-        if (index >= 0 && static_cast<size_t>(index) != m_pageIndex)
+        if (index >= 0 && static_cast<size_t>(index) < m_listedPages.size() &&
+            m_listedPages[static_cast<size_t>(index)] != m_pageIndex)
         {
             try
             {
-                BuildPage(static_cast<size_t>(index));
+                BuildPage(m_listedPages[static_cast<size_t>(index)]);
             }
             MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the page.")
         }

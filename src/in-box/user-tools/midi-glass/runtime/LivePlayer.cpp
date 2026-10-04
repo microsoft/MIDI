@@ -21,6 +21,40 @@ namespace glass
         {
             return static_cast<uint64_t>(::GetTickCount64());
         }
+
+        // A message's timestamp is the service's performance counter when the message arrived,
+        // a steadier clock than when this process got round to reading it. Zero means the
+        // service did not say, and now is the best there is.
+        uint64_t MicrosecondsOfTimestamp(_In_ uint64_t timestamp) noexcept
+        {
+            static auto const frequency = []()
+                {
+                    LARGE_INTEGER value{};
+                    ::QueryPerformanceFrequency(&value);
+                    return static_cast<uint64_t>(value.QuadPart);
+                }();
+
+            if (frequency == 0)
+            {
+                return 0;
+            }
+
+            if (timestamp == 0)
+            {
+                LARGE_INTEGER now{};
+                ::QueryPerformanceCounter(&now);
+                timestamp = static_cast<uint64_t>(now.QuadPart);
+            }
+
+            // In two parts, so a counter that has run for weeks does not overflow the multiply.
+            return (timestamp / frequency) * 1'000'000 + (timestamp % frequency) * 1'000'000 / frequency;
+        }
+
+        // Timing clock. A UMP carries it only one way: a system message with status F8.
+        bool IsTimingClock(_In_ uint32_t firstWord) noexcept
+        {
+            return (firstWord >> 28) == 0x1 && ((firstWord >> 16) & 0xFF) == 0xF8;
+        }
     }
 
     std::shared_ptr<LivePlayer> LivePlayer::Create()
@@ -56,6 +90,7 @@ namespace glass
         m_dispatcher = dispatcher;
         m_ownerId = ownerId;
 
+        FollowTempoSource();
         RebuildThrottles();
 
         std::weak_ptr<LivePlayer> weak{ shared_from_this() };
@@ -233,7 +268,15 @@ namespace glass
 
         m_document = document;
 
+        FollowTempoSource();
         RebuildThrottles();
+
+        // A tempo typed into the layout, or a clock no longer followed, reaches the sweeps that
+        // are already running. Each keeps the place in its cycle it had reached.
+        if (m_lfos != nullptr)
+        {
+            m_lfos->SetTempo(LayoutTempo());
+        }
 
         m_devices.SetDocument(m_document);
 
@@ -441,7 +484,7 @@ namespace glass
             {
                 if (std::find(runningSteps.begin(), runningSteps.end(), steps.ControlId) != runningSteps.end())
                 {
-                    steps.Run = m_steps->Run(steps.ControlIndex, steps.Spec, m_document.Tempo.BeatsPerMinute);
+                    steps.Run = m_steps->Run(steps.ControlIndex, steps.Spec, LayoutTempo());
                 }
             }
         }
@@ -500,7 +543,7 @@ namespace glass
                 continue;
             }
 
-            m_lfos->Run(lfo.ControlIndex, lfo.Spec, m_document.Tempo.BeatsPerMinute);
+            m_lfos->Run(lfo.ControlIndex, lfo.Spec, LayoutTempo());
         }
 
         if (m_steps == nullptr)
@@ -515,7 +558,7 @@ namespace glass
                 continue;
             }
 
-            steps.Run = m_steps->Run(steps.ControlIndex, steps.Spec, m_document.Tempo.BeatsPerMinute);
+            steps.Run = m_steps->Run(steps.ControlIndex, steps.Spec, LayoutTempo());
         }
     }
 
@@ -791,11 +834,11 @@ namespace glass
                     std::vector<winrt::com_ptr<IMidiEndpointConnectionRaw>> table{};
 
                     FeedbackHandler handler =
-                        [weak](std::wstring const& endpointDeviceId, uint64_t, uint32_t wordCount, uint32_t const* words)
+                        [weak](std::wstring const& endpointDeviceId, uint64_t timestamp, uint32_t wordCount, uint32_t const* words)
                         {
                             if (auto strong = weak.lock())
                             {
-                                strong->OnFeedbackWords(endpointDeviceId, wordCount, words);
+                                strong->OnFeedbackWords(endpointDeviceId, timestamp, wordCount, words);
                             }
                         };
 
@@ -1186,7 +1229,7 @@ namespace glass
 
                 if (isOn)
                 {
-                    m_lfos->Run(controlIndex, lfo.Spec, m_document.Tempo.BeatsPerMinute);
+                    m_lfos->Run(controlIndex, lfo.Spec, LayoutTempo());
                 }
                 else
                 {
@@ -1207,7 +1250,7 @@ namespace glass
             }
             else if (steps->Run == 0 && m_steps != nullptr)
             {
-                steps->Run = m_steps->Run(controlIndex, steps->Spec, m_document.Tempo.BeatsPerMinute);
+                steps->Run = m_steps->Run(controlIndex, steps->Spec, LayoutTempo());
             }
 
             return;
@@ -1519,6 +1562,7 @@ namespace glass
     _Use_decl_annotations_
     void LivePlayer::OnFeedbackWords(
         std::wstring const& endpointDeviceId,
+        uint64_t timestamp,
         uint32_t wordCount,
         uint32_t const* words)
     {
@@ -1528,8 +1572,9 @@ namespace glass
         }
 
         auto const learning = m_learning.load();
+        auto const tempoDevice = m_tempoDeviceIndex.load();
 
-        if (!learning && !FeedbackMoved && !ActivitySeen)
+        if (!learning && !FeedbackMoved && !ActivitySeen && tempoDevice < 0)
         {
             return;
         }
@@ -1552,6 +1597,9 @@ namespace glass
         std::vector<uint32_t> lit{};
         std::vector<std::pair<uint32_t, ListenerState>> latched{};
         std::vector<uint32_t> ticks{};
+
+        // Only the last tempo of a burst matters; the ones before it are already out of date.
+        std::optional<double> followed{};
 
         uint32_t position{ 0 };
 
@@ -1624,17 +1672,28 @@ namespace glass
                 }
             }
 
+            if (tempoDevice >= 0 && destinationIndex == tempoDevice && IsTimingClock(words[position]))
+            {
+                std::lock_guard guard{ m_clockMeterLock };
+
+                if (auto const tempo = m_clockMeter.Tick(MicrosecondsOfTimestamp(timestamp)); tempo.has_value())
+                {
+                    followed = tempo;
+                }
+            }
+
             position += length;
         }
 
-        if (moves.empty() && captures.empty() && lit.empty() && latched.empty() && ticks.empty())
+        if (moves.empty() && captures.empty() && lit.empty() && latched.empty() && ticks.empty() &&
+            !followed.has_value())
         {
             return;
         }
 
         std::weak_ptr<LivePlayer> weak{ weak_from_this() };
 
-        m_dispatcher.TryEnqueue([weak, moves, captures, lit, latched, ticks]()
+        m_dispatcher.TryEnqueue([weak, moves, captures, lit, latched, ticks, followed]()
             {
                 auto strong = weak.lock();
 
@@ -1698,6 +1757,75 @@ namespace glass
                 {
                     strong->Learned(captures.front());
                 }
+
+                if (followed.has_value())
+                {
+                    strong->ApplyFollowedTempo(*followed);
+                }
             });
+    }
+
+    void LivePlayer::FollowTempoSource()
+    {
+        int32_t index{ -1 };
+
+        if (m_document.Tempo.Kind == TempoSourceKind::FollowIncomingClock)
+        {
+            for (size_t at = 0; at < m_document.Devices.size(); ++at)
+            {
+                if (m_document.Devices[at].Name == m_document.Tempo.DeviceName)
+                {
+                    index = static_cast<int32_t>(at);
+                    break;
+                }
+            }
+        }
+
+        // Most edits leave it alone, and starting the measurement over would drop half a beat
+        // of tempo for nothing.
+        if (index == m_tempoDeviceIndex.load())
+        {
+            return;
+        }
+
+        {
+            std::lock_guard guard{ m_clockMeterLock };
+            m_clockMeter.Reset();
+        }
+
+        m_followedBeatsPerMinute = 0.0;
+        m_tempoDeviceIndex = index;
+    }
+
+    double LivePlayer::LayoutTempo() const noexcept
+    {
+        if (m_tempoDeviceIndex.load() >= 0 && m_followedBeatsPerMinute > 0.0)
+        {
+            return m_followedBeatsPerMinute;
+        }
+
+        return m_document.Tempo.BeatsPerMinute;
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::ApplyFollowedTempo(double beatsPerMinute)
+    {
+        // A tempo measured just before the layout stopped following that clock.
+        if (m_tempoDeviceIndex.load() < 0)
+        {
+            return;
+        }
+
+        m_followedBeatsPerMinute = beatsPerMinute;
+
+        if (m_lfos != nullptr)
+        {
+            m_lfos->SetTempo(beatsPerMinute);
+        }
+
+        if (m_steps != nullptr)
+        {
+            m_steps->SetTempo(beatsPerMinute);
+        }
     }
 }

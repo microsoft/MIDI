@@ -373,7 +373,7 @@ Get-MidiNetworkAdvertisedHost | Format-Table -AutoSize
 
 ### Connect-MidiNetworkHost
 
-Connects to a remote host, either one which was discovered, or one at a fixed address and port. A discovered host is matched on its advertisement, so the connection survives it moving to a new address; a direct address cannot do that, and is not retried automatically if it stops answering.
+Connects to a remote host, either one which was discovered, or one at a fixed address and port. A discovered host is matched on its advertisement, so the connection survives it moving to a new address. A fixed address is tried again on its own if it stops answering, and a host name is looked up again each time. `LastErrorCode` on the client entry says why it is not connected.
 
 ```pwsh
 # connect to something which was discovered
@@ -383,6 +383,12 @@ Get-MidiNetworkAdvertisedHost |
 
 # connect to a fixed address
 Connect-MidiNetworkHost -HostNameOrAddress 192.168.1.243 -Port 33327 -SaveToConfiguration
+```
+
+For a device that loses data when a lot of it arrives at once, like a long SysEx dump, add `-SendSpeedLimit` with a speed such as `Midi1WireSpeed`, the speed of a MIDI 1.0 cable, or `Midi1WireSpeedTimes4`. A single message is never held back. Add `-ReduceSendSpeedAutomatically` to send more slowly while the device keeps asking for data again. See [Sending speed]({{ site.baseurl }}/kb/network-midi2-transport/#sending-speed).
+
+```pwsh
+Connect-MidiNetworkHost -HostNameOrAddress 192.168.1.243 -Port 33327 -SendSpeedLimit Midi1WireSpeedTimes4 -ReduceSendSpeedAutomatically
 ```
 
 ### Disconnect-MidiNetworkHost
@@ -432,6 +438,8 @@ Get-MidiRtpAdvertisedHost |
 # connect to a fixed address
 Connect-MidiRtpHost -HostNameOrAddress 192.168.1.167 -Port 5006
 ```
+
+`-SendSpeedLimit` works the same way as for Network MIDI 2.0. RTP-MIDI devices can't say when they miss data, so there's no option to slow down by itself.
 
 ### Disconnect-MidiRtpHost
 

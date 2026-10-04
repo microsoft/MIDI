@@ -28,6 +28,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool AutoReconnect() const noexcept { return m_autoReconnect; }
         bool IsEnabled() const noexcept { return m_isEnabled; }
         bool SendRecoveryJournal() const noexcept { return m_sendRecoveryJournal; }
+        rtp::MidiRtpSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        rtp::MidiRtpSendSpeedLimit CurrentSendSpeedLimit() const noexcept { return m_currentSendSpeedLimit; }
         int32_t LastErrorCode() const noexcept { return m_lastErrorCode; }
         rtp::MidiRtpConnection Connection() const noexcept { return m_connection; }
 
@@ -46,6 +48,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool m_autoReconnect{ false };
         bool m_isEnabled{ false };
         bool m_sendRecoveryJournal{ false };
+        rtp::MidiRtpSendSpeedLimit m_sendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
+        rtp::MidiRtpSendSpeedLimit m_currentSendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
         int32_t m_lastErrorCode{ 0 };
         rtp::MidiRtpConnection m_connection{ nullptr };
     };

@@ -214,6 +214,44 @@ namespace glass
         }
     }
 
+    _Use_decl_annotations_
+    void StepSequencer::SetTempo(double beatsPerMinute) noexcept
+    {
+        try
+        {
+            {
+                std::lock_guard guard{ m_lock };
+
+                for (auto& sequence : m_sequences)
+                {
+                    auto const step = StepMicroseconds(sequence.Spec, beatsPerMinute);
+
+                    if (std::abs(step - sequence.StepMicroseconds) < 1.0)
+                    {
+                        continue;
+                    }
+
+                    // Moved so the next step lands when it was already going to, with every
+                    // step after it spaced at the new tempo. The count is kept, so swing keeps
+                    // its feel and a pattern does not jump back to its first step.
+                    auto const next = NextStepMicrosecondsOf(sequence);
+                    auto const offset = static_cast<uint64_t>(std::llround(
+                        StepStartMicroseconds(sequence.Spec, sequence.StepsStarted, step)));
+
+                    sequence.StepMicroseconds = step;
+                    sequence.OriginMicroseconds = next > offset ? next - offset : 0;
+                }
+
+                m_signaled = true;
+            }
+
+            Wake();
+        }
+        catch (...)
+        {
+        }
+    }
+
     void StepSequencer::TimeLoop()
     {
         for (;;)

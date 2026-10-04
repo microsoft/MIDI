@@ -691,7 +691,9 @@ TransportState::MarkClientDefinitionForReconnect(winrt::guid const& clientConfig
 
 _Use_decl_annotations_
 HRESULT
-TransportState::MarkClientDefinitionUnavailableOrRetry(winrt::guid const& clientConfigEntryIdentifier)
+TransportState::MarkClientDefinitionForRetry(
+    winrt::guid const& clientConfigEntryIdentifier,
+    uint32_t const errorCode)
 {
     auto lock = m_stateLock.lock_exclusive();
 
@@ -704,14 +706,89 @@ TransportState::MarkClientDefinitionUnavailableOrRetry(winrt::guid const& client
                 return S_FALSE;
             }
 
+            definition.State = MidiNetworkEntryState::Pending;
+            definition.LastErrorCode = errorCode;
+
+            // An advertised host is only tried while it advertises. Nothing announces a direct one.
             if (definition.IsDirectConnection())
             {
-                definition.State = MidiNetworkEntryState::Unavailable;
+                definition.RetryNotBeforeTickCount = GetTickCount64() + TransportSettings.DirectConnectionScanInterval;
+            }
 
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::MarkClientDefinitionForRetryAfter(
+    winrt::guid const& clientConfigEntryIdentifier,
+    uint32_t const delayMilliseconds,
+    uint32_t const errorCode)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            if (!definition.Enabled)
+            {
                 return S_FALSE;
             }
 
             definition.State = MidiNetworkEntryState::Pending;
+            definition.RetryNotBeforeTickCount = GetTickCount64() + delayMilliseconds;
+            definition.LastErrorCode = errorCode;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::MarkClientDefinitionFailed(
+    winrt::guid const& clientConfigEntryIdentifier,
+    uint32_t const errorCode)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            if (!definition.Enabled)
+            {
+                return S_FALSE;
+            }
+
+            definition.State = MidiNetworkEntryState::Failed;
+            definition.LastErrorCode = errorCode;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::ClearClientDefinitionLastErrorCode(winrt::guid const& clientConfigEntryIdentifier)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            definition.LastErrorCode = 0;
 
             return S_OK;
         }
@@ -732,6 +809,8 @@ TransportState::RearmClientDefinition(winrt::guid const& clientConfigEntryIdenti
         {
             definition.State = MidiNetworkEntryState::Pending;
             definition.Enabled = true;
+            definition.RetryNotBeforeTickCount = 0;
+            definition.LastErrorCode = 0;
 
             return S_OK;
         }

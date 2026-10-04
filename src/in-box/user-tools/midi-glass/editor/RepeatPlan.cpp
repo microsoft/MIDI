@@ -57,7 +57,7 @@ namespace glass
                     kind == MessageKind::AssignedController;
 
             case RepeatField::NoteNumber:
-                return kind == MessageKind::Note || kind == MessageKind::PerNoteController;
+                return kind == MessageKind::Note || IsPerNoteController(kind);
 
             default:
                 return false;

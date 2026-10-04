@@ -57,6 +57,11 @@ namespace winrt::midi2monitor::implementation
             return native::GetMessageTypeFromFirstWord(record.Words[0]) == native::MessageTypeData64;
         }
 
+        bool IsMidiMessage(_In_ native::MessageRecord const& record) noexcept
+        {
+            return record.Kind == native::RecordKind::MidiMessage && record.WordCount > 0;
+        }
+
         void AppendHexByte(std::wstring& target, uint8_t value)
         {
             if (!target.empty() && target.back() != L'\n')
@@ -110,6 +115,35 @@ namespace winrt::midi2monitor::implementation
                     text.append(std::format(L"{:08X}", record.Words[i]));
                 }
 
+                text.append(L"\r\n");
+            }
+
+            return text;
+        }
+
+        // The bytes of a binary save, as hex text: the clipboard has no binary format hex editors share.
+        std::wstring BuildBinaryDataText(_In_ std::vector<native::MessageRecord> const& records)
+        {
+            std::wstring text{};
+
+            for (auto const& record : records)
+            {
+                if (!IsMidiMessage(record))
+                {
+                    continue;
+                }
+
+                std::wstring line{};
+
+                for (uint8_t i = 0; i < record.WordCount && i < 4; i++)
+                {
+                    for (auto const value : std::bit_cast<std::array<uint8_t, sizeof(uint32_t)>>(record.Words[i]))
+                    {
+                        AppendHexByte(line, value);
+                    }
+                }
+
+                text.append(line);
                 text.append(L"\r\n");
             }
 
@@ -291,10 +325,12 @@ namespace winrt::midi2monitor::implementation
 
             auto const hasAny = !records.empty();
 
+            auto const hasMessages = std::any_of(records.begin(), records.end(), IsMidiMessage);
             auto const hasMidi1 = std::any_of(records.begin(), records.end(), IsMidi1ByteConvertible);
             auto const hasSysEx = std::any_of(records.begin(), records.end(), IsSysEx7);
 
             CopyUmpWordsMenuItem().IsEnabled(hasAny);
+            CopyBinaryDataMenuItem().IsEnabled(hasMessages);
             CopyMidi1BytesMenuItem().IsEnabled(hasMidi1);
             CopySysExBytesMenuItem().IsEnabled(hasSysEx);
 
@@ -409,6 +445,12 @@ namespace winrt::midi2monitor::implementation
     void MainWindow::OnCopyUmpWordsClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         CopyToClipboard(BuildUmpWordText(SelectedRecords()));
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnCopyBinaryDataClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        CopyToClipboard(BuildBinaryDataText(SelectedRecords()));
     }
 
     _Use_decl_annotations_

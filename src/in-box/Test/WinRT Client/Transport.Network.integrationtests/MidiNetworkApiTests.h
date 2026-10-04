@@ -175,6 +175,14 @@ public:
     // on one network, which is usual for IPv6, has to answer from that one.
     TEST_METHOD(TestHostRepliesFromTheAddressTheClientInvited);
 
+    // An app has to be able to say why an entry is not connected
+    TEST_METHOD(TestConfiguredClientSaysWhyItIsNotConnected);
+
+    // The send speed limit: a client limited to MIDI 1.0 wire speed takes about as long to send a
+    // SysEx dump as a DIN cable would, and says what it is sending at
+    TEST_METHOD(TestClientSendSpeedLimitPacesASysExDump);
+    TEST_METHOD(TestClientUpdateConfigSendsTheSpeedLimitOnlyWhenSet);
+
     // Ending one remote client's session with a host on this PC.
     TEST_METHOD(TestRemoteClientDisconnectConfigRoundTrip);
     TEST_METHOD(TestDisconnectRemoteClientWithEmptyIdentityFailsWithoutCallingService);

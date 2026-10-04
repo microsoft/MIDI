@@ -34,6 +34,8 @@ public:
     TEST_METHOD(TestPropertyHeaderEscapesTextOutsideSevenBits);
     TEST_METHOD(TestLargePropertyBodyIsChunked);
     TEST_METHOD(TestBuilderRefusesAMessageTypeItCannotBuild);
+    TEST_METHOD(TestEndpointInquiryAndReplyRoundTrip);
+    TEST_METHOD(TestEndpointReplyRefusesAnInvalidProductInstanceId);
 
 private:
 

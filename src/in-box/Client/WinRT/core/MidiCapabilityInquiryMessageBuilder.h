@@ -43,6 +43,21 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
             _In_ ci::MidiUniqueId const& sourceMuid,
             _In_ ci::MidiUniqueId const& muidToInvalidate) noexcept;
 
+        static foundation::Collections::IVector<midi2::MidiMessage64> BuildEndpointInquiry(
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ midi2::MidiGroup const& group,
+            _In_ ci::MidiUniqueId const& sourceMuid,
+            _In_ ci::MidiUniqueId const& destinationMuid,
+            _In_ uint8_t const status) noexcept;
+
+        static foundation::Collections::IVector<midi2::MidiMessage64> BuildEndpointReply(
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ midi2::MidiGroup const& group,
+            _In_ ci::MidiUniqueId const& sourceMuid,
+            _In_ ci::MidiUniqueId const& destinationMuid,
+            _In_ uint8_t const status,
+            _In_ foundation::Collections::IIterable<uint8_t> const& information) noexcept;
+
         static foundation::Collections::IVector<midi2::MidiMessage64> BuildAck(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,

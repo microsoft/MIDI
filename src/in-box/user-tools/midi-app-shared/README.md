@@ -23,6 +23,8 @@ Because shared code cannot reach any one app's telemetry, a swallowed exception 
 
 `DocumentHandoff` is for a tool that opens files by double-click. When a copy is already running, the new one sends its paths to the running window with `WM_COPYDATA` and exits. The receiving window has to subclass itself to see the message, because XAML does not pass it on.
 
+`AssistantPrompt` is the **Ask an AI assistant** dialog in MIDI Glass and MIDI Patchbay. It shows a starting prompt the customer pastes into the AI assistant they use, and copies it to the clipboard. The app sends nothing anywhere. Each app builds its own prompt text from its own resources.
+
 ## What a consuming project has to do
 
 There is no `.props` file and no MSBuild import. Each app's `.vcxproj` lists these files with

@@ -26,12 +26,16 @@ Pass to `MidiNetworkTransportManager.UpdateNetworkHostAsync`.
 | `NetworkAdapterId` | Moves the host to another network adapter, or to every adapter with an empty GUID. The host restarts on it, which ends its connections. Setting it also fills in `NetworkAdapterName` |
 | `NetworkAdapterName` | The adapter's name. It's only shown to people |
 | `AllowNetworkAdapterFallback` | What the host does while its adapter is missing: true to run on every adapter until the adapter is back, false to wait for it |
+| `SendSpeedLimit` | How fast the host sends to each connected device. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |
+| `ReduceSendSpeedAutomatically` | Whether a connection sends more slowly while the device keeps asking for data again |
 
 ## Remarks
 
 Only the properties you set are changed. Everything else about the host stays as it is.
 
 The host keeps running, unless you change `NetworkAdapterId`. Only the settings that can change on a running host take effect right away.
+
+`SendSpeedLimit` and `ReduceSendSpeedAutomatically` apply straight away, to the connections that are already up as well as to new ones, without disconnecting anything.
 
 `FallbackMidi1PortCount` applies to connections that are already running. Ports are added or removed without interrupting the session. `CreateMidi1Ports` applies the next time a remote device connects, because whether an endpoint has MIDI 1.0 ports at all is decided when the endpoint is built.
 

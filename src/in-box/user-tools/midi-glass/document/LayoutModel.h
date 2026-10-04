@@ -204,10 +204,13 @@ namespace glass
         RawUmp = 9,
         Sequence = 10,
         GoToPage = 11,
-        HoldLayer = 12,
 
         // A named Mackie Control function, such as Play or Fader 3. Number holds which one.
         MackieControl = 13,
+
+        // A per-note controller whose meaning the instrument decides. PerNoteController is the
+        // registered kind, whose numbers MIDI 2.0 defines.
+        AssignablePerNoteController = 14,
     };
 
     // How the layout talks to one device. It decides what a row sent there can say.
@@ -535,7 +538,7 @@ namespace glass
         // White and black together, counted the way a keyboard is sold: 25, 49, 61, 88.
         int32_t KeyCount{ 25 };
 
-        // The note the leftmost key plays. 48 is C3 in the naming this app uses everywhere else.
+        // The note the leftmost key plays. 48 is C2, an octave below middle C (C3).
         int32_t LowestNote{ 48 };
 
         // Empty means the theme decides. A keyboard is the one control where the two colors are
@@ -546,7 +549,8 @@ namespace glass
         // The key under the finger. Empty means the control's own hue.
         std::wstring PressedKeyColor{};
 
-        // The C keys carry their octave number, so a wide keyboard can be read at a glance.
+        // Each key carries its name and number the way MIDI Keyboard prints them, where the keys
+        // are big enough to read.
         bool ShowNoteNames{ false };
 
         // Harder on a touch screen than on a keyboard, and not every layout wants it.
@@ -820,8 +824,7 @@ namespace glass
         // too small to hold them all at this size.
         double PadSize{ 48.0 };
 
-        // The note the bottom left pad plays. 48 is C3 in the naming this app uses everywhere
-        // else.
+        // The note the bottom left pad plays. 48 is C2, an octave below middle C (C3).
         int32_t StartNote{ 48 };
 
         // Semitones from one pad to the next one on its right.
@@ -928,7 +931,6 @@ namespace glass
         Wait = 2,
         SetControlValue = 3,
         GoToPage = 4,
-        HoldLayer = 5,
         RepeatBlockStart = 6,
         RepeatBlockEnd = 7,
     };
@@ -1001,6 +1003,14 @@ namespace glass
         // Controller, note or bank number, depending on Kind. Ignored where it has no meaning.
         uint32_t Number{ 0 };
 
+        // Which per-note controller, 0 to 255. Number is the note it acts on.
+        uint32_t Controller{ 0 };
+
+        // A MIDI 2.0 note on or note off can carry an attribute: a type, and 16 bits of data in
+        // the second word beside the velocity. Type 0 is none. MIDI 1.0 has no attribute.
+        uint32_t AttributeType{ 0 };
+        uint32_t AttributeData{ 0 };
+
         // The two ends of what this message sends. A control at rest sends the minimum and a
         // control at full travel sends the maximum; anything between is interpolated.
         //
@@ -1032,7 +1042,6 @@ namespace glass
 
         std::wstring SequenceName{};
         std::wstring TargetPageId{};
-        std::wstring TargetLayerId{};
 
         // On a switch, the one position that sends this row, counted from 0, and it sends its
         // maximum. -1 is every change, the way a row on any other control works.
@@ -1044,6 +1053,16 @@ namespace glass
     // An RPN or NRPN is named by a bank and an index, 0 to 127 each: in MIDI 1.0, the values of
     // CC 101 and 100 or of CC 99 and 98. ControlMessage::Number holds both as bank * 128 + index.
     constexpr uint32_t MaximumControllerNumber = 16383;
+
+    constexpr uint32_t MaximumPerNoteController = 255;
+    constexpr uint32_t MaximumAttributeType = 255;
+    constexpr uint32_t MaximumAttributeData = 65535;
+
+    // Registered or assignable.
+    bool IsPerNoteController(_In_ MessageKind kind) noexcept;
+
+    // Whether a row's note on or note off carries its attribute: a note, going out as MIDI 2.0.
+    bool SendsNoteAttribute(_In_ ControlMessage const& message, _In_ DeviceProtocol protocol) noexcept;
 
     bool HasBankAndIndex(_In_ MessageKind kind) noexcept;
     uint32_t ControllerBank(_In_ uint32_t number) noexcept;
@@ -1304,9 +1323,6 @@ namespace glass
         midiapp::EndpointMatch Match{};
         midiapp::EndpointMatchMode MatchMode{ midiapp::EndpointMatchMode::EndpointDeviceId };
 
-        // Clock to a device that does not want it is noise, so this is per destination.
-        bool SendsBeatClock{ false };
-
         DeviceProtocol Protocol{ DeviceProtocol::Midi2 };
 
         // A protocol a newer build named. Treated as MIDI 2.0 and written back as it was.
@@ -1424,10 +1440,6 @@ namespace glass
         // window, so whatever is behind the window shows through.
         bool SeeThrough{ false };
 
-        // Which display this layout was last opened on. Gone display means primary, not
-        // off screen.
-        std::wstring PreferredDisplayId{};
-
         // The one switch that stops a layout whose faders sit at zero from muting a live desk.
         bool SuppressAllStartupValues{ false };
 
@@ -1520,6 +1532,10 @@ namespace glass
     // the moment it matters, so which groups a layout drives is worth deriving rather than
     // guessing, and worth a test.
     std::vector<uint16_t> CollectGroupMasks(_In_ LayoutDocument const& document) noexcept;
+
+    // The pages a running layout moves between, by index. A page marked always on screen shows
+    // on every one of them instead, so it is left out, unless every page is one.
+    std::vector<size_t> PagesToChooseFrom(_In_ LayoutDocument const& document);
 
     // What a control or a label is printed on. A theme can ink each one differently, because a
     // panel printed in two layers is two surfaces a long way apart in value.

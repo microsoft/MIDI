@@ -112,6 +112,28 @@ void MonitorFormatTests::ARegisteredControllerNamesBothHalves()
         Describe({ 0x40200509, 0x12345678 }).Meaning);
 }
 
+void MonitorFormatTests::APerNoteControllerNamesItsNote()
+{
+    VERIFY_ARE_EQUAL(
+        std::wstring{ L"Per-note controller 74 on note 60 = 1.000" },
+        Describe({ 0x40003C4A, 0xFFFFFFFF }).Meaning);
+
+    VERIFY_ARE_EQUAL(
+        std::wstring{ L"Assignable per-note controller 200 on note 60 = 0.500" },
+        Describe({ 0x40103CC8, 0x80000000 }).Meaning);
+}
+
+void MonitorFormatTests::ANoteShowsItsAttribute()
+{
+    VERIFY_ARE_EQUAL(
+        std::wstring{ L"Note on 60 = 65535, attribute 02 1234" },
+        Describe({ 0x40903C02, 0xFFFF1234 }).Meaning);
+
+    VERIFY_ARE_EQUAL(
+        std::wstring{ L"Note off 60 = 0, attribute 03 ABCD" },
+        Describe({ 0x40803C03, 0x0000ABCD }).Meaning);
+}
+
 // ---- group and channel ----
 
 void MonitorFormatTests::GroupAndChannelAreCountedFromOne()

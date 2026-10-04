@@ -599,6 +599,12 @@ namespace glass
             return;
         }
 
+        if (control.Kind == ControlKind::PianoKeyboard)
+        {
+            LayoutKeyNames(itemIndex, control);
+            return;
+        }
+
         if (!IsPadGrid(control.Kind) || control.Pads.NoteNames == PadNoteNames::Hidden || m_host == nullptr)
         {
             return;

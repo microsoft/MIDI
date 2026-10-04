@@ -58,6 +58,9 @@ namespace glass
                 left.GroupIndex == right.GroupIndex &&
                 left.ChannelIndex == right.ChannelIndex &&
                 left.Number == right.Number &&
+                left.Controller == right.Controller &&
+                left.AttributeType == right.AttributeType &&
+                left.AttributeData == right.AttributeData &&
                 SameValue(left.Minimum, right.Minimum) &&
                 SameValue(left.Maximum, right.Maximum) &&
                 SameDetents(left.Detents, right.Detents) &&
@@ -66,7 +69,6 @@ namespace glass
                 left.UseMidi1Protocol == right.UseMidi1Protocol &&
                 left.SequenceName == right.SequenceName &&
                 left.TargetPageId == right.TargetPageId &&
-                left.TargetLayerId == right.TargetLayerId &&
                 left.Axis == right.Axis &&
                 left.Position == right.Position;
         }

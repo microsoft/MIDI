@@ -81,9 +81,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MidiSendPacerTests.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RtpMidiDnssdTests.h" />
     <ClInclude Include="RtpMidiProtocolTests.h" />
+    <ClInclude Include="RtpMidiReplySourceTests.h" />
     <ClInclude Include="RtpMidiTestJson.h" />
     <ClInclude Include="RtpMidiTestMdns.h" />
     <ClInclude Include="RtpMidiTestMocks.h" />
@@ -92,12 +94,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiSendPacerTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="RtpMidiApprovalTests.cpp" />
     <ClCompile Include="RtpMidiDnssdTests.cpp" />
     <ClCompile Include="RtpMidiProtocolTests.cpp" />
+    <ClCompile Include="RtpMidiReplySourceTests.cpp" />
+    <ClCompile Include="RtpMidiSendSpeedTests.cpp" />
     <ClCompile Include="RtpMidiTransportTests.cpp" />
   </ItemGroup>
   <ItemGroup>

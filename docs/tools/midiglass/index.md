@@ -16,16 +16,16 @@ Each design is called a **layout**. A layout can have several pages and send to 
 
 ## Quick start
 
-![The MIDI Glass library, with numbered callouts on the New layout button, a layout card, a card's device status, the search and sort controls, the Open a file and More options buttons, the Appearance and settings button, and the status bar]({{ site.baseurl }}/assets/images/midiglass-quick-start.png)
+![The MIDI Glass library, with numbered callouts on the New layout button, a layout card, a card's device status, the search and sort controls, the Ask an AI assistant, Open a file and More options buttons, the Appearance and settings button, and the status bar]({{ site.baseurl }}/assets/images/midiglass-quick-start.png)
 
 MIDI Glass opens to the **library**, where all your layouts are.
 
 1. **New layout** makes a layout. You give it a name, pick the device it sends to, and pick a template to start from.
 2. **Each card is a layout.** Click a card to run it. Point at a card to see **Run**, **Edit** and **…** for more options. You can also right-click a card for the same options.
 3. **The status chip** on each card says whether the devices that layout sends to are connected right now.
-4. **Search, sort and view.** Type to find a layout. Sort by last used, by name or by last changed. Switch between cards and a list.
-5. **Open a file…** runs a layout from any folder. **…** (More options) imports a layout package, opens the backups folder, and can keep the PC awake while a layout runs.
-6. **Appearance and settings** sets the app's light or dark theme and its window background.
+4. **Search, sort and view.** Type to find a layout. Sort by last used, by name or by last changed. Switch between cards and a list. The list shows each layout's description under its name.
+5. **Open a file…** runs a layout from any folder. **Ask an AI assistant…**, next to it, helps an AI assistant build a layout for you. **…** (More options) imports a layout package, opens the backups folder, and can keep the PC awake while a layout runs.
+6. **Appearance and settings** sets the app's light or dark theme and its window background, and turns **Ask an AI assistant** on or off.
 7. **The status bar** shows how many layouts you have and where they're saved. The chip on the right says whether the MIDI service is running.
 
 ### Make your first layout
@@ -97,9 +97,11 @@ A few of them need a word of explanation:
 - An **XY pad** or a **Joystick** sends two values at once: one for across and one for up and down.
 - A **Ribbon** is a strip you slide a finger along. It sends one value, like a fader.
 - **Generators** play by themselves once they start. **Beat clock** sends MIDI clock at the tempo you set. **LFO** sweeps a value up and down. **Steps** plays a short pattern of notes, one step at a time.
-- **Note pads** and **Hex pads** take a finger on each pad, so you can play chords. The **Mono keyboard** plays one key at a time, and you can slide along it.
+- **Note pads** and **Hex pads** take a finger on each pad, so you can play chords. The **Mono keyboard** plays one key at a time, and you can slide along it. Turn on **Show note names**, on its **Look** tab, to print each key's name and number on it.
 - **Meter**, **Lamp** and **Readout** show values that arrive from a device. You set that up on their **Listens** tab. A **Stopwatch** counts up from when the layout starts, so you can see how long you've been playing. Tap it to start again from zero.
 - A **Group** control draws a frame around controls that belong together, and a **Line** divides one part of a page from another. Neither sends anything. Don't mix up the **Group** control with **Group** on the toolbar, which ties the selected controls together.
+
+![A mono keyboard with Show note names on, showing each key's name and number from C2 48 to C4 72]({{ site.baseurl }}/assets/images/midiglass-keyboard-note-names.png)
 
 Type in **Find a control** to narrow the list. To add a control without the mouse, pick it with the keyboard and select **Add to page**. **Add to page** stays off until you pick a control.
 
@@ -134,6 +136,15 @@ The **Sends** tab has an **Action list**. Each row in it says when to send, what
 - **Type** can be a note, a control change, a program change, pitch bend, channel pressure, a per-note controller, an RPN or NRPN, or system exclusive.
 - **To** is one of the layout's devices, with its group and channel.
 
+A few types need more than a number:
+
+- **A per-note controller** changes one note that's playing, not the whole channel. **Note** is the note, and **Controller** is which controller. **Per-note controller (registered)** has a list of the controllers MIDI 2.0 names, such as **Volume** and **Pan**. **Per-note controller (assignable)** is for the ones your instrument defines itself, so take the numbers from its manual.
+- **A note sent as MIDI 2.0** has an **Attribute** row. Type the attribute type, then its data, in hexadecimal, from the instrument's manual or the profile's specification. It goes out with the note on or the note off that row sends, so a button that sends both needs it on both rows. A keyboard or a pad grid puts it on every note it plays.
+
+![The Sends tab for a knob that sends a registered per-note controller, with Note 60 and Controller 7, which the list names Volume]({{ site.baseurl }}/assets/images/midiglass-per-note-controller.png) ![The Sends tab for a pad's note on row, with the attribute type 02 and the attribute data 0001]({{ site.baseurl }}/assets/images/midiglass-note-attribute.png)
+
+MIDI Glass names notes the same way the rest of Windows MIDI Services does: note 60, middle C, is C3.
+
 The fastest way to fill in a row is **MIDI Learn**. Turn on **Learn**, then move a knob or press a key on your hardware, and MIDI Glass copies what it sends. **Learn a bank** fills several controls in a row: touch the knobs on your hardware one after another, and each one fills the next control in keyboard order. MIDI Learn listens to the devices in the layout's device list, so add your hardware there first.
 
 Each device has a **Protocol** setting: **MIDI 2.0**, **MIDI 1.0** or **Mackie Control**. It decides how you type values on the **Sends** tab. [How MIDI Glass talks to each device]({{ site.baseurl }}/kb/midi-glass-mackie-control/#how-midi-glass-talks-to-each-device) explains the choices.
@@ -149,6 +160,8 @@ On the **Listens** tab, turn on **MIDI follow** and the control moves or lights 
 - **Beat**: the control flashes on the beat.
 - **Any activity**: the control lights whenever anything arrives, like an activity light.
 
+A fader that follows the DAW can be a long way from your finger when you touch it. On the **Behavior** tab, **Pickup** decides what happens then, for a fader, an XY pad, a joystick or a ribbon. **Jump** goes straight to your finger. **Catch** waits until your finger reaches the value, so nothing jumps. **Relative** moves the value by as far as your finger moves.
+
 ## Trying a layout as you build it
 
 **Try** turns the page on without leaving the editor. Every control sends for real, so you can check that a fader sends what you expect before you go any further. Ctrl+Enter switches back to **Edit**.
@@ -159,9 +172,17 @@ The **Sending** list under the page shows each message as it goes out. **Selecte
 
 A layout can have as many pages as you like. The tabs under the page switch between them in the editor, and **+ Page** adds one. To let people change pages while the layout runs, put a **Page tab** control on each page.
 
-Open **Layout…**, then **Pages and devices…**, to rename pages, change their order, or pin a band to every page. A band is a strip that's always on screen, such as a transport row or a panic button, so you only build it once.
+Open **Layout…**, then **Pages and devices…**, to rename pages and change their order. To make a band, open a page's **…** menu there and select **Always on screen**. A band is a page whose controls show on top of every other page while the layout runs, such as a transport row, a panic button or your page tabs, so you only build it once. You don't switch to a band the way you switch pages, so leave room for its controls on your other pages. In the editor, you edit a band like any other page.
 
 **Layout…**, then **Page size…**, sets how big the page is, in pixels. Pick a size close to the screen the layout will run on.
+
+## Tempo
+
+LFO and Steps controls run at the layout's tempo. To set it, open **Layout…**, then **Pages and devices…**, and select **Behavior**. A **Beat clock** keeps its own tempo.
+
+To follow another device instead, such as your DAW, set **Tempo source** to **Incoming MIDI clock** and pick the device under **Clock comes from**. The LFOs and Steps controls then follow the speed of the clock it sends. Until the clock arrives they use the tempo you typed, and if the clock stops they keep the last tempo they had. They follow only the clock's speed. They don't start or stop when the clock does, and they don't line up with its beat.
+
+![The Tempo settings, with Tempo source set to Incoming MIDI clock, Clock comes from set to Synth, and a tempo of 120]({{ site.baseurl }}/assets/images/midiglass-tempo.png)
 
 ## Running a layout
 
@@ -208,7 +229,7 @@ Layouts are saved in **Documents › MIDI Layouts**, one file per layout. The fi
 - **Package for another PC…** makes one file that holds the layout and its pictures. Copy it to the other PC, and in the library there, select **…** (More options), then **Import a layout package…**.
 - **Duplicate** makes a copy to try ideas on, and **Add to favorites** puts the layout in a **Favorites** section at the top of the library.
 
-To have an AI assistant build a layout for you, give it the link to [MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/) and ask it to read the whole page first.
+To have an AI assistant build a layout for you, select **Ask an AI assistant…** in the library, next to **Open a file…**. It shows a starting prompt to paste into the AI assistant you use, such as a chat in your web browser. The prompt has the link to [MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/), the names of your MIDI devices, and the themes you have, so the layout the assistant makes can find your devices. MIDI Glass doesn't send anything itself. If you'd rather not see it, open **Appearance and settings** and turn off **Ask an AI assistant**.
 
 ## Keyboard and screen readers
 

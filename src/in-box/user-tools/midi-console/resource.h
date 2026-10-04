@@ -632,6 +632,13 @@
 #define IDS_NET_ADAPTER_MISSING_FORMAT                  51906
 #define IDS_NET_ADAPTER_WAITING_NOTE                    51907
 #define IDS_NET_ADAPTER_FALLBACK_NOTE                   51908
+#define IDS_NET_PROBLEM_NO_ANSWER                       51909
+#define IDS_NET_PROBLEM_NOT_APPROVED                    51910
+#define IDS_NET_PROBLEM_BUSY                            51911
+#define IDS_NET_PROBLEM_REFUSED                         51912
+#define IDS_NET_PROBLEM_NEEDS_PASSWORD                  51913
+#define IDS_NET_PROBLEM_ENDED                           51914
+#define IDS_NET_PROBLEM_OTHER                           51915
 
 // ---------------------------------------------------------------- bluetooth status 51920
 #define IDS_CMD_BT_STATUS                               51920
@@ -799,3 +806,11 @@
 #define IDS_RTP_LABEL_TRANSPORT_ID                      52249
 #define IDS_RTP_LABEL_DECISION                          52250
 #define IDS_RTP_LABEL_REQUESTED                         52251
+
+// ---------------------------------------------------------------- send speed limit 52260
+#define IDS_NET_LABEL_SEND_SPEED                        52260
+#define IDS_NET_SEND_SPEED_UNLIMITED                    52261
+#define IDS_NET_SEND_SPEED_WIRE                         52262
+#define IDS_NET_SEND_SPEED_MULTIPLE_FORMAT              52263
+#define IDS_NET_SEND_SPEED_AUTOMATIC_FORMAT             52264
+#define IDS_NET_SEND_SPEED_SLOWED_FORMAT                52265

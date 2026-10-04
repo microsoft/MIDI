@@ -1752,6 +1752,7 @@
     <Midl Include="MidiNetworkHostConnection.idl" />
     <Midl Include="MidiNetworkAdvertisedHostChangedPropertiesEnum.idl" />
     <Midl Include="MidiNetworkRemoteClientPolicyEnum.idl" />
+    <Midl Include="MidiNetworkSendSpeedLimitEnum.idl" />
     <Midl Include="MidiNetworkHostCreationErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkHostRemovalErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkHostUpdateResponse.idl" />
@@ -1775,6 +1776,7 @@
     <Midl Include="MidiRtpRemoteClientDisconnectErrorCodeEnum.idl" />
     <Midl Include="MidiRtpRemoteClientForgetErrorCodeEnum.idl" />
     <Midl Include="MidiRtpRemoteClientPolicyEnum.idl" />
+    <Midl Include="MidiRtpSendSpeedLimitEnum.idl" />
     <Midl Include="MidiRtpAdvertisedHost.idl" />
     <Midl Include="MidiRtpClientConnectConfig.idl" />
     <Midl Include="MidiRtpClientConnectResponse.idl" />

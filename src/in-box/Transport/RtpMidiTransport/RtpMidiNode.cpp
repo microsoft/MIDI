@@ -97,6 +97,26 @@ RtpMidiNode::Start(
     {
         RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED), m_running.load());
 
+        // made before anything starts, so a failure leaves nothing running
+        if (!m_tickWakeEvent.is_valid())
+        {
+            RETURN_IF_FAILED(m_tickWakeEvent.create(wil::EventOptions::None));
+        }
+
+        if (!m_pacedSendTimer)
+        {
+            // Half a millisecond of resolution without touching the global timer rate. A normal
+            // timer still works if the flag is refused, only less precisely.
+            m_pacedSendTimer.reset(CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS));
+
+            if (!m_pacedSendTimer)
+            {
+                m_pacedSendTimer.reset(CreateWaitableTimerExW(nullptr, nullptr, 0, TIMER_ALL_ACCESS));
+            }
+
+            RETURN_LAST_ERROR_IF_NULL(m_pacedSendTimer.get());
+        }
+
         RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ADDRESS_ALREADY_ASSOCIATED),
             !m_ports.Bind(preferredControlPort, fallbackRanges, m_usedPortFallback));
 
@@ -214,6 +234,9 @@ RtpMidiNode::Stop()
 
         m_ticker.request_stop();
 
+        // now, rather than at its next tick
+        if (m_tickWakeEvent.is_valid()) m_tickWakeEvent.SetEvent();
+
         if (m_ticker.joinable())
         {
             if (m_ticker.get_id() != std::this_thread::get_id()) m_ticker.join();
@@ -226,6 +249,10 @@ RtpMidiNode::Stop()
 
         {
             auto lock = std::scoped_lock{ m_connectionsLock };
+
+            // releases any sender still waiting for room to queue more
+            for (auto const& entry : m_connections) entry.second->ClosePacedSend();
+
             m_connections.clear();
         }
     }
@@ -286,6 +313,36 @@ RtpMidiNode::SendMidi(uint32_t const participantId, uint8_t const* bytes, size_t
 }
 
 
+_Use_decl_annotations_
+void
+RtpMidiNode::SetSendSpeedLimit(uint32_t const speedMultiple) noexcept
+{
+    auto const multiple = WindowsMidiServicesInternal::ClampMidiSendSpeedMultiple(speedMultiple);
+
+    if (m_sendSpeedLimit.exchange(multiple) == multiple) return;
+
+    TraceLoggingWrite(
+        MidiRtpMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Send speed limit changed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_localName.c_str(), "local name"),
+        TraceLoggingUInt32(multiple, "multiple of MIDI 1.0 wire speed, 0 for no limit")
+    );
+
+    // what is waiting may go sooner now
+    WakeForPacedSend();
+}
+
+void
+RtpMidiNode::WakeForPacedSend() noexcept
+{
+    if (m_tickWakeEvent.is_valid()) m_tickWakeEvent.SetEvent();
+}
+
+
 std::vector<RtpMidi::Participant>
 RtpMidiNode::Snapshot()
 {
@@ -336,22 +393,86 @@ _Use_decl_annotations_
 void
 RtpMidiNode::TickLoop(std::stop_token stopToken)
 {
+    HANDLE const waitHandles[]{ m_tickWakeEvent.get(), m_pacedSendTimer.get() };
+
+    // in session clock ticks, like SessionNow
+    constexpr uint64_t sessionTicksPerMillisecond{ RtpMidi::SessionClockTicksPerSecond / 1000 };
+    constexpr uint64_t engineTickInterval{ MIDI_RTP_TICK_INTERVAL_MS * sessionTicksPerMillisecond };
+
+    uint64_t nextEngineTick{ 0 };
+
     while (!stopToken.stop_requested())
     {
         // one failed tick must not stop the timers of every connection on this port pair
         try
         {
+            if (SessionNow() >= nextEngineTick)
             {
-                auto lock = std::scoped_lock{ m_engineLock };
-                if (m_session != nullptr) m_session->Tick(SessionNow());
+                {
+                    auto lock = std::scoped_lock{ m_engineLock };
+                    if (m_session != nullptr) m_session->Tick(SessionNow());
+                }
+
+                DeliverPending();
+
+                nextEngineTick = SessionNow() + engineTickInterval;
             }
 
-            DeliverPending();
+            // Messages held back by a speed limit. The timer wakes this thread the moment the
+            // next of them may go, which is usually well before the next engine tick.
+            auto const pacedWait = SendPacedMidi();
+
+            if (pacedWait > 0) ArmPacedSendTimer(pacedWait);
         }
         CATCH_LOG();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(MIDI_RTP_TICK_INTERVAL_MS));
+        auto const now = SessionNow();
+
+        DWORD const timeout = (now >= nextEngineTick) ? 0 :
+            static_cast<DWORD>((std::min)(
+                (nextEngineTick - now + sessionTicksPerMillisecond - 1) / sessionTicksPerMillisecond,
+                static_cast<uint64_t>(MIDI_RTP_TICK_INTERVAL_MS)));
+
+        if (WaitForMultipleObjects(ARRAYSIZE(waitHandles), waitHandles, FALSE, timeout) == WAIT_FAILED)
+        {
+            // never spin on a broken handle
+            LOG_LAST_ERROR();
+            std::this_thread::sleep_for(std::chrono::milliseconds(MIDI_RTP_TICK_INTERVAL_MS));
+        }
     }
+}
+
+
+uint64_t
+RtpMidiNode::SendPacedMidi()
+{
+    uint64_t earliest{ 0 };
+
+    for (auto const& connection : Connections())
+    {
+        auto const wait = connection->SendPacedMidi();
+
+        if (wait > 0 && (earliest == 0 || wait < earliest)) earliest = wait;
+    }
+
+    return earliest;
+}
+
+
+_Use_decl_annotations_
+void
+RtpMidiNode::ArmPacedSendTimer(uint64_t const ticks) noexcept
+{
+    auto const frequency = internal::GetMidiTimestampFrequency();
+
+    if (!m_pacedSendTimer || frequency == 0) return;
+
+    // relative, in 100 nanosecond units, and never zero
+    LARGE_INTEGER dueTime{};
+    dueTime.QuadPart = -static_cast<LONGLONG>((std::max)((ticks * 10'000'000ull) / frequency, 1ull));
+
+    // If this fails, the engine tick still wakes the thread, only later
+    LOG_IF_WIN32_BOOL_FALSE(SetWaitableTimer(m_pacedSendTimer.get(), &dueTime, 0, nullptr, nullptr, FALSE));
 }
 
 
@@ -424,6 +545,9 @@ RtpMidiNode::DeliverPending()
                         m_connections.erase(it);
                     }
                 }
+
+                // nothing more can go to it, and a sender waiting for room must not wait for nothing
+                if (connection != nullptr) connection->ClosePacedSend();
 
                 if (m_listener != nullptr)
                 {

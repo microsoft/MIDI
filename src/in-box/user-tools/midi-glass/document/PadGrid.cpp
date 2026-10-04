@@ -522,6 +522,7 @@ namespace glass
 
         auto const names = flats ? flatNames : sharpNames;
 
-        return std::wstring{ names[note % 12] } + std::to_wstring((note / 12) - 1);
+        // Middle C, note 60, is C3: the SDK's MidiMessageHelper default, so every MIDI tool names a note alike.
+        return std::wstring{ names[note % 12] } + std::to_wstring((note / 12) - 2);
     }
 }

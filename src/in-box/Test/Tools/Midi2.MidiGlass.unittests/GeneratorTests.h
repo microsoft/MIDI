@@ -54,4 +54,11 @@ public:
     TEST_METHOD(AKnobTurnedRoundItsArcGoesEndToEnd);
     TEST_METHOD(TurningAKnobBackFromPastItsEndMovesItAtOnce);
     TEST_METHOD(TheMiddleOfAKnobDoesNotTurnIt);
+
+    // ---- following a MIDI clock ----
+
+    TEST_METHOD(AClocksTempoIsMeasuredFromHalfABeat);
+    TEST_METHOD(JitterOnEachClockMessageDoesNotMoveTheTempo);
+    TEST_METHOD(AClockThatSlowsDownIsFollowed);
+    TEST_METHOD(AStoppedClockKeepsItsTempoUntilItComesBack);
 };

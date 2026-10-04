@@ -96,6 +96,7 @@ namespace winrt::midiglass::implementation
             glass::MessageKind::PitchBend,
             glass::MessageKind::ChannelPressure,
             glass::MessageKind::PerNoteController,
+            glass::MessageKind::AssignablePerNoteController,
             glass::MessageKind::RegisteredController,
             glass::MessageKind::AssignedController,
             glass::MessageKind::SystemExclusive,
@@ -107,12 +108,60 @@ namespace winrt::midiglass::implementation
         constexpr wchar_t const* MessageKindResourceKeys[]
         {
             L"MessageControlChange", L"MessageNote", L"MessageProgramChange", L"MessagePitchBend",
-            L"MessageChannelPressure", L"MessagePerNoteController", L"MessageRegisteredController",
-            L"MessageAssignedController", L"MessageSystemExclusive", L"MessageRawUmp",
+            L"MessageChannelPressure", L"MessagePerNoteController", L"MessageAssignablePerNoteController",
+            L"MessageRegisteredController", L"MessageAssignedController", L"MessageSystemExclusive", L"MessageRawUmp",
             L"MessageSequence", L"MessageGoToPage",
         };
 
         static_assert(std::size(MessageKindOrder) == std::size(MessageKindResourceKeys));
+
+        // The per-note controllers MIDI 2.0 registers. Most mean what the control change of the
+        // same number means; 3 is the note's pitch.
+        struct PerNoteControllerName
+        {
+            uint32_t Number{ 0 };
+            wchar_t const* Key{ nullptr };
+        };
+
+        constexpr PerNoteControllerName RegisteredPerNoteControllers[]
+        {
+            { 1, L"PerNoteModulation" },
+            { 2, L"PerNoteBreath" },
+            { 3, L"PerNotePitch" },
+            { 7, L"PerNoteVolume" },
+            { 8, L"PerNoteBalance" },
+            { 10, L"PerNotePan" },
+            { 11, L"PerNoteExpression" },
+            { 70, L"PerNoteSoundVariation" },
+            { 71, L"PerNoteTimbre" },
+            { 72, L"PerNoteReleaseTime" },
+            { 73, L"PerNoteAttackTime" },
+            { 74, L"PerNoteBrightness" },
+            { 75, L"PerNoteDecayTime" },
+            { 76, L"PerNoteVibratoRate" },
+            { 77, L"PerNoteVibratoDepth" },
+            { 78, L"PerNoteVibratoDelay" },
+            { 91, L"PerNoteReverb" },
+            { 93, L"PerNoteChorus" },
+        };
+
+        winrt::hstring DescribePerNoteController(_In_ glass::MessageKind kind, _In_ uint32_t controller)
+        {
+            if (kind == glass::MessageKind::AssignablePerNoteController)
+            {
+                return resources::GetString(L"PerNoteCaptionAssignable");
+            }
+
+            for (auto const& entry : RegisteredPerNoteControllers)
+            {
+                if (entry.Number == controller)
+                {
+                    return resources::GetString(entry.Key);
+                }
+            }
+
+            return resources::GetString(L"PerNoteCaptionUnnamed");
+        }
 
         // The overrides, in the order the comp lists them. "Use the theme" is first, because it
         // is what almost every control stays at.
@@ -325,6 +374,29 @@ namespace winrt::midiglass::implementation
             for (auto const* const key : { L"PickupJump", L"PickupCatch", L"PickupRelative" })
             {
                 PickupCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            // The registered per-note controllers by name. Picking one fills in its number.
+            auto weak = get_weak();
+
+            for (auto const& entry : RegisteredPerNoteControllers)
+            {
+                controls::MenuFlyoutItem item{};
+
+                item.Text(resources::FormatString(
+                    L"PerNoteChoiceFormat", std::to_wstring(entry.Number), std::wstring{ resources::GetString(entry.Key) }));
+
+                auto const number = entry.Number;
+
+                item.Click([weak, number](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->SetPerNoteController(number);
+                        }
+                    });
+
+                PerNoteControllerMenu().Items().Append(item);
             }
 
             // Six hue slots, the theme's one neutral where it has one, and a color of this
@@ -1046,6 +1118,11 @@ namespace winrt::midiglass::implementation
             KindCombo().SelectedIndex(kindIndex);
             PickupCombo().SelectedIndex(static_cast<int32_t>(control->Pickup));
 
+            // A knob already turns from where it is, and a button has no position to pick up.
+            PickupPanel().Visibility(glass::UsesAbsolutePosition(control->Kind)
+                ? xaml::Visibility::Visible
+                : xaml::Visibility::Collapsed);
+
             LabelPlacedCombo().SelectedIndex(IndexOf(LabelPlacedOrder,
                 control->LabelPlaced == glass::LabelPlacementOverride::Inside
                     ? glass::LabelPlacementOverride::InsideBottom
@@ -1134,18 +1211,25 @@ namespace winrt::midiglass::implementation
             {
                 auto const& message = control->Messages[index];
 
-                // The list is narrow, so an RPN or NRPN row uses the short name the monitor prints.
-                auto const kindName = message.Kind == glass::MessageKind::RegisteredController
-                    ? resources::GetString(L"MessageRowRegisteredController")
-                    : message.Kind == glass::MessageKind::AssignedController
-                        ? resources::GetString(L"MessageRowAssignedController")
-                        : resources::GetString(MessageKindResourceKeys[IndexOf(MessageKindOrder, message.Kind)]);
+                // The list is narrow, so an RPN, an NRPN or a per-note row uses a short name.
+                auto const kindName =
+                    message.Kind == glass::MessageKind::RegisteredController ? resources::GetString(L"MessageRowRegisteredController") :
+                    message.Kind == glass::MessageKind::AssignedController ? resources::GetString(L"MessageRowAssignedController") :
+                    message.Kind == glass::MessageKind::PerNoteController ? resources::GetString(L"MessageRowPerNoteController") :
+                    message.Kind == glass::MessageKind::AssignablePerNoteController ? resources::GetString(L"MessageRowAssignablePerNoteController") :
+                    resources::GetString(MessageKindResourceKeys[IndexOf(MessageKindOrder, message.Kind)]);
+
+                // A per-note row names its controller, then the note it acts on.
+                auto const numberText = glass::IsPerNoteController(message.Kind)
+                    ? std::wstring{ resources::FormatString(L"PerNoteRowNumberFormat",
+                        std::to_wstring(message.Controller), std::to_wstring(message.Number)) }
+                    : glass::FormatMessageNumber(message.Kind, message.Number);
 
                 auto text = resources::FormatString(
                     L"MessageRowFormat",
                     resources::GetString(TriggerResourceKeys[IndexOf(TriggerOrder, message.Trigger)]),
                     kindName,
-                    glass::FormatMessageNumber(message.Kind, message.Number),
+                    numberText,
                     message.DeviceName.empty()
                         ? std::wstring{ resources::GetString(L"MessageNoDevice") }
                         : message.DeviceName);
@@ -1249,6 +1333,9 @@ namespace winrt::midiglass::implementation
             MessageNumberBox().IsEnabled(valid);
             MessageValueBox().IsEnabled(valid);
             MessageSecondValueBox().IsEnabled(valid);
+            PerNoteControllerBox().IsEnabled(valid);
+            AttributeTypeBox().IsEnabled(valid);
+            AttributeDataBox().IsEnabled(valid);
 
             if (!valid)
             {
@@ -1258,6 +1345,10 @@ namespace winrt::midiglass::implementation
                 SequencePanel().Visibility(xaml::Visibility::Collapsed);
                 TargetPagePanel().Visibility(xaml::Visibility::Collapsed);
                 MessageProtocolText().Visibility(xaml::Visibility::Collapsed);
+                MessageControllerLabel().Visibility(xaml::Visibility::Collapsed);
+                PerNoteControllerPanel().Visibility(xaml::Visibility::Collapsed);
+                MessageAttributeLabel().Visibility(xaml::Visibility::Collapsed);
+                AttributePanel().Visibility(xaml::Visibility::Collapsed);
 
                 m_updatingInspector = previous;
                 return;
@@ -1313,6 +1404,9 @@ namespace winrt::midiglass::implementation
             MessageNumberBox().Value(message.Number);
             ParameterBankBox().Value(glass::ControllerBank(message.Number));
             ParameterIndexBox().Value(glass::ControllerIndex(message.Number));
+            PerNoteControllerBox().Value(message.Controller);
+            AttributeTypeBox().Text(winrt::hstring{ glass::FormatHexNumber(message.AttributeType, 2) });
+            AttributeDataBox().Text(winrt::hstring{ glass::FormatHexNumber(message.AttributeData, 4) });
 
             RefreshMessageKindFields(*control);
 
@@ -1392,11 +1486,13 @@ namespace winrt::midiglass::implementation
 
         AllGroupsCheck().IsChecked(m_showAllGroups);
 
-        GroupSourceText().Text(declared
-            ? resources::FormatString(
-                L"GroupsFromDeviceFormat",
-                std::to_wstring(static_cast<int32_t>(m_groupChoices.size()) - 1))
-            : winrt::hstring{});
+        auto const declaredCount = static_cast<int32_t>(m_groupChoices.size()) - 1;
+
+        GroupSourceText().Text(!declared
+            ? winrt::hstring{}
+            : declaredCount == 1
+                ? resources::GetString(L"GroupsFromDeviceOne")
+                : resources::FormatString(L"GroupsFromDeviceFormat", std::to_wstring(declaredCount)));
 
         m_updatingInspector = previous;
     }
@@ -1452,7 +1548,8 @@ namespace winrt::midiglass::implementation
             for (auto const& element : std::initializer_list<xaml::UIElement>{
                 MessageChannelLabel(), ChannelCombo(), MessageNumberLabel(), MessageNumberBox(),
                 MessageParameterLabel(), ParameterPanel(), DetentPanel(), SysExPanel(), RawWordsPanel(),
-                SequencePanel(), TargetPagePanel() })
+                SequencePanel(), TargetPagePanel(), MessageControllerLabel(), PerNoteControllerPanel(),
+                MessageAttributeLabel(), AttributePanel() })
             {
                 show(element, false);
             }
@@ -1483,6 +1580,10 @@ namespace winrt::midiglass::implementation
             MessageNumberBox().Visibility(xaml::Visibility::Collapsed);
             MessageParameterLabel().Visibility(xaml::Visibility::Collapsed);
             ParameterPanel().Visibility(xaml::Visibility::Collapsed);
+            MessageControllerLabel().Visibility(xaml::Visibility::Collapsed);
+            PerNoteControllerPanel().Visibility(xaml::Visibility::Collapsed);
+            MessageAttributeLabel().Visibility(xaml::Visibility::Collapsed);
+            AttributePanel().Visibility(xaml::Visibility::Collapsed);
         }
 
         // Same for a keyboard and a grid of pads: the key or the pad decides the note, so the
@@ -1526,6 +1627,28 @@ namespace winrt::midiglass::implementation
         show(MessageParameterLabel(), bankAndIndex);
         show(ParameterPanel(), bankAndIndex);
 
+        // A note and a per-note controller are both numbered by the note they play or act on.
+        auto const perNote = glass::IsPerNoteController(kind);
+
+        MessageNumberLabel().Text(resources::GetString(
+            kind == glass::MessageKind::Note || perNote ? L"MessageNumberNoteLabel" : L"MessageNumberPlainLabel"));
+
+        show(MessageControllerLabel(), perNote);
+        show(PerNoteControllerPanel(), perNote);
+
+        if (perNote)
+        {
+            // Assignable numbers have no names to pick from: the instrument decides what they are.
+            show(PerNoteControllerPicker(), kind == glass::MessageKind::PerNoteController);
+
+            PerNoteControllerCaption().Text(DescribePerNoteController(kind, message.Controller));
+        }
+
+        auto const attribute = glass::SendsNoteAttribute(message, RowProtocol(m_editor.Document(), message));
+
+        show(MessageAttributeLabel(), attribute);
+        show(AttributePanel(), attribute);
+
         show(SysExPanel(), kind == glass::MessageKind::SystemExclusive);
         show(RawWordsPanel(), kind == glass::MessageKind::RawUmp);
         show(SequencePanel(), kind == glass::MessageKind::Sequence);
@@ -1537,7 +1660,7 @@ namespace winrt::midiglass::implementation
             kind == glass::MessageKind::ControlChange ||
             kind == glass::MessageKind::PitchBend ||
             kind == glass::MessageKind::ChannelPressure ||
-            kind == glass::MessageKind::PerNoteController ||
+            glass::IsPerNoteController(kind) ||
             kind == glass::MessageKind::RegisteredController ||
             kind == glass::MessageKind::AssignedController;
 
@@ -1612,7 +1735,7 @@ namespace winrt::midiglass::implementation
         // MIDI 1.0 has no per-note controller, but a row that already is one keeps it on offer so
         // the list still shows what it is.
         auto const offersPerNote =
-            protocol != glass::DeviceProtocol::Midi1 || message.Kind == glass::MessageKind::PerNoteController;
+            protocol != glass::DeviceProtocol::Midi1 || glass::IsPerNoteController(message.Kind);
 
         auto const key = protocol == glass::DeviceProtocol::MackieControl
             ? L"mackie:" + std::to_wstring(static_cast<int32_t>(control.Kind))
@@ -1657,7 +1780,7 @@ namespace winrt::midiglass::implementation
             {
                 for (size_t index = 0; index < std::size(MessageKindOrder); ++index)
                 {
-                    if (MessageKindOrder[index] == glass::MessageKind::PerNoteController && !offersPerNote)
+                    if (glass::IsPerNoteController(MessageKindOrder[index]) && !offersPerNote)
                     {
                         continue;
                     }
@@ -1705,7 +1828,7 @@ namespace winrt::midiglass::implementation
             kind == glass::MessageKind::ControlChange ||
             kind == glass::MessageKind::PitchBend ||
             kind == glass::MessageKind::ChannelPressure ||
-            kind == glass::MessageKind::PerNoteController ||
+            glass::IsPerNoteController(kind) ||
             kind == glass::MessageKind::RegisteredController ||
             kind == glass::MessageKind::AssignedController;
 
@@ -2846,6 +2969,136 @@ namespace winrt::midiglass::implementation
             }
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to change the message parameter.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnPerNoteControllerChanged(
+        controls::NumberBox const& sender,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const value = PerNoteControllerBox().Value();
+
+        if (!std::isfinite(value))
+        {
+            return;
+        }
+
+        SetPerNoteController(static_cast<uint32_t>(
+            std::clamp(std::lround(value), 0L, static_cast<long>(glass::MaximumPerNoteController))));
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::SetPerNoteController(uint32_t controller)
+    {
+        try
+        {
+            auto const* const control = SingleSelectedControl();
+
+            if (control == nullptr ||
+                m_messageIndex < 0 ||
+                m_messageIndex >= static_cast<int32_t>(control->Messages.size()))
+            {
+                return;
+            }
+
+            auto message = control->Messages[static_cast<size_t>(m_messageIndex)];
+
+            message.Controller = (std::min)(controller, glass::MaximumPerNoteController);
+
+            auto const id = control->Id;
+            auto const index = static_cast<size_t>(m_messageIndex);
+
+            if (m_editor.SetMessage(id, index, message))
+            {
+                RefreshMessageList();
+                MarkChanged();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to change the per-note controller.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnAttributeChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        CommitAttribute();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnAttributeKeyDown(
+        foundation::IInspectable const& sender,
+        xaml::Input::KeyRoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+
+        if (args.Key() == winrt::Windows::System::VirtualKey::Enter)
+        {
+            args.Handled(true);
+            CommitAttribute();
+        }
+    }
+
+    void EditorWindow::CommitAttribute()
+    {
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const* const control = SingleSelectedControl();
+
+            if (control == nullptr ||
+                m_messageIndex < 0 ||
+                m_messageIndex >= static_cast<int32_t>(control->Messages.size()))
+            {
+                return;
+            }
+
+            auto message = control->Messages[static_cast<size_t>(m_messageIndex)];
+
+            uint32_t type{ 0 };
+            uint32_t data{ 0 };
+
+            // A typo puts back what was there rather than quietly becoming zero.
+            if (glass::TryParseHexNumber(std::wstring_view{ AttributeTypeBox().Text() }, glass::MaximumAttributeType, type))
+            {
+                message.AttributeType = type;
+            }
+
+            if (glass::TryParseHexNumber(std::wstring_view{ AttributeDataBox().Text() }, glass::MaximumAttributeData, data))
+            {
+                message.AttributeData = data;
+            }
+
+            auto const id = control->Id;
+            auto const index = static_cast<size_t>(m_messageIndex);
+
+            if (m_editor.SetMessage(id, index, message))
+            {
+                MarkChanged();
+            }
+
+            auto const previous = m_updatingInspector;
+            m_updatingInspector = true;
+
+            AttributeTypeBox().Text(winrt::hstring{ glass::FormatHexNumber(message.AttributeType, 2) });
+            AttributeDataBox().Text(winrt::hstring{ glass::FormatHexNumber(message.AttributeData, 4) });
+
+            m_updatingInspector = previous;
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to change the note attribute.")
     }
 
     // ---------------------------------------------------------------- behavior

@@ -27,6 +27,7 @@ namespace glass
         constexpr uint8_t StatusRegisteredController = 0x2;
         constexpr uint8_t StatusAssignedController = 0x3;
         constexpr uint8_t StatusPerNoteController = 0x0;
+        constexpr uint8_t StatusAssignablePerNoteController = 0x1;
 
         constexpr double Normalize(_In_ uint32_t value, _In_ uint32_t bits) noexcept
         {
@@ -159,8 +160,12 @@ namespace glass
             return true;
 
         case StatusPerNoteController:
-            learned.Kind = MessageKind::PerNoteController;
+        case StatusAssignablePerNoteController:
+            learned.Kind = status == StatusPerNoteController
+                ? MessageKind::PerNoteController
+                : MessageKind::AssignablePerNoteController;
             learned.Number = index1;
+            learned.Controller = words[0] & 0xFF;
             learned.Value = Normalize(words[1], 32);
             return true;
 
@@ -193,7 +198,11 @@ namespace glass
         if (accept.Group) { message.GroupIndex = learned.GroupIndex; }
         if (accept.Channel) { message.ChannelIndex = learned.ChannelIndex; }
         if (accept.Kind) { message.Kind = learned.Kind; }
-        if (accept.Number) { message.Number = learned.Number; }
+        if (accept.Number)
+        {
+            message.Number = learned.Number;
+            message.Controller = learned.Controller;
+        }
     }
 
     _Use_decl_annotations_
@@ -218,6 +227,7 @@ namespace glass
             left.Kind == right.Kind &&
             left.GroupIndex == right.GroupIndex &&
             left.ChannelIndex == right.ChannelIndex &&
-            left.Number == right.Number;
+            left.Number == right.Number &&
+            left.Controller == right.Controller;
     }
 }

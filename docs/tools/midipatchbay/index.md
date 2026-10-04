@@ -34,7 +34,7 @@ A **patch** is one canvas: the endpoints on it, the connections between them, an
 
 Patch files end in `.midipatch`. To add one that somebody sent you, or one an AI assistant saved in another folder, select **Import patch…** and pick the file. You can also double-click it in File Explorer. The first time you do, Windows asks which app to open it with, so pick MIDI Patchbay. Either way, the patch is copied into your patches. It doesn't route, and it doesn't start automatically, until you turn those on. A file from somewhere else shouldn't connect your devices before you've looked at it.
 
-To have an AI assistant build a patch for you, give it the link to [MIDI Patchbay patch files, a guide for AI agents]({{ site.baseurl }}/kb/midi-patchbay-patches-for-agents/) and ask it to read the whole page first.
+To have an AI assistant build a patch for you, select **Ask an AI assistant…** under **Import patch…**. It shows a starting prompt to paste into the AI assistant you use, such as a chat in your web browser. The prompt has the link to [MIDI Patchbay patch files, a guide for AI agents]({{ site.baseurl }}/kb/midi-patchbay-patches-for-agents/) and the names of your MIDI devices, so the patch the assistant makes can find them. Patchbay doesn't send anything itself. If you'd rather not see it, turn off **Ask an AI assistant** in the appearance and settings flyout.
 
 Older versions of Patchbay named patch files `.midipatch.json`. Patchbay renames them to `.midipatch` the next time it starts. If a file with the new name is already there, the old one is left alone.
 
@@ -130,6 +130,38 @@ Leave **Bypass exact-pitch notes** clear and the pitch moves with the note, so t
 Selecting a connection shows what its filters and transforms add up to, so you can see at a glance what a cord is doing without opening either dialog.
 
 ![What a connection carries]({{ site.baseurl }}/assets/images/midipatchbay-connection.png)
+
+## Sending speed
+
+A USB or network connection can carry MIDI many times faster than the 5-pin DIN cable most MIDI hardware was built around. Some devices can't keep up when a lot of data arrives at once. A synth taking a long SysEx dump, a device with a small buffer, or one with a slow processor can lose messages, play notes late, or stop responding.
+
+Filters are often the first fix. Keeping out messages a device doesn't use, such as clock, active sensing, or aftertouch, leaves more room for the ones it needs. When that isn't enough, slow the connection down. Select the connection and pick a **Sending speed**:
+
+- **Unlimited** is the default. Messages go out as fast as they arrive.
+- **MIDI 1.0 wire speed** is the speed of a 5-pin DIN MIDI cable, 31,250 bits a second.
+- **2×** to **32× MIDI 1.0 wire speed** are that many times faster. 32× is about a megabit a second.
+
+Start with MIDI 1.0 wire speed for a device that was built for a DIN cable, and go faster if it copes. These are the same choices Network MIDI Setup offers for network MIDI devices.
+
+The sending speed is the last step on a connection. It applies after the filters and the transforms, so it's spent only on the messages that actually go to the device. Speed is counted in the bytes the same messages would take on a MIDI 1.0 cable.
+
+**A single note or knob turn is never held back.** After a quiet moment, a short burst goes out right away: 64 bytes at MIDI 1.0 wire speed, and twice that at twice the speed. Only what comes after that is spaced out. So playing a keyboard feels the same, while a 3,000-byte SysEx dump at MIDI 1.0 wire speed takes about a second, just as it would over a cable.
+
+**Patchbay holds the messages that are waiting** and sends them as fast as the speed allows. It never slows down the device or app that's sending to it. Select the connection to see how many messages are waiting, under **Activity**. A connection can hold minutes' worth of messages at MIDI 1.0 wire speed. If even more arrives, the newest messages are dropped, and **Activity** says how many.
+
+Each connection is slowed down on its own. Two connections into one device can together send it twice as much as either one, so keep that in mind when several connections lead to the same slow device.
+
+When the routing changes, such as when you edit a connection or start or stop a patch, Patchbay restarts every connection that's routing, and messages that were still waiting are dropped. Let a long transfer finish before you change things.
+
+### Waiting for each send to complete
+
+When an app sends MIDI, it can ask Windows to wait until the device's driver has taken each message before the app sends the next one. That keeps a fast app from piling messages up in front of a slow device. Older apps that use the Windows multimedia MIDI API (WinMM) always wait like this.
+
+That waiting stops at a loopback, though. An app sending to a loopback only waits for the loopback, and Patchbay then passes the messages on to the device as fast as they come. To put the waiting back, open the patch's **…** menu and turn on **Wait for send complete**. Patchbay then waits until the device's driver has taken each message before it sends the next one.
+
+It applies to every connection in the patch, because it changes how Patchbay connects to each device. Like a sending speed, it never holds up the device or app that's sending to Patchbay. Patchbay holds the messages that are waiting, and **Activity** shows how many there are.
+
+You can use both together. The sending speed sets the most a connection sends in a second, and waiting makes sure the device has taken each message before the next one goes.
 
 ## Routing only runs while Patchbay is running
 

@@ -67,6 +67,10 @@ namespace midipatchbay
 
         MessageFilter Filter{};
         MessageTransform Transform{};
+
+        // A multiple of MIDI 1.0 wire speed, 0 for no limit. Applied after the filter and the
+        // transform, to what is actually sent.
+        uint32_t SendSpeedLimit{ 0 };
     };
 
     // A patch is a file. Nothing in here touches WinRT UI types, so this whole layer is what a
@@ -81,6 +85,10 @@ namespace midipatchbay
 
         bool IsTemporary{ false };
         bool ActivateAtStartup{ true };
+
+        // Every send waits until the service has taken it, the way WinMM sends do. It is how
+        // each device connection is opened, so it covers the whole patch.
+        bool WaitForSendComplete{ false };
 
         // Seconds since 1970. Kept small enough to survive a JSON number exactly.
         int64_t CreatedTimestamp{ 0 };

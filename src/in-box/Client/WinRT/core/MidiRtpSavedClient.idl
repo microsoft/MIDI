@@ -10,6 +10,7 @@
 import "MidiApiContracts.idl";
 
 import "MidiRtpClientMatchCriteria.idl";
+import "MidiRtpSendSpeedLimitEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Rtp
 {
@@ -39,5 +40,7 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         [noexcept] Boolean SendRecoveryJournal{ get; };
 
         [noexcept] Boolean IsEnabled{ get; };
+
+        [noexcept] MidiRtpSendSpeedLimit SendSpeedLimit{ get; };
     }
 }

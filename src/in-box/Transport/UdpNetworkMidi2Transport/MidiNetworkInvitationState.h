@@ -42,11 +42,13 @@ public:
         m_pending = true;
     }
 
-    // The host answered, whatever the answer was.
-    void Answered() noexcept
+    // The host answered, whatever the answer was. True if an invitation was still out, so only
+    // one of an answer and a timeout decides how the invitation ended.
+    bool Answered() noexcept
     {
-        m_pending = false;
         m_replyPendingReceived = false;
+
+        return m_pending.exchange(false);
     }
 
     bool IsPending() const noexcept { return m_pending; }
@@ -90,15 +92,23 @@ public:
                 return MidiNetworkInvitationAction::None;
             }
 
-            m_pending = false;
             m_replyPendingReceived = false;
+
+            // an answer which arrived meanwhile has already decided it
+            if (!m_pending.exchange(false))
+            {
+                return MidiNetworkInvitationAction::None;
+            }
 
             return MidiNetworkInvitationAction::CancelNotApproved;
         }
 
         if (m_attempts >= maxAttempts)
         {
-            m_pending = false;
+            if (!m_pending.exchange(false))
+            {
+                return MidiNetworkInvitationAction::None;
+            }
 
             return MidiNetworkInvitationAction::CancelNoReply;
         }

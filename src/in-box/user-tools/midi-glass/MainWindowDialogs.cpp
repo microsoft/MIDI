@@ -13,9 +13,11 @@
 #include "App.xaml.h"
 
 #include "AppSettings.h"
+#include "AssistantPrompt.h"
 #include "StringResources.h"
 #include "LayoutStore.h"
 #include "LayoutTemplates.h"
+#include "ThemeStore.h"
 #include "ThumbnailRenderer.h"
 #include "EndpointCatalog.h"
 
@@ -27,6 +29,9 @@ namespace winrt::midiglass::implementation
 {
     namespace
     {
+        // A short link, so the guide can move without changing the app.
+        constexpr wchar_t AssistantGuideUrl[] = L"https://aka.ms/AgentGuideMidiGlass";
+
         controls::TextBox MakeField(
             _In_ winrt::hstring const& header,
             _In_ winrt::hstring const& text,
@@ -513,5 +518,71 @@ namespace winrt::midiglass::implementation
             RefreshLibrary();
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to delete the layout.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAssistantClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ShowAssistantDialogAsync();
+    }
+
+    foundation::IAsyncAction MainWindow::ShowAssistantDialogAsync()
+    {
+        auto strong = get_strong();
+
+        try
+        {
+            std::wstring const guide{ AssistantGuideUrl };
+            auto const devices = midiapp::FormatPromptList(midiapp::EndpointNamesForPrompt());
+
+            // Built-in themes first, then the customer's own, which is the order the theme picker uses.
+            std::vector<std::wstring> themeNames{};
+
+            for (auto const& theme : glass::AllThemes())
+            {
+                themeNames.push_back(theme.Name);
+            }
+
+            std::wstring prompt{ resources::FormatString(L"AssistantPromptIntroFormat", guide) };
+            prompt += L"\r\n\r\n";
+
+            if (devices.empty())
+            {
+                prompt += resources::GetString(L"AssistantPromptNoDevices");
+            }
+            else
+            {
+                prompt += resources::GetString(L"AssistantPromptDevices");
+                prompt += L"\r\n";
+                prompt += devices;
+            }
+
+            prompt += L"\r\n\r\n";
+            prompt += resources::GetString(L"AssistantPromptThemes");
+            prompt += L"\r\n";
+            prompt += midiapp::FormatPromptList(themeNames);
+            prompt += L"\r\n\r\n";
+            prompt += resources::GetString(L"AssistantPromptRequest");
+
+            // The customer types their request straight after it.
+            prompt += L" ";
+
+            midiapp::AssistantPromptStrings strings{};
+            strings.Title = resources::GetString(L"AssistantTitle");
+            strings.Message = resources::GetString(L"AssistantMessage");
+            strings.PromptHeader = resources::GetString(L"AssistantPromptHeader");
+            strings.GuideLink = resources::GetString(L"AssistantGuideLink");
+            strings.CopyButton = resources::GetString(L"AssistantCopy");
+            strings.CopiedButton = resources::GetString(L"AssistantCopied");
+            strings.CopyFailedButton = resources::GetString(L"AssistantCopyFailed");
+            strings.CloseButton = resources::GetString(L"DialogClose");
+
+            co_await midiapp::ShowAssistantPromptAsync(
+                Content().XamlRoot(), strings, winrt::hstring{ prompt }, foundation::Uri{ guide });
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the AI assistant prompt.")
     }
 }

@@ -232,6 +232,9 @@ namespace winrt::midiglass::implementation
         void OnMessageNumberChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnMessageValueChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
         void OnMessageParameterChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnPerNoteControllerChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnAttributeChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnAttributeKeyDown(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::KeyRoutedEventArgs const& args);
 
         // Several controls picked: where all of them send, and where the ones that listen do.
         void OnManySendChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
@@ -331,6 +334,7 @@ namespace winrt::midiglass::implementation
         void OnLowestNoteChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnKeyColorChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnKeyVelocityChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnKeyNamesChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         void OnPadGridNumberChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
         void OnPadGridChoiceChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
@@ -495,6 +499,10 @@ namespace winrt::midiglass::implementation
         // Which of the message rows make sense for the kind of message this is.
         void RefreshMessageKindFields(_In_ glass::Control const& control);
         void RefreshMessageKindFields(_In_ glass::ControlMessage const& message);
+
+        // Writes a per-note controller number onto the selected row, from the box or the list.
+        void SetPerNoteController(_In_ uint32_t controller);
+        void CommitAttribute();
         void RefreshSequenceChoices(_In_ std::wstring const& selectedName);
 
         // The What list for a row, which depends on what its device speaks: every message, only

@@ -50,6 +50,7 @@ namespace winrt::midi2monitor::implementation
         void OnSelectAllSysEx7Click(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnDeselectAllClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCopyUmpWordsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCopyBinaryDataClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnCopyMidi1BytesClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCopySysExBytesClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 

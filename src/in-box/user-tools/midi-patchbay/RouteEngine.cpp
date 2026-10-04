@@ -9,6 +9,7 @@
 #include "RouteEngine.h"
 #include "StringResources.h"
 
+#include <midi_timestamp.h>
 #include <ump_helpers.h>
 
 namespace internal = ::WindowsMidiServicesInternal;
@@ -32,6 +33,206 @@ namespace midipatchbay
             return value;
         }
     }
+
+    // Sends what the queued connections into one destination are holding, as fast as each
+    // connection's speed allows. One thread for each destination, so a send that waits to
+    // complete holds up only the device it is waiting for.
+    struct RouteEngine::DestinationSender
+    {
+        winrt::com_ptr<IMidiEndpointConnectionRaw> Destination{ nullptr };
+
+        // Owned by the hubs, which are destroyed only after this thread has stopped
+        std::vector<Target*> Targets{};
+
+        DestinationSender() noexcept = default;
+        DestinationSender(DestinationSender const&) = delete;
+        DestinationSender& operator=(DestinationSender const&) = delete;
+
+        ~DestinationSender() noexcept
+        {
+            Stop();
+        }
+
+        bool Start() noexcept
+        {
+            try
+            {
+                auto const maxWords = Destination == nullptr ? 0 : Destination->GetSupportedMaxMidiWordsPerTransmission();
+
+                if (maxWords < MaximumWordsPerUmp || Targets.empty())
+                {
+                    return false;
+                }
+
+                m_buffer.assign(maxWords, 0);
+
+                if (!m_wake.try_create(wil::EventOptions::None, nullptr))
+                {
+                    return false;
+                }
+
+                // At MIDI 1.0 wire speed, a message can be due every millisecond or so
+                m_paceTimer.reset(::CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS));
+
+                if (!m_paceTimer)
+                {
+                    m_paceTimer.reset(::CreateWaitableTimerExW(nullptr, nullptr, 0, TIMER_ALL_ACCESS));
+                }
+
+                if (!m_paceTimer)
+                {
+                    return false;
+                }
+
+                m_ticksPerSecond = internal::GetMidiTimestampFrequency();
+                m_thread = std::thread([this]() { Run(); });
+
+                return true;
+            }
+            MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to start a send thread.")
+
+            return false;
+        }
+
+        bool IsRunning() const noexcept
+        {
+            return m_thread.joinable();
+        }
+
+        void RequestStop() noexcept
+        {
+            m_stopRequested.store(true);
+
+            if (m_wake)
+            {
+                m_wake.SetEvent();
+            }
+        }
+
+        // The thread finishes the send it is in first
+        void Stop() noexcept
+        {
+            RequestStop();
+
+            try
+            {
+                if (m_thread.joinable())
+                {
+                    m_thread.join();
+                }
+            }
+            MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to stop a send thread.")
+        }
+
+        void Wake() noexcept
+        {
+            m_wake.SetEvent();
+        }
+
+    private:
+        void Run() noexcept
+        {
+            try
+            {
+                HANDLE const handles[]{ m_wake.get(), m_paceTimer.get() };
+
+                while (!m_stopRequested.load())
+                {
+                    if (::WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE) == WAIT_FAILED)
+                    {
+                        // never spin on a broken handle
+                        LOG_LAST_ERROR();
+                        break;
+                    }
+
+                    auto const waitTicks = SendWhatIsAllowed();
+
+                    if (waitTicks > 0)
+                    {
+                        ArmPaceTimer(waitTicks);
+                    }
+                }
+            }
+            MIDI_PATCHBAY_CATCH_AND_LOG(L"A send thread failed.")
+        }
+
+        // Takes from each connection in turn, so a busy one cannot hold up the others. Returns
+        // how long until a sending speed lets the next message go, or zero.
+        uint64_t SendWhatIsAllowed() noexcept
+        {
+            uint64_t earliestWait{ 0 };
+            bool sentAny{ true };
+
+            while (sentAny && !m_stopRequested.load())
+            {
+                sentAny = false;
+                earliestWait = 0;
+
+                for (auto* target : Targets)
+                {
+                    if (m_stopRequested.load())
+                    {
+                        break;
+                    }
+
+                    uint64_t timestamp{ 0 };
+                    uint32_t messageCount{ 0 };
+                    uint64_t waitTicks{ 0 };
+
+                    auto const wordCount = target->Queue->Take(
+                        internal::GetCurrentMidiTimestamp(),
+                        m_buffer.data(),
+                        static_cast<uint32_t>(m_buffer.size()),
+                        timestamp,
+                        messageCount,
+                        waitTicks);
+
+                    if (wordCount > 0)
+                    {
+                        sentAny = true;
+
+                        target->MessagesForwarded.fetch_add(messageCount, std::memory_order_relaxed);
+
+                        if (FAILED(Destination->SendMidiMessagesRaw(timestamp, wordCount, m_buffer.data())))
+                        {
+                            target->SendFailures.fetch_add(1, std::memory_order_relaxed);
+                        }
+                    }
+                    else if (waitTicks > 0 && (earliestWait == 0 || waitTicks < earliestWait))
+                    {
+                        earliestWait = waitTicks;
+                    }
+                }
+            }
+
+            return earliestWait;
+        }
+
+        void ArmPaceTimer(_In_ uint64_t const ticks) noexcept
+        {
+            if (m_ticksPerSecond == 0)
+            {
+                return;
+            }
+
+            // relative, in 100 nanosecond units, and never zero
+            LARGE_INTEGER dueTime{};
+            dueTime.QuadPart = -static_cast<LONGLONG>((std::max)((ticks * 10'000'000ull) / m_ticksPerSecond, 1ull));
+
+            // If this fails, the next message to arrive still wakes the thread, only later
+            LOG_IF_WIN32_BOOL_FALSE(::SetWaitableTimer(m_paceTimer.get(), &dueTime, 0, nullptr, nullptr, FALSE));
+        }
+
+        std::vector<uint32_t> m_buffer{};
+
+        wil::unique_event_nothrow m_wake{};
+        wil::unique_handle m_paceTimer{};
+
+        std::atomic<bool> m_stopRequested{ false };
+        uint64_t m_ticksPerSecond{ 0 };
+
+        std::thread m_thread{};
+    };
 
     // One per source endpoint. Registered as the raw messages-received callback on that
     // endpoint's connection, and fans every arriving batch out to its targets.
@@ -76,6 +277,7 @@ namespace midipatchbay
             for (auto& target : Targets)
             {
                 target->SendBufferUsed = 0;
+                target->SendBufferMessages = 0;
             }
 
             uint32_t position{ 0 };
@@ -135,8 +337,7 @@ namespace midipatchbay
                             target->SendBuffer.data() + target->SendBufferUsed, messageWordCount);
 
                         target->SendBufferUsed += messageWordCount;
-
-                        target->MessagesForwarded.fetch_add(1, std::memory_order_relaxed);
+                        target->SendBufferMessages++;
                     }
                 }
 
@@ -156,13 +357,32 @@ namespace midipatchbay
                 return;
             }
 
-            if (FAILED(target.Destination->SendMidiMessagesRaw(
-                timestamp, static_cast<UINT32>(target.SendBufferUsed), target.SendBuffer.data())))
+            if (target.Queue != nullptr)
             {
-                target.SendFailures.fetch_add(1, std::memory_order_relaxed);
+                // Never waited for here. This thread also carries everything the source sends
+                // to its other destinations.
+                if (target.Queue->Push(timestamp, target.SendBuffer.data(), static_cast<uint32_t>(target.SendBufferUsed)))
+                {
+                    target.Sender->Wake();
+                }
+                else
+                {
+                    target.MessagesDropped.fetch_add(target.SendBufferMessages, std::memory_order_relaxed);
+                }
+            }
+            else
+            {
+                target.MessagesForwarded.fetch_add(target.SendBufferMessages, std::memory_order_relaxed);
+
+                if (FAILED(target.Destination->SendMidiMessagesRaw(
+                    timestamp, static_cast<UINT32>(target.SendBufferUsed), target.SendBuffer.data())))
+                {
+                    target.SendFailures.fetch_add(1, std::memory_order_relaxed);
+                }
             }
 
             target.SendBufferUsed = 0;
+            target.SendBufferMessages = 0;
         }
     };
 
@@ -186,7 +406,9 @@ namespace midipatchbay
                 LowerCopy(entry.DestinationEndpointDeviceId) + L'|' +
                 std::to_wstring(entry.DestinationGroupIndex) + L'|' +
                 FilterSignature(entry.Filter) + L'|' +
-                TransformSignature(entry.Transform));
+                TransformSignature(entry.Transform) + L'|' +
+                std::to_wstring(entry.SendSpeedLimit) + L'|' +
+                (entry.WaitForSendComplete ? L'w' : L'-'));
         }
 
         std::sort(parts.begin(), parts.end());
@@ -218,6 +440,18 @@ namespace midipatchbay
                 LOG_IF_FAILED(hub->SourceRaw->RemoveMessagesReceivedCallback());
             }
         }
+
+        // No callback can add to a queue now. Each send thread finishes the send it is in, and
+        // whatever is still queued goes with the plan. All are told first, so they stop together.
+        for (auto& sender : m_senders)
+        {
+            if (sender != nullptr)
+            {
+                sender->RequestStop();
+            }
+        }
+
+        m_senders.clear();
 
         m_hubs.clear();
 
@@ -290,11 +524,11 @@ namespace midipatchbay
                 }
             }
 
-            // Pass one: work out which endpoints are needed and which of them are sources. The
+            // Pass one: work out which connections are needed and which of them are sources. The
             // COM extensions require the callback to be set before the connection is opened, so
             // that has to be known before anything is created.
-            std::set<std::wstring> sourceIds{};
-            std::set<std::wstring> allIds{};
+            std::set<ConnectionKey> sourceKeys{};
+            std::set<ConnectionKey> allKeys{};
 
             for (auto const& entry : plan)
             {
@@ -303,17 +537,25 @@ namespace midipatchbay
                     continue;
                 }
 
-                sourceIds.insert(LowerCopy(entry.SourceEndpointDeviceId));
-                allIds.insert(LowerCopy(entry.SourceEndpointDeviceId));
-                allIds.insert(LowerCopy(entry.DestinationEndpointDeviceId));
+                ConnectionKey const sourceKey{ LowerCopy(entry.SourceEndpointDeviceId), entry.WaitForSendComplete };
+
+                sourceKeys.insert(sourceKey);
+                allKeys.insert(sourceKey);
+                allKeys.insert(ConnectionKey{ LowerCopy(entry.DestinationEndpointDeviceId), entry.WaitForSendComplete });
             }
 
             // Pass two: create every connection, and give each source its hub before opening.
-            std::map<std::wstring, winrt::com_ptr<SourceHub>> hubsById{};
+            std::map<ConnectionKey, winrt::com_ptr<SourceHub>> hubsByKey{};
 
-            for (auto const& id : allIds)
+            for (auto const& key : allKeys)
             {
-                auto connection = m_session.CreateEndpointConnection(winrt::hstring{ id });
+                auto const& [id, waitForSendComplete] = key;
+
+                // Settings only where a patch waits, so every other connection opens exactly as
+                // it always has
+                auto connection = waitForSendComplete
+                    ? m_session.CreateEndpointConnection(winrt::hstring{ id }, midi2::MidiEndpointConnectionSettings{ true })
+                    : m_session.CreateEndpointConnection(winrt::hstring{ id });
 
                 if (connection == nullptr)
                 {
@@ -323,7 +565,7 @@ namespace midipatchbay
                     continue;
                 }
 
-                if (sourceIds.count(id) != 0)
+                if (sourceKeys.count(key) != 0)
                 {
                     auto raw = connection.try_as<IMidiEndpointConnectionRaw>();
 
@@ -344,24 +586,32 @@ namespace midipatchbay
                         continue;
                     }
 
-                    hubsById.emplace(id, hub);
+                    hubsByKey.emplace(key, hub);
                 }
 
-                m_connections.emplace(id, connection);
+                m_connections.emplace(key, connection);
             }
 
-            // Pass three: attach the targets, now that every destination connection exists.
-            size_t activeRoutes{ 0 };
+            // Pass three: build the targets, now that every destination connection exists.
+            struct PendingTarget
+            {
+                SourceHub* Hub{ nullptr };
+                ConnectionKey DestinationKey{};
+                std::unique_ptr<Target> Route{};
+            };
+
+            std::vector<PendingTarget> pending{};
+            auto const ticksPerSecond = internal::GetMidiTimestampFrequency();
 
             for (auto const& entry : plan)
             {
-                auto const sourceId = LowerCopy(entry.SourceEndpointDeviceId);
-                auto const destinationId = LowerCopy(entry.DestinationEndpointDeviceId);
+                ConnectionKey const sourceKey{ LowerCopy(entry.SourceEndpointDeviceId), entry.WaitForSendComplete };
+                ConnectionKey const destinationKey{ LowerCopy(entry.DestinationEndpointDeviceId), entry.WaitForSendComplete };
 
-                auto const hubIt = hubsById.find(sourceId);
-                auto const destinationIt = m_connections.find(destinationId);
+                auto const hubIt = hubsByKey.find(sourceKey);
+                auto const destinationIt = m_connections.find(destinationKey);
 
-                if (hubIt == hubsById.end() || destinationIt == m_connections.end())
+                if (hubIt == hubsByKey.end() || destinationIt == m_connections.end())
                 {
                     continue;
                 }
@@ -394,26 +644,82 @@ namespace midipatchbay
                 target->ConnectionId = entry.ConnectionId;
                 target->SendBuffer.assign(maxWords, 0);
 
-                hubIt->second->Targets.push_back(std::move(target));
+                // After the filter and the transform, so the speed is spent only on what is sent
+                if (entry.SendSpeedLimit != 0 || entry.WaitForSendComplete)
+                {
+                    target->Queue = std::make_unique<SendQueue>();
+                    target->Queue->Configure(entry.SendSpeedLimit, ticksPerSecond);
+                }
+
+                pending.push_back(PendingTarget{ hubIt->second.get(), destinationKey, std::move(target) });
+            }
+
+            // Pass four: a send thread for each destination with connections that hold messages
+            // back. A connection whose thread cannot start is left out, rather than left to fill
+            // a queue that nothing empties.
+            std::map<ConnectionKey, DestinationSender*> sendersByKey{};
+
+            for (auto& item : pending)
+            {
+                if (item.Route->Queue == nullptr)
+                {
+                    continue;
+                }
+
+                auto& sender = sendersByKey[item.DestinationKey];
+
+                if (sender == nullptr)
+                {
+                    m_senders.push_back(std::make_unique<DestinationSender>());
+
+                    sender = m_senders.back().get();
+                    sender->Destination = item.Route->Destination;
+                }
+
+                sender->Targets.push_back(item.Route.get());
+                item.Route->Sender = sender;
+            }
+
+            for (auto& sender : m_senders)
+            {
+                if (!sender->Start())
+                {
+                    m_lastError = resources::GetString(L"ErrorRoutingFailed");
+                }
+            }
+
+            size_t activeRoutes{ 0 };
+
+            for (auto& item : pending)
+            {
+                if (item.Route->Sender != nullptr && !item.Route->Sender->IsRunning())
+                {
+                    continue;
+                }
+
+                item.Hub->Targets.push_back(std::move(item.Route));
 
                 activeRoutes++;
             }
 
-            // Pass four: open. Every callback is already in place, so no message can arrive
-            // before the route it belongs to exists.
-            for (auto& [id, connection] : m_connections)
-            {
-                UNREFERENCED_PARAMETER(id);
+            std::erase_if(m_senders, [](std::unique_ptr<DestinationSender> const& sender)
+                {
+                    return !sender->IsRunning();
+                });
 
+            // Pass five: open. Every callback is already in place, so no message can arrive
+            // before the route it belongs to exists.
+            for (auto& [key, connection] : m_connections)
+            {
                 if (!connection.Open())
                 {
-                    MIDI_PATCHBAY_LOG_INFO_WITH_ENDPOINT(L"Endpoint connection could not be opened.", id.c_str());
+                    MIDI_PATCHBAY_LOG_INFO_WITH_ENDPOINT(L"Endpoint connection could not be opened.", key.first.c_str());
                 }
             }
 
-            for (auto& [id, hub] : hubsById)
+            for (auto& [key, hub] : hubsByKey)
             {
-                UNREFERENCED_PARAMETER(id);
+                UNREFERENCED_PARAMETER(key);
 
                 hub->Running.store(true);
                 m_hubs.push_back(hub);
@@ -454,6 +760,13 @@ namespace midipatchbay
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to shut down the routing engine.")
     }
 
+    RouteEngine::~RouteEngine() noexcept
+    {
+        // The window shuts the engine down on a thread of its own, which can still be running
+        // when the process exits. This waits for it, then stops anything it left.
+        Shutdown();
+    }
+
     std::unordered_map<std::wstring, RouteStats> RouteEngine::Stats() const noexcept
     {
         std::unordered_map<std::wstring, RouteStats> result{};
@@ -478,6 +791,8 @@ namespace midipatchbay
 
                 stats.MessagesForwarded = target->MessagesForwarded.load(std::memory_order_relaxed);
                 stats.SendFailures = target->SendFailures.load(std::memory_order_relaxed);
+                stats.MessagesWaiting = target->Queue == nullptr ? 0 : target->Queue->WaitingMessageCount();
+                stats.MessagesDropped = target->MessagesDropped.load(std::memory_order_relaxed);
                 stats.IsActive = true;
 
                 result[target->ConnectionId] = stats;
@@ -527,11 +842,17 @@ namespace midipatchbay
             {
                 std::scoped_lock guard{ m_lock };
 
-                auto const it = m_connections.find(LowerCopy(endpointDeviceId));
+                auto const id = LowerCopy(endpointDeviceId);
 
-                if (it != m_connections.end() && it->second != nullptr)
+                for (auto const waitsForSendComplete : { false, true })
                 {
-                    raw = it->second.try_as<IMidiEndpointConnectionRaw>();
+                    auto const it = m_connections.find(ConnectionKey{ id, waitsForSendComplete });
+
+                    if (it != m_connections.end() && it->second != nullptr)
+                    {
+                        raw = it->second.try_as<IMidiEndpointConnectionRaw>();
+                        break;
+                    }
                 }
             }
 

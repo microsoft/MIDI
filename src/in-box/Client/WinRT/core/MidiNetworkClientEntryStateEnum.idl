@@ -14,17 +14,19 @@ namespace Windows.Devices.Midi2.Transports.Network
     [contract(MidiTransportsNetworkApiContract, 1)]
     enum MidiNetworkClientEntryState
     {
-        // configured, and waiting for the service to connect it
+        // configured, and waiting for the service to connect it. Also after a host said it was
+        // busy, and between tries of a direct connection. LastErrorCode says why it is waiting.
         Pending = 0,
 
         // the service has created the client. Use IsSessionActive for whether MIDI is flowing
         Active = 1,
 
-        // the configuration entry itself was rejected, so retrying cannot help
+        // the configuration entry was rejected, or the host turned the connection down, so
+        // retrying cannot help
         Failed = 2,
 
-        // A direct connection which stopped answering. Nothing advertises its return, so the
-        // service will not retry it until an app calls ConnectNetworkClientAsync again.
+        // Not reported at present. A direct connection which stops answering goes back to Pending
+        // and is tried again after DirectConnectionScanIntervalMilliseconds.
         Unavailable = 3,
     };
 }
