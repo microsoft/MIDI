@@ -57,6 +57,12 @@ namespace midipatchbay
             { BlockKind::LfoGenerator, BlockCategory::Generator, L"lfoGenerator" },
             { BlockKind::ClockDivider, BlockCategory::Transform, L"clockDivider" },
             { BlockKind::Annotation, BlockCategory::Annotation, L"annotation" },
+            { BlockKind::ParameterFilter, BlockCategory::Filter, L"rpnFilter" },
+            { BlockKind::ParameterTransform, BlockCategory::Transform, L"rpnTransform" },
+            { BlockKind::NoteDistributor, BlockCategory::Distribution, L"noteDistributor" },
+            { BlockKind::Gate, BlockCategory::Distribution, L"gate" },
+            { BlockKind::CiResponder, BlockCategory::CapabilityInquiry, L"ciResponder" },
+            { BlockKind::CiFilter, BlockCategory::CapabilityInquiry, L"ciFilter" },
         };
 
         static_assert(std::size(Kinds) == BlockKindCount);
@@ -128,6 +134,7 @@ namespace midipatchbay
         constexpr wchar_t KeyNumber[] = L"number";
         constexpr wchar_t KeyMidi1[] = L"midi1";
         constexpr wchar_t KeyReturnToMiddle[] = L"returnToMiddle";
+        constexpr wchar_t KeyStartStopWithClock[] = L"startStopWithClock";
         constexpr wchar_t KeyDivideBy[] = L"divideBy";
 
         // Annotations.
@@ -138,6 +145,48 @@ namespace midipatchbay
         constexpr wchar_t KeyItalic[] = L"italic";
         constexpr wchar_t KeyUnderline[] = L"underline";
         constexpr wchar_t KeyColor[] = L"color";
+
+        // (N)RPN filter and transform, note distributor and gate.
+        constexpr wchar_t KeyParameters[] = L"parameters";
+        constexpr wchar_t KeyType[] = L"type";
+        constexpr wchar_t KeyBank[] = L"bank";
+        constexpr wchar_t KeyIndex[] = L"index";
+        constexpr wchar_t KeyRows[] = L"rows";
+        constexpr wchar_t KeyFrom[] = L"from";
+        constexpr wchar_t KeyTo[] = L"to";
+        constexpr wchar_t KeyShape[] = L"shape";
+        constexpr wchar_t KeyControlChangesToAll[] = L"controlChangesToAll";
+        constexpr wchar_t KeyChannelPressureToAll[] = L"channelPressureToAll";
+        constexpr wchar_t KeyPitchBendToAll[] = L"pitchBendToAll";
+        constexpr wchar_t KeyOpen[] = L"open";
+        constexpr wchar_t KeyClose[] = L"close";
+        constexpr wchar_t KeyStartsOpen[] = L"startsOpen";
+        constexpr wchar_t KeyPassTriggers[] = L"passTriggers";
+        constexpr wchar_t KeyTest[] = L"test";
+        constexpr wchar_t KeyMessageWords[] = L"messageWords";
+
+        // MIDI-CI responder and filter.
+        constexpr wchar_t KeyManufacturer[] = L"manufacturer";
+        constexpr wchar_t KeyFamily[] = L"family";
+        constexpr wchar_t KeyModel[] = L"model";
+        constexpr wchar_t KeyVersion[] = L"version";
+        constexpr wchar_t KeyProductInstanceId[] = L"productInstanceId";
+        constexpr wchar_t KeyProcessInquiry[] = L"processInquiry";
+        constexpr wchar_t KeyPassMidiCi[] = L"passMidiCi";
+        constexpr wchar_t KeyFile[] = L"file";
+        constexpr wchar_t KeyCategories[] = L"categories";
+
+        // In the order of the CiCategory bits.
+        constexpr wchar_t const* CiCategoryNames[]{ L"management", L"profiles", L"propertyExchange", L"processInquiry" };
+
+        constexpr size_t MaximumCiFileNameLength = 200;
+        constexpr size_t MaximumProductInstanceIdLength = 42;
+
+        constexpr wchar_t const* ParameterKindNames[]{ L"rpn", L"nrpn", L"either" };
+        constexpr wchar_t const* DistributionModeNames[]{ L"takeTurns", L"firstFree", L"highestNotes", L"lowestNotes" };
+        constexpr wchar_t const* GateTriggerNames[]{
+            L"noteOn", L"noteOff", L"controlChange", L"programChange", L"start", L"continue", L"stop", L"words" };
+        constexpr wchar_t const* GateTestNames[]{ L"any", L"atLeast", L"below" };
 
         constexpr wchar_t ModeRange[] = L"range";
         constexpr wchar_t ModeOne[] = L"one";
@@ -597,6 +646,236 @@ namespace midipatchbay
         std::wstring NumberText(_In_ double value)
         {
             return std::to_wstring(value);
+        }
+
+        // The index of a name in a list, or the fallback.
+        template <typename T, size_t N>
+        T ReadName(_In_ json::JsonObject const& object, _In_ std::wstring_view key, _In_ wchar_t const* const (&names)[N], _In_ T fallback)
+        {
+            auto const text = ReadString(object, key);
+
+            for (size_t i = 0; i < N; i++)
+            {
+                if (text == names[i])
+                {
+                    return static_cast<T>(i);
+                }
+            }
+
+            return fallback;
+        }
+
+        json::JsonObject ReadObject(_In_ json::JsonObject const& object, _In_ std::wstring_view key) noexcept
+        {
+            auto const value = GetValue(object, key);
+
+            return value != nullptr && value.ValueType() == json::JsonValueType::Object ? value.GetObject() : nullptr;
+        }
+
+        json::JsonArray ReadArray(_In_ json::JsonObject const& object, _In_ std::wstring_view key) noexcept
+        {
+            auto const value = GetValue(object, key);
+
+            return value != nullptr && value.ValueType() == json::JsonValueType::Array ? value.GetArray() : nullptr;
+        }
+
+        // MIDI-CI numbers, 0 to 127 each.
+        template <size_t N>
+        json::JsonArray SevenBitBytesToJson(_In_ std::array<uint8_t, N> const& bytes)
+        {
+            json::JsonArray array{};
+
+            for (auto const value : bytes)
+            {
+                array.Append(json::JsonValue::CreateNumberValue(value & 0x7F));
+            }
+
+            return array;
+        }
+
+        // All of them or none: a list of the wrong length, or with anything out of range, is left
+        // as it was.
+        template <size_t N>
+        void SevenBitBytesFromJson(
+            _In_ json::JsonObject const& object,
+            _In_ std::wstring_view key,
+            _Inout_ std::array<uint8_t, N>& bytes) noexcept
+        {
+            try
+            {
+                auto const list = ReadArray(object, key);
+
+                if (list == nullptr || list.Size() != N)
+                {
+                    return;
+                }
+
+                std::array<uint8_t, N> read{};
+
+                for (uint32_t i = 0; i < N; i++)
+                {
+                    auto const value = list.GetAt(i);
+
+                    if (value == nullptr || value.ValueType() != json::JsonValueType::Number)
+                    {
+                        return;
+                    }
+
+                    auto const number = value.GetNumber();
+
+                    if (!std::isfinite(number) || number < 0 || number > 127 || std::floor(number) != number)
+                    {
+                        return;
+                    }
+
+                    read[i] = static_cast<uint8_t>(number);
+                }
+
+                bytes = read;
+            }
+            catch (...)
+            {
+            }
+        }
+
+        // Left out of the file when it is any, and read back as any when it is missing.
+        void SetOptional(_Inout_ json::JsonObject& object, _In_ std::wstring_view key, _In_ int32_t value)
+        {
+            if (value >= 0)
+            {
+                SetNumber(object, key, value);
+            }
+        }
+
+        int16_t ReadOptional(_In_ json::JsonObject const& object, _In_ std::wstring_view key, _In_ int32_t highest) noexcept
+        {
+            return static_cast<int16_t>(std::floor(ReadNumber(object, key, 0, highest, -1)));
+        }
+
+        json::JsonObject ParameterMatchToJson(_In_ ParameterKind kind, _In_ int32_t bank, _In_ int32_t index)
+        {
+            json::JsonObject item{};
+
+            if (kind != ParameterKind::Either || bank >= 0 || index >= 0)
+            {
+                SetString(item, KeyType, ParameterKindNames[static_cast<size_t>(kind)]);
+            }
+
+            SetOptional(item, KeyBank, bank);
+            SetOptional(item, KeyIndex, index);
+
+            return item;
+        }
+
+        ParameterMatch ParameterMatchFromJson(_In_ json::JsonObject const& item, _In_ ParameterKind fallback) noexcept
+        {
+            ParameterMatch match{};
+
+            match.Kind = ReadName(item, KeyType, ParameterKindNames, fallback);
+            match.Bank = ReadOptional(item, KeyBank, 127);
+            match.Index = ReadOptional(item, KeyIndex, 127);
+
+            return match;
+        }
+
+        json::JsonObject GateTriggerToJson(_In_ GateTrigger const& trigger)
+        {
+            json::JsonObject item{};
+
+            SetString(item, KeyMessage, GateTriggerNames[static_cast<size_t>(trigger.Kind)]);
+            SetOptional(item, KeyGroup, trigger.Group);
+
+            switch (trigger.Kind)
+            {
+            case GateTriggerKind::NoteOn:
+            case GateTriggerKind::NoteOff:
+            case GateTriggerKind::ProgramChange:
+                SetOptional(item, KeyChannel, trigger.Channel);
+                SetOptional(item, KeyNumber, trigger.Number);
+                break;
+
+            case GateTriggerKind::ControlChange:
+                SetOptional(item, KeyChannel, trigger.Channel);
+                SetOptional(item, KeyNumber, trigger.Number);
+                SetString(item, KeyTest, GateTestNames[static_cast<size_t>(trigger.Test)]);
+                SetNumber(item, KeyValue, trigger.Value);
+                break;
+
+            case GateTriggerKind::Words:
+            {
+                json::JsonArray words{};
+
+                for (uint8_t i = 0; i < trigger.WordCount && i < MaximumUmpWords; i++)
+                {
+                    words.Append(json::JsonValue::CreateNumberValue(trigger.Words[i]));
+                }
+
+                item.SetNamedValue(KeyMessageWords, words);
+                break;
+            }
+
+            default:
+                break;
+            }
+
+            return item;
+        }
+
+        GateTrigger GateTriggerFromJson(_In_ json::JsonObject const& item, _In_ GateTrigger const& fallback) noexcept
+        {
+            if (item == nullptr)
+            {
+                return fallback;
+            }
+
+            GateTrigger trigger{};
+
+            trigger.Kind = ReadName(item, KeyMessage, GateTriggerNames, fallback.Kind);
+            trigger.Group = static_cast<int8_t>(ReadOptional(item, KeyGroup, 15));
+            trigger.Channel = static_cast<int8_t>(ReadOptional(item, KeyChannel, 15));
+            trigger.Number = ReadOptional(item, KeyNumber, 127);
+            trigger.Test = ReadName(item, KeyTest, GateTestNames, GateValueTest::Any);
+            trigger.Value = static_cast<uint8_t>(std::floor(ReadNumber(item, KeyValue, 0, 127, 64)));
+
+            if (auto const words = ReadArray(item, KeyMessageWords))
+            {
+                uint8_t count{ 0 };
+
+                for (auto const& value : words)
+                {
+                    if (count >= MaximumUmpWords || value.ValueType() != json::JsonValueType::Number)
+                    {
+                        break;
+                    }
+
+                    auto const number = value.GetNumber();
+
+                    if (!std::isfinite(number) || number < 0 || number > 0xFFFFFFFF)
+                    {
+                        break;
+                    }
+
+                    trigger.Words[count++] = static_cast<uint32_t>(number);
+                }
+
+                trigger.WordCount = (std::max)(count, uint8_t{ 1 });
+            }
+
+            return trigger;
+        }
+
+        std::wstring GateTriggerSignature(_In_ GateTrigger const& trigger)
+        {
+            auto signature = std::to_wstring(static_cast<int32_t>(trigger.Kind)) + L'g' + std::to_wstring(trigger.Group) +
+                L'c' + std::to_wstring(trigger.Channel) + L'n' + std::to_wstring(trigger.Number) + L't' +
+                std::to_wstring(static_cast<int32_t>(trigger.Test)) + L'v' + std::to_wstring(trigger.Value) + L'w';
+
+            for (uint8_t i = 0; i < trigger.WordCount && i < MaximumUmpWords; i++)
+            {
+                signature += std::to_wstring(trigger.Words[i]) + L',';
+            }
+
+            return signature;
         }
     }
 
@@ -1075,6 +1354,25 @@ namespace midipatchbay
         case BlockKind::ClockDivider:
             return settings.ClockDivision <= 1;
 
+        case BlockKind::ParameterFilter:
+            return settings.ParameterFilter.Parameters.empty();
+
+        case BlockKind::ParameterTransform:
+            return settings.ParameterTransform.Rows.empty();
+
+        // Both decide where each message goes, so they always run.
+        case BlockKind::NoteDistributor:
+        case BlockKind::Gate:
+            return false;
+
+        // Answers MIDI-CI, whatever else it is set to do.
+        case BlockKind::CiResponder:
+            return false;
+
+        // Letting only some MIDI-CI through keeps everything else out.
+        case BlockKind::CiFilter:
+            return settings.CiFilter.Action == FilterAction::KeepOut && settings.CiFilter.Categories == 0;
+
         // Text on the canvas: messages never reach it.
         case BlockKind::Annotation:
             return true;
@@ -1240,12 +1538,98 @@ namespace midipatchbay
                 SetNumber(object, KeyGroup, lfo.Target.Group);
                 SetBool(object, KeyMidi1, lfo.Target.Midi1Protocol);
                 SetBool(object, KeyReturnToMiddle, lfo.ReturnsToMiddle);
+                SetBool(object, KeyStartStopWithClock, lfo.KeepsToStartAndStop);
                 break;
             }
 
             case BlockKind::ClockDivider:
                 SetNumber(object, KeyDivideBy, settings.ClockDivision);
                 break;
+
+            case BlockKind::ParameterFilter:
+            {
+                SetString(object, KeyAction, ActionName(settings.ParameterFilter.Action));
+
+                json::JsonArray parameters{};
+
+                for (auto const& match : settings.ParameterFilter.Parameters)
+                {
+                    parameters.Append(ParameterMatchToJson(match.Kind, match.Bank, match.Index));
+                }
+
+                object.SetNamedValue(KeyParameters, parameters);
+                break;
+            }
+
+            case BlockKind::ParameterTransform:
+            {
+                json::JsonArray rows{};
+
+                for (auto const& row : settings.ParameterTransform.Rows)
+                {
+                    json::JsonObject item{};
+
+                    item.SetNamedValue(KeyFrom, ParameterMatchToJson(row.From.Kind, row.From.Bank, row.From.Index));
+                    item.SetNamedValue(KeyTo, ParameterMatchToJson(row.ToKind, row.ToBank, row.ToIndex));
+                    item.SetNamedValue(KeyShape, ShapeToJson(row.Shape, true));
+
+                    rows.Append(item);
+                }
+
+                object.SetNamedValue(KeyRows, rows);
+                break;
+            }
+
+            case BlockKind::NoteDistributor:
+            {
+                auto const& distributor = settings.Distributor;
+
+                SetString(object, KeyMode, DistributionModeNames[static_cast<size_t>(distributor.Mode)]);
+                SetBool(object, KeyControlChangesToAll, distributor.ControlChangesToEveryVoice);
+                SetBool(object, KeyChannelPressureToAll, distributor.ChannelPressureToEveryVoice);
+                SetBool(object, KeyPitchBendToAll, distributor.PitchBendToEveryVoice);
+                break;
+            }
+
+            case BlockKind::Gate:
+                object.SetNamedValue(KeyOpen, GateTriggerToJson(settings.Gate.Open));
+                object.SetNamedValue(KeyClose, GateTriggerToJson(settings.Gate.Close));
+                SetBool(object, KeyStartsOpen, settings.Gate.StartsOpen);
+                SetBool(object, KeyPassTriggers, settings.Gate.PassesTriggers);
+                break;
+
+            case BlockKind::CiResponder:
+            {
+                auto const& responder = settings.CiResponder;
+
+                object.SetNamedValue(KeyManufacturer, SevenBitBytesToJson(responder.Manufacturer));
+                SetNumber(object, KeyFamily, responder.Family);
+                SetNumber(object, KeyModel, responder.Model);
+                object.SetNamedValue(KeyVersion, SevenBitBytesToJson(responder.Version));
+                SetString(object, KeyProductInstanceId, responder.ProductInstanceId);
+                SetBool(object, KeyProcessInquiry, responder.ProcessInquiry);
+                SetBool(object, KeyPassMidiCi, responder.PassMidiCi);
+                SetString(object, KeyFile, responder.FileName);
+                break;
+            }
+
+            case BlockKind::CiFilter:
+            {
+                SetString(object, KeyAction, ActionName(settings.CiFilter.Action));
+
+                json::JsonArray categories{};
+
+                for (size_t i = 0; i < std::size(CiCategoryNames); i++)
+                {
+                    if ((settings.CiFilter.Categories & (1u << i)) != 0)
+                    {
+                        categories.Append(json::JsonValue::CreateStringValue(CiCategoryNames[i]));
+                    }
+                }
+
+                object.SetNamedValue(KeyCategories, categories);
+                break;
+            }
 
             case BlockKind::Annotation:
             {
@@ -1487,6 +1871,7 @@ namespace midipatchbay
                 target.Midi1Protocol = ReadBool(object, KeyMidi1, false);
 
                 lfo.ReturnsToMiddle = ReadBool(object, KeyReturnToMiddle, true);
+                lfo.KeepsToStartAndStop = ReadBool(object, KeyStartStopWithClock, false);
                 break;
             }
 
@@ -1494,6 +1879,144 @@ namespace midipatchbay
                 settings.ClockDivision = static_cast<uint32_t>(
                     std::floor(ReadNumber(object, KeyDivideBy, 1, MaximumClockDivision, DefaultClockDivision)));
                 break;
+
+            case BlockKind::ParameterFilter:
+            {
+                auto& filter = settings.ParameterFilter;
+
+                filter.Action = ReadAction(object, FilterAction::KeepOut);
+
+                if (auto const parameters = ReadArray(object, KeyParameters))
+                {
+                    for (auto const& value : parameters)
+                    {
+                        if (filter.Parameters.size() >= MaximumParameterRows)
+                        {
+                            break;
+                        }
+
+                        if (value.ValueType() == json::JsonValueType::Object)
+                        {
+                            filter.Parameters.push_back(ParameterMatchFromJson(value.GetObject(), ParameterKind::Registered));
+                        }
+                    }
+                }
+                break;
+            }
+
+            case BlockKind::ParameterTransform:
+            {
+                if (auto const rows = ReadArray(object, KeyRows))
+                {
+                    for (auto const& value : rows)
+                    {
+                        if (settings.ParameterTransform.Rows.size() >= MaximumParameterRows)
+                        {
+                            break;
+                        }
+
+                        if (value.ValueType() != json::JsonValueType::Object)
+                        {
+                            continue;
+                        }
+
+                        auto const item = value.GetObject();
+                        ParameterMapRow row{};
+
+                        if (auto const from = ReadObject(item, KeyFrom))
+                        {
+                            row.From = ParameterMatchFromJson(from, ParameterKind::Registered);
+                        }
+
+                        if (auto const to = ReadObject(item, KeyTo))
+                        {
+                            auto const target = ParameterMatchFromJson(to, ParameterKind::Either);
+
+                            row.ToKind = target.Kind;
+                            row.ToBank = target.Bank;
+                            row.ToIndex = target.Index;
+                        }
+
+                        row.Shape = ShapeFromJson(ReadObject(item, KeyShape), true);
+
+                        settings.ParameterTransform.Rows.push_back(std::move(row));
+                    }
+                }
+                break;
+            }
+
+            case BlockKind::NoteDistributor:
+            {
+                auto& distributor = settings.Distributor;
+
+                distributor.Mode = ReadName(object, KeyMode, DistributionModeNames, DistributionMode::TakeTurns);
+                distributor.ControlChangesToEveryVoice = ReadBool(object, KeyControlChangesToAll, true);
+                distributor.ChannelPressureToEveryVoice = ReadBool(object, KeyChannelPressureToAll, true);
+                distributor.PitchBendToEveryVoice = ReadBool(object, KeyPitchBendToAll, true);
+                break;
+            }
+
+            case BlockKind::Gate:
+            {
+                auto& gate = settings.Gate;
+
+                gate.Open = GateTriggerFromJson(ReadObject(object, KeyOpen), gate.Open);
+                gate.Close = GateTriggerFromJson(ReadObject(object, KeyClose), gate.Close);
+                gate.StartsOpen = ReadBool(object, KeyStartsOpen, true);
+                gate.PassesTriggers = ReadBool(object, KeyPassTriggers, true);
+                break;
+            }
+
+            case BlockKind::CiResponder:
+            {
+                auto& responder = settings.CiResponder;
+
+                SevenBitBytesFromJson(object, KeyManufacturer, responder.Manufacturer);
+                responder.Family = static_cast<uint16_t>(std::floor(ReadNumber(object, KeyFamily, 0, 16383, 0)));
+                responder.Model = static_cast<uint16_t>(std::floor(ReadNumber(object, KeyModel, 0, 16383, 0)));
+                SevenBitBytesFromJson(object, KeyVersion, responder.Version);
+                responder.ProductInstanceId = CiProductInstanceIdFrom(ReadString(object, KeyProductInstanceId));
+                responder.ProcessInquiry = ReadBool(object, KeyProcessInquiry, true);
+                responder.PassMidiCi = ReadBool(object, KeyPassMidiCi, false);
+
+                // A path, or anything else that isn't a plain file name, is never opened.
+                auto file = ReadString(object, KeyFile);
+                responder.FileName = IsCiFileName(file) ? std::move(file) : std::wstring{};
+                break;
+            }
+
+            case BlockKind::CiFilter:
+            {
+                auto& filter = settings.CiFilter;
+
+                filter.Action = ReadAction(object, FilterAction::KeepOut);
+
+                if (auto const categories = ReadArray(object, KeyCategories))
+                {
+                    uint8_t bits{ 0 };
+
+                    for (auto const& value : categories)
+                    {
+                        if (value == nullptr || value.ValueType() != json::JsonValueType::String)
+                        {
+                            continue;
+                        }
+
+                        auto const name = value.GetString();
+
+                        for (size_t i = 0; i < std::size(CiCategoryNames); i++)
+                        {
+                            if (name == CiCategoryNames[i])
+                            {
+                                bits = static_cast<uint8_t>(bits | (1u << i));
+                            }
+                        }
+                    }
+
+                    filter.Categories = bits;
+                }
+                break;
+            }
 
             case BlockKind::Annotation:
             {
@@ -1623,12 +2146,77 @@ namespace midipatchbay
                     std::wstring{ midiapp::ValueMessageKindKey(lfo.Target.Kind) } + L'.' +
                     std::to_wstring(lfo.Target.Channel) + L'.' + std::to_wstring(lfo.Target.Number) +
                     L".g" + std::to_wstring(lfo.Target.Group) +
-                    (lfo.Target.Midi1Protocol ? L".m1" : L".m2") + (lfo.ReturnsToMiddle ? L".r" : L".-");
+                    (lfo.Target.Midi1Protocol ? L".m1" : L".m2") + (lfo.ReturnsToMiddle ? L".r" : L".-") + (lfo.KeepsToStartAndStop ? L".s" : L".-");
                 break;
             }
 
             case BlockKind::ClockDivider:
                 signature += std::to_wstring(settings.ClockDivision);
+                break;
+
+            case BlockKind::ParameterFilter:
+                signature += std::to_wstring(static_cast<int32_t>(settings.ParameterFilter.Action));
+
+                for (auto const& match : settings.ParameterFilter.Parameters)
+                {
+                    signature += L'|' + std::to_wstring(static_cast<int32_t>(match.Kind)) + L'.' +
+                        std::to_wstring(match.Bank) + L'.' + std::to_wstring(match.Index);
+                }
+                break;
+
+            case BlockKind::ParameterTransform:
+                for (auto const& row : settings.ParameterTransform.Rows)
+                {
+                    signature += L'|' + std::to_wstring(static_cast<int32_t>(row.From.Kind)) + L'.' +
+                        std::to_wstring(row.From.Bank) + L'.' + std::to_wstring(row.From.Index) + L'>' +
+                        std::to_wstring(static_cast<int32_t>(row.ToKind)) + L'.' +
+                        std::to_wstring(row.ToBank) + L'.' + std::to_wstring(row.ToIndex) + L'~' +
+                        ShapeSignature(row.Shape);
+                }
+                break;
+
+            case BlockKind::NoteDistributor:
+            {
+                auto const& distributor = settings.Distributor;
+
+                signature += std::to_wstring(static_cast<int32_t>(distributor.Mode)) +
+                    (distributor.ControlChangesToEveryVoice ? L".c" : L".-") +
+                    (distributor.ChannelPressureToEveryVoice ? L"p" : L"-") +
+                    (distributor.PitchBendToEveryVoice ? L"b" : L"-");
+                break;
+            }
+
+            case BlockKind::Gate:
+                signature += GateTriggerSignature(settings.Gate.Open) + L'/' + GateTriggerSignature(settings.Gate.Close) +
+                    (settings.Gate.StartsOpen ? L".o" : L".-") + (settings.Gate.PassesTriggers ? L"p" : L"-");
+                break;
+
+            // What the file says is added where the patch is routed, because it is read then.
+            case BlockKind::CiResponder:
+            {
+                auto const& responder = settings.CiResponder;
+
+                for (auto const value : responder.Manufacturer)
+                {
+                    signature += std::to_wstring(value) + L'.';
+                }
+
+                signature += std::to_wstring(responder.Family) + L'.' + std::to_wstring(responder.Model) + L'.';
+
+                for (auto const value : responder.Version)
+                {
+                    signature += std::to_wstring(value) + L'.';
+                }
+
+                signature += responder.ProcessInquiry ? L"pi" : L"--";
+                signature += responder.PassMidiCi ? L".pass|" : L".keep|";
+                signature += responder.ProductInstanceId + L'|' + responder.FileName;
+                break;
+            }
+
+            case BlockKind::CiFilter:
+                signature += std::to_wstring(static_cast<int32_t>(settings.CiFilter.Action)) + L'.' +
+                    std::to_wstring(settings.CiFilter.Categories);
                 break;
 
             case BlockKind::Annotation:
@@ -1653,6 +2241,49 @@ namespace midipatchbay
         }
 
         return {};
+    }
+
+    _Use_decl_annotations_
+    bool IsCiFileName(std::wstring_view name) noexcept
+    {
+        if (name.empty() || name.size() > MaximumCiFileNameLength || name == L"." || name == L"..")
+        {
+            return false;
+        }
+
+        // Windows drops a trailing dot or space, so the file opened would not be the one named.
+        if (name.front() == L' ' || name.back() == L' ' || name.back() == L'.')
+        {
+            return false;
+        }
+
+        for (auto const c : name)
+        {
+            // 0x5C is the backslash.
+            if (c < 0x20 || c == 0x5C || c == L'/' || c == L':' || c == L'*' || c == L'?' ||
+                c == L'"' || c == L'<' || c == L'>' || c == L'|')
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    std::wstring CiProductInstanceIdFrom(std::wstring_view text)
+    {
+        std::wstring kept{};
+
+        for (auto const c : text)
+        {
+            if (c >= 0x20 && c <= 0x7E && kept.size() < MaximumProductInstanceIdLength)
+            {
+                kept += c;
+            }
+        }
+
+        return kept;
     }
 
     _Use_decl_annotations_

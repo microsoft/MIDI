@@ -1544,6 +1544,10 @@ namespace winrt::midipatchbay::implementation
                     view.CanReorderItems(false);
                     view.AllowDrop(false);
 
+                    // The default ones slide every tile into place again each time the palette is
+                    // resized or rebuilt.
+                    view.ItemContainerTransitions(media::Animation::TransitionCollection{});
+
                     view.DragItemsStarting([weak, isEndpointList](auto&&, controls::DragItemsStartingEventArgs const& args)
                         {
                             auto const items = args.Items();
@@ -1656,7 +1660,9 @@ namespace winrt::midipatchbay::implementation
             if (!showEndpoints)
             {
                 for (auto const category : { patchbay::BlockCategory::Filter, patchbay::BlockCategory::Transform,
-                                             patchbay::BlockCategory::Sending, patchbay::BlockCategory::Generator,
+                                             patchbay::BlockCategory::Sending, patchbay::BlockCategory::Distribution,
+                                             patchbay::BlockCategory::CapabilityInquiry,
+                                             patchbay::BlockCategory::Generator,
                                              patchbay::BlockCategory::Annotation })
                 {
                     controls::GridView grid{ nullptr };

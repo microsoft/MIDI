@@ -45,7 +45,8 @@ namespace midipatchbay
             return value;
         }
 
-        // What an LFO that follows a clock listens to: timing clock, start and song position.
+        // What an LFO that follows a clock listens to: timing clock, start, continue, stop and
+        // song position.
         bool IsClockMessage(_In_ uint32_t word) noexcept
         {
             if ((word >> 28) != static_cast<uint32_t>(UmpMessageType::System))
@@ -55,8 +56,47 @@ namespace midipatchbay
 
             auto const status = (word >> 16) & 0xFF;
 
-            return status == 0xF8 || status == 0xFA || status == 0xF2;
+            return status == 0xF8 || status == 0xFA || status == 0xFB || status == 0xFC || status == 0xF2;
         }
+
+        // A responder's answers, held until the packet it passes on has gone, then sent back the
+        // way the question came. Sent at once, an answer to the same endpoint and group would land
+        // inside the question it forwards.
+        class HeldReplies final : public CiReplyWriter
+        {
+        public:
+            void Write(_In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept override
+            {
+                try
+                {
+                    m_words.insert(m_words.end(), words, words + wordCount);
+                    m_counts.push_back(wordCount);
+                }
+                catch (...)
+                {
+                }
+            }
+
+            void SendTo(_Inout_ RouteSink& sink, _In_ uint32_t leaf) const noexcept
+            {
+                size_t first = 0;
+
+                for (auto const count : m_counts)
+                {
+                    if (first + count > m_words.size())
+                    {
+                        break;
+                    }
+
+                    sink.Send(leaf, m_words.data() + first, count);
+                    first += count;
+                }
+            }
+
+        private:
+            std::vector<uint32_t> m_words{};
+            std::vector<uint8_t> m_counts{};
+        };
 
         class PatchCompiler
         {
@@ -80,6 +120,10 @@ namespace midipatchbay
                         m_outgoing[link.SourceId].push_back(&link);
                     }
                 }
+
+                // A responder answers whoever asked, so each source gets a way back.
+                auto const answers = std::any_of(m_patch.Blocks.begin(), m_patch.Blocks.end(),
+                    [](PatchBlock const& block) { return block.Kind == BlockKind::CiResponder && !block.Bypassed; });
 
                 for (auto const& endpoint : m_patch.Endpoints)
                 {
@@ -120,6 +164,7 @@ namespace midipatchbay
                         root.WaitForSendComplete = m_patch.WaitForSendComplete;
                         root.SourceGroupIndex = link->SourceGroupIndex;
                         root.Edge = edge;
+                        root.ReplyLeaf = answers ? ReplyLeafFor(endpoint.Id, *device) : NoReturnLeaf;
 
                         m_graph.Roots.push_back(std::move(root));
                     }
@@ -224,8 +269,32 @@ namespace midipatchbay
 
                 auto const index = static_cast<uint32_t>(m_graph.States.size());
 
-                m_graph.States.push_back(CellFor(block.Id));
+                m_graph.States.push_back(RouteState{ CellFor(block.Id), block.Kind });
                 m_states.emplace(block.Id, index);
+
+                return index;
+            }
+
+            // Sends back to a source, on whatever group each answer is for.
+            uint32_t ReplyLeafFor(_In_ std::wstring const& endpointId, _In_ std::wstring const& deviceId)
+            {
+                auto const found = m_replyLeaves.find(endpointId);
+
+                if (found != m_replyLeaves.end())
+                {
+                    return found->second;
+                }
+
+                RouteLeaf leaf{};
+                leaf.DestinationDeviceId = LowerCopy(deviceId);
+                leaf.WaitForSendComplete = m_patch.WaitForSendComplete;
+                leaf.DestinationGroupIndex = AllGroups;
+                leaf.LinkCell = CellFor(endpointId + L"|replies");
+
+                m_graph.Leaves.push_back(std::move(leaf));
+
+                auto const index = static_cast<uint32_t>(m_graph.Leaves.size() - 1);
+                m_replyLeaves.emplace(endpointId, index);
 
                 return index;
             }
@@ -393,7 +462,7 @@ namespace midipatchbay
                 stage.Block = block->Kind;
                 stage.Index = runs ? SettingsFor(*block) : 0;
                 stage.Cell = CellFor(block->Id);
-                stage.State = runs && block->Kind == BlockKind::ClockDivider ? StateFor(*block) : 0;
+                stage.State = runs && IsStatefulBlock(block->Kind) ? StateFor(*block) : 0;
 
                 edge.Stage = AddStage(stage, next);
                 edge.LinkCell = CellFor(link.Id);
@@ -517,6 +586,7 @@ namespace midipatchbay
             std::unordered_map<std::wstring, uint32_t> m_states{};
             std::unordered_map<std::wstring, uint32_t> m_clockTargets{};
             std::unordered_map<std::wstring, uint32_t> m_leafStages{};
+            std::unordered_map<std::wstring, uint32_t> m_replyLeaves{};
             std::unordered_map<std::wstring, uint32_t> m_throttleStages{};
             std::unordered_set<std::wstring> m_deadThrottles{};
 
@@ -546,8 +616,18 @@ namespace midipatchbay
                     continue;
                 }
 
-                parts.push_back(L"b " + block.Id + (block.Bypassed ? L" off " : L" on ") +
-                    BlockSettingsSignature(block.Kind, block.Settings));
+                auto part = L"b " + block.Id + (block.Bypassed ? L" off " : L" on ") +
+                    BlockSettingsSignature(block.Kind, block.Settings);
+
+                // What a responder's file says, which is read when the patch routes.
+                if (block.Kind == BlockKind::CiResponder)
+                {
+                    auto const& description = block.Settings.CiResponder.Description;
+
+                    part += L" ci" + std::to_wstring(description == nullptr ? 0 : description->Fingerprint);
+                }
+
+                parts.push_back(std::move(part));
             }
 
             for (auto const& link : patch.Connections)
@@ -655,7 +735,8 @@ namespace midipatchbay
         RouteEdge const& edge,
         uint32_t const* words,
         uint8_t wordCount,
-        RouteSink& sink) noexcept
+        RouteSink& sink,
+        ReturnPath const& from) noexcept
     {
         if (words == nullptr || wordCount == 0 || wordCount > MaximumWordsPerMessage ||
             edge.Stage >= graph.Stages.size())
@@ -701,22 +782,80 @@ namespace midipatchbay
         case RouteStageKind::Block:
         {
             bool passed{ false };
+            StageOutput output{};
 
-            if (stage.Block == BlockKind::ClockDivider)
+            auto const& settings = graph.Settings[stage.Index];
+
+            if (stage.Block == BlockKind::CiResponder)
             {
-                auto* count = sink.StateOf(stage.State);
+                auto* state = sink.StateOf(stage.State);
 
-                passed = count == nullptr ||
-                    DivideClock(graph.Settings[stage.Index].ClockDivision, *count, copy, wordCount);
+                if (state == nullptr || state->Ci == nullptr)
+                {
+                    passed = true;
+                }
+                else
+                {
+                    HeldReplies replies{};
+
+                    CiReturn const back{ from.Leaf < graph.Leaves.size(), from.Leaf, from.Group };
+
+                    passed = RunCiResponder(settings.CiResponder, *state->Ci, edge.Stage, back, copy, wordCount, replies);
+
+                    sink.CountBlock(stage.Cell, passed);
+
+                    if (passed)
+                    {
+                        for (uint32_t i = 0; i < stage.EdgeCount; i++)
+                        {
+                            RunEdge(graph, graph.Edges[stage.FirstEdge + i], copy, wordCount, sink, from);
+                        }
+                    }
+
+                    replies.SendTo(sink, from.Leaf);
+                    return;
+                }
+            }
+            else if (stage.Block == BlockKind::CiFilter)
+            {
+                auto* state = sink.StateOf(stage.State);
+
+                passed = state == nullptr || RunCiFilter(settings.CiFilter, state->CiFilter, edge.Stage, copy, wordCount);
+            }
+            else if (IsStatefulBlock(stage.Block))
+            {
+                auto* state = sink.StateOf(stage.State);
+
+                passed = state == nullptr ||
+                    RunStatefulBlock(stage.Block, settings, *state, copy, wordCount, stage.EdgeCount, output);
             }
             else
             {
-                passed = ProcessBlock(stage.Block, graph.Settings[stage.Index], copy, wordCount);
+                passed = ProcessBlock(stage.Block, settings, copy, wordCount);
             }
 
             sink.CountBlock(stage.Cell, passed);
 
             if (!passed)
+            {
+                return;
+            }
+
+            // What the step sends instead, each to one connection or to all of them.
+            for (size_t m = 0; m < output.Count; m++)
+            {
+                auto const& message = output.Messages[m];
+
+                for (uint32_t i = 0; i < stage.EdgeCount; i++)
+                {
+                    if (message.Edge == EveryEdge || message.Edge == static_cast<int32_t>(i))
+                    {
+                        RunEdge(graph, graph.Edges[stage.FirstEdge + i], message.Words.data(), message.Count, sink, from);
+                    }
+                }
+            }
+
+            if (output.Count > 0)
             {
                 return;
             }
@@ -731,7 +870,7 @@ namespace midipatchbay
 
         for (uint32_t i = 0; i < stage.EdgeCount; i++)
         {
-            RunEdge(graph, graph.Edges[stage.FirstEdge + i], copy, wordCount, sink);
+            RunEdge(graph, graph.Edges[stage.FirstEdge + i], copy, wordCount, sink, from);
         }
     }
 
@@ -754,6 +893,9 @@ namespace midipatchbay
             return;
         }
 
-        RunEdge(graph, root.Edge, words, wordCount, sink);
+        // Answers go back on the group the question came in on, whatever the patch does to it.
+        ReturnPath const from{ root.ReplyLeaf, static_cast<uint8_t>(internal::GetGroupIndexFromFirstWord(words[0]) & 0x0F) };
+
+        RunEdge(graph, root.Edge, words, wordCount, sink, from);
     }
 }

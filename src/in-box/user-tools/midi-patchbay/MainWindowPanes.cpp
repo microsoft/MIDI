@@ -262,7 +262,9 @@ namespace winrt::midipatchbay::implementation
                 auto const room = grid.ActualWidth() > 0 ? grid.ActualWidth() : width;
                 auto const slot = std::floor(room / 3.0);
 
-                if (auto const panel = grid.ItemsPanelRoot().try_as<controls::ItemsWrapGrid>())
+                // Setting the same size again still lays every tile out again.
+                if (auto const panel = grid.ItemsPanelRoot().try_as<controls::VariableSizedWrapGrid>();
+                    panel != nullptr && panel.ItemWidth() != slot)
                 {
                     panel.ItemWidth(slot);
                     panel.ItemHeight(slot);

@@ -372,10 +372,6 @@ namespace winrt::midipatchbay::implementation
                 BuildTransposeSection();
                 break;
 
-            case patchbay::BlockKind::Transpose:
-                BuildTransposeSection();
-                break;
-
             case patchbay::BlockKind::Velocity:
                 BuildValueScaleSection();
                 BuildVelocitySection();
@@ -412,10 +408,6 @@ namespace winrt::midipatchbay::implementation
                 content.Children().Append(TransformCard(body));
                 break;
             }
-
-            case patchbay::BlockKind::Throttle:
-                BuildThrottleSection();
-                break;
 
             default:
                 break;
@@ -492,57 +484,11 @@ namespace winrt::midipatchbay::implementation
         try
         {
             auto weak = get_weak();
-            auto const isTranspose = m_editingKind == patchbay::BlockKind::Transpose;
 
             controls::StackPanel body{};
             body.Spacing(4);
 
-            if (isTranspose)
-            {
-                body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionTranspose")));
-                body.Children().Append(TransformHint(resources::GetString(L"TransformSectionTransposeHint")));
-
-                controls::StackPanel row{};
-                row.Orientation(controls::Orientation::Horizontal);
-                row.Spacing(12);
-
-                auto box = SmallNumberBox(patchbay::MinimumTranspose, patchbay::MaximumTranspose,
-                    m_editingTransform.TransposeSemitones);
-
-                box.Header(winrt::box_value(resources::GetString(L"TransformSemitones")));
-
-                box.ValueChanged([weak](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
-                    {
-                        auto s = weak.get();
-
-                        if (s == nullptr || std::isnan(args.NewValue()))
-                        {
-                            return;
-                        }
-
-                        s->m_editingTransform.TransposeSemitones = static_cast<int32_t>(std::clamp(
-                            args.NewValue(),
-                            static_cast<double>(patchbay::MinimumTranspose),
-                            static_cast<double>(patchbay::MaximumTranspose)));
-
-                        s->UpdateBlockSummary();
-                    });
-
-                row.Children().Append(box);
-
-                m_transposeExampleText = controls::TextBlock{};
-                m_transposeExampleText.FontSize(13);
-                m_transposeExampleText.VerticalAlignment(xaml::VerticalAlignment::Bottom);
-                m_transposeExampleText.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 6));
-
-                row.Children().Append(m_transposeExampleText);
-
-                body.Children().Append(row);
-            }
-            else
-            {
-                body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionExactPitch")));
-            }
+            body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionExactPitch")));
 
             // The note map moves the note number the same way a transpose does, so both need to
             // know what to do with a MIDI 2.0 note that carries its own pitch.
@@ -550,7 +496,6 @@ namespace winrt::midipatchbay::implementation
 
             exactPitch.Content(winrt::box_value(resources::GetString(L"TransformIgnoreExactPitch")));
             exactPitch.IsChecked(m_editingTransform.IgnoreExactPitchNotes);
-            exactPitch.Margin(xaml::ThicknessHelper::FromLengths(0, isTranspose ? 8 : 0, 0, 0));
 
             auto const setIgnoreExactPitch = [weak](bool value)
                 {
@@ -815,62 +760,6 @@ namespace winrt::midipatchbay::implementation
             BlockDialogContent().Children().Append(TransformCard(body));
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the group map section.")
-    }
-
-    void MainWindow::BuildThrottleSection() noexcept
-    {
-        try
-        {
-            auto weak = get_weak();
-
-            controls::StackPanel body{};
-            body.Spacing(6);
-
-            body.Children().Append(TransformHeading(resources::GetString(L"InspectorSendingSpeed")));
-            body.Children().Append(TransformHint(resources::GetString(L"InspectorSendingSpeedHelp")));
-
-            // The speeds Network MIDI Setup offers, and whatever else a file asked for.
-            std::vector<uint32_t> options{ 0, 1, 2, 4, 8, 16, 32 };
-
-            if (std::find(options.begin(), options.end(), m_editingSettings.SendSpeedLimit) == options.end())
-            {
-                options.push_back(m_editingSettings.SendSpeedLimit);
-            }
-
-            controls::RadioButtons speeds{};
-
-            for (size_t i = 0; i < options.size(); i++)
-            {
-                speeds.Items().Append(winrt::box_value(patchbay::DescribeSendSpeed(options[i])));
-
-                if (options[i] == m_editingSettings.SendSpeedLimit)
-                {
-                    speeds.SelectedIndex(static_cast<int32_t>(i));
-                }
-            }
-
-            xaml::Automation::AutomationProperties::SetName(speeds, resources::GetString(L"InspectorSendingSpeed"));
-
-            speeds.SelectionChanged([weak, options](foundation::IInspectable const& sender, auto&&)
-                {
-                    auto s = weak.get();
-                    auto const list = sender.try_as<controls::RadioButtons>();
-
-                    if (s == nullptr || list == nullptr || list.SelectedIndex() < 0 ||
-                        static_cast<size_t>(list.SelectedIndex()) >= options.size())
-                    {
-                        return;
-                    }
-
-                    s->m_editingSettings.SendSpeedLimit = options[static_cast<size_t>(list.SelectedIndex())];
-                    s->UpdateBlockSummary();
-                });
-
-            body.Children().Append(speeds);
-
-            BlockDialogContent().Children().Append(TransformCard(body));
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the throttle section.")
     }
 
     _Use_decl_annotations_

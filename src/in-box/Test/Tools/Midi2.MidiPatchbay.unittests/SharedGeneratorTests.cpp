@@ -279,3 +279,50 @@ void SharedGeneratorTests::AFollowerSitsOutAPause()
 
     VERIFY_ARE_EQUAL(uint64_t{ 11'000 }, clock.KnownUntil());
 }
+
+void SharedGeneratorTests::AFollowerCanKeepToStartAndStop()
+{
+    midiapp::ClockFollower clock{};
+    clock.KeepsToStartAndStop(true);
+
+    // Nothing counts before Start.
+    clock.Pulse(900);
+
+    VERIFY_IS_TRUE(clock.IsStopped());
+    VERIFY_IS_FALSE(clock.PulsesAt(950).has_value());
+
+    clock.Start(950);
+
+    for (uint64_t i = 0; i < 4; i++)
+    {
+        clock.Pulse(1000 + i * 100);
+    }
+
+    // A pulse handed over early for after the stop is taken back, and the ones while stopped
+    // don't count.
+    clock.Pulse(1400);
+    clock.Stop(1350);
+    clock.Pulse(1500);
+    clock.Pulse(1600);
+
+    VERIFY_IS_TRUE(clock.IsStopped());
+    VERIFY_ARE_EQUAL(uint64_t{ 1400 }, clock.KnownUntil());
+    VERIFY_IS_TRUE(Near(4.0, clock.PulsesAt(2000).value()));
+
+    // Continue carries on from there.
+    clock.Continue();
+    clock.Pulse(3000);
+
+    VERIFY_IS_FALSE(clock.IsStopped());
+    VERIFY_IS_TRUE(Near(4.0, clock.PulsesAt(3000).value()));
+
+    // Without it, Stop is ignored, the same as before.
+    midiapp::ClockFollower plain{};
+
+    plain.Pulse(0);
+    plain.Stop(50);
+    plain.Pulse(100);
+
+    VERIFY_IS_FALSE(plain.IsStopped());
+    VERIFY_IS_TRUE(Near(1.0, plain.PulsesAt(100).value()));
+}

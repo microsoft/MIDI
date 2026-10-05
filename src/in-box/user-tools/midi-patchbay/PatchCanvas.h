@@ -288,6 +288,9 @@ namespace midipatchbay
         void OnSurfacePointerMoved(_In_ input::PointerRoutedEventArgs const& args) noexcept;
         void OnSurfacePointerReleased(_In_ input::PointerRoutedEventArgs const& args) noexcept;
 
+        // Saves where the dragged nodes ended up, the same as letting go of the button.
+        void FinishNodeDrag() noexcept;
+
         void OnDragOver(_In_ xaml::DragEventArgs const& args) noexcept;
         void OnDrop(_In_ xaml::DragEventArgs const& args) noexcept;
         void SetDropTarget(_In_ std::wstring const& connectionId) noexcept;

@@ -75,6 +75,84 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
+    winrt::hstring DescribeParameter(ParameterKind kind, int32_t bank, int32_t index) noexcept
+    {
+        try
+        {
+            auto const part = [](int32_t value)
+                {
+                    return value < 0 ? resources::GetString(L"ParameterAny") : winrt::to_hstring(value);
+                };
+
+            auto const name = resources::GetString(kind == ParameterKind::Assignable
+                ? L"ParameterKindAssignable"
+                : kind == ParameterKind::Either ? L"ParameterKindEither" : L"ParameterKindRegistered");
+
+            return resources::FormatString(L"ParameterFormat", name, part(bank), part(index));
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeGateTrigger(GateTrigger const& trigger) noexcept
+    {
+        try
+        {
+            switch (trigger.Kind)
+            {
+            case GateTriggerKind::NoteOn:
+            case GateTriggerKind::NoteOff:
+            {
+                auto const on = trigger.Kind == GateTriggerKind::NoteOn;
+
+                return trigger.Number < 0
+                    ? resources::GetString(on ? L"GateTriggerNoteOnAny" : L"GateTriggerNoteOffAny")
+                    : resources::FormatString(on ? L"GateTriggerNoteOnFormat" : L"GateTriggerNoteOffFormat",
+                        DescribeNote(static_cast<uint8_t>(trigger.Number & 0x7F)));
+            }
+
+            case GateTriggerKind::ControlChange:
+            {
+                auto const controller = trigger.Number < 0
+                    ? resources::GetString(L"GateTriggerControlAny")
+                    : resources::FormatString(L"GateTriggerControlFormat", static_cast<int>(trigger.Number));
+
+                switch (trigger.Test)
+                {
+                case GateValueTest::AtLeast:
+                    return resources::FormatString(L"GateTriggerAtLeastFormat", controller, static_cast<int>(trigger.Value));
+
+                case GateValueTest::Below:
+                    return resources::FormatString(L"GateTriggerBelowFormat", controller, static_cast<int>(trigger.Value));
+
+                default:
+                    return controller;
+                }
+            }
+
+            case GateTriggerKind::ProgramChange:
+                return trigger.Number < 0
+                    ? resources::GetString(L"GateTriggerProgramAny")
+                    : resources::FormatString(L"GateTriggerProgramFormat", static_cast<int>(trigger.Number));
+
+            case GateTriggerKind::Start:    return resources::GetString(L"GateTriggerStart");
+            case GateTriggerKind::Continue: return resources::GetString(L"GateTriggerContinue");
+            case GateTriggerKind::Stop:     return resources::GetString(L"GateTriggerStop");
+            default:                        return resources::GetString(L"GateTriggerWords");
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
+    _Use_decl_annotations_
     winrt::hstring DescribeMessageType(uint8_t messageType) noexcept
     {
         switch (messageType)
@@ -749,6 +827,12 @@ namespace midipatchbay
             { BlockKind::TimeCodeGenerator, L"BlockNameTimeCodeGenerator", L"BlockShortTimeCodeGenerator", L"BlockBadgeTimeCodeGenerator", L"BlockHintTimeCodeGenerator" },
             { BlockKind::LfoGenerator, L"BlockNameLfoGenerator", L"BlockShortLfoGenerator", L"BlockBadgeLfoGenerator", L"BlockHintLfoGenerator" },
             { BlockKind::Annotation, L"BlockNameAnnotation", L"BlockShortAnnotation", L"BlockBadgeAnnotation", L"BlockHintAnnotation" },
+            { BlockKind::ParameterFilter, L"BlockNameParameterFilter", L"BlockShortParameterFilter", L"BlockBadgeParameterFilter", L"BlockHintParameterFilter" },
+            { BlockKind::ParameterTransform, L"BlockNameParameterTransform", L"BlockShortParameterTransform", L"BlockBadgeParameterTransform", L"BlockHintParameterTransform" },
+            { BlockKind::NoteDistributor, L"BlockNameNoteDistributor", L"BlockShortNoteDistributor", L"BlockBadgeNoteDistributor", L"BlockHintNoteDistributor" },
+            { BlockKind::Gate, L"BlockNameGate", L"BlockShortGate", L"BlockBadgeGate", L"BlockHintGate" },
+            { BlockKind::CiResponder, L"BlockNameCiResponder", L"BlockShortCiResponder", L"BlockBadgeCiResponder", L"BlockHintCiResponder" },
+            { BlockKind::CiFilter, L"BlockNameCiFilter", L"BlockShortCiFilter", L"BlockBadgeCiFilter", L"BlockHintCiFilter" },
         };
 
         KindText const* FindKindText(_In_ BlockKind kind) noexcept
@@ -802,6 +886,8 @@ namespace midipatchbay
         case BlockCategory::Sending:    return resources::GetString(L"BlockCategorySending");
         case BlockCategory::Generator:  return resources::GetString(L"BlockCategoryGenerators");
         case BlockCategory::Annotation: return resources::GetString(L"BlockCategoryAnnotations");
+        case BlockCategory::Distribution: return resources::GetString(L"BlockCategoryDistribution");
+        case BlockCategory::CapabilityInquiry: return resources::GetString(L"BlockCategoryCapabilityInquiry");
         default:                        return resources::GetString(L"BlockCategoryFilters");
         }
     }
@@ -1311,6 +1397,89 @@ namespace midipatchbay
                     : settings.Annotation.Text;
                 break;
 
+            case BlockKind::ParameterFilter:
+            {
+                auto const& filter = settings.ParameterFilter;
+                auto const count = static_cast<int>(filter.Parameters.size());
+
+                if (count == 1)
+                {
+                    text = Text(resources::FormatString(filter.Action == FilterAction::KeepOut
+                        ? L"BlockDescParameterKeepOutOneFormat" : L"BlockDescParameterOnlyOneFormat",
+                        DescribeParameter(filter.Parameters.front().Kind, filter.Parameters.front().Bank, filter.Parameters.front().Index)));
+                }
+                else if (count > 1)
+                {
+                    text = Text(resources::FormatString(filter.Action == FilterAction::KeepOut
+                        ? L"BlockDescParameterKeepOutFormat" : L"BlockDescParameterOnlyFormat", count));
+                }
+                break;
+            }
+
+            case BlockKind::ParameterTransform:
+            {
+                auto const& rows = settings.ParameterTransform.Rows;
+
+                if (rows.size() == 1)
+                {
+                    auto const& row = rows.front();
+
+                    text = Text(resources::FormatString(L"BlockDescParameterMoveFormat",
+                        DescribeParameter(row.From.Kind, row.From.Bank, row.From.Index),
+                        DescribeParameter(row.ToKind == ParameterKind::Either ? row.From.Kind : row.ToKind,
+                            row.ToBank >= 0 ? row.ToBank : row.From.Bank,
+                            row.ToIndex >= 0 ? row.ToIndex : row.From.Index)));
+                }
+                else if (!rows.empty())
+                {
+                    text = Text(resources::FormatString(L"BlockDescParameterRowsFormat", static_cast<int>(rows.size())));
+                }
+                break;
+            }
+
+            case BlockKind::NoteDistributor:
+                switch (settings.Distributor.Mode)
+                {
+                case DistributionMode::FirstFree:    text = Text(resources::GetString(L"BlockDescDistributeFirstFree")); break;
+                case DistributionMode::HighestNotes: text = Text(resources::GetString(L"BlockDescDistributeHighest")); break;
+                case DistributionMode::LowestNotes:  text = Text(resources::GetString(L"BlockDescDistributeLowest")); break;
+                default:                             text = Text(resources::GetString(L"BlockDescDistributeTurns")); break;
+                }
+                break;
+
+            case BlockKind::Gate:
+                text = Text(resources::FormatString(L"BlockDescGateFormat",
+                    DescribeGateTrigger(settings.Gate.Open), DescribeGateTrigger(settings.Gate.Close)));
+                break;
+
+            case BlockKind::CiResponder:
+                text = settings.CiResponder.FileName.empty()
+                    ? Text(resources::GetString(L"BlockDescCiResponder"))
+                    : Text(resources::FormatString(L"BlockDescCiResponderFileFormat", settings.CiResponder.FileName));
+                break;
+
+            case BlockKind::CiFilter:
+            {
+                auto const& filter = settings.CiFilter;
+                auto const keepOut = filter.Action == FilterAction::KeepOut;
+                auto const categories = static_cast<uint8_t>(filter.Categories & CiCategoryAll);
+
+                if (categories == 0)
+                {
+                    text = Text(resources::GetString(keepOut ? L"BlockDescNothing" : L"BlockDescCiOnlyNone"));
+                }
+                else if (categories == CiCategoryAll)
+                {
+                    text = Text(resources::GetString(keepOut ? L"BlockDescCiKeepOutAll" : L"BlockDescCiOnlyAll"));
+                }
+                else
+                {
+                    text = Text(resources::FormatString(keepOut ? L"BlockDescCiKeepOutFormat" : L"BlockDescCiOnlyFormat",
+                        DescribeCiCategories(categories)));
+                }
+                break;
+            }
+
             default:
                 break;
             }
@@ -1327,5 +1496,130 @@ namespace midipatchbay
         }
 
         return resources::GetString(L"BlockDescNothing");
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeCiCategories(uint8_t categories) noexcept
+    {
+        try
+        {
+            constexpr wchar_t const* Keys[]{ L"CiCategoryManagement", L"CiCategoryProfiles", L"CiCategoryPropertyExchange", L"CiCategoryProcessInquiry" };
+
+            std::wstring text{};
+
+            for (size_t i = 0; i < std::size(Keys); i++)
+            {
+                if ((categories & (1u << i)) == 0)
+                {
+                    continue;
+                }
+
+                if (!text.empty())
+                {
+                    text += L", ";
+                }
+
+                text += resources::GetString(Keys[i]);
+            }
+
+            return winrt::hstring{ text };
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeCiMessage(uint8_t messageType) noexcept
+    {
+        try
+        {
+            wchar_t const* key{ nullptr };
+
+            switch (messageType)
+            {
+            case 0x70: key = L"CiMessageDiscovery"; break;
+            case 0x72: key = L"CiMessageEndpoint"; break;
+            case 0x7E: key = L"CiMessageInvalidateMuid"; break;
+            case 0x20: key = L"CiMessageProfileInquiry"; break;
+            case 0x22: key = L"CiMessageSetProfileOn"; break;
+            case 0x23: key = L"CiMessageSetProfileOff"; break;
+            case 0x28: key = L"CiMessageProfileDetails"; break;
+            case 0x30: key = L"CiMessagePropertyCapabilities"; break;
+            case 0x34: key = L"CiMessageGetProperty"; break;
+            case 0x36: key = L"CiMessageSetProperty"; break;
+            case 0x38: key = L"CiMessageSubscription"; break;
+            case 0x40: key = L"CiMessageProcessInquiryCapabilities"; break;
+            case 0x42: key = L"CiMessageReport"; break;
+            default: break;
+            }
+
+            if (key != nullptr)
+            {
+                return resources::GetString(key);
+            }
+
+            return resources::FormatString(L"CiMessageOtherFormat", std::format(L"{:02X}", messageType));
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeCiFileProblem(CiFileProblem const& problem) noexcept
+    {
+        // People count from 1.
+        auto const number = problem.Index + 1;
+
+        switch (problem.Kind)
+        {
+        case CiFileProblemKind::UnknownKey:
+            switch (problem.Section)
+            {
+            case CiFileSection::Profiles:   return resources::FormatString(L"CiProblemProfileKeyFormat", number, problem.Key);
+            case CiFileSection::Resources:  return resources::FormatString(L"CiProblemPropertyKeyFormat", number, problem.Key);
+            case CiFileSection::DeviceInfo: return resources::FormatString(L"CiProblemDeviceInfoKeyFormat", problem.Key);
+            default:                        return resources::FormatString(L"CiProblemFileKeyFormat", problem.Key);
+            }
+
+        case CiFileProblemKind::BadProfile:
+            return problem.Index < 0
+                ? resources::GetString(L"CiProblemProfilesNotList")
+                : resources::FormatString(L"CiProblemBadProfileFormat", number);
+
+        case CiFileProblemKind::DuplicateProfile:
+            return resources::FormatString(L"CiProblemDuplicateProfileFormat", number);
+
+        case CiFileProblemKind::BadDeviceInfo:
+            return problem.Key.empty()
+                ? resources::GetString(L"CiProblemDeviceInfoNotObject")
+                : resources::FormatString(L"CiProblemBadDeviceInfoFormat", problem.Key);
+
+        case CiFileProblemKind::BadResource:
+            return problem.Index < 0
+                ? resources::GetString(L"CiProblemPropertiesNotList")
+                : resources::FormatString(L"CiProblemBadPropertyFormat", number);
+
+        case CiFileProblemKind::DuplicateResource:
+            return resources::FormatString(L"CiProblemDuplicatePropertyFormat", number);
+
+        case CiFileProblemKind::TooMany:
+            return resources::GetString(problem.Section == CiFileSection::Profiles
+                ? L"CiProblemTooManyProfiles"
+                : L"CiProblemTooManyProperties");
+
+        case CiFileProblemKind::TooLarge:
+            return problem.Index < 0
+                ? resources::GetString(L"CiProblemFileTooLarge")
+                : resources::FormatString(L"CiProblemPropertyTooLargeFormat", number);
+
+        default:
+            return resources::GetString(L"CiProblemNotJson");
+        }
     }
 }

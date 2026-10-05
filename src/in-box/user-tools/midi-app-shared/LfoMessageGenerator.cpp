@@ -36,6 +36,8 @@ namespace midiapp
         constexpr uint8_t StatusSongPosition = 0xF2;
         constexpr uint8_t StatusTimingClock = 0xF8;
         constexpr uint8_t StatusStart = 0xFA;
+        constexpr uint8_t StatusContinue = 0xFB;
+        constexpr uint8_t StatusStop = 0xFC;
 
         LfoMessageGeneratorOptions Normalized(_In_ LfoMessageGeneratorOptions options) noexcept
         {
@@ -55,6 +57,7 @@ namespace midiapp
         m_sink(std::move(sink)),
         m_options(Normalized(std::move(options)))
     {
+        m_clock.KeepsToStartAndStop(m_options.KeepsToStartAndStop);
     }
 
     LfoMessageGenerator::~LfoMessageGenerator()
@@ -70,6 +73,8 @@ namespace midiapp
 
             m_options = Normalized(options);
             m_optionsGeneration++;
+
+            m_clock.KeepsToStartAndStop(m_options.KeepsToStartAndStop);
         }
 
         m_wakeup.notify_all();
@@ -87,7 +92,8 @@ namespace midiapp
 
             auto const status = static_cast<uint8_t>((words[0] >> 16) & 0xFF);
 
-            if (status != StatusTimingClock && status != StatusStart && status != StatusSongPosition)
+            if (status != StatusTimingClock && status != StatusStart && status != StatusSongPosition &&
+                status != StatusContinue && status != StatusStop)
             {
                 return;
             }
@@ -104,6 +110,14 @@ namespace midiapp
                 else if (status == StatusStart)
                 {
                     m_clock.Start(time);
+                }
+                else if (status == StatusContinue)
+                {
+                    m_clock.Continue();
+                }
+                else if (status == StatusStop)
+                {
+                    m_clock.Stop(time);
                 }
                 else
                 {
@@ -242,6 +256,7 @@ namespace midiapp
             // stops leaves the sweep where it got to.
             auto next = originTimestamp;
             uint64_t clockGeneration{ 0 };
+            bool wasStopped{ false };
 
             std::array<std::pair<uint64_t, double>, MaximumSamplesPerPass> due{};
 
@@ -249,6 +264,7 @@ namespace midiapp
             {
                 size_t dueCount{ 0 };
                 bool waitingForClock{ false };
+                bool justStopped{ false };
 
                 {
                     std::lock_guard<std::mutex> const guard{ m_mutex };
@@ -288,6 +304,9 @@ namespace midiapp
 
                     waitingForClock = next > m_clock.KnownUntil();
                     clockGeneration = m_clockGeneration;
+
+                    justStopped = m_clock.IsStopped() && !wasStopped;
+                    wasStopped = m_clock.IsStopped();
                 }
 
                 auto const pulsesPerCycle = MidiClocksPerBeat * options.BeatsPerCycle;
@@ -297,6 +316,26 @@ namespace midiapp
                     auto const turns = due[i].second / pulsesPerCycle;
 
                     send(due[i].first, turns - std::floor(turns));
+                }
+
+                // Held by a Stop: put back to the middle, the same as when the patch stops.
+                if (justStopped && options.ReturnsToMiddleWhenStopped && sentAny)
+                {
+                    uint32_t words[2]{};
+                    auto const count = BuildValueMessage(options.Target, (options.Lowest + options.Highest) / 2.0, words);
+
+                    if (count > 0)
+                    {
+                        auto const last = m_lastScheduledTimestamp.load();
+                        auto const now = lfomidi::MidiClock::Now();
+                        auto const timestamp = last > now ? last + 1 : now;
+
+                        m_sink(timestamp, words, count);
+                        m_lastScheduledTimestamp.store(timestamp);
+
+                        std::copy_n(words, count, lastWords);
+                        lastCount = count;
+                    }
                 }
 
                 auto const afterSending = lfomidi::MidiClock::Now();

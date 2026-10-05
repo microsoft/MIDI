@@ -138,7 +138,10 @@ namespace winrt::midipatchbay::implementation
 
             m_activityText = nullptr;
             m_activityElementId.clear();
+            m_ciStatusText = nullptr;
             m_annotationTextBox = nullptr;
+            m_inspectorSummary = nullptr;
+            m_stepSettingsFocus = nullptr;
 
             auto* patch = CurrentPatch();
             auto const kind = m_canvas.SelectionKind();
@@ -251,7 +254,9 @@ namespace winrt::midipatchbay::implementation
 
                 auto const& stats = found->second;
 
-                if (patchbay::CategoryOf(block->Kind) == patchbay::BlockCategory::Filter)
+                // The MIDI-CI steps keep messages out too: MIDI-CI, packet by packet.
+                if (patchbay::CategoryOf(block->Kind) == patchbay::BlockCategory::Filter ||
+                    patchbay::CategoryOf(block->Kind) == patchbay::BlockCategory::CapabilityInquiry)
                 {
                     return resources::FormatString(L"ActivityFilterFormat", stats.MessagesForwarded, stats.MessagesKeptOut);
                 }
@@ -327,6 +332,17 @@ namespace winrt::midipatchbay::implementation
             }
 
             m_activityText.Text(ActivityText(m_activityElementId));
+
+            if (m_ciStatusText != nullptr)
+            {
+                auto const status = CiStatusText(m_activityElementId);
+
+                // Only when it changed, so a screen reader isn't told the same thing twice a second.
+                if (m_ciStatusText.Text() != status)
+                {
+                    m_ciStatusText.Text(status);
+                }
+            }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to refresh the activity.")
     }
@@ -956,161 +972,13 @@ namespace winrt::midipatchbay::implementation
                 controls::StackPanel body{};
                 body.Spacing(10);
 
-                auto summary = ValueText(patchbay::DescribeBlock(kind, block.Settings), 12, true);
-                body.Children().Append(summary);
+                m_inspectorSummary = ValueText(patchbay::DescribeBlock(kind, block.Settings), 12, true);
+                body.Children().Append(m_inspectorSummary);
 
-                // The two settings people change most often are right here, not behind the dialog.
-                if (kind == patchbay::BlockKind::Transpose)
-                {
-                    controls::NumberBox semitones{};
+                // Settings that fit are right here; the rest are behind the dialog.
+                BuildStepSettings(block, body);
 
-                    semitones.Header(winrt::box_value(resources::GetString(L"TransformSemitones")));
-                    semitones.Minimum(patchbay::MinimumTranspose);
-                    semitones.Maximum(patchbay::MaximumTranspose);
-                    semitones.SmallChange(1);
-                    semitones.LargeChange(12);
-                    semitones.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Inline);
-                    semitones.ValidationMode(controls::NumberBoxValidationMode::InvalidInputOverwritten);
-                    semitones.Value(block.Settings.Transform.TransposeSemitones);
-
-                    semitones.ValueChanged([weak, blockId, summary](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
-                        {
-                            auto strong = weak.get();
-                            auto* current = strong == nullptr ? nullptr : strong->CurrentPatch();
-                            auto* target = current == nullptr ? nullptr : current->FindBlock(blockId);
-
-                            if (target == nullptr || std::isnan(args.NewValue()))
-                            {
-                                return;
-                            }
-
-                            auto const value = static_cast<int32_t>(std::clamp(args.NewValue(),
-                                static_cast<double>(patchbay::MinimumTranspose),
-                                static_cast<double>(patchbay::MaximumTranspose)));
-
-                            if (value == target->Settings.Transform.TransposeSemitones)
-                            {
-                                return;
-                            }
-
-                            target->Settings.Transform.TransposeSemitones = value;
-                            summary.Text(patchbay::DescribeBlock(target->Kind, target->Settings));
-
-                            strong->CommitChange(true, false);
-                            strong->RebuildCanvas();
-                        });
-
-                    body.Children().Append(semitones);
-                }
-                else if (kind == patchbay::BlockKind::Throttle)
-                {
-                    // The speeds Network MIDI Setup offers, and whatever else a file asked for.
-                    std::vector<uint32_t> options{ 0, 1, 2, 4, 8, 16, 32 };
-
-                    if (std::find(options.begin(), options.end(), block.Settings.SendSpeedLimit) == options.end())
-                    {
-                        options.push_back(block.Settings.SendSpeedLimit);
-                    }
-
-                    auto items = winrt::single_threaded_vector<foundation::IInspectable>();
-                    int32_t selectedIndex{ 0 };
-
-                    for (size_t i = 0; i < options.size(); i++)
-                    {
-                        items.Append(winrt::box_value(patchbay::DescribeSendSpeed(options[i])));
-
-                        if (options[i] == block.Settings.SendSpeedLimit)
-                        {
-                            selectedIndex = static_cast<int32_t>(i);
-                        }
-                    }
-
-                    controls::ComboBox speed{};
-
-                    speed.Header(winrt::box_value(resources::GetString(L"InspectorSendingSpeed")));
-                    speed.ItemsSource(items);
-                    speed.SelectedIndex(selectedIndex);
-                    speed.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
-
-                    speed.SelectionChanged([weak, blockId, options, summary](foundation::IInspectable const& s, auto&&)
-                        {
-                            auto strong = weak.get();
-                            auto const control = s.try_as<controls::ComboBox>();
-                            auto* current = strong == nullptr ? nullptr : strong->CurrentPatch();
-                            auto* target = current == nullptr ? nullptr : current->FindBlock(blockId);
-
-                            if (target == nullptr || control == nullptr)
-                            {
-                                return;
-                            }
-
-                            auto const index = control.SelectedIndex();
-
-                            // -1 while the list is replaced. Acting on it would rewrite the step.
-                            if (index < 0 || static_cast<size_t>(index) >= options.size() ||
-                                target->Settings.SendSpeedLimit == options[static_cast<size_t>(index)])
-                            {
-                                return;
-                            }
-
-                            target->Settings.SendSpeedLimit = options[static_cast<size_t>(index)];
-                            summary.Text(patchbay::DescribeBlock(target->Kind, target->Settings));
-
-                            strong->CommitChange(true, false);
-                            strong->RebuildCanvas();
-                        });
-
-                    body.Children().Append(speed);
-
-                    auto help = ValueText(resources::GetString(L"InspectorSendingSpeedHelp"), 11, true);
-                    help.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
-                    body.Children().Append(help);
-                }
-                else if (kind == patchbay::BlockKind::ClockGenerator)
-                {
-                    controls::NumberBox tempo{};
-
-                    tempo.Header(winrt::box_value(resources::GetString(L"GeneratorBeatsPerMinute")));
-                    tempo.Minimum(patchbay::MinimumGeneratorBeatsPerMinute);
-                    tempo.Maximum(patchbay::MaximumGeneratorBeatsPerMinute);
-                    tempo.SmallChange(1);
-                    tempo.LargeChange(10);
-                    tempo.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Inline);
-                    tempo.ValidationMode(controls::NumberBoxValidationMode::InvalidInputOverwritten);
-                    tempo.Value(block.Settings.Clock.BeatsPerMinute);
-
-                    tempo.ValueChanged([weak, blockId, summary](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
-                        {
-                            auto strong = weak.get();
-                            auto* current = strong == nullptr ? nullptr : strong->CurrentPatch();
-                            auto* target = current == nullptr ? nullptr : current->FindBlock(blockId);
-
-                            if (target == nullptr || std::isnan(args.NewValue()))
-                            {
-                                return;
-                            }
-
-                            // Two places, the same as the file keeps.
-                            auto const value = std::round(std::clamp(args.NewValue(),
-                                patchbay::MinimumGeneratorBeatsPerMinute,
-                                patchbay::MaximumGeneratorBeatsPerMinute) * 100.0) / 100.0;
-
-                            if (value == target->Settings.Clock.BeatsPerMinute)
-                            {
-                                return;
-                            }
-
-                            target->Settings.Clock.BeatsPerMinute = value;
-                            summary.Text(patchbay::DescribeBlock(target->Kind, target->Settings));
-
-                            strong->CommitChange(true, false);
-                            strong->RebuildCanvas();
-                        });
-
-                    body.Children().Append(tempo);
-                }
-
-                if (kind != patchbay::BlockKind::Throttle)
+                if (!EditsInInspector(kind))
                 {
                     controls::Button editButton{};
 
@@ -1174,6 +1042,15 @@ namespace winrt::midipatchbay::implementation
                 m_activityText = ValueText(ActivityText(blockId), 13, true);
 
                 section.Children().Append(m_activityText);
+
+                if (kind == patchbay::BlockKind::CiResponder)
+                {
+                    m_ciStatusText = ValueText(CiStatusText(blockId), 12, true);
+                    m_ciStatusText.Margin(xaml::ThicknessHelper::FromLengths(0, 8, 0, 0));
+                    m_ciStatusText.IsTextSelectionEnabled(true);
+
+                    section.Children().Append(m_ciStatusText);
+                }
 
                 InspectorContent().Children().Append(section);
             }
@@ -1770,7 +1647,7 @@ namespace winrt::midipatchbay::implementation
         {
             auto weak = get_weak();
 
-            for (auto const category : { patchbay::BlockCategory::Filter, patchbay::BlockCategory::Transform, patchbay::BlockCategory::Sending })
+            for (auto const category : { patchbay::BlockCategory::Filter, patchbay::BlockCategory::Transform, patchbay::BlockCategory::Sending, patchbay::BlockCategory::Distribution, patchbay::BlockCategory::CapabilityInquiry })
             {
                 std::vector<patchbay::BlockKind> kinds{};
 

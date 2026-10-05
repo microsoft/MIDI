@@ -17,6 +17,7 @@
 // generator starts a tree of its own too, because what it sends comes from nowhere.
 
 #include "PatchDocument.h"
+#include "StatefulBlocks.h"
 
 #include <atomic>
 #include <unordered_map>
@@ -53,6 +54,16 @@ namespace midipatchbay
         uint32_t LinkCell{ 0 };
     };
 
+    // No way back: a message from a throttle or a generator.
+    constexpr uint32_t NoReturnLeaf = 0xFFFFFFFF;
+
+    // Where an answer to a message goes, and on which group: the one it came in on.
+    struct ReturnPath
+    {
+        uint32_t Leaf{ NoReturnLeaf };
+        uint8_t Group{ 0 };
+    };
+
     struct RouteStage
     {
         RouteStageKind Kind{ RouteStageKind::PassThrough };
@@ -65,7 +76,7 @@ namespace midipatchbay
         // The block's counters. Unused for a leaf, which counts on its link.
         uint32_t Cell{ 0 };
 
-        // A clock divider's count, as an index into RouteGraph::States.
+        // A stateful step's state, as an index into RouteGraph::States.
         uint32_t State{ 0 };
 
         // Where this stage sends on to, as a run in RouteGraph::Edges.
@@ -81,6 +92,10 @@ namespace midipatchbay
         bool WaitForSendComplete{ false };
         int32_t SourceGroupIndex{ AllGroups };
         RouteEdge Edge{};
+
+        // Where a MIDI-CI responder's answers go: back to the source. Only made when the patch
+        // has a responder in it.
+        uint32_t ReplyLeaf{ NoReturnLeaf };
     };
 
     // A link into a destination endpoint. Each one sends on its own, the way a version 1
@@ -152,6 +167,13 @@ namespace midipatchbay
         std::unordered_map<std::wstring, std::wstring> DeviceIds{};
     };
 
+    // A stateful step: the cell of the block it is for, and what kind it is.
+    struct RouteState
+    {
+        uint32_t Cell{ 0 };
+        BlockKind Kind{ BlockKind::MessageTypeFilter };
+    };
+
     struct RouteGraph
     {
         std::vector<BlockSettings> Settings{};
@@ -166,9 +188,9 @@ namespace midipatchbay
         std::vector<RouteThrottle> Throttles{};
         std::vector<RouteGenerator> Generators{};
 
-        // One for each clock divider, holding the cell of the block it counts for. One count for
-        // each step rather than each path, so the engine can keep it when the graph changes.
-        std::vector<uint32_t> States{};
+        // One for each stateful step. One for each step rather than each path, so the engine can
+        // keep it when the graph changes.
+        std::vector<RouteState> States{};
 
         // The LFOs that clock inputs feed, by generator key. One that isn't running gets nothing.
         std::vector<std::wstring> ClockTargets{};
@@ -205,10 +227,11 @@ namespace midipatchbay
             _In_reads_(wordCount) uint32_t const* words,
             _In_ uint8_t wordCount) noexcept = 0;
 
-        // A clock divider's count. Null leaves the clock undivided.
-        virtual std::atomic<uint32_t>* StateOf(_In_ uint32_t state) noexcept = 0;
+        // A stateful step's state. Null passes the message on as it is.
+        virtual BlockState* StateOf(_In_ uint32_t state) noexcept = 0;
 
-        // Timing clock, start or song position on its way into an LFO that follows it.
+        // Timing clock, start, continue, stop or song position on its way into an LFO that
+        // follows it.
         virtual void Clock(
             _In_ uint32_t target,
             _In_reads_(wordCount) uint32_t const* words,
@@ -217,13 +240,16 @@ namespace midipatchbay
 
     // Sends one message down one link and everything after it. Every branch works on its own
     // copy, because blocks change the words in place. Runs on the service callback thread: no
-    // allocation, no locks and nothing that throws, and no deeper than MaximumRouteDepth.
+    // allocation, no locks and nothing that throws, and no deeper than MaximumRouteDepth. A
+    // MIDI-CI responder is the exception: it takes a lock and allocates while it answers, which
+    // only MIDI-CI makes it do.
     void RunEdge(
         _In_ RouteGraph const& graph,
         _In_ RouteEdge const& edge,
         _In_reads_(wordCount) uint32_t const* words,
         _In_ uint8_t wordCount,
-        _Inout_ RouteSink& sink) noexcept;
+        _Inout_ RouteSink& sink,
+        _In_ ReturnPath const& from = ReturnPath{}) noexcept;
 
     // A message arriving from a root's source endpoint. Messages without a group are never
     // routed, as before: nothing says which route they were meant for.

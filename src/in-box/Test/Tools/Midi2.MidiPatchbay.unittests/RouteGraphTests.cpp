@@ -35,8 +35,12 @@ namespace
     public:
         explicit RecordingSink(RouteGraph const& graph) :
             m_graph(graph),
-            m_states(std::make_unique<std::atomic<uint32_t>[]>((std::max)(graph.States.size(), size_t{ 1 })))
+            m_states(std::make_unique<BlockState[]>((std::max)(graph.States.size(), size_t{ 1 })))
         {
+            for (size_t i = 0; i < graph.States.size(); i++)
+            {
+                PrepareBlockState(graph.States[i].Kind, m_states[i]);
+            }
         }
 
         std::vector<Output> Sent{};
@@ -82,7 +86,7 @@ namespace
             }
         }
 
-        std::atomic<uint32_t>* StateOf(uint32_t state) noexcept override
+        BlockState* StateOf(uint32_t state) noexcept override
         {
             return state < m_graph.States.size() ? &m_states[state] : nullptr;
         }
@@ -100,7 +104,7 @@ namespace
 
     private:
         RouteGraph const& m_graph;
-        std::unique_ptr<std::atomic<uint32_t>[]> m_states{};
+        std::unique_ptr<BlockState[]> m_states{};
     };
 
     RecordingSink Arrive(RouteGraph const& graph, std::wstring const& device, Message const& message)
@@ -821,8 +825,8 @@ void RouteGraphTests::AnLfoFollowsTheClockConnectedToIt()
     VERIFY_ARE_EQUAL(size_t{ 1 }, graph.ClockTargets.size());
     VERIFY_ARE_EQUAL(graph.Generators[0].Key, graph.ClockTargets[0]);
 
-    // Timing clock, start and song position go in, and nothing goes on from the In.
-    for (auto const& clock : { System(0, 0xF8), System(3, 0xFA), System(0, 0xF2, 4, 0) })
+    // Timing clock, start, continue, stop and song position go in, and nothing goes on from the In.
+    for (auto const& clock : { System(0, 0xF8), System(3, 0xFA), System(0, 0xFB), System(0, 0xFC), System(0, 0xF2, 4, 0) })
     {
         auto const played = Arrive(graph, L"dev-drums", clock);
 
@@ -834,7 +838,7 @@ void RouteGraphTests::AnLfoFollowsTheClockConnectedToIt()
     }
 
     // Everything else stops at the In.
-    for (auto const& other : { System(0, 0xFC), System(0, 0xFE), Midi1(0, NoteOn, 0, 60, 100) })
+    for (auto const& other : { System(0, 0xFE), Midi1(0, NoteOn, 0, 60, 100) })
     {
         auto const played = Arrive(graph, L"dev-drums", other);
 

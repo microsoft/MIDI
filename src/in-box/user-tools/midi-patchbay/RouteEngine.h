@@ -76,6 +76,10 @@ namespace midipatchbay
         // Links out of a source endpoint that lead somewhere, and generators that are running.
         size_t ActiveRouteCount() const noexcept;
 
+        // What a MIDI-CI responder step has been doing, by its "patch key|block id". Nothing when
+        // it isn't routing.
+        std::optional<::midipatchbay::CiResponderSnapshot> CiResponderStatus(_In_ std::wstring const& cell) const noexcept;
+
         // Plays one note on an endpoint so a mapping can be heard. Reuses the open connection
         // when the patch is already routing, and otherwise opens one for the length of the note.
         // Blocks for the duration, so it has to be called from a background thread.
@@ -129,7 +133,7 @@ namespace midipatchbay
         std::map<std::wstring, std::unique_ptr<GeneratorRunner>> m_generators{};
 
         // Each clock divider's count, keyed by its cell, so a change elsewhere does not restart it.
-        std::unordered_map<std::wstring, std::shared_ptr<std::atomic<uint32_t>>> m_blockStates{};
+        std::unordered_map<std::wstring, std::shared_ptr<::midipatchbay::BlockState>> m_blockStates{};
 
         // Shared with the source hubs and generators, so a callback that is still running when the
         // graph is replaced finishes on the graph it started with.

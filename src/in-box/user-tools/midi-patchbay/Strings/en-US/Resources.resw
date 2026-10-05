@@ -2934,4 +2934,625 @@
   <data name="InspectorSplitter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Resize the details panel</value>
   </data>
+  <data name="InspectorChannelsThrough" xml:space="preserve">
+    <value>Channels that get through</value>
+  </data>
+  <data name="InspectorGroupsThrough" xml:space="preserve">
+    <value>Groups that get through</value>
+  </data>
+  <data name="InspectorAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="InspectorNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="GeneratorLfoStartStop" xml:space="preserve">
+    <value>Start and stop with the clock</value>
+  </data>
+  <data name="GeneratorLfoStartStopHint" xml:space="preserve">
+    <value>Only when a clock is connected to the LFO's In. The LFO waits for a Start or Continue message, and a Stop message holds it until the next one, back at the middle if that's checked above. Without this, it moves with every timing clock, playing or not.</value>
+  </data>
+  <data name="BlockNameParameterFilter" xml:space="preserve">
+    <value>(N)RPN filter</value>
+  </data>
+  <data name="BlockShortParameterFilter" xml:space="preserve">
+    <value>(N)RPN filter</value>
+  </data>
+  <data name="BlockBadgeParameterFilter" xml:space="preserve">
+    <value>RPN</value>
+  </data>
+  <data name="BlockHintParameterFilter" xml:space="preserve">
+    <value>Lets RPN and NRPN parameters through, or keeps them out, by bank and index.</value>
+  </data>
+  <data name="BlockNameParameterTransform" xml:space="preserve">
+    <value>(N)RPN transform</value>
+  </data>
+  <data name="BlockShortParameterTransform" xml:space="preserve">
+    <value>(N)RPN transform</value>
+  </data>
+  <data name="BlockBadgeParameterTransform" xml:space="preserve">
+    <value>RPN→</value>
+  </data>
+  <data name="BlockHintParameterTransform" xml:space="preserve">
+    <value>Sends one RPN or NRPN parameter as another, and reshapes its value.</value>
+  </data>
+  <data name="BlockNameNoteDistributor" xml:space="preserve">
+    <value>Note distributor</value>
+  </data>
+  <data name="BlockShortNoteDistributor" xml:space="preserve">
+    <value>Distributor</value>
+  </data>
+  <data name="BlockBadgeNoteDistributor" xml:space="preserve">
+    <value>POLY</value>
+  </data>
+  <data name="BlockHintNoteDistributor" xml:space="preserve">
+    <value>Plays several one-note synths as one big synth. Each new note goes to the next free connection out.</value>
+  </data>
+  <data name="BlockNameGate" xml:space="preserve">
+    <value>Gate</value>
+  </data>
+  <data name="BlockShortGate" xml:space="preserve">
+    <value>Gate</value>
+  </data>
+  <data name="BlockBadgeGate" xml:space="preserve">
+    <value>GATE</value>
+  </data>
+  <data name="BlockHintGate" xml:space="preserve">
+    <value>Lets messages through only between one message and another, such as Start and Stop.</value>
+  </data>
+  <data name="BlockCategoryDistribution" xml:space="preserve">
+    <value>Distribution</value>
+  </data>
+  <data name="BlockDescParameterKeepOutOneFormat" xml:space="preserve">
+    <value>Keeps out {0}</value>
+  </data>
+  <data name="BlockDescParameterOnlyOneFormat" xml:space="preserve">
+    <value>Lets only {0} through</value>
+  </data>
+  <data name="BlockDescParameterKeepOutFormat" xml:space="preserve">
+    <value>Keeps out {0} parameters</value>
+  </data>
+  <data name="BlockDescParameterOnlyFormat" xml:space="preserve">
+    <value>Lets only {0} parameters through</value>
+  </data>
+  <data name="BlockDescParameterMoveFormat" xml:space="preserve">
+    <value>Sends {0} as {1}</value>
+  </data>
+  <data name="BlockDescParameterRowsFormat" xml:space="preserve">
+    <value>Changes {0} parameters</value>
+  </data>
+  <data name="BlockDescDistributeTurns" xml:space="preserve">
+    <value>Shares notes out in turn</value>
+  </data>
+  <data name="BlockDescDistributeFirstFree" xml:space="preserve">
+    <value>Sends each note to the first free voice</value>
+  </data>
+  <data name="BlockDescDistributeHighest" xml:space="preserve">
+    <value>Keeps the highest notes</value>
+  </data>
+  <data name="BlockDescDistributeLowest" xml:space="preserve">
+    <value>Keeps the lowest notes</value>
+  </data>
+  <data name="BlockDescGateFormat" xml:space="preserve">
+    <value>Open from {0} until {1}</value>
+  </data>
+  <data name="ParameterAny" xml:space="preserve">
+    <value>any</value>
+  </data>
+  <data name="ParameterSame" xml:space="preserve">
+    <value>same</value>
+  </data>
+  <data name="ParameterFormat" xml:space="preserve">
+    <value>{0} {1}/{2}</value>
+  </data>
+  <data name="ParameterKindRegistered" xml:space="preserve">
+    <value>RPN</value>
+  </data>
+  <data name="ParameterKindAssignable" xml:space="preserve">
+    <value>NRPN</value>
+  </data>
+  <data name="ParameterKindEither" xml:space="preserve">
+    <value>RPN or NRPN</value>
+  </data>
+  <data name="ParameterKindSame" xml:space="preserve">
+    <value>Same</value>
+  </data>
+  <data name="ParameterType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="ParameterBank" xml:space="preserve">
+    <value>Bank</value>
+  </data>
+  <data name="ParameterIndex" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="ParameterFrom" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="ParameterTo" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="ParameterOutputLowest" xml:space="preserve">
+    <value>Lowest %</value>
+  </data>
+  <data name="ParameterOutputHighest" xml:space="preserve">
+    <value>Highest %</value>
+  </data>
+  <data name="ParameterFilterSection" xml:space="preserve">
+    <value>Parameters</value>
+  </data>
+  <data name="ParameterFilterHint" xml:space="preserve">
+    <value>An RPN or NRPN is a bank and an index. RPN 0/0 is pitch bend range, for example. Leave a bank or an index empty to match any. Everything that isn't an RPN or NRPN goes through.</value>
+  </data>
+  <data name="ParameterAdd" xml:space="preserve">
+    <value>Add a parameter</value>
+  </data>
+  <data name="ParameterNone" xml:space="preserve">
+    <value>No parameters yet, so this step changes nothing.</value>
+  </data>
+  <data name="ParameterMidi1Hint" xml:space="preserve">
+    <value>MIDI 1.0 sends a parameter as several control changes: the bank and index first, then the value. The bank and index always go through, and the values that follow are let through or kept out.</value>
+  </data>
+  <data name="ParameterTransformSection" xml:space="preserve">
+    <value>Parameters to change</value>
+  </data>
+  <data name="ParameterTransformHint" xml:space="preserve">
+    <value>The first row that matches is used. Leave a From bank or index empty to match any, and a To bank or index empty to keep it as it came in. The value is reshaped across its whole range, 32 bits for MIDI 2.0.</value>
+  </data>
+  <data name="ParameterAddRow" xml:space="preserve">
+    <value>Add a change</value>
+  </data>
+  <data name="ParameterNoRows" xml:space="preserve">
+    <value>Nothing to change yet, so this step changes nothing.</value>
+  </data>
+  <data name="ParameterTransformMidi1Hint" xml:space="preserve">
+    <value>For MIDI 1.0, the bank and index are sent again with the new numbers once both have arrived, and a value is reshaped as 14 bits when the fine part follows the coarse part. A MIDI 2.0 relative change keeps its step and only moves to the new parameter.</value>
+  </data>
+  <data name="GateTriggerNoteOnAny" xml:space="preserve">
+    <value>any note on</value>
+  </data>
+  <data name="GateTriggerNoteOffAny" xml:space="preserve">
+    <value>any note off</value>
+  </data>
+  <data name="GateTriggerNoteOnFormat" xml:space="preserve">
+    <value>note on {0}</value>
+  </data>
+  <data name="GateTriggerNoteOffFormat" xml:space="preserve">
+    <value>note off {0}</value>
+  </data>
+  <data name="GateTriggerControlAny" xml:space="preserve">
+    <value>any control change</value>
+  </data>
+  <data name="GateTriggerControlFormat" xml:space="preserve">
+    <value>CC {0}</value>
+  </data>
+  <data name="GateTriggerAtLeastFormat" xml:space="preserve">
+    <value>{0} at {1} or more</value>
+  </data>
+  <data name="GateTriggerBelowFormat" xml:space="preserve">
+    <value>{0} below {1}</value>
+  </data>
+  <data name="GateTriggerProgramAny" xml:space="preserve">
+    <value>any program change</value>
+  </data>
+  <data name="GateTriggerProgramFormat" xml:space="preserve">
+    <value>program {0}</value>
+  </data>
+  <data name="GateTriggerStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="GateTriggerContinue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="GateTriggerStop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="GateTriggerWords" xml:space="preserve">
+    <value>the message you typed</value>
+  </data>
+  <data name="GateOpensOn" xml:space="preserve">
+    <value>Opens on</value>
+  </data>
+  <data name="GateClosesOn" xml:space="preserve">
+    <value>Closes on</value>
+  </data>
+  <data name="GateStartsOpen" xml:space="preserve">
+    <value>Starts open</value>
+  </data>
+  <data name="GateStartsOpenHint" xml:space="preserve">
+    <value>How the gate is when the patch starts routing. When the same message opens and closes it, each one turns it the other way.</value>
+  </data>
+  <data name="GatePassTriggers" xml:space="preserve">
+    <value>Send the opening and closing messages on</value>
+  </data>
+  <data name="GatePassTriggersHint" xml:space="preserve">
+    <value>Checked, they always go through, even when they close the gate. Clear, they're kept out.</value>
+  </data>
+  <data name="GateNoteOffHint" xml:space="preserve">
+    <value>Note offs always go through, so no note is left sounding when the gate closes.</value>
+  </data>
+  <data name="GateMessage" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="GateKindNoteOn" xml:space="preserve">
+    <value>Note on</value>
+  </data>
+  <data name="GateKindNoteOff" xml:space="preserve">
+    <value>Note off</value>
+  </data>
+  <data name="GateKindControlChange" xml:space="preserve">
+    <value>Control change</value>
+  </data>
+  <data name="GateKindProgramChange" xml:space="preserve">
+    <value>Program change</value>
+  </data>
+  <data name="GateKindStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="GateKindContinue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="GateKindStop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="GateKindWords" xml:space="preserve">
+    <value>Exact message</value>
+  </data>
+  <data name="GateChannel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="GateNote" xml:space="preserve">
+    <value>Note number</value>
+  </data>
+  <data name="GateController" xml:space="preserve">
+    <value>Controller</value>
+  </data>
+  <data name="GateProgram" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="GateValueTest" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="GateTestAny" xml:space="preserve">
+    <value>Any value</value>
+  </data>
+  <data name="GateTestAtLeast" xml:space="preserve">
+    <value>At or above</value>
+  </data>
+  <data name="GateTestBelow" xml:space="preserve">
+    <value>Below</value>
+  </data>
+  <data name="GateValue" xml:space="preserve">
+    <value>0 to 127</value>
+  </data>
+  <data name="GateValueHint" xml:space="preserve">
+    <value>A MIDI 2.0 value is compared by its top seven bits, so 64 means halfway for both. A sustain pedal is controller 64: at or above 64 is down, below 64 is up.</value>
+  </data>
+  <data name="GateWords" xml:space="preserve">
+    <value>Words, in hex</value>
+  </data>
+  <data name="GateWordsHint" xml:space="preserve">
+    <value>One to four words of eight hex digits, the way MIDI Monitor shows them. A message matches when it starts with these words. The group in the first word is ignored: use Group above.</value>
+  </data>
+  <data name="GateWordsNotUnderstood" xml:space="preserve">
+    <value>Write one to four words of up to eight hex digits each, with spaces between them.</value>
+  </data>
+  <data name="DistributorMode" xml:space="preserve">
+    <value>How notes are shared out</value>
+  </data>
+  <data name="DistributorModeTurns" xml:space="preserve">
+    <value>Take turns</value>
+  </data>
+  <data name="DistributorModeFirstFree" xml:space="preserve">
+    <value>First free voice</value>
+  </data>
+  <data name="DistributorModeHighest" xml:space="preserve">
+    <value>Keep the highest notes</value>
+  </data>
+  <data name="DistributorModeLowest" xml:space="preserve">
+    <value>Keep the lowest notes</value>
+  </data>
+  <data name="DistributorModeHint" xml:space="preserve">
+    <value>Take turns moves on to the next voice for each note. First free voice uses the first one that isn't playing. When every voice is playing, the oldest note is cut short, except with Keep the highest or Keep the lowest, which only replace a lower or a higher note.</value>
+  </data>
+  <data name="DistributorVoicesOne" xml:space="preserve">
+    <value>1 voice. Connect one synth to the Out for each voice you want.</value>
+  </data>
+  <data name="DistributorVoicesFormat" xml:space="preserve">
+    <value>{0} voices, one for each connection out, in the order you connected them.</value>
+  </data>
+  <data name="DistributorControlChangesToAll" xml:space="preserve">
+    <value>Send control changes to every voice</value>
+  </data>
+  <data name="DistributorChannelPressureToAll" xml:space="preserve">
+    <value>Send channel pressure to every voice</value>
+  </data>
+  <data name="DistributorPitchBendToAll" xml:space="preserve">
+    <value>Send pitch bend to every voice</value>
+  </data>
+  <data name="DistributorToAllHint" xml:space="preserve">
+    <value>When one is clear, those messages go only to the voice that played the latest note. All notes off, program changes and everything else always go to every voice.</value>
+  </data>
+  <data name="BlockNameCiResponder" xml:space="preserve">
+    <value>MIDI-CI responder</value>
+  </data>
+  <data name="BlockShortCiResponder" xml:space="preserve">
+    <value>Responder</value>
+  </data>
+  <data name="BlockBadgeCiResponder" xml:space="preserve">
+    <value>CI↩</value>
+  </data>
+  <data name="BlockHintCiResponder" xml:space="preserve">
+    <value>Answers MIDI-CI for a MIDI 1.0 device that can't, with the profiles and properties you describe. Answers go back to whatever asked.</value>
+  </data>
+  <data name="BlockNameCiFilter" xml:space="preserve">
+    <value>MIDI-CI filter</value>
+  </data>
+  <data name="BlockShortCiFilter" xml:space="preserve">
+    <value>CI filter</value>
+  </data>
+  <data name="BlockBadgeCiFilter" xml:space="preserve">
+    <value>CI</value>
+  </data>
+  <data name="BlockHintCiFilter" xml:space="preserve">
+    <value>Keeps MIDI-CI away from a device, or lets only MIDI-CI through.</value>
+  </data>
+  <data name="BlockCategoryCapabilityInquiry" xml:space="preserve">
+    <value>MIDI-CI</value>
+  </data>
+  <data name="BlockDescCiResponder" xml:space="preserve">
+    <value>Answers MIDI-CI for the device it leads to</value>
+  </data>
+  <data name="BlockDescCiResponderFileFormat" xml:space="preserve">
+    <value>Answers MIDI-CI with what {0} describes</value>
+  </data>
+  <data name="BlockDescCiKeepOutAll" xml:space="preserve">
+    <value>Keeps all MIDI-CI out</value>
+  </data>
+  <data name="BlockDescCiKeepOutFormat" xml:space="preserve">
+    <value>Keeps MIDI-CI out: {0}</value>
+  </data>
+  <data name="BlockDescCiOnlyAll" xml:space="preserve">
+    <value>Lets only MIDI-CI through</value>
+  </data>
+  <data name="BlockDescCiOnlyFormat" xml:space="preserve">
+    <value>Lets only this MIDI-CI through: {0}</value>
+  </data>
+  <data name="BlockDescCiOnlyNone" xml:space="preserve">
+    <value>Lets nothing through</value>
+  </data>
+  <data name="CiCategoryManagement" xml:space="preserve">
+    <value>Discovery and management</value>
+  </data>
+  <data name="CiCategoryProfiles" xml:space="preserve">
+    <value>Profiles</value>
+  </data>
+  <data name="CiCategoryPropertyExchange" xml:space="preserve">
+    <value>Property Exchange</value>
+  </data>
+  <data name="CiCategoryProcessInquiry" xml:space="preserve">
+    <value>Process Inquiry</value>
+  </data>
+  <data name="CiMessageDiscovery" xml:space="preserve">
+    <value>Discovery</value>
+  </data>
+  <data name="CiMessageEndpoint" xml:space="preserve">
+    <value>Endpoint inquiry</value>
+  </data>
+  <data name="CiMessageInvalidateMuid" xml:space="preserve">
+    <value>Invalidate MUID</value>
+  </data>
+  <data name="CiMessageProfileInquiry" xml:space="preserve">
+    <value>Profile inquiry</value>
+  </data>
+  <data name="CiMessageSetProfileOn" xml:space="preserve">
+    <value>Set profile on</value>
+  </data>
+  <data name="CiMessageSetProfileOff" xml:space="preserve">
+    <value>Set profile off</value>
+  </data>
+  <data name="CiMessageProfileDetails" xml:space="preserve">
+    <value>Profile details</value>
+  </data>
+  <data name="CiMessagePropertyCapabilities" xml:space="preserve">
+    <value>Property Exchange capabilities</value>
+  </data>
+  <data name="CiMessageGetProperty" xml:space="preserve">
+    <value>Get property</value>
+  </data>
+  <data name="CiMessageSetProperty" xml:space="preserve">
+    <value>Set property</value>
+  </data>
+  <data name="CiMessageSubscription" xml:space="preserve">
+    <value>Subscription</value>
+  </data>
+  <data name="CiMessageProcessInquiryCapabilities" xml:space="preserve">
+    <value>Process Inquiry capabilities</value>
+  </data>
+  <data name="CiMessageReport" xml:space="preserve">
+    <value>MIDI message report</value>
+  </data>
+  <data name="CiMessageOtherFormat" xml:space="preserve">
+    <value>MIDI-CI message {0}</value>
+  </data>
+  <data name="CiProblemNotJson" xml:space="preserve">
+    <value>The file isn't a JSON object.</value>
+  </data>
+  <data name="CiProblemFileKeyFormat" xml:space="preserve">
+    <value>The file has a key it doesn't use: {0}.</value>
+  </data>
+  <data name="CiProblemProfileKeyFormat" xml:space="preserve">
+    <value>Profile {0} has a key the file doesn't use: {1}.</value>
+  </data>
+  <data name="CiProblemPropertyKeyFormat" xml:space="preserve">
+    <value>Property {0} has a key the file doesn't use: {1}.</value>
+  </data>
+  <data name="CiProblemDeviceInfoKeyFormat" xml:space="preserve">
+    <value>deviceInfo has a key the file doesn't use: {0}.</value>
+  </data>
+  <data name="CiProblemProfilesNotList" xml:space="preserve">
+    <value>profiles has to be a list.</value>
+  </data>
+  <data name="CiProblemBadProfileFormat" xml:space="preserve">
+    <value>Profile {0} can't be read, so it's left out.</value>
+  </data>
+  <data name="CiProblemDuplicateProfileFormat" xml:space="preserve">
+    <value>Profile {0} is the same as one before it, so it's left out.</value>
+  </data>
+  <data name="CiProblemDeviceInfoNotObject" xml:space="preserve">
+    <value>deviceInfo has to be an object.</value>
+  </data>
+  <data name="CiProblemBadDeviceInfoFormat" xml:space="preserve">
+    <value>deviceInfo's {0} has to be text of 128 characters or fewer.</value>
+  </data>
+  <data name="CiProblemPropertiesNotList" xml:space="preserve">
+    <value>resources has to be a list.</value>
+  </data>
+  <data name="CiProblemBadPropertyFormat" xml:space="preserve">
+    <value>Property {0} can't be read, so it's left out.</value>
+  </data>
+  <data name="CiProblemDuplicatePropertyFormat" xml:space="preserve">
+    <value>Property {0} has the same name and resId as one before it, so it's left out.</value>
+  </data>
+  <data name="CiProblemTooManyProfiles" xml:space="preserve">
+    <value>There are more than 64 profiles. The rest are left out.</value>
+  </data>
+  <data name="CiProblemTooManyProperties" xml:space="preserve">
+    <value>There are more than 64 properties. The rest are left out.</value>
+  </data>
+  <data name="CiProblemFileTooLarge" xml:space="preserve">
+    <value>The file is larger than 1 MB, so it isn't read.</value>
+  </data>
+  <data name="CiProblemPropertyTooLargeFormat" xml:space="preserve">
+    <value>Property {0} is larger than 256 KB, so it's left out.</value>
+  </data>
+  <data name="CiIdentityHeading" xml:space="preserve">
+    <value>Who it says it is</value>
+  </data>
+  <data name="CiIdentityHint" xml:space="preserve">
+    <value>MIDI-CI Discovery answers with these. Use the numbers from the device's manual if it has them.</value>
+  </data>
+  <data name="CiManufacturer" xml:space="preserve">
+    <value>Manufacturer ID, in hex</value>
+  </data>
+  <data name="CiManufacturerHint" xml:space="preserve">
+    <value>One byte or three, such as 41 or 00 20 29. 7D is for prototypes and private use.</value>
+  </data>
+  <data name="CiManufacturerNotUnderstood" xml:space="preserve">
+    <value>Write one byte or three in hex, each 7F or less, such as 41 or 00 20 29.</value>
+  </data>
+  <data name="CiFamily" xml:space="preserve">
+    <value>Family</value>
+  </data>
+  <data name="CiModel" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="CiVersion" xml:space="preserve">
+    <value>Software version</value>
+  </data>
+  <data name="CiVersionNotUnderstood" xml:space="preserve">
+    <value>Write up to four numbers from 0 to 127 with dots between them, such as 1.0.2.0.</value>
+  </data>
+  <data name="CiProductInstanceId" xml:space="preserve">
+    <value>Product instance ID</value>
+  </data>
+  <data name="CiProductInstanceIdHint" xml:space="preserve">
+    <value>Tells this device apart from others of the same model, like a serial number. Up to 42 letters, numbers and symbols. Leave it empty if there isn't one.</value>
+  </data>
+  <data name="CiAnswersHeading" xml:space="preserve">
+    <value>What it answers</value>
+  </data>
+  <data name="CiProcessInquiry" xml:space="preserve">
+    <value>Answer MIDI message reports</value>
+  </data>
+  <data name="CiProcessInquiryHint" xml:space="preserve">
+    <value>Tells an app which notes, controllers, programs and pitch bend have gone to the device since the patch started routing. It only knows what went through this step.</value>
+  </data>
+  <data name="CiPassMidiCi" xml:space="preserve">
+    <value>Send MIDI-CI on to the device too</value>
+  </data>
+  <data name="CiPassMidiCiHint" xml:space="preserve">
+    <value>Most MIDI 1.0 devices don't understand MIDI-CI, and some don't cope with system exclusive they don't know. Leave this off unless the device needs it.</value>
+  </data>
+  <data name="CiFileHeading" xml:space="preserve">
+    <value>Profiles and properties</value>
+  </data>
+  <data name="CiFileName" xml:space="preserve">
+    <value>MIDI-CI file</value>
+  </data>
+  <data name="CiFileNamePlaceholder" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="CiFileNameNotPlain" xml:space="preserve">
+    <value>Only a file name, such as Organ.midici. The file goes in the patch folder.</value>
+  </data>
+  <data name="CiChooseFile" xml:space="preserve">
+    <value>Choose…</value>
+  </data>
+  <data name="CiOpenFolder" xml:space="preserve">
+    <value>Open patch folder</value>
+  </data>
+  <data name="CiFileHint" xml:space="preserve">
+    <value>A .midici file in the patch folder describes the device's profiles and properties. Changes to it are picked up straight away.</value>
+  </data>
+  <data name="CiChooseFileTitle" xml:space="preserve">
+    <value>Choose a MIDI-CI file</value>
+  </data>
+  <data name="CiFileFilter" xml:space="preserve">
+    <value>MIDI-CI files</value>
+  </data>
+  <data name="CiFileFilterJson" xml:space="preserve">
+    <value>JSON files</value>
+  </data>
+  <data name="CiFileTooLargeToCopy" xml:space="preserve">
+    <value>That file is too large to be a MIDI-CI file, so it wasn't copied.</value>
+  </data>
+  <data name="CiFileCopyFailed" xml:space="preserve">
+    <value>The file couldn't be copied into the patch folder.</value>
+  </data>
+  <data name="CiFilterKeepOut" xml:space="preserve">
+    <value>Keep this MIDI-CI out</value>
+  </data>
+  <data name="CiFilterLetThrough" xml:space="preserve">
+    <value>Let only this MIDI-CI through, and keep everything else out</value>
+  </data>
+  <data name="CiFilterWhich" xml:space="preserve">
+    <value>Which MIDI-CI</value>
+  </data>
+  <data name="CiFilterHint" xml:space="preserve">
+    <value>Discovery and management covers Discovery, endpoint inquiries, Invalidate MUID, ACK and NAK. System exclusive that isn't MIDI-CI is never any of these.</value>
+  </data>
+  <data name="CiFileNone" xml:space="preserve">
+    <value>No MIDI-CI file, so it answers with who it is, and with MIDI message reports when they're on.</value>
+  </data>
+  <data name="CiFileMissingFormat" xml:space="preserve">
+    <value>{0} isn't in the patch folder, so it answers as if there were no file.</value>
+  </data>
+  <data name="CiFileUnreadableFormat" xml:space="preserve">
+    <value>{0} can't be read, so it answers as if there were no file.</value>
+  </data>
+  <data name="CiFileReadFormat" xml:space="preserve">
+    <value>{0}. Profiles: {1}. Properties: {2}.</value>
+  </data>
+  <data name="CiFileProblemsFormat" xml:space="preserve">
+    <value>Problems: {0}. Everything else in the file is used.</value>
+  </data>
+  <data name="CiMuidFormat" xml:space="preserve">
+    <value>MUID: {0}</value>
+  </data>
+  <data name="CiNothingAskedYet" xml:space="preserve">
+    <value>Nothing has asked it anything yet.</value>
+  </data>
+  <data name="CiActivityFormat" xml:space="preserve">
+    <value>{0}  {1} from {2}: {3}</value>
+  </data>
+  <data name="CiOutcomeAnswered" xml:space="preserve">
+    <value>answered</value>
+  </data>
+  <data name="CiOutcomeRefused" xml:space="preserve">
+    <value>turned down</value>
+  </data>
+  <data name="CiOutcomeNewMuid" xml:space="preserve">
+    <value>took a new MUID</value>
+  </data>
 </root>

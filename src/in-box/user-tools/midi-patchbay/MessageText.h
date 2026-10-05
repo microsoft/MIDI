@@ -11,6 +11,7 @@
 // files because the words come from the app's resources.
 
 #include "ProcessingBlock.h"
+#include "CapabilityInquiry.h"
 
 namespace midipatchbay
 {
@@ -75,4 +76,19 @@ namespace midipatchbay
 
     // "Pitch bend", for a picker.
     winrt::hstring DescribeValueMessageKind(_In_ midiapp::ValueMessageKind kind) noexcept;
+
+    // "RPN 0/0". A bank or index of -1 is "any".
+    winrt::hstring DescribeParameter(_In_ ParameterKind kind, _In_ int32_t bank, _In_ int32_t index) noexcept;
+
+    // "CC 64 at 64 or more", for a gate's summary.
+    winrt::hstring DescribeGateTrigger(_In_ GateTrigger const& trigger) noexcept;
+
+    // "Profiles, Property Exchange", from the CiCategory bits.
+    winrt::hstring DescribeCiCategories(_In_ uint8_t categories) noexcept;
+
+    // "Discovery", "Get property", for what a MIDI-CI step has been answering.
+    winrt::hstring DescribeCiMessage(_In_ uint8_t messageType) noexcept;
+
+    // One problem with a MIDI-CI file, in a sentence.
+    winrt::hstring DescribeCiFileProblem(_In_ CiFileProblem const& problem) noexcept;
 }

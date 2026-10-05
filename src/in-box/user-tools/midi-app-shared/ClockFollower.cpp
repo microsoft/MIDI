@@ -57,6 +57,11 @@ namespace midiapp
     _Use_decl_annotations_
     void ClockFollower::Pulse(uint64_t time) noexcept
     {
+        if (IsStopped())
+        {
+            return;
+        }
+
         if (m_count > 0)
         {
             auto const last = At(m_count - 1).Time;
@@ -93,6 +98,36 @@ namespace midiapp
     void ClockFollower::Start(uint64_t time) noexcept
     {
         Restart(time, 0);
+        m_stopped = false;
+    }
+
+    _Use_decl_annotations_
+    void ClockFollower::Stop(uint64_t time) noexcept
+    {
+        if (!m_keepsToStartAndStop)
+        {
+            return;
+        }
+
+        // Pulses handed over early for after the stop never happened.
+        while (m_count > 0 && At(m_count - 1).Time >= time)
+        {
+            m_nextNumber = At(m_count - 1).Number;
+            m_count--;
+        }
+
+        m_stopped = true;
+    }
+
+    void ClockFollower::Continue() noexcept
+    {
+        m_stopped = false;
+    }
+
+    _Use_decl_annotations_
+    void ClockFollower::KeepsToStartAndStop(bool value) noexcept
+    {
+        m_keepsToStartAndStop = value;
     }
 
     _Use_decl_annotations_

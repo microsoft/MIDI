@@ -19,6 +19,7 @@
 #include "MidiTimeCode.h"
 
 #include <atomic>
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -54,20 +55,32 @@ namespace midipatchbay
         ClockDivider = 20,
 
         Annotation = 21,
+
+        ParameterFilter = 22,
+        ParameterTransform = 23,
+
+        NoteDistributor = 24,
+        Gate = 25,
+
+        CiResponder = 26,
+        CiFilter = 27,
     };
 
-    constexpr size_t BlockKindCount = 22;
+    constexpr size_t BlockKindCount = 28;
 
     // The order the palette shows them in.
     constexpr BlockKind AllBlockKinds[BlockKindCount] =
     {
         BlockKind::MessageTypeFilter, BlockKind::GroupFilter, BlockKind::ChannelFilter,
         BlockKind::NoteFilter, BlockKind::ControlChangeFilter, BlockKind::VelocityFilter,
-        BlockKind::MessageMaskFilter,
+        BlockKind::ParameterFilter, BlockKind::MessageMaskFilter,
         BlockKind::ChannelMap, BlockKind::GroupMap, BlockKind::NoteMap, BlockKind::Transpose,
         BlockKind::Velocity, BlockKind::Aftertouch, BlockKind::ControlChangeMap,
-        BlockKind::ControlChangeValue, BlockKind::ProgramMap, BlockKind::ClockDivider,
+        BlockKind::ControlChangeValue, BlockKind::ProgramMap, BlockKind::ParameterTransform,
+        BlockKind::ClockDivider,
         BlockKind::Throttle,
+        BlockKind::NoteDistributor, BlockKind::Gate,
+        BlockKind::CiResponder, BlockKind::CiFilter,
         BlockKind::ClockGenerator, BlockKind::TimeCodeGenerator, BlockKind::LfoGenerator,
         BlockKind::Annotation,
     };
@@ -83,6 +96,12 @@ namespace midipatchbay
 
         // Text on the canvas. Nothing goes in or comes out.
         Annotation = 4,
+
+        // Decides which of its connections a message goes out on, or whether it goes at all.
+        Distribution = 5,
+
+        // Answers MIDI-CI for a device that can't, or keeps MIDI-CI away from one.
+        CapabilityInquiry = 6,
     };
 
     BlockCategory CategoryOf(_In_ BlockKind kind) noexcept;
@@ -261,6 +280,9 @@ namespace midipatchbay
         // Sends the middle of the range when the patch stops routing, so a pitch bend is not
         // left bent.
         bool ReturnsToMiddle{ true };
+
+        // Following a clock: waits for Start or Continue, and holds on Stop.
+        bool KeepsToStartAndStop{ false };
     };
 
     // What an LFO step's number starts as for each kind of message: the mod wheel, middle C, or
@@ -270,6 +292,193 @@ namespace midipatchbay
     // Clock divider: one timing clock in this many goes through. 1 lets every one through.
     constexpr uint32_t DefaultClockDivision = 2;
     constexpr uint32_t MaximumClockDivision = 96;
+
+    // RPN is registered, NRPN is assignable. Either is only for matching.
+    enum class ParameterKind : int32_t
+    {
+        Registered = 0,
+        Assignable = 1,
+        Either = 2,
+    };
+
+    // Bank and index are 0 to 127, or -1 for any.
+    struct ParameterMatch
+    {
+        ParameterKind Kind{ ParameterKind::Registered };
+        int16_t Bank{ -1 };
+        int16_t Index{ -1 };
+
+        bool Matches(_In_ bool assignable, _In_ uint8_t bank, _In_ uint8_t index) const noexcept;
+    };
+
+    constexpr size_t MaximumParameterRows = 32;
+
+    // With no parameters listed, the step does nothing.
+    struct ParameterFilterSettings
+    {
+        FilterAction Action{ FilterAction::KeepOut };
+        std::vector<ParameterMatch> Parameters{};
+    };
+
+    // One parameter moved to another, its value reshaped on the way. To fields of -1, or a kind
+    // of Either, keep what came in.
+    struct ParameterMapRow
+    {
+        ParameterMatch From{};
+
+        ParameterKind ToKind{ ParameterKind::Either };
+        int16_t ToBank{ -1 };
+        int16_t ToIndex{ -1 };
+
+        ValueShape Shape{};
+    };
+
+    // The first row that matches is the one used.
+    struct ParameterTransformSettings
+    {
+        std::vector<ParameterMapRow> Rows{};
+    };
+
+    // Which voice a new note goes to. A voice is one connection out of the step.
+    enum class DistributionMode : int32_t
+    {
+        // Each note goes to the next voice along, skipping voices that are still playing.
+        TakeTurns = 0,
+
+        // The first voice that isn't playing. With none free, the oldest note is cut short.
+        FirstFree = 1,
+
+        // With every voice playing, a new note replaces the lowest one if it's higher.
+        HighestNotes = 2,
+
+        // With every voice playing, a new note replaces the highest one if it's lower.
+        LowestNotes = 3,
+    };
+
+    constexpr size_t MaximumVoices = 64;
+
+    struct NoteDistributorSettings
+    {
+        DistributionMode Mode{ DistributionMode::TakeTurns };
+
+        // Otherwise each goes only to the voice that played the latest note.
+        bool ControlChangesToEveryVoice{ true };
+        bool ChannelPressureToEveryVoice{ true };
+        bool PitchBendToEveryVoice{ true };
+    };
+
+    enum class GateTriggerKind : int32_t
+    {
+        NoteOn = 0,
+        NoteOff = 1,
+        ControlChange = 2,
+        ProgramChange = 3,
+        Start = 4,
+        Continue = 5,
+        Stop = 6,
+
+        // The first words of a message, exactly.
+        Words = 7,
+    };
+
+    enum class GateValueTest : int32_t
+    {
+        Any = 0,
+        AtLeast = 1,
+        Below = 2,
+    };
+
+    // A message that opens or closes a gate. Group, channel and number are -1 for any, and count
+    // from 0 like everywhere else in the file.
+    struct GateTrigger
+    {
+        GateTriggerKind Kind{ GateTriggerKind::Start };
+
+        int8_t Group{ -1 };
+        int8_t Channel{ -1 };
+
+        // The note, controller or program.
+        int16_t Number{ -1 };
+
+        // Control change only. Compared on the MIDI 1.0 scale, so a MIDI 2.0 value is compared
+        // at its top seven bits.
+        GateValueTest Test{ GateValueTest::Any };
+        uint8_t Value{ 64 };
+
+        // Words only.
+        uint8_t WordCount{ 1 };
+        std::array<uint32_t, MaximumUmpWords> Words{};
+
+        bool Matches(_In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) const noexcept;
+    };
+
+    // Lets messages through between one trigger and the other. The same trigger for both turns
+    // it on and off. Note offs always go through, so nothing is left sounding.
+    struct GateSettings
+    {
+        GateTrigger Open{ GateTriggerKind::Start };
+        GateTrigger Close{ GateTriggerKind::Stop };
+
+        bool StartsOpen{ true };
+
+        // Off keeps the trigger messages out. On sends them on whether the gate is open or not.
+        bool PassesTriggers{ true };
+    };
+
+    // What a MIDI-CI file next to the patch describes: profiles and properties. Read when the patch
+    // routes, so it is never part of the patch file itself. In CapabilityInquiry.h.
+    struct CiDescription;
+
+    // Answers MIDI-CI for the device it leads to, which is usually a MIDI 1.0 device that knows
+    // nothing about it. Answers go back to the endpoint the question came from.
+    struct CiResponderSettings
+    {
+        // MIDI-CI always carries three bytes. A one byte ID such as 0x41 is 41 00 00. 0x7D is the
+        // ID for prototypes and private use.
+        std::array<uint8_t, 3> Manufacturer{ 0x7D, 0x00, 0x00 };
+
+        // 14 bits each.
+        uint16_t Family{ 0 };
+        uint16_t Model{ 0 };
+
+        // Four 7-bit numbers, written 1.0.0.0.
+        std::array<uint8_t, 4> Version{};
+
+        // What Inquiry: Endpoint is answered with. Printable ASCII, up to 42 characters.
+        std::wstring ProductInstanceId{};
+
+        // Reports what has been sent through the step when an app asks for a MIDI Message Report.
+        bool ProcessInquiry{ true };
+
+        // MIDI-CI messages go on to the device as well. Off, the device never sees them.
+        bool PassMidiCi{ false };
+
+        // A file in the patch folder, by name only.
+        std::wstring FileName{};
+
+        // What the file said, attached when the patch routes. Null when there is no file, or it
+        // couldn't be read.
+        std::shared_ptr<CiDescription const> Description{};
+    };
+
+    // Groups of MIDI-CI messages, as a bit each.
+    constexpr uint8_t CiCategoryManagement = 0x01;
+    constexpr uint8_t CiCategoryProfiles = 0x02;
+    constexpr uint8_t CiCategoryPropertyExchange = 0x04;
+    constexpr uint8_t CiCategoryProcessInquiry = 0x08;
+    constexpr uint8_t CiCategoryAll = 0x0F;
+
+    struct CiFilterSettings
+    {
+        FilterAction Action{ FilterAction::KeepOut };
+        uint8_t Categories{ CiCategoryAll };
+    };
+
+    // The name a patch can give a MIDI-CI file: a bare file name, never a path.
+    bool IsCiFileName(_In_ std::wstring_view name) noexcept;
+
+    // Printable ASCII only, and no more than MIDI-CI carries.
+    std::wstring CiProductInstanceIdFrom(_In_ std::wstring_view text);
 
     // One line of text on the canvas, for notes about the patch.
     constexpr size_t MaximumAnnotationLength = 200;
@@ -332,6 +541,14 @@ namespace midipatchbay
         LfoGeneratorSettings Lfo{};
 
         uint32_t ClockDivision{ DefaultClockDivision };
+
+        ParameterFilterSettings ParameterFilter{};
+        ParameterTransformSettings ParameterTransform{};
+        NoteDistributorSettings Distributor{};
+        GateSettings Gate{};
+
+        CiResponderSettings CiResponder{};
+        CiFilterSettings CiFilter{};
 
         AnnotationSettings Annotation{};
     };

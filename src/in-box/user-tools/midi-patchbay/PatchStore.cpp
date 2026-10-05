@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "PatchStore.h"
+#include "CapabilityInquiry.h"
 #include "PatchSerializer.h"
 #include "StringResources.h"
 
@@ -586,6 +587,27 @@ namespace midipatchbay
             // Somebody else wrote this file, so it does not start routing by itself the next time
             // the app starts either. The customer chooses that in the app.
             patch->ActivateAtStartup = false;
+
+            // A MIDI-CI responder's file comes too, from beside the patch. One already in the
+            // folder by that name is the customer's, and is left as it is.
+            for (auto const& block : patch->Blocks)
+            {
+                auto const& name = block.Settings.CiResponder.FileName;
+
+                if (block.Kind != BlockKind::CiResponder || !IsCiFileName(name))
+                {
+                    continue;
+                }
+
+                auto const from = std::filesystem::path{ sourcePath }.parent_path() / name;
+                auto const to = std::filesystem::path{ m_folder } / name;
+
+                if (std::filesystem::is_regular_file(from, ec) && !std::filesystem::exists(to, ec) &&
+                    std::filesystem::file_size(from, ec) <= MaximumCiFileBytes)
+                {
+                    std::filesystem::copy_file(from, to, ec);
+                }
+            }
 
             if (!Save(patch.value()))
             {

@@ -10,6 +10,7 @@
 
 #include "AppSettings.h"
 #include "BackgroundWork.h"
+#include "CiFileStore.h"
 #include "PatchStore.h"
 #include "RouteGraph.h"
 #include "StringResources.h"
@@ -477,6 +478,17 @@ namespace midipatchbay
                     }
                 }
 
+                // Each MIDI-CI responder answers from its file as it is now.
+                for (auto& block : copy.Blocks)
+                {
+                    auto& responder = block.Settings.CiResponder;
+
+                    if (block.Kind == BlockKind::CiResponder && !responder.FileName.empty())
+                    {
+                        responder.Description = CiFileStore::Current().Read(responder.FileName).Description;
+                    }
+                }
+
                 RoutePatch input{};
                 input.Key = copy.SessionKey;
                 input.Patch = &copy;
@@ -526,6 +538,13 @@ namespace midipatchbay
     {
         try
         {
+            // A MIDI-CI file edited beside the patches is answered from straight away.
+            if (CiFileStore::Current().CheckForChanges())
+            {
+                ApplyRouting();
+                Notify(LibraryChange::Routing, {});
+            }
+
             m_stats = RouteEngine::Current().Stats();
 
             Notify(LibraryChange::Activity, {});

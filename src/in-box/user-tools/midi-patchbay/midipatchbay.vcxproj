@@ -143,6 +143,9 @@
     <ClInclude Include="PatchStore.h" />
     <ClInclude Include="ProcessingBlock.h" />
     <ClInclude Include="RouteGraph.h" />
+    <ClInclude Include="StatefulBlocks.h" />
+    <ClInclude Include="CapabilityInquiry.h" />
+    <ClInclude Include="CiFileStore.h" />
     <ClInclude Include="RouteEngine.h" />
     <ClInclude Include="SendQueue.h" />
     <ClInclude Include="StringResources.h" />
@@ -217,12 +220,19 @@
     <ClCompile Include="RouteGraph.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="StatefulBlocks.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="CapabilityInquiry.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="MessageText.cpp" />
     <ClCompile Include="PatchCanvas.cpp" />
     <ClCompile Include="PatchGraph.cpp" />
     <ClCompile Include="PatchLibrary.cpp" />
     <ClCompile Include="PatchModel.cpp" />
     <ClCompile Include="PatchStore.cpp" />
+    <ClCompile Include="CiFileStore.cpp" />
     <ClCompile Include="RouteEngine.cpp" />
     <ClCompile Include="SendQueue.cpp" />
     <ClCompile Include="StringResources.cpp" />
@@ -236,6 +246,9 @@
     </ClCompile>
     <ClCompile Include="MainWindowDialogs.cpp" />
     <ClCompile Include="MainWindowInspector.cpp" />
+    <ClCompile Include="MainWindowStepSettings.cpp" />
+    <ClCompile Include="MainWindowCapabilityInquiry.cpp" />
+    <ClCompile Include="MainWindowParameterSteps.cpp" />
     <ClCompile Include="MainWindowFilters.cpp" />
     <ClCompile Include="MainWindowGenerators.cpp" />
     <ClCompile Include="MainWindowPanes.cpp" />

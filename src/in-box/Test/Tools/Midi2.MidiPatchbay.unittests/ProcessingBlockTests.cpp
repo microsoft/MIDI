@@ -100,8 +100,12 @@ void ProcessingBlockTests::ANewBlockChangesNothing()
         auto const settings = DefaultBlockSettings(kind);
 
         // A throttle with no limit, or a clock divider dividing by one, would be pointless to
-        // add, so a new one starts out doing something.
-        auto const startsDoingSomething = kind == BlockKind::Throttle || kind == BlockKind::ClockDivider;
+        // add, so a new one starts out doing something. A distributor and a gate decide where
+        // each message goes, so they always run. A MIDI-CI responder always answers, and a new
+        // MIDI-CI filter keeps all MIDI-CI out.
+        auto const startsDoingSomething = kind == BlockKind::Throttle || kind == BlockKind::ClockDivider ||
+            kind == BlockKind::NoteDistributor || kind == BlockKind::Gate ||
+            kind == BlockKind::CiResponder || kind == BlockKind::CiFilter;
 
         VERIFY_ARE_EQUAL(!startsDoingSomething, BlockChangesNothing(kind, settings));
 
@@ -503,6 +507,59 @@ void ProcessingBlockTests::SettingsSurviveTheFile()
             settings.Annotation.Italic = true;
             settings.Annotation.Underline = true;
             settings.Annotation.Color = L"#16C60C";
+            break;
+
+        case BlockKind::ParameterFilter:
+            settings.ParameterFilter.Action = FilterAction::LetThrough;
+            settings.ParameterFilter.Parameters.push_back(ParameterMatch{ ParameterKind::Assignable, 3, -1 });
+            settings.ParameterFilter.Parameters.push_back(ParameterMatch{ ParameterKind::Either, -1, 7 });
+            break;
+
+        case BlockKind::ParameterTransform:
+        {
+            ParameterMapRow row{};
+            row.From = ParameterMatch{ ParameterKind::Registered, 0, 0 };
+            row.ToKind = ParameterKind::Assignable;
+            row.ToBank = 1;
+            row.Shape.Invert = true;
+            row.Shape.OutputMaximumHundredths = 5000;
+
+            settings.ParameterTransform.Rows.push_back(row);
+            break;
+        }
+
+        case BlockKind::NoteDistributor:
+            settings.Distributor.Mode = DistributionMode::LowestNotes;
+            settings.Distributor.PitchBendToEveryVoice = false;
+            break;
+
+        case BlockKind::Gate:
+            settings.Gate.Open.Kind = GateTriggerKind::ControlChange;
+            settings.Gate.Open.Number = 64;
+            settings.Gate.Open.Channel = 2;
+            settings.Gate.Open.Test = GateValueTest::AtLeast;
+            settings.Gate.Open.Value = 100;
+            settings.Gate.Close.Kind = GateTriggerKind::Words;
+            settings.Gate.Close.WordCount = 2;
+            settings.Gate.Close.Words = { 0x40903C00u, 0xFFFF0000u, 0, 0 };
+            settings.Gate.StartsOpen = false;
+            settings.Gate.PassesTriggers = false;
+            break;
+
+        case BlockKind::CiResponder:
+            settings.CiResponder.Manufacturer = { 0x00, 0x20, 0x29 };
+            settings.CiResponder.Family = 300;
+            settings.CiResponder.Model = 16383;
+            settings.CiResponder.Version = { 1, 2, 3, 127 };
+            settings.CiResponder.ProductInstanceId = L"SN-0042";
+            settings.CiResponder.ProcessInquiry = false;
+            settings.CiResponder.PassMidiCi = true;
+            settings.CiResponder.FileName = L"Organ.midici";
+            break;
+
+        case BlockKind::CiFilter:
+            settings.CiFilter.Action = FilterAction::LetThrough;
+            settings.CiFilter.Categories = CiCategoryProfiles | CiCategoryPropertyExchange;
             break;
         }
 

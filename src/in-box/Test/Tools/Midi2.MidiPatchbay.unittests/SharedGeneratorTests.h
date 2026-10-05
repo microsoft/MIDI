@@ -26,4 +26,5 @@ public:
     TEST_METHOD(AFollowerTakesPulsesBeforeTheyPlay);
     TEST_METHOD(AFollowerStartsAgainOnStartAndSongPosition);
     TEST_METHOD(AFollowerSitsOutAPause);
+    TEST_METHOD(AFollowerCanKeepToStartAndStop);
 };

@@ -45,8 +45,10 @@
             </Style>
 
             <!-- The palette's step tiles: three to a row, square, sized in code to the palette's width. -->
+            <!-- Not an ItemsWrapGrid: that one throws its tiles away and builds them again each
+                 time their size changes, which flickers while the palette is resized. -->
             <ItemsPanelTemplate x:Key="PaletteTilesPanel">
-                <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="3" />
+                <VariableSizedWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="3" />
             </ItemsPanelTemplate>
             <Style x:Key="PaletteTileContainerStyle" TargetType="GridViewItem">
                 <Setter Property="Margin" Value="0,0,4,4" />

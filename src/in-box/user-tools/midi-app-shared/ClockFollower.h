@@ -35,6 +35,19 @@ namespace midiapp
         // Start at this time: the first pulse after it is the top of the song.
         void Start(_In_ uint64_t time) noexcept;
 
+        // Only for a follower that keeps to Start and Stop: pulses from this time on don't count
+        // until Continue or Start, so it holds where it got to.
+        void Stop(_In_ uint64_t time) noexcept;
+
+        // Picks up again from where Stop left it.
+        void Continue() noexcept;
+
+        // Waits for Start or Continue before it counts a pulse, and Stop holds it again.
+        // Without this a follower counts every pulse and ignores Stop and Continue.
+        void KeepsToStartAndStop(_In_ bool value) noexcept;
+
+        bool IsStopped() const noexcept { return m_keepsToStartAndStop && m_stopped; }
+
         // Song position at this time, in sixteenth notes: the first pulse after it is that far in.
         void SongPosition(_In_ uint64_t time, _In_ uint32_t sixteenths) noexcept;
 
@@ -74,5 +87,8 @@ namespace midiapp
 
         uint64_t m_interval{ 0 };
         uint64_t m_lastGap{ 0 };
+
+        bool m_keepsToStartAndStop{ false };
+        bool m_stopped{ true };
     };
 }

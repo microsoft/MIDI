@@ -99,18 +99,20 @@ To work with more than one endpoint or step at once, hold Ctrl and click each on
 
 Steps sit between the endpoints and do something to the messages that pass through them. Drag one from the **Steps** tab on the left, or select a connection and choose **Add a step here**. Drop a step on a connection and the connection is split in two, with the step in the middle. A generator or an annotation is never put into a connection, so it's added on its own instead.
 
-There are four kinds:
+There are six kinds:
 
 - **Filters** keep some messages out and let the rest through.
 - **Transforms** change messages on the way past.
 - The **message throttler** slows messages down for a device that can't keep up.
+- **Distribution** steps decide which connection out a message takes, or whether it goes at all. See [Distribution steps](#distribution-steps).
+- **MIDI-CI** steps answer MIDI-CI for a MIDI 1.0 device that can't, or keep MIDI-CI away from a device. See [MIDI-CI steps](#midi-ci-steps).
 - **Generators** make messages of their own: MIDI clock, MIDI Time Code, and an LFO. See [Generators](#generators).
 
 The **Steps** tab also has **Annotation**, a line of text for notes on the canvas. It isn't a step. See [Annotations](#annotations).
 
 Messages go through the steps in the order the connections lead them, and each step only sees what the steps before it let through. When an **Out** leads to more than one place, each one gets its own copy of every message, so a step on one path never changes what another path carries. When more than one connection leads into the same **In**, their messages are merged.
 
-Select a step to see what it does, in a sentence, under **What it does**. **Edit settings…** opens its settings, as large as the patch window allows, so on a big screen a step with a lot of settings fits without scrolling. Nothing changes until you select **Apply**, and **Reset** puts the step back the way it started. Under **Name**, you can give a step a name of its own, such as "Bass side".
+Select a step to see what it does, in a sentence, under **What it does**. When a step's settings are short, they're right there in the panel on the right, and a change takes effect as soon as you make it: the channel, group, and velocity filters, transpose, the message throttler, the clock divider, the note distributor, the MIDI-CI responder and filter, MIDI clock, and MIDI Time Code. Double-click one of those, and the panel is ready for you to change it. For the other steps, **Edit settings…**, or a double-click, opens their settings, as large as the patch window allows, so on a big screen a step with a lot of settings fits without scrolling. Nothing changes until you select **Apply**, and **Reset** puts the step back the way it started. Under **Name**, you can give a step a name of its own, such as "Bass side".
 
 **Bypass** lets everything through a step unchanged, so you can hear the patch with and without it. A bypassed generator sends nothing.
 
@@ -124,6 +126,7 @@ Steps can't be connected in a circle, because nothing would ever leave it. Patch
 - **Note filter** picks out a range of notes, one note, or a list of notes, and either lets only those through or keeps them out. Click keys on the keyboard to pick them. For a range, click the lowest key, then hold Shift and click the highest. It applies to note on, note off, poly pressure and the MIDI 2.0 per note messages, so a held note can't be stranded. Everything else goes through.
 - **Control change filter** does the same for controllers: a range, one controller, or a list, picked from a grid of numbers. Everything that isn't a control change goes through.
 - **Velocity filter** picks out notes by how hard they're played, which is how you send soft playing to one sound and hard playing to another. It only looks at note on. Note off always goes through, so no note is left sounding.
+- **(N)RPN filter** picks out RPNs and NRPNs by bank and index, such as RPN 0/0, pitch bend range, and lets only those through or keeps them out. Leave a bank or an index empty to match any. A MIDI 1.0 device sends a parameter as several control changes: the bank and index always go through, and the values that follow are let through or kept out. Everything that isn't an RPN or NRPN goes through.
 - **Message mask filter** is for anything the others don't cover. It looks at the bits in messages of one size, such as "word 1, bits 14 down to 8", and lets the matching ones through or keeps them out. Messages of other sizes go through.
 
 The note filter and the control change filter can also **Learn**. Turn it on and play the notes, or move the controls, on your device. Learn listens to the devices connected to the step's **In**, through any steps before it, so connect the step first.
@@ -146,6 +149,7 @@ Transforms change messages on the way past. Between them they do everything the 
 - **Control change values** changes what a controller's value does on its way out. See [Shaping controller values](#shaping-controller-values) below.
 - **Program and bank mapper** picks a different sound on the destination, for an instrument whose programs aren't laid out the way the music expects. The program numbers are the ones on the wire, 0 to 127, with the General MIDI name beside each one. It can also remap the bank, as controller 0 and controller 32 on MIDI 1.0 and as the bank a MIDI 2.0 program change carries. Most instruments only use the MSB half.
 - **Clock divider** lets one MIDI clock pulse in every so many through, so a device that follows it runs at half the tempo, a third, and so on. Start sets the count back, so the first pulse after it always goes through. A song position is divided to match, and everything else goes through untouched.
+- **(N)RPN transform** sends one RPN or NRPN as another, and can reshape its value with a curve, an output range, and **Invert**. The first row that matches is used. A MIDI 2.0 value is reshaped across its whole range. For a MIDI 1.0 device, the new bank and index are sent once both halves have arrived, and the coarse and fine values are reshaped together.
 
 ### Shaping controller values
 
@@ -174,6 +178,38 @@ A MIDI 2.0 note on can say exactly which pitch to play, down to a fraction of a 
 
 Leave **Bypass exact-pitch notes** clear and the pitch moves with the note, so the transpose and note mapper steps both stay honest. Check it and those notes are passed through untouched, which is what you want when the note number means a drum pad or a key on a controller rather than a pitch.
 
+## Distribution steps
+
+These decide where a message goes, rather than changing it.
+
+- **Note distributor** plays several one-note synths as one bigger synth. Connect one synth to its **Out** for each voice you want. Each connection is a voice, in the order you connected them, and each new note goes to one of them. Its note off, poly pressure, and MIDI 2.0 per-note messages follow it there. **Take turns** moves on to the next voice for each note. **First free voice** uses the first one that isn't playing. When every voice is playing, both cut the oldest note short. **Keep the highest notes** and **Keep the lowest notes** only cut a note short for a higher or a lower one. Control changes, channel pressure, and pitch bend go to every voice, or, with their box cleared, only to the voice that played the latest note. All notes off, program changes, and everything else always go to every voice.
+- **Gate** lets messages through only between one message and another. Pick what opens it and what closes it: a note on or off, a control change with a value at or above or below a number, a program change, Start, Continue, Stop, or an exact message typed in hex. When the same message opens and closes it, each one turns it the other way, like a footswitch. You can keep the opening and closing messages out or send them on, and choose whether it starts open. Note offs always get through, so no note is left sounding.
+
+To play notes only while a sequencer is playing, connect the sequencer's clock and the keyboard into a gate left as it starts: it opens on Start and closes on Stop.
+
+## MIDI-CI steps
+
+MIDI-CI lets an app ask a device what it is and what it can do. A MIDI 2.0 device answers for itself. A MIDI 1.0 device can't, so Patchbay can answer for it.
+
+- **MIDI-CI responder** answers MIDI-CI for the device it leads to. Put it on the path from the app to the device, usually right after the loopback the app uses. When the app looks for MIDI-CI devices, it finds one with the manufacturer ID, family, model, and software version you give the step. Use the numbers from the device's manual if it has them. The answers go back the way the question came, on the same group. Everything that isn't MIDI-CI, such as notes, goes on to the device as usual. MIDI-CI doesn't, unless you check **Send MIDI-CI on to the device too**, because most MIDI 1.0 devices don't understand it.
+- **MIDI-CI filter** keeps MIDI-CI away from a device, or lets only MIDI-CI through. Pick which kinds: discovery and management, profiles, Property Exchange, and Process Inquiry. System exclusive that isn't MIDI-CI goes through when MIDI-CI is kept out, and is kept out when only MIDI-CI is let through.
+
+With **Answer MIDI message reports** on, a responder tells an app which notes are playing, and where each channel's controllers, program, pitch bend, and channel pressure are. It only knows what went through it since the patch started routing, so a change made on the device itself doesn't show.
+
+**Profiles and properties.** A MIDI-CI file tells the responder which profiles the device follows, such as one for drawbar organs, and gives an app properties to read, such as the device's program list. Put the file in the patch folder, then type its name under **MIDI-CI file**, or select **Choose…**. A file from somewhere else is copied into the patch folder first. **Open patch folder** opens the folder in File Explorer. While the patch routes, changes to the file are picked up straight away.
+
+The file is JSON. [MIDI Patchbay patch files, a guide for AI agents]({{ site.baseurl }}/kb/midi-patchbay-patches-for-agents/#the-midi-ci-file) describes it, and an AI assistant can write one for you from the device's manual.
+
+Under **Activity**, a responder shows what its file adds, any problems in the file, its MUID, and the last questions it answered.
+
+Things a responder can't do:
+
+- **It only answers.** It never asks other devices anything.
+- **It can't change the device.** When an app turns a profile on or off, the responder says how the profile already is. An app can read properties, but can't change them or ask to hear when they change.
+- **It can't answer what comes through a message throttler or from a generator,** because it doesn't know where to send the answer.
+- **It stands for one device.** To answer for two devices, put a responder on each path.
+- **It stops answering when routing stops.** An app that found it may still list it until the app looks again.
+
 ## Generators
 
 Generators make messages of their own. MIDI clock and MIDI Time Code only have an **Out**. An LFO also has an **In**, for a clock to follow. A generator runs for as long as its patch is routing: it starts when you start the patch and stops when you stop it. Connect it to everything that should get what it sends, straight or through other steps.
@@ -182,7 +218,9 @@ Generators make messages of their own. MIDI clock and MIDI Time Code only have a
 - **MIDI Time Code** sends quarter frame messages at 24, 25, 29.97 drop frame, or 30 frames per second, counting from the start time you set. It starts from that time each time the patch starts routing. With **Send a full timecode when starting and stopping** on, a device finds its place at once.
 - **LFO** sweeps a value up and down in the same shapes as an LFO control in MIDI Glass: sine, triangle, square, a ramp up or down, or one of four kinds of noise. Pick how long one pass takes, in beats at a tempo you set, and how much of the range it covers. It can send a control change, pitch bend, channel pressure, poly pressure on one note, or an RPN or NRPN, on the channel and group you pick. **Return to center when routing stops** sends the value halfway between the two ends as it stops, so a pitch bend that sweeps its whole range ends up back in the middle.
 
-**Keeping an LFO in step with a clock.** Connect a clock to the LFO's **In**: a device that sends MIDI clock, a MIDI clock step, or a clock divider. The LFO then follows that clock instead of its own tempo. One pass takes that many beats of the clock, a Start from the clock puts the LFO back at the beginning of a pass, and when the clock stops, the LFO stops moving. Only timing clock, Start and Song Position reach the LFO. Anything else that comes in stops there. With nothing connected to its **In**, an LFO keeps its own tempo. A muted connection still counts, so muting the clock holds the LFO still.
+**Keeping an LFO in step with a clock.** Connect a clock to the LFO's **In**: a device that sends MIDI clock, a MIDI clock step, or a clock divider. The LFO then follows that clock instead of its own tempo. One pass takes that many beats of the clock, a Start from the clock puts the LFO back at the beginning of a pass, and when the clock stops, the LFO stops moving. Only timing clock, Start, Continue, Stop and Song Position reach the LFO. Anything else that comes in stops there. With nothing connected to its **In**, an LFO keeps its own tempo. A muted connection still counts, so muting the clock holds the LFO still.
+
+With **Start and stop with the clock** checked, the LFO waits for a Start or Continue before it moves, and a Stop holds it until the next one. It goes back to the middle on Stop if **Return to center when routing stops** is checked. Without it, the LFO moves with every timing clock, whether the music is playing or not.
 
 The clock and the time code go out on the group you pick. A connection to one group or port of an endpoint sends them there instead.
 

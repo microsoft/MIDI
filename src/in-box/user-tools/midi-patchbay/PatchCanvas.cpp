@@ -277,6 +277,14 @@ namespace midipatchbay
                 color = dark ? Rgb(0xB8, 0xB8, 0xB8) : Rgb(0x5C, 0x5C, 0x5C);
                 break;
 
+            case BlockCategory::Distribution:
+                color = dark ? Rgb(0xFF, 0x8F, 0xC8) : Rgb(0xA8, 0x1F, 0x6B);
+                break;
+
+            case BlockCategory::CapabilityInquiry:
+                color = dark ? Rgb(0x8E, 0xE0, 0x4F) : Rgb(0x3D, 0x6E, 0x00);
+                break;
+
             default:
                 color = dark ? Rgb(0xFF, 0xB5, 0x47) : Rgb(0x9A, 0x5B, 0x00);
                 break;
@@ -1096,6 +1104,10 @@ namespace midipatchbay
                 root.DoubleTapped([this, nodeId](auto&&, input::DoubleTappedRoutedEventArgs const& args)
                     {
                         args.Handled(true);
+
+                        // The second press started a drag, and its release goes to whatever the
+                        // double-click opens.
+                        FinishNodeDrag();
 
                         if (m_callbacks.BlockActivated)
                         {
@@ -2087,7 +2099,17 @@ namespace midipatchbay
                 return;
             }
 
-            ApplyDragPosition(args.GetCurrentPoint(m_surface).Position());
+            auto const point = args.GetCurrentPoint(m_surface);
+
+            // The release went somewhere else, such as a dialog that opened in the middle of the
+            // drag. A cord can be drawn with two clicks, so only a node drag ends here.
+            if (m_draggingNode && !point.Properties().IsLeftButtonPressed())
+            {
+                FinishNodeDrag();
+                return;
+            }
+
+            ApplyDragPosition(point.Position());
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to move a node.")
     }
@@ -2150,6 +2172,15 @@ namespace midipatchbay
                 return;
             }
 
+            FinishNodeDrag();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to finish a node drag.")
+    }
+
+    void PatchCanvas::FinishNodeDrag() noexcept
+    {
+        try
+        {
             if (!m_draggingNode)
             {
                 return;

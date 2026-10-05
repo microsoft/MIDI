@@ -298,7 +298,7 @@ namespace midipatchbay
             _In_reads_(wordCount) uint32_t const* words,
             _In_ uint8_t wordCount) noexcept override;
 
-        std::atomic<uint32_t>* StateOf(_In_ uint32_t state) noexcept override;
+        ::midipatchbay::BlockState* StateOf(_In_ uint32_t state) noexcept override;
 
         void Clock(
             _In_ uint32_t target,
@@ -497,7 +497,7 @@ namespace midipatchbay
 
         // One for each clock divider. Shared with the graphs before and after this one, so a
         // divider keeps its count through a change somewhere else.
-        std::vector<std::shared_ptr<std::atomic<uint32_t>>> States{};
+        std::vector<std::shared_ptr<::midipatchbay::BlockState>> States{};
 
         // The LFO each of the graph's clock targets is, filled in before anything can reach this
         // graph and never changed after. Empty where that LFO isn't running.
@@ -904,6 +904,7 @@ namespace midipatchbay
             options.Target = lfo.Target;
             options.ReturnsToMiddleWhenStopped = lfo.ReturnsToMiddle;
             options.FollowsClock = followsClock;
+            options.KeepsToStartAndStop = followsClock && lfo.KeepsToStartAndStop;
 
             return options;
         }
@@ -1080,7 +1081,7 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    std::atomic<uint32_t>* RouteEngine::Context::StateOf(uint32_t state) noexcept
+    ::midipatchbay::BlockState* RouteEngine::Context::StateOf(uint32_t state) noexcept
     {
         if (state >= Owner->States.size())
         {
@@ -1290,18 +1291,28 @@ namespace midipatchbay
             runtime.Cells = std::make_unique<Counters[]>((std::max)(routes.Cells.size(), size_t{ 1 }));
             runtime.Leaves.resize(routes.Leaves.size());
 
-            // Each clock divider keeps its count from the graph before, when it is still there.
+            // Each stateful step keeps its state from the graph before, when it is still there.
             {
-                std::unordered_map<std::wstring, std::shared_ptr<std::atomic<uint32_t>>> states{};
+                std::unordered_map<std::wstring, std::shared_ptr<::midipatchbay::BlockState>> states{};
 
-                for (auto const cell : routes.States)
+                for (auto const& planned : routes.States)
                 {
-                    auto const& name = routes.Cells[cell];
+                    auto const& name = routes.Cells[planned.Cell];
                     auto const kept = m_blockStates.find(name);
 
-                    auto state = kept != m_blockStates.end()
-                        ? kept->second
-                        : std::make_shared<std::atomic<uint32_t>>(0u);
+                    std::shared_ptr<::midipatchbay::BlockState> state{};
+
+                    // A responder's state is made before anything can reach it, never after.
+                    if (kept != m_blockStates.end() &&
+                        (planned.Kind != ::midipatchbay::BlockKind::CiResponder || kept->second->Ci != nullptr))
+                    {
+                        state = kept->second;
+                    }
+                    else
+                    {
+                        state = std::make_shared<::midipatchbay::BlockState>();
+                        ::midipatchbay::PrepareBlockState(planned.Kind, *state);
+                    }
 
                     runtime.States.push_back(state);
                     states.insert_or_assign(name, std::move(state));
@@ -1846,6 +1857,43 @@ namespace midipatchbay
     {
         std::scoped_lock guard{ m_publishLock };
         return m_activeRoutes;
+    }
+
+    _Use_decl_annotations_
+    std::optional<::midipatchbay::CiResponderSnapshot> RouteEngine::CiResponderStatus(std::wstring const& cell) const noexcept
+    {
+        std::shared_ptr<Runtime> runtime{};
+
+        {
+            std::scoped_lock guard{ m_publishLock };
+            runtime = m_runtime;
+        }
+
+        if (runtime == nullptr)
+        {
+            return std::nullopt;
+        }
+
+        try
+        {
+            auto const& routes = runtime->Graph;
+
+            for (size_t i = 0; i < routes.States.size() && i < runtime->States.size(); i++)
+            {
+                auto const& planned = routes.States[i];
+                auto const& state = runtime->States[i];
+
+                if (planned.Kind == ::midipatchbay::BlockKind::CiResponder &&
+                    planned.Cell < routes.Cells.size() && routes.Cells[planned.Cell] == cell &&
+                    state != nullptr && state->Ci != nullptr)
+                {
+                    return state->Ci->Snapshot();
+                }
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to read what a MIDI-CI step has been doing.")
+
+        return std::nullopt;
     }
 
     _Use_decl_annotations_

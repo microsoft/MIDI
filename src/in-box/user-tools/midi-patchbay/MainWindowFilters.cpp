@@ -297,6 +297,12 @@ namespace winrt::midipatchbay::implementation
                 co_return;
             }
 
+            if (EditsInInspector(block->Kind))
+            {
+                FocusStepSettings(blockId);
+                co_return;
+            }
+
             m_editingBlockId = blockId;
 
             auto const editingDone = wil::scope_exit([this]() { m_editingBlockId.clear(); });
@@ -440,16 +446,6 @@ namespace winrt::midipatchbay::implementation
             BlockSummaryText().Text(resources::FormatString(L"BlockDialogSummaryFormat",
                 patchbay::DescribeBlock(m_editingKind, settings)));
 
-            if (m_transposeExampleText != nullptr)
-            {
-                // Middle C, so the example means something to a musician.
-                constexpr uint8_t exampleNote = 60;
-
-                m_transposeExampleText.Text(resources::FormatString(L"TransformTransposeExampleFormat",
-                    patchbay::DescribeNote(exampleNote),
-                    patchbay::DescribeNote(settings.Transform.ResultingNote(exampleNote))));
-            }
-
             DrawVelocityCurve();
             DrawShapePreviews();
         }
@@ -476,7 +472,6 @@ namespace winrt::midipatchbay::implementation
             m_valueToggles.clear();
             m_maskConditionsPanel = nullptr;
 
-            m_transposeExampleText = nullptr;
             m_velocityCurveCanvas = nullptr;
             m_fixedVelocityBox = nullptr;
             m_minimumVelocityBox = nullptr;
@@ -487,16 +482,14 @@ namespace winrt::midipatchbay::implementation
             m_controlValuePreviews.clear();
             m_shapeRangeBoxes.clear();
 
-            m_swingCaption = nullptr;
-            m_startTimeBox = nullptr;
-            m_startTimeCaption = nullptr;
             m_lfoRateCaption = nullptr;
             m_lfoIntervalCaption = nullptr;
             m_lfoNumberBox = nullptr;
             m_lfoBankBox = nullptr;
             m_lfoIndexBox = nullptr;
             m_lfoProtocolButtons = nullptr;
-            m_dividerCaption = nullptr;
+            m_parameterRowsPanel = nullptr;
+            m_gateTriggerPanels = { nullptr, nullptr };
 
             for (auto& panel : m_mapPanels)
             {
@@ -514,41 +507,29 @@ namespace winrt::midipatchbay::implementation
                 BuildMessageTypeSections();
                 break;
 
-            case patchbay::BlockKind::ChannelFilter:
-                BuildChannelSection();
-                break;
-
-            case patchbay::BlockKind::GroupFilter:
-                BuildGroupFilterSection();
-                break;
-
             case patchbay::BlockKind::NoteFilter:
             case patchbay::BlockKind::ControlChangeFilter:
                 BuildValueSetSection();
-                break;
-
-            case patchbay::BlockKind::VelocityFilter:
-                BuildVelocityFilterSection();
                 break;
 
             case patchbay::BlockKind::MessageMaskFilter:
                 BuildMaskSection();
                 break;
 
-            case patchbay::BlockKind::ClockGenerator:
-                BuildClockGeneratorSections();
-                break;
-
-            case patchbay::BlockKind::TimeCodeGenerator:
-                BuildTimeCodeGeneratorSections();
-                break;
-
             case patchbay::BlockKind::LfoGenerator:
                 BuildLfoGeneratorSections();
                 break;
 
-            case patchbay::BlockKind::ClockDivider:
-                BuildClockDividerSection();
+            case patchbay::BlockKind::ParameterFilter:
+                BuildParameterFilterSection();
+                break;
+
+            case patchbay::BlockKind::ParameterTransform:
+                BuildParameterTransformSection();
+                break;
+
+            case patchbay::BlockKind::Gate:
+                BuildGateSections();
                 break;
 
             default:
@@ -711,155 +692,6 @@ namespace winrt::midipatchbay::implementation
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the message type sections.")
-    }
-
-    void MainWindow::BuildChannelSection() noexcept
-    {
-        try
-        {
-            auto weak = get_weak();
-
-            controls::StackPanel body{};
-            body.Spacing(4);
-
-            body.Children().Append(SectionHeading(resources::GetString(L"FilterSectionChannels")));
-            body.Children().Append(SectionHint(resources::GetString(L"FilterSectionChannelsHint")));
-
-            controls::VariableSizedWrapGrid grid{};
-            grid.Orientation(controls::Orientation::Horizontal);
-            grid.MaximumRowsOrColumns(4);
-            grid.ItemWidth(116);
-            grid.ItemHeight(32);
-
-            std::vector<controls::CheckBox> checks{};
-
-            for (size_t i = 0; i < patchbay::ChannelCount; i++)
-            {
-                controls::CheckBox check{};
-
-                // Channels are numbered from one everywhere a musician sees them.
-                check.Content(winrt::box_value(resources::FormatString(L"FilterChannelFormat", static_cast<int>(i) + 1)));
-                check.IsChecked(m_editingFilter.Channels[i]);
-                check.MinWidth(0);
-
-                check.Checked([weak, i](auto&&, auto&&)
-                    {
-                        if (auto s = weak.get()) { s->m_editingFilter.Channels[i] = true; s->UpdateBlockSummary(); }
-                    });
-
-                check.Unchecked([weak, i](auto&&, auto&&)
-                    {
-                        if (auto s = weak.get()) { s->m_editingFilter.Channels[i] = false; s->UpdateBlockSummary(); }
-                    });
-
-                grid.Children().Append(check);
-                checks.push_back(check);
-            }
-
-            body.Children().Append(grid);
-
-            controls::StackPanel buttons{};
-            buttons.Orientation(controls::Orientation::Horizontal);
-            buttons.Spacing(8);
-            buttons.Margin(xaml::ThicknessHelper::FromLengths(0, 6, 0, 0));
-
-            for (auto const all : { true, false })
-            {
-                controls::Button button{};
-
-                button.Content(winrt::box_value(resources::GetString(all ? L"FilterSelectAll" : L"FilterSelectNone")));
-
-                // Setting each box raises its own handler, which keeps the copy in step.
-                button.Click([checks, all](auto&&, auto&&)
-                    {
-                        for (auto const& check : checks)
-                        {
-                            check.IsChecked(all);
-                        }
-                    });
-
-                buttons.Children().Append(button);
-            }
-
-            body.Children().Append(buttons);
-
-            BlockDialogContent().Children().Append(FilterCard(body));
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the channel section.")
-    }
-
-    void MainWindow::BuildGroupFilterSection() noexcept
-    {
-        try
-        {
-            auto weak = get_weak();
-
-            controls::StackPanel body{};
-            body.Spacing(4);
-
-            body.Children().Append(SectionHeading(resources::GetString(L"FilterSectionGroups")));
-            body.Children().Append(SectionHint(resources::GetString(L"FilterSectionGroupsHint")));
-
-            controls::VariableSizedWrapGrid grid{};
-            grid.Orientation(controls::Orientation::Horizontal);
-            grid.MaximumRowsOrColumns(4);
-            grid.ItemWidth(116);
-            grid.ItemHeight(32);
-
-            std::vector<controls::CheckBox> checks{};
-
-            for (size_t i = 0; i < m_editingSettings.Groups.size(); i++)
-            {
-                controls::CheckBox check{};
-
-                // Groups are counted from one on screen, the same as channels.
-                check.Content(winrt::box_value(resources::FormatString(L"FilterGroupFormat", static_cast<int>(i) + 1)));
-                check.IsChecked(m_editingSettings.Groups[i]);
-                check.MinWidth(0);
-
-                check.Checked([weak, i](auto&&, auto&&)
-                    {
-                        if (auto s = weak.get()) { s->m_editingSettings.Groups[i] = true; s->UpdateBlockSummary(); }
-                    });
-
-                check.Unchecked([weak, i](auto&&, auto&&)
-                    {
-                        if (auto s = weak.get()) { s->m_editingSettings.Groups[i] = false; s->UpdateBlockSummary(); }
-                    });
-
-                grid.Children().Append(check);
-                checks.push_back(check);
-            }
-
-            body.Children().Append(grid);
-
-            controls::StackPanel buttons{};
-            buttons.Orientation(controls::Orientation::Horizontal);
-            buttons.Spacing(8);
-            buttons.Margin(xaml::ThicknessHelper::FromLengths(0, 6, 0, 0));
-
-            for (auto const all : { true, false })
-            {
-                controls::Button button{};
-
-                button.Content(winrt::box_value(resources::GetString(all ? L"FilterSelectAll" : L"FilterSelectNone")));
-
-                button.Click([checks, all](auto&&, auto&&)
-                    {
-                        for (auto const& check : checks)
-                        {
-                            check.IsChecked(all);
-                        }
-                    });
-
-                buttons.Children().Append(button);
-            }
-
-            body.Children().Append(buttons);
-
-            BlockDialogContent().Children().Append(FilterCard(body));
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the group section.")
     }
 
     void MainWindow::BuildValueSetSection() noexcept
@@ -1595,147 +1427,6 @@ namespace winrt::midipatchbay::implementation
             UpdateBlockSummary();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to use a learned value.")
-    }
-
-    void MainWindow::BuildVelocityFilterSection() noexcept
-    {
-        try
-        {
-            auto weak = get_weak();
-            auto const& range = m_editingSettings.Velocities;
-
-            controls::StackPanel body{};
-            body.Spacing(8);
-
-            body.Children().Append(SectionHeading(resources::GetString(L"FilterSectionVelocities")));
-            body.Children().Append(SectionHint(resources::GetString(L"FilterSectionVelocitiesHint")));
-
-            auto action = ChoiceButtons(
-                resources::GetString(L"FilterActionHeader"),
-                { resources::GetString(L"FilterActionLetThrough"), resources::GetString(L"FilterActionKeepOut") },
-                range.Action == patchbay::FilterAction::KeepOut ? 1 : 0);
-
-            action.SelectionChanged([weak](foundation::IInspectable const& sender, auto&&)
-                {
-                    auto s = weak.get();
-                    auto const list = sender.try_as<controls::RadioButtons>();
-
-                    if (s == nullptr || list == nullptr || list.SelectedIndex() < 0)
-                    {
-                        return;
-                    }
-
-                    s->m_editingSettings.Velocities.Action = list.SelectedIndex() == 1
-                        ? patchbay::FilterAction::KeepOut
-                        : patchbay::FilterAction::LetThrough;
-
-                    s->UpdateBlockSummary();
-                });
-
-            body.Children().Append(action);
-
-            auto scale = ChoiceButtons(
-                resources::GetString(L"TransformValueScale"),
-                { resources::GetString(L"TransformValueScaleSevenBit"), resources::GetString(L"TransformValueScalePercent") },
-                range.Scale == patchbay::ValueScale::Percent ? 1 : 0);
-
-            body.Children().Append(scale);
-
-            controls::StackPanel boxes{};
-            boxes.Orientation(controls::Orientation::Horizontal);
-            boxes.Spacing(12);
-
-            auto const lowBox = NumberField(resources::GetString(L"FilterVelocityLowest"), 0, 127, 0);
-            auto const highBox = NumberField(resources::GetString(L"FilterVelocityHighest"), 0, 127, 127);
-
-            boxes.Children().Append(lowBox);
-            boxes.Children().Append(highBox);
-
-            body.Children().Append(boxes);
-
-            // The maximum moves before the value does, or a 127 would be clamped to 100 on its way
-            // through a box that is about to show percent.
-            auto const applyScale = [lowBox, highBox](patchbay::VelocityRange const& velocities)
-                {
-                    auto const isPercent = velocities.Scale == patchbay::ValueScale::Percent;
-
-                    winrt::Windows::Globalization::NumberFormatting::DecimalFormatter formatter{};
-
-                    formatter.IntegerDigits(1);
-                    formatter.FractionDigits(isPercent ? 2 : 0);
-                    formatter.IsGrouped(false);
-
-                    lowBox.NumberFormatter(formatter);
-                    lowBox.Maximum(isPercent ? 100.0 : 127.0);
-                    lowBox.Value(patchbay::DisplayFromHundredths(velocities.LowestHundredths, velocities.Scale));
-
-                    highBox.NumberFormatter(formatter);
-                    highBox.Maximum(isPercent ? 100.0 : 127.0);
-                    highBox.Value(patchbay::DisplayFromHundredths(velocities.HighestHundredths, velocities.Scale));
-                };
-
-            lowBox.ValueChanged([weak](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
-                {
-                    auto s = weak.get();
-
-                    if (s == nullptr || s->m_updatingValueSet || std::isnan(args.NewValue()))
-                    {
-                        return;
-                    }
-
-                    auto& velocities = s->m_editingSettings.Velocities;
-                    velocities.LowestHundredths = patchbay::HundredthsFromDisplay(args.NewValue(), velocities.Scale);
-
-                    s->UpdateBlockSummary();
-                });
-
-            highBox.ValueChanged([weak](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
-                {
-                    auto s = weak.get();
-
-                    if (s == nullptr || s->m_updatingValueSet || std::isnan(args.NewValue()))
-                    {
-                        return;
-                    }
-
-                    auto& velocities = s->m_editingSettings.Velocities;
-                    velocities.HighestHundredths = patchbay::HundredthsFromDisplay(args.NewValue(), velocities.Scale);
-
-                    s->UpdateBlockSummary();
-                });
-
-            scale.SelectionChanged([weak, applyScale](foundation::IInspectable const& sender, auto&&)
-                {
-                    auto s = weak.get();
-                    auto const list = sender.try_as<controls::RadioButtons>();
-
-                    if (s == nullptr || list == nullptr || list.SelectedIndex() < 0)
-                    {
-                        return;
-                    }
-
-                    s->m_editingSettings.Velocities.Scale = list.SelectedIndex() == 1
-                        ? patchbay::ValueScale::Percent
-                        : patchbay::ValueScale::SevenBit;
-
-                    s->m_updatingValueSet = true;
-                    applyScale(s->m_editingSettings.Velocities);
-                    s->m_updatingValueSet = false;
-
-                    s->UpdateBlockSummary();
-                });
-
-            m_updatingValueSet = true;
-            applyScale(m_editingSettings.Velocities);
-            m_updatingValueSet = false;
-
-            BlockDialogContent().Children().Append(FilterCard(body));
-        }
-        catch (...)
-        {
-            m_updatingValueSet = false;
-            MIDI_PATCHBAY_LOG_GENERAL_EXCEPTION(L"Unable to build the velocity section.");
-        }
     }
 
     void MainWindow::BuildMaskSection() noexcept

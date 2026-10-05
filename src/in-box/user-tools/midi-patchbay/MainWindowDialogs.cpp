@@ -993,7 +993,7 @@ namespace winrt::midipatchbay::implementation
                 }
                 else
                 {
-                    if (block->Kind != patchbay::BlockKind::Throttle)
+                    if (!EditsInInspector(block->Kind))
                     {
                         addItem(resources::GetString(L"ActionEditStep"),
                             [blockId](MainWindow& window) { window.ShowBlockDialogAsync(blockId); });

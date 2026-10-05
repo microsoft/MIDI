@@ -225,12 +225,9 @@ namespace winrt::midipatchbay::implementation
         ::midipatchbay::BlockSettings EditedSettings() noexcept;
 
         void BuildMessageTypeSections() noexcept;
-        void BuildChannelSection() noexcept;
-        void BuildGroupFilterSection() noexcept;
         void BuildValueSetSection() noexcept;
         void RefreshValueSetUi() noexcept;
         void OnValueKeyPressed(_In_ uint8_t value, _In_ bool shift) noexcept;
-        void BuildVelocityFilterSection() noexcept;
         void BuildMaskSection() noexcept;
         void RebuildMaskConditions() noexcept;
 
@@ -247,18 +244,20 @@ namespace winrt::midipatchbay::implementation
         void BuildTransposeSection() noexcept;
         void BuildVelocitySection() noexcept;
         void BuildGroupMapSection() noexcept;
-        void BuildThrottleSection() noexcept;
 
-        // ---- generators and the clock divider, in MainWindowGenerators.cpp ----
-        void BuildClockGeneratorSections() noexcept;
-        void BuildTimeCodeGeneratorSections() noexcept;
+        // ---- generators, in MainWindowGenerators.cpp ----
         void BuildLfoGeneratorSections() noexcept;
-        void BuildClockDividerSection() noexcept;
         controls::Border BuildGeneratorGroupCard(_Inout_ uint8_t* group) noexcept;
-        void ApplyStartTimeText() noexcept;
         void RefreshLfoMessageUi() noexcept;
         void RefreshGeneratorCaptions() noexcept;
         bool LfoFollowsClock(_In_ std::wstring const& blockId) noexcept;
+
+        // ---- (N)RPN filter and transform, and the gate, in MainWindowParameterSteps.cpp ----
+        void BuildParameterFilterSection() noexcept;
+        void BuildParameterTransformSection() noexcept;
+        void RebuildParameterRows() noexcept;
+        void BuildGateSections() noexcept;
+        void RebuildGateTrigger(_In_ bool open) noexcept;
 
         // The mapping tables are edited the same way, so one set of row functions drives them all.
         controls::StackPanel BuildMapSection(_In_ TransformMap which) noexcept;
@@ -290,6 +289,26 @@ namespace winrt::midipatchbay::implementation
 
         // Selects the annotation and puts the cursor in its text, ready to type.
         void FocusAnnotationText(_In_ std::wstring const& blockId) noexcept;
+
+        // ---- settings edited in the inspector, in MainWindowStepSettings.cpp ----
+        static bool EditsInInspector(_In_ ::midipatchbay::BlockKind kind) noexcept;
+        void BuildStepSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
+        void FocusStepSettings(_In_ std::wstring const& blockId) noexcept;
+
+        // Kept and routed at once. Returns what was kept, or nothing when nothing changed.
+        std::optional<::midipatchbay::BlockSettings> ChangeStepSettings(
+            _In_ std::wstring const& blockId,
+            _In_ std::function<void(::midipatchbay::BlockSettings&)> const& change) noexcept;
+
+        // ---- MIDI-CI steps, in MainWindowCapabilityInquiry.cpp ----
+        void BuildCiResponderSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
+        void BuildCiFilterSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
+
+        // What a responder's file says and what it has been answering, for the activity section.
+        winrt::hstring CiStatusText(_In_ std::wstring const& blockId) noexcept;
+
+        // A file from anywhere, copied into the patch folder when it isn't there already.
+        void ChooseCiFile(_In_ std::wstring const& blockId, _In_ controls::TextBox const& nameBox) noexcept;
 
         // The steps a customer can put into a link, by category.
         controls::MenuFlyout BuildAddStepMenu(_In_ std::wstring const& connectionId) noexcept;
@@ -367,8 +386,18 @@ namespace winrt::midipatchbay::implementation
         controls::TextBlock m_activityText{ nullptr };
         std::wstring m_activityElementId{};
 
+        // A MIDI-CI responder's file and what it has been answering, under its activity.
+        controls::TextBlock m_ciStatusText{ nullptr };
+
         // The selected annotation's text box, so double-clicking the annotation goes straight to it.
         controls::TextBox m_annotationTextBox{ nullptr };
+
+        // The selected step's summary and the control a double-click goes to.
+        controls::TextBlock m_inspectorSummary{ nullptr };
+        controls::Control m_stepSettingsFocus{ nullptr };
+
+        // Set while code changes a settings control, so its handler doesn't save it again.
+        bool m_updatingStepSettings{ false };
 
         // Typed into the patch but not yet a step for Undo.
         bool m_annotationTextChanged{ false };
@@ -430,7 +459,6 @@ namespace winrt::midipatchbay::implementation
         controls::NumberBox m_minimumVelocityBox{ nullptr };
         controls::NumberBox m_maximumVelocityBox{ nullptr };
         controls::CheckBox m_velocityRescaleCheck{ nullptr };
-        controls::TextBlock m_transposeExampleText{ nullptr };
         controls::Canvas m_velocityCurveCanvas{ nullptr };
         bool m_applyingValueScale{ false };
 
@@ -462,16 +490,16 @@ namespace winrt::midipatchbay::implementation
         std::vector<ShapeRangeBoxEntry> m_shapeRangeBoxes{};
 
         // The generator sections' parts that follow another setting.
-        controls::TextBlock m_swingCaption{ nullptr };
-        controls::TextBox m_startTimeBox{ nullptr };
-        controls::TextBlock m_startTimeCaption{ nullptr };
         controls::TextBlock m_lfoRateCaption{ nullptr };
         controls::TextBlock m_lfoIntervalCaption{ nullptr };
         controls::NumberBox m_lfoNumberBox{ nullptr };
         controls::NumberBox m_lfoBankBox{ nullptr };
         controls::NumberBox m_lfoIndexBox{ nullptr };
         controls::RadioButtons m_lfoProtocolButtons{ nullptr };
-        controls::TextBlock m_dividerCaption{ nullptr };
+
+        // The (N)RPN rows and the gate's two triggers, rebuilt as they change.
+        controls::StackPanel m_parameterRowsPanel{ nullptr };
+        std::array<controls::StackPanel, 2> m_gateTriggerPanels{ nullptr, nullptr };
 
         // Where the audition button plays, captured when the dialog opens.
         std::wstring m_testEndpointDeviceId{};

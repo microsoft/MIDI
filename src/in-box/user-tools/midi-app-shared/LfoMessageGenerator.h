@@ -45,6 +45,10 @@ namespace midiapp
         // BeatsPerCycle beats of that clock, and its Start puts the sweep back at the top. Fixed
         // when the sweep starts.
         bool FollowsClock{ false };
+
+        // With FollowsClock: waits for Start or Continue, and Stop holds the sweep (sending the
+        // middle of the range first when ReturnsToMiddleWhenStopped).
+        bool KeepsToStartAndStop{ false };
     };
 
     // Sends an LFO sweep as channel voice messages. The same shape as BeatClockGenerator, and for
@@ -78,8 +82,9 @@ namespace midiapp
         // sweep has reached, so changing the rate does not jump the wave back to its start.
         void Options(_In_ LfoMessageGeneratorOptions const& options) noexcept;
 
-        // Timing clock, start and song position from the clock a sweep that FollowsClock keeps
-        // in step with, at the time each plays. Anything else is ignored. Safe from any thread.
+        // Timing clock, start, continue, stop and song position from the clock a sweep that
+        // FollowsClock keeps in step with, at the time each plays. Anything else is ignored.
+        // Safe from any thread.
         void ReceiveClock(
             _In_ uint64_t timestamp,
             _In_reads_(wordCount) uint32_t const* words,

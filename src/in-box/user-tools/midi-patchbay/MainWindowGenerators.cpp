@@ -149,264 +149,6 @@ namespace winrt::midipatchbay::implementation
         }
     }
 
-    void MainWindow::BuildClockGeneratorSections() noexcept
-    {
-        try
-        {
-            auto weak = get_weak();
-            auto const content = BlockDialogContent();
-            auto const& clock = m_editingSettings.Clock;
-
-            // ------------------------------------------------------------ tempo
-            {
-                controls::StackPanel body{};
-                body.Spacing(4);
-
-                body.Children().Append(GeneratorHeading(resources::GetString(L"GeneratorSectionTempo")));
-                body.Children().Append(GeneratorHint(resources::GetString(L"GeneratorClockTempoHint")));
-
-                auto tempo = GeneratorNumberBox(resources::GetString(L"GeneratorBeatsPerMinute"),
-                    patchbay::MinimumGeneratorBeatsPerMinute, patchbay::MaximumGeneratorBeatsPerMinute,
-                    clock.BeatsPerMinute);
-
-                tempo.Width(220);
-
-                tempo.ValueChanged([weak](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
-                    {
-                        auto s = weak.get();
-
-                        if (s == nullptr || std::isnan(args.NewValue()))
-                        {
-                            return;
-                        }
-
-                        s->m_editingSettings.Clock.BeatsPerMinute = RoundedTempo(args.NewValue());
-                        s->UpdateBlockSummary();
-                    });
-
-                body.Children().Append(tempo);
-
-                controls::CheckBox startStop{};
-
-                startStop.Content(winrt::box_value(resources::GetString(L"GeneratorSendStartStop")));
-                startStop.IsChecked(clock.SendStartStop);
-                startStop.Margin(xaml::ThicknessHelper::FromLengths(0, 8, 0, 0));
-
-                auto const setStartStop = [weak](bool value)
-                    {
-                        if (auto s = weak.get())
-                        {
-                            s->m_editingSettings.Clock.SendStartStop = value;
-                            s->UpdateBlockSummary();
-                        }
-                    };
-
-                startStop.Checked([setStartStop](auto&&, auto&&) { setStartStop(true); });
-                startStop.Unchecked([setStartStop](auto&&, auto&&) { setStartStop(false); });
-
-                body.Children().Append(startStop);
-                body.Children().Append(GeneratorHint(resources::GetString(L"GeneratorSendStartStopHint")));
-
-                content.Children().Append(GeneratorCard(body));
-            }
-
-            // ------------------------------------------------------------ swing
-            {
-                controls::StackPanel body{};
-                body.Spacing(4);
-
-                body.Children().Append(GeneratorHeading(resources::GetString(L"GeneratorSectionSwing")));
-
-                auto row = GeneratorRow();
-
-                auto swing = GeneratorNumberBox(resources::GetString(L"GeneratorSwingPercent"), 50, 75, clock.SwingPercent);
-
-                swing.ValueChanged([weak](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
-                    {
-                        auto s = weak.get();
-
-                        if (s == nullptr || std::isnan(args.NewValue()))
-                        {
-                            return;
-                        }
-
-                        s->m_editingSettings.Clock.SwingPercent = std::round(std::clamp(args.NewValue(), 50.0, 75.0));
-                        s->RefreshGeneratorCaptions();
-                        s->UpdateBlockSummary();
-                    });
-
-                row.Children().Append(swing);
-
-                controls::ComboBox subdivision{};
-
-                subdivision.Header(winrt::box_value(resources::GetString(L"GeneratorSwingAppliesTo")));
-                subdivision.MinWidth(180);
-                subdivision.Items().Append(winrt::box_value(resources::GetString(L"GeneratorSwingEighths")));
-                subdivision.Items().Append(winrt::box_value(resources::GetString(L"GeneratorSwingSixteenths")));
-                subdivision.SelectedIndex(clock.SwingSubdivision == 4 ? 1 : 0);
-
-                subdivision.SelectionChanged([weak](foundation::IInspectable const& sender, auto&&)
-                    {
-                        auto s = weak.get();
-                        auto const combo = sender.try_as<controls::ComboBox>();
-
-                        if (s == nullptr || combo == nullptr || combo.SelectedIndex() < 0)
-                        {
-                            return;
-                        }
-
-                        s->m_editingSettings.Clock.SwingSubdivision = combo.SelectedIndex() == 1 ? 4 : 2;
-                        s->UpdateBlockSummary();
-                    });
-
-                row.Children().Append(subdivision);
-                body.Children().Append(row);
-
-                m_swingCaption = GeneratorCaption();
-                body.Children().Append(m_swingCaption);
-
-                content.Children().Append(GeneratorCard(body));
-            }
-
-            content.Children().Append(BuildGeneratorGroupCard(&m_editingSettings.Clock.Group));
-
-            RefreshGeneratorCaptions();
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the clock sections.")
-    }
-
-    void MainWindow::BuildTimeCodeGeneratorSections() noexcept
-    {
-        try
-        {
-            auto weak = get_weak();
-            auto const content = BlockDialogContent();
-            auto const& timeCode = m_editingSettings.TimeCode;
-
-            controls::StackPanel body{};
-            body.Spacing(4);
-
-            body.Children().Append(GeneratorHeading(resources::GetString(L"GeneratorSectionTimeCode")));
-            body.Children().Append(GeneratorHint(resources::GetString(L"GeneratorTimeCodeHint")));
-
-            auto row = GeneratorRow();
-
-            // In the order of the format's own rate codes, so the index is the code.
-            controls::ComboBox rate{};
-
-            rate.Header(winrt::box_value(resources::GetString(L"GeneratorFrameRate")));
-            rate.MinWidth(280);
-
-            for (auto const each : { midiapp::MidiTimeCodeFrameRate::Frames24, midiapp::MidiTimeCodeFrameRate::Frames25,
-                                     midiapp::MidiTimeCodeFrameRate::Frames2997Drop, midiapp::MidiTimeCodeFrameRate::Frames30 })
-            {
-                rate.Items().Append(winrt::box_value(patchbay::DescribeFrameRate(each, true)));
-            }
-
-            rate.SelectedIndex(static_cast<int32_t>(timeCode.FrameRate));
-
-            rate.SelectionChanged([weak](foundation::IInspectable const& sender, auto&&)
-                {
-                    auto s = weak.get();
-                    auto const combo = sender.try_as<controls::ComboBox>();
-
-                    if (s == nullptr || combo == nullptr || combo.SelectedIndex() < 0)
-                    {
-                        return;
-                    }
-
-                    auto& settings = s->m_editingSettings.TimeCode;
-
-                    settings.FrameRate = midiapp::FrameRateFromValue(combo.SelectedIndex());
-
-                    // A frame number can be too high for the new rate, or one 29.97 skips.
-                    settings.Start = midiapp::ClampPosition(settings.Start, settings.FrameRate);
-
-                    s->ApplyStartTimeText();
-                    s->UpdateBlockSummary();
-                });
-
-            row.Children().Append(rate);
-
-            m_startTimeBox = controls::TextBox{};
-            m_startTimeBox.Header(winrt::box_value(resources::GetString(L"GeneratorStartAt")));
-            m_startTimeBox.PlaceholderText(L"00:00:00:00");
-            m_startTimeBox.Width(150);
-            m_startTimeBox.MaxLength(16);
-            m_startTimeBox.Text(winrt::hstring{ midiapp::FormatPosition(timeCode.Start, timeCode.FrameRate) });
-
-            m_startTimeBox.TextChanged([weak](auto&&, auto&&)
-                {
-                    if (auto s = weak.get())
-                    {
-                        s->ApplyStartTimeText();
-                        s->UpdateBlockSummary();
-                    }
-                });
-
-            row.Children().Append(m_startTimeBox);
-            body.Children().Append(row);
-
-            m_startTimeCaption = GeneratorCaption();
-            body.Children().Append(m_startTimeCaption);
-
-            controls::CheckBox fullFrame{};
-
-            fullFrame.Content(winrt::box_value(resources::GetString(L"GeneratorSendFullFrame")));
-            fullFrame.IsChecked(timeCode.SendFullFrame);
-            fullFrame.Margin(xaml::ThicknessHelper::FromLengths(0, 8, 0, 0));
-
-            auto const setFullFrame = [weak](bool value)
-                {
-                    if (auto s = weak.get())
-                    {
-                        s->m_editingSettings.TimeCode.SendFullFrame = value;
-                        s->UpdateBlockSummary();
-                    }
-                };
-
-            fullFrame.Checked([setFullFrame](auto&&, auto&&) { setFullFrame(true); });
-            fullFrame.Unchecked([setFullFrame](auto&&, auto&&) { setFullFrame(false); });
-
-            body.Children().Append(fullFrame);
-            body.Children().Append(GeneratorHint(resources::GetString(L"GeneratorSendFullFrameHint")));
-
-            content.Children().Append(GeneratorCard(body));
-            content.Children().Append(BuildGeneratorGroupCard(&m_editingSettings.TimeCode.Group));
-
-            ApplyStartTimeText();
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the time code sections.")
-    }
-
-    // What doesn't read as a time keeps the last start that did, and says how to write one.
-    void MainWindow::ApplyStartTimeText() noexcept
-    {
-        try
-        {
-            if (m_startTimeBox == nullptr || m_startTimeCaption == nullptr)
-            {
-                return;
-            }
-
-            auto& settings = m_editingSettings.TimeCode;
-            midiapp::MidiTimeCodePosition position{};
-
-            if (midiapp::TryParsePosition(std::wstring_view{ m_startTimeBox.Text() }, settings.FrameRate, position))
-            {
-                settings.Start = midiapp::ClampPosition(position, settings.FrameRate);
-
-                m_startTimeCaption.Text(resources::FormatString(L"GeneratorStartReadingFormat",
-                    midiapp::FormatPosition(settings.Start, settings.FrameRate)));
-            }
-            else
-            {
-                m_startTimeCaption.Text(resources::GetString(L"GeneratorStartNotUnderstood"));
-            }
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to read the start time.")
-    }
-
     void MainWindow::BuildLfoGeneratorSections() noexcept
     {
         try
@@ -812,6 +554,27 @@ namespace winrt::midipatchbay::implementation
                 body.Children().Append(center);
                 body.Children().Append(GeneratorHint(resources::GetString(L"GeneratorReturnToCenterHint")));
 
+                controls::CheckBox startStop{};
+
+                startStop.Content(winrt::box_value(resources::GetString(L"GeneratorLfoStartStop")));
+                startStop.IsChecked(lfo.KeepsToStartAndStop);
+                startStop.Margin(xaml::ThicknessHelper::FromLengths(0, 8, 0, 0));
+
+                auto const setStartStop = [weak](bool value)
+                    {
+                        if (auto s = weak.get())
+                        {
+                            s->m_editingSettings.Lfo.KeepsToStartAndStop = value;
+                            s->UpdateBlockSummary();
+                        }
+                    };
+
+                startStop.Checked([setStartStop](auto&&, auto&&) { setStartStop(true); });
+                startStop.Unchecked([setStartStop](auto&&, auto&&) { setStartStop(false); });
+
+                body.Children().Append(startStop);
+                body.Children().Append(GeneratorHint(resources::GetString(L"GeneratorLfoStartStopHint")));
+
                 content.Children().Append(GeneratorCard(body));
             }
 
@@ -864,49 +627,6 @@ namespace winrt::midipatchbay::implementation
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to update the LFO message settings.")
-    }
-
-    void MainWindow::BuildClockDividerSection() noexcept
-    {
-        try
-        {
-            auto weak = get_weak();
-
-            controls::StackPanel body{};
-            body.Spacing(4);
-
-            body.Children().Append(GeneratorHeading(resources::GetString(L"DividerSection")));
-            body.Children().Append(GeneratorHint(resources::GetString(L"DividerHint")));
-
-            auto divideBy = GeneratorNumberBox(resources::GetString(L"DividerDivideBy"),
-                1, patchbay::MaximumClockDivision, m_editingSettings.ClockDivision);
-
-            divideBy.ValueChanged([weak](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
-                {
-                    auto s = weak.get();
-
-                    if (s == nullptr || std::isnan(args.NewValue()))
-                    {
-                        return;
-                    }
-
-                    s->m_editingSettings.ClockDivision = static_cast<uint32_t>(std::lround(std::clamp(args.NewValue(),
-                        1.0, static_cast<double>(patchbay::MaximumClockDivision))));
-
-                    s->RefreshGeneratorCaptions();
-                    s->UpdateBlockSummary();
-                });
-
-            body.Children().Append(divideBy);
-
-            m_dividerCaption = GeneratorCaption();
-            body.Children().Append(m_dividerCaption);
-
-            BlockDialogContent().Children().Append(GeneratorCard(body));
-
-            RefreshGeneratorCaptions();
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the clock divider section.")
     }
 
     _Use_decl_annotations_
@@ -966,15 +686,6 @@ namespace winrt::midipatchbay::implementation
     {
         try
         {
-            if (m_swingCaption != nullptr)
-            {
-                auto const swing = static_cast<int>(std::lround(m_editingSettings.Clock.SwingPercent));
-
-                m_swingCaption.Text(swing <= 50
-                    ? resources::GetString(L"GeneratorSwingStraight")
-                    : resources::FormatString(L"GeneratorSwingValueFormat", swing));
-            }
-
             if (m_lfoRateCaption != nullptr)
             {
                 auto const& lfo = m_editingSettings.Lfo;
@@ -1001,14 +712,6 @@ namespace winrt::midipatchbay::implementation
                     1000.0 / (std::max)(m_editingSettings.Lfo.IntervalMilliseconds, 1)));
 
                 m_lfoIntervalCaption.Text(resources::FormatString(L"GeneratorIntervalCaptionFormat", perSecond));
-            }
-
-            if (m_dividerCaption != nullptr)
-            {
-                auto const division = (std::max)(m_editingSettings.ClockDivision, 1u);
-
-                m_dividerCaption.Text(resources::FormatString(L"DividerEffectFormat",
-                    patchbay::DescribeNumber(120.0 / division, 2)));
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to update the step's captions.")

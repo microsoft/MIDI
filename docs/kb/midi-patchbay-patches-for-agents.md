@@ -2,7 +2,7 @@
 layout: kb
 title: MIDI Patchbay patch files, a guide for AI agents
 audience: everyone
-description: How an AI agent or an online AI chat plans a Windows MIDI Patchbay patch for someone. What to ask, what Patchbay can and can't do, the .midipatch file format and its steps, showing the customer the plan, and getting the file into Patchbay.
+description: How an AI agent or an online AI chat plans a Windows MIDI Patchbay patch for someone. What to ask, what Patchbay can and can't do, the .midipatch file format and its steps, the MIDI-CI file, showing the customer the plan, and getting the file into Patchbay.
 categories:
   - Developer Guidance
 ---
@@ -34,6 +34,7 @@ On this page:
 - [What Patchbay can't do](#what-patchbay-cant-do)
 - [The patch file](#the-patch-file)
 - [Step settings](#step-settings)
+- [The MIDI-CI file](#the-midi-ci-file)
 - [Mistakes that are easy to miss](#mistakes-that-are-easy-to-miss)
 
 ## What a patch is
@@ -43,7 +44,7 @@ On this page:
 - A patch has **connections**. Each one takes what comes out of an endpoint's or a step's **Out** and sends it to another endpoint's or step's **In**.
 - Messages go through the steps in the order the connections lead them. A chain of steps between a keyboard and a synth works like a cable with each step plugged in along the way.
 - When an **Out** has more than one connection, each connection gets its own copy of every message. What a step does to one copy doesn't change the others. When more than one connection goes into the same **In**, their messages are merged.
-- There are four kinds of steps. **Filters** keep messages out. **Transforms** change messages. The **message throttler** slows messages down for a device that loses data when a lot arrives at once. **Generators** make messages of their own, such as MIDI clock, for as long as the patch is routing.
+- There are six kinds of steps. **Filters** keep messages out. **Transforms** change messages. The **message throttler** slows messages down for a device that loses data when a lot arrives at once. **Distribution** steps decide which connection out each message takes, or whether it goes at all: the **note distributor** plays several one-note synths as one, and the **gate** lets messages through between one message and another. **MIDI-CI** steps answer MIDI-CI for a MIDI 1.0 device that can't, or keep MIDI-CI away from a device. **Generators** make messages of their own, such as MIDI clock, for as long as the patch is routing.
 - A patch can have **annotations**: a line of text on the canvas, for notes such as which keyboard is which. Nothing goes into or comes out of an annotation, and it doesn't change what routes. The file keeps annotations in the same list as the steps.
 - A patch can **wait for send complete**. Then each message waits until the device's driver has taken the one before it. It covers every connection in the patch.
 - **Routing only happens while Patchbay is running.** Patchbay receives the messages and sends them on itself.
@@ -81,6 +82,11 @@ If the customer pasted a prompt from **Ask an AI assistant…** in Patchbay, it 
 | Does a device need MIDI Time Code? At what frame rate, and from what time? | That's a `timeCodeGenerator` step. |
 | Should something move up and down by itself, such as a filter sweep or a wobble? Which controller, how fast, and over how much of its range? Should it keep in step with a clock? | That's an `lfoGenerator` step. To keep it in step, connect the clock to its **In**. |
 | Would notes on the canvas help, such as which keyboard is which, or what a split is for? | That's an `annotation`: one line of text. It doesn't change what routes. |
+| Should an RPN or NRPN, such as pitch bend range, be kept out or sent as a different one? | That's an `rpnFilter` or an `rpnTransform` step. Ask for the bank and index, such as RPN 0/0. |
+| Should several one-note synths play together as one bigger synth? How should notes be shared out, and should knobs and pitch bend reach all of them? | That's a `noteDistributor` step, with one connection out to each synth, in the order they should be used. |
+| Should messages only get through at some times, such as while the sequencer plays, or while a pedal is down? | That's a `gate` step. Ask which message opens it and which closes it. |
+| Should an app, such as a DAW, see a MIDI 1.0 device as a MIDI-CI device? Ask for the device's manufacturer ID, family, model, and software version from its manual, which profiles it follows, and what an app should be able to read, such as its programs. | That's a `ciResponder` step on the path from the app to the device, with a MIDI-CI file beside the patch. See [The MIDI-CI file](#the-midi-ci-file). |
+| Does a device get confused by system exclusive it doesn't know, or should MIDI-CI be kept away from it? | That's a `ciFilter` step in front of it. |
 | Should the patch start by itself whenever Patchbay starts? | The customer turns that on in Patchbay. Tell them where. |
 
 ### 2. Plan the steps and connections
@@ -123,6 +129,13 @@ Write the plan down as a list of paths before you write the file, such as "Keybo
 | A slow filter sweep on controller 74, two bars long | An `lfoGenerator` step with `"wave": "triangle", "beatsPerCycle": 8, "message": "controlChange", "number": 74`. |
 | An LFO in step with a clock | A connection from the clock into the `lfoGenerator` step. The clock can be a `clockGenerator`, a `clockDivider`, or a device that sends MIDI clock. |
 | A note on the canvas, such as "Bass below middle C" | An `annotation` with `"text": "Bass below middle C"`, placed near what it describes. Nothing connects to it. |
+| Keep pitch bend range changes away from a synth | An `rpnFilter` step with `"action": "keepOut", "parameters": [ { "type": "rpn", "bank": 0, "index": 0 } ]`. |
+| Send NRPN 1/8 as NRPN 3/16, at half its range | An `rpnTransform` step with `"rows": [ { "from": { "type": "nrpn", "bank": 1, "index": 8 }, "to": { "bank": 3, "index": 16 }, "shape": { "outputMaximumPercent": 50 } } ]`. |
+| Four one-note synths played as one four-note synth | A `noteDistributor` step fed by the keyboard, with one connection out to each synth. |
+| Notes only get through while the sequencer plays | A `gate` step with its defaults: it opens on Start and closes on Stop. Connect the sequencer's clock and the keyboard to its **In**. |
+| Notes only get through while a pedal is down | A `gate` step with `"open": { "message": "controlChange", "number": 64, "test": "atLeast", "value": 64 }, "close": { "message": "controlChange", "number": 64, "test": "below", "value": 64 }, "startsOpen": false`. |
+| A DAW finds an older synth as a MIDI-CI device, with its program list | The DAW sends to the synth through a loopback. A `ciResponder` step goes between the loopback and the synth, with the synth's numbers and `"file": "Synth.midici"`. The file lists the programs as a `ProgramList` resource. |
+| Keep MIDI-CI away from a device | A `ciFilter` step with its defaults, in front of the device. |
 
 The numbers are explained in [Step settings](#step-settings).
 
@@ -151,15 +164,12 @@ If you're an online chat, give the customer the file as a download named after t
 
 ### 4. Check it
 
-Go through [Mistakes that are easy to miss](#mistakes-that-are-easy-to-miss) for every file. If you can run PowerShell 7, save this as `Test-MidiPatch.ps1` and run `pwsh -File Test-MidiPatch.ps1 -Path "<patch file>"`. It reads the file as strictly as Patchbay does, and lists the mistakes that load without an error.
+Go through [Mistakes that are easy to miss](#mistakes-that-are-easy-to-miss) for every file. If you can run PowerShell 7, save this as `Test-MidiPatch.ps1` and run `pwsh -File Test-MidiPatch.ps1 -Path "<patch file>"`. It reads the file as strictly as Patchbay does, and lists the mistakes that load without an error. It also checks each [MIDI-CI file](#the-midi-ci-file) the patch names, when it's in the same folder. To check a MIDI-CI file on its own, give its path instead.
 
 ```powershell
 param([Parameter(Mandatory)][string]$Path)
 $ErrorActionPreference = 'Stop'
 
-$text = [IO.File]::ReadAllText($Path)
-$null = [Text.Json.JsonDocument]::Parse($text)   # throws on a comment, a trailing comma, or a hexadecimal number
-$patch = $text | ConvertFrom-Json
 $problems = [Collections.Generic.List[string]]::new()
 
 function Test-Number($Value) { $Value -is [long] -or $Value -is [int] -or $Value -is [double] -or $Value -is [decimal] }
@@ -197,6 +207,109 @@ function Test-ValueSet($Settings, [string]$One, [string]$Many, [string]$Where) {
     if ($mode -ceq 'list' -and (Get-List $Settings.$Many).Count -eq 0) { $problems.Add("$Where has an empty $Many list. With letThrough nothing it looks at gets through, and with keepOut it does nothing.") }
 }
 
+function Test-Parameter($Item, [string[]]$Types, [string]$Where) {
+    Test-Keys $Item @('type', 'bank', 'index') $Where
+    Test-Choice $Item.type $Types $Where 'type'
+    foreach ($key in 'bank', 'index') { if (-not (Test-Range $Item.$key 0 127)) { $problems.Add("$Where has a $key outside 0 to 127. Leave it out for any.") } }
+}
+function Test-Trigger($Trigger, [string]$Where) {
+    if ($null -eq $Trigger) { return }
+    Test-Keys $Trigger @('message', 'group', 'channel', 'number', 'test', 'value', 'messageWords') $Where
+    Test-Choice $Trigger.message @('noteOn', 'noteOff', 'controlChange', 'programChange', 'start', 'continue', 'stop', 'words') $Where 'message'
+    if (-not (Test-Range $Trigger.group 0 15) -or -not (Test-Range $Trigger.channel 0 15)) { $problems.Add("$Where has a group or channel outside 0 to 15. The file counts from 0, and leaving it out means any.") }
+    if (-not (Test-Range $Trigger.number 0 127) -or -not (Test-Range $Trigger.value 0 127)) { $problems.Add("$Where has a number or value outside 0 to 127.") }
+    Test-Choice $Trigger.test @('any', 'atLeast', 'below') $Where 'test'
+    if ($Trigger.message -ceq 'words') {
+        $words = Get-List $Trigger.messageWords
+        if ($words.Count -lt 1 -or $words.Count -gt 4 -or ($words | Where-Object { -not (Test-Number $_) -or -not (Test-Range $_ 0 4294967295) })) { $problems.Add("$Where matches words, but messageWords isn't a list of 1 to 4 numbers from 0 to 4294967295. JSON has no hex, so write each word as an ordinary number.") }
+    }
+}
+
+# A MIDI-CI responder's file: its profiles, device info, and properties.
+function Test-CiFile([string]$File) {
+    $label = "The MIDI-CI file '$([IO.Path]::GetFileName($File))'"
+    $inLabel = "the MIDI-CI file '$([IO.Path]::GetFileName($File))'"
+    if ((Get-Item -LiteralPath $File).Length -gt 1MB) { $problems.Add("$label is larger than 1 MB, so Patchbay doesn't read it."); return }
+    $ciText = [IO.File]::ReadAllText($File)
+    try { $null = [Text.Json.JsonDocument]::Parse($ciText) } catch { $problems.Add("$label isn't strict JSON, so Patchbay can't read it."); return }
+    $ci = $ciText | ConvertFrom-Json
+    if ($ci -isnot [Management.Automation.PSCustomObject]) { $problems.Add("$label isn't a JSON object, so Patchbay can't read it."); return }
+    Test-Keys $ci @('profiles', 'deviceInfo', 'resources') $label
+    $profiles = Get-List $ci.profiles
+    $resources = Get-List $ci.resources
+    if ($profiles.Count -eq 0 -and $null -eq $ci.deviceInfo -and $resources.Count -eq 0) { $problems.Add("$label has no profiles, deviceInfo, or resources, so it adds nothing.") }
+    if ($profiles.Count -gt 64) { $problems.Add("$label has more than 64 profiles. Patchbay keeps the first 64.") }
+    if ($resources.Count -gt 64) { $problems.Add("$label has more than 64 resources. Patchbay keeps the first 64.") }
+
+    $places = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    $number = 0
+    foreach ($p in $profiles) {
+        $number++
+        $in = "Profile $number in $inLabel"
+        Test-Keys $p @('id', 'name', 'target', 'channel', 'channels', 'enabled', 'details') $in
+        $id = $null
+        if ($p.id -is [string]) {
+            $hex = $p.id -replace ' ', ''
+            if ($hex -match '^[0-9A-Fa-f]{10}$') { $id = @(0..4 | ForEach-Object { [Convert]::ToInt32($hex.Substring($_ * 2, 2), 16) }) }
+        }
+        elseif ($null -ne $p.id) { $id = Get-List $p.id }
+        if ($null -eq $id -or $id.Count -ne 5 -or ($id | Where-Object { -not (Test-Number $_) -or -not (Test-Range $_ 0 127) -or $_ -ne [Math]::Floor($_) })) { $problems.Add("$in has no id of five numbers from 0 to 127, such as [126, 33, 0, 1, 1] or the same as hex text, so it's left out."); continue }
+        $target = $p.target ?? $(if ($null -ne $p.channel) { 'channel' } else { 'functionBlock' })
+        if ($target -cnotin 'channel', 'group', 'functionBlock') { $problems.Add("$in has the target '$target', so it's left out. Use one of: channel, group, functionBlock."); continue }
+        if ($target -ceq 'channel' -and -not ((Test-Number $p.channel) -and (Test-Range $p.channel 0 15))) { $problems.Add("$in is for a channel but has no channel from 0 to 15, so it's left out. The file counts channels from 0."); continue }
+        if ($target -cne 'channel' -and ($null -ne $p.channel -or $null -ne $p.channels)) { $problems.Add("$in is for a $target but has a channel, so it's left out."); continue }
+        if (-not (Test-Range $p.channels 1 16)) { $problems.Add("$in has channels outside 1 to 16, so it's left out."); continue }
+        if ($null -ne $p.enabled -and $p.enabled -isnot [bool]) { $problems.Add("$in has enabled that isn't true or false, so it's left out."); continue }
+        if ($null -ne $p.name -and $p.name -isnot [string]) { $problems.Add("$in has a name that isn't text, so it's left out."); continue }
+        $details = Get-List $p.details
+        $badDetail = $details.Count -gt 16
+        $targets = [Collections.Generic.HashSet[long]]::new()
+        foreach ($d in $details) {
+            if ($d -isnot [Management.Automation.PSCustomObject] -or @($d.PSObject.Properties.Name | Where-Object { $_ -cnotin 'target', 'data' }).Count -gt 0 -or -not (Test-Number $d.target) -or -not (Test-Range $d.target 0 127) -or -not $targets.Add([long]$d.target)) { $badDetail = $true; continue }
+            $data = Get-List $d.data
+            if ($null -eq $d.data -or $data.Count -gt 512 -or ($data | Where-Object { -not (Test-Number $_) -or -not (Test-Range $_ 0 127) })) { $badDetail = $true }
+        }
+        if ($badDetail) { $problems.Add("$in has details that aren't up to 16 entries of a target from 0 to 127 and data of up to 512 numbers from 0 to 127, each with a different target, so it's left out."); continue }
+        if (-not $places.Add("$($id -join ',')|$target|$($p.channel)")) { $problems.Add("$in is the same profile in the same place as one before it, so it's left out.") }
+    }
+
+    if ($null -ne $ci.deviceInfo) {
+        if ($ci.deviceInfo -isnot [Management.Automation.PSCustomObject]) { $problems.Add("deviceInfo in $inLabel isn't an object, so it's left out.") }
+        else {
+            Test-Keys $ci.deviceInfo @('manufacturer', 'family', 'model', 'version') "deviceInfo in $inLabel"
+            foreach ($key in 'manufacturer', 'family', 'model', 'version') {
+                $value = $ci.deviceInfo.$key
+                if ($null -ne $value -and ($value -isnot [string] -or $value.Length -gt 128)) { $problems.Add("deviceInfo's $key in $inLabel isn't text of 128 characters or fewer, so it's left out.") }
+            }
+        }
+    }
+
+    $names = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    $number = 0
+    foreach ($r in $resources) {
+        $number++
+        $in = "Resource $number in $inLabel"
+        Test-Keys $r @('resource', 'resId', 'data') $in
+        if ($r.resource -isnot [string] -or $r.resource -cnotmatch '^[ -~]{1,64}$' -or $r.resource -cin 'ResourceList', 'DeviceInfo') { $problems.Add("$in needs a resource name of up to 64 plain ASCII characters, and Patchbay makes ResourceList and DeviceInfo itself, so it's left out."); continue }
+        if ($null -ne $r.resId -and ($r.resId -isnot [string] -or $r.resId -cnotmatch '^[ -~]{0,64}$')) { $problems.Add("$in has a resId that isn't up to 64 plain ASCII characters, so it's left out."); continue }
+        if ($null -eq $r.PSObject.Properties['data']) { $problems.Add("$in has no data, so it's left out."); continue }
+        if (-not $names.Add("$($r.resource)|$($r.resId)")) { $problems.Add("$in has the same resource and resId as one before it, so it's left out.") }
+    }
+}
+
+# A MIDI-CI file on its own.
+if ([IO.Path]::GetExtension($Path) -ieq '.midici') {
+    Test-CiFile $Path
+    if ($problems.Count -gt 0) { $problems | Select-Object -Unique; exit 1 }
+    'No problems found.'
+    exit 0
+}
+
+$text = [IO.File]::ReadAllText($Path)
+$null = [Text.Json.JsonDocument]::Parse($text)   # throws on a comment, a trailing comma, or a hexadecimal number
+$patch = $text | ConvertFrom-Json
+$ciFiles = [Collections.Generic.List[string]]::new()
+
 $stepKeys = @{
     messageTypeFilter   = @('messageTypes', 'channelVoiceStatuses', 'systemMessages')
     groupFilter         = @('groups')
@@ -218,8 +331,14 @@ $stepKeys = @{
     clockDivider        = @('divideBy')
     clockGenerator      = @('beatsPerMinute', 'sendStartStop', 'swingPercent', 'swingSubdivision', 'group')
     timeCodeGenerator   = @('frameRate', 'startTime', 'sendFullFrame', 'group')
-    lfoGenerator        = @('wave', 'beatsPerCycle', 'beatsPerMinute', 'lowestPercent', 'highestPercent', 'intervalMilliseconds', 'message', 'channel', 'number', 'group', 'midi1', 'returnToMiddle')
+    lfoGenerator        = @('wave', 'beatsPerCycle', 'beatsPerMinute', 'lowestPercent', 'highestPercent', 'intervalMilliseconds', 'message', 'channel', 'number', 'group', 'midi1', 'returnToMiddle', 'startStopWithClock')
     annotation          = @('text', 'fontFamily', 'fontSize', 'bold', 'italic', 'underline', 'color')
+    rpnFilter           = @('action', 'parameters')
+    rpnTransform        = @('rows')
+    noteDistributor     = @('mode', 'controlChangesToAll', 'channelPressureToAll', 'pitchBendToAll')
+    gate                = @('open', 'close', 'startsOpen', 'passTriggers')
+    ciResponder         = @('manufacturer', 'family', 'model', 'version', 'productInstanceId', 'processInquiry', 'passMidiCi', 'file')
+    ciFilter            = @('action', 'categories')
 }
 $generators = @('clockGenerator', 'timeCodeGenerator', 'lfoGenerator')
 $noInput = @('clockGenerator', 'timeCodeGenerator', 'annotation')
@@ -305,6 +424,59 @@ foreach ($b in (Get-List $patch.blocks)) {
         'programMap' { foreach ($key in 'programMap', 'bankMsbMap', 'bankLsbMap') { Test-Map $s $key 127 $where } }
         'throttle' { if ($null -ne $s.speed -and -not ((Test-Number $s.speed) -and $s.speed -in 0, 1, 2, 4, 8, 16, 32)) { $problems.Add("$where has a speed that isn't 0, 1, 2, 4, 8, 16, or 32.") } }
         'clockDivider' { if (-not (Test-Range $s.divideBy 1 96)) { $problems.Add("$where has divideBy outside 1 to 96.") } }
+        'rpnFilter' {
+            Test-Choice $s.action @('letThrough', 'keepOut') $where 'action'
+            $parameters = Get-List $s.parameters
+            if ($parameters.Count -eq 0) { $problems.Add("$where has no parameters, so it does nothing.") }
+            if ($parameters.Count -gt 32) { $problems.Add("$where has more than 32 parameters. Patchbay keeps the first 32.") }
+            foreach ($p in $parameters) { Test-Parameter $p @('rpn', 'nrpn', 'either') "A parameter in the step '$($b.name ?? $b.id)'" }
+        }
+        'rpnTransform' {
+            $rows = Get-List $s.rows
+            if ($rows.Count -eq 0) { $problems.Add("$where has no rows, so it does nothing.") }
+            if ($rows.Count -gt 32) { $problems.Add("$where has more than 32 rows. Patchbay keeps the first 32.") }
+            foreach ($r in $rows) {
+                $in = "A row in the step '$($b.name ?? $b.id)'"
+                Test-Keys $r @('from', 'to', 'shape') $in
+                if ($null -eq $r.from) { $problems.Add("$in has no from, so it matches every RPN.") }
+                else { Test-Parameter $r.from @('rpn', 'nrpn', 'either') "$in's from" }
+                if ($null -ne $r.to) { Test-Parameter $r.to @('rpn', 'nrpn', 'either') "$in's to" }
+                if ($null -ne $r.shape) {
+                    Test-Keys $r.shape @('invert', 'curve', 'inputMinimumPercent', 'inputMaximumPercent', 'outputMinimumPercent', 'outputMaximumPercent') "$in's shape"
+                    Test-Choice $r.shape.curve @('linear', 'slowRise', 'fastRise') "$in's shape" 'curve'
+                    foreach ($key in 'inputMinimumPercent', 'inputMaximumPercent', 'outputMinimumPercent', 'outputMaximumPercent') { if (-not (Test-Range $r.shape.$key 0 100)) { $problems.Add("$in's shape has $key outside 0 to 100.") } }
+                }
+            }
+        }
+        'noteDistributor' {
+            Test-Choice $s.mode @('takeTurns', 'firstFree', 'highestNotes', 'lowestNotes') $where 'mode'
+            foreach ($key in 'controlChangesToAll', 'channelPressureToAll', 'pitchBendToAll') { if ($null -ne $s.$key -and $s.$key -isnot [bool]) { $problems.Add("$where has $key that isn't true or false.") } }
+        }
+        'gate' {
+            Test-Trigger $s.open "The open trigger of the step '$($b.name ?? $b.id)'"
+            Test-Trigger $s.close "The close trigger of the step '$($b.name ?? $b.id)'"
+        }
+        'ciResponder' {
+            foreach ($check in @(@{ Key = 'manufacturer'; Count = 3; Hint = ' JSON has no hex: 0x7D is 125.' }, @{ Key = 'version'; Count = 4; Hint = '' })) {
+                $value = $s.($check.Key)
+                if ($null -eq $value) { continue }
+                $list = Get-List $value
+                if ($value -isnot [array] -or $list.Count -ne $check.Count -or ($list | Where-Object { -not (Test-Number $_) -or -not (Test-Range $_ 0 127) -or $_ -ne [Math]::Floor($_) })) { $problems.Add("$where has a $($check.Key) that isn't a list of $($check.Count) whole numbers from 0 to 127, so Patchbay uses the default.$($check.Hint)") }
+            }
+            foreach ($key in 'family', 'model') { if (-not (Test-Range $s.$key 0 16383)) { $problems.Add("$where has $key outside 0 to 16383.") } }
+            if ($null -ne $s.productInstanceId -and ($s.productInstanceId -isnot [string] -or $s.productInstanceId.Length -gt 42 -or $s.productInstanceId -cnotmatch '^[ -~]*$')) { $problems.Add("$where has a productInstanceId that isn't up to 42 plain ASCII characters. Patchbay drops what doesn't fit.") }
+            foreach ($key in 'processInquiry', 'passMidiCi') { if ($null -ne $s.$key -and $s.$key -isnot [bool]) { $problems.Add("$where has $key that isn't true or false.") } }
+            if ($null -ne $s.file) {
+                $file = "$($s.file)"
+                if ($s.file -isnot [string] -or $file.Length -eq 0 -or $file.Length -gt 200 -or $file.IndexOfAny([char[]]'\/:*?"<>|') -ge 0 -or $file -cin '.', '..' -or $file -match '^ | $|\.$') { $problems.Add("$where has a file that isn't a plain file name, so Patchbay never opens it. Write only the name, such as Organ.midici, and put the file beside the patch.") }
+                else { $ciFiles.Add($file) }
+            }
+        }
+        'ciFilter' {
+            Test-Choice $s.action @('letThrough', 'keepOut') $where 'action'
+            foreach ($category in (Get-List $s.categories)) { Test-Choice $category @('management', 'profiles', 'propertyExchange', 'processInquiry') $where 'category' }
+            if ($null -ne $s.categories -and (Get-List $s.categories).Count -eq 0 -and ($s.action ?? 'keepOut') -ceq 'keepOut') { $problems.Add("$where keeps out no MIDI-CI, so it does nothing.") }
+        }
         'clockGenerator' {
             if (-not (Test-Range $s.beatsPerMinute 20 300)) { $problems.Add("$where has beatsPerMinute outside 20 to 300.") }
             if (-not (Test-Range $s.swingPercent 50 75)) { $problems.Add("$where has swingPercent outside 50 to 75.") }
@@ -382,6 +554,39 @@ foreach ($id in $kinds.Keys) {
     }
     if (-not $hasIn.Contains($id)) { $problems.Add("Nothing is connected to the In of the step '$id', so it does nothing.") }
     if (-not $hasOut.Contains($id)) { $problems.Add("Nothing is connected to the Out of the step '$id', so what goes into it goes nowhere.") }
+    elseif ($kinds[$id] -ceq 'noteDistributor' -and $next[$id].Count -lt 2) { $problems.Add("The note distributor '$id' has one connection out, so it has one voice and plays one note at a time. Connect one synth for each voice.") }
+}
+
+# A MIDI-CI responder answers back the way a question came. That needs a device before it, with no throttler or generator on the way.
+$previous = [Collections.Generic.Dictionary[string, Collections.Generic.List[string]]]::new([StringComparer]::Ordinal)
+foreach ($from in $next.Keys) {
+    foreach ($to in $next[$from]) {
+        if (-not $previous.ContainsKey($to)) { $previous[$to] = [Collections.Generic.List[string]]::new() }
+        $previous[$to].Add($from)
+    }
+}
+foreach ($id in @($kinds.Keys)) {
+    if ($kinds[$id] -cne 'ciResponder' -or -not $hasIn.Contains($id)) { continue }
+    $reached = $false
+    $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    $pending = [Collections.Generic.Stack[string]]::new(); $pending.Push($id)
+    while ($pending.Count -gt 0 -and -not $reached) {
+        $current = $pending.Pop()
+        if (-not $previous.ContainsKey($current)) { continue }
+        foreach ($from in $previous[$current]) {
+            if ($kinds[$from] -ceq 'endpoint') { $reached = $true; break }
+            if ($kinds[$from] -ceq 'throttle' -or $kinds[$from] -cin $generators) { continue }
+            if ($seen.Add($from)) { $pending.Push($from) }
+        }
+    }
+    if (-not $reached) { $problems.Add("The MIDI-CI responder '$id' only gets messages through a message throttler or from a generator, so it has nowhere to send its answers.") }
+}
+
+# Each MIDI-CI file the patch names, from beside the patch, where importing looks for it.
+foreach ($file in $ciFiles) {
+    $beside = Join-Path ([IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($Path))) $file
+    if (Test-Path -LiteralPath $beside -PathType Leaf) { Test-CiFile $beside }
+    else { $problems.Add("The MIDI-CI file '$file' isn't in the same folder as the patch. Hand them over together, so importing the patch brings the file along.") }
 }
 
 # Steps connected in a circle stop the whole patch from routing.
@@ -453,6 +658,7 @@ Patchbay keeps its patches in **Documents › MIDI Patchbay**, one `.midipatch` 
 
 - **To bring a patch in,** select **Import patch…** in the main MIDI Patchbay window and pick the file, or double-click the file in File Explorer. The first time you double-click one, Windows asks which app to open it with: pick MIDI Patchbay. From a command line, `midipatchbay "<patch file>"` does the same.
 - **Importing copies the file into the patches folder** under a name of its own, so the original can stay where it is. The imported patch doesn't route, and doesn't start automatically, until the customer turns those on.
+- **A MIDI-CI responder's file goes in the patches folder too,** and the patch names it without a path. Importing a patch copies each file it names from the folder the patch came from, unless the patches folder already has a file with that name. So hand the `.midici` file over in the same folder as the patch.
 - **The Documents folder isn't always `C:\Users\<name>\Documents`.** On many PCs it has been moved into OneDrive. In File Explorer, select **Documents** and look for **MIDI Patchbay** there.
 - **A file put straight into the folder** shows up the next time Patchbay starts, and skips the import. If it says `"activateAtStartup": true`, or doesn't say, it can start routing as soon as Patchbay starts. That's why you should hand files over to be imported.
 - **A version 1 patch is converted when Patchbay opens it.** Its filters, transforms, and sending speeds become steps, and it routes the same way it did. Patchbay keeps the original file in **Documents › MIDI Patchbay › Earlier versions**.
@@ -465,10 +671,12 @@ Tell the customer about these before they find out on their own.
 
 - **Routing only runs while Patchbay is running.** Close it, and every route stops. The **Start with Windows** and **Run in notification area** settings keep it going in the background.
 - **Patchbay can't reach inside another app.** To send to or receive from an app on the same PC, such as a DAW, the app and Patchbay both use a loopback. A patch file can name a loopback that already exists, but it can't make one. Make it first, with **Create loopback** in Patchbay or with MIDI Loopback Setup, then use its name in the patch.
-- **It can't turn one kind of message into another.** No notes into controllers, no controller into an NRPN, and no aftertouch into a controller. Steps move messages to another channel, group, note, controller, program, or bank, and reshape velocity, controller values, and aftertouch.
+- **It can't turn one kind of message into another.** No notes into controllers, no controller into an NRPN, and no aftertouch into a controller. Steps move messages to another channel, group, note, controller, program, bank, or RPN or NRPN, and reshape velocity, controller values, aftertouch, and RPN and NRPN values.
 - **No delays, echoes, arpeggios, or chords.** Only the generator steps make messages of their own: MIDI clock, MIDI Time Code, and an LFO.
+- **A note distributor doesn't remember notes it couldn't play.** With every voice busy, a new note either cuts the oldest short or is left out. When a voice comes free, a note that was left out doesn't come back.
 - **MIDI clock and MIDI Time Code don't follow anything.** They can't lock to a clock that comes in from a device, and messages don't start or stop them. They run whenever their patch is routing. Only an LFO follows a clock, and only one connected to its **In**.
-- **It doesn't look inside system exclusive.** A message type filter lets it all through or keeps it all out. A message mask can't do better: a long system exclusive message is split into many packets, and a mask sees each packet on its own.
+- **It doesn't look inside system exclusive, except to tell MIDI-CI apart.** A message type filter lets it all through or keeps it all out. A message mask can't do better: a long system exclusive message is split into many packets, and a mask sees each packet on its own. Only the MIDI-CI steps know a MIDI-CI message from other system exclusive.
+- **A MIDI-CI responder only answers, and stands for one device.** It never asks other devices anything. It can't change the device: when an app turns a profile on or off, it says how the profile already is. An app can read its properties, but can't set them or subscribe to them. It can't answer what comes through a message throttler or from a generator. Its MIDI message reports only know what went through it since the patch started routing.
 - **Steps can't be connected in a circle.** A patch with steps in a circle doesn't route until the circle is broken.
 - **A filter's channels and notes only apply to messages that carry them.** Clock, for example, gets through a channel filter and a note filter.
 - **A velocity filter only looks at note on messages.** Note off always gets through, so no note is left sounding.
@@ -571,6 +779,7 @@ The steps are in the `blocks` list.
 | `noteFilter` | Note filter | Lets a range of notes, one note, or a list of notes through, or keeps them out. |
 | `controlChangeFilter` | Control change filter | Lets a range of controllers, one controller, or a list of controllers through, or keeps them out. |
 | `velocityFilter` | Velocity filter | Lets through only notes played within a range of velocities, or keeps them out. |
+| `rpnFilter` | (N)RPN filter | Lets RPN and NRPN parameters through, or keeps them out, by bank and index. |
 | `messageMaskFilter` | Message mask filter | Picks out messages by the bits in them, for anything the other filters don't cover. |
 | `channelMap` | Channel mapper | Moves messages from one channel to another. |
 | `groupMap` | Group mapper | Moves messages from one group to another. |
@@ -581,8 +790,13 @@ The steps are in the `blocks` list.
 | `controlChangeMap` | Control change mapper | Sends one controller as another. |
 | `controlChangeValue` | Control change values | Turns a controller's values upside down, bends them, or squeezes them into a range. |
 | `programMap` | Program and bank mapper | Picks a different program or bank. |
+| `rpnTransform` | (N)RPN transform | Sends one RPN or NRPN as another, and reshapes its value. |
 | `clockDivider` | Clock divider | Lets one MIDI clock pulse in every so many through, for a device that should run at half the tempo, a third, and so on. |
 | `throttle` | Message throttler | Slows messages down for a device that loses data when a lot arrives at once. |
+| `noteDistributor` | Note distributor | Plays several one-note synths as one bigger synth. Each new note goes out on one of its connections. |
+| `gate` | Gate | Lets messages through only between one message and another, such as Start and Stop. |
+| `ciResponder` | MIDI-CI responder | Answers MIDI-CI for the device it leads to, which is usually a MIDI 1.0 device that can't. Answers go back to the endpoint that asked. |
+| `ciFilter` | MIDI-CI filter | Keeps MIDI-CI out, or lets only MIDI-CI through. |
 | `clockGenerator` | MIDI clock | A generator. Sends MIDI clock at a tempo, for as long as the patch is routing. |
 | `timeCodeGenerator` | MIDI Time Code | A generator. Sends MIDI Time Code from a start time, for as long as the patch is routing. |
 | `lfoGenerator` | LFO | A generator. Sweeps a controller, pitch bend, aftertouch, or an RPN or NRPN up and down, for as long as the patch is routing. |
@@ -984,6 +1198,7 @@ A customer who wants a different tempo for each project can keep one patch like 
 | `group` | 0 to 15 | 0 | The group, counted from 0. |
 | `midi1` | `true`, `false` | `false` | Sends MIDI 1.0 messages instead of MIDI 2.0. Windows converts MIDI 2.0 messages for a MIDI 1.0 device, so leave it out unless the customer asks for MIDI 1.0 messages. `rpn` and `nrpn` always go as MIDI 2.0. |
 | `returnToMiddle` | `true`, `false` | `true` | When the patch stops routing, sends the value halfway between `lowestPercent` and `highestPercent`. Over the whole range, that puts a pitch bend back in the middle. |
+| `startStopWithClock` | `true`, `false` | `false` | Only for an LFO that follows a clock. The LFO waits for Start or Continue before it moves, and Stop holds it until the next one, sending the middle value first when `returnToMiddle` is `true`. Without it, the LFO moves with every timing clock, playing or not. |
 
 For example, a slow triangle sweep of controller 74 on channel 1, which many synths use for filter cutoff, two bars long at 120 BPM, between 20% and 80%:
 
@@ -991,10 +1206,155 @@ For example, a slow triangle sweep of controller 74 on channel 1, which many syn
 { "id": "filter-sweep", "type": "lfoGenerator", "name": "Filter sweep", "x": 60, "y": 300, "settings": { "wave": "triangle", "beatsPerCycle": 8, "beatsPerMinute": 120, "lowestPercent": 20, "highestPercent": 80, "message": "controlChange", "channel": 0, "number": 74 } }
 ```
 
-**An LFO that follows a clock.** An LFO has an **In**. Connect a clock to it, and the LFO follows that clock instead of `beatsPerMinute`. The clock can come from a `clockGenerator`, a `clockDivider`, or a device that sends MIDI clock. One pass takes `beatsPerCycle` beats of the clock, a Start from the clock puts the LFO back at the beginning of a pass, and when the clock stops, the LFO stops moving. Only timing clock, Start and Song Position reach the LFO, and nothing goes on from its **In**. A muted connection into the LFO still counts, so the LFO waits for the clock rather than running at its own tempo. For example, with the clock from the MIDI clock example above:
+**An LFO that follows a clock.** An LFO has an **In**. Connect a clock to it, and the LFO follows that clock instead of `beatsPerMinute`. The clock can come from a `clockGenerator`, a `clockDivider`, or a device that sends MIDI clock. One pass takes `beatsPerCycle` beats of the clock, a Start from the clock puts the LFO back at the beginning of a pass, and when the clock stops, the LFO stops moving. Only timing clock, Start, Continue, Stop and Song Position reach the LFO, and nothing goes on from its **In**. A muted connection into the LFO still counts, so the LFO waits for the clock rather than running at its own tempo. For example, with the clock from the MIDI clock example above:
 
 ```json
 { "id": "clock-to-sweep", "source": "clock", "destination": "filter-sweep" }
+```
+
+### (N)RPN filter
+
+`"type": "rpnFilter"`. Picks out RPNs and NRPNs by bank and index. RPN 0/0 is pitch bend range, for example. Everything that isn't an RPN or NRPN gets through, and so does everything while it has no parameters.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `action` | `letThrough`, `keepOut` | `keepOut` | `keepOut` keeps out the parameters listed. `letThrough` lets only those through, and keeps out every other RPN and NRPN. |
+| `parameters` | a list, up to 32 | none | The parameters it picks out. |
+
+Each parameter:
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `type` | `rpn`, `nrpn`, `either` | `rpn` | Registered (RPN), assignable (NRPN), or both. |
+| `bank` | 0 to 127 | any | The bank, which MIDI 1.0 sends as controller 101 for an RPN and 99 for an NRPN. |
+| `index` | 0 to 127 | any | The index, which MIDI 1.0 sends as controller 100 for an RPN and 98 for an NRPN. |
+
+A MIDI 2.0 RPN or NRPN carries its bank, index, and value in one message, so the step judges each one on its own. MIDI 1.0 sends the bank and index as control changes first, then the value as controllers 6 and 38, or a step up or down as 96 and 97. Those that select the bank and index always go through, and the values that follow are let through or kept out. Each group and channel is followed on its own.
+
+### (N)RPN transform
+
+`"type": "rpnTransform"`. Sends one RPN or NRPN as another, and reshapes its value. The first row that matches a parameter is used. Everything else goes through untouched.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `rows` | a list, up to 32 | none | What to change. |
+
+Each row:
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `from` | a parameter, as in the (N)RPN filter | RPN, any bank, any index | Which parameter the row is for. |
+| `to` | the same, with `type` `rpn` or `nrpn` | the same as it came in | What to send it as. A `type`, `bank` or `index` left out stays as it came in. |
+| `shape` | object | changes nothing | Reshapes the value: `invert`, `curve`, and the four percentages from the table under [Control change values](#control-change-values). |
+
+A MIDI 2.0 value is reshaped across its whole 32 bits. A MIDI 2.0 relative change keeps its step, and only moves to the new parameter. For MIDI 1.0, the bank goes as it is, and once the index arrives, the new bank and index are sent instead of it. The coarse value, controller 6, is reshaped on its own. When the fine value, controller 38, follows, both are sent again, reshaped together as 14 bits.
+
+For example, this sends a synth's NRPN 1/8 as NRPN 3/16, using only the lower half of its range:
+
+```json
+{ "id": "cutoff", "type": "rpnTransform", "name": "Cutoff for the new synth", "x": 400, "y": 90, "settings": { "rows": [ { "from": { "type": "nrpn", "bank": 1, "index": 8 }, "to": { "type": "nrpn", "bank": 3, "index": 16 }, "shape": { "outputMaximumPercent": 50 } } ] } }
+```
+
+### Note distributor
+
+`"type": "noteDistributor"`. Plays several one-note synths as one bigger synth. Each connection out of the step is one **voice**, in the order the connections are in the file. Connect one synth to each. Each new note goes to one voice, and its note off, poly pressure and MIDI 2.0 per-note messages follow it there.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `mode` | `takeTurns`, `firstFree`, `highestNotes`, `lowestNotes` | `takeTurns` | `takeTurns` moves on to the next voice for each note, skipping voices that are playing. `firstFree` uses the first voice that isn't playing. With every voice playing, both cut the oldest note short. `highestNotes` and `lowestNotes` only cut a note short for a higher or a lower one, and leave out the new note otherwise. |
+| `controlChangesToAll` | `true`, `false` | `true` | Sends control changes, and MIDI 2.0 RPNs and NRPNs, to every voice. With `false`, they go only to the voice that played the latest note. |
+| `channelPressureToAll` | `true`, `false` | `true` | The same, for channel pressure. |
+| `pitchBendToAll` | `true`, `false` | `true` | The same, for pitch bend. |
+
+All notes off, all sound off and the other channel mode messages, program changes, clock, system exclusive, and everything else always go to every voice. Up to 64 voices count. A note that was left out, or cut short, gets no second note off.
+
+For example, a keyboard playing three one-note synths:
+
+```json
+"blocks": [ { "id": "poly", "type": "noteDistributor", "name": "Three voices", "x": 400, "y": 180, "settings": { "mode": "takeTurns" } } ],
+"connections": [
+  { "id": "in", "source": "keyboard", "destination": "poly" },
+  { "id": "voice-1", "source": "poly", "destination": "mono-1", "destinationGroup": -1 },
+  { "id": "voice-2", "source": "poly", "destination": "mono-2", "destinationGroup": -1 },
+  { "id": "voice-3", "source": "poly", "destination": "mono-3", "destinationGroup": -1 }
+]
+```
+
+### Gate
+
+`"type": "gate"`. Lets messages through only between one message, the **open** trigger, and another, the **close** trigger. When they're the same, each one turns the gate the other way. Note offs always get through, so no note is left sounding.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `open` | a trigger | Start | What opens the gate. |
+| `close` | a trigger | Stop | What closes it. |
+| `startsOpen` | `true`, `false` | `true` | Whether it's open when the patch starts routing. |
+| `passTriggers` | `true`, `false` | `true` | Sends the open and close messages on, even when they close the gate. With `false` they're kept out. |
+
+Each trigger:
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `message` | `noteOn`, `noteOff`, `controlChange`, `programChange`, `start`, `continue`, `stop`, `words` | `start` for open, `stop` for close | The kind of message. |
+| `group` | 0 to 15 | any | The group, counted from 0. |
+| `channel` | 0 to 15 | any | For notes, control changes, and program changes. The channel, counted from 0. |
+| `number` | 0 to 127 | any | The note, controller, or program. |
+| `test` | `any`, `atLeast`, `below` | `any` | For control changes: which values count. |
+| `value` | 0 to 127 | 64 | For `atLeast` and `below`. A MIDI 2.0 value is compared by its top seven bits, so 64 is halfway for both. |
+| `messageWords` | a list of 1 to 4 numbers | one word of 0 | For `words`: a message matches when it starts with these words. The group in the first word is ignored; use `group`. JSON has no hex, so write each word as an ordinary number: `0x20B04000` is `548421632`. |
+
+For example, notes that only get through while the sustain pedal is down, with the pedal itself kept out:
+
+```json
+{ "id": "pedal-gate", "type": "gate", "name": "While the pedal is down", "x": 400, "y": 90, "settings": { "open": { "message": "controlChange", "number": 64, "test": "atLeast", "value": 64 }, "close": { "message": "controlChange", "number": 64, "test": "below", "value": 64 }, "startsOpen": false, "passTriggers": false } }
+```
+
+### MIDI-CI responder
+
+`"type": "ciResponder"`. Answers MIDI-CI for the device it leads to, which is usually a MIDI 1.0 device that can't answer for itself. Put it on the path from the app to the device, such as right after the loopback the app sends to. Answers go back to the endpoint the question came from, on the same group. MIDI-CI goes no further unless `passMidiCi` is `true`, and everything else, such as notes, goes on as usual.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `manufacturer` | a list of 3 numbers from 0 to 127 | `[125, 0, 0]` | The manufacturer's System Exclusive ID, as three bytes. A one-byte ID is followed by two zeros. 125, which is 0x7D, is for prototypes and private use. JSON has no hex, so write ordinary numbers. |
+| `family` | 0 to 16383 | 0 | The device's family, from its manual. |
+| `model` | 0 to 16383 | 0 | The model in that family. |
+| `version` | a list of 4 numbers from 0 to 127 | `[0, 0, 0, 0]` | The software version. |
+| `productInstanceId` | up to 42 plain ASCII characters | empty | Tells this device apart from others of the same model, such as a serial number. With none, an app that asks for it is told the device doesn't have one. |
+| `processInquiry` | `true`, `false` | `true` | Answers MIDI message reports: which notes are on, and where each channel's controllers, program and bank, pitch bend, and channel pressure are. It only knows what went through the step since the patch started routing. |
+| `passMidiCi` | `true`, `false` | `false` | Sends MIDI-CI on to the device as well. Leave it `false` unless the device understands MIDI-CI. |
+| `file` | a file name | none | A MIDI-CI file in the patches folder, by name only, such as `Organ.midici`. It adds profiles and properties. See [The MIDI-CI file](#the-midi-ci-file). A path, or anything else that isn't a plain file name, is ignored. |
+
+What it answers:
+
+- **Discovery,** with the numbers above. It says it's no function block, because a MIDI 1.0 device has none, and it answers on every group and channel, for the whole device.
+- **Endpoint Inquiry,** with `productInstanceId`.
+- **Invalidate MUID.** When an app tells it to, or another device has the same MUID, it takes a new one.
+- **Profile Inquiry, Set Profile On and Off, and Profile Details Inquiry,** from the file.
+- **Property Exchange:** what it supports, and getting `ResourceList`, `DeviceInfo`, and the file's resources, in pieces the app can take. A list can be asked for a page at a time.
+- **Process Inquiry:** what it supports, and MIDI message reports, when `processInquiry` is on.
+- **Anything else that expects an answer,** such as setting a property, is turned down with a NAK. Asking to subscribe gets status 405, because nothing changes.
+
+One responder is one MIDI-CI device, with one MUID. To answer for two devices, give each device its own responder, on its own path.
+
+For example:
+
+```json
+{ "id": "ci", "type": "ciResponder", "name": "Answers for the organ", "x": 400, "y": 90, "settings": { "manufacturer": [125, 0, 0], "family": 1, "model": 2, "version": [1, 0, 0, 0], "productInstanceId": "SN-00042", "processInquiry": true, "passMidiCi": false, "file": "Organ.midici" } }
+```
+
+### MIDI-CI filter
+
+`"type": "ciFilter"`. Keeps MIDI-CI out, or lets only MIDI-CI through. MIDI-CI is system exclusive that starts with 7E, a device ID, and 0D. Other system exclusive isn't MIDI-CI.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `action` | `keepOut`, `letThrough` | `keepOut` | `keepOut` keeps out the MIDI-CI in `categories` and lets everything else through. `letThrough` lets only the MIDI-CI in `categories` through, and keeps out everything else, notes included. |
+| `categories` | a list of `management`, `profiles`, `propertyExchange`, `processInquiry` | all four | Which MIDI-CI. `management` is Discovery, Endpoint Inquiry, Invalidate MUID, ACK, NAK, and anything else that isn't one of the other three. |
+
+For example, to keep Property Exchange away from a device:
+
+```json
+{ "id": "no-pe", "type": "ciFilter", "name": "No Property Exchange", "x": 400, "y": 90, "settings": { "action": "keepOut", "categories": ["propertyExchange"] } }
 ```
 
 ### Annotation
@@ -1014,6 +1374,71 @@ For example, a note above the bass side of the split in the complete example:
 ```json
 { "id": "note-bass", "type": "annotation", "x": 680, "y": 0, "settings": { "text": "Bass below middle C", "fontSize": 14, "bold": true } }
 ```
+
+## The MIDI-CI file
+
+A MIDI-CI responder's file describes what MIDI-CI can ask the device about: the **profiles** it follows, and **properties** an app can read with Property Exchange, such as its program list. It's JSON, saved as UTF-8, in the patches folder with the patches. Give it a name that ends in `.midici`. Patchbay reads it when the patch starts routing, and again whenever it changes.
+
+The file is optional. Without one, a responder still answers Discovery, and MIDI message reports when `processInquiry` is on.
+
+Hand the file over in the same folder as the patch. Importing the patch copies it into the patches folder.
+
+> **For agents:** Take profile IDs, and what goes in the properties, from the device's manual and the MIDI-CI specifications. Don't make up a profile ID: an app that knows the profile expects the device to behave the way the profile says.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `profiles` | list, up to 64 | none | The profiles the device follows, or could. |
+| `deviceInfo` | object | none | The names `DeviceInfo` gives. With it, the responder supports Property Exchange even with no resources. |
+| `resources` | list, up to 64 | none | Other properties, such as a program list. |
+
+Each profile:
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `id` | a list of 5 numbers from 0 to 127, or the same as hex text, such as `"7E 21 00 01 01"` | required | The profile's ID. A profile from the MIDI Association and AMEI starts with 126, which is 0x7E. A manufacturer's own profile starts with the manufacturer's System Exclusive ID. |
+| `name` | text | none | A note for people reading the file. Patchbay doesn't send it. |
+| `target` | `channel`, `group`, `functionBlock` | `channel` when there's a `channel`, otherwise `functionBlock` | Where the profile applies: one channel, the group, or the whole device. |
+| `channel` | 0 to 15 | required for `channel` | The channel, counted from 0. For a profile that takes several channels, the first one. |
+| `channels` | 1 to 16 | 1 | For a channel profile, how many channels it takes, counting the first. |
+| `enabled` | `true`, `false` | `true` | Whether the device follows the profile now. The responder can't change this. When an app turns the profile on or off, it says how the profile already is. |
+| `details` | list, up to 16 | none | What Profile Details Inquiry gets, as `{ "target": 0 to 127, "data": [up to 512 numbers from 0 to 127] }`, one for each target. The profile's specification says what they mean. |
+
+A profile that can't be read is left out, and so is one that repeats another in the same place.
+
+`deviceInfo`:
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `manufacturer`, `family`, `model`, `version` | text, up to 128 characters | empty | The names `DeviceInfo` gives. Its numbers come from the step's settings. |
+
+Each resource:
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `resource` | up to 64 plain ASCII characters | required | The property's name, such as `ProgramList` or `ChannelList`. A name that isn't from a MIDI-CI specification should start with `X-`. Patchbay makes `ResourceList` and `DeviceInfo` itself, so the file can't use them. |
+| `resId` | up to 64 plain ASCII characters | none | Tells apart two properties with the same name. An app that doesn't give one gets the one without a `resId`. |
+| `data` | any JSON, up to 256 KB | required | What the app gets. A list can be asked for a page at a time, and then the answer says how long the whole list is. |
+
+Patchbay sends every character that isn't plain ASCII as a `\u` escape, which is what MIDI-CI needs.
+
+For example, a device with a profile of its own on channel 1, its names, and two programs:
+
+```json
+{
+  "profiles": [
+    { "id": [125, 0, 0, 1, 1], "name": "Our own organ profile", "channel": 0 }
+  ],
+  "deviceInfo": { "manufacturer": "Contoso", "family": "Organs", "model": "Model 2", "version": "1.0" },
+  "resources": [
+    { "resource": "ProgramList", "data": [
+      { "title": "Jazz", "bankPC": [0, 0, 0] },
+      { "title": "Gospel", "bankPC": [0, 0, 1] }
+    ] }
+  ]
+}
+```
+
+In a `ProgramList`, `bankPC` is the bank MSB, the bank LSB, and the program, each counted from 0.
 
 ## Mistakes that are easy to miss
 
@@ -1045,4 +1470,17 @@ For example, a note above the bass side of the split in the complete example:
 > - A clock and an LFO that should play together aren't connected. Each keeps its own `beatsPerMinute` until the clock is connected to the LFO's **In**.
 > - A connection goes into or out of an annotation. An annotation has no **In** or **Out**, so the connection is left out.
 > - An annotation's text has a line break, to make two lines. An annotation is one line, so the break becomes a space. Use two annotations instead.
+> - A note distributor's connections out are in the wrong order. The first connection in the file is the first voice.
+> - A note distributor has one connection out, so it plays one note at a time.
+> - A gate's group, channel or number is counted from 1. Channel 1 is `0` in the file.
+> - A gate keeps out its triggers with `"passTriggers": false`, and the trigger is a sustain pedal the synth also needs.
+> - An `rpnFilter` or `rpnTransform` is put after a `messageTypeFilter` that keeps out control changes, so a MIDI 1.0 device's RPNs and NRPNs never reach it.
+> - A MIDI-CI responder is on the path from the device to the app, instead of from the app to the device. It answers the questions that pass through it, so it goes where the app's messages go.
+> - A MIDI-CI responder comes after a `throttle` step or a generator, so it has nowhere to send its answers.
+> - A responder's `manufacturer` or `version` is hex, or one number. Each is a list of ordinary numbers: three for the manufacturer, four for the version.
+> - A responder's `file` is a path. It's only a name, and the file goes beside the patch.
+> - A MIDI-CI file has a resource called `ResourceList` or `DeviceInfo`. Patchbay makes those itself. Put the names in `deviceInfo` instead.
+> - A profile's `channel` is counted from 1. Channel 1 is `0` in the file.
+> - A profile ID is made up. Take it from the profile's specification or the device's manual.
+> - A `ciFilter` with `"action": "letThrough"` is in front of a device that needs notes. It keeps out everything but the MIDI-CI it names.
 > - The patch depends on something in [What Patchbay can't do](#what-patchbay-cant-do).
