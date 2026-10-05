@@ -36,6 +36,10 @@ namespace WindowsMidiServicesCapabilityInquiry
         // or initiators will pipeline requests it silently discards.
         uint8_t SimultaneousPropertyRequests{ 1 };
 
+        // Declares Process Inquiry in Discovery and answers its capabilities inquiry. The host has
+        // to build each MIDI Message Report itself, because only it knows the device's state.
+        bool SupportsProcessInquiry{ false };
+
         // What Inquiry: Endpoint is answered with. It must match the Product Instance Id the UMP
         // Endpoint declares in its stream notification. Left empty, the inquiry gets a NAK.
         uint8_t ProductInstanceId[ProductInstanceIdMaximumByteCount]{};
@@ -73,6 +77,11 @@ namespace WindowsMidiServicesCapabilityInquiry
         // A subscription start, end or update reply. Same reason the caller owns it: the command
         // and the subscription identifier are both in the header JSON.
         PropertySubscriptionRequested,
+
+        // A well formed Inquiry: MIDI Message Report. The caller sends the reply, the messages that
+        // report its state and the end, all of which only it can know. ParsedMessage carries the
+        // device id and the bitmaps.
+        MidiMessageReportRequested,
     };
 
     // Produces replies into a buffer the caller owns. It never sends, never allocates and holds no
@@ -198,6 +207,11 @@ namespace WindowsMidiServicesCapabilityInquiry
                     fields.CapabilityCategories |= CapabilityBitPropertyExchange;
                 }
 
+                if (m_config.SupportsProcessInquiry)
+                {
+                    fields.CapabilityCategories |= CategoryProcessInquiry;
+                }
+
                 fields.ReceivableMaximumSysExSize = m_config.ReceivableMaximumSysExSize;
 
                 fields.OutputPathId = message.OutputPathId;
@@ -221,6 +235,10 @@ namespace WindowsMidiServicesCapabilityInquiry
 
                 return ResponderAction::Replied;
             }
+
+            // What a NAK says when one is owed, if a branch below does not narrow it down.
+            uint8_t nakStatus = NakStatusMessageNotSupported;
+            uint8_t nakDeviceId = DeviceIdFunctionBlock;
 
             if (message.Type == MessageType::PropertyGetDataInquiry)
             {
@@ -308,6 +326,61 @@ namespace WindowsMidiServicesCapabilityInquiry
                     return ResponderAction::Replied;
                 }
             }
+            else if (message.Type == MessageType::ProcessInquiryCapabilities)
+            {
+                if (m_config.SupportsProcessInquiry && m_config.Muid != 0)
+                {
+                    if (replyBuffer == nullptr || replyCapacity < ProcessInquiryCapabilitiesReplyByteCount)
+                    {
+                        return ResponderAction::ReplyBufferTooSmall;
+                    }
+
+                    const auto written = BuildProcessInquiryCapabilitiesReply(
+                        m_config.Muid,
+                        message.SourceMuid,
+                        ProcessInquiryFeatureMidiMessageReport,
+                        replyBuffer,
+                        replyCapacity,
+                        ReplyVersionFor(message.VersionFormat));
+
+                    if (written == 0)
+                    {
+                        return ResponderAction::ReplyBufferTooSmall;
+                    }
+
+                    if (replyByteCount != nullptr)
+                    {
+                        *replyByteCount = written;
+                    }
+
+                    return ResponderAction::Replied;
+                }
+            }
+            else if (message.Type == MessageType::MidiMessageReport)
+            {
+                if (m_config.SupportsProcessInquiry && m_config.Muid != 0)
+                {
+                    const auto deviceId = message.DeviceId;
+                    const bool addressable = deviceId <= 0x0F || deviceId == 0x7E || deviceId == DeviceIdFunctionBlock;
+
+                    const auto control = message.MidiMessageReport.MessageDataControl;
+                    const bool knownControl =
+                        control == MessageDataControlNone ||
+                        control == MessageDataControlNonDefault ||
+                        control == MessageDataControlFull;
+
+                    // M2-101-UM section 5.11.2: a cut short inquiry, or a data control from the
+                    // reserved range, is malformed; a device id from the reserved range names
+                    // nothing in use. Either way the initiator is told now rather than left waiting.
+                    if (addressable && message.HasMidiMessageReportFields && knownControl)
+                    {
+                        return ResponderAction::MidiMessageReportRequested;
+                    }
+
+                    nakStatus = addressable ? NakStatusMessageMalformed : NakStatusNotInUse;
+                    nakDeviceId = addressable ? deviceId : DeviceIdFunctionBlock;
+                }
+            }
 
             // Being able to NAK is one of the three things M2-101-UM section 2 asks of every
             // MIDI-CI device. An initiator that gets silence instead waits out its timeout and may
@@ -322,11 +395,11 @@ namespace WindowsMidiServicesCapabilityInquiry
                 AcknowledgmentFields fields{};
 
                 fields.OriginalMessageType = static_cast<uint8_t>(message.Type);
-                fields.StatusCode = NakStatusMessageNotSupported;
+                fields.StatusCode = nakStatus;
 
                 const auto written = BuildAcknowledgment(
                     MessageType::Nak,
-                    DeviceIdFunctionBlock,
+                    nakDeviceId,
                     m_config.Muid,
                     message.SourceMuid,
                     fields,

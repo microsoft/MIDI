@@ -30,6 +30,10 @@ namespace MidiSynth
     constexpr char const* MelodicProgramListResourceId = "melodic";
     constexpr char const* DrumKitProgramListResourceId = "drums";
 
+    // Every channel answers the same controllers, drum channels included, so one ChCtrlList serves
+    // all sixteen.
+    constexpr char const* ControllerListResourceId = "channel";
+
     class PropertyExchangeSource
     {
     public:
@@ -43,8 +47,8 @@ namespace MidiSynth
         const std::vector<char>& ResourceListJson() const noexcept { return m_resourceListJson; }
         const std::vector<char>& DeviceInfoJson() const noexcept { return m_deviceInfoJson; }
 
-        // A request naming neither list gets the melodic one. The resource list declares that a
-        // resource id is required, but answering a client that did not send one is better than
+        // A request naming neither list gets the melodic one. ProgramList's specification makes a
+        // resource id required, but answering a client that did not send one is better than
         // refusing it.
         const std::vector<char>& ProgramListJson(_In_ const std::string& resourceId) const noexcept
         {
@@ -58,6 +62,15 @@ namespace MidiSynth
             return resourceId.empty()
                 || resourceId == MelodicProgramListResourceId
                 || resourceId == DrumKitProgramListResourceId;
+        }
+
+        // The controllers a channel responds to, M2-117-UM ChCtrlList. Like ProgramList it needs a
+        // resource id by its specification, and like ProgramList a request without one is answered.
+        const std::vector<char>& ControllerListJson() const noexcept { return m_controllerListJson; }
+
+        static bool IsKnownControllerListResourceId(_In_ const std::string& resourceId) noexcept
+        {
+            return resourceId.empty() || resourceId == ControllerListResourceId;
         }
 
         // Reflects what is selected right now, which is why it is rebuilt per request and why it
@@ -78,9 +91,9 @@ namespace MidiSynth
             _In_ const std::vector<char>& resource,
             _In_ bool cacheable) noexcept;
 
-        // Starts a ProgramList reply, serializing the requested page first. The ResourceList
-        // declares this resource paginated, so M2-103-UM requires "totalCount" in every reply for
-        // it, page or no page. Pass SIZE_MAX as the limit for a request that did not paginate.
+        // Starts a ProgramList reply, serializing the requested page first. ProgramList pages by
+        // its specification, so M2-103-UM requires "totalCount" in every reply for it, page or no
+        // page. Pass SIZE_MAX as the limit for a request that did not paginate.
         void BeginProgramListReply(
             _In_ const DlsCollection& collection,
             _In_ const UmpDispatcher::PendingPropertyRequest& request,
@@ -154,6 +167,8 @@ namespace MidiSynth
     private:
         static std::string ToNarrow(_In_ const std::wstring& text);
 
+        void BuildControllerList();
+
         struct ChannelListSubscription
         {
             uint32_t InitiatorMuid{ 0 };
@@ -173,6 +188,7 @@ namespace MidiSynth
         std::vector<char> m_deviceInfoJson;
         std::vector<char> m_melodicProgramListJson;
         std::vector<char> m_drumKitProgramListJson;
+        std::vector<char> m_controllerListJson;
         std::vector<char> m_channelListJson;
 
         // One page of a program list, serialized per request. Like the channel list it has to

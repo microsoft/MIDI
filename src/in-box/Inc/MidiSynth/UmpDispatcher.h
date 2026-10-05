@@ -12,6 +12,7 @@
 
 #include <sal.h>
 
+#include <array>
 #include <atomic>
 #include <cstdint>
 #include <vector>
@@ -95,6 +96,7 @@ namespace MidiSynth
         uint64_t DiscoveryRepliesSent{ 0 };
         uint64_t MuidInvalidations{ 0 };
         uint64_t PropertyRequests{ 0 };
+        uint64_t MessageReportRequests{ 0 };
     };
 
     class UmpDispatcher
@@ -159,6 +161,42 @@ namespace MidiSynth
         // Returns false when none is waiting.
         bool TakeInvalidatedInitiatorMuid(_Out_ uint32_t& muid) noexcept;
 
+        // Inquiry: MIDI Message Report, M2-101-UM section 9. The channels are copied on the thread
+        // that owns them at the moment the inquiry arrives, so the report describes one instant
+        // even though a worker sends it later.
+        struct PendingMessageReport
+        {
+            uint32_t InitiatorMuid{ 0 };
+            uint8_t DeviceId{ 0 };
+            uint8_t MessageVersion{ 0 };
+            WindowsMidiServicesCapabilityInquiry::MidiMessageReportFields Requested{};
+            std::array<SynthChannelState, MidiChannelCount> Channels{};
+        };
+
+        // A full report is 166 messages. Sent from the thread that renders audio, it would take
+        // most of the queue that thread shares with every other reply, so it is parked here for a
+        // worker exactly like a property request. Returns false when none waits.
+        bool TakePendingMessageReport(_Out_ PendingMessageReport& report) noexcept;
+
+        // Pitch bend, seven controllers, pitch bend sensitivity and the program, for each channel.
+        static constexpr size_t MidiMessageReportMessagesPerChannel = 10;
+
+        // The largest report there is: everything on all sixteen channels, between a reply and an
+        // end of three system exclusive packets each. A transport that queues a report whole can
+        // check its queue against this.
+        static constexpr size_t MidiMessageReportMaximumPackets =
+            (WindowsMidiServicesCapabilityInquiry::MidiMessageReportReplyByteCount + 5) / 6 +
+            MidiChannelCount * MidiMessageReportMessagesPerChannel +
+            (WindowsMidiServicesCapabilityInquiry::MidiMessageReportEndByteCount + 5) / 6;
+
+        // Writes the whole report in order: the reply, the MIDI 2.0 Protocol messages carrying
+        // the current values, and the end.
+        static void WriteMidiMessageReport(
+            _In_ const PendingMessageReport& report,
+            _In_ uint8_t group,
+            _In_ uint32_t sourceMuid,
+            _In_ IUmpOutput& output) noexcept;
+
         // Public because a host answering a property request needs exactly this packing and must
         // not grow a second copy of it.
         static void PacketizeSysEx7(
@@ -205,6 +243,8 @@ namespace MidiSynth
             _In_ const uint8_t* message,
             _In_ bool isSubscription) noexcept;
 
+        void ParkMessageReport(_In_ const WindowsMidiServicesCapabilityInquiry::ParsedMessage& parsed) noexcept;
+
         SynthEngine* m_engine{ nullptr };
         IUmpOutput* m_output{ nullptr };
         SynthIdentity m_identity{};
@@ -221,6 +261,10 @@ namespace MidiSynth
         // only by the worker, so neither can see a half written request.
         PendingPropertyRequest m_propertyRequest{};
         std::atomic<bool> m_propertyRequestPending{ false };
+
+        // Same handoff as the property request above.
+        PendingMessageReport m_messageReport{};
+        std::atomic<bool> m_messageReportPending{ false };
 
         // Zero means none waiting, which is also not a legal identifier.
         std::atomic<uint32_t> m_invalidatedInitiatorMuid{ 0 };

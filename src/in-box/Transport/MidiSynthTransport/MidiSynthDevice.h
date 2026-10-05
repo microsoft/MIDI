@@ -56,7 +56,12 @@ public:
 private:
     // Replies are produced on whichever thread dispatched the message, so they are queued here and
     // put on the wire by the worker.
-    using OutboundQueue = MidiSynth::SpscRingBuffer<MidiSynth::QueuedUmp, 256>;
+    static constexpr size_t OutboundQueueCapacity = 256;
+    using OutboundQueue = MidiSynth::SpscRingBuffer<MidiSynth::QueuedUmp, OutboundQueueCapacity>;
+
+    // The worker queues a MIDI Message Report whole, in one pass. The ring keeps one slot empty.
+    static_assert(MidiSynth::UmpDispatcher::MidiMessageReportMaximumPackets <= OutboundQueueCapacity - 1,
+        "the largest MIDI Message Report must fit the property queue in one pass");
 
     class QueuedUmpOutput final : public MidiSynth::IUmpOutput
     {

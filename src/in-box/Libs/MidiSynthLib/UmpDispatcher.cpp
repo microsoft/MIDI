@@ -15,6 +15,7 @@
 #include <libmidi2/utils.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 
 namespace MidiSynth
@@ -63,6 +64,57 @@ namespace MidiSynth
         constexpr uint8_t Channel(uint32_t word) noexcept { return static_cast<uint8_t>((word >> 16) & 0xF); }
         constexpr uint8_t Data1(uint32_t word) noexcept { return static_cast<uint8_t>((word >> 8) & 0x7F); }
         constexpr uint8_t Data2(uint32_t word) noexcept { return static_cast<uint8_t>(word & 0x7F); }
+
+        // The reverse of what the engine does with a controller on the way in. It keeps a value
+        // as a double so a 32 bit value is not cut down to 7 bits, and a 7 bit value divides back
+        // out exactly. So a value goes back at the width it arrived in, and a 7 bit one is scaled
+        // up the way M2-115-UM does it: a MIDI 1.0 sender's 100 reads back as the same 32 bit
+        // value a protocol translator would have made of it.
+        uint32_t UnipolarTo32(double normalized) noexcept
+        {
+            const auto sevenBit = std::lround(normalized * 127.0);
+
+            if (sevenBit >= 0 && sevenBit <= 127 && static_cast<double>(sevenBit) / 127.0 == normalized)
+            {
+                return M2Utils::scaleUp(static_cast<uint32_t>(sevenBit), 7, 32);
+            }
+
+            return static_cast<uint32_t>(std::llround((std::clamp)(normalized, 0.0, 1.0) * 4294967295.0));
+        }
+
+        // Pan is held from -0.5 to +0.5, and its 7 bit form is centered on 64.
+        uint32_t PanTo32(double offset) noexcept
+        {
+            const auto sevenBit = std::lround(offset * 127.0 + 64.0);
+
+            if (sevenBit >= 0 && sevenBit <= 127 && (static_cast<double>(sevenBit) - 64.0) / 127.0 == offset)
+            {
+                return M2Utils::scaleUp(static_cast<uint32_t>(sevenBit), 7, 32);
+            }
+
+            return static_cast<uint32_t>(std::llround((std::clamp)(offset + 0.5, 0.0, 1.0) * 4294967295.0));
+        }
+
+        // Pitch bend is held from -1 to +1, and its MIDI 1.0 form is 14 bits centered on 8192.
+        uint32_t PitchBendTo32(double normalized) noexcept
+        {
+            const auto fourteenBit = std::lround(normalized * 8192.0 + 8192.0);
+
+            if (fourteenBit >= 0 && fourteenBit <= 16383 &&
+                (static_cast<double>(fourteenBit) - 8192.0) / 8192.0 == normalized)
+            {
+                return M2Utils::scaleUp(static_cast<uint32_t>(fourteenBit), 14, 32);
+            }
+
+            return static_cast<uint32_t>(
+                std::llround((std::clamp)((normalized + 1.0) / 2.0, 0.0, 1.0) * 4294967295.0));
+        }
+
+        // Registered controller 0,0 carries whole semitones in its top seven bits.
+        uint32_t PitchBendSensitivityTo32(double semitones) noexcept
+        {
+            return static_cast<uint32_t>((std::clamp)(std::lround(semitones), 0L, 127L)) << 25;
+        }
     }
 
     _Use_decl_annotations_
@@ -550,6 +602,7 @@ namespace MidiSynth
             ci::InvalidateMuidByteCount,
             ci::AcknowledgmentFixedByteCount,
             ci::PropertyExchangeCapabilitiesByteCount,
+            ci::ProcessInquiryCapabilitiesReplyByteCount,
             ci::EndpointReplyFixedByteCount + ci::ProductInstanceIdMaximumByteCount })]{};
 
         size_t replyBytes{ 0 };
@@ -599,6 +652,10 @@ namespace MidiSynth
 
         case ci::ResponderAction::PropertySubscriptionRequested:
             ParkPropertyRequest(parsed, message, true);
+            return;
+
+        case ci::ResponderAction::MidiMessageReportRequested:
+            ParkMessageReport(parsed);
             return;
 
         default:
@@ -668,6 +725,177 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
+    void UmpDispatcher::ParkMessageReport(const WindowsMidiServicesCapabilityInquiry::ParsedMessage& parsed) noexcept
+    {
+        // Same as a property request: the initiator retries, and overwriting would corrupt the
+        // snapshot the worker is reading.
+        if (m_messageReportPending.load(std::memory_order_acquire))
+        {
+            m_stats.Ignored++;
+            return;
+        }
+
+        m_messageReport.InitiatorMuid = parsed.SourceMuid;
+        m_messageReport.DeviceId = parsed.DeviceId;
+        m_messageReport.MessageVersion = WindowsMidiServicesCapabilityInquiry::ReplyVersionFor(parsed.VersionFormat);
+        m_messageReport.Requested = parsed.MidiMessageReport;
+
+        for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
+        {
+            m_messageReport.Channels[channel] = m_engine->ChannelState(channel);
+        }
+
+        m_messageReportPending.store(true, std::memory_order_release);
+
+        m_stats.MessageReportRequests++;
+    }
+
+    _Use_decl_annotations_
+    bool UmpDispatcher::TakePendingMessageReport(PendingMessageReport& report) noexcept
+    {
+        if (!m_messageReportPending.load(std::memory_order_acquire))
+        {
+            return false;
+        }
+
+        report = m_messageReport;
+
+        m_messageReportPending.store(false, std::memory_order_release);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    void UmpDispatcher::WriteMidiMessageReport(
+        const PendingMessageReport& report,
+        uint8_t group,
+        uint32_t sourceMuid,
+        IUmpOutput& output) noexcept
+    {
+        namespace ci = WindowsMidiServicesCapabilityInquiry;
+
+        // What this synthesizer can report. No MIDI message sets any system state here, and
+        // M2-101-UM lets a responder leave out notes it cannot report.
+        constexpr uint8_t ReportableChannelControllers =
+            ci::ChannelControllerPitchBend |
+            ci::ChannelControllerControlChange |
+            ci::ChannelControllerRegistered |
+            ci::ChannelControllerProgramChange;
+
+        ci::MidiMessageReportFields reported{};
+        reported.ChannelControllerMessages =
+            report.Requested.ChannelControllerMessages & ReportableChannelControllers;
+
+        uint8_t sysex[(std::max)(ci::MidiMessageReportReplyByteCount, ci::MidiMessageReportEndByteCount)]{};
+
+        PacketizeSysEx7(output, group, sysex, ci::BuildMidiMessageReportReply(
+            report.DeviceId, sourceMuid, report.InitiatorMuid, reported, sysex, sizeof(sysex), report.MessageVersion));
+
+        // Data control 0x00 asks only what could be reported, and the reply has already said that.
+        if (report.Requested.MessageDataControl != ci::MessageDataControlNone)
+        {
+            const bool onlyChanged = report.Requested.MessageDataControl == ci::MessageDataControlNonDefault;
+            const SynthChannelState powerUp{};
+
+            // A channel is reported alone. The group and the function block are the same sixteen
+            // channels here, and they go out one whole channel after another.
+            const bool oneChannel = report.DeviceId < MidiChannelCount;
+            const uint8_t firstChannel = oneChannel ? report.DeviceId : 0;
+            const uint8_t lastChannel = oneChannel ? report.DeviceId : static_cast<uint8_t>(MidiChannelCount - 1);
+
+            for (uint8_t channel = firstChannel; channel <= lastChannel; channel++)
+            {
+                const auto& state = report.Channels[channel];
+
+                const auto send = [&](uint8_t status, uint8_t index1, uint8_t index2, uint32_t value) noexcept
+                {
+                    const uint32_t words[2] =
+                    {
+                        (MessageTypeMidi2ChannelVoice << 28) |
+                        (static_cast<uint32_t>(group & 0xF) << 24) |
+                        (static_cast<uint32_t>(status) << 20) |
+                        (static_cast<uint32_t>(channel) << 16) |
+                        (static_cast<uint32_t>(index1) << 8) |
+                        index2,
+
+                        value,
+                    };
+
+                    output.SendUmp(words, 2);
+                };
+
+                // The families go in the order of their bits in the inquiry.
+                if ((reported.ChannelControllerMessages & ci::ChannelControllerPitchBend) != 0)
+                {
+                    const auto value = PitchBendTo32(state.PitchBendNormalized);
+
+                    if (!onlyChanged || value != PitchBendTo32(powerUp.PitchBendNormalized))
+                    {
+                        send(StatusPitchBend, 0, 0, value);
+                    }
+                }
+
+                if ((reported.ChannelControllerMessages & ci::ChannelControllerControlChange) != 0)
+                {
+                    const struct
+                    {
+                        uint8_t Index;
+                        uint32_t Value;
+                        uint32_t PowerUp;
+                    } controllers[] =
+                    {
+                        { 1, UnipolarTo32(state.Modulation), UnipolarTo32(powerUp.Modulation) },
+                        { 7, UnipolarTo32(state.Volume), UnipolarTo32(powerUp.Volume) },
+                        { 10, PanTo32(state.PanOffset), PanTo32(powerUp.PanOffset) },
+                        { 11, UnipolarTo32(state.Expression), UnipolarTo32(powerUp.Expression) },
+                        { 64, state.SustainPedal ? 0xFFFFFFFFu : 0u, powerUp.SustainPedal ? 0xFFFFFFFFu : 0u },
+                        { 91, UnipolarTo32(state.ReverbSend), UnipolarTo32(powerUp.ReverbSend) },
+                        { 93, UnipolarTo32(state.ChorusSend), UnipolarTo32(powerUp.ChorusSend) },
+                    };
+
+                    static_assert(sizeof(controllers) / sizeof(controllers[0]) + 3 == MidiMessageReportMessagesPerChannel);
+
+                    for (const auto& controller : controllers)
+                    {
+                        if (!onlyChanged || controller.Value != controller.PowerUp)
+                        {
+                            send(StatusControlChange, controller.Index, 0, controller.Value);
+                        }
+                    }
+                }
+
+                if ((reported.ChannelControllerMessages & ci::ChannelControllerRegistered) != 0)
+                {
+                    const auto value = PitchBendSensitivityTo32(state.PitchBendRangeSemitones);
+
+                    if (!onlyChanged || value != PitchBendSensitivityTo32(powerUp.PitchBendRangeSemitones))
+                    {
+                        send(StatusRegisteredController, 0, 0, value);
+                    }
+                }
+
+                if ((reported.ChannelControllerMessages & ci::ChannelControllerProgramChange) != 0)
+                {
+                    if (!onlyChanged ||
+                        state.Program != powerUp.Program ||
+                        state.BankMsb != powerUp.BankMsb ||
+                        state.BankLsb != powerUp.BankLsb)
+                    {
+                        // Option flag 0x01 says the bank is valid, so the bank goes back too.
+                        send(StatusProgramChange, 0, 0x01,
+                            (static_cast<uint32_t>(state.Program & 0x7F) << 24) |
+                            (static_cast<uint32_t>(state.BankMsb & 0x7F) << 8) |
+                            (state.BankLsb & 0x7F));
+                    }
+                }
+            }
+        }
+
+        PacketizeSysEx7(output, group, sysex, ci::BuildMidiMessageReportEnd(
+            report.DeviceId, sourceMuid, report.InitiatorMuid, sysex, sizeof(sysex), report.MessageVersion));
+    }
+
+    _Use_decl_annotations_
     void UmpDispatcher::ConfigureResponder(uint32_t muid) noexcept
     {
         namespace ci = WindowsMidiServicesCapabilityInquiry;
@@ -691,6 +919,7 @@ namespace MidiSynth
         config.ReceivableMaximumSysExSize = MaxSysExBytes;
         config.FunctionBlockNumber = SynthEndpoint::FunctionBlockNumber;
         config.SupportsPropertyExchange = true;
+        config.SupportsProcessInquiry = true;
 
         const size_t productInstanceIdBytes =
             strnlen(m_productInstanceId, ci::ProductInstanceIdMaximumByteCount);

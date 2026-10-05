@@ -592,3 +592,61 @@ void MidiCapabilityInquiryMessageTests::TestEndpointReplyRefusesAnInvalidProduct
     // Every status still has to fit in seven bit system exclusive.
     VERIFY_ARE_EQUAL(build(0x05, { 0x80 }).Size(), (uint32_t)0);
 }
+
+void MidiCapabilityInquiryMessageTests::TestResourceListEntryFollowsTheResourcesOwnDefaults()
+{
+    auto const parse = [](wchar_t const* text)
+        {
+            return ci::MidiResourceList::FromJson(json::JsonArray::Parse(text));
+        };
+
+    // The minimal entries the specifications themselves show. M2-107-UM section 2.4 makes a
+    // ProgramList paged and keyed by resource id without either being written, and LocalOn can be
+    // written unless the device says it cannot.
+    auto const minimal = parse(
+        L"[{\"resource\":\"ProgramList\"},{\"resource\":\"ChannelList\"},{\"resource\":\"LocalOn\"}]");
+
+    VERIFY_ARE_EQUAL(minimal.Entries().Size(), (uint32_t)3);
+
+    auto const programList = minimal.GetEntry(L"ProgramList");
+
+    VERIFY_IS_NOT_NULL(programList);
+    VERIFY_IS_TRUE(programList.CanPaginate());
+    VERIFY_IS_TRUE(programList.RequireResourceId());
+    VERIFY_ARE_EQUAL(programList.CanSet(), ci::MidiResourceListEntry::CanSetNone());
+
+    auto const channelList = minimal.GetEntry(L"ChannelList");
+
+    VERIFY_IS_FALSE(channelList.CanPaginate());
+    VERIFY_IS_FALSE(channelList.RequireResourceId());
+
+    VERIFY_ARE_EQUAL(minimal.GetEntry(L"LocalOn").CanSet(), ci::MidiResourceListEntry::CanSetFull());
+
+    // What a device says outright still wins, even where it contradicts the specification.
+    auto const stated = parse(L"[{\"resource\":\"ProgramList\",\"canPaginate\":false,\"requireResId\":false}]");
+
+    VERIFY_IS_FALSE(stated.GetEntry(L"ProgramList").CanPaginate());
+    VERIFY_IS_FALSE(stated.GetEntry(L"ProgramList").RequireResourceId());
+
+    // Writing leaves out anything the reader will assume, and keeps what it would not.
+    ci::MidiResourceListEntry written{ L"ProgramList" };
+
+    VERIFY_IS_TRUE(written.CanPaginate());
+    VERIFY_IS_TRUE(written.RequireResourceId());
+    VERIFY_ARE_EQUAL(written.GetJson().Stringify(), winrt::hstring{ L"{\"resource\":\"ProgramList\"}" });
+
+    written.CanPaginate(false);
+
+    VERIFY_IS_TRUE(written.GetJson().HasKey(L"canPaginate"));
+    VERIFY_IS_FALSE(written.GetJson().GetNamedBoolean(L"canPaginate"));
+    VERIFY_IS_FALSE(written.GetJson().HasKey(L"requireResId"));
+
+    // A manufacturer's own resource has only the general defaults, so the same values are written.
+    ci::MidiResourceListEntry custom{ L"X-Patches" };
+
+    custom.CanPaginate(true);
+    custom.RequireResourceId(true);
+
+    VERIFY_IS_TRUE(custom.GetJson().GetNamedBoolean(L"canPaginate"));
+    VERIFY_IS_TRUE(custom.GetJson().GetNamedBoolean(L"requireResId"));
+}

@@ -36,6 +36,7 @@ public:
     TEST_METHOD(TestBuilderRefusesAMessageTypeItCannotBuild);
     TEST_METHOD(TestEndpointInquiryAndReplyRoundTrip);
     TEST_METHOD(TestEndpointReplyRefusesAnInvalidProductInstanceId);
+    TEST_METHOD(TestResourceListEntryFollowsTheResourcesOwnDefaults);
 
 private:
 

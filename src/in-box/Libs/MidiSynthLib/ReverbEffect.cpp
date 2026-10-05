@@ -7,18 +7,31 @@ namespace MidiSynth
 {
     namespace
     {
-        // Mutually prime lengths in milliseconds, so the comb resonances do not line up and ring.
-        // The right channel is offset slightly to widen the tail.
-        constexpr double CombMilliseconds[]{ 29.7, 37.1, 41.1, 43.7 };
-        constexpr double AllpassMilliseconds[]{ 5.0, 1.7 };
-        constexpr double RightChannelOffsetMilliseconds = 0.9;
+        // Freeverb's delay lengths, which Jezar placed in the public domain, converted from samples
+        // at 44.1 kHz to milliseconds so they hold at any rate. They are spread so the resonances of
+        // the combs do not line up and ring.
+        constexpr double CombMilliseconds[]{ 25.31, 26.94, 28.96, 30.75, 32.24, 33.81, 35.31, 36.67 };
+        constexpr double AllpassMilliseconds[]{ 12.61, 10.00, 7.73, 5.10 };
 
-        constexpr float AllpassFeedback = 0.5f;
+        // The right side runs slightly longer, which is what makes the two sides of the tail differ.
+        constexpr double RightChannelOffsetMilliseconds = 0.52;
+
+        // Puts the tail of a centered sound back at the level the earlier four comb design gave it,
+        // so content sends the same amount of reverb it always has. Measured: the denser network
+        // came out 6.03 dB louder for the same input.
+        constexpr float OutputGain = 0.5f;
 
         size_t DelayLength(double milliseconds, uint32_t sampleRate) noexcept
         {
             const auto frames = static_cast<size_t>(milliseconds * 0.001 * sampleRate);
             return (std::max)(frames, static_cast<size_t>(1));
+        }
+
+        // A tail left to decay into denormal floats costs many times the processor time for no
+        // audible difference, so anything this far below hearing is treated as silence.
+        float FlushDenormal(float value) noexcept
+        {
+            return (std::fabs(value) < 1.0e-20f) ? 0.0f : value;
         }
     }
 
@@ -29,6 +42,9 @@ namespace MidiSynth
         {
             return false;
         }
+
+        static_assert(std::size(CombMilliseconds) == CombCount);
+        static_assert(std::size(AllpassMilliseconds) == AllpassCount);
 
         m_sampleRate = sampleRate;
 
@@ -86,12 +102,22 @@ namespace MidiSynth
             return;
         }
 
-        // Feedback that decays by 60 dB over the requested time, using the longest comb as the
-        // representative loop length.
-        const double loopSeconds = CombMilliseconds[CombCount - 1] * 0.001;
         const double time = (std::max)(m_timeSeconds, 0.05);
 
-        m_combFeedback = static_cast<float>((std::min)(std::pow(10.0, -3.0 * loopSeconds / time), 0.98));
+        // Feedback that loses 60 dB over the requested time, worked out from each comb's own loop
+        // length so that none of them rings on after the others have gone.
+        auto setFeedback = [this, time](auto& combs) noexcept
+        {
+            for (auto& comb : combs)
+            {
+                const double loopSeconds = static_cast<double>(comb.Buffer.size()) / m_sampleRate;
+
+                comb.Feedback = static_cast<float>((std::min)(std::pow(10.0, -3.0 * loopSeconds / time), 0.98));
+            }
+        };
+
+        setFeedback(m_combLeft);
+        setFeedback(m_combRight);
 
         m_damp1 = static_cast<float>((std::clamp)(m_damping, 0.0, 0.95));
         m_damp2 = 1.0f - m_damp1;
@@ -147,8 +173,10 @@ namespace MidiSynth
             return;
         }
 
-        const auto wet = static_cast<float>(m_wetLevel);
-        const auto allpassMix = static_cast<float>(0.3 + 0.4 * m_depth);
+        const auto wet = static_cast<float>(m_wetLevel) * OutputGain;
+
+        // Depth is the diffusion. The default lands on 0.5, the value Freeverb uses throughout.
+        const auto allpassFeedback = static_cast<float>(0.2 + 0.43 * m_depth);
 
         auto runCombs = [this](auto& combs, float in) noexcept
         {
@@ -160,9 +188,9 @@ namespace MidiSynth
                 const float delayed = sample;
 
                 // One pole lowpass inside the loop, so each pass loses more high frequency.
-                comb.Filtered = delayed * m_damp2 + comb.Filtered * m_damp1;
+                comb.Filtered = FlushDenormal(delayed * m_damp2 + comb.Filtered * m_damp1);
 
-                sample = in + comb.Filtered * m_combFeedback;
+                sample = in + comb.Filtered * comb.Feedback;
 
                 if (++comb.Index >= comb.Buffer.size())
                 {
@@ -175,7 +203,7 @@ namespace MidiSynth
             return sum / static_cast<float>(CombCount);
         };
 
-        auto runAllpasses = [allpassMix](auto& allpasses, float in) noexcept
+        auto runAllpasses = [allpassFeedback](auto& allpasses, float in) noexcept
         {
             float value = in;
 
@@ -184,7 +212,7 @@ namespace MidiSynth
                 float& sample = allpass.Buffer[allpass.Index];
                 const float delayed = sample;
 
-                sample = value + delayed * AllpassFeedback * allpassMix;
+                sample = FlushDenormal(value + delayed * allpassFeedback);
                 value = delayed - value;
 
                 if (++allpass.Index >= allpass.Buffer.size())
@@ -198,11 +226,12 @@ namespace MidiSynth
 
         for (uint32_t frame = 0; frame < frameCount; frame++)
         {
-            const float left = input[frame * 2];
-            const float right = input[frame * 2 + 1];
+            // Both sides are fed the same mono signal. Feeding each its own channel kept the tail
+            // of a sound panned hard left on the left alone.
+            const float in = (input[frame * 2] + input[frame * 2 + 1]) * 0.5f;
 
-            const float wetLeft = runAllpasses(m_allpassLeft, runCombs(m_combLeft, left));
-            const float wetRight = runAllpasses(m_allpassRight, runCombs(m_combRight, right));
+            const float wetLeft = runAllpasses(m_allpassLeft, runCombs(m_combLeft, in));
+            const float wetRight = runAllpasses(m_allpassRight, runCombs(m_combRight, in));
 
             output[frame * 2] += wetLeft * wet;
             output[frame * 2 + 1] += wetRight * wet;

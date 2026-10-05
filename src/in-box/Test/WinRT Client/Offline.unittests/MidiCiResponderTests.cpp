@@ -41,6 +41,20 @@ namespace
         return responder;
     }
 
+    Responder MakeProcessInquiryResponder()
+    {
+        ResponderConfig config{};
+
+        config.Muid = OurMuid;
+        config.ManufacturerSysExId[2] = 0x41;
+        config.SupportsProcessInquiry = true;
+
+        Responder responder;
+        responder.Initialize(config);
+
+        return responder;
+    }
+
     ParsedMessage MakeDiscovery(_In_ uint32_t const destinationMuid, _In_ uint8_t const outputPathId)
     {
         ParsedMessage message{};
@@ -596,4 +610,155 @@ void MidiCiResponderTests::TestEndpointInquiryReturnsProductInstanceId()
 
     VERIFY_IS_TRUE(IsNakFor(reply, replyBytes, MessageType::EndpointInquiry),
         L"an id the specification does not allow is refused rather than sent");
+}
+
+
+// M2-101-UM section 9. Declaring Process Inquiry in Discovery is a promise to answer its inquiry.
+void MidiCiResponderTests::TestProcessInquiryIsDeclaredAndAnswered()
+{
+    uint8_t reply[64]{};
+    size_t replyBytes{ 0 };
+
+    // Same offset as the property exchange bit.
+    constexpr size_t capabilityOffset{ 24 };
+
+    auto plain = MakeResponder();
+    plain.ProcessMessage(MakeDiscovery(MuidBroadcast, 0), reply, sizeof(reply), &replyBytes);
+
+    VERIFY_ARE_EQUAL(replyBytes, DiscoveryReplyByteCount);
+    VERIFY_ARE_EQUAL(reply[capabilityOffset] & CategoryProcessInquiry, 0, L"off by default");
+
+    auto responder = MakeProcessInquiryResponder();
+    responder.ProcessMessage(MakeDiscovery(MuidBroadcast, 0), reply, sizeof(reply), &replyBytes);
+
+    VERIFY_ARE_EQUAL(replyBytes, DiscoveryReplyByteCount);
+    VERIFY_ARE_EQUAL(reply[capabilityOffset] & CategoryProcessInquiry, (int)CategoryProcessInquiry);
+
+    ParsedMessage message{};
+
+    message.Type = MessageType::ProcessInquiryCapabilities;
+    message.DeviceId = DeviceIdFunctionBlock;
+    message.VersionFormat = 0x02;
+    message.SourceMuid = TheirMuid;
+    message.DestinationMuid = OurMuid;
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+
+    // Worked out by hand from the message format table, not from the builder.
+    const uint8_t expected[]
+    {
+        0x7E, 0x7F, 0x0D, 0x41, 0x02,
+        0x56, 0x68, 0x48, 0x00,             // source muid 0x0123456
+        0x42, 0x00, 0x00, 0x00,             // destination muid 0x42
+        0x01                                // MIDI Message Report
+    };
+
+    VERIFY_ARE_EQUAL(replyBytes, sizeof(expected));
+    VERIFY_ARE_EQUAL(memcmp(reply, expected, sizeof(expected)), 0);
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, ProcessInquiryCapabilitiesReplyByteCount - 1, &replyBytes),
+        (int)ResponderAction::ReplyBufferTooSmall);
+}
+
+
+// The report itself is the host's to send, because only the host knows its own state. What the
+// responder owes is checking the inquiry, and refusing out loud the ones nobody can act on.
+void MidiCiResponderTests::TestMidiMessageReportIsHandedToTheCaller()
+{
+    auto responder = MakeProcessInquiryResponder();
+
+    ParsedMessage message{};
+
+    message.Type = MessageType::MidiMessageReport;
+    message.VersionFormat = 0x02;
+    message.SourceMuid = TheirMuid;
+    message.DestinationMuid = OurMuid;
+    message.HasMidiMessageReportFields = true;
+    message.MidiMessageReport.MessageDataControl = MessageDataControlFull;
+    message.MidiMessageReport.ChannelControllerMessages = 0x3F;
+
+    uint8_t reply[64]{};
+    size_t replyBytes{ 0 };
+
+    // A report can be about one channel, the group or the function block.
+    for (const uint8_t deviceId : { (uint8_t)0x00, (uint8_t)0x0F, (uint8_t)0x7E, (uint8_t)0x7F })
+    {
+        message.DeviceId = deviceId;
+        replyBytes = 0;
+
+        VERIFY_ARE_EQUAL(
+            (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+            (int)ResponderAction::MidiMessageReportRequested);
+
+        VERIFY_ARE_EQUAL(replyBytes, (size_t)0);
+    }
+
+    message.DeviceId = DeviceIdFunctionBlock;
+
+    for (const uint8_t control : { MessageDataControlNone, MessageDataControlNonDefault, MessageDataControlFull })
+    {
+        message.MidiMessageReport.MessageDataControl = control;
+
+        VERIFY_ARE_EQUAL(
+            (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+            (int)ResponderAction::MidiMessageReportRequested);
+    }
+
+    // The device id is byte 1, the message refused is byte 13 and the reason is byte 14.
+    const auto isNak = [&](uint8_t const deviceId, uint8_t const status)
+    {
+        return replyBytes == AcknowledgmentFixedByteCount &&
+            reply[1] == deviceId &&
+            reply[3] == static_cast<uint8_t>(MessageType::Nak) &&
+            reply[13] == static_cast<uint8_t>(MessageType::MidiMessageReport) &&
+            reply[14] == status;
+    };
+
+    message.DeviceId = 0x05;
+    message.MidiMessageReport.MessageDataControl = 0x02;
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+
+    VERIFY_IS_TRUE(isNak(0x05, NakStatusMessageMalformed), L"a data control from the reserved range is malformed");
+
+    message.MidiMessageReport.MessageDataControl = MessageDataControlFull;
+    message.HasMidiMessageReportFields = false;
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+
+    VERIFY_IS_TRUE(isNak(0x05, NakStatusMessageMalformed), L"so is an inquiry that stopped before its bitmaps");
+
+    message.HasMidiMessageReportFields = true;
+    message.DeviceId = 0x10;
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+
+    VERIFY_IS_TRUE(isNak(DeviceIdFunctionBlock, NakStatusNotInUse), L"a device id from the reserved range names nothing in use");
+
+    // A device that never declared Process Inquiry refuses the whole thing.
+    message.DeviceId = DeviceIdFunctionBlock;
+
+    auto plain = MakeResponder();
+
+    VERIFY_ARE_EQUAL(
+        (int)plain.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+
+    VERIFY_IS_TRUE(IsNakFor(reply, replyBytes, MessageType::MidiMessageReport));
+
+    // And an inquiry meant for another device is none of our business.
+    message.DestinationMuid = 0x0000099;
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Ignored);
 }

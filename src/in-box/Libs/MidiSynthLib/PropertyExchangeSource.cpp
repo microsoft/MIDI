@@ -7,6 +7,9 @@
 
 #include "MidiCiProgramList.h"
 
+#include <libmidi2/utils.h>
+
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <iterator>
@@ -40,6 +43,7 @@ namespace
         { "DeviceInfo", false, false, false },
         { "ChannelList", false, true, false },
         { "ProgramList", true, false, true },
+        { "ChCtrlList", true, false, false },
     };
 
     // Shown to a customer when a client lists the collections a channel can select from. Not
@@ -47,6 +51,7 @@ namespace
     // out of the sound set file untranslated.
     constexpr char const* MelodicProgramListTitle = "Melodic Programs";
     constexpr char const* DrumKitProgramListTitle = "Drum Kits";
+    constexpr char const* ControllerListTitle = "Controllers";
 }
 
 namespace MidiSynth
@@ -103,6 +108,86 @@ namespace MidiSynth
 
         m_resourceListJson.resize(ci::BuildResourceListJson(resources, nameCount, nullptr, 0));
         (void)ci::BuildResourceListJson(resources, nameCount, m_resourceListJson.data(), m_resourceListJson.size());
+
+        BuildControllerList();
+    }
+
+    void PropertyExchangeSource::BuildControllerList()
+    {
+        // Defaults are the power-up values a reset returns to, written the way the MIDI 2.0
+        // Protocol carries them, so they are taken from the engine's own channel state.
+        const SynthChannelState powerUp{};
+
+        auto const fromSevenBit = [](double normalized)
+        {
+            return M2Utils::scaleUp(static_cast<uint32_t>(std::lround(normalized * 127.0)), 7, 32);
+        };
+
+        constexpr uint32_t Center = 0x80000000u;
+        constexpr uint32_t Full = 0xFFFFFFFFu;
+
+        // Most useful first, as M2-117-UM asks. Everything is MIDI 2.0 Protocol: the bank select and
+        // RPN selector controllers are not listed because MIDI 2.0 replaces them with messages of
+        // its own. The synth sends no controllers at all, which "transmit":"none" has to say.
+        // numSigBits is set where the engine reads only the top bits of the value.
+        const ci::ControllerListEntry entries[]
+        {
+            { .Title = "Volume", .ControllerType = "cc", .Index = { 7 }, .IndexCount = 1, .Priority = 1,
+              .HasDefault = true, .Default = fromSevenBit(powerUp.Volume), .Transmit = "none",
+              .ParameterPath = "/volume", .TypeHint = "continuous" },
+
+            { .Title = "Modulation", .ControllerType = "cc", .Index = { 1 }, .IndexCount = 1, .Priority = 1,
+              .HasDefault = true, .Default = fromSevenBit(powerUp.Modulation), .Transmit = "none",
+              .ParameterPath = "/modulation", .TypeHint = "continuous" },
+
+            { .Title = "Pitch Bend", .ControllerType = "pBend", .Priority = 1,
+              .HasDefault = true, .Default = Center, .Transmit = "none",
+              .ParameterPath = "/pitchBend", .TypeHint = "continuous" },
+
+            { .Title = "Sustain Pedal", .ControllerType = "cc", .Index = { 64 }, .IndexCount = 1, .Priority = 1,
+              .HasDefault = true, .Default = powerUp.SustainPedal ? Full : 0u, .Transmit = "none",
+              .SignificantBits = 1, .ParameterPath = "/sustain", .TypeHint = "momentary" },
+
+            { .Title = "Pan", .ControllerType = "cc", .Index = { 10 }, .IndexCount = 1, .Priority = 2,
+              .HasDefault = true, .Default = fromSevenBit(powerUp.PanOffset + 64.0 / 127.0), .Transmit = "none",
+              .ParameterPath = "/pan", .TypeHint = "continuous" },
+
+            { .Title = "Expression", .ControllerType = "cc", .Index = { 11 }, .IndexCount = 1, .Priority = 2,
+              .HasDefault = true, .Default = fromSevenBit(powerUp.Expression), .Transmit = "none",
+              .ParameterPath = "/expression", .TypeHint = "continuous" },
+
+            { .Title = "Reverb Send", .ControllerType = "cc", .Index = { 91 }, .IndexCount = 1, .Priority = 3,
+              .HasDefault = true, .Default = fromSevenBit(powerUp.ReverbSend), .Transmit = "none",
+              .SignificantBits = 7, .ParameterPath = "/effects/reverb", .TypeHint = "continuous" },
+
+            { .Title = "Chorus Send", .ControllerType = "cc", .Index = { 93 }, .IndexCount = 1, .Priority = 3,
+              .HasDefault = true, .Default = fromSevenBit(powerUp.ChorusSend), .Transmit = "none",
+              .SignificantBits = 7, .ParameterPath = "/effects/chorus", .TypeHint = "continuous" },
+
+            { .Title = "Note Pitch Bend", .ControllerType = "pnp", .Priority = 3,
+              .HasDefault = true, .Default = Center, .Transmit = "none",
+              .ParameterPath = "/note/pitchBend", .TypeHint = "continuous" },
+
+            // Whole semitones in the top seven bits, which is all the engine reads.
+            { .Title = "Pitch Bend Sensitivity", .ControllerType = "rpn", .Index = { 0, 0 }, .IndexCount = 2, .Priority = 4,
+              .HasDefault = true, .Default = static_cast<uint32_t>(std::lround(powerUp.PitchBendRangeSemitones)) << 25,
+              .Transmit = "none", .SignificantBits = 7, .ParameterPath = "/pitchBend/sensitivity", .TypeHint = "continuous" },
+
+            { .Title = "Note Volume", .ControllerType = "pnrc", .Index = { PerNoteControllerVolume }, .IndexCount = 1, .Priority = 4,
+              .HasDefault = true, .Default = Full, .Transmit = "none",
+              .ParameterPath = "/note/volume", .TypeHint = "continuous" },
+
+            { .Title = "Note Pan", .ControllerType = "pnrc", .Index = { PerNoteControllerPan }, .IndexCount = 1, .Priority = 4,
+              .HasDefault = true, .Default = Center, .Transmit = "none",
+              .ParameterPath = "/note/pan", .TypeHint = "continuous" },
+
+            // An absolute pitch, so the only default is the note's own.
+            { .Title = "Note Pitch", .ControllerType = "pnrc", .Index = { PerNoteControllerPitch }, .IndexCount = 1, .Priority = 4,
+              .Transmit = "none", .ParameterPath = "/note/pitch", .TypeHint = "continuous" },
+        };
+
+        m_controllerListJson.resize(ci::BuildControllerListJson(entries, std::size(entries), nullptr, 0));
+        (void)ci::BuildControllerListJson(entries, std::size(entries), m_controllerListJson.data(), m_controllerListJson.size());
     }
 
     _Use_decl_annotations_
@@ -114,15 +199,17 @@ namespace MidiSynth
         char titles[MidiChannelCount][16]{};
         std::string programTitles[MidiChannelCount];
 
-        // One link object per kind, shared by every channel that uses it. They outlive the build.
-        constexpr ci::ResourceLink MelodicLink
+        // One set of links per kind, shared by every channel that uses it. They outlive the build.
+        constexpr ci::ResourceLink MelodicLinks[]
         {
-            "ProgramList", MelodicProgramListResourceId, MelodicProgramListTitle
+            { "ProgramList", MelodicProgramListResourceId, MelodicProgramListTitle },
+            { "ChCtrlList", ControllerListResourceId, ControllerListTitle },
         };
 
-        constexpr ci::ResourceLink DrumKitLink
+        constexpr ci::ResourceLink DrumKitLinks[]
         {
-            "ProgramList", DrumKitProgramListResourceId, DrumKitProgramListTitle
+            { "ProgramList", DrumKitProgramListResourceId, DrumKitProgramListTitle },
+            { "ChCtrlList", ControllerListResourceId, ControllerListTitle },
         };
 
         for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
@@ -148,8 +235,8 @@ namespace MidiSynth
                 entries[channel].ProgramTitle = programTitles[channel].c_str();
             }
 
-            entries[channel].Links = state.IsDrumChannel ? &DrumKitLink : &MelodicLink;
-            entries[channel].LinkCount = 1;
+            entries[channel].Links = state.IsDrumChannel ? DrumKitLinks : MelodicLinks;
+            entries[channel].LinkCount = std::size(MelodicLinks);
         }
 
         const auto required = ci::BuildChannelListJson(entries, MidiChannelCount, nullptr, 0);

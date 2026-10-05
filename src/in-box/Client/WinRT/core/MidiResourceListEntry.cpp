@@ -10,10 +10,37 @@
 #include "MidiResourceListEntry.h"
 #include "CapabilityInquiry.MidiResourceListEntry.g.cpp"
 
+#include "MidiCiProgramList.h"
+
+namespace native = ::WindowsMidiServicesCapabilityInquiry;
+
 namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 {
     namespace
     {
+        native::ResourceListDefaults DefaultsFor(_In_ winrt::hstring const& resource) noexcept
+        {
+            try
+            {
+                return native::ResourceListDefaultsFor(winrt::to_string(resource).c_str());
+            }
+            catch (...)
+            {
+                LOG_CAUGHT_EXCEPTION();
+                return native::ResourceListDefaults{};
+            }
+        }
+
+        winrt::hstring CanSetFrom(_In_z_ char const* value) noexcept
+        {
+            std::string_view const text{ value };
+
+            if (text == "full") return MidiResourceListEntry::CanSetFull();
+            if (text == "partial") return MidiResourceListEntry::CanSetPartial();
+
+            return MidiResourceListEntry::CanSetNone();
+        }
+
         constexpr std::wstring_view FieldResource{ L"resource" };
         constexpr std::wstring_view FieldCanGet{ L"canGet" };
         constexpr std::wstring_view FieldCanSet{ L"canSet" };
@@ -101,6 +128,17 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         }
     }
 
+    _Use_decl_annotations_
+    MidiResourceListEntry::MidiResourceListEntry(winrt::hstring const& resource) noexcept
+        : m_resource(resource)
+    {
+        auto const defaults = DefaultsFor(resource);
+
+        m_canSet = CanSetFrom(defaults.CanSet);
+        m_canPaginate = defaults.CanPaginate;
+        m_requireResourceId = defaults.RequireResourceId;
+    }
+
     json::JsonObject MidiResourceListEntry::GetJson() noexcept
     {
         try
@@ -110,16 +148,18 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
             jsonObject.SetNamedValue(winrt::hstring{ FieldResource },
                 json::JsonValue::CreateStringValue(m_resource));
 
-            // Everything else is written only when it differs from the specification's default, so
-            // a device's list stays as small as the wire format expects rather than restating what
-            // a reader would have assumed anyway.
+            // Everything else is written only when it differs from the resource's specification,
+            // so a device's list stays as small as the wire format expects rather than restating
+            // what a reader would have assumed anyway. M2-103-UM section 14.
+            auto const defaults = DefaultsFor(m_resource);
+
             if (!m_canGet)
             {
                 jsonObject.SetNamedValue(winrt::hstring{ FieldCanGet },
                     json::JsonValue::CreateBooleanValue(false));
             }
 
-            if (m_canSet != CanSetNone())
+            if (m_canSet != CanSetFrom(defaults.CanSet))
             {
                 jsonObject.SetNamedValue(winrt::hstring{ FieldCanSet },
                     json::JsonValue::CreateStringValue(m_canSet));
@@ -131,16 +171,16 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                     json::JsonValue::CreateBooleanValue(true));
             }
 
-            if (m_canPaginate)
+            if (m_canPaginate != defaults.CanPaginate)
             {
                 jsonObject.SetNamedValue(winrt::hstring{ FieldCanPaginate },
-                    json::JsonValue::CreateBooleanValue(true));
+                    json::JsonValue::CreateBooleanValue(m_canPaginate));
             }
 
-            if (m_requireResourceId)
+            if (m_requireResourceId != defaults.RequireResourceId)
             {
                 jsonObject.SetNamedValue(winrt::hstring{ FieldRequireResId },
-                    json::JsonValue::CreateBooleanValue(true));
+                    json::JsonValue::CreateBooleanValue(m_requireResourceId));
             }
 
             WriteStringArrayIfAny(jsonObject, FieldMediaTypes, m_mediaTypes);
@@ -180,10 +220,15 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 entry->Resource(jsonObject.Lookup(resourceName).GetString());
             }
 
+            // A property the device left out means what the resource's own specification says,
+            // which for a ProgramList is paged and needing a resource id.
+            auto const defaults = DefaultsFor(entry->Resource());
+
             entry->CanGet(ReadBoolean(jsonObject, FieldCanGet, true));
             entry->CanSubscribe(ReadBoolean(jsonObject, FieldCanSubscribe, false));
-            entry->CanPaginate(ReadBoolean(jsonObject, FieldCanPaginate, false));
-            entry->RequireResourceId(ReadBoolean(jsonObject, FieldRequireResId, false));
+            entry->CanPaginate(ReadBoolean(jsonObject, FieldCanPaginate, defaults.CanPaginate));
+            entry->RequireResourceId(ReadBoolean(jsonObject, FieldRequireResId, defaults.RequireResourceId));
+            entry->CanSet(CanSetFrom(defaults.CanSet));
 
             winrt::hstring const canSetName{ FieldCanSet };
 

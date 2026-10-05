@@ -1003,6 +1003,17 @@ MidiSynthDevice::ServicePropertyRequestsInner()
             (void)m_propertyExchange.RemoveSubscription(withdrawn, {});
         }
 
+        // A MIDI Message Report goes out whole, in a pass that sends nothing else, so no property
+        // reply can land between its reply and its end. The queue is empty at this point, because
+        // every pass drains it, and the header checks that the largest report fits.
+        UmpDispatcher::PendingMessageReport report{};
+
+        if (m_dispatcher.TakePendingMessageReport(report))
+        {
+            UmpDispatcher::WriteMidiMessageReport(report, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), m_propertyOutput);
+            return;
+        }
+
         UmpDispatcher::PendingPropertyRequest request{};
 
         if (m_dispatcher.TakePendingPropertyRequest(request))
@@ -1264,6 +1275,24 @@ MidiSynthDevice::ResourceForHeader(
         result.Offset = readCount(L"offset", 0);
         result.Limit = readCount(L"limit", SIZE_MAX);
 
+        return ResourceLookup::Found;
+    }
+
+    if (resource == L"ChCtrlList")
+    {
+        std::string resourceId;
+
+        for (auto const character : readString(L"resId"))
+        {
+            resourceId += (character > 0 && character < 0x80) ? static_cast<char>(character) : '?';
+        }
+
+        if (!MidiSynth::PropertyExchangeSource::IsKnownControllerListResourceId(resourceId))
+        {
+            return ResourceLookup::UnknownResource;
+        }
+
+        result.Blob = &m_propertyExchange.ControllerListJson();
         return ResourceLookup::Found;
     }
 

@@ -33,6 +33,9 @@ public:
     TEST_METHOD(TestDeviceInfoBytes);
     TEST_METHOD(TestDeviceInfoAgreesWithTheOtherIdentityCarriers);
     TEST_METHOD(TestResourceListBytes);
+    TEST_METHOD(TestResourceListLeavesOutEachResourcesOwnDefaults);
+    TEST_METHOD(TestResourceListDefaultsComeFromTheResourceSpecification);
+    TEST_METHOD(TestControllerListBytes);
     TEST_METHOD(TestChannelListWithoutLinksBytes);
     TEST_METHOD(TestChannelListLinksBytes);
     TEST_METHOD(TestChannelListLinkOmitsMissingFields);
