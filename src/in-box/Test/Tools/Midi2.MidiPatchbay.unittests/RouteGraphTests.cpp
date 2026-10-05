@@ -1006,3 +1006,39 @@ void RouteGraphTests::TheAgentGuideLfoExampleReads()
     VERIFY_ARE_EQUAL(size_t{ 1 }, graph.Generators.size());
     VERIFY_IS_TRUE(graph.Generators[0].Kind == BlockKind::LfoGenerator);
 }
+
+void RouteGraphTests::AnAnnotationIsNotPartOfTheRoute()
+{
+    PatchDocument patch{};
+    AddEndpoint(patch, L"keys");
+    AddEndpoint(patch, L"synth");
+    AddBlock(patch, L"up", BlockKind::Transpose).Settings.Transform.TransposeSemitones = 2;
+    Link(patch, L"1", L"keys", L"up");
+    Link(patch, L"2", L"up", L"synth");
+
+    auto const without = Compile(patch).Signature;
+
+    // Adding, editing or moving a note doesn't start routing over.
+    AddBlock(patch, L"note", BlockKind::Annotation).Settings.Annotation.Text = L"Up a tone";
+    VERIFY_ARE_EQUAL(without, Compile(patch).Signature);
+
+    patch.Blocks[1].Settings.Annotation.Text = L"Up two semitones";
+    patch.Blocks[1].Settings.Annotation.Bold = true;
+    patch.Blocks[1].CanvasX = 300;
+    VERIFY_ARE_EQUAL(without, Compile(patch).Signature);
+
+    // Drawn by hand, a link into or out of one carries nothing.
+    Link(patch, L"3", L"keys", L"note");
+    Link(patch, L"4", L"note", L"synth");
+
+    auto const graph = Compile(patch);
+
+    VERIFY_IS_TRUE(graph.Problems.empty());
+    VERIFY_IS_TRUE(graph.Generators.empty());
+
+    auto const played = Arrive(graph, L"dev-keys", Midi1(0, NoteOn, 0, 60, 100));
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, played.Sent.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"dev-synth" }, played.Sent[0].Device);
+    VERIFY_IS_TRUE(played.Sent[0].Sent == Midi1(0, NoteOn, 0, 62, 100));
+}

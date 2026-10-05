@@ -908,3 +908,55 @@ void PatchSerializerTests::RemovingABlockRemovesItsLinks()
     VERIFY_ARE_NOT_EQUAL(one, two);
     VERIFY_ARE_EQUAL(std::wstring::npos, one.find(L'{'));
 }
+
+void PatchSerializerTests::AnAnnotationKeepsItsTextAndNoLinks()
+{
+    auto const patch = ReadPatchJson(LR"({
+        "fileVersion": 3,
+        "endpoints": [ { "id": "a", "match": {} }, { "id": "b", "match": {} } ],
+        "blocks": [
+            { "id": "t", "type": "transpose", "x": 0, "y": 0, "settings": { "transposeSemitones": 3 } },
+            { "id": "n", "type": "annotation", "x": 40, "y": -20,
+              "settings": { "text": "Pads\nup a third", "fontFamily": "Cascadia Mono", "fontSize": 20, "bold": true, "color": "#e3008c" } }
+        ],
+        "connections": [
+            { "id": "1", "source": "a", "destination": "t" },
+            { "id": "2", "source": "t", "destination": "b" },
+            { "id": "3", "source": "a", "destination": "n" },
+            { "id": "4", "source": "n", "destination": "b" }
+        ]
+    })", L"fallback");
+
+    VERIFY_IS_TRUE(patch.has_value());
+    VERIFY_ARE_EQUAL(size_t{ 2 }, patch->Blocks.size());
+
+    // Text on the canvas isn't a step.
+    VERIFY_ARE_EQUAL(size_t{ 1 }, patch->StepCount());
+
+    auto const* note = patch->FindBlock(L"n");
+
+    VERIFY_IS_NOT_NULL(note);
+    VERIFY_IS_TRUE(note->Kind == BlockKind::Annotation);
+    VERIFY_ARE_EQUAL(40.0, note->CanvasX);
+    VERIFY_ARE_EQUAL(-20.0, note->CanvasY);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Pads up a third" }, note->Settings.Annotation.Text);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Cascadia Mono" }, note->Settings.Annotation.FontFamily);
+    VERIFY_ARE_EQUAL(20.0, note->Settings.Annotation.FontSize);
+    VERIFY_IS_TRUE(note->Settings.Annotation.Bold);
+    VERIFY_IS_FALSE(note->Settings.Annotation.Italic);
+    VERIFY_ARE_EQUAL(std::wstring{ L"#E3008C" }, note->Settings.Annotation.Color);
+
+    // Nothing goes into an annotation or comes out of one.
+    VERIFY_ARE_EQUAL(size_t{ 2 }, patch->Connections.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"1" }, patch->Connections[0].Id);
+    VERIFY_ARE_EQUAL(std::wstring{ L"2" }, patch->Connections[1].Id);
+
+    auto const again = ReadPatchJson(WritePatchJson(patch.value()), L"fallback");
+
+    VERIFY_IS_TRUE(again.has_value());
+
+    auto const* back = again->FindBlock(L"n");
+
+    VERIFY_IS_NOT_NULL(back);
+    VERIFY_IS_TRUE(back->Settings.Annotation == note->Settings.Annotation);
+}

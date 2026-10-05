@@ -11,6 +11,9 @@
 
 #include "ProcessingBlock.h"
 
+// Shared with MIDI Glass, in midi-app-shared. Header only and pure.
+#include "FontNames.h"
+
 #include <algorithm>
 #include <cmath>
 
@@ -53,6 +56,7 @@ namespace midipatchbay
             { BlockKind::TimeCodeGenerator, BlockCategory::Generator, L"timeCodeGenerator" },
             { BlockKind::LfoGenerator, BlockCategory::Generator, L"lfoGenerator" },
             { BlockKind::ClockDivider, BlockCategory::Transform, L"clockDivider" },
+            { BlockKind::Annotation, BlockCategory::Annotation, L"annotation" },
         };
 
         static_assert(std::size(Kinds) == BlockKindCount);
@@ -125,6 +129,15 @@ namespace midipatchbay
         constexpr wchar_t KeyMidi1[] = L"midi1";
         constexpr wchar_t KeyReturnToMiddle[] = L"returnToMiddle";
         constexpr wchar_t KeyDivideBy[] = L"divideBy";
+
+        // Annotations.
+        constexpr wchar_t KeyText[] = L"text";
+        constexpr wchar_t KeyFontFamily[] = L"fontFamily";
+        constexpr wchar_t KeyFontSize[] = L"fontSize";
+        constexpr wchar_t KeyBold[] = L"bold";
+        constexpr wchar_t KeyItalic[] = L"italic";
+        constexpr wchar_t KeyUnderline[] = L"underline";
+        constexpr wchar_t KeyColor[] = L"color";
 
         constexpr wchar_t ModeRange[] = L"range";
         constexpr wchar_t ModeOne[] = L"one";
@@ -619,9 +632,90 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
+    bool IsAnnotation(BlockKind kind) noexcept
+    {
+        return kind == BlockKind::Annotation;
+    }
+
+    _Use_decl_annotations_
     bool HasInput(BlockKind kind) noexcept
     {
-        return kind != BlockKind::ClockGenerator && kind != BlockKind::TimeCodeGenerator;
+        return kind != BlockKind::ClockGenerator && kind != BlockKind::TimeCodeGenerator && kind != BlockKind::Annotation;
+    }
+
+    _Use_decl_annotations_
+    bool HasOutput(BlockKind kind) noexcept
+    {
+        return kind != BlockKind::Annotation;
+    }
+
+    _Use_decl_annotations_
+    bool CanGoIntoConnection(BlockKind kind) noexcept
+    {
+        // A generator passes on what it makes, never what comes in, so a connection through one
+        // would quietly stop carrying its messages.
+        return HasInput(kind) && HasOutput(kind) && !IsGenerator(kind);
+    }
+
+    _Use_decl_annotations_
+    std::wstring AnnotationTextFrom(std::wstring_view text)
+    {
+        std::wstring kept{};
+        kept.reserve((std::min)(text.size(), MaximumAnnotationLength));
+
+        for (auto const ch : text)
+        {
+            if (kept.size() >= MaximumAnnotationLength)
+            {
+                break;
+            }
+
+            // A line break or a tab would make a second line the canvas has no room for.
+            auto const control = ch < L' ' || (ch >= 0x7F && ch <= 0x9F) || ch == 0x2028 || ch == 0x2029;
+
+            kept.push_back(control ? L' ' : ch);
+        }
+
+        // Cut between the halves of a character outside the basic plane, which is not a character.
+        if (!kept.empty() && kept.back() >= 0xD800 && kept.back() <= 0xDBFF)
+        {
+            kept.pop_back();
+        }
+
+        return kept;
+    }
+
+    _Use_decl_annotations_
+    std::wstring AnnotationColorFrom(std::wstring_view text)
+    {
+        if (text.size() != 7 || text[0] != L'#')
+        {
+            return {};
+        }
+
+        std::wstring color{ L"#" };
+
+        for (auto const ch : text.substr(1))
+        {
+            if (ch >= L'0' && ch <= L'9')
+            {
+                color.push_back(ch);
+            }
+            else if (ch >= L'a' && ch <= L'f')
+            {
+                color.push_back(static_cast<wchar_t>(ch - L'a' + L'A'));
+            }
+            else if (ch >= L'A' && ch <= L'F')
+            {
+                color.push_back(ch);
+            }
+            else
+            {
+                return {};
+            }
+        }
+
+        return color;
     }
 
     _Use_decl_annotations_
@@ -981,6 +1075,10 @@ namespace midipatchbay
         case BlockKind::ClockDivider:
             return settings.ClockDivision <= 1;
 
+        // Text on the canvas: messages never reach it.
+        case BlockKind::Annotation:
+            return true;
+
         case BlockKind::ClockGenerator:
         case BlockKind::TimeCodeGenerator:
         case BlockKind::LfoGenerator:
@@ -1148,6 +1246,20 @@ namespace midipatchbay
             case BlockKind::ClockDivider:
                 SetNumber(object, KeyDivideBy, settings.ClockDivision);
                 break;
+
+            case BlockKind::Annotation:
+            {
+                auto const& note = settings.Annotation;
+
+                SetString(object, KeyText, note.Text);
+                SetString(object, KeyFontFamily, note.FontFamily);
+                SetNumber(object, KeyFontSize, note.FontSize);
+                SetBool(object, KeyBold, note.Bold);
+                SetBool(object, KeyItalic, note.Italic);
+                SetBool(object, KeyUnderline, note.Underline);
+                SetString(object, KeyColor, note.Color);
+                break;
+            }
 
             default:
                 break;
@@ -1383,6 +1495,25 @@ namespace midipatchbay
                     std::floor(ReadNumber(object, KeyDivideBy, 1, MaximumClockDivision, DefaultClockDivision)));
                 break;
 
+            case BlockKind::Annotation:
+            {
+                auto& note = settings.Annotation;
+
+                note.Text = AnnotationTextFrom(ReadString(object, KeyText));
+
+                // A family that could not be handed to XAML as it is goes back to the default.
+                auto family = ReadString(object, KeyFontFamily);
+                note.FontFamily = midiapp::IsSafeFontFamilyName(family) ? std::move(family) : std::wstring{};
+
+                note.FontSize = ReadNumber(object, KeyFontSize,
+                    MinimumAnnotationFontSize, MaximumAnnotationFontSize, DefaultAnnotationFontSize);
+                note.Bold = ReadBool(object, KeyBold, false);
+                note.Italic = ReadBool(object, KeyItalic, false);
+                note.Underline = ReadBool(object, KeyUnderline, false);
+                note.Color = AnnotationColorFrom(ReadString(object, KeyColor));
+                break;
+            }
+
             default:
                 break;
             }
@@ -1499,6 +1630,16 @@ namespace midipatchbay
             case BlockKind::ClockDivider:
                 signature += std::to_wstring(settings.ClockDivision);
                 break;
+
+            case BlockKind::Annotation:
+            {
+                auto const& note = settings.Annotation;
+
+                signature += NumberText(note.FontSize) + (note.Bold ? L".b" : L".-") +
+                    (note.Italic ? L"i" : L"-") + (note.Underline ? L"u" : L"-") + L'.' +
+                    note.Color + L'.' + note.FontFamily + L'|' + note.Text;
+                break;
+            }
 
             default:
                 signature += TransformSignature(settings.Transform);

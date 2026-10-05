@@ -185,3 +185,40 @@ void PatchLayoutTests::ALoopStillGetsALayout()
     VERIFY_IS_TRUE(X(patch, L"b") < X(patch, L"out"));
     VERIFY_IS_FALSE(AnythingOverlaps(patch));
 }
+
+void PatchLayoutTests::AnAnnotationStaysWhereItWasPut()
+{
+    PatchDocument patch{};
+    AddEndpoint(patch, L"keys");
+    AddEndpoint(patch, L"synth");
+    AddBlock(patch, L"up");
+
+    Link(patch, L"keys", L"up");
+    Link(patch, L"up", L"synth");
+
+    PatchBlock note{};
+    note.Id = L"note";
+    note.Kind = BlockKind::Annotation;
+    note.Settings = DefaultBlockSettings(note.Kind);
+    note.Settings.Annotation.Text = L"Up an octave for the pads";
+    note.CanvasX = 1234;
+    note.CanvasY = -56;
+    patch.Blocks.push_back(note);
+
+    ArrangeInColumns(patch, nullptr);
+
+    VERIFY_ARE_EQUAL(1234.0, X(patch, L"note"));
+    VERIFY_ARE_EQUAL(-56.0, *patch.NodeY(L"note"));
+    VERIFY_IS_TRUE(X(patch, L"keys") < X(patch, L"up"));
+    VERIFY_IS_TRUE(X(patch, L"up") < X(patch, L"synth"));
+
+    // Its size follows its text, so a bigger font takes more room.
+    auto const small = EstimatedNodeSize(patch, L"note");
+
+    patch.Blocks.back().Settings.Annotation.FontSize = 32;
+
+    auto const large = EstimatedNodeSize(patch, L"note");
+
+    VERIFY_IS_TRUE(large.Width > small.Width);
+    VERIFY_IS_TRUE(large.Height > small.Height);
+}

@@ -21,7 +21,7 @@
 #include "ThemeStore.h"
 
 namespace resources = ::midiglass::resources;
-namespace fonts = ::midiglass::fonts;
+namespace fonts = ::midiapp::fonts;
 
 namespace winrt::midiglass::implementation
 {

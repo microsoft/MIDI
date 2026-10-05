@@ -39,4 +39,5 @@ public:
     TEST_METHOD(TheAgentGuideMaskExampleRoutes);
     TEST_METHOD(TheAgentGuideClockExampleRoutes);
     TEST_METHOD(TheAgentGuideLfoExampleReads);
+    TEST_METHOD(AnAnnotationIsNotPartOfTheRoute);
 };

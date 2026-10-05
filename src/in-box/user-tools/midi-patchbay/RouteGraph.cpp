@@ -312,6 +312,12 @@ namespace midipatchbay
                     return ExpandDestination(link, edge);
                 }
 
+                // An annotation is text on the canvas. A link into one came from a file.
+                if (!HasInput(block->Kind) && !IsGenerator(block->Kind))
+                {
+                    return Expansion::Dead;
+                }
+
                 // Nothing goes into MIDI clock or MIDI Time Code, and only timing into an LFO. A
                 // link into one that can't take it came from a file, and carries nothing. A clock
                 // input goes no further, so it is never part of a circle.
@@ -534,6 +540,12 @@ namespace midipatchbay
 
             for (auto const& block : patch.Blocks)
             {
+                // Text on the canvas: editing it never changes how the patch routes.
+                if (IsAnnotation(block.Kind))
+                {
+                    continue;
+                }
+
                 parts.push_back(L"b " + block.Id + (block.Bypassed ? L" off " : L" on ") +
                     BlockSettingsSignature(block.Kind, block.Settings));
             }

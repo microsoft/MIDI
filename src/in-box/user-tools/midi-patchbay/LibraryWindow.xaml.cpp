@@ -1357,7 +1357,7 @@ namespace winrt::midipatchbay::implementation
             footer.Children().Append(state);
 
             controls::TextBlock size{};
-            size.Text(resources::FormatString(L"TileSizeFormat", patch.Blocks.size(), patch.Connections.size()));
+            size.Text(resources::FormatString(L"TileSizeFormat", patch.StepCount(), patch.Connections.size()));
             size.FontSize(12);
             size.Foreground(Brush(L"TextFillColorTertiaryBrush"));
             controls::Grid::SetColumn(size, 1);

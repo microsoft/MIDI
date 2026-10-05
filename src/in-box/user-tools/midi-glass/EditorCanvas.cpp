@@ -723,7 +723,7 @@ namespace winrt::midiglass::implementation
                 double labelHeight{ 0.0 };
 
                 if (!control.LabelLook.FontFamily.empty() &&
-                    !::midiglass::fonts::IsInstalled(control.LabelLook.FontFamily) &&
+                    !::midiapp::fonts::IsInstalled(control.LabelLook.FontFamily) &&
                     m_renderer.TryGetLabelBox(index, labelX, labelY, labelWidth, labelHeight))
                 {
                     addRectangle(

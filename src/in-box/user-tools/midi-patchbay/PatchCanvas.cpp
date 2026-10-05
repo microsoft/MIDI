@@ -10,6 +10,9 @@
 #include "PatchLayout.h"
 #include "StringResources.h"
 
+// Shared with MIDI Glass, in midi-app-shared.
+#include "FontCatalog.h"
+
 namespace midipatchbay
 {
     namespace
@@ -57,6 +60,11 @@ namespace midipatchbay
         // Within this of a connection, a block dropped from the palette goes into it.
         constexpr double ConnectionHitDistance = 14.0;
         constexpr int SamplesPerCurve = 24;
+
+        // Room around an annotation's text, so the edge drawn when it is selected clears it.
+        constexpr double AnnotationPaddingX = 6.0;
+        constexpr double AnnotationPaddingY = 2.0;
+        constexpr double AnnotationCornerRadius = 4.0;
 
         winrt::Windows::UI::Color Rgb(_In_ uint8_t r, _In_ uint8_t g, _In_ uint8_t b, _In_ uint8_t a = 255) noexcept
         {
@@ -124,6 +132,19 @@ namespace midipatchbay
             return collection;
         }
 
+        // A button fills itself, square, on hover and press. Nothing clips a connection point's
+        // row now, so that fill would show past the node's rounded corners. The rows draw their own.
+        void ClearStateFills(_In_ controls::Button const& button)
+        {
+            auto const dictionary = button.Resources();
+
+            for (auto const key : { L"ButtonBackground", L"ButtonBackgroundPointerOver",
+                                    L"ButtonBackgroundPressed", L"ButtonBackgroundDisabled" })
+            {
+                dictionary.Insert(winrt::box_value(key), media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+            }
+        }
+
         // The category colors need a darker shade on a light background to stay readable.
         bool IsDarkTheme() noexcept
         {
@@ -178,43 +199,44 @@ namespace midipatchbay
 
             return std::sqrt(x * x + y * y);
         }
+    }
 
-        // BitmapImage cannot render SVG and the shipped default endpoint art is SVG, so the
-        // decoder is chosen by extension, the same way the Settings app does it.
-        media::ImageSource LoadEndpointImage(_In_ std::wstring const& path, _In_ int32_t pixelHeight) noexcept
+    // BitmapImage cannot render SVG and the shipped default endpoint art is SVG, so the decoder
+    // is chosen by extension, the same way the Settings app does it.
+    _Use_decl_annotations_
+    media::ImageSource PatchCanvas::LoadEndpointImage(std::wstring const& path, int32_t pixelHeight) noexcept
+    {
+        if (path.empty())
         {
-            if (path.empty())
-            {
-                return nullptr;
-            }
-
-            try
-            {
-                foundation::Uri const uri{ L"file:///" + winrt::hstring{ path } };
-
-                if (midiapp::EndpointImageAssets::IsScalableVector(path))
-                {
-                    media::Imaging::SvgImageSource source{};
-
-                    source.RasterizePixelHeight(pixelHeight);
-                    source.UriSource(uri);
-
-                    return source;
-                }
-
-                media::Imaging::BitmapImage bitmap{};
-
-                bitmap.DecodePixelHeight(pixelHeight);
-                bitmap.UriSource(uri);
-
-                return bitmap;
-            }
-            catch (...)
-            {
-            }
-
             return nullptr;
         }
+
+        try
+        {
+            foundation::Uri const uri{ L"file:///" + winrt::hstring{ path } };
+
+            if (midiapp::EndpointImageAssets::IsScalableVector(path))
+            {
+                media::Imaging::SvgImageSource source{};
+
+                source.RasterizePixelHeight(pixelHeight);
+                source.UriSource(uri);
+
+                return source;
+            }
+
+            media::Imaging::BitmapImage bitmap{};
+
+            bitmap.DecodePixelHeight(pixelHeight);
+            bitmap.UriSource(uri);
+
+            return bitmap;
+        }
+        catch (...)
+        {
+        }
+
+        return nullptr;
     }
 
     _Use_decl_annotations_
@@ -251,6 +273,10 @@ namespace midipatchbay
                 color = dark ? Rgb(0x6C, 0xC8, 0xFF) : Rgb(0x00, 0x5A, 0x9E);
                 break;
 
+            case BlockCategory::Annotation:
+                color = dark ? Rgb(0xB8, 0xB8, 0xB8) : Rgb(0x5C, 0x5C, 0x5C);
+                break;
+
             default:
                 color = dark ? Rgb(0xFF, 0xB5, 0x47) : Rgb(0x9A, 0x5B, 0x00);
                 break;
@@ -265,6 +291,80 @@ namespace midipatchbay
         }
 
         return nullptr;
+    }
+
+    _Use_decl_annotations_
+    std::optional<winrt::Windows::UI::Color> PatchCanvas::ParseColorCode(std::wstring_view code) noexcept
+    {
+        try
+        {
+            auto const normal = AnnotationColorFrom(code);
+
+            if (normal.empty())
+            {
+                return std::nullopt;
+            }
+
+            auto const value = std::stoul(normal.substr(1), nullptr, 16);
+
+            return Rgb(
+                static_cast<uint8_t>((value >> 16) & 0xFF),
+                static_cast<uint8_t>((value >> 8) & 0xFF),
+                static_cast<uint8_t>(value & 0xFF));
+        }
+        catch (...)
+        {
+        }
+
+        return std::nullopt;
+    }
+
+    _Use_decl_annotations_
+    std::wstring PatchCanvas::ColorCode(winrt::Windows::UI::Color const& color)
+    {
+        return std::format(L"#{:02X}{:02X}{:02X}", color.R, color.G, color.B);
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::ApplyAnnotationLook(controls::TextBlock const& text, AnnotationSettings const& settings) noexcept
+    {
+        try
+        {
+            auto const empty = settings.Text.empty();
+
+            text.Text(empty ? resources::GetString(L"AnnotationPlaceholder") : winrt::hstring{ settings.Text });
+            text.FontFamily(midiapp::fonts::FamilyFor(settings.FontFamily));
+            text.FontSize(std::clamp(settings.FontSize, MinimumAnnotationFontSize, MaximumAnnotationFontSize));
+
+            text.FontWeight(settings.Bold
+                ? winrt::Microsoft::UI::Text::FontWeights::Bold()
+                : winrt::Microsoft::UI::Text::FontWeights::Normal());
+
+            // The hint is in italics, so an empty annotation is not mistaken for one that says so.
+            text.FontStyle(settings.Italic || empty
+                ? winrt::Windows::UI::Text::FontStyle::Italic
+                : winrt::Windows::UI::Text::FontStyle::Normal);
+
+            text.TextDecorations(settings.Underline
+                ? winrt::Windows::UI::Text::TextDecorations::Underline
+                : winrt::Windows::UI::Text::TextDecorations::None);
+
+            auto const color = empty ? std::nullopt : ParseColorCode(settings.Color);
+
+            if (color.has_value())
+            {
+                text.Foreground(media::SolidColorBrush{ color.value() });
+            }
+            else
+            {
+                text.Foreground(empty
+                    ? ThemeBrush(L"TextFillColorTertiaryBrush", Rgb(0x90, 0x90, 0x90))
+                    : ThemeBrush(L"TextFillColorPrimaryBrush", Rgb(0xFF, 0xFF, 0xFF)));
+            }
+        }
+        catch (...)
+        {
+        }
     }
 
     _Use_decl_annotations_
@@ -390,16 +490,33 @@ namespace midipatchbay
             if (m_scrollViewer != nullptr)
             {
                 // Blocks and endpoints arrive from the palette by drag and drop.
-                m_scrollViewer.AllowDrop(true);
-
-                m_scrollViewer.DragOver([this](auto&&, xaml::DragEventArgs const& args) { OnDragOver(args); });
-                m_scrollViewer.DragLeave([this](auto&&, auto&&) { SetDropTarget({}); });
-                m_scrollViewer.Drop([this](auto&&, xaml::DragEventArgs const& args) { OnDrop(args); });
+                AcceptDrops(m_scrollViewer);
             }
 
             m_initialized = true;
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to initialize the canvas.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::AcceptDrops(xaml::UIElement const& element) noexcept
+    {
+        try
+        {
+            if (element == nullptr)
+            {
+                return;
+            }
+
+            element.AllowDrop(true);
+
+            // DragEnter as well, so a drop made the moment the pointer arrives isn't turned away.
+            element.DragEnter([this](auto&&, xaml::DragEventArgs const& args) { OnDragOver(args); });
+            element.DragOver([this](auto&&, xaml::DragEventArgs const& args) { OnDragOver(args); });
+            element.DragLeave([this](auto&&, auto&&) { SetDropTarget({}); });
+            element.Drop([this](auto&&, xaml::DragEventArgs const& args) { OnDrop(args); });
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to take drops on the canvas.")
     }
 
     void PatchCanvas::Shutdown() noexcept
@@ -526,7 +643,14 @@ namespace midipatchbay
 
             for (auto const& block : patch->Blocks)
             {
-                BuildBlockNode(block);
+                if (IsAnnotation(block.Kind))
+                {
+                    BuildAnnotationNode(block);
+                }
+                else
+                {
+                    BuildBlockNode(block);
+                }
             }
 
             // Whatever was selected and is gone now is let go of, without telling the window:
@@ -763,13 +887,23 @@ namespace midipatchbay
                 row.Height(PortRowHeight);
                 row.Padding(xaml::ThicknessHelper::FromUniformLength(0));
                 row.BorderThickness(xaml::ThicknessHelper::FromUniformLength(0));
-                row.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(4));
+                row.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(0));
                 row.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
                 row.HorizontalContentAlignment(xaml::HorizontalAlignment::Stretch);
                 row.VerticalContentAlignment(xaml::VerticalAlignment::Center);
                 row.Background(media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+                ClearStateFills(row);
 
                 controls::Grid rowGrid{};
+
+                // Inside the node and rounded like it, with the dot hanging over the edge beside it.
+                controls::Border highlight{};
+                highlight.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(4));
+                highlight.Margin(isOutput
+                    ? xaml::ThicknessHelper::FromLengths(0, 1, 3, 1)
+                    : xaml::ThicknessHelper::FromLengths(3, 1, 0, 1));
+                highlight.Background(media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+                rowGrid.Children().Append(highlight);
 
                 std::wstring groupName{};
 
@@ -795,8 +929,8 @@ namespace midipatchbay
                 label.HorizontalAlignment(isOutput ? xaml::HorizontalAlignment::Right : xaml::HorizontalAlignment::Left);
 
                 label.Margin(isOutput
-                    ? xaml::ThicknessHelper::FromLengths(8, 0, 22, 0)
-                    : xaml::ThicknessHelper::FromLengths(22, 0, 8, 0));
+                    ? xaml::ThicknessHelper::FromLengths(8, 0, 14, 0)
+                    : xaml::ThicknessHelper::FromLengths(14, 0, 8, 0));
 
                 rowGrid.Children().Append(label);
 
@@ -808,11 +942,10 @@ namespace midipatchbay
                 dot.Fill(ThemeBrush(L"SolidBackgroundFillColorSecondaryBrush", Rgb(0x2B, 0x2B, 0x2B)));
                 dot.VerticalAlignment(xaml::VerticalAlignment::Center);
                 dot.HorizontalAlignment(isOutput ? xaml::HorizontalAlignment::Right : xaml::HorizontalAlignment::Left);
-                // Just inside the edge, not straddling it: the node's rounded border clips its
-                // child, and a dot hanging over the edge renders as a half circle.
+                // Centered on the node's edge, half in and half out.
                 dot.Margin(isOutput
-                    ? xaml::ThicknessHelper::FromLengths(0, 0, 4, 0)
-                    : xaml::ThicknessHelper::FromLengths(4, 0, 0, 0));
+                    ? xaml::ThicknessHelper::FromLengths(0, 0, -DotDiameter / 2, 0)
+                    : xaml::ThicknessHelper::FromLengths(-DotDiameter / 2, 0, 0, 0));
 
                 rowGrid.Children().Append(dot);
 
@@ -832,6 +965,7 @@ namespace midipatchbay
                 port.Row = row;
                 port.Label = label;
                 port.LabelBrush = groupIndex == AllGroups ? textPrimary : textSecondary;
+                port.Highlight = highlight;
 
                 node.Ports.push_back(std::move(port));
 
@@ -877,14 +1011,18 @@ namespace midipatchbay
         }
 
         // ---------------------------------------------------------------- root
-        controls::Border root{};
+        controls::Border card{};
+
+        card.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(NodeCornerRadius));
+        card.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
+        card.Background(ThemeBrush(L"CardBackgroundFillColorDefaultBrush", Rgb(0x2B, 0x2B, 0x2B)));
+        card.Shadow(media::ThemeShadow{});
+
+        controls::Grid root{};
 
         root.Width(node.Width);
-        root.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(NodeCornerRadius));
-        root.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-        root.Background(ThemeBrush(L"CardBackgroundFillColorDefaultBrush", Rgb(0x2B, 0x2B, 0x2B)));
-        root.Shadow(media::ThemeShadow{});
-        root.Child(body);
+        root.Children().Append(card);
+        root.Children().Append(body);
 
         controls::Canvas::SetLeft(root, endpoint.CanvasX);
         controls::Canvas::SetTop(root, endpoint.CanvasY);
@@ -892,6 +1030,7 @@ namespace midipatchbay
         AttachNodeHandlers(root, endpoint.Id, false);
 
         node.Root = root;
+        node.Card = card;
 
         m_nodeLayer.Children().Append(root);
 
@@ -920,7 +1059,7 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    void PatchCanvas::AttachNodeHandlers(controls::Border const& root, std::wstring const& nodeId, bool isBlock) noexcept
+    void PatchCanvas::AttachNodeHandlers(xaml::UIElement const& root, std::wstring const& nodeId, bool isBlock) noexcept
     {
         try
         {
@@ -1120,6 +1259,7 @@ namespace midipatchbay
                 row.HorizontalContentAlignment(xaml::HorizontalAlignment::Stretch);
                 row.VerticalContentAlignment(xaml::VerticalAlignment::Center);
                 row.Background(media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+                ClearStateFills(row);
 
                 shapes::Ellipse dot{};
                 dot.Width(BlockDotDiameter);
@@ -1130,8 +1270,8 @@ namespace midipatchbay
                 dot.VerticalAlignment(xaml::VerticalAlignment::Center);
                 dot.HorizontalAlignment(isOutput ? xaml::HorizontalAlignment::Right : xaml::HorizontalAlignment::Left);
                 dot.Margin(isOutput
-                    ? xaml::ThicknessHelper::FromLengths(0, 0, 1, 0)
-                    : xaml::ThicknessHelper::FromLengths(1, 0, 0, 0));
+                    ? xaml::ThicknessHelper::FromLengths(0, 0, -BlockDotDiameter / 2, 0)
+                    : xaml::ThicknessHelper::FromLengths(-BlockDotDiameter / 2, 0, 0, 0));
 
                 row.Content(dot);
 
@@ -1154,8 +1294,12 @@ namespace midipatchbay
             }
 
             // ------------------------------------------------- root
-            controls::Grid layers{};
-            layers.Children().Append(body);
+            controls::Border card{};
+
+            card.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(BlockCornerRadius));
+            card.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
+            card.Background(ThemeBrush(L"CardBackgroundFillColorDefaultBrush", Rgb(0x2B, 0x2B, 0x2B)));
+            card.Shadow(media::ThemeShadow{});
 
             // A Border cannot dash its outline, so a bypassed block gets one drawn over it.
             node.DashedOutline = shapes::Rectangle{};
@@ -1165,16 +1309,13 @@ namespace midipatchbay
             node.DashedOutline.StrokeDashArray(MakeDashArray(4.0, 3.0));
             node.DashedOutline.IsHitTestVisible(false);
             node.DashedOutline.Visibility(block.Bypassed ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
-            layers.Children().Append(node.DashedOutline);
 
-            controls::Border root{};
+            controls::Grid root{};
 
             root.Width(node.Width);
-            root.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(BlockCornerRadius));
-            root.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-            root.Background(ThemeBrush(L"CardBackgroundFillColorDefaultBrush", Rgb(0x2B, 0x2B, 0x2B)));
-            root.Shadow(media::ThemeShadow{});
-            root.Child(layers);
+            root.Children().Append(card);
+            root.Children().Append(node.DashedOutline);
+            root.Children().Append(body);
 
             controls::ToolTipService::SetToolTip(root, winrt::box_value(winrt::hstring{
                 std::wstring{ BlockKindName(block.Kind) } + L"\n" + std::wstring{ BlockKindHint(block.Kind) } }));
@@ -1188,6 +1329,7 @@ namespace midipatchbay
             AttachNodeHandlers(root, block.Id, true);
 
             node.Root = root;
+            node.Card = card;
 
             m_nodeLayer.Children().Append(root);
             m_nodes.push_back(std::move(node));
@@ -1195,6 +1337,63 @@ namespace midipatchbay
             ApplyNodeAppearance(m_nodes.back());
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build a block on the canvas.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::BuildAnnotationNode(PatchBlock const& block) noexcept
+    {
+        try
+        {
+            NodeVisual node{};
+
+            node.NodeId = block.Id;
+            node.IsBlock = true;
+            node.IsAnnotation = true;
+            node.Category = BlockCategory::Annotation;
+
+            controls::TextBlock text{};
+            text.TextWrapping(xaml::TextWrapping::NoWrap);
+            text.TextTrimming(xaml::TextTrimming::None);
+
+            ApplyAnnotationLook(text, block.Settings.Annotation);
+
+            // Clear rather than empty, so a press between the letters still picks it up.
+            controls::Border card{};
+            card.Padding(xaml::ThicknessHelper::FromLengths(
+                AnnotationPaddingX, AnnotationPaddingY, AnnotationPaddingX, AnnotationPaddingY));
+            card.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(AnnotationCornerRadius));
+            card.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1.5));
+            card.Background(media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+            card.Child(text);
+
+            controls::Grid root{};
+            root.Children().Append(card);
+
+            xaml::Automation::AutomationProperties::SetName(root, text.Text());
+
+            controls::Canvas::SetLeft(root, block.CanvasX);
+            controls::Canvas::SetTop(root, block.CanvasY);
+
+            AttachNodeHandlers(root, block.Id, true);
+
+            node.Root = root;
+            node.Card = card;
+            node.AnnotationText = text;
+
+            m_nodeLayer.Children().Append(root);
+
+            // Measured in the tree, where the text has its real font.
+            root.Measure(foundation::Size{
+                std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() });
+
+            node.Width = std::ceil(root.DesiredSize().Width);
+            node.Height = std::ceil(root.DesiredSize().Height);
+
+            m_nodes.push_back(std::move(node));
+
+            ApplyNodeAppearance(m_nodes.back());
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build an annotation on the canvas.")
     }
 
     _Use_decl_annotations_
@@ -1600,7 +1799,7 @@ namespace midipatchbay
     _Use_decl_annotations_
     void PatchCanvas::ApplyNodeAppearance(NodeVisual& node) noexcept
     {
-        if (node.Root == nullptr)
+        if (node.Root == nullptr || node.Card == nullptr)
         {
             return;
         }
@@ -1612,11 +1811,18 @@ namespace midipatchbay
 
         auto const selected = IsNodeSelected(node.NodeId);
 
+        // Text has no edge of its own, so only a selected annotation shows one.
+        if (node.IsAnnotation)
+        {
+            node.Card.BorderBrush(selected ? accent : media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+            return;
+        }
+
         if (node.IsBlock)
         {
             // The edge carries the category, so a filter and a transform are told apart at a
             // glance; a bypassed block keeps only its dashed outline.
-            node.Root.BorderBrush(selected
+            node.Card.BorderBrush(selected
                 ? accent
                 : (node.IsBypassed ? media::SolidColorBrush{ Rgb(0, 0, 0, 0) } : CategoryBrush(node.Category, 0.55)));
 
@@ -1627,14 +1833,14 @@ namespace midipatchbay
         }
         else
         {
-            node.Root.BorderBrush(selected ? accent : (node.IsOffline ? critical : stroke));
+            node.Card.BorderBrush(selected ? accent : (node.IsOffline ? critical : stroke));
         }
 
-        node.Root.BorderThickness(xaml::ThicknessHelper::FromUniformLength(selected ? 2.0 : 1.0));
+        node.Card.BorderThickness(xaml::ThicknessHelper::FromUniformLength(selected ? 2.0 : 1.0));
 
         // Lifting the card casts the shadow, which reads as selection without relying on the
         // border color alone.
-        node.Root.Translation(winrt::Windows::Foundation::Numerics::float3{ 0, 0, selected ? 28.0f : 0.0f });
+        node.Card.Translation(winrt::Windows::Foundation::Numerics::float3{ 0, 0, selected ? 28.0f : 0.0f });
     }
 
     _Use_decl_annotations_
@@ -2357,9 +2563,9 @@ namespace midipatchbay
             ? accent
             : ThemeBrush(L"SolidBackgroundFillColorSecondaryBrush", Rgb(0x2B, 0x2B, 0x2B)));
 
-        if (port.Row != nullptr)
+        if (port.Highlight != nullptr)
         {
-            port.Row.Background(hovered
+            port.Highlight.Background(hovered
                 ? ThemeBrush(L"SubtleFillColorSecondaryBrush", Rgb(0xFF, 0xFF, 0xFF, 0x0F))
                 : media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
         }
@@ -2560,6 +2766,34 @@ namespace midipatchbay
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to arrange the canvas.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::RefreshAnnotation(std::wstring const& blockId) noexcept
+    {
+        try
+        {
+            auto* node = FindNode(blockId);
+            auto const* block = m_patch == nullptr ? nullptr : m_patch->FindBlock(blockId);
+
+            if (node == nullptr || block == nullptr || node->AnnotationText == nullptr || node->Root == nullptr)
+            {
+                return;
+            }
+
+            ApplyAnnotationLook(node->AnnotationText, block->Settings.Annotation);
+            xaml::Automation::AutomationProperties::SetName(node->Root, node->AnnotationText.Text());
+
+            node->Root.Measure(foundation::Size{
+                std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() });
+
+            node->Width = std::ceil(node->Root.DesiredSize().Width);
+            node->Height = std::ceil(node->Root.DesiredSize().Height);
+
+            UpdateExtent();
+            UpdateMinimap();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to redraw an annotation.")
     }
 
     void PatchCanvas::UpdateMinimap() noexcept
@@ -2835,6 +3069,68 @@ namespace midipatchbay
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to move a new node clear of the others.")
     }
 
+    _Use_decl_annotations_
+    void PatchCanvas::BringIntoView(std::wstring const& nodeId) noexcept
+    {
+        try
+        {
+            auto const* node = FindNode(nodeId);
+            auto const origin = NodePosition(nodeId);
+
+            if (node == nullptr || !origin.has_value() || m_scrollViewer == nullptr)
+            {
+                return;
+            }
+
+            // So the scroll range already takes in a node that was just moved past the old edge.
+            m_scrollViewer.UpdateLayout();
+
+            auto const zoom = static_cast<double>(m_scrollViewer.ZoomFactor());
+
+            if (zoom <= 0 || m_scrollViewer.ViewportWidth() <= 0 || m_scrollViewer.ViewportHeight() <= 0)
+            {
+                return;
+            }
+
+            auto const height = node->Height > 0
+                ? node->Height
+                : (node->IsBlock ? BlockFallbackHeight : EndpointFallbackHeight);
+
+            // In canvas units. Bigger than the view, its top left corner is what shows.
+            auto const reveal = [](double start, double size, double viewStart, double viewSize)
+                {
+                    if (start - FitMargin < viewStart || size + 2 * FitMargin > viewSize)
+                    {
+                        return start - FitMargin;
+                    }
+
+                    if (start + size + FitMargin > viewStart + viewSize)
+                    {
+                        return start + size + FitMargin - viewSize;
+                    }
+
+                    return viewStart;
+                };
+
+            auto const viewLeft = m_scrollViewer.HorizontalOffset() / zoom;
+            auto const viewTop = m_scrollViewer.VerticalOffset() / zoom;
+
+            auto const left = reveal(origin->X, node->Width, viewLeft, m_scrollViewer.ViewportWidth() / zoom);
+            auto const top = reveal(origin->Y, height, viewTop, m_scrollViewer.ViewportHeight() / zoom);
+
+            if (left == viewLeft && top == viewTop)
+            {
+                return;
+            }
+
+            m_scrollViewer.ChangeView(
+                winrt::box_value((std::max)(0.0, left) * zoom).as<foundation::IReference<double>>(),
+                winrt::box_value((std::max)(0.0, top) * zoom).as<foundation::IReference<double>>(),
+                nullptr);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to bring a node into view.")
+    }
+
     foundation::Point PatchCanvas::ViewCenter() const noexcept
     {
         try
@@ -2913,8 +3209,8 @@ namespace midipatchbay
 
             args.AcceptedOperation(transfer::DataPackageOperation::Copy);
 
-            // A generator never goes into a connection. Even an LFO, which takes a clock in,
-            // passes nothing on.
+            // Only a step that passes on what a connection carries can go into one: not a
+            // generator, which passes on only what it makes, and not an annotation.
             auto canInsert = false;
 
             if (isBlock)
@@ -2922,7 +3218,7 @@ namespace midipatchbay
                 auto const key = winrt::unbox_value_or<winrt::hstring>(properties.Lookup(PaletteBlockKindProperty), L"");
                 auto const kind = BlockKindFromKey(key);
 
-                canInsert = kind.has_value() && !IsGenerator(kind.value());
+                canInsert = kind.has_value() && CanGoIntoConnection(kind.value());
             }
 
             auto const target = canInsert ? ConnectionAt(args.GetPosition(m_surface)) : std::wstring{};
@@ -2964,7 +3260,7 @@ namespace midipatchbay
                 if (kind.has_value() && m_callbacks.BlockDropped)
                 {
                     m_callbacks.BlockDropped(kind.value(), point,
-                        IsGenerator(kind.value()) ? std::wstring{} : ConnectionAt(point));
+                        CanGoIntoConnection(kind.value()) ? ConnectionAt(point) : std::wstring{});
                 }
 
                 return;

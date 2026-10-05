@@ -52,9 +52,11 @@ namespace midipatchbay
         LfoGenerator = 19,
 
         ClockDivider = 20,
+
+        Annotation = 21,
     };
 
-    constexpr size_t BlockKindCount = 21;
+    constexpr size_t BlockKindCount = 22;
 
     // The order the palette shows them in.
     constexpr BlockKind AllBlockKinds[BlockKindCount] =
@@ -67,6 +69,7 @@ namespace midipatchbay
         BlockKind::ControlChangeValue, BlockKind::ProgramMap, BlockKind::ClockDivider,
         BlockKind::Throttle,
         BlockKind::ClockGenerator, BlockKind::TimeCodeGenerator, BlockKind::LfoGenerator,
+        BlockKind::Annotation,
     };
 
     enum class BlockCategory : int32_t
@@ -77,14 +80,26 @@ namespace midipatchbay
 
         // Makes messages of its own, so it has a way out and no way in.
         Generator = 3,
+
+        // Text on the canvas. Nothing goes in or comes out.
+        Annotation = 4,
     };
 
     BlockCategory CategoryOf(_In_ BlockKind kind) noexcept;
 
     bool IsGenerator(_In_ BlockKind kind) noexcept;
 
+    bool IsAnnotation(_In_ BlockKind kind) noexcept;
+
     // Every kind but MIDI clock and MIDI Time Code has an In. An LFO's takes the clock it follows.
     bool HasInput(_In_ BlockKind kind) noexcept;
+
+    // Every kind but an annotation has an Out.
+    bool HasOutput(_In_ BlockKind kind) noexcept;
+
+    // Whether a step of this kind can be put into the middle of a connection: it takes what the
+    // connection carries and passes it on.
+    bool CanGoIntoConnection(_In_ BlockKind kind) noexcept;
 
     // The name a patch file uses for the kind, for example "noteFilter".
     std::wstring_view BlockKindKey(_In_ BlockKind kind) noexcept;
@@ -256,6 +271,37 @@ namespace midipatchbay
     constexpr uint32_t DefaultClockDivision = 2;
     constexpr uint32_t MaximumClockDivision = 96;
 
+    // One line of text on the canvas, for notes about the patch.
+    constexpr size_t MaximumAnnotationLength = 200;
+    constexpr double MinimumAnnotationFontSize = 8.0;
+    constexpr double MaximumAnnotationFontSize = 96.0;
+    constexpr double DefaultAnnotationFontSize = 16.0;
+
+    struct AnnotationSettings
+    {
+        std::wstring Text{};
+
+        // Empty is the app's own font.
+        std::wstring FontFamily{};
+
+        double FontSize{ DefaultAnnotationFontSize };
+        bool Bold{ false };
+        bool Italic{ false };
+        bool Underline{ false };
+
+        // "#RRGGBB", or empty for the theme's text color, which reads in both themes.
+        std::wstring Color{};
+
+        bool operator==(AnnotationSettings const&) const = default;
+    };
+
+    // The text as an annotation keeps it: one line, no control characters, no longer than the most
+    // an annotation holds.
+    std::wstring AnnotationTextFrom(_In_ std::wstring_view text);
+
+    // "#RRGGBB" in capitals, or empty when the text is not a color in that form.
+    std::wstring AnnotationColorFrom(_In_ std::wstring_view text);
+
     // Everything any kind of block can hold. Each kind uses only its own part, so one shape
     // serves every kind and a block can be copied, compared and undone as a plain value.
     struct BlockSettings
@@ -286,6 +332,8 @@ namespace midipatchbay
         LfoGeneratorSettings Lfo{};
 
         uint32_t ClockDivision{ DefaultClockDivision };
+
+        AnnotationSettings Annotation{};
     };
 
     // What a block dropped on the canvas starts as. Apart from the throttle, every kind starts

@@ -21,12 +21,15 @@ namespace midipatchbay
         constexpr wchar_t ValueConfirmCanvasRemove[] = L"ConfirmCanvasRemove";
         constexpr wchar_t ValueActivateSavedPatches[] = L"ActivateSavedPatchesAtStartup";
         constexpr wchar_t ValueShowAssistant[] = L"ShowAssistant";
+        constexpr wchar_t ValueShowAllFonts[] = L"ShowAllFonts";
 
         constexpr wchar_t ValueEditorX[] = L"EditorWindowX";
         constexpr wchar_t ValueEditorY[] = L"EditorWindowY";
         constexpr wchar_t ValueEditorWidth[] = L"EditorWindowWidth";
         constexpr wchar_t ValueEditorHeight[] = L"EditorWindowHeight";
         constexpr wchar_t ValueEditorMaximized[] = L"EditorWindowMaximized";
+        constexpr wchar_t ValueEditorPaletteWidth[] = L"EditorPaletteWidth";
+        constexpr wchar_t ValueEditorInspectorWidth[] = L"EditorInspectorWidth";
 
         constexpr wchar_t RunKeyPath[] = LR"(Software\Microsoft\Windows\CurrentVersion\Run)";
         constexpr wchar_t RunValueName[] = L"WindowsMidiServicesPatchbay";
@@ -82,6 +85,7 @@ namespace midipatchbay
         m_confirmCanvasRemove = ReadDword(ValueConfirmCanvasRemove, 1) != 0;
         m_activateSavedPatchesAtStartup = ReadDword(ValueActivateSavedPatches, 1) != 0;
         m_showAssistant = ReadDword(ValueShowAssistant, 1) != 0;
+        m_showAllFonts = ReadDword(ValueShowAllFonts, 0) != 0;
 
         m_editorPlacement.X = static_cast<int32_t>(ReadDword(ValueEditorX, 0));
         m_editorPlacement.Y = static_cast<int32_t>(ReadDword(ValueEditorY, 0));
@@ -92,6 +96,9 @@ namespace midipatchbay
         m_editorPlacement.Valid =
             m_editorPlacement.Width >= MinimumWindowWidth &&
             m_editorPlacement.Height >= MinimumWindowHeight;
+
+        m_editorPaletteWidth = static_cast<int32_t>(ReadDword(ValueEditorPaletteWidth, 0));
+        m_editorInspectorWidth = static_cast<int32_t>(ReadDword(ValueEditorInspectorWidth, 0));
     }
 
     _Use_decl_annotations_
@@ -105,6 +112,16 @@ namespace midipatchbay
         WriteDword(ValueEditorWidth, static_cast<uint32_t>(value.Width));
         WriteDword(ValueEditorHeight, static_cast<uint32_t>(value.Height));
         WriteDword(ValueEditorMaximized, value.Maximized ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::EditorPaneWidths(int32_t paletteWidth, int32_t inspectorWidth) noexcept
+    {
+        m_editorPaletteWidth = (std::max)(paletteWidth, 0);
+        m_editorInspectorWidth = (std::max)(inspectorWidth, 0);
+
+        WriteDword(ValueEditorPaletteWidth, static_cast<uint32_t>(m_editorPaletteWidth));
+        WriteDword(ValueEditorInspectorWidth, static_cast<uint32_t>(m_editorInspectorWidth));
     }
 
     _Use_decl_annotations_
@@ -154,6 +171,13 @@ namespace midipatchbay
     {
         m_showAssistant = value;
         WriteDword(ValueShowAssistant, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::ShowAllFonts(bool value) noexcept
+    {
+        m_showAllFonts = value;
+        WriteDword(ValueShowAllFonts, value ? 1u : 0u);
     }
 
     bool AppSettings::StartsWithWindows() noexcept

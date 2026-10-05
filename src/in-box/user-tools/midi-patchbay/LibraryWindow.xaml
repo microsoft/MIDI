@@ -60,6 +60,8 @@
             <Border x:Name="CardBackgroundFillColorDefaultBrush" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
             <Border x:Name="CardBackgroundFillColorSecondaryBrush" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
             <Border x:Name="CardStrokeColorDefaultBrush" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+            <Border x:Name="SubtleFillColorSecondaryBrush" Background="{ThemeResource SubtleFillColorSecondaryBrush}" />
+            <Border x:Name="ControlStrokeColorDefaultBrush" Background="{ThemeResource ControlStrokeColorDefaultBrush}" />
         </Grid>
 
         <!-- ============================ Title bar drag region ============================ -->

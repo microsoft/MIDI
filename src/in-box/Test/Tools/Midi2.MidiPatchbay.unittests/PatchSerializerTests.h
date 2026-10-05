@@ -29,4 +29,5 @@ public:
     TEST_METHOD(AnUnknownBlockIsLeftOutWithItsLinks);
     TEST_METHOD(TextThatIsNotAPatchIsRejected);
     TEST_METHOD(RemovingABlockRemovesItsLinks);
+    TEST_METHOD(AnAnnotationKeepsItsTextAndNoLinks);
 };

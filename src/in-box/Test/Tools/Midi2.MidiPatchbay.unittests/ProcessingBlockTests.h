@@ -34,4 +34,6 @@ public:
     TEST_METHOD(TheClockDividerLetsOneInSoManyThrough);
     TEST_METHOD(TheClockDividerFollowsSongPosition);
     TEST_METHOD(OnlyTheRightChangesRestartAGenerator);
+    TEST_METHOD(AnAnnotationIsOnlyText);
+    TEST_METHOD(AnnotationTextAndColorAreCleanedUp);
 };

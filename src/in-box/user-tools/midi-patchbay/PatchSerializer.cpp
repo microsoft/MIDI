@@ -381,9 +381,16 @@ namespace midipatchbay
                     continue;
                 }
 
-                // MIDI clock and MIDI Time Code have no way in to draw it to.
+                // MIDI clock, MIDI Time Code and an annotation have no way in to draw it to.
                 if (auto const* destination = patch.FindBlock(connection.DestinationId);
                     destination != nullptr && !HasInput(destination->Kind))
+                {
+                    continue;
+                }
+
+                // An annotation has no way out.
+                if (auto const* source = patch.FindBlock(connection.SourceId);
+                    source != nullptr && !HasOutput(source->Kind))
                 {
                     continue;
                 }

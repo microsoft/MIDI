@@ -236,7 +236,7 @@ namespace winrt::midiglass::implementation
 
             if (!style.FontFamily.empty())
             {
-                parts.push_back(::midiglass::fonts::IsInstalled(style.FontFamily)
+                parts.push_back(::midiapp::fonts::IsInstalled(style.FontFamily)
                     ? style.FontFamily
                     : std::wstring{ resources::FormatString(L"FontMissingFormat", style.FontFamily) });
             }

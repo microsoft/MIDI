@@ -229,6 +229,7 @@ namespace winrt::midipatchbay::implementation
 
             InitializeWindowChrome();
             InitializeStaticText();
+            InitializeSplitters();
             CollapseClosedBars(MessageBars());
 
             // The canvas only ever lives as long as this window, and is shut down before it goes.
@@ -251,6 +252,9 @@ namespace winrt::midipatchbay::implementation
 
             m_canvas.Initialize(CanvasScroller(), CanvasSurface(), MinimapSurface(), std::move(callbacks));
 
+            // The hint on an empty patch sits in the middle of the canvas, where a first drop lands.
+            m_canvas.AcceptDrops(EmptyCanvasPanel());
+
             auto weak = get_weak();
 
             // Visuals built in code cannot re-theme themselves, and changing the Windows theme
@@ -272,6 +276,15 @@ namespace winrt::midipatchbay::implementation
                     if (auto strong = weak.get())
                     {
                         strong->HandleKeyDown(args);
+                    }
+                });
+
+            // An open step dialog follows the window, so making the window bigger shows more.
+            RootGrid().SizeChanged([weak](auto&&, auto&&)
+                {
+                    if (auto strong = weak.get(); strong != nullptr && !strong->m_editingBlockId.empty())
+                    {
+                        strong->FitBlockDialogToWindow();
                     }
                 });
 
@@ -1249,6 +1262,13 @@ namespace winrt::midipatchbay::implementation
 
     void MainWindow::OnCanvasSelectionChanged() noexcept
     {
+        // Typed into an annotation that is going out of the inspector: one step for Undo.
+        if (m_annotationTextChanged)
+        {
+            m_annotationTextChanged = false;
+            CommitChange(false, false);
+        }
+
         RefreshInspector();
         UpdateCommandStates();
     }
@@ -1291,6 +1311,13 @@ namespace winrt::midipatchbay::implementation
 
             auto const sourceIsBlock = patch->IsBlock(candidate.SourceId);
             auto const destinationIsBlock = patch->IsBlock(candidate.DestinationId);
+
+            // An annotation has no Out to start one from.
+            if (auto const* source = patch->FindBlock(candidate.SourceId);
+                source != nullptr && !patchbay::HasOutput(source->Kind))
+            {
+                return false;
+            }
 
             if (auto const* destination = patch->FindBlock(candidate.DestinationId);
                 destination != nullptr && !patchbay::HasInput(destination->Kind))
@@ -1460,6 +1487,7 @@ namespace winrt::midipatchbay::implementation
 
             auto const content = PaletteContent();
             content.Children().Clear();
+            m_paletteGrids.clear();
 
             auto const search = std::wstring{ PaletteSearchBox().Text() };
             auto const showEndpoints = PaletteTabs().SelectedItem() == PaletteEndpointsTab();
@@ -1467,36 +1495,56 @@ namespace winrt::midipatchbay::implementation
 
             auto weak = get_weak();
 
-            auto const addHeading = [&content, &tertiary](winrt::hstring const& text)
+            // A step category's heading starts with a square in its color, the same color as the
+            // edge of its steps on the canvas.
+            auto const addHeading = [&content, &tertiary](winrt::hstring const& text, media::Brush const& marker)
                 {
-                    controls::TextBlock heading{};
+                    controls::StackPanel heading{};
 
-                    heading.Text(text);
-                    heading.FontSize(12);
-                    heading.FontWeight(winrt::Microsoft::UI::Text::FontWeights::SemiBold());
-                    heading.Margin(xaml::ThicknessHelper::FromLengths(2, 10, 0, 2));
+                    heading.Orientation(controls::Orientation::Horizontal);
+                    heading.Spacing(7);
+                    heading.Margin(xaml::ThicknessHelper::FromLengths(2, 10, 0, 4));
+
+                    if (marker != nullptr)
+                    {
+                        controls::Border square{};
+
+                        square.Width(8);
+                        square.Height(8);
+                        square.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(2));
+                        square.VerticalAlignment(xaml::VerticalAlignment::Center);
+                        square.Background(marker);
+
+                        heading.Children().Append(square);
+                    }
+
+                    controls::TextBlock label{};
+
+                    label.Text(text);
+                    label.FontSize(12);
+                    label.FontWeight(winrt::Microsoft::UI::Text::FontWeights::SemiBold());
 
                     if (tertiary != nullptr)
                     {
-                        heading.Foreground(tertiary);
+                        label.Foreground(tertiary);
                     }
+
+                    heading.Children().Append(label);
 
                     content.Children().Append(heading);
                 };
 
-            // A list rather than buttons, because a list item can be dragged as well as clicked,
-            // and the keyboard reaches it the same way.
-            auto const addList = [&content, weak](bool isEndpointList)
+            // Lists and grids rather than buttons, because an item can be dragged as well as
+            // clicked, and the keyboard reaches it the same way.
+            auto const wire = [weak](controls::ListViewBase const& view, bool isEndpointList)
                 {
-                    controls::ListView list{};
+                    view.SelectionMode(controls::ListViewSelectionMode::None);
+                    view.IsItemClickEnabled(true);
+                    view.CanDragItems(true);
+                    view.CanReorderItems(false);
+                    view.AllowDrop(false);
 
-                    list.SelectionMode(controls::ListViewSelectionMode::None);
-                    list.IsItemClickEnabled(true);
-                    list.CanDragItems(true);
-                    list.CanReorderItems(false);
-                    list.AllowDrop(false);
-
-                    list.DragItemsStarting([weak, isEndpointList](auto&&, controls::DragItemsStartingEventArgs const& args)
+                    view.DragItemsStarting([weak, isEndpointList](auto&&, controls::DragItemsStartingEventArgs const& args)
                         {
                             auto const items = args.Items();
                             auto const element = items.Size() == 0 ? nullptr : items.GetAt(0).try_as<xaml::FrameworkElement>();
@@ -1522,7 +1570,7 @@ namespace winrt::midipatchbay::implementation
                             args.Data().RequestedOperation(transfer::DataPackageOperation::Copy);
                         });
 
-                    list.ItemClick([weak, isEndpointList](auto&&, controls::ItemClickEventArgs const& args)
+                    view.ItemClick([weak, isEndpointList](auto&&, controls::ItemClickEventArgs const& args)
                         {
                             auto strong = weak.get();
                             auto const element = args.ClickedItem().try_as<xaml::FrameworkElement>();
@@ -1563,10 +1611,44 @@ namespace winrt::midipatchbay::implementation
                                 strong->AddBlock(kind.value(), strong->m_canvas.ViewCenter());
                             }
                         });
+                };
 
+            auto const addList = [&content, &wire]()
+                {
+                    controls::ListView list{};
+
+                    wire(list, true);
                     content.Children().Append(list);
 
                     return list;
+                };
+
+            auto const addTileGrid = [this, &content, &wire, weak]()
+                {
+                    controls::GridView grid{};
+
+                    auto const dictionary = RootGrid().Resources();
+
+                    grid.ItemsPanel(dictionary.Lookup(winrt::box_value(L"PaletteTilesPanel")).as<controls::ItemsPanelTemplate>());
+                    grid.ItemContainerStyle(dictionary.Lookup(winrt::box_value(L"PaletteTileContainerStyle")).as<xaml::Style>());
+
+                    // The palette scrolls as a whole, so a grid inside it never does.
+                    controls::ScrollViewer::SetVerticalScrollMode(grid, controls::ScrollMode::Disabled);
+                    controls::ScrollViewer::SetVerticalScrollBarVisibility(grid, controls::ScrollBarVisibility::Disabled);
+
+                    grid.Loaded([weak](auto&&, auto&&)
+                        {
+                            if (auto strong = weak.get())
+                            {
+                                strong->SizePaletteTiles();
+                            }
+                        });
+
+                    wire(grid, false);
+                    content.Children().Append(grid);
+                    m_paletteGrids.push_back(grid);
+
+                    return grid;
                 };
 
             size_t shown{ 0 };
@@ -1574,9 +1656,10 @@ namespace winrt::midipatchbay::implementation
             if (!showEndpoints)
             {
                 for (auto const category : { patchbay::BlockCategory::Filter, patchbay::BlockCategory::Transform,
-                                             patchbay::BlockCategory::Sending, patchbay::BlockCategory::Generator })
+                                             patchbay::BlockCategory::Sending, patchbay::BlockCategory::Generator,
+                                             patchbay::BlockCategory::Annotation })
                 {
-                    controls::ListView list{ nullptr };
+                    controls::GridView grid{ nullptr };
 
                     for (auto const kind : patchbay::AllBlockKinds)
                     {
@@ -1591,15 +1674,15 @@ namespace winrt::midipatchbay::implementation
                             continue;
                         }
 
-                        if (list == nullptr)
+                        if (grid == nullptr)
                         {
-                            addHeading(patchbay::BlockCategoryName(category));
-                            list = addList(false);
+                            addHeading(patchbay::BlockCategoryName(category), patchbay::PatchCanvas::CategoryBrush(category));
+                            grid = addTileGrid();
                         }
 
                         if (auto const tile = BuildBlockTile(kind))
                         {
-                            list.Items().Append(tile);
+                            grid.Items().Append(tile);
                             shown++;
                         }
                     }
@@ -1625,8 +1708,8 @@ namespace winrt::midipatchbay::implementation
 
                     if (liveList == nullptr)
                     {
-                        addHeading(resources::GetString(L"PaletteConnectedHeading"));
-                        liveList = addList(true);
+                        addHeading(resources::GetString(L"PaletteConnectedHeading"), nullptr);
+                        liveList = addList();
                     }
 
                     auto detail = endpoint.ManufacturerName;
@@ -1637,7 +1720,7 @@ namespace winrt::midipatchbay::implementation
                     }
 
                     if (auto const tile = BuildEndpointTile(
-                        endpoint.EndpointDeviceId, endpoint.Name, detail, IsOnCanvas(endpoint.EndpointDeviceId)))
+                        endpoint.EndpointDeviceId, endpoint.Name, detail, endpoint.ImagePath, IsOnCanvas(endpoint.EndpointDeviceId)))
                     {
                         liveList.Items().Append(tile);
                         shown++;
@@ -1655,14 +1738,15 @@ namespace winrt::midipatchbay::implementation
 
                     if (rememberedList == nullptr)
                     {
-                        addHeading(resources::GetString(L"PaletteSeenBefore"));
-                        rememberedList = addList(true);
+                        addHeading(resources::GetString(L"PaletteSeenBefore"), nullptr);
+                        rememberedList = addList();
                     }
 
                     if (auto const tile = BuildEndpointTile(
                         endpoint.Match.EndpointDeviceId,
                         endpoint.DisplayName,
                         std::wstring{ resources::GetString(L"NodeNotConnected") },
+                        std::wstring{},
                         IsOnCanvas(endpoint)))
                     {
                         rememberedList.Items().Append(tile);
@@ -1720,52 +1804,71 @@ namespace winrt::midipatchbay::implementation
             auto const category = patchbay::CategoryOf(kind);
             auto const name = patchbay::BlockKindName(kind);
             auto const hint = patchbay::BlockKindHint(kind);
+            auto const badge = patchbay::BlockKindBadge(kind);
+
+            auto const& brushes = patchbay::ThemeBrushes::Current();
 
             controls::Grid tile{};
 
-            tile.ColumnSpacing(10);
-            tile.Padding(xaml::ThicknessHelper::FromLengths(0, 2, 0, 2));
+            // A quiet square face, the way MIDI Glass draws its palette. A Rectangle rather than a
+            // Border: a Border's corners are stepped at fractional scaling.
+            shapes::Rectangle face{};
 
-            for (auto const width : { xaml::GridLength{ 0, xaml::GridUnitType::Auto },
-                                      xaml::GridLength{ 1, xaml::GridUnitType::Star } })
-            {
-                controls::ColumnDefinition column{};
-                column.Width(width);
-                tile.ColumnDefinitions().Append(column);
-            }
+            face.RadiusX(6);
+            face.RadiusY(6);
+            face.StrokeThickness(1);
+            face.UseLayoutRounding(false);
+            face.Fill(brushes.Get(L"SubtleFillColorSecondaryBrush"));
+            face.Stroke(brushes.Get(L"ControlStrokeColorDefaultBrush"));
 
-            // The same colors and badge as the step on the canvas, so the two are seen to match.
-            controls::Border badge{};
+            tile.Children().Append(face);
 
-            badge.MinWidth(40);
-            badge.Height(22);
-            badge.Padding(xaml::ThicknessHelper::FromLengths(4, 0, 4, 0));
-            badge.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(4));
-            badge.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-            badge.BorderBrush(patchbay::PatchCanvas::CategoryBrush(category));
-            badge.Background(patchbay::PatchCanvas::CategoryBrush(category, 0.18));
-            badge.VerticalAlignment(xaml::VerticalAlignment::Center);
+            // Two rows of fixed height rather than a stack, as in MIDI Glass: every name in a row
+            // starts on the same line, whether it takes one line or two.
+            controls::Grid stack{};
 
+            stack.VerticalAlignment(xaml::VerticalAlignment::Center);
+
+            controls::RowDefinition artRow{};
+            artRow.Height(xaml::GridLengthHelper::FromPixels(24));
+            stack.RowDefinitions().Append(artRow);
+
+            controls::RowDefinition captionRow{};
+            captionRow.Height(xaml::GridLengthHelper::FromPixels(28));
+            stack.RowDefinitions().Append(captionRow);
+
+            // The same badge in the same color as the step on the canvas, so the two are seen to match.
             controls::TextBlock badgeText{};
 
-            badgeText.Text(patchbay::BlockKindBadge(kind));
-            badgeText.FontSize(11);
+            badgeText.Text(badge);
+            badgeText.FontSize(badge.size() >= 3 ? 12 : 14);
             badgeText.FontWeight(winrt::Microsoft::UI::Text::FontWeights::SemiBold());
             badgeText.HorizontalAlignment(xaml::HorizontalAlignment::Center);
             badgeText.VerticalAlignment(xaml::VerticalAlignment::Center);
             badgeText.Foreground(patchbay::PatchCanvas::CategoryBrush(category));
 
-            badge.Child(badgeText);
-            tile.Children().Append(badge);
+            controls::Grid::SetRow(badgeText, 0);
+            stack.Children().Append(badgeText);
 
-            controls::TextBlock label{};
+            controls::TextBlock caption{};
 
-            label.Text(patchbay::BlockKindShortName(kind));
-            label.VerticalAlignment(xaml::VerticalAlignment::Center);
-            label.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
+            caption.Text(patchbay::BlockKindShortName(kind));
+            caption.FontSize(11);
+            caption.LineHeight(13);
+            caption.LineStackingStrategy(xaml::LineStackingStrategy::BlockLineHeight);
+            caption.TextWrapping(xaml::TextWrapping::WrapWholeWords);
+            caption.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
+            caption.MaxLines(2);
+            caption.TextAlignment(xaml::TextAlignment::Center);
+            caption.HorizontalAlignment(xaml::HorizontalAlignment::Center);
+            caption.VerticalAlignment(xaml::VerticalAlignment::Top);
+            caption.Margin(xaml::ThicknessHelper::FromLengths(3, 1, 3, 0));
+            caption.Foreground(brushes.Get(L"TextFillColorSecondaryBrush"));
 
-            controls::Grid::SetColumn(label, 1);
-            tile.Children().Append(label);
+            controls::Grid::SetRow(caption, 1);
+            stack.Children().Append(caption);
+
+            tile.Children().Append(stack);
 
             tile.Tag(winrt::box_value(winrt::hstring{ patchbay::BlockKindKey(kind) }));
 
@@ -1785,16 +1888,18 @@ namespace winrt::midipatchbay::implementation
         std::wstring const& endpointDeviceId,
         std::wstring const& name,
         std::wstring const& detail,
+        std::wstring const& imagePath,
         bool onCanvas) noexcept
     {
         try
         {
             controls::Grid tile{};
 
-            tile.ColumnSpacing(8);
+            tile.ColumnSpacing(10);
             tile.Padding(xaml::ThicknessHelper::FromLengths(0, 3, 0, 3));
 
-            for (auto const width : { xaml::GridLength{ 1, xaml::GridUnitType::Star },
+            for (auto const width : { xaml::GridLength{ 0, xaml::GridUnitType::Auto },
+                                      xaml::GridLength{ 1, xaml::GridUnitType::Star },
                                       xaml::GridLength{ 0, xaml::GridUnitType::Auto } })
             {
                 controls::ColumnDefinition column{};
@@ -1802,7 +1907,36 @@ namespace winrt::midipatchbay::implementation
                 tile.ColumnDefinitions().Append(column);
             }
 
+            // The picture the customer chose for the device, or an empty square where it would
+            // go, so the names line up either way.
+            controls::Border art{};
+
+            art.Width(28);
+            art.Height(28);
+            art.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(5));
+            art.VerticalAlignment(xaml::VerticalAlignment::Center);
+
+            if (auto const picture = patchbay::PatchCanvas::LoadEndpointImage(imagePath, 56))
+            {
+                controls::Image image{};
+
+                image.Source(picture);
+                image.Stretch(media::Stretch::Uniform);
+                xaml::Automation::AutomationProperties::SetAccessibilityView(image, xaml::Automation::Peers::AccessibilityView::Raw);
+
+                art.Child(image);
+            }
+            else
+            {
+                art.Background(patchbay::ThemeBrushes::Current().Get(L"SubtleFillColorSecondaryBrush"));
+                art.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
+                art.BorderBrush(patchbay::ThemeBrushes::Current().Get(L"ControlStrokeColorDefaultBrush"));
+            }
+
+            tile.Children().Append(art);
+
             controls::StackPanel text{};
+            text.VerticalAlignment(xaml::VerticalAlignment::Center);
 
             controls::TextBlock title{};
             title.Text(winrt::hstring{ name });
@@ -1823,6 +1957,7 @@ namespace winrt::midipatchbay::implementation
                 text.Children().Append(line);
             }
 
+            controls::Grid::SetColumn(text, 1);
             tile.Children().Append(text);
 
             if (onCanvas)
@@ -1834,7 +1969,7 @@ namespace winrt::midipatchbay::implementation
                 check.VerticalAlignment(xaml::VerticalAlignment::Center);
                 check.Foreground(patchbay::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
 
-                controls::Grid::SetColumn(check, 1);
+                controls::Grid::SetColumn(check, 2);
                 tile.Children().Append(check);
             }
 
@@ -1896,6 +2031,15 @@ namespace winrt::midipatchbay::implementation
 
             m_canvas.Select(patchbay::CanvasSelectionKind::Block, id);
 
+            // Moved clear of the others, it can end up out of view, which looks like nothing happened.
+            m_canvas.BringIntoView(id);
+
+            // Ready to type, which is the first thing anybody does with a new annotation.
+            if (patchbay::IsAnnotation(kind))
+            {
+                FocusAnnotationText(id);
+            }
+
             return id;
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to add a step.")
@@ -1918,8 +2062,9 @@ namespace winrt::midipatchbay::implementation
                 return;
             }
 
-            // A generator passes nothing on, so it is added on its own instead.
-            if (patchbay::IsGenerator(kind))
+            // A generator passes on only what it makes, and an annotation passes on nothing, so
+            // either is added on its own instead.
+            if (!patchbay::CanGoIntoConnection(kind))
             {
                 AddBlock(kind, center.value_or(m_canvas.ViewCenter()));
                 return;

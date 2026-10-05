@@ -103,7 +103,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shlwapi.lib;shell32.lib;advapi32.lib;pathcch.lib;comctl32.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shlwapi.lib;shell32.lib;advapi32.lib;pathcch.lib;comctl32.lib;dwrite.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -183,6 +183,9 @@
     <ClInclude Include="..\midi-app-shared\ClockFollower.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
     <ClInclude Include="..\midi-app-shared\AssistantPrompt.h" />
+    <ClInclude Include="..\midi-app-shared\FontCatalog.h" />
+    <ClInclude Include="..\midi-app-shared\FontNames.h" />
+    <ClInclude Include="..\midi-app-shared\DialogSizing.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -235,6 +238,7 @@
     <ClCompile Include="MainWindowInspector.cpp" />
     <ClCompile Include="MainWindowFilters.cpp" />
     <ClCompile Include="MainWindowGenerators.cpp" />
+    <ClCompile Include="MainWindowPanes.cpp" />
     <ClCompile Include="MainWindowTransforms.cpp" />
     <ClCompile Include="MainWindowRouting.cpp" />
     <ClCompile Include="LibraryWindow.xaml.cpp">
@@ -279,6 +283,7 @@
     </ClCompile>
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="..\midi-app-shared\AssistantPrompt.cpp" />
+    <ClCompile Include="..\midi-app-shared\FontCatalog.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -44,6 +44,7 @@ On this page:
 - Messages go through the steps in the order the connections lead them. A chain of steps between a keyboard and a synth works like a cable with each step plugged in along the way.
 - When an **Out** has more than one connection, each connection gets its own copy of every message. What a step does to one copy doesn't change the others. When more than one connection goes into the same **In**, their messages are merged.
 - There are four kinds of steps. **Filters** keep messages out. **Transforms** change messages. The **message throttler** slows messages down for a device that loses data when a lot arrives at once. **Generators** make messages of their own, such as MIDI clock, for as long as the patch is routing.
+- A patch can have **annotations**: a line of text on the canvas, for notes such as which keyboard is which. Nothing goes into or comes out of an annotation, and it doesn't change what routes. The file keeps annotations in the same list as the steps.
 - A patch can **wait for send complete**. Then each message waits until the device's driver has taken the one before it. It covers every connection in the patch.
 - **Routing only happens while Patchbay is running.** Patchbay receives the messages and sends them on itself.
 - Several patches can route at the same time. Each patch opens in a window of its own, and it keeps routing after its window is closed.
@@ -79,6 +80,7 @@ If the customer pasted a prompt from **Ask an AI assistant…** in Patchbay, it 
 | Should Patchbay send MIDI clock to some of the devices? At what tempo? Should it send Start and Stop? | That's a `clockGenerator` step, connected to each device that follows it. A device that should run at half speed gets the clock through a `clockDivider` step. |
 | Does a device need MIDI Time Code? At what frame rate, and from what time? | That's a `timeCodeGenerator` step. |
 | Should something move up and down by itself, such as a filter sweep or a wobble? Which controller, how fast, and over how much of its range? Should it keep in step with a clock? | That's an `lfoGenerator` step. To keep it in step, connect the clock to its **In**. |
+| Would notes on the canvas help, such as which keyboard is which, or what a split is for? | That's an `annotation`: one line of text. It doesn't change what routes. |
 | Should the patch start by itself whenever Patchbay starts? | The customer turns that on in Patchbay. Tell them where. |
 
 ### 2. Plan the steps and connections
@@ -120,6 +122,7 @@ Write the plan down as a list of paths before you write the file, such as "Keybo
 | Time code at 25 frames per second, from one hour in | A `timeCodeGenerator` step with `"frameRate": 25, "startTime": "01:00:00:00"`. |
 | A slow filter sweep on controller 74, two bars long | An `lfoGenerator` step with `"wave": "triangle", "beatsPerCycle": 8, "message": "controlChange", "number": 74`. |
 | An LFO in step with a clock | A connection from the clock into the `lfoGenerator` step. The clock can be a `clockGenerator`, a `clockDivider`, or a device that sends MIDI clock. |
+| A note on the canvas, such as "Bass below middle C" | An `annotation` with `"text": "Bass below middle C"`, placed near what it describes. Nothing connects to it. |
 
 The numbers are explained in [Step settings](#step-settings).
 
@@ -216,9 +219,10 @@ $stepKeys = @{
     clockGenerator      = @('beatsPerMinute', 'sendStartStop', 'swingPercent', 'swingSubdivision', 'group')
     timeCodeGenerator   = @('frameRate', 'startTime', 'sendFullFrame', 'group')
     lfoGenerator        = @('wave', 'beatsPerCycle', 'beatsPerMinute', 'lowestPercent', 'highestPercent', 'intervalMilliseconds', 'message', 'channel', 'number', 'group', 'midi1', 'returnToMiddle')
+    annotation          = @('text', 'fontFamily', 'fontSize', 'bold', 'italic', 'underline', 'color')
 }
 $generators = @('clockGenerator', 'timeCodeGenerator', 'lfoGenerator')
-$noInput = @('clockGenerator', 'timeCodeGenerator')
+$noInput = @('clockGenerator', 'timeCodeGenerator', 'annotation')
 
 Test-Keys $patch @('_comment', 'fileVersion', 'name', 'description', 'activateAtStartup', 'waitForSendComplete', 'created', 'modified', 'endpoints', 'blocks', 'connections') 'The patch'
 if ($patch.fileVersion -ne 2) { $problems.Add('fileVersion isn''t 2, so Patchbay reads this as an older patch and leaves out every step and connection.') }
@@ -238,15 +242,15 @@ foreach ($e in (Get-List $patch.endpoints)) {
 }
 
 foreach ($b in (Get-List $patch.blocks)) {
-    $where = "The step '$($b.name ?? $b.id)'"
+    $where = "$(if ($b.type -ceq 'annotation') { 'The annotation' } else { 'The step' }) '$($b.name ?? $b.id)'"
     Test-Keys $b @('id', 'type', 'name', 'x', 'y', 'bypassed', 'settings') $where
     if (-not $b.id) { $problems.Add("$where has no id, so Patchbay leaves it out."); continue }
     if ($b.type -cnotin $stepKeys.Keys) { $problems.Add("$where has the type '$($b.type)', which Patchbay doesn't know, so it leaves the step out with its connections."); continue }
     if (-not $kinds.TryAdd($b.id, $b.type)) { $problems.Add("The step '$($b.id)' has an id that another endpoint or step already has, so Patchbay leaves it out."); continue }
-    if ($b.bypassed -eq $true) { $problems.Add($(if ($b.type -cin $generators) { "$where is bypassed, so it sends nothing." } else { "$where is bypassed, so it lets everything through unchanged." })) }
+    if ($b.bypassed -eq $true) { $problems.Add($(if ($b.type -ceq 'annotation') { "$where is bypassed, which does nothing for an annotation." } elseif ($b.type -cin $generators) { "$where is bypassed, so it sends nothing." } else { "$where is bypassed, so it lets everything through unchanged." })) }
     $s = $b.settings
     if ($null -eq $s) { $problems.Add("$where has no settings, so it uses the defaults for its type."); continue }
-    Test-Keys $s $stepKeys[$b.type] "The settings of the step '$($b.name ?? $b.id)'"
+    Test-Keys $s $stepKeys[$b.type] ("The settings of " + $where.Substring(0, 1).ToLowerInvariant() + $where.Substring(1))
 
     switch -CaseSensitive ($b.type) {
         'messageTypeFilter' {
@@ -334,6 +338,14 @@ foreach ($b in (Get-List $patch.blocks)) {
                 if (-not (Test-Range $s.number 0 $largest)) { $problems.Add("$where has a number outside 0 to $largest for $message.") }
             }
         }
+        'annotation' {
+            if ($null -eq $s.text -or "$($s.text)".Trim().Length -eq 0) { $problems.Add("$where has no text, so the canvas shows only a hint.") }
+            elseif ("$($s.text)".Length -gt 200) { $problems.Add("$where has more than 200 characters of text. Patchbay cuts it off.") }
+            elseif ("$($s.text)" -match '[\x00-\x1F\x7F-\x9F\u2028\u2029]') { $problems.Add("$where has a line break or a tab in its text. An annotation is one line, so it becomes a space.") }
+            if (-not (Test-Range $s.fontSize 8 96)) { $problems.Add("$where has a fontSize outside 8 to 96.") }
+            if ($null -ne $s.color -and "$($s.color)" -notmatch '^#[0-9A-Fa-f]{6}$') { $problems.Add("$where has a color that isn't #RRGGBB, so Patchbay uses the theme's text color.") }
+            if ($null -ne $s.fontFamily -and ("$($s.fontFamily)".Length -gt 128 -or "$($s.fontFamily)" -match '[\\/:#,%?*"<>|]')) { $problems.Add("$where has a fontFamily that isn't the name of one font, so Patchbay uses its default font.") }
+        }
     }
     if ($b.type -cin $generators -and -not (Test-Range $s.group 0 15)) { $problems.Add("$where has a group outside 0 to 15. The file counts groups from 0.") }
 }
@@ -347,6 +359,8 @@ foreach ($c in (Get-List $patch.connections)) {
     Test-Keys $c @('id', 'source', 'sourceGroup', 'destination', 'destinationGroup', 'muted') $where
     if (-not $c.source -or -not $c.destination -or -not $kinds.ContainsKey($c.source) -or -not $kinds.ContainsKey($c.destination)) { $problems.Add("$where names an endpoint or step that isn't in the patch, so Patchbay leaves it out."); continue }
     if ($c.source -ceq $c.destination) { $problems.Add("$where goes from something to itself, so Patchbay leaves it out."); continue }
+    if ($kinds[$c.source] -ceq 'annotation') { $problems.Add("$where comes out of an annotation, which has no Out, so Patchbay leaves it out."); continue }
+    if ($kinds[$c.destination] -ceq 'annotation') { $problems.Add("$where goes into an annotation, which has no In, so Patchbay leaves it out."); continue }
     if ($kinds[$c.destination] -cin $noInput) { $problems.Add("$where goes into a $($kinds[$c.destination]) step, which has no In, so Patchbay leaves it out."); continue }
     if ($kinds[$c.source] -cne 'endpoint' -and $null -ne $c.sourceGroup) { $problems.Add("$where has a sourceGroup, but a step has one Out, so it's ignored.") }
     if ($kinds[$c.destination] -cne 'endpoint' -and $null -ne $c.destinationGroup) { $problems.Add("$where has a destinationGroup, but a step has one In, so it's ignored.") }
@@ -361,7 +375,7 @@ foreach ($c in (Get-List $patch.connections)) {
 }
 
 foreach ($id in $kinds.Keys) {
-    if ($kinds[$id] -ceq 'endpoint') { continue }
+    if ($kinds[$id] -cin 'endpoint', 'annotation') { continue }
     if ($kinds[$id] -cin $generators) {
         if (-not $hasOut.Contains($id)) { $problems.Add("Nothing is connected to the Out of the generator '$id', so it doesn't run.") }
         continue
@@ -460,6 +474,7 @@ Tell the customer about these before they find out on their own.
 - **A velocity filter only looks at note on messages.** Note off always gets through, so no note is left sounding.
 - **Messages without a group aren't routed.** Those are the MIDI 2.0 stream messages that devices use to describe themselves, and utility messages such as jitter reduction timestamps.
 - **It only sees its own connections.** A cable between two devices, or another routing app, can close a loop Patchbay can't see.
+- **An annotation is one line of text.** It can't wrap into a paragraph, and nothing can connect to it.
 
 ## The patch file
 
@@ -571,6 +586,7 @@ The steps are in the `blocks` list.
 | `clockGenerator` | MIDI clock | A generator. Sends MIDI clock at a tempo, for as long as the patch is routing. |
 | `timeCodeGenerator` | MIDI Time Code | A generator. Sends MIDI Time Code from a start time, for as long as the patch is routing. |
 | `lfoGenerator` | LFO | A generator. Sweeps a controller, pitch bend, aftertouch, or an RPN or NRPN up and down, for as long as the patch is routing. |
+| `annotation` | Annotation | Not a step. A line of text on the canvas, for notes about the patch. Nothing goes in or comes out. |
 
 ### Connections
 
@@ -583,7 +599,7 @@ The steps are in the `blocks` list.
 | `destinationGroup` | -1 to 15 | -1 | Only when `destination` is an endpoint. The group messages go to, counted from 0. -1 keeps each message's own group. |
 | `muted` | `true`, `false` | `false` | A muted connection passes nothing. Write `false`. |
 
-A connection is left out when it names an endpoint or step the patch doesn't have, when it goes from something to itself, when it goes into a MIDI clock or MIDI Time Code step, which has no **In**, or when it repeats another connection between the same two points with the same groups. A step has no groups, so `sourceGroup` and `destinationGroup` are ignored at a step's end of a connection.
+A connection is left out when it names an endpoint or step the patch doesn't have, when it goes from something to itself, when it goes into a MIDI clock or MIDI Time Code step, which has no **In**, when it goes into or out of an annotation, or when it repeats another connection between the same two points with the same groups. A step has no groups, so `sourceGroup` and `destinationGroup` are ignored at a step's end of a connection.
 
 ### Where things go on the canvas
 
@@ -591,6 +607,7 @@ A connection is left out when it names an endpoint or step the patch doesn't hav
 
 - An endpoint is 280 pixels wide. With one group it's about 130 pixels high, and each extra group it shows adds 32.
 - A step is 208 pixels wide and 76 high.
+- An annotation is as wide as its text, about half its font size for each character, and a little taller than its font size. **Auto arrange** leaves annotations where they are.
 - Put sources at `x` 60, one under another. A generator is a source too.
 - Put each step one column to the right of the step before it. Columns 280 pixels apart, starting at `x` 400, work well. Steps that come after the same step can share a column, at least 110 pixels apart from top to bottom.
 - Put destinations in a column after the last steps, 280 pixels further right.
@@ -599,7 +616,7 @@ Things that overlap still work, but the customer can't see them. **Auto arrange*
 
 ### Limits
 
-Patchbay reads a patch up to 4 megabytes, with up to 64 endpoints, 1,024 steps, and 2,048 connections. A step can have up to 128 entries in each list, and a message mask up to 4 conditions. Patchbay shows up to 256 patches. Text is cut off at 1,024 characters. Anything past a limit is dropped.
+Patchbay reads a patch up to 4 megabytes, with up to 64 endpoints, 1,024 steps and annotations together, and 2,048 connections. A step can have up to 128 entries in each list, and a message mask up to 4 conditions. Patchbay shows up to 256 patches. Text is cut off at 1,024 characters. Anything past a limit is dropped.
 
 ## Step settings
 
@@ -980,6 +997,24 @@ For example, a slow triangle sweep of controller 74 on channel 1, which many syn
 { "id": "clock-to-sweep", "source": "clock", "destination": "filter-sweep" }
 ```
 
+### Annotation
+
+`"type": "annotation"`. Not a step: a line of text on the canvas, for notes such as which keyboard is which, or what a split is for. Nothing goes into or comes out of it, it doesn't change what routes, and it isn't counted with the steps.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `text` | text, up to 200 characters | empty | The note. It's one line: a line break or a tab becomes a space. |
+| `fontFamily` | the name of one font | Patchbay's own font | The font. Fonts every Windows PC has are `Segoe UI`, `Segoe UI Variable Text`, `Segoe UI Variable Display`, `Bahnschrift`, `Cascadia Mono`, and `Consolas`. On a PC without the font, Patchbay uses its own. |
+| `fontSize` | 8 to 96 | 16 | The size of the text. |
+| `bold`, `italic`, `underline` | `true`, `false` | `false` | How the text is drawn. |
+| `color` | `"#RRGGBB"` | the theme's text color | The color of the text, such as `"#E74856"` for red. Leave it out to follow the light or dark theme. |
+
+For example, a note above the bass side of the split in the complete example:
+
+```json
+{ "id": "note-bass", "type": "annotation", "x": 680, "y": 0, "settings": { "text": "Bass below middle C", "fontSize": 14, "bold": true } }
+```
+
 ## Mistakes that are easy to miss
 
 > **For agents:** Each of these loads without an error and gives the customer the wrong patch.
@@ -1008,4 +1043,6 @@ For example, a slow triangle sweep of controller 74 on channel 1, which many syn
 > - A generator's `channel` or `group` is counted from 1. Channel 1 is `0` in the file.
 > - An LFO's `number` doesn't match its `message`. For `rpn` and `nrpn` it's the bank times 128 plus the index, so RPN 0, 0 is `0` and NRPN 1, 5 is `133`.
 > - A clock and an LFO that should play together aren't connected. Each keeps its own `beatsPerMinute` until the clock is connected to the LFO's **In**.
+> - A connection goes into or out of an annotation. An annotation has no **In** or **Out**, so the connection is left out.
+> - An annotation's text has a line break, to make two lines. An annotation is one line, so the break becomes a space. Use two annotations instead.
 > - The patch depends on something in [What Patchbay can't do](#what-patchbay-cant-do).

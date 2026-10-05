@@ -31,12 +31,14 @@ Routing happens only while Windows MIDI Patchbay is running. [Routing only runs 
 
 ![A patch open in a window of its own, with numbered callouts on the Steps and Endpoints panel, a connection, the details panel, the Routing button and Start automatically switch, the toolbar, and the zoom and Test buttons]({{ site.baseurl }}/assets/images/midipatchbay-editor.png)
 
-1. **Steps and Endpoints.** The panel on the left has everything you can add. Drag a device from **Endpoints** onto the canvas. Drag a step from **Steps** onto a connection to put it in the way, or anywhere on the canvas to connect it yourself.
+1. **Steps and Endpoints.** The panel on the left has everything you can add. Drag a device from **Endpoints** onto the canvas. Each one shows the picture set for it in MIDI Settings, or an empty square when it has none. Drag a step from **Steps** onto a connection to put it in the way, or anywhere on the canvas to connect it yourself.
 2. **Draw a connection** by dragging from an **Out** point to an **In** point.
 3. **The details panel** shows whatever you've selected. For a step, **Edit settings…** changes what it does.
 4. **Routing** turns the patch on and off. **Start automatically** starts it each time Windows MIDI Patchbay starts.
 5. **The toolbar** has **Undo**, **Redo**, **Cut**, **Copy**, **Paste**, and **Remove**, and buttons to add an endpoint, create a loopback, or arrange the canvas for you.
 6. **The zoom buttons** change how much of the canvas you see. **Test** opens a monitor, a keyboard, or a scratch pad pointed at the selected endpoint.
+
+To give the canvas more room, or the panels more, drag the bar between the left panel and the canvas, or between the canvas and the details panel. Each patch window opens with the widths you last used.
 
 ## Your patches
 
@@ -95,7 +97,7 @@ To work with more than one endpoint or step at once, hold Ctrl and click each on
 
 ## Steps
 
-Steps sit between the endpoints and do something to the messages that pass through them. Drag one from the **Steps** tab on the left, or select a connection and choose **Add a step here**. Drop a step on a connection and the connection is split in two, with the step in the middle. A generator is never put into a connection, so it's added on its own instead.
+Steps sit between the endpoints and do something to the messages that pass through them. Drag one from the **Steps** tab on the left, or select a connection and choose **Add a step here**. Drop a step on a connection and the connection is split in two, with the step in the middle. A generator or an annotation is never put into a connection, so it's added on its own instead.
 
 There are four kinds:
 
@@ -104,9 +106,11 @@ There are four kinds:
 - The **message throttler** slows messages down for a device that can't keep up.
 - **Generators** make messages of their own: MIDI clock, MIDI Time Code, and an LFO. See [Generators](#generators).
 
+The **Steps** tab also has **Annotation**, a line of text for notes on the canvas. It isn't a step. See [Annotations](#annotations).
+
 Messages go through the steps in the order the connections lead them, and each step only sees what the steps before it let through. When an **Out** leads to more than one place, each one gets its own copy of every message, so a step on one path never changes what another path carries. When more than one connection leads into the same **In**, their messages are merged.
 
-Select a step to see what it does, in a sentence, under **What it does**. **Edit settings…** opens its settings. Nothing changes until you select **Apply**, and **Reset** puts the step back the way it started. Under **Name**, you can give a step a name of its own, such as "Bass side".
+Select a step to see what it does, in a sentence, under **What it does**. **Edit settings…** opens its settings, as large as the patch window allows, so on a big screen a step with a lot of settings fits without scrolling. Nothing changes until you select **Apply**, and **Reset** puts the step back the way it started. Under **Name**, you can give a step a name of its own, such as "Bass side".
 
 **Bypass** lets everything through a step unchanged, so you can hear the patch with and without it. A bypassed generator sends nothing.
 
@@ -187,6 +191,16 @@ The clock and the time code go out on the group you pick. A connection to one gr
 Changing a generator while its patch is routing doesn't start it again. A new tempo, more or less swing, and every change to an LFO take effect right away. Changing the clock's group, what its swing applies to, or **Send Start and Stop messages**, or anything about the time code, starts it again from the top. So does connecting a clock to an LFO, or taking it away.
 
 MIDI clock and MIDI Time Code don't follow a clock that comes in from a device, and messages don't start or stop them. They run whenever their patch routes.
+
+## Annotations
+
+An annotation is a line of text on the canvas, for notes about the patch, such as which keyboard is which or what a split is for. Drag **Annotation** from the **Steps** tab onto the canvas, type the text in the details panel on the right, and press Enter.
+
+The details panel also sets the font, its size, bold, italic, and underline, and the color. The font list has the fonts every Windows PC has. **Show all fonts** lists every font on your PC, but if you share the patch, a PC without that font shows the annotation in the standard font.
+
+An annotation has no **In** or **Out**, so nothing connects to it, and it doesn't change what routes. It isn't counted with the steps in the status bar, and **Auto arrange** leaves it where you put it. To change the text later, double-click the annotation, or right-click it and choose **Edit text**.
+
+An annotation is one line. To write more, add another one.
 
 ## Slowing messages down
 

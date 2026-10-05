@@ -5,16 +5,15 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-// The fonts a label can be set in, read from DirectWrite, which is what XAML draws text with, so
-// a family this says is installed is one XAML will find.
+// The fonts text can be set in, read from DirectWrite, which is what XAML draws text with, so a
+// family this says is installed is one XAML will find.
 
 #include "pch.h"
 #include "FontCatalog.h"
-#include "LayoutModel.h"
 
 #include <dwrite.h>
 
-namespace midiglass::fonts
+namespace midiapp::fonts
 {
     namespace
     {
@@ -55,7 +54,7 @@ namespace midiglass::fonts
             return cached;
         }
 
-        // The English name where the family has one. A layout goes to PCs whose Windows speaks
+        // The English name where the family has one. A file goes to PCs whose Windows speaks
         // other languages, and every one of them knows a family by its English name as well.
         std::wstring StoredName(_In_ IDWriteFontFamily* family)
         {
@@ -134,9 +133,9 @@ namespace midiglass::fonts
 
                 auto name = StoredName(family.get());
 
-                // A name a layout could not store is not offered, and a family whose name starts
+                // A name a file could not store is not offered, and a family whose name starts
                 // with @ is the sideways copy of an East Asian font for vertical text.
-                if (!glass::IsSafeFontFamilyName(name) || name.front() == L'@')
+                if (!IsSafeFontFamilyName(name) || name.front() == L'@')
                 {
                     continue;
                 }
@@ -203,11 +202,11 @@ namespace midiglass::fonts
     _Use_decl_annotations_
     media::FontFamily FamilyFor(std::wstring const& family)
     {
-        if (family.empty() || !glass::IsSafeFontFamilyName(family))
+        if (family.empty() || !IsSafeFontFamilyName(family))
         {
-            return media::FontFamily{ DefaultFamily };
+            return media::FontFamily{ DefaultFontFamily };
         }
 
-        return media::FontFamily{ winrt::hstring{ family + L", " + DefaultFamily } };
+        return media::FontFamily{ winrt::hstring{ family + L", " + DefaultFontFamily } };
     }
 }

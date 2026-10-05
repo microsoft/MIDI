@@ -290,6 +290,13 @@ namespace winrt::midipatchbay::implementation
                 co_return;
             }
 
+            // Everything an annotation has fits in the inspector.
+            if (patchbay::IsAnnotation(block->Kind))
+            {
+                FocusAnnotationText(blockId);
+                co_return;
+            }
+
             m_editingBlockId = blockId;
 
             auto const editingDone = wil::scope_exit([this]() { m_editingBlockId.clear(); });
@@ -356,6 +363,8 @@ namespace winrt::midipatchbay::implementation
             BlockDialog().Title(winrt::box_value(patchbay::BlockDisplayName(*block)));
             BlockDialogIntroText().Text(patchbay::BlockKindHint(block->Kind));
             BlockDialog().XamlRoot(Content().XamlRoot());
+
+            FitBlockDialogToWindow();
 
             auto const result = co_await BlockDialog().ShowAsync();
 

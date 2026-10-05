@@ -494,9 +494,20 @@ void ProcessingBlockTests::SettingsSurviveTheFile()
             settings.Lfo.Target.Kind = midiapp::ValueMessageKind::PitchBend;
             settings.Lfo.Target.Number = 0;
             break;
+
+        case BlockKind::Annotation:
+            settings.Annotation.Text = L"Drums come in here";
+            settings.Annotation.FontFamily = L"Cascadia Mono";
+            settings.Annotation.FontSize = 24;
+            settings.Annotation.Bold = true;
+            settings.Annotation.Italic = true;
+            settings.Annotation.Underline = true;
+            settings.Annotation.Color = L"#16C60C";
+            break;
         }
 
-        VERIFY_IS_FALSE(BlockChangesNothing(kind, settings));
+        // Only an annotation changes no message, whatever its settings.
+        VERIFY_ARE_EQUAL(IsAnnotation(kind), BlockChangesNothing(kind, settings));
 
         auto const object = BlockSettingsToJson(kind, settings);
         auto const back = BlockSettingsFromJson(kind, json::JsonObject::Parse(object.Stringify()));
@@ -826,4 +837,110 @@ void ProcessingBlockTests::OnlyTheRightChangesRestartAGenerator()
     later.TimeCode.Start.Hours = 1;
 
     VERIFY_ARE_NOT_EQUAL(restart(BlockKind::TimeCodeGenerator, timeCode), restart(BlockKind::TimeCodeGenerator, later));
+}
+
+void ProcessingBlockTests::AnAnnotationIsOnlyText()
+{
+    VERIFY_IS_TRUE(IsAnnotation(BlockKind::Annotation));
+    VERIFY_IS_FALSE(IsGenerator(BlockKind::Annotation));
+    VERIFY_IS_FALSE(HasInput(BlockKind::Annotation));
+    VERIFY_IS_FALSE(HasOutput(BlockKind::Annotation));
+    VERIFY_IS_FALSE(CanGoIntoConnection(BlockKind::Annotation));
+
+    // Everything else has an Out, and only a step that passes on what comes in can go into a link.
+    for (auto const kind : AllBlockKinds)
+    {
+        if (kind == BlockKind::Annotation)
+        {
+            continue;
+        }
+
+        VERIFY_IS_FALSE(IsAnnotation(kind));
+        VERIFY_IS_TRUE(HasOutput(kind));
+        VERIFY_ARE_EQUAL(HasInput(kind) && !IsGenerator(kind), CanGoIntoConnection(kind));
+    }
+
+    VERIFY_IS_TRUE(CanGoIntoConnection(BlockKind::Transpose));
+    VERIFY_IS_FALSE(CanGoIntoConnection(BlockKind::ClockGenerator));
+    VERIFY_IS_FALSE(CanGoIntoConnection(BlockKind::LfoGenerator));
+
+    auto const fresh = DefaultBlockSettings(BlockKind::Annotation).Annotation;
+
+    VERIFY_IS_TRUE(fresh.Text.empty());
+    VERIFY_IS_TRUE(fresh.FontFamily.empty());
+    VERIFY_ARE_EQUAL(DefaultAnnotationFontSize, fresh.FontSize);
+    VERIFY_IS_FALSE(fresh.Bold || fresh.Italic || fresh.Underline);
+    VERIFY_IS_TRUE(fresh.Color.empty());
+
+    // Whatever it says, a message is never changed by it.
+    auto settings = DefaultBlockSettings(BlockKind::Annotation);
+    settings.Annotation.Text = L"Keep the drums on channel 10";
+    settings.Annotation.Bold = true;
+
+    VERIFY_IS_TRUE(BlockChangesNothing(BlockKind::Annotation, settings));
+
+    for (auto const& original : SampleMessages())
+    {
+        auto message = original;
+
+        VERIFY_IS_TRUE(Run(BlockKind::Annotation, settings, message));
+        VERIFY_IS_TRUE(message == original);
+    }
+}
+
+void ProcessingBlockTests::AnnotationTextAndColorAreCleanedUp()
+{
+    // One line: a line break or a tab becomes a space.
+    VERIFY_ARE_EQUAL(std::wstring{ L"Two lines  here" }, AnnotationTextFrom(L"Two lines\r\nhere"));
+    VERIFY_ARE_EQUAL(std::wstring{ L"a b c" }, AnnotationTextFrom(L"a\tb\x2028" L"c"));
+
+    VERIFY_ARE_EQUAL(MaximumAnnotationLength, AnnotationTextFrom(std::wstring(500, L'x')).size());
+
+    // A cut never leaves half of a character from outside the basic plane.
+    std::wstring nearlyFull(MaximumAnnotationLength - 1, L'x');
+    nearlyFull += L"\xD83C\xDFB9";
+
+    auto const cut = AnnotationTextFrom(nearlyFull);
+
+    VERIFY_ARE_EQUAL(MaximumAnnotationLength - 1, cut.size());
+    VERIFY_IS_TRUE(cut.back() == L'x');
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"Keys \xD83C\xDFB9" }, AnnotationTextFrom(L"Keys \xD83C\xDFB9"));
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"#E3008C" }, AnnotationColorFrom(L"#e3008c"));
+    VERIFY_ARE_EQUAL(std::wstring{ L"#16C60C" }, AnnotationColorFrom(L"#16C60C"));
+    VERIFY_IS_TRUE(AnnotationColorFrom(L"16C60C").empty());
+    VERIFY_IS_TRUE(AnnotationColorFrom(L"#16C60").empty());
+    VERIFY_IS_TRUE(AnnotationColorFrom(L"#FF16C60C").empty());
+    VERIFY_IS_TRUE(AnnotationColorFrom(L"#GG0000").empty());
+    VERIFY_IS_TRUE(AnnotationColorFrom(L"red").empty());
+    VERIFY_IS_TRUE(AnnotationColorFrom(L"").empty());
+
+    // Anything that can't be kept as it is in the file goes back to the default.
+    auto const bad = BlockSettingsFromJson(BlockKind::Annotation, json::JsonObject::Parse(
+        LR"({"text":"Line one\nline two","fontFamily":"C:\\Windows\\Fonts\\font.ttf","fontSize":500,
+            "bold":"yes","italic":1,"underline":true,"color":"blue"})")).Annotation;
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"Line one line two" }, bad.Text);
+    VERIFY_IS_TRUE(bad.FontFamily.empty());
+    VERIFY_ARE_EQUAL(DefaultAnnotationFontSize, bad.FontSize);
+    VERIFY_IS_FALSE(bad.Bold);
+    VERIFY_IS_FALSE(bad.Italic);
+    VERIFY_IS_TRUE(bad.Underline);
+    VERIFY_IS_TRUE(bad.Color.empty());
+
+    for (auto const family : { L"file:///C:/font.ttf", L"Arial, Segoe UI", L"#Font", L"   " })
+    {
+        json::JsonObject object{};
+        object.SetNamedValue(L"fontFamily", json::JsonValue::CreateStringValue(family));
+
+        VERIFY_IS_TRUE(BlockSettingsFromJson(BlockKind::Annotation, object).Annotation.FontFamily.empty());
+    }
+
+    auto const small = BlockSettingsFromJson(BlockKind::Annotation, json::JsonObject::Parse(LR"({"fontSize":4})"));
+    VERIFY_ARE_EQUAL(DefaultAnnotationFontSize, small.Annotation.FontSize);
+
+    auto const edges = BlockSettingsFromJson(BlockKind::Annotation, json::JsonObject::Parse(LR"({"fontSize":8,"fontFamily":"Segoe Print"})"));
+    VERIFY_ARE_EQUAL(MinimumAnnotationFontSize, edges.Annotation.FontSize);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Segoe Print" }, edges.Annotation.FontFamily);
 }

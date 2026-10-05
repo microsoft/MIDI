@@ -128,7 +128,9 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="AppSettings.h" />
-    <ClInclude Include="FontCatalog.h" />
+    <ClInclude Include="..\midi-app-shared\FontCatalog.h" />
+    <ClInclude Include="..\midi-app-shared\FontNames.h" />
+    <ClInclude Include="..\midi-app-shared\DialogSizing.h" />
     <ClInclude Include="CommandLine.h" />
     <ClInclude Include="LibraryItems.h" />
     <ClInclude Include="EditorItems.h" />
@@ -221,7 +223,7 @@
     </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="AppSettings.cpp" />
-    <ClCompile Include="FontCatalog.cpp" />
+    <ClCompile Include="..\midi-app-shared\FontCatalog.cpp" />
     <ClCompile Include="LibraryItems.cpp" />
     <ClCompile Include="EditorItems.cpp" />
     <ClCompile Include="StringResources.cpp" />

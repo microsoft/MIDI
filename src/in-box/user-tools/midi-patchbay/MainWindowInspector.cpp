@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 
+#include "FontCatalog.h"
 #include "StringResources.h"
 #include "ThemeBrushes.h"
 
@@ -92,6 +93,36 @@ namespace winrt::midipatchbay::implementation
 
             return actions;
         }
+
+        // Colors that read on the dark and the light theme alike.
+        struct AnnotationSwatch
+        {
+            wchar_t const* NameKey;
+            wchar_t const* Code;
+        };
+
+        constexpr AnnotationSwatch AnnotationSwatches[]
+        {
+            { L"AnnotationColorRed", L"#E74856" },
+            { L"AnnotationColorOrange", L"#F7630C" },
+            { L"AnnotationColorGold", L"#C19C00" },
+            { L"AnnotationColorGreen", L"#16C60C" },
+            { L"AnnotationColorTeal", L"#00B7C3" },
+            { L"AnnotationColorBlue", L"#0078D4" },
+            { L"AnnotationColorPurple", L"#8764B8" },
+            { L"AnnotationColorPink", L"#E3008C" },
+            { L"AnnotationColorGray", L"#7A7574" },
+        };
+
+        // The sizes a text editor offers. A size from a file that is not one of them is added.
+        constexpr double AnnotationSizes[]{ 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 64, 80, 96 };
+
+        bool SameFamilyName(_In_ std::wstring const& left, _In_ std::wstring const& right) noexcept
+        {
+            return ::CompareStringOrdinal(
+                left.c_str(), static_cast<int>(left.size()),
+                right.c_str(), static_cast<int>(right.size()), TRUE) == CSTR_EQUAL;
+        }
     }
 
     void MainWindow::RefreshInspector() noexcept
@@ -107,17 +138,18 @@ namespace winrt::midipatchbay::implementation
 
             m_activityText = nullptr;
             m_activityElementId.clear();
+            m_annotationTextBox = nullptr;
 
             auto* patch = CurrentPatch();
             auto const kind = m_canvas.SelectionKind();
 
             if (patch == nullptr || kind == patchbay::CanvasSelectionKind::None)
             {
-                InspectorPanel().Visibility(xaml::Visibility::Collapsed);
+                SetInspectorVisible(false);
                 return;
             }
 
-            InspectorPanel().Visibility(xaml::Visibility::Visible);
+            SetInspectorVisible(true);
 
             // Several nodes at once: only what can be done to all of them.
             if (auto const count = m_canvas.SelectedNodeIds().size(); count > 1)
@@ -141,7 +173,16 @@ namespace winrt::midipatchbay::implementation
                 if (auto const* block = patch->FindBlock(m_canvas.SelectedNodeId()))
                 {
                     InspectorTitle().Text(patchbay::BlockDisplayName(*block));
-                    BuildBlockInspector(*block);
+
+                    if (patchbay::IsAnnotation(block->Kind))
+                    {
+                        BuildAnnotationInspector(*block);
+                    }
+                    else
+                    {
+                        BuildBlockInspector(*block);
+                    }
+
                     return;
                 }
             }
@@ -152,7 +193,7 @@ namespace winrt::midipatchbay::implementation
                 return;
             }
 
-            InspectorPanel().Visibility(xaml::Visibility::Collapsed);
+            SetInspectorVisible(false);
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the inspector.")
     }
@@ -1171,6 +1212,516 @@ namespace winrt::midipatchbay::implementation
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the step inspector.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::BuildAnnotationInspector(patchbay::PatchBlock const& block) noexcept
+    {
+        try
+        {
+            auto const blockId = block.Id;
+            auto const note = block.Settings.Annotation;
+            auto weak = get_weak();
+
+            // Anything but the text is one step for Undo, and is drawn at once.
+            auto const change = [weak, blockId](std::function<void(patchbay::AnnotationSettings&)> const& edit)
+                {
+                    auto strong = weak.get();
+                    auto* current = strong == nullptr ? nullptr : strong->CurrentPatch();
+                    auto* target = current == nullptr ? nullptr : current->FindBlock(blockId);
+
+                    if (target == nullptr || !patchbay::IsAnnotation(target->Kind))
+                    {
+                        return;
+                    }
+
+                    auto edited = target->Settings.Annotation;
+                    edit(edited);
+
+                    if (edited == target->Settings.Annotation)
+                    {
+                        return;
+                    }
+
+                    target->Settings.Annotation = std::move(edited);
+
+                    strong->m_canvas.RefreshAnnotation(blockId);
+                    strong->CommitChange(false, false);
+                };
+
+            // ------------------------------------------------------- text
+            {
+                controls::StackPanel body{};
+                body.Spacing(8);
+
+                auto hint = ValueText(patchbay::BlockKindHint(patchbay::BlockKind::Annotation), 12, true);
+                hint.Foreground(BrushOrNull(L"TextFillColorSecondaryBrush"));
+                body.Children().Append(hint);
+
+                controls::TextBox textBox{};
+                textBox.Header(winrt::box_value(resources::GetString(L"AnnotationTextHeader")));
+                textBox.PlaceholderText(resources::GetString(L"AnnotationTextPlaceholder"));
+                textBox.MaxLength(static_cast<int32_t>(patchbay::MaximumAnnotationLength));
+                textBox.AcceptsReturn(false);
+                textBox.Text(winrt::hstring{ note.Text });
+
+                // Drawn on the canvas as it is typed, and one step for Undo once it is done.
+                textBox.TextChanged([weak, blockId](foundation::IInspectable const& sender, auto&&)
+                    {
+                        auto strong = weak.get();
+                        auto* current = strong == nullptr ? nullptr : strong->CurrentPatch();
+                        auto* target = current == nullptr ? nullptr : current->FindBlock(blockId);
+                        auto const box = sender.try_as<controls::TextBox>();
+
+                        if (target == nullptr || box == nullptr || !patchbay::IsAnnotation(target->Kind))
+                        {
+                            return;
+                        }
+
+                        auto text = patchbay::AnnotationTextFrom(std::wstring_view{ box.Text() });
+
+                        if (text == target->Settings.Annotation.Text)
+                        {
+                            return;
+                        }
+
+                        target->Settings.Annotation.Text = std::move(text);
+                        strong->m_annotationTextChanged = true;
+                        strong->m_canvas.RefreshAnnotation(blockId);
+                    });
+
+                textBox.LostFocus([weak](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get(); strong != nullptr && strong->m_annotationTextChanged)
+                        {
+                            strong->m_annotationTextChanged = false;
+                            strong->CommitChange(false, false);
+                        }
+                    });
+
+                textBox.KeyDown([weak](auto&&, input::KeyRoutedEventArgs const& args)
+                    {
+                        if (args.Key() != winrt::Windows::System::VirtualKey::Enter)
+                        {
+                            return;
+                        }
+
+                        args.Handled(true);
+
+                        if (auto strong = weak.get(); strong != nullptr && strong->m_annotationTextChanged)
+                        {
+                            strong->m_annotationTextChanged = false;
+                            strong->CommitChange(false, false);
+                        }
+                    });
+
+                body.Children().Append(textBox);
+                m_annotationTextBox = textBox;
+
+                InspectorContent().Children().Append(Card(body));
+            }
+
+            // ------------------------------------------------------- font
+            {
+                auto section = Section(resources::GetString(L"AnnotationFontHeader"));
+
+                auto const families = std::make_shared<std::vector<std::wstring>>();
+
+                // Filling the list raises SelectionChanged, which is not the customer choosing.
+                auto const filling = std::make_shared<bool>(false);
+
+                controls::ComboBox family{};
+                family.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+                xaml::Automation::AutomationProperties::SetName(family, resources::GetString(L"AnnotationFontHeader"));
+
+                // The fonts every PC has, or every font on this one. A font the annotation already
+                // names stays in the list either way, and says so when this PC doesn't have it.
+                auto const fill = [family, families, filling](bool all, std::wstring const& keep)
+                    {
+                        *filling = true;
+                        auto const done = wil::scope_exit([filling]() { *filling = false; });
+
+                        auto const offered = all ? midiapp::fonts::InstalledFamilies(true) : midiapp::fonts::InBoxFamilies();
+
+                        families->clear();
+                        family.Items().Clear();
+                        family.Items().Append(winrt::box_value(resources::GetString(L"AnnotationFontDefault")));
+
+                        auto const listed = std::any_of(offered.begin(), offered.end(),
+                            [&keep](std::wstring const& name) { return SameFamilyName(name, keep); });
+
+                        if (!keep.empty() && !listed)
+                        {
+                            families->push_back(keep);
+                            family.Items().Append(winrt::box_value(midiapp::fonts::IsInstalled(keep)
+                                ? winrt::hstring{ keep }
+                                : resources::FormatString(L"AnnotationFontMissingFormat", keep)));
+                        }
+
+                        for (auto const& name : offered)
+                        {
+                            families->push_back(name);
+                            family.Items().Append(winrt::box_value(winrt::hstring{ name }));
+                        }
+
+                        int32_t selected{ 0 };
+
+                        for (size_t index = 0; index < families->size() && !keep.empty(); ++index)
+                        {
+                            if (SameFamilyName((*families)[index], keep))
+                            {
+                                selected = static_cast<int32_t>(index) + 1;
+                                break;
+                            }
+                        }
+
+                        family.SelectedIndex(selected);
+                    };
+
+                fill(patchbay::AppSettings::Current().ShowAllFonts(), note.FontFamily);
+
+                family.SelectionChanged([change, families, filling](foundation::IInspectable const& sender, auto&&)
+                    {
+                        auto const box = sender.try_as<controls::ComboBox>();
+
+                        if (*filling || box == nullptr || box.SelectedIndex() < 0)
+                        {
+                            return;
+                        }
+
+                        auto const index = static_cast<size_t>(box.SelectedIndex());
+                        auto const name = index == 0 || index > families->size() ? std::wstring{} : (*families)[index - 1];
+
+                        change([name](patchbay::AnnotationSettings& settings) { settings.FontFamily = name; });
+                    });
+
+                section.Children().Append(family);
+
+                controls::CheckBox showAll{};
+                showAll.Content(winrt::box_value(resources::GetString(L"AnnotationShowAllFonts")));
+                showAll.IsChecked(patchbay::AppSettings::Current().ShowAllFonts());
+
+                auto const onShowAll = [weak, blockId, fill](bool all)
+                    {
+                        patchbay::AppSettings::Current().ShowAllFonts(all);
+
+                        auto strong = weak.get();
+                        auto* current = strong == nullptr ? nullptr : strong->CurrentPatch();
+                        auto const* target = current == nullptr ? nullptr : current->FindBlock(blockId);
+
+                        fill(all, target == nullptr ? std::wstring{} : target->Settings.Annotation.FontFamily);
+                    };
+
+                showAll.Checked([onShowAll](auto&&, auto&&) { onShowAll(true); });
+                showAll.Unchecked([onShowAll](auto&&, auto&&) { onShowAll(false); });
+
+                section.Children().Append(showAll);
+
+                auto showAllHint = ValueText(resources::GetString(L"AnnotationShowAllFontsHint"), 11, true);
+                showAllHint.Margin(xaml::ThicknessHelper::FromLengths(0, -6, 0, 4));
+                showAllHint.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
+                section.Children().Append(showAllHint);
+
+                // ---- size and style, side by side
+                controls::Grid row{};
+                row.ColumnSpacing(8);
+
+                for (auto const width : { xaml::GridLength{ 1, xaml::GridUnitType::Star },
+                                          xaml::GridLength{ 0, xaml::GridUnitType::Auto } })
+                {
+                    controls::ColumnDefinition column{};
+                    column.Width(width);
+                    row.ColumnDefinitions().Append(column);
+                }
+
+                std::vector<double> sizes(std::begin(AnnotationSizes), std::end(AnnotationSizes));
+
+                if (std::find(sizes.begin(), sizes.end(), note.FontSize) == sizes.end())
+                {
+                    sizes.push_back(note.FontSize);
+                    std::sort(sizes.begin(), sizes.end());
+                }
+
+                controls::ComboBox size{};
+                size.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+                xaml::Automation::AutomationProperties::SetName(size, resources::GetString(L"AnnotationSizeName"));
+
+                for (size_t index = 0; index < sizes.size(); ++index)
+                {
+                    size.Items().Append(winrt::box_value(patchbay::DescribeNumber(sizes[index], 1)));
+
+                    if (sizes[index] == note.FontSize)
+                    {
+                        size.SelectedIndex(static_cast<int32_t>(index));
+                    }
+                }
+
+                size.SelectionChanged([change, sizes](foundation::IInspectable const& sender, auto&&)
+                    {
+                        auto const box = sender.try_as<controls::ComboBox>();
+
+                        if (box == nullptr || box.SelectedIndex() < 0 || static_cast<size_t>(box.SelectedIndex()) >= sizes.size())
+                        {
+                            return;
+                        }
+
+                        auto const value = sizes[static_cast<size_t>(box.SelectedIndex())];
+
+                        change([value](patchbay::AnnotationSettings& settings) { settings.FontSize = value; });
+                    });
+
+                row.Children().Append(size);
+
+                controls::StackPanel styles{};
+                styles.Orientation(controls::Orientation::Horizontal);
+                styles.Spacing(4);
+
+                auto const addStyle = [&styles, change](wchar_t const* glyph, wchar_t const* nameKey, bool on,
+                    void (*set)(patchbay::AnnotationSettings&, bool))
+                    {
+                        primitives::ToggleButton toggle{};
+
+                        toggle.Width(40);
+                        toggle.Height(32);
+                        toggle.Padding(xaml::ThicknessHelper::FromUniformLength(0));
+                        toggle.IsChecked(on);
+
+                        controls::FontIcon icon{};
+                        icon.Glyph(glyph);
+                        icon.FontSize(14);
+                        toggle.Content(icon);
+
+                        auto const name = resources::GetString(nameKey);
+                        xaml::Automation::AutomationProperties::SetName(toggle, name);
+                        controls::ToolTipService::SetToolTip(toggle, winrt::box_value(name));
+
+                        toggle.Click([change, set](foundation::IInspectable const& sender, auto&&)
+                            {
+                                auto const button = sender.try_as<primitives::ToggleButton>();
+
+                                if (button == nullptr)
+                                {
+                                    return;
+                                }
+
+                                auto const value = button.IsChecked() != nullptr && button.IsChecked().Value();
+
+                                change([set, value](patchbay::AnnotationSettings& settings) { set(settings, value); });
+                            });
+
+                        styles.Children().Append(toggle);
+                    };
+
+                addStyle(L"\uE8DD", L"AnnotationBold", note.Bold,
+                    [](patchbay::AnnotationSettings& settings, bool value) { settings.Bold = value; });
+                addStyle(L"\uE8DB", L"AnnotationItalic", note.Italic,
+                    [](patchbay::AnnotationSettings& settings, bool value) { settings.Italic = value; });
+                addStyle(L"\uE8DC", L"AnnotationUnderline", note.Underline,
+                    [](patchbay::AnnotationSettings& settings, bool value) { settings.Underline = value; });
+
+                controls::Grid::SetColumn(styles, 1);
+                row.Children().Append(styles);
+
+                section.Children().Append(row);
+
+                InspectorContent().Children().Append(section);
+            }
+
+            // ------------------------------------------------------- color
+            {
+                auto section = Section(resources::GetString(L"AnnotationColorHeader"));
+
+                auto const accent = BrushOrNull(L"AccentFillColorDefaultBrush");
+                auto const swatchButtons = std::make_shared<std::vector<std::pair<controls::Button, std::wstring>>>();
+
+                auto currentText = ValueText({}, 11, true);
+                currentText.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
+
+                auto const mark = [swatchButtons, accent, currentText](std::wstring const& code)
+                    {
+                        for (auto const& [button, buttonCode] : *swatchButtons)
+                        {
+                            button.BorderBrush(buttonCode == code && accent != nullptr
+                                ? accent
+                                : media::SolidColorBrush{ winrt::Windows::UI::Colors::Transparent() });
+                        }
+
+                        currentText.Text(code.empty() ? resources::GetString(L"AnnotationColorTheme") : winrt::hstring{ code });
+                    };
+
+                auto const apply = [change, mark](std::wstring const& code)
+                    {
+                        change([code](patchbay::AnnotationSettings& settings) { settings.Color = code; });
+                        mark(code);
+                    };
+
+                controls::VariableSizedWrapGrid swatches{};
+                swatches.Orientation(controls::Orientation::Horizontal);
+                swatches.ItemWidth(36);
+                swatches.ItemHeight(36);
+
+                auto const addSwatch = [&swatches, swatchButtons, apply](winrt::hstring const& name, std::wstring const& code, media::Brush const& fill)
+                    {
+                        controls::Button button{};
+
+                        button.Width(32);
+                        button.Height(32);
+                        button.Padding(xaml::ThicknessHelper::FromUniformLength(3));
+                        button.BorderThickness(xaml::ThicknessHelper::FromUniformLength(2));
+                        button.BorderBrush(media::SolidColorBrush{ winrt::Windows::UI::Colors::Transparent() });
+
+                        // A Rectangle rather than a Border: a Border's corners are stepped at
+                        // fractional scaling.
+                        shapes::Rectangle swatch{};
+                        swatch.Width(22);
+                        swatch.Height(22);
+                        swatch.RadiusX(4);
+                        swatch.RadiusY(4);
+                        swatch.UseLayoutRounding(false);
+                        swatch.StrokeThickness(1);
+                        swatch.Stroke(BrushOrNull(L"CardStrokeColorDefaultBrush"));
+                        swatch.Fill(fill);
+
+                        button.Content(swatch);
+
+                        xaml::Automation::AutomationProperties::SetName(button, name);
+                        controls::ToolTipService::SetToolTip(button, winrt::box_value(name));
+
+                        button.Click([apply, code](auto&&, auto&&) { apply(code); });
+
+                        swatchButtons->emplace_back(button, code);
+                        swatches.Children().Append(button);
+                    };
+
+                // The theme's own text color first, because it is the one that reads in both themes.
+                addSwatch(resources::GetString(L"AnnotationColorTheme"), std::wstring{}, BrushOrNull(L"TextFillColorPrimaryBrush"));
+
+                for (auto const& entry : AnnotationSwatches)
+                {
+                    auto const color = patchbay::PatchCanvas::ParseColorCode(entry.Code);
+
+                    addSwatch(resources::GetString(entry.NameKey), entry.Code,
+                        media::SolidColorBrush{ color.value_or(winrt::Windows::UI::Colors::Gray()) });
+                }
+
+                section.Children().Append(swatches);
+
+                // ---- anything else
+                controls::Button more{};
+                more.Content(winrt::box_value(resources::GetString(L"AnnotationColorMore")));
+
+                controls::Flyout flyout{};
+
+                controls::StackPanel flyoutBody{};
+                flyoutBody.Spacing(8);
+
+                controls::ColorPicker picker{};
+                picker.IsAlphaEnabled(false);
+                picker.IsColorSliderVisible(true);
+                picker.IsHexInputVisible(true);
+                picker.IsColorChannelTextInputVisible(false);
+                picker.ColorSpectrumShape(controls::ColorSpectrumShape::Box);
+
+                if (auto const color = patchbay::PatchCanvas::ParseColorCode(note.Color))
+                {
+                    picker.Color(color.value());
+                }
+
+                controls::Button use{};
+                use.Content(winrt::box_value(resources::GetString(L"AnnotationColorUse")));
+                use.Style(xaml::Application::Current().Resources()
+                    .Lookup(winrt::box_value(L"AccentButtonStyle")).as<xaml::Style>());
+
+                use.Click([apply, picker, flyout](auto&&, auto&&)
+                    {
+                        apply(patchbay::PatchCanvas::ColorCode(picker.Color()));
+                        flyout.Hide();
+                    });
+
+                flyoutBody.Children().Append(picker);
+                flyoutBody.Children().Append(use);
+                flyout.Content(flyoutBody);
+                more.Flyout(flyout);
+
+                section.Children().Append(more);
+                section.Children().Append(currentText);
+
+                mark(note.Color);
+
+                InspectorContent().Children().Append(section);
+            }
+
+            // -------------------------------------------------------- actions
+            {
+                auto actions = ActionRow();
+
+                controls::Button duplicateButton{};
+                duplicateButton.Content(winrt::box_value(resources::GetString(L"ActionDuplicate")));
+
+                duplicateButton.Click([weak](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->DuplicateSelection();
+                        }
+                    });
+
+                actions.Children().Append(duplicateButton);
+
+                controls::Button removeButton{};
+                removeButton.Content(winrt::box_value(resources::GetString(L"ActionRemove")));
+
+                removeButton.Click([weak](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->DeleteSelection();
+                        }
+                    });
+
+                actions.Children().Append(removeButton);
+
+                InspectorContent().Children().Append(actions);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the annotation inspector.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::FocusAnnotationText(std::wstring const& blockId) noexcept
+    {
+        try
+        {
+            auto const* patch = CurrentPatch();
+            auto const* block = patch == nullptr ? nullptr : patch->FindBlock(blockId);
+
+            if (block == nullptr || !patchbay::IsAnnotation(block->Kind))
+            {
+                return;
+            }
+
+            if (m_canvas.SelectionKind() != patchbay::CanvasSelectionKind::Block ||
+                m_canvas.SelectedNodeId() != blockId ||
+                m_canvas.SelectedNodeIds().size() != 1)
+            {
+                m_canvas.Select(patchbay::CanvasSelectionKind::Block, blockId);
+            }
+
+            // After the press or the drop that got here has finished, or it takes the focus back.
+            DispatcherQueue().TryEnqueue([weak = get_weak()]()
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr || strong->m_annotationTextBox == nullptr)
+                    {
+                        return;
+                    }
+
+                    strong->m_annotationTextBox.Focus(xaml::FocusState::Programmatic);
+                    strong->m_annotationTextBox.SelectAll();
+                });
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to go to the annotation's text.")
     }
 
     _Use_decl_annotations_

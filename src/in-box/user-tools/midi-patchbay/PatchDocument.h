@@ -158,6 +158,9 @@ namespace midipatchbay
         bool HasNode(_In_ std::wstring const& id) const noexcept;
         bool IsBlock(_In_ std::wstring const& id) const noexcept;
 
+        // The steps messages go through. Annotations are text on the canvas, not steps.
+        size_t StepCount() const noexcept;
+
         // True when the same source point is already wired to the same destination point.
         bool HasConnection(
             _In_ std::wstring const& sourceId,

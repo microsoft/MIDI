@@ -3914,7 +3914,7 @@ namespace glass
 
         // A font this PC does not have falls back to the default rather than to whatever
         // Windows picks.
-        label.FontFamily(::midiglass::fonts::FamilyFor(look.FontFamily));
+        label.FontFamily(::midiapp::fonts::FamilyFor(look.FontFamily));
 
         label.FontWeight(winrt::Windows::UI::Text::FontWeight{
             static_cast<uint16_t>(look.FontWeight > 0 ? look.FontWeight : 400) });

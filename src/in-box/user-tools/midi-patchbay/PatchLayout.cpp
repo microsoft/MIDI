@@ -29,6 +29,12 @@ namespace midipatchbay
 
         constexpr double BlockWidth = 208.0;
         constexpr double BlockHeight = 76.0;
+
+        // Roughly how wide a character of an annotation is, against its font size, and the space
+        // around the text.
+        constexpr double AnnotationCharacterWidth = 0.55;
+        constexpr double AnnotationLineHeight = 1.35;
+        constexpr double AnnotationPadding = 12.0;
     }
 
     _Use_decl_annotations_
@@ -40,6 +46,15 @@ namespace midipatchbay
             auto const rows = endpoint->ShowAllGroups ? 1 + MaximumGroupCount : 2;
 
             return { EndpointWidth, EndpointFixedHeight + rows * EndpointRowHeight };
+        }
+
+        if (auto const* block = patch.FindBlock(nodeId); block != nullptr && IsAnnotation(block->Kind))
+        {
+            auto const& note = block->Settings.Annotation;
+            auto const characters = static_cast<double>((std::max)(note.Text.size(), size_t{ 8 }));
+
+            return { characters * note.FontSize * AnnotationCharacterWidth + AnnotationPadding,
+                note.FontSize * AnnotationLineHeight + AnnotationPadding };
         }
 
         return { BlockWidth, BlockHeight };
@@ -59,6 +74,12 @@ namespace midipatchbay
 
             for (auto const& block : patch.Blocks)
             {
+                // An annotation stays where the customer put it.
+                if (IsAnnotation(block.Kind))
+                {
+                    continue;
+                }
+
                 ids.push_back(block.Id);
             }
 

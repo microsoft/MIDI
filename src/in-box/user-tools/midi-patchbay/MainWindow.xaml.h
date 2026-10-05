@@ -79,6 +79,14 @@ namespace winrt::midipatchbay::implementation
             _In_ controls::SelectorBar const& sender,
             _In_ controls::SelectorBarSelectionChangedEventArgs const& args);
         void OnPaletteSearchChanged(_In_ foundation::IInspectable const& sender, _In_ controls::TextChangedEventArgs const& args);
+        void OnPaletteContentSizeChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::SizeChangedEventArgs const& args);
+
+        // The bars between the palette, the canvas and the details panel, in MainWindowPanes.cpp.
+        void OnSplitterPressed(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
+        void OnSplitterMoved(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
+        void OnSplitterReleased(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
+        void OnSplitterEntered(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
+        void OnSplitterExited(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
 
         // Which of the transform dialog's mapping tables a row belongs to. Public only so the
         // helpers in MainWindowTransforms.cpp can name it; nothing is projected from here.
@@ -177,7 +185,18 @@ namespace winrt::midipatchbay::implementation
             _In_ std::wstring const& endpointDeviceId,
             _In_ std::wstring const& name,
             _In_ std::wstring const& detail,
+            _In_ std::wstring const& imagePath,
             _In_ bool onCanvas) noexcept;
+
+        // ---- panels, in MainWindowPanes.cpp ----
+        void InitializeSplitters() noexcept;
+        void SetInspectorVisible(_In_ bool visible) noexcept;
+
+        // Three square tiles to a row, whatever width the palette has been dragged to.
+        void SizePaletteTiles() noexcept;
+
+        // As big as the window allows, so a long step shows without scrolling on a large screen.
+        void FitBlockDialogToWindow() noexcept;
 
         // The point is where the middle of the step goes. Returns the new step's id, or empty.
         std::wstring AddBlock(_In_ ::midipatchbay::BlockKind kind, _In_ foundation::Point const& center) noexcept;
@@ -266,7 +285,11 @@ namespace winrt::midipatchbay::implementation
         void BuildEndpointInspector(_In_ ::midipatchbay::PatchEndpoint const& endpoint) noexcept;
         void BuildConnectionInspector(_In_ ::midipatchbay::PatchConnection const& connection) noexcept;
         void BuildBlockInspector(_In_ ::midipatchbay::PatchBlock const& block) noexcept;
+        void BuildAnnotationInspector(_In_ ::midipatchbay::PatchBlock const& block) noexcept;
         void BuildSelectionInspector(_In_ size_t count) noexcept;
+
+        // Selects the annotation and puts the cursor in its text, ready to type.
+        void FocusAnnotationText(_In_ std::wstring const& blockId) noexcept;
 
         // The steps a customer can put into a link, by category.
         controls::MenuFlyout BuildAddStepMenu(_In_ std::wstring const& connectionId) noexcept;
@@ -344,7 +367,23 @@ namespace winrt::midipatchbay::implementation
         controls::TextBlock m_activityText{ nullptr };
         std::wstring m_activityElementId{};
 
+        // The selected annotation's text box, so double-clicking the annotation goes straight to it.
+        controls::TextBox m_annotationTextBox{ nullptr };
+
+        // Typed into the patch but not yet a step for Undo.
+        bool m_annotationTextChanged{ false };
+
         bool m_settingZoomBox{ false };
+
+        // A resize bar being dragged: which one, and where the drag started.
+        bool m_draggingSplitter{ false };
+        std::wstring m_splitterTag{};
+        double m_splitterStartX{ 0 };
+        double m_splitterStartWidth{ 0 };
+        uint32_t m_splitterPointerId{ 0 };
+
+        // The palette's tile grids, so a new palette width can resize their tiles.
+        std::vector<controls::GridView> m_paletteGrids{};
 
         // ---- the step dialog works on a copy, so Cancel leaves a running patch alone ----
         std::wstring m_editingBlockId{};

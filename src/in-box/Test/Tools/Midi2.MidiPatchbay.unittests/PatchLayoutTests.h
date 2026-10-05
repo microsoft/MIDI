@@ -20,4 +20,5 @@ public:
     TEST_METHOD(MessagesFlowLeftToRight);
     TEST_METHOD(NothingLandsOnAnythingElse);
     TEST_METHOD(ALoopStillGetsALayout);
+    TEST_METHOD(AnAnnotationStaysWhereItWasPut);
 };

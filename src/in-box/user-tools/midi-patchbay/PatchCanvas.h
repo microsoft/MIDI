@@ -132,9 +132,19 @@ namespace midipatchbay
         // Lays the nodes out left to right in the order messages flow.
         void AutoArrange() noexcept;
 
+        // Redraws one annotation from the patch as it is now, for text that is still being typed.
+        void RefreshAnnotation(_In_ std::wstring const& blockId) noexcept;
+
         // For a node that was just added: its width is only known once it is built, so a spot
         // picked beforehand can land on another node. Moves it right until it does not.
         void MoveClearOfOtherNodes(_In_ std::wstring const& nodeId) noexcept;
+
+        // Scrolls only as far as it takes to show all of a node, at the zoom there is now.
+        void BringIntoView(_In_ std::wstring const& nodeId) noexcept;
+
+        // Lets palette drops land on something laid over the canvas, such as the hint on an empty
+        // patch, as well as on the canvas itself.
+        void AcceptDrops(_In_ xaml::UIElement const& element) noexcept;
 
         void UpdateMinimap() noexcept;
 
@@ -159,6 +169,18 @@ namespace midipatchbay
         // Category colors for the blocks, so the palette and the inspector match the canvas.
         static media::Brush CategoryBrush(_In_ BlockCategory category, _In_ double opacity = 1.0) noexcept;
 
+        // "#RRGGBB" to a color and back, for annotation colors.
+        static std::optional<winrt::Windows::UI::Color> ParseColorCode(_In_ std::wstring_view code) noexcept;
+        static std::wstring ColorCode(_In_ winrt::Windows::UI::Color const& color);
+
+        // Sets text in an annotation's font, size, style and color. Empty text shows the hint.
+        static void ApplyAnnotationLook(
+            _In_ controls::TextBlock const& text,
+            _In_ AnnotationSettings const& settings) noexcept;
+
+        // The picture the customer chose for an endpoint, decoded at this height. Null for none.
+        static media::ImageSource LoadEndpointImage(_In_ std::wstring const& path, _In_ int32_t pixelHeight) noexcept;
+
     private:
         struct PortVisual
         {
@@ -169,16 +191,27 @@ namespace midipatchbay
             controls::Button Row{ nullptr };
             controls::TextBlock Label{ nullptr };
             media::Brush LabelBrush{ nullptr };
+
+            // The hover wash on an endpoint's row. A step's point has none.
+            controls::Border Highlight{ nullptr };
         };
 
         struct NodeVisual
         {
             std::wstring NodeId{};
             bool IsBlock{ false };
+            bool IsAnnotation{ false };
             BlockCategory Category{ BlockCategory::Filter };
-            controls::Border Root{ nullptr };
+
+            // What the canvas positions. The card is drawn behind the node's content rather than
+            // around it, because a rounded border clips what is inside it and the connection
+            // points hang half over the edge.
+            controls::Grid Root{ nullptr };
+            controls::Border Card{ nullptr };
+
             controls::TextBlock NameText{ nullptr };
             controls::TextBlock SubtitleText{ nullptr };
+            controls::TextBlock AnnotationText{ nullptr };
             shapes::Ellipse StatusDot{ nullptr };
             controls::Border AlertPanel{ nullptr };
 
@@ -221,8 +254,10 @@ namespace midipatchbay
 
         void BuildBlockNode(_In_ PatchBlock const& block) noexcept;
 
+        void BuildAnnotationNode(_In_ PatchBlock const& block) noexcept;
+
         // Pressing, right-clicking and double-clicking work the same on every kind of node.
-        void AttachNodeHandlers(_In_ controls::Border const& root, _In_ std::wstring const& nodeId, _In_ bool isBlock) noexcept;
+        void AttachNodeHandlers(_In_ xaml::UIElement const& root, _In_ std::wstring const& nodeId, _In_ bool isBlock) noexcept;
 
         // The same for every connection point: hover, press to drag, click for the keyboard.
         void AttachPortHandlers(_In_ controls::Button const& row, _In_ PortKey const& key) noexcept;

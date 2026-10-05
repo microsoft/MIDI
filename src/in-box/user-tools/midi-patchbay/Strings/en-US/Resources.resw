@@ -2829,4 +2829,109 @@
     <value>A device that follows this runs at {0} BPM when the clock coming in is at 120.</value>
     <comment>{0} is a tempo, such as "60" or "40".</comment>
   </data>
+  <data name="BlockNameAnnotation" xml:space="preserve">
+    <value>Annotation</value>
+  </data>
+  <data name="BlockShortAnnotation" xml:space="preserve">
+    <value>Annotation</value>
+  </data>
+  <data name="BlockBadgeAnnotation" xml:space="preserve">
+    <value>Aa</value>
+    <comment>Two or three characters at most. Stands for text.</comment>
+  </data>
+  <data name="BlockHintAnnotation" xml:space="preserve">
+    <value>A line of text on the canvas, for notes about the patch. Nothing goes in or comes out.</value>
+  </data>
+  <data name="BlockCategoryAnnotations" xml:space="preserve">
+    <value>Annotations</value>
+  </data>
+  <data name="BlockDescAnnotationEmpty" xml:space="preserve">
+    <value>No text yet</value>
+  </data>
+  <data name="AnnotationPlaceholder" xml:space="preserve">
+    <value>Double-click to add text</value>
+    <comment>Shown on the canvas in place of an annotation that has no text.</comment>
+  </data>
+  <data name="AnnotationTextHeader" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="AnnotationTextPlaceholder" xml:space="preserve">
+    <value>Type a note</value>
+  </data>
+  <data name="AnnotationFontHeader" xml:space="preserve">
+    <value>Font</value>
+  </data>
+  <data name="AnnotationFontDefault" xml:space="preserve">
+    <value>Default font</value>
+  </data>
+  <data name="AnnotationFontMissingFormat" xml:space="preserve">
+    <value>{0} (not on this PC)</value>
+    <comment>{0} is the name of a font.</comment>
+  </data>
+  <data name="AnnotationShowAllFonts" xml:space="preserve">
+    <value>Show all fonts</value>
+  </data>
+  <data name="AnnotationShowAllFontsHint" xml:space="preserve">
+    <value>Otherwise the list has only the fonts every Windows PC has. An annotation in a font another PC doesn't have is shown there in the default font.</value>
+  </data>
+  <data name="AnnotationSizeName" xml:space="preserve">
+    <value>Font size</value>
+  </data>
+  <data name="AnnotationBold" xml:space="preserve">
+    <value>Bold</value>
+  </data>
+  <data name="AnnotationItalic" xml:space="preserve">
+    <value>Italic</value>
+  </data>
+  <data name="AnnotationUnderline" xml:space="preserve">
+    <value>Underline</value>
+  </data>
+  <data name="AnnotationColorHeader" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="AnnotationColorTheme" xml:space="preserve">
+    <value>Theme text color</value>
+  </data>
+  <data name="AnnotationColorRed" xml:space="preserve">
+    <value>Red</value>
+  </data>
+  <data name="AnnotationColorOrange" xml:space="preserve">
+    <value>Orange</value>
+  </data>
+  <data name="AnnotationColorGold" xml:space="preserve">
+    <value>Gold</value>
+  </data>
+  <data name="AnnotationColorGreen" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="AnnotationColorTeal" xml:space="preserve">
+    <value>Teal</value>
+  </data>
+  <data name="AnnotationColorBlue" xml:space="preserve">
+    <value>Blue</value>
+  </data>
+  <data name="AnnotationColorPurple" xml:space="preserve">
+    <value>Purple</value>
+  </data>
+  <data name="AnnotationColorPink" xml:space="preserve">
+    <value>Pink</value>
+  </data>
+  <data name="AnnotationColorGray" xml:space="preserve">
+    <value>Gray</value>
+  </data>
+  <data name="AnnotationColorMore" xml:space="preserve">
+    <value>More colors…</value>
+  </data>
+  <data name="AnnotationColorUse" xml:space="preserve">
+    <value>Use this color</value>
+  </data>
+  <data name="ActionEditAnnotation" xml:space="preserve">
+    <value>Edit text</value>
+  </data>
+  <data name="PaletteSplitter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Resize the palette</value>
+  </data>
+  <data name="InspectorSplitter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Resize the details panel</value>
+  </data>
 </root>

@@ -748,6 +748,7 @@ namespace midipatchbay
             { BlockKind::ClockGenerator, L"BlockNameClockGenerator", L"BlockShortClockGenerator", L"BlockBadgeClockGenerator", L"BlockHintClockGenerator" },
             { BlockKind::TimeCodeGenerator, L"BlockNameTimeCodeGenerator", L"BlockShortTimeCodeGenerator", L"BlockBadgeTimeCodeGenerator", L"BlockHintTimeCodeGenerator" },
             { BlockKind::LfoGenerator, L"BlockNameLfoGenerator", L"BlockShortLfoGenerator", L"BlockBadgeLfoGenerator", L"BlockHintLfoGenerator" },
+            { BlockKind::Annotation, L"BlockNameAnnotation", L"BlockShortAnnotation", L"BlockBadgeAnnotation", L"BlockHintAnnotation" },
         };
 
         KindText const* FindKindText(_In_ BlockKind kind) noexcept
@@ -800,6 +801,7 @@ namespace midipatchbay
         case BlockCategory::Transform:  return resources::GetString(L"BlockCategoryTransforms");
         case BlockCategory::Sending:    return resources::GetString(L"BlockCategorySending");
         case BlockCategory::Generator:  return resources::GetString(L"BlockCategoryGenerators");
+        case BlockCategory::Annotation: return resources::GetString(L"BlockCategoryAnnotations");
         default:                        return resources::GetString(L"BlockCategoryFilters");
         }
     }
@@ -1302,6 +1304,12 @@ namespace midipatchbay
                     DescribeLfoLength(lfo.BeatsPerCycle)));
                 break;
             }
+
+            case BlockKind::Annotation:
+                text = settings.Annotation.Text.empty()
+                    ? Text(resources::GetString(L"BlockDescAnnotationEmpty"))
+                    : settings.Annotation.Text;
+                break;
 
             default:
                 break;

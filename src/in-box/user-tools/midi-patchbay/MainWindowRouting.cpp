@@ -304,7 +304,7 @@ namespace winrt::midipatchbay::implementation
             auto const* patch = CurrentPatch();
 
             auto const endpointCount = patch == nullptr ? 0 : patch->Endpoints.size();
-            auto const stepCount = patch == nullptr ? 0 : patch->Blocks.size();
+            auto const stepCount = patch == nullptr ? 0 : patch->StepCount();
             auto const connectionCount = patch == nullptr ? 0 : patch->Connections.size();
 
             StatusEndpointsText().Text(endpointCount == 1

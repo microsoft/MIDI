@@ -561,10 +561,15 @@ namespace winrt::midipatchbay::implementation
             m_canvas.Select(patchbay::CanvasSelectionKind::Endpoint, addedId);
 
             // Moved clear of the others, it can end up out of view, which looks like nothing
-            // happened. A drop is already where the customer is looking.
+            // happened. Added from a menu, the whole patch is fitted; dropped, the view moves only
+            // as far as it has to.
             if (!center.has_value())
             {
                 m_canvas.FitToContent();
+            }
+            else
+            {
+                m_canvas.BringIntoView(addedId);
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to add the endpoint.")
@@ -978,31 +983,42 @@ namespace winrt::midipatchbay::implementation
             {
                 auto const blockId = block->Id;
 
-                if (block->Kind != patchbay::BlockKind::Throttle)
+                // Nothing goes through an annotation, so there is nothing to bypass.
+                if (patchbay::IsAnnotation(block->Kind))
                 {
-                    addItem(resources::GetString(L"ActionEditStep"),
-                        [blockId](MainWindow& window) { window.ShowBlockDialogAsync(blockId); });
+                    addItem(resources::GetString(L"ActionEditAnnotation"),
+                        [blockId](MainWindow& window) { window.FocusAnnotationText(blockId); });
+                    addSeparator();
+                    addEditItems();
                 }
-
-                controls::ToggleMenuFlyoutItem bypassItem{};
-
-                bypassItem.Text(resources::GetString(L"InspectorBypass"));
-                bypassItem.IsChecked(block->Bypassed);
-
-                bypassItem.Click([weak, blockId](foundation::IInspectable const& s, auto&&)
+                else
+                {
+                    if (block->Kind != patchbay::BlockKind::Throttle)
                     {
-                        auto strong = weak.get();
-                        auto const item = s.try_as<controls::ToggleMenuFlyoutItem>();
+                        addItem(resources::GetString(L"ActionEditStep"),
+                            [blockId](MainWindow& window) { window.ShowBlockDialogAsync(blockId); });
+                    }
 
-                        if (strong != nullptr && item != nullptr)
+                    controls::ToggleMenuFlyoutItem bypassItem{};
+
+                    bypassItem.Text(resources::GetString(L"InspectorBypass"));
+                    bypassItem.IsChecked(block->Bypassed);
+
+                    bypassItem.Click([weak, blockId](foundation::IInspectable const& s, auto&&)
                         {
-                            strong->SetBlockBypassed(blockId, item.IsChecked());
-                        }
-                    });
+                            auto strong = weak.get();
+                            auto const item = s.try_as<controls::ToggleMenuFlyoutItem>();
 
-                menu.Items().Append(bypassItem);
-                addSeparator();
-                addEditItems();
+                            if (strong != nullptr && item != nullptr)
+                            {
+                                strong->SetBlockBypassed(blockId, item.IsChecked());
+                            }
+                        });
+
+                    menu.Items().Append(bypassItem);
+                    addSeparator();
+                    addEditItems();
+                }
             }
             else if (auto const* endpoint = patch->FindEndpoint(nodeId))
             {

@@ -81,6 +81,12 @@ namespace midipatchbay
         return FindBlock(id) != nullptr;
     }
 
+    size_t PatchDocument::StepCount() const noexcept
+    {
+        return static_cast<size_t>(std::count_if(Blocks.begin(), Blocks.end(),
+            [](PatchBlock const& block) { return !IsAnnotation(block.Kind); }));
+    }
+
     _Use_decl_annotations_
     bool PatchDocument::HasConnection(
         std::wstring const& sourceId,

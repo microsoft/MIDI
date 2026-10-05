@@ -18,6 +18,8 @@ The generators are shared too. `BeatClockGenerator` and `TimeCodeGenerator` take
 
 `ClockFollower` is plain C++ too. It keeps track of where an incoming MIDI clock has got to between its pulses, including pulses that arrive before the time they play, which is how `LfoMessageGenerator` follows a clock. Only MIDI Patchbay uses it so far.
 
+`FontCatalog` lists the font families a customer can pick: the ones every Windows PC has, or every family installed on this PC. It reads them from DirectWrite, so a project that takes it links `dwrite.lib`. `FontNames.h` is plain C++ and header only: the default family, and the check a family name read from a file has to pass. MIDI Glass uses both for control labels and MIDI Patchbay for annotations, so the two apps offer the same fonts.
+
 `EndpointCatalog` watches the live endpoints and answers "which live endpoint does this saved one
 mean". It owns `EndpointMatch`, `EndpointMatchMode` and `LiveEndpoint`, and it matches on criteria
 alone, so it never sees an app's own document type. An app that stores endpoints keeps its own
