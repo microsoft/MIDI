@@ -209,7 +209,16 @@ MidiBleConnection::Start()
                     }
                 });
 
-            RETURN_IF_FAILED(SubscribeToNotifications());
+            m_sessionStatusChangedToken = m_session.SessionStatusChanged(
+                [weakThis = weak_from_this()](gatt::GattSession const&, gatt::GattSessionStatusChangedEventArgs const& args)
+                {
+                    if (auto self = weakThis.lock())
+                    {
+                        self->OnSessionStatusChanged(args);
+                    }
+                });
+
+            RETURN_IF_FAILED(SubscribeToNotifications(MidiBleUtilities::BleConnectOperationTimeoutMilliseconds));
 
             RefreshConnectionParameters();
         }
@@ -228,14 +237,17 @@ MidiBleConnection::RefreshNotificationSubscription()
     RETURN_HR_IF(S_FALSE, m_shutdown.load());
     RETURN_HR_IF(S_FALSE, m_isPeripheral);
 
-    return SubscribeToNotifications();
+    RequestSubscriptionRenewal(false);
+
+    return S_OK;
 }
 
 
+_Use_decl_annotations_
 HRESULT
-MidiBleConnection::SubscribeToNotifications()
+MidiBleConnection::SubscribeToNotifications(uint32_t const timeoutMilliseconds)
 {
-    // Copied because Shutdown clears the member, and this also runs from the pairing path rather
+    // Copied because Shutdown clears the member, and this also runs on the writer thread rather
     // than only from Start.
     auto characteristic = m_characteristic;
 
@@ -248,7 +260,7 @@ MidiBleConnection::SubscribeToNotifications()
         auto descriptorResult = MidiBleUtilities::AwaitWithTimeout(
             characteristic.WriteClientCharacteristicConfigurationDescriptorWithResultAsync(
                 gatt::GattClientCharacteristicConfigurationDescriptorValue::Notify),
-            MidiBleUtilities::BleConnectOperationTimeoutMilliseconds,
+            timeoutMilliseconds,
             gatt::GattWriteResult{ nullptr });
 
         auto const descriptorStatus = descriptorResult != nullptr ?
@@ -280,7 +292,7 @@ MidiBleConnection::SubscribeToNotifications()
         // Peripheral answers with an empty payload. Some devices will not start notifying without it.
         auto readResult = MidiBleUtilities::AwaitWithTimeout(
             characteristic.ReadValueAsync(bt::BluetoothCacheMode::Uncached),
-            MidiBleUtilities::BleConnectOperationTimeoutMilliseconds,
+            timeoutMilliseconds,
             gatt::GattReadResult{ nullptr });
 
         // A device can allow the subscription and still demand authentication for the read
@@ -321,12 +333,8 @@ MidiBleConnection::ResetTranslationState()
         m_umpToBytestream.resetBuffer();
     }
 
-    m_incomingPacketDecoder.Reset();
-    m_bytestreamToUmp.resetBuffer();
-
-    // The remote clock has no continuity across a link drop, so the mapping is rebuilt from the
-    // first packet after reconnecting.
-    m_incomingTimestampCorrelator.Reset();
+    // A notification can be decoding on another thread right now
+    m_incomingStateResetPending.store(true);
 
     auto lock = std::scoped_lock{ m_outgoingQueueLock };
     m_outgoingPackets.clear();
@@ -348,12 +356,16 @@ MidiBleConnection::OnDeviceConnectionStatusChanged(
     try
     {
         bool const connected = sender != nullptr && sender.ConnectionStatus() == bt::BluetoothConnectionStatus::Connected;
+        bool const wasConnected = m_deviceConnected.exchange(connected);
 
-        if (connected == m_deviceConnected.exchange(connected))
+        if (!connected && !wasConnected)
         {
             return;
         }
 
+        // The event carries no status, so this reads the status now, not when it was raised. A
+        // device which is back before Windows notices it left (a reset, for instance) is dropped
+        // and reconnected within a fraction of a second, and then every event reads connected.
         TraceLoggingWrite(
             MidiBluetoothMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
@@ -362,32 +374,24 @@ MidiBleConnection::OnDeviceConnectionStatusChanged(
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"BLE MIDI device connection status changed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_deviceId.c_str(), "device id"),
-            TraceLoggingBool(connected, "connected")
+            TraceLoggingBool(connected, "connected"),
+            TraceLoggingBool(wasConnected, "previously connected")
         );
-
-        ResetTranslationState();
 
         if (connected)
         {
-            // Notifications do not always survive a link drop, and a device which came back
-            // without them looks alive to apps while delivering nothing. That silent failure is
-            // the main complaint about the older Windows BLE MIDI support.
-            LOG_IF_FAILED(SubscribeToNotifications());
+            // Even with no drop seen, the link may be new, and a new link to a device which is not
+            // bonded starts with notifications off. A device which came back without them looks
+            // alive to apps while delivering nothing, which is the main complaint about the older
+            // Windows BLE MIDI support.
+            RequestSubscriptionRenewal(true);
 
-            auto const endpointDeviceInterfaceId = EndpointDeviceInterfaceId();
-
-            if (m_protocol == MidiBleProtocol::Protocol::Midi2Ump && !endpointDeviceInterfaceId.empty())
-            {
-                // Section 5.12: the Central performs full discovery and protocol negotiation
-                // again on reconnection. It is queued because negotiation calls back into the
-                // service, which must never happen on a Bluetooth callback thread.
-                if (auto endpointManager = TransportState::Current().GetEndpointManager())
-                {
-                    LOG_IF_FAILED(endpointManager->QueueDiscoveryAndNegotiation(endpointDeviceInterfaceId));
-                }
-            }
+            return;
         }
-        else if (!m_isPeripheral)
+
+        ResetTranslationState();
+
+        if (!m_isPeripheral)
         {
             // The endpoint is deliberately left in place: the session is set to maintain the
             // connection, so Windows re-establishes the link on its own and apps keep their
@@ -400,6 +404,238 @@ MidiBleConnection::OnDeviceConnectionStatusChanged(
         }
     }
     CATCH_LOG();
+}
+
+
+_Use_decl_annotations_
+void
+MidiBleConnection::OnSessionStatusChanged(gatt::GattSessionStatusChangedEventArgs const& args)
+{
+    if (m_shutdown.load())
+    {
+        return;
+    }
+
+    try
+    {
+        auto const status = args.Status();
+
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"BLE MIDI GATT session status changed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+            TraceLoggingUInt32(static_cast<uint32_t>(status), "session status"),
+            TraceLoggingUInt32(static_cast<uint32_t>(args.Error()), "bluetooth error")
+        );
+
+        // This event carries its own status, so it still shows a reconnect the device's connection
+        // status missed.
+        if (status == gatt::GattSessionStatus::Active)
+        {
+            RequestSubscriptionRenewal(true);
+        }
+    }
+    CATCH_LOG();
+}
+
+
+_Use_decl_annotations_
+void
+MidiBleConnection::RequestSubscriptionRenewal(bool const followsReconnect)
+{
+    if (m_shutdown.load() || m_isPeripheral)
+    {
+        return;
+    }
+
+    {
+        auto lock = std::scoped_lock{ m_outgoingQueueLock };
+
+        m_subscriptionRenewalPending = true;
+        m_subscriptionRenewalFollowsReconnect = m_subscriptionRenewalFollowsReconnect || followsReconnect;
+        m_subscriptionRenewalAttempts = 0;
+        m_subscriptionRenewalGeneration++;
+        m_nextSubscriptionRenewalTickCount = 0;
+    }
+
+    m_outgoingPacketsAvailable.SetEvent();
+}
+
+
+void
+MidiBleConnection::RenewNotificationSubscription()
+{
+    uint64_t generation{ 0 };
+    uint32_t attempt{ 0 };
+    bool followsReconnect{ false };
+
+    {
+        auto lock = std::scoped_lock{ m_outgoingQueueLock };
+
+        generation = m_subscriptionRenewalGeneration;
+        attempt = ++m_subscriptionRenewalAttempts;
+        followsReconnect = m_subscriptionRenewalFollowsReconnect;
+    }
+
+    // A request made while this attempt ran is for a newer link, so this outcome leaves it pending
+    auto const settle = [&](bool const retry, uint64_t const retryAtTickCount)
+        {
+            auto lock = std::scoped_lock{ m_outgoingQueueLock };
+
+            if (m_subscriptionRenewalGeneration != generation)
+            {
+                return;
+            }
+
+            m_subscriptionRenewalPending = retry;
+            m_nextSubscriptionRenewalTickCount = retryAtTickCount;
+
+            if (!retry)
+            {
+                m_subscriptionRenewalFollowsReconnect = false;
+                m_subscriptionRenewalAttempts = 0;
+            }
+        };
+
+    // Runs on the writer thread, and a renewal left pending by an exception would retry in a tight loop
+    try
+    {
+        if (m_shutdown.load() || MidiBleUtilities::IsShuttingDown())
+        {
+            settle(false, 0);
+
+            return;
+        }
+
+        // The device's status can lag the session's, and either one being up is enough to try
+        bool linkUp = IsDeviceConnected();
+
+        if (!linkUp && m_session != nullptr)
+        {
+            linkUp = m_session.SessionStatus() == gatt::GattSessionStatus::Active;
+        }
+
+        // A write to a device which is away waits out a whole Bluetooth timeout, and its return asks again
+        if (!linkUp)
+        {
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Not renewing the BLE MIDI notification subscription, because the link is down", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_deviceId.c_str(), "device id")
+            );
+
+            settle(false, 0);
+
+            return;
+        }
+
+        // Nothing from the old link can be finished on the new one. Once only, so a retry does not
+        // throw away what has been queued since.
+        if (followsReconnect && attempt == 1)
+        {
+            ResetTranslationState();
+        }
+
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Renewing the BLE MIDI notification subscription", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+            TraceLoggingUInt32(attempt, "attempt"),
+            TraceLoggingBool(followsReconnect, "follows reconnect")
+        );
+
+        if (SUCCEEDED(SubscribeToNotifications(MidiBleUtilities::BleOperationTimeoutMilliseconds)))
+        {
+            settle(false, 0);
+
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Renewed the BLE MIDI notification subscription", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+                TraceLoggingUInt32(attempt, "attempt")
+            );
+
+            auto const endpointDeviceInterfaceId = EndpointDeviceInterfaceId();
+
+            if (followsReconnect && m_protocol == MidiBleProtocol::Protocol::Midi2Ump && !endpointDeviceInterfaceId.empty())
+            {
+                // Section 5.12: the Central performs full discovery and protocol negotiation again
+                // on reconnection. Only now, because the device answers in notifications. It is
+                // queued because negotiation calls back into the service.
+                if (auto endpointManager = TransportState::Current().GetEndpointManager())
+                {
+                    LOG_IF_FAILED(endpointManager->QueueDiscoveryAndNegotiation(endpointDeviceInterfaceId));
+                }
+            }
+
+            return;
+        }
+
+        if (attempt < MIDI_BLE_SUBSCRIPTION_RENEWAL_MAX_ATTEMPTS)
+        {
+            auto const delay = MidiBleUtilities::ConnectRetryIntervalMilliseconds(
+                attempt,
+                MIDI_BLE_SUBSCRIPTION_RENEWAL_RETRY_BASE_MS,
+                MIDI_BLE_SUBSCRIPTION_RENEWAL_RETRY_MAX_MS);
+
+            settle(true, GetTickCount64() + delay);
+
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Could not renew the BLE MIDI notification subscription. Trying again.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+                TraceLoggingUInt32(attempt, "attempt"),
+                TraceLoggingUInt64(delay, "retry in milliseconds")
+            );
+
+            return;
+        }
+
+        settle(false, 0);
+
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Could not renew the BLE MIDI notification subscription. Rebuilding the connection.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+            TraceLoggingUInt32(attempt, "attempt")
+        );
+
+        // The link is up but delivers nothing, so the endpoint is no use as it is
+        if (auto endpointManager = TransportState::Current().GetEndpointManager())
+        {
+            endpointManager->OnNotificationSubscriptionLost(m_deviceId);
+        }
+    }
+    catch (...)
+    {
+        LOG_CAUGHT_EXCEPTION();
+
+        settle(false, 0);
+    }
 }
 
 
@@ -443,6 +679,12 @@ MidiBleConnection::Shutdown()
         {
             m_device.ConnectionParametersChanged(m_connectionParametersChangedToken);
             m_connectionParametersChangedToken = {};
+        }
+
+        if (m_session != nullptr && m_sessionStatusChangedToken)
+        {
+            m_session.SessionStatusChanged(m_sessionStatusChangedToken);
+            m_sessionStatusChangedToken = {};
         }
 
         if (m_characteristic != nullptr)
@@ -813,6 +1055,15 @@ MidiBleConnection::ProcessIncomingPacket(
     if (m_shutdown.load() || bytes == nullptr || byteCount == 0)
     {
         return;
+    }
+
+    if (m_incomingStateResetPending.exchange(false))
+    {
+        // The remote clock has no continuity across a link drop, so the mapping is rebuilt from
+        // this packet.
+        m_incomingPacketDecoder.Reset();
+        m_bytestreamToUmp.resetBuffer();
+        m_incomingTimestampCorrelator.Reset();
     }
 
     m_packetsReceived++;
@@ -1260,29 +1511,54 @@ MidiBleConnection::WriterWorker(std::stop_token stopToken)
             {
                 std::vector<uint8_t> packet;
                 bool havePacket{ false };
+                bool renewSubscription{ false };
+                DWORD waitMilliseconds{ INFINITE };
 
                 {
                     auto lock = std::scoped_lock{ m_outgoingQueueLock };
 
-                    if (!m_outgoingPackets.empty())
+                    if (m_subscriptionRenewalPending)
                     {
-                        packet = std::move(m_outgoingPackets.front());
-                        m_outgoingPackets.pop_front();
-                        havePacket = true;
+                        auto const now = GetTickCount64();
+
+                        if (now >= m_nextSubscriptionRenewalTickCount)
+                        {
+                            renewSubscription = true;
+                        }
+                        else
+                        {
+                            waitMilliseconds = static_cast<DWORD>(m_nextSubscriptionRenewalTickCount - now);
+                        }
                     }
-                    else
+
+                    // A due renewal goes ahead of any packet, because nothing the device sends
+                    // arrives until it is done
+                    if (!renewSubscription)
                     {
-                        m_outgoingPacketsAvailable.ResetEvent();
+                        if (!m_outgoingPackets.empty())
+                        {
+                            packet = std::move(m_outgoingPackets.front());
+                            m_outgoingPackets.pop_front();
+                            havePacket = true;
+                        }
+                        else
+                        {
+                            m_outgoingPacketsAvailable.ResetEvent();
+                        }
                     }
                 }
 
-                if (havePacket)
+                if (renewSubscription)
+                {
+                    RenewNotificationSubscription();
+                }
+                else if (havePacket)
                 {
                     LOG_IF_FAILED(WritePacketToDevice(packet));
                 }
                 else
                 {
-                    m_outgoingPacketsAvailable.wait();
+                    m_outgoingPacketsAvailable.wait(waitMilliseconds);
                 }
             }
             // One bad iteration must not end the worker. An exception leaving this thread

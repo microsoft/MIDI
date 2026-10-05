@@ -110,9 +110,14 @@ public:
 private:
     void OnCharacteristicValueChanged(_In_ gatt::GattCharacteristic const& sender, _In_ gatt::GattValueChangedEventArgs const& args);
     void OnDeviceConnectionStatusChanged(_In_ bt::BluetoothLEDevice const& sender, _In_ foundation::IInspectable const& args);
+    void OnSessionStatusChanged(_In_ gatt::GattSessionStatusChangedEventArgs const& args);
 
-    HRESULT SubscribeToNotifications();
+    HRESULT SubscribeToNotifications(_In_ uint32_t const timeoutMilliseconds);
     void ResetTranslationState();
+
+    // A GATT call must not block a Bluetooth callback, so the writer thread does the renewal.
+    void RequestSubscriptionRenewal(_In_ bool const followsReconnect);
+    void RenewNotificationSubscription();
 
     void ProcessIncomingMidi1Packet(_In_reads_bytes_(byteCount) uint8_t const* const bytes, _In_ size_t const byteCount);
     void ProcessIncomingUmpPayload(_In_reads_bytes_(byteCount) uint8_t const* const bytes, _In_ size_t const byteCount);
@@ -143,6 +148,7 @@ private:
     gatt::GattCharacteristic m_characteristic{ nullptr };
     gatt::GattSession m_session{ nullptr };
     winrt::event_token m_valueChangedToken{ };
+    winrt::event_token m_sessionStatusChangedToken{ };
 
     bt::BluetoothLEDevice m_device{ nullptr };
     winrt::event_token m_connectionStatusChangedToken{ };
@@ -166,6 +172,9 @@ private:
     MidiBleMidi1::TimestampCorrelator m_incomingTimestampCorrelator{ };
     bytestreamToUMP m_bytestreamToUmp{ };
 
+    // Only the receive path touches its state, so a reset asked for elsewhere is done there.
+    std::atomic<bool> m_incomingStateResetPending{ false };
+
     MidiBleMidi1::PacketBuilder m_outgoingPacketBuilder{ };
     umpToBytestream m_umpToBytestream{ };
     std::mutex m_outgoingTranslationLock;
@@ -173,6 +182,13 @@ private:
     std::mutex m_outgoingQueueLock;
     std::deque<std::vector<uint8_t>> m_outgoingPackets{ };
     wil::slim_event_manual_reset m_outgoingPacketsAvailable;
+
+    // Guarded by m_outgoingQueueLock, which the writer thread holds while deciding whether to sleep.
+    bool m_subscriptionRenewalPending{ false };
+    bool m_subscriptionRenewalFollowsReconnect{ false };
+    uint32_t m_subscriptionRenewalAttempts{ 0 };
+    uint64_t m_subscriptionRenewalGeneration{ 0 };
+    uint64_t m_nextSubscriptionRenewalTickCount{ 0 };
 
     std::atomic<bool> m_shutdown{ false };
     std::atomic<bool> m_started{ false };
