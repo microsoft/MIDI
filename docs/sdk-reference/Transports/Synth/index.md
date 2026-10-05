@@ -47,7 +47,7 @@ Turning it back on creates the endpoint again with the same device id, so an app
 
 ## Reading the instrument list
 
-A connected app should ask the synthesizer what it can play with MIDI Capability Inquiry Property Exchange, the same way it would ask any other device. The synthesizer answers `ResourceList`, `DeviceInfo`, `ChannelList`, and a full `ProgramList`. See [How to read a device's patch list]({{ site.baseurl }}/kb/how-to-read-a-device-patch-list/).
+A connected app should ask the synthesizer what it can play with MIDI Capability Inquiry Property Exchange, the same way it would ask any other device. The synthesizer answers `ResourceList`, `DeviceInfo`, `ChannelList`, `ChCtrlList`, and a full `ProgramList`. See [How to read a device's patch list]({{ site.baseurl }}/kb/how-to-read-a-device-patch-list/).
 
 [MidiSynthManager.GetMelodicInstruments()]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthManager/) is for when Property Exchange can't help: showing instruments in a settings screen or instrument picker before any connection is open. The list comes from the sound set, so it doesn't change when the settings do.
 

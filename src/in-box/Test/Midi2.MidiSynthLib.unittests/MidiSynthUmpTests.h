@@ -27,6 +27,7 @@ public:
     TEST_METHOD(TestPropertyRequestParking);
     TEST_METHOD(TestPropertyExchangeProgramListLinks);
     TEST_METHOD(TestPropertyExchangeControllerList);
+    TEST_METHOD(TestPropertyExchangeText);
     TEST_METHOD(TestPropertyExchangeProgramListCategories);
     TEST_METHOD(TestPropertyExchangeProgramListPagination);
     TEST_METHOD(TestChannelListSubscriptionNotification);

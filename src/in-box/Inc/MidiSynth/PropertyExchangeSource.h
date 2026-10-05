@@ -34,6 +34,37 @@ namespace MidiSynth
     // all sixteen.
     constexpr char const* ControllerListResourceId = "channel";
 
+    // Text a customer reads in these resources, localized by the host. Patch names and other GM or GS names are never translated.
+    struct PropertyExchangeText
+    {
+        // DeviceInfo
+        std::string Manufacturer{ "Microsoft" };
+        std::string Family{ "Windows" };
+        std::string Model{ "General MIDI Synth" };
+
+        // ChannelList, and the links in each entry
+        std::string MelodicChannel{ "Melodic" };
+        std::string PercussionChannel{ "Percussion" };
+        std::string MelodicProgramList{ "Melodic Programs" };
+        std::string DrumKitProgramList{ "Drum Kits" };
+        std::string ControllerList{ "Controllers" };
+
+        // ChCtrlList
+        std::string Volume{ "Volume" };
+        std::string Modulation{ "Modulation" };
+        std::string PitchBend{ "Pitch Bend" };
+        std::string SustainPedal{ "Sustain Pedal" };
+        std::string Pan{ "Pan" };
+        std::string Expression{ "Expression" };
+        std::string ReverbSend{ "Reverb Send" };
+        std::string ChorusSend{ "Chorus Send" };
+        std::string NotePitchBend{ "Note Pitch Bend" };
+        std::string PitchBendSensitivity{ "Pitch Bend Sensitivity" };
+        std::string NoteVolume{ "Note Volume" };
+        std::string NotePan{ "Note Pan" };
+        std::string NotePitch{ "Note Pitch" };
+    };
+
     class PropertyExchangeSource
     {
     public:
@@ -42,7 +73,10 @@ namespace MidiSynth
         //
         // The identity is the caller's so that this, the SysEx Identity Reply, the MIDI-CI
         // Discovery Reply and the UMP Device Identity Notification cannot disagree.
-        void Build(_In_ const DlsCollection& collection, _In_ const SynthIdentity& identity);
+        void Build(
+            _In_ const DlsCollection& collection,
+            _In_ const SynthIdentity& identity,
+            _In_ const PropertyExchangeText& text = {});
 
         const std::vector<char>& ResourceListJson() const noexcept { return m_resourceListJson; }
         const std::vector<char>& DeviceInfoJson() const noexcept { return m_deviceInfoJson; }
@@ -190,6 +224,7 @@ namespace MidiSynth
         std::vector<char> m_drumKitProgramListJson;
         std::vector<char> m_controllerListJson;
         std::vector<char> m_channelListJson;
+        PropertyExchangeText m_text{};
 
         // One page of a program list, serialized per request. Like the channel list it has to
         // outlive the chunked reply, which points into it rather than copying it.

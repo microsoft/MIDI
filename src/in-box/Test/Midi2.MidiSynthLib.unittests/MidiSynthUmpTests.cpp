@@ -1372,6 +1372,125 @@ void MidiSynthUmpTests::TestPropertyExchangeControllerList()
 }
 
 
+// What a customer reads in these resources comes from the host, so it can be translated. M2-105-UM
+// requires a title on every ChannelList entry, and here it says what the channel plays. Patch names
+// and the other names General MIDI and GS define are never translated.
+void MidiSynthUmpTests::TestPropertyExchangeText()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    SynthEngine engine;
+    UmpDispatcher dispatcher;
+    FreshEngine(*collection, engine, dispatcher, 0);
+
+    const auto text = [](const std::vector<char>& blob) { return std::string(blob.data(), blob.size()); };
+
+    const auto count = [](const std::string& haystack, const char* needle)
+    {
+        size_t found = 0;
+
+        for (auto at = haystack.find(needle); at != std::string::npos; at = haystack.find(needle, at + 1))
+        {
+            found++;
+        }
+
+        return found;
+    };
+
+    PropertyExchangeSource source;
+    source.Build(*collection, SynthIdentity{});
+
+    auto channels = text(source.RebuildChannelListJson(engine, *collection));
+
+    VERIFY_IS_TRUE(channels.find("{\"title\":\"Percussion\",\"channel\":10,") != std::string::npos,
+        L"channel 10 is called Percussion");
+    VERIFY_ARE_EQUAL(count(channels, "{\"title\":\"Melodic\",\"channel\":"), (size_t)15,
+        L"every other channel is called Melodic");
+
+    // Like the program list link, the title follows the rhythm part rather than the channel number.
+    engine.SetDrumChannel(5, true);
+
+    channels = text(source.RebuildChannelListJson(engine, *collection));
+
+    VERIFY_IS_TRUE(channels.find("{\"title\":\"Percussion\",\"channel\":6,") != std::string::npos,
+        L"a channel moved to drums is called Percussion");
+    VERIFY_ARE_EQUAL(count(channels, "{\"title\":\"Melodic\",\"channel\":"), (size_t)14);
+
+    // A translation arrives as UTF-8 and leaves escaped per code point, so it survives the trip.
+    PropertyExchangeText host{};
+    host.Manufacturer = "#Manufacturer";
+    host.Family = "#Family";
+    host.Model = "#Model";
+    host.MelodicChannel = "M\xC3\xA9lodique";
+    host.PercussionChannel = "#Percussion";
+    host.MelodicProgramList = "#MelodicPrograms";
+    host.DrumKitProgramList = "#DrumKits";
+    host.ControllerList = "#Controllers";
+
+    const std::pair<std::string*, const char*> controllerTitles[]
+    {
+        { &host.Volume, "#Volume" },
+        { &host.Modulation, "#Modulation" },
+        { &host.PitchBend, "#PitchBend" },
+        { &host.SustainPedal, "#SustainPedal" },
+        { &host.Pan, "#Pan" },
+        { &host.Expression, "#Expression" },
+        { &host.ReverbSend, "#ReverbSend" },
+        { &host.ChorusSend, "#ChorusSend" },
+        { &host.NotePitchBend, "#NotePitchBend" },
+        { &host.PitchBendSensitivity, "#PitchBendSensitivity" },
+        { &host.NoteVolume, "#NoteVolume" },
+        { &host.NotePan, "#NotePan" },
+        { &host.NotePitch, "#NotePitch" },
+    };
+
+    for (const auto& [field, value] : controllerTitles)
+    {
+        *field = value;
+    }
+
+    PropertyExchangeSource translated;
+    translated.Build(*collection, SynthIdentity{}, host);
+
+    const auto deviceInfo = text(translated.DeviceInfoJson());
+
+    VERIFY_IS_TRUE(
+        deviceInfo.find("\"manufacturer\":\"#Manufacturer\"") != std::string::npos &&
+        deviceInfo.find("\"family\":\"#Family\"") != std::string::npos &&
+        deviceInfo.find("\"model\":\"#Model\"") != std::string::npos,
+        L"DeviceInfo names come from the host");
+
+    channels = text(translated.RebuildChannelListJson(engine, *collection));
+
+    VERIFY_IS_TRUE(channels.find("{\"title\":\"M\\u00E9lodique\",\"channel\":1,") != std::string::npos,
+        L"the host's title is used, and a character beyond ASCII is escaped rather than mangled");
+    VERIFY_IS_TRUE(channels.find("{\"title\":\"#Percussion\",\"channel\":10,") != std::string::npos);
+    VERIFY_IS_TRUE(channels.find("{\"title\":\"#Percussion\",\"channel\":6,") != std::string::npos);
+    VERIFY_ARE_EQUAL(count(channels, "\"resId\":\"melodic\",\"title\":\"#MelodicPrograms\"}"), (size_t)14);
+    VERIFY_ARE_EQUAL(count(channels, "\"resId\":\"drums\",\"title\":\"#DrumKits\"}"), (size_t)2);
+    VERIFY_ARE_EQUAL(count(channels, "\"resId\":\"channel\",\"title\":\"#Controllers\"}"), MidiChannelCount,
+        L"link titles come from the host");
+
+    const auto controllers = text(translated.ControllerListJson());
+
+    for (const auto& [field, value] : controllerTitles)
+    {
+        VERIFY_IS_TRUE(controllers.find(std::string("{\"title\":\"") + value + "\",") != std::string::npos,
+            L"every controller name comes from the host");
+    }
+
+    VERIFY_IS_TRUE(
+        translated.ProgramListJson(MelodicProgramListResourceId) == source.ProgramListJson(MelodicProgramListResourceId) &&
+        translated.ProgramListJson(DrumKitProgramListResourceId) == source.ProgramListJson(DrumKitProgramListResourceId),
+        L"patch names and categories are left exactly as they were");
+}
+
+
 // A subscriber is told that the channel list moved with a "notify", not by having the list
 // pushed at it. M2-103-UM section 11.1.1 limits "full" to data that fits in a single chunk, and
 // section 7.1 requires the command to be the first Property of a subscription message.

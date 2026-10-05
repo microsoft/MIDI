@@ -182,7 +182,39 @@ MidiSynthDevice::EnsureSoundSetLoaded()
         RETURN_HR(HRESULT_FROM_WIN32(ERROR_FILE_CORRUPT));
     }
 
-    m_propertyExchange.Build(m_collection, SynthIdentity{});
+    PropertyExchangeText text{};
+
+    const std::pair<std::string*, UINT> localized[]
+    {
+        { &text.Manufacturer, IDS_DEVICE_INFO_MANUFACTURER },
+        { &text.Family, IDS_DEVICE_INFO_FAMILY },
+        { &text.Model, IDS_DEVICE_INFO_MODEL },
+        { &text.MelodicChannel, IDS_CHANNEL_TITLE_MELODIC },
+        { &text.PercussionChannel, IDS_CHANNEL_TITLE_PERCUSSION },
+        { &text.MelodicProgramList, IDS_LINK_TITLE_MELODIC_PROGRAMS },
+        { &text.DrumKitProgramList, IDS_LINK_TITLE_DRUM_KITS },
+        { &text.ControllerList, IDS_LINK_TITLE_CONTROLLERS },
+        { &text.Volume, IDS_CONTROLLER_VOLUME },
+        { &text.Modulation, IDS_CONTROLLER_MODULATION },
+        { &text.PitchBend, IDS_CONTROLLER_PITCH_BEND },
+        { &text.SustainPedal, IDS_CONTROLLER_SUSTAIN_PEDAL },
+        { &text.Pan, IDS_CONTROLLER_PAN },
+        { &text.Expression, IDS_CONTROLLER_EXPRESSION },
+        { &text.ReverbSend, IDS_CONTROLLER_REVERB_SEND },
+        { &text.ChorusSend, IDS_CONTROLLER_CHORUS_SEND },
+        { &text.NotePitchBend, IDS_CONTROLLER_NOTE_PITCH_BEND },
+        { &text.PitchBendSensitivity, IDS_CONTROLLER_PITCH_BEND_SENSITIVITY },
+        { &text.NoteVolume, IDS_CONTROLLER_NOTE_VOLUME },
+        { &text.NotePan, IDS_CONTROLLER_NOTE_PAN },
+        { &text.NotePitch, IDS_CONTROLLER_NOTE_PITCH },
+    };
+
+    for (auto const& [target, id] : localized)
+    {
+        *target = internal::Utf8FromWString(internal::ResourceGetWString(id));
+    }
+
+    m_propertyExchange.Build(m_collection, SynthIdentity{}, text);
 
     m_soundSetLoaded = true;
 

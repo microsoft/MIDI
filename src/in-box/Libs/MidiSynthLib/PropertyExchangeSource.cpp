@@ -45,13 +45,6 @@ namespace
         { "ProgramList", true, false, true },
         { "ChCtrlList", true, false, false },
     };
-
-    // Shown to a customer when a client lists the collections a channel can select from. Not
-    // localized: this library has no resource loading, and the program names it sits beside come
-    // out of the sound set file untranslated.
-    constexpr char const* MelodicProgramListTitle = "Melodic Programs";
-    constexpr char const* DrumKitProgramListTitle = "Drum Kits";
-    constexpr char const* ControllerListTitle = "Controllers";
 }
 
 namespace MidiSynth
@@ -64,8 +57,13 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
-    void PropertyExchangeSource::Build(const DlsCollection& collection, const SynthIdentity& identity)
+    void PropertyExchangeSource::Build(
+        const DlsCollection& collection,
+        const SynthIdentity& identity,
+        const PropertyExchangeText& text)
     {
+        m_text = text;
+
         m_melodicProgramListJson = BuildProgramListJson(collection, ProgramListKind::Melodic);
         m_drumKitProgramListJson = BuildProgramListJson(collection, ProgramListKind::DrumKits);
 
@@ -74,16 +72,16 @@ namespace MidiSynth
         info.ManufacturerId[0] = identity.ManufacturerSysExId[0];
         info.ManufacturerId[1] = identity.ManufacturerSysExId[1];
         info.ManufacturerId[2] = identity.ManufacturerSysExId[2];
-        info.Manufacturer = "Microsoft";
+        info.Manufacturer = m_text.Manufacturer.c_str();
 
         // Two seven bit bytes, least significant first, exactly as the identity reply carries them.
         info.FamilyId[0] = static_cast<uint8_t>(identity.FamilyCode & 0x7F);
         info.FamilyId[1] = static_cast<uint8_t>((identity.FamilyCode >> 7) & 0x7F);
-        info.Family = "Windows";
+        info.Family = m_text.Family.c_str();
 
         info.ModelId[0] = static_cast<uint8_t>(identity.FamilyMemberCode & 0x7F);
         info.ModelId[1] = static_cast<uint8_t>((identity.FamilyMemberCode >> 7) & 0x7F);
-        info.Model = "General MIDI Synth";
+        info.Model = m_text.Model.c_str();
 
         // The same four bytes the identity reply and the discovery reply carry, because M2-105-UM
         // requires them to match. The string is built from them so the two cannot drift apart.
@@ -132,57 +130,57 @@ namespace MidiSynth
         // numSigBits is set where the engine reads only the top bits of the value.
         const ci::ControllerListEntry entries[]
         {
-            { .Title = "Volume", .ControllerType = "cc", .Index = { 7 }, .IndexCount = 1, .Priority = 1,
+            { .Title = m_text.Volume.c_str(), .ControllerType = "cc", .Index = { 7 }, .IndexCount = 1, .Priority = 1,
               .HasDefault = true, .Default = fromSevenBit(powerUp.Volume), .Transmit = "none",
               .ParameterPath = "/volume", .TypeHint = "continuous" },
 
-            { .Title = "Modulation", .ControllerType = "cc", .Index = { 1 }, .IndexCount = 1, .Priority = 1,
+            { .Title = m_text.Modulation.c_str(), .ControllerType = "cc", .Index = { 1 }, .IndexCount = 1, .Priority = 1,
               .HasDefault = true, .Default = fromSevenBit(powerUp.Modulation), .Transmit = "none",
               .ParameterPath = "/modulation", .TypeHint = "continuous" },
 
-            { .Title = "Pitch Bend", .ControllerType = "pBend", .Priority = 1,
+            { .Title = m_text.PitchBend.c_str(), .ControllerType = "pBend", .Priority = 1,
               .HasDefault = true, .Default = Center, .Transmit = "none",
               .ParameterPath = "/pitchBend", .TypeHint = "continuous" },
 
-            { .Title = "Sustain Pedal", .ControllerType = "cc", .Index = { 64 }, .IndexCount = 1, .Priority = 1,
+            { .Title = m_text.SustainPedal.c_str(), .ControllerType = "cc", .Index = { 64 }, .IndexCount = 1, .Priority = 1,
               .HasDefault = true, .Default = powerUp.SustainPedal ? Full : 0u, .Transmit = "none",
               .SignificantBits = 1, .ParameterPath = "/sustain", .TypeHint = "momentary" },
 
-            { .Title = "Pan", .ControllerType = "cc", .Index = { 10 }, .IndexCount = 1, .Priority = 2,
+            { .Title = m_text.Pan.c_str(), .ControllerType = "cc", .Index = { 10 }, .IndexCount = 1, .Priority = 2,
               .HasDefault = true, .Default = fromSevenBit(powerUp.PanOffset + 64.0 / 127.0), .Transmit = "none",
               .ParameterPath = "/pan", .TypeHint = "continuous" },
 
-            { .Title = "Expression", .ControllerType = "cc", .Index = { 11 }, .IndexCount = 1, .Priority = 2,
+            { .Title = m_text.Expression.c_str(), .ControllerType = "cc", .Index = { 11 }, .IndexCount = 1, .Priority = 2,
               .HasDefault = true, .Default = fromSevenBit(powerUp.Expression), .Transmit = "none",
               .ParameterPath = "/expression", .TypeHint = "continuous" },
 
-            { .Title = "Reverb Send", .ControllerType = "cc", .Index = { 91 }, .IndexCount = 1, .Priority = 3,
+            { .Title = m_text.ReverbSend.c_str(), .ControllerType = "cc", .Index = { 91 }, .IndexCount = 1, .Priority = 3,
               .HasDefault = true, .Default = fromSevenBit(powerUp.ReverbSend), .Transmit = "none",
               .SignificantBits = 7, .ParameterPath = "/effects/reverb", .TypeHint = "continuous" },
 
-            { .Title = "Chorus Send", .ControllerType = "cc", .Index = { 93 }, .IndexCount = 1, .Priority = 3,
+            { .Title = m_text.ChorusSend.c_str(), .ControllerType = "cc", .Index = { 93 }, .IndexCount = 1, .Priority = 3,
               .HasDefault = true, .Default = fromSevenBit(powerUp.ChorusSend), .Transmit = "none",
               .SignificantBits = 7, .ParameterPath = "/effects/chorus", .TypeHint = "continuous" },
 
-            { .Title = "Note Pitch Bend", .ControllerType = "pnp", .Priority = 3,
+            { .Title = m_text.NotePitchBend.c_str(), .ControllerType = "pnp", .Priority = 3,
               .HasDefault = true, .Default = Center, .Transmit = "none",
               .ParameterPath = "/note/pitchBend", .TypeHint = "continuous" },
 
             // Whole semitones in the top seven bits, which is all the engine reads.
-            { .Title = "Pitch Bend Sensitivity", .ControllerType = "rpn", .Index = { 0, 0 }, .IndexCount = 2, .Priority = 4,
+            { .Title = m_text.PitchBendSensitivity.c_str(), .ControllerType = "rpn", .Index = { 0, 0 }, .IndexCount = 2, .Priority = 4,
               .HasDefault = true, .Default = static_cast<uint32_t>(std::lround(powerUp.PitchBendRangeSemitones)) << 25,
               .Transmit = "none", .SignificantBits = 7, .ParameterPath = "/pitchBend/sensitivity", .TypeHint = "continuous" },
 
-            { .Title = "Note Volume", .ControllerType = "pnrc", .Index = { PerNoteControllerVolume }, .IndexCount = 1, .Priority = 4,
+            { .Title = m_text.NoteVolume.c_str(), .ControllerType = "pnrc", .Index = { PerNoteControllerVolume }, .IndexCount = 1, .Priority = 4,
               .HasDefault = true, .Default = Full, .Transmit = "none",
               .ParameterPath = "/note/volume", .TypeHint = "continuous" },
 
-            { .Title = "Note Pan", .ControllerType = "pnrc", .Index = { PerNoteControllerPan }, .IndexCount = 1, .Priority = 4,
+            { .Title = m_text.NotePan.c_str(), .ControllerType = "pnrc", .Index = { PerNoteControllerPan }, .IndexCount = 1, .Priority = 4,
               .HasDefault = true, .Default = Center, .Transmit = "none",
               .ParameterPath = "/note/pan", .TypeHint = "continuous" },
 
             // An absolute pitch, so the only default is the note's own.
-            { .Title = "Note Pitch", .ControllerType = "pnrc", .Index = { PerNoteControllerPitch }, .IndexCount = 1, .Priority = 4,
+            { .Title = m_text.NotePitch.c_str(), .ControllerType = "pnrc", .Index = { PerNoteControllerPitch }, .IndexCount = 1, .Priority = 4,
               .Transmit = "none", .ParameterPath = "/note/pitch", .TypeHint = "continuous" },
         };
 
@@ -196,29 +194,28 @@ namespace MidiSynth
         const DlsCollection& collection)
     {
         ci::ChannelListEntry entries[MidiChannelCount]{};
-        char titles[MidiChannelCount][16]{};
         std::string programTitles[MidiChannelCount];
 
         // One set of links per kind, shared by every channel that uses it. They outlive the build.
-        constexpr ci::ResourceLink MelodicLinks[]
+        const ci::ResourceLink MelodicLinks[]
         {
-            { "ProgramList", MelodicProgramListResourceId, MelodicProgramListTitle },
-            { "ChCtrlList", ControllerListResourceId, ControllerListTitle },
+            { "ProgramList", MelodicProgramListResourceId, m_text.MelodicProgramList.c_str() },
+            { "ChCtrlList", ControllerListResourceId, m_text.ControllerList.c_str() },
         };
 
-        constexpr ci::ResourceLink DrumKitLinks[]
+        const ci::ResourceLink DrumKitLinks[]
         {
-            { "ProgramList", DrumKitProgramListResourceId, DrumKitProgramListTitle },
-            { "ChCtrlList", ControllerListResourceId, ControllerListTitle },
+            { "ProgramList", DrumKitProgramListResourceId, m_text.DrumKitProgramList.c_str() },
+            { "ChCtrlList", ControllerListResourceId, m_text.ControllerList.c_str() },
         };
 
         for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
         {
             const auto state = engine.ChannelState(channel);
 
-            snprintf(titles[channel], sizeof(titles[channel]), "Channel %u", channel + 1u);
-
-            entries[channel].Title = titles[channel];
+            entries[channel].Title = state.IsDrumChannel
+                ? m_text.PercussionChannel.c_str()
+                : m_text.MelodicChannel.c_str();
             entries[channel].Channel = static_cast<uint16_t>(channel + 1);
             entries[channel].BankMsb = state.BankMsb;
             entries[channel].BankLsb = state.BankLsb;
