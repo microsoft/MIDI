@@ -83,6 +83,9 @@ namespace midipatchbay
 
     bool IsGenerator(_In_ BlockKind kind) noexcept;
 
+    // Every kind but MIDI clock and MIDI Time Code has an In. An LFO's takes the clock it follows.
+    bool HasInput(_In_ BlockKind kind) noexcept;
+
     // The name a patch file uses for the kind, for example "noteFilter".
     std::wstring_view BlockKindKey(_In_ BlockKind kind) noexcept;
     std::optional<BlockKind> BlockKindFromKey(_In_ std::wstring_view key) noexcept;

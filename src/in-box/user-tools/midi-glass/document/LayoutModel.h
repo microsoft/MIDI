@@ -1208,8 +1208,8 @@ namespace glass
 
         // The least time between two sends while this control is being moved. Zero is no limit.
         //
-        // A DIN cable carries about 350 three byte messages a second, shared with everything else
-        // on that wire, and a fader dragged across a high rate digitizer will out-run it. Only a
+        // A DIN cable carries about a thousand three-byte messages a second, shared with everything
+        // else on that wire, and a fader dragged across a high rate digitizer can fill it. Only a
         // continuous control is ever limited; rate limiting a note on would be a defect.
         int32_t SendIntervalMilliseconds{ 0 };
 

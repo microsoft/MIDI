@@ -45,6 +45,19 @@ namespace midipatchbay
             return value;
         }
 
+        // What an LFO that follows a clock listens to: timing clock, start and song position.
+        bool IsClockMessage(_In_ uint32_t word) noexcept
+        {
+            if ((word >> 28) != static_cast<uint32_t>(UmpMessageType::System))
+            {
+                return false;
+            }
+
+            auto const status = (word >> 16) & 0xFF;
+
+            return status == 0xF8 || status == 0xFA || status == 0xF2;
+        }
+
         class PatchCompiler
         {
         public:
@@ -140,6 +153,9 @@ namespace midipatchbay
                     generator.Kind = block.Kind;
                     generator.Settings = SettingsFor(block);
                     generator.Cell = CellFor(block.Id);
+                    generator.FollowsClock = HasInput(block.Kind) &&
+                        std::any_of(m_patch.Connections.begin(), m_patch.Connections.end(),
+                            [&block](PatchConnection const& link) { return link.DestinationId == block.Id; });
                     generator.FirstEdge = static_cast<uint32_t>(m_graph.Edges.size());
                     generator.EdgeCount = static_cast<uint32_t>(edges.size());
 
@@ -214,6 +230,23 @@ namespace midipatchbay
                 return index;
             }
 
+            uint32_t ClockTargetFor(_In_ PatchBlock const& block)
+            {
+                auto const found = m_clockTargets.find(block.Id);
+
+                if (found != m_clockTargets.end())
+                {
+                    return found->second;
+                }
+
+                auto const index = static_cast<uint32_t>(m_graph.ClockTargets.size());
+
+                m_graph.ClockTargets.push_back(m_input.Key + L'|' + block.Id);
+                m_clockTargets.emplace(block.Id, index);
+
+                return index;
+            }
+
             Expansion ExpandOutgoing(
                 _In_ std::wstring const& nodeId,
                 _Inout_ std::vector<std::wstring>& path,
@@ -279,11 +312,26 @@ namespace midipatchbay
                     return ExpandDestination(link, edge);
                 }
 
-                // Nothing goes into a generator. A link that says otherwise came from a file, and
-                // carries nothing.
+                // Nothing goes into MIDI clock or MIDI Time Code, and only timing into an LFO. A
+                // link into one that can't take it came from a file, and carries nothing. A clock
+                // input goes no further, so it is never part of a circle.
                 if (IsGenerator(block->Kind))
                 {
-                    return Expansion::Dead;
+                    if (!HasInput(block->Kind) || block->Bypassed)
+                    {
+                        return Expansion::Dead;
+                    }
+
+                    RouteStage stage{};
+                    stage.Kind = RouteStageKind::ClockInput;
+                    stage.Block = block->Kind;
+                    stage.Index = ClockTargetFor(*block);
+                    stage.Cell = CellFor(block->Id);
+
+                    edge.Stage = AddStage(stage, {});
+                    edge.LinkCell = CellFor(link.Id);
+
+                    return Expansion::Live;
                 }
 
                 if (std::find(path.begin(), path.end(), block->Id) != path.end())
@@ -461,6 +509,7 @@ namespace midipatchbay
             std::unordered_map<std::wstring, uint32_t> m_cells{};
             std::unordered_map<std::wstring, uint32_t> m_settings{};
             std::unordered_map<std::wstring, uint32_t> m_states{};
+            std::unordered_map<std::wstring, uint32_t> m_clockTargets{};
             std::unordered_map<std::wstring, uint32_t> m_leafStages{};
             std::unordered_map<std::wstring, uint32_t> m_throttleStages{};
             std::unordered_set<std::wstring> m_deadThrottles{};
@@ -543,6 +592,7 @@ namespace midipatchbay
                 auto const throttles = graph.Throttles.size();
                 auto const generators = graph.Generators.size();
                 auto const states = graph.States.size();
+                auto const clockTargets = graph.ClockTargets.size();
 
                 PatchCompiler compiler{ graph, input };
                 RouteProblemKind problem{};
@@ -558,6 +608,7 @@ namespace midipatchbay
                     graph.Throttles.resize(throttles);
                     graph.Generators.resize(generators);
                     graph.States.resize(states);
+                    graph.ClockTargets.resize(clockTargets);
 
                     graph.Problems.push_back(RouteProblem{ input.Key, problem });
 
@@ -626,6 +677,13 @@ namespace midipatchbay
         case RouteStageKind::Throttle:
             sink.CountBlock(stage.Cell, true);
             sink.Throttle(stage.Index, copy, wordCount);
+            return;
+
+        case RouteStageKind::ClockInput:
+            if (IsClockMessage(copy[0]))
+            {
+                sink.Clock(stage.Index, copy, wordCount);
+            }
             return;
 
         case RouteStageKind::Block:

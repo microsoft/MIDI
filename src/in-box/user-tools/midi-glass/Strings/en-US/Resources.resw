@@ -1982,7 +1982,7 @@
     <value>Milliseconds</value>
   </data>
   <data name="LfoUpdateCaptionFormat" xml:space="preserve">
-    <value>About {0} messages a second. A DIN cable carries roughly 350, shared with everything else on the wire, so leave room.</value>
+    <value>About {0} messages a second. A DIN cable carries about a thousand control changes a second, shared with everything else on the wire, so leave room.</value>
     <comment>{0} is a number of messages per second.</comment>
   </data>
   <data name="LfoLatchingCheck.Content" xml:space="preserve">
@@ -3237,7 +3237,7 @@
     <value>Least time between sends, in milliseconds</value>
   </data>
   <data name="SendIntervalCaption.Text" xml:space="preserve">
-    <value>Milliseconds. Zero is no limit. A DIN cable carries about 350 three byte messages a second, so a fader dragged quickly can out-run it.</value>
+    <value>Milliseconds. Zero is no limit. A DIN cable carries about a thousand control changes a second, shared with everything else on the wire, so a few faders moved quickly can fill it.</value>
   </data>
   <data name="InspectorPickupHeading.Text" xml:space="preserve">
     <value>Pickup</value>

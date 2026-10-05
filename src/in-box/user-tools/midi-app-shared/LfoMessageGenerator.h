@@ -14,6 +14,7 @@
 #include <thread>
 
 #include "ChannelVoiceWords.h"
+#include "ClockFollower.h"
 #include "GeneratorSink.h"
 #include "LfoWave.h"
 
@@ -39,6 +40,11 @@ namespace midiapp
         // Sends the middle of the range when it stops. A pitch bend left wherever the sweep
         // happened to be is an instrument left out of tune.
         bool ReturnsToMiddleWhenStopped{ true };
+
+        // Follows the clock handed to ReceiveClock instead of BeatsPerMinute: one pass is
+        // BeatsPerCycle beats of that clock, and its Start puts the sweep back at the top. Fixed
+        // when the sweep starts.
+        bool FollowsClock{ false };
     };
 
     // Sends an LFO sweep as channel voice messages. The same shape as BeatClockGenerator, and for
@@ -72,6 +78,13 @@ namespace midiapp
         // sweep has reached, so changing the rate does not jump the wave back to its start.
         void Options(_In_ LfoMessageGeneratorOptions const& options) noexcept;
 
+        // Timing clock, start and song position from the clock a sweep that FollowsClock keeps
+        // in step with, at the time each plays. Anything else is ignored. Safe from any thread.
+        void ReceiveClock(
+            _In_ uint64_t timestamp,
+            _In_reads_(wordCount) uint32_t const* words,
+            _In_ uint32_t wordCount) noexcept;
+
         uint64_t SamplesScheduled() const noexcept { return m_samplesScheduled.load(); }
 
     private:
@@ -86,6 +99,11 @@ namespace midiapp
 
         // Bumped by every change to the options. The worker watches this one number.
         uint64_t m_optionsGeneration{ 0 };
+
+        // The clock a sweep that FollowsClock keeps in step with, and a count of what has
+        // arrived from it, so the worker can wait for the next pulse.
+        ClockFollower m_clock{};
+        uint64_t m_clockGeneration{ 0 };
 
         uint64_t m_startOriginTimestamp{ 0 };
 

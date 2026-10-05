@@ -95,7 +95,7 @@ To work with more than one endpoint or step at once, hold Ctrl and click each on
 
 ## Steps
 
-Steps sit between the endpoints and do something to the messages that pass through them. Drag one from the **Steps** tab on the left, or select a connection and choose **Add a step here**. Drop a step on a connection and the connection is split in two, with the step in the middle. A generator has no **In**, so it's added on its own instead.
+Steps sit between the endpoints and do something to the messages that pass through them. Drag one from the **Steps** tab on the left, or select a connection and choose **Add a step here**. Drop a step on a connection and the connection is split in two, with the step in the middle. A generator is never put into a connection, so it's added on its own instead.
 
 There are four kinds:
 
@@ -172,19 +172,21 @@ Leave **Bypass exact-pitch notes** clear and the pitch moves with the note, so t
 
 ## Generators
 
-Generators make messages of their own, so they only have an **Out**. A generator runs for as long as its patch is routing: it starts when you start the patch and stops when you stop it. Connect it to everything that should get what it sends, straight or through other steps.
+Generators make messages of their own. MIDI clock and MIDI Time Code only have an **Out**. An LFO also has an **In**, for a clock to follow. A generator runs for as long as its patch is routing: it starts when you start the patch and stops when you stop it. Connect it to everything that should get what it sends, straight or through other steps.
 
 - **MIDI clock** sends 24 timing clock pulses for every beat, at the tempo you set. With **Send Start and Stop messages** on, it sends Start as routing starts and Stop as it stops, so a sequencer or drum machine plays along. It can swing eighth notes or sixteenth notes, up to 75%. Select the step to change its tempo right in the panel on the right.
 - **MIDI Time Code** sends quarter frame messages at 24, 25, 29.97 drop frame, or 30 frames per second, counting from the start time you set. It starts from that time each time the patch starts routing. With **Send a full timecode when starting and stopping** on, a device finds its place at once.
 - **LFO** sweeps a value up and down in the same shapes as an LFO control in MIDI Glass: sine, triangle, square, a ramp up or down, or one of four kinds of noise. Pick how long one pass takes, in beats at a tempo you set, and how much of the range it covers. It can send a control change, pitch bend, channel pressure, poly pressure on one note, or an RPN or NRPN, on the channel and group you pick. **Return to center when routing stops** sends the value halfway between the two ends as it stops, so a pitch bend that sweeps its whole range ends up back in the middle.
 
+**Keeping an LFO in step with a clock.** Connect a clock to the LFO's **In**: a device that sends MIDI clock, a MIDI clock step, or a clock divider. The LFO then follows that clock instead of its own tempo. One pass takes that many beats of the clock, a Start from the clock puts the LFO back at the beginning of a pass, and when the clock stops, the LFO stops moving. Only timing clock, Start and Song Position reach the LFO. Anything else that comes in stops there. With nothing connected to its **In**, an LFO keeps its own tempo. A muted connection still counts, so muting the clock holds the LFO still.
+
 The clock and the time code go out on the group you pick. A connection to one group or port of an endpoint sends them there instead.
 
-**One clock for a whole setup.** Put a MIDI clock step on a patch and connect it to every device that should follow it. A device that should run at half speed gets its clock through a **Clock divider** set to 2. Make a patch like this for each project, each with its own tempo, and start the one you need.
+**One clock for a whole setup.** Put a MIDI clock step on a patch and connect it to every device that should follow it. A device that should run at half speed gets its clock through a **Clock divider** set to 2. An LFO connected to the same clock sweeps in time with it. Make a patch like this for each project, each with its own tempo, and start the one you need.
 
-Changing a generator while its patch is routing doesn't start it again. A new tempo, more or less swing, and every change to an LFO take effect right away. Changing the clock's group, what its swing applies to, or **Send Start and Stop messages**, or anything about the time code, starts it again from the top.
+Changing a generator while its patch is routing doesn't start it again. A new tempo, more or less swing, and every change to an LFO take effect right away. Changing the clock's group, what its swing applies to, or **Send Start and Stop messages**, or anything about the time code, starts it again from the top. So does connecting a clock to an LFO, or taking it away.
 
-A generator doesn't follow a clock that comes in from a device, and messages don't start or stop it. It runs whenever its patch routes. Each generator has its own tempo, so an LFO doesn't follow a clock step: give them both the same tempo.
+MIDI clock and MIDI Time Code don't follow a clock that comes in from a device, and messages don't start or stop them. They run whenever their patch routes.
 
 ## Slowing messages down
 

@@ -1293,7 +1293,7 @@ namespace winrt::midipatchbay::implementation
             auto const destinationIsBlock = patch->IsBlock(candidate.DestinationId);
 
             if (auto const* destination = patch->FindBlock(candidate.DestinationId);
-                destination != nullptr && patchbay::IsGenerator(destination->Kind))
+                destination != nullptr && !patchbay::HasInput(destination->Kind))
             {
                 ShowStatus(resources::GetString(L"ConnectionIntoGeneratorRejected"), controls::InfoBarSeverity::Warning);
                 return false;
@@ -1327,8 +1327,9 @@ namespace winrt::midipatchbay::implementation
             }
 
             // Steps that feed each other in a circle would pass a message round for ever, and the
-            // routing turns the whole patch down when it sees one. Better to say so now.
-            if (sourceIsBlock && destinationIsBlock)
+            // routing turns the whole patch down when it sees one. Better to say so now. An LFO's
+            // In goes no further, so a connection into one can't close a circle.
+            if (sourceIsBlock && destinationIsBlock && !patchbay::IsGenerator(patch->FindBlock(candidate.DestinationId)->Kind))
             {
                 std::vector<std::wstring> pending{ candidate.DestinationId };
                 std::unordered_set<std::wstring> seen{};
@@ -1351,7 +1352,11 @@ namespace winrt::midipatchbay::implementation
 
                     for (auto const& link : patch->Connections)
                     {
-                        if (link.Id != ignoreConnectionId && link.SourceId == current && patch->IsBlock(link.DestinationId))
+                        auto const* next = link.Id != ignoreConnectionId && link.SourceId == current
+                            ? patch->FindBlock(link.DestinationId)
+                            : nullptr;
+
+                        if (next != nullptr && !patchbay::IsGenerator(next->Kind))
                         {
                             pending.push_back(link.DestinationId);
                         }
@@ -1913,7 +1918,7 @@ namespace winrt::midipatchbay::implementation
                 return;
             }
 
-            // A generator has no way in, so it is added on its own instead.
+            // A generator passes nothing on, so it is added on its own instead.
             if (patchbay::IsGenerator(kind))
             {
                 AddBlock(kind, center.value_or(m_canvas.ViewCenter()));

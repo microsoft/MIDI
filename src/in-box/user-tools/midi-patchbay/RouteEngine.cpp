@@ -300,6 +300,11 @@ namespace midipatchbay
 
         std::atomic<uint32_t>* StateOf(_In_ uint32_t state) noexcept override;
 
+        void Clock(
+            _In_ uint32_t target,
+            _In_reads_(wordCount) uint32_t const* words,
+            _In_ uint8_t wordCount) noexcept override;
+
     private:
         struct Buffer
         {
@@ -493,6 +498,10 @@ namespace midipatchbay
         // One for each clock divider. Shared with the graphs before and after this one, so a
         // divider keeps its count through a change somewhere else.
         std::vector<std::shared_ptr<std::atomic<uint32_t>>> States{};
+
+        // The LFO each of the graph's clock targets is, filled in before anything can reach this
+        // graph and never changed after. Empty where that LFO isn't running.
+        std::vector<std::shared_ptr<midiapp::LfoMessageGenerator>> ClockTargets{};
 
         // Each throttle finishes the message it is on, then each send thread the send it is in,
         // and whatever is still queued goes with the graph. All are told first, so they stop
@@ -724,7 +733,9 @@ namespace midipatchbay
             m_plan.store(std::move(plan));
         }
 
-        bool Start(_In_ BlockSettings const& settings, _In_ uint64_t originTimestamp) noexcept
+        // Builds the generator without starting it, so a clock input can find an LFO before
+        // anything reaches the graph it runs in.
+        bool Create(_In_ BlockSettings const& settings, _In_ bool followsClock) noexcept
         {
             try
             {
@@ -747,7 +758,6 @@ namespace midipatchbay
                     options.SwingSubdivision = settings.Clock.SwingSubdivision;
 
                     m_clock = std::make_unique<midiapp::BeatClockGenerator>(std::move(sink), std::move(options));
-                    m_clock->Start(originTimestamp);
                     break;
                 }
 
@@ -761,13 +771,16 @@ namespace midipatchbay
                     options.SendFullFrameMessages = settings.TimeCode.SendFullFrame;
 
                     m_timeCode = std::make_unique<midiapp::TimeCodeGenerator>(std::move(sink), std::move(options));
-                    m_timeCode->Start(originTimestamp);
                     break;
                 }
 
                 case BlockKind::LfoGenerator:
-                    m_lfo = std::make_unique<midiapp::LfoMessageGenerator>(std::move(sink), LfoOptions(settings.Lfo));
-                    m_lfo->Start(originTimestamp);
+                    m_followsClock = followsClock;
+
+                    // Shared, because a graph that is being replaced can still hand it a pulse
+                    // after this runner has gone. Only its own thread calls the sink, and Stop
+                    // ends that thread.
+                    m_lfo = std::make_shared<midiapp::LfoMessageGenerator>(std::move(sink), LfoOptions(settings.Lfo, followsClock));
                     break;
 
                 default:
@@ -777,9 +790,43 @@ namespace midipatchbay
                 m_liveSignature = BlockSettingsSignature(m_kind, settings);
                 return true;
             }
+            MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to create a generator.")
+
+            return false;
+        }
+
+        bool Start(_In_ uint64_t originTimestamp) noexcept
+        {
+            try
+            {
+                if (m_clock != nullptr)
+                {
+                    m_clock->Start(originTimestamp);
+                }
+                else if (m_timeCode != nullptr)
+                {
+                    m_timeCode->Start(originTimestamp);
+                }
+                else if (m_lfo != nullptr)
+                {
+                    m_lfo->Start(originTimestamp);
+                }
+                else
+                {
+                    return false;
+                }
+
+                return true;
+            }
             MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to start a generator.")
 
             return false;
+        }
+
+        // The LFO a clock input feeds, when this is one that follows a clock.
+        std::shared_ptr<midiapp::LfoMessageGenerator> ClockInput() const noexcept
+        {
+            return m_followsClock ? m_lfo : nullptr;
         }
 
         // What can change while it runs. Takes effect at the first message it has not scheduled.
@@ -804,7 +851,7 @@ namespace midipatchbay
 
                 if (m_lfo != nullptr)
                 {
-                    m_lfo->Options(LfoOptions(settings.Lfo));
+                    m_lfo->Options(LfoOptions(settings.Lfo, m_followsClock));
                 }
             }
             MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to change a running generator.")
@@ -842,7 +889,9 @@ namespace midipatchbay
         }
 
     private:
-        static midiapp::LfoMessageGeneratorOptions LfoOptions(_In_ LfoGeneratorSettings const& lfo) noexcept
+        static midiapp::LfoMessageGeneratorOptions LfoOptions(
+            _In_ LfoGeneratorSettings const& lfo,
+            _In_ bool followsClock) noexcept
         {
             midiapp::LfoMessageGeneratorOptions options{};
 
@@ -854,6 +903,7 @@ namespace midipatchbay
             options.IntervalMilliseconds = lfo.IntervalMilliseconds;
             options.Target = lfo.Target;
             options.ReturnsToMiddleWhenStopped = lfo.ReturnsToMiddle;
+            options.FollowsClock = followsClock;
 
             return options;
         }
@@ -894,6 +944,8 @@ namespace midipatchbay
         }
 
         BlockKind m_kind{ BlockKind::ClockGenerator };
+        bool m_followsClock{ false };
+
         std::wstring m_restartSignature{};
         std::wstring m_liveSignature{};
 
@@ -901,7 +953,7 @@ namespace midipatchbay
 
         std::unique_ptr<midiapp::BeatClockGenerator> m_clock{};
         std::unique_ptr<midiapp::TimeCodeGenerator> m_timeCode{};
-        std::unique_ptr<midiapp::LfoMessageGenerator> m_lfo{};
+        std::shared_ptr<midiapp::LfoMessageGenerator> m_lfo{};
     };
 
     _Use_decl_annotations_
@@ -1038,8 +1090,27 @@ namespace midipatchbay
         return Owner->States[state].get();
     }
 
+    _Use_decl_annotations_
+    void RouteEngine::Context::Clock(uint32_t target, uint32_t const* words, uint8_t wordCount) noexcept
+    {
+        if (target >= Owner->ClockTargets.size() || Owner->ClockTargets[target] == nullptr)
+        {
+            return;
+        }
+
+        Owner->ClockTargets[target]->ReceiveClock(Timestamp, words, wordCount);
+    }
+
     namespace
     {
+        // What a running generator can't take on the fly, including whether an LFO follows a
+        // clock.
+        std::wstring RestartSignatureOf(_In_ RouteGraph const& graph, _In_ RouteGenerator const& generator)
+        {
+            return GeneratorRestartSignature(generator.Kind, graph.Settings[generator.Settings]) +
+                (generator.FollowsClock ? L"|clock" : L"");
+        }
+
         // Until the service has played everything a stopped generator scheduled, so closing a
         // connection does not throw away a clock's stop or a time code's last full frame.
         void WaitUntilPlayed(_In_ uint64_t timestamp) noexcept
@@ -1460,7 +1531,80 @@ namespace midipatchbay
                 activeRoutes++;
             }
 
-            // Pass seven: open what pass two created. Its hub has its plan first, so nothing that
+            // Pass seven: generators that stop, because their patch no longer routes them or a
+            // setting they cannot take on the fly changed. Their last messages, such as a clock's
+            // stop, go through the graph that is still running.
+            uint64_t lastScheduled{ 0 };
+            std::unordered_map<std::wstring, size_t> plannedGenerators{};
+
+            for (size_t i = 0; i < routes.Generators.size(); i++)
+            {
+                plannedGenerators.emplace(routes.Generators[i].Key, i);
+            }
+
+            for (auto it = m_generators.begin(); it != m_generators.end();)
+            {
+                auto const planned = plannedGenerators.find(it->first);
+                auto keeps = false;
+
+                if (planned != plannedGenerators.end() && it->second != nullptr)
+                {
+                    keeps = it->second->RestartSignature() ==
+                        RestartSignatureOf(routes, routes.Generators[planned->second]);
+                }
+
+                if (keeps)
+                {
+                    ++it;
+                    continue;
+                }
+
+                if (it->second != nullptr)
+                {
+                    lastScheduled = (std::max)(lastScheduled, it->second->Stop());
+                }
+
+                it = m_generators.erase(it);
+            }
+
+            // Pass eight: every generator that isn't running is built, not started, and each
+            // clock input finds the LFO it feeds, all before anything can reach the new graph.
+            std::vector<bool> starting(routes.Generators.size(), false);
+
+            for (size_t i = 0; i < routes.Generators.size(); i++)
+            {
+                auto const& planned = routes.Generators[i];
+
+                if (m_generators.count(planned.Key) != 0)
+                {
+                    continue;
+                }
+
+                auto runner = std::make_unique<GeneratorRunner>(planned.Kind, RestartSignatureOf(routes, planned));
+
+                if (!runner->Create(routes.Settings[planned.Settings], planned.FollowsClock))
+                {
+                    SetLastError(resources::GetString(L"ErrorRoutingFailed"));
+                    continue;
+                }
+
+                m_generators.insert_or_assign(planned.Key, std::move(runner));
+                starting[i] = true;
+            }
+
+            runtime.ClockTargets.resize(routes.ClockTargets.size());
+
+            for (size_t i = 0; i < routes.ClockTargets.size(); i++)
+            {
+                auto const found = m_generators.find(routes.ClockTargets[i]);
+
+                if (found != m_generators.end() && found->second != nullptr)
+                {
+                    runtime.ClockTargets[i] = found->second->ClockInput();
+                }
+            }
+
+            // Pass nine: open what pass two created. Its hub has its plan first, so nothing that
             // arrives meets a hub that does not know its links yet. One that cannot open is let
             // go, so the next change tries it again.
             for (auto const& key : created)
@@ -1500,45 +1644,42 @@ namespace midipatchbay
                 m_connections.erase(found);
             }
 
-            // Pass eight: generators that stop, because their patch no longer routes them or a
-            // setting they cannot take on the fly changed. Their last messages, such as a clock's
-            // stop, go through the graph that is still running.
-            uint64_t lastScheduled{ 0 };
-            std::unordered_map<std::wstring, size_t> plannedGenerators{};
+            // Pass ten: generators still running carry on into the new graph, and new ones start
+            // together.
+            auto const origin = midi2::MidiClock::Now() + midiapp::BeatClockGenerator::SuggestedStartLeadTicks();
 
             for (size_t i = 0; i < routes.Generators.size(); i++)
             {
-                plannedGenerators.emplace(routes.Generators[i].Key, i);
-            }
+                auto const& planned = routes.Generators[i];
+                auto const running = m_generators.find(planned.Key);
 
-            for (auto it = m_generators.begin(); it != m_generators.end();)
-            {
-                auto const planned = plannedGenerators.find(it->first);
-                auto keeps = false;
-
-                if (planned != plannedGenerators.end() && it->second != nullptr)
+                if (running == m_generators.end() || running->second == nullptr)
                 {
-                    auto const& generator = routes.Generators[planned->second];
-
-                    keeps = it->second->RestartSignature() ==
-                        GeneratorRestartSignature(generator.Kind, routes.Settings[generator.Settings]);
-                }
-
-                if (keeps)
-                {
-                    ++it;
                     continue;
                 }
 
-                if (it->second != nullptr)
+                auto plan = std::make_shared<GeneratorPlan>();
+                plan->Owner = next;
+                plan->Index = static_cast<uint32_t>(i);
+                plan->Work.Prepare(runtime);
+
+                running->second->Plan(std::move(plan));
+
+                if (!starting[i])
                 {
-                    lastScheduled = (std::max)(lastScheduled, it->second->Stop());
+                    running->second->Update(routes.Settings[planned.Settings]);
+                }
+                else if (!running->second->Start(origin))
+                {
+                    SetLastError(resources::GetString(L"ErrorRoutingFailed"));
+                    m_generators.erase(running);
+                    continue;
                 }
 
-                it = m_generators.erase(it);
+                activeRoutes++;
             }
 
-            // Pass nine: the switch. Every open endpoint moves to its new plan, or to none.
+            // Pass eleven: the switch. Every open endpoint moves to its new plan, or to none.
             for (auto& [key, connection] : m_connections)
             {
                 if (connection == nullptr || connection->Hub == nullptr)
@@ -1549,44 +1690,6 @@ namespace midipatchbay
                 auto const plan = plans.find(key);
 
                 connection->Hub->Plan(plan == plans.end() ? nullptr : plan->second);
-            }
-
-            // Generators still running carry on into the new graph, and new ones start together.
-            auto const origin = midi2::MidiClock::Now() + midiapp::BeatClockGenerator::SuggestedStartLeadTicks();
-
-            for (size_t i = 0; i < routes.Generators.size(); i++)
-            {
-                auto const& planned = routes.Generators[i];
-                auto const& settings = routes.Settings[planned.Settings];
-
-                auto plan = std::make_shared<GeneratorPlan>();
-                plan->Owner = next;
-                plan->Index = static_cast<uint32_t>(i);
-                plan->Work.Prepare(runtime);
-
-                auto const running = m_generators.find(planned.Key);
-
-                if (running != m_generators.end() && running->second != nullptr)
-                {
-                    running->second->Plan(std::move(plan));
-                    running->second->Update(settings);
-                    activeRoutes++;
-                    continue;
-                }
-
-                auto runner = std::make_unique<GeneratorRunner>(
-                    planned.Kind, GeneratorRestartSignature(planned.Kind, settings));
-
-                runner->Plan(std::move(plan));
-
-                if (!runner->Start(settings, origin))
-                {
-                    SetLastError(resources::GetString(L"ErrorRoutingFailed"));
-                    continue;
-                }
-
-                m_generators.insert_or_assign(planned.Key, std::move(runner));
-                activeRoutes++;
             }
 
             // The graph this replaces stops once nothing new can reach it.

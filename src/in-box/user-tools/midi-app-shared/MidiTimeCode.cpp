@@ -303,8 +303,8 @@ namespace midiapp
             return false;
         }
 
-        // Fewer fields than four are read from the right, so "1:30" is a minute and a half and
-        // "12" is twelve frames. That is how a transport field behaves everywhere else.
+        // Fewer fields than four are read from the right, so "12" is twelve frames and "1:20" is
+        // a second and twenty frames. That is how a transport field behaves everywhere else.
         std::array<uint32_t, 4> parts{};
 
         for (size_t index = 0; index < fieldCount; index++)

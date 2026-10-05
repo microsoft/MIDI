@@ -3089,7 +3089,7 @@
                                                SpinButtonPlacementMode="Compact"
                                                ValueChanged="OnSendIntervalChanged" />
                                     <TextBlock x:Uid="SendIntervalCaption"
-                                               Text="Milliseconds. Zero is no limit. A DIN cable carries about 350 three byte messages a second, so a fader dragged quickly can out-run it."
+                                               Text="Milliseconds. Zero is no limit. A DIN cable carries about a thousand control changes a second, shared with everything else on the wire, so a few faders moved quickly can fill it."
                                                FontSize="11"
                                                TextWrapping="Wrap"
                                                Foreground="{ThemeResource TextFillColorTertiaryBrush}" />

@@ -102,7 +102,8 @@ namespace midiapp
         _In_ MidiTimeCodePosition const& position,
         _In_ MidiTimeCodeFrameRate const rate) noexcept;
 
-    // Accepts either separator and a missing field or two, so "1:30" reads as one minute thirty.
+    // Accepts either separator. Fewer than four fields fill from the right, so "1:20" is one
+    // second and twenty frames.
     bool TryParsePosition(
         _In_ std::wstring_view const text,
         _In_ MidiTimeCodeFrameRate const rate,

@@ -112,6 +112,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\LfoWave.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\LfoSweep.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ChannelVoiceWords.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\ClockFollower.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Module.cpp" />
@@ -132,6 +133,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\LfoWave.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\LfoSweep.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ChannelVoiceWords.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\ClockFollower.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

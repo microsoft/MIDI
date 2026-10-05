@@ -87,6 +87,17 @@ namespace
             return state < m_graph.States.size() ? &m_states[state] : nullptr;
         }
 
+        std::vector<std::pair<uint32_t, Message>> Clocked{};
+
+        void Clock(uint32_t target, uint32_t const* words, uint8_t wordCount) noexcept override
+        {
+            Message message{};
+            std::copy_n(words, wordCount, message.Words.begin());
+            message.Count = wordCount;
+
+            Clocked.emplace_back(target, message);
+        }
+
     private:
         RouteGraph const& m_graph;
         std::unique_ptr<std::atomic<uint32_t>[]> m_states{};
@@ -738,43 +749,162 @@ void RouteGraphTests::AGeneratorRunsOnlyWhenItLeadsSomewhere()
     VERIFY_ARE_EQUAL(90.0, running.Settings[running.Generators[0].Settings].Clock.BeatsPerMinute);
 }
 
-void RouteGraphTests::NothingGoesIntoAGenerator()
+void RouteGraphTests::NothingGoesIntoAClockOrTimeCode()
 {
-    // Drawn by hand, a link into a generator carries nothing, and the generator still runs.
+    // Drawn by hand, a link into a clock step carries nothing, and the clock still runs.
     PatchDocument built{};
     AddEndpoint(built, L"keys");
     AddEndpoint(built, L"synth");
-    AddBlock(built, L"lfo", BlockKind::LfoGenerator);
-    Link(built, L"in", L"keys", L"lfo");
-    Link(built, L"out", L"lfo", L"synth");
+    AddBlock(built, L"clock", BlockKind::ClockGenerator);
+    Link(built, L"in", L"keys", L"clock");
+    Link(built, L"out", L"clock", L"synth");
 
     auto const graph = Compile(built);
 
     VERIFY_IS_TRUE(graph.Problems.empty());
     VERIFY_ARE_EQUAL(size_t{ 0 }, graph.Roots.size());
     VERIFY_ARE_EQUAL(size_t{ 1 }, graph.Generators.size());
-    VERIFY_ARE_EQUAL(size_t{ 0 }, Arrive(graph, L"dev-keys", Midi1(0, NoteOn, 0, 60, 100)).Sent.size());
+    VERIFY_IS_FALSE(graph.Generators[0].FollowsClock);
 
-    // From a file, the link is left out when the patch is read.
+    auto const played = Arrive(graph, L"dev-keys", System(0, 0xF8));
+
+    VERIFY_IS_TRUE(played.Sent.empty());
+    VERIFY_IS_TRUE(played.Clocked.empty());
+
+    // From a file, a link into MIDI clock or MIDI Time Code is left out when the patch is read.
+    // One into an LFO stays: it's the clock the LFO follows.
     auto const patch = ReadPatchJson(LR"({
   "fileVersion": 2,
-  "name": "Into a clock",
+  "name": "Into generators",
   "endpoints": [
     { "id": "keys", "displayName": "Keys", "match": { "transportSuppliedEndpointName": "Keys" }, "matchMode": "endpointName", "x": 60, "y": 20 },
     { "id": "synth", "displayName": "Synth", "match": { "transportSuppliedEndpointName": "Synth" }, "matchMode": "endpointName", "x": 680, "y": 20 }
   ],
   "blocks": [
-    { "id": "clock", "type": "clockGenerator", "x": 400, "y": 50, "settings": {} }
+    { "id": "clock", "type": "clockGenerator", "x": 400, "y": 50, "settings": {} },
+    { "id": "mtc", "type": "timeCodeGenerator", "x": 400, "y": 150, "settings": {} },
+    { "id": "lfo", "type": "lfoGenerator", "x": 400, "y": 250, "settings": {} }
   ],
   "connections": [
-    { "id": "in", "source": "keys", "destination": "clock" },
-    { "id": "out", "source": "clock", "destination": "synth" }
+    { "id": "into-clock", "source": "keys", "destination": "clock" },
+    { "id": "into-mtc", "source": "keys", "destination": "mtc" },
+    { "id": "into-lfo", "source": "keys", "destination": "lfo" },
+    { "id": "out", "source": "clock", "destination": "synth" },
+    { "id": "lfo-out", "source": "lfo", "destination": "synth" }
   ]
 })", L"fallback");
 
     VERIFY_IS_TRUE(patch.has_value());
-    VERIFY_ARE_EQUAL(size_t{ 1 }, patch->Connections.size());
-    VERIFY_ARE_EQUAL(std::wstring{ L"out" }, patch->Connections[0].Id);
+    VERIFY_ARE_EQUAL(size_t{ 3 }, patch->Connections.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"into-lfo" }, patch->Connections[0].Id);
+    VERIFY_ARE_EQUAL(std::wstring{ L"out" }, patch->Connections[1].Id);
+    VERIFY_ARE_EQUAL(std::wstring{ L"lfo-out" }, patch->Connections[2].Id);
+}
+
+void RouteGraphTests::AnLfoFollowsTheClockConnectedToIt()
+{
+    PatchDocument patch{};
+    AddEndpoint(patch, L"drums");
+    AddEndpoint(patch, L"synth");
+
+    AddBlock(patch, L"lfo", BlockKind::LfoGenerator);
+
+    Link(patch, L"in", L"drums", L"lfo");
+    Link(patch, L"out", L"lfo", L"synth");
+
+    auto const graph = Compile(patch);
+
+    VERIFY_IS_TRUE(graph.Problems.empty());
+    VERIFY_ARE_EQUAL(size_t{ 1 }, graph.Roots.size());
+    VERIFY_ARE_EQUAL(size_t{ 1 }, graph.Generators.size());
+    VERIFY_IS_TRUE(graph.Generators[0].FollowsClock);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, graph.ClockTargets.size());
+    VERIFY_ARE_EQUAL(graph.Generators[0].Key, graph.ClockTargets[0]);
+
+    // Timing clock, start and song position go in, and nothing goes on from the In.
+    for (auto const& clock : { System(0, 0xF8), System(3, 0xFA), System(0, 0xF2, 4, 0) })
+    {
+        auto const played = Arrive(graph, L"dev-drums", clock);
+
+        VERIFY_ARE_EQUAL(size_t{ 1 }, played.Clocked.size());
+        VERIFY_ARE_EQUAL(uint32_t{ 0 }, played.Clocked[0].first);
+        VERIFY_IS_TRUE(played.Clocked[0].second == clock);
+        VERIFY_IS_TRUE(played.Sent.empty());
+        VERIFY_ARE_EQUAL(uint64_t{ 1 }, played.Links.at(L"k|in"));
+    }
+
+    // Everything else stops at the In.
+    for (auto const& other : { System(0, 0xFC), System(0, 0xFE), Midi1(0, NoteOn, 0, 60, 100) })
+    {
+        auto const played = Arrive(graph, L"dev-drums", other);
+
+        VERIFY_IS_TRUE(played.Clocked.empty());
+        VERIFY_IS_TRUE(played.Sent.empty());
+    }
+
+    // With nothing connected to its In, it keeps its own tempo.
+    PatchDocument own{};
+    AddEndpoint(own, L"synth");
+    AddBlock(own, L"lfo", BlockKind::LfoGenerator);
+    Link(own, L"out", L"lfo", L"synth");
+
+    VERIFY_IS_FALSE(Compile(own).Generators[0].FollowsClock);
+
+    // A muted clock still counts, so the LFO waits for it rather than running on its own.
+    patch.Connections[0].Muted = true;
+
+    auto const muted = Compile(patch);
+
+    VERIFY_ARE_EQUAL(size_t{ 0 }, muted.Roots.size());
+    VERIFY_IS_TRUE(muted.Generators[0].FollowsClock);
+
+    // Muting the clock changes what routes, so a running patch picks it up.
+    VERIFY_ARE_NOT_EQUAL(graph.Signature, muted.Signature);
+}
+
+void RouteGraphTests::AClockStepOrADividerCanDriveAnLfo()
+{
+    PatchDocument patch{};
+    AddEndpoint(patch, L"synth");
+
+    AddBlock(patch, L"clock", BlockKind::ClockGenerator);
+    AddBlock(patch, L"half", BlockKind::ClockDivider);
+    AddBlock(patch, L"lfo", BlockKind::LfoGenerator);
+
+    Link(patch, L"1", L"clock", L"half");
+    Link(patch, L"2", L"half", L"lfo");
+    Link(patch, L"3", L"lfo", L"synth");
+    Link(patch, L"4", L"clock", L"synth");
+
+    auto const graph = Compile(patch);
+
+    VERIFY_IS_TRUE(graph.Problems.empty());
+    VERIFY_ARE_EQUAL(size_t{ 2 }, graph.Generators.size());
+
+    auto const clock = std::find_if(graph.Generators.begin(), graph.Generators.end(),
+        [](RouteGenerator const& generator) { return generator.Kind == BlockKind::ClockGenerator; });
+
+    VERIFY_IS_TRUE(clock != graph.Generators.end());
+
+    // Every pulse reaches the synth, and every other one the LFO.
+    RecordingSink sink{ graph };
+
+    for (int i = 0; i < 4; i++)
+    {
+        Generate(graph, *clock, System(0, 0xF8), sink);
+    }
+
+    VERIFY_ARE_EQUAL(size_t{ 4 }, SentTo(sink, L"dev-synth"));
+    VERIFY_ARE_EQUAL(size_t{ 2 }, sink.Clocked.size());
+
+    // A bypassed LFO doesn't run, so nothing leads to it and the divider has nowhere to send.
+    patch.Blocks[2].Bypassed = true;
+
+    auto const bypassed = Compile(patch);
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, bypassed.Generators.size());
+    VERIFY_ARE_EQUAL(uint32_t{ 1 }, bypassed.Generators[0].EdgeCount);
+    VERIFY_IS_TRUE(bypassed.ClockTargets.empty());
 }
 
 void RouteGraphTests::TheAgentGuideClockExampleRoutes()

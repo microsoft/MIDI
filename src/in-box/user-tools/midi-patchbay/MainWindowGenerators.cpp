@@ -518,6 +518,9 @@ namespace winrt::midipatchbay::implementation
                         s->UpdateBlockSummary();
                     });
 
+                // Kept for when the clock is taken away again.
+                tempo.IsEnabled(!LfoFollowsClock(m_editingBlockId));
+
                 row.Children().Append(tempo);
                 body.Children().Append(row);
 
@@ -943,6 +946,22 @@ namespace winrt::midipatchbay::implementation
         return controls::Border{};
     }
 
+    // An LFO with anything connected to its In follows that clock, the same rule the routing uses.
+    _Use_decl_annotations_
+    bool MainWindow::LfoFollowsClock(std::wstring const& blockId) noexcept
+    {
+        auto const* patch = CurrentPatch();
+        auto const* block = patch == nullptr ? nullptr : patch->FindBlock(blockId);
+
+        if (block == nullptr || !patchbay::IsGenerator(block->Kind) || !patchbay::HasInput(block->Kind))
+        {
+            return false;
+        }
+
+        return std::any_of(patch->Connections.begin(), patch->Connections.end(),
+            [&blockId](patchbay::PatchConnection const& link) { return link.DestinationId == blockId; });
+    }
+
     void MainWindow::RefreshGeneratorCaptions() noexcept
     {
         try
@@ -961,10 +980,19 @@ namespace winrt::midipatchbay::implementation
                 auto const& lfo = m_editingSettings.Lfo;
                 auto const seconds = lfo.BeatsPerCycle * 60.0 / (std::max)(lfo.BeatsPerMinute, 1.0);
 
-                m_lfoRateCaption.Text(resources::FormatString(L"GeneratorLfoRateCaptionFormat",
-                    patchbay::DescribeNumber(lfo.BeatsPerCycle, 3),
-                    patchbay::DescribeNumber(seconds, 2),
-                    patchbay::DescribeTempo(lfo.BeatsPerMinute)));
+                auto const counted = [](winrt::hstring const& number, std::wstring_view oneKey, std::wstring_view formatKey)
+                    {
+                        return number == L"1" ? resources::GetString(oneKey) : resources::FormatString(formatKey, number);
+                    };
+
+                auto const beats = counted(patchbay::DescribeNumber(lfo.BeatsPerCycle, 3), L"GeneratorBeatsOne", L"GeneratorBeatsFormat");
+
+                m_lfoRateCaption.Text(LfoFollowsClock(m_editingBlockId)
+                    ? resources::FormatString(L"GeneratorLfoFollowsClockCaptionFormat", beats)
+                    : resources::FormatString(L"GeneratorLfoRateCaptionFormat",
+                        beats,
+                        counted(patchbay::DescribeNumber(seconds, 2), L"GeneratorSecondsOne", L"GeneratorSecondsFormat"),
+                        patchbay::DescribeTempo(lfo.BeatsPerMinute)));
             }
 
             if (m_lfoIntervalCaption != nullptr)

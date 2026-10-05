@@ -12,9 +12,11 @@ needs step 1, 2 and the `$(ProjectDir)` part of step 4 below.
 must set `<PrecompiledHeader>NotUsing</PrecompiledHeader>` on its `ClCompile` entry. MIDI Player
 and MIDI Patchbay both use it, so the General MIDI names they show agree.
 
-The generators are shared too. `BeatClockGenerator` and `TimeCodeGenerator` take either an endpoint connection, which is how MIDI Clock and the console use them, or a `GeneratorSink` from `GeneratorSink.h`: a function that gets each message with its timestamp. MIDI Patchbay's clock and time code steps use the sink, so what they send goes through the patch's other steps on the way out. `LfoMessageGenerator` is MIDI Patchbay's LFO step, and sends through a sink the same way.
+The generators are shared too. `BeatClockGenerator` and `TimeCodeGenerator` take either an endpoint connection, which is how MIDI Clock and the console use them, or a `GeneratorSink` from `GeneratorSink.h`: a function that gets each message with its timestamp. MIDI Patchbay's clock and time code steps use the sink, so what they send goes through the patch's other steps on the way out. `LfoMessageGenerator` is MIDI Patchbay's LFO step, and sends through a sink the same way. It can follow a clock instead of its own tempo: hand it timing clock, start and song position with `ReceiveClock`.
 
 `LfoWave`, `LfoSweep` and `ChannelVoiceWords` are plain C++ like `GeneralMidi`, so a project marks them `NotUsing` and the unit tests compile them as they ship. `LfoWave` has the LFO shapes, the noise, and the names files use for them. `LfoSweep` says when each sample of a running LFO is due and where it falls in the cycle. `ChannelVoiceWords` builds MIDI 1.0 and MIDI 2.0 channel voice messages, including a single value as a control change, pitch bend, pressure, RPN or NRPN. MIDI Glass and MIDI Patchbay both use all three, so an LFO sweeps the same way in both apps.
+
+`ClockFollower` is plain C++ too. It keeps track of where an incoming MIDI clock has got to between its pulses, including pulses that arrive before the time they play, which is how `LfoMessageGenerator` follows a clock. Only MIDI Patchbay uses it so far.
 
 `EndpointCatalog` watches the live endpoints and answers "which live endpoint does this saved one
 mean". It owns `EndpointMatch`, `EndpointMatchMode` and `LiveEndpoint`, and it matches on criteria

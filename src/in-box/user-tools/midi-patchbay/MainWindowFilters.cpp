@@ -326,9 +326,14 @@ namespace winrt::midipatchbay::implementation
                             continue;
                         }
 
-                        if (patch->IsBlock(link.DestinationId))
+                        if (auto const* next = patch->FindBlock(link.DestinationId))
                         {
-                            pending.push_back(link.DestinationId);
+                            // What goes into an LFO doesn't come out of it.
+                            if (!patchbay::IsGenerator(next->Kind))
+                            {
+                                pending.push_back(link.DestinationId);
+                            }
+
                             continue;
                         }
 
@@ -1332,9 +1337,14 @@ namespace winrt::midipatchbay::implementation
                         continue;
                     }
 
-                    if (patch->IsBlock(link.SourceId))
+                    if (auto const* previous = patch->FindBlock(link.SourceId))
                     {
-                        pending.push_back(link.SourceId);
+                        // A generator sends its own messages, not what comes into it.
+                        if (!patchbay::IsGenerator(previous->Kind))
+                        {
+                            pending.push_back(link.SourceId);
+                        }
+
                         continue;
                     }
 

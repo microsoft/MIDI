@@ -15,8 +15,8 @@
 
 namespace glass
 {
-    // A fader dragged quickly produces a message per pointer move. A DIN cable carries about 350
-    // three byte messages a second, shared with everything else on that wire, so a continuous
+    // A fader dragged quickly produces a message per pointer move. A DIN cable carries about a
+    // thousand three-byte messages a second, shared with everything else on that wire, so a continuous
     // control needs a rate limit.
     //
     // The throttle sits on the value-changed notification rather than inside the engine, so one

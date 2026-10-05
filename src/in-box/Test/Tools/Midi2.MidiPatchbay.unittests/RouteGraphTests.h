@@ -29,7 +29,9 @@ public:
     TEST_METHOD(AConvertedPatchRoutesLikeVersion1);
     TEST_METHOD(AGeneratorStartsATreeOfItsOwn);
     TEST_METHOD(AGeneratorRunsOnlyWhenItLeadsSomewhere);
-    TEST_METHOD(NothingGoesIntoAGenerator);
+    TEST_METHOD(NothingGoesIntoAClockOrTimeCode);
+    TEST_METHOD(AnLfoFollowsTheClockConnectedToIt);
+    TEST_METHOD(AClockStepOrADividerCanDriveAnLfo);
 
     // The examples in docs/kb/midi-patchbay-patches-for-agents.md, word for word. If one of these
     // fails, the guide is telling agents to write something that doesn't do what it says.

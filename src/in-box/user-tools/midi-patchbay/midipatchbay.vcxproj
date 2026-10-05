@@ -180,6 +180,7 @@
     <ClInclude Include="..\midi-app-shared\LfoWave.h" />
     <ClInclude Include="..\midi-app-shared\LfoSweep.h" />
     <ClInclude Include="..\midi-app-shared\ChannelVoiceWords.h" />
+    <ClInclude Include="..\midi-app-shared\ClockFollower.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
     <ClInclude Include="..\midi-app-shared\AssistantPrompt.h" />
   </ItemGroup>
@@ -271,6 +272,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\midi-app-shared\ChannelVoiceWords.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\ClockFollower.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />

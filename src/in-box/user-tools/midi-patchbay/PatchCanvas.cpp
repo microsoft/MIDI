@@ -1100,8 +1100,8 @@ namespace midipatchbay
             {
                 bool const isOutput = side == 1;
 
-                // A generator makes its own messages, so it has nothing to take in.
-                if (!isOutput && IsGenerator(block.Kind))
+                // MIDI clock and MIDI Time Code make their own messages, so they take nothing in.
+                if (!isOutput && !HasInput(block.Kind))
                 {
                     continue;
                 }
@@ -2913,7 +2913,8 @@ namespace midipatchbay
 
             args.AcceptedOperation(transfer::DataPackageOperation::Copy);
 
-            // Only a block with a way in can go into a connection, so not a generator.
+            // A generator never goes into a connection. Even an LFO, which takes a clock in,
+            // passes nothing on.
             auto canInsert = false;
 
             if (isBlock)

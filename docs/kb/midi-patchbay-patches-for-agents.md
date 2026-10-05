@@ -39,7 +39,7 @@ On this page:
 ## What a patch is
 
 - A patch has **endpoints**: the devices on its canvas. A keyboard, a synth, a drum machine, or a loopback that leads to an app.
-- A patch has **steps**. Each step does one job, such as keeping out clock, letting only some notes through, or transposing. A step has one **In** and one **Out**. A generator has only an **Out**.
+- A patch has **steps**. Each step does one job, such as keeping out clock, letting only some notes through, or transposing. A step has one **In** and one **Out**. MIDI clock and MIDI Time Code have only an **Out**, and an LFO's **In** takes the clock it follows.
 - A patch has **connections**. Each one takes what comes out of an endpoint's or a step's **Out** and sends it to another endpoint's or step's **In**.
 - Messages go through the steps in the order the connections lead them. A chain of steps between a keyboard and a synth works like a cable with each step plugged in along the way.
 - When an **Out** has more than one connection, each connection gets its own copy of every message. What a step does to one copy doesn't change the others. When more than one connection goes into the same **In**, their messages are merged.
@@ -78,7 +78,7 @@ If the customer pasted a prompt from **Ask an AI assistant…** in Patchbay, it 
 | Does any device lose messages when a lot arrives at once, such as during a SysEx dump? | That's a message throttler step in front of it. Keeping out what it doesn't use, with a filter step, helps too. |
 | Should Patchbay send MIDI clock to some of the devices? At what tempo? Should it send Start and Stop? | That's a `clockGenerator` step, connected to each device that follows it. A device that should run at half speed gets the clock through a `clockDivider` step. |
 | Does a device need MIDI Time Code? At what frame rate, and from what time? | That's a `timeCodeGenerator` step. |
-| Should something move up and down by itself, such as a filter sweep or a wobble? Which controller, how fast, and over how much of its range? | That's an `lfoGenerator` step. |
+| Should something move up and down by itself, such as a filter sweep or a wobble? Which controller, how fast, and over how much of its range? Should it keep in step with a clock? | That's an `lfoGenerator` step. To keep it in step, connect the clock to its **In**. |
 | Should the patch start by itself whenever Patchbay starts? | The customer turns that on in Patchbay. Tell them where. |
 
 ### 2. Plan the steps and connections
@@ -119,6 +119,7 @@ Write the plan down as a list of paths before you write the file, such as "Keybo
 | One device at half the tempo of the others | A `clockDivider` step with `"divideBy": 2`, between the clock and that device. |
 | Time code at 25 frames per second, from one hour in | A `timeCodeGenerator` step with `"frameRate": 25, "startTime": "01:00:00:00"`. |
 | A slow filter sweep on controller 74, two bars long | An `lfoGenerator` step with `"wave": "triangle", "beatsPerCycle": 8, "message": "controlChange", "number": 74`. |
+| An LFO in step with a clock | A connection from the clock into the `lfoGenerator` step. The clock can be a `clockGenerator`, a `clockDivider`, or a device that sends MIDI clock. |
 
 The numbers are explained in [Step settings](#step-settings).
 
@@ -217,6 +218,7 @@ $stepKeys = @{
     lfoGenerator        = @('wave', 'beatsPerCycle', 'beatsPerMinute', 'lowestPercent', 'highestPercent', 'intervalMilliseconds', 'message', 'channel', 'number', 'group', 'midi1', 'returnToMiddle')
 }
 $generators = @('clockGenerator', 'timeCodeGenerator', 'lfoGenerator')
+$noInput = @('clockGenerator', 'timeCodeGenerator')
 
 Test-Keys $patch @('_comment', 'fileVersion', 'name', 'description', 'activateAtStartup', 'waitForSendComplete', 'created', 'modified', 'endpoints', 'blocks', 'connections') 'The patch'
 if ($patch.fileVersion -ne 2) { $problems.Add('fileVersion isn''t 2, so Patchbay reads this as an older patch and leaves out every step and connection.') }
@@ -345,7 +347,7 @@ foreach ($c in (Get-List $patch.connections)) {
     Test-Keys $c @('id', 'source', 'sourceGroup', 'destination', 'destinationGroup', 'muted') $where
     if (-not $c.source -or -not $c.destination -or -not $kinds.ContainsKey($c.source) -or -not $kinds.ContainsKey($c.destination)) { $problems.Add("$where names an endpoint or step that isn't in the patch, so Patchbay leaves it out."); continue }
     if ($c.source -ceq $c.destination) { $problems.Add("$where goes from something to itself, so Patchbay leaves it out."); continue }
-    if ($kinds[$c.destination] -cin $generators) { $problems.Add("$where goes into a generator, which has no In, so Patchbay leaves it out."); continue }
+    if ($kinds[$c.destination] -cin $noInput) { $problems.Add("$where goes into a $($kinds[$c.destination]) step, which has no In, so Patchbay leaves it out."); continue }
     if ($kinds[$c.source] -cne 'endpoint' -and $null -ne $c.sourceGroup) { $problems.Add("$where has a sourceGroup, but a step has one Out, so it's ignored.") }
     if ($kinds[$c.destination] -cne 'endpoint' -and $null -ne $c.destinationGroup) { $problems.Add("$where has a destinationGroup, but a step has one In, so it's ignored.") }
     if (-not (Test-Range $c.sourceGroup -1 15) -or -not (Test-Range $c.destinationGroup -1 15)) { $problems.Add("$where has a group outside -1 to 15. The file counts groups from 0, and -1 is all groups.") }
@@ -374,7 +376,7 @@ function Find-StepCircle([string]$Id) {
     $state[$Id] = 1
     if ($next.ContainsKey($Id)) {
         foreach ($to in $next[$Id]) {
-            if ($kinds[$to] -ceq 'endpoint') { continue }
+            if ($kinds[$to] -ceq 'endpoint' -or $kinds[$to] -cin $generators) { continue }   # what goes into an LFO goes no further
             if ($state.ContainsKey($to) -and $state[$to] -eq 1) { return $true }
             if (-not $state.ContainsKey($to) -and (Find-StepCircle $to)) { return $true }
         }
@@ -394,7 +396,7 @@ foreach ($id in @($kinds.Keys)) {
         if (-not $next.ContainsKey($current)) { continue }
         foreach ($to in $next[$current]) {
             if ($to -ceq $id) { $problems.Add("The endpoint '$id' sends its output back into its own input. Unless that only moves messages to another group, it floods the device."); $pending.Clear(); break }
-            if ($kinds[$to] -cne 'endpoint' -and $seen.Add($to)) { $pending.Push($to) }
+            if ($kinds[$to] -cne 'endpoint' -and $kinds[$to] -cnotin $generators -and $seen.Add($to)) { $pending.Push($to) }
         }
     }
 }
@@ -451,7 +453,7 @@ Tell the customer about these before they find out on their own.
 - **Patchbay can't reach inside another app.** To send to or receive from an app on the same PC, such as a DAW, the app and Patchbay both use a loopback. A patch file can name a loopback that already exists, but it can't make one. Make it first, with **Create loopback** in Patchbay or with MIDI Loopback Setup, then use its name in the patch.
 - **It can't turn one kind of message into another.** No notes into controllers, no controller into an NRPN, and no aftertouch into a controller. Steps move messages to another channel, group, note, controller, program, or bank, and reshape velocity, controller values, and aftertouch.
 - **No delays, echoes, arpeggios, or chords.** Only the generator steps make messages of their own: MIDI clock, MIDI Time Code, and an LFO.
-- **A generator doesn't follow anything.** It can't lock to a clock that comes in from a device, messages don't start or stop it, and an LFO doesn't follow a clock step's tempo. It runs whenever its patch is routing.
+- **MIDI clock and MIDI Time Code don't follow anything.** They can't lock to a clock that comes in from a device, and messages don't start or stop them. They run whenever their patch is routing. Only an LFO follows a clock, and only one connected to its **In**.
 - **It doesn't look inside system exclusive.** A message type filter lets it all through or keeps it all out. A message mask can't do better: a long system exclusive message is split into many packets, and a mask sees each packet on its own.
 - **Steps can't be connected in a circle.** A patch with steps in a circle doesn't route until the circle is broken.
 - **A filter's channels and notes only apply to messages that carry them.** Clock, for example, gets through a channel filter and a note filter.
@@ -581,7 +583,7 @@ The steps are in the `blocks` list.
 | `destinationGroup` | -1 to 15 | -1 | Only when `destination` is an endpoint. The group messages go to, counted from 0. -1 keeps each message's own group. |
 | `muted` | `true`, `false` | `false` | A muted connection passes nothing. Write `false`. |
 
-A connection is left out when it names an endpoint or step the patch doesn't have, when it goes from something to itself, when it goes into a generator, which has no **In**, or when it repeats another connection between the same two points with the same groups. A step has no groups, so `sourceGroup` and `destinationGroup` are ignored at a step's end of a connection.
+A connection is left out when it names an endpoint or step the patch doesn't have, when it goes from something to itself, when it goes into a MIDI clock or MIDI Time Code step, which has no **In**, or when it repeats another connection between the same two points with the same groups. A step has no groups, so `sourceGroup` and `destinationGroup` are ignored at a step's end of a connection.
 
 ### Where things go on the canvas
 
@@ -950,13 +952,13 @@ A customer who wants a different tempo for each project can keep one patch like 
 
 ### LFO
 
-`"type": "lfoGenerator"`. A generator: it has no **In**. Sweeps a value up and down for as long as the patch is routing, in the same shapes as an LFO control in MIDI Glass.
+`"type": "lfoGenerator"`. A generator. Sweeps a value up and down for as long as the patch is routing, in the same shapes as an LFO control in MIDI Glass.
 
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
 | `wave` | `sine`, `triangle`, `square`, `rampUp`, `rampDown`, `whiteNoise`, `pinkNoise`, `brownNoise`, `blueNoise` | `sine` | The shape. |
 | `beatsPerCycle` | 0.0625 to 64 | 4 | How long one pass takes, in beats. 4 is one bar of 4/4. Patchbay's settings offer 0.25, 0.5, 1, 1.5, 2, 3, 4, 8, 16, and 32. |
-| `beatsPerMinute` | 20 to 300 | 120 | The tempo the beats are counted at. |
+| `beatsPerMinute` | 20 to 300 | 120 | The tempo the beats are counted at, when no clock is connected to the LFO's **In**. |
 | `lowestPercent`, `highestPercent` | 0 to 100 | 0 and 100 | The two ends of the sweep, as a percentage of the message's whole range. A lowest above the highest turns the wave upside down. |
 | `intervalMilliseconds` | 5 to 1000 | 25 | How often it sends a new value. A value that hasn't changed isn't sent again. |
 | `message` | `controlChange`, `pitchBend`, `channelPressure`, `polyPressure`, `rpn`, `nrpn` | `controlChange` | What it sends. |
@@ -970,6 +972,12 @@ For example, a slow triangle sweep of controller 74 on channel 1, which many syn
 
 ```json
 { "id": "filter-sweep", "type": "lfoGenerator", "name": "Filter sweep", "x": 60, "y": 300, "settings": { "wave": "triangle", "beatsPerCycle": 8, "beatsPerMinute": 120, "lowestPercent": 20, "highestPercent": 80, "message": "controlChange", "channel": 0, "number": 74 } }
+```
+
+**An LFO that follows a clock.** An LFO has an **In**. Connect a clock to it, and the LFO follows that clock instead of `beatsPerMinute`. The clock can come from a `clockGenerator`, a `clockDivider`, or a device that sends MIDI clock. One pass takes `beatsPerCycle` beats of the clock, a Start from the clock puts the LFO back at the beginning of a pass, and when the clock stops, the LFO stops moving. Only timing clock, Start and Song Position reach the LFO, and nothing goes on from its **In**. A muted connection into the LFO still counts, so the LFO waits for the clock rather than running at its own tempo. For example, with the clock from the MIDI clock example above:
+
+```json
+{ "id": "clock-to-sweep", "source": "clock", "destination": "filter-sweep" }
 ```
 
 ## Mistakes that are easy to miss
@@ -995,8 +1003,9 @@ For example, a slow triangle sweep of controller 74 on channel 1, which many syn
 > - A message type filter keeps out control changes, which also keeps out a MIDI 1.0 device's sustain pedal, mod wheel, RPNs, and NRPNs.
 > - A throttler is put on the way out of the device that loses data, instead of in front of it.
 > - A connection is supposed to reach an app, but the patch names a loopback that doesn't exist yet.
-> - A connection goes into a generator. A generator has no **In**, so the connection is left out.
+> - A connection goes into a `clockGenerator` or `timeCodeGenerator` step. They have no **In**, so the connection is left out.
+> - Something other than a clock is connected to an LFO's **In**, such as a keyboard that doesn't send clock. The LFO then waits for a clock that never comes, and doesn't move.
 > - A generator's `channel` or `group` is counted from 1. Channel 1 is `0` in the file.
 > - An LFO's `number` doesn't match its `message`. For `rpn` and `nrpn` it's the bank times 128 plus the index, so RPN 0, 0 is `0` and NRPN 1, 5 is `133`.
-> - A clock and an LFO that should play together have different `beatsPerMinute`. Each generator keeps its own tempo.
+> - A clock and an LFO that should play together aren't connected. Each keeps its own `beatsPerMinute` until the clock is connected to the LFO's **In**.
 > - The patch depends on something in [What Patchbay can't do](#what-patchbay-cant-do).

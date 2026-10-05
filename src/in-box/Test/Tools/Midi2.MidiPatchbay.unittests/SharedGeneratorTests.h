@@ -22,4 +22,8 @@ public:
     TEST_METHOD(KindsAndWavesReadBackFromTheirKeys);
     TEST_METHOD(ASweepKeepsItsPlaceWhenItsTempoChanges);
     TEST_METHOD(ASweepStartsAgainAfterALongStall);
+    TEST_METHOD(AFollowerMovesBetweenPulses);
+    TEST_METHOD(AFollowerTakesPulsesBeforeTheyPlay);
+    TEST_METHOD(AFollowerStartsAgainOnStartAndSongPosition);
+    TEST_METHOD(AFollowerSitsOutAPause);
 };

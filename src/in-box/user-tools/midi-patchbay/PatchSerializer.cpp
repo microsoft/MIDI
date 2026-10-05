@@ -381,9 +381,9 @@ namespace midipatchbay
                     continue;
                 }
 
-                // A generator has no way in to draw it to.
+                // MIDI clock and MIDI Time Code have no way in to draw it to.
                 if (auto const* destination = patch.FindBlock(connection.DestinationId);
-                    destination != nullptr && IsGenerator(destination->Kind))
+                    destination != nullptr && !HasInput(destination->Kind))
                 {
                     continue;
                 }

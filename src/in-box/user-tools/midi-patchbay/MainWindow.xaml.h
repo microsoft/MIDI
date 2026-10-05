@@ -239,6 +239,7 @@ namespace winrt::midipatchbay::implementation
         void ApplyStartTimeText() noexcept;
         void RefreshLfoMessageUi() noexcept;
         void RefreshGeneratorCaptions() noexcept;
+        bool LfoFollowsClock(_In_ std::wstring const& blockId) noexcept;
 
         // The mapping tables are edited the same way, so one set of row functions drives them all.
         controls::StackPanel BuildMapSection(_In_ TransformMap which) noexcept;

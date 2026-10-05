@@ -619,6 +619,12 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
+    bool HasInput(BlockKind kind) noexcept
+    {
+        return kind != BlockKind::ClockGenerator && kind != BlockKind::TimeCodeGenerator;
+    }
+
+    _Use_decl_annotations_
     std::wstring_view BlockKindKey(BlockKind kind) noexcept
     {
         for (auto const& info : Kinds)

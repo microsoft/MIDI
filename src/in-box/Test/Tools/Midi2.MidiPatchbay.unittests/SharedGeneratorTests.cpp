@@ -9,6 +9,7 @@
 #include "TestMessages.h"
 
 #include "ChannelVoiceWords.h"
+#include "ClockFollower.h"
 #include "LfoSweep.h"
 #include "LfoWave.h"
 
@@ -161,4 +162,120 @@ void SharedGeneratorTests::ASweepStartsAgainAfterALongStall()
 
     // Early is never a stall.
     VERIFY_IS_FALSE(sweep.CatchUp(0));
+}
+
+void SharedGeneratorTests::AFollowerMovesBetweenPulses()
+{
+    midiapp::ClockFollower clock{};
+
+    // Nothing to follow before the first pulse.
+    VERIFY_IS_FALSE(clock.PulsesAt(1000).has_value());
+    VERIFY_ARE_EQUAL(uint64_t{ 0 }, clock.KnownUntil());
+
+    clock.Pulse(1000);
+    clock.Pulse(1100);
+    clock.Pulse(1200);
+
+    VERIFY_ARE_EQUAL(uint64_t{ 100 }, clock.PulseInterval());
+    VERIFY_IS_FALSE(clock.PulsesAt(999).has_value());
+    VERIFY_IS_TRUE(Near(0.5, clock.PulsesAt(1050).value()));
+    VERIFY_IS_TRUE(Near(1.25, clock.PulsesAt(1125).value()));
+
+    // Past the last pulse it carries on at the same pace, but never as far as a pulse that
+    // hasn't come, so a clock that stops leaves it where it got to.
+    VERIFY_IS_TRUE(Near(2.5, clock.PulsesAt(1250).value()));
+    VERIFY_IS_TRUE(Near(3.0, clock.PulsesAt(1300).value()));
+    VERIFY_IS_TRUE(Near(3.0, clock.PulsesAt(5000).value()));
+    VERIFY_ARE_EQUAL(uint64_t{ 1300 }, clock.KnownUntil());
+}
+
+void SharedGeneratorTests::AFollowerTakesPulsesBeforeTheyPlay()
+{
+    // A clock generator hands over its pulses ahead of time, each with the time it plays.
+    midiapp::ClockFollower clock{};
+
+    for (uint64_t i = 0; i < 6; i++)
+    {
+        clock.Pulse(1000 + i * 100);
+    }
+
+    VERIFY_IS_TRUE(Near(0.0, clock.PulsesAt(1000).value()));
+    VERIFY_IS_TRUE(Near(2.5, clock.PulsesAt(1250).value()));
+    VERIFY_ARE_EQUAL(uint64_t{ 1600 }, clock.KnownUntil());
+
+    // Swung pulses are followed as they come, rather than evened out.
+    midiapp::ClockFollower swung{};
+
+    swung.Pulse(0);
+    swung.Pulse(130);
+    swung.Pulse(200);
+
+    VERIFY_IS_TRUE(Near(1.5, swung.PulsesAt(165).value()));
+
+    // Pulses handed over for after a start belong to the run it replaces.
+    clock.Start(1250);
+
+    VERIFY_IS_TRUE(Near(2.1, clock.PulsesAt(1210).value()));
+
+    clock.Pulse(1260);
+
+    VERIFY_IS_TRUE(Near(0.0, clock.PulsesAt(1260).value()));
+}
+
+void SharedGeneratorTests::AFollowerStartsAgainOnStartAndSongPosition()
+{
+    midiapp::ClockFollower clock{};
+
+    for (uint64_t i = 0; i < 4; i++)
+    {
+        clock.Pulse(1000 + i * 100);
+    }
+
+    // After a start the next pulse is the top again. Until it plays, the run before holds
+    // where it got to.
+    clock.Start(1350);
+    clock.Pulse(1400);
+    clock.Pulse(1500);
+
+    VERIFY_IS_TRUE(Near(3.2, clock.PulsesAt(1320).value()));
+    VERIFY_IS_TRUE(Near(3.9, clock.PulsesAt(1390).value()));
+    VERIFY_IS_TRUE(Near(0.0, clock.PulsesAt(1400).value()));
+    VERIFY_IS_TRUE(Near(0.5, clock.PulsesAt(1450).value()));
+
+    // A song position counts in sixteenths, six pulses each.
+    clock.SongPosition(1550, 4);
+    clock.Pulse(1600);
+
+    VERIFY_IS_TRUE(Near(24.0, clock.PulsesAt(1600).value()));
+    VERIFY_IS_TRUE(Near(24.5, clock.PulsesAt(1650).value()));
+}
+
+void SharedGeneratorTests::AFollowerSitsOutAPause()
+{
+    midiapp::ClockFollower clock{};
+
+    for (uint64_t i = 0; i < 4; i++)
+    {
+        clock.Pulse(i * 100);
+    }
+
+    // A pause, then the same pace again. The gap isn't taken for a tempo.
+    clock.Pulse(10'000);
+    clock.Pulse(10'100);
+
+    VERIFY_ARE_EQUAL(uint64_t{ 100 }, clock.PulseInterval());
+
+    // One long gap could be a hiccup. The same gap twice is a new tempo.
+    clock.Pulse(10'400);
+
+    VERIFY_ARE_EQUAL(uint64_t{ 100 }, clock.PulseInterval());
+
+    clock.Pulse(10'700);
+
+    VERIFY_ARE_EQUAL(uint64_t{ 300 }, clock.PulseInterval());
+
+    // Out of order, from two clocks at once, is held to the last time rather than trusted.
+    clock.Pulse(5);
+
+    VERIFY_ARE_EQUAL(uint64_t{ 11'000 }, clock.KnownUntil());
 }

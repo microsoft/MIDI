@@ -41,6 +41,9 @@ namespace midipatchbay
 
         // Sends the message to a destination endpoint.
         Leaf = 3,
+
+        // Hands timing to an LFO that follows a clock. Nothing goes on from here.
+        ClockInput = 4,
     };
 
     // A link into a stage. The cell is the link's own counters.
@@ -55,7 +58,8 @@ namespace midipatchbay
         RouteStageKind Kind{ RouteStageKind::PassThrough };
         BlockKind Block{ BlockKind::MessageTypeFilter };
 
-        // Block: which settings. Leaf: which leaf. Throttle: which throttle.
+        // Block: which settings. Leaf: which leaf. Throttle: which throttle. ClockInput: which of
+        // RouteGraph::ClockTargets.
         uint32_t Index{ 0 };
 
         // The block's counters. Unused for a leaf, which counts on its link.
@@ -112,6 +116,10 @@ namespace midipatchbay
         uint32_t Settings{ 0 };
         uint32_t Cell{ 0 };
 
+        // An LFO with anything connected to its In follows that clock, even while the connection
+        // is muted or its source is missing, rather than its own tempo.
+        bool FollowsClock{ false };
+
         uint32_t FirstEdge{ 0 };
         uint32_t EdgeCount{ 0 };
     };
@@ -162,6 +170,9 @@ namespace midipatchbay
         // each step rather than each path, so the engine can keep it when the graph changes.
         std::vector<uint32_t> States{};
 
+        // The LFOs that clock inputs feed, by generator key. One that isn't running gets nothing.
+        std::vector<std::wstring> ClockTargets{};
+
         std::vector<RouteProblem> Problems{};
 
         // Equal for two graphs that route the same way, so applying an unchanged plan does
@@ -196,6 +207,12 @@ namespace midipatchbay
 
         // A clock divider's count. Null leaves the clock undivided.
         virtual std::atomic<uint32_t>* StateOf(_In_ uint32_t state) noexcept = 0;
+
+        // Timing clock, start or song position on its way into an LFO that follows it.
+        virtual void Clock(
+            _In_ uint32_t target,
+            _In_reads_(wordCount) uint32_t const* words,
+            _In_ uint8_t wordCount) noexcept = 0;
     };
 
     // Sends one message down one link and everything after it. Every branch works on its own

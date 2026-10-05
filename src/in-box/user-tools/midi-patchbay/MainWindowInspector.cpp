@@ -195,9 +195,12 @@ namespace winrt::midipatchbay::implementation
                         return resources::GetString(L"ActivityGeneratorNotConnected");
                     }
 
-                    return found == m_activity.end()
-                        ? resources::GetString(L"ActivityNothingSentYet")
-                        : resources::FormatString(L"ActivitySentFormat", found->second.MessagesForwarded);
+                    if (found == m_activity.end() || found->second.MessagesForwarded == 0)
+                    {
+                        return resources::GetString(LfoFollowsClock(elementId) ? L"ActivityWaitingForClock" : L"ActivityNothingSentYet");
+                    }
+
+                    return resources::FormatString(L"ActivitySentFormat", found->second.MessagesForwarded);
                 }
 
                 if (found == m_activity.end())

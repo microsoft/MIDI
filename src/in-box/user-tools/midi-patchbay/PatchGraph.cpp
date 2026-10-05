@@ -153,6 +153,13 @@ namespace midipatchbay
                 auto const source = sourceIt->second;
                 auto const destination = destinationIt->second;
 
+                // What goes into an LFO is the clock it follows, and what comes out is its own
+                // sweep, so nothing that goes in can come round again.
+                if (builder.IsBlock(destination) && IsGenerator(patch.Blocks[destination - builder.EndpointCount].Kind))
+                {
+                    continue;
+                }
+
                 PatchBlock const* sourceBlock = builder.IsBlock(source)
                     ? &patch.Blocks[source - builder.EndpointCount]
                     : nullptr;

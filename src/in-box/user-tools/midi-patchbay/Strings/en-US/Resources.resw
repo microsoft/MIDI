@@ -2474,7 +2474,7 @@
     <value>Sends MIDI Time Code from a start time you set, for as long as the patch is routing.</value>
   </data>
   <data name="BlockHintLfoGenerator" xml:space="preserve">
-    <value>Sweeps a controller, pitch bend, aftertouch, or an RPN or NRPN up and down in a shape you pick, for as long as the patch is routing.</value>
+    <value>Sweeps a controller, pitch bend, aftertouch, or an RPN or NRPN up and down in a shape you pick, for as long as the patch is routing. Connect a clock to its In to keep it in step with that clock.</value>
   </data>
   <data name="BlockHintClockDivider" xml:space="preserve">
     <value>Lets one MIDI clock pulse in every few through, so a device runs at half the tempo, a third, and so on.</value>
@@ -2648,7 +2648,14 @@
     <value>When this is on, the step sends nothing. Use it to silence the step without taking it out of the patch.</value>
   </data>
   <data name="ConnectionIntoGeneratorRejected" xml:space="preserve">
-    <value>A generator makes its own messages, so nothing can be connected into it.</value>
+    <value>MIDI clock and MIDI Time Code steps make their own messages, so nothing can be connected into them.</value>
+  </data>
+  <data name="ActivityWaitingForClock" xml:space="preserve">
+    <value>Waiting for a clock at its In</value>
+  </data>
+  <data name="GeneratorLfoFollowsClockCaptionFormat" xml:space="preserve">
+    <value>{0} of the clock connected to its In, so the tempo here isn't used. A Start from that clock puts the sweep back at the beginning of a pass.</value>
+    <comment>{0} is a number of beats, such as "4 beats" or "1 beat".</comment>
   </data>
   <data name="GeneratorSectionTempo" xml:space="preserve">
     <value>Tempo</value>
@@ -2728,8 +2735,22 @@
     <value>One pass takes</value>
   </data>
   <data name="GeneratorLfoRateCaptionFormat" xml:space="preserve">
-    <value>{0} beats, which is about {1} seconds at {2} BPM. A change here takes effect while the patch is routing.</value>
-    <comment>{0} is a number of beats, {1} a number of seconds, {2} a tempo in beats per minute.</comment>
+    <value>{0}, which is about {1} at {2} BPM. A change here takes effect while the patch is routing.</value>
+    <comment>{0} is a number of beats, such as "4 beats", {1} a number of seconds, such as "2 seconds", and {2} a tempo in beats per minute.</comment>
+  </data>
+  <data name="GeneratorBeatsOne" xml:space="preserve">
+    <value>1 beat</value>
+  </data>
+  <data name="GeneratorBeatsFormat" xml:space="preserve">
+    <value>{0} beats</value>
+    <comment>{0} is a number other than 1, such as "4" or "0.25".</comment>
+  </data>
+  <data name="GeneratorSecondsOne" xml:space="preserve">
+    <value>1 second</value>
+  </data>
+  <data name="GeneratorSecondsFormat" xml:space="preserve">
+    <value>{0} seconds</value>
+    <comment>{0} is a number other than 1, such as "2" or "0.5".</comment>
   </data>
   <data name="GeneratorSectionRange" xml:space="preserve">
     <value>Range</value>
