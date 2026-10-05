@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midisoundfontsynth.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midisoundfontsynth"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid"
+          Loaded="OnRootLoaded"
+          Background="Transparent">
+
+        <Grid.Resources>
+            <!-- ================================ One synth ================================ -->
+            <DataTemplate x:Key="SynthCardTemplate" x:DataType="local:SynthItem">
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="14,8,8,12"
+                        AutomationProperties.Name="{x:Bind AccessibleName, Mode=OneWay}">
+                    <Grid RowSpacing="6">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!-- name, connected and the menu -->
+                        <Grid Grid.Row="0" ColumnSpacing="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="NoWrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                       Text="{x:Bind Name, Mode=OneWay}" />
+
+                            <FontIcon Grid.Column="1"
+                                      x:Uid="InUseIcon"
+                                      Glyph="&#xE71B;"
+                                      FontSize="14"
+                                      VerticalAlignment="Center"
+                                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                      Visibility="{x:Bind InUseVisibility, Mode=OneWay}" />
+
+                            <Button Grid.Column="2"
+                                    Width="32"
+                                    Height="32"
+                                    Padding="0"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Tag="{x:Bind Id}"
+                                    AutomationProperties.Name="{x:Bind MoreAccessibleName, Mode=OneWay}"
+                                    Click="OnMoreClick">
+                                <FontIcon Glyph="&#xE712;" FontSize="14" />
+                            </Button>
+                        </Grid>
+
+                        <!-- the bank -->
+                        <TextBlock Grid.Row="1"
+                                   TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   ToolTipService.ToolTip="{x:Bind FilePath, Mode=OneWay}"
+                                   Text="{x:Bind FileName, Mode=OneWay}" />
+
+                        <TextBlock Grid.Row="2"
+                                   TextWrapping="Wrap"
+                                   MaxLines="2"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Visibility="{x:Bind DetailVisibility, Mode=OneWay}"
+                                   Text="{x:Bind DetailText, Mode=OneWay}" />
+
+                        <!-- what it is doing. A grid, not a horizontal stack panel, so a long
+                             message wraps inside the card instead of being cut off. -->
+                        <Grid Grid.Row="3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <ProgressRing Grid.Column="0"
+                                          Width="14"
+                                          Height="14"
+                                          Margin="0,1,6,0"
+                                          VerticalAlignment="Top"
+                                          Visibility="{x:Bind BusyVisibility, Mode=OneWay}"
+                                          IsActive="{x:Bind IsBusy, Mode=OneWay}" />
+                            <FontIcon Grid.Column="1"
+                                      Glyph="&#xE7BA;"
+                                      FontSize="12"
+                                      Margin="0,2,6,0"
+                                      VerticalAlignment="Top"
+                                      Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                      Visibility="{x:Bind WarningVisibility, Mode=OneWay}" />
+                            <TextBlock Grid.Column="2"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Text="{x:Bind StatusText, Mode=OneWay}" />
+                        </Grid>
+
+                        <!-- level -->
+                        <Grid Grid.Row="4" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="64" />
+                            </Grid.ColumnDefinitions>
+
+                            <FontIcon Grid.Column="0"
+                                      Glyph="&#xE767;"
+                                      FontSize="14"
+                                      VerticalAlignment="Center"
+                                      Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                            <Slider Grid.Column="1"
+                                    Minimum="-60"
+                                    Maximum="12"
+                                    StepFrequency="0.5"
+                                    SmallChange="0.5"
+                                    LargeChange="3"
+                                    IsThumbToolTipEnabled="False"
+                                    VerticalAlignment="Center"
+                                    Tag="{x:Bind Id}"
+                                    AutomationProperties.Name="{x:Bind VolumeAccessibleName, Mode=OneWay}"
+                                    Value="{x:Bind VolumeDb, Mode=OneWay}"
+                                    ValueChanged="OnVolumeChanged" />
+
+                            <TextBlock Grid.Column="2"
+                                       VerticalAlignment="Center"
+                                       TextAlignment="Right"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Text="{x:Bind VolumeText, Mode=OneWay}" />
+                        </Grid>
+
+                        <!-- on or off, and how busy -->
+                        <Grid Grid.Row="5" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <ToggleSwitch Grid.Column="0"
+                                          MinWidth="0"
+                                          OnContent=""
+                                          OffContent=""
+                                          Tag="{x:Bind Id}"
+                                          AutomationProperties.Name="{x:Bind ToggleAccessibleName, Mode=OneWay}"
+                                          IsOn="{x:Bind IsOn, Mode=OneWay}"
+                                          Toggled="OnSynthToggled" />
+
+                            <TextBlock Grid.Column="1"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Right"
+                                       Margin="0,0,6,0"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Text="{x:Bind VoicesText, Mode=OneWay}" />
+                        </Grid>
+                    </Grid>
+                </Border>
+            </DataTemplate>
+        </Grid.Resources>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- hidden when a system backdrop is in use, so the material shows through -->
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <!-- a separate layer, so switching back to the default color just hides it and the
+             theme bound fill underneath returns -->
+        <Border x:Name="WindowTint"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Visibility="Collapsed" />
+
+        <!-- ============================ Title bar drag region ============================ -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <!-- Spans every column so it sits in the middle of the window. Not hit testable, so
+                 it stays part of the drag region. Hidden when this is not a preview build. -->
+            <Grid x:Name="PreviewChiclet"
+                  Grid.Column="0"
+                  Grid.ColumnSpan="5"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Height="18"
+                  IsHitTestVisible="False">
+                <!-- A shape, not a Border: a Border snaps its corner radius to whole pixels
+                     along with its bounds, so at 125% scaling the arc comes out stepped. -->
+                <Rectangle RadiusX="9"
+                           RadiusY="9"
+                           StrokeThickness="1"
+                           UseLayoutRounding="False"
+                           Stroke="{ThemeResource SystemFillColorCautionBrush}"
+                           Fill="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
+                <TextBlock x:Name="PreviewChicletText"
+                           x:Uid="PreviewChicletText"
+                           Text="PREVIEW"
+                           FontSize="10"
+                           FontWeight="SemiBold"
+                           Margin="9,0,9,0"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+            </Grid>
+
+            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
+                <StackPanel.Resources>
+                    <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
+                </StackPanel.Resources>
+
+                <ToggleButton x:Name="SettingsToggle"
+                              x:Uid="SettingsToggle"
+                              AutomationProperties.AutomationId="SettingsToggle"
+                              Width="46"
+                              Height="32"
+                              Padding="0"
+                              BorderThickness="0"
+                              Click="OnSettingsToggleClick">
+                    <FontIcon Glyph="&#xE713;" FontSize="14" />
+                </ToggleButton>
+
+                <ToggleButton x:Name="AlwaysOnTopToggle"
+                              x:Uid="AlwaysOnTopToggle"
+                              AutomationProperties.AutomationId="AlwaysOnTopToggle"
+                              Width="46"
+                              Height="32"
+                              Padding="0"
+                              BorderThickness="0"
+                              Click="OnAlwaysOnTopToggled">
+                    <FontIcon Glyph="&#xE718;" FontSize="14" />
+                </ToggleButton>
+            </StackPanel>
+        </Grid>
+
+        <!-- =================================== Notices =================================== -->
+        <InfoBar x:Name="NoticeBar"
+                 Grid.Row="1"
+                 Margin="16,0,16,8"
+                 IsOpen="False"
+                 IsClosable="True" />
+
+        <!-- ================================== The synths ================================== -->
+        <ScrollViewer x:Name="SynthScroller"
+                      Grid.Row="2"
+                      Padding="16,4,16,12"
+                      HorizontalScrollMode="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <muxc:ItemsRepeater x:Name="SynthRepeater"
+                                AutomationProperties.AutomationId="SynthRepeater"
+                                ItemTemplate="{StaticResource SynthCardTemplate}">
+                <muxc:ItemsRepeater.Layout>
+                    <muxc:UniformGridLayout MinItemWidth="300"
+                                            MinItemHeight="196"
+                                            MinColumnSpacing="12"
+                                            MinRowSpacing="12"
+                                            ItemsStretch="Fill" />
+                </muxc:ItemsRepeater.Layout>
+            </muxc:ItemsRepeater>
+        </ScrollViewer>
+
+        <StackPanel x:Name="EmptyStatePanel"
+                    Grid.Row="2"
+                    Spacing="8"
+                    Visibility="Collapsed"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+            <FontIcon Glyph="&#xEC4F;" FontSize="32" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <TextBlock x:Uid="EmptyStateTitle"
+                       HorizontalAlignment="Center"
+                       Style="{ThemeResource SubtitleTextBlockStyle}" />
+            <TextBlock x:Uid="EmptyStateDescription"
+                       HorizontalAlignment="Center"
+                       MaxWidth="440"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
+
+        <!-- ================================= Command bar ================================= -->
+        <Border Grid.Row="3"
+                Padding="16,10,16,12"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" MinWidth="40" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Button x:Name="AddSynthButton"
+                        x:Uid="AddSynthButton"
+                        Grid.Column="0"
+                        Style="{ThemeResource AccentButtonStyle}"
+                        AutomationProperties.AutomationId="AddSynthButton"
+                        Click="OnAddSynthClick">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE710;" FontSize="12" />
+                        <TextBlock x:Uid="AddSynthButtonText" />
+                    </StackPanel>
+                </Button>
+
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            VerticalAlignment="Center">
+                    <FontIcon x:Name="AudioStatusIcon"
+                              Glyph="&#xE7F5;"
+                              FontSize="14"
+                              VerticalAlignment="Center"
+                              Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock x:Name="AudioStatusTextBlock"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                </StackPanel>
+
+                <Button x:Name="SilenceButton"
+                        x:Uid="SilenceButton"
+                        Grid.Column="2"
+                        AutomationProperties.AutomationId="SilenceButton"
+                        Click="OnSilenceClick">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE74F;" FontSize="12" />
+                        <TextBlock x:Uid="SilenceButtonText" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- =================================== Dialogs =================================== -->
+        <ContentDialog x:Name="RenameDialog"
+                       x:Uid="RenameDialog"
+                       DefaultButton="Primary">
+            <StackPanel Spacing="8" MinWidth="320">
+                <TextBox x:Name="RenameTextBox"
+                         x:Uid="RenameTextBox"
+                         MaxLength="31"
+                         TextChanged="OnRenameTextChanged" />
+                <TextBlock x:Uid="RenameHint"
+                           TextWrapping="Wrap"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Style="{ThemeResource CaptionTextBlockStyle}" />
+            </StackPanel>
+        </ContentDialog>
+
+        <ContentDialog x:Name="RemoveDialog"
+                       x:Uid="RemoveDialog"
+                       DefaultButton="Close">
+            <TextBlock x:Name="RemoveDialogText" TextWrapping="Wrap" />
+        </ContentDialog>
+
+        <ContentDialog x:Name="ExitDialog"
+                       x:Uid="ExitDialog"
+                       DefaultButton="Close">
+            <TextBlock x:Name="ExitDialogText" TextWrapping="Wrap" />
+        </ContentDialog>
+    </Grid>
+</Window>
