@@ -77,6 +77,13 @@ namespace midiapp
         m_ticksPerPulse = TicksPerPulseForTempo(m_options.BeatsPerMinute);
     }
 
+    _Use_decl_annotations_
+    BeatClockGenerator::BeatClockGenerator(GeneratorSink sink, BeatClockGeneratorOptions options) :
+        BeatClockGenerator(clockmidi::MidiEndpointConnection{ nullptr }, std::move(options))
+    {
+        m_sink = std::move(sink);
+    }
+
     BeatClockGenerator::~BeatClockGenerator()
     {
         Stop();
@@ -302,7 +309,14 @@ namespace midiapp
         {
             for (size_t index = 0; index < m_clockWords.size(); index++)
             {
-                m_connection.SendSingleMessageWords(timestamp, words[index]);
+                if (m_sink)
+                {
+                    m_sink(timestamp, &words[index], 1);
+                }
+                else
+                {
+                    m_connection.SendSingleMessageWords(timestamp, words[index]);
+                }
             }
         }
         catch (...)

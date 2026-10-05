@@ -85,38 +85,6 @@ namespace glass
         }
     }
 
-    _Use_decl_annotations_
-    uint32_t ScaleToBits(double fraction, uint32_t bits) noexcept
-    {
-        if (!std::isfinite(fraction) || bits == 0 || bits > 32)
-        {
-            return 0;
-        }
-
-        auto const clamped = std::clamp(fraction, 0.0, 1.0);
-
-        // The top of the range, not one short of it. A fader pushed all the way up has to send
-        // 127, not 126, or every layout is quietly a little bit wrong at the top.
-        auto const maximum = (bits >= 32)
-            ? 4294967295.0
-            : static_cast<double>((1u << bits) - 1u);
-
-        return static_cast<uint32_t>(std::llround(clamped * maximum));
-    }
-
-    _Use_decl_annotations_
-    uint32_t ClampToBits(double value, uint32_t bits) noexcept
-    {
-        if (!std::isfinite(value) || value <= 0.0 || bits == 0 || bits > 32)
-        {
-            return 0;
-        }
-
-        auto const maximum = (bits >= 32) ? 4294967295.0 : static_cast<double>((1u << bits) - 1u);
-
-        return static_cast<uint32_t>(std::llround((std::min)(value, maximum)));
-    }
-
     namespace
     {
         double FieldMaximum(_In_ uint32_t bits) noexcept
@@ -241,42 +209,6 @@ namespace glass
         }
 
         return static_cast<uint32_t>(std::llround(std::clamp(raw, 0.0, maximum)));
-    }
-
-    _Use_decl_annotations_
-    uint32_t BuildMidi1ChannelVoice(
-        uint8_t group,
-        uint8_t status,
-        uint8_t channel,
-        uint8_t data1,
-        uint8_t data2) noexcept
-    {
-        return (MessageTypeMidi1ChannelVoice << 28)
-            | (static_cast<uint32_t>(group & 0x0F) << 24)
-            | (static_cast<uint32_t>(status & 0x0F) << 20)
-            | (static_cast<uint32_t>(channel & 0x0F) << 16)
-            | (static_cast<uint32_t>(data1 & 0x7F) << 8)
-            | static_cast<uint32_t>(data2 & 0x7F);
-    }
-
-    _Use_decl_annotations_
-    void BuildMidi2ChannelVoice(
-        uint8_t group,
-        uint8_t status,
-        uint8_t channel,
-        uint8_t index1,
-        uint8_t index2,
-        uint32_t data,
-        uint32_t* words) noexcept
-    {
-        words[0] = (MessageTypeMidi2ChannelVoice << 28)
-            | (static_cast<uint32_t>(group & 0x0F) << 24)
-            | (static_cast<uint32_t>(status & 0x0F) << 20)
-            | (static_cast<uint32_t>(channel & 0x0F) << 16)
-            | (static_cast<uint32_t>(index1) << 8)
-            | static_cast<uint32_t>(index2);
-
-        words[1] = data;
     }
 
     _Use_decl_annotations_

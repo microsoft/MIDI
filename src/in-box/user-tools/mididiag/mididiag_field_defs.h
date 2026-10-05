@@ -133,6 +133,17 @@
 #define MIDIDIAG_FIELD_LABEL_CONNECTED_NETWORK                           L"connected_network"
 #define MIDIDIAG_FIELD_LABEL_FIREWALL_PROFILE                            L"firewall_profile"
 #define MIDIDIAG_FIELD_LABEL_FIREWALL_RULE                               L"midisrv_firewall_rule"
+#define MIDIDIAG_FIELD_LABEL_NETWORK_ADAPTER                             L"network_adapter"
+
+#define MIDIDIAG_SECTION_LABEL_MDNS                                      L"mdns"
+#define MIDIDIAG_FIELD_LABEL_DNS_CLIENT_SERVICE                          L"dns_client_service"
+#define MIDIDIAG_FIELD_LABEL_MDNS_SETTING                                L"mdns_setting"
+#define MIDIDIAG_FIELD_LABEL_MDNS_FIREWALL_RULE                          L"mdns_firewall_rule"
+#define MIDIDIAG_FIELD_LABEL_MDNS_PORT_USER                              L"mdns_port_user"
+
+#define MIDIDIAG_SECTION_LABEL_NETWORK_HISTORY                           L"network_history"
+#define MIDIDIAG_FIELD_LABEL_NETWORK_EVENT_COUNT                         L"network_event_count"
+#define MIDIDIAG_FIELD_LABEL_NETWORK_EVENT                               L"network_event"
 
 #define MIDIDIAG_SECTION_LABEL_MIDI1_API_INPUT_ENDPOINTS                 L"enum_winrt_midi1_api_input_ports"
 #define MIDIDIAG_SECTION_LABEL_MIDI1_API_OUTPUT_ENDPOINTS                L"enum_winrt_midi1_api_output_ports"
@@ -223,6 +234,8 @@
 #define MIDIDIAG_FIELD_LABEL_ADVERTISED_HOST                             L"advertised_host"
 #define MIDIDIAG_FIELD_LABEL_SAVED_HOST                                  L"saved_host"
 #define MIDIDIAG_FIELD_LABEL_SAVED_CLIENT                                L"saved_client"
+#define MIDIDIAG_FIELD_LABEL_TRANSPORT_SETTINGS                          L"transport_settings"
+#define MIDIDIAG_FIELD_LABEL_ADVERTISING_CHECK                           L"advertising_check"
 
 #define MIDIDIAG_SECTION_LABEL_LOOPBACK                                  L"transport_loopback"
 #define MIDIDIAG_SECTION_LABEL_BASIC_LOOPBACK                            L"transport_basic_loopback"

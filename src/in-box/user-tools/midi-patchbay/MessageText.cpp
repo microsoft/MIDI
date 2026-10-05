@@ -1,0 +1,1323 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "pch.h"
+#include "MessageText.h"
+#include "StringResources.h"
+
+namespace midipatchbay
+{
+    _Use_decl_annotations_
+    std::wstring DescribeRuns(bool const* values, size_t count, int offset) noexcept
+    {
+        std::wstring text{};
+
+        try
+        {
+            size_t index{ 0 };
+
+            while (index < count)
+            {
+                if (!values[index])
+                {
+                    index++;
+                    continue;
+                }
+
+                auto const start = index;
+
+                while (index + 1 < count && values[index + 1])
+                {
+                    index++;
+                }
+
+                if (!text.empty())
+                {
+                    text += L", ";
+                }
+
+                text += start == index
+                    ? std::to_wstring(static_cast<int>(start) + offset)
+                    : std::to_wstring(static_cast<int>(start) + offset) + L" - " +
+                      std::to_wstring(static_cast<int>(index) + offset);
+
+                index++;
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return text;
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeNote(uint8_t noteIndex) noexcept
+    {
+        try
+        {
+            // The shipped helper, so this app names notes exactly like the rest of the tools.
+            // Note names are MIDI proper nouns and are not translated.
+            auto const name = midi2msg::MidiMessageHelper::GetNoteDisplayNameFromNoteIndex(noteIndex);
+            auto const octave = midi2msg::MidiMessageHelper::GetNoteOctaveFromNoteIndex(noteIndex);
+
+            return winrt::hstring{ std::wstring{ name } + std::to_wstring(octave) };
+        }
+        catch (...)
+        {
+        }
+
+        return winrt::to_hstring(static_cast<int>(noteIndex));
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeMessageType(uint8_t messageType) noexcept
+    {
+        switch (messageType)
+        {
+        case 0x0: return resources::GetString(L"MessageTypeUtility");
+        case 0x1: return resources::GetString(L"MessageTypeSystem");
+        case 0x2: return resources::GetString(L"MessageTypeMidi1ChannelVoice");
+        case 0x3: return resources::GetString(L"MessageTypeSysEx7");
+        case 0x4: return resources::GetString(L"MessageTypeMidi2ChannelVoice");
+        case 0x5: return resources::GetString(L"MessageTypeData128");
+        case 0xD: return resources::GetString(L"MessageTypeFlexData");
+        case 0xF: return resources::GetString(L"MessageTypeStream");
+        default: return resources::FormatString(L"MessageTypeReservedFormat", messageType);
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeChannelVoiceStatus(uint8_t status) noexcept
+    {
+        switch (status)
+        {
+        case 0x0: return resources::GetString(L"VoiceRegisteredPerNote");
+        case 0x1: return resources::GetString(L"VoiceAssignablePerNote");
+        case 0x2: return resources::GetString(L"VoiceRegisteredController");
+        case 0x3: return resources::GetString(L"VoiceAssignableController");
+        case 0x4: return resources::GetString(L"VoiceRelativeRegisteredController");
+        case 0x5: return resources::GetString(L"VoiceRelativeAssignableController");
+        case 0x6: return resources::GetString(L"VoicePerNotePitchBend");
+        case 0x8: return resources::GetString(L"VoiceNoteOff");
+        case 0x9: return resources::GetString(L"VoiceNoteOn");
+        case 0xA: return resources::GetString(L"VoicePolyPressure");
+        case 0xB: return resources::GetString(L"VoiceControlChange");
+        case 0xC: return resources::GetString(L"VoiceProgramChange");
+        case 0xD: return resources::GetString(L"VoiceChannelPressure");
+        case 0xE: return resources::GetString(L"VoicePitchBend");
+        case 0xF: return resources::GetString(L"VoicePerNoteManagement");
+        default: return resources::FormatString(L"VoiceReservedFormat", status);
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeSystemMessage(uint8_t status) noexcept
+    {
+        switch (status)
+        {
+        case 0xF1: return resources::GetString(L"SystemTimeCode");
+        case 0xF2: return resources::GetString(L"SystemSongPosition");
+        case 0xF3: return resources::GetString(L"SystemSongSelect");
+        case 0xF6: return resources::GetString(L"SystemTuneRequest");
+        case 0xF8: return resources::GetString(L"SystemTimingClock");
+        case 0xFA: return resources::GetString(L"SystemStart");
+        case 0xFB: return resources::GetString(L"SystemContinue");
+        case 0xFC: return resources::GetString(L"SystemStop");
+        case 0xFE: return resources::GetString(L"SystemActiveSensing");
+        case 0xFF: return resources::GetString(L"SystemReset");
+        default: return resources::FormatString(L"SystemReservedFormat", status);
+        }
+    }
+
+    namespace
+    {
+        // Beyond this the list stops being something anyone reads and turns into a wall of text.
+        constexpr size_t MaximumNamesInSummary = 4;
+
+        std::wstring JoinNames(_In_ std::vector<std::wstring> const& names)
+        {
+            std::wstring text{};
+            auto const shown = (std::min)(names.size(), MaximumNamesInSummary);
+
+            for (size_t i = 0; i < shown; i++)
+            {
+                if (!text.empty())
+                {
+                    text += L", ";
+                }
+
+                text += names[i];
+            }
+
+            if (names.size() > shown)
+            {
+                text = std::wstring{ resources::FormatString(L"FilterSummaryMoreFormat",
+                    text, static_cast<int>(names.size() - shown)) };
+            }
+
+            return text;
+        }
+
+        // Saying "no A, B, C, D, E, F, G, H, I, J" when only two things are kept is unreadable, so
+        // whichever side is shorter is the one described.
+        void DescribeGroup(
+            _In_reads_(count) bool const* values,
+            _In_ size_t count,
+            _In_ std::function<winrt::hstring(size_t)> const& describe,
+            _In_ std::wstring_view onlyKey,
+            _In_ std::wstring_view noneKey,
+            _In_ std::wstring_view nothingKey,
+            _Inout_ std::vector<std::wstring>& parts)
+        {
+            std::vector<std::wstring> kept{};
+            std::vector<std::wstring> dropped{};
+
+            for (size_t i = 0; i < count; i++)
+            {
+                auto const name = describe(i);
+
+                if (values[i])
+                {
+                    kept.push_back(std::wstring{ name });
+                }
+                else
+                {
+                    dropped.push_back(std::wstring{ name });
+                }
+            }
+
+            if (dropped.empty())
+            {
+                return;
+            }
+
+            if (kept.empty())
+            {
+                parts.push_back(std::wstring{ resources::GetString(nothingKey) });
+            }
+            else if (kept.size() <= dropped.size())
+            {
+                parts.push_back(std::wstring{ resources::FormatString(onlyKey, JoinNames(kept)) });
+            }
+            else
+            {
+                parts.push_back(std::wstring{ resources::FormatString(noneKey, JoinNames(dropped)) });
+            }
+        }
+
+        std::wstring JoinParts(_In_ std::vector<std::wstring> const& parts, _In_ std::wstring_view separator)
+        {
+            std::wstring text{};
+
+            for (auto const& part : parts)
+            {
+                if (part.empty())
+                {
+                    continue;
+                }
+
+                if (!text.empty())
+                {
+                    text += separator;
+                }
+
+                text += part;
+            }
+
+            return text;
+        }
+
+        // "A", "A and B", "A, B and C". The joining word comes from resources.
+        std::wstring JoinList(_In_ std::vector<std::wstring> const& items, _In_ std::wstring_view lastFormatKey)
+        {
+            if (items.empty())
+            {
+                return {};
+            }
+
+            if (items.size() == 1)
+            {
+                return items[0];
+            }
+
+            std::wstring head{};
+
+            for (size_t i = 0; i + 1 < items.size(); i++)
+            {
+                if (!head.empty())
+                {
+                    head += L", ";
+                }
+
+                head += items[i];
+            }
+
+            return std::wstring{ resources::FormatString(lastFormatKey, head, items.back()) };
+        }
+
+        std::wstring Text(_In_ winrt::hstring const& value)
+        {
+            return std::wstring{ value };
+        }
+
+        std::wstring SignedSemitones(_In_ int32_t semitones)
+        {
+            return std::to_wstring(std::abs(semitones));
+        }
+
+        // The real-time messages most people want out of a route, in the order the filter lists them.
+        bool KeepsOutOnlyRealTime(_In_ MessageFilter const& filter) noexcept
+        {
+            if (!AllTrue(filter.MessageTypes.data(), filter.MessageTypes.size()) ||
+                !AllTrue(filter.ChannelVoiceStatuses.data(), filter.ChannelVoiceStatuses.size()))
+            {
+                return false;
+            }
+
+            for (size_t i = 0; i < SystemMessageCount; i++)
+            {
+                auto const status = SystemMessageList[i];
+                auto const isRealTime = status >= 0xF8;
+
+                if (filter.SystemMessages[i] == isRealTime)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        std::vector<std::wstring> ListedNumbers(
+            _In_ std::array<bool, SevenBitValueCount> const& list,
+            _In_ bool asNotes)
+        {
+            std::vector<std::wstring> names{};
+
+            for (uint8_t i = 0; i < SevenBitValueCount; i++)
+            {
+                if (list[i])
+                {
+                    names.push_back(asNotes ? Text(DescribeNote(i)) : std::to_wstring(i));
+                }
+            }
+
+            return names;
+        }
+
+        std::wstring DescribeValueSet(_In_ ValueSetFilter const& values, _In_ bool asNotes)
+        {
+            auto const letThrough = values.Action == FilterAction::LetThrough;
+
+            auto const name = [asNotes](uint8_t value)
+                {
+                    return asNotes ? Text(DescribeNote(value)) : std::to_wstring(value);
+                };
+
+            if (values.PassesEverything())
+            {
+                return Text(resources::GetString(asNotes ? L"BlockDescEveryNote" : L"BlockDescEveryController"));
+            }
+
+            switch (values.Mode)
+            {
+            case ValueSetMode::One:
+                return Text(resources::FormatString(asNotes
+                    ? (letThrough ? L"BlockDescNoteOneLetFormat" : L"BlockDescNoteOneKeepFormat")
+                    : (letThrough ? L"BlockDescControllerOneLetFormat" : L"BlockDescControllerOneKeepFormat"),
+                    name(values.One)));
+
+            case ValueSetMode::List:
+            {
+                auto const listed = ListedNumbers(values.List, asNotes);
+
+                if (listed.empty())
+                {
+                    return Text(resources::GetString(asNotes ? L"BlockDescNoNotes" : L"BlockDescNoControllers"));
+                }
+
+                if (listed.size() > MaximumNamesInSummary)
+                {
+                    return Text(resources::FormatString(asNotes
+                        ? (letThrough ? L"BlockDescNoteCountLetFormat" : L"BlockDescNoteCountKeepFormat")
+                        : (letThrough ? L"BlockDescControllerCountLetFormat" : L"BlockDescControllerCountKeepFormat"),
+                        static_cast<int>(listed.size())));
+                }
+
+                auto const items = JoinList(listed, L"BlockDescListAndFormat");
+
+                if (asNotes)
+                {
+                    return Text(resources::FormatString(letThrough ? L"BlockDescNoteListLetFormat" : L"BlockDescNoteListKeepFormat", items));
+                }
+
+                return Text(resources::FormatString(letThrough
+                    ? (listed.size() == 1 ? L"BlockDescControllerOneLetFormat" : L"BlockDescControllerListLetFormat")
+                    : (listed.size() == 1 ? L"BlockDescControllerOneKeepFormat" : L"BlockDescControllerListKeepFormat"),
+                    items));
+            }
+
+            default:
+            {
+                auto const low = (std::min)(values.Lowest, values.Highest);
+                auto const high = (std::max)(values.Lowest, values.Highest);
+
+                return Text(resources::FormatString(asNotes
+                    ? (letThrough ? L"BlockDescNoteRangeLetFormat" : L"BlockDescNoteRangeKeepFormat")
+                    : (letThrough ? L"BlockDescControllerRangeLetFormat" : L"BlockDescControllerRangeKeepFormat"),
+                    name(low), name(high)));
+            }
+            }
+        }
+
+        std::wstring DescribeMapOne(
+            _In_reads_(count) int16_t const* map,
+            _In_ size_t count,
+            _In_ int offset,
+            _In_ std::wstring_view oneFormatKey,
+            _In_ std::wstring_view manyFormatKey,
+            _In_ bool asNotes)
+        {
+            auto const entries = CountMapEntries(map, count);
+
+            if (entries == 0)
+            {
+                return {};
+            }
+
+            if (entries == 1)
+            {
+                for (size_t i = 0; i < count; i++)
+                {
+                    if (map[i] >= 0 && map[i] != static_cast<int16_t>(i))
+                    {
+                        if (asNotes)
+                        {
+                            return Text(resources::FormatString(oneFormatKey,
+                                DescribeNote(static_cast<uint8_t>(i)), DescribeNote(static_cast<uint8_t>(map[i]))));
+                        }
+
+                        return Text(resources::FormatString(oneFormatKey,
+                            static_cast<int>(i) + offset, static_cast<int>(map[i]) + offset));
+                    }
+                }
+            }
+
+            return Text(resources::FormatString(manyFormatKey, static_cast<int>(entries)));
+        }
+
+        std::wstring DescribeShape(_In_ ValueShape const& shape, _In_ ValueScale scale)
+        {
+            std::vector<std::wstring> parts{};
+
+            if (shape.Invert)
+            {
+                parts.push_back(Text(resources::GetString(L"BlockDescInverted")));
+            }
+
+            if (shape.Curve == ValueCurve::SlowRise)
+            {
+                parts.push_back(Text(resources::GetString(L"BlockDescSlowRise")));
+            }
+            else if (shape.Curve == ValueCurve::FastRise)
+            {
+                parts.push_back(Text(resources::GetString(L"BlockDescFastRise")));
+            }
+
+            if (shape.InputMinimumHundredths != 0 || shape.InputMaximumHundredths != FullScaleHundredths)
+            {
+                parts.push_back(Text(resources::FormatString(L"BlockDescInputFormat",
+                    DescribeScaledValue(shape.InputMinimumHundredths, scale),
+                    DescribeScaledValue(shape.InputMaximumHundredths, scale))));
+            }
+
+            if (shape.OutputMinimumHundredths != 0 || shape.OutputMaximumHundredths != FullScaleHundredths)
+            {
+                parts.push_back(Text(resources::FormatString(L"BlockDescOutputFormat",
+                    DescribeScaledValue(shape.OutputMinimumHundredths, scale),
+                    DescribeScaledValue(shape.OutputMaximumHundredths, scale))));
+            }
+
+            return JoinParts(parts, L", ");
+        }
+
+        std::wstring DescribeCondition(_In_ MaskCondition const& condition, _In_ bool hex)
+        {
+            std::wstring values{};
+
+            switch (condition.Match)
+            {
+            case MaskMatch::AnyOf:
+            {
+                std::vector<std::wstring> items{};
+
+                for (auto const value : condition.Values)
+                {
+                    items.push_back(Text(DescribeMaskValue(value, hex)));
+                }
+
+                if (items.size() > MaximumNamesInSummary)
+                {
+                    values = Text(resources::FormatString(L"BlockDescValueCountFormat", static_cast<int>(items.size())));
+                }
+                else
+                {
+                    values = JoinList(items, L"BlockDescListOrFormat");
+                }
+                break;
+            }
+
+            case MaskMatch::Between:
+                values = Text(resources::FormatString(L"BlockDescRangeFormat",
+                    DescribeMaskValue((std::min)(condition.Lowest, condition.Highest), hex),
+                    DescribeMaskValue((std::max)(condition.Lowest, condition.Highest), hex)));
+                break;
+
+            default:
+                values = Text(DescribeMaskValue(condition.Value, hex));
+                break;
+            }
+
+            if (condition.HighBit == condition.LowBit)
+            {
+                return Text(resources::FormatString(L"BlockDescMaskBitFormat",
+                    static_cast<int>(condition.Word) + 1, static_cast<int>(condition.HighBit), values));
+            }
+
+            return Text(resources::FormatString(L"BlockDescMaskConditionFormat",
+                static_cast<int>(condition.Word) + 1,
+                static_cast<int>(condition.HighBit),
+                static_cast<int>(condition.LowBit),
+                values));
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring SummarizeFilter(MessageFilter const& filter) noexcept
+    {
+        try
+        {
+            if (filter.PassesEverything())
+            {
+                return resources::GetString(L"FilterSummaryEverything");
+            }
+
+            std::vector<std::wstring> parts{};
+
+            DescribeGroup(filter.MessageTypes.data(), MessageTypeCount,
+                [](size_t i) { return DescribeMessageType(static_cast<uint8_t>(i)); },
+                L"FilterSummaryOnlyTypesFormat", L"FilterSummaryNoTypesFormat",
+                L"FilterSummaryNothingFormat", parts);
+
+            DescribeGroup(filter.ChannelVoiceStatuses.data(), ChannelVoiceStatusCount,
+                [](size_t i) { return DescribeChannelVoiceStatus(static_cast<uint8_t>(i)); },
+                L"FilterSummaryOnlyMessagesFormat", L"FilterSummaryNoMessagesFormat",
+                L"FilterSummaryNoChannelMessages", parts);
+
+            DescribeGroup(filter.SystemMessages.data(), SystemMessageCount,
+                [](size_t i) { return DescribeSystemMessage(SystemMessageList[i]); },
+                L"FilterSummaryOnlyMessagesFormat", L"FilterSummaryNoMessagesFormat",
+                L"FilterSummaryNoSystemMessages", parts);
+
+            if (!AllTrue(filter.Channels.data(), filter.Channels.size()))
+            {
+                auto const runs = DescribeRuns(filter.Channels.data(), ChannelCount, 1);
+
+                parts.push_back(std::wstring{ resources::FormatString(L"FilterSummaryChannelsFormat", runs) });
+            }
+
+            if (filter.LimitNoteRange)
+            {
+                parts.push_back(std::wstring{ resources::FormatString(L"FilterSummaryNotesFormat",
+                    DescribeNote(filter.LowestAllowedNote), DescribeNote(filter.HighestAllowedNote)) });
+            }
+
+            if (parts.empty())
+            {
+                return resources::GetString(L"FilterSummaryEverything");
+            }
+
+            return winrt::hstring{ JoinParts(parts, L". ") };
+        }
+        catch (...)
+        {
+        }
+
+        return resources::GetString(L"FilterSummaryEverything");
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeScaledValue(int32_t hundredths, ValueScale scale) noexcept
+    {
+        try
+        {
+            if (scale == ValueScale::SevenBit)
+            {
+                return winrt::hstring{ std::to_wstring(SevenBitFromHundredths(hundredths)) };
+            }
+
+            auto const clamped = std::clamp(hundredths, 0, FullScaleHundredths);
+
+            // A whole percentage reads better without its zeros.
+            if (clamped % 100 == 0)
+            {
+                return resources::FormatString(L"BlockWholePercentFormat", clamped / 100);
+            }
+
+            return resources::FormatString(L"TransformPercentFormat",
+                clamped / 100, clamped % 100);
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring SummarizeTransform(MessageTransform const& transform) noexcept
+    {
+        try
+        {
+            if (transform.ChangesNothing())
+            {
+                return resources::GetString(L"TransformSummaryNothing");
+            }
+
+            std::vector<std::wstring> parts{};
+
+            auto const channels = CountMapEntries(transform.ChannelMap.data(), transform.ChannelMap.size());
+
+            if (channels > 0)
+            {
+                parts.push_back(std::wstring{ channels == 1
+                    ? resources::GetString(L"TransformSummaryOneChannelMap")
+                    : resources::FormatString(L"TransformSummaryChannelMapFormat", static_cast<int>(channels)) });
+            }
+
+            if (transform.TransposeSemitones != 0)
+            {
+                parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryTransposeFormat",
+                    transform.TransposeSemitones > 0
+                        ? std::wstring{ L"+" } + std::to_wstring(transform.TransposeSemitones)
+                        : std::to_wstring(transform.TransposeSemitones)) });
+            }
+
+            auto const notes = CountMapEntries(transform.NoteMap.data(), transform.NoteMap.size());
+
+            if (notes > 0)
+            {
+                parts.push_back(std::wstring{ notes == 1
+                    ? resources::GetString(L"TransformSummaryOneNoteMap")
+                    : resources::FormatString(L"TransformSummaryNoteMapFormat", static_cast<int>(notes)) });
+            }
+
+            if (transform.Curve == VelocityCurve::LinearToCurved)
+            {
+                parts.push_back(std::wstring{ resources::GetString(L"TransformSummaryCurved") });
+            }
+            else if (transform.Curve == VelocityCurve::CurvedToLinear)
+            {
+                parts.push_back(std::wstring{ resources::GetString(L"TransformSummaryLinear") });
+            }
+            else if (transform.Curve == VelocityCurve::Fixed)
+            {
+                parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryFixedVelocityFormat",
+                    DescribeScaledValue(transform.FixedVelocityHundredths, transform.Scale)) });
+            }
+
+            if (transform.RescaleVelocity && transform.Curve != VelocityCurve::Fixed)
+            {
+                parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryVelocityRangeFormat",
+                    DescribeScaledValue(transform.MinimumVelocityHundredths, transform.Scale),
+                    DescribeScaledValue(transform.MaximumVelocityHundredths, transform.Scale)) });
+            }
+
+            auto const& aftertouch = transform.AftertouchShape;
+
+            if (aftertouch.Curve == ValueCurve::SlowRise)
+            {
+                parts.push_back(std::wstring{ resources::GetString(L"TransformSummaryAftertouchSlowRise") });
+            }
+            else if (aftertouch.Curve == ValueCurve::FastRise)
+            {
+                parts.push_back(std::wstring{ resources::GetString(L"TransformSummaryAftertouchFastRise") });
+            }
+
+            if (aftertouch.InputMinimumHundredths != 0 || aftertouch.InputMaximumHundredths != FullScaleHundredths)
+            {
+                parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryAftertouchInputFormat",
+                    DescribeScaledValue(aftertouch.InputMinimumHundredths, transform.Scale),
+                    DescribeScaledValue(aftertouch.InputMaximumHundredths, transform.Scale)) });
+            }
+
+            if (aftertouch.OutputMinimumHundredths != 0 || aftertouch.OutputMaximumHundredths != FullScaleHundredths)
+            {
+                parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryAftertouchOutputFormat",
+                    DescribeScaledValue(aftertouch.OutputMinimumHundredths, transform.Scale),
+                    DescribeScaledValue(aftertouch.OutputMaximumHundredths, transform.Scale)) });
+            }
+
+            auto const controls = CountMapEntries(transform.ControlMap.data(), transform.ControlMap.size());
+
+            if (controls > 0)
+            {
+                parts.push_back(std::wstring{ controls == 1
+                    ? resources::GetString(L"TransformSummaryOneControlMap")
+                    : resources::FormatString(L"TransformSummaryControlMapFormat", static_cast<int>(controls)) });
+            }
+
+            auto const shapedControls = std::count_if(
+                transform.ControlValueShapes.begin(), transform.ControlValueShapes.end(),
+                [](ValueShape const& shape) { return !shape.ChangesNothing(); });
+
+            if (shapedControls > 0)
+            {
+                parts.push_back(std::wstring{ shapedControls == 1
+                    ? resources::GetString(L"TransformSummaryOneControlValue")
+                    : resources::FormatString(L"TransformSummaryControlValueFormat", static_cast<int>(shapedControls)) });
+            }
+
+            auto const programs = CountMapEntries(transform.ProgramMap.data(), transform.ProgramMap.size());
+
+            if (programs > 0)
+            {
+                parts.push_back(std::wstring{ programs == 1
+                    ? resources::GetString(L"TransformSummaryOneProgramMap")
+                    : resources::FormatString(L"TransformSummaryProgramMapFormat", static_cast<int>(programs)) });
+            }
+
+            auto const banks =
+                CountMapEntries(transform.BankMsbMap.data(), transform.BankMsbMap.size()) +
+                CountMapEntries(transform.BankLsbMap.data(), transform.BankLsbMap.size());
+
+            if (banks > 0)
+            {
+                parts.push_back(std::wstring{ banks == 1
+                    ? resources::GetString(L"TransformSummaryOneBankMap")
+                    : resources::FormatString(L"TransformSummaryBankMapFormat", static_cast<int>(banks)) });
+            }
+
+            auto const text = JoinParts(parts, L". ");
+
+            return text.empty() ? resources::GetString(L"TransformSummaryNothing") : winrt::hstring{ text };
+        }
+        catch (...)
+        {
+        }
+
+        return resources::GetString(L"TransformSummaryNothing");
+    }
+
+    namespace
+    {
+        struct KindText
+        {
+            BlockKind Kind;
+            wchar_t const* Name;
+            wchar_t const* Short;
+            wchar_t const* Badge;
+            wchar_t const* Hint;
+        };
+
+        constexpr KindText KindTexts[] =
+        {
+            { BlockKind::MessageTypeFilter, L"BlockNameMessageTypeFilter", L"BlockShortMessageTypeFilter", L"BlockBadgeMessageTypeFilter", L"BlockHintMessageTypeFilter" },
+            { BlockKind::GroupFilter, L"BlockNameGroupFilter", L"BlockShortGroupFilter", L"BlockBadgeGroupFilter", L"BlockHintGroupFilter" },
+            { BlockKind::ChannelFilter, L"BlockNameChannelFilter", L"BlockShortChannelFilter", L"BlockBadgeChannelFilter", L"BlockHintChannelFilter" },
+            { BlockKind::NoteFilter, L"BlockNameNoteFilter", L"BlockShortNoteFilter", L"BlockBadgeNoteFilter", L"BlockHintNoteFilter" },
+            { BlockKind::ControlChangeFilter, L"BlockNameControlChangeFilter", L"BlockShortControlChangeFilter", L"BlockBadgeControlChangeFilter", L"BlockHintControlChangeFilter" },
+            { BlockKind::VelocityFilter, L"BlockNameVelocityFilter", L"BlockShortVelocityFilter", L"BlockBadgeVelocityFilter", L"BlockHintVelocityFilter" },
+            { BlockKind::MessageMaskFilter, L"BlockNameMessageMaskFilter", L"BlockShortMessageMaskFilter", L"BlockBadgeMessageMaskFilter", L"BlockHintMessageMaskFilter" },
+            { BlockKind::ChannelMap, L"BlockNameChannelMap", L"BlockShortChannelMap", L"BlockBadgeChannelMap", L"BlockHintChannelMap" },
+            { BlockKind::GroupMap, L"BlockNameGroupMap", L"BlockShortGroupMap", L"BlockBadgeGroupMap", L"BlockHintGroupMap" },
+            { BlockKind::NoteMap, L"BlockNameNoteMap", L"BlockShortNoteMap", L"BlockBadgeNoteMap", L"BlockHintNoteMap" },
+            { BlockKind::Transpose, L"BlockNameTranspose", L"BlockShortTranspose", L"BlockBadgeTranspose", L"BlockHintTranspose" },
+            { BlockKind::Velocity, L"BlockNameVelocity", L"BlockShortVelocity", L"BlockBadgeVelocity", L"BlockHintVelocity" },
+            { BlockKind::Aftertouch, L"BlockNameAftertouch", L"BlockShortAftertouch", L"BlockBadgeAftertouch", L"BlockHintAftertouch" },
+            { BlockKind::ControlChangeMap, L"BlockNameControlChangeMap", L"BlockShortControlChangeMap", L"BlockBadgeControlChangeMap", L"BlockHintControlChangeMap" },
+            { BlockKind::ControlChangeValue, L"BlockNameControlChangeValue", L"BlockShortControlChangeValue", L"BlockBadgeControlChangeValue", L"BlockHintControlChangeValue" },
+            { BlockKind::ProgramMap, L"BlockNameProgramMap", L"BlockShortProgramMap", L"BlockBadgeProgramMap", L"BlockHintProgramMap" },
+            { BlockKind::Throttle, L"BlockNameThrottle", L"BlockShortThrottle", L"BlockBadgeThrottle", L"BlockHintThrottle" },
+            { BlockKind::ClockDivider, L"BlockNameClockDivider", L"BlockShortClockDivider", L"BlockBadgeClockDivider", L"BlockHintClockDivider" },
+            { BlockKind::ClockGenerator, L"BlockNameClockGenerator", L"BlockShortClockGenerator", L"BlockBadgeClockGenerator", L"BlockHintClockGenerator" },
+            { BlockKind::TimeCodeGenerator, L"BlockNameTimeCodeGenerator", L"BlockShortTimeCodeGenerator", L"BlockBadgeTimeCodeGenerator", L"BlockHintTimeCodeGenerator" },
+            { BlockKind::LfoGenerator, L"BlockNameLfoGenerator", L"BlockShortLfoGenerator", L"BlockBadgeLfoGenerator", L"BlockHintLfoGenerator" },
+        };
+
+        KindText const* FindKindText(_In_ BlockKind kind) noexcept
+        {
+            for (auto const& entry : KindTexts)
+            {
+                if (entry.Kind == kind)
+                {
+                    return &entry;
+                }
+            }
+
+            return nullptr;
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring BlockKindName(BlockKind kind) noexcept
+    {
+        auto const* text = FindKindText(kind);
+        return text == nullptr ? winrt::hstring{} : resources::GetString(text->Name);
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring BlockKindShortName(BlockKind kind) noexcept
+    {
+        auto const* text = FindKindText(kind);
+        return text == nullptr ? winrt::hstring{} : resources::GetString(text->Short);
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring BlockKindBadge(BlockKind kind) noexcept
+    {
+        auto const* text = FindKindText(kind);
+        return text == nullptr ? winrt::hstring{} : resources::GetString(text->Badge);
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring BlockKindHint(BlockKind kind) noexcept
+    {
+        auto const* text = FindKindText(kind);
+        return text == nullptr ? winrt::hstring{} : resources::GetString(text->Hint);
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring BlockCategoryName(BlockCategory category) noexcept
+    {
+        switch (category)
+        {
+        case BlockCategory::Transform:  return resources::GetString(L"BlockCategoryTransforms");
+        case BlockCategory::Sending:    return resources::GetString(L"BlockCategorySending");
+        case BlockCategory::Generator:  return resources::GetString(L"BlockCategoryGenerators");
+        default:                        return resources::GetString(L"BlockCategoryFilters");
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeMaskValue(uint32_t value, bool hex) noexcept
+    {
+        try
+        {
+            if (hex)
+            {
+                return winrt::hstring{ std::format(L"0x{:X}", value) };
+            }
+
+            return winrt::hstring{ std::to_wstring(value) };
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeSendSpeed(uint32_t speed) noexcept
+    {
+        if (speed == 0)
+        {
+            return resources::GetString(L"SendSpeedLimitUnlimited");
+        }
+
+        if (speed == 1)
+        {
+            return resources::GetString(L"SendSpeedLimitWireSpeed");
+        }
+
+        return resources::FormatString(L"SendSpeedLimitMultipleFormat", static_cast<int>(speed));
+    }
+
+    namespace
+    {
+        // At most this many places, without trailing zeros, so 120 reads as "120" and not "120.00".
+        std::wstring TrimmedNumber(_In_ double value, _In_ int places)
+        {
+            auto text = std::format(L"{:.{}f}", value, places);
+
+            if (text.find(L'.') != std::wstring::npos)
+            {
+                while (!text.empty() && text.back() == L'0')
+                {
+                    text.pop_back();
+                }
+
+                if (!text.empty() && text.back() == L'.')
+                {
+                    text.pop_back();
+                }
+            }
+
+            return text;
+        }
+
+        constexpr wchar_t const* LfoWaveKeys[]
+        {
+            L"LfoWaveSine", L"LfoWaveTriangle", L"LfoWaveSquare", L"LfoWaveRampUp",
+            L"LfoWaveRampDown", L"LfoWaveWhite", L"LfoWavePink", L"LfoWaveBrown", L"LfoWaveBlue",
+        };
+
+        static_assert(std::size(midiapp::LfoWaveOrder) == std::size(LfoWaveKeys));
+
+        constexpr wchar_t const* LfoRateKeys[]
+        {
+            L"LfoRateSixteenth", L"LfoRateEighth", L"LfoRateQuarter", L"LfoRateDottedQuarter",
+            L"LfoRateHalf", L"LfoRateDottedHalf", L"LfoRateBar", L"LfoRateTwoBars",
+            L"LfoRateFourBars", L"LfoRateEightBars",
+        };
+
+        static_assert(std::size(midiapp::LfoRateChoices) == std::size(LfoRateKeys));
+
+        winrt::hstring DescribeLfoTarget(_In_ midiapp::ValueMessageTarget const& target)
+        {
+            auto const bank = static_cast<int>(target.Number >> 7);
+            auto const index = static_cast<int>(target.Number & 0x7F);
+
+            switch (target.Kind)
+            {
+            case midiapp::ValueMessageKind::PitchBend:
+                return resources::GetString(L"LfoTargetPitchBend");
+
+            case midiapp::ValueMessageKind::ChannelPressure:
+                return resources::GetString(L"LfoTargetChannelPressure");
+
+            case midiapp::ValueMessageKind::PolyPressure:
+                return resources::FormatString(L"LfoTargetPolyPressureFormat", DescribeNote(static_cast<uint8_t>(index)));
+
+            case midiapp::ValueMessageKind::RegisteredController:
+                return resources::FormatString(L"LfoTargetRegisteredFormat", bank, index);
+
+            case midiapp::ValueMessageKind::AssignableController:
+                return resources::FormatString(L"LfoTargetAssignableFormat", bank, index);
+
+            default:
+                return resources::FormatString(L"LfoTargetControlChangeFormat", index);
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeNumber(double value, int places) noexcept
+    {
+        try
+        {
+            return winrt::hstring{ TrimmedNumber(value, std::clamp(places, 0, 6)) };
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeTempo(double beatsPerMinute) noexcept
+    {
+        return DescribeNumber(beatsPerMinute, 2);
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeFrameRate(midiapp::MidiTimeCodeFrameRate rate, bool forPicker) noexcept
+    {
+        switch (rate)
+        {
+        case midiapp::MidiTimeCodeFrameRate::Frames24:
+            return resources::GetString(forPicker ? L"FrameRate24" : L"FrameRateShort24");
+
+        case midiapp::MidiTimeCodeFrameRate::Frames25:
+            return resources::GetString(forPicker ? L"FrameRate25" : L"FrameRateShort25");
+
+        case midiapp::MidiTimeCodeFrameRate::Frames2997Drop:
+            return resources::GetString(forPicker ? L"FrameRate2997Drop" : L"FrameRateShort2997Drop");
+
+        default:
+            return resources::GetString(forPicker ? L"FrameRate30" : L"FrameRateShort30");
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeLfoWave(midiapp::LfoWave wave) noexcept
+    {
+        for (size_t i = 0; i < std::size(midiapp::LfoWaveOrder); i++)
+        {
+            if (midiapp::LfoWaveOrder[i] == wave)
+            {
+                return resources::GetString(LfoWaveKeys[i]);
+            }
+        }
+
+        return resources::GetString(LfoWaveKeys[0]);
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeLfoLength(double beatsPerCycle) noexcept
+    {
+        try
+        {
+            for (size_t i = 0; i < std::size(midiapp::LfoRateChoices); i++)
+            {
+                if (std::abs(midiapp::LfoRateChoices[i] - beatsPerCycle) < 0.0001)
+                {
+                    return resources::GetString(LfoRateKeys[i]);
+                }
+            }
+
+            return resources::FormatString(L"BlockDescLfoBeatsFormat", TrimmedNumber(beatsPerCycle, 3));
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeValueMessageKind(midiapp::ValueMessageKind kind) noexcept
+    {
+        switch (kind)
+        {
+        case midiapp::ValueMessageKind::PitchBend:              return resources::GetString(L"LfoMessagePitchBend");
+        case midiapp::ValueMessageKind::ChannelPressure:        return resources::GetString(L"LfoMessageChannelPressure");
+        case midiapp::ValueMessageKind::PolyPressure:           return resources::GetString(L"LfoMessagePolyPressure");
+        case midiapp::ValueMessageKind::RegisteredController:   return resources::GetString(L"LfoMessageRegistered");
+        case midiapp::ValueMessageKind::AssignableController:   return resources::GetString(L"LfoMessageAssignable");
+        default:                                                return resources::GetString(L"LfoMessageControlChange");
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeBlock(BlockKind kind, BlockSettings const& settings) noexcept
+    {
+        try
+        {
+            auto const& transform = settings.Transform;
+            std::wstring text{};
+
+            switch (kind)
+            {
+            case BlockKind::MessageTypeFilter:
+                if (settings.Filter.PassesEverything())
+                {
+                    text = Text(resources::GetString(L"BlockDescEverything"));
+                }
+                else if (KeepsOutOnlyRealTime(settings.Filter))
+                {
+                    text = Text(resources::GetString(L"BlockDescNoRealTime"));
+                }
+                else
+                {
+                    text = Text(SummarizeFilter(settings.Filter));
+                }
+                break;
+
+            case BlockKind::ChannelFilter:
+            {
+                auto const& channels = settings.Filter.Channels;
+                auto const kept = std::count(channels.begin(), channels.end(), true);
+
+                if (kept == static_cast<ptrdiff_t>(channels.size()))
+                {
+                    text = Text(resources::GetString(L"BlockDescEverything"));
+                }
+                else if (kept == 0)
+                {
+                    text = Text(resources::GetString(L"BlockDescNoChannels"));
+                }
+                else
+                {
+                    text = Text(resources::FormatString(kept == 1 ? L"BlockDescChannelOneFormat" : L"BlockDescChannelsFormat",
+                        DescribeRuns(channels.data(), channels.size(), 1)));
+                }
+                break;
+            }
+
+            case BlockKind::GroupFilter:
+            {
+                auto const kept = std::count(settings.Groups.begin(), settings.Groups.end(), true);
+
+                if (kept == static_cast<ptrdiff_t>(settings.Groups.size()))
+                {
+                    text = Text(resources::GetString(L"BlockDescEverything"));
+                }
+                else if (kept == 0)
+                {
+                    text = Text(resources::GetString(L"BlockDescNoGroups"));
+                }
+                else
+                {
+                    text = Text(resources::FormatString(kept == 1 ? L"BlockDescGroupOneFormat" : L"BlockDescGroupsFormat",
+                        DescribeRuns(settings.Groups.data(), settings.Groups.size(), 1)));
+                }
+                break;
+            }
+
+            case BlockKind::NoteFilter:
+                text = DescribeValueSet(settings.Values, true);
+                break;
+
+            case BlockKind::ControlChangeFilter:
+                text = DescribeValueSet(settings.Values, false);
+                break;
+
+            case BlockKind::VelocityFilter:
+            {
+                auto const& range = settings.Velocities;
+
+                if (range.PassesEverything())
+                {
+                    text = Text(resources::GetString(L"BlockDescEveryNote"));
+                }
+                else
+                {
+                    text = Text(resources::FormatString(
+                        range.Action == FilterAction::LetThrough ? L"BlockDescVelocityLetFormat" : L"BlockDescVelocityKeepFormat",
+                        DescribeScaledValue((std::min)(range.LowestHundredths, range.HighestHundredths), range.Scale),
+                        DescribeScaledValue((std::max)(range.LowestHundredths, range.HighestHundredths), range.Scale)));
+                }
+                break;
+            }
+
+            case BlockKind::MessageMaskFilter:
+            {
+                auto const& mask = settings.Mask;
+
+                if (mask.Conditions.empty())
+                {
+                    text = Text(resources::GetString(L"BlockDescMaskNone"));
+                    break;
+                }
+
+                auto const where = mask.Conditions.size() == 1
+                    ? DescribeCondition(mask.Conditions.front(), mask.ShowHex)
+                    : Text(resources::FormatString(L"BlockDescMaskManyFormat", static_cast<int>(mask.Conditions.size())));
+
+                text = Text(resources::FormatString(
+                    mask.Action == FilterAction::LetThrough ? L"BlockDescMaskLetFormat" : L"BlockDescMaskKeepFormat",
+                    static_cast<int>(mask.WordCount), where));
+                break;
+            }
+
+            case BlockKind::ChannelMap:
+                text = DescribeMapOne(transform.ChannelMap.data(), transform.ChannelMap.size(), 1,
+                    L"BlockDescChannelMapOneFormat", L"BlockDescChannelMapFormat", false);
+                break;
+
+            case BlockKind::GroupMap:
+            {
+                std::array<int16_t, 16> wide{};
+
+                for (size_t i = 0; i < wide.size(); i++)
+                {
+                    wide[i] = settings.GroupMap[i];
+                }
+
+                text = DescribeMapOne(wide.data(), wide.size(), 1,
+                    L"BlockDescGroupMapOneFormat", L"BlockDescGroupMapFormat", false);
+                break;
+            }
+
+            case BlockKind::NoteMap:
+                text = DescribeMapOne(transform.NoteMap.data(), transform.NoteMap.size(), 0,
+                    L"BlockDescNoteMapOneFormat", L"BlockDescNoteMapFormat", true);
+                break;
+
+            case BlockKind::Transpose:
+            {
+                auto const semitones = transform.TransposeSemitones;
+
+                if (semitones != 0)
+                {
+                    auto const up = semitones > 0;
+                    auto const one = std::abs(semitones) == 1;
+
+                    text = one
+                        ? Text(resources::GetString(up ? L"BlockDescTransposeUpOne" : L"BlockDescTransposeDownOne"))
+                        : Text(resources::FormatString(up ? L"BlockDescTransposeUpFormat" : L"BlockDescTransposeDownFormat",
+                            SignedSemitones(semitones)));
+                }
+                break;
+            }
+
+            case BlockKind::Velocity:
+            {
+                std::vector<std::wstring> parts{};
+
+                if (transform.Curve == VelocityCurve::LinearToCurved)
+                {
+                    parts.push_back(Text(resources::GetString(L"BlockDescVelocityCurved")));
+                }
+                else if (transform.Curve == VelocityCurve::CurvedToLinear)
+                {
+                    parts.push_back(Text(resources::GetString(L"BlockDescVelocityLinear")));
+                }
+                else if (transform.Curve == VelocityCurve::Fixed)
+                {
+                    parts.push_back(Text(resources::FormatString(L"BlockDescVelocityFixedFormat",
+                        DescribeScaledValue(transform.FixedVelocityHundredths, transform.Scale))));
+                }
+
+                if (transform.RescaleVelocity && transform.Curve != VelocityCurve::Fixed)
+                {
+                    parts.push_back(Text(resources::FormatString(L"BlockDescRangeFormat",
+                        DescribeScaledValue(transform.MinimumVelocityHundredths, transform.Scale),
+                        DescribeScaledValue(transform.MaximumVelocityHundredths, transform.Scale))));
+                }
+
+                text = JoinParts(parts, L", ");
+                break;
+            }
+
+            case BlockKind::Aftertouch:
+                text = DescribeShape(transform.AftertouchShape, transform.Scale);
+                break;
+
+            case BlockKind::ControlChangeMap:
+                text = DescribeMapOne(transform.ControlMap.data(), transform.ControlMap.size(), 0,
+                    L"BlockDescControlMapOneFormat", L"BlockDescControlMapFormat", false);
+                break;
+
+            case BlockKind::ControlChangeValue:
+            {
+                std::vector<size_t> shaped{};
+
+                for (size_t i = 0; i < transform.ControlValueShapes.size(); i++)
+                {
+                    if (!transform.ControlValueShapes[i].ChangesNothing())
+                    {
+                        shaped.push_back(i);
+                    }
+                }
+
+                if (shaped.size() == 1)
+                {
+                    text = Text(resources::FormatString(L"BlockDescControlValueOneFormat",
+                        static_cast<int>(shaped.front()),
+                        DescribeShape(transform.ControlValueShapes[shaped.front()], transform.Scale)));
+                }
+                else if (!shaped.empty())
+                {
+                    text = Text(resources::FormatString(L"BlockDescControlValueFormat", static_cast<int>(shaped.size())));
+                }
+                break;
+            }
+
+            case BlockKind::ProgramMap:
+            {
+                std::vector<std::wstring> parts{};
+
+                auto const programs = CountMapEntries(transform.ProgramMap.data(), transform.ProgramMap.size());
+                auto const banks =
+                    CountMapEntries(transform.BankMsbMap.data(), transform.BankMsbMap.size()) +
+                    CountMapEntries(transform.BankLsbMap.data(), transform.BankLsbMap.size());
+
+                if (programs == 1 && banks == 0)
+                {
+                    text = DescribeMapOne(transform.ProgramMap.data(), transform.ProgramMap.size(), 0,
+                        L"BlockDescProgramMapOneFormat", L"BlockDescProgramsFormat", false);
+                    break;
+                }
+
+                if (programs > 0)
+                {
+                    parts.push_back(Text(programs == 1
+                        ? resources::GetString(L"BlockDescProgramsOne")
+                        : resources::FormatString(L"BlockDescProgramsFormat", static_cast<int>(programs))));
+                }
+
+                if (banks > 0)
+                {
+                    parts.push_back(Text(banks == 1
+                        ? resources::GetString(L"BlockDescBanksOne")
+                        : resources::FormatString(L"BlockDescBanksFormat", static_cast<int>(banks))));
+                }
+
+                if (!parts.empty())
+                {
+                    text = Text(resources::FormatString(L"BlockDescRemapsFormat", JoinList(parts, L"BlockDescListAndFormat")));
+                }
+                break;
+            }
+
+            case BlockKind::Throttle:
+                text = settings.SendSpeedLimit == 0
+                    ? Text(resources::GetString(L"BlockDescThrottleUnlimited"))
+                    : Text(resources::FormatString(L"BlockDescThrottleFormat", DescribeSendSpeed(settings.SendSpeedLimit)));
+                break;
+
+            case BlockKind::ClockDivider:
+                if (settings.ClockDivision > 1)
+                {
+                    text = Text(resources::FormatString(L"BlockDescClockDivideFormat", static_cast<int>(settings.ClockDivision)));
+                }
+                break;
+
+            case BlockKind::ClockGenerator:
+            {
+                auto const& clock = settings.Clock;
+                std::vector<std::wstring> parts{};
+
+                parts.push_back(Text(resources::FormatString(L"BlockDescClockFormat", DescribeTempo(clock.BeatsPerMinute))));
+
+                auto const swing = static_cast<int>(std::lround(clock.SwingPercent));
+
+                if (swing > 50)
+                {
+                    parts.push_back(Text(resources::FormatString(L"BlockDescSwingFormat", swing)));
+                }
+
+                if (!clock.SendStartStop)
+                {
+                    parts.push_back(Text(resources::GetString(L"BlockDescNoStartStop")));
+                }
+
+                text = JoinParts(parts, L", ");
+                break;
+            }
+
+            case BlockKind::TimeCodeGenerator:
+                text = Text(resources::FormatString(L"BlockDescTimeCodeFormat",
+                    DescribeFrameRate(settings.TimeCode.FrameRate, false),
+                    midiapp::FormatPosition(settings.TimeCode.Start, settings.TimeCode.FrameRate)));
+                break;
+
+            case BlockKind::LfoGenerator:
+            {
+                auto const& lfo = settings.Lfo;
+
+                text = Text(resources::FormatString(L"BlockDescLfoFormat",
+                    DescribeLfoWave(lfo.Wave),
+                    DescribeLfoTarget(lfo.Target),
+                    static_cast<int>(lfo.Target.Channel) + 1,
+                    DescribeLfoLength(lfo.BeatsPerCycle)));
+                break;
+            }
+
+            default:
+                break;
+            }
+
+            if (text.empty())
+            {
+                text = Text(resources::GetString(L"BlockDescNothing"));
+            }
+
+            return winrt::hstring{ text };
+        }
+        catch (...)
+        {
+        }
+
+        return resources::GetString(L"BlockDescNothing");
+    }
+}

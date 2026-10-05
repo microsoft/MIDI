@@ -82,20 +82,15 @@ namespace winrt::midipatchbay::implementation
             return panel;
         }
 
-        // Worded the way Network MIDI Setup words the same choice
-        winrt::hstring SendSpeedText(_In_ uint32_t const multiple) noexcept
+        // A toolbar-sized row of buttons, which is what every inspector ends with.
+        controls::StackPanel ActionRow() noexcept
         {
-            if (multiple == 0)
-            {
-                return resources::GetString(L"SendSpeedLimitUnlimited");
-            }
+            controls::StackPanel actions{};
 
-            if (multiple == 1)
-            {
-                return resources::GetString(L"SendSpeedLimitWireSpeed");
-            }
+            actions.Spacing(8);
+            actions.Orientation(controls::Orientation::Horizontal);
 
-            return resources::FormatString(L"SendSpeedLimitMultipleFormat", multiple);
+            return actions;
         }
     }
 
@@ -103,98 +98,177 @@ namespace winrt::midipatchbay::implementation
     {
         try
         {
+            if (m_closing)
+            {
+                return;
+            }
+
             InspectorContent().Children().Clear();
 
             m_activityText = nullptr;
-            m_activityConnectionId.clear();
+            m_activityElementId.clear();
 
             auto* patch = CurrentPatch();
+            auto const kind = m_canvas.SelectionKind();
 
-            if (patch == nullptr || m_canvas.SelectionKind() == patchbay::CanvasSelectionKind::None)
-            {
-                InspectorPanel().Visibility(xaml::Visibility::Collapsed);
-                return;
-            }
-
-            if (m_canvas.SelectionKind() == patchbay::CanvasSelectionKind::Endpoint)
-            {
-                auto const* endpoint = patch->FindEndpoint(m_canvas.SelectedEndpointId());
-
-                if (endpoint == nullptr)
-                {
-                    InspectorPanel().Visibility(xaml::Visibility::Collapsed);
-                    return;
-                }
-
-                InspectorPanel().Visibility(xaml::Visibility::Visible);
-                InspectorTitle().Text(winrt::hstring{ endpoint->DisplayName });
-                BuildEndpointInspector(*endpoint);
-                return;
-            }
-
-            auto const* connection = patch->FindConnection(m_canvas.SelectedConnectionId());
-
-            if (connection == nullptr)
+            if (patch == nullptr || kind == patchbay::CanvasSelectionKind::None)
             {
                 InspectorPanel().Visibility(xaml::Visibility::Collapsed);
                 return;
             }
 
             InspectorPanel().Visibility(xaml::Visibility::Visible);
-            InspectorTitle().Text(resources::GetString(L"InspectorConnectionTitle"));
-            BuildConnectionInspector(*connection);
+
+            // Several nodes at once: only what can be done to all of them.
+            if (auto const count = m_canvas.SelectedNodeIds().size(); count > 1)
+            {
+                InspectorTitle().Text(resources::FormatString(L"InspectorSelectionTitleFormat", count));
+                BuildSelectionInspector(count);
+                return;
+            }
+
+            if (kind == patchbay::CanvasSelectionKind::Endpoint)
+            {
+                if (auto const* endpoint = patch->FindEndpoint(m_canvas.SelectedNodeId()))
+                {
+                    InspectorTitle().Text(winrt::hstring{ endpoint->DisplayName });
+                    BuildEndpointInspector(*endpoint);
+                    return;
+                }
+            }
+            else if (kind == patchbay::CanvasSelectionKind::Block)
+            {
+                if (auto const* block = patch->FindBlock(m_canvas.SelectedNodeId()))
+                {
+                    InspectorTitle().Text(patchbay::BlockDisplayName(*block));
+                    BuildBlockInspector(*block);
+                    return;
+                }
+            }
+            else if (auto const* connection = patch->FindConnection(m_canvas.SelectedConnectionId()))
+            {
+                InspectorTitle().Text(resources::GetString(L"InspectorConnectionTitle"));
+                BuildConnectionInspector(*connection);
+                return;
+            }
+
+            InspectorPanel().Visibility(xaml::Visibility::Collapsed);
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the inspector.")
     }
 
     _Use_decl_annotations_
-    winrt::hstring MainWindow::ConnectionActivityText(std::wstring const& connectionId) const noexcept
+    winrt::hstring MainWindow::ActivityText(std::wstring const& elementId) noexcept
     {
         try
         {
-            if (m_analysis.LoopMutedConnectionIds.count(connectionId) != 0)
+            auto const* patch = CurrentPatch();
+
+            if (patch == nullptr)
+            {
+                return {};
+            }
+
+            if (!patchbay::PatchLibrary::Current().IsRouting(m_patchKey))
+            {
+                return resources::GetString(L"ActivityNotRouting");
+            }
+
+            auto const found = m_activity.find(elementId);
+
+            if (auto const* block = patch->FindBlock(elementId))
+            {
+                auto const generator = patchbay::IsGenerator(block->Kind);
+
+                if (block->Bypassed)
+                {
+                    return resources::GetString(generator ? L"ActivityGeneratorBypassed" : L"ActivityBypassed");
+                }
+
+                if (generator)
+                {
+                    auto const connected = std::any_of(patch->Connections.begin(), patch->Connections.end(),
+                        [&elementId](patchbay::PatchConnection const& link) { return link.SourceId == elementId; });
+
+                    if (!connected)
+                    {
+                        return resources::GetString(L"ActivityGeneratorNotConnected");
+                    }
+
+                    return found == m_activity.end()
+                        ? resources::GetString(L"ActivityNothingSentYet")
+                        : resources::FormatString(L"ActivitySentFormat", found->second.MessagesForwarded);
+                }
+
+                if (found == m_activity.end())
+                {
+                    return resources::GetString(L"ActivityNothingYet");
+                }
+
+                auto const& stats = found->second;
+
+                if (patchbay::CategoryOf(block->Kind) == patchbay::BlockCategory::Filter)
+                {
+                    return resources::FormatString(L"ActivityFilterFormat", stats.MessagesForwarded, stats.MessagesKeptOut);
+                }
+
+                auto text = resources::FormatString(L"ActivityThroughFormat", stats.MessagesForwarded);
+
+                if (stats.MessagesWaiting > 0)
+                {
+                    text = text + winrt::hstring{ L"\n" } +
+                        resources::FormatString(L"ConnectionWaitingToSendFormat", stats.MessagesWaiting);
+                }
+
+                if (stats.MessagesDropped > 0)
+                {
+                    text = text + winrt::hstring{ L"\n" } +
+                        resources::FormatString(L"ConnectionDroppedFormat", stats.MessagesDropped);
+                }
+
+                return text;
+            }
+
+            if (Analysis().LoopMutedConnectionIds.count(elementId) != 0)
             {
                 return resources::GetString(L"ConnectionLoopMuted");
             }
 
-            auto const* patch = const_cast<MainWindow*>(this)->CurrentPatch();
-            auto const* connection = patch == nullptr ? nullptr : patch->FindConnection(connectionId);
+            auto const* connection = patch->FindConnection(elementId);
 
             if (connection != nullptr && connection->Muted)
             {
                 return resources::GetString(L"ConnectionMuted");
             }
 
-            auto const it = m_routeStats.find(connectionId);
-
-            if (it == m_routeStats.end())
+            if (found == m_activity.end())
             {
                 return resources::GetString(L"ConnectionWaiting");
             }
 
-            auto text = resources::FormatString(L"ConnectionForwardedFormat", it->second.MessagesForwarded);
+            auto text = resources::FormatString(L"ConnectionForwardedFormat", found->second.MessagesForwarded);
 
-            if (it->second.SendFailures > 0)
+            if (found->second.SendFailures > 0)
             {
                 text = text + winrt::hstring{ L"\n" } +
-                    resources::FormatString(L"ConnectionSendFailuresFormat", it->second.SendFailures);
+                    resources::FormatString(L"ConnectionSendFailuresFormat", found->second.SendFailures);
             }
 
-            if (it->second.MessagesWaiting > 0)
+            if (found->second.MessagesWaiting > 0)
             {
                 text = text + winrt::hstring{ L"\n" } +
-                    resources::FormatString(L"ConnectionWaitingToSendFormat", it->second.MessagesWaiting);
+                    resources::FormatString(L"ConnectionWaitingToSendFormat", found->second.MessagesWaiting);
             }
 
-            if (it->second.MessagesDropped > 0)
+            if (found->second.MessagesDropped > 0)
             {
                 text = text + winrt::hstring{ L"\n" } +
-                    resources::FormatString(L"ConnectionDroppedFormat", it->second.MessagesDropped);
+                    resources::FormatString(L"ConnectionDroppedFormat", found->second.MessagesDropped);
             }
 
             return text;
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to describe the connection activity.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to describe the activity.")
 
         return {};
     }
@@ -203,14 +277,14 @@ namespace winrt::midipatchbay::implementation
     {
         try
         {
-            if (m_activityText == nullptr || m_activityConnectionId.empty())
+            if (m_activityText == nullptr || m_activityElementId.empty())
             {
                 return;
             }
 
-            m_activityText.Text(ConnectionActivityText(m_activityConnectionId));
+            m_activityText.Text(ActivityText(m_activityElementId));
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to refresh the connection activity.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to refresh the activity.")
     }
 
     _Use_decl_annotations_
@@ -301,10 +375,7 @@ namespace winrt::midipatchbay::implementation
 
                                 target->MatchMode = mode;
 
-                                strong->MarkDirty();
-                                strong->RebuildCanvas();
-                                strong->UpdateMessages();
-                                strong->ApplyRouting();
+                                strong->CommitChange(true);
                             });
 
                         section.Children().Append(button);
@@ -395,12 +466,7 @@ namespace winrt::midipatchbay::implementation
                             target->DisplayName = replacement->Name;
                             target->TransportCode = replacement->TransportCode;
 
-                            strong->MarkDirty();
-                            strong->RefreshAnalysis();
-                            strong->RebuildCanvas();
-                            strong->RefreshInspector();
-                            strong->UpdateMessages();
-                            strong->ApplyRouting();
+                            strong->CommitChange(true);
                         });
 
                     body.Children().Append(useButton);
@@ -441,9 +507,8 @@ namespace winrt::midipatchbay::implementation
                         {
                             target->ShowAllGroups = !target->ShowAllGroups;
 
-                            strong->MarkDirty();
-                            strong->RebuildCanvas();
-                            strong->RefreshInspector();
+                            // Only which points are drawn, so the routes stay as they are.
+                            strong->CommitChange(false);
                         }
                     });
 
@@ -471,12 +536,7 @@ namespace winrt::midipatchbay::implementation
                         current->RemoveEndpoint(endpointId);
 
                         strong->m_canvas.ClearSelection();
-                        strong->MarkDirty();
-                        strong->RefreshAnalysis();
-                        strong->RebuildCanvas();
-                        strong->RefreshInspector();
-                        strong->UpdateMessages();
-                        strong->ApplyRouting();
+                        strong->CommitChange(true);
                     });
 
                 actions.Children().Append(removeButton);
@@ -502,10 +562,8 @@ namespace winrt::midipatchbay::implementation
             auto const connectionId = connection.Id;
             auto weak = get_weak();
 
-            auto const* source = patch->FindEndpoint(connection.SourceEndpointId);
-            auto const* destination = patch->FindEndpoint(connection.DestinationEndpointId);
-
-            auto const liveSource = source == nullptr ? std::nullopt : patchbay::ResolveEndpoint(*source);
+            // Only an endpoint has groups. A step takes whatever group each message carries.
+            auto const* destination = patch->FindEndpoint(connection.DestinationId);
             auto const liveDestination = destination == nullptr ? std::nullopt : patchbay::ResolveEndpoint(*destination);
 
             // ----------------------------------------------------- from / to
@@ -513,41 +571,27 @@ namespace winrt::midipatchbay::implementation
                 controls::StackPanel body{};
                 body.Spacing(3);
 
-                auto const addEnd = [&](winrt::hstring const& label,
-                    patchbay::PatchEndpoint const* endpoint,
-                    std::optional<patchbay::LiveEndpoint> const& live,
-                    int32_t groupIndex,
-                    bool isOutput)
+                auto const addEnd = [&](winrt::hstring const& label, winrt::hstring const& text)
                     {
                         auto labelText = ValueText(label, 11);
                         labelText.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
                         body.Children().Append(labelText);
 
-                        body.Children().Append(ValueText(
-                            winrt::hstring{ endpoint == nullptr ? L"" : endpoint->DisplayName }, 13, true));
-
-                        std::wstring groupName{};
-
-                        if (live.has_value() && groupIndex != patchbay::AllGroups)
-                        {
-                            groupName = live->GroupName(groupIndex, isOutput);
-                        }
-
-                        auto detail = ValueText(patchbay::DescribeGroupIndex(groupIndex, groupName), 11, true);
-                        detail.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
-                        detail.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 6));
-                        body.Children().Append(detail);
+                        auto value = ValueText(text, 13, true);
+                        value.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 6));
+                        body.Children().Append(value);
                     };
 
-                addEnd(resources::GetString(L"InspectorFrom"), source, liveSource,
-                    connection.SourceGroupIndex, true);
-                addEnd(resources::GetString(L"InspectorTo"), destination, liveDestination,
-                    connection.DestinationGroupIndex, false);
+                addEnd(resources::GetString(L"InspectorFrom"),
+                    DescribeLinkEnd(connection.SourceId, connection.SourceGroupIndex, true));
+                addEnd(resources::GetString(L"InspectorTo"),
+                    DescribeLinkEnd(connection.DestinationId, connection.DestinationGroupIndex, false));
 
                 InspectorContent().Children().Append(Card(body));
             }
 
             // -------------------------------------------------- destination group
+            if (destination != nullptr)
             {
                 auto section = Section(resources::GetString(L"InspectorSendToGroup"));
 
@@ -650,184 +694,38 @@ namespace winrt::midipatchbay::implementation
 
                         target->DestinationGroupIndex = options[index];
 
-                        strong->MarkDirty();
-                        strong->RefreshAnalysis();
-                        strong->RebuildCanvas();
-                        strong->UpdateMessages();
-                        strong->ApplyRouting();
+                        strong->CommitChange(true);
                     });
 
                 section.Children().Append(combo);
                 InspectorContent().Children().Append(section);
             }
 
-            // ------------------------------------------------ filters
+            // ------------------------------------------------------ add a step
             {
-                auto section = Section(resources::GetString(L"InspectorFilters"));
+                controls::DropDownButton addStep{};
+
+                addStep.Content(winrt::box_value(resources::GetString(L"ActionAddStepHere")));
+                addStep.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+                addStep.Flyout(BuildAddStepMenu(connectionId));
+
+                auto hint = ValueText(resources::GetString(L"ActionAddStepHereHint"), 11, true);
+                hint.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
 
                 controls::StackPanel body{};
-                body.Spacing(8);
+                body.Spacing(6);
+                body.Children().Append(addStep);
+                body.Children().Append(hint);
 
-                auto summary = ValueText(patchbay::SummarizeFilter(connection.Filter), 12, false);
-                summary.TextWrapping(xaml::TextWrapping::Wrap);
-                summary.TextTrimming(xaml::TextTrimming::None);
-
-                if (connection.Filter.PassesEverything())
-                {
-                    summary.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
-                }
-
-                body.Children().Append(summary);
-
-                controls::Button editButton{};
-                editButton.Content(winrt::box_value(resources::GetString(L"ActionEditFilters")));
-                editButton.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
-
-                editButton.Click([weak, connectionId](auto&&, auto&&)
-                    {
-                        if (auto strong = weak.get())
-                        {
-                            strong->ShowFilterDialogAsync(connectionId);
-                        }
-                    });
-
-                body.Children().Append(editButton);
-
-                section.Children().Append(Card(body));
-                InspectorContent().Children().Append(section);
-            }
-
-            // ------------------------------------------------ transforms
-            {
-                auto section = Section(resources::GetString(L"InspectorTransforms"));
-
-                controls::StackPanel body{};
-                body.Spacing(8);
-
-                auto summary = ValueText(patchbay::SummarizeTransform(connection.Transform), 12, false);
-                summary.TextWrapping(xaml::TextWrapping::Wrap);
-                summary.TextTrimming(xaml::TextTrimming::None);
-
-                if (connection.Transform.ChangesNothing())
-                {
-                    summary.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
-                }
-
-                body.Children().Append(summary);
-
-                controls::Button transformButton{};
-                transformButton.Content(winrt::box_value(resources::GetString(L"ActionEditTransforms")));
-                transformButton.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
-
-                transformButton.Click([weak, connectionId](auto&&, auto&&)
-                    {
-                        if (auto strong = weak.get())
-                        {
-                            strong->ShowTransformDialogAsync(connectionId);
-                        }
-                    });
-
-                body.Children().Append(transformButton);
-
-                section.Children().Append(Card(body));
-                InspectorContent().Children().Append(section);
-            }
-
-            // -------------------------------------------------- sending speed
-            {
-                auto const label = resources::GetString(L"InspectorSendingSpeed");
-                auto section = Section(label);
-
-                // The speeds Network MIDI Setup offers, and whatever else a file asked for
-                std::vector<uint32_t> options{ 0, 1, 2, 4, 8, 16, 32 };
-
-                if (std::find(options.begin(), options.end(), connection.SendSpeedLimit) == options.end())
-                {
-                    options.push_back(connection.SendSpeedLimit);
-                }
-
-                auto items = winrt::single_threaded_vector<foundation::IInspectable>();
-
-                int32_t selectedIndex{ 0 };
-
-                for (size_t i = 0; i < options.size(); i++)
-                {
-                    items.Append(winrt::box_value(SendSpeedText(options[i])));
-
-                    if (options[i] == connection.SendSpeedLimit)
-                    {
-                        selectedIndex = static_cast<int32_t>(i);
-                    }
-                }
-
-                controls::ComboBox combo{};
-
-                combo.ItemsSource(items);
-                combo.SelectedIndex(selectedIndex);
-                combo.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
-                xaml::Automation::AutomationProperties::SetName(combo, label);
-
-                combo.SelectionChanged([weak, connectionId, options](
-                    foundation::IInspectable const& s, controls::SelectionChangedEventArgs const&)
-                    {
-                        auto strong = weak.get();
-
-                        if (strong == nullptr)
-                        {
-                            return;
-                        }
-
-                        auto const control = s.try_as<controls::ComboBox>();
-
-                        if (control == nullptr)
-                        {
-                            return;
-                        }
-
-                        auto const index = control.SelectedIndex();
-
-                        // -1 happens while the list is being replaced; acting on it would
-                        // rewrite the connection on every refresh
-                        if (index < 0 || static_cast<size_t>(index) >= options.size())
-                        {
-                            return;
-                        }
-
-                        auto* current = strong->CurrentPatch();
-
-                        if (current == nullptr)
-                        {
-                            return;
-                        }
-
-                        auto* target = current->FindConnection(connectionId);
-
-                        if (target == nullptr || target->SendSpeedLimit == options[index])
-                        {
-                            return;
-                        }
-
-                        target->SendSpeedLimit = options[index];
-
-                        strong->MarkDirty();
-                        strong->ApplyRouting();
-                    });
-
-                section.Children().Append(combo);
-
-                auto help = ValueText(resources::GetString(L"InspectorSendingSpeedHelp"), 12, true);
-                help.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
-                section.Children().Append(help);
-
-                InspectorContent().Children().Append(section);
+                InspectorContent().Children().Append(body);
             }
 
             // ------------------------------------------------------- activity
             {
                 auto section = Section(resources::GetString(L"InspectorActivity"));
 
-                m_activityConnectionId = connectionId;
-                m_activityText = ValueText(ConnectionActivityText(connectionId), 13, true);
+                m_activityElementId = connectionId;
+                m_activityText = ValueText(ActivityText(connectionId), 13, true);
 
                 section.Children().Append(m_activityText);
 
@@ -836,9 +734,7 @@ namespace winrt::midipatchbay::implementation
 
             // -------------------------------------------------------- actions
             {
-                controls::StackPanel actions{};
-                actions.Spacing(8);
-                actions.Orientation(controls::Orientation::Horizontal);
+                auto actions = ActionRow();
 
                 controls::Button muteButton{};
                 muteButton.Content(winrt::box_value(connection.Muted
@@ -848,13 +744,7 @@ namespace winrt::midipatchbay::implementation
                 muteButton.Click([weak, connectionId](auto&&, auto&&)
                     {
                         auto strong = weak.get();
-
-                        if (strong == nullptr)
-                        {
-                            return;
-                        }
-
-                        auto* current = strong->CurrentPatch();
+                        auto* current = strong == nullptr ? nullptr : strong->CurrentPatch();
 
                         if (current == nullptr)
                         {
@@ -864,13 +754,7 @@ namespace winrt::midipatchbay::implementation
                         if (auto* target = current->FindConnection(connectionId))
                         {
                             target->Muted = !target->Muted;
-
-                            strong->MarkDirty();
-                            strong->RefreshAnalysis();
-                            strong->RebuildCanvas();
-                            strong->RefreshInspector();
-                            strong->UpdateMessages();
-                            strong->ApplyRouting();
+                            strong->CommitChange(true);
                         }
                     });
 
@@ -882,13 +766,7 @@ namespace winrt::midipatchbay::implementation
                 removeButton.Click([weak, connectionId](auto&&, auto&&)
                     {
                         auto strong = weak.get();
-
-                        if (strong == nullptr)
-                        {
-                            return;
-                        }
-
-                        auto* current = strong->CurrentPatch();
+                        auto* current = strong == nullptr ? nullptr : strong->CurrentPatch();
 
                         if (current == nullptr)
                         {
@@ -898,12 +776,7 @@ namespace winrt::midipatchbay::implementation
                         current->RemoveConnection(connectionId);
 
                         strong->m_canvas.ClearSelection();
-                        strong->MarkDirty();
-                        strong->RefreshAnalysis();
-                        strong->RebuildCanvas();
-                        strong->RefreshInspector();
-                        strong->UpdateMessages();
-                        strong->ApplyRouting();
+                        strong->CommitChange(true);
                     });
 
                 actions.Children().Append(removeButton);
@@ -912,5 +785,526 @@ namespace winrt::midipatchbay::implementation
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the connection inspector.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::BuildBlockInspector(patchbay::PatchBlock const& block) noexcept
+    {
+        try
+        {
+            auto const blockId = block.Id;
+            auto const kind = block.Kind;
+            auto const category = patchbay::CategoryOf(kind);
+            auto weak = get_weak();
+
+            // ---------------------------------------------------- what it is
+            {
+                controls::StackPanel body{};
+                body.Spacing(10);
+
+                controls::StackPanel kindRow{};
+                kindRow.Orientation(controls::Orientation::Horizontal);
+                kindRow.Spacing(8);
+
+                controls::Border badge{};
+                badge.MinWidth(36);
+                badge.Height(20);
+                badge.Padding(xaml::ThicknessHelper::FromLengths(4, 0, 4, 0));
+                badge.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(4));
+                badge.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
+                badge.BorderBrush(patchbay::PatchCanvas::CategoryBrush(category));
+                badge.Background(patchbay::PatchCanvas::CategoryBrush(category, 0.18));
+
+                controls::TextBlock badgeText{};
+                badgeText.Text(patchbay::BlockKindBadge(kind));
+                badgeText.FontSize(11);
+                badgeText.FontWeight(winrt::Microsoft::UI::Text::FontWeights::SemiBold());
+                badgeText.HorizontalAlignment(xaml::HorizontalAlignment::Center);
+                badgeText.VerticalAlignment(xaml::VerticalAlignment::Center);
+                badgeText.Foreground(patchbay::PatchCanvas::CategoryBrush(category));
+                badge.Child(badgeText);
+
+                kindRow.Children().Append(badge);
+
+                auto kindText = ValueText(resources::FormatString(L"InspectorStepKindFormat",
+                    patchbay::BlockKindName(kind), patchbay::BlockCategoryName(category)), 12);
+                kindText.VerticalAlignment(xaml::VerticalAlignment::Center);
+                kindText.Foreground(BrushOrNull(L"TextFillColorSecondaryBrush"));
+                kindRow.Children().Append(kindText);
+
+                body.Children().Append(kindRow);
+
+                // Empty means the step goes by its kind's name, which the placeholder shows.
+                controls::TextBox nameBox{};
+                nameBox.Header(winrt::box_value(resources::GetString(L"InspectorStepName")));
+                nameBox.PlaceholderText(patchbay::BlockKindName(kind));
+                nameBox.Text(winrt::hstring{ block.Name });
+                nameBox.MaxLength(96);
+
+                auto const commitName = [weak, blockId](controls::TextBox const& box)
+                    {
+                        auto strong = weak.get();
+                        auto* current = strong == nullptr ? nullptr : strong->CurrentPatch();
+                        auto* target = current == nullptr ? nullptr : current->FindBlock(blockId);
+
+                        if (target == nullptr)
+                        {
+                            return;
+                        }
+
+                        auto name = patchbay::SanitizeStoredString(std::wstring{ box.Text() });
+
+                        // Typing the kind's own name is the same as giving it no name.
+                        if (name == std::wstring{ patchbay::BlockKindName(target->Kind) })
+                        {
+                            name.clear();
+                        }
+
+                        if (name == target->Name)
+                        {
+                            return;
+                        }
+
+                        target->Name = name;
+
+                        // The inspector stays as it is, so the box keeps its focus.
+                        strong->CommitChange(true, false);
+                        strong->RebuildCanvas();
+
+                        if (auto const* renamed = current->FindBlock(blockId))
+                        {
+                            strong->InspectorTitle().Text(patchbay::BlockDisplayName(*renamed));
+                        }
+                    };
+
+                nameBox.LostFocus([commitName](foundation::IInspectable const& sender, auto&&)
+                    {
+                        if (auto const box = sender.try_as<controls::TextBox>())
+                        {
+                            commitName(box);
+                        }
+                    });
+
+                nameBox.KeyDown([commitName](foundation::IInspectable const& sender, input::KeyRoutedEventArgs const& args)
+                    {
+                        if (args.Key() != winrt::Windows::System::VirtualKey::Enter)
+                        {
+                            return;
+                        }
+
+                        args.Handled(true);
+
+                        if (auto const box = sender.try_as<controls::TextBox>())
+                        {
+                            commitName(box);
+                        }
+                    });
+
+                body.Children().Append(nameBox);
+
+                InspectorContent().Children().Append(Card(body));
+            }
+
+            // ------------------------------------------------- what it does
+            {
+                auto section = Section(resources::GetString(L"InspectorWhatItDoes"));
+
+                controls::StackPanel body{};
+                body.Spacing(10);
+
+                auto summary = ValueText(patchbay::DescribeBlock(kind, block.Settings), 12, true);
+                body.Children().Append(summary);
+
+                // The two settings people change most often are right here, not behind the dialog.
+                if (kind == patchbay::BlockKind::Transpose)
+                {
+                    controls::NumberBox semitones{};
+
+                    semitones.Header(winrt::box_value(resources::GetString(L"TransformSemitones")));
+                    semitones.Minimum(patchbay::MinimumTranspose);
+                    semitones.Maximum(patchbay::MaximumTranspose);
+                    semitones.SmallChange(1);
+                    semitones.LargeChange(12);
+                    semitones.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Inline);
+                    semitones.ValidationMode(controls::NumberBoxValidationMode::InvalidInputOverwritten);
+                    semitones.Value(block.Settings.Transform.TransposeSemitones);
+
+                    semitones.ValueChanged([weak, blockId, summary](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
+                        {
+                            auto strong = weak.get();
+                            auto* current = strong == nullptr ? nullptr : strong->CurrentPatch();
+                            auto* target = current == nullptr ? nullptr : current->FindBlock(blockId);
+
+                            if (target == nullptr || std::isnan(args.NewValue()))
+                            {
+                                return;
+                            }
+
+                            auto const value = static_cast<int32_t>(std::clamp(args.NewValue(),
+                                static_cast<double>(patchbay::MinimumTranspose),
+                                static_cast<double>(patchbay::MaximumTranspose)));
+
+                            if (value == target->Settings.Transform.TransposeSemitones)
+                            {
+                                return;
+                            }
+
+                            target->Settings.Transform.TransposeSemitones = value;
+                            summary.Text(patchbay::DescribeBlock(target->Kind, target->Settings));
+
+                            strong->CommitChange(true, false);
+                            strong->RebuildCanvas();
+                        });
+
+                    body.Children().Append(semitones);
+                }
+                else if (kind == patchbay::BlockKind::Throttle)
+                {
+                    // The speeds Network MIDI Setup offers, and whatever else a file asked for.
+                    std::vector<uint32_t> options{ 0, 1, 2, 4, 8, 16, 32 };
+
+                    if (std::find(options.begin(), options.end(), block.Settings.SendSpeedLimit) == options.end())
+                    {
+                        options.push_back(block.Settings.SendSpeedLimit);
+                    }
+
+                    auto items = winrt::single_threaded_vector<foundation::IInspectable>();
+                    int32_t selectedIndex{ 0 };
+
+                    for (size_t i = 0; i < options.size(); i++)
+                    {
+                        items.Append(winrt::box_value(patchbay::DescribeSendSpeed(options[i])));
+
+                        if (options[i] == block.Settings.SendSpeedLimit)
+                        {
+                            selectedIndex = static_cast<int32_t>(i);
+                        }
+                    }
+
+                    controls::ComboBox speed{};
+
+                    speed.Header(winrt::box_value(resources::GetString(L"InspectorSendingSpeed")));
+                    speed.ItemsSource(items);
+                    speed.SelectedIndex(selectedIndex);
+                    speed.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+
+                    speed.SelectionChanged([weak, blockId, options, summary](foundation::IInspectable const& s, auto&&)
+                        {
+                            auto strong = weak.get();
+                            auto const control = s.try_as<controls::ComboBox>();
+                            auto* current = strong == nullptr ? nullptr : strong->CurrentPatch();
+                            auto* target = current == nullptr ? nullptr : current->FindBlock(blockId);
+
+                            if (target == nullptr || control == nullptr)
+                            {
+                                return;
+                            }
+
+                            auto const index = control.SelectedIndex();
+
+                            // -1 while the list is replaced. Acting on it would rewrite the step.
+                            if (index < 0 || static_cast<size_t>(index) >= options.size() ||
+                                target->Settings.SendSpeedLimit == options[static_cast<size_t>(index)])
+                            {
+                                return;
+                            }
+
+                            target->Settings.SendSpeedLimit = options[static_cast<size_t>(index)];
+                            summary.Text(patchbay::DescribeBlock(target->Kind, target->Settings));
+
+                            strong->CommitChange(true, false);
+                            strong->RebuildCanvas();
+                        });
+
+                    body.Children().Append(speed);
+
+                    auto help = ValueText(resources::GetString(L"InspectorSendingSpeedHelp"), 11, true);
+                    help.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
+                    body.Children().Append(help);
+                }
+                else if (kind == patchbay::BlockKind::ClockGenerator)
+                {
+                    controls::NumberBox tempo{};
+
+                    tempo.Header(winrt::box_value(resources::GetString(L"GeneratorBeatsPerMinute")));
+                    tempo.Minimum(patchbay::MinimumGeneratorBeatsPerMinute);
+                    tempo.Maximum(patchbay::MaximumGeneratorBeatsPerMinute);
+                    tempo.SmallChange(1);
+                    tempo.LargeChange(10);
+                    tempo.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Inline);
+                    tempo.ValidationMode(controls::NumberBoxValidationMode::InvalidInputOverwritten);
+                    tempo.Value(block.Settings.Clock.BeatsPerMinute);
+
+                    tempo.ValueChanged([weak, blockId, summary](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
+                        {
+                            auto strong = weak.get();
+                            auto* current = strong == nullptr ? nullptr : strong->CurrentPatch();
+                            auto* target = current == nullptr ? nullptr : current->FindBlock(blockId);
+
+                            if (target == nullptr || std::isnan(args.NewValue()))
+                            {
+                                return;
+                            }
+
+                            // Two places, the same as the file keeps.
+                            auto const value = std::round(std::clamp(args.NewValue(),
+                                patchbay::MinimumGeneratorBeatsPerMinute,
+                                patchbay::MaximumGeneratorBeatsPerMinute) * 100.0) / 100.0;
+
+                            if (value == target->Settings.Clock.BeatsPerMinute)
+                            {
+                                return;
+                            }
+
+                            target->Settings.Clock.BeatsPerMinute = value;
+                            summary.Text(patchbay::DescribeBlock(target->Kind, target->Settings));
+
+                            strong->CommitChange(true, false);
+                            strong->RebuildCanvas();
+                        });
+
+                    body.Children().Append(tempo);
+                }
+
+                if (kind != patchbay::BlockKind::Throttle)
+                {
+                    controls::Button editButton{};
+
+                    editButton.Content(winrt::box_value(resources::GetString(L"ActionEditStep")));
+                    editButton.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+
+                    editButton.Click([weak, blockId](auto&&, auto&&)
+                        {
+                            if (auto strong = weak.get())
+                            {
+                                strong->ShowBlockDialogAsync(blockId);
+                            }
+                        });
+
+                    body.Children().Append(editButton);
+                }
+
+                section.Children().Append(Card(body));
+                InspectorContent().Children().Append(section);
+            }
+
+            // ------------------------------------------------------- bypass
+            {
+                controls::StackPanel body{};
+                body.Spacing(2);
+
+                controls::ToggleSwitch bypass{};
+
+                bypass.Header(winrt::box_value(resources::GetString(L"InspectorBypass")));
+                bypass.IsOn(block.Bypassed);
+                bypass.OnContent(winrt::box_value(resources::GetString(L"InspectorBypassOn")));
+                bypass.OffContent(winrt::box_value(resources::GetString(L"InspectorBypassOff")));
+
+                bypass.Toggled([weak, blockId](foundation::IInspectable const& s, auto&&)
+                    {
+                        auto strong = weak.get();
+                        auto const control = s.try_as<controls::ToggleSwitch>();
+
+                        if (strong != nullptr && control != nullptr)
+                        {
+                            strong->SetBlockBypassed(blockId, control.IsOn());
+                        }
+                    });
+
+                body.Children().Append(bypass);
+
+                auto hint = ValueText(resources::GetString(patchbay::IsGenerator(kind)
+                    ? L"InspectorBypassGeneratorHint"
+                    : L"InspectorBypassHint"), 11, true);
+                hint.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
+                body.Children().Append(hint);
+
+                InspectorContent().Children().Append(body);
+            }
+
+            // ------------------------------------------------------- activity
+            {
+                auto section = Section(resources::GetString(L"InspectorActivity"));
+
+                m_activityElementId = blockId;
+                m_activityText = ValueText(ActivityText(blockId), 13, true);
+
+                section.Children().Append(m_activityText);
+
+                InspectorContent().Children().Append(section);
+            }
+
+            // -------------------------------------------------------- actions
+            {
+                auto actions = ActionRow();
+
+                controls::Button duplicateButton{};
+                duplicateButton.Content(winrt::box_value(resources::GetString(L"ActionDuplicateStep")));
+
+                duplicateButton.Click([weak](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->DuplicateSelection();
+                        }
+                    });
+
+                actions.Children().Append(duplicateButton);
+
+                controls::Button removeButton{};
+                removeButton.Content(winrt::box_value(resources::GetString(L"ActionRemoveStep")));
+
+                removeButton.Click([weak](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->DeleteSelection();
+                        }
+                    });
+
+                actions.Children().Append(removeButton);
+
+                InspectorContent().Children().Append(actions);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the step inspector.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::BuildSelectionInspector(size_t count) noexcept
+    {
+        try
+        {
+            auto weak = get_weak();
+
+            InspectorContent().Children().Append(Card(ValueText(
+                resources::FormatString(L"InspectorSelectionMessageFormat", count), 12, true)));
+
+            auto actions = ActionRow();
+
+            auto const addAction = [&actions, weak](wchar_t const* key, std::function<void(MainWindow&)> action)
+                {
+                    controls::Button button{};
+
+                    button.Content(winrt::box_value(resources::GetString(key)));
+                    button.Click([weak, action](auto&&, auto&&)
+                        {
+                            if (auto strong = weak.get())
+                            {
+                                action(*strong);
+                            }
+                        });
+
+                    actions.Children().Append(button);
+                };
+
+            addAction(L"ActionCopy", [](MainWindow& window) { window.CopySelection(); });
+            addAction(L"ActionDuplicate", [](MainWindow& window) { window.DuplicateSelection(); });
+            addAction(L"ActionRemove", [](MainWindow& window) { window.DeleteSelection(); });
+
+            InspectorContent().Children().Append(actions);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the selection inspector.")
+    }
+
+    _Use_decl_annotations_
+    controls::MenuFlyout MainWindow::BuildAddStepMenu(std::wstring const& connectionId) noexcept
+    {
+        controls::MenuFlyout menu{};
+
+        try
+        {
+            auto weak = get_weak();
+
+            for (auto const category : { patchbay::BlockCategory::Filter, patchbay::BlockCategory::Transform, patchbay::BlockCategory::Sending })
+            {
+                std::vector<patchbay::BlockKind> kinds{};
+
+                for (auto const kind : patchbay::AllBlockKinds)
+                {
+                    if (patchbay::CategoryOf(kind) == category)
+                    {
+                        kinds.push_back(kind);
+                    }
+                }
+
+                auto const makeItem = [weak, connectionId](patchbay::BlockKind kind)
+                    {
+                        controls::MenuFlyoutItem item{};
+
+                        item.Text(patchbay::BlockKindName(kind));
+                        controls::ToolTipService::SetToolTip(item, winrt::box_value(patchbay::BlockKindHint(kind)));
+
+                        item.Click([weak, connectionId, kind](auto&&, auto&&)
+                            {
+                                if (auto strong = weak.get())
+                                {
+                                    strong->InsertBlockIntoConnection(kind, connectionId, std::nullopt);
+                                }
+                            });
+
+                        return item;
+                    };
+
+                // A category of one is its one item, not a menu with one thing in it.
+                if (kinds.size() == 1)
+                {
+                    menu.Items().Append(makeItem(kinds.front()));
+                    continue;
+                }
+
+                controls::MenuFlyoutSubItem submenu{};
+                submenu.Text(patchbay::BlockCategoryName(category));
+
+                for (auto const kind : kinds)
+                {
+                    submenu.Items().Append(makeItem(kind));
+                }
+
+                menu.Items().Append(submenu);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the add a step menu.")
+
+        return menu;
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring MainWindow::DescribeLinkEnd(std::wstring const& nodeId, int32_t groupIndex, bool isSource) noexcept
+    {
+        try
+        {
+            auto const* patch = CurrentPatch();
+
+            if (patch == nullptr)
+            {
+                return {};
+            }
+
+            if (auto const* block = patch->FindBlock(nodeId))
+            {
+                return patchbay::BlockDisplayName(*block);
+            }
+
+            if (auto const* endpoint = patch->FindEndpoint(nodeId))
+            {
+                std::wstring groupName{};
+
+                if (groupIndex != patchbay::AllGroups)
+                {
+                    if (auto const live = patchbay::ResolveEndpoint(*endpoint))
+                    {
+                        groupName = live->GroupName(groupIndex, isSource);
+                    }
+                }
+
+                return resources::FormatString(L"LinkEndFormat",
+                    endpoint->DisplayName,
+                    patchbay::DescribeGroupIndex(groupIndex, groupName, !isSource));
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to describe the end of a connection.")
+
+        return {};
     }
 }

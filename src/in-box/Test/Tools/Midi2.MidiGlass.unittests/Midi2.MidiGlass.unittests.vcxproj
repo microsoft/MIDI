@@ -146,6 +146,8 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\editor\RepeatPlan.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\editor\UndoStack.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\LfoWave.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\ChannelVoiceWords.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Module.cpp" />
@@ -202,6 +204,8 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\RepeatPlan.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\UndoStack.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\LfoWave.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\ChannelVoiceWords.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -632,16 +632,34 @@ namespace midiapp
                 return;
             }
 
-            if (!saved.Valid)
-            {
-                appWindow.Resize(winrt::Windows::Graphics::SizeInt32{ defaultWidth, defaultHeight });
-                return;
-            }
-
             winrt::Windows::Graphics::RectInt32 bounds{ saved.X, saved.Y, saved.Width, saved.Height };
 
-            // The saved monitor may be gone or smaller now, so pull the window back onto a
-            // display that actually exists before showing it.
+            if (!saved.Valid)
+            {
+                // The defaults are effective pixels and AppWindow works in physical pixels.
+                auto scale = 1.0;
+                HWND handle{ nullptr };
+
+                if (auto const native = window.try_as<::IWindowNative>();
+                    native != nullptr && SUCCEEDED(native->get_WindowHandle(&handle)) && handle != nullptr)
+                {
+                    if (auto const dpi = ::GetDpiForWindow(handle); dpi != 0)
+                    {
+                        scale = static_cast<double>(dpi) / USER_DEFAULT_SCREEN_DPI;
+                    }
+                }
+
+                auto const position = appWindow.Position();
+
+                bounds = winrt::Windows::Graphics::RectInt32{
+                    position.X,
+                    position.Y,
+                    static_cast<int32_t>(defaultWidth * scale + 0.5),
+                    static_cast<int32_t>(defaultHeight * scale + 0.5) };
+            }
+
+            // The saved monitor may be gone or smaller now, and a scaled default can be bigger
+            // than a small display, so pull the window onto a display that actually exists.
             auto const display = wuw::DisplayArea::GetFromRect(bounds, wuw::DisplayAreaFallback::Nearest);
 
             if (display != nullptr)
@@ -656,7 +674,7 @@ namespace midiapp
 
             appWindow.MoveAndResize(bounds);
 
-            if (saved.Maximized)
+            if (saved.Valid && saved.Maximized)
             {
                 if (auto presenter = appWindow.Presenter().try_as<wuw::OverlappedPresenter>())
                 {

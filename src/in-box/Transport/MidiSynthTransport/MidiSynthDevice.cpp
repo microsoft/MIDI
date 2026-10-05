@@ -103,6 +103,52 @@ void MidiSynthDevice::QueuedUmpOutput::SendUmp(const uint32_t* words, uint32_t w
 }
 
 
+_Use_decl_annotations_
+void MidiSynthDevice::WholeMessageUmpOutput::SendUmp(const uint32_t* words, uint32_t wordCount) noexcept
+{
+    if (words == nullptr || wordCount == 0 || wordCount > 4)
+    {
+        return;
+    }
+
+    if (m_heldCount < m_held.size())
+    {
+        auto& held = m_held[m_heldCount++];
+
+        held = QueuedUmp{};
+
+        for (uint32_t i = 0; i < wordCount; i++)
+        {
+            held.Words[i] = words[i];
+        }
+
+        held.WordCount = static_cast<uint8_t>(wordCount);
+    }
+    else
+    {
+        m_overflowed = true;
+    }
+
+    // Status 1 is start and 2 is continue: more of this message is still to come.
+    auto const status = internal::GetStatusFromDataMessage64FirstWord(words[0]);
+
+    if (internal::GetUmpMessageTypeFromFirstWord(words[0]) == MIDI_UMP_MESSAGE_TYPE_DATA_MESSAGE_64 &&
+        (status == 1 || status == 2))
+    {
+        return;
+    }
+
+    // A message too long to hold, or one the queue has no room for, is dropped whole.
+    if (!m_overflowed)
+    {
+        (void)m_queue.TryPushAll(m_held.data(), m_heldCount);
+    }
+
+    m_heldCount = 0;
+    m_overflowed = false;
+}
+
+
 HRESULT
 MidiSynthDevice::EnsureSoundSetLoaded()
 {
@@ -876,7 +922,13 @@ MidiSynthDevice::ServiceOutbound() noexcept
 {
     QueuedUmp message;
 
+    // Dispatcher replies go first: they answer messages that arrived before the property request.
     while (m_outbound.TryPop(message))
+    {
+        LOG_IF_FAILED(DeliverToCallback(message));
+    }
+
+    while (m_propertyOutbound.TryPop(message))
     {
         LOG_IF_FAILED(DeliverToCallback(message));
     }
@@ -985,7 +1037,7 @@ MidiSynthDevice::ServicePropertyRequestsInner()
                     TraceLoggingString(asked.c_str(), "header")
                 );
 
-                m_propertyExchange.SendNotFound(m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request);
+                m_propertyExchange.SendNotFound(m_propertyOutput, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request);
 
                 return;
             }
@@ -1024,7 +1076,7 @@ MidiSynthDevice::ServicePropertyRequestsInner()
 
     // One chunk per pass. A full program list is far more system exclusive packets than the
     // outbound queue holds at once.
-    (void)m_propertyExchange.SendNextChunk(m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid());
+    (void)m_propertyExchange.SendNextChunk(m_propertyOutput, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid());
 }
 
 
@@ -1039,7 +1091,7 @@ MidiSynthDevice::HandleSubscriptionRequest(
     if (!json::JsonObject::TryParse(winrt::to_hstring(text), parsed))
     {
         m_propertyExchange.SendSubscriptionReply(
-            m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 400, nullptr);
+            m_propertyOutput, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 400, nullptr);
 
         return;
     }
@@ -1080,7 +1132,7 @@ MidiSynthDevice::HandleSubscriptionRequest(
         if (resource != L"ChannelList")
         {
             m_propertyExchange.SendSubscriptionReply(
-                m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 405, nullptr);
+                m_propertyOutput, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 405, nullptr);
 
             return;
         }
@@ -1090,7 +1142,7 @@ MidiSynthDevice::HandleSubscriptionRequest(
         // Out of room. 507 is what the specification uses for a responder that cannot take on
         // any more, and it tells the initiator to keep polling instead.
         m_propertyExchange.SendSubscriptionReply(
-            m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request,
+            m_propertyOutput, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request,
             (assigned[0] == '\0') ? 507 : 200, assigned);
 
         return;
@@ -1101,7 +1153,7 @@ MidiSynthDevice::HandleSubscriptionRequest(
         (void)m_propertyExchange.RemoveSubscription(request.InitiatorMuid, subscribeId);
 
         m_propertyExchange.SendSubscriptionReply(
-            m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 200, nullptr);
+            m_propertyOutput, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 200, nullptr);
 
         return;
     }
@@ -1109,7 +1161,7 @@ MidiSynthDevice::HandleSubscriptionRequest(
     // An initiator does not send full, partial or notify to a responder. Answering rather than
     // ignoring keeps it from waiting out a timeout.
     m_propertyExchange.SendSubscriptionReply(
-        m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 400, nullptr);
+        m_propertyOutput, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 400, nullptr);
 }
 
 

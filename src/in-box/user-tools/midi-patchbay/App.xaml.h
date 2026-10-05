@@ -20,6 +20,17 @@ namespace winrt::midipatchbay::implementation
 
         static ::midipatchbay::CommandLineOptions const& StartupOptions() noexcept { return s_startupOptions; }
 
+        // One editor per patch. Opening a patch that already has one brings that one forward.
+        static void OpenEditorWindow(_In_ std::wstring const& patchKey);
+
+        static void ActivateLibraryWindow();
+
+        // The theme, the backdrop or always on top changed in the library.
+        static void ApplyAppearanceToEditors();
+
+        // The app is closing. Routing lives in the library, so an editor closing loses nothing.
+        static void CloseAllEditors();
+
     private:
         void OnUnhandledException(
             foundation::IInspectable const& sender,

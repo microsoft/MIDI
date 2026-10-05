@@ -7,8 +7,23 @@
 
 #pragma once
 
+// Pure: no XAML, no resources and no precompiled header, so the unit tests compile it exactly as
+// it ships. The names and summaries a customer reads are in MessageText.h.
+
+#include <sal.h>
+#include <array>
+#include <cstdint>
+#include <string>
+#include <string_view>
+
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Data.Json.h>
+
 namespace midipatchbay
 {
+    namespace json = ::winrt::Windows::Data::Json;
+
     // UMP message types, as they appear in the first nibble of the first word.
     enum class UmpMessageType : uint8_t
     {
@@ -100,17 +115,11 @@ namespace midipatchbay
     // per note messages to the three MIDI 1.0 ones.
     bool StatusCarriesNote(_In_ uint8_t status, _In_ bool isMidi2) noexcept;
 
-    // "C4", "F#-1" and so on, from the shipped SDK helper so this app names notes the same way
-    // every other Windows MIDI Services tool does.
-    winrt::hstring DescribeNote(_In_ uint8_t noteIndex) noexcept;
-
-    // Localized names for the pickers.
-    winrt::hstring DescribeMessageType(_In_ uint8_t messageType) noexcept;
-    winrt::hstring DescribeChannelVoiceStatus(_In_ uint8_t status) noexcept;
-    winrt::hstring DescribeSystemMessage(_In_ uint8_t status) noexcept;
-
-    // One line for the inspector, for example "Channels 1, 2 - no clock - notes C2 to C6".
-    winrt::hstring SummarizeFilter(_In_ MessageFilter const& filter) noexcept;
+    // A bit per entry, so a set costs a few characters in the patch file rather than a list of
+    // sixteen booleans.
+    uint32_t PackFlags(_In_reads_(count) bool const* values, _In_ size_t count) noexcept;
+    void UnpackFlags(_In_ uint32_t packed, _Out_writes_(count) bool* values, _In_ size_t count) noexcept;
+    bool AllTrue(_In_reads_(count) bool const* values, _In_ size_t count) noexcept;
 
     json::JsonObject FilterToJson(_In_ MessageFilter const& filter) noexcept;
     MessageFilter FilterFromJson(_In_ json::JsonObject const& object) noexcept;

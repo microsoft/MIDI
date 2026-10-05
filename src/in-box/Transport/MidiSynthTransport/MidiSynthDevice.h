@@ -71,6 +71,26 @@ private:
         OutboundQueue& m_queue;
     };
 
+    // Queues a system exclusive message only once its last packet arrives, so it is never seen in part.
+    class WholeMessageUmpOutput final : public MidiSynth::IUmpOutput
+    {
+    public:
+        explicit WholeMessageUmpOutput(_In_ OutboundQueue& queue) noexcept : m_queue(queue) {}
+
+        void SendUmp(
+            _In_reads_(wordCount) const uint32_t* words,
+            _In_ uint32_t wordCount) noexcept override;
+
+    private:
+        // The longest reply the dispatcher sends is ten packets.
+        static constexpr size_t MaxHeldPackets = 64;
+
+        OutboundQueue& m_queue;
+        std::array<MidiSynth::QueuedUmp, MaxHeldPackets> m_held{};
+        size_t m_heldCount{ 0 };
+        bool m_overflowed{ false };
+    };
+
     // The sound set is 3.4 MB and cannot change while the service runs, so it is read once on the
     // first connection and kept. A machine that never plays a note never reads it at all.
     HRESULT EnsureSoundSetLoaded();
@@ -132,8 +152,14 @@ private:
     MidiSynth::PropertyExchangeSource m_propertyExchange;
 
     MidiSynth::UmpInboundQueue m_inbound;
+
+    // Single producer: the render thread while audio runs, the worker while it does not.
     OutboundQueue m_outbound;
-    QueuedUmpOutput m_output{ m_outbound };
+    WholeMessageUmpOutput m_output{ m_outbound };
+
+    // Property exchange replies. Only the worker writes and reads this one.
+    OutboundQueue m_propertyOutbound;
+    QueuedUmpOutput m_propertyOutput{ m_propertyOutbound };
 
     std::unique_ptr<MidiSynth::WasapiAudioSink> m_sink;
     std::unique_ptr<MidiSynth::UmpRenderSource> m_source;

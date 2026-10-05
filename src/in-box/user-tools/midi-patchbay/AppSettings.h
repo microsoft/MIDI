@@ -57,6 +57,10 @@ namespace midipatchbay
         bool ShowAssistant() const noexcept { return m_showAssistant; }
         void ShowAssistant(_In_ bool value) noexcept;
 
+        // Where the last patch editor was. Every editor opens there, nudged along from the last.
+        WindowPlacementInfo const& EditorPlacement() const noexcept { return m_editorPlacement; }
+        void EditorPlacement(_In_ WindowPlacementInfo const& value) noexcept;
+
         // The per-user Run entry. Reads and writes HKCU directly rather than caching, because the
         // customer can change it outside the app.
         static bool StartsWithWindows() noexcept;
@@ -72,5 +76,7 @@ namespace midipatchbay
         bool m_confirmCanvasRemove{ true };
         bool m_activateSavedPatchesAtStartup{ true };
         bool m_showAssistant{ true };
+
+        WindowPlacementInfo m_editorPlacement{};
     };
 }

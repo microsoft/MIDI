@@ -266,42 +266,12 @@ namespace winrt::midipatchbay::implementation
         }
     }
 
-    winrt::fire_and_forget MainWindow::ShowTransformDialogAsync(std::wstring connectionId)
+    // The mapping tables are edited as row lists, filled here from the sparse arrays the step
+    // keeps, and collected back into them by CommitTransformMaps.
+    void MainWindow::PrepareTransformRows() noexcept
     {
-        auto strong = get_strong();
-
         try
         {
-            auto* patch = CurrentPatch();
-
-            if (patch == nullptr)
-            {
-                co_return;
-            }
-
-            auto const* connection = patch->FindConnection(connectionId);
-
-            if (connection == nullptr)
-            {
-                co_return;
-            }
-
-            m_editingTransform = connection->Transform;
-            m_editingTransformConnectionId = connectionId;
-
-            // Captured now so the audition button knows where to play, even if the selection
-            // changes behind the dialog.
-            m_testEndpointDeviceId.clear();
-            m_testGroupIndex = connection->DestinationGroupIndex;
-
-            if (auto const* destination = patch->FindEndpoint(connection->DestinationEndpointId))
-            {
-                if (auto const live = patchbay::ResolveEndpoint(*destination))
-                {
-                    m_testEndpointDeviceId = live->EndpointDeviceId;
-                }
-            }
-
             auto const fillRows = [this](TransformMap which, int16_t const* map, size_t count)
                 {
                     auto& rows = m_mapRows[static_cast<size_t>(which)];
@@ -334,52 +304,8 @@ namespace winrt::midipatchbay::implementation
                         static_cast<int32_t>(i), m_editingTransform.ControlValueShapes[i] });
                 }
             }
-
-            BuildTransformDialog();
-
-            TransformDialog().XamlRoot(Content().XamlRoot());
-
-            auto const result = co_await TransformDialog().ShowAsync();
-
-            if (result == controls::ContentDialogResult::None)
-            {
-                co_return;
-            }
-
-            if (result == controls::ContentDialogResult::Secondary)
-            {
-                m_editingTransform.Reset();
-            }
-            else
-            {
-                CommitTransformMaps();
-            }
-
-            m_editingTransform.IsActive = true;
-            m_editingTransform.IsActive = !m_editingTransform.ChangesNothing();
-
-            patch = CurrentPatch();
-
-            if (patch == nullptr)
-            {
-                co_return;
-            }
-
-            auto* target = patch->FindConnection(connectionId);
-
-            if (target == nullptr)
-            {
-                co_return;
-            }
-
-            target->Transform = m_editingTransform;
-
-            MarkDirty();
-            RefreshInspector();
-            ApplyRouting();
-            UpdateMessages();
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to edit the transforms.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to list the mappings.")
     }
 
     void MainWindow::CommitTransformMaps() noexcept
@@ -425,117 +351,154 @@ namespace winrt::midipatchbay::implementation
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to collect the mapping tables.")
     }
 
-    void MainWindow::UpdateTransformSummary() noexcept
+    void MainWindow::BuildTransformSections() noexcept
     {
         try
         {
-            CommitTransformMaps();
+            auto const content = BlockDialogContent();
 
-            auto preview = m_editingTransform;
-            preview.IsActive = true;
-
-            TransformSummaryText().Text(resources::FormatString(L"TransformDialogSummaryFormat",
-                patchbay::SummarizeTransform(preview)));
-
-            if (m_transposeExampleText != nullptr)
+            switch (m_editingKind)
             {
-                // Middle C, so the example means something to a musician.
-                constexpr uint8_t exampleNote = 60;
+            case patchbay::BlockKind::ChannelMap:
+                content.Children().Append(TransformCard(BuildMapSection(TransformMap::Channel)));
+                break;
 
-                m_transposeExampleText.Text(resources::FormatString(L"TransformTransposeExampleFormat",
-                    patchbay::DescribeNote(exampleNote),
-                    patchbay::DescribeNote(preview.ResultingNote(exampleNote))));
+            case patchbay::BlockKind::GroupMap:
+                BuildGroupMapSection();
+                break;
+
+            case patchbay::BlockKind::NoteMap:
+                content.Children().Append(TransformCard(BuildMapSection(TransformMap::Note)));
+                BuildTransposeSection();
+                break;
+
+            case patchbay::BlockKind::Transpose:
+                BuildTransposeSection();
+                break;
+
+            case patchbay::BlockKind::Velocity:
+                BuildValueScaleSection();
+                BuildVelocitySection();
+                break;
+
+            case patchbay::BlockKind::Aftertouch:
+                BuildValueScaleSection();
+                content.Children().Append(TransformCard(BuildAftertouchSection()));
+                break;
+
+            case patchbay::BlockKind::ControlChangeMap:
+                content.Children().Append(TransformCard(BuildMapSection(TransformMap::Control)));
+                break;
+
+            case patchbay::BlockKind::ControlChangeValue:
+                BuildValueScaleSection();
+                content.Children().Append(TransformCard(BuildControlValueSection()));
+                break;
+
+            case patchbay::BlockKind::ProgramMap:
+            {
+                content.Children().Append(TransformCard(BuildMapSection(TransformMap::Program)));
+
+                controls::StackPanel body{};
+                body.Spacing(4);
+
+                body.Children().Append(BuildMapSection(TransformMap::BankMsb));
+
+                auto lsb = BuildMapSection(TransformMap::BankLsb);
+                lsb.Margin(xaml::ThicknessHelper::FromLengths(0, 10, 0, 0));
+
+                body.Children().Append(lsb);
+
+                content.Children().Append(TransformCard(body));
+                break;
             }
 
-            DrawVelocityCurve();
-            DrawShapePreviews();
+            case patchbay::BlockKind::Throttle:
+                BuildThrottleSection();
+                break;
+
+            default:
+                break;
+            }
+
+            // Each does nothing for a table or a list this kind doesn't show.
+            for (int32_t i = 0; i < static_cast<int32_t>(TransformMapCount); i++)
+            {
+                RebuildMapRows(static_cast<TransformMap>(i));
+            }
+
+            RebuildControlValueRows();
+            ApplyValueScale();
+            RefreshVelocityEnabledState();
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to summarize the transforms.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the step's sections.")
     }
 
-    void MainWindow::BuildTransformDialog() noexcept
+    // First, for the kinds that show values as numbers, because it decides how every value below
+    // it is read and typed.
+    void MainWindow::BuildValueScaleSection() noexcept
     {
         try
         {
-            TransformContent().Children().Clear();
-
-            m_transposeExampleText = nullptr;
-            m_velocityCurveCanvas = nullptr;
-            m_fixedVelocityBox = nullptr;
-            m_minimumVelocityBox = nullptr;
-            m_maximumVelocityBox = nullptr;
-            m_velocityRescaleCheck = nullptr;
-            m_aftertouchPreview = nullptr;
-            m_controlValuePanel = nullptr;
-            m_controlValuePreviews.clear();
-            m_shapeRangeBoxes.clear();
-
-            for (auto& panel : m_mapPanels)
-            {
-                panel = nullptr;
-            }
-
-            for (auto& labels : m_mapLabels)
-            {
-                labels.clear();
-            }
-
             auto weak = get_weak();
 
-            // --------------------------------------------------------- value scale
-            // First, because it decides how every value below it is read and typed.
-            {
-                controls::StackPanel body{};
-                body.Spacing(4);
+            controls::StackPanel body{};
+            body.Spacing(4);
 
-                controls::RadioButtons scale{};
+            controls::RadioButtons scale{};
 
-                scale.Header(winrt::box_value(resources::GetString(L"TransformValueScale")));
-                scale.MaxColumns(2);
+            scale.Header(winrt::box_value(resources::GetString(L"TransformValueScale")));
+            scale.MaxColumns(2);
 
-                scale.Items().Append(winrt::box_value(resources::GetString(L"TransformValueScaleSevenBit")));
-                scale.Items().Append(winrt::box_value(resources::GetString(L"TransformValueScalePercent")));
+            scale.Items().Append(winrt::box_value(resources::GetString(L"TransformValueScaleSevenBit")));
+            scale.Items().Append(winrt::box_value(resources::GetString(L"TransformValueScalePercent")));
 
-                scale.SelectedIndex(m_editingTransform.Scale == patchbay::ValueScale::Percent ? 1 : 0);
+            scale.SelectedIndex(m_editingTransform.Scale == patchbay::ValueScale::Percent ? 1 : 0);
 
-                scale.SelectionChanged([weak](foundation::IInspectable const& sender, auto&&)
+            scale.SelectionChanged([weak](foundation::IInspectable const& sender, auto&&)
+                {
+                    auto s = weak.get();
+
+                    if (s == nullptr || s->m_applyingValueScale)
                     {
-                        auto s = weak.get();
+                        return;
+                    }
 
-                        if (s == nullptr || s->m_applyingValueScale)
-                        {
-                            return;
-                        }
+                    auto const list = sender.try_as<controls::RadioButtons>();
 
-                        auto const list = sender.try_as<controls::RadioButtons>();
+                    if (list == nullptr || list.SelectedIndex() < 0)
+                    {
+                        return;
+                    }
 
-                        if (list == nullptr || list.SelectedIndex() < 0)
-                        {
-                            return;
-                        }
+                    s->m_editingTransform.Scale = list.SelectedIndex() == 1
+                        ? patchbay::ValueScale::Percent
+                        : patchbay::ValueScale::SevenBit;
 
-                        s->m_editingTransform.Scale = list.SelectedIndex() == 1
-                            ? patchbay::ValueScale::Percent
-                            : patchbay::ValueScale::SevenBit;
+                    s->ApplyValueScale();
+                    s->UpdateBlockSummary();
+                });
 
-                        s->ApplyValueScale();
-                        s->UpdateTransformSummary();
-                    });
+            body.Children().Append(scale);
+            body.Children().Append(TransformHint(resources::GetString(L"TransformValueScaleHint")));
 
-                body.Children().Append(scale);
-                body.Children().Append(TransformHint(resources::GetString(L"TransformValueScaleHint")));
+            BlockDialogContent().Children().Append(TransformCard(body));
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the value scale section.")
+    }
 
-                TransformContent().Children().Append(TransformCard(body));
-            }
+    void MainWindow::BuildTransposeSection() noexcept
+    {
+        try
+        {
+            auto weak = get_weak();
+            auto const isTranspose = m_editingKind == patchbay::BlockKind::Transpose;
 
-            // ------------------------------------------------------------ channels
-            TransformContent().Children().Append(TransformCard(BuildMapSection(TransformMap::Channel)));
+            controls::StackPanel body{};
+            body.Spacing(4);
 
-            // ------------------------------------------------- transpose and notes
+            if (isTranspose)
             {
-                controls::StackPanel body{};
-                body.Spacing(4);
-
                 body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionTranspose")));
                 body.Children().Append(TransformHint(resources::GetString(L"TransformSectionTransposeHint")));
 
@@ -562,7 +525,7 @@ namespace winrt::midipatchbay::implementation
                             static_cast<double>(patchbay::MinimumTranspose),
                             static_cast<double>(patchbay::MaximumTranspose)));
 
-                        s->UpdateTransformSummary();
+                        s->UpdateBlockSummary();
                     });
 
                 row.Children().Append(box);
@@ -575,247 +538,339 @@ namespace winrt::midipatchbay::implementation
                 row.Children().Append(m_transposeExampleText);
 
                 body.Children().Append(row);
-
-                controls::CheckBox exactPitch{};
-
-                exactPitch.Content(winrt::box_value(resources::GetString(L"TransformIgnoreExactPitch")));
-                exactPitch.IsChecked(m_editingTransform.IgnoreExactPitchNotes);
-                exactPitch.Margin(xaml::ThicknessHelper::FromLengths(0, 8, 0, 0));
-
-                auto const setIgnoreExactPitch = [weak](bool value)
-                    {
-                        if (auto s = weak.get())
-                        {
-                            s->m_editingTransform.IgnoreExactPitchNotes = value;
-                            s->UpdateTransformSummary();
-                        }
-                    };
-
-                exactPitch.Checked([setIgnoreExactPitch](auto&&, auto&&) { setIgnoreExactPitch(true); });
-                exactPitch.Unchecked([setIgnoreExactPitch](auto&&, auto&&) { setIgnoreExactPitch(false); });
-
-                body.Children().Append(exactPitch);
-                body.Children().Append(TransformHint(resources::GetString(L"TransformIgnoreExactPitchHint")));
-
-                auto noteMap = BuildMapSection(TransformMap::Note);
-                noteMap.Margin(xaml::ThicknessHelper::FromLengths(0, 10, 0, 0));
-
-                body.Children().Append(noteMap);
-
-                TransformContent().Children().Append(TransformCard(body));
+            }
+            else
+            {
+                body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionExactPitch")));
             }
 
-            // ------------------------------------------------------------ velocity
-            {
-                controls::StackPanel body{};
-                body.Spacing(4);
+            // The note map moves the note number the same way a transpose does, so both need to
+            // know what to do with a MIDI 2.0 note that carries its own pitch.
+            controls::CheckBox exactPitch{};
 
-                body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionVelocity")));
-                body.Children().Append(TransformHint(resources::GetString(L"TransformSectionVelocityHint")));
+            exactPitch.Content(winrt::box_value(resources::GetString(L"TransformIgnoreExactPitch")));
+            exactPitch.IsChecked(m_editingTransform.IgnoreExactPitchNotes);
+            exactPitch.Margin(xaml::ThicknessHelper::FromLengths(0, isTranspose ? 8 : 0, 0, 0));
 
-                controls::Grid layout{};
-                layout.ColumnSpacing(20);
-
-                for (auto const width : { xaml::GridLength{ 1, xaml::GridUnitType::Star },
-                                          xaml::GridLength{ 0, xaml::GridUnitType::Auto } })
+            auto const setIgnoreExactPitch = [weak](bool value)
                 {
-                    controls::ColumnDefinition column{};
-                    column.Width(width);
-                    layout.ColumnDefinitions().Append(column);
+                    if (auto s = weak.get())
+                    {
+                        s->m_editingTransform.IgnoreExactPitchNotes = value;
+                        s->UpdateBlockSummary();
+                    }
+                };
+
+            exactPitch.Checked([setIgnoreExactPitch](auto&&, auto&&) { setIgnoreExactPitch(true); });
+            exactPitch.Unchecked([setIgnoreExactPitch](auto&&, auto&&) { setIgnoreExactPitch(false); });
+
+            body.Children().Append(exactPitch);
+            body.Children().Append(TransformHint(resources::GetString(L"TransformIgnoreExactPitchHint")));
+
+            BlockDialogContent().Children().Append(TransformCard(body));
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the transpose section.")
+    }
+
+    void MainWindow::BuildVelocitySection() noexcept
+    {
+        try
+        {
+            auto weak = get_weak();
+
+            controls::StackPanel body{};
+            body.Spacing(4);
+
+            body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionVelocity")));
+            body.Children().Append(TransformHint(resources::GetString(L"TransformSectionVelocityHint")));
+
+            controls::Grid layout{};
+            layout.ColumnSpacing(20);
+
+            for (auto const width : { xaml::GridLength{ 1, xaml::GridUnitType::Star },
+                                      xaml::GridLength{ 0, xaml::GridUnitType::Auto } })
+            {
+                controls::ColumnDefinition column{};
+                column.Width(width);
+                layout.ColumnDefinitions().Append(column);
+            }
+
+            controls::StackPanel options{};
+            options.Spacing(6);
+
+            auto const addCurveOption = [this, weak, &options](winrt::hstring const& text, patchbay::VelocityCurve curve)
+                {
+                    controls::RadioButton radio{};
+
+                    radio.Content(winrt::box_value(text));
+                    radio.GroupName(L"VelocityCurve");
+                    radio.IsChecked(m_editingTransform.Curve == curve);
+
+                    radio.Checked([weak, curve](auto&&, auto&&)
+                        {
+                            auto s = weak.get();
+
+                            if (s == nullptr)
+                            {
+                                return;
+                            }
+
+                            s->m_editingTransform.Curve = curve;
+                            s->RefreshVelocityEnabledState();
+                            s->UpdateBlockSummary();
+                        });
+
+                    options.Children().Append(radio);
+                };
+
+            addCurveOption(resources::GetString(L"TransformCurveUnchanged"), patchbay::VelocityCurve::Unchanged);
+            addCurveOption(resources::GetString(L"TransformCurveLinearToCurved"), patchbay::VelocityCurve::LinearToCurved);
+            addCurveOption(resources::GetString(L"TransformCurveCurvedToLinear"), patchbay::VelocityCurve::CurvedToLinear);
+            addCurveOption(resources::GetString(L"TransformCurveFixed"), patchbay::VelocityCurve::Fixed);
+
+            m_fixedVelocityBox = SmallNumberBox(0, 127, patchbay::DisplayFromHundredths(
+                m_editingTransform.FixedVelocityHundredths, m_editingTransform.Scale));
+
+            m_fixedVelocityBox.Header(winrt::box_value(resources::GetString(L"TransformFixedVelocity")));
+            m_fixedVelocityBox.Margin(xaml::ThicknessHelper::FromLengths(28, 0, 0, 0));
+            m_fixedVelocityBox.HorizontalAlignment(xaml::HorizontalAlignment::Left);
+
+            m_fixedVelocityBox.ValueChanged([weak](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
+                {
+                    auto s = weak.get();
+
+                    if (s == nullptr || s->m_applyingValueScale || std::isnan(args.NewValue()))
+                    {
+                        return;
+                    }
+
+                    s->m_editingTransform.FixedVelocityHundredths =
+                        patchbay::HundredthsFromDisplay(args.NewValue(), s->m_editingTransform.Scale);
+
+                    s->UpdateBlockSummary();
+                });
+
+            options.Children().Append(m_fixedVelocityBox);
+
+            m_velocityRescaleCheck = controls::CheckBox{};
+
+            m_velocityRescaleCheck.Content(winrt::box_value(resources::GetString(L"TransformRescaleVelocity")));
+            m_velocityRescaleCheck.IsChecked(m_editingTransform.RescaleVelocity);
+            m_velocityRescaleCheck.Margin(xaml::ThicknessHelper::FromLengths(0, 8, 0, 0));
+
+            auto const setRescale = [weak](bool value)
+                {
+                    auto s = weak.get();
+
+                    if (s == nullptr)
+                    {
+                        return;
+                    }
+
+                    s->m_editingTransform.RescaleVelocity = value;
+                    s->RefreshVelocityEnabledState();
+                    s->UpdateBlockSummary();
+                };
+
+            m_velocityRescaleCheck.Checked([setRescale](auto&&, auto&&) { setRescale(true); });
+            m_velocityRescaleCheck.Unchecked([setRescale](auto&&, auto&&) { setRescale(false); });
+
+            options.Children().Append(m_velocityRescaleCheck);
+
+            controls::StackPanel range{};
+            range.Orientation(controls::Orientation::Horizontal);
+            range.Spacing(12);
+            range.Margin(xaml::ThicknessHelper::FromLengths(0, 4, 0, 0));
+
+            auto const addRangeBox = [this, weak, &range](winrt::hstring const& header, bool isLow)
+                {
+                    auto box = SmallNumberBox(0, 127, patchbay::DisplayFromHundredths(
+                        isLow ? m_editingTransform.MinimumVelocityHundredths
+                              : m_editingTransform.MaximumVelocityHundredths,
+                        m_editingTransform.Scale));
+
+                    box.Header(winrt::box_value(header));
+
+                    box.ValueChanged([weak, isLow](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
+                        {
+                            auto s = weak.get();
+
+                            if (s == nullptr || s->m_applyingValueScale || std::isnan(args.NewValue()))
+                            {
+                                return;
+                            }
+
+                            auto const value = patchbay::HundredthsFromDisplay(
+                                args.NewValue(), s->m_editingTransform.Scale);
+
+                            if (isLow)
+                            {
+                                s->m_editingTransform.MinimumVelocityHundredths = value;
+                            }
+                            else
+                            {
+                                s->m_editingTransform.MaximumVelocityHundredths = value;
+                            }
+
+                            s->UpdateBlockSummary();
+                        });
+
+                    range.Children().Append(box);
+
+                    return box;
+                };
+
+            m_minimumVelocityBox = addRangeBox(resources::GetString(L"TransformQuietest"), true);
+            m_maximumVelocityBox = addRangeBox(resources::GetString(L"TransformLoudest"), false);
+
+            options.Children().Append(range);
+
+            controls::Grid::SetColumn(options, 0);
+            layout.Children().Append(options);
+
+            m_velocityCurveCanvas = controls::Canvas{};
+
+            auto frame = CurveFrame(m_velocityCurveCanvas, CurvePreviewSize);
+            controls::Grid::SetColumn(frame, 1);
+            layout.Children().Append(frame);
+
+            body.Children().Append(layout);
+
+            BlockDialogContent().Children().Append(TransformCard(body));
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the velocity section.")
+    }
+
+    void MainWindow::BuildGroupMapSection() noexcept
+    {
+        try
+        {
+            auto weak = get_weak();
+
+            controls::StackPanel body{};
+            body.Spacing(4);
+
+            body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionGroupMap")));
+            body.Children().Append(TransformHint(resources::GetString(L"TransformSectionGroupMapHint")));
+
+            controls::VariableSizedWrapGrid grid{};
+            grid.Orientation(controls::Orientation::Horizontal);
+            grid.MaximumRowsOrColumns(2);
+            grid.ItemWidth(350);
+            grid.ItemHeight(44);
+
+            for (size_t group = 0; group < m_editingSettings.GroupMap.size(); group++)
+            {
+                controls::StackPanel row{};
+                row.Orientation(controls::Orientation::Horizontal);
+                row.Spacing(10);
+
+                // Groups are counted from one on screen and from zero in the file.
+                controls::TextBlock label{};
+                label.Text(resources::FormatString(L"FilterGroupFormat", static_cast<int>(group) + 1));
+                label.Width(80);
+                label.VerticalAlignment(xaml::VerticalAlignment::Center);
+                row.Children().Append(label);
+
+                auto arrow = MapRowArrow();
+                arrow.VerticalAlignment(xaml::VerticalAlignment::Center);
+                arrow.Margin(xaml::ThicknessHelper::FromUniformLength(0));
+                row.Children().Append(arrow);
+
+                controls::ComboBox target{};
+                target.Width(170);
+                target.Items().Append(winrt::box_value(resources::GetString(L"TransformGroupUnchanged")));
+
+                for (int32_t to = 0; to < 16; to++)
+                {
+                    target.Items().Append(winrt::box_value(resources::FormatString(L"FilterGroupFormat", to + 1)));
                 }
 
-                controls::StackPanel options{};
-                options.Spacing(6);
+                auto const mapped = m_editingSettings.GroupMap[group];
+                target.SelectedIndex(mapped < 0 || mapped > 15 ? 0 : mapped + 1);
 
-                auto const addCurveOption = [this, weak, &options](winrt::hstring const& text, patchbay::VelocityCurve curve)
-                    {
-                        controls::RadioButton radio{};
+                xaml::Automation::AutomationProperties::SetName(target,
+                    resources::FormatString(L"TransformGroupMapAccessibleFormat", static_cast<int>(group) + 1));
 
-                        radio.Content(winrt::box_value(text));
-                        radio.GroupName(L"VelocityCurve");
-                        radio.IsChecked(m_editingTransform.Curve == curve);
-
-                        radio.Checked([weak, curve](auto&&, auto&&)
-                            {
-                                auto s = weak.get();
-
-                                if (s == nullptr)
-                                {
-                                    return;
-                                }
-
-                                s->m_editingTransform.Curve = curve;
-                                s->RefreshVelocityEnabledState();
-                                s->UpdateTransformSummary();
-                            });
-
-                        options.Children().Append(radio);
-                    };
-
-                addCurveOption(resources::GetString(L"TransformCurveUnchanged"), patchbay::VelocityCurve::Unchanged);
-                addCurveOption(resources::GetString(L"TransformCurveLinearToCurved"), patchbay::VelocityCurve::LinearToCurved);
-                addCurveOption(resources::GetString(L"TransformCurveCurvedToLinear"), patchbay::VelocityCurve::CurvedToLinear);
-                addCurveOption(resources::GetString(L"TransformCurveFixed"), patchbay::VelocityCurve::Fixed);
-
-                m_fixedVelocityBox = SmallNumberBox(0, 127, patchbay::DisplayFromHundredths(
-                    m_editingTransform.FixedVelocityHundredths, m_editingTransform.Scale));
-
-                m_fixedVelocityBox.Header(winrt::box_value(resources::GetString(L"TransformFixedVelocity")));
-                m_fixedVelocityBox.Margin(xaml::ThicknessHelper::FromLengths(28, 0, 0, 0));
-                m_fixedVelocityBox.HorizontalAlignment(xaml::HorizontalAlignment::Left);
-
-                m_fixedVelocityBox.ValueChanged([weak](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
+                target.SelectionChanged([weak, group](foundation::IInspectable const& sender, auto&&)
                     {
                         auto s = weak.get();
+                        auto const combo = sender.try_as<controls::ComboBox>();
 
-                        if (s == nullptr || s->m_applyingValueScale || std::isnan(args.NewValue()))
+                        if (s == nullptr || combo == nullptr || combo.SelectedIndex() < 0)
                         {
                             return;
                         }
 
-                        s->m_editingTransform.FixedVelocityHundredths =
-                            patchbay::HundredthsFromDisplay(args.NewValue(), s->m_editingTransform.Scale);
-
-                        s->UpdateTransformSummary();
+                        s->m_editingSettings.GroupMap[group] = static_cast<int8_t>(combo.SelectedIndex() - 1);
+                        s->UpdateBlockSummary();
                     });
 
-                options.Children().Append(m_fixedVelocityBox);
-
-                m_velocityRescaleCheck = controls::CheckBox{};
-
-                m_velocityRescaleCheck.Content(winrt::box_value(resources::GetString(L"TransformRescaleVelocity")));
-                m_velocityRescaleCheck.IsChecked(m_editingTransform.RescaleVelocity);
-                m_velocityRescaleCheck.Margin(xaml::ThicknessHelper::FromLengths(0, 8, 0, 0));
-
-                auto const setRescale = [weak](bool value)
-                    {
-                        auto s = weak.get();
-
-                        if (s == nullptr)
-                        {
-                            return;
-                        }
-
-                        s->m_editingTransform.RescaleVelocity = value;
-                        s->RefreshVelocityEnabledState();
-                        s->UpdateTransformSummary();
-                    };
-
-                m_velocityRescaleCheck.Checked([setRescale](auto&&, auto&&) { setRescale(true); });
-                m_velocityRescaleCheck.Unchecked([setRescale](auto&&, auto&&) { setRescale(false); });
-
-                options.Children().Append(m_velocityRescaleCheck);
-
-                controls::StackPanel range{};
-                range.Orientation(controls::Orientation::Horizontal);
-                range.Spacing(12);
-                range.Margin(xaml::ThicknessHelper::FromLengths(0, 4, 0, 0));
-
-                auto const addRangeBox = [this, weak, &range](winrt::hstring const& header, bool isLow)
-                    {
-                        auto box = SmallNumberBox(0, 127, patchbay::DisplayFromHundredths(
-                            isLow ? m_editingTransform.MinimumVelocityHundredths
-                                  : m_editingTransform.MaximumVelocityHundredths,
-                            m_editingTransform.Scale));
-
-                        box.Header(winrt::box_value(header));
-
-                        box.ValueChanged([weak, isLow](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
-                            {
-                                auto s = weak.get();
-
-                                if (s == nullptr || s->m_applyingValueScale || std::isnan(args.NewValue()))
-                                {
-                                    return;
-                                }
-
-                                auto const value = patchbay::HundredthsFromDisplay(
-                                    args.NewValue(), s->m_editingTransform.Scale);
-
-                                if (isLow)
-                                {
-                                    s->m_editingTransform.MinimumVelocityHundredths = value;
-                                }
-                                else
-                                {
-                                    s->m_editingTransform.MaximumVelocityHundredths = value;
-                                }
-
-                                s->UpdateTransformSummary();
-                            });
-
-                        range.Children().Append(box);
-
-                        return box;
-                    };
-
-                m_minimumVelocityBox = addRangeBox(resources::GetString(L"TransformQuietest"), true);
-                m_maximumVelocityBox = addRangeBox(resources::GetString(L"TransformLoudest"), false);
-
-                options.Children().Append(range);
-
-                controls::Grid::SetColumn(options, 0);
-                layout.Children().Append(options);
-
-                controls::Border preview{};
-                preview.Width(CurvePreviewSize);
-                preview.Height(CurvePreviewSize);
-                preview.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(4));
-                preview.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-                preview.VerticalAlignment(xaml::VerticalAlignment::Top);
-                preview.BorderBrush(patchbay::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"));
-                preview.Background(patchbay::ThemeBrushes::Current().Get(L"SolidBackgroundFillColorTertiaryBrush"));
-
-                m_velocityCurveCanvas = controls::Canvas{};
-                m_velocityCurveCanvas.Width(CurvePreviewSize);
-                m_velocityCurveCanvas.Height(CurvePreviewSize);
-
-                preview.Child(m_velocityCurveCanvas);
-
-                controls::Grid::SetColumn(preview, 1);
-                layout.Children().Append(preview);
-
-                body.Children().Append(layout);
-
-                TransformContent().Children().Append(TransformCard(body));
+                row.Children().Append(target);
+                grid.Children().Append(row);
             }
 
-            // ---------------------------------------------------------- aftertouch
-            TransformContent().Children().Append(TransformCard(BuildAftertouchSection()));
+            body.Children().Append(grid);
 
-            // ------------------------------------------------------ control change
-            TransformContent().Children().Append(TransformCard(BuildMapSection(TransformMap::Control)));
-            TransformContent().Children().Append(TransformCard(BuildControlValueSection()));
-
-            // ------------------------------------------------------------ programs
-            TransformContent().Children().Append(TransformCard(BuildMapSection(TransformMap::Program)));
-
-            // --------------------------------------------------------- bank select
-            {
-                controls::StackPanel body{};
-                body.Spacing(4);
-
-                body.Children().Append(BuildMapSection(TransformMap::BankMsb));
-
-                auto lsb = BuildMapSection(TransformMap::BankLsb);
-                lsb.Margin(xaml::ThicknessHelper::FromLengths(0, 10, 0, 0));
-
-                body.Children().Append(lsb);
-
-                TransformContent().Children().Append(TransformCard(body));
-            }
-
-            for (int32_t i = 0; i < static_cast<int32_t>(TransformMapCount); i++)
-            {
-                RebuildMapRows(static_cast<TransformMap>(i));
-            }
-
-            RebuildControlValueRows();
-            ApplyValueScale();
-            RefreshVelocityEnabledState();
-            UpdateTransformSummary();
+            BlockDialogContent().Children().Append(TransformCard(body));
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the transform dialog.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the group map section.")
+    }
+
+    void MainWindow::BuildThrottleSection() noexcept
+    {
+        try
+        {
+            auto weak = get_weak();
+
+            controls::StackPanel body{};
+            body.Spacing(6);
+
+            body.Children().Append(TransformHeading(resources::GetString(L"InspectorSendingSpeed")));
+            body.Children().Append(TransformHint(resources::GetString(L"InspectorSendingSpeedHelp")));
+
+            // The speeds Network MIDI Setup offers, and whatever else a file asked for.
+            std::vector<uint32_t> options{ 0, 1, 2, 4, 8, 16, 32 };
+
+            if (std::find(options.begin(), options.end(), m_editingSettings.SendSpeedLimit) == options.end())
+            {
+                options.push_back(m_editingSettings.SendSpeedLimit);
+            }
+
+            controls::RadioButtons speeds{};
+
+            for (size_t i = 0; i < options.size(); i++)
+            {
+                speeds.Items().Append(winrt::box_value(patchbay::DescribeSendSpeed(options[i])));
+
+                if (options[i] == m_editingSettings.SendSpeedLimit)
+                {
+                    speeds.SelectedIndex(static_cast<int32_t>(i));
+                }
+            }
+
+            xaml::Automation::AutomationProperties::SetName(speeds, resources::GetString(L"InspectorSendingSpeed"));
+
+            speeds.SelectionChanged([weak, options](foundation::IInspectable const& sender, auto&&)
+                {
+                    auto s = weak.get();
+                    auto const list = sender.try_as<controls::RadioButtons>();
+
+                    if (s == nullptr || list == nullptr || list.SelectedIndex() < 0 ||
+                        static_cast<size_t>(list.SelectedIndex()) >= options.size())
+                    {
+                        return;
+                    }
+
+                    s->m_editingSettings.SendSpeedLimit = options[static_cast<size_t>(list.SelectedIndex())];
+                    s->UpdateBlockSummary();
+                });
+
+            body.Children().Append(speeds);
+
+            BlockDialogContent().Children().Append(TransformCard(body));
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the throttle section.")
     }
 
     _Use_decl_annotations_
@@ -865,7 +920,7 @@ namespace winrt::midipatchbay::implementation
                     rows.emplace_back(added.DefaultValue, added.DefaultValue);
 
                     s->RebuildMapRows(which);
-                    s->UpdateTransformSummary();
+                    s->UpdateBlockSummary();
                 });
 
             body.Children().Append(add);
@@ -950,7 +1005,7 @@ namespace winrt::midipatchbay::implementation
                                 }
 
                                 s->RefreshMapRowLabels(which);
-                                s->UpdateTransformSummary();
+                                s->UpdateBlockSummary();
                             });
 
                         row.Children().Append(box);
@@ -1030,7 +1085,7 @@ namespace winrt::midipatchbay::implementation
                         target.erase(target.begin() + static_cast<ptrdiff_t>(position));
 
                         s->RebuildMapRows(which);
-                        s->UpdateTransformSummary();
+                        s->UpdateBlockSummary();
                     });
 
                 row.Children().Append(remove);
@@ -1287,7 +1342,7 @@ namespace winrt::midipatchbay::implementation
                     rows.push_back(ControlValueRow{ controller, patchbay::ValueShape{} });
 
                     s->RebuildControlValueRows();
-                    s->UpdateTransformSummary();
+                    s->UpdateBlockSummary();
                 });
 
             body.Children().Append(add);
@@ -1371,7 +1426,7 @@ namespace winrt::midipatchbay::implementation
                         s->m_controlValueRows[position].Controller =
                             static_cast<int32_t>(std::clamp(args.NewValue(), 0.0, 127.0));
 
-                        s->UpdateTransformSummary();
+                        s->UpdateBlockSummary();
                     });
 
                 first.Children().Append(controller);
@@ -1394,7 +1449,7 @@ namespace winrt::midipatchbay::implementation
                         s->m_controlValueRows.erase(s->m_controlValueRows.begin() + static_cast<ptrdiff_t>(position));
 
                         s->RebuildControlValueRows();
-                        s->UpdateTransformSummary();
+                        s->UpdateBlockSummary();
                     });
 
                 first.Children().Append(remove);
@@ -1517,7 +1572,7 @@ namespace winrt::midipatchbay::implementation
                     }
 
                     target->Curve = static_cast<patchbay::ValueCurve>(std::clamp(combo.SelectedIndex(), 0, 2));
-                    s->UpdateTransformSummary();
+                    s->UpdateBlockSummary();
                 });
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build a curve picker.")
@@ -1552,7 +1607,7 @@ namespace winrt::midipatchbay::implementation
                     if (auto* target = s->EditingShape(which))
                     {
                         target->Invert = value;
-                        s->UpdateTransformSummary();
+                        s->UpdateBlockSummary();
                     }
                 };
 
@@ -1595,7 +1650,7 @@ namespace winrt::midipatchbay::implementation
                         FieldOf(*target, field) =
                             patchbay::HundredthsFromDisplay(args.NewValue(), s->m_editingTransform.Scale);
 
-                        s->UpdateTransformSummary();
+                        s->UpdateBlockSummary();
                     }
                 });
 

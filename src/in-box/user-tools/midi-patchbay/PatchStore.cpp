@@ -7,9 +7,8 @@
 
 #include "pch.h"
 #include "PatchStore.h"
+#include "PatchSerializer.h"
 #include "StringResources.h"
-
-#include <midi_send_pacer.h>
 
 namespace midipatchbay
 {
@@ -17,46 +16,9 @@ namespace midipatchbay
     {
         constexpr wchar_t FolderName[] = L"MIDI Patchbay";
 
-        constexpr wchar_t KeyFileVersion[] = L"fileVersion";
-        constexpr wchar_t KeyName[] = L"name";
-        constexpr wchar_t KeyDescription[] = L"description";
-        constexpr wchar_t KeyCreated[] = L"created";
-        constexpr wchar_t KeyModified[] = L"modified";
-        constexpr wchar_t KeyActivateAtStartup[] = L"activateAtStartup";
-        constexpr wchar_t KeyWaitForSendComplete[] = L"waitForSendComplete";
-        constexpr wchar_t KeyEndpoints[] = L"endpoints";
-        constexpr wchar_t KeyConnections[] = L"connections";
-        constexpr wchar_t KeyId[] = L"id";
-        constexpr wchar_t KeyDisplayName[] = L"displayName";
-        constexpr wchar_t KeyTransportCode[] = L"transportCode";
-        constexpr wchar_t KeyMatch[] = L"match";
-        constexpr wchar_t KeyMatchMode[] = L"matchMode";
-        constexpr wchar_t KeyCanvasX[] = L"x";
-        constexpr wchar_t KeyCanvasY[] = L"y";
-        constexpr wchar_t KeyShowAllGroups[] = L"showAllGroups";
-        constexpr wchar_t KeySourceEndpoint[] = L"sourceEndpointId";
-        constexpr wchar_t KeySourceGroup[] = L"sourceGroup";
-        constexpr wchar_t KeyDestinationEndpoint[] = L"destinationEndpointId";
-        constexpr wchar_t KeyDestinationGroup[] = L"destinationGroup";
-        constexpr wchar_t KeyMuted[] = L"muted";
-        constexpr wchar_t KeyFilter[] = L"filter";
-        constexpr wchar_t KeyTransform[] = L"transform";
-        constexpr wchar_t KeySendSpeedLimit[] = L"sendSpeedLimit";
-        constexpr wchar_t KeyComment[] = L"_comment";
-
-        constexpr wchar_t CommentText[] =
-            L"Windows MIDI Patchbay. Written by the MIDI Patchbay app. The MIDI service does not "
-            L"read this file.";
-
-        constexpr int32_t FileVersion = 1;
-
-        constexpr wchar_t MatchModeDeviceId[] = L"endpointDeviceId";
-        constexpr wchar_t MatchModeUsb[] = L"usbVendorAndProduct";
-        constexpr wchar_t MatchModeName[] = L"endpointName";
-
-        // Canvas coordinates are clamped rather than rejected: a nonsense value should move a
-        // node back into view, not throw the whole patch away.
-        constexpr double MaximumCanvasCoordinate = 100000.0;
+        // Inside the patch folder. The app only reads the files directly in that folder, so
+        // nothing in here is ever loaded as a patch by mistake.
+        constexpr wchar_t EarlierVersionsFolderName[] = L"Earlier versions";
 
         std::wstring Utf8ToWide(_In_ std::string const& text) noexcept
         {
@@ -189,162 +151,6 @@ namespace midipatchbay
             }
 
             return written == contents.size();
-        }
-
-        std::wstring GetNamedString(_In_ json::JsonObject const& parent, _In_ std::wstring_view key) noexcept
-        {
-            try
-            {
-                if (parent != nullptr && parent.HasKey(key))
-                {
-                    auto const value = parent.GetNamedValue(key);
-
-                    if (value != nullptr && value.ValueType() == json::JsonValueType::String)
-                    {
-                        return SanitizeStoredString(std::wstring{ value.GetString() });
-                    }
-                }
-            }
-            catch (...)
-            {
-            }
-
-            return {};
-        }
-
-        double GetNamedDouble(
-            _In_ json::JsonObject const& parent,
-            _In_ std::wstring_view key,
-            _In_ double defaultValue) noexcept
-        {
-            try
-            {
-                if (parent != nullptr && parent.HasKey(key))
-                {
-                    auto const value = parent.GetNamedValue(key);
-
-                    if (value != nullptr && value.ValueType() == json::JsonValueType::Number)
-                    {
-                        auto const number = value.GetNumber();
-
-                        if (std::isfinite(number))
-                        {
-                            return number;
-                        }
-                    }
-                }
-            }
-            catch (...)
-            {
-            }
-
-            return defaultValue;
-        }
-
-        bool GetNamedBool(
-            _In_ json::JsonObject const& parent,
-            _In_ std::wstring_view key,
-            _In_ bool defaultValue) noexcept
-        {
-            try
-            {
-                if (parent != nullptr && parent.HasKey(key))
-                {
-                    auto const value = parent.GetNamedValue(key);
-
-                    if (value != nullptr && value.ValueType() == json::JsonValueType::Boolean)
-                    {
-                        return value.GetBoolean();
-                    }
-                }
-            }
-            catch (...)
-            {
-            }
-
-            return defaultValue;
-        }
-
-        json::JsonObject GetNamedObject(_In_ json::JsonObject const& parent, _In_ std::wstring_view key) noexcept
-        {
-            try
-            {
-                if (parent != nullptr && parent.HasKey(key))
-                {
-                    auto const value = parent.GetNamedValue(key);
-
-                    if (value != nullptr && value.ValueType() == json::JsonValueType::Object)
-                    {
-                        return value.GetObject();
-                    }
-                }
-            }
-            catch (...)
-            {
-            }
-
-            return nullptr;
-        }
-
-        int32_t ReadGroupIndex(_In_ json::JsonObject const& parent, _In_ std::wstring_view key) noexcept
-        {
-            auto const raw = static_cast<int32_t>(GetNamedDouble(parent, key, AllGroups));
-
-            if (raw < 0 || raw >= MaximumGroupCount)
-            {
-                return AllGroups;
-            }
-
-            return raw;
-        }
-
-        // A multiple of MIDI 1.0 wire speed from 1 through 32. Anything else is no limit, as it is
-        // for the network transports.
-        uint32_t ReadSendSpeedLimit(_In_ json::JsonObject const& parent) noexcept
-        {
-            auto const raw = GetNamedDouble(parent, KeySendSpeedLimit, 0.0);
-
-            if (raw < 1.0 || raw > static_cast<double>(::WindowsMidiServicesInternal::MidiSendSpeedMaxMultiple))
-            {
-                return 0;
-            }
-
-            return static_cast<uint32_t>(raw);
-        }
-
-        double ClampCoordinate(_In_ double value) noexcept
-        {
-            if (!std::isfinite(value))
-            {
-                return 0.0;
-            }
-
-            return std::clamp(value, -MaximumCanvasCoordinate, MaximumCanvasCoordinate);
-        }
-
-        EndpointMatchMode MatchModeFromString(_In_ std::wstring const& value) noexcept
-        {
-            if (value == MatchModeUsb)
-            {
-                return EndpointMatchMode::UsbVendorAndProduct;
-            }
-
-            if (value == MatchModeName)
-            {
-                return EndpointMatchMode::EndpointName;
-            }
-
-            return EndpointMatchMode::EndpointDeviceId;
-        }
-
-        std::wstring MatchModeToString(_In_ EndpointMatchMode mode) noexcept
-        {
-            switch (mode)
-            {
-            case EndpointMatchMode::UsbVendorAndProduct:    return MatchModeUsb;
-            case EndpointMatchMode::EndpointName:           return MatchModeName;
-            default:                                        return MatchModeDeviceId;
-            }
         }
 
         // Seconds since 1970, not a FILETIME: a FILETIME needs more bits than a JSON number can
@@ -557,129 +363,11 @@ namespace midipatchbay
                 return std::nullopt;
             }
 
-            json::JsonObject root{ nullptr };
+            auto patch = ReadPatchJson(Utf8ToWide(bytes), std::filesystem::path{ path }.stem().wstring());
 
-            if (!json::JsonObject::TryParse(winrt::hstring{ Utf8ToWide(bytes) }, root) || root == nullptr)
+            if (patch.has_value())
             {
-                return std::nullopt;
-            }
-
-            PatchDocument patch{};
-
-            patch.FilePath = path;
-            patch.Name = GetNamedString(root, KeyName);
-            patch.Description = GetNamedString(root, KeyDescription);
-            patch.ActivateAtStartup = GetNamedBool(root, KeyActivateAtStartup, true);
-            patch.WaitForSendComplete = GetNamedBool(root, KeyWaitForSendComplete, false);
-            patch.CreatedTimestamp = static_cast<int64_t>(GetNamedDouble(root, KeyCreated, 0.0));
-            patch.ModifiedTimestamp = static_cast<int64_t>(GetNamedDouble(root, KeyModified, 0.0));
-
-            if (patch.Name.empty())
-            {
-                patch.Name = std::filesystem::path{ path }.stem().wstring();
-            }
-
-            if (root.HasKey(KeyEndpoints))
-            {
-                auto const value = root.GetNamedValue(KeyEndpoints);
-
-                if (value != nullptr && value.ValueType() == json::JsonValueType::Array)
-                {
-                    for (auto const& entry : value.GetArray())
-                    {
-                        if (patch.Endpoints.size() >= MaximumEndpointsPerPatch)
-                        {
-                            break;
-                        }
-
-                        if (entry == nullptr || entry.ValueType() != json::JsonValueType::Object)
-                        {
-                            continue;
-                        }
-
-                        auto const item = entry.GetObject();
-
-                        PatchEndpoint endpoint{};
-
-                        endpoint.Id = GetNamedString(item, KeyId);
-                        endpoint.DisplayName = GetNamedString(item, KeyDisplayName);
-                        endpoint.TransportCode = GetNamedString(item, KeyTransportCode);
-                        endpoint.Match = MatchFromJson(GetNamedObject(item, KeyMatch));
-                        endpoint.MatchMode = MatchModeFromString(GetNamedString(item, KeyMatchMode));
-                        endpoint.CanvasX = ClampCoordinate(GetNamedDouble(item, KeyCanvasX, 0.0));
-                        endpoint.CanvasY = ClampCoordinate(GetNamedDouble(item, KeyCanvasY, 0.0));
-                        endpoint.ShowAllGroups = GetNamedBool(item, KeyShowAllGroups, false);
-
-                        if (endpoint.Id.empty())
-                        {
-                            continue;
-                        }
-
-                        if (patch.FindEndpoint(endpoint.Id) != nullptr)
-                        {
-                            continue;
-                        }
-
-                        patch.Endpoints.push_back(std::move(endpoint));
-                    }
-                }
-            }
-
-            if (root.HasKey(KeyConnections))
-            {
-                auto const value = root.GetNamedValue(KeyConnections);
-
-                if (value != nullptr && value.ValueType() == json::JsonValueType::Array)
-                {
-                    for (auto const& entry : value.GetArray())
-                    {
-                        if (patch.Connections.size() >= MaximumConnectionsPerPatch)
-                        {
-                            break;
-                        }
-
-                        if (entry == nullptr || entry.ValueType() != json::JsonValueType::Object)
-                        {
-                            continue;
-                        }
-
-                        auto const item = entry.GetObject();
-
-                        PatchConnection connection{};
-
-                        connection.Id = GetNamedString(item, KeyId);
-                        connection.SourceEndpointId = GetNamedString(item, KeySourceEndpoint);
-                        connection.SourceGroupIndex = ReadGroupIndex(item, KeySourceGroup);
-                        connection.DestinationEndpointId = GetNamedString(item, KeyDestinationEndpoint);
-                        connection.DestinationGroupIndex = ReadGroupIndex(item, KeyDestinationGroup);
-                        connection.Muted = GetNamedBool(item, KeyMuted, false);
-                        connection.Filter = FilterFromJson(GetNamedObject(item, KeyFilter));
-                        connection.Transform = TransformFromJson(GetNamedObject(item, KeyTransform));
-                        connection.SendSpeedLimit = ReadSendSpeedLimit(item);
-
-                        if (connection.Id.empty())
-                        {
-                            connection.Id = PatchDocument::NewId();
-                        }
-
-                        // a connection that names an endpoint the file does not contain would
-                        // draw from nowhere, so it is dropped rather than half rendered
-                        if (patch.FindEndpoint(connection.SourceEndpointId) == nullptr ||
-                            patch.FindEndpoint(connection.DestinationEndpointId) == nullptr)
-                        {
-                            continue;
-                        }
-
-                        if (patch.HasConnection(
-                            connection.SourceEndpointId, connection.SourceGroupIndex,
-                            connection.DestinationEndpointId, connection.DestinationGroupIndex))
-                        {
-                            continue;
-                        }
-
-                        patch.Connections.push_back(std::move(connection));
-                    }
-                }
+                patch->FilePath = path;
             }
 
             return patch;
@@ -687,6 +375,49 @@ namespace midipatchbay
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to read a patch file.")
 
         return std::nullopt;
+    }
+
+    _Use_decl_annotations_
+    bool PatchStore::KeepEarlierVersion(PatchDocument& patch) noexcept
+    {
+        try
+        {
+            std::filesystem::path const original{ patch.FilePath };
+            std::filesystem::path const folder = std::filesystem::path{ m_folder } / EarlierVersionsFolderName;
+
+            std::error_code ec{};
+            std::filesystem::create_directories(folder, ec);
+
+            if (ec)
+            {
+                return false;
+            }
+
+            auto const stem = original.stem().wstring();
+            auto const extension = original.extension().wstring();
+
+            // Never over another copy: converting twice must not lose the first original.
+            for (int suffix = 0; suffix < 1000; suffix++)
+            {
+                auto const target = folder / (suffix == 0
+                    ? stem + extension
+                    : stem + L" (" + std::to_wstring(suffix) + L")" + extension);
+
+                if (::CopyFileW(original.c_str(), target.c_str(), TRUE))
+                {
+                    patch.EarlierVersionPath = target.wstring();
+                    return true;
+                }
+
+                if (::GetLastError() != ERROR_FILE_EXISTS)
+                {
+                    return false;
+                }
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to keep a copy of an earlier patch file.")
+
+        return false;
     }
 
     _Use_decl_annotations_
@@ -735,10 +466,19 @@ namespace midipatchbay
 
                 auto loaded = LoadFile(entry.path().wstring());
 
-                if (loaded.has_value())
+                if (!loaded.has_value())
                 {
-                    patches.push_back(std::move(loaded.value()));
+                    continue;
                 }
+
+                // A file an earlier version wrote is converted as it is read. The original is
+                // kept first, and only once it is safe is the file rewritten in the new form.
+                if (loaded->LoadedFileVersion < CurrentPatchFileVersion && KeepEarlierVersion(loaded.value()))
+                {
+                    Save(loaded.value());
+                }
+
+                patches.push_back(std::move(loaded.value()));
             }
 
             return true;
@@ -830,6 +570,11 @@ namespace midipatchbay
 
             if (std::filesystem::equivalent(std::filesystem::path{ sourcePath }.parent_path(), m_folder, ec))
             {
+                if (patch->LoadedFileVersion < CurrentPatchFileVersion && KeepEarlierVersion(patch.value()))
+                {
+                    Save(patch.value());
+                }
+
                 return patch;
             }
 
@@ -880,72 +625,9 @@ namespace midipatchbay
 
             patch.ModifiedTimestamp = CurrentTimestamp();
 
-            json::JsonObject root{};
+            auto const text = WritePatchJson(patch);
 
-            root.SetNamedValue(KeyComment, json::JsonValue::CreateStringValue(CommentText));
-            root.SetNamedValue(KeyFileVersion, json::JsonValue::CreateNumberValue(FileVersion));
-            root.SetNamedValue(KeyName, json::JsonValue::CreateStringValue(patch.Name));
-            root.SetNamedValue(KeyDescription, json::JsonValue::CreateStringValue(patch.Description));
-            root.SetNamedValue(KeyCreated, json::JsonValue::CreateNumberValue(static_cast<double>(patch.CreatedTimestamp)));
-            root.SetNamedValue(KeyModified, json::JsonValue::CreateNumberValue(static_cast<double>(patch.ModifiedTimestamp)));
-            root.SetNamedValue(KeyActivateAtStartup, json::JsonValue::CreateBooleanValue(patch.ActivateAtStartup));
-            root.SetNamedValue(KeyWaitForSendComplete, json::JsonValue::CreateBooleanValue(patch.WaitForSendComplete));
-
-            json::JsonArray endpoints{};
-
-            for (auto const& endpoint : patch.Endpoints)
-            {
-                json::JsonObject item{};
-
-                item.SetNamedValue(KeyId, json::JsonValue::CreateStringValue(endpoint.Id));
-                item.SetNamedValue(KeyDisplayName, json::JsonValue::CreateStringValue(endpoint.DisplayName));
-                item.SetNamedValue(KeyTransportCode, json::JsonValue::CreateStringValue(endpoint.TransportCode));
-                item.SetNamedValue(KeyMatch, MatchToJson(endpoint.Match));
-                item.SetNamedValue(KeyMatchMode, json::JsonValue::CreateStringValue(MatchModeToString(endpoint.MatchMode)));
-                item.SetNamedValue(KeyCanvasX, json::JsonValue::CreateNumberValue(endpoint.CanvasX));
-                item.SetNamedValue(KeyCanvasY, json::JsonValue::CreateNumberValue(endpoint.CanvasY));
-                item.SetNamedValue(KeyShowAllGroups, json::JsonValue::CreateBooleanValue(endpoint.ShowAllGroups));
-
-                endpoints.Append(item);
-            }
-
-            root.SetNamedValue(KeyEndpoints, endpoints);
-
-            json::JsonArray connections{};
-
-            for (auto const& connection : patch.Connections)
-            {
-                json::JsonObject item{};
-
-                item.SetNamedValue(KeyId, json::JsonValue::CreateStringValue(connection.Id));
-                item.SetNamedValue(KeySourceEndpoint, json::JsonValue::CreateStringValue(connection.SourceEndpointId));
-                item.SetNamedValue(KeySourceGroup, json::JsonValue::CreateNumberValue(connection.SourceGroupIndex));
-                item.SetNamedValue(KeyDestinationEndpoint, json::JsonValue::CreateStringValue(connection.DestinationEndpointId));
-                item.SetNamedValue(KeyDestinationGroup, json::JsonValue::CreateNumberValue(connection.DestinationGroupIndex));
-                item.SetNamedValue(KeyMuted, json::JsonValue::CreateBooleanValue(connection.Muted));
-
-                // Only when it does something, so an untouched patch file stays readable.
-                if (!connection.Filter.PassesEverything())
-                {
-                    item.SetNamedValue(KeyFilter, FilterToJson(connection.Filter));
-                }
-
-                if (!connection.Transform.ChangesNothing())
-                {
-                    item.SetNamedValue(KeyTransform, TransformToJson(connection.Transform));
-                }
-
-                if (connection.SendSpeedLimit != 0)
-                {
-                    item.SetNamedValue(KeySendSpeedLimit, json::JsonValue::CreateNumberValue(connection.SendSpeedLimit));
-                }
-
-                connections.Append(item);
-            }
-
-            root.SetNamedValue(KeyConnections, connections);
-
-            if (!WriteAllBytes(targetPath, WideToUtf8(std::wstring{ root.Stringify() })))
+            if (text.empty() || !WriteAllBytes(targetPath, WideToUtf8(text)))
             {
                 m_lastError = resources::FormatString(L"ErrorSavePatchFormat", targetPath);
                 return false;

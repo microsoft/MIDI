@@ -2271,6 +2271,8 @@ int __cdecl wmain(_In_ int argc, _In_reads_(argc) wchar_t* argv[])
         DoSectionMidi2RegistryEntries(verbose);
         DoSectionDeviceNodes();
         DoSectionNetwork();
+        DoSectionMdns();
+        DoSectionNetworkHistory();
 
         if (context.IncludeWinRTMidi1)
         {

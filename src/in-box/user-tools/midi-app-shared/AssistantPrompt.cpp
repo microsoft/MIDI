@@ -74,10 +74,12 @@ namespace midiapp
 
         wuxc::TextBox promptBox{};
         promptBox.Header(winrt::box_value(strings.PromptHeader));
-        promptBox.Text(prompt);
-        promptBox.IsReadOnly(true);
+
+        // Multi-line before the text goes in: a single-line box keeps only the first line.
         promptBox.AcceptsReturn(true);
         promptBox.TextWrapping(wux::TextWrapping::Wrap);
+        promptBox.Text(prompt);
+        promptBox.IsReadOnly(true);
         promptBox.Height(240.0);
         wuxc::ScrollViewer::SetVerticalScrollBarVisibility(promptBox, wuxc::ScrollBarVisibility::Auto);
 

@@ -15,23 +15,24 @@
 
 namespace midipatchbay
 {
-    // Identifies one connection point: an endpoint node, a side, and a group (or all groups).
+    // Identifies one connection point: a node, a side, and a group (or all groups). A block has
+    // one of each side, and its group is always AllGroups.
     struct PortKey
     {
-        std::wstring EndpointId{};
+        std::wstring NodeId{};
         bool IsOutput{ false };
         int32_t GroupIndex{ AllGroups };
 
         bool operator==(PortKey const& other) const noexcept
         {
-            return EndpointId == other.EndpointId &&
+            return NodeId == other.NodeId &&
                 IsOutput == other.IsOutput &&
                 GroupIndex == other.GroupIndex;
         }
 
         std::wstring ToString() const noexcept
         {
-            return EndpointId + (IsOutput ? L"|out|" : L"|in|") + std::to_wstring(GroupIndex);
+            return NodeId + (IsOutput ? L"|out|" : L"|in|") + std::to_wstring(GroupIndex);
         }
     };
 
@@ -40,7 +41,13 @@ namespace midipatchbay
         None = 0,
         Endpoint = 1,
         Connection = 2,
+        Block = 3,
     };
+
+    // What the palette sets on a drag's data, so the canvas knows what is arriving without
+    // waiting for the data itself.
+    constexpr wchar_t PaletteBlockKindProperty[] = L"PatchbayBlockKind";
+    constexpr wchar_t PaletteEndpointProperty[] = L"PatchbayEndpointId";
 
     // The node graph surface: builds the visuals, draws the connections, and turns pointer input
     // into requests the window decides on.
@@ -64,13 +71,23 @@ namespace midipatchbay
 
             // The point is relative to the scroll viewer, so the menu opens where the click
             // happened rather than at the corner of the canvas.
-            std::function<void(std::wstring, foundation::Point)> EndpointContextMenuRequested{};
+            std::function<void(std::wstring, foundation::Point)> NodeContextMenuRequested{};
 
             // The customer dragged one end of an existing connection onto a different port.
             // The window validates and commits it, the same as a brand new connection.
             std::function<void(std::wstring, PatchConnection)> ConnectionRetargetRequested{};
 
             std::function<void()> ViewportChanged{};
+
+            // A block from the palette was dropped. The point is in canvas units; the connection
+            // is the one it landed on, if any, so the window can put the block into it.
+            std::function<void(BlockKind, foundation::Point, std::wstring)> BlockDropped{};
+
+            // An endpoint from the palette was dropped, by endpoint device id.
+            std::function<void(std::wstring, foundation::Point)> EndpointDropped{};
+
+            // A block was double-clicked, which opens its settings.
+            std::function<void(std::wstring)> BlockActivated{};
         };
 
         void Initialize(
@@ -88,40 +105,59 @@ namespace midipatchbay
             _In_ PatchAnalysis const& analysis) noexcept;
 
         // Cheap refresh of the things that change often: activity, offline state, muted state.
+        // Keyed by link or block id.
         void RefreshStatus(
             _In_ std::unordered_map<std::wstring, RouteStats> const& stats) noexcept;
 
         CanvasSelectionKind SelectionKind() const noexcept { return m_selectionKind; }
-        std::wstring const& SelectedEndpointId() const noexcept { return m_selectedEndpointId; }
+
+        // The node the inspector shows: the one clicked last.
+        std::wstring const& SelectedNodeId() const noexcept { return m_selectedNodeId; }
         std::wstring const& SelectedConnectionId() const noexcept { return m_selectedConnectionId; }
 
+        // Every selected node, the primary one included. Ctrl and a click add or take away one.
+        std::vector<std::wstring> const& SelectedNodeIds() const noexcept { return m_selectedNodeIds; }
+
         void Select(_In_ CanvasSelectionKind kind, _In_ std::wstring const& id) noexcept;
+
+        // Selects several nodes at once, for example what was just pasted.
+        void SelectNodes(_In_ std::vector<std::wstring> const& nodeIds) noexcept;
+
         void ClearSelection() noexcept;
 
         // Moves the viewport so everything on the canvas is in view, at the largest zoom that fits
         // up to the ceiling. Automatic fits stay at 100% or less so a small patch is not blown up.
         void FitToContent(_In_ float maximumZoom = 1.0f) noexcept;
 
-        // Lays the nodes out in two columns, sources on the left and everything they feed on
-        // the right, which is the shape almost every patch ends up in by hand anyway.
+        // Lays the nodes out left to right in the order messages flow.
         void AutoArrange() noexcept;
 
         // For a node that was just added: its width is only known once it is built, so a spot
         // picked beforehand can land on another node. Moves it right until it does not.
-        void MoveClearOfOtherNodes(_In_ std::wstring const& endpointId) noexcept;
+        void MoveClearOfOtherNodes(_In_ std::wstring const& nodeId) noexcept;
 
         void UpdateMinimap() noexcept;
 
         // Extent of the content, which is what makes the canvas bigger than the window.
         foundation::Size ContentExtent() const noexcept { return m_extent; }
 
+        // The middle of what is in view, in canvas units, for something added without a drop.
+        foundation::Point ViewCenter() const noexcept;
+
+        // The connection nearest the point, in canvas units, when one is close enough to hit.
+        std::wstring ConnectionAt(_In_ foundation::Point const& point) const noexcept;
+
         // Nodes grow from here to fit their longest name.
         static constexpr double MinimumNodeWidth = 252.0;
+        static constexpr double BlockNodeWidth = 208.0;
         static constexpr double CanvasMargin = 280.0;
 
         // Must match the scroll viewer's MinZoomFactor and MaxZoomFactor in MainWindow.xaml.
         static constexpr float MinimumZoom = 0.1f;
         static constexpr float MaximumZoom = 4.0f;
+
+        // Category colors for the blocks, so the palette and the inspector match the canvas.
+        static media::Brush CategoryBrush(_In_ BlockCategory category, _In_ double opacity = 1.0) noexcept;
 
     private:
         struct PortVisual
@@ -137,12 +173,19 @@ namespace midipatchbay
 
         struct NodeVisual
         {
-            std::wstring EndpointId{};
+            std::wstring NodeId{};
+            bool IsBlock{ false };
+            BlockCategory Category{ BlockCategory::Filter };
             controls::Border Root{ nullptr };
             controls::TextBlock NameText{ nullptr };
             controls::TextBlock SubtitleText{ nullptr };
             shapes::Ellipse StatusDot{ nullptr };
             controls::Border AlertPanel{ nullptr };
+
+            // A block that is bypassed is drawn with a dashed outline, which a Border cannot do.
+            shapes::Rectangle DashedOutline{ nullptr };
+            bool IsBypassed{ false };
+
             std::vector<PortVisual> Ports{};
             double Width{ MinimumNodeWidth };
             double Height{ 0 };
@@ -166,12 +209,23 @@ namespace midipatchbay
             controls::TextBlock PillText{ nullptr };
             bool IsLoopMuted{ false };
             bool IsMuted{ false };
+
+            // Points along the curve, for finding which connection something was dropped on.
+            std::vector<foundation::Point> Samples{};
         };
 
         void BuildNode(
             _In_ PatchEndpoint const& endpoint,
             _In_ LiveEndpoint const* live,
             _In_ std::optional<LiveEndpoint> const& suggestion) noexcept;
+
+        void BuildBlockNode(_In_ PatchBlock const& block) noexcept;
+
+        // Pressing, right-clicking and double-clicking work the same on every kind of node.
+        void AttachNodeHandlers(_In_ controls::Border const& root, _In_ std::wstring const& nodeId, _In_ bool isBlock) noexcept;
+
+        // The same for every connection point: hover, press to drag, click for the keyboard.
+        void AttachPortHandlers(_In_ controls::Button const& row, _In_ PortKey const& key) noexcept;
 
         void BuildConnections(_In_ PatchAnalysis const& analysis) noexcept;
 
@@ -184,13 +238,24 @@ namespace midipatchbay
         void ApplyNodeAppearance(_In_ NodeVisual& node) noexcept;
         void ApplyConnectionAppearance(_In_ ConnectionVisual& visual) noexcept;
 
-        NodeVisual* FindNode(_In_ std::wstring const& endpointId) noexcept;
+        NodeVisual* FindNode(_In_ std::wstring const& nodeId) noexcept;
+        NodeVisual const* FindNode(_In_ std::wstring const& nodeId) const noexcept;
+
+        // Where a node sits, endpoint or block alike.
+        std::optional<foundation::Point> NodePosition(_In_ std::wstring const& nodeId) const noexcept;
+        void SetNodePosition(_In_ std::wstring const& nodeId, _In_ double x, _In_ double y) noexcept;
+
+        bool IsNodeSelected(_In_ std::wstring const& nodeId) const noexcept;
 
         std::optional<foundation::Point> PortPoint(_In_ PortKey const& key) noexcept;
 
-        void OnNodePointerPressed(_In_ std::wstring const& endpointId, _In_ input::PointerRoutedEventArgs const& args) noexcept;
+        void OnNodePointerPressed(_In_ std::wstring const& nodeId, _In_ input::PointerRoutedEventArgs const& args) noexcept;
         void OnSurfacePointerMoved(_In_ input::PointerRoutedEventArgs const& args) noexcept;
         void OnSurfacePointerReleased(_In_ input::PointerRoutedEventArgs const& args) noexcept;
+
+        void OnDragOver(_In_ xaml::DragEventArgs const& args) noexcept;
+        void OnDrop(_In_ xaml::DragEventArgs const& args) noexcept;
+        void SetDropTarget(_In_ std::wstring const& connectionId) noexcept;
 
         // Shared by the move and the release, so a drag that delivered no useful move events
         // still ends up where the pointer actually was.
@@ -253,15 +318,19 @@ namespace midipatchbay
         std::unordered_set<std::wstring> m_loopMutedConnectionIds{};
 
         CanvasSelectionKind m_selectionKind{ CanvasSelectionKind::None };
-        std::wstring m_selectedEndpointId{};
+        std::wstring m_selectedNodeId{};
         std::wstring m_selectedConnectionId{};
+        std::vector<std::wstring> m_selectedNodeIds{};
 
-        // node drag
+        // The connection a palette drag would land on, shown so the customer knows before
+        // letting go.
+        std::wstring m_dropTargetConnectionId{};
+
+        // node drag: every selected node moves together
         bool m_draggingNode{ false };
         std::wstring m_dragNodeId{};
         foundation::Point m_dragStartPointer{};
-        double m_dragStartX{ 0 };
-        double m_dragStartY{ 0 };
+        std::vector<std::pair<std::wstring, foundation::Point>> m_dragStartPositions{};
 
         // connection drag
         bool m_draggingConnection{ false };

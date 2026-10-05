@@ -59,6 +59,7 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Foundation.Numerics.h>
+#include <winrt/Windows.ApplicationModel.DataTransfer.h>
 #include <winrt/Windows.Data.Json.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Globalization.NumberFormatting.h>

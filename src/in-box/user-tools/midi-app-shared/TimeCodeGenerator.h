@@ -8,6 +8,7 @@
 #pragma once
 
 #include "MidiTimeCode.h"
+#include "GeneratorSink.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -51,6 +52,12 @@ namespace midiapp
             _In_ winrt::Windows::Devices::Midi2::MidiEndpointConnection const& connection,
             _In_ TimeCodeGeneratorOptions options);
 
+        // Hands every message to the sink rather than to a connection, for a caller that sends
+        // them on itself.
+        TimeCodeGenerator(
+            _In_ GeneratorSink sink,
+            _In_ TimeCodeGeneratorOptions options);
+
         ~TimeCodeGenerator();
 
         TimeCodeGenerator(TimeCodeGenerator const&) = delete;
@@ -83,6 +90,7 @@ namespace midiapp
         void StorePosition(_In_ MidiTimeCodePosition const& position) noexcept;
 
         winrt::Windows::Devices::Midi2::MidiEndpointConnection m_connection{ nullptr };
+        GeneratorSink m_sink{};
         TimeCodeGeneratorOptions m_options;
 
         mutable std::mutex m_mutex;

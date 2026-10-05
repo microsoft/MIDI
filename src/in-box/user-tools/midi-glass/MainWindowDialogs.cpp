@@ -40,15 +40,17 @@ namespace winrt::midiglass::implementation
             controls::TextBox box{};
 
             box.Header(box_value(header));
-            box.Text(text);
-            box.SelectAll();
 
+            // Multi-line before the text goes in: a single-line box keeps only the first line.
             if (multiLine)
             {
                 box.AcceptsReturn(true);
                 box.TextWrapping(xaml::TextWrapping::Wrap);
                 box.Height(96);
             }
+
+            box.Text(text);
+            box.SelectAll();
 
             return box;
         }

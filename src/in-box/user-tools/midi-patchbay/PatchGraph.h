@@ -28,6 +28,7 @@ namespace midipatchbay
         LoopSeverity Severity{ LoopSeverity::Possible };
 
         // In travel order, so the message can name the hops the way the customer sees them.
+        // Blocks on the circle are named here too, alongside the endpoints.
         std::vector<std::wstring> EndpointIds{};
         std::vector<std::wstring> EndpointNames{};
 

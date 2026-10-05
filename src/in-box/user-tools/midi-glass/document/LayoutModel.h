@@ -23,6 +23,7 @@
 #include <winrt/Windows.Data.Json.h>
 
 #include "EndpointMatch.h"
+#include "LfoWave.h"
 #include "ThemeModel.h"
 
 namespace glass
@@ -152,32 +153,9 @@ namespace glass
         Steps = 26,
     };
 
-    // The shape an LFO sweeps. The first five repeat, so one cycle of them can be drawn with a
-    // bead running along it; the noises do not, so there is no cycle to draw and the bead only
-    // moves up and down.
-    enum class LfoWave
-    {
-        Sine = 0,
-        Triangle = 1,
-        Square = 2,
-
-        // A sawtooth. Up is the one that climbs and falls off a cliff; down is the reverse.
-        RampUp = 3,
-        RampDown = 4,
-
-        // Flat spectrum. Every sample is as likely to be anything as any other.
-        WhiteNoise = 5,
-
-        // Falls away three decibels an octave. Sounds and reads as more natural than white.
-        PinkNoise = 6,
-
-        // Six decibels an octave: a random walk, so it wanders rather than jumps. Also called
-        // red noise, which is the same thing under a different name rather than a sixth shape.
-        BrownNoise = 7,
-
-        // The mirror of pink. Rises three decibels an octave, so it is all jitter and no drift.
-        BlueNoise = 8,
-    };
+    // The shape an LFO sweeps. Shared with MIDI Patchbay's LFO step, so one wave is the same
+    // wave in both apps.
+    using LfoWave = ::midiapp::LfoWave;
 
     // When a control sends. A control has a list of messages, not one, so a single button can
     // send a note on press and a control change to a different device on release.
@@ -627,11 +605,11 @@ namespace glass
 
     // One pass may not be so slow that nobody can tell it is running, nor so fast that the
     // update rate is doing all the shaping.
-    constexpr double MinimumBeatsPerCycle = 0.0625;
-    constexpr double MaximumBeatsPerCycle = 64.0;
+    constexpr double MinimumBeatsPerCycle = ::midiapp::MinimumLfoBeatsPerCycle;
+    constexpr double MaximumBeatsPerCycle = ::midiapp::MaximumLfoBeatsPerCycle;
 
-    constexpr int32_t MinimumLfoIntervalMilliseconds = 5;
-    constexpr int32_t MaximumLfoIntervalMilliseconds = 1000;
+    constexpr int32_t MinimumLfoIntervalMilliseconds = ::midiapp::MinimumLfoIntervalMilliseconds;
+    constexpr int32_t MaximumLfoIntervalMilliseconds = ::midiapp::MaximumLfoIntervalMilliseconds;
 
     // The platter. There is only one thing to set on it, because everything else a jog wheel
     // does already falls out of the ordinary message rows: the control's value is how far it

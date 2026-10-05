@@ -135,8 +135,9 @@
                            Foreground="{ThemeResource SystemFillColorCautionBrush}" />
             </Grid>
 
-            <Button x:Name="AppearanceButton"
-                    x:Uid="AppearanceButton"
+            <!-- Every patch has a window of its own, so the way back to the rest of them is here. -->
+            <Button x:Name="LibraryButton"
+                    x:Uid="LibraryButton"
                     Grid.Column="3"
                     Width="46"
                     Height="32"
@@ -144,167 +145,13 @@
                     Padding="0"
                     BorderThickness="0"
                     Background="Transparent"
-                    Click="OnAppearanceButtonClick">
-                <FontIcon Glyph="&#xE713;" FontSize="14" />
+                    Click="OnLibraryButtonClick">
+                <FontIcon Glyph="&#xE8F1;" FontSize="14" />
             </Button>
-
-            <ToggleButton x:Name="AlwaysOnTopToggle"
-                          x:Uid="AlwaysOnTopToggle"
-                          Grid.Column="4"
-                          Width="46"
-                          Height="32"
-                          VerticalAlignment="Top"
-                          Padding="0"
-                          BorderThickness="0"
-                          Click="OnAlwaysOnTopToggled">
-                <ToggleButton.Resources>
-                    <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
-                    <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
-                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
-                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
-                    <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
-                    <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
-                </ToggleButton.Resources>
-                <FontIcon Glyph="&#xE718;" FontSize="14" />
-            </ToggleButton>
         </Grid>
 
-        <!-- ================================= Navigation ================================= -->
-        <NavigationView x:Name="MainNavigation"
-                        Grid.Row="1"
-                        IsSettingsVisible="False"
-                        IsBackButtonVisible="Collapsed"
-                        IsPaneToggleButtonVisible="False"
-                        OpenPaneLength="250"
-                        PaneDisplayMode="Left"
-                        SelectionChanged="OnNavigationSelectionChanged">
-
-            <NavigationView.PaneHeader>
-                <StackPanel Margin="4,4,4,0">
-                    <Button x:Name="NewPatchButton"
-                            x:Uid="NewPatchButton"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Height="36"
-                            Padding="12,0,12,0"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Click="OnNewPatchClick">
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <FontIcon Glyph="&#xE710;"
-                                      FontSize="15"
-                                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                            <TextBlock x:Name="NewPatchText"
-                                       x:Uid="NewPatchText"
-                                       Text="New empty patch"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button x:Name="NewQuickPatchButton"
-                            x:Uid="NewQuickPatchButton"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Height="36"
-                            Padding="12,0,12,0"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Click="OnNewQuickPatchClick">
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <FontIcon Glyph="&#xE71B;"
-                                      FontSize="15"
-                                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                            <TextBlock x:Name="NewQuickPatchText"
-                                       x:Uid="NewQuickPatchText"
-                                       Text="New quick patch"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <!-- A patch written somewhere else, by an agent or a friend, comes in here. -->
-                    <Button x:Name="ImportPatchButton"
-                            x:Uid="ImportPatchButton"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Height="36"
-                            Padding="12,0,12,0"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Click="OnImportPatchClick">
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <FontIcon Glyph="&#xE8B5;"
-                                      FontSize="15"
-                                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                            <TextBlock x:Name="ImportPatchText"
-                                       x:Uid="ImportPatchText"
-                                       Text="Import patch…"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <!-- Copies a starting prompt for the customer's own AI assistant. Nothing is sent from here. -->
-                    <Button x:Name="AssistantButton"
-                            x:Uid="AssistantButton"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Height="36"
-                            Padding="12,0,12,0"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Click="OnAssistantClick">
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <FontIcon Glyph="&#xE8F2;"
-                                      FontSize="15"
-                                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                            <TextBlock x:Name="AssistantText"
-                                       x:Uid="AssistantText"
-                                       Text="Ask an AI assistant…"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Border Height="1" Margin="12,8,12,2"
-                            Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-
-                    <Grid Margin="12,6,0,2" Height="30">
-                        <TextBlock x:Name="PatchesHeaderText"
-                                   x:Uid="PatchesHeaderText"
-                                   Text="Patches"
-                                   FontSize="12"
-                                   FontWeight="SemiBold"
-                                   VerticalAlignment="Center"
-                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                        <Button x:Name="SortButton"
-                                x:Uid="SortButton"
-                                HorizontalAlignment="Right"
-                                Width="32"
-                                Height="28"
-                                Padding="0"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Click="OnSortClick">
-                            <FontIcon Glyph="&#xE8CB;" FontSize="13" />
-                        </Button>
-                    </Grid>
-                </StackPanel>
-            </NavigationView.PaneHeader>
-
-            <NavigationView.PaneFooter>
-                <StackPanel>
-                    <Border Height="1" Margin="12,8,12,8"
-                            Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                    <Button x:Name="OpenFolderButton"
-                            x:Uid="OpenFolderButton"
-                            Content="Open patch folder"
-                            Style="{StaticResource ToolbarButtonStyle}"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Margin="4,0,4,8"
-                            Click="OnOpenFolderClick" />
-                </StackPanel>
-            </NavigationView.PaneFooter>
-
-            <Grid x:Name="ContentRoot">
+        <!-- =================================== Editor =================================== -->
+            <Grid x:Name="ContentRoot" Grid.Row="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -385,7 +232,22 @@
                 </Grid>
 
                 <!-- ============================== messages ============================== -->
-                <StackPanel Grid.Row="1" Margin="20,0,16,0" Spacing="6">
+                <StackPanel x:Name="MessageBars" Grid.Row="1" Margin="20,0,16,0" Spacing="6">
+                    <!-- A patch from an earlier version was turned into steps when it was read.
+                         The original file is kept, and this is where the customer finds it. -->
+                    <InfoBar x:Name="ConversionBar"
+                             Severity="Informational"
+                             IsOpen="False"
+                             IsClosable="True"
+                             CloseButtonClick="OnConversionBarCloseClick">
+                        <InfoBar.ActionButton>
+                            <Button x:Name="ConversionShowButton"
+                                    x:Uid="ConversionShowButton"
+                                    Content="Show the original"
+                                    Click="OnShowEarlierVersionClick" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+
                     <!-- The toggle in the header is easy to miss, and a patch that is not routing
                          looks exactly like one that is until a note fails to arrive. -->
                     <InfoBar x:Name="NotRoutingBar"
@@ -450,7 +312,58 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="2">
+                        <Button x:Name="UndoButton"
+                                x:Uid="UndoButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Width="36"
+                                IsEnabled="False"
+                                Click="OnUndoClick">
+                            <FontIcon Glyph="&#xE7A7;" FontSize="14" />
+                        </Button>
+                        <Button x:Name="RedoButton"
+                                x:Uid="RedoButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Width="36"
+                                IsEnabled="False"
+                                Click="OnRedoClick">
+                            <FontIcon Glyph="&#xE7A6;" FontSize="14" />
+                        </Button>
+                        <Border Width="1" Height="20" Margin="4,0,4,0"
+                                Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                        <Button x:Name="CutButton"
+                                x:Uid="CutButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Width="36"
+                                IsEnabled="False"
+                                Click="OnCutClick">
+                            <FontIcon Glyph="&#xE8C6;" FontSize="14" />
+                        </Button>
+                        <Button x:Name="CopyButton"
+                                x:Uid="CopyButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Width="36"
+                                IsEnabled="False"
+                                Click="OnCopyClick">
+                            <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                        </Button>
+                        <Button x:Name="PasteButton"
+                                x:Uid="PasteButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Width="36"
+                                Click="OnPasteClick">
+                            <FontIcon Glyph="&#xE77F;" FontSize="14" />
+                        </Button>
+                        <Button x:Name="DeleteButton"
+                                x:Uid="DeleteButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Width="36"
+                                IsEnabled="False"
+                                Click="OnDeleteClick">
+                            <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                        </Button>
+                        <Border Width="1" Height="20" Margin="4,0,4,0"
+                                Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
                         <Button x:Name="AddEndpointButton"
                                 x:Uid="AddEndpointButton"
                                 Content="Add endpoint"
@@ -534,11 +447,59 @@
                 <!-- =============================== canvas =============================== -->
                 <Grid Grid.Row="3" Margin="16,8,16,0">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0"
+                    <!-- ============================== palette =============================== -->
+                    <Border x:Name="PalettePanel"
+                            Grid.Column="0"
+                            Width="216"
+                            Margin="0,0,12,0"
+                            CornerRadius="6"
+                            BorderThickness="1"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <SelectorBar x:Name="PaletteTabs"
+                                         x:Uid="PaletteTabs"
+                                         Grid.Row="0"
+                                         Margin="4,2,4,0"
+                                         SelectionChanged="OnPaletteTabChanged">
+                                <SelectorBarItem x:Name="PaletteStepsTab"
+                                                 x:Uid="PaletteStepsTab"
+                                                 Text="Steps"
+                                                 IsSelected="True" />
+                                <SelectorBarItem x:Name="PaletteEndpointsTab"
+                                                 x:Uid="PaletteEndpointsTab"
+                                                 Text="Endpoints" />
+                            </SelectorBar>
+
+                            <TextBox x:Name="PaletteSearchBox"
+                                     x:Uid="PaletteSearchBox"
+                                     Grid.Row="1"
+                                     Margin="10,4,10,8"
+                                     PlaceholderText="Search"
+                                     TextChanged="OnPaletteSearchChanged" />
+
+                            <ScrollViewer Grid.Row="2"
+                                          VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel x:Name="PaletteContent"
+                                            Spacing="4"
+                                            Padding="10,0,10,12" />
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="1"
                             CornerRadius="6"
                             BorderThickness="1"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -605,7 +566,7 @@
                     </Border>
 
                     <Border x:Name="InspectorPanel"
-                            Grid.Column="1"
+                            Grid.Column="2"
                             Width="300"
                             Margin="12,0,0,0"
                             CornerRadius="6"
@@ -668,6 +629,7 @@
                 <Grid Grid.Row="4" Height="34" Margin="20,4,20,4">
                     <StackPanel Orientation="Horizontal" Spacing="18" VerticalAlignment="Center">
                         <TextBlock x:Name="StatusEndpointsText" Style="{StaticResource StatusTextStyle}" />
+                        <TextBlock x:Name="StatusStepsText" Style="{StaticResource StatusTextStyle}" />
                         <TextBlock x:Name="StatusConnectionsText" Style="{StaticResource StatusTextStyle}" />
                         <TextBlock x:Name="StatusRateText" Style="{StaticResource StatusTextStyle}" />
                     </StackPanel>
@@ -676,7 +638,6 @@
                                Style="{StaticResource StatusTextStyle}" />
                 </Grid>
             </Grid>
-        </NavigationView>
 
         <!-- ================================== dialogs =================================== -->
         <ContentDialog x:Name="SavePatchDialog"
@@ -793,70 +754,6 @@
             </StackPanel>
         </ContentDialog>
 
-        <ContentDialog x:Name="QuickPatchDialog"
-                       x:Uid="QuickPatchDialog"
-                       Title="New quick patch"
-                       PrimaryButtonText="Create"
-                       CloseButtonText="Cancel"
-                       DefaultButton="Primary">
-            <ContentDialog.Resources>
-                <x:Double x:Key="ContentDialogMaxWidth">560</x:Double>
-            </ContentDialog.Resources>
-            <StackPanel Spacing="12" Width="480">
-                <TextBlock x:Uid="QuickPatchIntroText"
-                           Text="One route, from one endpoint to another. It goes on the canvas as an ordinary patch, so you can add to it, edit it or save it afterwards."
-                           TextWrapping="Wrap"
-                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-
-                <Grid ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <ComboBox x:Name="QuickPatchSourceCombo"
-                              x:Uid="QuickPatchSourceCombo"
-                              Header="Source"
-                              HorizontalAlignment="Stretch"
-                              SelectionChanged="OnQuickPatchSourceChanged" />
-                    <ComboBox x:Name="QuickPatchSourceGroupCombo"
-                              x:Uid="QuickPatchSourceGroupCombo"
-                              Grid.Column="1"
-                              Width="190"
-                              Header="Group"
-                              SelectionChanged="OnQuickPatchGroupChanged" />
-                </Grid>
-
-                <FontIcon Glyph="&#xE70D;"
-                          FontSize="14"
-                          HorizontalAlignment="Center"
-                          Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-
-                <Grid ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <ComboBox x:Name="QuickPatchDestinationCombo"
-                              x:Uid="QuickPatchDestinationCombo"
-                              Header="Destination"
-                              HorizontalAlignment="Stretch"
-                              SelectionChanged="OnQuickPatchDestinationChanged" />
-                    <ComboBox x:Name="QuickPatchDestinationGroupCombo"
-                              x:Uid="QuickPatchDestinationGroupCombo"
-                              Grid.Column="1"
-                              Width="190"
-                              Header="Group"
-                              SelectionChanged="OnQuickPatchGroupChanged" />
-                </Grid>
-
-                <TextBlock x:Name="QuickPatchErrorText"
-                           FontSize="12"
-                           TextWrapping="Wrap"
-                           Visibility="Collapsed"
-                           Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
-            </StackPanel>
-        </ContentDialog>
-
         <ContentDialog x:Name="ConfirmDeleteDialog"
                        x:Uid="ConfirmDeleteDialog"
                        Title="Delete this patch?"
@@ -880,11 +777,13 @@
             </StackPanel>
         </ContentDialog>
 
-        <ContentDialog x:Name="FilterDialog"
-                       x:Uid="FilterDialog"
-                       Title="Filters"
+        <!-- One dialog for every kind of step. Its sections are built in code for the kind being
+             edited, and it works on a copy, so Cancel leaves a running patch alone. -->
+        <ContentDialog x:Name="BlockDialog"
+                       x:Uid="BlockDialog"
+                       Title="Step"
                        PrimaryButtonText="Apply"
-                       SecondaryButtonText="Clear filters"
+                       SecondaryButtonText="Reset"
                        CloseButtonText="Cancel"
                        DefaultButton="Primary">
             <ContentDialog.Resources>
@@ -898,15 +797,14 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock x:Uid="FilterDialogIntroText"
+                <TextBlock x:Name="BlockDialogIntroText"
                            Grid.Row="0"
-                           Text="Everything is allowed until you clear something here. A message has to pass every section to be sent on."
                            TextWrapping="Wrap"
                            Margin="0,0,0,12"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,14,0">
-                    <StackPanel x:Name="FilterContent" Spacing="16" />
+                    <StackPanel x:Name="BlockDialogContent" Spacing="16" />
                 </ScrollViewer>
 
                 <Border Grid.Row="2"
@@ -916,51 +814,7 @@
                         BorderThickness="1"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
-                    <TextBlock x:Name="FilterSummaryText"
-                               FontSize="12"
-                               TextWrapping="Wrap"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                </Border>
-            </Grid>
-        </ContentDialog>
-
-        <ContentDialog x:Name="TransformDialog"
-                       x:Uid="TransformDialog"
-                       Title="Transforms"
-                       PrimaryButtonText="Apply"
-                       SecondaryButtonText="Clear transforms"
-                       CloseButtonText="Cancel"
-                       DefaultButton="Primary">
-            <ContentDialog.Resources>
-                <x:Double x:Key="ContentDialogMaxWidth">900</x:Double>
-                <x:Double x:Key="ContentDialogMaxHeight">760</x:Double>
-            </ContentDialog.Resources>
-            <Grid Width="760" MaxHeight="520">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-
-                <TextBlock x:Uid="TransformDialogIntroText"
-                           Grid.Row="0"
-                           Text="Transforms run after the filters, on the copy sent to this destination. Nothing here changes what any other connection carries."
-                           TextWrapping="Wrap"
-                           Margin="0,0,0,12"
-                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,14,0">
-                    <StackPanel x:Name="TransformContent" Spacing="16" />
-                </ScrollViewer>
-
-                <Border Grid.Row="2"
-                        Margin="0,14,0,0"
-                        Padding="12,10,12,10"
-                        CornerRadius="6"
-                        BorderThickness="1"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
-                    <TextBlock x:Name="TransformSummaryText"
+                    <TextBlock x:Name="BlockSummaryText"
                                FontSize="12"
                                TextWrapping="Wrap"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />

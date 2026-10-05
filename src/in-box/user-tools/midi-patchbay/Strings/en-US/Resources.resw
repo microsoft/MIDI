@@ -83,14 +83,17 @@
   </data>
 
   <!-- ============================================================= navigation -->
-  <data name="OpenFolderButton.Content" xml:space="preserve">
+  <data name="OpenFolderButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Open patch folder</value>
+  </data>
+  <data name="OpenFolderText.Text" xml:space="preserve">
     <value>Open patch folder</value>
   </data>
   <data name="NewPatchButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>New empty patch</value>
+    <value>New patch</value>
   </data>
   <data name="NewPatchText.Text" xml:space="preserve">
-    <value>New empty patch</value>
+    <value>New patch</value>
   </data>
   <data name="NewQuickPatchButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>New quick patch</value>
@@ -152,16 +155,13 @@
     <comment>{0} is the address of the guide, a web link</comment>
   </data>
   <data name="AssistantPromptDevices" xml:space="preserve">
-    <value>These are the MIDI devices on my PC, with the names Windows shows for them:</value>
+    <value>These are the MIDI devices on my PC, with the names Windows shows for them and the groups each one uses. Groups here are counted from 1, the way Windows shows them:</value>
   </data>
   <data name="AssistantPromptNoDevices" xml:space="preserve">
     <value>I couldn't list the MIDI devices on my PC, so ask me for their names.</value>
   </data>
   <data name="AssistantPromptRequest" xml:space="preserve">
     <value>Here's what I want the patch to do:</value>
-  </data>
-  <data name="PatchesHeaderText.Text" xml:space="preserve">
-    <value>Patches</value>
   </data>
   <data name="SortButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Sort</value>
@@ -278,7 +278,7 @@
     <value>Nothing on this patch yet</value>
   </data>
   <data name="EmptyCanvasSubtitle.Text" xml:space="preserve">
-    <value>Add the endpoints you want to route between, then drag from an Out connection point to an In connection point. Nothing is sent until you do.</value>
+    <value>Drag endpoints and steps onto the canvas from the panel on the left. Then drag from an Out point to an In point to connect them. Nothing is sent until you do.</value>
   </data>
   <data name="EmptyCanvasAddButton.Content" xml:space="preserve">
     <value>Add endpoint</value>
@@ -294,6 +294,10 @@
   </data>
   <data name="PortAllGroups" xml:space="preserve">
     <value>All groups</value>
+  </data>
+  <data name="PortAnyGroup" xml:space="preserve">
+    <value>Any group</value>
+    <comment>The In side of an endpoint. Messages sent here keep the group they already have.</comment>
   </data>
   <data name="PortGroupOnlyFormat" xml:space="preserve">
     <value>Group {0}</value>
@@ -365,9 +369,6 @@
   </data>
   <data name="StatusPatchImportedFormat" xml:space="preserve">
     <value>"{0}" was added to your patches. It isn't routing yet.</value>
-  </data>
-  <data name="StatusNoPatchOpen" xml:space="preserve">
-    <value>Create or select a patch first.</value>
   </data>
   <data name="StatusEndpointLimit" xml:space="preserve">
     <value>This patch already has as many endpoints as it can hold.</value>
@@ -452,18 +453,6 @@
   <data name="InspectorSendToGroup" xml:space="preserve">
     <value>Destination group</value>
   </data>
-  <data name="InspectorFilters" xml:space="preserve">
-    <value>Filters</value>
-  </data>
-  <data name="ActionEditFilters" xml:space="preserve">
-    <value>Edit filters…</value>
-  </data>
-  <data name="InspectorTransforms" xml:space="preserve">
-    <value>Transforms</value>
-  </data>
-  <data name="ActionEditTransforms" xml:space="preserve">
-    <value>Edit transforms…</value>
-  </data>
   <data name="InspectorSendingSpeed" xml:space="preserve">
     <value>Sending speed</value>
   </data>
@@ -483,24 +472,6 @@
   </data>
 
   <!-- =========================================================== transforms -->
-  <data name="TransformDialog.Title" xml:space="preserve">
-    <value>Transforms</value>
-  </data>
-  <data name="TransformDialog.PrimaryButtonText" xml:space="preserve">
-    <value>Apply</value>
-  </data>
-  <data name="TransformDialog.SecondaryButtonText" xml:space="preserve">
-    <value>Clear transforms</value>
-  </data>
-  <data name="TransformDialog.CloseButtonText" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
-  <data name="TransformDialogIntroText.Text" xml:space="preserve">
-    <value>Transforms run after the filters, on the copy sent to this destination. Nothing here changes what any other connection carries.</value>
-  </data>
-  <data name="TransformDialogSummaryFormat" xml:space="preserve">
-    <value>This connection does: {0}</value>
-  </data>
   <data name="TransformSectionTranspose" xml:space="preserve">
     <value>Transpose</value>
   </data>
@@ -523,7 +494,7 @@
     <value>Note mapping</value>
   </data>
   <data name="TransformSectionNoteMapHint" xml:space="preserve">
-    <value>Exceptions to the transpose. A note listed here goes exactly where you send it; every other note is transposed as usual. Play sends the destination note so you can hear where it lands.</value>
+    <value>Sends each note listed here to a different note. Notes that aren't listed go through unchanged. Play sends the new note so you can hear where it lands.</value>
   </data>
   <data name="TransformAddNoteMapping" xml:space="preserve">
     <value>Add a note mapping</value>
@@ -804,24 +775,6 @@
   </data>
 
   <!-- ============================================================== filters -->
-  <data name="FilterDialog.Title" xml:space="preserve">
-    <value>Filters</value>
-  </data>
-  <data name="FilterDialog.PrimaryButtonText" xml:space="preserve">
-    <value>Apply</value>
-  </data>
-  <data name="FilterDialog.SecondaryButtonText" xml:space="preserve">
-    <value>Clear filters</value>
-  </data>
-  <data name="FilterDialog.CloseButtonText" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
-  <data name="FilterDialogIntroText.Text" xml:space="preserve">
-    <value>Everything is allowed until you clear something here. A message has to pass every section to be sent on.</value>
-  </data>
-  <data name="FilterDialogSummaryFormat" xml:space="preserve">
-    <value>This connection carries: {0}</value>
-  </data>
   <data name="FilterSectionMessageTypes" xml:space="preserve">
     <value>Message types</value>
   </data>
@@ -850,13 +803,10 @@
     <value>Channel {0}</value>
   </data>
   <data name="FilterSectionNotes" xml:space="preserve">
-    <value>Note range</value>
+    <value>Notes</value>
   </data>
   <data name="FilterSectionNotesHint" xml:space="preserve">
-    <value>Click a key for the bottom of the range, Shift and click for the top. Applies to note on, note off, poly pressure and the MIDI 2.0 per note messages.</value>
-  </data>
-  <data name="FilterLimitNoteRange" xml:space="preserve">
-    <value>Limit note range</value>
+    <value>Picks out notes by number. Applies to note on, note off, poly pressure and the MIDI 2.0 per note messages. Everything else goes through.</value>
   </data>
   <data name="FilterLowestNote" xml:space="preserve">
     <value>Lowest note</value>
@@ -866,9 +816,6 @@
   </data>
   <data name="FilterNoteRangeFormat" xml:space="preserve">
     <value>{0} ({1}) to {2} ({3})</value>
-  </data>
-  <data name="FilterNoteRangeAll" xml:space="preserve">
-    <value>All notes</value>
   </data>
   <data name="FilterSummaryEverything" xml:space="preserve">
     <value>Everything</value>
@@ -1182,7 +1129,7 @@
     <value>Cancel</value>
   </data>
   <data name="QuickPatchIntroText.Text" xml:space="preserve">
-    <value>One route, from one endpoint to another. It goes on the canvas as an ordinary patch, so you can add to it, edit it or save it afterwards.</value>
+    <value>One route, from one endpoint to another. It opens as an ordinary patch, so you can add steps to it, edit it or save it afterwards.</value>
   </data>
   <data name="QuickPatchSourceCombo.Header" xml:space="preserve">
     <value>Source</value>
@@ -1415,5 +1362,1450 @@
   </data>
   <data name="ErrorToolNotFoundFormat" xml:space="preserve">
     <value>{0} is not installed on this PC.</value>
+  </data>
+  <!-- Processing blocks. The name is what a block is called on the canvas until the customer renames it. -->
+  <data name="BlockCategoryFilters" xml:space="preserve">
+    <value>Filters</value>
+  </data>
+  <data name="BlockCategoryTransforms" xml:space="preserve">
+    <value>Transforms</value>
+  </data>
+  <data name="BlockCategorySending" xml:space="preserve">
+    <value>Sending</value>
+  </data>
+  <data name="BlockNameMessageTypeFilter" xml:space="preserve">
+    <value>Message type filter</value>
+  </data>
+  <data name="BlockNameGroupFilter" xml:space="preserve">
+    <value>Group filter</value>
+  </data>
+  <data name="BlockNameChannelFilter" xml:space="preserve">
+    <value>Channel filter</value>
+  </data>
+  <data name="BlockNameNoteFilter" xml:space="preserve">
+    <value>Note filter</value>
+  </data>
+  <data name="BlockNameControlChangeFilter" xml:space="preserve">
+    <value>Control change filter</value>
+  </data>
+  <data name="BlockNameVelocityFilter" xml:space="preserve">
+    <value>Velocity filter</value>
+  </data>
+  <data name="BlockNameMessageMaskFilter" xml:space="preserve">
+    <value>Message mask filter</value>
+  </data>
+  <data name="BlockNameChannelMap" xml:space="preserve">
+    <value>Channel mapper</value>
+  </data>
+  <data name="BlockNameGroupMap" xml:space="preserve">
+    <value>Group mapper</value>
+  </data>
+  <data name="BlockNameNoteMap" xml:space="preserve">
+    <value>Note mapper</value>
+  </data>
+  <data name="BlockNameTranspose" xml:space="preserve">
+    <value>Transpose</value>
+  </data>
+  <data name="BlockNameVelocity" xml:space="preserve">
+    <value>Velocity rescaler</value>
+  </data>
+  <data name="BlockNameAftertouch" xml:space="preserve">
+    <value>Aftertouch rescaler</value>
+  </data>
+  <data name="BlockNameControlChangeMap" xml:space="preserve">
+    <value>Control change mapper</value>
+  </data>
+  <data name="BlockNameControlChangeValue" xml:space="preserve">
+    <value>Control change values</value>
+  </data>
+  <data name="BlockNameProgramMap" xml:space="preserve">
+    <value>Program and bank mapper</value>
+  </data>
+  <data name="BlockNameThrottle" xml:space="preserve">
+    <value>Message throttler</value>
+  </data>
+  <!-- The short labels under the palette tiles. Two lines at most. -->
+  <data name="BlockShortMessageTypeFilter" xml:space="preserve">
+    <value>Message type</value>
+  </data>
+  <data name="BlockShortGroupFilter" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="BlockShortChannelFilter" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="BlockShortNoteFilter" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="BlockShortControlChangeFilter" xml:space="preserve">
+    <value>Control change</value>
+  </data>
+  <data name="BlockShortVelocityFilter" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="BlockShortMessageMaskFilter" xml:space="preserve">
+    <value>Message mask</value>
+  </data>
+  <data name="BlockShortChannelMap" xml:space="preserve">
+    <value>Channel map</value>
+  </data>
+  <data name="BlockShortGroupMap" xml:space="preserve">
+    <value>Group map</value>
+  </data>
+  <data name="BlockShortNoteMap" xml:space="preserve">
+    <value>Note map</value>
+  </data>
+  <data name="BlockShortTranspose" xml:space="preserve">
+    <value>Transpose</value>
+  </data>
+  <data name="BlockShortVelocity" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="BlockShortAftertouch" xml:space="preserve">
+    <value>Aftertouch</value>
+  </data>
+  <data name="BlockShortControlChangeMap" xml:space="preserve">
+    <value>CC number</value>
+  </data>
+  <data name="BlockShortControlChangeValue" xml:space="preserve">
+    <value>CC value</value>
+  </data>
+  <data name="BlockShortProgramMap" xml:space="preserve">
+    <value>Program and bank</value>
+  </data>
+  <data name="BlockShortThrottle" xml:space="preserve">
+    <value>Throttle</value>
+  </data>
+  <!-- A few characters that stand for each kind of block on its tile and on the canvas. Keep them to three or four characters. -->
+  <data name="BlockBadgeMessageTypeFilter" xml:space="preserve">
+    <value>UMP</value>
+  </data>
+  <data name="BlockBadgeGroupFilter" xml:space="preserve">
+    <value>GRP</value>
+  </data>
+  <data name="BlockBadgeChannelFilter" xml:space="preserve">
+    <value>CH</value>
+  </data>
+  <data name="BlockBadgeNoteFilter" xml:space="preserve">
+    <value>♪</value>
+  </data>
+  <data name="BlockBadgeControlChangeFilter" xml:space="preserve">
+    <value>CC</value>
+  </data>
+  <data name="BlockBadgeVelocityFilter" xml:space="preserve">
+    <value>VEL</value>
+  </data>
+  <data name="BlockBadgeMessageMaskFilter" xml:space="preserve">
+    <value>01</value>
+  </data>
+  <data name="BlockBadgeChannelMap" xml:space="preserve">
+    <value>CH</value>
+  </data>
+  <data name="BlockBadgeGroupMap" xml:space="preserve">
+    <value>GRP</value>
+  </data>
+  <data name="BlockBadgeNoteMap" xml:space="preserve">
+    <value>♪</value>
+  </data>
+  <data name="BlockBadgeTranspose" xml:space="preserve">
+    <value>±</value>
+  </data>
+  <data name="BlockBadgeVelocity" xml:space="preserve">
+    <value>VEL</value>
+  </data>
+  <data name="BlockBadgeAftertouch" xml:space="preserve">
+    <value>AT</value>
+  </data>
+  <data name="BlockBadgeControlChangeMap" xml:space="preserve">
+    <value>CC#</value>
+  </data>
+  <data name="BlockBadgeControlChangeValue" xml:space="preserve">
+    <value>CC~</value>
+  </data>
+  <data name="BlockBadgeProgramMap" xml:space="preserve">
+    <value>PGM</value>
+  </data>
+  <data name="BlockBadgeThrottle" xml:space="preserve">
+    <value>1×</value>
+  </data>
+  <data name="BlockHintMessageTypeFilter" xml:space="preserve">
+    <value>Lets message types, channel messages and system messages through, or keeps them out. Clock and active sensing are the ones most often kept out.</value>
+  </data>
+  <data name="BlockHintGroupFilter" xml:space="preserve">
+    <value>Lets messages on the groups you pick through.</value>
+  </data>
+  <data name="BlockHintChannelFilter" xml:space="preserve">
+    <value>Lets messages on the channels you pick through. Messages that don't carry a channel go through untouched.</value>
+  </data>
+  <data name="BlockHintNoteFilter" xml:space="preserve">
+    <value>Lets a range of notes, one note, or a list of notes through, or keeps them out.</value>
+  </data>
+  <data name="BlockHintControlChangeFilter" xml:space="preserve">
+    <value>Lets one controller, a range, or a list of controllers through, or keeps them out.</value>
+  </data>
+  <data name="BlockHintVelocityFilter" xml:space="preserve">
+    <value>Lets notes played within a range of velocities through, or keeps them out. Two of these make velocity layers.</value>
+  </data>
+  <data name="BlockHintMessageMaskFilter" xml:space="preserve">
+    <value>Picks out messages by the bits in them, for anything the other filters don't cover.</value>
+  </data>
+  <data name="BlockHintChannelMap" xml:space="preserve">
+    <value>Moves messages from one channel to another.</value>
+  </data>
+  <data name="BlockHintGroupMap" xml:space="preserve">
+    <value>Moves messages from one group to another.</value>
+  </data>
+  <data name="BlockHintNoteMap" xml:space="preserve">
+    <value>Sends one note as another, for example to remap drum pads.</value>
+  </data>
+  <data name="BlockHintTranspose" xml:space="preserve">
+    <value>Moves every note up or down by a number of semitones.</value>
+  </data>
+  <data name="BlockHintVelocity" xml:space="preserve">
+    <value>Changes how hard notes play: a curve, one fixed velocity, or a narrower range.</value>
+  </data>
+  <data name="BlockHintAftertouch" xml:space="preserve">
+    <value>Changes how pressure on a key that is already down rises, and where it lands.</value>
+  </data>
+  <data name="BlockHintControlChangeMap" xml:space="preserve">
+    <value>Sends one controller as another, for example the mod wheel as expression.</value>
+  </data>
+  <data name="BlockHintControlChangeValue" xml:space="preserve">
+    <value>Changes the values a controller sends: turn them upside down, bend them, or fit them into a range.</value>
+  </data>
+  <data name="BlockHintProgramMap" xml:space="preserve">
+    <value>Picks a different program or bank on the destination.</value>
+  </data>
+  <data name="BlockHintThrottle" xml:space="preserve">
+    <value>Slows messages down for a device that loses data when a lot arrives at once.</value>
+  </data>
+  <!-- What a block does right now, in one short line under its name on the canvas. -->
+  <data name="BlockWholePercentFormat" xml:space="preserve">
+    <value>{0}%</value>
+  </data>
+  <data name="BlockDescNothing" xml:space="preserve">
+    <value>Changes nothing</value>
+  </data>
+  <data name="BlockDescEverything" xml:space="preserve">
+    <value>Lets everything through</value>
+  </data>
+  <data name="BlockDescNoRealTime" xml:space="preserve">
+    <value>Keeps out system real-time messages</value>
+  </data>
+  <data name="BlockDescNoChannels" xml:space="preserve">
+    <value>Keeps out every channel message</value>
+  </data>
+  <data name="BlockDescChannelOneFormat" xml:space="preserve">
+    <value>Lets channel {0} through</value>
+  </data>
+  <data name="BlockDescChannelsFormat" xml:space="preserve">
+    <value>Lets channels {0} through</value>
+  </data>
+  <data name="BlockDescNoGroups" xml:space="preserve">
+    <value>Keeps out everything</value>
+  </data>
+  <data name="BlockDescGroupOneFormat" xml:space="preserve">
+    <value>Lets group {0} through</value>
+  </data>
+  <data name="BlockDescGroupsFormat" xml:space="preserve">
+    <value>Lets groups {0} through</value>
+  </data>
+  <data name="BlockDescEveryNote" xml:space="preserve">
+    <value>Lets every note through</value>
+  </data>
+  <data name="BlockDescEveryController" xml:space="preserve">
+    <value>Lets every controller through</value>
+  </data>
+  <data name="BlockDescNoNotes" xml:space="preserve">
+    <value>Keeps out every note</value>
+  </data>
+  <data name="BlockDescNoControllers" xml:space="preserve">
+    <value>Keeps out every controller</value>
+  </data>
+  <data name="BlockDescNoteOneLetFormat" xml:space="preserve">
+    <value>Lets only {0} through</value>
+  </data>
+  <data name="BlockDescNoteOneKeepFormat" xml:space="preserve">
+    <value>Keeps out {0}</value>
+  </data>
+  <data name="BlockDescNoteListLetFormat" xml:space="preserve">
+    <value>Lets only {0} through</value>
+  </data>
+  <data name="BlockDescNoteListKeepFormat" xml:space="preserve">
+    <value>Keeps out {0}</value>
+  </data>
+  <data name="BlockDescNoteCountLetFormat" xml:space="preserve">
+    <value>Lets {0} notes through</value>
+  </data>
+  <data name="BlockDescNoteCountKeepFormat" xml:space="preserve">
+    <value>Keeps out {0} notes</value>
+  </data>
+  <data name="BlockDescNoteRangeLetFormat" xml:space="preserve">
+    <value>Lets {0} to {1} through</value>
+  </data>
+  <data name="BlockDescNoteRangeKeepFormat" xml:space="preserve">
+    <value>Keeps out {0} to {1}</value>
+  </data>
+  <data name="BlockDescControllerOneLetFormat" xml:space="preserve">
+    <value>Lets only controller {0} through</value>
+  </data>
+  <data name="BlockDescControllerOneKeepFormat" xml:space="preserve">
+    <value>Keeps out controller {0}</value>
+  </data>
+  <data name="BlockDescControllerListLetFormat" xml:space="preserve">
+    <value>Lets only controllers {0} through</value>
+  </data>
+  <data name="BlockDescControllerListKeepFormat" xml:space="preserve">
+    <value>Keeps out controllers {0}</value>
+  </data>
+  <data name="BlockDescControllerCountLetFormat" xml:space="preserve">
+    <value>Lets {0} controllers through</value>
+  </data>
+  <data name="BlockDescControllerCountKeepFormat" xml:space="preserve">
+    <value>Keeps out {0} controllers</value>
+  </data>
+  <data name="BlockDescControllerRangeLetFormat" xml:space="preserve">
+    <value>Lets controllers {0} to {1} through</value>
+  </data>
+  <data name="BlockDescControllerRangeKeepFormat" xml:space="preserve">
+    <value>Keeps out controllers {0} to {1}</value>
+  </data>
+  <data name="BlockDescListAndFormat" xml:space="preserve">
+    <value>{0} and {1}</value>
+    <comment>The last two items of a list, for example "C1, D1 and E1". {0} is everything before the last item.</comment>
+  </data>
+  <data name="BlockDescListOrFormat" xml:space="preserve">
+    <value>{0} or {1}</value>
+    <comment>The last two items of a list of choices. {0} is everything before the last item.</comment>
+  </data>
+  <data name="BlockDescRangeFormat" xml:space="preserve">
+    <value>{0} to {1}</value>
+  </data>
+  <data name="BlockDescValueCountFormat" xml:space="preserve">
+    <value>one of {0} values</value>
+  </data>
+  <data name="BlockDescVelocityLetFormat" xml:space="preserve">
+    <value>Lets notes played at {0} to {1} through</value>
+  </data>
+  <data name="BlockDescVelocityKeepFormat" xml:space="preserve">
+    <value>Keeps out notes played at {0} to {1}</value>
+  </data>
+  <data name="BlockDescMaskNone" xml:space="preserve">
+    <value>Does nothing until you pick where to look</value>
+  </data>
+  <data name="BlockDescMaskLetFormat" xml:space="preserve">
+    <value>Lets only {0}-word messages through where {1}</value>
+    <comment>{0} is how many 32-bit words the message has. {1} is a condition such as "bits 15 to 8 of word 1 are 60".</comment>
+  </data>
+  <data name="BlockDescMaskKeepFormat" xml:space="preserve">
+    <value>Keeps out {0}-word messages where {1}</value>
+    <comment>{0} is how many 32-bit words the message has. {1} is a condition such as "bits 15 to 8 of word 1 are 60".</comment>
+  </data>
+  <data name="BlockDescMaskConditionFormat" xml:space="preserve">
+    <value>bits {1} to {2} of word {0} are {3}</value>
+  </data>
+  <data name="BlockDescMaskBitFormat" xml:space="preserve">
+    <value>bit {1} of word {0} is {2}</value>
+  </data>
+  <data name="BlockDescMaskManyFormat" xml:space="preserve">
+    <value>{0} places match</value>
+  </data>
+  <data name="BlockDescChannelMapOneFormat" xml:space="preserve">
+    <value>Moves channel {0} to {1}</value>
+  </data>
+  <data name="BlockDescChannelMapFormat" xml:space="preserve">
+    <value>Moves {0} channels</value>
+  </data>
+  <data name="BlockDescGroupMapOneFormat" xml:space="preserve">
+    <value>Moves group {0} to {1}</value>
+  </data>
+  <data name="BlockDescGroupMapFormat" xml:space="preserve">
+    <value>Moves {0} groups</value>
+  </data>
+  <data name="BlockDescNoteMapOneFormat" xml:space="preserve">
+    <value>Sends {0} as {1}</value>
+  </data>
+  <data name="BlockDescNoteMapFormat" xml:space="preserve">
+    <value>Remaps {0} notes</value>
+  </data>
+  <data name="BlockDescTransposeUpOne" xml:space="preserve">
+    <value>Up 1 semitone</value>
+  </data>
+  <data name="BlockDescTransposeDownOne" xml:space="preserve">
+    <value>Down 1 semitone</value>
+  </data>
+  <data name="BlockDescTransposeUpFormat" xml:space="preserve">
+    <value>Up {0} semitones</value>
+  </data>
+  <data name="BlockDescTransposeDownFormat" xml:space="preserve">
+    <value>Down {0} semitones</value>
+  </data>
+  <data name="BlockDescVelocityCurved" xml:space="preserve">
+    <value>Linear to curved</value>
+  </data>
+  <data name="BlockDescVelocityLinear" xml:space="preserve">
+    <value>Curved to linear</value>
+  </data>
+  <data name="BlockDescVelocityFixedFormat" xml:space="preserve">
+    <value>Every note at {0}</value>
+  </data>
+  <data name="BlockDescInverted" xml:space="preserve">
+    <value>Upside down</value>
+  </data>
+  <data name="BlockDescSlowRise" xml:space="preserve">
+    <value>Slow rise</value>
+  </data>
+  <data name="BlockDescFastRise" xml:space="preserve">
+    <value>Fast rise</value>
+  </data>
+  <data name="BlockDescInputFormat" xml:space="preserve">
+    <value>Input {0} to {1}</value>
+  </data>
+  <data name="BlockDescOutputFormat" xml:space="preserve">
+    <value>Output {0} to {1}</value>
+  </data>
+  <data name="BlockDescControlMapOneFormat" xml:space="preserve">
+    <value>Sends CC {0} as CC {1}</value>
+  </data>
+  <data name="BlockDescControlMapFormat" xml:space="preserve">
+    <value>Moves {0} controllers</value>
+  </data>
+  <data name="BlockDescControlValueOneFormat" xml:space="preserve">
+    <value>CC {0}: {1}</value>
+  </data>
+  <data name="BlockDescControlValueFormat" xml:space="preserve">
+    <value>Changes {0} controllers</value>
+  </data>
+  <data name="BlockDescProgramMapOneFormat" xml:space="preserve">
+    <value>Program {0} becomes {1}</value>
+  </data>
+  <data name="BlockDescProgramsOne" xml:space="preserve">
+    <value>1 program</value>
+  </data>
+  <data name="BlockDescProgramsFormat" xml:space="preserve">
+    <value>{0} programs</value>
+  </data>
+  <data name="BlockDescBanksOne" xml:space="preserve">
+    <value>1 bank</value>
+  </data>
+  <data name="BlockDescBanksFormat" xml:space="preserve">
+    <value>{0} banks</value>
+  </data>
+  <data name="BlockDescRemapsFormat" xml:space="preserve">
+    <value>Remaps {0}</value>
+  </data>
+  <data name="BlockDescThrottleUnlimited" xml:space="preserve">
+    <value>No speed limit</value>
+  </data>
+  <data name="BlockDescThrottleFormat" xml:space="preserve">
+    <value>Sends at {0}</value>
+    <comment>{0} is a speed such as "MIDI 1.0 wire speed" or "2× MIDI 1.0 wire speed".</comment>
+  </data>
+
+  <!-- ======================================================= library window -->
+  <data name="LibraryFilterBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="FilterAllItem.Text" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="FilterRoutingItem.Text" xml:space="preserve">
+    <value>Routing</value>
+  </data>
+  <data name="FilterStoppedItem.Text" xml:space="preserve">
+    <value>Not routing</value>
+  </data>
+  <data name="FilterAttentionItem.Text" xml:space="preserve">
+    <value>Needs attention</value>
+  </data>
+  <data name="SearchBox.PlaceholderText" xml:space="preserve">
+    <value>Search patches</value>
+  </data>
+  <data name="SearchBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Search patches</value>
+  </data>
+  <data name="PatchGrid.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Patches</value>
+  </data>
+  <data name="LibraryEmptyTitle.Text" xml:space="preserve">
+    <value>No patches yet</value>
+  </data>
+  <data name="LibraryEmptySubtitle.Text" xml:space="preserve">
+    <value>A patch connects MIDI devices and apps, and can change messages on the way. Each one opens in a window of its own.</value>
+  </data>
+  <data name="EmptyNewPatchButton.Content" xml:space="preserve">
+    <value>New patch</value>
+  </data>
+  <data name="NoMatchesText.Text" xml:space="preserve">
+    <value>No patches match.</value>
+  </data>
+  <data name="ConfirmExitDialog.Title" xml:space="preserve">
+    <value>Stop routing and close?</value>
+  </data>
+  <data name="ConfirmExitDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="ConfirmExitDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ConfirmExitMessageOne" xml:space="preserve">
+    <value>A patch is routing. Closing MIDI Patchbay stops it. To keep patches routing with the window closed, turn on Run in notification area in settings.</value>
+  </data>
+  <data name="ConfirmExitMessageFormat" xml:space="preserve">
+    <value>{0} patches are routing. Closing MIDI Patchbay stops them. To keep patches routing with the window closed, turn on Run in notification area in settings.</value>
+  </data>
+  <data name="TileAccessibleNameFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>{0} is the patch name. {1} is its state, such as "Routing".</comment>
+  </data>
+  <data name="TileRoutingFormat" xml:space="preserve">
+    <value>Route {0}</value>
+    <comment>The name of the switch on a patch tile. {0} is the patch name.</comment>
+  </data>
+  <data name="TileNoDescription" xml:space="preserve">
+    <value>No description</value>
+  </data>
+  <data name="TileMoreEndpointsFormat" xml:space="preserve">
+    <value>+{0} more</value>
+  </data>
+  <data name="TileSizeFormat" xml:space="preserve">
+    <value>Steps: {0} · Connections: {1}</value>
+  </data>
+  <data name="TileStateProblem" xml:space="preserve">
+    <value>Can't route</value>
+  </data>
+  <data name="TileStateWaiting" xml:space="preserve">
+    <value>Waiting for a device</value>
+  </data>
+  <data name="TileStateTemporaryFormat" xml:space="preserve">
+    <value>{0} · Temporary</value>
+    <comment>{0} is the state, such as "Routing". A temporary patch is one that isn't saved to a file.</comment>
+  </data>
+  <data name="TileMenuOpen" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="TileMenuDuplicate" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="TileMenuShowInFolder" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <data name="PatchCopyNameFormat" xml:space="preserve">
+    <value>{0} copy</value>
+  </data>
+  <data name="StatusPatchDuplicatedFormat" xml:space="preserve">
+    <value>Made a copy called "{0}". It isn't routing.</value>
+  </data>
+  <data name="StatusPatchesOne" xml:space="preserve">
+    <value>1 patch</value>
+  </data>
+  <data name="StatusPatchesFormat" xml:space="preserve">
+    <value>{0} patches</value>
+  </data>
+  <data name="StatusRoutingFormat" xml:space="preserve">
+    <value>{0} routing</value>
+  </data>
+  <data name="ErrorTooManyPatches" xml:space="preserve">
+    <value>You have as many patches as MIDI Patchbay can hold. Delete one first.</value>
+  </data>
+  <data name="AssistantPromptEndpointFormat" xml:space="preserve">
+    <value>- {0}: sends on {1}, receives on {2}</value>
+    <comment>One line of the AI assistant prompt. {0} is a device name. {1} and {2} are group lists such as "groups 1-4" or "no groups".</comment>
+  </data>
+  <data name="AssistantPromptGroupFormat" xml:space="preserve">
+    <value>group {0}</value>
+  </data>
+  <data name="AssistantPromptGroupsFormat" xml:space="preserve">
+    <value>groups {0}</value>
+  </data>
+  <data name="AssistantPromptNoGroups" xml:space="preserve">
+    <value>no groups</value>
+  </data>
+
+  <!-- ======================================================== editor window -->
+  <data name="EditorTitleFormat" xml:space="preserve">
+    <value>{0} - MIDI Patchbay</value>
+    <comment>The editor window title. {0} is the patch name.</comment>
+  </data>
+  <data name="LibraryButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show all patches</value>
+  </data>
+  <data name="LibraryButtonTip" xml:space="preserve">
+    <value>Show all patches</value>
+  </data>
+  <data name="UndoButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="UndoButtonTip" xml:space="preserve">
+    <value>Undo (Ctrl+Z)</value>
+  </data>
+  <data name="RedoButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Redo</value>
+  </data>
+  <data name="RedoButtonTip" xml:space="preserve">
+    <value>Redo (Ctrl+Y)</value>
+  </data>
+  <data name="CutButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Cut</value>
+  </data>
+  <data name="CutButtonTip" xml:space="preserve">
+    <value>Cut (Ctrl+X)</value>
+  </data>
+  <data name="CopyButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="CopyButtonTip" xml:space="preserve">
+    <value>Copy (Ctrl+C)</value>
+  </data>
+  <data name="PasteButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="PasteButtonTip" xml:space="preserve">
+    <value>Paste (Ctrl+V)</value>
+  </data>
+  <data name="DeleteButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="DeleteButtonTip" xml:space="preserve">
+    <value>Remove (Delete)</value>
+  </data>
+  <data name="ConversionTitle" xml:space="preserve">
+    <value>Updated for this version of MIDI Patchbay</value>
+  </data>
+  <data name="ConversionMessage" xml:space="preserve">
+    <value>This patch was made with an earlier version. Its filters, changes and speed limits are now steps on the canvas, and it works the same way. The original file is kept in the Earlier versions folder.</value>
+  </data>
+  <data name="ConversionMessageNoCopy" xml:space="preserve">
+    <value>This patch was made with an earlier version. Its filters, changes and speed limits are now steps on the canvas, and it works the same way.</value>
+  </data>
+  <data name="ConversionIssueNoteFormat" xml:space="preserve">
+    <value>The note map entry {0} to {1} in "{2}" couldn't be kept, because with the transpose it would go past the highest or lowest note. That note is now transposed like the others.</value>
+    <comment>{0} and {1} are note names such as C4. {2} is the step name.</comment>
+  </data>
+  <data name="ConversionIssueTooLarge" xml:space="preserve">
+    <value>The patch had more in it than a patch can hold now, so some connections were left out. Check the original in the Earlier versions folder.</value>
+  </data>
+  <data name="ConversionShowButton.Content" xml:space="preserve">
+    <value>Show the original</value>
+  </data>
+  <data name="RouteProblemTitle" xml:space="preserve">
+    <value>This patch can't route</value>
+  </data>
+  <data name="RouteProblemStepLoop" xml:space="preserve">
+    <value>Some steps send messages around in a circle. Remove one of the connections between them.</value>
+  </data>
+  <data name="RouteProblemTooComplex" xml:space="preserve">
+    <value>This patch has too many paths through its steps. Split it into smaller patches.</value>
+  </data>
+  <data name="StatusStepsOne" xml:space="preserve">
+    <value>1 step</value>
+  </data>
+  <data name="StatusStepsFormat" xml:space="preserve">
+    <value>{0} steps</value>
+  </data>
+  <data name="StatusStepLimit" xml:space="preserve">
+    <value>This patch already has as many steps as it can hold.</value>
+  </data>
+  <data name="StatusEndpointAlreadyHere" xml:space="preserve">
+    <value>That endpoint is already on this patch.</value>
+  </data>
+  <data name="ClipboardUnavailable" xml:space="preserve">
+    <value>Another app is using the clipboard. Try again in a moment.</value>
+  </data>
+  <data name="PasteNothing" xml:space="preserve">
+    <value>There's nothing to paste. Copy steps or endpoints from a patch first.</value>
+  </data>
+  <data name="PasteAlreadyHere" xml:space="preserve">
+    <value>Everything you copied is already on this patch.</value>
+  </data>
+  <data name="PasteLimited" xml:space="preserve">
+    <value>Some of what you pasted didn't fit, because this patch is full.</value>
+  </data>
+  <data name="ConnectionStepLoopRejected" xml:space="preserve">
+    <value>That would send messages around in a circle between steps, so it wasn't connected.</value>
+  </data>
+  <data name="ConnectionPillFromGroupFormat" xml:space="preserve">
+    <value>From group {0}</value>
+  </data>
+  <data name="ConnectionPillToGroupFormat" xml:space="preserve">
+    <value>To group {0}</value>
+  </data>
+  <data name="DropAddToPatch" xml:space="preserve">
+    <value>Add to the patch</value>
+  </data>
+  <data name="DropIntoConnection" xml:space="preserve">
+    <value>Put into this connection</value>
+  </data>
+  <data name="RemoveStepMessageFormat" xml:space="preserve">
+    <value>"{0}" and its connections will be taken off this patch.</value>
+  </data>
+  <data name="RemoveSelectionMessageFormat" xml:space="preserve">
+    <value>These {0} items and their connections will be taken off this patch.</value>
+  </data>
+
+  <!-- =============================================================== palette -->
+  <data name="PaletteTabs.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>What to add</value>
+  </data>
+  <data name="PaletteStepsTab.Text" xml:space="preserve">
+    <value>Steps</value>
+  </data>
+  <data name="PaletteEndpointsTab.Text" xml:space="preserve">
+    <value>Endpoints</value>
+  </data>
+  <data name="PaletteSearchBox.PlaceholderText" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="PaletteSearchBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Search the steps and endpoints</value>
+  </data>
+  <data name="PaletteConnectedHeading" xml:space="preserve">
+    <value>On this PC</value>
+  </data>
+  <data name="PaletteCreateLoopback" xml:space="preserve">
+    <value>Create loopback…</value>
+  </data>
+  <data name="PaletteEndpointOnPatchFormat" xml:space="preserve">
+    <value>{0}, already on this patch</value>
+  </data>
+  <data name="PaletteNoEndpoints" xml:space="preserve">
+    <value>No endpoints to show. Connect a device, or create a loopback.</value>
+  </data>
+  <data name="PaletteNoMatches" xml:space="preserve">
+    <value>Nothing matches.</value>
+  </data>
+  <data name="PaletteOnThisPatch" xml:space="preserve">
+    <value>On this patch</value>
+  </data>
+
+  <!-- ============================================================ step nodes -->
+  <data name="BlockBypassedCaption" xml:space="preserve">
+    <value>Bypassed: everything goes through</value>
+  </data>
+  <data name="BlockPortAccessibleNameFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>{0} is In or Out. {1} is the step name.</comment>
+  </data>
+  <data name="BlockDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="BlockDialog.SecondaryButtonText" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="BlockDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="BlockDialogSummaryFormat" xml:space="preserve">
+    <value>What this step does: {0}</value>
+  </data>
+
+  <!-- ============================================================ inspector -->
+  <data name="InspectorStepKindFormat" xml:space="preserve">
+    <value>{0} · {1}</value>
+    <comment>{0} is the kind of step, such as "Note filter". {1} is its category, such as "Filters".</comment>
+  </data>
+  <data name="InspectorStepName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="InspectorWhatItDoes" xml:space="preserve">
+    <value>What it does</value>
+  </data>
+  <data name="InspectorBypass" xml:space="preserve">
+    <value>Bypass</value>
+  </data>
+  <data name="InspectorBypassOn" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="InspectorBypassOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="InspectorBypassHint" xml:space="preserve">
+    <value>When this is on, everything goes through the step unchanged. Use it to compare the patch with and without the step.</value>
+  </data>
+  <data name="InspectorSelectionTitleFormat" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
+  <data name="InspectorSelectionMessageFormat" xml:space="preserve">
+    <value>{0} items are selected. You can copy, duplicate or remove them together, or drag them as one.</value>
+  </data>
+  <data name="LinkEndFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>{0} is an endpoint or step name. {1} is a group, such as "Group 1".</comment>
+  </data>
+  <data name="ActionAddStepHere" xml:space="preserve">
+    <value>Add a step here</value>
+  </data>
+  <data name="ActionAddStepHereHint" xml:space="preserve">
+    <value>Puts a step into this connection. You can also drag one from the panel on the left and drop it on the line.</value>
+  </data>
+  <data name="ActionEditStep" xml:space="preserve">
+    <value>Edit settings…</value>
+  </data>
+  <data name="ActionDuplicateStep" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="ActionRemoveStep" xml:space="preserve">
+    <value>Remove step</value>
+  </data>
+  <data name="ActionCopy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="ActionCut" xml:space="preserve">
+    <value>Cut</value>
+  </data>
+  <data name="ActionDuplicate" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="ActionRemove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="ActivityNotRouting" xml:space="preserve">
+    <value>Not routing</value>
+  </data>
+  <data name="ActivityBypassed" xml:space="preserve">
+    <value>Bypassed. Everything goes through unchanged.</value>
+  </data>
+  <data name="ActivityNothingYet" xml:space="preserve">
+    <value>Nothing has come through yet</value>
+  </data>
+  <data name="ActivityFilterFormat" xml:space="preserve">
+    <value>{0} let through, {1} kept out</value>
+    <comment>{0} and {1} are message counts.</comment>
+  </data>
+  <data name="ActivityThroughFormat" xml:space="preserve">
+    <value>{0} went through</value>
+    <comment>{0} is a message count.</comment>
+  </data>
+
+  <!-- ======================================================= filter settings -->
+  <data name="FilterActionHeader" xml:space="preserve">
+    <value>What happens to them</value>
+  </data>
+  <data name="FilterActionLetThrough" xml:space="preserve">
+    <value>Let only these through</value>
+  </data>
+  <data name="FilterActionKeepOut" xml:space="preserve">
+    <value>Keep these out</value>
+  </data>
+  <data name="FilterValuesHeader" xml:space="preserve">
+    <value>Which ones</value>
+  </data>
+  <data name="FilterModeRange" xml:space="preserve">
+    <value>A range</value>
+  </data>
+  <data name="FilterModeOneNote" xml:space="preserve">
+    <value>One note</value>
+  </data>
+  <data name="FilterModeOneController" xml:space="preserve">
+    <value>One controller</value>
+  </data>
+  <data name="FilterModeList" xml:space="preserve">
+    <value>A list</value>
+  </data>
+  <data name="FilterLowestController" xml:space="preserve">
+    <value>Lowest controller</value>
+  </data>
+  <data name="FilterHighestController" xml:space="preserve">
+    <value>Highest controller</value>
+  </data>
+  <data name="FilterOneNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="FilterOneController" xml:space="preserve">
+    <value>Controller</value>
+  </data>
+  <data name="FilterOneNoteFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+    <comment>{0} is a note name such as C4. {1} is its number.</comment>
+  </data>
+  <data name="FilterControllerFormat" xml:space="preserve">
+    <value>Controller {0}</value>
+  </data>
+  <data name="FilterControllerRangeFormat" xml:space="preserve">
+    <value>Controllers {0} to {1}</value>
+  </data>
+  <data name="FilterListNotesFormat" xml:space="preserve">
+    <value>{0} notes picked</value>
+  </data>
+  <data name="FilterListControllersFormat" xml:space="preserve">
+    <value>{0} controllers picked</value>
+  </data>
+  <data name="FilterListEmptyNotes" xml:space="preserve">
+    <value>No notes picked yet. Click keys to add them.</value>
+  </data>
+  <data name="FilterListEmptyControllers" xml:space="preserve">
+    <value>No controllers picked yet. Click numbers to add them.</value>
+  </data>
+  <data name="FilterLearn" xml:space="preserve">
+    <value>Learn</value>
+  </data>
+  <data name="FilterLearnNotesHint" xml:space="preserve">
+    <value>Turn on Learn and play notes on your device to pick them.</value>
+  </data>
+  <data name="FilterLearnControllersHint" xml:space="preserve">
+    <value>Turn on Learn and move controls on your device to pick them.</value>
+  </data>
+  <data name="FilterLearningNotes" xml:space="preserve">
+    <value>Listening. Play the notes you want.</value>
+  </data>
+  <data name="FilterLearningControllers" xml:space="preserve">
+    <value>Listening. Move the controls you want.</value>
+  </data>
+  <data name="FilterLearnNoSource" xml:space="preserve">
+    <value>Connect a device to this step's In point first, so there's something to listen to.</value>
+  </data>
+  <data name="FilterKeyboardHint" xml:space="preserve">
+    <value>Click a key to pick it. For a range, click the lowest key, then hold Shift and click the highest.</value>
+  </data>
+  <data name="FilterControllerGridHint" xml:space="preserve">
+    <value>Click a number to pick it. For a range, click the lowest, then hold Shift and click the highest.</value>
+  </data>
+  <data name="FilterSectionControllers" xml:space="preserve">
+    <value>Controllers</value>
+  </data>
+  <data name="FilterSectionControllersHint" xml:space="preserve">
+    <value>Picks out control change messages by controller number. Everything else goes through.</value>
+  </data>
+  <data name="FilterSectionGroups" xml:space="preserve">
+    <value>Groups</value>
+  </data>
+  <data name="FilterSectionGroupsHint" xml:space="preserve">
+    <value>Messages in the groups you don't check are kept out. Messages that have no group always go through.</value>
+  </data>
+  <data name="FilterGroupFormat" xml:space="preserve">
+    <value>Group {0}</value>
+  </data>
+  <data name="FilterSelectAll" xml:space="preserve">
+    <value>Select all</value>
+  </data>
+  <data name="FilterSelectNone" xml:space="preserve">
+    <value>Select none</value>
+  </data>
+  <data name="FilterSectionVelocities" xml:space="preserve">
+    <value>Velocities</value>
+  </data>
+  <data name="FilterSectionVelocitiesHint" xml:space="preserve">
+    <value>Picks out notes by how hard they're played. Note offs always go through, so no note is left sounding.</value>
+  </data>
+  <data name="FilterVelocityLowest" xml:space="preserve">
+    <value>Lowest</value>
+  </data>
+  <data name="FilterVelocityHighest" xml:space="preserve">
+    <value>Highest</value>
+  </data>
+
+  <!-- ========================================================== message mask -->
+  <data name="MaskSectionHeading" xml:space="preserve">
+    <value>Message mask</value>
+  </data>
+  <data name="MaskSectionHint" xml:space="preserve">
+    <value>It looks only at messages of the size you pick. Messages of other sizes always go through, and so does everything until you add a condition.</value>
+  </data>
+  <data name="MaskSize" xml:space="preserve">
+    <value>Message size</value>
+  </data>
+  <data name="MaskSize1" xml:space="preserve">
+    <value>32 bits</value>
+  </data>
+  <data name="MaskSize2" xml:space="preserve">
+    <value>64 bits</value>
+  </data>
+  <data name="MaskSize3" xml:space="preserve">
+    <value>96 bits</value>
+  </data>
+  <data name="MaskSize4" xml:space="preserve">
+    <value>128 bits</value>
+  </data>
+  <data name="MaskSizeHint" xml:space="preserve">
+    <value>32 bits: utility, system and MIDI 1.0 channel voice messages. 64 bits: MIDI 2.0 channel voice and 7-bit system exclusive messages. 128 bits: 8-bit data, flex data and stream messages.</value>
+  </data>
+  <data name="MaskActionHeader" xml:space="preserve">
+    <value>Messages that match</value>
+  </data>
+  <data name="MaskShowHex" xml:space="preserve">
+    <value>Show numbers in hexadecimal</value>
+  </data>
+  <data name="MaskAddCondition" xml:space="preserve">
+    <value>Add a condition</value>
+  </data>
+  <data name="MaskNoConditions" xml:space="preserve">
+    <value>Nothing to match yet. Add a condition to pick out messages.</value>
+  </data>
+  <data name="MaskAnd" xml:space="preserve">
+    <value>and</value>
+  </data>
+  <data name="MaskWord" xml:space="preserve">
+    <value>Word</value>
+  </data>
+  <data name="MaskWordFormat" xml:space="preserve">
+    <value>Word {0}</value>
+  </data>
+  <data name="MaskHighBit" xml:space="preserve">
+    <value>Top bit</value>
+  </data>
+  <data name="MaskLowBit" xml:space="preserve">
+    <value>Bottom bit</value>
+  </data>
+  <data name="MaskPickField" xml:space="preserve">
+    <value>Pick a field</value>
+  </data>
+  <data name="MaskFieldMessageType" xml:space="preserve">
+    <value>Message type</value>
+  </data>
+  <data name="MaskFieldGroup" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="MaskFieldStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="MaskFieldChannel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="MaskFieldIndex" xml:space="preserve">
+    <value>Note or controller number</value>
+  </data>
+  <data name="MaskFieldMidi1Value" xml:space="preserve">
+    <value>MIDI 1.0 velocity or value</value>
+  </data>
+  <data name="MaskFieldMidi2Velocity" xml:space="preserve">
+    <value>MIDI 2.0 velocity</value>
+  </data>
+  <data name="MaskFieldMidi2Value" xml:space="preserve">
+    <value>MIDI 2.0 controller value</value>
+  </data>
+  <data name="MaskMatch" xml:space="preserve">
+    <value>Matches when it</value>
+  </data>
+  <data name="MaskMatchExactly" xml:space="preserve">
+    <value>Is exactly</value>
+  </data>
+  <data name="MaskMatchAnyOf" xml:space="preserve">
+    <value>Is any of</value>
+  </data>
+  <data name="MaskMatchBetween" xml:space="preserve">
+    <value>Is between</value>
+  </data>
+  <data name="MaskValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="MaskValues" xml:space="preserve">
+    <value>Values</value>
+  </data>
+  <data name="MaskValuesPlaceholder" xml:space="preserve">
+    <value>For example 36, 38, 42</value>
+  </data>
+  <data name="MaskLowest" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="MaskHighest" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="MaskConditionFormat" xml:space="preserve">
+    <value>Word {0}, bits {1} down to {2}. That's a {3}-bit number from 0 to {4}.</value>
+  </data>
+  <data name="MaskBitsInvalid" xml:space="preserve">
+    <value>The top bit has to be the same as the bottom bit or higher.</value>
+  </data>
+  <data name="MaskValueInvalidFormat" xml:space="preserve">
+    <value>Type a number from 0 to {0}. Start it with 0x for hexadecimal.</value>
+  </data>
+
+  <!-- ===================================================== transform settings -->
+  <data name="TransformSectionGroupMap" xml:space="preserve">
+    <value>Groups</value>
+  </data>
+  <data name="TransformSectionGroupMapHint" xml:space="preserve">
+    <value>Groups you leave unchanged keep their messages where they are.</value>
+  </data>
+  <data name="TransformGroupUnchanged" xml:space="preserve">
+    <value>Unchanged</value>
+  </data>
+  <data name="TransformGroupMapAccessibleFormat" xml:space="preserve">
+    <value>Where messages in group {0} go</value>
+  </data>
+  <data name="TransformSectionExactPitch" xml:space="preserve">
+    <value>Notes with their own pitch</value>
+  </data>
+
+  <!-- ============================================ generators and the clock divider -->
+  <data name="BlockCategoryGenerators" xml:space="preserve">
+    <value>Generators</value>
+  </data>
+  <data name="BlockNameClockGenerator" xml:space="preserve">
+    <value>MIDI clock</value>
+  </data>
+  <data name="BlockNameTimeCodeGenerator" xml:space="preserve">
+    <value>MIDI Time Code</value>
+  </data>
+  <data name="BlockNameLfoGenerator" xml:space="preserve">
+    <value>LFO</value>
+  </data>
+  <data name="BlockNameClockDivider" xml:space="preserve">
+    <value>Clock divider</value>
+  </data>
+  <data name="BlockShortClockGenerator" xml:space="preserve">
+    <value>Clock</value>
+  </data>
+  <data name="BlockShortTimeCodeGenerator" xml:space="preserve">
+    <value>Time code</value>
+  </data>
+  <data name="BlockShortLfoGenerator" xml:space="preserve">
+    <value>LFO</value>
+  </data>
+  <data name="BlockShortClockDivider" xml:space="preserve">
+    <value>Clock divider</value>
+  </data>
+  <data name="BlockBadgeClockGenerator" xml:space="preserve">
+    <value>CLK</value>
+  </data>
+  <data name="BlockBadgeTimeCodeGenerator" xml:space="preserve">
+    <value>MTC</value>
+  </data>
+  <data name="BlockBadgeLfoGenerator" xml:space="preserve">
+    <value>LFO</value>
+  </data>
+  <data name="BlockBadgeClockDivider" xml:space="preserve">
+    <value>÷</value>
+  </data>
+  <data name="BlockHintClockGenerator" xml:space="preserve">
+    <value>Sends MIDI clock at a tempo you set, for as long as the patch is routing. Connect it to every device that should follow it.</value>
+  </data>
+  <data name="BlockHintTimeCodeGenerator" xml:space="preserve">
+    <value>Sends MIDI Time Code from a start time you set, for as long as the patch is routing.</value>
+  </data>
+  <data name="BlockHintLfoGenerator" xml:space="preserve">
+    <value>Sweeps a controller, pitch bend, aftertouch, or an RPN or NRPN up and down in a shape you pick, for as long as the patch is routing.</value>
+  </data>
+  <data name="BlockHintClockDivider" xml:space="preserve">
+    <value>Lets one MIDI clock pulse in every few through, so a device runs at half the tempo, a third, and so on.</value>
+  </data>
+  <data name="BlockDescClockFormat" xml:space="preserve">
+    <value>Clock at {0} BPM</value>
+    <comment>{0} is a tempo, such as "120" or "97.5".</comment>
+  </data>
+  <data name="BlockDescSwingFormat" xml:space="preserve">
+    <value>{0}% swing</value>
+    <comment>{0} is a whole number from 51 to 75. Follows "Clock at 120 BPM, ".</comment>
+  </data>
+  <data name="BlockDescNoStartStop" xml:space="preserve">
+    <value>no start or stop</value>
+    <comment>Follows "Clock at 120 BPM, ".</comment>
+  </data>
+  <data name="BlockDescTimeCodeFormat" xml:space="preserve">
+    <value>{0} from {1}</value>
+    <comment>{0} is a frame rate such as "30 fps". {1} is a start time such as "01:00:00:00".</comment>
+  </data>
+  <data name="BlockDescLfoFormat" xml:space="preserve">
+    <value>{0} on {1}, channel {2}, one pass every {3}</value>
+    <comment>{0} is a wave such as "Sine". {1} is a message such as "CC 1". {2} is a channel from 1 to 16. {3} is a length such as "1 bar" or "1/4".</comment>
+  </data>
+  <data name="BlockDescLfoBeatsFormat" xml:space="preserve">
+    <value>{0} beats</value>
+    <comment>A length that isn't one of the listed choices. {0} is a number such as "2.5".</comment>
+  </data>
+  <data name="BlockDescClockDivideFormat" xml:space="preserve">
+    <value>Divides the clock by {0}</value>
+    <comment>{0} is a whole number from 2 to 96.</comment>
+  </data>
+  <data name="FrameRateShort24" xml:space="preserve">
+    <value>24 fps</value>
+  </data>
+  <data name="FrameRateShort25" xml:space="preserve">
+    <value>25 fps</value>
+  </data>
+  <data name="FrameRateShort2997Drop" xml:space="preserve">
+    <value>29.97 drop</value>
+  </data>
+  <data name="FrameRateShort30" xml:space="preserve">
+    <value>30 fps</value>
+  </data>
+  <data name="FrameRate24" xml:space="preserve">
+    <value>24 frames per second - film</value>
+  </data>
+  <data name="FrameRate25" xml:space="preserve">
+    <value>25 frames per second - PAL</value>
+  </data>
+  <data name="FrameRate2997Drop" xml:space="preserve">
+    <value>29.97 drop frame - NTSC broadcast</value>
+  </data>
+  <data name="FrameRate30" xml:space="preserve">
+    <value>30 frames per second</value>
+  </data>
+  <data name="LfoTargetControlChangeFormat" xml:space="preserve">
+    <value>CC {0}</value>
+    <comment>{0} is a controller number from 0 to 127.</comment>
+  </data>
+  <data name="LfoTargetPitchBend" xml:space="preserve">
+    <value>pitch bend</value>
+  </data>
+  <data name="LfoTargetChannelPressure" xml:space="preserve">
+    <value>channel pressure</value>
+  </data>
+  <data name="LfoTargetPolyPressureFormat" xml:space="preserve">
+    <value>pressure on {0}</value>
+    <comment>{0} is a note such as "C4".</comment>
+  </data>
+  <data name="LfoTargetRegisteredFormat" xml:space="preserve">
+    <value>RPN {0}:{1}</value>
+    <comment>{0} is a bank and {1} an index, each from 0 to 127.</comment>
+  </data>
+  <data name="LfoTargetAssignableFormat" xml:space="preserve">
+    <value>NRPN {0}:{1}</value>
+    <comment>{0} is a bank and {1} an index, each from 0 to 127.</comment>
+  </data>
+  <data name="LfoWaveSine" xml:space="preserve">
+    <value>Sine</value>
+  </data>
+  <data name="LfoWaveTriangle" xml:space="preserve">
+    <value>Triangle</value>
+  </data>
+  <data name="LfoWaveSquare" xml:space="preserve">
+    <value>Square</value>
+  </data>
+  <data name="LfoWaveRampUp" xml:space="preserve">
+    <value>Ramp up</value>
+  </data>
+  <data name="LfoWaveRampDown" xml:space="preserve">
+    <value>Ramp down</value>
+  </data>
+  <data name="LfoWaveWhite" xml:space="preserve">
+    <value>White noise</value>
+  </data>
+  <data name="LfoWavePink" xml:space="preserve">
+    <value>Pink noise</value>
+  </data>
+  <data name="LfoWaveBrown" xml:space="preserve">
+    <value>Brown noise</value>
+  </data>
+  <data name="LfoWaveBlue" xml:space="preserve">
+    <value>Blue noise</value>
+  </data>
+  <data name="LfoRateSixteenth" xml:space="preserve">
+    <value>1/16</value>
+  </data>
+  <data name="LfoRateEighth" xml:space="preserve">
+    <value>1/8</value>
+  </data>
+  <data name="LfoRateQuarter" xml:space="preserve">
+    <value>1/4</value>
+  </data>
+  <data name="LfoRateDottedQuarter" xml:space="preserve">
+    <value>1/4 dotted</value>
+  </data>
+  <data name="LfoRateHalf" xml:space="preserve">
+    <value>1/2</value>
+  </data>
+  <data name="LfoRateDottedHalf" xml:space="preserve">
+    <value>1/2 dotted</value>
+  </data>
+  <data name="LfoRateBar" xml:space="preserve">
+    <value>1 bar</value>
+  </data>
+  <data name="LfoRateTwoBars" xml:space="preserve">
+    <value>2 bars</value>
+  </data>
+  <data name="LfoRateFourBars" xml:space="preserve">
+    <value>4 bars</value>
+  </data>
+  <data name="LfoRateEightBars" xml:space="preserve">
+    <value>8 bars</value>
+  </data>
+  <data name="LfoMessageControlChange" xml:space="preserve">
+    <value>Control change (CC)</value>
+  </data>
+  <data name="LfoMessagePitchBend" xml:space="preserve">
+    <value>Pitch bend</value>
+  </data>
+  <data name="LfoMessageChannelPressure" xml:space="preserve">
+    <value>Channel pressure (aftertouch)</value>
+  </data>
+  <data name="LfoMessagePolyPressure" xml:space="preserve">
+    <value>Poly pressure (aftertouch on one note)</value>
+  </data>
+  <data name="LfoMessageRegistered" xml:space="preserve">
+    <value>RPN (registered controller)</value>
+  </data>
+  <data name="LfoMessageAssignable" xml:space="preserve">
+    <value>NRPN (assignable controller)</value>
+  </data>
+  <data name="ActivitySentFormat" xml:space="preserve">
+    <value>{0} sent</value>
+    <comment>{0} is a message count.</comment>
+  </data>
+  <data name="ActivityNothingSentYet" xml:space="preserve">
+    <value>Nothing sent yet</value>
+  </data>
+  <data name="ActivityGeneratorBypassed" xml:space="preserve">
+    <value>Bypassed. Sends nothing.</value>
+  </data>
+  <data name="ActivityGeneratorNotConnected" xml:space="preserve">
+    <value>Not sending. Connect it to something to start it.</value>
+  </data>
+  <data name="BlockBypassedGeneratorCaption" xml:space="preserve">
+    <value>Bypassed: sends nothing</value>
+  </data>
+  <data name="InspectorBypassGeneratorHint" xml:space="preserve">
+    <value>When this is on, the step sends nothing. Use it to silence the step without taking it out of the patch.</value>
+  </data>
+  <data name="ConnectionIntoGeneratorRejected" xml:space="preserve">
+    <value>A generator makes its own messages, so nothing can be connected into it.</value>
+  </data>
+  <data name="GeneratorSectionTempo" xml:space="preserve">
+    <value>Tempo</value>
+  </data>
+  <data name="GeneratorClockTempoHint" xml:space="preserve">
+    <value>The clock sends 24 pulses for every beat. A change here takes effect while the patch is routing, without restarting the clock.</value>
+  </data>
+  <data name="GeneratorBeatsPerMinute" xml:space="preserve">
+    <value>Tempo in beats per minute</value>
+  </data>
+  <data name="GeneratorSendStartStop" xml:space="preserve">
+    <value>Send Start and Stop messages</value>
+  </data>
+  <data name="GeneratorSendStartStopHint" xml:space="preserve">
+    <value>Start goes out when the patch starts routing and Stop when it stops, so a sequencer or drum machine plays along with the clock.</value>
+  </data>
+  <data name="GeneratorSectionSwing" xml:space="preserve">
+    <value>Swing</value>
+  </data>
+  <data name="GeneratorSwingPercent" xml:space="preserve">
+    <value>Swing %</value>
+  </data>
+  <data name="GeneratorSwingStraight" xml:space="preserve">
+    <value>50% is straight, with no swing.</value>
+  </data>
+  <data name="GeneratorSwingValueFormat" xml:space="preserve">
+    <value>{0}% swing. The first note of each pair is held longer and the second is shortened, so the tempo stays the same.</value>
+    <comment>{0} is a whole number from 51 to 75.</comment>
+  </data>
+  <data name="GeneratorSwingAppliesTo" xml:space="preserve">
+    <value>Swing applies to</value>
+  </data>
+  <data name="GeneratorSwingEighths" xml:space="preserve">
+    <value>Eighth notes</value>
+  </data>
+  <data name="GeneratorSwingSixteenths" xml:space="preserve">
+    <value>Sixteenth notes</value>
+  </data>
+  <data name="GeneratorSectionGroup" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="GeneratorGroupHint" xml:space="preserve">
+    <value>The group it sends on when it's connected to a whole endpoint. A connection to one group or port sends it there instead.</value>
+  </data>
+  <data name="GeneratorSectionTimeCode" xml:space="preserve">
+    <value>Time code</value>
+  </data>
+  <data name="GeneratorTimeCodeHint" xml:space="preserve">
+    <value>Time code starts from the start time each time the patch starts routing.</value>
+  </data>
+  <data name="GeneratorFrameRate" xml:space="preserve">
+    <value>Frame rate</value>
+  </data>
+  <data name="GeneratorStartAt" xml:space="preserve">
+    <value>Start at</value>
+  </data>
+  <data name="GeneratorStartReadingFormat" xml:space="preserve">
+    <value>Starts at {0}.</value>
+    <comment>{0} is a time such as "01:00:00:00".</comment>
+  </data>
+  <data name="GeneratorStartNotUnderstood" xml:space="preserve">
+    <value>Write this as hours:minutes:seconds:frames. A shorter entry fills from the right, so 12 means twelve frames.</value>
+  </data>
+  <data name="GeneratorSendFullFrame" xml:space="preserve">
+    <value>Send a full timecode when starting and stopping</value>
+  </data>
+  <data name="GeneratorSendFullFrameHint" xml:space="preserve">
+    <value>A receiver finds its place at once, instead of waiting for the next two frames.</value>
+  </data>
+  <data name="GeneratorSectionWave" xml:space="preserve">
+    <value>Shape and rate</value>
+  </data>
+  <data name="GeneratorWave" xml:space="preserve">
+    <value>Waveform</value>
+  </data>
+  <data name="GeneratorRate" xml:space="preserve">
+    <value>One pass takes</value>
+  </data>
+  <data name="GeneratorLfoRateCaptionFormat" xml:space="preserve">
+    <value>{0} beats, which is about {1} seconds at {2} BPM. A change here takes effect while the patch is routing.</value>
+    <comment>{0} is a number of beats, {1} a number of seconds, {2} a tempo in beats per minute.</comment>
+  </data>
+  <data name="GeneratorSectionRange" xml:space="preserve">
+    <value>Range</value>
+  </data>
+  <data name="GeneratorRangeHint" xml:space="preserve">
+    <value>How much of the message's travel the sweep covers. Setting the minimum above the maximum turns the wave upside down.</value>
+  </data>
+  <data name="GeneratorLowest" xml:space="preserve">
+    <value>Minimum %</value>
+  </data>
+  <data name="GeneratorHighest" xml:space="preserve">
+    <value>Maximum %</value>
+  </data>
+  <data name="GeneratorSectionMessage" xml:space="preserve">
+    <value>What it sends</value>
+  </data>
+  <data name="GeneratorMessage" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="GeneratorController" xml:space="preserve">
+    <value>Controller</value>
+  </data>
+  <data name="GeneratorNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="GeneratorBank" xml:space="preserve">
+    <value>Bank</value>
+  </data>
+  <data name="GeneratorIndex" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="GeneratorChannel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="GeneratorGroup" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="GeneratorProtocol" xml:space="preserve">
+    <value>Message format</value>
+  </data>
+  <data name="GeneratorProtocolMidi2" xml:space="preserve">
+    <value>MIDI 2.0</value>
+  </data>
+  <data name="GeneratorProtocolMidi1" xml:space="preserve">
+    <value>MIDI 1.0</value>
+  </data>
+  <data name="GeneratorProtocolHint" xml:space="preserve">
+    <value>MIDI 2.0 has the finest steps, and Windows converts it for a MIDI 1.0 device. RPN and NRPN always go out as MIDI 2.0.</value>
+  </data>
+  <data name="GeneratorSectionInterval" xml:space="preserve">
+    <value>Update interval</value>
+  </data>
+  <data name="GeneratorInterval" xml:space="preserve">
+    <value>Milliseconds</value>
+  </data>
+  <data name="GeneratorIntervalCaptionFormat" xml:space="preserve">
+    <value>Up to {0} messages a second. A MIDI 1.0 cable carries about a thousand a second, shared with everything else on it, so leave room.</value>
+    <comment>{0} is a whole number of messages per second.</comment>
+  </data>
+  <data name="GeneratorReturnToCenter" xml:space="preserve">
+    <value>Return to center when routing stops</value>
+  </data>
+  <data name="GeneratorReturnToCenterHint" xml:space="preserve">
+    <value>Sends the middle of the range as it stops, so a pitch bend isn't left bent.</value>
+  </data>
+  <data name="DividerSection" xml:space="preserve">
+    <value>Divide the clock</value>
+  </data>
+  <data name="DividerHint" xml:space="preserve">
+    <value>Lets the first clock pulse through, then one in every so many after it. Start, Stop and Continue go through as they are, and a song position is divided to match.</value>
+  </data>
+  <data name="DividerDivideBy" xml:space="preserve">
+    <value>Divide by</value>
+  </data>
+  <data name="DividerEffectFormat" xml:space="preserve">
+    <value>A device that follows this runs at {0} BPM when the clock coming in is at 120.</value>
+    <comment>{0} is a tempo, such as "60" or "40".</comment>
   </data>
 </root>

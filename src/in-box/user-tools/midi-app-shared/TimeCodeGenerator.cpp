@@ -73,6 +73,13 @@ namespace midiapp
         m_packedPosition.store(PackPosition(m_options.StartPosition));
     }
 
+    _Use_decl_annotations_
+    TimeCodeGenerator::TimeCodeGenerator(GeneratorSink sink, TimeCodeGeneratorOptions options) :
+        TimeCodeGenerator(tcmidi::MidiEndpointConnection{ nullptr }, std::move(options))
+    {
+        m_sink = std::move(sink);
+    }
+
     TimeCodeGenerator::~TimeCodeGenerator()
     {
         Stop();
@@ -154,7 +161,15 @@ namespace midiapp
                 auto const message = tcmsg::MidiMessageBuilder::BuildSystemMessage(
                     0, tcmidi::MidiGroup{ groupIndex }, StatusTimeCodeQuarterFrame, dataByte, 0);
 
-                m_connection.SendSingleMessageWords(timestamp, message.Word0());
+                if (m_sink)
+                {
+                    uint32_t const word{ message.Word0() };
+                    m_sink(timestamp, &word, 1);
+                }
+                else
+                {
+                    m_connection.SendSingleMessageWords(timestamp, message.Word0());
+                }
             }
         }
         catch (...)
@@ -187,8 +202,19 @@ namespace midiapp
                     0, group, SysExEnd, 2,
                     payload[6], payload[7], 0, 0, 0, 0);
 
-                m_connection.SendSingleMessageWords(timestamp, first.Word0(), first.Word1());
-                m_connection.SendSingleMessageWords(timestamp, second.Word0(), second.Word1());
+                if (m_sink)
+                {
+                    uint32_t const firstWords[2]{ first.Word0(), first.Word1() };
+                    uint32_t const secondWords[2]{ second.Word0(), second.Word1() };
+
+                    m_sink(timestamp, firstWords, 2);
+                    m_sink(timestamp, secondWords, 2);
+                }
+                else
+                {
+                    m_connection.SendSingleMessageWords(timestamp, first.Word0(), first.Word1());
+                    m_connection.SendSingleMessageWords(timestamp, second.Word0(), second.Word1());
+                }
             }
         }
         catch (...)

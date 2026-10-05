@@ -14,6 +14,8 @@
 #include <thread>
 #include <vector>
 
+#include "GeneratorSink.h"
+
 namespace midiapp
 {
     struct BeatClockGeneratorOptions
@@ -60,6 +62,12 @@ namespace midiapp
 
         BeatClockGenerator(
             _In_ winrt::Windows::Devices::Midi2::MidiEndpointConnection const& connection,
+            _In_ BeatClockGeneratorOptions options);
+
+        // Hands every message to the sink rather than to a connection, for a caller that sends
+        // them on itself.
+        BeatClockGenerator(
+            _In_ GeneratorSink sink,
             _In_ BeatClockGeneratorOptions options);
 
         ~BeatClockGenerator();
@@ -121,6 +129,7 @@ namespace midiapp
         static double SwingPosition(_In_ uint64_t pulseIndex, _In_ SwingShape const& shape) noexcept;
 
         winrt::Windows::Devices::Midi2::MidiEndpointConnection m_connection{ nullptr };
+        GeneratorSink m_sink{};
         BeatClockGeneratorOptions m_options;
 
         std::vector<uint32_t> m_clockWords;

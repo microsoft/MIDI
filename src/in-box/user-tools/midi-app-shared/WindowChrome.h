@@ -63,7 +63,8 @@ namespace midiapp
             std::wstring const& executablePath,
             int32_t sizePixels) noexcept;
 
-        // Static, because this runs before Activate and therefore before Initialize.
+        // Static, because this runs before Activate and therefore before Initialize. The default
+        // size is in effective pixels, so it is scaled for the display's DPI.
         static void RestorePlacement(
             winrt::Microsoft::UI::Xaml::Window const& window,
             MidiAppSettings const& settings,

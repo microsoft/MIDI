@@ -131,11 +131,18 @@
     <ClInclude Include="BackgroundWork.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="MessageFilter.h" />
+    <ClInclude Include="MessageText.h" />
     <ClInclude Include="MessageTransform.h" />
     <ClInclude Include="PatchCanvas.h" />
+    <ClInclude Include="PatchDocument.h" />
     <ClInclude Include="PatchGraph.h" />
+    <ClInclude Include="PatchLayout.h" />
+    <ClInclude Include="PatchLibrary.h" />
     <ClInclude Include="PatchModel.h" />
+    <ClInclude Include="PatchSerializer.h" />
     <ClInclude Include="PatchStore.h" />
+    <ClInclude Include="ProcessingBlock.h" />
+    <ClInclude Include="RouteGraph.h" />
     <ClInclude Include="RouteEngine.h" />
     <ClInclude Include="SendQueue.h" />
     <ClInclude Include="StringResources.h" />
@@ -147,6 +154,9 @@
     </ClInclude>
     <ClInclude Include="MainWindow.xaml.h">
       <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="LibraryWindow.xaml.h">
+      <DependentUpon>LibraryWindow.xaml</DependentUpon>
     </ClInclude>
     <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md -->
     <ClInclude Include="..\midi-app-shared\PreviewBuild.h" />
@@ -162,6 +172,14 @@
     <ClInclude Include="..\midi-app-shared\MidiServiceStatus.h" />
     <ClInclude Include="..\midi-app-shared\EndpointImageAssets.h" />
     <ClInclude Include="..\midi-app-shared\GeneralMidi.h" />
+    <ClInclude Include="..\midi-app-shared\GeneratorSink.h" />
+    <ClInclude Include="..\midi-app-shared\BeatClockGenerator.h" />
+    <ClInclude Include="..\midi-app-shared\TimeCodeGenerator.h" />
+    <ClInclude Include="..\midi-app-shared\MidiTimeCode.h" />
+    <ClInclude Include="..\midi-app-shared\LfoMessageGenerator.h" />
+    <ClInclude Include="..\midi-app-shared\LfoWave.h" />
+    <ClInclude Include="..\midi-app-shared\LfoSweep.h" />
+    <ClInclude Include="..\midi-app-shared\ChannelVoiceWords.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
     <ClInclude Include="..\midi-app-shared\AssistantPrompt.h" />
   </ItemGroup>
@@ -173,10 +191,32 @@
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
-    <ClCompile Include="MessageFilter.cpp" />
-    <ClCompile Include="MessageTransform.cpp" />
+    <!-- The patch model is free of pch.h and XAML so the unit tests compile it exactly as it ships. -->
+    <ClCompile Include="MessageFilter.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="MessageTransform.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ProcessingBlock.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="PatchDocument.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="PatchLayout.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="PatchSerializer.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="RouteGraph.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="MessageText.cpp" />
     <ClCompile Include="PatchCanvas.cpp" />
     <ClCompile Include="PatchGraph.cpp" />
+    <ClCompile Include="PatchLibrary.cpp" />
     <ClCompile Include="PatchModel.cpp" />
     <ClCompile Include="PatchStore.cpp" />
     <ClCompile Include="RouteEngine.cpp" />
@@ -193,8 +233,13 @@
     <ClCompile Include="MainWindowDialogs.cpp" />
     <ClCompile Include="MainWindowInspector.cpp" />
     <ClCompile Include="MainWindowFilters.cpp" />
+    <ClCompile Include="MainWindowGenerators.cpp" />
     <ClCompile Include="MainWindowTransforms.cpp" />
     <ClCompile Include="MainWindowRouting.cpp" />
+    <ClCompile Include="LibraryWindow.xaml.cpp">
+      <DependentUpon>LibraryWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="LibraryWindowDialogs.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
@@ -212,6 +257,22 @@
     <ClCompile Include="..\midi-app-shared\GeneralMidi.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <!-- The generators: the same clock and time code as MIDI Clock, and the same LFO as MIDI Glass. -->
+    <ClCompile Include="..\midi-app-shared\BeatClockGenerator.cpp" />
+    <ClCompile Include="..\midi-app-shared\TimeCodeGenerator.cpp" />
+    <ClCompile Include="..\midi-app-shared\LfoMessageGenerator.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiTimeCode.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\LfoWave.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\LfoSweep.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\ChannelVoiceWords.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="..\midi-app-shared\AssistantPrompt.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
@@ -221,12 +282,18 @@
     <Midl Include="MainWindow.idl">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Midl>
+    <Midl Include="LibraryWindow.idl">
+      <DependentUpon>LibraryWindow.xaml</DependentUpon>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="MainWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="LibraryWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

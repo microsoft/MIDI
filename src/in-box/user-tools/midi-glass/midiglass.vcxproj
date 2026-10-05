@@ -161,6 +161,9 @@
     <ClInclude Include="..\midi-app-shared\EndpointImageAssets.h" />
     <ClInclude Include="..\midi-app-shared\MidiServiceStatus.h" />
     <ClInclude Include="..\midi-app-shared\EndpointMatch.h" />
+    <ClInclude Include="..\midi-app-shared\LfoWave.h" />
+    <ClInclude Include="..\midi-app-shared\LfoSweep.h" />
+    <ClInclude Include="..\midi-app-shared\ChannelVoiceWords.h" />
     <ClInclude Include="..\midi-app-shared\EndpointCatalog.h" />
     <ClInclude Include="document\JsonText.h" />
     <ClInclude Include="document\LayoutModel.h" />
@@ -272,6 +275,16 @@
     <ClCompile Include="..\midi-app-shared\EndpointImageAssets.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiServiceStatus.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointMatch.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <!-- shared with MIDI Patchbay's LFO step, and free of the pch for the unit tests -->
+    <ClCompile Include="..\midi-app-shared\LfoWave.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\LfoSweep.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\ChannelVoiceWords.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\midi-app-shared\EndpointCatalog.cpp" />

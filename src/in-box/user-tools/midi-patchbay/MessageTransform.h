@@ -7,6 +7,8 @@
 
 #pragma once
 
+// Pure, like MessageFilter.h. The summaries a customer reads are in MessageText.h.
+
 #include "MessageFilter.h"
 
 namespace midipatchbay
@@ -61,9 +63,6 @@ namespace midipatchbay
     // What a stored value looks like in the scale the customer chose, and back again.
     double DisplayFromHundredths(_In_ int32_t hundredths, _In_ ValueScale scale) noexcept;
     int32_t HundredthsFromDisplay(_In_ double value, _In_ ValueScale scale) noexcept;
-
-    // "72" or "56.69%", for a summary line.
-    winrt::hstring DescribeScaledValue(_In_ int32_t hundredths, _In_ ValueScale scale) noexcept;
 
     // How a controller or aftertouch value rises from the bottom of its range to the top.
     enum class ValueCurve : int32_t
@@ -181,10 +180,32 @@ namespace midipatchbay
         uint16_t ShapeVelocity16(_In_ uint16_t velocity) const noexcept;
     };
 
-    winrt::hstring SummarizeTransform(_In_ MessageTransform const& transform) noexcept;
-
     json::JsonObject TransformToJson(_In_ MessageTransform const& transform) noexcept;
     MessageTransform TransformFromJson(_In_ json::JsonObject const& object) noexcept;
 
     std::wstring TransformSignature(_In_ MessageTransform const& transform) noexcept;
+
+    // The pieces of the transform file format that the blocks reuse, so a block writes a map or
+    // a shape exactly the way a whole transform does.
+    json::JsonArray MapToJson(_In_reads_(count) int16_t const* map, _In_ size_t count) noexcept;
+
+    // Fills the whole map: -1 everywhere the array does not name.
+    void MapFromJson(
+        _In_ json::JsonObject const& object,
+        _In_ std::wstring_view key,
+        _Out_writes_(count) int16_t* map,
+        _In_ size_t count) noexcept;
+
+    json::JsonObject ShapeToJson(_In_ ValueShape const& shape, _In_ bool includeInvert) noexcept;
+    ValueShape ShapeFromJson(_In_ json::JsonObject const& object, _In_ bool includeInvert) noexcept;
+
+    json::JsonArray ControlValueShapesToJson(_In_ std::array<ValueShape, ControlMapSize> const& shapes) noexcept;
+    void ControlValueShapesFromJson(
+        _In_ json::JsonObject const& object,
+        _Inout_ std::array<ValueShape, ControlMapSize>& shapes) noexcept;
+
+    std::wstring ShapeSignature(_In_ ValueShape const& shape);
+
+    // How many entries of a map move something somewhere else.
+    size_t CountMapEntries(_In_reads_(count) int16_t const* map, _In_ size_t count) noexcept;
 }

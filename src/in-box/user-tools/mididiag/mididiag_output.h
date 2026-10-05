@@ -67,6 +67,24 @@ namespace mididiag
         // from the network section, for the finding about hosts the firewall blocks
         bool FirewallStateKnown{ false };
         bool AnyConnectedNetworkBlocksMidiService{ false };
+
+        // NET_FW_PROFILE2 bits, also from the network section: the profiles of the networks this
+        // PC is connected to, and the profiles where the firewall is on, where it blocks
+        // everything coming in, and where it lets in whatever no rule blocks
+        long ConnectedFirewallProfiles{ 0 };
+        long EnabledFirewallProfiles{ 0 };
+        long BlockAllInboundProfiles{ 0 };
+        long DefaultInboundAllowProfiles{ 0 };
+
+        // from the service status section. Zero when the service was not running.
+        FILETIME MidiServiceStartTime{};
+
+        // from the mdns section. The network transport sections turn these into findings only
+        // when a transport is in use, and only once.
+        bool MdnsTurnedOff{ false };
+        bool MdnsBlockedOnConnectedNetwork{ false };
+        FILETIME DnsClientStartTime{};
+        bool MdnsFindingsAdded{ false };
     };
 
     ReportContext& Context() noexcept;

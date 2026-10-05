@@ -22,6 +22,12 @@ namespace midipatchbay
         constexpr wchar_t ValueActivateSavedPatches[] = L"ActivateSavedPatchesAtStartup";
         constexpr wchar_t ValueShowAssistant[] = L"ShowAssistant";
 
+        constexpr wchar_t ValueEditorX[] = L"EditorWindowX";
+        constexpr wchar_t ValueEditorY[] = L"EditorWindowY";
+        constexpr wchar_t ValueEditorWidth[] = L"EditorWindowWidth";
+        constexpr wchar_t ValueEditorHeight[] = L"EditorWindowHeight";
+        constexpr wchar_t ValueEditorMaximized[] = L"EditorWindowMaximized";
+
         constexpr wchar_t RunKeyPath[] = LR"(Software\Microsoft\Windows\CurrentVersion\Run)";
         constexpr wchar_t RunValueName[] = L"WindowsMidiServicesPatchbay";
 
@@ -76,6 +82,29 @@ namespace midipatchbay
         m_confirmCanvasRemove = ReadDword(ValueConfirmCanvasRemove, 1) != 0;
         m_activateSavedPatchesAtStartup = ReadDword(ValueActivateSavedPatches, 1) != 0;
         m_showAssistant = ReadDword(ValueShowAssistant, 1) != 0;
+
+        m_editorPlacement.X = static_cast<int32_t>(ReadDword(ValueEditorX, 0));
+        m_editorPlacement.Y = static_cast<int32_t>(ReadDword(ValueEditorY, 0));
+        m_editorPlacement.Width = static_cast<int32_t>(ReadDword(ValueEditorWidth, 0));
+        m_editorPlacement.Height = static_cast<int32_t>(ReadDword(ValueEditorHeight, 0));
+        m_editorPlacement.Maximized = ReadDword(ValueEditorMaximized, 0) != 0;
+
+        m_editorPlacement.Valid =
+            m_editorPlacement.Width >= MinimumWindowWidth &&
+            m_editorPlacement.Height >= MinimumWindowHeight;
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::EditorPlacement(WindowPlacementInfo const& value) noexcept
+    {
+        m_editorPlacement = value;
+        m_editorPlacement.Valid = true;
+
+        WriteDword(ValueEditorX, static_cast<uint32_t>(value.X));
+        WriteDword(ValueEditorY, static_cast<uint32_t>(value.Y));
+        WriteDword(ValueEditorWidth, static_cast<uint32_t>(value.Width));
+        WriteDword(ValueEditorHeight, static_cast<uint32_t>(value.Height));
+        WriteDword(ValueEditorMaximized, value.Maximized ? 1u : 0u);
     }
 
     _Use_decl_annotations_

@@ -68,6 +68,11 @@ namespace midipatchbay
 
         std::optional<PatchDocument> LoadFile(_In_ std::wstring const& path) noexcept;
 
+        // Copies a file an earlier version wrote into the "Earlier versions" folder, under a
+        // name no other copy has, and records where. False leaves the original as the only copy,
+        // so the caller must not rewrite it.
+        bool KeepEarlierVersion(_Inout_ PatchDocument& patch) noexcept;
+
         // Gives every old ".midipatch.json" in the folder the new extension, unless a file
         // already has that name.
         void RenameLegacyFiles() noexcept;

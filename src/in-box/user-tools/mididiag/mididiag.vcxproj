@@ -171,6 +171,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="mididiag_field_defs.h" />
+    <ClInclude Include="mididiag_network_probe.h" />
     <ClInclude Include="mididiag_output.h" />
     <ClInclude Include="mididiag_sections.h" />
     <ClInclude Include="pch.h" />
@@ -178,6 +179,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mididiag_main.cpp" />
+    <ClCompile Include="mididiag_network_probe.cpp" />
     <ClCompile Include="mididiag_output.cpp" />
     <ClCompile Include="mididiag_system.cpp" />
     <ClCompile Include="mididiag_transports.cpp" />
