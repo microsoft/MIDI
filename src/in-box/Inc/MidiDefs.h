@@ -785,6 +785,10 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NamingPortNameInputs, 961);            // DEVPRO
 #define MIDI_DEVICE_FAMILY_MODEL_NUMBER_GM_SYNTH            ((uint16_t)1)
 #define MIDI_DEVICE_FAMILY_MODEL_NUMBER_MIDI_KEYBOARD       ((uint16_t)2)
 
+// The MIDI 2.0 SoundFont Synth app. Not part of Windows, but it reports this family, so its number
+// is kept here where no other model can take it.
+#define MIDI_DEVICE_FAMILY_MODEL_NUMBER_SOUNDFONT_SYNTH     ((uint16_t)3)
+
 
 // for PKEY_MIDI_DeviceIdentification
 struct MidiDeviceIdentityProperty
