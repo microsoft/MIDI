@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "PatchCanvas.h"
 #include "PatchLayout.h"
+#include "RoundedShape.h"
 #include "StringResources.h"
 
 // Shared with MIDI Glass, in midi-app-shared.
@@ -54,8 +55,22 @@ namespace midipatchbay
         constexpr double BlockCornerRadius = 12.0;
         constexpr double BlockPortColumnWidth = 16.0;
         constexpr double BlockDotDiameter = 13.0;
-        constexpr double BlockFallbackHeight = 80.0;
+        constexpr double BlockLineHeight = 16.0;
+        constexpr double BlockFallbackHeight = 99.0;
         constexpr double EndpointFallbackHeight = 200.0;
+
+        // A selected node is lifted, and the lift casts a shadow, which reads as selection without
+        // relying on the border color alone.
+        constexpr float SelectedNodeLift = 28.0f;
+
+        // The soft shadow under every node: how far it reaches past each edge, furthest below so
+        // the node seems lifted off the canvas, and how dark it is. Multiples of 4, so the pieces
+        // land on whole pixels at the usual display scales.
+        constexpr double ShadowReachAbove = 8.0;
+        constexpr double ShadowReachBeside = 12.0;
+        constexpr double ShadowReachBelow = 16.0;
+        constexpr double ShadowStrengthDark = 0.44;
+        constexpr double ShadowStrengthLight = 0.22;
 
         // Within this of a connection, a block dropped from the palette goes into it.
         constexpr double ConnectionHitDistance = 14.0;
@@ -145,6 +160,47 @@ namespace midipatchbay
             }
         }
 
+        // The block's color down its header, strongest at the top. A bypassed block's is fainter.
+        // It fills the whole card, so it has the card's corners, and is clear from the header's
+        // rule down. Past its end a gradient keeps its last color, so the last stop is clear.
+        media::Brush HeaderShade(_In_ BlockCategory category, _In_ double strength) noexcept
+        {
+            try
+            {
+                auto const top = PatchCanvas::CategoryBrush(category, 0.28 * strength).try_as<media::SolidColorBrush>();
+                auto const bottom = PatchCanvas::CategoryBrush(category, 0.08 * strength).try_as<media::SolidColorBrush>();
+
+                if (top == nullptr || bottom == nullptr)
+                {
+                    return nullptr;
+                }
+
+                media::LinearGradientBrush brush{};
+                brush.MappingMode(media::BrushMappingMode::Absolute);
+                brush.StartPoint(foundation::Point{ 0, 0 });
+                brush.EndPoint(foundation::Point{ 0, static_cast<float>(HeaderHeight + 1) });
+
+                auto const rule = HeaderHeight / (HeaderHeight + 1);
+
+                for (auto const& [offset, color] : { std::pair{ 0.0, top.Color() },
+                                                     std::pair{ rule, bottom.Color() },
+                                                     std::pair{ rule, Rgb(0, 0, 0, 0) } })
+                {
+                    media::GradientStop stop{};
+                    stop.Color(color);
+                    stop.Offset(offset);
+                    brush.GradientStops().Append(stop);
+                }
+
+                return brush;
+            }
+            catch (...)
+            {
+            }
+
+            return nullptr;
+        }
+
         // The category colors need a darker shade on a light background to stay readable.
         bool IsDarkTheme() noexcept
         {
@@ -162,6 +218,252 @@ namespace midipatchbay
             }
 
             return true;
+        }
+
+        bool IsHighContrast() noexcept
+        {
+            HIGHCONTRASTW contrast{};
+            contrast.cbSize = sizeof(contrast);
+
+            return ::SystemParametersInfoW(SPI_GETHIGHCONTRAST, sizeof(contrast), &contrast, 0) &&
+                (contrast.dwFlags & HCF_HIGHCONTRASTON) != 0;
+        }
+
+        // How dark the shadow is a fraction of the way out from the center of a card's corner to
+        // where the shadow ends. Beside the node it is a blur's bell curve, half strength at the
+        // card's edge. The same curve is squeezed above the node and stretched below it, so the
+        // sides and the corners all use it and meet without a seam.
+        double ShadowAlpha(_In_ double fraction, _In_ double cornerRadius, _In_ double strength) noexcept
+        {
+            auto const spread = ShadowReachBeside / 3.0;
+            auto const distance = fraction * (cornerRadius + ShadowReachBeside) - cornerRadius;
+
+            return std::clamp(strength * 0.5 * std::erfc(distance / (spread * std::sqrt(2.0))), 0.0, 1.0);
+        }
+
+        // Stops for a gradient that runs between two fractions of the way out. A radial brush
+        // hands back its stops as an observable vector, not a GradientStopCollection.
+        void AddShadowStops(
+            _In_ winrt::Windows::Foundation::Collections::IVector<media::GradientStop> const& stops,
+            _In_ double from,
+            _In_ double to,
+            _In_ double cornerRadius,
+            _In_ double strength)
+        {
+            constexpr int samples = 16;
+
+            for (int i = 0; i <= samples; i++)
+            {
+                auto const fraction = from + (to - from) * i / samples;
+                auto const alpha = ShadowAlpha(fraction, cornerRadius, strength);
+
+                media::GradientStop stop{};
+                stop.Offset(static_cast<double>(i) / samples);
+                stop.Color(Rgb(0, 0, 0, static_cast<uint8_t>(std::lround(255.0 * alpha))));
+                stops.Append(stop);
+            }
+        }
+
+        // A point on a corner's outline, reached in a straight line or round the card's corner.
+        struct OutlineStep
+        {
+            double X{ 0 };
+            double Y{ 0 };
+            bool RoundCard{ false };
+        };
+
+        // The part of a corner's cell outside the card, as one figure. A shape paints a gradient
+        // from the top left of what it draws, so the figure covers the cell from 0,0 and nothing
+        // outside it, or the gradient lands in the wrong place.
+        media::PathGeometry MakeOutline(_In_ double cornerRadius, _In_ std::initializer_list<OutlineStep> steps)
+        {
+            media::PathFigure figure{};
+            figure.IsClosed(true);
+            figure.IsFilled(true);
+
+            bool first{ true };
+
+            for (auto const& step : steps)
+            {
+                foundation::Point const point{ static_cast<float>(step.X), static_cast<float>(step.Y) };
+
+                if (first)
+                {
+                    figure.StartPoint(point);
+                    first = false;
+                }
+                else if (step.RoundCard)
+                {
+                    media::ArcSegment segment{};
+                    segment.Point(point);
+                    segment.Size(foundation::Size{ static_cast<float>(cornerRadius), static_cast<float>(cornerRadius) });
+                    segment.SweepDirection(media::SweepDirection::Counterclockwise);
+                    figure.Segments().Append(segment);
+                }
+                else
+                {
+                    media::LineSegment segment{};
+                    segment.Point(point);
+                    figure.Segments().Append(segment);
+                }
+            }
+
+            media::PathGeometry geometry{};
+            geometry.Figures().Append(figure);
+
+            return geometry;
+        }
+
+        // A soft shadow under a node. A theme shadow barely shows on a dark canvas, so this one is
+        // drawn: a gradient down each side and round each corner, in a 3 by 3 grid whose lines
+        // run through the centers of the card's corners, so the pieces meet without a seam.
+        // Nothing is drawn where the card is, so a card that isn't opaque never shows it through.
+        // None in high contrast, where it is only noise.
+        xaml::UIElement MakeSoftShadow(_In_ double cornerRadius) noexcept
+        {
+            controls::Grid shadow{};
+
+            try
+            {
+                shadow.IsHitTestVisible(false);
+
+                if (IsHighContrast())
+                {
+                    return shadow;
+                }
+
+                // Black shows more on a light canvas, so it is used more lightly there.
+                auto const strength = IsDarkTheme() ? ShadowStrengthDark : ShadowStrengthLight;
+
+                auto const radius = cornerRadius;
+                auto const above = ShadowReachAbove;
+                auto const beside = ShadowReachBeside;
+                auto const below = ShadowReachBelow;
+
+                // The corner cells run from where the shadow ends in to the center of the card's corner.
+                auto const cornerWidth = radius + beside;
+                auto const topHeight = radius + above;
+                auto const bottomHeight = radius + below;
+
+                // Placed exactly, so the inside edge of each piece meets the card's edge.
+                shadow.UseLayoutRounding(false);
+                shadow.Margin(xaml::ThicknessHelper::FromLengths(-beside, -above, -beside, -below));
+
+                xaml::GridLength const middle{ 1, xaml::GridUnitType::Star };
+
+                for (auto const length : { xaml::GridLength{ topHeight, xaml::GridUnitType::Pixel },
+                                           middle,
+                                           xaml::GridLength{ bottomHeight, xaml::GridUnitType::Pixel } })
+                {
+                    controls::RowDefinition row{};
+                    row.Height(length);
+                    shadow.RowDefinitions().Append(row);
+                }
+
+                for (auto const length : { xaml::GridLength{ cornerWidth, xaml::GridUnitType::Pixel },
+                                           middle,
+                                           xaml::GridLength{ cornerWidth, xaml::GridUnitType::Pixel } })
+                {
+                    controls::ColumnDefinition column{};
+                    column.Width(length);
+                    shadow.ColumnDefinitions().Append(column);
+                }
+
+                // A side: only the part outside the card, fading out from the card's edge over `reach`.
+                auto const addSide = [&shadow, strength, radius](
+                    int row,
+                    int column,
+                    xaml::HorizontalAlignment horizontal,
+                    xaml::VerticalAlignment vertical,
+                    double reach,
+                    foundation::Point start,
+                    foundation::Point end)
+                    {
+                        media::LinearGradientBrush brush{};
+                        brush.MappingMode(media::BrushMappingMode::Absolute);
+                        brush.StartPoint(start);
+                        brush.EndPoint(end);
+                        AddShadowStops(brush.GradientStops(), radius / (radius + reach), 1.0, radius, strength);
+
+                        controls::Border piece{};
+                        piece.UseLayoutRounding(false);
+                        piece.HorizontalAlignment(horizontal);
+                        piece.VerticalAlignment(vertical);
+                        piece.Background(brush);
+
+                        if (horizontal == xaml::HorizontalAlignment::Stretch)
+                        {
+                            piece.Height(reach);
+                        }
+                        else
+                        {
+                            piece.Width(reach);
+                        }
+
+                        controls::Grid::SetRow(piece, row);
+                        controls::Grid::SetColumn(piece, column);
+                        shadow.Children().Append(piece);
+                    };
+
+                auto const aboveEdge = static_cast<float>(above);
+                auto const belowEdge = static_cast<float>(below);
+                auto const besideEdge = static_cast<float>(beside);
+
+                addSide(0, 1, xaml::HorizontalAlignment::Stretch, xaml::VerticalAlignment::Top, above,
+                    { 0, aboveEdge }, { 0, 0 });
+                addSide(2, 1, xaml::HorizontalAlignment::Stretch, xaml::VerticalAlignment::Bottom, below,
+                    { 0, 0 }, { 0, belowEdge });
+                addSide(1, 0, xaml::HorizontalAlignment::Left, xaml::VerticalAlignment::Stretch, beside,
+                    { besideEdge, 0 }, { 0, 0 });
+                addSide(1, 2, xaml::HorizontalAlignment::Right, xaml::VerticalAlignment::Stretch, beside,
+                    { 0, 0 }, { besideEdge, 0 });
+
+                // A corner: an oval gradient round the center of the card's corner, wider than it
+                // is tall above the node and taller than it is wide below, with the card cut out.
+                auto const addCorner = [&shadow, strength, radius, cornerWidth](
+                    int row,
+                    int column,
+                    double height,
+                    foundation::Point center,
+                    media::PathGeometry const& outline)
+                    {
+                        media::RadialGradientBrush brush{};
+                        brush.MappingMode(media::BrushMappingMode::Absolute);
+                        brush.Center(center);
+                        brush.GradientOrigin(center);
+                        brush.RadiusX(cornerWidth);
+                        brush.RadiusY(height);
+                        AddShadowStops(brush.GradientStops(), 0.0, 1.0, radius, strength);
+
+                        shapes::Path piece{};
+                        piece.UseLayoutRounding(false);
+                        piece.Width(cornerWidth);
+                        piece.Height(height);
+                        piece.Data(outline);
+                        piece.Fill(brush);
+
+                        controls::Grid::SetRow(piece, row);
+                        controls::Grid::SetColumn(piece, column);
+                        shadow.Children().Append(piece);
+                    };
+
+                auto const right = static_cast<float>(cornerWidth);
+                auto const lower = static_cast<float>(topHeight);
+
+                addCorner(0, 0, topHeight, { right, lower }, MakeOutline(radius,
+                    { { 0, 0 }, { cornerWidth, 0 }, { cornerWidth, above }, { beside, topHeight, true }, { 0, topHeight } }));
+                addCorner(0, 2, topHeight, { 0, lower }, MakeOutline(radius,
+                    { { 0, 0 }, { cornerWidth, 0 }, { cornerWidth, topHeight }, { radius, topHeight }, { 0, above, true } }));
+                addCorner(2, 0, bottomHeight, { right, 0 }, MakeOutline(radius,
+                    { { 0, 0 }, { beside, 0 }, { cornerWidth, radius, true }, { cornerWidth, bottomHeight }, { 0, bottomHeight } }));
+                addCorner(2, 2, bottomHeight, { 0, 0 }, MakeOutline(radius,
+                    { { radius, 0 }, { cornerWidth, 0 }, { cornerWidth, bottomHeight }, { 0, bottomHeight }, { 0, radius }, { radius, 0, true } }));
+            }
+            catch (...)
+            {
+            }
+
+            return shadow;
         }
 
         void AppendCurveSamples(
@@ -740,19 +1042,14 @@ namespace midipatchbay
             header.ColumnDefinitions().Append(column);
         }
 
-        controls::Border art{};
-        art.Width(28);
-        art.Height(28);
-        art.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(6));
-        art.VerticalAlignment(xaml::VerticalAlignment::Center);
-        art.Background(ThemeBrush(L"ControlAltFillColorSecondaryBrush", Rgb(0x30, 0x3A, 0x45)));
-
         auto const isLoopback = live != nullptr && live->IsLoopback;
 
         // The customer's own picture wins where there is one. It is small at this size, but it
         // is the thing they chose to recognize the device by.
         auto const artwork = node.IsOffline || live == nullptr
             ? nullptr : LoadEndpointImage(live->ImagePath, 56);
+
+        xaml::UIElement picture{ nullptr };
 
         if (artwork != nullptr)
         {
@@ -762,15 +1059,26 @@ namespace midipatchbay
             image.Stretch(media::Stretch::Uniform);
             image.Margin(xaml::ThicknessHelper::FromUniformLength(3));
 
-            art.Child(image);
+            picture = image;
         }
         else
         {
-            art.Child(MakeGlyph(
+            picture = MakeGlyph(
                 node.IsOffline ? L"\uE711" : (isLoopback ? L"\uE895" : L"\uE7F6"),
                 14,
-                node.IsOffline ? critical : accent));
+                node.IsOffline ? critical : accent);
         }
+
+        auto const art = MakeRoundedPanel(
+            6,
+            ThemeBrush(L"ControlAltFillColorSecondaryBrush", Rgb(0x30, 0x3A, 0x45)),
+            nullptr,
+            xaml::Thickness{},
+            picture).Panel;
+
+        art.Width(28);
+        art.Height(28);
+        art.VerticalAlignment(xaml::VerticalAlignment::Center);
 
         controls::Grid::SetColumn(art, 0);
         header.Children().Append(art);
@@ -905,12 +1213,10 @@ namespace midipatchbay
                 controls::Grid rowGrid{};
 
                 // Inside the node and rounded like it, with the dot hanging over the edge beside it.
-                controls::Border highlight{};
-                highlight.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(4));
+                auto highlight = MakeRoundedShape(4, media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
                 highlight.Margin(isOutput
                     ? xaml::ThicknessHelper::FromLengths(0, 1, 3, 1)
                     : xaml::ThicknessHelper::FromLengths(3, 1, 0, 1));
-                highlight.Background(media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
                 rowGrid.Children().Append(highlight);
 
                 std::wstring groupName{};
@@ -989,15 +1295,6 @@ namespace midipatchbay
         // ---------------------------------------------------------------- alert
         if (node.IsOffline)
         {
-            controls::Border alert{};
-
-            alert.Margin(xaml::ThicknessHelper::FromLengths(8, 0, 8, 8));
-            alert.Padding(xaml::ThicknessHelper::FromLengths(10, 8, 10, 8));
-            alert.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(5));
-            alert.Background(ThemeBrush(L"SystemFillColorCriticalBackgroundBrush", Rgb(0x44, 0x27, 0x2A)));
-            alert.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-            alert.BorderBrush(critical);
-
             controls::StackPanel alertBody{};
             alertBody.Spacing(6);
 
@@ -1012,24 +1309,33 @@ namespace midipatchbay
             message.TextTrimming(xaml::TextTrimming::None);
             alertBody.Children().Append(message);
 
-            alert.Child(alertBody);
+            auto const alert = MakeRoundedPanel(
+                5,
+                ThemeBrush(L"SystemFillColorCriticalBackgroundBrush", Rgb(0x44, 0x27, 0x2A)),
+                critical,
+                xaml::ThicknessHelper::FromLengths(10, 8, 10, 8),
+                alertBody).Panel;
+
+            alert.Margin(xaml::ThicknessHelper::FromLengths(8, 0, 8, 8));
 
             node.AlertPanel = alert;
             body.Children().Append(alert);
         }
 
         // ---------------------------------------------------------------- root
-        controls::Border card{};
-
-        card.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(NodeCornerRadius));
-        card.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-        card.Background(ThemeBrush(L"CardBackgroundFillColorDefaultBrush", Rgb(0x2B, 0x2B, 0x2B)));
+        auto card = MakeRoundedShape(NodeCornerRadius, ThemeBrush(L"CardBackgroundFillColorDefaultBrush", Rgb(0x2B, 0x2B, 0x2B)));
         card.Shadow(media::ThemeShadow{});
+
+        // Its color and width come with the selection.
+        auto edge = MakeRoundedShape(NodeCornerRadius, nullptr);
+        edge.IsHitTestVisible(false);
 
         controls::Grid root{};
 
         root.Width(node.Width);
+        root.Children().Append(MakeSoftShadow(NodeCornerRadius));
         root.Children().Append(card);
+        root.Children().Append(edge);
         root.Children().Append(body);
 
         controls::Canvas::SetLeft(root, endpoint.CanvasX);
@@ -1039,6 +1345,7 @@ namespace midipatchbay
 
         node.Root = root;
         node.Card = card;
+        node.Edge = edge;
 
         m_nodeLayer.Children().Append(root);
 
@@ -1183,6 +1490,8 @@ namespace midipatchbay
 
             auto const name = BlockDisplayName(block);
 
+            // The way in and the way out, over the whole block. The middle column is empty, so
+            // a press there reaches the card.
             controls::Grid body{};
 
             for (auto const width : { xaml::GridLength{ BlockPortColumnWidth, xaml::GridUnitType::Pixel },
@@ -1195,12 +1504,23 @@ namespace midipatchbay
             }
 
             // ------------------------------------------------- what it is, what it does
-            controls::StackPanel content{};
-            content.Padding(xaml::ThicknessHelper::FromLengths(0, 9, 0, 10));
-            content.Spacing(4);
+            // Inside the card's edge, which is drawn over it.
+            controls::Grid content{};
+            content.Margin(xaml::ThicknessHelper::FromUniformLength(1));
 
+            for (auto const height : { xaml::GridLength{ HeaderHeight - 1, xaml::GridUnitType::Pixel },
+                                       xaml::GridLength{ 1, xaml::GridUnitType::Pixel },
+                                       xaml::GridLength{ 1, xaml::GridUnitType::Star } })
+            {
+                controls::RowDefinition row{};
+                row.Height(height);
+                content.RowDefinitions().Append(row);
+            }
+
+            // The icon sits where an endpoint's picture does, measured from the outside edge.
             controls::Grid header{};
-            header.ColumnSpacing(8);
+            header.Padding(xaml::ThicknessHelper::FromLengths(9, 9, 10, 0));
+            header.ColumnSpacing(9);
 
             for (auto const width : { xaml::GridLength{ 0, xaml::GridUnitType::Auto },
                                       xaml::GridLength{ 1, xaml::GridUnitType::Star } })
@@ -1212,26 +1532,32 @@ namespace midipatchbay
 
             auto const badgeLabel = BlockKindBadge(block.Kind);
 
-            controls::Border badge{};
-            badge.Width(26);
-            badge.Height(24);
-            badge.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(6));
-            badge.VerticalAlignment(xaml::VerticalAlignment::Center);
-            badge.Background(CategoryBrush(node.Category, 0.18));
-
             auto badgeText = MakeText(badgeLabel, badgeLabel.size() >= 3 ? 9.0 : 12.0, CategoryBrush(node.Category), true);
             badgeText.TextTrimming(xaml::TextTrimming::None);
             badgeText.HorizontalAlignment(xaml::HorizontalAlignment::Center);
-            badge.Child(badgeText);
+
+            auto const badge = MakeRoundedPanel(
+                6, CategoryBrush(node.Category, 0.18), nullptr, xaml::Thickness{}, badgeText).Panel;
+
+            badge.Width(28);
+            badge.Height(28);
+            badge.VerticalAlignment(xaml::VerticalAlignment::Top);
 
             header.Children().Append(badge);
 
-            node.NameText = MakeText(name, 12.5, textPrimary, true);
+            node.NameText = MakeText(name, 13, textPrimary, true);
+            node.NameText.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 9));
             controls::Grid::SetColumn(node.NameText, 1);
             header.Children().Append(node.NameText);
 
             content.Children().Append(header);
 
+            controls::Border rule{};
+            rule.Background(ThemeBrush(L"DividerStrokeColorDefaultBrush", Rgb(0x55, 0x55, 0x55)));
+            controls::Grid::SetRow(rule, 1);
+            content.Children().Append(rule);
+
+            // Always room for two lines, so blocks line up whatever they say.
             node.SubtitleText = MakeText(
                 block.Bypassed
                     ? resources::GetString(IsGenerator(block.Kind) ? L"BlockBypassedGeneratorCaption" : L"BlockBypassedCaption")
@@ -1240,11 +1566,13 @@ namespace midipatchbay
                 block.Bypassed ? textTertiary : textSecondary);
             node.SubtitleText.TextWrapping(xaml::TextWrapping::Wrap);
             node.SubtitleText.MaxLines(2);
-            node.SubtitleText.Margin(xaml::ThicknessHelper::FromLengths(34, 0, 0, 0));
+            node.SubtitleText.LineHeight(BlockLineHeight);
+            node.SubtitleText.LineStackingStrategy(xaml::LineStackingStrategy::BlockLineHeight);
+            node.SubtitleText.Height(2 * BlockLineHeight);
+            node.SubtitleText.VerticalAlignment(xaml::VerticalAlignment::Top);
+            node.SubtitleText.Margin(xaml::ThicknessHelper::FromLengths(11, 7, 11, 10));
+            controls::Grid::SetRow(node.SubtitleText, 2);
             content.Children().Append(node.SubtitleText);
-
-            controls::Grid::SetColumn(content, 1);
-            body.Children().Append(content);
 
             // ------------------------------------------------- the way in and the way out
             for (int side = 0; side < 2; side++)
@@ -1306,18 +1634,19 @@ namespace midipatchbay
             }
 
             // ------------------------------------------------- root
-            controls::Border card{};
-
-            card.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(BlockCornerRadius));
-            card.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-            card.Background(ThemeBrush(L"CardBackgroundFillColorDefaultBrush", Rgb(0x2B, 0x2B, 0x2B)));
+            auto card = MakeRoundedShape(BlockCornerRadius, ThemeBrush(L"CardBackgroundFillColorDefaultBrush", Rgb(0x2B, 0x2B, 0x2B)));
             card.Shadow(media::ThemeShadow{});
 
-            // A Border cannot dash its outline, so a bypassed block gets one drawn over it.
-            node.DashedOutline = shapes::Rectangle{};
-            node.DashedOutline.RadiusX(BlockCornerRadius);
-            node.DashedOutline.RadiusY(BlockCornerRadius);
-            node.DashedOutline.StrokeThickness(1.5);
+            // As big as the card, so it has the card's corners.
+            auto shade = MakeRoundedShape(BlockCornerRadius, HeaderShade(node.Category, block.Bypassed ? 0.5 : 1.0));
+            shade.IsHitTestVisible(false);
+
+            // Its color and width come with the selection.
+            auto edge = MakeRoundedShape(BlockCornerRadius, nullptr);
+            edge.IsHitTestVisible(false);
+
+            // A bypassed block gets a dashed outline too. Its color is set with the edge's.
+            node.DashedOutline = MakeRoundedShape(BlockCornerRadius, nullptr, media::SolidColorBrush{ Rgb(0, 0, 0, 0) }, 1.5);
             node.DashedOutline.StrokeDashArray(MakeDashArray(4.0, 3.0));
             node.DashedOutline.IsHitTestVisible(false);
             node.DashedOutline.Visibility(block.Bypassed ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
@@ -1325,7 +1654,11 @@ namespace midipatchbay
             controls::Grid root{};
 
             root.Width(node.Width);
+            root.Children().Append(MakeSoftShadow(BlockCornerRadius));
             root.Children().Append(card);
+            root.Children().Append(shade);
+            root.Children().Append(content);
+            root.Children().Append(edge);
             root.Children().Append(node.DashedOutline);
             root.Children().Append(body);
 
@@ -1342,6 +1675,7 @@ namespace midipatchbay
 
             node.Root = root;
             node.Card = card;
+            node.Edge = edge;
 
             m_nodeLayer.Children().Append(root);
             m_nodes.push_back(std::move(node));
@@ -1369,17 +1703,18 @@ namespace midipatchbay
 
             ApplyAnnotationLook(text, block.Settings.Annotation);
 
-            // Clear rather than empty, so a press between the letters still picks it up.
-            controls::Border card{};
-            card.Padding(xaml::ThicknessHelper::FromLengths(
-                AnnotationPaddingX, AnnotationPaddingY, AnnotationPaddingX, AnnotationPaddingY));
-            card.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(AnnotationCornerRadius));
-            card.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1.5));
-            card.Background(media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
-            card.Child(text);
+            // Clear rather than empty, so a press between the letters still picks it up. Its edge
+            // shows only while it is selected.
+            auto const card = MakeRoundedPanel(
+                AnnotationCornerRadius,
+                media::SolidColorBrush{ Rgb(0, 0, 0, 0) },
+                media::SolidColorBrush{ Rgb(0, 0, 0, 0) },
+                xaml::ThicknessHelper::FromLengths(AnnotationPaddingX, AnnotationPaddingY, AnnotationPaddingX, AnnotationPaddingY),
+                text,
+                1.5);
 
             controls::Grid root{};
-            root.Children().Append(card);
+            root.Children().Append(card.Panel);
 
             xaml::Automation::AutomationProperties::SetName(root, text.Text());
 
@@ -1389,7 +1724,8 @@ namespace midipatchbay
             AttachNodeHandlers(root, block.Id, true);
 
             node.Root = root;
-            node.Card = card;
+            node.Card = card.Shape;
+            node.Edge = card.Shape;
             node.AnnotationText = text;
 
             m_nodeLayer.Children().Append(root);
@@ -1561,29 +1897,29 @@ namespace midipatchbay
 
             m_connectionLayer.Children().Append(visual.HitArea);
 
-            controls::Border pill{};
-
-            controls::Canvas::SetZIndex(pill, PillZIndex);
-
-            pill.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(11));
-            pill.Padding(xaml::ThicknessHelper::FromLengths(9, 2, 9, 2));
-            pill.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
+            auto pillText = MakeText(L"", 11, textSecondary);
 
             // Opaque on purpose. The card brushes are a few percent white in dark mode, so the
-            // line the label sits on would show straight through it.
-            pill.Background(ThemeBrush(L"SolidBackgroundFillColorTertiaryBrush", Rgb(0x28, 0x28, 0x28)));
+            // line the label sits on would show straight through it. Its edge's color comes with
+            // the selection.
+            auto const pill = MakeRoundedPanel(
+                11,
+                ThemeBrush(L"SolidBackgroundFillColorTertiaryBrush", Rgb(0x28, 0x28, 0x28)),
+                media::SolidColorBrush{ Rgb(0, 0, 0, 0) },
+                xaml::ThicknessHelper::FromLengths(9, 2, 9, 2),
+                pillText);
 
-            auto pillText = MakeText(L"", 11, textSecondary);
-            pill.Child(pillText);
+            controls::Canvas::SetZIndex(pill.Panel, PillZIndex);
 
-            pill.PointerPressed([this, connectionId](auto&&, input::PointerRoutedEventArgs const& args)
+            pill.Panel.PointerPressed([this, connectionId](auto&&, input::PointerRoutedEventArgs const& args)
                 {
                     args.Handled(true);
                     FocusCanvas();
                     Select(CanvasSelectionKind::Connection, connectionId);
                 });
 
-            visual.Pill = pill;
+            visual.Pill = pill.Panel;
+            visual.PillShape = pill.Shape;
             visual.PillText = pillText;
 
             m_connections.push_back(std::move(visual));
@@ -1811,7 +2147,7 @@ namespace midipatchbay
     _Use_decl_annotations_
     void PatchCanvas::ApplyNodeAppearance(NodeVisual& node) noexcept
     {
-        if (node.Root == nullptr || node.Card == nullptr)
+        if (node.Root == nullptr || node.Card == nullptr || node.Edge == nullptr)
         {
             return;
         }
@@ -1826,17 +2162,20 @@ namespace midipatchbay
         // Text has no edge of its own, so only a selected annotation shows one.
         if (node.IsAnnotation)
         {
-            node.Card.BorderBrush(selected ? accent : media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+            SetRoundedEdge(node.Edge, AnnotationCornerRadius,
+                selected ? accent : media::SolidColorBrush{ Rgb(0, 0, 0, 0) }, 1.5);
             return;
         }
+
+        media::Brush edge{ nullptr };
 
         if (node.IsBlock)
         {
             // The edge carries the category, so a filter and a transform are told apart at a
             // glance; a bypassed block keeps only its dashed outline.
-            node.Card.BorderBrush(selected
+            edge = selected
                 ? accent
-                : (node.IsBypassed ? media::SolidColorBrush{ Rgb(0, 0, 0, 0) } : CategoryBrush(node.Category, 0.55)));
+                : (node.IsBypassed ? media::SolidColorBrush{ Rgb(0, 0, 0, 0) } : CategoryBrush(node.Category, 0.55));
 
             if (node.DashedOutline != nullptr)
             {
@@ -1845,14 +2184,13 @@ namespace midipatchbay
         }
         else
         {
-            node.Card.BorderBrush(selected ? accent : (node.IsOffline ? critical : stroke));
+            edge = selected ? accent : (node.IsOffline ? critical : stroke);
         }
 
-        node.Card.BorderThickness(xaml::ThicknessHelper::FromUniformLength(selected ? 2.0 : 1.0));
+        SetRoundedEdge(node.Edge, node.IsBlock ? BlockCornerRadius : NodeCornerRadius, edge, selected ? 2.0 : 1.0);
 
-        // Lifting the card casts the shadow, which reads as selection without relying on the
-        // border color alone.
-        node.Card.Translation(winrt::Windows::Foundation::Numerics::float3{ 0, 0, selected ? 28.0f : 0.0f });
+        // The lift is what casts the shadow.
+        node.Card.Translation(winrt::Windows::Foundation::Numerics::float3{ 0, 0, selected ? SelectedNodeLift : 0.0f });
     }
 
     _Use_decl_annotations_
@@ -1904,9 +2242,9 @@ namespace midipatchbay
             visual.Line.Opacity(selected ? 1.0 : 0.72);
         }
 
-        if (visual.Pill != nullptr)
+        if (visual.PillShape != nullptr)
         {
-            visual.Pill.BorderBrush(visual.IsLoopMuted ? critical : (selected ? accent : stroke));
+            visual.PillShape.Stroke(visual.IsLoopMuted ? critical : (selected ? accent : stroke));
         }
     }
 
@@ -2596,7 +2934,7 @@ namespace midipatchbay
 
         if (port.Highlight != nullptr)
         {
-            port.Highlight.Background(hovered
+            port.Highlight.Fill(hovered
                 ? ThemeBrush(L"SubtleFillColorSecondaryBrush", Rgb(0xFF, 0xFF, 0xFF, 0x0F))
                 : media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
         }
@@ -2884,6 +3222,7 @@ namespace midipatchbay
                 rectangle.Height(std::max(2.0, height * scale));
                 rectangle.RadiusX(1);
                 rectangle.RadiusY(1);
+                rectangle.UseLayoutRounding(false);
                 rectangle.Fill(node.IsBlock
                     ? CategoryBrush(node.Category)
                     : (node.IsOffline ? critical : nodeBrush));

@@ -39,13 +39,16 @@ namespace winrt::midipatchbay::implementation
         void OnImportPatchClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnAssistantClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnOpenFolderClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
-        void OnSortClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnSortSelectionChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnGridViewToggled(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnListViewToggled(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
-        void OnSearchChanged(_In_ foundation::IInspectable const& sender, _In_ controls::TextChangedEventArgs const& args);
-        void OnFilterChanged(
-            _In_ controls::SelectorBar const& sender,
-            _In_ controls::SelectorBarSelectionChangedEventArgs const& args);
+        void OnSearchTextChanged(
+            _In_ controls::AutoSuggestBox const& sender,
+            _In_ controls::AutoSuggestBoxTextChangedEventArgs const& args);
+        void OnFilterClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnPatchTileClick(_In_ foundation::IInspectable const& sender, _In_ controls::ItemClickEventArgs const& args);
+        void OnPatchGridSizeChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::SizeChangedEventArgs const& args);
 
         void OnQuickPatchSourceChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
         void OnQuickPatchDestinationChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
@@ -89,19 +92,38 @@ namespace winrt::midipatchbay::implementation
         // False when none of them could be imported.
         bool ImportPatchFiles(_In_ std::vector<std::wstring> const& paths) noexcept;
 
-        // ---- tiles ----
+        // ---- tiles, rows, the filter and the bar at the bottom, in LibraryWindowTiles.cpp ----
+        enum class LibraryFilter
+        {
+            All,
+            Routing,
+            Stopped,
+            Attention,
+        };
+
+        void InitializeLibraryControls() noexcept;
+        void ApplyViewMode() noexcept;
+
         void OnLibraryChanged(_In_ ::midipatchbay::LibraryChange change, _In_ std::wstring const& key) noexcept;
         void RebuildTiles() noexcept;
         xaml::UIElement BuildTile(_In_ ::midipatchbay::PatchDocument const& patch) noexcept;
-        xaml::UIElement BuildMiniMap(_In_ ::midipatchbay::PatchDocument const& patch) noexcept;
+        xaml::UIElement BuildListRow(_In_ ::midipatchbay::PatchDocument const& patch) noexcept;
+        xaml::UIElement BuildNewTile() noexcept;
+        xaml::UIElement BuildMiniMap(_In_ ::midipatchbay::PatchDocument const& patch, _In_ double width, _In_ double height) noexcept;
         controls::MenuFlyout BuildTileMenu(_In_ std::wstring const& key) noexcept;
+        void ShowNewPatchMenu(_In_ xaml::FrameworkElement const& anchor) noexcept;
 
-        // The routing switches change without the tiles being built again.
+        // The routing switches, edges and rates change without the tiles being built again.
         void RefreshTileStates() noexcept;
+        void UpdateTileRates() noexcept;
+        void UpdateFilterCounts() noexcept;
+        void ShowHoverBar(_In_ std::wstring const& key, _In_ bool show) noexcept;
+
+        // A row is as wide as the list, which a row cannot work out for itself.
+        void ApplyRowWidths() noexcept;
 
         // Missing endpoints, a loop that is held muted, or routing the app had to refuse.
         bool NeedsAttention(_In_ ::midipatchbay::PatchDocument const& patch) noexcept;
-        winrt::hstring TileStateText(_In_ ::midipatchbay::PatchDocument const& patch) noexcept;
 
         void OpenPatch(_In_ std::wstring const& key) noexcept;
         void DuplicatePatch(_In_ std::wstring const& key) noexcept;
@@ -110,6 +132,8 @@ namespace winrt::midipatchbay::implementation
 
         void OnRefreshTimerTick() noexcept;
         void UpdateStatusStrip() noexcept;
+        void CheckServiceState() noexcept;
+        void UpdateServiceChip() noexcept;
         void ShowStatus(_In_ winrt::hstring const& message, _In_ controls::InfoBarSeverity severity) noexcept;
 
         // ---- quick patch and the assistant, in LibraryWindowDialogs.cpp ----
@@ -129,16 +153,34 @@ namespace winrt::midipatchbay::implementation
         uint32_t m_libraryToken{ 0 };
         xaml::DispatcherTimer m_refreshTimer{ nullptr };
 
-        // What each tile needs to change in place, by patch.
+        // What each tile or row needs to change in place, by patch.
         struct TileParts
         {
             std::wstring Key{};
             controls::ToggleSwitch Routing{ nullptr };
-            controls::TextBlock State{ nullptr };
+            shapes::Rectangle Outline{ nullptr };
+            xaml::UIElement RatePill{ nullptr };
+            controls::TextBlock RateText{ nullptr };
+            xaml::UIElement HoverBar{ nullptr };
+            xaml::FrameworkElement Root{ nullptr };
         };
 
         std::vector<TileParts> m_tiles{};
         bool m_updatingTiles{ false };
+        LibraryFilter m_filter{ LibraryFilter::All };
+        bool m_fillingSortSelector{ false };
+
+        // The last count each tile's rate was worked out from.
+        struct RateSample
+        {
+            uint64_t Delivered{ 0 };
+            std::chrono::steady_clock::time_point At{};
+        };
+
+        std::unordered_map<std::wstring, RateSample> m_rateSamples{};
+
+        bool m_serviceRunning{ true };
+        uint32_t m_serviceCheckTicks{ 0 };
 
         // What the quick patch combos are showing, by position, because a ComboBox of strings
         // cannot carry an endpoint id or a group number on its own.

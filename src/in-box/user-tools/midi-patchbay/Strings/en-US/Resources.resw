@@ -83,11 +83,14 @@
   </data>
 
   <!-- ============================================================= navigation -->
-  <data name="OpenFolderButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+  <data name="LibraryMenuOpenFolder.Text" xml:space="preserve">
     <value>Open patch folder</value>
   </data>
-  <data name="OpenFolderText.Text" xml:space="preserve">
-    <value>Open patch folder</value>
+  <data name="LibraryMoreButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>More options</value>
+  </data>
+  <data name="LibraryMoreButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>More options</value>
   </data>
   <data name="NewPatchButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>New patch</value>
@@ -163,17 +166,26 @@
   <data name="AssistantPromptRequest" xml:space="preserve">
     <value>Here's what I want the patch to do:</value>
   </data>
-  <data name="SortButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Sort</value>
+  <data name="SortSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Sort order</value>
   </data>
-  <data name="SortButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Sort</value>
+  <data name="SortByLastChanged" xml:space="preserve">
+    <value>Sorted by last changed</value>
   </data>
-  <data name="NavSortNewest" xml:space="preserve">
-    <value>Newest first</value>
+  <data name="SortByName" xml:space="preserve">
+    <value>Sorted by name</value>
   </data>
-  <data name="NavSortName" xml:space="preserve">
-    <value>Name, A to Z</value>
+  <data name="GridViewToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show patches as tiles</value>
+  </data>
+  <data name="GridViewToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show patches as tiles</value>
+  </data>
+  <data name="ListViewToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show patches as a list</value>
+  </data>
+  <data name="ListViewToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show patches as a list</value>
   </data>
   <data name="UntitledPatchName" xml:space="preserve">
     <value>Untitled patch</value>
@@ -263,8 +275,14 @@
   <data name="ZoomButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Set the zoom level</value>
   </data>
-  <data name="ZoomFitButton.Content" xml:space="preserve">
+  <data name="ZoomFitButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Fit to screen</value>
+  </data>
+  <data name="ZoomFitButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Fit to screen</value>
+  </data>
+  <data name="ZoomFitLabel.Text" xml:space="preserve">
+    <value>Fit</value>
   </data>
   <data name="ZoomInputBox.Header" xml:space="preserve">
     <value>Zoom (%)</value>
@@ -1803,20 +1821,23 @@
   </data>
 
   <!-- ======================================================= library window -->
-  <data name="LibraryFilterBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Show</value>
+  <data name="PatchesHeading.Text" xml:space="preserve">
+    <value>Patches</value>
   </data>
-  <data name="FilterAllItem.Text" xml:space="preserve">
+  <data name="FilterAllText.Text" xml:space="preserve">
     <value>All</value>
   </data>
-  <data name="FilterRoutingItem.Text" xml:space="preserve">
-    <value>Routing</value>
+  <data name="FilterRoutingFormat" xml:space="preserve">
+    <value>Routing · {0}</value>
+    <comment>A part of the filter over the patches. {0} is how many patches are routing.</comment>
   </data>
-  <data name="FilterStoppedItem.Text" xml:space="preserve">
-    <value>Not routing</value>
+  <data name="FilterStoppedFormat" xml:space="preserve">
+    <value>Not routing · {0}</value>
+    <comment>A part of the filter over the patches. {0} is how many patches aren't routing.</comment>
   </data>
-  <data name="FilterAttentionItem.Text" xml:space="preserve">
-    <value>Needs attention</value>
+  <data name="FilterAttentionFormat" xml:space="preserve">
+    <value>Needs attention · {0}</value>
+    <comment>A part of the filter over the patches. {0} is how many patches have a missing device or a loop.</comment>
   </data>
   <data name="SearchBox.PlaceholderText" xml:space="preserve">
     <value>Search patches</value>
@@ -1855,8 +1876,8 @@
     <value>{0} patches are routing. Closing MIDI Patchbay stops them. To keep patches routing with the window closed, turn on Run in notification area in settings.</value>
   </data>
   <data name="TileAccessibleNameFormat" xml:space="preserve">
-    <value>{0}, {1}</value>
-    <comment>{0} is the patch name. {1} is its state, such as "Routing".</comment>
+    <value>{0}. {1}. {2}. {3}</value>
+    <comment>{0} is the patch name. {1} is whether it is routing. {2} is its devices, such as "4 devices ready". {3} is when it last changed, such as "2 hours ago".</comment>
   </data>
   <data name="TileRoutingFormat" xml:space="preserve">
     <value>Route {0}</value>
@@ -1865,21 +1886,81 @@
   <data name="TileNoDescription" xml:space="preserve">
     <value>No description</value>
   </data>
-  <data name="TileMoreEndpointsFormat" xml:space="preserve">
-    <value>+{0} more</value>
-  </data>
   <data name="TileSizeFormat" xml:space="preserve">
     <value>Steps: {0} · Connections: {1}</value>
   </data>
   <data name="TileStateProblem" xml:space="preserve">
     <value>Can't route</value>
   </data>
-  <data name="TileStateWaiting" xml:space="preserve">
-    <value>Waiting for a device</value>
+  <data name="TileOneDeviceReady" xml:space="preserve">
+    <value>1 device ready</value>
   </data>
-  <data name="TileStateTemporaryFormat" xml:space="preserve">
-    <value>{0} · Temporary</value>
-    <comment>{0} is the state, such as "Routing". A temporary patch is one that isn't saved to a file.</comment>
+  <data name="TileDevicesReadyFormat" xml:space="preserve">
+    <value>{0} devices ready</value>
+  </data>
+  <data name="TileOneDeviceMissing" xml:space="preserve">
+    <value>1 device missing</value>
+  </data>
+  <data name="TileDevicesMissingFormat" xml:space="preserve">
+    <value>{0} devices missing</value>
+  </data>
+  <data name="TileNoDevices" xml:space="preserve">
+    <value>No devices yet</value>
+  </data>
+  <data name="TileLoopFormat" xml:space="preserve">
+    <value>Loop found, {0} muted</value>
+    <comment>{0} is how many connections are held muted to break the loop.</comment>
+  </data>
+  <data name="TileStartsAutomatically" xml:space="preserve">
+    <value>Starts automatically</value>
+  </data>
+  <data name="TileRateFormat" xml:space="preserve">
+    <value>{0} a second</value>
+    <comment>How many messages a routing patch sends each second. {0} is the number.</comment>
+  </data>
+  <data name="TileEdit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="TileEditAccessibleFormat" xml:space="preserve">
+    <value>Edit {0}</value>
+    <comment>{0} is the patch name.</comment>
+  </data>
+  <data name="TileMoreAccessibleFormat" xml:space="preserve">
+    <value>More options for {0}</value>
+    <comment>{0} is the patch name.</comment>
+  </data>
+  <data name="NewTileHeading" xml:space="preserve">
+    <value>New patch</value>
+  </data>
+  <data name="NewTileBody" xml:space="preserve">
+    <value>Start empty, or pick two devices for a quick patch</value>
+  </data>
+  <data name="NewTileAccessibleName" xml:space="preserve">
+    <value>New patch. Start empty, or pick two devices for a quick patch</value>
+  </data>
+  <data name="NewTileMenuEmpty" xml:space="preserve">
+    <value>Empty patch</value>
+  </data>
+  <data name="NewTileMenuQuick" xml:space="preserve">
+    <value>Quick patch…</value>
+  </data>
+  <data name="DateJustNow" xml:space="preserve">
+    <value>Just now</value>
+  </data>
+  <data name="DateMinuteAgo" xml:space="preserve">
+    <value>A minute ago</value>
+  </data>
+  <data name="DateMinutesAgo" xml:space="preserve">
+    <value>{0} minutes ago</value>
+  </data>
+  <data name="DateHourAgo" xml:space="preserve">
+    <value>An hour ago</value>
+  </data>
+  <data name="DateHoursAgo" xml:space="preserve">
+    <value>{0} hours ago</value>
+  </data>
+  <data name="DateYesterday" xml:space="preserve">
+    <value>Yesterday</value>
   </data>
   <data name="TileMenuOpen" xml:space="preserve">
     <value>Open</value>
@@ -1896,14 +1977,26 @@
   <data name="StatusPatchDuplicatedFormat" xml:space="preserve">
     <value>Made a copy called "{0}". It isn't routing.</value>
   </data>
-  <data name="StatusPatchesOne" xml:space="preserve">
-    <value>1 patch</value>
+  <data name="StatusFolderOne" xml:space="preserve">
+    <value>1 patch in Documents › MIDI Patchbay</value>
   </data>
-  <data name="StatusPatchesFormat" xml:space="preserve">
-    <value>{0} patches</value>
+  <data name="StatusFolderFormat" xml:space="preserve">
+    <value>{0} patches in Documents › MIDI Patchbay</value>
+    <comment>{0} is how many patches there are. The folder is named the way it shows in File Explorer.</comment>
   </data>
-  <data name="StatusRoutingFormat" xml:space="preserve">
-    <value>{0} routing</value>
+  <data name="StatusActivityFormat" xml:space="preserve">
+    <value>{0} routing · {1} messages a second</value>
+    <comment>{0} is how many patches are routing. {1} is how many messages they send each second.</comment>
+  </data>
+  <data name="StatusActivityOneFormat" xml:space="preserve">
+    <value>{0} routing · 1 message a second</value>
+    <comment>{0} is how many patches are routing.</comment>
+  </data>
+  <data name="StatusServiceRunning" xml:space="preserve">
+    <value>MIDI service running</value>
+  </data>
+  <data name="StatusServiceStopped" xml:space="preserve">
+    <value>MIDI service not running</value>
   </data>
   <data name="ErrorTooManyPatches" xml:space="preserve">
     <value>You have as many patches as MIDI Patchbay can hold. Delete one first.</value>
@@ -2840,7 +2933,7 @@
     <comment>Two or three characters at most. Stands for text.</comment>
   </data>
   <data name="BlockHintAnnotation" xml:space="preserve">
-    <value>A line of text on the canvas, for notes about the patch. Nothing goes in or comes out.</value>
+    <value>Text on the canvas, for notes about the patch. Lines break where you press Enter. Nothing goes in or comes out.</value>
   </data>
   <data name="BlockCategoryAnnotations" xml:space="preserve">
     <value>Annotations</value>

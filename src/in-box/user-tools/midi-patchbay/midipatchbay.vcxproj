@@ -151,6 +151,7 @@
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="ThemeBrushes.h" />
+    <ClInclude Include="RoundedShape.h" />
     <ClInclude Include="TrayIcon.h" />
     <ClInclude Include="App.xaml.h">
       <DependentUpon>App.xaml</DependentUpon>
@@ -258,6 +259,7 @@
       <DependentUpon>LibraryWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="LibraryWindowDialogs.cpp" />
+    <ClCompile Include="LibraryWindowTiles.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />

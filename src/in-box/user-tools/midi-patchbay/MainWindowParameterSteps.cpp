@@ -10,6 +10,7 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 
+#include "RoundedShape.h"
 #include "StringResources.h"
 #include "ThemeBrushes.h"
 
@@ -45,18 +46,14 @@ namespace winrt::midipatchbay::implementation
             return block;
         }
 
-        controls::Border Card(_In_ xaml::UIElement const& content) noexcept
+        controls::Grid Card(_In_ xaml::UIElement const& content) noexcept
         {
-            controls::Border card{};
-
-            card.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(6));
-            card.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-            card.Padding(xaml::ThicknessHelper::FromLengths(12, 10, 12, 12));
-            card.BorderBrush(patchbay::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"));
-            card.Background(patchbay::ThemeBrushes::Current().Get(L"CardBackgroundFillColorSecondaryBrush"));
-            card.Child(content);
-
-            return card;
+            return patchbay::MakeRoundedPanel(
+                6,
+                patchbay::ThemeBrushes::Current().Get(L"CardBackgroundFillColorSecondaryBrush"),
+                patchbay::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"),
+                xaml::ThicknessHelper::FromLengths(12, 10, 12, 12),
+                content).Panel;
         }
 
         controls::StackPanel Row() noexcept

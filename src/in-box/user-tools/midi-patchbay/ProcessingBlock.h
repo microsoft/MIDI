@@ -480,8 +480,8 @@ namespace midipatchbay
     // Printable ASCII only, and no more than MIDI-CI carries.
     std::wstring CiProductInstanceIdFrom(_In_ std::wstring_view text);
 
-    // One line of text on the canvas, for notes about the patch.
-    constexpr size_t MaximumAnnotationLength = 200;
+    // Text on the canvas, for notes about the patch. Lines break only where the text does.
+    constexpr size_t MaximumAnnotationLength = 1000;
     constexpr double MinimumAnnotationFontSize = 8.0;
     constexpr double MaximumAnnotationFontSize = 96.0;
     constexpr double DefaultAnnotationFontSize = 16.0;
@@ -504,8 +504,8 @@ namespace midipatchbay
         bool operator==(AnnotationSettings const&) const = default;
     };
 
-    // The text as an annotation keeps it: one line, no control characters, no longer than the most
-    // an annotation holds.
+    // The text as an annotation keeps it: line breaks as line feeds, no other control characters,
+    // no line break at the end, and no longer than the most an annotation holds.
     std::wstring AnnotationTextFrom(_In_ std::wstring_view text);
 
     // "#RRGGBB" in capitals, or empty when the text is not a color in that form.

@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 
+#include "RoundedShape.h"
 #include "StringResources.h"
 #include "ThemeBrushes.h"
 
@@ -57,18 +58,14 @@ namespace winrt::midipatchbay::implementation
             return block;
         }
 
-        controls::Border GeneratorCard(_In_ xaml::UIElement const& content) noexcept
+        controls::Grid GeneratorCard(_In_ xaml::UIElement const& content) noexcept
         {
-            controls::Border card{};
-
-            card.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(6));
-            card.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-            card.Padding(xaml::ThicknessHelper::FromLengths(12, 10, 12, 12));
-            card.BorderBrush(patchbay::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"));
-            card.Background(patchbay::ThemeBrushes::Current().Get(L"CardBackgroundFillColorSecondaryBrush"));
-            card.Child(content);
-
-            return card;
+            return patchbay::MakeRoundedPanel(
+                6,
+                patchbay::ThemeBrushes::Current().Get(L"CardBackgroundFillColorSecondaryBrush"),
+                patchbay::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"),
+                xaml::ThicknessHelper::FromLengths(12, 10, 12, 12),
+                content).Panel;
         }
 
         controls::NumberBox GeneratorNumberBox(
@@ -630,7 +627,7 @@ namespace winrt::midipatchbay::implementation
     }
 
     _Use_decl_annotations_
-    controls::Border MainWindow::BuildGeneratorGroupCard(uint8_t* group) noexcept
+    controls::Grid MainWindow::BuildGeneratorGroupCard(uint8_t* group) noexcept
     {
         try
         {
@@ -663,7 +660,7 @@ namespace winrt::midipatchbay::implementation
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the group section.")
 
-        return controls::Border{};
+        return controls::Grid{};
     }
 
     // An LFO with anything connected to its In follows that clock, the same rule the routing uses.

@@ -15,13 +15,6 @@
         </Grid.RowDefinitions>
 
         <Grid.Resources>
-            <Style x:Key="CardBorderStyle" TargetType="Border">
-                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
-                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
-                <Setter Property="BorderThickness" Value="1" />
-                <Setter Property="CornerRadius" Value="6" />
-                <Setter Property="Padding" Value="12" />
-            </Style>
             <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
@@ -198,17 +191,19 @@
                                    Margin="0,2,0,0" />
                     </StackPanel>
 
-                    <Border x:Name="StateChip"
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            CornerRadius="11"
-                            Padding="10,3,10,3"
-                            BorderThickness="1"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                    <Grid x:Name="StateChip"
+                          Grid.Column="1"
+                          VerticalAlignment="Center">
+                        <Rectangle RadiusX="10.5"
+                                   RadiusY="10.5"
+                                   StrokeThickness="1"
+                                   UseLayoutRounding="False"
+                                   Stroke="{ThemeResource CardStrokeColorDefaultBrush}" />
                         <TextBlock x:Name="StateChipText"
+                                   Margin="11,4,11,4"
                                    FontSize="12"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    </Border>
+                    </Grid>
 
                     <ToggleButton x:Name="RoutingToggle"
                                   x:Uid="RoutingToggle"
@@ -321,7 +316,13 @@
                 </StackPanel>
 
                 <!-- ============================== toolbar =============================== -->
-                <Grid x:Name="CanvasToolbar" Grid.Row="2" Height="48" Margin="16,4,16,0">
+                <Grid x:Name="CanvasToolbar"
+                      Grid.Row="2"
+                      Height="48"
+                      Margin="0,4,0,0"
+                      Padding="16,0,16,0"
+                      BorderThickness="0,0,0,1"
+                      BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
@@ -400,57 +401,6 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
-                        <Button x:Name="ZoomOutButton"
-                                x:Uid="ZoomOutButton"
-                                Style="{StaticResource ToolbarButtonStyle}"
-                                Width="32"
-                                Click="OnZoomOutClick">
-                            <FontIcon Glyph="&#xE71F;" FontSize="14" />
-                        </Button>
-                        <Button x:Name="ZoomButton"
-                                x:Uid="ZoomButton"
-                                Style="{StaticResource ToolbarButtonStyle}"
-                                MinWidth="52"
-                                Padding="4,0,4,0">
-                            <TextBlock x:Name="ZoomText"
-                                       TextAlignment="Center"
-                                       Style="{StaticResource StatusTextStyle}" />
-                            <Button.Flyout>
-                                <Flyout x:Name="ZoomFlyout" Opening="OnZoomFlyoutOpening">
-                                    <StackPanel Spacing="10" Width="188">
-                                        <Button x:Name="ZoomFitButton"
-                                                x:Uid="ZoomFitButton"
-                                                Content="Fit to screen"
-                                                HorizontalAlignment="Stretch"
-                                                Click="OnZoomFitClick" />
-                                        <NumberBox x:Name="ZoomInputBox"
-                                                   x:Uid="ZoomInputBox"
-                                                   Header="Zoom (%)"
-                                                   Minimum="10"
-                                                   Maximum="400"
-                                                   SmallChange="5"
-                                                   LargeChange="10"
-                                                   SpinButtonPlacementMode="Inline"
-                                                   ValidationMode="InvalidInputOverwritten"
-                                                   ValueChanged="OnZoomValueChanged" />
-                                        <Button x:Name="ZoomApplyButton"
-                                                x:Uid="ZoomApplyButton"
-                                                Content="Apply"
-                                                HorizontalAlignment="Right"
-                                                Click="OnZoomApplyClick" />
-                                    </StackPanel>
-                                </Flyout>
-                            </Button.Flyout>
-                        </Button>
-                        <Button x:Name="ZoomInButton"
-                                x:Uid="ZoomInButton"
-                                Style="{StaticResource ToolbarButtonStyle}"
-                                Width="32"
-                                Click="OnZoomInClick">
-                            <FontIcon Glyph="&#xE8A3;" FontSize="14" />
-                        </Button>
-                        <Border Width="1" Height="20" Margin="4,0,4,0"
-                                Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
                         <Button x:Name="TestButton"
                                 x:Uid="TestButton"
                                 Content="Test"
@@ -460,7 +410,7 @@
                 </Grid>
 
                 <!-- =============================== canvas =============================== -->
-                <Grid Grid.Row="3" Margin="16,8,16,0">
+                <Grid Grid.Row="3">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
@@ -469,13 +419,14 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- WinUI has no splitter, so each resize bar is a border with pointer handlers:
-                         a grab area as wide as the gap between the panels, with a line down the
-                         middle that lights up under the pointer. -->
+                    <!-- WinUI has no splitter, so each resize bar is a border with pointer handlers,
+                         the way MIDI Glass does it: a transparent grab area wide enough to hit,
+                         with a hairline down the middle that is also the canvas's edge, and that
+                         lights up under the pointer. -->
                     <Border x:Name="PaletteSplitter"
                             x:Uid="PaletteSplitter"
                             Grid.Column="1"
-                            Width="12"
+                            Width="6"
                             Background="Transparent"
                             Tag="palette"
                             PointerPressed="OnSplitterPressed"
@@ -486,13 +437,9 @@
                             PointerExited="OnSplitterExited">
                         <Grid>
                             <Rectangle Width="2"
-                                       RadiusX="1"
-                                       RadiusY="1"
                                        HorizontalAlignment="Center"
                                        Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
                             <Rectangle Width="2"
-                                       RadiusX="1"
-                                       RadiusY="1"
                                        HorizontalAlignment="Center"
                                        Opacity="0"
                                        Fill="{ThemeResource AccentFillColorDefaultBrush}" />
@@ -502,7 +449,7 @@
                     <Border x:Name="InspectorSplitter"
                             x:Uid="InspectorSplitter"
                             Grid.Column="3"
-                            Width="12"
+                            Width="6"
                             Background="Transparent"
                             Visibility="Collapsed"
                             Tag="inspector"
@@ -514,13 +461,9 @@
                             PointerExited="OnSplitterExited">
                         <Grid>
                             <Rectangle Width="2"
-                                       RadiusX="1"
-                                       RadiusY="1"
                                        HorizontalAlignment="Center"
                                        Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
                             <Rectangle Width="2"
-                                       RadiusX="1"
-                                       RadiusY="1"
                                        HorizontalAlignment="Center"
                                        Opacity="0"
                                        Fill="{ThemeResource AccentFillColorDefaultBrush}" />
@@ -531,10 +474,7 @@
                     <Border x:Name="PalettePanel"
                             Grid.Column="0"
                             Width="240"
-                            CornerRadius="6"
-                            BorderThickness="1"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                            Padding="0,6,0,0">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -574,11 +514,8 @@
                         </Grid>
                     </Border>
 
-                    <Border Grid.Column="2"
-                            CornerRadius="6"
-                            BorderThickness="1"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                            Background="{ThemeResource LayerOnAcrylicFillColorDefaultBrush}">
+                    <!-- Darker than the window, so it reads as the surface everything sits on. -->
+                    <Border Grid.Column="2" Background="{ThemeResource CanvasSurfaceBrush}">
                         <Grid>
                             <ScrollViewer x:Name="CanvasScroller"
                                           HorizontalScrollMode="Enabled"
@@ -626,28 +563,98 @@
                                         Click="OnAddEndpointClick" />
                             </StackPanel>
 
-                            <Border x:Name="MinimapPanel"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Bottom"
-                                    Margin="0,0,14,14"
-                                    Padding="6"
-                                    CornerRadius="5"
-                                    BorderThickness="1"
-                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                                <Canvas x:Name="MinimapSurface" Width="170" Height="116" Background="Transparent" />
-                            </Border>
+                            <!-- The overview, and under it the zoom, in the corner of what they
+                                 describe rather than up in the toolbar. -->
+                            <StackPanel HorizontalAlignment="Right"
+                                        VerticalAlignment="Bottom"
+                                        Margin="0,0,14,14"
+                                        Spacing="8">
+                                <Grid x:Name="MinimapPanel">
+                                    <Rectangle RadiusX="4.5"
+                                               RadiusY="4.5"
+                                               StrokeThickness="1"
+                                               UseLayoutRounding="False"
+                                               Stroke="{ThemeResource CardStrokeColorDefaultBrush}"
+                                               Fill="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                                    <Canvas x:Name="MinimapSurface" Margin="7" Width="170" Height="116" Background="Transparent" />
+                                </Grid>
+
+                                <Grid HorizontalAlignment="Right">
+                                    <Rectangle RadiusX="4.5"
+                                               RadiusY="4.5"
+                                               StrokeThickness="1"
+                                               UseLayoutRounding="False"
+                                               Stroke="{ThemeResource CardStrokeColorDefaultBrush}"
+                                               Fill="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                                    <StackPanel Orientation="Horizontal" Spacing="2" Margin="3">
+                                        <!-- The zoom, which opens a box to type one into. -->
+                                        <Button x:Name="ZoomButton"
+                                                x:Uid="ZoomButton"
+                                                Style="{StaticResource ToolbarButtonStyle}"
+                                                Height="28"
+                                                MinWidth="48"
+                                                Padding="6,0,6,0">
+                                            <TextBlock x:Name="ZoomText"
+                                                       TextAlignment="Center"
+                                                       Style="{StaticResource StatusTextStyle}" />
+                                            <Button.Flyout>
+                                                <Flyout x:Name="ZoomFlyout" Opening="OnZoomFlyoutOpening">
+                                                    <StackPanel Spacing="10" Width="188">
+                                                        <NumberBox x:Name="ZoomInputBox"
+                                                                   x:Uid="ZoomInputBox"
+                                                                   Header="Zoom (%)"
+                                                                   Minimum="10"
+                                                                   Maximum="400"
+                                                                   SmallChange="5"
+                                                                   LargeChange="10"
+                                                                   SpinButtonPlacementMode="Inline"
+                                                                   ValidationMode="InvalidInputOverwritten"
+                                                                   ValueChanged="OnZoomValueChanged" />
+                                                        <Button x:Name="ZoomApplyButton"
+                                                                x:Uid="ZoomApplyButton"
+                                                                Content="Apply"
+                                                                HorizontalAlignment="Right"
+                                                                Click="OnZoomApplyClick" />
+                                                    </StackPanel>
+                                                </Flyout>
+                                            </Button.Flyout>
+                                        </Button>
+                                        <Button x:Name="ZoomOutButton"
+                                                x:Uid="ZoomOutButton"
+                                                Style="{StaticResource ToolbarButtonStyle}"
+                                                Width="28"
+                                                Height="28"
+                                                Padding="0"
+                                                Click="OnZoomOutClick">
+                                            <FontIcon Glyph="&#xE71F;" FontSize="12" />
+                                        </Button>
+                                        <Button x:Name="ZoomInButton"
+                                                x:Uid="ZoomInButton"
+                                                Style="{StaticResource ToolbarButtonStyle}"
+                                                Width="28"
+                                                Height="28"
+                                                Padding="0"
+                                                Click="OnZoomInClick">
+                                            <FontIcon Glyph="&#xE8A3;" FontSize="12" />
+                                        </Button>
+                                        <Button x:Name="ZoomFitButton"
+                                                x:Uid="ZoomFitButton"
+                                                Style="{StaticResource ToolbarButtonStyle}"
+                                                Height="28"
+                                                Padding="8,0,8,0"
+                                                Click="OnZoomFitClick">
+                                            <TextBlock x:Uid="ZoomFitLabel" Text="Fit" FontSize="12" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
                         </Grid>
                     </Border>
 
                     <Border x:Name="InspectorPanel"
                             Grid.Column="4"
                             Width="300"
-                            CornerRadius="6"
-                            BorderThickness="1"
-                            Visibility="Collapsed"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                            Visibility="Collapsed">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -700,7 +707,11 @@
                 </Grid>
 
                 <!-- ============================== status bar ============================ -->
-                <Grid Grid.Row="4" Height="34" Margin="20,4,20,4">
+                <Grid Grid.Row="4"
+                      Height="32"
+                      Padding="20,0,20,0"
+                      BorderThickness="0,1,0,0"
+                      BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
                     <StackPanel Orientation="Horizontal" Spacing="18" VerticalAlignment="Center">
                         <TextBlock x:Name="StatusEndpointsText" Style="{StaticResource StatusTextStyle}" />
                         <TextBlock x:Name="StatusStepsText" Style="{StaticResource StatusTextStyle}" />
@@ -883,18 +894,19 @@
                     <StackPanel x:Name="BlockDialogContent" Spacing="16" />
                 </ScrollViewer>
 
-                <Border Grid.Row="2"
-                        Margin="0,14,0,0"
-                        Padding="12,10,12,10"
-                        CornerRadius="6"
-                        BorderThickness="1"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+                <Grid Grid.Row="2" Margin="0,14,0,0">
+                    <Rectangle RadiusX="5.5"
+                               RadiusY="5.5"
+                               StrokeThickness="1"
+                               UseLayoutRounding="False"
+                               Stroke="{ThemeResource CardStrokeColorDefaultBrush}"
+                               Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
                     <TextBlock x:Name="BlockSummaryText"
+                               Margin="13,11,13,11"
                                FontSize="12"
                                TextWrapping="Wrap"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                </Border>
+                </Grid>
             </Grid>
         </ContentDialog>
     </Grid>

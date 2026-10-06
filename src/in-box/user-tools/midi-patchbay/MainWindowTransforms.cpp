@@ -10,6 +10,7 @@
 
 #include "BackgroundWork.h"
 #include "GeneralMidi.h"
+#include "RoundedShape.h"
 #include "StringResources.h"
 #include "ThemeBrushes.h"
 
@@ -105,18 +106,14 @@ namespace winrt::midipatchbay::implementation
             return block;
         }
 
-        controls::Border TransformCard(_In_ xaml::UIElement const& content) noexcept
+        controls::Grid TransformCard(_In_ xaml::UIElement const& content) noexcept
         {
-            controls::Border card{};
-
-            card.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(6));
-            card.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-            card.Padding(xaml::ThicknessHelper::FromLengths(12, 10, 12, 12));
-            card.BorderBrush(patchbay::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"));
-            card.Background(patchbay::ThemeBrushes::Current().Get(L"CardBackgroundFillColorSecondaryBrush"));
-            card.Child(content);
-
-            return card;
+            return patchbay::MakeRoundedPanel(
+                6,
+                patchbay::ThemeBrushes::Current().Get(L"CardBackgroundFillColorSecondaryBrush"),
+                patchbay::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"),
+                xaml::ThicknessHelper::FromLengths(12, 10, 12, 12),
+                content).Panel;
         }
 
         controls::NumberBox SmallNumberBox(_In_ double minimum, _In_ double maximum, _In_ double value) noexcept
@@ -190,22 +187,21 @@ namespace winrt::midipatchbay::implementation
             }
         }
 
-        controls::Border CurveFrame(_In_ controls::Canvas const& canvas, _In_ double size) noexcept
+        controls::Grid CurveFrame(_In_ controls::Canvas const& canvas, _In_ double size) noexcept
         {
-            controls::Border frame{};
-
-            frame.Width(size);
-            frame.Height(size);
-            frame.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(4));
-            frame.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-            frame.VerticalAlignment(xaml::VerticalAlignment::Top);
-            frame.BorderBrush(patchbay::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"));
-            frame.Background(patchbay::ThemeBrushes::Current().Get(L"SolidBackgroundFillColorTertiaryBrush"));
-
             canvas.Width(size);
             canvas.Height(size);
 
-            frame.Child(canvas);
+            auto const frame = patchbay::MakeRoundedPanel(
+                4,
+                patchbay::ThemeBrushes::Current().Get(L"SolidBackgroundFillColorTertiaryBrush"),
+                patchbay::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"),
+                xaml::Thickness{},
+                canvas).Panel;
+
+            frame.Width(size);
+            frame.Height(size);
+            frame.VerticalAlignment(xaml::VerticalAlignment::Top);
 
             return frame;
         }

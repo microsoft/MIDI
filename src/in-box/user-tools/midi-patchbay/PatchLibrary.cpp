@@ -582,28 +582,47 @@ namespace midipatchbay
         {
             for (auto const& patch : m_patches)
             {
-                if (!IsRouting(patch->SessionKey))
+                total += Delivered(patch->SessionKey);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to add up the routing counts.")
+
+        return total;
+    }
+
+    _Use_decl_annotations_
+    uint64_t PatchLibrary::Delivered(std::wstring const& key) const noexcept
+    {
+        uint64_t total{ 0 };
+
+        try
+        {
+            auto const found = std::find_if(m_patches.begin(), m_patches.end(),
+                [&key](std::unique_ptr<PatchDocument> const& p) { return p->SessionKey == key; });
+
+            if (found == m_patches.end() || !IsRouting(key))
+            {
+                return 0;
+            }
+
+            auto const& patch = **found;
+
+            for (auto const& link : patch.Connections)
+            {
+                if (patch.FindEndpoint(link.DestinationId) == nullptr)
                 {
                     continue;
                 }
 
-                for (auto const& link : patch->Connections)
+                auto const stats = m_stats.find(key + L'|' + link.Id);
+
+                if (stats != m_stats.end())
                 {
-                    if (patch->FindEndpoint(link.DestinationId) == nullptr)
-                    {
-                        continue;
-                    }
-
-                    auto const found = m_stats.find(patch->SessionKey + L'|' + link.Id);
-
-                    if (found != m_stats.end())
-                    {
-                        total += found->second.MessagesForwarded;
-                    }
+                    total += stats->second.MessagesForwarded;
                 }
             }
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to add up the routing counts.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to add up a patch's routing counts.")
 
         return total;
     }

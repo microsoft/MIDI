@@ -9,6 +9,7 @@
 #include "MainWindow.xaml.h"
 
 #include "FontCatalog.h"
+#include "RoundedShape.h"
 #include "StringResources.h"
 #include "ThemeBrushes.h"
 
@@ -59,18 +60,16 @@ namespace winrt::midipatchbay::implementation
             return block;
         }
 
-        controls::Border Card(_In_ xaml::UIElement const& content) noexcept
+        controls::Grid Card(
+            _In_ xaml::UIElement const& content,
+            _In_ std::wstring_view stroke = L"CardStrokeColorDefaultBrush") noexcept
         {
-            controls::Border border{};
-
-            border.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(6));
-            border.Padding(xaml::ThicknessHelper::FromUniformLength(12));
-            border.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-            border.BorderBrush(BrushOrNull(L"CardStrokeColorDefaultBrush"));
-            border.Background(BrushOrNull(L"CardBackgroundFillColorSecondaryBrush"));
-            border.Child(content);
-
-            return border;
+            return patchbay::MakeRoundedPanel(
+                6,
+                BrushOrNull(L"CardBackgroundFillColorSecondaryBrush"),
+                BrushOrNull(stroke),
+                xaml::ThicknessHelper::FromUniformLength(12),
+                content).Panel;
         }
 
         controls::StackPanel Section(_In_ winrt::hstring const& label) noexcept
@@ -531,9 +530,7 @@ namespace winrt::midipatchbay::implementation
 
                     body.Children().Append(useButton);
 
-                    auto card = Card(body);
-                    card.BorderBrush(BrushOrNull(L"AccentFillColorDefaultBrush"));
-                    InspectorContent().Children().Append(card);
+                    InspectorContent().Children().Append(Card(body, L"AccentFillColorDefaultBrush"));
                 }
             }
 
@@ -866,15 +863,6 @@ namespace winrt::midipatchbay::implementation
                 kindRow.Orientation(controls::Orientation::Horizontal);
                 kindRow.Spacing(8);
 
-                controls::Border badge{};
-                badge.MinWidth(36);
-                badge.Height(20);
-                badge.Padding(xaml::ThicknessHelper::FromLengths(4, 0, 4, 0));
-                badge.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(4));
-                badge.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-                badge.BorderBrush(patchbay::PatchCanvas::CategoryBrush(category));
-                badge.Background(patchbay::PatchCanvas::CategoryBrush(category, 0.18));
-
                 controls::TextBlock badgeText{};
                 badgeText.Text(patchbay::BlockKindBadge(kind));
                 badgeText.FontSize(11);
@@ -882,7 +870,16 @@ namespace winrt::midipatchbay::implementation
                 badgeText.HorizontalAlignment(xaml::HorizontalAlignment::Center);
                 badgeText.VerticalAlignment(xaml::VerticalAlignment::Center);
                 badgeText.Foreground(patchbay::PatchCanvas::CategoryBrush(category));
-                badge.Child(badgeText);
+
+                auto const badge = patchbay::MakeRoundedPanel(
+                    4,
+                    patchbay::PatchCanvas::CategoryBrush(category, 0.18),
+                    patchbay::PatchCanvas::CategoryBrush(category),
+                    xaml::ThicknessHelper::FromLengths(4, 0, 4, 0),
+                    badgeText).Panel;
+
+                badge.MinWidth(36);
+                badge.Height(20);
 
                 kindRow.Children().Append(badge);
 
@@ -1135,11 +1132,16 @@ namespace winrt::midipatchbay::implementation
                 hint.Foreground(BrushOrNull(L"TextFillColorSecondaryBrush"));
                 body.Children().Append(hint);
 
+                // AcceptsReturn before Text: a box that is still one line when the text arrives
+                // keeps only the first line of it.
                 controls::TextBox textBox{};
                 textBox.Header(winrt::box_value(resources::GetString(L"AnnotationTextHeader")));
                 textBox.PlaceholderText(resources::GetString(L"AnnotationTextPlaceholder"));
                 textBox.MaxLength(static_cast<int32_t>(patchbay::MaximumAnnotationLength));
-                textBox.AcceptsReturn(false);
+                textBox.AcceptsReturn(true);
+                textBox.TextWrapping(xaml::TextWrapping::Wrap);
+                textBox.MinHeight(120);
+                textBox.MaxHeight(320);
                 textBox.Text(winrt::hstring{ note.Text });
 
                 // Drawn on the canvas as it is typed, and one step for Undo once it is done.
@@ -1169,22 +1171,6 @@ namespace winrt::midipatchbay::implementation
 
                 textBox.LostFocus([weak](auto&&, auto&&)
                     {
-                        if (auto strong = weak.get(); strong != nullptr && strong->m_annotationTextChanged)
-                        {
-                            strong->m_annotationTextChanged = false;
-                            strong->CommitChange(false, false);
-                        }
-                    });
-
-                textBox.KeyDown([weak](auto&&, input::KeyRoutedEventArgs const& args)
-                    {
-                        if (args.Key() != winrt::Windows::System::VirtualKey::Enter)
-                        {
-                            return;
-                        }
-
-                        args.Handled(true);
-
                         if (auto strong = weak.get(); strong != nullptr && strong->m_annotationTextChanged)
                         {
                             strong->m_annotationTextChanged = false;

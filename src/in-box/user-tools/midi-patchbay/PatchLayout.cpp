@@ -27,8 +27,9 @@ namespace midipatchbay
         constexpr double EndpointFixedHeight = 68.0;
         constexpr double EndpointRowHeight = 32.0;
 
+        // A header, a line, and two lines of what the step does.
         constexpr double BlockWidth = 208.0;
-        constexpr double BlockHeight = 76.0;
+        constexpr double BlockHeight = 99.0;
 
         // Roughly how wide a character of an annotation is, against its font size, and the space
         // around the text.
@@ -51,10 +52,28 @@ namespace midipatchbay
         if (auto const* block = patch.FindBlock(nodeId); block != nullptr && IsAnnotation(block->Kind))
         {
             auto const& note = block->Settings.Annotation;
-            auto const characters = static_cast<double>((std::max)(note.Text.size(), size_t{ 8 }));
+
+            // The longest line sets the width, and each line break adds a line.
+            size_t longest{ 0 };
+            size_t lines{ 1 };
+            size_t current{ 0 };
+
+            for (auto const ch : note.Text)
+            {
+                if (ch == L'\n')
+                {
+                    lines++;
+                    current = 0;
+                    continue;
+                }
+
+                longest = (std::max)(longest, ++current);
+            }
+
+            auto const characters = static_cast<double>((std::max)(longest, size_t{ 8 }));
 
             return { characters * note.FontSize * AnnotationCharacterWidth + AnnotationPadding,
-                note.FontSize * AnnotationLineHeight + AnnotationPadding };
+                static_cast<double>(lines) * note.FontSize * AnnotationLineHeight + AnnotationPadding };
         }
 
         return { BlockWidth, BlockHeight };

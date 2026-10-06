@@ -942,21 +942,37 @@ namespace midipatchbay
         std::wstring kept{};
         kept.reserve((std::min)(text.size(), MaximumAnnotationLength));
 
-        for (auto const ch : text)
+        for (size_t i = 0; i < text.size() && kept.size() < MaximumAnnotationLength; i++)
         {
-            if (kept.size() >= MaximumAnnotationLength)
+            auto const ch = text[i];
+
+            // A text box ends a line with a carriage return, a file with a line feed, and text
+            // pasted from Windows with both. Every one of them is kept as one line feed.
+            if (ch == L'\r' || ch == L'\n' || ch == 0x2028 || ch == 0x2029)
             {
-                break;
+                if (ch == L'\r' && i + 1 < text.size() && text[i + 1] == L'\n')
+                {
+                    i++;
+                }
+
+                kept.push_back(L'\n');
+                continue;
             }
 
-            // A line break or a tab would make a second line the canvas has no room for.
-            auto const control = ch < L' ' || (ch >= 0x7F && ch <= 0x9F) || ch == 0x2028 || ch == 0x2029;
+            // A tab or any other control character would draw as a box, or as nothing.
+            auto const control = ch < L' ' || (ch >= 0x7F && ch <= 0x9F);
 
             kept.push_back(control ? L' ' : ch);
         }
 
         // Cut between the halves of a character outside the basic plane, which is not a character.
         if (!kept.empty() && kept.back() >= 0xD800 && kept.back() <= 0xDBFF)
+        {
+            kept.pop_back();
+        }
+
+        // A line break at the very end only leaves an empty line under the text.
+        while (!kept.empty() && kept.back() == L'\n')
         {
             kept.pop_back();
         }

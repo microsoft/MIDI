@@ -193,7 +193,7 @@ namespace midipatchbay
             media::Brush LabelBrush{ nullptr };
 
             // The hover wash on an endpoint's row. A step's point has none.
-            controls::Border Highlight{ nullptr };
+            shapes::Rectangle Highlight{ nullptr };
         };
 
         struct NodeVisual
@@ -203,17 +203,17 @@ namespace midipatchbay
             bool IsAnnotation{ false };
             BlockCategory Category{ BlockCategory::Filter };
 
-            // What the canvas positions. The card is drawn behind the node's content rather than
-            // around it, because a rounded border clips what is inside it and the connection
-            // points hang half over the edge.
+            // What the canvas positions. The card is drawn behind the node's content and its edge
+            // over it, because the connection points hang half over the edge.
             controls::Grid Root{ nullptr };
-            controls::Border Card{ nullptr };
+            shapes::Rectangle Card{ nullptr };
+            shapes::Rectangle Edge{ nullptr };
 
             controls::TextBlock NameText{ nullptr };
             controls::TextBlock SubtitleText{ nullptr };
             controls::TextBlock AnnotationText{ nullptr };
             shapes::Ellipse StatusDot{ nullptr };
-            controls::Border AlertPanel{ nullptr };
+            xaml::FrameworkElement AlertPanel{ nullptr };
 
             // A block that is bypassed is drawn with a dashed outline, which a Border cannot do.
             shapes::Rectangle DashedOutline{ nullptr };
@@ -238,7 +238,8 @@ namespace midipatchbay
             // to expect anyone to hit.
             shapes::Path HitArea{ nullptr };
 
-            controls::Border Pill{ nullptr };
+            controls::Grid Pill{ nullptr };
+            shapes::Rectangle PillShape{ nullptr };
             controls::TextBlock PillText{ nullptr };
             bool IsLoopMuted{ false };
             bool IsMuted{ false };

@@ -939,7 +939,7 @@ void PatchSerializerTests::AnAnnotationKeepsItsTextAndNoLinks()
     VERIFY_IS_TRUE(note->Kind == BlockKind::Annotation);
     VERIFY_ARE_EQUAL(40.0, note->CanvasX);
     VERIFY_ARE_EQUAL(-20.0, note->CanvasY);
-    VERIFY_ARE_EQUAL(std::wstring{ L"Pads up a third" }, note->Settings.Annotation.Text);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Pads\nup a third" }, note->Settings.Annotation.Text);
     VERIFY_ARE_EQUAL(std::wstring{ L"Cascadia Mono" }, note->Settings.Annotation.FontFamily);
     VERIFY_ARE_EQUAL(20.0, note->Settings.Annotation.FontSize);
     VERIFY_IS_TRUE(note->Settings.Annotation.Bold);

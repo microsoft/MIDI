@@ -22,6 +22,7 @@ namespace midipatchbay
         constexpr wchar_t ValueActivateSavedPatches[] = L"ActivateSavedPatchesAtStartup";
         constexpr wchar_t ValueShowAssistant[] = L"ShowAssistant";
         constexpr wchar_t ValueShowAllFonts[] = L"ShowAllFonts";
+        constexpr wchar_t ValueLibraryShowsList[] = L"LibraryShowsList";
 
         constexpr wchar_t ValueEditorX[] = L"EditorWindowX";
         constexpr wchar_t ValueEditorY[] = L"EditorWindowY";
@@ -86,6 +87,7 @@ namespace midipatchbay
         m_activateSavedPatchesAtStartup = ReadDword(ValueActivateSavedPatches, 1) != 0;
         m_showAssistant = ReadDword(ValueShowAssistant, 1) != 0;
         m_showAllFonts = ReadDword(ValueShowAllFonts, 0) != 0;
+        m_libraryShowsList = ReadDword(ValueLibraryShowsList, 0) != 0;
 
         m_editorPlacement.X = static_cast<int32_t>(ReadDword(ValueEditorX, 0));
         m_editorPlacement.Y = static_cast<int32_t>(ReadDword(ValueEditorY, 0));
@@ -178,6 +180,13 @@ namespace midipatchbay
     {
         m_showAllFonts = value;
         WriteDword(ValueShowAllFonts, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::LibraryShowsList(bool value) noexcept
+    {
+        m_libraryShowsList = value;
+        WriteDword(ValueLibraryShowsList, value ? 1u : 0u);
     }
 
     bool AppSettings::StartsWithWindows() noexcept

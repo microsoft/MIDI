@@ -247,7 +247,7 @@ namespace winrt::midipatchbay::implementation
 
         // ---- generators, in MainWindowGenerators.cpp ----
         void BuildLfoGeneratorSections() noexcept;
-        controls::Border BuildGeneratorGroupCard(_Inout_ uint8_t* group) noexcept;
+        controls::Grid BuildGeneratorGroupCard(_Inout_ uint8_t* group) noexcept;
         void RefreshLfoMessageUi() noexcept;
         void RefreshGeneratorCaptions() noexcept;
         bool LfoFollowsClock(_In_ std::wstring const& blockId) noexcept;

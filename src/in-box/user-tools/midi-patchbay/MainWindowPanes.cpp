@@ -28,8 +28,8 @@ namespace winrt::midipatchbay::implementation
         // Whatever the panels are dragged to, the canvas keeps this much.
         constexpr double MinimumCanvasWidth = 240.0;
 
-        // The canvas row's margins and the two bars, which neither panel can take.
-        constexpr double FixedRowWidth = 32.0 + 2 * 12.0;
+        // The two bars, which neither panel can take.
+        constexpr double FixedRowWidth = 2 * 6.0;
 
         // A step dialog wider than this only makes its lines longer, not fewer.
         constexpr double MaximumBlockDialogWidth = 1100.0;
@@ -256,11 +256,12 @@ namespace winrt::midipatchbay::implementation
 
             // Each slot holds a tile and its right margin, and the panel never lets the last
             // margin hang past the edge, so three whole slots fit inside the grid. Square, so a
-            // row of tiles lines up however long their names are.
+            // row of tiles lines up however long their names are. Two pixels are kept back, or
+            // rounding to whole pixels can push the third tile onto the next row.
             for (auto const& grid : m_paletteGrids)
             {
                 auto const room = grid.ActualWidth() > 0 ? grid.ActualWidth() : width;
-                auto const slot = std::floor(room / 3.0);
+                auto const slot = std::floor((room - 2.0) / 3.0);
 
                 // Setting the same size again still lays every tile out again.
                 if (auto const panel = grid.ItemsPanelRoot().try_as<controls::VariableSizedWrapGrid>();

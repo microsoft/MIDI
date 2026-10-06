@@ -99,6 +99,9 @@ namespace midipatchbay
         // Messages that reached a destination, in every patch.
         uint64_t TotalDelivered() const noexcept;
 
+        // Messages that reached a destination in one patch. 0 when it isn't routing.
+        uint64_t Delivered(_In_ std::wstring const& key) const noexcept;
+
         // Why a patch that is routing does not route, when it doesn't.
         std::optional<RouteProblemKind> Problem(_In_ std::wstring const& key) const noexcept;
 

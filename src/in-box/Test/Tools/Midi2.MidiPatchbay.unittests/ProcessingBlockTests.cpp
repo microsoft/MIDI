@@ -947,11 +947,13 @@ void ProcessingBlockTests::AnAnnotationIsOnlyText()
 
 void ProcessingBlockTests::AnnotationTextAndColorAreCleanedUp()
 {
-    // One line: a line break or a tab becomes a space.
-    VERIFY_ARE_EQUAL(std::wstring{ L"Two lines  here" }, AnnotationTextFrom(L"Two lines\r\nhere"));
-    VERIFY_ARE_EQUAL(std::wstring{ L"a b c" }, AnnotationTextFrom(L"a\tb\x2028" L"c"));
+    // A line break stays, however it was written, as one line feed. A tab becomes a space, and a
+    // line break at the very end goes.
+    VERIFY_ARE_EQUAL(std::wstring{ L"Two lines\nhere" }, AnnotationTextFrom(L"Two lines\r\nhere"));
+    VERIFY_ARE_EQUAL(std::wstring{ L"one\ntwo\n\nfour" }, AnnotationTextFrom(L"one\rtwo\n\r\nfour\r\n\n"));
+    VERIFY_ARE_EQUAL(std::wstring{ L"a b\nc" }, AnnotationTextFrom(L"a\tb\x2028" L"c"));
 
-    VERIFY_ARE_EQUAL(MaximumAnnotationLength, AnnotationTextFrom(std::wstring(500, L'x')).size());
+    VERIFY_ARE_EQUAL(MaximumAnnotationLength, AnnotationTextFrom(std::wstring(MaximumAnnotationLength + 300, L'x')).size());
 
     // A cut never leaves half of a character from outside the basic plane.
     std::wstring nearlyFull(MaximumAnnotationLength - 1, L'x');
@@ -978,7 +980,7 @@ void ProcessingBlockTests::AnnotationTextAndColorAreCleanedUp()
         LR"({"text":"Line one\nline two","fontFamily":"C:\\Windows\\Fonts\\font.ttf","fontSize":500,
             "bold":"yes","italic":1,"underline":true,"color":"blue"})")).Annotation;
 
-    VERIFY_ARE_EQUAL(std::wstring{ L"Line one line two" }, bad.Text);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Line one\nline two" }, bad.Text);
     VERIFY_IS_TRUE(bad.FontFamily.empty());
     VERIFY_ARE_EQUAL(DefaultAnnotationFontSize, bad.FontSize);
     VERIFY_IS_FALSE(bad.Bold);

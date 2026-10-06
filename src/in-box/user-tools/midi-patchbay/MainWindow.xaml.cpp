@@ -15,6 +15,7 @@
 #include "BackgroundWork.h"
 #include "PatchLayout.h"
 #include "PatchSerializer.h"
+#include "RoundedShape.h"
 #include "StringResources.h"
 #include "resource.h"
 
@@ -1507,13 +1508,11 @@ namespace winrt::midipatchbay::implementation
 
                     if (marker != nullptr)
                     {
-                        controls::Border square{};
+                        auto square = patchbay::MakeRoundedShape(2, marker);
 
                         square.Width(8);
                         square.Height(8);
-                        square.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(2));
                         square.VerticalAlignment(xaml::VerticalAlignment::Center);
-                        square.Background(marker);
 
                         heading.Children().Append(square);
                     }
@@ -1913,31 +1912,28 @@ namespace winrt::midipatchbay::implementation
                 tile.ColumnDefinitions().Append(column);
             }
 
-            // The picture the customer chose for the device, or an empty square where it would
-            // go, so the names line up either way.
-            controls::Border art{};
-
-            art.Width(28);
-            art.Height(28);
-            art.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(5));
-            art.VerticalAlignment(xaml::VerticalAlignment::Center);
+            // The picture the customer chose for the device, cut to a rounded square, or an empty
+            // square where it would go, so the names line up either way.
+            shapes::Rectangle art{ nullptr };
 
             if (auto const picture = patchbay::PatchCanvas::LoadEndpointImage(imagePath, 56))
             {
-                controls::Image image{};
-
-                image.Source(picture);
+                media::ImageBrush image{};
+                image.ImageSource(picture);
                 image.Stretch(media::Stretch::Uniform);
-                xaml::Automation::AutomationProperties::SetAccessibilityView(image, xaml::Automation::Peers::AccessibilityView::Raw);
 
-                art.Child(image);
+                art = patchbay::MakeRoundedShape(5, image);
             }
             else
             {
-                art.Background(patchbay::ThemeBrushes::Current().Get(L"SubtleFillColorSecondaryBrush"));
-                art.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-                art.BorderBrush(patchbay::ThemeBrushes::Current().Get(L"ControlStrokeColorDefaultBrush"));
+                art = patchbay::MakeRoundedShape(5,
+                    patchbay::ThemeBrushes::Current().Get(L"SubtleFillColorSecondaryBrush"),
+                    patchbay::ThemeBrushes::Current().Get(L"ControlStrokeColorDefaultBrush"));
             }
+
+            art.Width(28);
+            art.Height(28);
+            art.VerticalAlignment(xaml::VerticalAlignment::Center);
 
             tile.Children().Append(art);
 
