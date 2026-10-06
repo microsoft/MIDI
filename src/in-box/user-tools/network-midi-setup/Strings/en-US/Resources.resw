@@ -1107,6 +1107,10 @@
   <data name="ReduceSendSpeedHelp.Text" xml:space="preserve">
     <value>When a device asks for data again, Windows sends more slowly, down to MIDI 1.0 wire speed. It speeds back up once the device stops asking.</value>
   </data>
+  <data name="RtpNoReduceSendSpeedHelp.Text" xml:space="preserve">
+    <value>Windows can't slow down by itself for RTP-MIDI devices, because they don't tell this PC when they miss data.</value>
+    <comment>Shown for RTP-MIDI in place of the "Slow down when a device misses data" check box, which only Network MIDI 2.0 has.</comment>
+  </data>
   <data name="SendSpeedLimitUnlimited" xml:space="preserve">
     <value>Unlimited</value>
   </data>
@@ -1116,7 +1120,7 @@
   </data>
   <data name="SendSpeedLimitMultipleFormat" xml:space="preserve">
     <value>{0}× MIDI 1.0 wire speed</value>
-    <comment>{0} is a whole number: 2, 4, 8, 16 or 32. The speed of a MIDI 1.0 DIN cable is 31,250 bits a second.</comment>
+    <comment>{0} is a whole number from 2 through 32, usually 2, 4, 8, 16 or 32. The speed of a MIDI 1.0 DIN cable is 31,250 bits a second.</comment>
   </data>
   <data name="SendSpeedReducesAutomaticallyFormat" xml:space="preserve">
     <value>{0}, and slows down when a device misses data</value>

@@ -625,6 +625,7 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
                                 <TextBox x:Name="ManualAddressTextBox"
@@ -681,6 +682,13 @@
                                 <TextBlock x:Uid="SendSpeedLimitHelp"
                                            Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5"
                                            Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                <TextBlock x:Uid="ReduceSendSpeedHelp"
+                                           Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="5"
+                                           Text="When a device asks for data again, Windows sends more slowly, down to MIDI 1.0 wire speed. It speeds back up once the device stops asking."
                                            TextWrapping="Wrap"
                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -1687,6 +1695,7 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
                                 <TextBox x:Name="RtpManualAddressTextBox"
@@ -1740,6 +1749,13 @@
                                 <TextBlock x:Uid="SendSpeedLimitHelp"
                                            Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5"
                                            Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                <TextBlock x:Uid="RtpNoReduceSendSpeedHelp"
+                                           Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="5"
+                                           Text="Windows can't slow down by itself for RTP-MIDI devices, because they don't tell this PC when they miss data."
                                            TextWrapping="Wrap"
                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -2213,7 +2229,7 @@
                        CloseButtonText="Cancel"
                        PrimaryButtonClick="OnCreateHostPrimaryButtonClick"
                        DefaultButton="Primary">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="460">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="12" Width="440" Margin="0,4,4,4">
                     <TextBox x:Name="HostNameTextBox"
                              x:Uid="HostNameTextBox"
@@ -2253,27 +2269,7 @@
                               Content="Advertise this host on the network"
                               IsChecked="True" />
 
-                    <CheckBox x:Name="HostCreateMidi1PortsCheckBox"
-                              x:Uid="HostCreateMidi1PortsCheckBox"
-                              Content="Also create MIDI 1.0 ports for connected devices"
-                              IsChecked="True" />
-
-                    <StackPanel Spacing="4" Margin="28,0,0,0">
-                        <NumberBox x:Name="HostFallbackMidi1PortCountBox"
-                                   x:Uid="HostFallbackMidi1PortCountBox"
-                                   Header="MIDI 1.0 ports to create for a device that does not describe itself"
-                                   Minimum="1"
-                                   Maximum="16"
-                                   MinWidth="160"
-                                   HorizontalAlignment="Left"
-                                   SpinButtonPlacementMode="Compact" />
-                        <TextBlock x:Uid="HostFallbackMidi1PortCountHint"
-                                   Text="Most devices say how many ports they have, and this is not used for them. It is only for a device that never tells us."
-                                   TextWrapping="Wrap"
-                                   Style="{ThemeResource CaptionTextBlockStyle}"
-                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                    </StackPanel>
-
+                    <!-- above the MIDI 1.0 ports, so it shows without scrolling -->
                     <StackPanel Spacing="4">
                         <ComboBox x:Name="HostSendSpeedLimitComboBox"
                                   x:Uid="SendSpeedLimitComboBox"
@@ -2292,6 +2288,26 @@
                                    TextWrapping="Wrap"
                                    Style="{ThemeResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <CheckBox x:Name="HostCreateMidi1PortsCheckBox"
+                              x:Uid="HostCreateMidi1PortsCheckBox"
+                              Content="Also create MIDI 1.0 ports for connected devices"
+                              IsChecked="True" />
+
+                    <StackPanel Spacing="4">
+                        <NumberBox x:Name="HostFallbackMidi1PortCountBox"
+                                   x:Uid="HostFallbackMidi1PortCountBox"
+                                   Header="MIDI 1.0 ports to create for a device that does not describe itself"
+                                   Minimum="1"
+                                   Maximum="16"
+                                   HorizontalAlignment="Stretch"
+                                   SpinButtonPlacementMode="Compact" />
+                        <TextBlock x:Uid="HostFallbackMidi1PortCountHint"
+                                   Text="Most devices say how many ports they have, and this is not used for them. It is only for a device that never tells us."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                     </StackPanel>
 
                     <Expander x:Uid="HostAdvancedExpander"
@@ -2383,7 +2399,7 @@
                        PrimaryButtonText="Create"
                        CloseButtonText="Cancel"
                        DefaultButton="Primary">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="460">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="12" Width="440" Margin="0,4,4,4">
                     <StackPanel Spacing="4">
                         <TextBox x:Name="RtpHostNameTextBox"
@@ -2437,6 +2453,11 @@
                                   HorizontalAlignment="Stretch" />
                         <TextBlock x:Uid="SendSpeedLimitHelp"
                                    Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Uid="RtpNoReduceSendSpeedHelp"
+                                   Text="Windows can't slow down by itself for RTP-MIDI devices, because they don't tell this PC when they miss data."
                                    TextWrapping="Wrap"
                                    Style="{ThemeResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -2613,6 +2634,14 @@
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 </StackPanel>
+
+                <!-- RTP-MIDI only, in place of the check box -->
+                <TextBlock x:Name="ChangeRtpNoReduceSendSpeedText"
+                           x:Uid="RtpNoReduceSendSpeedHelp"
+                           Text="Windows can't slow down by itself for RTP-MIDI devices, because they don't tell this PC when they miss data."
+                           TextWrapping="Wrap"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
         </ContentDialog>
 
@@ -2657,6 +2686,14 @@
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 </StackPanel>
+
+                <!-- RTP-MIDI only, in place of the check box -->
+                <TextBlock x:Name="ConnectRtpNoReduceSendSpeedText"
+                           x:Uid="RtpNoReduceSendSpeedHelp"
+                           Text="Windows can't slow down by itself for RTP-MIDI devices, because they don't tell this PC when they miss data."
+                           TextWrapping="Wrap"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
         </ContentDialog>
         <ContentDialog x:Name="ReassociateDialog"
@@ -2701,110 +2738,133 @@
                        SecondaryButtonText="Reset"
                        CloseButtonText="Cancel"
                        DefaultButton="Primary">
-            <StackPanel Spacing="12" Width="420">
-                <TextBlock x:Name="CustomizeTransportNameText"
-                           TextWrapping="Wrap"
-                           Style="{ThemeResource CaptionTextBlockStyle}"
-                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <!-- The template sizes itself from this key, not from MaxWidth -->
+            <ContentDialog.Resources>
+                <x:Double x:Key="ContentDialogMaxWidth">920</x:Double>
+            </ContentDialog.Resources>
 
-                <TextBox x:Name="CustomizeNameBox"
-                         x:Uid="CustomizeNameBox"
-                         Header="Name" />
+            <!-- Two columns, because one ran off the bottom, and a dialog cuts its content off rather
+                 than scrolling. Scrolling here is only for a small window. -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Auto"
+                          HorizontalScrollMode="Auto">
+                <StackPanel Orientation="Horizontal" Spacing="32" Margin="0,0,12,0">
+                    <StackPanel Spacing="12" Width="400">
+                        <TextBlock x:Name="CustomizeTransportNameText"
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
-                <TextBox x:Name="CustomizeDescriptionBox"
-                         x:Uid="CustomizeDescriptionBox"
-                         Header="Description"
-                         AcceptsReturn="True"
-                         TextWrapping="Wrap"
-                         Height="80" />
+                        <TextBox x:Name="CustomizeNameBox"
+                                 x:Uid="CustomizeNameBox"
+                                 Header="Name" />
 
-                <Grid ColumnSpacing="8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                        <TextBox x:Name="CustomizeDescriptionBox"
+                                 x:Uid="CustomizeDescriptionBox"
+                                 Header="Description"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 Height="80" />
 
-                    <TextBox x:Name="CustomizeImageBox"
-                             x:Uid="CustomizeImageBox"
-                             Grid.Column="0"
-                             Header="Image file name" />
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
 
-                    <Button x:Name="CustomizeBrowseImageButton"
-                            x:Uid="CustomizeBrowseImageButton"
-                            Grid.Column="1"
-                            Content="Browse..."
-                            VerticalAlignment="Bottom"
-                            Click="OnBrowseForImageClick" />
+                            <TextBox x:Name="CustomizeImageBox"
+                                     x:Uid="CustomizeImageBox"
+                                     Grid.Column="0"
+                                     Header="Image file name" />
 
-                    <Button x:Name="CustomizeRemoveImageButton"
-                            x:Uid="CustomizeRemoveImageButton"
-                            Grid.Column="2"
-                            Content="Remove"
-                            VerticalAlignment="Bottom"
-                            Click="OnRemoveImageClick" />
-                </Grid>
+                            <Button x:Name="CustomizeBrowseImageButton"
+                                    x:Uid="CustomizeBrowseImageButton"
+                                    Grid.Column="1"
+                                    Content="Browse..."
+                                    VerticalAlignment="Bottom"
+                                    Click="OnBrowseForImageClick" />
 
-                <TextBlock x:Uid="CustomizeHelpText"
-                           Text="Leave a box empty to use what the device reports. Browsing for an image copies it into the shared endpoint images folder. Remove clears the image from this device without deleting the file."
-                           TextWrapping="Wrap"
-                           Style="{ThemeResource CaptionTextBlockStyle}"
-                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            <Button x:Name="CustomizeRemoveImageButton"
+                                    x:Uid="CustomizeRemoveImageButton"
+                                    Grid.Column="2"
+                                    Content="Remove"
+                                    VerticalAlignment="Bottom"
+                                    Click="OnRemoveImageClick" />
+                        </Grid>
 
-                <!-- Network MIDI 2.0 only. An RTP-MIDI endpoint always has its one MIDI 1.0 port. -->
-                <StackPanel x:Name="CustomizeMidi1PortsPanel" Spacing="12">
-                    <CheckBox x:Name="CustomizeCreateMidi1PortsCheckBox"
-                              x:Uid="CustomizeCreateMidi1PortsCheckBox"
-                              Content="Create MIDI 1.0 ports for this device" />
-
-                    <TextBlock x:Uid="CustomizeCreateMidi1PortsHint"
-                               Text="Turning this on or off takes effect the next time this device connects. The number of ports below applies right away."
-                               TextWrapping="Wrap"
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-
-                    <StackPanel Spacing="4" Margin="28,0,0,0">
-                        <NumberBox x:Name="CustomizeFallbackMidi1PortCountBox"
-                                   x:Uid="CustomizeFallbackMidi1PortCountBox"
-                                   Header="MIDI 1.0 ports to create if this device does not describe itself"
-                                   Minimum="1"
-                                   Maximum="16"
-                                   MinWidth="160"
-                                   HorizontalAlignment="Left"
-                                   SpinButtonPlacementMode="Compact" />
-                        <TextBlock x:Uid="CustomizeFallbackMidi1PortCountHint"
-                                   Text="Most devices say how many ports they have, and this is not used for them. It is only for a device that never tells us."
+                        <TextBlock x:Uid="CustomizeHelpText"
+                                   Text="Leave a box empty to use what the device reports. Browsing for an image copies it into the shared endpoint images folder. Remove clears the image from this device without deleting the file."
                                    TextWrapping="Wrap"
                                    Style="{ThemeResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                     </StackPanel>
-                </StackPanel>
 
-                <!-- Only for a device this PC connects to. A host's speed is set on the host. -->
-                <StackPanel x:Name="CustomizeSendSpeedPanel" Spacing="4">
-                    <ComboBox x:Name="CustomizeSendSpeedLimitComboBox"
-                              x:Uid="SendSpeedLimitComboBox"
-                              Header="Sending speed"
-                              HorizontalAlignment="Stretch" />
-                    <TextBlock x:Uid="SendSpeedLimitHelp"
-                               Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
-                               TextWrapping="Wrap"
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    <!-- How this PC connects to the device. Collapsed in code when it holds nothing. -->
+                    <StackPanel x:Name="CustomizeConnectionPanel" Spacing="12" Width="400">
+                        <!-- Network MIDI 2.0 only. An RTP-MIDI endpoint always has its one MIDI 1.0 port. -->
+                        <StackPanel x:Name="CustomizeMidi1PortsPanel" Spacing="12">
+                            <CheckBox x:Name="CustomizeCreateMidi1PortsCheckBox"
+                                      x:Uid="CustomizeCreateMidi1PortsCheckBox"
+                                      Content="Create MIDI 1.0 ports for this device" />
 
-                    <!-- Network MIDI 2.0 only. RTP-MIDI cannot tell that a device missed data. -->
-                    <StackPanel x:Name="CustomizeReduceSendSpeedPanel" Spacing="4">
-                        <CheckBox x:Name="CustomizeReduceSendSpeedCheckBox"
-                                  x:Uid="ReduceSendSpeedCheckBox"
-                                  Content="Slow down when a device misses data" />
-                        <TextBlock x:Uid="ReduceSendSpeedHelp"
-                                   Text="When a device asks for data again, Windows sends more slowly, down to MIDI 1.0 wire speed. It speeds back up once the device stops asking."
-                                   TextWrapping="Wrap"
-                                   Style="{ThemeResource CaptionTextBlockStyle}"
-                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            <TextBlock x:Uid="CustomizeCreateMidi1PortsHint"
+                                       Text="Turning this on or off takes effect the next time this device connects. The number of ports below applies right away."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                            <StackPanel Spacing="4">
+                                <NumberBox x:Name="CustomizeFallbackMidi1PortCountBox"
+                                           x:Uid="CustomizeFallbackMidi1PortCountBox"
+                                           Header="MIDI 1.0 ports to create if this device does not describe itself"
+                                           Minimum="1"
+                                           Maximum="16"
+                                           HorizontalAlignment="Stretch"
+                                           SpinButtonPlacementMode="Compact" />
+                                <TextBlock x:Uid="CustomizeFallbackMidi1PortCountHint"
+                                           Text="Most devices say how many ports they have, and this is not used for them. It is only for a device that never tells us."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Only for a device this PC connects to. A host's speed is set on the host. -->
+                        <StackPanel x:Name="CustomizeSendSpeedPanel" Spacing="4">
+                            <ComboBox x:Name="CustomizeSendSpeedLimitComboBox"
+                                      x:Uid="SendSpeedLimitComboBox"
+                                      Header="Sending speed"
+                                      HorizontalAlignment="Stretch" />
+                            <TextBlock x:Uid="SendSpeedLimitHelp"
+                                       Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                            <!-- Network MIDI 2.0 only. RTP-MIDI cannot tell that a device missed data. -->
+                            <StackPanel x:Name="CustomizeReduceSendSpeedPanel" Spacing="4">
+                                <CheckBox x:Name="CustomizeReduceSendSpeedCheckBox"
+                                          x:Uid="ReduceSendSpeedCheckBox"
+                                          Content="Slow down when a device misses data" />
+                                <TextBlock x:Uid="ReduceSendSpeedHelp"
+                                           Text="When a device asks for data again, Windows sends more slowly, down to MIDI 1.0 wire speed. It speeds back up once the device stops asking."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            </StackPanel>
+
+                            <!-- RTP-MIDI only, in place of the check box -->
+                            <TextBlock x:Name="CustomizeRtpNoReduceSendSpeedText"
+                                       x:Uid="RtpNoReduceSendSpeedHelp"
+                                       Text="Windows can't slow down by itself for RTP-MIDI devices, because they don't tell this PC when they miss data."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
-            </StackPanel>
+            </ScrollViewer>
         </ContentDialog>
     </Grid>
 </Window>
