@@ -127,7 +127,7 @@ namespace winrt::midipatchbay::implementation
 
         void OpenPatch(_In_ std::wstring const& key) noexcept;
         void DuplicatePatch(_In_ std::wstring const& key) noexcept;
-        winrt::fire_and_forget DeletePatchAsync(std::wstring key);
+        winrt::fire_and_forget DeletePatchAsync(_In_ std::wstring key);
         void ShowInFolder(_In_ std::wstring const& path) noexcept;
 
         void OnRefreshTimerTick() noexcept;
@@ -205,10 +205,6 @@ namespace winrt::midipatchbay::implementation
         // Guards the window briefly reporting itself minimized on its way out of the
         // notification area, which would otherwise hide it again straight away.
         bool m_restoringFromNotificationArea{ false };
-
-        winrt::event_token m_closedToken{};
-        winrt::event_token m_closingToken{};
-        winrt::event_token m_windowChangedToken{};
     };
 }
 

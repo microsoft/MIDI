@@ -110,6 +110,8 @@
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\PatchSerializer.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\RouteGraph.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\CapabilityInquiry.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\SpinGuard.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\TextMatch.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\LfoWave.h" />

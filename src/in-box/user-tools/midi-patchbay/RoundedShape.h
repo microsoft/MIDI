@@ -75,4 +75,16 @@ namespace midipatchbay
 
         return result;
     }
+
+    // For a dashed edge or line. DoubleCollection has no initializer list constructor in this
+    // projection.
+    inline media::DoubleCollection MakeDashArray(_In_ double on, _In_ double off)
+    {
+        media::DoubleCollection collection{};
+
+        collection.Append(on);
+        collection.Append(off);
+
+        return collection;
+    }
 }

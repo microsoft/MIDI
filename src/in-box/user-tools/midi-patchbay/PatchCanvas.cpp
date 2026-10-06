@@ -27,8 +27,6 @@ namespace midipatchbay
         constexpr double MinimapHeight = 116.0;
 
         constexpr double DefaultColumnX[2] = { 60.0, 460.0 };
-        constexpr double ArrangeTopMargin = 48.0;
-        constexpr double ArrangeRowGap = 32.0;
 
         // How close a drop has to be to a connection point to land on it.
         constexpr double PortSnapRadius = 36.0;
@@ -95,7 +93,7 @@ namespace midipatchbay
             _In_ winrt::hstring const& text,
             _In_ double fontSize,
             _In_ media::Brush const& brush,
-            _In_ bool bold = false) noexcept
+            _In_ bool bold = false)
         {
             controls::TextBlock block{};
 
@@ -121,7 +119,7 @@ namespace midipatchbay
         controls::FontIcon MakeGlyph(
             _In_ winrt::hstring const& glyph,
             _In_ double fontSize,
-            _In_ media::Brush const& brush) noexcept
+            _In_ media::Brush const& brush)
         {
             controls::FontIcon icon{};
 
@@ -134,17 +132,6 @@ namespace midipatchbay
             }
 
             return icon;
-        }
-
-        // DoubleCollection has no initializer list constructor in this projection.
-        media::DoubleCollection MakeDashArray(_In_ double on, _In_ double off) noexcept
-        {
-            media::DoubleCollection collection{};
-
-            collection.Append(on);
-            collection.Append(off);
-
-            return collection;
         }
 
         // A button fills itself, square, on hover and press. Nothing clips a connection point's
@@ -549,7 +536,15 @@ namespace midipatchbay
             return brush;
         }
 
-        return media::SolidColorBrush{ fallback };
+        try
+        {
+            return media::SolidColorBrush{ fallback };
+        }
+        catch (...)
+        {
+        }
+
+        return nullptr;
     }
 
     _Use_decl_annotations_
@@ -900,8 +895,12 @@ namespace midipatchbay
 
         if (auto* node = FindNode(nodeId); node != nullptr && node->Root != nullptr)
         {
-            controls::Canvas::SetLeft(node->Root, x);
-            controls::Canvas::SetTop(node->Root, y);
+            try
+            {
+                controls::Canvas::SetLeft(node->Root, x);
+                controls::Canvas::SetTop(node->Root, y);
+            }
+            MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to move a node.")
         }
     }
 
@@ -1009,6 +1008,7 @@ namespace midipatchbay
         PatchEndpoint const& endpoint,
         LiveEndpoint const* live,
         std::optional<LiveEndpoint> const& suggestion) noexcept
+    try
     {
         NodeVisual node{};
 
@@ -1318,7 +1318,6 @@ namespace midipatchbay
 
             alert.Margin(xaml::ThicknessHelper::FromLengths(8, 0, 8, 8));
 
-            node.AlertPanel = alert;
             body.Children().Append(alert);
         }
 
@@ -1372,6 +1371,7 @@ namespace midipatchbay
 
         ApplyNodeAppearance(m_nodes.back());
     }
+    MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build an endpoint node.")
 
     _Use_decl_annotations_
     void PatchCanvas::AttachNodeHandlers(xaml::UIElement const& root, std::wstring const& nodeId, bool isBlock) noexcept
@@ -1813,6 +1813,7 @@ namespace midipatchbay
 
     _Use_decl_annotations_
     void PatchCanvas::BuildConnections(PatchAnalysis const& analysis) noexcept
+    try
     {
         UNREFERENCED_PARAMETER(analysis);
 
@@ -1940,6 +1941,7 @@ namespace midipatchbay
             ApplyConnectionAppearance(visual);
         }
     }
+    MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the connections.")
 
     void PatchCanvas::RedrawConnections() noexcept
     {
@@ -2146,6 +2148,7 @@ namespace midipatchbay
 
     _Use_decl_annotations_
     void PatchCanvas::ApplyNodeAppearance(NodeVisual& node) noexcept
+    try
     {
         if (node.Root == nullptr || node.Card == nullptr || node.Edge == nullptr)
         {
@@ -2192,9 +2195,11 @@ namespace midipatchbay
         // The lift is what casts the shadow.
         node.Card.Translation(winrt::Windows::Foundation::Numerics::float3{ 0, 0, selected ? SelectedNodeLift : 0.0f });
     }
+    MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw a node.")
 
     _Use_decl_annotations_
     void PatchCanvas::ApplyConnectionAppearance(ConnectionVisual& visual) noexcept
+    try
     {
         if (visual.Line == nullptr)
         {
@@ -2247,6 +2252,7 @@ namespace midipatchbay
             visual.PillShape.Stroke(visual.IsLoopMuted ? critical : (selected ? accent : stroke));
         }
     }
+    MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw a connection.")
 
     _Use_decl_annotations_
     void PatchCanvas::RefreshStatus(std::unordered_map<std::wstring, RouteStats> const& stats) noexcept
@@ -2412,7 +2418,6 @@ namespace midipatchbay
             }
 
             m_draggingNode = true;
-            m_dragNodeId = nodeId;
             m_dragStartPointer = point.Position();
             m_dragStartPositions.clear();
 
@@ -2560,10 +2565,14 @@ namespace midipatchbay
         auto const anchor = PortPoint(key);
         m_dragAnchor = anchor.value_or(foundation::Point{});
 
-        if (m_dragLine != nullptr)
+        try
         {
-            m_dragLine.Visibility(xaml::Visibility::Visible);
+            if (m_dragLine != nullptr)
+            {
+                m_dragLine.Visibility(xaml::Visibility::Visible);
+            }
         }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the connection being drawn.")
 
         RefreshPortAppearance();
     }
@@ -2875,10 +2884,14 @@ namespace midipatchbay
     // Delete is handled on the scroll viewer, which only sees it while the canvas has focus.
     void PatchCanvas::FocusCanvas() noexcept
     {
-        if (m_scrollViewer != nullptr)
+        try
         {
-            m_scrollViewer.Focus(xaml::FocusState::Pointer);
+            if (m_scrollViewer != nullptr)
+            {
+                m_scrollViewer.Focus(xaml::FocusState::Pointer);
+            }
         }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to focus the canvas.")
     }
 
     void PatchCanvas::CancelDrags() noexcept
@@ -2891,10 +2904,14 @@ namespace midipatchbay
             m_retargeting = false;
             m_hoverPort.reset();
 
-            if (m_dragLine != nullptr)
+            try
             {
-                m_dragLine.Visibility(xaml::Visibility::Collapsed);
+                if (m_dragLine != nullptr)
+                {
+                    m_dragLine.Visibility(xaml::Visibility::Collapsed);
+                }
             }
+            MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to hide the connection being drawn.")
 
             RefreshPortAppearance();
         }
@@ -2902,6 +2919,7 @@ namespace midipatchbay
 
     _Use_decl_annotations_
     void PatchCanvas::ApplyPortAppearance(PortVisual& port) noexcept
+    try
     {
         if (port.Dot == nullptr)
         {
@@ -2944,6 +2962,7 @@ namespace midipatchbay
             port.Label.Foreground(hovered || filled ? secondary : port.LabelBrush);
         }
     }
+    MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw a connection point.")
 
     _Use_decl_annotations_
     void PatchCanvas::RequestConnection(PortKey const& source, PortKey const& destination) noexcept

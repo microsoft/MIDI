@@ -463,26 +463,4 @@ namespace midipatchbay
 
         return analysis;
     }
-
-    _Use_decl_annotations_
-    bool WouldCreateCertainLoop(
-        PatchDocument const& patch,
-        PatchConnection const& proposed,
-        std::vector<LiveEndpoint> const& liveEndpoints) noexcept
-    {
-        try
-        {
-            PatchDocument working{ patch };
-            working.Connections.push_back(proposed);
-
-            auto const graph = BuildGraph(working, liveEndpoints, false);
-
-            std::vector<Edge const*> cycle{};
-
-            return FindCycle(graph, cycle);
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to test a connection for loops.")
-
-        return false;
-    }
 }

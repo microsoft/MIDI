@@ -9,7 +9,7 @@
 #include "MainWindow.xaml.h"
 
 #include "BackgroundWork.h"
-#include "RoundedShape.h"
+#include "DialogParts.h"
 #include "StringResources.h"
 #include "ThemeBrushes.h"
 
@@ -60,13 +60,19 @@ namespace winrt::midipatchbay::implementation
             color.G = 0x4B;
             color.B = 0x60;
 
-            if (auto const solid = accent.try_as<media::SolidColorBrush>())
+            try
             {
-                auto const source = solid.Color();
+                if (auto const solid = accent.try_as<media::SolidColorBrush>())
+                {
+                    auto const source = solid.Color();
 
-                color.R = static_cast<uint8_t>(source.R * 0.42);
-                color.G = static_cast<uint8_t>(source.G * 0.42);
-                color.B = static_cast<uint8_t>(source.B * 0.42);
+                    color.R = static_cast<uint8_t>(source.R * 0.42);
+                    color.G = static_cast<uint8_t>(source.G * 0.42);
+                    color.B = static_cast<uint8_t>(source.B * 0.42);
+                }
+            }
+            catch (...)
+            {
             }
 
             return color;
@@ -88,60 +94,19 @@ namespace winrt::midipatchbay::implementation
             return count;
         }
 
-        controls::TextBlock SectionHeading(_In_ winrt::hstring const& text) noexcept
-        {
-            controls::TextBlock block{};
-
-            block.Text(text);
-            block.FontSize(13);
-            block.FontWeight(winrt::Microsoft::UI::Text::FontWeights::SemiBold());
-
-            return block;
-        }
-
-        controls::TextBlock SectionHint(_In_ winrt::hstring const& text) noexcept
-        {
-            controls::TextBlock block{};
-
-            block.Text(text);
-            block.FontSize(11);
-            block.TextWrapping(xaml::TextWrapping::Wrap);
-            block.Margin(xaml::ThicknessHelper::FromLengths(0, -4, 0, 4));
-            block.Foreground(patchbay::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
-
-            return block;
-        }
-
-        controls::Grid FilterCard(_In_ xaml::UIElement const& content) noexcept
-        {
-            return patchbay::MakeRoundedPanel(
-                6,
-                patchbay::ThemeBrushes::Current().Get(L"CardBackgroundFillColorSecondaryBrush"),
-                patchbay::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"),
-                xaml::ThicknessHelper::FromLengths(12, 10, 12, 12),
-                content).Panel;
-        }
+        using patchbay::parts::Card;
+        using patchbay::parts::Heading;
+        using patchbay::parts::HeadingHint;
 
         controls::NumberBox NumberField(
             _In_ winrt::hstring const& header,
             _In_ double minimum,
             _In_ double maximum,
-            _In_ double value) noexcept
+            _In_ double value)
         {
-            controls::NumberBox box{};
+            auto box = patchbay::parts::NumberBox(header, minimum, maximum, value, 12);
 
-            box.Header(winrt::box_value(header));
-            box.Minimum(minimum);
-            box.Maximum(maximum);
-            box.SmallChange(1);
-            box.LargeChange(12);
             box.Width(150);
-
-            // Inline, not Compact: the compact spin buttons live in a popup that the dialog's
-            // scroll viewer does not clip.
-            box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Inline);
-            box.ValidationMode(controls::NumberBoxValidationMode::InvalidInputOverwritten);
-            box.Value(value);
 
             return box;
         }
@@ -150,7 +115,7 @@ namespace winrt::midipatchbay::implementation
         controls::RadioButtons ChoiceButtons(
             _In_ winrt::hstring const& header,
             _In_ std::initializer_list<winrt::hstring> choices,
-            _In_ int32_t selected) noexcept
+            _In_ int32_t selected)
         {
             controls::RadioButtons buttons{};
 
@@ -266,6 +231,7 @@ namespace winrt::midipatchbay::implementation
 
     // The dialog edits a copy. Nothing reaches the step until Apply, so Cancel really does leave
     // a running patch alone.
+    _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::ShowBlockDialogAsync(std::wstring blockId)
     {
         auto strong = get_strong();
@@ -589,8 +555,8 @@ namespace winrt::midipatchbay::implementation
                 controls::StackPanel body{};
                 body.Spacing(4);
 
-                body.Children().Append(SectionHeading(resources::GetString(L"FilterSectionMessageTypes")));
-                body.Children().Append(SectionHint(resources::GetString(L"FilterSectionMessageTypesHint")));
+                body.Children().Append(Heading(resources::GetString(L"FilterSectionMessageTypes")));
+                body.Children().Append(HeadingHint(resources::GetString(L"FilterSectionMessageTypesHint")));
 
                 auto grid = makeGrid();
 
@@ -613,7 +579,7 @@ namespace winrt::midipatchbay::implementation
 
                 body.Children().Append(grid);
 
-                BlockDialogContent().Children().Append(FilterCard(body));
+                BlockDialogContent().Children().Append(Card(body));
             }
 
             // -------------------------------------------- channel voice messages
@@ -621,8 +587,8 @@ namespace winrt::midipatchbay::implementation
                 controls::StackPanel body{};
                 body.Spacing(4);
 
-                body.Children().Append(SectionHeading(resources::GetString(L"FilterSectionChannelVoice")));
-                body.Children().Append(SectionHint(resources::GetString(L"FilterSectionChannelVoiceHint")));
+                body.Children().Append(Heading(resources::GetString(L"FilterSectionChannelVoice")));
+                body.Children().Append(HeadingHint(resources::GetString(L"FilterSectionChannelVoiceHint")));
 
                 auto grid = makeGrid();
 
@@ -664,7 +630,7 @@ namespace winrt::midipatchbay::implementation
 
                 body.Children().Append(grid);
 
-                BlockDialogContent().Children().Append(FilterCard(body));
+                BlockDialogContent().Children().Append(Card(body));
             }
 
             // -------------------------------------------------- system messages
@@ -672,8 +638,8 @@ namespace winrt::midipatchbay::implementation
                 controls::StackPanel body{};
                 body.Spacing(4);
 
-                body.Children().Append(SectionHeading(resources::GetString(L"FilterSectionSystem")));
-                body.Children().Append(SectionHint(resources::GetString(L"FilterSectionSystemHint")));
+                body.Children().Append(Heading(resources::GetString(L"FilterSectionSystem")));
+                body.Children().Append(HeadingHint(resources::GetString(L"FilterSectionSystemHint")));
 
                 auto grid = makeGrid();
 
@@ -685,7 +651,7 @@ namespace winrt::midipatchbay::implementation
 
                 body.Children().Append(grid);
 
-                BlockDialogContent().Children().Append(FilterCard(body));
+                BlockDialogContent().Children().Append(Card(body));
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the message type sections.")
@@ -702,8 +668,8 @@ namespace winrt::midipatchbay::implementation
             controls::StackPanel body{};
             body.Spacing(8);
 
-            body.Children().Append(SectionHeading(resources::GetString(isNotes ? L"FilterSectionNotes" : L"FilterSectionControllers")));
-            body.Children().Append(SectionHint(resources::GetString(isNotes ? L"FilterSectionNotesHint" : L"FilterSectionControllersHint")));
+            body.Children().Append(Heading(resources::GetString(isNotes ? L"FilterSectionNotes" : L"FilterSectionControllers")));
+            body.Children().Append(HeadingHint(resources::GetString(isNotes ? L"FilterSectionNotesHint" : L"FilterSectionControllersHint")));
 
             // ---- what happens to them
             auto action = ChoiceButtons(
@@ -939,7 +905,7 @@ namespace winrt::midipatchbay::implementation
                 keyboardScroller.Content(keyboard);
 
                 body.Children().Append(keyboardScroller);
-                body.Children().Append(SectionHint(resources::GetString(L"FilterKeyboardHint")));
+                body.Children().Append(HeadingHint(resources::GetString(L"FilterKeyboardHint")));
             }
             else
             {
@@ -978,10 +944,10 @@ namespace winrt::midipatchbay::implementation
                 }
 
                 body.Children().Append(grid);
-                body.Children().Append(SectionHint(resources::GetString(L"FilterControllerGridHint")));
+                body.Children().Append(HeadingHint(resources::GetString(L"FilterControllerGridHint")));
             }
 
-            BlockDialogContent().Children().Append(FilterCard(body));
+            BlockDialogContent().Children().Append(Card(body));
 
             RefreshValueSetUi();
         }
@@ -1251,7 +1217,7 @@ namespace winrt::midipatchbay::implementation
                 {
                     try
                     {
-                        session = midi2::MidiSession::Create(L"MIDI Patchbay learn");
+                        session = midi2::MidiSession::Create(resources::GetString(L"LearnSessionName"));
 
                         if (session == nullptr)
                         {
@@ -1436,8 +1402,8 @@ namespace winrt::midipatchbay::implementation
             controls::StackPanel body{};
             body.Spacing(8);
 
-            body.Children().Append(SectionHeading(resources::GetString(L"MaskSectionHeading")));
-            body.Children().Append(SectionHint(resources::GetString(L"MaskSectionHint")));
+            body.Children().Append(Heading(resources::GetString(L"MaskSectionHeading")));
+            body.Children().Append(HeadingHint(resources::GetString(L"MaskSectionHint")));
 
             auto size = ChoiceButtons(
                 resources::GetString(L"MaskSize"),
@@ -1481,7 +1447,7 @@ namespace winrt::midipatchbay::implementation
                 });
 
             body.Children().Append(size);
-            body.Children().Append(SectionHint(resources::GetString(L"MaskSizeHint")));
+            body.Children().Append(HeadingHint(resources::GetString(L"MaskSizeHint")));
 
             auto action = ChoiceButtons(
                 resources::GetString(L"MaskActionHeader"),
@@ -1568,7 +1534,7 @@ namespace winrt::midipatchbay::implementation
 
             body.Children().Append(add);
 
-            BlockDialogContent().Children().Append(FilterCard(body));
+            BlockDialogContent().Children().Append(Card(body));
 
             RebuildMaskConditions();
         }
@@ -1592,7 +1558,7 @@ namespace winrt::midipatchbay::implementation
 
             if (mask.Conditions.empty())
             {
-                auto empty = SectionHint(resources::GetString(L"MaskNoConditions"));
+                auto empty = HeadingHint(resources::GetString(L"MaskNoConditions"));
                 empty.Margin(xaml::ThicknessHelper::FromUniformLength(0));
                 m_maskConditionsPanel.Children().Append(empty);
                 return;

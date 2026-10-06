@@ -48,11 +48,7 @@ namespace midipatchbay
                     continue;
                 }
 
-                if (IsSwitch(argument, L"--help") || IsSwitch(argument, L"-?") || IsSwitch(argument, L"/?"))
-                {
-                    options.ShowHelp = true;
-                }
-                else if (IsSwitch(argument, L"--minimized"))
+                if (IsSwitch(argument, L"--minimized"))
                 {
                     options.StartMinimized = true;
                 }
@@ -61,11 +57,6 @@ namespace midipatchbay
                     if (i + 1 < argumentCount)
                     {
                         options.PatchName = arguments[++i];
-                    }
-                    else
-                    {
-                        options.HasError = true;
-                        options.ErrorText = L"--patch needs the name of a patch.";
                     }
                 }
                 else if (PatchStore::IsPatchFileName(argument))
@@ -76,11 +67,6 @@ namespace midipatchbay
                     auto const absolute = std::filesystem::absolute(std::filesystem::path{ argument }, ignored);
 
                     options.FilesToImport.push_back(ignored ? std::wstring{ argument } : absolute.wstring());
-                }
-                else
-                {
-                    options.HasError = true;
-                    options.ErrorText = std::wstring{ L"Unrecognized option: " } + std::wstring{ argument };
                 }
             }
         }

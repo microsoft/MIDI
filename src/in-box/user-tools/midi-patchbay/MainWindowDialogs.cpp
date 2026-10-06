@@ -10,6 +10,7 @@
 
 #include "BackgroundWork.h"
 #include "StringResources.h"
+#include "TextMatch.h"
 
 using namespace winrt::Microsoft::UI::Xaml;
 
@@ -31,28 +32,30 @@ namespace winrt::midipatchbay::implementation
         constexpr wchar_t KeyboardExeName[] = L"midikeyboard.exe";
         constexpr wchar_t ScratchPadExeName[] = L"midiscratchpad.exe";
 
-        bool SameText(_In_ std::wstring const& left, _In_ std::wstring const& right) noexcept
-        {
-            return ::CompareStringOrdinal(left.c_str(), -1, right.c_str(), -1, TRUE) == CSTR_EQUAL;
-        }
+        using patchbay::SameText;
 
         std::wstring ExecutableFolder() noexcept
         {
-            std::wstring buffer(MAX_PATH, L'\0');
-
-            auto const length = ::GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
-
-            if (length == 0 || length >= buffer.size())
+            try
             {
-                return {};
+                std::wstring buffer(MAX_PATH, L'\0');
+
+                auto const length = ::GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+
+                if (length == 0 || length >= buffer.size())
+                {
+                    return {};
+                }
+
+                buffer.resize(length);
+
+                return std::filesystem::path{ buffer }.parent_path().wstring();
+            }
+            catch (...)
+            {
             }
 
-            buffer.resize(length);
-
-            std::error_code ec{};
-            auto const parent = std::filesystem::path{ buffer }.parent_path();
-
-            return parent.wstring();
+            return {};
         }
     }
 

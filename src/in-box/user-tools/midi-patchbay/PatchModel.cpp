@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "PatchModel.h"
 #include "StringResources.h"
+#include "TextMatch.h"
 
 namespace midipatchbay
 {
@@ -50,11 +51,6 @@ namespace midipatchbay
 
     namespace
     {
-        bool SameText(_In_ std::wstring const& left, _In_ std::wstring const& right) noexcept
-        {
-            return ::CompareStringOrdinal(left.c_str(), -1, right.c_str(), -1, TRUE) == CSTR_EQUAL;
-        }
-
         std::wstring const& MatchedName(_In_ PatchEndpoint const& endpoint) noexcept
         {
             return endpoint.Match.TransportSuppliedEndpointName.empty()

@@ -148,9 +148,6 @@ namespace midipatchbay
 
         void UpdateMinimap() noexcept;
 
-        // Extent of the content, which is what makes the canvas bigger than the window.
-        foundation::Size ContentExtent() const noexcept { return m_extent; }
-
         // The middle of what is in view, in canvas units, for something added without a drop.
         foundation::Point ViewCenter() const noexcept;
 
@@ -213,7 +210,6 @@ namespace midipatchbay
             controls::TextBlock SubtitleText{ nullptr };
             controls::TextBlock AnnotationText{ nullptr };
             shapes::Ellipse StatusDot{ nullptr };
-            xaml::FrameworkElement AlertPanel{ nullptr };
 
             // A block that is bypassed is drawn with a dashed outline, which a Border cannot do.
             shapes::Rectangle DashedOutline{ nullptr };
@@ -367,7 +363,6 @@ namespace midipatchbay
 
         // node drag: every selected node moves together
         bool m_draggingNode{ false };
-        std::wstring m_dragNodeId{};
         foundation::Point m_dragStartPointer{};
         std::vector<std::pair<std::wstring, foundation::Point>> m_dragStartPositions{};
 

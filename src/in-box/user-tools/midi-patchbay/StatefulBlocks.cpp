@@ -8,10 +8,10 @@
 // Pure: no precompiled header, so the unit tests compile this file exactly as it ships.
 
 #include "StatefulBlocks.h"
+#include "SpinGuard.h"
 
 #include <algorithm>
 #include <cmath>
-#include <thread>
 
 namespace midipatchbay
 {
@@ -480,29 +480,6 @@ namespace midipatchbay
 
         // ------------------------------------------------------------ note distributor
 
-        class VoiceLockGuard
-        {
-        public:
-            explicit VoiceLockGuard(_Inout_ std::atomic_flag& flag) noexcept : m_flag(flag)
-            {
-                while (m_flag.test_and_set(std::memory_order_acquire))
-                {
-                    std::this_thread::yield();
-                }
-            }
-
-            ~VoiceLockGuard() noexcept
-            {
-                m_flag.clear(std::memory_order_release);
-            }
-
-            VoiceLockGuard(VoiceLockGuard const&) = delete;
-            VoiceLockGuard& operator=(VoiceLockGuard const&) = delete;
-
-        private:
-            std::atomic_flag& m_flag;
-        };
-
         int32_t FindVoice(_In_ BlockState const& state, _In_ uint8_t group, _In_ uint8_t channel, _In_ uint8_t note) noexcept
         {
             for (uint32_t i = 0; i < state.VoiceCount; i++)
@@ -630,7 +607,7 @@ namespace midipatchbay
             auto const channel = ChannelOf(word);
             auto const note = NoteOf(word);
 
-            VoiceLockGuard const guard{ state.VoiceLock };
+            SpinGuard const guard{ state.VoiceLock };
 
             // A connection added or taken away: the voices are counted again from nothing.
             if (state.VoiceCount != voices)

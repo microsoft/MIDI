@@ -8,7 +8,7 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 
-#include "RoundedShape.h"
+#include "DialogParts.h"
 #include "StringResources.h"
 #include "ThemeBrushes.h"
 
@@ -21,32 +21,13 @@ namespace winrt::midipatchbay::implementation
 {
     namespace
     {
-        controls::TextBlock GeneratorHeading(_In_ winrt::hstring const& text) noexcept
-        {
-            controls::TextBlock block{};
-
-            block.Text(text);
-            block.FontSize(13);
-            block.FontWeight(winrt::Microsoft::UI::Text::FontWeights::SemiBold());
-
-            return block;
-        }
-
-        controls::TextBlock GeneratorHint(_In_ winrt::hstring const& text) noexcept
-        {
-            controls::TextBlock block{};
-
-            block.Text(text);
-            block.FontSize(11);
-            block.TextWrapping(xaml::TextWrapping::Wrap);
-            block.Margin(xaml::ThicknessHelper::FromLengths(0, -4, 0, 4));
-            block.Foreground(patchbay::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
-
-            return block;
-        }
+        using patchbay::parts::Card;
+        using patchbay::parts::Heading;
+        using patchbay::parts::HeadingHint;
+        using patchbay::parts::RoundedTempo;
 
         // A line that follows a setting, such as how long a sweep takes at this tempo.
-        controls::TextBlock GeneratorCaption() noexcept
+        controls::TextBlock GeneratorCaption()
         {
             controls::TextBlock block{};
 
@@ -58,36 +39,15 @@ namespace winrt::midipatchbay::implementation
             return block;
         }
 
-        controls::Grid GeneratorCard(_In_ xaml::UIElement const& content) noexcept
-        {
-            return patchbay::MakeRoundedPanel(
-                6,
-                patchbay::ThemeBrushes::Current().Get(L"CardBackgroundFillColorSecondaryBrush"),
-                patchbay::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"),
-                xaml::ThicknessHelper::FromLengths(12, 10, 12, 12),
-                content).Panel;
-        }
-
         controls::NumberBox GeneratorNumberBox(
             _In_ winrt::hstring const& header,
             _In_ double minimum,
             _In_ double maximum,
-            _In_ double value) noexcept
+            _In_ double value)
         {
-            controls::NumberBox box{};
+            auto box = patchbay::parts::NumberBox(header, minimum, maximum, value, 10);
 
-            box.Header(winrt::box_value(header));
-            box.Minimum(minimum);
-            box.Maximum(maximum);
-            box.SmallChange(1);
-            box.LargeChange(10);
             box.Width(150);
-
-            // Inline, not Compact: the compact spin buttons live in a popup that the dialog's
-            // scroll viewer does not clip.
-            box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Inline);
-            box.ValidationMode(controls::NumberBoxValidationMode::InvalidInputOverwritten);
-            box.Value(value);
 
             return box;
         }
@@ -96,7 +56,7 @@ namespace winrt::midipatchbay::implementation
         controls::ComboBox SixteenChoices(
             _In_ winrt::hstring const& header,
             _In_ wchar_t const* itemFormat,
-            _In_ int32_t selected) noexcept
+            _In_ int32_t selected)
         {
             controls::ComboBox box{};
 
@@ -113,7 +73,7 @@ namespace winrt::midipatchbay::implementation
             return box;
         }
 
-        controls::StackPanel GeneratorRow() noexcept
+        controls::StackPanel GeneratorRow()
         {
             controls::StackPanel row{};
 
@@ -121,14 +81,6 @@ namespace winrt::midipatchbay::implementation
             row.Spacing(16);
 
             return row;
-        }
-
-        // Two places, the same as a summary shows.
-        double RoundedTempo(_In_ double value) noexcept
-        {
-            return std::round(std::clamp(value,
-                patchbay::MinimumGeneratorBeatsPerMinute,
-                patchbay::MaximumGeneratorBeatsPerMinute) * 100.0) / 100.0;
         }
 
         // What an LFO's number means for each kind, so changing the kind only resets it when the
@@ -159,7 +111,7 @@ namespace winrt::midipatchbay::implementation
                 controls::StackPanel body{};
                 body.Spacing(4);
 
-                body.Children().Append(GeneratorHeading(resources::GetString(L"GeneratorSectionWave")));
+                body.Children().Append(Heading(resources::GetString(L"GeneratorSectionWave")));
 
                 auto row = GeneratorRow();
 
@@ -266,7 +218,7 @@ namespace winrt::midipatchbay::implementation
                 m_lfoRateCaption = GeneratorCaption();
                 body.Children().Append(m_lfoRateCaption);
 
-                content.Children().Append(GeneratorCard(body));
+                content.Children().Append(Card(body));
             }
 
             // ------------------------------------------------------------ range
@@ -274,8 +226,8 @@ namespace winrt::midipatchbay::implementation
                 controls::StackPanel body{};
                 body.Spacing(4);
 
-                body.Children().Append(GeneratorHeading(resources::GetString(L"GeneratorSectionRange")));
-                body.Children().Append(GeneratorHint(resources::GetString(L"GeneratorRangeHint")));
+                body.Children().Append(Heading(resources::GetString(L"GeneratorSectionRange")));
+                body.Children().Append(HeadingHint(resources::GetString(L"GeneratorRangeHint")));
 
                 auto row = GeneratorRow();
 
@@ -309,7 +261,7 @@ namespace winrt::midipatchbay::implementation
 
                 body.Children().Append(row);
 
-                content.Children().Append(GeneratorCard(body));
+                content.Children().Append(Card(body));
             }
 
             // ---------------------------------------------------- what it sends
@@ -319,7 +271,7 @@ namespace winrt::midipatchbay::implementation
                 controls::StackPanel body{};
                 body.Spacing(8);
 
-                body.Children().Append(GeneratorHeading(resources::GetString(L"GeneratorSectionMessage")));
+                body.Children().Append(Heading(resources::GetString(L"GeneratorSectionMessage")));
 
                 auto row = GeneratorRow();
 
@@ -492,9 +444,9 @@ namespace winrt::midipatchbay::implementation
                     });
 
                 body.Children().Append(m_lfoProtocolButtons);
-                body.Children().Append(GeneratorHint(resources::GetString(L"GeneratorProtocolHint")));
+                body.Children().Append(HeadingHint(resources::GetString(L"GeneratorProtocolHint")));
 
-                content.Children().Append(GeneratorCard(body));
+                content.Children().Append(Card(body));
             }
 
             // ------------------------------------------------ how often, and stopping
@@ -502,7 +454,7 @@ namespace winrt::midipatchbay::implementation
                 controls::StackPanel body{};
                 body.Spacing(4);
 
-                body.Children().Append(GeneratorHeading(resources::GetString(L"GeneratorSectionInterval")));
+                body.Children().Append(Heading(resources::GetString(L"GeneratorSectionInterval")));
 
                 auto interval = GeneratorNumberBox(resources::GetString(L"GeneratorInterval"),
                     midiapp::MinimumLfoIntervalMilliseconds, midiapp::MaximumLfoIntervalMilliseconds,
@@ -549,7 +501,7 @@ namespace winrt::midipatchbay::implementation
                 center.Unchecked([setCenter](auto&&, auto&&) { setCenter(false); });
 
                 body.Children().Append(center);
-                body.Children().Append(GeneratorHint(resources::GetString(L"GeneratorReturnToCenterHint")));
+                body.Children().Append(HeadingHint(resources::GetString(L"GeneratorReturnToCenterHint")));
 
                 controls::CheckBox startStop{};
 
@@ -570,9 +522,9 @@ namespace winrt::midipatchbay::implementation
                 startStop.Unchecked([setStartStop](auto&&, auto&&) { setStartStop(false); });
 
                 body.Children().Append(startStop);
-                body.Children().Append(GeneratorHint(resources::GetString(L"GeneratorLfoStartStopHint")));
+                body.Children().Append(HeadingHint(resources::GetString(L"GeneratorLfoStartStopHint")));
 
-                content.Children().Append(GeneratorCard(body));
+                content.Children().Append(Card(body));
             }
 
             RefreshLfoMessageUi();
@@ -624,43 +576,6 @@ namespace winrt::midipatchbay::implementation
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to update the LFO message settings.")
-    }
-
-    _Use_decl_annotations_
-    controls::Grid MainWindow::BuildGeneratorGroupCard(uint8_t* group) noexcept
-    {
-        try
-        {
-            auto weak = get_weak();
-
-            controls::StackPanel body{};
-            body.Spacing(4);
-
-            body.Children().Append(GeneratorHeading(resources::GetString(L"GeneratorSectionGroup")));
-            body.Children().Append(GeneratorHint(resources::GetString(L"GeneratorGroupHint")));
-
-            auto choices = SixteenChoices(resources::GetString(L"GeneratorGroup"), L"FilterGroupFormat", *group);
-
-            // The pointer is into the dialog's working copy, which lives as long as the window.
-            choices.SelectionChanged([weak, group](foundation::IInspectable const& sender, auto&&)
-                {
-                    auto s = weak.get();
-                    auto const combo = sender.try_as<controls::ComboBox>();
-
-                    if (s != nullptr && combo != nullptr && combo.SelectedIndex() >= 0)
-                    {
-                        *group = static_cast<uint8_t>(combo.SelectedIndex());
-                        s->UpdateBlockSummary();
-                    }
-                });
-
-            body.Children().Append(choices);
-
-            return GeneratorCard(body);
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the group section.")
-
-        return controls::Grid{};
     }
 
     // An LFO with anything connected to its In follows that clock, the same rule the routing uses.

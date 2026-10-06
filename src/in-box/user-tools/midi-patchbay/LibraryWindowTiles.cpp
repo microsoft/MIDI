@@ -17,6 +17,7 @@
 #include "PatchLayout.h"
 #include "RoundedShape.h"
 #include "StringResources.h"
+#include "TextMatch.h"
 
 using namespace winrt::Microsoft::UI::Xaml;
 
@@ -67,37 +68,8 @@ namespace winrt::midipatchbay::implementation
             return patchbay::ThemeBrushes::Current().Get(key);
         }
 
-        // Case-insensitive, the way a person expects a search box to work.
-        bool ContainsText(_In_ std::wstring_view text, _In_ std::wstring_view search) noexcept
-        {
-            if (search.empty())
-            {
-                return true;
-            }
-
-            if (text.empty())
-            {
-                return false;
-            }
-
-            return ::FindNLSStringEx(
-                LOCALE_NAME_USER_DEFAULT,
-                FIND_FROMSTART | LINGUISTIC_IGNORECASE,
-                text.data(), static_cast<int>(text.size()),
-                search.data(), static_cast<int>(search.size()),
-                nullptr, nullptr, nullptr, 0) >= 0;
-        }
-
-        // DoubleCollection has no initializer list constructor in this projection.
-        media::DoubleCollection MakeDashArray(_In_ double on, _In_ double off) noexcept
-        {
-            media::DoubleCollection collection{};
-
-            collection.Append(on);
-            collection.Append(off);
-
-            return collection;
-        }
+        using patchbay::ContainsText;
+        using patchbay::MakeDashArray;
 
         std::wstring FormatDate(_In_ int64_t secondsSince1970, _In_ wchar_t const* picture) noexcept
         {
@@ -182,7 +154,8 @@ namespace winrt::midipatchbay::implementation
                     }
                 }
 
-                return FormatDate(secondsSince1970, L"MMM d");
+                // The order of month and day is the language's, so the picture is a resource.
+                return FormatDate(secondsSince1970, resources::GetString(L"DateMonthDayPicture").c_str());
             }
             catch (...)
             {
@@ -385,7 +358,7 @@ namespace winrt::midipatchbay::implementation
         }
 
         // A button laid over a tile's map, solid so the map doesn't show through it.
-        controls::Button MakeMapButton() noexcept
+        controls::Button MakeMapButton()
         {
             controls::Button button{};
 

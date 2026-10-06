@@ -8,23 +8,13 @@
 #include "pch.h"
 #include "CiFileStore.h"
 #include "PatchStore.h"
+#include "TextMatch.h"
 
 #include <fstream>
 #include <iterator>
 
 namespace midipatchbay
 {
-    namespace
-    {
-        std::wstring LowerCopy(_In_ std::wstring value)
-        {
-            std::transform(value.begin(), value.end(), value.begin(),
-                [](wchar_t c) { return static_cast<wchar_t>(::towlower(c)); });
-
-            return value;
-        }
-    }
-
     CiFileStore& CiFileStore::Current() noexcept
     {
         static CiFileStore instance{};

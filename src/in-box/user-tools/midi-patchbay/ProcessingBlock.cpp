@@ -667,16 +667,38 @@ namespace midipatchbay
 
         json::JsonObject ReadObject(_In_ json::JsonObject const& object, _In_ std::wstring_view key) noexcept
         {
-            auto const value = GetValue(object, key);
+            try
+            {
+                auto const value = GetValue(object, key);
 
-            return value != nullptr && value.ValueType() == json::JsonValueType::Object ? value.GetObject() : nullptr;
+                if (value != nullptr && value.ValueType() == json::JsonValueType::Object)
+                {
+                    return value.GetObject();
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return nullptr;
         }
 
         json::JsonArray ReadArray(_In_ json::JsonObject const& object, _In_ std::wstring_view key) noexcept
         {
-            auto const value = GetValue(object, key);
+            try
+            {
+                auto const value = GetValue(object, key);
 
-            return value != nullptr && value.ValueType() == json::JsonValueType::Array ? value.GetArray() : nullptr;
+                if (value != nullptr && value.ValueType() == json::JsonValueType::Array)
+                {
+                    return value.GetArray();
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return nullptr;
         }
 
         // MIDI-CI numbers, 0 to 127 each.
@@ -837,28 +859,34 @@ namespace midipatchbay
             trigger.Test = ReadName(item, KeyTest, GateTestNames, GateValueTest::Any);
             trigger.Value = static_cast<uint8_t>(std::floor(ReadNumber(item, KeyValue, 0, 127, 64)));
 
-            if (auto const words = ReadArray(item, KeyMessageWords))
+            try
             {
-                uint8_t count{ 0 };
-
-                for (auto const& value : words)
+                if (auto const words = ReadArray(item, KeyMessageWords))
                 {
-                    if (count >= MaximumUmpWords || value.ValueType() != json::JsonValueType::Number)
+                    uint8_t count{ 0 };
+
+                    for (auto const& value : words)
                     {
-                        break;
+                        if (count >= MaximumUmpWords || value.ValueType() != json::JsonValueType::Number)
+                        {
+                            break;
+                        }
+
+                        auto const number = value.GetNumber();
+
+                        if (!std::isfinite(number) || number < 0 || number > 0xFFFFFFFF)
+                        {
+                            break;
+                        }
+
+                        trigger.Words[count++] = static_cast<uint32_t>(number);
                     }
 
-                    auto const number = value.GetNumber();
-
-                    if (!std::isfinite(number) || number < 0 || number > 0xFFFFFFFF)
-                    {
-                        break;
-                    }
-
-                    trigger.Words[count++] = static_cast<uint32_t>(number);
+                    trigger.WordCount = (std::max)(count, uint8_t{ 1 });
                 }
-
-                trigger.WordCount = (std::max)(count, uint8_t{ 1 });
+            }
+            catch (...)
+            {
             }
 
             return trigger;

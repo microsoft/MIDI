@@ -63,6 +63,14 @@
   <data name="AppDisplayName" xml:space="preserve">
     <value>Windows MIDI Patchbay</value>
   </data>
+  <data name="RoutingSessionName" xml:space="preserve">
+    <value>MIDI Patchbay</value>
+    <comment>The name other MIDI tools, such as MIDI Settings, show for the connections this app opens to route patches.</comment>
+  </data>
+  <data name="LearnSessionName" xml:space="preserve">
+    <value>MIDI Patchbay learn</value>
+    <comment>The name other MIDI tools show for the connection this app opens while a step's Learn button listens to a device.</comment>
+  </data>
 
   <!-- ============================================================== title bar -->
   <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
@@ -490,9 +498,6 @@
   </data>
 
   <!-- =========================================================== transforms -->
-  <data name="TransformSectionTranspose" xml:space="preserve">
-    <value>Transpose</value>
-  </data>
   <data name="TransformSectionTransposeHint" xml:space="preserve">
     <value>Transposing shifts every note, including aftertouch and the MIDI 2.0 per note messages. A note pushed past either end is clamped rather than wrapped, so nothing lands an octave out.</value>
   </data>
@@ -664,59 +669,11 @@
   <data name="TransformTestFailed" xml:space="preserve">
     <value>That note could not be sent to the destination endpoint.</value>
   </data>
-  <data name="TransformSummaryNothing" xml:space="preserve">
-    <value>Nothing, messages are passed through as they are</value>
-  </data>
-  <data name="TransformSummaryTransposeFormat" xml:space="preserve">
-    <value>Transpose {0} semitones</value>
-  </data>
-  <data name="TransformSummaryNoteMapFormat" xml:space="preserve">
-    <value>{0} note mappings</value>
-  </data>
-  <data name="TransformSummaryOneNoteMap" xml:space="preserve">
-    <value>1 note mapping</value>
-  </data>
-  <data name="TransformSummaryControlMapFormat" xml:space="preserve">
-    <value>{0} control change mappings</value>
-  </data>
-  <data name="TransformSummaryOneControlMap" xml:space="preserve">
-    <value>1 control change mapping</value>
-  </data>
   <data name="TransformNoteFrom" xml:space="preserve">
     <value>From note</value>
   </data>
   <data name="TransformNoteTo" xml:space="preserve">
     <value>To note</value>
-  </data>
-  <data name="TransformSummaryCurved" xml:space="preserve">
-    <value>Velocity linear to curved</value>
-  </data>
-  <data name="TransformSummaryLinear" xml:space="preserve">
-    <value>Velocity curved to linear</value>
-  </data>
-  <data name="TransformSummaryVelocityRangeFormat" xml:space="preserve">
-    <value>Velocity {0} to {1}</value>
-  </data>
-  <data name="TransformSummaryFixedVelocityFormat" xml:space="preserve">
-    <value>Every note at velocity {0}</value>
-  </data>
-  <data name="TransformSummaryChannelMapFormat" xml:space="preserve">
-    <value>{0} channel mappings</value>
-  </data>
-  <data name="TransformSummaryOneChannelMap" xml:space="preserve">
-    <value>1 channel mapping</value>
-  </data>
-  <data name="TransformSummaryProgramMapFormat" xml:space="preserve">
-    <value>{0} program mappings</value>
-  </data>
-  <data name="TransformSummaryOneProgramMap" xml:space="preserve">
-    <value>1 program mapping</value>
-  </data>
-  <data name="TransformSummaryBankMapFormat" xml:space="preserve">
-    <value>{0} bank mappings</value>
-  </data>
-  <data name="TransformSummaryOneBankMap" xml:space="preserve">
-    <value>1 bank mapping</value>
   </data>
   <!-- A percentage with two decimal places. {0} is the whole part and {1} the hundredths, so a
        language that writes 56,69 changes the separator here. -->
@@ -773,24 +730,6 @@
   <data name="TransformShapeOutputHigh" xml:space="preserve">
     <value>Output high</value>
   </data>
-  <data name="TransformSummaryAftertouchSlowRise" xml:space="preserve">
-    <value>Aftertouch slow rise</value>
-  </data>
-  <data name="TransformSummaryAftertouchFastRise" xml:space="preserve">
-    <value>Aftertouch fast rise</value>
-  </data>
-  <data name="TransformSummaryAftertouchInputFormat" xml:space="preserve">
-    <value>Aftertouch input {0} to {1}</value>
-  </data>
-  <data name="TransformSummaryAftertouchOutputFormat" xml:space="preserve">
-    <value>Aftertouch output {0} to {1}</value>
-  </data>
-  <data name="TransformSummaryControlValueFormat" xml:space="preserve">
-    <value>Values changed on {0} controllers</value>
-  </data>
-  <data name="TransformSummaryOneControlValue" xml:space="preserve">
-    <value>Values changed on 1 controller</value>
-  </data>
 
   <!-- ============================================================== filters -->
   <data name="FilterSectionMessageTypes" xml:space="preserve">
@@ -810,9 +749,6 @@
   </data>
   <data name="FilterSectionSystemHint" xml:space="preserve">
     <value>Clock and active sensing are the two most often taken out of a route.</value>
-  </data>
-  <data name="FilterSectionChannels" xml:space="preserve">
-    <value>Channels</value>
   </data>
   <data name="FilterSectionChannelsHint" xml:space="preserve">
     <value>Only applies to channel messages. Everything else ignores this.</value>
@@ -1962,6 +1898,10 @@
   <data name="DateYesterday" xml:space="preserve">
     <value>Yesterday</value>
   </data>
+  <data name="DateMonthDayPicture" xml:space="preserve">
+    <value>MMM d</value>
+    <comment>A Windows date picture for a patch changed more than a week ago, such as Sep 30. MMM is the short month name and d is the day. Put them in the order your language uses, such as d MMM. Do not translate the letters themselves.</comment>
+  </data>
   <data name="TileMenuOpen" xml:space="preserve">
     <value>Open</value>
   </data>
@@ -2359,9 +2299,6 @@
   <data name="FilterSectionControllersHint" xml:space="preserve">
     <value>Picks out control change messages by controller number. Everything else goes through.</value>
   </data>
-  <data name="FilterSectionGroups" xml:space="preserve">
-    <value>Groups</value>
-  </data>
   <data name="FilterSectionGroupsHint" xml:space="preserve">
     <value>Messages in the groups you don't check are kept out. Messages that have no group always go through.</value>
   </data>
@@ -2373,9 +2310,6 @@
   </data>
   <data name="FilterSelectNone" xml:space="preserve">
     <value>Select none</value>
-  </data>
-  <data name="FilterSectionVelocities" xml:space="preserve">
-    <value>Velocities</value>
   </data>
   <data name="FilterSectionVelocitiesHint" xml:space="preserve">
     <value>Picks out notes by how hard they're played. Note offs always go through, so no note is left sounding.</value>
@@ -2750,12 +2684,6 @@
     <value>{0} of the clock connected to its In, so the tempo here isn't used. A Start from that clock puts the sweep back at the beginning of a pass.</value>
     <comment>{0} is a number of beats, such as "4 beats" or "1 beat".</comment>
   </data>
-  <data name="GeneratorSectionTempo" xml:space="preserve">
-    <value>Tempo</value>
-  </data>
-  <data name="GeneratorClockTempoHint" xml:space="preserve">
-    <value>The clock sends 24 pulses for every beat. A change here takes effect while the patch is routing, without restarting the clock.</value>
-  </data>
   <data name="GeneratorBeatsPerMinute" xml:space="preserve">
     <value>Tempo in beats per minute</value>
   </data>
@@ -2764,9 +2692,6 @@
   </data>
   <data name="GeneratorSendStartStopHint" xml:space="preserve">
     <value>Start goes out when the patch starts routing and Stop when it stops, so a sequencer or drum machine plays along with the clock.</value>
-  </data>
-  <data name="GeneratorSectionSwing" xml:space="preserve">
-    <value>Swing</value>
   </data>
   <data name="GeneratorSwingPercent" xml:space="preserve">
     <value>Swing %</value>
@@ -2787,17 +2712,8 @@
   <data name="GeneratorSwingSixteenths" xml:space="preserve">
     <value>Sixteenth notes</value>
   </data>
-  <data name="GeneratorSectionGroup" xml:space="preserve">
-    <value>Group</value>
-  </data>
   <data name="GeneratorGroupHint" xml:space="preserve">
     <value>The group it sends on when it's connected to a whole endpoint. A connection to one group or port sends it there instead.</value>
-  </data>
-  <data name="GeneratorSectionTimeCode" xml:space="preserve">
-    <value>Time code</value>
-  </data>
-  <data name="GeneratorTimeCodeHint" xml:space="preserve">
-    <value>Time code starts from the start time each time the patch starts routing.</value>
   </data>
   <data name="GeneratorFrameRate" xml:space="preserve">
     <value>Frame rate</value>
@@ -2908,9 +2824,6 @@
   </data>
   <data name="GeneratorReturnToCenterHint" xml:space="preserve">
     <value>Sends the middle of the range as it stops, so a pitch bend isn't left bent.</value>
-  </data>
-  <data name="DividerSection" xml:space="preserve">
-    <value>Divide the clock</value>
   </data>
   <data name="DividerHint" xml:space="preserve">
     <value>Lets the first clock pulse through, then one in every so many after it. Start, Stop and Continue go through as they are, and a song position is divided to match.</value>

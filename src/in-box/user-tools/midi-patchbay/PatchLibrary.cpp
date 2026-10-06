@@ -203,7 +203,7 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    bool PatchLibrary::Remove(std::wstring const& key) noexcept
+    bool PatchLibrary::Remove(std::wstring key) noexcept
     {
         try
         {
@@ -688,6 +688,10 @@ namespace midipatchbay
             // A copy, because a listener can close a window and unsubscribe while this runs.
             auto const listeners = m_listeners;
 
+            // A copy too: a listener can free or change the string the caller's key refers to,
+            // such as the notification area menu item a patch was turned on from.
+            std::wstring const changedKey{ key };
+
             for (auto const& [token, listener] : listeners)
             {
                 auto const stillSubscribed = std::any_of(m_listeners.begin(), m_listeners.end(),
@@ -695,7 +699,7 @@ namespace midipatchbay
 
                 if (stillSubscribed && listener)
                 {
-                    listener(change, key);
+                    listener(change, changedKey);
                 }
             }
         }

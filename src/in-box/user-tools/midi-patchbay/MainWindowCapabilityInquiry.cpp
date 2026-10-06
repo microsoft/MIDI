@@ -12,11 +12,12 @@
 #include "MainWindow.xaml.h"
 
 #include "CiFileStore.h"
+#include "DialogParts.h"
 #include "PatchLibrary.h"
 #include "PatchStore.h"
 #include "RouteEngine.h"
 #include "StringResources.h"
-#include "ThemeBrushes.h"
+#include "TextMatch.h"
 
 using namespace winrt::Microsoft::UI::Xaml;
 
@@ -35,19 +36,11 @@ namespace winrt::midipatchbay::implementation
         // Problems listed under a file that has them.
         constexpr size_t ShownProblems = 3;
 
-        controls::TextBlock Hint(_In_ winrt::hstring const& text) noexcept
-        {
-            controls::TextBlock block{};
+        using patchbay::HexDigit;
+        using patchbay::parts::Check;
+        using patchbay::parts::Hint;
 
-            block.Text(text);
-            block.FontSize(11);
-            block.TextWrapping(xaml::TextWrapping::Wrap);
-            block.Foreground(patchbay::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
-
-            return block;
-        }
-
-        controls::TextBlock Caption() noexcept
+        controls::TextBlock Caption()
         {
             controls::TextBlock block{};
 
@@ -57,29 +50,16 @@ namespace winrt::midipatchbay::implementation
             return block;
         }
 
-        controls::TextBlock Heading(_In_ winrt::hstring const& text) noexcept
+        controls::TextBlock Heading(_In_ winrt::hstring const& text)
         {
-            controls::TextBlock block{};
+            auto block = patchbay::parts::Heading(text);
 
-            block.Text(text);
-            block.FontSize(13);
-            block.FontWeight(winrt::Microsoft::UI::Text::FontWeights::SemiBold());
             block.Margin(xaml::ThicknessHelper::FromLengths(0, 6, 0, 0));
 
             return block;
         }
 
-        controls::CheckBox Check(_In_ winrt::hstring const& text, _In_ bool value) noexcept
-        {
-            controls::CheckBox check{};
-
-            check.Content(winrt::box_value(text));
-            check.IsChecked(value);
-
-            return check;
-        }
-
-        controls::TextBox TextField(_In_ winrt::hstring const& header, _In_ std::wstring const& text, _In_ int32_t maximumLength) noexcept
+        controls::TextBox TextField(_In_ winrt::hstring const& header, _In_ std::wstring const& text, _In_ int32_t maximumLength)
         {
             controls::TextBox box{};
 
@@ -95,19 +75,11 @@ namespace winrt::midipatchbay::implementation
             _In_ winrt::hstring const& header,
             _In_ double minimum,
             _In_ double maximum,
-            _In_ double value) noexcept
+            _In_ double value)
         {
-            controls::NumberBox box{};
+            auto box = patchbay::parts::NumberBox(header, minimum, maximum, value, 16);
 
-            box.Header(winrt::box_value(header));
-            box.Minimum(minimum);
-            box.Maximum(maximum);
-            box.SmallChange(1);
-            box.LargeChange(16);
             box.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
-            box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Inline);
-            box.ValidationMode(controls::NumberBoxValidationMode::InvalidInputOverwritten);
-            box.Value(value);
 
             return box;
         }
@@ -161,15 +133,6 @@ namespace winrt::midipatchbay::implementation
             }
 
             return text;
-        }
-
-        int HexDigit(_In_ wchar_t c) noexcept
-        {
-            if (c >= L'0' && c <= L'9') { return c - L'0'; }
-            if (c >= L'a' && c <= L'f') { return c - L'a' + 10; }
-            if (c >= L'A' && c <= L'F') { return c - L'A' + 10; }
-
-            return -1;
         }
 
         // One byte or three, in hex: "41" is 41 00 00. Each byte is 7 bits.

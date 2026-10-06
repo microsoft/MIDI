@@ -18,6 +18,7 @@
 #include "PatchLayout.h"
 #include "PatchStore.h"
 #include "StringResources.h"
+#include "TextMatch.h"
 #include "resource.h"
 
 using namespace winrt::Microsoft::UI::Xaml;
@@ -34,10 +35,7 @@ namespace winrt::midipatchbay::implementation
 
         constexpr int32_t RefreshIntervalMilliseconds = 500;
 
-        bool SameText(_In_ std::wstring const& left, _In_ std::wstring const& right) noexcept
-        {
-            return ::CompareStringOrdinal(left.c_str(), -1, right.c_str(), -1, TRUE) == CSTR_EQUAL;
-        }
+        using patchbay::SameText;
 
         media::Brush Brush(_In_ std::wstring_view key) noexcept
         {
@@ -248,7 +246,7 @@ namespace winrt::midipatchbay::implementation
 
             // Closing is turned into a hide when the customer has asked the app to keep running.
             // Otherwise closing the library closes the app, which asks first if that stops a route.
-            m_closingToken = AppWindow().Closing(
+            AppWindow().Closing(
                 [weak](auto&&, windowing::AppWindowClosingEventArgs const& args)
                 {
                     auto strong = weak.get();
@@ -274,7 +272,7 @@ namespace winrt::midipatchbay::implementation
                 });
 
             // Minimizing goes the same way, so the app is in one place rather than two.
-            m_windowChangedToken = AppWindow().Changed(
+            AppWindow().Changed(
                 [weak](windowing::AppWindow const& sender, windowing::AppWindowChangedEventArgs const& args)
                 {
                     if (!args.DidPresenterChange() && !args.DidVisibilityChange())
@@ -299,7 +297,7 @@ namespace winrt::midipatchbay::implementation
                     }
                 });
 
-            m_closedToken = this->Closed([weak](auto&&, auto&&)
+            this->Closed([weak](auto&&, auto&&)
                 {
                     auto strong = weak.get();
 
@@ -1003,6 +1001,7 @@ namespace winrt::midipatchbay::implementation
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to duplicate the patch.")
     }
 
+    _Use_decl_annotations_
     winrt::fire_and_forget LibraryWindow::DeletePatchAsync(std::wstring key)
     {
         auto strong = get_strong();

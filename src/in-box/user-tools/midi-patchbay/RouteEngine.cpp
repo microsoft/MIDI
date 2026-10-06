@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "RouteEngine.h"
 #include "StringResources.h"
+#include "TextMatch.h"
 
 #include "BeatClockGenerator.h"
 #include "LfoMessageGenerator.h"
@@ -30,8 +31,6 @@ namespace midipatchbay
         // What a throttle takes from its queue at a time.
         constexpr uint32_t ThrottleBatchWords = 256;
 
-        constexpr wchar_t SessionName[] = L"MIDI Patchbay";
-
         // Long enough to hear, short enough that the button does not feel stuck.
         constexpr uint32_t TestNoteMilliseconds = 350;
 
@@ -40,12 +39,33 @@ namespace midipatchbay
         constexpr uint64_t DrainMarginMilliseconds = 25;
         constexpr uint64_t LongestDrainMilliseconds = 2000;
 
-        std::wstring LowerCopy(_In_ std::wstring value) noexcept
+        // At MIDI 1.0 wire speed, a message can be due every millisecond or so, so the timer is
+        // high resolution where there is one.
+        wil::unique_handle CreatePaceTimer() noexcept
         {
-            std::transform(value.begin(), value.end(), value.begin(),
-                [](wchar_t c) { return static_cast<wchar_t>(::towlower(c)); });
+            wil::unique_handle timer{ ::CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS) };
 
-            return value;
+            if (!timer)
+            {
+                timer.reset(::CreateWaitableTimerExW(nullptr, nullptr, 0, TIMER_ALL_ACCESS));
+            }
+
+            return timer;
+        }
+
+        void ArmPaceTimer(_In_ HANDLE timer, _In_ uint64_t ticksPerSecond, _In_ uint64_t ticks) noexcept
+        {
+            if (ticksPerSecond == 0)
+            {
+                return;
+            }
+
+            // relative, in 100 nanosecond units, and never zero
+            LARGE_INTEGER dueTime{};
+            dueTime.QuadPart = -static_cast<LONGLONG>((std::max)((ticks * 10'000'000ull) / ticksPerSecond, 1ull));
+
+            // If this fails, the next message to arrive still wakes the thread, only later
+            LOG_IF_WIN32_BOOL_FALSE(::SetWaitableTimer(timer, &dueTime, 0, nullptr, nullptr, FALSE));
         }
     }
 
@@ -113,13 +133,7 @@ namespace midipatchbay
                     return false;
                 }
 
-                // At MIDI 1.0 wire speed, a message can be due every millisecond or so
-                m_paceTimer.reset(::CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS));
-
-                if (!m_paceTimer)
-                {
-                    m_paceTimer.reset(::CreateWaitableTimerExW(nullptr, nullptr, 0, TIMER_ALL_ACCESS));
-                }
+                m_paceTimer = CreatePaceTimer();
 
                 if (!m_paceTimer)
                 {
@@ -191,7 +205,7 @@ namespace midipatchbay
 
                     if (waitTicks > 0)
                     {
-                        ArmPaceTimer(waitTicks);
+                        ArmPaceTimer(m_paceTimer.get(), m_ticksPerSecond, waitTicks);
                     }
                 }
             }
@@ -247,21 +261,6 @@ namespace midipatchbay
             }
 
             return earliestWait;
-        }
-
-        void ArmPaceTimer(_In_ uint64_t const ticks) noexcept
-        {
-            if (m_ticksPerSecond == 0)
-            {
-                return;
-            }
-
-            // relative, in 100 nanosecond units, and never zero
-            LARGE_INTEGER dueTime{};
-            dueTime.QuadPart = -static_cast<LONGLONG>((std::max)((ticks * 10'000'000ull) / m_ticksPerSecond, 1ull));
-
-            // If this fails, the next message to arrive still wakes the thread, only later
-            LOG_IF_WIN32_BOOL_FALSE(::SetWaitableTimer(m_paceTimer.get(), &dueTime, 0, nullptr, nullptr, FALSE));
         }
 
         std::vector<uint32_t> m_buffer{};
@@ -351,12 +350,7 @@ namespace midipatchbay
                     return false;
                 }
 
-                m_paceTimer.reset(::CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS));
-
-                if (!m_paceTimer)
-                {
-                    m_paceTimer.reset(::CreateWaitableTimerExW(nullptr, nullptr, 0, TIMER_ALL_ACCESS));
-                }
+                m_paceTimer = CreatePaceTimer();
 
                 if (!m_paceTimer)
                 {
@@ -441,7 +435,7 @@ namespace midipatchbay
 
                     if (waitTicks > 0)
                     {
-                        ArmPaceTimer(waitTicks);
+                        ArmPaceTimer(m_paceTimer.get(), m_ticksPerSecond, waitTicks);
                     }
                 }
             }
@@ -454,21 +448,6 @@ namespace midipatchbay
         // long until the next message may go, or zero when nothing is waiting. Defined after
         // Runtime, which it reads.
         uint64_t RunWhatIsAllowed() noexcept;
-
-        void ArmPaceTimer(_In_ uint64_t const ticks) noexcept
-        {
-            if (m_ticksPerSecond == 0)
-            {
-                return;
-            }
-
-            // relative, in 100 nanosecond units, and never zero
-            LARGE_INTEGER dueTime{};
-            dueTime.QuadPart = -static_cast<LONGLONG>((std::max)((ticks * 10'000'000ull) / m_ticksPerSecond, 1ull));
-
-            // If this fails, the next message to arrive still wakes the thread, only later
-            LOG_IF_WIN32_BOOL_FALSE(::SetWaitableTimer(m_paceTimer.get(), &dueTime, 0, nullptr, nullptr, FALSE));
-        }
 
         std::array<uint32_t, ThrottleBatchWords> m_buffer{};
 
@@ -617,11 +596,11 @@ namespace midipatchbay
         }
 
         STDMETHOD(MessagesReceived)(
-            GUID sessionId,
-            GUID connectionId,
-            UINT64 timestamp,
-            UINT32 wordCount,
-            UINT32 const* messages) override
+            _In_ GUID sessionId,
+            _In_ GUID connectionId,
+            _In_ UINT64 timestamp,
+            _In_ UINT32 wordCount,
+            _In_ UINT32 const* messages) override
         {
             UNREFERENCED_PARAMETER(sessionId);
             UNREFERENCED_PARAMETER(connectionId);
@@ -1138,11 +1117,9 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    std::shared_ptr<RouteEngine::Runtime> RouteEngine::Publish(std::shared_ptr<Runtime> runtime, size_t activeRoutes) noexcept
+    std::shared_ptr<RouteEngine::Runtime> RouteEngine::Publish(std::shared_ptr<Runtime> runtime) noexcept
     {
         std::scoped_lock guard{ m_publishLock };
-
-        m_activeRoutes = activeRoutes;
 
         return std::exchange(m_runtime, std::move(runtime));
     }
@@ -1208,7 +1185,7 @@ namespace midipatchbay
                 }
             }
 
-            if (auto const previous = Publish(nullptr, 0))
+            if (auto const previous = Publish(nullptr))
             {
                 previous->StopThreads();
             }
@@ -1270,7 +1247,7 @@ namespace midipatchbay
                     return;
                 }
 
-                m_session = midi2::MidiSession::Create(SessionName);
+                m_session = midi2::MidiSession::Create(resources::GetString(L"RoutingSessionName"));
 
                 if (m_session == nullptr)
                 {
@@ -1515,7 +1492,6 @@ namespace midipatchbay
             }
 
             // Pass six: what each source does with what arrives from it.
-            size_t activeRoutes{ 0 };
             std::map<ConnectionKey, std::shared_ptr<HubPlan>> plans{};
 
             for (size_t i = 0; i < routes.Roots.size(); i++)
@@ -1539,7 +1515,6 @@ namespace midipatchbay
                 }
 
                 plan->Roots.push_back(static_cast<uint32_t>(i));
-                activeRoutes++;
             }
 
             // Pass seven: generators that stop, because their patch no longer routes them or a
@@ -1684,10 +1659,7 @@ namespace midipatchbay
                 {
                     SetLastError(resources::GetString(L"ErrorRoutingFailed"));
                     m_generators.erase(running);
-                    continue;
                 }
-
-                activeRoutes++;
             }
 
             // Pass eleven: the switch. Every open endpoint moves to its new plan, or to none.
@@ -1704,7 +1676,7 @@ namespace midipatchbay
             }
 
             // The graph this replaces stops once nothing new can reach it.
-            if (auto const previous = Publish(next, activeRoutes))
+            if (auto const previous = Publish(next))
             {
                 previous->StopThreads();
             }
@@ -1853,12 +1825,6 @@ namespace midipatchbay
         return m_lastError;
     }
 
-    size_t RouteEngine::ActiveRouteCount() const noexcept
-    {
-        std::scoped_lock guard{ m_publishLock };
-        return m_activeRoutes;
-    }
-
     _Use_decl_annotations_
     std::optional<::midipatchbay::CiResponderSnapshot> RouteEngine::CiResponderStatus(std::wstring const& cell) const noexcept
     {
@@ -1945,7 +1911,7 @@ namespace midipatchbay
                     return false;
                 }
 
-                temporarySession = midi2::MidiSession::Create(SessionName);
+                temporarySession = midi2::MidiSession::Create(resources::GetString(L"RoutingSessionName"));
 
                 if (temporarySession == nullptr)
                 {
@@ -1963,12 +1929,17 @@ namespace midipatchbay
                 raw = temporaryConnection.try_as<IMidiEndpointConnectionRaw>();
             }
 
+            // Run from a noexcept destructor, so a session that fails to close must not throw.
             auto const closeTemporary = wil::scope_exit([&temporarySession]()
                 {
-                    if (temporarySession != nullptr)
+                    try
                     {
-                        temporarySession.Close();
+                        if (temporarySession != nullptr)
+                        {
+                            temporarySession.Close();
+                        }
                     }
+                    MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to close the test note's session.")
                 });
 
             if (raw == nullptr)

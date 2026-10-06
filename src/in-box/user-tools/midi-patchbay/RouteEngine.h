@@ -73,9 +73,6 @@ namespace midipatchbay
 
         winrt::hstring LastErrorMessage() const noexcept;
 
-        // Links out of a source endpoint that lead somewhere, and generators that are running.
-        size_t ActiveRouteCount() const noexcept;
-
         // What a MIDI-CI responder step has been doing, by its "patch key|block id". Nothing when
         // it isn't routing.
         std::optional<::midipatchbay::CiResponderSnapshot> CiResponderStatus(_In_ std::wstring const& cell) const noexcept;
@@ -111,7 +108,7 @@ namespace midipatchbay
         void TearDownLocked() noexcept;
 
         // Swaps in what the window reads, and hands back the graph it replaced.
-        std::shared_ptr<Runtime> Publish(_In_ std::shared_ptr<Runtime> runtime, _In_ size_t activeRoutes) noexcept;
+        std::shared_ptr<Runtime> Publish(_In_ std::shared_ptr<Runtime> runtime) noexcept;
 
         void SetLastError(_In_ winrt::hstring const& message) noexcept;
 
@@ -141,6 +138,5 @@ namespace midipatchbay
 
         std::wstring m_signature{};
         winrt::hstring m_lastError{};
-        size_t m_activeRoutes{ 0 };
     };
 }

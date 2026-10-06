@@ -30,8 +30,6 @@ namespace midipatchbay
     // "72" or "56.69%", for a summary line.
     winrt::hstring DescribeScaledValue(_In_ int32_t hundredths, _In_ ValueScale scale) noexcept;
 
-    winrt::hstring SummarizeTransform(_In_ MessageTransform const& transform) noexcept;
-
     // "1, 2, 5 - 8" rather than a list of sixteen numbers. Offset turns an index into what a
     // person counts from.
     std::wstring DescribeRuns(_In_reads_(count) bool const* values, _In_ size_t count, _In_ int offset) noexcept;

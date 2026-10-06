@@ -61,8 +61,9 @@ namespace midipatchbay
         // Takes in a patch read from somewhere else, or a copy of one already here.
         PatchDocument* Add(_In_ PatchDocument patch, _In_ bool routing) noexcept;
 
-        // Deletes the file as well.
-        bool Remove(_In_ std::wstring const& key) noexcept;
+        // Deletes the file as well. The key is a copy because the windows told about it can
+        // change the string a caller passed in, and it is used again after they are told.
+        bool Remove(_In_ std::wstring key) noexcept;
 
         bool IsRouting(_In_ std::wstring const& key) const noexcept;
         void SetRouting(_In_ std::wstring const& key, _In_ bool routing) noexcept;

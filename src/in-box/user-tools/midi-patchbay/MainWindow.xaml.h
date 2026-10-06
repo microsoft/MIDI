@@ -39,11 +39,11 @@ namespace winrt::midipatchbay::implementation
         // The theme or the backdrop changed in the library.
         void ApplyAppearance() noexcept;
 
-        void OnRootLoaded(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnRootLoaded(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
-        void OnSavePatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnPatchMenuClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnRoutingToggleClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnSavePatchClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPatchMenuClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnRoutingToggleClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnAutoStartToggled(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnAutoStartBarCloseClick(_In_ controls::InfoBar const& sender, _In_ foundation::IInspectable const& args);
         void OnNotRoutingStartClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -56,24 +56,24 @@ namespace winrt::midipatchbay::implementation
         void OnPasteClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnDeleteClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
-        void OnAddEndpointClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnCreateLoopbackClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnAutoArrangeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnZoomFitClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnZoomInClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnZoomOutClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnZoomApplyClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnZoomFlyoutOpening(foundation::IInspectable const& sender, foundation::IInspectable const& args);
-        void OnZoomValueChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
-        void OnTestClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAddEndpointClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnCreateLoopbackClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnAutoArrangeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnZoomFitClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnZoomInClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnZoomOutClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnZoomApplyClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnZoomFlyoutOpening(_In_ foundation::IInspectable const& sender, _In_ foundation::IInspectable const& args);
+        void OnZoomValueChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnTestClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
-        void OnShowLoopClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnInspectorCloseClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnShowLoopClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnInspectorCloseClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnLibraryButtonClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnConversionBarCloseClick(_In_ controls::InfoBar const& sender, _In_ foundation::IInspectable const& args);
 
-        void OnSavePatchNameChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
-        void OnLoopbackNameChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
+        void OnSavePatchNameChanged(_In_ foundation::IInspectable const& sender, _In_ controls::TextChangedEventArgs const& args);
+        void OnLoopbackNameChanged(_In_ foundation::IInspectable const& sender, _In_ controls::TextChangedEventArgs const& args);
 
         void OnPaletteTabChanged(
             _In_ controls::SelectorBar const& sender,
@@ -217,7 +217,7 @@ namespace winrt::midipatchbay::implementation
         void SetBlockBypassed(_In_ std::wstring const& blockId, _In_ bool bypassed) noexcept;
 
         // ---- step settings, in MainWindowFilters.cpp ----
-        winrt::fire_and_forget ShowBlockDialogAsync(std::wstring blockId);
+        winrt::fire_and_forget ShowBlockDialogAsync(_In_ std::wstring blockId);
         void BuildBlockDialog() noexcept;
         void UpdateBlockSummary() noexcept;
 
@@ -247,7 +247,6 @@ namespace winrt::midipatchbay::implementation
 
         // ---- generators, in MainWindowGenerators.cpp ----
         void BuildLfoGeneratorSections() noexcept;
-        controls::Grid BuildGeneratorGroupCard(_Inout_ uint8_t* group) noexcept;
         void RefreshLfoMessageUi() noexcept;
         void RefreshGeneratorCaptions() noexcept;
         bool LfoFollowsClock(_In_ std::wstring const& blockId) noexcept;
@@ -510,8 +509,6 @@ namespace winrt::midipatchbay::implementation
 
         bool m_loaded{ false };
         bool m_closing{ false };
-
-        winrt::event_token m_closedToken{};
     };
 }
 

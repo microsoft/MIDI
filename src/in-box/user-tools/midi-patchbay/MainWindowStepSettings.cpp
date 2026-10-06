@@ -10,6 +10,7 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 
+#include "DialogParts.h"
 #include "StringResources.h"
 #include "ThemeBrushes.h"
 
@@ -22,7 +23,11 @@ namespace winrt::midipatchbay::implementation
 {
     namespace
     {
-        controls::TextBlock Label(_In_ winrt::hstring const& text) noexcept
+        using patchbay::parts::Check;
+        using patchbay::parts::Hint;
+        using patchbay::parts::RoundedTempo;
+
+        controls::TextBlock Label(_In_ winrt::hstring const& text)
         {
             controls::TextBlock block{};
 
@@ -34,20 +39,8 @@ namespace winrt::midipatchbay::implementation
             return block;
         }
 
-        controls::TextBlock Hint(_In_ winrt::hstring const& text) noexcept
-        {
-            controls::TextBlock block{};
-
-            block.Text(text);
-            block.FontSize(11);
-            block.TextWrapping(xaml::TextWrapping::Wrap);
-            block.Foreground(patchbay::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
-
-            return block;
-        }
-
         // A line that follows a setting, such as which note middle C becomes.
-        controls::TextBlock Caption() noexcept
+        controls::TextBlock Caption()
         {
             controls::TextBlock block{};
 
@@ -61,19 +54,11 @@ namespace winrt::midipatchbay::implementation
             _In_ winrt::hstring const& header,
             _In_ double minimum,
             _In_ double maximum,
-            _In_ double value) noexcept
+            _In_ double value)
         {
-            controls::NumberBox box{};
+            auto box = patchbay::parts::NumberBox(header, minimum, maximum, value, 10);
 
-            box.Header(winrt::box_value(header));
-            box.Minimum(minimum);
-            box.Maximum(maximum);
-            box.SmallChange(1);
-            box.LargeChange(10);
             box.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
-            box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Inline);
-            box.ValidationMode(controls::NumberBoxValidationMode::InvalidInputOverwritten);
-            box.Value(value);
 
             return box;
         }
@@ -81,7 +66,7 @@ namespace winrt::midipatchbay::implementation
         controls::RadioButtons Choices(
             _In_ winrt::hstring const& header,
             _In_ std::initializer_list<winrt::hstring> items,
-            _In_ int32_t selected) noexcept
+            _In_ int32_t selected)
         {
             controls::RadioButtons list{};
 
@@ -98,7 +83,7 @@ namespace winrt::midipatchbay::implementation
         }
 
         // Sixteen choices counted from 1 on screen and stored from 0.
-        controls::ComboBox GroupChoices(_In_ int32_t selected) noexcept
+        controls::ComboBox GroupChoices(_In_ int32_t selected)
         {
             controls::ComboBox box{};
 
@@ -113,24 +98,6 @@ namespace winrt::midipatchbay::implementation
             box.SelectedIndex(std::clamp(selected, 0, 15));
 
             return box;
-        }
-
-        controls::CheckBox Check(_In_ winrt::hstring const& text, _In_ bool value) noexcept
-        {
-            controls::CheckBox check{};
-
-            check.Content(winrt::box_value(text));
-            check.IsChecked(value);
-
-            return check;
-        }
-
-        // Two places, the same as a summary shows.
-        double RoundedTempo(_In_ double value) noexcept
-        {
-            return std::round(std::clamp(value,
-                patchbay::MinimumGeneratorBeatsPerMinute,
-                patchbay::MaximumGeneratorBeatsPerMinute) * 100.0) / 100.0;
         }
 
         winrt::hstring SwingText(_In_ double percent) noexcept

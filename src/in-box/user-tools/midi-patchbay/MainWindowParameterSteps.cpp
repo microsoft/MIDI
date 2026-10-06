@@ -10,9 +10,8 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 
-#include "RoundedShape.h"
+#include "DialogParts.h"
 #include "StringResources.h"
-#include "ThemeBrushes.h"
 
 using namespace winrt::Microsoft::UI::Xaml;
 
@@ -23,40 +22,11 @@ namespace winrt::midipatchbay::implementation
 {
     namespace
     {
-        controls::TextBlock Heading(_In_ winrt::hstring const& text) noexcept
-        {
-            controls::TextBlock block{};
+        using patchbay::parts::Card;
+        using patchbay::parts::Heading;
+        using patchbay::parts::Hint;
 
-            block.Text(text);
-            block.FontSize(13);
-            block.FontWeight(winrt::Microsoft::UI::Text::FontWeights::SemiBold());
-
-            return block;
-        }
-
-        controls::TextBlock Hint(_In_ winrt::hstring const& text) noexcept
-        {
-            controls::TextBlock block{};
-
-            block.Text(text);
-            block.FontSize(11);
-            block.TextWrapping(xaml::TextWrapping::Wrap);
-            block.Foreground(patchbay::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
-
-            return block;
-        }
-
-        controls::Grid Card(_In_ xaml::UIElement const& content) noexcept
-        {
-            return patchbay::MakeRoundedPanel(
-                6,
-                patchbay::ThemeBrushes::Current().Get(L"CardBackgroundFillColorSecondaryBrush"),
-                patchbay::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"),
-                xaml::ThicknessHelper::FromLengths(12, 10, 12, 12),
-                content).Panel;
-        }
-
-        controls::StackPanel Row() noexcept
+        controls::StackPanel Row()
         {
             controls::StackPanel row{};
 
@@ -69,7 +39,7 @@ namespace winrt::midipatchbay::implementation
         controls::ComboBox Choices(
             _In_ winrt::hstring const& header,
             _In_ std::initializer_list<wchar_t const*> keys,
-            _In_ int32_t selected) noexcept
+            _In_ int32_t selected)
         {
             controls::ComboBox box{};
 
@@ -89,7 +59,7 @@ namespace winrt::midipatchbay::implementation
         controls::NumberBox OptionalNumber(
             _In_ winrt::hstring const& header,
             _In_ int32_t maximum,
-            _In_ int32_t value) noexcept
+            _In_ int32_t value)
         {
             controls::NumberBox box{};
 
@@ -113,7 +83,7 @@ namespace winrt::midipatchbay::implementation
                 : static_cast<int16_t>(std::clamp(std::lround(value), 0L, static_cast<long>(maximum)));
         }
 
-        controls::NumberBox PercentBox(_In_ winrt::hstring const& header, _In_ int32_t hundredths) noexcept
+        controls::NumberBox PercentBox(_In_ winrt::hstring const& header, _In_ int32_t hundredths)
         {
             controls::NumberBox box{};
 
@@ -129,7 +99,7 @@ namespace winrt::midipatchbay::implementation
             return box;
         }
 
-        controls::Button RemoveButton() noexcept
+        controls::Button RemoveButton()
         {
             controls::Button button{};
 
@@ -223,7 +193,7 @@ namespace winrt::midipatchbay::implementation
         }
 
         // Any, then 1 to 16 on screen, stored from 0.
-        controls::ComboBox SixteenOrAny(_In_ wchar_t const* headerKey, _In_ wchar_t const* itemFormat, _In_ int32_t value) noexcept
+        controls::ComboBox SixteenOrAny(_In_ wchar_t const* headerKey, _In_ wchar_t const* itemFormat, _In_ int32_t value)
         {
             controls::ComboBox box{};
 

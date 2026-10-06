@@ -10,6 +10,7 @@
 #include <windows.h>
 
 #include "RouteGraph.h"
+#include "TextMatch.h"
 
 #include <algorithm>
 #include <unordered_set>
@@ -36,14 +37,6 @@ namespace midipatchbay
             // The patch cannot route at all.
             Refused,
         };
-
-        std::wstring LowerCopy(_In_ std::wstring value)
-        {
-            std::transform(value.begin(), value.end(), value.begin(),
-                [](wchar_t c) { return static_cast<wchar_t>(::towlower(c)); });
-
-            return value;
-        }
 
         // What an LFO that follows a clock listens to: timing clock, start, continue, stop and
         // song position.

@@ -10,13 +10,14 @@
 #include <windows.h>
 
 #include "CapabilityInquiry.h"
+#include "SpinGuard.h"
+#include "TextMatch.h"
 
 #include <MidiCiProgramList.h>
 
 #include <algorithm>
 #include <cmath>
 #include <random>
-#include <thread>
 
 namespace ci = ::WindowsMidiServicesCapabilityInquiry;
 
@@ -182,31 +183,6 @@ namespace midipatchbay
 
         private:
             std::vector<uint32_t> m_words{};
-        };
-
-        // Held for one message at most, by every note through a responder.
-        class SpinGuard
-        {
-        public:
-            explicit SpinGuard(_Inout_ std::atomic_flag& flag) noexcept :
-                m_flag(flag)
-            {
-                while (m_flag.test_and_set(std::memory_order_acquire))
-                {
-                    std::this_thread::yield();
-                }
-            }
-
-            ~SpinGuard() noexcept
-            {
-                m_flag.clear(std::memory_order_release);
-            }
-
-            SpinGuard(SpinGuard const&) = delete;
-            SpinGuard& operator=(SpinGuard const&) = delete;
-
-        private:
-            std::atomic_flag& m_flag;
         };
 
         // MIDI 2.0's way of widening a value, so the top of the narrow range is the top of the
@@ -398,15 +374,6 @@ namespace midipatchbay
             }
 
             return false;
-        }
-
-        int HexDigit(_In_ wchar_t c) noexcept
-        {
-            if (c >= L'0' && c <= L'9') { return c - L'0'; }
-            if (c >= L'a' && c <= L'f') { return c - L'a' + 10; }
-            if (c >= L'A' && c <= L'F') { return c - L'A' + 10; }
-
-            return -1;
         }
 
         // Five numbers, or the same five as hex like "7E 21 00 01 01".
@@ -2333,7 +2300,6 @@ namespace midipatchbay
                 auto& slot = ClaimAssembly(state);
 
                 slot.Active = true;
-                slot.Collecting = true;
                 slot.KeepOut = !settings.PassMidiCi;
                 slot.Overflowed = false;
                 slot.Path = path;

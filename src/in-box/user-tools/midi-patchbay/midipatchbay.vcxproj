@@ -130,6 +130,7 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="BackgroundWork.h" />
     <ClInclude Include="CommandLineOptions.h" />
+    <ClInclude Include="DialogParts.h" />
     <ClInclude Include="MessageFilter.h" />
     <ClInclude Include="MessageText.h" />
     <ClInclude Include="MessageTransform.h" />
@@ -148,8 +149,10 @@
     <ClInclude Include="CiFileStore.h" />
     <ClInclude Include="RouteEngine.h" />
     <ClInclude Include="SendQueue.h" />
+    <ClInclude Include="SpinGuard.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
+    <ClInclude Include="TextMatch.h" />
     <ClInclude Include="ThemeBrushes.h" />
     <ClInclude Include="RoundedShape.h" />
     <ClInclude Include="TrayIcon.h" />

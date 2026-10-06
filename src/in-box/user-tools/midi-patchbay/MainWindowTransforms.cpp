@@ -9,6 +9,7 @@
 #include "MainWindow.xaml.h"
 
 #include "BackgroundWork.h"
+#include "DialogParts.h"
 #include "GeneralMidi.h"
 #include "RoundedShape.h"
 #include "StringResources.h"
@@ -82,63 +83,22 @@ namespace winrt::midipatchbay::implementation
             return sections[index < std::size(sections) ? index : 0];
         }
 
-        controls::TextBlock TransformHeading(_In_ winrt::hstring const& text) noexcept
+        using patchbay::parts::Card;
+        using patchbay::parts::Heading;
+        using patchbay::parts::HeadingHint;
+
+        controls::NumberBox SmallNumberBox(_In_ double minimum, _In_ double maximum, _In_ double value)
         {
-            controls::TextBlock block{};
-
-            block.Text(text);
-            block.FontSize(13);
-            block.FontWeight(winrt::Microsoft::UI::Text::FontWeights::SemiBold());
-
-            return block;
-        }
-
-        controls::TextBlock TransformHint(_In_ winrt::hstring const& text) noexcept
-        {
-            controls::TextBlock block{};
-
-            block.Text(text);
-            block.FontSize(11);
-            block.TextWrapping(xaml::TextWrapping::Wrap);
-            block.Margin(xaml::ThicknessHelper::FromLengths(0, -4, 0, 4));
-            block.Foreground(patchbay::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
-
-            return block;
-        }
-
-        controls::Grid TransformCard(_In_ xaml::UIElement const& content) noexcept
-        {
-            return patchbay::MakeRoundedPanel(
-                6,
-                patchbay::ThemeBrushes::Current().Get(L"CardBackgroundFillColorSecondaryBrush"),
-                patchbay::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"),
-                xaml::ThicknessHelper::FromLengths(12, 10, 12, 12),
-                content).Panel;
-        }
-
-        controls::NumberBox SmallNumberBox(_In_ double minimum, _In_ double maximum, _In_ double value) noexcept
-        {
-            controls::NumberBox box{};
-
-            box.Minimum(minimum);
-            box.Maximum(maximum);
-            box.SmallChange(1);
-            box.LargeChange(12);
+            auto box = patchbay::parts::NumberBox({}, minimum, maximum, value, 12);
 
             // Wide enough that the value is still readable once the clear button appears next to
             // the two inline spin buttons.
             box.Width(148);
 
-            // Inline, not Compact: the compact spin buttons live in a popup that the dialog's
-            // scroll viewer does not clip, so they hang over everything and never go away.
-            box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Inline);
-            box.ValidationMode(controls::NumberBoxValidationMode::InvalidInputOverwritten);
-            box.Value(value);
-
             return box;
         }
 
-        controls::FontIcon MapRowArrow() noexcept
+        controls::FontIcon MapRowArrow()
         {
             controls::FontIcon arrow{};
 
@@ -187,7 +147,7 @@ namespace winrt::midipatchbay::implementation
             }
         }
 
-        controls::Grid CurveFrame(_In_ controls::Canvas const& canvas, _In_ double size) noexcept
+        controls::Grid CurveFrame(_In_ controls::Canvas const& canvas, _In_ double size)
         {
             canvas.Width(size);
             canvas.Height(size);
@@ -356,7 +316,7 @@ namespace winrt::midipatchbay::implementation
             switch (m_editingKind)
             {
             case patchbay::BlockKind::ChannelMap:
-                content.Children().Append(TransformCard(BuildMapSection(TransformMap::Channel)));
+                content.Children().Append(Card(BuildMapSection(TransformMap::Channel)));
                 break;
 
             case patchbay::BlockKind::GroupMap:
@@ -364,7 +324,7 @@ namespace winrt::midipatchbay::implementation
                 break;
 
             case patchbay::BlockKind::NoteMap:
-                content.Children().Append(TransformCard(BuildMapSection(TransformMap::Note)));
+                content.Children().Append(Card(BuildMapSection(TransformMap::Note)));
                 BuildTransposeSection();
                 break;
 
@@ -375,21 +335,21 @@ namespace winrt::midipatchbay::implementation
 
             case patchbay::BlockKind::Aftertouch:
                 BuildValueScaleSection();
-                content.Children().Append(TransformCard(BuildAftertouchSection()));
+                content.Children().Append(Card(BuildAftertouchSection()));
                 break;
 
             case patchbay::BlockKind::ControlChangeMap:
-                content.Children().Append(TransformCard(BuildMapSection(TransformMap::Control)));
+                content.Children().Append(Card(BuildMapSection(TransformMap::Control)));
                 break;
 
             case patchbay::BlockKind::ControlChangeValue:
                 BuildValueScaleSection();
-                content.Children().Append(TransformCard(BuildControlValueSection()));
+                content.Children().Append(Card(BuildControlValueSection()));
                 break;
 
             case patchbay::BlockKind::ProgramMap:
             {
-                content.Children().Append(TransformCard(BuildMapSection(TransformMap::Program)));
+                content.Children().Append(Card(BuildMapSection(TransformMap::Program)));
 
                 controls::StackPanel body{};
                 body.Spacing(4);
@@ -401,7 +361,7 @@ namespace winrt::midipatchbay::implementation
 
                 body.Children().Append(lsb);
 
-                content.Children().Append(TransformCard(body));
+                content.Children().Append(Card(body));
                 break;
             }
 
@@ -468,9 +428,9 @@ namespace winrt::midipatchbay::implementation
                 });
 
             body.Children().Append(scale);
-            body.Children().Append(TransformHint(resources::GetString(L"TransformValueScaleHint")));
+            body.Children().Append(HeadingHint(resources::GetString(L"TransformValueScaleHint")));
 
-            BlockDialogContent().Children().Append(TransformCard(body));
+            BlockDialogContent().Children().Append(Card(body));
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the value scale section.")
     }
@@ -484,7 +444,7 @@ namespace winrt::midipatchbay::implementation
             controls::StackPanel body{};
             body.Spacing(4);
 
-            body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionExactPitch")));
+            body.Children().Append(Heading(resources::GetString(L"TransformSectionExactPitch")));
 
             // The note map moves the note number the same way a transpose does, so both need to
             // know what to do with a MIDI 2.0 note that carries its own pitch.
@@ -506,9 +466,9 @@ namespace winrt::midipatchbay::implementation
             exactPitch.Unchecked([setIgnoreExactPitch](auto&&, auto&&) { setIgnoreExactPitch(false); });
 
             body.Children().Append(exactPitch);
-            body.Children().Append(TransformHint(resources::GetString(L"TransformIgnoreExactPitchHint")));
+            body.Children().Append(HeadingHint(resources::GetString(L"TransformIgnoreExactPitchHint")));
 
-            BlockDialogContent().Children().Append(TransformCard(body));
+            BlockDialogContent().Children().Append(Card(body));
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the transpose section.")
     }
@@ -522,8 +482,8 @@ namespace winrt::midipatchbay::implementation
             controls::StackPanel body{};
             body.Spacing(4);
 
-            body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionVelocity")));
-            body.Children().Append(TransformHint(resources::GetString(L"TransformSectionVelocityHint")));
+            body.Children().Append(Heading(resources::GetString(L"TransformSectionVelocity")));
+            body.Children().Append(HeadingHint(resources::GetString(L"TransformSectionVelocityHint")));
 
             controls::Grid layout{};
             layout.ColumnSpacing(20);
@@ -677,7 +637,7 @@ namespace winrt::midipatchbay::implementation
 
             body.Children().Append(layout);
 
-            BlockDialogContent().Children().Append(TransformCard(body));
+            BlockDialogContent().Children().Append(Card(body));
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the velocity section.")
     }
@@ -691,8 +651,8 @@ namespace winrt::midipatchbay::implementation
             controls::StackPanel body{};
             body.Spacing(4);
 
-            body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionGroupMap")));
-            body.Children().Append(TransformHint(resources::GetString(L"TransformSectionGroupMapHint")));
+            body.Children().Append(Heading(resources::GetString(L"TransformSectionGroupMap")));
+            body.Children().Append(HeadingHint(resources::GetString(L"TransformSectionGroupMapHint")));
 
             controls::VariableSizedWrapGrid grid{};
             grid.Orientation(controls::Orientation::Horizontal);
@@ -753,7 +713,7 @@ namespace winrt::midipatchbay::implementation
 
             body.Children().Append(grid);
 
-            BlockDialogContent().Children().Append(TransformCard(body));
+            BlockDialogContent().Children().Append(Card(body));
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the group map section.")
     }
@@ -770,8 +730,8 @@ namespace winrt::midipatchbay::implementation
 
             body.Spacing(4);
 
-            body.Children().Append(TransformHeading(resources::GetString(info.Heading)));
-            body.Children().Append(TransformHint(resources::GetString(info.Hint)));
+            body.Children().Append(Heading(resources::GetString(info.Heading)));
+            body.Children().Append(HeadingHint(resources::GetString(info.Hint)));
 
             m_mapPanels[index] = controls::StackPanel{};
             m_mapPanels[index].Spacing(6);
@@ -837,7 +797,7 @@ namespace winrt::midipatchbay::implementation
 
             if (rows.empty())
             {
-                auto empty = TransformHint(resources::GetString(info.EmptyText));
+                auto empty = HeadingHint(resources::GetString(info.EmptyText));
                 empty.Margin(xaml::ThicknessHelper::FromUniformLength(0));
                 m_mapPanels[index].Children().Append(empty);
 
@@ -1122,8 +1082,8 @@ namespace winrt::midipatchbay::implementation
         {
             body.Spacing(4);
 
-            body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionAftertouch")));
-            body.Children().Append(TransformHint(resources::GetString(L"TransformSectionAftertouchHint")));
+            body.Children().Append(Heading(resources::GetString(L"TransformSectionAftertouch")));
+            body.Children().Append(HeadingHint(resources::GetString(L"TransformSectionAftertouchHint")));
 
             controls::Grid layout{};
             layout.ColumnSpacing(20);
@@ -1178,8 +1138,8 @@ namespace winrt::midipatchbay::implementation
         {
             body.Spacing(4);
 
-            body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionControlValues")));
-            body.Children().Append(TransformHint(resources::GetString(L"TransformSectionControlValuesHint")));
+            body.Children().Append(Heading(resources::GetString(L"TransformSectionControlValues")));
+            body.Children().Append(HeadingHint(resources::GetString(L"TransformSectionControlValuesHint")));
 
             m_controlValuePanel = controls::StackPanel{};
             m_controlValuePanel.Spacing(12);
@@ -1256,7 +1216,7 @@ namespace winrt::midipatchbay::implementation
 
             if (m_controlValueRows.empty())
             {
-                auto empty = TransformHint(resources::GetString(L"TransformNoControlValues"));
+                auto empty = HeadingHint(resources::GetString(L"TransformNoControlValues"));
                 empty.Margin(xaml::ThicknessHelper::FromUniformLength(0));
                 m_controlValuePanel.Children().Append(empty);
 

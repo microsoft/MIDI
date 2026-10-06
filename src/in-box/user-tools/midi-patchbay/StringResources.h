@@ -11,11 +11,11 @@ namespace midipatchbay::resources
 {
     // Looks up a string from Strings\<language>\Resources.resw. Never throws: if the
     // resource subsystem is unavailable the key itself is returned so the UI still renders.
-    winrt::hstring GetString(std::wstring_view resourceKey) noexcept;
+    winrt::hstring GetString(_In_ std::wstring_view resourceKey) noexcept;
 
     // The format string comes from resources and uses std::format placeholders.
     template <typename... TArgs>
-    winrt::hstring FormatString(std::wstring_view resourceKey, TArgs&&... args) noexcept
+    winrt::hstring FormatString(_In_ std::wstring_view resourceKey, TArgs&&... args) noexcept
     {
         try
         {

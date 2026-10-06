@@ -17,6 +17,7 @@
 #include "PatchSerializer.h"
 #include "RoundedShape.h"
 #include "StringResources.h"
+#include "TextMatch.h"
 #include "resource.h"
 
 using namespace winrt::Microsoft::UI::Xaml;
@@ -80,31 +81,8 @@ namespace winrt::midipatchbay::implementation
             return ZoomSteps[0];
         }
 
-        bool SameText(_In_ std::wstring const& left, _In_ std::wstring const& right) noexcept
-        {
-            return ::CompareStringOrdinal(left.c_str(), -1, right.c_str(), -1, TRUE) == CSTR_EQUAL;
-        }
-
-        // Case-insensitive, the way a person expects a search box to work.
-        bool ContainsText(_In_ std::wstring_view text, _In_ std::wstring_view search) noexcept
-        {
-            if (search.empty())
-            {
-                return true;
-            }
-
-            if (text.empty())
-            {
-                return false;
-            }
-
-            return ::FindNLSStringEx(
-                LOCALE_NAME_USER_DEFAULT,
-                FIND_FROMSTART | LINGUISTIC_IGNORECASE,
-                text.data(), static_cast<int>(text.size()),
-                search.data(), static_cast<int>(search.size()),
-                nullptr, nullptr, nullptr, 0) >= 0;
-        }
+        using patchbay::ContainsText;
+        using patchbay::SameText;
 
         bool IsKeyDown(_In_ int virtualKey) noexcept
         {
@@ -298,7 +276,7 @@ namespace winrt::midipatchbay::implementation
                     }
                 });
 
-            m_closedToken = this->Closed([weak](auto&&, auto&&)
+            this->Closed([weak](auto&&, auto&&)
                 {
                     if (auto strong = weak.get())
                     {

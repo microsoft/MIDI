@@ -27,7 +27,7 @@ namespace winrt::midipatchbay::implementation
             return patchbay::ThemeBrushes::Current().Get(key);
         }
 
-        controls::TextBlock SectionLabel(_In_ winrt::hstring const& text) noexcept
+        controls::TextBlock SectionLabel(_In_ winrt::hstring const& text)
         {
             controls::TextBlock block{};
 
@@ -41,7 +41,7 @@ namespace winrt::midipatchbay::implementation
         controls::TextBlock ValueText(
             _In_ winrt::hstring const& text,
             _In_ double size = 13,
-            _In_ bool wrap = false) noexcept
+            _In_ bool wrap = false)
         {
             controls::TextBlock block{};
 
@@ -62,7 +62,7 @@ namespace winrt::midipatchbay::implementation
 
         controls::Grid Card(
             _In_ xaml::UIElement const& content,
-            _In_ std::wstring_view stroke = L"CardStrokeColorDefaultBrush") noexcept
+            _In_ std::wstring_view stroke = L"CardStrokeColorDefaultBrush")
         {
             return patchbay::MakeRoundedPanel(
                 6,
@@ -72,7 +72,7 @@ namespace winrt::midipatchbay::implementation
                 content).Panel;
         }
 
-        controls::StackPanel Section(_In_ winrt::hstring const& label) noexcept
+        controls::StackPanel Section(_In_ winrt::hstring const& label)
         {
             controls::StackPanel panel{};
 
@@ -83,7 +83,7 @@ namespace winrt::midipatchbay::implementation
         }
 
         // A toolbar-sized row of buttons, which is what every inspector ends with.
-        controls::StackPanel ActionRow() noexcept
+        controls::StackPanel ActionRow()
         {
             controls::StackPanel actions{};
 

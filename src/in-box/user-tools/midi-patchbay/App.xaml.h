@@ -16,7 +16,7 @@ namespace winrt::midipatchbay::implementation
     {
         App();
 
-        void OnLaunched(xaml::LaunchActivatedEventArgs const& args);
+        void OnLaunched(_In_ xaml::LaunchActivatedEventArgs const& args);
 
         static ::midipatchbay::CommandLineOptions const& StartupOptions() noexcept { return s_startupOptions; }
 
@@ -33,8 +33,8 @@ namespace winrt::midipatchbay::implementation
 
     private:
         void OnUnhandledException(
-            foundation::IInspectable const& sender,
-            xaml::UnhandledExceptionEventArgs const& args);
+            _In_ foundation::IInspectable const& sender,
+            _In_ xaml::UnhandledExceptionEventArgs const& args);
 
         static ::midipatchbay::CommandLineOptions s_startupOptions;
 

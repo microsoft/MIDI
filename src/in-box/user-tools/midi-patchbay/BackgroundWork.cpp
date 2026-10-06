@@ -24,9 +24,17 @@ namespace midipatchbay
                 return Queue == nullptr;
             }
 
-            bool await_suspend(std::coroutine_handle<> handle) const noexcept
+            bool await_suspend(_In_ std::coroutine_handle<> handle) const noexcept
             {
-                return Queue.TryEnqueue([handle]() { handle(); });
+                try
+                {
+                    return Queue.TryEnqueue([handle]() { handle(); });
+                }
+                catch (...)
+                {
+                }
+
+                return false;
             }
 
             void await_resume() const noexcept

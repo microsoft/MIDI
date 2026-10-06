@@ -253,7 +253,6 @@ namespace midipatchbay
     struct CiAssembly
     {
         bool Active{ false };
-        bool Collecting{ false };
         bool KeepOut{ false };
         bool Overflowed{ false };
         uint32_t Path{ 0 };
