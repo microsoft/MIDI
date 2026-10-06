@@ -16,27 +16,29 @@ It's the software version of the patchbay in a studio rack: keys into a sound mo
 
 ## Quick start
 
-![The main Windows MIDI Patchbay window with four patch tiles, and numbered callouts on the toolbar, a patch tile, the filter buttons, the search box and Sort button, the Appearance and settings and keep on top buttons, and the status bar]({{ site.baseurl }}/assets/images/midipatchbay-quick-start.png)
+![The main Windows MIDI Patchbay window with five patch tiles and a New patch tile, and numbered callouts on the New patch and New quick patch buttons, a patch tile, the filter, the search box with the sort list and view buttons, the Ask an AI assistant and Import patch buttons, the Appearance and settings and keep on top buttons, and the status bar]({{ site.baseurl }}/assets/images/midipatchbay-quick-start.png)
 
-1. **New patch** starts a blank patch, and **New quick patch** connects one device to another in two steps. **Import patch…** adds a patch file that somebody sent you, **Ask an AI assistant…** helps an AI assistant build one for you, and **Open patch folder** shows your patch files in File Explorer.
-2. **Each tile is a patch.** It shows the devices the patch uses, a small map of its canvas, and whether it's routing. Select a tile to open the patch in a window of its own. Turn on the switch to start it routing.
-3. **All**, **Routing**, **Not routing**, and **Needs attention** show only some of your patches.
-4. **The search box** finds a patch by its name, its description, or the devices on it. **Sort** changes the order of the tiles.
-5. **Appearance and settings** changes the theme and the window background, and has settings such as **Run in notification area** and **Start patches automatically**. The pin keeps the window on top of other windows.
-6. **The status bar** shows how many patches you have, how many are routing, and how many messages go through each second.
+1. **New patch** starts a blank patch, and **New quick patch** connects one device to another in two steps. The **New patch** tile at the end of your patches offers both.
+2. **Each tile is a patch.** It shows a map of the patch and says whether its devices are here. Turn on the switch to start it routing. A routing patch has a green edge and shows how many messages go through it each second. Select a tile to open the patch in a window of its own.
+3. **All**, **Routing**, **Not routing**, and **Needs attention** show only some of your patches. Each one says how many patches it would show.
+4. **The search box** finds a patch by its name, its description, or the devices on it. The list next to it sorts your patches, and the two buttons after that show them as tiles or as a list.
+5. **Ask an AI assistant…** helps an AI assistant build a patch for you, and **Import patch…** adds a patch file that somebody sent you. **…** has **Open patch folder**, which shows your patch files in File Explorer.
+6. **Appearance and settings** changes the theme and the window background, and has settings such as **Run in notification area** and **Start patches automatically**. The pin keeps the window on top of other windows.
+7. **The status bar** shows where your patches are, how many are routing, how many messages go through each second, and whether the MIDI service is running.
 
 Routing happens only while Windows MIDI Patchbay is running. [Routing only runs while Patchbay is running](#routing-only-runs-while-patchbay-is-running) explains how to keep it going in the background.
 
 ## The patch window
 
-![A patch open in a window of its own, with numbered callouts on the Steps and Endpoints panel, a connection, the details panel, the Routing button and Start automatically switch, the toolbar, and the zoom and Test buttons]({{ site.baseurl }}/assets/images/midipatchbay-editor.png)
+![A patch open in a window of its own, with numbered callouts on the Steps and Endpoints panel, a connection, the details panel, the Routing button and Start automatically switch, the toolbar, the zoom controls, and the Test button]({{ site.baseurl }}/assets/images/midipatchbay-editor.png)
 
 1. **Steps and Endpoints.** The panel on the left has everything you can add. Drag a device from **Endpoints** onto the canvas. Each one shows the picture set for it in MIDI Settings, or an empty square when it has none. Drag a step from **Steps** onto a connection to put it in the way, or anywhere on the canvas to connect it yourself.
 2. **Draw a connection** by dragging from an **Out** point to an **In** point.
 3. **The details panel** shows whatever you've selected. For a step, **Edit settings…** changes what it does.
 4. **Routing** turns the patch on and off. **Start automatically** starts it each time Windows MIDI Patchbay starts.
 5. **The toolbar** has **Undo**, **Redo**, **Cut**, **Copy**, **Paste**, and **Remove**, and buttons to add an endpoint, create a loopback, or arrange the canvas for you.
-6. **The zoom buttons** change how much of the canvas you see. **Test** opens a monitor, a keyboard, or a scratch pad pointed at the selected endpoint.
+6. **The zoom controls**, at the bottom right of the canvas, change how much of the canvas you see. **Fit** shows all of it. The overview above them shows the whole patch.
+7. **Test** opens a monitor, a keyboard, or a scratch pad pointed at the selected endpoint.
 
 To give the canvas more room, or the panels more, drag the bar between the left panel and the canvas, or between the canvas and the details panel. Each patch window opens with the widths you last used.
 
@@ -44,7 +46,11 @@ To give the canvas more room, or the panels more, drag the bar between the left 
 
 A **patch** is one canvas: the endpoints on it, the steps, the connections between them, and a name. Patches are saved as files in **Documents &rsaquo; MIDI Patchbay**, one file per patch, so you can back one up or copy it to another PC.
 
-The main MIDI Patchbay window shows each patch as a tile, with the devices it uses and whether it's routing. Turn on the switch on a tile to start that patch, and select the tile to open it. Right-click a tile to duplicate the patch, find its file, or delete it. **All**, **Routing**, **Not routing**, and **Needs attention** show only some of your patches, and the search box finds a patch by its name, its description, or the devices on it.
+The main MIDI Patchbay window shows each patch as a tile. A tile has a map of the patch, its name and description, and words that say whether its devices are here, such as **4 devices ready** or **1 device missing**. A missing device is dashed and red on the map. A routing patch has a green edge, and the number in its corner is how many messages go through it each second. The power mark beside the device count means the patch starts automatically, and **Not saved** means the patch is temporary.
+
+Turn on the switch on a tile to start that patch. To open a patch, select its tile, or point at the tile and select **Edit**. Right-click a tile, or select **…** on it, to duplicate the patch, find its file, or delete it.
+
+**All**, **Routing**, **Not routing**, and **Needs attention** show only some of your patches. **Needs attention** is any patch with a missing device, a loop, or a problem that keeps it from routing. The search box finds a patch by its name, its description, or the devices on it. The sort list puts your patches in order by when they last changed or by name. The two buttons beside it switch between tiles and a list. The list fits more patches on the screen, and it also shows how many steps and connections each one has.
 
 Patch files end in `.midipatch`. To add one that somebody sent you, or one an AI assistant saved in another folder, select **Import patch…** and pick the file. You can also double-click it in File Explorer. The first time you do, Windows asks which app to open it with, so pick MIDI Patchbay. Either way, the patch is copied into your patches. It doesn't route, and it doesn't start automatically, until you turn those on. A file from somewhere else shouldn't connect your devices before you've looked at it.
 
@@ -87,7 +93,7 @@ You can draw a connection by dragging from an Out point to an In point, or by cl
 
 To change where an existing connection goes, drag the end of the cord onto a different point. Drag an endpoint or a step by its title bar to move it out of the way. Select a connection, an endpoint, or a step and press **Delete** to remove it. The first time, Patchbay asks, and offers to stop asking.
 
-The zoom controls above the canvas go from 10% to 400%. Click the zoom percentage and choose **Fit to screen** to see everything on the patch at once, as large as the window allows. The overview in the corner of the canvas shows the whole patch, with a box around the part on screen. Drag the box to move around, or click anywhere in the overview to jump there.
+The zoom controls at the bottom right of the canvas go from 10% to 400%. **Fit** shows everything on the patch at once, as large as the window allows. To type a zoom level, click the percentage. The overview above the zoom controls shows the whole patch, with a box around the part on screen. Drag the box to move around, or click anywhere in the overview to jump there.
 
 ## Undo, copy, and paste
 
@@ -108,7 +114,7 @@ There are six kinds:
 - **MIDI-CI** steps answer MIDI-CI for a MIDI 1.0 device that can't, or keep MIDI-CI away from a device. See [MIDI-CI steps](#midi-ci-steps).
 - **Generators** make messages of their own: MIDI clock, MIDI Time Code, and an LFO. See [Generators](#generators).
 
-The **Steps** tab also has **Annotation**, a line of text for notes on the canvas. It isn't a step. See [Annotations](#annotations).
+The **Steps** tab also has **Annotation**, a note on the canvas. It isn't a step. See [Annotations](#annotations).
 
 Messages go through the steps in the order the connections lead them, and each step only sees what the steps before it let through. When an **Out** leads to more than one place, each one gets its own copy of every message, so a step on one path never changes what another path carries. When more than one connection leads into the same **In**, their messages are merged.
 
@@ -232,13 +238,11 @@ MIDI clock and MIDI Time Code don't follow a clock that comes in from a device, 
 
 ## Annotations
 
-An annotation is a line of text on the canvas, for notes about the patch, such as which keyboard is which or what a split is for. Drag **Annotation** from the **Steps** tab onto the canvas, type the text in the details panel on the right, and press Enter.
+An annotation is a note on the canvas about the patch, such as which keyboard is which or what a split is for. Drag **Annotation** from the **Steps** tab onto the canvas, and type the text in the details panel on the right. The canvas shows it as you type. Press Enter to start a new line. Lines break only where you press Enter, so a long line stays on one line. An annotation can hold up to 1,000 characters.
 
 The details panel also sets the font, its size, bold, italic, and underline, and the color. The font list has the fonts every Windows PC has. **Show all fonts** lists every font on your PC, but if you share the patch, a PC without that font shows the annotation in the standard font.
 
 An annotation has no **In** or **Out**, so nothing connects to it, and it doesn't change what routes. It isn't counted with the steps in the status bar, and **Auto arrange** leaves it where you put it. To change the text later, double-click the annotation, or right-click it and choose **Edit text**.
-
-An annotation is one line. To write more, add another one.
 
 ## Slowing messages down
 
@@ -297,7 +301,7 @@ Because Patchbay works inside its own process, it can only route *from* a messag
 
 Gear gets unplugged. That's a normal state, not an error.
 
-An endpoint that isn't connected right now is drawn with a dashed outline and a warning badge, its patch's tile says it's waiting for a device, and the connections to it sit idle. Everything else in the patch keeps routing. The moment the device comes back, its connections start carrying messages again without you doing anything.
+An endpoint that isn't connected right now is drawn with a dashed outline and a warning badge, its patch's tile says a device is missing, and the connections to it sit idle. Everything else in the patch keeps routing. The moment the device comes back, its connections start carrying messages again without you doing anything.
 
 If the device came back with a different identity &mdash; a USB device with no serial number moved to another port, for example &mdash; Patchbay notices a likely match and offers it. It never binds to a different device on its own.
 

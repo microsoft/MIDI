@@ -45,7 +45,7 @@ On this page:
 - Messages go through the steps in the order the connections lead them. A chain of steps between a keyboard and a synth works like a cable with each step plugged in along the way.
 - When an **Out** has more than one connection, each connection gets its own copy of every message. What a step does to one copy doesn't change the others. When more than one connection goes into the same **In**, their messages are merged.
 - There are six kinds of steps. **Filters** keep messages out. **Transforms** change messages. The **message throttler** slows messages down for a device that loses data when a lot arrives at once. **Distribution** steps decide which connection out each message takes, or whether it goes at all: the **note distributor** plays several one-note synths as one, and the **gate** lets messages through between one message and another. **MIDI-CI** steps answer MIDI-CI for a MIDI 1.0 device that can't, or keep MIDI-CI away from a device. **Generators** make messages of their own, such as MIDI clock, for as long as the patch is routing.
-- A patch can have **annotations**: a line of text on the canvas, for notes such as which keyboard is which. Nothing goes into or comes out of an annotation, and it doesn't change what routes. The file keeps annotations in the same list as the steps.
+- A patch can have **annotations**: notes on the canvas, such as which keyboard is which. Nothing goes into or comes out of an annotation, and it doesn't change what routes. The file keeps annotations in the same list as the steps.
 - A patch can **wait for send complete**. Then each message waits until the device's driver has taken the one before it. It covers every connection in the patch.
 - **Routing only happens while Patchbay is running.** Patchbay receives the messages and sends them on itself.
 - Several patches can route at the same time. Each patch opens in a window of its own, and it keeps routing after its window is closed.
@@ -81,7 +81,7 @@ If the customer pasted a prompt from **Ask an AI assistant…** in Patchbay, it 
 | Should Patchbay send MIDI clock to some of the devices? At what tempo? Should it send Start and Stop? | That's a `clockGenerator` step, connected to each device that follows it. A device that should run at half speed gets the clock through a `clockDivider` step. |
 | Does a device need MIDI Time Code? At what frame rate, and from what time? | That's a `timeCodeGenerator` step. |
 | Should something move up and down by itself, such as a filter sweep or a wobble? Which controller, how fast, and over how much of its range? Should it keep in step with a clock? | That's an `lfoGenerator` step. To keep it in step, connect the clock to its **In**. |
-| Would notes on the canvas help, such as which keyboard is which, or what a split is for? | That's an `annotation`: one line of text. It doesn't change what routes. |
+| Would notes on the canvas help, such as which keyboard is which, or what a split is for? | That's an `annotation`: text on the canvas, one or more lines. It doesn't change what routes. |
 | Should an RPN or NRPN, such as pitch bend range, be kept out or sent as a different one? | That's an `rpnFilter` or an `rpnTransform` step. Ask for the bank and index, such as RPN 0/0. |
 | Should several one-note synths play together as one bigger synth? How should notes be shared out, and should knobs and pitch bend reach all of them? | That's a `noteDistributor` step, with one connection out to each synth, in the order they should be used. |
 | Should messages only get through at some times, such as while the sequencer plays, or while a pedal is down? | That's a `gate` step. Ask which message opens it and which closes it. |
@@ -512,8 +512,8 @@ foreach ($b in (Get-List $patch.blocks)) {
         }
         'annotation' {
             if ($null -eq $s.text -or "$($s.text)".Trim().Length -eq 0) { $problems.Add("$where has no text, so the canvas shows only a hint.") }
-            elseif ("$($s.text)".Length -gt 200) { $problems.Add("$where has more than 200 characters of text. Patchbay cuts it off.") }
-            elseif ("$($s.text)" -match '[\x00-\x1F\x7F-\x9F\u2028\u2029]') { $problems.Add("$where has a line break or a tab in its text. An annotation is one line, so it becomes a space.") }
+            elseif ("$($s.text)".Length -gt 1000) { $problems.Add("$where has more than 1,000 characters of text. Patchbay cuts it off.") }
+            elseif ("$($s.text)" -match '[\x00-\x09\x0B\x0C\x0E-\x1F\x7F-\x9F]') { $problems.Add("$where has a tab or another control character in its text. Patchbay turns it into a space. Use \n for a new line.") }
             if (-not (Test-Range $s.fontSize 8 96)) { $problems.Add("$where has a fontSize outside 8 to 96.") }
             if ($null -ne $s.color -and "$($s.color)" -notmatch '^#[0-9A-Fa-f]{6}$') { $problems.Add("$where has a color that isn't #RRGGBB, so Patchbay uses the theme's text color.") }
             if ($null -ne $s.fontFamily -and ("$($s.fontFamily)".Length -gt 128 -or "$($s.fontFamily)" -match '[\\/:#,%?*"<>|]')) { $problems.Add("$where has a fontFamily that isn't the name of one font, so Patchbay uses its default font.") }
@@ -682,7 +682,7 @@ Tell the customer about these before they find out on their own.
 - **A velocity filter only looks at note on messages.** Note off always gets through, so no note is left sounding.
 - **Messages without a group aren't routed.** Those are the MIDI 2.0 stream messages that devices use to describe themselves, and utility messages such as jitter reduction timestamps.
 - **It only sees its own connections.** A cable between two devices, or another routing app, can close a loop Patchbay can't see.
-- **An annotation is one line of text.** It can't wrap into a paragraph, and nothing can connect to it.
+- **An annotation's text doesn't wrap.** Each `\n` in `text` starts a new line, and a long line stays one line, so break it yourself. Nothing can connect to an annotation.
 
 ## The patch file
 
@@ -800,7 +800,7 @@ The steps are in the `blocks` list.
 | `clockGenerator` | MIDI clock | A generator. Sends MIDI clock at a tempo, for as long as the patch is routing. |
 | `timeCodeGenerator` | MIDI Time Code | A generator. Sends MIDI Time Code from a start time, for as long as the patch is routing. |
 | `lfoGenerator` | LFO | A generator. Sweeps a controller, pitch bend, aftertouch, or an RPN or NRPN up and down, for as long as the patch is routing. |
-| `annotation` | Annotation | Not a step. A line of text on the canvas, for notes about the patch. Nothing goes in or comes out. |
+| `annotation` | Annotation | Not a step. A note on the canvas about the patch, one or more lines. Nothing goes in or comes out. |
 
 ### Connections
 
@@ -821,7 +821,7 @@ A connection is left out when it names an endpoint or step the patch doesn't hav
 
 - An endpoint is 280 pixels wide. With one group it's about 130 pixels high, and each extra group it shows adds 32.
 - A step is 208 pixels wide and 76 high.
-- An annotation is as wide as its text, about half its font size for each character, and a little taller than its font size. **Auto arrange** leaves annotations where they are.
+- An annotation is as wide as its longest line, about half its font size for each character, and each line is a little taller than its font size. **Auto arrange** leaves annotations where they are.
 - Put sources at `x` 60, one under another. A generator is a source too.
 - Put each step one column to the right of the step before it. Columns 280 pixels apart, starting at `x` 400, work well. Steps that come after the same step can share a column, at least 110 pixels apart from top to bottom.
 - Put destinations in a column after the last steps, 280 pixels further right.
@@ -1359,11 +1359,11 @@ For example, to keep Property Exchange away from a device:
 
 ### Annotation
 
-`"type": "annotation"`. Not a step: a line of text on the canvas, for notes such as which keyboard is which, or what a split is for. Nothing goes into or comes out of it, it doesn't change what routes, and it isn't counted with the steps.
+`"type": "annotation"`. Not a step: a note on the canvas, such as which keyboard is which, or what a split is for. Nothing goes into or comes out of it, it doesn't change what routes, and it isn't counted with the steps.
 
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
-| `text` | text, up to 200 characters | empty | The note. It's one line: a line break or a tab becomes a space. |
+| `text` | text, up to 1,000 characters | empty | The note. `\n` starts a new line, and the text doesn't wrap anywhere else. A tab or another control character becomes a space. |
 | `fontFamily` | the name of one font | Patchbay's own font | The font. Fonts every Windows PC has are `Segoe UI`, `Segoe UI Variable Text`, `Segoe UI Variable Display`, `Bahnschrift`, `Cascadia Mono`, and `Consolas`. On a PC without the font, Patchbay uses its own. |
 | `fontSize` | 8 to 96 | 16 | The size of the text. |
 | `bold`, `italic`, `underline` | `true`, `false` | `false` | How the text is drawn. |
@@ -1372,7 +1372,7 @@ For example, to keep Property Exchange away from a device:
 For example, a note above the bass side of the split in the complete example:
 
 ```json
-{ "id": "note-bass", "type": "annotation", "x": 680, "y": 0, "settings": { "text": "Bass below middle C", "fontSize": 14, "bold": true } }
+{ "id": "note-bass", "type": "annotation", "x": 680, "y": 0, "settings": { "text": "Bass below middle C\nPad from middle C up", "fontSize": 14, "bold": true } }
 ```
 
 ## The MIDI-CI file
@@ -1469,7 +1469,7 @@ In a `ProgramList`, `bankPC` is the bank MSB, the bank LSB, and the program, eac
 > - An LFO's `number` doesn't match its `message`. For `rpn` and `nrpn` it's the bank times 128 plus the index, so RPN 0, 0 is `0` and NRPN 1, 5 is `133`.
 > - A clock and an LFO that should play together aren't connected. Each keeps its own `beatsPerMinute` until the clock is connected to the LFO's **In**.
 > - A connection goes into or out of an annotation. An annotation has no **In** or **Out**, so the connection is left out.
-> - An annotation's text has a line break, to make two lines. An annotation is one line, so the break becomes a space. Use two annotations instead.
+> - An annotation's text is one long line. Annotation text doesn't wrap, so it runs far across the canvas. Put a `\n` where each line should break.
 > - A note distributor's connections out are in the wrong order. The first connection in the file is the first voice.
 > - A note distributor has one connection out, so it plays one note at a time.
 > - A gate's group, channel or number is counted from 1. Channel 1 is `0` in the file.

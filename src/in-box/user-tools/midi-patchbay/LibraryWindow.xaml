@@ -34,15 +34,99 @@
                 <Setter Property="TextTrimming" Value="CharacterEllipsis" />
             </Style>
 
-            <!-- One part of the filter: flat, and filled only when it is the one chosen. -->
-            <Style x:Key="FilterSegmentStyle" TargetType="ToggleButton">
+            <!-- One part of a segmented choice, filled only when it is the one chosen. A shape draws
+                 the fill, because the default template's Border steps its corners at 125%. -->
+            <Style x:Key="SegmentStyle" TargetType="ToggleButton" BasedOn="{StaticResource DefaultToggleButtonStyle}">
                 <Setter Property="Height" Value="28" />
                 <Setter Property="MinWidth" Value="0" />
                 <Setter Property="Padding" Value="12,0,12,0" />
-                <Setter Property="BorderThickness" Value="0" />
                 <Setter Property="CornerRadius" Value="3" />
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Grid Background="Transparent">
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="PointerOver">
+                                            <VisualState.Setters>
+                                                <Setter Target="Face.Fill" Value="{ThemeResource SubtleFillColorTertiaryBrush}" />
+                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter Target="Face.Fill" Value="{ThemeResource SubtleFillColorTertiaryBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Disabled">
+                                            <VisualState.Setters>
+                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TextFillColorDisabledBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Checked">
+                                            <VisualState.Setters>
+                                                <Setter Target="Face.Fill" Value="{ThemeResource SubtleFillColorSecondaryBrush}" />
+                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="CheckedPointerOver">
+                                            <VisualState.Setters>
+                                                <Setter Target="Face.Fill" Value="{ThemeResource SubtleFillColorSecondaryBrush}" />
+                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="CheckedPressed">
+                                            <VisualState.Setters>
+                                                <Setter Target="Face.Fill" Value="{ThemeResource SubtleFillColorTertiaryBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="CheckedDisabled">
+                                            <VisualState.Setters>
+                                                <Setter Target="Face.Fill" Value="{ThemeResource SubtleFillColorSecondaryBrush}" />
+                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TextFillColorDisabledBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Indeterminate" />
+                                        <VisualState x:Name="IndeterminatePointerOver">
+                                            <VisualState.Setters>
+                                                <Setter Target="Face.Fill" Value="{ThemeResource SubtleFillColorTertiaryBrush}" />
+                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="IndeterminatePressed">
+                                            <VisualState.Setters>
+                                                <Setter Target="Face.Fill" Value="{ThemeResource SubtleFillColorTertiaryBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="IndeterminateDisabled">
+                                            <VisualState.Setters>
+                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TextFillColorDisabledBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+
+                                <Rectangle x:Name="Face"
+                                           RadiusX="3"
+                                           RadiusY="3"
+                                           UseLayoutRounding="False"
+                                           Fill="{ThemeResource SubtleFillColorTransparentBrush}" />
+                                <ContentPresenter x:Name="ContentPresenter"
+                                                  Padding="{TemplateBinding Padding}"
+                                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                  Content="{TemplateBinding Content}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                  ContentTransitions="{TemplateBinding ContentTransitions}"
+                                                  Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                  AutomationProperties.AccessibilityView="Raw" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
             <!-- A tile draws its own surface, so the container adds nothing but focus. Anything it
@@ -269,27 +353,35 @@
                               VerticalAlignment="Center"
                               SelectionChanged="OnSortSelectionChanged" />
 
-                    <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
-                        <ToggleButton x:Name="GridViewToggle"
-                                      x:Uid="GridViewToggle"
-                                      Width="38"
-                                      Height="32"
-                                      Padding="0"
-                                      CornerRadius="4,0,0,4"
-                                      Click="OnGridViewToggled">
-                            <FontIcon Glyph="&#xE80A;" FontSize="13" />
-                        </ToggleButton>
-                        <ToggleButton x:Name="ListViewToggle"
-                                      x:Uid="ListViewToggle"
-                                      Width="38"
-                                      Height="32"
-                                      Padding="0"
-                                      Margin="-1,0,0,0"
-                                      CornerRadius="0,4,4,0"
-                                      Click="OnListViewToggled">
-                            <FontIcon Glyph="&#xE8FD;" FontSize="13" />
-                        </ToggleButton>
-                    </StackPanel>
+                    <!-- Framed like the filter, with the chosen view filled. -->
+                    <Grid Grid.Column="5" VerticalAlignment="Center">
+                        <Rectangle RadiusX="4.5"
+                                   RadiusY="4.5"
+                                   StrokeThickness="1"
+                                   UseLayoutRounding="False"
+                                   Stroke="{ThemeResource ControlStrokeColorDefaultBrush}"
+                                   Fill="{ThemeResource ControlFillColorDefaultBrush}" />
+                        <StackPanel Orientation="Horizontal" Spacing="2" Margin="3">
+                            <ToggleButton x:Name="GridViewToggle"
+                                          x:Uid="GridViewToggle"
+                                          Style="{StaticResource SegmentStyle}"
+                                          Width="34"
+                                          Height="26"
+                                          Padding="0"
+                                          Click="OnGridViewToggled">
+                                <FontIcon Glyph="&#xE80A;" FontSize="13" />
+                            </ToggleButton>
+                            <ToggleButton x:Name="ListViewToggle"
+                                          x:Uid="ListViewToggle"
+                                          Style="{StaticResource SegmentStyle}"
+                                          Width="34"
+                                          Height="26"
+                                          Padding="0"
+                                          Click="OnListViewToggled">
+                                <FontIcon Glyph="&#xE8FD;" FontSize="13" />
+                            </ToggleButton>
+                        </StackPanel>
+                    </Grid>
 
                     <StackPanel Grid.Column="7" Orientation="Horizontal" Spacing="4">
                         <!-- Copies a starting prompt for the customer's own AI assistant. Nothing is sent from here. -->
@@ -382,53 +474,6 @@
                     <Grid x:Name="FilterSegments"
                           Grid.Column="3"
                           VerticalAlignment="Center">
-                        <Grid.Resources>
-                            <ResourceDictionary>
-                                <ResourceDictionary.ThemeDictionaries>
-                                    <ResourceDictionary x:Key="Default">
-                                        <StaticResource x:Key="ToggleButtonBackground" ResourceKey="SubtleFillColorTransparentBrush" />
-                                        <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorTertiaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonBackgroundChecked" ResourceKey="SubtleFillColorSecondaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonBackgroundCheckedPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonBackgroundCheckedPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonForeground" ResourceKey="TextFillColorSecondaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonForegroundPointerOver" ResourceKey="TextFillColorPrimaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonForegroundPressed" ResourceKey="TextFillColorSecondaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonForegroundChecked" ResourceKey="TextFillColorPrimaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonForegroundCheckedPointerOver" ResourceKey="TextFillColorPrimaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonForegroundCheckedPressed" ResourceKey="TextFillColorSecondaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonBorderBrush" ResourceKey="SubtleFillColorTransparentBrush" />
-                                        <StaticResource x:Key="ToggleButtonBorderBrushPointerOver" ResourceKey="SubtleFillColorTransparentBrush" />
-                                        <StaticResource x:Key="ToggleButtonBorderBrushPressed" ResourceKey="SubtleFillColorTransparentBrush" />
-                                        <StaticResource x:Key="ToggleButtonBorderBrushChecked" ResourceKey="SubtleFillColorTransparentBrush" />
-                                        <StaticResource x:Key="ToggleButtonBorderBrushCheckedPointerOver" ResourceKey="SubtleFillColorTransparentBrush" />
-                                        <StaticResource x:Key="ToggleButtonBorderBrushCheckedPressed" ResourceKey="SubtleFillColorTransparentBrush" />
-                                    </ResourceDictionary>
-                                    <ResourceDictionary x:Key="Light">
-                                        <StaticResource x:Key="ToggleButtonBackground" ResourceKey="SubtleFillColorTransparentBrush" />
-                                        <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorTertiaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonBackgroundChecked" ResourceKey="SubtleFillColorSecondaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonBackgroundCheckedPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonBackgroundCheckedPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonForeground" ResourceKey="TextFillColorSecondaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonForegroundPointerOver" ResourceKey="TextFillColorPrimaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonForegroundPressed" ResourceKey="TextFillColorSecondaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonForegroundChecked" ResourceKey="TextFillColorPrimaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonForegroundCheckedPointerOver" ResourceKey="TextFillColorPrimaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonForegroundCheckedPressed" ResourceKey="TextFillColorSecondaryBrush" />
-                                        <StaticResource x:Key="ToggleButtonBorderBrush" ResourceKey="SubtleFillColorTransparentBrush" />
-                                        <StaticResource x:Key="ToggleButtonBorderBrushPointerOver" ResourceKey="SubtleFillColorTransparentBrush" />
-                                        <StaticResource x:Key="ToggleButtonBorderBrushPressed" ResourceKey="SubtleFillColorTransparentBrush" />
-                                        <StaticResource x:Key="ToggleButtonBorderBrushChecked" ResourceKey="SubtleFillColorTransparentBrush" />
-                                        <StaticResource x:Key="ToggleButtonBorderBrushCheckedPointerOver" ResourceKey="SubtleFillColorTransparentBrush" />
-                                        <StaticResource x:Key="ToggleButtonBorderBrushCheckedPressed" ResourceKey="SubtleFillColorTransparentBrush" />
-                                    </ResourceDictionary>
-                                </ResourceDictionary.ThemeDictionaries>
-                            </ResourceDictionary>
-                        </Grid.Resources>
-
                         <Rectangle RadiusX="4.5"
                                    RadiusY="4.5"
                                    StrokeThickness="1"
@@ -438,23 +483,23 @@
 
                         <StackPanel Orientation="Horizontal" Spacing="2" Margin="3">
                             <ToggleButton x:Name="FilterAllItem"
-                                          Style="{StaticResource FilterSegmentStyle}"
+                                          Style="{StaticResource SegmentStyle}"
                                           IsChecked="True"
                                           Click="OnFilterClick">
                                 <TextBlock x:Name="FilterAllText" x:Uid="FilterAllText" Text="All" />
                             </ToggleButton>
                             <ToggleButton x:Name="FilterRoutingItem"
-                                          Style="{StaticResource FilterSegmentStyle}"
+                                          Style="{StaticResource SegmentStyle}"
                                           Click="OnFilterClick">
                                 <TextBlock x:Name="FilterRoutingText" />
                             </ToggleButton>
                             <ToggleButton x:Name="FilterStoppedItem"
-                                          Style="{StaticResource FilterSegmentStyle}"
+                                          Style="{StaticResource SegmentStyle}"
                                           Click="OnFilterClick">
                                 <TextBlock x:Name="FilterStoppedText" />
                             </ToggleButton>
                             <ToggleButton x:Name="FilterAttentionItem"
-                                          Style="{StaticResource FilterSegmentStyle}"
+                                          Style="{StaticResource SegmentStyle}"
                                           Click="OnFilterClick">
                                 <TextBlock x:Name="FilterAttentionText" />
                             </ToggleButton>
