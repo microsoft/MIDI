@@ -157,14 +157,23 @@ public:
     // definition remains, which is how a user-requested disconnect avoids being reconnected.
     HRESULT MarkClientDefinitionForReconnect(_In_ winrt::guid const& clientConfigEntryIdentifier);
 
-    // The remote never answered, nobody approved the invitation, or the host ended it with a Bye
-    // this client can do nothing about. An advertised host is tried again while it advertises,
-    // which costs nothing while it is absent. Nothing announces a direct host's return, so it is
-    // tried again after the direct connection scan interval. Returns S_OK when it will be
-    // retried, S_FALSE when there is no enabled entry.
+    // Nobody approved the invitation, or the host ended it with a Bye this client can do nothing
+    // about. An advertised host is tried again while it advertises, which costs nothing while it
+    // is absent. Nothing announces a direct host's return, so it is tried again after the direct
+    // connection scan interval. Returns S_OK when it will be retried, S_FALSE when there is no
+    // enabled entry.
     HRESULT MarkClientDefinitionForRetry(
         _In_ winrt::guid const& clientConfigEntryIdentifier,
         _In_ uint32_t const errorCode);
+
+    // Nobody answered the invitation at the address it went to, so the next attempt goes to the
+    // remote's next address. True when that one hasn't been tried yet and can go at once.
+    // Otherwise the entry is paced the way MarkClientDefinitionForRetry paces it.
+    bool MarkClientDefinitionUnanswered(_In_ winrt::guid const& clientConfigEntryIdentifier);
+
+    // The client could not even start at the address it was given, so the next attempt goes to
+    // the remote's next address
+    HRESULT MarkClientDefinitionAddressUnreachable(_In_ winrt::guid const& clientConfigEntryIdentifier);
 
     // The remote host said it was busy. Tried again, direct or advertised, once the delay passes.
     HRESULT MarkClientDefinitionForRetryAfter(
@@ -177,16 +186,21 @@ public:
         _In_ winrt::guid const& clientConfigEntryIdentifier,
         _In_ uint32_t const errorCode);
 
-    // A session opened, so the reason the last attempt failed no longer applies
-    HRESULT ClearClientDefinitionLastErrorCode(_In_ winrt::guid const& clientConfigEntryIdentifier);
+    // A session opened. The reason the last attempt failed no longer applies, and the address it
+    // opened on is tried first next time.
+    HRESULT MarkClientDefinitionSessionOpened(_In_ winrt::guid const& clientConfigEntryIdentifier);
 
     // The app asking to connect an entry which is already configured: "it is available now, try
     // again". Returns S_FALSE when there is no such definition.
     HRESULT RearmClientDefinition(_In_ winrt::guid const& clientConfigEntryIdentifier);
 
     // Set by the endpoint creator worker once an entry has been built, or once its definition has
-    // been rejected. Every legal transition of MidiNetworkEntryState is one of these calls.
-    HRESULT MarkClientDefinitionLive(_In_ winrt::guid const& clientConfigEntryIdentifier);
+    // been rejected. Every legal transition of MidiNetworkEntryState is one of these calls. A
+    // client's invitation goes to remoteAddress, one of the remote's remoteAddressCount addresses.
+    HRESULT MarkClientDefinitionLive(
+        _In_ winrt::guid const& clientConfigEntryIdentifier,
+        _In_ winrt::hstring const& remoteAddress,
+        _In_ uint32_t const remoteAddressCount);
     HRESULT MarkHostDefinitionLive(_In_ winrt::guid const& hostConfigEntryIdentifier);
     HRESULT MarkHostDefinitionFailed(_In_ winrt::guid const& hostConfigEntryIdentifier);
 

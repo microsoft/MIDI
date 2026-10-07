@@ -192,6 +192,18 @@
                 </NavigationViewItem>
             </NavigationView.MenuItems>
 
+            <!-- The firewall is about the MIDI service, not either transport, so it sits apart -->
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem x:Name="FirewallNavigationItem"
+                                    x:Uid="FirewallNavigationItem"
+                                    Content="Firewall"
+                                    Tag="firewall">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xEA18;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
+
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -2216,6 +2228,130 @@
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 </Grid>
+
+                <!-- ========================== Page 6: Windows Firewall ========================== -->
+                <ScrollViewer x:Name="FirewallPanel"
+                              Margin="16,8,16,12"
+                              VerticalScrollBarVisibility="Auto"
+                              Visibility="Collapsed">
+                    <StackPanel Spacing="12" Margin="0,0,4,0" MaxWidth="720" HorizontalAlignment="Left">
+                        <StackPanel>
+                            <TextBlock x:Uid="FirewallHeader"
+                                       Text="Windows Firewall"
+                                       Style="{StaticResource SectionHeaderTextStyle}" />
+                            <TextBlock x:Uid="FirewallDescription"
+                                       Text="Devices on your network connect to this PC's hosts through the MIDI service, and Windows Firewall keeps them out until the service is allowed in. Windows may have asked whether to let this app through the firewall, but that answer covers this app only. The MIDI service runs in the background with no window, so it cannot ask."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <StackPanel Spacing="10">
+                                <TextBlock x:Uid="FirewallSymptomHeader"
+                                           Text="Can other devices see this PC, but not connect to it?"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="FirewallSymptomDescription"
+                                           Text="Windows announces this PC's hosts on the network for the MIDI service, so other devices can list them even while the firewall blocks the service. If another device lists this PC but cannot connect to it, or it connects and no MIDI ever arrives, the firewall is the most likely reason."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <StackPanel Spacing="10">
+                                <TextBlock x:Uid="FirewallAllowHeader"
+                                           Text="Allow the MIDI service through Windows Firewall"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                                <!-- What the firewall does with the service on the networks this PC
+                                     is connected to now. Filled in from code. -->
+                                <InfoBar x:Name="FirewallStateBar"
+                                         IsOpen="False"
+                                         IsClosable="False" />
+
+                                <!-- The text is set in code, which also marks the type of network
+                                     in use now -->
+                                <StackPanel>
+                                    <CheckBox x:Name="FirewallPrivateCheckBox"
+                                              Checked="OnFirewallNetworkChoiceChanged"
+                                              Unchecked="OnFirewallNetworkChoiceChanged" />
+                                    <CheckBox x:Name="FirewallPublicCheckBox"
+                                              Checked="OnFirewallNetworkChoiceChanged"
+                                              Unchecked="OnFirewallNetworkChoiceChanged" />
+                                </StackPanel>
+
+                                <TextBlock x:Uid="FirewallNetworkTypeHelp"
+                                           Text="Windows treats a network as public until you mark it as private, so your home or studio network might be public. Only allow public networks if you trust the other devices on them."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                <TextBlock x:Uid="FirewallAllowNote"
+                                           Text="Windows asks for administrator permission first. This adds one rule for the MIDI service to Windows Firewall, and using it again changes that same rule. Rules you made yourself in Windows Firewall are left as they are."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                <!-- the result sits beside the button, so an empty one takes no room -->
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button x:Name="FirewallAllowButton"
+                                            x:Uid="FirewallAllowButton"
+                                            Grid.Column="0"
+                                            Content="Allow through Windows Firewall"
+                                            Style="{ThemeResource AccentButtonStyle}"
+                                            IsEnabled="False"
+                                            Click="OnAllowThroughFirewallClick" />
+                                    <ProgressRing x:Name="FirewallProgressRing"
+                                                  Grid.Column="1"
+                                                  IsActive="False"
+                                                  Width="20"
+                                                  Height="20" />
+                                    <TextBlock x:Name="FirewallStatusText"
+                                               Grid.Column="2"
+                                               VerticalAlignment="Center"
+                                               TextWrapping="Wrap"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <StackPanel Spacing="10">
+                                <TextBlock x:Uid="FirewallOtherHeader"
+                                           Text="Using a different firewall?"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="FirewallOtherDescription"
+                                           Text="This page changes Windows Firewall only. Some PCs use a firewall from another company instead, often one that comes with antivirus software. If yours does, follow that company's instructions for letting a program accept incoming connections, and choose the MIDI service program shown here."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <StackPanel Spacing="2">
+                                    <TextBlock x:Uid="FirewallServicePathLabel"
+                                               Text="MIDI service program"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock x:Name="FirewallServicePathText"
+                                               IsTextSelectionEnabled="True"
+                                               TextWrapping="Wrap"
+                                               Style="{ThemeResource BodyTextBlockStyle}" />
+                                </StackPanel>
+                                <HyperlinkButton x:Uid="FirewallHelpLink"
+                                                 Content="How to allow the MIDI service through Windows Firewall yourself"
+                                                 NavigateUri="https://microsoft.github.io/MIDI/kb/network-midi-firewall/"
+                                                 Padding="0" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
                 </Grid>
             </Grid>
         </NavigationView>

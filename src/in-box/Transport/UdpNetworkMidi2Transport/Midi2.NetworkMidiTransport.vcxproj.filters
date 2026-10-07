@@ -81,6 +81,9 @@
     <ClCompile Include="$(SolutionDir)inc\midi_network_adapters.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="$(SolutionDir)inc\midi_network_addresses.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Midi2.NetworkMidiTransport.rgs">

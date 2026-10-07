@@ -81,6 +81,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MidiNetworkAddressTests.h" />
     <ClInclude Include="MidiSendPacerTests.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RtpMidiDnssdTests.h" />
@@ -94,6 +95,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiNetworkAddressTests.cpp" />
     <ClCompile Include="MidiSendPacerTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -104,6 +106,9 @@
     <ClCompile Include="RtpMidiReplySourceTests.cpp" />
     <ClCompile Include="RtpMidiSendSpeedTests.cpp" />
     <ClCompile Include="RtpMidiTransportTests.cpp" />
+    <ClCompile Include="$(SolutionDir)inc\midi_network_addresses.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="run-tests.cmd" />

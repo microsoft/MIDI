@@ -185,66 +185,6 @@ namespace RtpMidiNet
         return {};
     }
 
-    // Prefers routable IPv4, then link-local IPv4, then routable IPv6, then link-local IPv6. A
-    // link-local IPv6 address can only be reached through the adapter it was seen on, so one
-    // without a %scope naming that adapter is never chosen.
-    inline bool ChooseServiceAddress(
-        _In_ WindowsMidiServicesInternal::MidiDnssdService const& service,
-        _Out_ RtpMidi::PeerAddress& chosen)
-    {
-        chosen = RtpMidi::PeerAddress{};
-
-        RtpMidi::PeerAddress linkLocalV4{};
-        bool haveLinkLocalV4 = false;
-
-        for (auto const& text : service.IPv4Addresses)
-        {
-            RtpMidi::PeerAddress address{};
-            if (!TryParseAddress(text, service.Port, address)) continue;
-
-            if (address.Bytes[0] == 169 && address.Bytes[1] == 254)
-            {
-                if (!haveLinkLocalV4) { linkLocalV4 = address; haveLinkLocalV4 = true; }
-                continue;
-            }
-
-            chosen = address;
-            return true;
-        }
-
-        if (haveLinkLocalV4)
-        {
-            chosen = linkLocalV4;
-            return true;
-        }
-
-        RtpMidi::PeerAddress linkLocalV6{};
-        bool haveLinkLocalV6 = false;
-
-        for (auto const& text : service.IPv6Addresses)
-        {
-            RtpMidi::PeerAddress address{};
-            if (!TryParseAddress(text, service.Port, address)) continue;
-
-            if (address.Bytes[0] == 0xFE && (address.Bytes[1] & 0xC0) == 0x80)
-            {
-                if (!haveLinkLocalV6 && address.ScopeId != 0) { linkLocalV6 = address; haveLinkLocalV6 = true; }
-                continue;
-            }
-
-            chosen = address;
-            return true;
-        }
-
-        if (haveLinkLocalV6)
-        {
-            chosen = linkLocalV6;
-            return true;
-        }
-
-        return false;
-    }
-
     class UdpSocket
     {
     public:

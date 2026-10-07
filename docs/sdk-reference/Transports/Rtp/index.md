@@ -83,9 +83,11 @@ Once a client is set up, the service manages its connection for you. What it doe
 
 A remote that doesn't answer is asked for about twelve seconds before the service gives up on that try, so the 15 second wait starts after that.
 
+**A remote with more than one address.** A remote can have an IPv4 address and several IPv6 addresses, whether it's advertised or reached by host name. The service tries them in the order Windows uses for every name it looks up, which usually puts IPv6 first, and leaves out any address this PC has no route to. When a try gets no answer, the next try goes to the next address right away, instead of 15 seconds later. Once a connection is made, that address is tried first from then on. A client given an IP address only ever uses that address. An administrator can make the whole PC [prefer IPv4 over IPv6](https://learn.microsoft.com/troubleshoot/windows-server/networking/configure-ipv6-in-windows).
+
 Unlike Network MIDI 2.0, a client with a direct address keeps being retried. RTP-MIDI devices are often at a fixed address, and a device that's switched off and on again should come back without anyone doing anything.
 
-To connect only once, set `AutoReconnect` to false. Then, when a try or a connection ends, the entry is marked `Unavailable` instead of being tried again. A remote that can't be found yet doesn't count as a try, so the service keeps looking for it either way.
+To connect only once, set `AutoReconnect` to false. Then, when a try or a connection ends, the entry is marked `Unavailable` instead of being tried again. A remote that can't be found yet doesn't count as a try, so the service keeps looking for it either way. Neither does an address that didn't answer when the remote has another one it hasn't tried yet.
 
 An entry marked `Unavailable` stays that way until `ReconnectRtpClientAsync` is called. Use [MidiRtpConfiguredClient]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpConfiguredClient/).`EntryState` and `LastErrorCode` to show this in your app. See [MidiRtpClientEntryState]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpClientEntryStateEnum/).
 

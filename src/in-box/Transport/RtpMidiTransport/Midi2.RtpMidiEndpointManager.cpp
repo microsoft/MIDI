@@ -673,8 +673,16 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
     auto const definitions = TransportState::Current().GetClientDefinitions();
     auto const now = GetTickCount64();
 
+    // An entry's next attempt, copied under the lock
+    struct ClientAttempt
+    {
+        RtpMidiClientDefinition Definition{};
+        std::wstring ConnectedAddress;
+        uint32_t UnansweredAttempts{ 0 };
+    };
+
     std::vector<std::shared_ptr<RtpMidiNode>> toStop;
-    std::vector<RtpMidiClientDefinition> toAttempt;
+    std::vector<ClientAttempt> toAttempt;
 
     {
         auto lock = std::scoped_lock{ m_runtimeLock };
@@ -700,6 +708,10 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
                 it->second.InvitationOutstanding = false;
                 it->second.NextAttemptTick = 0;
                 it->second.LastError = S_OK;
+
+                // the remote may be a different one now
+                it->second.ConnectedAddress.clear();
+                it->second.UnansweredAttempts = 0;
             }
 
             ++it;
@@ -717,7 +729,7 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
             if (runtime.State == ClientEntryState::Live || runtime.State == ClientEntryState::Unavailable) continue;
             if (runtime.InvitationOutstanding || now < runtime.NextAttemptTick) continue;
 
-            toAttempt.push_back(definition);
+            toAttempt.push_back(ClientAttempt{ definition, runtime.ConnectedAddress, runtime.UnansweredAttempts });
         }
     }
 
@@ -726,13 +738,23 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
     for (auto const& node : toStop) node->Stop();
     toStop.clear();
 
-    for (auto const& definition : toAttempt)
+    for (auto const& attempt : toAttempt)
     {
         if (stopToken.stop_requested()) break;
 
+        auto const& definition = attempt.Definition;
+
+        std::vector<std::wstring> addresses{};
+        uint16_t port{ 0 };
+        std::wstring address{};
         RtpMidi::PeerAddress target{};
 
-        if (!TryResolveClientTarget(definition, stopToken, target))
+        if (TryResolveClientTarget(definition, stopToken, addresses, port))
+        {
+            address = WindowsMidiServicesInternal::ChooseMidiNetworkAddress(addresses, attempt.ConnectedAddress, attempt.UnansweredAttempts);
+        }
+
+        if (address.empty() || !RtpMidiNet::TryParseAddress(address, port, target))
         {
             auto lock = std::scoped_lock{ m_runtimeLock };
 
@@ -810,6 +832,10 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
             auto const it = m_clients.find(definition.EntryId);
             if (it == m_clients.end() || it->second.Node != node) continue;
 
+            // first, because copying the address can throw and must not leave an invitation marked outstanding
+            it->second.AttemptAddress = address;
+            it->second.AttemptAddressCount = static_cast<uint32_t>(addresses.size());
+
             // set before inviting, because the answer can arrive before Invite returns
             it->second.InvitationOutstanding = true;
             it->second.State = ClientEntryState::Pending;
@@ -841,6 +867,9 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
                 it->second.State = ClientEntryState::Failed;
                 it->second.LastError = inviteHr;
                 it->second.NextAttemptTick = now + MIDI_RTP_CLIENT_RETRY_INTERVAL_MS;
+
+                // so the next attempt goes to the remote's next address, if it has another
+                it->second.UnansweredAttempts++;
             }
         }
     }
@@ -849,91 +878,36 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
 
 _Use_decl_annotations_
 bool
-CMidi2RtpMidiEndpointManager::TryResolveClientTarget(RtpMidiClientDefinition const& definition, std::stop_token const& stopToken, RtpMidi::PeerAddress& target)
+CMidi2RtpMidiEndpointManager::TryResolveClientTarget(
+    RtpMidiClientDefinition const& definition,
+    std::stop_token const& stopToken,
+    std::vector<std::wstring>& addresses,
+    uint16_t& port)
 {
-    target = RtpMidi::PeerAddress{};
+    addresses.clear();
+    port = 0;
 
     try
     {
         if (definition.IsDirect())
         {
-            if (RtpMidiNet::TryParseAddress(definition.RemoteAddress, definition.RemotePort, target)) return true;
+            port = definition.RemotePort;
 
-            // A host name, which may be a .local name answered over multicast DNS. The lookup has
-            // a time limit and a service stop cancels it, so a slow or missing DNS server cannot
-            // hold up shutdown.
-            wil::unique_event_nothrow resolved;
-            wil::unique_event_nothrow stopped;
+            RtpMidi::PeerAddress typed{};
 
-            if (!resolved.try_create(wil::EventOptions::ManualReset, nullptr) ||
-                !stopped.try_create(wil::EventOptions::ManualReset, nullptr))
+            if (RtpMidiNet::TryParseAddress(definition.RemoteAddress, definition.RemotePort, typed))
             {
-                return false;
+                addresses.push_back(definition.RemoteAddress);
+                return true;
             }
 
-            std::stop_callback const onStop{ stopToken, [&]() noexcept { stopped.SetEvent(); } };
+            // A host name, which may be a .local name answered over multicast DNS. Each of its
+            // addresses gets a turn, in the order Windows prefers. The lookup has a time limit and
+            // a service stop cancels it, so a slow or missing DNS server cannot hold up shutdown.
+            addresses = WindowsMidiServicesInternal::SortMidiNetworkAddresses(
+                WindowsMidiServicesInternal::ResolveMidiNetworkHostName(definition.RemoteAddress, MIDI_RTP_NAME_RESOLUTION_TIMEOUT_SECONDS, stopToken));
 
-            ADDRINFOEXW hints{};
-            hints.ai_family = AF_UNSPEC;
-            hints.ai_socktype = SOCK_DGRAM;
-            hints.ai_protocol = IPPROTO_UDP;
-
-            PADDRINFOEXW results{ nullptr };
-            OVERLAPPED overlapped{};
-            overlapped.hEvent = resolved.get();
-            HANDLE cancel{ nullptr };
-            timeval timeout{ MIDI_RTP_NAME_RESOLUTION_TIMEOUT_SECONDS, 0 };
-
-            auto const service = std::to_wstring(definition.RemotePort);
-
-            auto status = GetAddrInfoExW(definition.RemoteAddress.c_str(), service.c_str(), NS_ALL, nullptr, &hints, &results,
-                &timeout, &overlapped, nullptr, &cancel);
-
-            if (status == WSA_IO_PENDING)
-            {
-                HANDLE const handles[]{ resolved.get(), stopped.get() };
-
-                if (WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE) != WAIT_OBJECT_0)
-                {
-                    // canceled or not, the lookup has to finish before the buffers it writes go away
-                    GetAddrInfoExCancel(&cancel);
-                    WaitForSingleObject(resolved.get(), INFINITE);
-                }
-
-                status = GetAddrInfoExOverlappedResult(&overlapped);
-            }
-
-            auto freeResults = wil::scope_exit([&]() { if (results != nullptr) FreeAddrInfoExW(results); });
-
-            if (status != NO_ERROR || results == nullptr) return false;
-
-            RtpMidi::PeerAddress firstV6{};
-            bool haveV6{ false };
-
-            for (auto result = results; result != nullptr; result = result->ai_next)
-            {
-                if (result->ai_addr == nullptr || result->ai_addrlen > sizeof(sockaddr_storage)) continue;
-
-                sockaddr_storage storage{};
-                memcpy(&storage, result->ai_addr, result->ai_addrlen);
-
-                auto const address = RtpMidiNet::FromSockaddr(storage);
-
-                if (address.Family == 4)
-                {
-                    target = address;
-                    return true;
-                }
-
-                if (address.Family == 6 && !haveV6)
-                {
-                    firstV6 = address;
-                    haveV6 = true;
-                }
-            }
-
-            if (haveV6) target = firstV6;
-            return haveV6;
+            return !addresses.empty();
         }
 
         for (auto const& service : m_browser.EnumeratedServices())
@@ -941,7 +915,14 @@ CMidi2RtpMidiEndpointManager::TryResolveClientTarget(RtpMidiClientDefinition con
             if (!service.IsResolved()) continue;
             if (_wcsicmp(service.ServiceInstanceName.c_str(), definition.RemoteServiceInstanceName.c_str()) != 0) continue;
 
-            return RtpMidiNet::ChooseServiceAddress(service, target);
+            // every address it advertised, in the order Windows prefers
+            std::vector<std::wstring> advertised{ service.IPv4Addresses };
+            advertised.insert(advertised.end(), service.IPv6Addresses.begin(), service.IPv6Addresses.end());
+
+            addresses = WindowsMidiServicesInternal::SortMidiNetworkAddresses(advertised);
+            port = service.Port;
+
+            return !addresses.empty();
         }
 
         return false;
@@ -949,7 +930,8 @@ CMidi2RtpMidiEndpointManager::TryResolveClientTarget(RtpMidiClientDefinition con
     catch (...)
     {
         LOG_CAUGHT_EXCEPTION();
-        target = RtpMidi::PeerAddress{};
+        addresses.clear();
+        port = 0;
         return false;
     }
 }
@@ -1293,6 +1275,10 @@ CMidi2RtpMidiEndpointManager::OnConnectionUp(std::shared_ptr<RtpMidiConnection> 
             it->second.State = ClientEntryState::Live;
             it->second.InvitationOutstanding = false;
             it->second.LastError = S_OK;
+
+            // tried first next time
+            it->second.ConnectedAddress = it->second.AttemptAddress;
+            it->second.UnansweredAttempts = 0;
         }
     }
 
@@ -1352,9 +1338,24 @@ CMidi2RtpMidiEndpointManager::OnInvitationEnded(RtpMidiNode const* node, RtpMidi
         runtime.LastError = EndReasonToHresult(reason);
         runtime.NextAttemptTick = GetTickCount64() + MIDI_RTP_CLIENT_RETRY_INTERVAL_MS;
 
-        // A disconnect asked for here stays disconnected until a reconnect is asked for
-        if (reason == RtpMidi::EndReason::LocalRequest || !runtime.Definition.AutoReconnect)
+        bool nextAddressNow{ false };
+
+        // Nobody answered at that address, so the next attempt goes to the remote's next one. If
+        // that one hasn't been tried, it goes at once: it is still the same attempt to connect.
+        if (reason == RtpMidi::EndReason::NoAnswer)
         {
+            runtime.UnansweredAttempts++;
+            nextAddressNow = WindowsMidiServicesInternal::IsNextMidiNetworkAddressUntried(runtime.UnansweredAttempts, runtime.AttemptAddressCount);
+        }
+
+        if (nextAddressNow)
+        {
+            runtime.State = ClientEntryState::Pending;
+            runtime.NextAttemptTick = 0;
+        }
+        else if (reason == RtpMidi::EndReason::LocalRequest || !runtime.Definition.AutoReconnect)
+        {
+            // A disconnect asked for here stays disconnected until a reconnect is asked for
             runtime.State = ClientEntryState::Unavailable;
         }
         else

@@ -165,13 +165,18 @@ MidiNetworkClientConnection::OnWatchdogTick()
                 return S_OK;
             }));
 
-        // The host may simply not be switched on yet. An advertised host is picked up again when
-        // it advertises, and a direct one after the scan interval.
-        if (!m_shuttingDown)
+        // The host may simply not be switched on yet, or may not answer at that address. The next
+        // attempt goes to its next address, at once if that one hasn't been tried. Otherwise an
+        // advertised host is picked up again when it advertises, and a direct one after the scan
+        // interval.
+        if (!m_shuttingDown && TransportState::Current().MarkClientDefinitionUnanswered(m_configIdentifier))
         {
-            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionForRetry(
-                m_configIdentifier,
-                NETWORK_ERROR_CODE_NO_REPLY_TO_INVITATION));
+            auto endpointManager = TransportState::Current().GetEndpointManager();
+
+            if (endpointManager != nullptr)
+            {
+                LOG_IF_FAILED(endpointManager->WakeupBackgroundEndpointCreatorThread());
+            }
         }
 
         return S_OK;
@@ -345,7 +350,7 @@ MidiNetworkClientConnection::HandleIncomingInvitationReplyAccepted(
         m_sessionEverEstablished = true;
     }
 
-    LOG_IF_FAILED(TransportState::Current().ClearClientDefinitionLastErrorCode(m_configIdentifier));
+    LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionSessionOpened(m_configIdentifier));
 
     // Creating the endpoint blocks on the service, and this is the socket receive callback
     auto queueHr = endpointManager->QueueClientEndpointCreation(

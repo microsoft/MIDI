@@ -257,6 +257,7 @@ namespace winrt::midinetworksetup::implementation
             midiapp::MakeLiveStatusRegion(RtpRemoteStatusText());
             midiapp::MakeLiveStatusRegion(RtpLocalStatusText());
             midiapp::MakeLiveStatusRegion(RtpCreateHostStatusText());
+            midiapp::MakeLiveStatusRegion(FirewallStatusText());
 
             midiapp::WindowChromeElements elements{};
 
@@ -291,6 +292,10 @@ namespace winrt::midinetworksetup::implementation
 
             InitializeSendSpeedPickers();
 
+            // set in code rather than in the markup, because the page marks the one in use later
+            FirewallPrivateCheckBox().Content(winrt::box_value(res::GetString(L"FirewallPrivateNetworks")));
+            FirewallPublicCheckBox().Content(winrt::box_value(res::GetString(L"FirewallPublicNetworks")));
+
             // the startup options were parsed before the window existed
             auto const& options = App::StartupOptions();
 
@@ -323,12 +328,15 @@ namespace winrt::midinetworksetup::implementation
                     startupPage == native::AppSettings::PageIndexRtpRemoteHosts ||
                     startupPage == native::AppSettings::PageIndexRtpLocalHosts;
 
+                // the firewall page is about the MIDI service, so it is there with either transport
+                auto const isFirewallPage = startupPage == native::AppSettings::PageIndexFirewall;
+
                 // the page saved last time may belong to a transport which is not here now
                 if (isRtpPage && !m_rtpUsable)
                 {
                     startupPage = native::AppSettings::PageIndexRemoteHosts;
                 }
-                else if (!isRtpPage && !m_networkMidi2Usable)
+                else if (!isRtpPage && !isFirewallPage && !m_networkMidi2Usable)
                 {
                     startupPage = startupPage == native::AppSettings::PageIndexLocalHosts ?
                         native::AppSettings::PageIndexRtpLocalHosts :
@@ -336,6 +344,11 @@ namespace winrt::midinetworksetup::implementation
                 }
 
                 ShowPage(startupPage);
+
+                if (isFirewallPage)
+                {
+                    RefreshFirewallStateAsync();
+                }
 
                 MainNavigation().SelectedItem(NavigationItemForPage(startupPage));
 
@@ -345,6 +358,29 @@ namespace winrt::midinetworksetup::implementation
                     selected.Focus(xaml::FocusState::Programmatic);
                 }
             }
+
+            // so the firewall page catches up with a change made in Windows Security meanwhile
+            Activated([weak = get_weak()](auto&&, xaml::WindowActivatedEventArgs const& args)
+                {
+                    try
+                    {
+                        auto strong = weak.get();
+
+                        if (strong == nullptr || strong->m_closing ||
+                            args.WindowActivationState() == xaml::WindowActivationState::Deactivated)
+                        {
+                            return;
+                        }
+
+                        if (strong->FirewallPanel().Visibility() == xaml::Visibility::Visible)
+                        {
+                            strong->RefreshFirewallStateAsync();
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
+                });
 
             Closed([weak = get_weak()](auto&&, auto&&)
                 {
@@ -442,6 +478,7 @@ namespace winrt::midinetworksetup::implementation
                 SettingsPanel().Visibility(xaml::Visibility::Collapsed);
                 RtpRemoteHostsPanel().Visibility(xaml::Visibility::Collapsed);
                 RtpLocalHostsPanel().Visibility(xaml::Visibility::Collapsed);
+                FirewallPanel().Visibility(xaml::Visibility::Collapsed);
                 MainNavigation().IsEnabled(false);
 
                 return false;
@@ -748,6 +785,7 @@ namespace winrt::midinetworksetup::implementation
                 tag == L"settings" ? native::AppSettings::PageIndexTransportSettings :
                 tag == L"rtp-remote" ? native::AppSettings::PageIndexRtpRemoteHosts :
                 tag == L"rtp-local" ? native::AppSettings::PageIndexRtpLocalHosts :
+                tag == L"firewall" ? native::AppSettings::PageIndexFirewall :
                 native::AppSettings::PageIndexRemoteHosts;
 
             // Leaving the page with a debounced write still waiting would quietly discard the
@@ -764,6 +802,12 @@ namespace winrt::midinetworksetup::implementation
             if (pageIndex == native::AppSettings::PageIndexTransportSettings)
             {
                 LoadTransportSettings();
+                return;
+            }
+
+            if (pageIndex == native::AppSettings::PageIndexFirewall)
+            {
+                RefreshFirewallStateAsync();
                 return;
             }
 
@@ -797,6 +841,11 @@ namespace winrt::midinetworksetup::implementation
                 return RtpLocalHostsNavigationItem().as<foundation::IInspectable>();
             }
 
+            if (pageIndex == native::AppSettings::PageIndexFirewall)
+            {
+                return FirewallNavigationItem().as<foundation::IInspectable>();
+            }
+
             return RemoteHostsNavigationItem().as<foundation::IInspectable>();
         }
         catch (...)
@@ -823,6 +872,9 @@ namespace winrt::midinetworksetup::implementation
 
             RtpLocalHostsPanel().Visibility(
                 pageIndex == native::AppSettings::PageIndexRtpLocalHosts ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            FirewallPanel().Visibility(
+                pageIndex == native::AppSettings::PageIndexFirewall ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
         }
         catch (...)
         {

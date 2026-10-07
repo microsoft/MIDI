@@ -16,6 +16,7 @@
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="StringResources.cpp" />
+    <ClCompile Include="ServiceFirewall.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
@@ -32,6 +33,7 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="StringResources.h" />
+    <ClInclude Include="ServiceFirewall.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
     <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />

@@ -1206,4 +1206,117 @@
     <value>Windows could not change the sending speed for {0}, because this PC's connection to it is not saved. Forget it, then connect again.</value>
     <comment>{0} is the name of a device this PC connects to.</comment>
   </data>
+  <data name="FirewallNavigationItem.Content" xml:space="preserve">
+    <value>Firewall</value>
+  </data>
+  <data name="FirewallHeader.Text" xml:space="preserve">
+    <value>Windows Firewall</value>
+  </data>
+  <data name="FirewallDescription.Text" xml:space="preserve">
+    <value>Devices on your network connect to this PC's hosts through the MIDI service, and Windows Firewall keeps them out until the service is allowed in. Windows may have asked whether to let this app through the firewall, but that answer covers this app only. The MIDI service runs in the background with no window, so it cannot ask.</value>
+  </data>
+  <data name="FirewallSymptomHeader.Text" xml:space="preserve">
+    <value>Can other devices see this PC, but not connect to it?</value>
+  </data>
+  <data name="FirewallSymptomDescription.Text" xml:space="preserve">
+    <value>Windows announces this PC's hosts on the network for the MIDI service, so other devices can list them even while the firewall blocks the service. If another device lists this PC but cannot connect to it, or it connects and no MIDI ever arrives, the firewall is the most likely reason.</value>
+  </data>
+  <data name="FirewallAllowHeader.Text" xml:space="preserve">
+    <value>Allow the MIDI service through Windows Firewall</value>
+  </data>
+  <data name="FirewallPrivateNetworks" xml:space="preserve">
+    <value>Private networks, like the one at home or in your studio</value>
+    <comment>A check box. Private and public are the network types Windows uses in Settings.</comment>
+  </data>
+  <data name="FirewallPublicNetworks" xml:space="preserve">
+    <value>Public networks, like the ones at a venue, a hotel, or a coffee shop</value>
+    <comment>A check box. Private and public are the network types Windows uses in Settings.</comment>
+  </data>
+  <data name="FirewallConnectedNowFormat" xml:space="preserve">
+    <value>{0} (connected now)</value>
+    <comment>{0} is FirewallPrivateNetworks or FirewallPublicNetworks. Marks the type of network this PC is connected to now.</comment>
+  </data>
+  <data name="FirewallNetworkTypeHelp.Text" xml:space="preserve">
+    <value>Windows treats a network as public until you mark it as private, so your home or studio network might be public. Only allow public networks if you trust the other devices on them.</value>
+  </data>
+  <data name="FirewallAllowButton.Content" xml:space="preserve">
+    <value>Allow through Windows Firewall</value>
+  </data>
+  <data name="FirewallAllowNote.Text" xml:space="preserve">
+    <value>Windows asks for administrator permission first. This adds one rule for the MIDI service to Windows Firewall, and using it again changes that same rule. Rules you made yourself in Windows Firewall are left as they are.</value>
+  </data>
+  <data name="FirewallOtherHeader.Text" xml:space="preserve">
+    <value>Using a different firewall?</value>
+  </data>
+  <data name="FirewallOtherDescription.Text" xml:space="preserve">
+    <value>This page changes Windows Firewall only. Some PCs use a firewall from another company instead, often one that comes with antivirus software. If yours does, follow that company's instructions for letting a program accept incoming connections, and choose the MIDI service program shown here.</value>
+  </data>
+  <data name="FirewallServicePathLabel.Text" xml:space="preserve">
+    <value>MIDI service program</value>
+  </data>
+  <data name="FirewallServicePathUnknown" xml:space="preserve">
+    <value>The MIDI service could not be found.</value>
+  </data>
+  <data name="FirewallHelpLink.Content" xml:space="preserve">
+    <value>How to allow the MIDI service through Windows Firewall yourself</value>
+  </data>
+  <data name="FirewallStateOpen" xml:space="preserve">
+    <value>Windows Firewall lets the MIDI service in on the network this PC is connected to now.</value>
+  </data>
+  <data name="FirewallStateClosed" xml:space="preserve">
+    <value>Windows Firewall is blocking the MIDI service on the network this PC is connected to now. Check that type of network below, then select Allow through Windows Firewall.</value>
+    <comment>"Allow through Windows Firewall" is FirewallAllowButton.Content.</comment>
+  </data>
+  <data name="FirewallStateClosedByRule" xml:space="preserve">
+    <value>A rule in Windows Firewall blocks the MIDI service on the network this PC is connected to now. A rule that blocks wins over one that allows, so turn that rule off or remove it in Windows Firewall first.</value>
+  </data>
+  <data name="FirewallStateClosedForAll" xml:space="preserve">
+    <value>Windows Firewall is set to block all incoming connections on the network this PC is connected to now. That blocks allowed apps too, so turn that setting off in Windows Security first.</value>
+  </data>
+  <data name="FirewallStateOff" xml:space="preserve">
+    <value>Windows Firewall is turned off on the network this PC is connected to now, so it is not blocking the MIDI service. If your PC uses a different firewall, see below.</value>
+  </data>
+  <data name="FirewallStateServiceNotFound" xml:space="preserve">
+    <value>The MIDI service is not installed on this PC, so there is nothing to allow.</value>
+  </data>
+  <data name="FirewallStateNotConnected" xml:space="preserve">
+    <value>This PC is not connected to a network right now.</value>
+  </data>
+  <data name="FirewallStateUnknown" xml:space="preserve">
+    <value>The Windows Firewall settings could not be read.</value>
+  </data>
+  <data name="FirewallStateManagedFormat" xml:space="preserve">
+    <value>{0} Your organization manages Windows Firewall on this PC, so a change made here might not take effect.</value>
+    <comment>{0} is one of the FirewallState sentences.</comment>
+  </data>
+  <data name="FirewallAllowWaiting" xml:space="preserve">
+    <value>Waiting for administrator permission...</value>
+  </data>
+  <data name="FirewallAllowSucceeded" xml:space="preserve">
+    <value>Windows Firewall now lets the MIDI service in on the networks you chose.</value>
+  </data>
+  <data name="FirewallAllowCanceled" xml:space="preserve">
+    <value>Windows Firewall was not changed, because administrator permission was not given.</value>
+  </data>
+  <data name="FirewallAllowServiceMissing" xml:space="preserve">
+    <value>Windows Firewall was not changed, because the MIDI service is not installed.</value>
+  </data>
+  <data name="FirewallAllowFirewallNotRunning" xml:space="preserve">
+    <value>Windows Firewall could not be changed, because its service is not running.</value>
+  </data>
+  <data name="FirewallAllowFailedFormat" xml:space="preserve">
+    <value>Windows Firewall could not be changed. {0}</value>
+    <comment>{0} is the reason Windows gave.</comment>
+  </data>
+  <data name="FirewallAllowFailed" xml:space="preserve">
+    <value>Windows Firewall could not be changed.</value>
+  </data>
+  <data name="FirewallRuleName" xml:space="preserve">
+    <value>Windows MIDI Service (network MIDI)</value>
+    <comment>The name of the rule this app adds, as Windows Firewall shows it. The app also finds its rule again by this name, so a changed translation leaves the old rule behind.</comment>
+  </data>
+  <data name="FirewallRuleDescription" xml:space="preserve">
+    <value>Lets other devices on your network connect to the network MIDI hosts on this PC. Added by Windows MIDI Network Setup.</value>
+    <comment>The description of the rule this app adds, as Windows Firewall shows it.</comment>
+  </data>
 </root>

@@ -124,6 +124,9 @@ namespace internal = ::WindowsMidiServicesInternal;
 // The adapters a host can be limited to, shared with the SDK and the setup app
 #include "midi_network_adapters.h"
 
+// Which of a remote's addresses a client tries, shared with the RTP-MIDI transport
+#include "midi_network_addresses.h"
+
 // The send speed limit, shared with the RTP-MIDI transport
 #include "midi_send_pacer.h"
 

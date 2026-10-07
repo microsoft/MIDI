@@ -8,6 +8,10 @@
 #include "pch.h"
 #include "RtpMidiTransportTests.h"
 
+#include <chrono>
+
+#include "midi_network_addresses.h"
+
 #include "WindowsMidiServices_i.c"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
@@ -116,6 +120,24 @@ namespace
         SOCKET m_socket{ INVALID_SOCKET };
         bool m_held{ false };
     };
+
+    // Runs on the way out of a test, a failed check included, so nothing a test made outlives it
+    template <typename Action>
+    struct OnExit
+    {
+        Action Run;
+
+        ~OnExit()
+        {
+            try { Run(); } catch (...) {}
+        }
+    };
+
+    // milliseconds since start
+    long long Since(_In_ std::chrono::steady_clock::time_point const start)
+    {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
+    }
 }
 
 json::JsonObject RtpMidiTransportTests::Send(std::wstring const& text, HRESULT* result)
@@ -414,6 +436,100 @@ void RtpMidiTransportTests::TestClientConnectsToRemoteHost()
     VERIFY_IS_TRUE(WaitFor([&]() { return remoteHost.Ended().size() > endsBefore; }, 3000), L"the remote host is told");
     VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints()[baseline + 1].Removed; }, 3000), L"the endpoint is removed");
     VERIFY_IS_TRUE(FindClient(clientId) == nullptr, L"the client is no longer listed");
+}
+
+// localhost has an IPv4 and an IPv6 address. The client used to invite the IPv4 one whenever
+// there was one. Now it invites the one Windows puts first, as Windows does for any name.
+void RtpMidiTransportTests::TestClientInvitesTheAddressWindowsPrefers()
+{
+    auto const order = WindowsMidiServicesInternal::SortMidiNetworkAddresses({ L"127.0.0.1", L"::1" });
+
+    if (order.size() < 2)
+    {
+        Log::Result(TestResults::Skipped, L"This PC can't reach both loopback addresses.");
+        return;
+    }
+
+    Log::Comment(String().Format(L"Windows puts %s first", order[0].c_str()));
+
+    auto const baseline = m_deviceManager->Endpoints().size();
+
+    // listening only at the address Windows puts first
+    Peer remoteHost("Preferred Address Host", true, order[0] == L"127.0.0.1");
+    VERIFY_IS_TRUE(remoteHost.Start(), L"the remote host binds a loopback port pair");
+
+    auto const clientId = NewGuidText();
+    OnExit removeClient{ [&]() { Send(Command(L"removeClient", { { L"entryIdentifier", clientId } })); } };
+
+    auto const clientSection =
+        L"{\"create\":{\"clients\":{\"" + clientId + L"\":{\"name\":\"Preferred Address Client\",\"remoteAddress\":\"localhost\",\"remotePort\":" +
+        std::to_wstring(remoteHost.ControlPort()) + L"}}}}";
+
+    VERIFY_IS_TRUE(IsSuccess(Send(clientSection)), L"a client for localhost is accepted");
+
+    // an unanswered invitation round takes 12 seconds, so this is well inside the first one
+    VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints().size() == baseline + 1; }, 8000),
+        L"the client connects at the first address it tries");
+
+    VERIFY_IS_TRUE(EntryState(FindClient(clientId)) == L"live", L"the client entry is live");
+}
+
+// Nothing answers at the address Windows puts first, so the next attempt goes to the other one
+// straight away. Once a connection is made there, that address is tried first from then on.
+void RtpMidiTransportTests::TestClientTriesTheNextAddressWhenOneDoesNotAnswer()
+{
+    auto const order = WindowsMidiServicesInternal::SortMidiNetworkAddresses({ L"127.0.0.1", L"::1" });
+
+    if (order.size() < 2)
+    {
+        Log::Result(TestResults::Skipped, L"This PC can't reach both loopback addresses.");
+        return;
+    }
+
+    Log::Comment(String().Format(L"Windows puts %s first. Nothing answers there, so this waits out one invitation round of about 12 seconds.", order[0].c_str()));
+
+    auto const baseline = m_deviceManager->Endpoints().size();
+
+    // listening only at the address Windows puts second
+    Peer remoteHost("Second Address Host", true, order[1] == L"127.0.0.1");
+    VERIFY_IS_TRUE(remoteHost.Start(), L"the remote host binds a loopback port pair");
+
+    auto const clientId = NewGuidText();
+    OnExit removeClient{ [&]() { Send(Command(L"removeClient", { { L"entryIdentifier", clientId } })); } };
+
+    auto const clientSection =
+        L"{\"create\":{\"clients\":{\"" + clientId + L"\":{\"name\":\"Second Address Client\",\"remoteAddress\":\"localhost\",\"remotePort\":" +
+        std::to_wstring(remoteHost.ControlPort()) + L"}}}}";
+
+    auto const started = std::chrono::steady_clock::now();
+
+    VERIFY_IS_TRUE(IsSuccess(Send(clientSection)), L"a client for localhost is accepted");
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints().size() == baseline + 1; }, 30000),
+        L"the client connects at the second address");
+
+    auto const firstConnection = Since(started);
+    Log::Comment(String().Format(L"Connected after %lld ms", firstConnection));
+
+    // the retry wait after an attempt is 15 seconds, so connecting before then means no wait
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(firstConnection, 5000ll, L"the first invitation went to the address Windows puts first, and nobody answered it");
+    VERIFY_IS_LESS_THAN(firstConnection, 25000ll, L"the second address was tried straight away, not after the retry wait");
+    VERIFY_IS_TRUE(EntryState(FindClient(clientId)) == L"live", L"the client entry is live");
+
+    // the remote ends it, and the client is asked to connect again at once
+    remoteHost.EndAll();
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints()[baseline].Removed; }, 3000), L"the endpoint goes when the remote ends the connection");
+    VERIFY_IS_TRUE(WaitFor([&]() { return EntryState(FindClient(clientId)) == L"failed"; }, 3000), L"the client entry waits to try again");
+
+    auto const reconnecting = std::chrono::steady_clock::now();
+
+    VERIFY_IS_TRUE(IsSuccess(Send(Command(L"reconnectClient", { { L"entryIdentifier", clientId } }))), L"reconnect the client now");
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints().size() == baseline + 2; }, 8000),
+        L"the client connects again well inside one invitation round, at the address that worked");
+
+    Log::Comment(String().Format(L"Connected again after %lld ms", Since(reconnecting)));
 }
 
 void RtpMidiTransportTests::TestSameNameFromTwoRemotesGetsTwoEndpoints()

@@ -11,6 +11,7 @@
 
 #include "AppSettings.h"
 #include "NetworkItems.h"
+#include "ServiceFirewall.h"
 
 namespace winrt::midinetworksetup::implementation
 {
@@ -41,6 +42,9 @@ namespace winrt::midinetworksetup::implementation
         void OnRestoreTransportSettingDefaultsClick(
             foundation::IInspectable const& sender,
             xaml::RoutedEventArgs const& args);
+
+        void OnFirewallNetworkChoiceChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnAllowThroughFirewallClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
 
         winrt::fire_and_forget OnConnectRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -214,6 +218,12 @@ namespace winrt::midinetworksetup::implementation
         // Appends the default to each setting's description, so the customer can see it without
         // having to reset the box to find out what it was.
         void AppendTransportSettingDefaults() noexcept;
+
+        // The firewall page reads Windows Firewall when it is shown, when the window comes back to
+        // the front, and after a change, rather than on the refresh timer: it walks every rule.
+        winrt::fire_and_forget RefreshFirewallStateAsync() noexcept;
+        void ApplyFirewallState(_In_ ::midinetworksetup::firewall::FirewallState const& state) noexcept;
+        void UpdateFirewallControls() noexcept;
 
         void UpdateManualConnectButton() noexcept;
         void UpdateCreateHostButtonState() noexcept;
@@ -389,6 +399,8 @@ namespace winrt::midinetworksetup::implementation
         // otherwise be a round trip to the service and a rewrite of the configuration file.
         winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_transportSettingsWriteTimer{ nullptr };
 
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_firewallStatusTimer{ nullptr };
+
         collections::IObservableVector<midinetworksetup::PendingInvitationItem> m_pendingInvitations{
             winrt::single_threaded_observable_vector<midinetworksetup::PendingInvitationItem>() };
 
@@ -426,6 +438,16 @@ namespace winrt::midinetworksetup::implementation
         // Closing the notifications bar means "not now", so it stays closed until the app has
         // run and stopped again rather than coming back on the next refresh.
         bool m_notificationsBannerDismissed{ false };
+
+        // The firewall page. The network choices are set from the first reading only, and are the
+        // customer's after that.
+        bool m_firewallBusy{ false };
+        bool m_firewallRefreshInProgress{ false };
+        bool m_firewallServiceFound{ false };
+        bool m_firewallChoicesSet{ false };
+
+        // what this app's rule covers now, so the button is only offered for a change
+        long m_firewallOwnRuleNetworks{ 0 };
     };
 }
 

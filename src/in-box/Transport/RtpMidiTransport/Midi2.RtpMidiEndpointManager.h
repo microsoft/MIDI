@@ -97,6 +97,13 @@ private:
         HRESULT LastError{ S_OK };
         uint64_t NextAttemptTick{ 0 };
         bool InvitationOutstanding{ false };
+
+        // A remote can have several addresses. They are tried in turn: the one the last connection
+        // was made on first, then the others in the order Windows prefers. See midi_network_addresses.h.
+        std::wstring AttemptAddress;            // where the last invitation went
+        uint32_t AttemptAddressCount{ 0 };      // how many addresses the remote had then
+        std::wstring ConnectedAddress;          // where the last connection was made
+        uint32_t UnansweredAttempts{ 0 };       // invitations nobody answered since then
     };
 
     struct EndpointWork
@@ -125,7 +132,13 @@ private:
     HRESULT RemoveEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
     bool IsInstanceIdInUse(_In_ std::wstring const& instanceId);
 
-    bool TryResolveClientTarget(_In_ RtpMidiClientDefinition const& definition, _In_ std::stop_token const& stopToken, _Out_ RtpMidi::PeerAddress& target);
+    // The addresses a client should invite, in the order to try them, and the port they share.
+    // False when there is nowhere to connect yet.
+    bool TryResolveClientTarget(
+        _In_ RtpMidiClientDefinition const& definition,
+        _In_ std::stop_token const& stopToken,
+        _Out_ std::vector<std::wstring>& addresses,
+        _Out_ uint16_t& port);
 
     std::vector<std::shared_ptr<RtpMidiNode>> RunningNodes();
     json::JsonArray BuildConnectionsJson(_In_ std::shared_ptr<RtpMidiNode> const& node, _In_ uint32_t const entrySendSpeedLimit);

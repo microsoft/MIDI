@@ -235,6 +235,9 @@ enum class MidiNetworkEntryState
 // every other configured client behind it.
 #define MIDI_NETWORK_CLIENT_CONNECT_TIMEOUT_MILLISECONDS                5000
 
+// Looking up a direct entry's host name, which runs on that same worker
+#define MIDI_NETWORK_CLIENT_NAME_RESOLUTION_TIMEOUT_SECONDS             5
+
 #define MIDI_NETWORK_STARTING_OUTBOUND_UMP_QUEUE_CAPACITY               50
 
 // UDP drops a datagram that arrives while the socket's receive buffer is full, and a dropped
