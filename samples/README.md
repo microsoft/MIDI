@@ -7,4 +7,5 @@ Sample code showing how to use the SDK and API from various languages and develo
 - [C# Examples](csharp-net/README.md)
 - [PowerShell](powershell/README.md)
 - [Electron NodeJS Examples](electron-js/README.md)
+- [Application manifest listing every Windows.Devices.Midi2 class, for unpackaged apps that ship their own copy of the DLL](app-manifest/app.manifest)
 
