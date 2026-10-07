@@ -55,7 +55,9 @@ namespace winrt::midiclock::implementation
 
         // Only the parts that are not at their default, so a plain clock says nothing extra and
         // the tile keeps its usual height.
-        winrt::hstring DescribeTiming(_In_ ::midiclock::ClockRowData const& data) noexcept
+        winrt::hstring DescribeTiming(
+            _In_ ::midiclock::ClockRowData const& data,
+            _In_ std::optional<midiapp::MidiTimeCodePosition> const& playingPosition) noexcept
         {
             try
             {
@@ -78,9 +80,12 @@ namespace winrt::midiclock::implementation
 
                 if (data.Kind == ::midiclock::ClockKind::TimeCode)
                 {
-                    // Where it starts is the only number a time code clock has besides its rate,
-                    // and it is the one somebody lining up to a picture needs to see.
-                    append(winrt::hstring{ midiapp::FormatPosition(data.StartTimeCode, data.FrameRate) });
+                    // A time that never moves would look like a broken counter, so none at all.
+                    if (data.ShowTimeCode)
+                    {
+                        append(winrt::hstring{ midiapp::FormatPosition(
+                            playingPosition.value_or(data.StartTimeCode), data.FrameRate) });
+                    }
                 }
                 else
                 {
@@ -121,6 +126,8 @@ namespace winrt::midiclock::implementation
     {
         try
         {
+            m_data = data;
+
             if (m_id != winrt::hstring{ data.Id })
             {
                 m_id = winrt::hstring{ data.Id };
@@ -165,14 +172,7 @@ namespace winrt::midiclock::implementation
                 RaisePropertyChanged(L"DestinationText");
             }
 
-            auto const timingText = DescribeTiming(data);
-
-            if (m_timingText != timingText)
-            {
-                m_timingText = timingText;
-                RaisePropertyChanged(L"TimingText");
-                RaisePropertyChanged(L"TimingVisibility");
-            }
+            RefreshTimingText();
 
             if (m_isEndpointMissing != data.IsEndpointMissing)
             {
@@ -185,6 +185,39 @@ namespace winrt::midiclock::implementation
             RaisePropertyChanged(L"TileAccessibleName");
         }
         MIDI_CLOCK_CATCH_AND_LOG(L"Unable to update a clock tile.")
+    }
+
+    void ClockItem::RefreshTimingText() noexcept
+    {
+        try
+        {
+            auto timingText = DescribeTiming(m_data, m_playingPosition);
+
+            if (m_timingText == timingText)
+            {
+                return;
+            }
+
+            auto const visibilityChanged = m_timingText.empty() != timingText.empty();
+
+            m_timingText = std::move(timingText);
+
+            RaisePropertyChanged(L"TimingText");
+
+            if (visibilityChanged)
+            {
+                RaisePropertyChanged(L"TimingVisibility");
+            }
+        }
+        MIDI_CLOCK_CATCH_AND_LOG(L"Unable to update the timing line on a clock tile.")
+    }
+
+    _Use_decl_annotations_
+    void ClockItem::PlayingPosition(midiapp::MidiTimeCodePosition const& position) noexcept
+    {
+        m_playingPosition = position;
+
+        RefreshTimingText();
     }
 
     void ClockItem::RaiseRunStateChanged() noexcept
@@ -207,6 +240,13 @@ namespace winrt::midiclock::implementation
         }
 
         m_isRunning = value;
+
+        // back to the time the next start begins from
+        if (!m_isRunning && m_playingPosition.has_value())
+        {
+            m_playingPosition.reset();
+            RefreshTimingText();
+        }
 
         RaiseRunStateChanged();
     }

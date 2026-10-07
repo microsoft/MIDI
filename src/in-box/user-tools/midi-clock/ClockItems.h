@@ -31,6 +31,9 @@ namespace midiclock
         ClockKind Kind{ ClockKind::BeatClock };
         midiapp::MidiTimeCodeFrameRate FrameRate{ midiapp::MidiTimeCodeFrameRate::Frames30 };
         midiapp::MidiTimeCodePosition StartTimeCode{};
+
+        // The "Show the running time code" setting. Off leaves no time on a time code tile at all.
+        bool ShowTimeCode{ false };
     };
 }
 
@@ -64,6 +67,12 @@ namespace winrt::midiclock::implementation
         bool IsStartStopEnabled() const noexcept { return !m_isBusy; }
 
         bool IsEndpointMissing() const noexcept { return m_isEndpointMissing; }
+
+        bool IsTimeCode() const noexcept { return m_data.Kind == ::midiclock::ClockKind::TimeCode; }
+
+        // Where a running time code clock has got to, shown in place of where it starts until
+        // the clock stops.
+        void PlayingPosition(_In_ midiapp::MidiTimeCodePosition const& position) noexcept;
 
         bool IsSelected() const noexcept { return m_isSelected; }
         void IsSelected(bool value) noexcept;
@@ -110,6 +119,10 @@ namespace winrt::midiclock::implementation
         }
 
         void RaiseRunStateChanged() noexcept;
+        void RefreshTimingText() noexcept;
+
+        ::midiclock::ClockRowData m_data{};
+        std::optional<midiapp::MidiTimeCodePosition> m_playingPosition{};
 
         winrt::hstring m_id{};
         winrt::hstring m_displayName{};

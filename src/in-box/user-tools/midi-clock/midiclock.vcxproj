@@ -103,7 +103,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shlwapi.lib;shell32.lib;advapi32.lib;pathcch.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shlwapi.lib;shell32.lib;advapi32.lib;pathcch.lib;dwmapi.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -136,6 +136,7 @@
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="TapTempo.h" />
     <ClInclude Include="Telemetry.h" />
+    <ClInclude Include="WindowVisibility.h" />
     <ClInclude Include="App.xaml.h">
       <DependentUpon>App.xaml</DependentUpon>
     </ClInclude>
@@ -166,6 +167,7 @@
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="TapTempo.cpp" />
+    <ClCompile Include="WindowVisibility.cpp" />
     <ClCompile Include="App.xaml.cpp">
       <DependentUpon>App.xaml</DependentUpon>
     </ClCompile>

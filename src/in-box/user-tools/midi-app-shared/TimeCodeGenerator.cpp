@@ -98,6 +98,29 @@ namespace midiapp
     }
 
     _Use_decl_annotations_
+    MidiTimeCodePosition TimeCodeGenerator::PositionAt(uint64_t timestamp) const noexcept
+    {
+        // m_options and m_ticksPerQuarterFrame are only written by the constructor.
+        auto const origin = m_originTimestamp.load();
+        auto const scheduled = m_quarterFramesScheduled.load();
+
+        if (origin == 0 || scheduled == 0 || timestamp < origin || m_ticksPerQuarterFrame <= 0.0)
+        {
+            return m_options.StartPosition;
+        }
+
+        auto const elapsed = static_cast<uint64_t>(
+            static_cast<double>(timestamp - origin) / m_ticksPerQuarterFrame);
+
+        // Never past the last quarter frame handed over, so a clock that is stopping does not
+        // look as though it runs on.
+        auto const quarterFrame = std::min(elapsed, scheduled - 1);
+
+        return PositionAfterFrames(
+            m_options.StartPosition, m_options.FrameRate, quarterFrame / MidiTimeCodeQuarterFramesPerFrame);
+    }
+
+    _Use_decl_annotations_
     void TimeCodeGenerator::StorePosition(MidiTimeCodePosition const& position) noexcept
     {
         m_packedPosition.store(PackPosition(position));
@@ -125,6 +148,7 @@ namespace midiapp
 
         m_quarterFramesScheduled.store(0);
         m_lastScheduledTimestamp.store(0);
+        m_originTimestamp.store(0);
         StorePosition(m_options.StartPosition);
         m_running.store(true);
 
@@ -253,6 +277,8 @@ namespace midiapp
                 originTimestamp = originTimestamp > offsetTicks ? originTimestamp - offsetTicks : 0;
             }
         }
+
+        m_originTimestamp.store(originTimestamp);
 
         auto const rate = m_options.FrameRate;
 

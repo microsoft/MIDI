@@ -87,6 +87,9 @@ namespace winrt::midiclock::implementation
         // Sits at the top of the settings flyout, above the appearance controls.
         static xaml::UIElement BuildPerformanceNote() noexcept;
 
+        // Sits at the bottom of the settings flyout.
+        xaml::UIElement BuildTimeCodeSetting() noexcept;
+
         void StartEndpointWatcher() noexcept;
         void StopEndpointWatcher() noexcept;
         void RefreshEndpointList() noexcept;
@@ -95,6 +98,11 @@ namespace winrt::midiclock::implementation
         // clock that is still there.
         void RebuildTiles() noexcept;
         void RefreshTileText() noexcept;
+
+        // Moves the time on every running time code tile, but only while the setting is on and
+        // someone can see the window, and keeps its timer going only while that is true.
+        void RefreshPlayingTimeCode() noexcept;
+
         void UpdateEmptyState() noexcept;
         void UpdateStatus(winrt::hstring const& message) noexcept;
         void ReportStoreError() noexcept;
@@ -140,6 +148,8 @@ namespace winrt::midiclock::implementation
 
         ::midiclock::ClockEngine m_engine{};
         ::midiclock::TapTempo m_tapTempo{};
+
+        xaml::DispatcherTimer m_timeCodeTimer{ nullptr };
 
         collections::IObservableVector<winrt::midiclock::ClockItem> m_items{ nullptr };
         collections::IObservableVector<appshared::EndpointChoice> m_endpoints{ nullptr };

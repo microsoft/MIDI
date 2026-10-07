@@ -80,8 +80,9 @@ namespace midiclock
         bool IsRunning(_In_ std::wstring const& id) const noexcept;
         std::vector<std::wstring> RunningIds() const noexcept;
 
-        // Where a running time code clock has reached. False when the id is not a running time
-        // code clock, which includes every beat clock.
+        // What a running time code clock is sending now, for the display. Never waits: false
+        // while a start or stop holds the engine, and when the id is not a running time code
+        // clock, which includes every beat clock.
         bool TryGetTimeCodePosition(
             _In_ std::wstring const& id,
             _Out_ midiapp::MidiTimeCodePosition& position) const noexcept;

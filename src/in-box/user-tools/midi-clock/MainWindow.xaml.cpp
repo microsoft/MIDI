@@ -14,6 +14,7 @@
 #include "App.xaml.h"
 #include "BackgroundWork.h"
 #include "StringResources.h"
+#include "WindowVisibility.h"
 #include "resource.h"
 
 namespace native = ::midiclock;
@@ -25,6 +26,12 @@ namespace winrt::midiclock::implementation
     {
         constexpr int32_t DefaultWindowWidth = 980;
         constexpr int32_t DefaultWindowHeight = 660;
+
+        // Every update is a redraw, and the redraw is most of what showing the time costs.
+        constexpr std::chrono::milliseconds TimeCodeDisplayInterval{ 100 };
+
+        // While nobody can see the window, only often enough to notice when somebody can.
+        constexpr std::chrono::milliseconds OnScreenCheckInterval{ 250 };
 
         implementation::ClockItem* Impl(winrt::midiclock::ClockItem const& item) noexcept
         {
@@ -73,6 +80,17 @@ namespace winrt::midiclock::implementation
                     {
                         strong->StopEndpointWatcher();
 
+                        try
+                        {
+                            if (strong->m_timeCodeTimer != nullptr)
+                            {
+                                strong->m_timeCodeTimer.Stop();
+                            }
+                        }
+                        MIDI_CLOCK_CATCH_AND_LOG(L"Unable to stop the time code display.")
+
+                        native::StopWatchingDisplayPower();
+
                         // Synchronous on purpose: the stop messages and the pulses already in
                         // the service queue have to go out before this process ends, or an
                         // instrument is left running with nothing driving it.
@@ -82,6 +100,21 @@ namespace winrt::midiclock::implementation
                         strong->m_chrome.Shutdown();
                     }
                 });
+
+            // Back from minimized or brought to the front: look again now, not at the next slow
+            // check, so the tile does not sit on an old time.
+            auto const lookAgain = [weak = get_weak()](auto&&, auto&&)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->RefreshPlayingTimeCode();
+                    }
+                };
+
+            VisibilityChanged(lookAgain);
+            Activated(lookAgain);
+
+            native::StartWatchingDisplayPower();
 
             m_initialized = true;
 
@@ -189,7 +222,7 @@ namespace winrt::midiclock::implementation
                         strong->m_chrome.ApplyTheme();
                     }
                 },
-                nullptr,
+                BuildTimeCodeSetting(),
                 BuildPerformanceNote());
         }
         MIDI_CLOCK_CATCH_AND_LOG(L"Unable to show the appearance settings.")
@@ -231,6 +264,57 @@ namespace winrt::midiclock::implementation
             return border;
         }
         MIDI_CLOCK_CATCH_AND_LOG(L"Unable to build the performance note.")
+
+        return nullptr;
+    }
+
+    xaml::UIElement MainWindow::BuildTimeCodeSetting() noexcept
+    {
+        try
+        {
+            auto const description = res::GetString(L"SettingsShowRunningTimeCodeDescription");
+
+            controls::ToggleSwitch toggle{};
+            toggle.Header(winrt::box_value(res::GetString(L"SettingsShowRunningTimeCode")));
+            toggle.IsOn(native::AppSettings::Current().ShowRunningTimeCode());
+            xaml::Automation::AutomationProperties::SetHelpText(toggle, description);
+
+            toggle.Toggled([weak = get_weak()](foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+                {
+                    try
+                    {
+                        auto strong = weak.get();
+                        auto const changed = sender.try_as<controls::ToggleSwitch>();
+
+                        if (strong == nullptr || changed == nullptr)
+                        {
+                            return;
+                        }
+
+                        native::AppSettings::Current().ShowRunningTimeCode(changed.IsOn());
+
+                        // rebuilds the time line on every tile, then starts or stops the display
+                        strong->RefreshTileText();
+                    }
+                    MIDI_CLOCK_CATCH_AND_LOG(L"Unable to change the running time code setting.")
+                });
+
+            controls::TextBlock body{};
+            body.Text(description);
+            body.TextWrapping(xaml::TextWrapping::Wrap);
+            body.Style(xaml::Application::Current().Resources()
+                .Lookup(winrt::box_value(L"CaptionTextBlockStyle")).as<xaml::Style>());
+            body.Foreground(xaml::Application::Current().Resources()
+                .Lookup(winrt::box_value(L"TextFillColorSecondaryBrush")).as<xaml::Media::Brush>());
+
+            controls::StackPanel panel{};
+            panel.Spacing(4.0);
+            panel.Children().Append(toggle);
+            panel.Children().Append(body);
+
+            return panel;
+        }
+        MIDI_CLOCK_CATCH_AND_LOG(L"Unable to build the running time code setting.")
 
         return nullptr;
     }
@@ -534,6 +618,7 @@ namespace winrt::midiclock::implementation
                 data.Kind = definition.Kind;
                 data.FrameRate = definition.FrameRate;
                 data.StartTimeCode = definition.StartTimeCode;
+                data.ShowTimeCode = native::AppSettings::Current().ShowRunningTimeCode();
 
                 data.EndpointName = device.has_value()
                     ? std::wstring{ device.value().Name() }
@@ -550,8 +635,85 @@ namespace winrt::midiclock::implementation
                 impl->Update(data);
                 impl->IsRunning(m_engine.IsRunning(definition.Id));
             }
+
+            RefreshPlayingTimeCode();
         }
         MIDI_CLOCK_CATCH_AND_LOG(L"Unable to refresh the clock tiles.")
+    }
+
+    void MainWindow::RefreshPlayingTimeCode() noexcept
+    {
+        try
+        {
+            std::vector<winrt::midiclock::ClockItem> playing{};
+
+            if (m_items != nullptr)
+            {
+                for (uint32_t index = 0; index < m_items.Size(); index++)
+                {
+                    auto const item = m_items.GetAt(index);
+                    auto const impl = Impl(item);
+
+                    if (impl != nullptr && impl->IsRunning() && impl->IsTimeCode())
+                    {
+                        playing.push_back(item);
+                    }
+                }
+            }
+
+            // Off or minimized: the setting and VisibilityChanged call this again, so no timer meanwhile.
+            if (playing.empty() || !native::AppSettings::Current().ShowRunningTimeCode() || !Visible())
+            {
+                if (m_timeCodeTimer != nullptr)
+                {
+                    m_timeCodeTimer.Stop();
+                }
+
+                return;
+            }
+
+            auto const onScreen = native::IsWindowOnScreen(m_chrome.WindowHandle());
+
+            if (onScreen)
+            {
+                for (auto const& item : playing)
+                {
+                    midiapp::MidiTimeCodePosition position{};
+
+                    // While a start or stop holds the engine the tile keeps what it last showed.
+                    if (m_engine.TryGetTimeCodePosition(std::wstring{ item.Id() }, position))
+                    {
+                        Impl(item)->PlayingPosition(position);
+                    }
+                }
+            }
+
+            if (m_timeCodeTimer == nullptr)
+            {
+                m_timeCodeTimer = xaml::DispatcherTimer{};
+
+                m_timeCodeTimer.Tick([weak = get_weak()](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->RefreshPlayingTimeCode();
+                        }
+                    });
+            }
+
+            foundation::TimeSpan const interval{ onScreen ? TimeCodeDisplayInterval : OnScreenCheckInterval };
+
+            if (m_timeCodeTimer.Interval() != interval)
+            {
+                m_timeCodeTimer.Interval(interval);
+            }
+
+            if (!m_timeCodeTimer.IsEnabled())
+            {
+                m_timeCodeTimer.Start();
+            }
+        }
+        MIDI_CLOCK_CATCH_AND_LOG(L"Unable to show where a time code clock has got to.")
     }
 
     void MainWindow::UpdateEmptyState() noexcept
