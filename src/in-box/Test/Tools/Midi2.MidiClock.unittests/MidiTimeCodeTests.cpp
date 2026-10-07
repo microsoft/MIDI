@@ -11,6 +11,7 @@
 
 #include <array>
 #include <cmath>
+#include <format>
 
 using namespace midiapp;
 
@@ -89,6 +90,35 @@ namespace
         MidiTimeCodeFrameRate::Frames2997Drop,
         MidiTimeCodeFrameRate::Frames30
     };
+
+    bool SamePosition(MidiTimeCodePosition const& first, MidiTimeCodePosition const& second)
+    {
+        return first.Hours == second.Hours && first.Minutes == second.Minutes &&
+            first.Seconds == second.Seconds && first.Frames == second.Frames;
+    }
+
+    // Fails the test with both positions and where they parted company. Checked by hand first,
+    // so a passing run of half a million comparisons does not log half a million lines.
+    bool MatchesCounting(
+        MidiTimeCodePosition const& start,
+        MidiTimeCodeFrameRate rate,
+        uint64_t frameCount,
+        MidiTimeCodePosition const& counted)
+    {
+        auto const direct = PositionAfterFrames(start, rate, frameCount);
+
+        if (SamePosition(direct, counted))
+        {
+            return true;
+        }
+
+        WEX::Logging::Log::Comment(std::format(L"Rate {}, starting at {}, after {} frames",
+            static_cast<int32_t>(rate), FormatPosition(start, rate), frameCount).c_str());
+
+        VERIFY_ARE_EQUAL(FormatPosition(counted, rate), FormatPosition(direct, rate));
+
+        return false;
+    }
 }
 
 void MidiTimeCodeTests::ReportsTheCountingRateForEachFrameRate()
@@ -254,6 +284,93 @@ void MidiTimeCodeTests::OtherRatesNeverSkipANumber()
         AdvanceOneFrame(position, rate);
 
         VerifyPosition(position, 0, 1, 0, 0);
+    }
+}
+
+void MidiTimeCodeTests::PositionAfterFramesMatchesCountingOneFrameAtATime()
+{
+    for (auto const rate : AllRates)
+    {
+        auto const lastFrame = static_cast<uint8_t>(FramesPerSecondForCounting(rate) - 1);
+
+        // The top of the count, the end of a minute, the end of a ten minute block, the end of
+        // an hour, the end of the day, and somewhere ordinary.
+        for (auto const start : { At(0, 0, 0, 0), At(0, 0, 59, lastFrame), At(0, 9, 59, 0),
+            At(0, 59, 58, 0), At(23, 59, 50, 0), At(12, 34, 56, 7) })
+        {
+            auto counted = start;
+
+            // Eleven minutes at thirty frames a second, so drop frame crosses both kinds of
+            // minute and a ten minute boundary from every start.
+            for (uint64_t frames = 0; frames <= 20000; frames++)
+            {
+                if (!MatchesCounting(start, rate, frames, counted))
+                {
+                    return;
+                }
+
+                AdvanceOneFrame(counted, rate);
+            }
+        }
+    }
+}
+
+void MidiTimeCodeTests::PositionAfterFramesMatchesCountingOverHours()
+{
+    for (auto const rate : AllRates)
+    {
+        auto const start = At(1, 2, 3, 4);
+        auto counted = start;
+
+        uint64_t const total = uint64_t{ FramesPerSecondForCounting(rate) } * 60 * 60 * 3;
+
+        // 997 frames apart lands on a different frame number every time.
+        for (uint64_t frames = 0; frames <= total; frames++)
+        {
+            if ((frames % 997) == 0 || frames == total)
+            {
+                if (!MatchesCounting(start, rate, frames, counted))
+                {
+                    return;
+                }
+            }
+
+            AdvanceOneFrame(counted, rate);
+        }
+    }
+}
+
+void MidiTimeCodeTests::PositionAfterFramesSkipsTheDropFrameNumbers()
+{
+    auto const rate = MidiTimeCodeFrameRate::Frames2997Drop;
+
+    // The first minute holds all 1800 numbers, so the 1800th frame is the first of minute one,
+    // which has no frame 0 or 1.
+    VerifyPosition(PositionAfterFrames(At(0, 0, 0, 0), rate, 1799), 0, 0, 59, 29);
+    VerifyPosition(PositionAfterFrames(At(0, 0, 0, 0), rate, 1800), 0, 1, 0, 2);
+
+    // Ten minutes is 17982 frames, and minute ten keeps its first two numbers.
+    VerifyPosition(PositionAfterFrames(At(0, 0, 0, 0), rate, 17981), 0, 9, 59, 29);
+    VerifyPosition(PositionAfterFrames(At(0, 0, 0, 0), rate, 17982), 0, 10, 0, 0);
+
+    // A start that cannot exist is moved to the first number that does, as the generator does.
+    VerifyPosition(PositionAfterFrames(At(0, 1, 0, 0), rate, 0), 0, 1, 0, 2);
+}
+
+void MidiTimeCodeTests::PositionAfterFramesWrapsAtTwentyFourHours()
+{
+    VerifyPosition(PositionAfterFrames(At(23, 59, 59, 29), MidiTimeCodeFrameRate::Frames30, 1), 0, 0, 0, 0);
+    VerifyPosition(PositionAfterFrames(At(23, 59, 59, 29), MidiTimeCodeFrameRate::Frames2997Drop, 1), 0, 0, 0, 0);
+
+    for (auto const rate : AllRates)
+    {
+        // A day of drop frame is 2,589,408 frames.
+        uint64_t const framesInADay = rate == MidiTimeCodeFrameRate::Frames2997Drop
+            ? 2589408
+            : uint64_t{ FramesPerSecondForCounting(rate) } * 60 * 60 * 24;
+
+        VerifyPosition(PositionAfterFrames(At(5, 6, 7, 8), rate, framesInADay), 5, 6, 7, 8);
+        VerifyPosition(PositionAfterFrames(At(5, 6, 7, 8), rate, (framesInADay * 3) + 1), 5, 6, 7, 9);
     }
 }
 

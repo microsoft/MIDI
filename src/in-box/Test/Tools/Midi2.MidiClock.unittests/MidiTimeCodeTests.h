@@ -34,6 +34,12 @@ public:
     TEST_METHOD(DropFrameRejectsPositionsThatCannotExist);
     TEST_METHOD(OtherRatesNeverSkipANumber);
 
+    // ---- jumping straight to a position, which is how the display follows a running clock ----
+    TEST_METHOD(PositionAfterFramesMatchesCountingOneFrameAtATime);
+    TEST_METHOD(PositionAfterFramesMatchesCountingOverHours);
+    TEST_METHOD(PositionAfterFramesSkipsTheDropFrameNumbers);
+    TEST_METHOD(PositionAfterFramesWrapsAtTwentyFourHours);
+
     // ---- what goes on the wire ----
     TEST_METHOD(QuarterFrameCarriesThePieceNumberInTheHighNibble);
     TEST_METHOD(EightQuarterFramesRebuildThePosition);
