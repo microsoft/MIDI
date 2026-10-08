@@ -66,13 +66,14 @@ namespace winrt::midipatchbay::implementation
             // sized and positioned before the first paint, so it does not visibly jump
             window->RestoreWindowPlacement();
 
-            m_window = window.as<xaml::Window>();
-            m_window.Activate();
-
+            // Minimize before activating the window, so it starts hidden rather than flashing on screen
             if (s_startupOptions.StartMinimized || ::midipatchbay::AppSettings::Current().StartMinimized())
             {
                 window->MinimizeAtStartup();
             }
+
+            m_window = window.as<xaml::Window>();
+            m_window.Activate();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to create the main window.")
     }
