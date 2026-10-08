@@ -22,6 +22,11 @@
                        Text="Settings"
                        Style="{ThemeResource SubtitleTextBlockStyle}" />
 
+            <HyperlinkButton x:Uid="UmpPrimerLink"
+                             Content="How to read and understand UMP messages"
+                             NavigateUri="https://aka.ms/MidiUMPPrimer"
+                             Padding="0" />
+
             <StackPanel Spacing="8">
                 <TextBlock x:Uid="SettingsAppearanceHeader"
                            Text="Appearance"

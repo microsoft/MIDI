@@ -109,6 +109,9 @@
   <data name="AppearanceColorPicker" xml:space="preserve">
     <value>Window color</value>
   </data>
+  <data name="UmpPrimerLink" xml:space="preserve">
+    <value>How to read and understand UMP messages</value>
+  </data>
   <data name="NewLayoutButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>New layout</value>
   </data>
@@ -3010,6 +3013,9 @@
   </data>
   <data name="RawWordsHelp.Text" xml:space="preserve">
     <value>Up to four 32 bit words, hexadecimal, separated by spaces. Sent exactly as written.</value>
+  </data>
+  <data name="RawWordsPrimerLink.Content" xml:space="preserve">
+    <value>How to read and understand UMP messages</value>
   </data>
   <data name="SequenceHeading.Text" xml:space="preserve">
     <value>Sequence</value>

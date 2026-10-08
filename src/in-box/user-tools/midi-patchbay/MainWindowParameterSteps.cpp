@@ -890,6 +890,7 @@ namespace winrt::midipatchbay::implementation
 
                 panel.Children().Append(words);
                 panel.Children().Append(caption);
+                panel.Children().Append(midiapp::MakeUmpPrimerLink(resources::GetString(L"UmpPrimerLink")));
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the gate trigger.")

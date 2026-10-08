@@ -190,6 +190,7 @@
     <ClInclude Include="..\midi-app-shared\ClockFollower.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
     <ClInclude Include="..\midi-app-shared\AssistantPrompt.h" />
+    <ClInclude Include="..\midi-app-shared\UmpPrimerLink.h" />
     <ClInclude Include="..\midi-app-shared\FontCatalog.h" />
     <ClInclude Include="..\midi-app-shared\FontNames.h" />
     <ClInclude Include="..\midi-app-shared\DialogSizing.h" />

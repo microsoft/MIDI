@@ -1404,6 +1404,7 @@ namespace winrt::midipatchbay::implementation
 
             body.Children().Append(Heading(resources::GetString(L"MaskSectionHeading")));
             body.Children().Append(HeadingHint(resources::GetString(L"MaskSectionHint")));
+            body.Children().Append(midiapp::MakeUmpPrimerLink(resources::GetString(L"UmpPrimerLink")));
 
             auto size = ChoiceButtons(
                 resources::GetString(L"MaskSize"),

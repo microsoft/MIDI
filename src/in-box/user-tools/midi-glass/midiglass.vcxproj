@@ -216,6 +216,7 @@
     <ClInclude Include="editor\UndoStack.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
     <ClInclude Include="..\midi-app-shared\AssistantPrompt.h" />
+    <ClInclude Include="..\midi-app-shared\UmpPrimerLink.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">

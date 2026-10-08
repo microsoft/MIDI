@@ -462,7 +462,9 @@ namespace winrt::midiglass::implementation
                     {
                         strong->m_chrome.ApplyTheme();
                     }
-                });
+                },
+                nullptr,
+                midiapp::MakeUmpPrimerLink(resources::GetString(L"UmpPrimerLink")));
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the appearance flyout.")
     }

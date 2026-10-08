@@ -1205,6 +1205,9 @@
   <data name="AppearanceRoutingNote" xml:space="preserve">
     <value>Routing only runs while Patchbay is running. Closing the window stops every patch unless you keep it in the notification area.</value>
   </data>
+  <data name="UmpPrimerLink" xml:space="preserve">
+    <value>How to read and understand UMP messages</value>
+  </data>
   <data name="SettingsSectionHeading" xml:space="preserve">
     <value>Patchbay</value>
   </data>

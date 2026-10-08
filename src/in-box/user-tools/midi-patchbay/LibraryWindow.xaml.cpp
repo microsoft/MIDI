@@ -443,6 +443,11 @@ namespace winrt::midipatchbay::implementation
             note.IsClosable(false);
             note.Message(resources::GetString(L"AppearanceRoutingNote"));
 
+            controls::StackPanel topContent{};
+            topContent.Spacing(16.0);
+            topContent.Children().Append(midiapp::MakeUmpPrimerLink(resources::GetString(L"UmpPrimerLink")));
+            topContent.Children().Append(note);
+
             auto weak = get_weak();
 
             midiapp::ShowAppearanceFlyout(
@@ -460,7 +465,7 @@ namespace winrt::midipatchbay::implementation
                     }
                 },
                 BuildAppSettingsPanel(),
-                note);
+                topContent);
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the appearance flyout.")
     }
