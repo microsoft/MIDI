@@ -23,8 +23,6 @@ Specifically:
 - **No device was tuned, configured, or optimized** for the test beyond connecting a cable.
 - These are **unofficial** measurements from a development machine. They carry no warranty, and nothing here should be used to make a purchasing decision.
 
-The iConnectivity mioXL was measured later than the other devices, under slightly different conditions. Note 13 describes them.
-
 If a vendor sees a number here they believe is wrong, it very likely reflects this specific unit on this specific PC, and we would be glad to hear about it.
 
 ## What was measured
@@ -77,7 +75,6 @@ Median round trip for a 3 byte MIDI message, in microseconds. Lower is faster.
 | Blokas MIDIhub | 1389 | 1428 | — | 50–120 | (9) |
 | iConnectivity mio 1x1 | — | 1492 | — | 26–61 | |
 | FORE / Prodipe / DigitalLife BM1003 | — | 1484–1510 | — | 53–93 | (10) |
-| iConnectivity mioXL | — | — | 1586 | 189–287 | (13) (14) (15) |
 | "8-in 9-out" rack MIDI interface | — | — | ~4950 | 988–1002 | (11) (12) |
 
 A dash means that combination was not tested, either because the device is not class compliant or because no vendor driver was installed.
@@ -96,9 +93,6 @@ A dash means that combination was not tested, either because the device is not c
 10. **Three different brands, one device.** All three report the same name, the same blank manufacturer, and the same USB identifiers, so Windows cannot distinguish them. Their measured figures agree within 26 microseconds. One of them has a make and model printed on the case, and still reports the generic identity. The range given covers all three.
 11. This device is deliberately not named here. It is not class compliant, so it can only run on its vendor driver, and it was therefore impossible to determine whether the figures in the table are caused by the device or by that driver. As best we can tell, this device is no longer sold in most places, and the driver is old.
 12. **This device behaves differently from every other one measured.** Its round trip does not change with message size at all, where every other device tracks the cable time closely, and its jitter is quantized to almost exactly 1 millisecond. *Inference:* something in the device or its driver buffers to a periodic tick, so a message waits for the next slot regardless of size. A fixed delay of this kind can be compensated for; the 1 millisecond of jitter cannot.
-13. A programmable router, like the Blokas MIDIhub in note 9, so it had to be told to connect a USB port to a DIN port before the cable loop would work. It was measured from USB port 1 to DIN port 1 and back, four runs, with medians between 1576 and 1593 microseconds. Routes to one of its network MIDI sessions were also active, so the device was copying every message to its network port as well. Its firmware was updated earlier the same day, because the vendor's configuration app required it. It ran on iConnectivity's own driver, version 5.74.0.20404, which was already installed; the Windows class drivers were not tested with it. It was measured later than the other devices and is not included in the summary below.
-14. **Its jitter was the highest in the table apart from the rack interface in note 12.** This method cannot say whether that comes from the device or from its driver. Messages handed over as a single block all arrived: 20 of 20 in each of three runs, coming back at the speed of the cable.
-15. **SysEx through its USB port starts late.** *Measured:* a SysEx message that arrives no faster than a MIDI cable can carry it starts 20 to 25 milliseconds late, in each direction. A SysEx message handed over all at once is not delayed, and short messages such as notes are not affected. *Inference:* SysEx is held until about 64 bytes have collected. It is not known whether the device or its driver does this. This was measured separately, because the script below does not send SysEx.
 
 ## Summary of findings
 
