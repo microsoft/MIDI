@@ -70,7 +70,10 @@ To learn more about function blocks and other device metadata, see the section o
 
 Windows MIDI Services does not turn a MIDI 1.0 Note On with zero velocity into a MIDI 1.0 Note Off. Doing that would break the Mackie protocol, and probably others.
 
-When translating between the MIDI 2.0 protocol in UMP and the MIDI 1.0 protocol, the UMP specification says a MIDI 1.0 Note On with zero velocity becomes a MIDI 2.0 Note On with a velocity of 1, and we follow that. Today the only code that does this is in the SDK helper functions, because incoming MIDI 1.0 byte format messages are always translated into the MIDI 1.0 protocol in UMP. We do downscale the MIDI 2.0 protocol in UMP to the MIDI 1.0 byte format when that's needed, as described above.
+The UMP specification has a rule for each direction of translation between the MIDI 1.0 and MIDI 2.0 protocols:
+
+- **MIDI 2.0 to MIDI 1.0.** In the MIDI 2.0 protocol, a Note On with zero velocity is a real Note On, not a Note Off. If a MIDI 2.0 Note On's velocity scales down to zero, the translator sends a velocity of 1 instead, so a MIDI 1.0 receiver doesn't read it as a Note Off. Windows MIDI Services follows this rule wherever it downscales, as described above. So do the [`MidiMessageConverter`]({{ site.baseurl }}/sdk-reference/Utilities/Messages/MidiMessageConverter/) and [`MidiStandardFileWriter`]({{ site.baseurl }}/sdk-reference/Utilities/Files/MidiStandardFileWriter/) classes in the API.
+- **MIDI 1.0 to MIDI 2.0.** A MIDI 1.0 Note On with zero velocity means Note Off, so the specification translates it into a MIDI 2.0 Note Off with a velocity of `0x8000`. Windows MIDI Services doesn't translate MIDI 1.0 messages up to the MIDI 2.0 protocol, so this rule doesn't come up today. Incoming MIDI 1.0 byte format messages always become the MIDI 1.0 protocol in UMP.
 
 ## Libraries we use
 
