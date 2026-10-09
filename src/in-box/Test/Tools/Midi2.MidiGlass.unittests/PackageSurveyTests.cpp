@@ -13,6 +13,7 @@
 #include "LayoutPackage.h"
 #include "LayoutSerializer.h"
 #include "LayoutStore.h"
+#include "TestLayoutFiles.h"
 
 #include <filesystem>
 #include <fstream>
@@ -335,4 +336,48 @@ void PackageSurveyTests::APackageFromAnOlderBuildImportsUnderTheNewName()
     VERIFY_IS_TRUE(read.Succeeded);
     VERIFY_ARE_EQUAL((target / L"Old set.midilayout").wstring(), read.Path);
     VERIFY_IS_TRUE(std::filesystem::is_regular_file(target / L"Old set.midilayout", ignored));
+}
+
+void PackageSurveyTests::ANewerLayoutIsNeverWrittenOver()
+{
+    auto const path = (g_folder / L"Future.midilayout").wstring();
+
+    {
+        auto const json = glasstests::LayoutFromANewerVersion();
+
+        std::string narrow{};
+
+        for (auto const character : json)
+        {
+            narrow.push_back(static_cast<char>(character));
+        }
+
+        std::ofstream file{ path, std::ios::binary | std::ios::trunc };
+        file.write(narrow.data(), static_cast<std::streamsize>(narrow.size()));
+    }
+
+    std::error_code ignored{};
+    auto const before = std::filesystem::file_size(path, ignored);
+
+    auto read = glass::ReadLayoutFile(path);
+
+    VERIFY_IS_TRUE(read.Succeeded);
+    VERIFY_IS_TRUE(read.Document.IsFromNewerVersion);
+
+    // The kind of change the editor, a rename or the favorite star would make, then a save.
+    read.Document.Name = L"Changed";
+    read.Document.IsFavorite = true;
+
+    VERIFY_IS_FALSE(glass::WriteLayoutFile(read.Document, path));
+
+    // Not a byte of it changed, and nothing was left beside it.
+    VERIFY_ARE_EQUAL(before, std::filesystem::file_size(path, ignored));
+    VERIFY_IS_TRUE(glass::ReadLayoutFile(path).Document.Name == L"From The Future");
+    VERIFY_IS_FALSE(std::filesystem::exists(path + L".writing", ignored));
+
+    // and no copy of the part this version understood is written anywhere else either
+    auto const copy = (g_folder / L"Copy.midilayout").wstring();
+
+    VERIFY_IS_FALSE(glass::WriteLayoutFile(read.Document, copy));
+    VERIFY_IS_FALSE(std::filesystem::exists(copy, ignored));
 }

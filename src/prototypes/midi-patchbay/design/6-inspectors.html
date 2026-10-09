@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Patchbay Preview 11 - 6 - inspector, one thing at a time</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="v2.css">
+<script src="mock2.js" defer></script>
+<style>
+    .panels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; width: 100%; }
+    .panel {
+        height: 640px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: linear-gradient(160deg, #262626, #1F1F1F);
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+    }
+    .panel .einspector { width: auto; flex: 1; border-left: 0; }
+    .bicon.t { font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; font-size: 11px; font-weight: 700; width: auto; min-width: 30px; padding: 0 4px; }
+    .linkicon { background: rgba(255, 255, 255, .08); color: var(--text2); }
+    .kv2 { display: flex; flex-direction: column; gap: 2px; }
+    .kv2 .a { font-size: 13px; }
+    .kv2 .b { font-size: 12px; color: var(--text3); }
+    .links { display: flex; gap: 14px; font-size: 12px; color: var(--accent); }
+    .planned .radio { font-size: 12.5px; }
+    .planned .radio.disabled { color: var(--text-disabled); }
+    .planned .radio.disabled .sub { color: var(--text-disabled); }
+</style>
+</head>
+<body>
+<div class="page lib">
+
+<div class="caption-above"><b>6. The inspector shows one thing at a time.</b> Select a connection, and it shows where the connection runs and lets a block be put in the middle. Select a block, and it shows that block's settings and nothing else. Short settings sit in the inspector; long ones open the block's own dialog.</div>
+
+<div class="panels">
+
+  <!-- connection -->
+  <div class="panel">
+    <div class="einspector">
+      <div class="ihead">
+        <div class="bicon gl linkicon">&#xE71B;</div>
+        <div class="txt"><div class="kind">Selected</div><div class="title">Connection</div></div>
+      </div>
+      <div class="ibody">
+        <div class="card" style="display:flex; flex-direction:column; gap:10px">
+          <div class="kv2"><div class="ilabel">From</div><div class="a">Impact LX Mini</div><div class="b">1 - Impact LX Mini MIDI1</div></div>
+          <div class="kv2"><div class="ilabel">To</div><div class="a">Message type filter</div><div class="b">Keeps out system real-time messages</div></div>
+        </div>
+        <div class="isec">
+          <div class="btn" style="justify-content:center"><span class="gl">&#xE710;</span>Add a block here<span class="gl chev">&#xE70D;</span></div>
+          <div class="ihelp">Puts a block in the middle of this connection. Dropping a block from the palette onto the line does the same.</div>
+        </div>
+        <div class="isec">
+          <div class="ilabel">Activity</div>
+          <div class="stat"><div><b>1,532</b>messages</div><div><b>0</b>failed</div></div>
+        </div>
+        <div class="irow" style="margin-top:auto">
+          <div class="btn"><span class="gl">&#xE74F;</span>Mute</div>
+          <div class="btn"><span class="gl">&#xE74D;</span>Remove</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- channel filter -->
+  <div class="panel">
+    <div class="einspector">
+      <div class="ihead filter">
+        <div class="bicon t">CH</div>
+        <div class="txt"><div class="kind">Filter</div><div class="title">Channel filter</div></div>
+        <div class="gl more">&#xE712;</div>
+      </div>
+      <div class="ibody">
+        <div class="isec"><div class="ilabel">Name</div><div class="field">Channel filter</div></div>
+        <div class="isec">
+          <div style="display:flex; align-items:center"><div class="ilabel" style="flex:1">Channels that get through</div><div class="links"><span>All</span><span>None</span></div></div>
+          <div class="checkgrid">
+            <div class="check on"><div class="cb">&#xE73E;</div>1</div>
+            <div class="check on"><div class="cb">&#xE73E;</div>2</div>
+            <div class="check on"><div class="cb">&#xE73E;</div>3</div>
+            <div class="check on"><div class="cb">&#xE73E;</div>4</div>
+            <div class="check"><div class="cb"></div>5</div>
+            <div class="check"><div class="cb"></div>6</div>
+            <div class="check"><div class="cb"></div>7</div>
+            <div class="check"><div class="cb"></div>8</div>
+            <div class="check"><div class="cb"></div>9</div>
+            <div class="check on"><div class="cb">&#xE73E;</div>10</div>
+            <div class="check"><div class="cb"></div>11</div>
+            <div class="check"><div class="cb"></div>12</div>
+            <div class="check"><div class="cb"></div>13</div>
+            <div class="check"><div class="cb"></div>14</div>
+            <div class="check"><div class="cb"></div>15</div>
+            <div class="check"><div class="cb"></div>16</div>
+          </div>
+          <div class="ihelp">Only applies to messages that carry a channel. Everything else goes through.</div>
+        </div>
+        <div class="isec">
+          <div class="ilabel">Activity</div>
+          <div class="stat"><div><b>2,040</b>in</div><div><b>1,812</b>out</div></div>
+        </div>
+        <div class="irow" style="margin-top:auto">
+          <div class="btn"><span class="gl">&#xE8D8;</span>Bypass</div>
+          <div class="btn"><span class="gl">&#xE74D;</span>Remove</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- transpose -->
+  <div class="panel">
+    <div class="einspector">
+      <div class="ihead transform">
+        <div class="bicon t">&plusmn;</div>
+        <div class="txt"><div class="kind">Transform</div><div class="title">Transpose</div></div>
+        <div class="gl more">&#xE712;</div>
+      </div>
+      <div class="ibody">
+        <div class="isec"><div class="ilabel">Name</div><div class="field">Transpose</div></div>
+        <div class="isec">
+          <div class="ilabel">Semitones</div>
+          <div class="numbox" style="width:150px">-12<div class="spin"><div class="gl">&#xE70E;</div><div class="gl">&#xE70D;</div></div></div>
+          <div class="ival">C3 is sent as C2</div>
+          <div class="ihelp">Shifts every note, including aftertouch and the MIDI 2.0 per-note messages. A note pushed past either end stops at the end.</div>
+        </div>
+        <div class="isec">
+          <div class="check"><div class="cb"></div><div>Bypass exact-pitch notes</div></div>
+          <div class="ihelp">A MIDI 2.0 note can say exactly which pitch to play. Leave this clear and the pitch moves with the note.</div>
+        </div>
+        <div class="isec">
+          <div class="ilabel">Activity</div>
+          <div class="stat"><div><b>640</b>notes in</div><div><b>640</b>notes out</div></div>
+        </div>
+        <div class="irow" style="margin-top:auto">
+          <div class="btn"><span class="gl">&#xE8D8;</span>Bypass</div>
+          <div class="btn"><span class="gl">&#xE74D;</span>Remove</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- throttler -->
+  <div class="panel">
+    <div class="einspector">
+      <div class="ihead flow">
+        <div class="bicon t">1&times;</div>
+        <div class="txt"><div class="kind">Sending</div><div class="title">Message throttler</div></div>
+        <div class="gl more">&#xE712;</div>
+      </div>
+      <div class="ibody">
+        <div class="isec"><div class="ilabel">Name</div><div class="field">Message throttler</div></div>
+        <div class="isec">
+          <div class="ilabel">Sending speed</div>
+          <div class="field combo">MIDI 1.0 wire speed<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+          <div class="ihelp">Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back.</div>
+        </div>
+        <div class="planned">
+          <div class="tag">Planned, #1254</div>
+          <div class="ilabel" style="margin-bottom:4px">When the device falls behind</div>
+          <div class="radio on"><div class="rb"></div><div class="t">Send every message, late</div></div>
+          <div class="radio disabled"><div class="rb"></div><div class="t">Thin out the waiting messages<div class="sub">Keeps the first, last, highest and lowest of a run of one controller, pitch bend or pressure</div></div></div>
+        </div>
+        <div class="isec">
+          <div class="ilabel">Activity</div>
+          <div class="stat"><div><b>3,118</b>sent</div><div><b>12</b>waiting</div><div><b>0</b>dropped</div></div>
+        </div>
+        <div class="irow" style="margin-top:auto">
+          <div class="btn"><span class="gl">&#xE8D8;</span>Bypass</div>
+          <div class="btn"><span class="gl">&#xE74D;</span>Remove</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes">
+  <div class="n"><div class="pin" style="background:#666">i</div><div><b>Connections are simple now.</b> No filter, transform or speed of their own: just where they run, a count, Mute, and a quick way to put a block in the middle.</div></div>
+  <div class="n"><div class="pin" style="background:#666">i</div><div><b>Every block has a name.</b> It starts as the kind of block and can be changed, for example to "Upper keys". The line under the name on the canvas always says what the block does.</div></div>
+  <div class="n"><div class="pin" style="background:#666">i</div><div><b>The throttler keeps room for #1254.</b> The dashed part is not built. When thinning arrives it goes here, as a choice on the block, and Network MIDI and RTP-MIDI can share it.</div></div>
+</div>
+
+</div>
+</body>
+</html>

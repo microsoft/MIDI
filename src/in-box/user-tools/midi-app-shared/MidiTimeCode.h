@@ -84,6 +84,14 @@ namespace midiapp
         _In_ MidiTimeCodeFrameRate const rate,
         _In_ uint32_t const frameCount) noexcept;
 
+    // The same answer as AdvanceFrames, worked out directly instead of a frame at a time, so a
+    // display can ask many times a second however long the clock has run. The start goes through
+    // ClampPosition first, as it does in the generator.
+    MidiTimeCodePosition PositionAfterFrames(
+        _In_ MidiTimeCodePosition const& start,
+        _In_ MidiTimeCodeFrameRate const rate,
+        _In_ uint64_t const frameCount) noexcept;
+
     // The single data byte of one quarter frame message: the piece number in the high nibble and
     // four bits of the timecode in the low one. pieceIndex runs 0 through 7.
     uint8_t QuarterFrameDataByte(
@@ -102,7 +110,8 @@ namespace midiapp
         _In_ MidiTimeCodePosition const& position,
         _In_ MidiTimeCodeFrameRate const rate) noexcept;
 
-    // Accepts either separator and a missing field or two, so "1:30" reads as one minute thirty.
+    // Accepts either separator. Fewer than four fields fill from the right, so "1:20" is one
+    // second and twenty frames.
     bool TryParsePosition(
         _In_ std::wstring_view const text,
         _In_ MidiTimeCodeFrameRate const rate,

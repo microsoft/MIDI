@@ -2019,6 +2019,45 @@ CMidi2BluetoothMidiEndpointManager::OnConnectionDropped(winrt::hstring const& de
 }
 
 
+_Use_decl_annotations_
+void
+CMidi2BluetoothMidiEndpointManager::OnNotificationSubscriptionLost(winrt::hstring const& deviceId)
+{
+    TraceLoggingWrite(
+        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_WARNING,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Rebuilding a BLE MIDI connection which could not turn notifications back on", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceId.c_str(), "device id")
+    );
+
+    {
+        auto lock = std::scoped_lock{ m_pendingRequestsLock };
+
+        // a device the customer has since disconnected is already being torn down, and stays down
+        if (m_desiredConnections.find(deviceId) == m_desiredConnections.end())
+        {
+            return;
+        }
+
+        // Torn down without being forgotten, then connected from scratch in the same worker pass,
+        // because disconnects run first.
+        m_pendingDisconnectRequests.push_back(deviceId);
+        m_consecutiveConnectFailures.erase(deviceId);
+        std::erase(m_pendingRetryRequests, deviceId);
+
+        if (std::find(m_pendingConnectRequests.begin(), m_pendingConnectRequests.end(), deviceId) == m_pendingConnectRequests.end())
+        {
+            m_pendingConnectRequests.push_front(deviceId);
+        }
+    }
+
+    LOG_IF_FAILED(WakeupBackgroundEndpointCreatorThread());
+}
+
+
 void
 CMidi2BluetoothMidiEndpointManager::EnforceOfflineRetention()
 {

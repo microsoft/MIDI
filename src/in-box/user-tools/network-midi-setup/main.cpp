@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "App.xaml.h"
+#include "ServiceFirewall.h"
 
 // The XAML compiler emits its own wWinMain; we supply this one so startup stays under our
 // control. The apartment must stay STA: an MTA UI thread makes UI Automation fail with
@@ -16,6 +17,13 @@
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 {
     winrt::init_apartment(winrt::apartment_type::single_threaded);
+
+    // The elevated copy the Firewall page starts. It changes one rule and exits without a window,
+    // so it has to stop here, before the single instance check hands it to the open window.
+    if (int exitCode{ 0 }; ::midinetworksetup::firewall::TryRunAllowRequest(exitCode))
+    {
+        return exitCode;
+    }
 
     // A second copy of a setup tool would show the customer two views of one machine-wide
     // configuration, which can disagree. This is also what makes a notification's Review button

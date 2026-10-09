@@ -18,11 +18,20 @@ namespace resources = ::midipatchbay::resources;
 
 namespace winrt::midipatchbay::implementation
 {
+    namespace
+    {
+        // Notices the customer closed, by patch, until the app closes. Shared by every editor, so
+        // closing a patch and opening it again doesn't bring a notice back.
+        std::unordered_set<std::wstring> g_autoStartNoticeDismissed{};
+        std::unordered_set<std::wstring> g_conversionNoticeDismissed{};
+    }
+
     void MainWindow::UpdatePatchHeader() noexcept
     {
         try
         {
             auto const* patch = CurrentPatch();
+            auto& library = patchbay::PatchLibrary::Current();
 
             if (patch == nullptr)
             {
@@ -49,11 +58,11 @@ namespace winrt::midipatchbay::implementation
             StateChip().Visibility(xaml::Visibility::Visible);
             StateChipText().Text(patch->FilePath.empty()
                 ? resources::GetString(L"ChipTemporary")
-                : (m_unsavedPatchKeys.count(PatchKey(*patch)) != 0
+                : (library.IsUnsaved(m_patchKey)
                     ? resources::GetString(L"ChipUnsaved")
                     : resources::GetString(L"ChipSaved")));
 
-            auto const routing = m_routingPatchKeys.count(PatchKey(*patch)) != 0;
+            auto const routing = library.IsRouting(m_patchKey);
 
             RoutingToggle().IsEnabled(true);
             RoutingToggle().IsChecked(routing);
@@ -71,7 +80,7 @@ namespace winrt::midipatchbay::implementation
             AutoStartSwitch().IsOn(saved && patch->ActivateAtStartup);
 
             if (saved && !(patch->ActivateAtStartup && savedPatchesStart) &&
-                m_autoStartNoticeDismissedKeys.count(PatchKey(*patch)) == 0)
+                g_autoStartNoticeDismissed.count(m_patchKey) == 0)
             {
                 AutoStartBar().Message(savedPatchesStart
                     ? resources::GetString(L"AutoStartBarMessage")
@@ -100,16 +109,14 @@ namespace winrt::midipatchbay::implementation
 
         try
         {
-            auto const* patch = CurrentPatch();
-
-            if (patch == nullptr)
+            if (CurrentPatch() == nullptr)
             {
                 return;
             }
 
             auto const isChecked = RoutingToggle().IsChecked();
 
-            SetPatchRouting(PatchKey(*patch), isChecked && isChecked.Value());
+            patchbay::PatchLibrary::Current().SetRouting(m_patchKey, isChecked && isChecked.Value());
             UpdatePatchHeader();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to change whether the patch is routing.")
@@ -121,14 +128,7 @@ namespace winrt::midipatchbay::implementation
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
-        try
-        {
-            if (auto const* patch = CurrentPatch())
-            {
-                SetPatchRouting(PatchKey(*patch), true);
-            }
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to start routing the patch.")
+        patchbay::PatchLibrary::Current().SetRouting(m_patchKey, true);
     }
 
     _Use_decl_annotations_
@@ -162,7 +162,13 @@ namespace winrt::midipatchbay::implementation
             }
 
             patch->ActivateAtStartup = on;
-            MarkDirty();
+
+            // A setting of the patch rather than an edit, so it is saved but not undone.
+            m_committing = true;
+            auto const reset = wil::scope_exit([this]() { m_committing = false; });
+
+            patchbay::PatchLibrary::Current().Changed(m_patchKey, false);
+            UpdatePatchHeader();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to change whether the patch starts automatically.")
     }
@@ -175,192 +181,134 @@ namespace winrt::midipatchbay::implementation
 
         try
         {
-            if (auto const* patch = CurrentPatch())
-            {
-                m_autoStartNoticeDismissedKeys.insert(PatchKey(*patch));
-            }
+            g_autoStartNoticeDismissed.insert(m_patchKey);
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to close the automatic start notice.")
     }
 
-    void MainWindow::MarkDirty() noexcept
+    _Use_decl_annotations_
+    void MainWindow::OnConversionBarCloseClick(controls::InfoBar const& sender, foundation::IInspectable const& args)
     {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
         try
         {
-            if (auto const* patch = CurrentPatch())
-            {
-                m_unsavedPatchKeys.insert(PatchKey(*patch));
-                m_lastChangeTime = std::chrono::steady_clock::now();
-            }
+            g_conversionNoticeDismissed.insert(m_patchKey);
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to mark the patch as changed.")
-
-        UpdatePatchHeader();
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to close the conversion notice.")
     }
 
-    void MainWindow::AutoSaveIfDue() noexcept
+    _Use_decl_annotations_
+    void MainWindow::OnShowEarlierVersionClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
     {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
         try
         {
-            if (m_unsavedPatchKeys.empty() || m_lastChangeTime.time_since_epoch().count() == 0)
+            auto const* patch = CurrentPatch();
+
+            if (patch == nullptr || patch->EarlierVersionPath.empty())
             {
                 return;
             }
 
-            // Debounced: dragging a node raises a change per drop, and a patch with a dozen
-            // endpoints would otherwise rewrite its file a dozen times in a few seconds.
-            constexpr auto quietPeriod = std::chrono::milliseconds{ 1500 };
+            // Explorer opens on the folder with the file picked out, rather than opening the file.
+            wil::unique_any<PIDLIST_ABSOLUTE, decltype(&::ILFree), ::ILFree> item{ ::ILCreateFromPathW(patch->EarlierVersionPath.c_str()) };
 
-            if (std::chrono::steady_clock::now() - m_lastChangeTime < quietPeriod)
+            if (item)
             {
-                return;
-            }
-
-            bool changed{ false };
-
-            for (auto& patch : m_patches)
-            {
-                auto const key = PatchKey(patch);
-
-                if (patch.FilePath.empty() || m_unsavedPatchKeys.count(key) == 0)
-                {
-                    continue;
-                }
-
-                if (patchbay::PatchStore::Current().Save(patch))
-                {
-                    m_unsavedPatchKeys.erase(key);
-                    changed = true;
-                }
-                else
-                {
-                    // Reported once rather than every tick, by clearing the flag either way.
-                    m_unsavedPatchKeys.erase(key);
-                    ShowStatus(patchbay::PatchStore::Current().LastErrorMessage(),
-                        controls::InfoBarSeverity::Error);
-                }
-            }
-
-            if (changed)
-            {
-                UpdatePatchHeader();
+                LOG_IF_FAILED(::SHOpenFolderAndSelectItems(item.get(), 0, nullptr, 0));
             }
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to save the patch automatically.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the earlier version of the patch.")
     }
 
-    void MainWindow::RefreshAnalysis() noexcept
+    void MainWindow::UpdateConversionNotice() noexcept
     {
         try
         {
             auto const* patch = CurrentPatch();
 
-            if (patch == nullptr)
+            // Changes to a patch from a newer version are never saved, so this one can't be closed.
+            if (patch != nullptr && patch->IsFromNewerVersion)
             {
-                m_analysis = {};
+                ConversionBar().Title(resources::GetString(L"NewerPatchTitle"));
+                ConversionBar().Message(resources::GetString(L"NewerPatchMessage"));
+                ConversionBar().Severity(controls::InfoBarSeverity::Warning);
+                ConversionBar().IsClosable(false);
+                ConversionShowButton().Visibility(xaml::Visibility::Collapsed);
+                ConversionBar().IsOpen(true);
                 return;
             }
 
-            m_analysis = patchbay::AnalyzePatch(*patch, m_liveEndpoints);
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to analyze the patch.")
-    }
+            ConversionBar().IsClosable(true);
 
-    void MainWindow::ApplyRouting() noexcept
-    {
-        try
-        {
-            std::vector<patchbay::RoutePlanEntry> plan{};
-
-            for (auto const& patch : m_patches)
+            if (patch == nullptr ||
+                patch->LoadedFileVersion >= patchbay::CurrentPatchFileVersion ||
+                g_conversionNoticeDismissed.count(m_patchKey) != 0)
             {
-                if (m_routingPatchKeys.count(PatchKey(patch)) == 0)
+                ConversionBar().IsOpen(false);
+                return;
+            }
+
+            std::wstring message{ resources::GetString(patch->EarlierVersionPath.empty()
+                ? L"ConversionMessageNoCopy"
+                : L"ConversionMessage") };
+
+            for (auto const& issue : patch->ConversionIssues)
+            {
+                message += L"\n";
+
+                if (issue.Kind == patchbay::ConversionIssueKind::TooLargeToConvert)
                 {
+                    message += resources::GetString(L"ConversionIssueTooLarge");
                     continue;
                 }
 
-                // Loops are only muted for the patch on screen, because that is the only one the
-                // analysis was run against. Every routing patch gets its own pass here.
-                auto const analysis = patchbay::AnalyzePatch(patch, m_liveEndpoints);
+                auto const* block = patch->FindBlock(issue.BlockId);
 
-                for (auto const& connection : patch.Connections)
-                {
-                    if (connection.Muted || analysis.LoopMutedConnectionIds.count(connection.Id) != 0)
-                    {
-                        continue;
-                    }
-
-                    auto const* source = patch.FindEndpoint(connection.SourceEndpointId);
-                    auto const* destination = patch.FindEndpoint(connection.DestinationEndpointId);
-
-                    if (source == nullptr || destination == nullptr)
-                    {
-                        continue;
-                    }
-
-                    auto const liveSource = patchbay::ResolveEndpoint(*source);
-                    auto const liveDestination = patchbay::ResolveEndpoint(*destination);
-
-                    // A connection whose endpoints are not both here is not an error; it simply
-                    // waits, and is wired up by the next pass when the device comes back.
-                    if (!liveSource.has_value() || !liveDestination.has_value())
-                    {
-                        continue;
-                    }
-
-                    patchbay::RoutePlanEntry entry{};
-
-                    entry.ConnectionId = connection.Id;
-                    entry.SourceEndpointDeviceId = liveSource->EndpointDeviceId;
-                    entry.DestinationEndpointDeviceId = liveDestination->EndpointDeviceId;
-                    entry.SourceGroupIndex = connection.SourceGroupIndex;
-                    entry.DestinationGroupIndex = connection.DestinationGroupIndex;
-                    entry.Filter = connection.Filter;
-                    entry.Transform = connection.Transform;
-                    entry.SendSpeedLimit = connection.SendSpeedLimit;
-                    entry.WaitForSendComplete = patch.WaitForSendComplete;
-
-                    plan.push_back(std::move(entry));
-                }
+                message += resources::FormatString(L"ConversionIssueNoteFormat",
+                    patchbay::DescribeNote(issue.FromNote),
+                    patchbay::DescribeNote(issue.ToNote),
+                    block == nullptr ? patchbay::BlockKindName(patchbay::BlockKind::NoteMap) : patchbay::BlockDisplayName(*block));
             }
 
-            // Everything below blocks on the service, so it never runs on the XAML thread.
-            patchbay::RunOnBackgroundAsync([plan = std::move(plan)]() mutable
-                {
-                    patchbay::RouteEngine::Current().Apply(std::move(plan));
-                });
+            ConversionBar().Title(resources::GetString(L"ConversionTitle"));
+            ConversionBar().Message(winrt::hstring{ message });
+            ConversionBar().Severity(patch->ConversionIssues.empty()
+                ? controls::InfoBarSeverity::Informational
+                : controls::InfoBarSeverity::Warning);
+
+            ConversionShowButton().Visibility(patch->EarlierVersionPath.empty()
+                ? xaml::Visibility::Collapsed
+                : xaml::Visibility::Visible);
+
+            ConversionBar().IsOpen(true);
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to apply the routing.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the conversion notice.")
     }
 
-    void MainWindow::OnRefreshTimerTick() noexcept
+    void MainWindow::OnActivity() noexcept
     {
         try
         {
-            if (m_closing)
+            if (m_closing || m_patchKey.empty())
             {
                 return;
             }
 
-            m_routeStats = patchbay::RouteEngine::Current().Stats();
+            m_activity = patchbay::PatchLibrary::Current().Activity(m_patchKey);
 
-            m_canvas.RefreshStatus(m_routeStats);
+            m_canvas.RefreshStatus(m_activity);
 
             UpdateInspectorActivity();
             UpdateStatusStrip();
-            UpdateTray();
-            AutoSaveIfDue();
-
-            auto const error = patchbay::RouteEngine::Current().LastErrorMessage();
-
-            if (!error.empty() && !ServiceBar().IsOpen())
-            {
-                ShowStatus(error, controls::InfoBarSeverity::Error);
-            }
 
             ServiceBar().IsOpen(!patchbay::EndpointCatalog::Current().IsServiceAvailable());
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"The refresh timer failed.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the latest activity.")
     }
 
     void MainWindow::UpdateStatusStrip() noexcept
@@ -370,22 +318,39 @@ namespace winrt::midipatchbay::implementation
             auto const* patch = CurrentPatch();
 
             auto const endpointCount = patch == nullptr ? 0 : patch->Endpoints.size();
+            auto const stepCount = patch == nullptr ? 0 : patch->StepCount();
             auto const connectionCount = patch == nullptr ? 0 : patch->Connections.size();
 
             StatusEndpointsText().Text(endpointCount == 1
                 ? resources::GetString(L"StatusEndpointsOne")
                 : resources::FormatString(L"StatusEndpointsFormat", endpointCount));
 
+            StatusStepsText().Text(stepCount == 1
+                ? resources::GetString(L"StatusStepsOne")
+                : resources::FormatString(L"StatusStepsFormat", stepCount));
+
             StatusConnectionsText().Text(connectionCount == 1
                 ? resources::GetString(L"StatusConnectionsOne")
                 : resources::FormatString(L"StatusConnectionsFormat", connectionCount));
 
+            // What reached a destination. A message that goes through three steps on its way is
+            // still one message.
             uint64_t total{ 0 };
 
-            for (auto const& [id, stats] : m_routeStats)
+            if (patch != nullptr)
             {
-                UNREFERENCED_PARAMETER(id);
-                total += stats.MessagesForwarded;
+                for (auto const& link : patch->Connections)
+                {
+                    if (patch->FindEndpoint(link.DestinationId) == nullptr)
+                    {
+                        continue;
+                    }
+
+                    if (auto const found = m_activity.find(link.Id); found != m_activity.end())
+                    {
+                        total += found->second.MessagesForwarded;
+                    }
+                }
             }
 
             auto const now = std::chrono::steady_clock::now();
@@ -405,9 +370,11 @@ namespace winrt::midipatchbay::implementation
             m_lastRateSample = now;
             m_lastTotalMessages = total;
 
-            if (m_analysis.HasCertainLoop())
+            auto const& analysis = Analysis();
+
+            if (analysis.HasCertainLoop())
             {
-                auto const muted = m_analysis.LoopMutedConnectionIds.size();
+                auto const muted = analysis.LoopMutedConnectionIds.size();
 
                 StatusLoopText().Text(muted == 1
                     ? resources::GetString(L"StatusLoopMutedOne")
@@ -428,12 +395,13 @@ namespace winrt::midipatchbay::implementation
         try
         {
             auto const* patch = CurrentPatch();
+            auto const& analysis = Analysis();
 
             // ---------------------------------------------------------- loops
-            auto const certain = std::find_if(m_analysis.Loops.begin(), m_analysis.Loops.end(),
+            auto const certain = std::find_if(analysis.Loops.begin(), analysis.Loops.end(),
                 [](patchbay::LoopFinding const& f) { return f.Severity == patchbay::LoopSeverity::Certain; });
 
-            auto const possible = std::find_if(m_analysis.Loops.begin(), m_analysis.Loops.end(),
+            auto const possible = std::find_if(analysis.Loops.begin(), analysis.Loops.end(),
                 [](patchbay::LoopFinding const& f) { return f.Severity == patchbay::LoopSeverity::Possible; });
 
             auto const joinNames = [](std::vector<std::wstring> const& names) -> std::wstring
@@ -453,15 +421,30 @@ namespace winrt::midipatchbay::implementation
                     return text;
                 };
 
-            if (certain != m_analysis.Loops.end())
+            // Routing turned down for the whole patch is worse than a loop that is held muted,
+            // so it takes the same bar first.
+            auto const problem = patchbay::PatchLibrary::Current().Problem(m_patchKey);
+
+            if (problem.has_value())
+            {
+                LoopBar().Severity(controls::InfoBarSeverity::Error);
+                LoopBar().Title(resources::GetString(L"RouteProblemTitle"));
+                LoopBar().Message(resources::GetString(problem.value() == patchbay::RouteProblemKind::LoopBetweenBlocks
+                    ? L"RouteProblemStepLoop"
+                    : L"RouteProblemTooComplex"));
+                LoopShowButton().Visibility(xaml::Visibility::Collapsed);
+                LoopBar().IsOpen(true);
+            }
+            else if (certain != analysis.Loops.end())
             {
                 LoopBar().Severity(controls::InfoBarSeverity::Error);
                 LoopBar().Title(resources::GetString(L"LoopCertainTitle"));
                 LoopBar().Message(resources::FormatString(
                     L"LoopCertainMessageFormat", joinNames(certain->EndpointNames)));
+                LoopShowButton().Visibility(xaml::Visibility::Visible);
                 LoopBar().IsOpen(true);
             }
-            else if (possible != m_analysis.Loops.end() && patchbay::AppSettings::Current().WarnAboutLoops())
+            else if (possible != analysis.Loops.end() && patchbay::AppSettings::Current().WarnAboutLoops())
             {
                 LoopBar().Severity(controls::InfoBarSeverity::Warning);
                 LoopBar().Title(resources::GetString(L"LoopPossibleTitle"));
@@ -469,12 +452,15 @@ namespace winrt::midipatchbay::implementation
                     L"LoopPossibleMessageFormat",
                     joinNames(possible->EndpointNames),
                     joinNames(possible->AssumedEchoNames)));
+                LoopShowButton().Visibility(xaml::Visibility::Visible);
                 LoopBar().IsOpen(true);
             }
             else
             {
                 LoopBar().IsOpen(false);
             }
+
+            ServiceBar().IsOpen(!patchbay::EndpointCatalog::Current().IsServiceAvailable());
 
             // ------------------------------------------------------- offline
             if (patch == nullptr)
@@ -518,89 +504,6 @@ namespace winrt::midipatchbay::implementation
             OfflineBar().IsOpen(true);
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to update the messages.")
-    }
-
-    void MainWindow::UpdateTray() noexcept
-    {
-        try
-        {
-            if (!m_tray.IsVisible())
-            {
-                return;
-            }
-
-            std::vector<patchbay::TrayPatchItem> items{};
-
-            size_t routing{ 0 };
-
-            for (auto const& patch : m_patches)
-            {
-                patchbay::TrayPatchItem item{};
-
-                item.PatchId = PatchKey(patch);
-                item.Name = patch.Name;
-                item.IsRouting = m_routingPatchKeys.count(item.PatchId) != 0;
-
-                if (item.IsRouting)
-                {
-                    routing++;
-                }
-
-                item.HasWarning = std::any_of(patch.Endpoints.begin(), patch.Endpoints.end(),
-                    [](patchbay::PatchEndpoint const& e)
-                    { return !patchbay::ResolveEndpoint(e).has_value(); });
-
-                if (item.HasWarning)
-                {
-                    item.Detail = std::wstring{ resources::GetString(L"TrayWaiting") };
-                }
-                else if (!item.IsRouting)
-                {
-                    item.Detail = std::wstring{ resources::GetString(L"TrayOff") };
-                }
-
-                items.push_back(std::move(item));
-            }
-
-            m_tray.Update(
-                std::wstring{ resources::FormatString(L"TrayTooltipFormat", routing) },
-                std::move(items));
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to update the notification area.")
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::SetPatchRouting(std::wstring const& patchKey, bool routing) noexcept
-    {
-        try
-        {
-            if (routing)
-            {
-                m_routingPatchKeys.insert(patchKey);
-            }
-            else
-            {
-                m_routingPatchKeys.erase(patchKey);
-            }
-
-            ApplyRouting();
-            UpdateTray();
-            UpdateStatusStrip();
-
-            // The notification area can change this for a patch that is on screen.
-            UpdatePatchHeader();
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to change whether a patch is routing.")
-    }
-
-    void MainWindow::StopAllRouting() noexcept
-    {
-        m_routingPatchKeys.clear();
-
-        ApplyRouting();
-        UpdateTray();
-        UpdateStatusStrip();
-        UpdatePatchHeader();
     }
 
     _Use_decl_annotations_

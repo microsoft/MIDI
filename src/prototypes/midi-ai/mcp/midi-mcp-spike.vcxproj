@@ -67,7 +67,7 @@
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory);$(ProjectionDir);$(WilIncludeDir);$(UserToolsDir)midi-app-shared;$(UserToolsDir)midi-glass\document;$(UserToolsDir)midi-glass\editor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory);$(ProjectionDir);$(WilIncludeDir);$(UserToolsDir)midi-app-shared;$(UserToolsDir)midi-glass\document;$(UserToolsDir)midi-glass\editor;$(UserToolsDir)midi-patchbay;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>%(AdditionalOptions) /utf-8 /bigobj</AdditionalOptions>
       <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
@@ -99,8 +99,10 @@
 
   <!-- Compiled unchanged from the tools, the same way their own unit tests compile them -->
   <ItemGroup>
+    <ClCompile Include="$(UserToolsDir)midi-app-shared\ContentProvenance.cpp" />
     <ClCompile Include="$(UserToolsDir)midi-app-shared\EndpointCatalog.cpp" />
     <ClCompile Include="$(UserToolsDir)midi-app-shared\EndpointMatch.cpp" />
+    <ClCompile Include="$(UserToolsDir)midi-app-shared\LfoWave.cpp" />
     <ClCompile Include="$(UserToolsDir)midi-app-shared\MidiEndpointHelpers.cpp" />
     <ClCompile Include="$(UserToolsDir)midi-app-shared\MidiServiceStatus.cpp" />
     <ClCompile Include="$(UserToolsDir)midi-glass\document\HexText.cpp" />
@@ -117,6 +119,7 @@
     <ClCompile Include="$(UserToolsDir)midi-glass\document\ThemeModel.cpp" />
     <ClCompile Include="$(UserToolsDir)midi-glass\document\ThemeStore.cpp" />
     <ClCompile Include="$(UserToolsDir)midi-glass\editor\ControlFactory.cpp" />
+    <ClCompile Include="$(UserToolsDir)midi-patchbay\PatchFolderMove.cpp" />
   </ItemGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

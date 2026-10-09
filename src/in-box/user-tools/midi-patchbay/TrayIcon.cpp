@@ -130,7 +130,11 @@ namespace midipatchbay
 
                     if (index < m_items.size() && m_onTogglePatch)
                     {
-                        m_onTogglePatch(m_items[index].PatchId);
+                        // A copy: turning a patch on or off rebuilds these items, which would
+                        // free the one passed in while it is still in use.
+                        auto const patchId = m_items[index].PatchId;
+
+                        m_onTogglePatch(patchId);
                     }
                 }
 

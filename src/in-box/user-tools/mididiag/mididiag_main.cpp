@@ -2056,6 +2056,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2UnicodeConversion.h"
 #include "Feature_Servicing_MIDI2KSInputRemovalDeadlock.h"
 #include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
+#include "Feature_Servicing_MIDI2KSInputReadCompletionTimestamp.h"
 #include "Feature_Servicing_MIDI2KSAWatcherHardening.h"
 #include "Feature_Servicing_MIDI2PortNumberCache.h"
 #include "Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock.h"
@@ -2124,6 +2125,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2UnicodeConversion::IsEnabled(),                    L"MIDI2UnicodeConversion");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSInputRemovalDeadlock::IsEnabled(),               L"MIDI2KSInputRemovalDeadlock (workaround surprise removal for InMusic drivers)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled(),                    L"MIDI2KSOutputWriteHang (fix for declared midi out when none present)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSInputReadCompletionTimestamp::IsEnabled(),       L"MIDI2KSInputReadCompletionTimestamp (timestamp incoming midi 1.0 driver data when the service reads it, so winmm apps stop dropping it)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSAWatcherHardening::IsEnabled(),                  L"MIDI2KSAWatcherHardening (fix for MONTAGE M / MODX usb port move)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2PortNumberCache::IsEnabled(),                      L"MIDI2PortNumberCache (greatly speeds up service startup)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBSystemRealTimeUmpSize::IsEnabled(),             L"MIDI2USBSystemRealTimeUmpSize (fix timing clock coming in as NOOP on MIDI2 driver)");
@@ -2271,6 +2273,8 @@ int __cdecl wmain(_In_ int argc, _In_reads_(argc) wchar_t* argv[])
         DoSectionMidi2RegistryEntries(verbose);
         DoSectionDeviceNodes();
         DoSectionNetwork();
+        DoSectionMdns();
+        DoSectionNetworkHistory();
 
         if (context.IncludeWinRTMidi1)
         {

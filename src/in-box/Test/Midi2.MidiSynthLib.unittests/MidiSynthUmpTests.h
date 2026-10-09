@@ -26,6 +26,8 @@ public:
     TEST_METHOD(TestResetAllControllersScope);
     TEST_METHOD(TestPropertyRequestParking);
     TEST_METHOD(TestPropertyExchangeProgramListLinks);
+    TEST_METHOD(TestPropertyExchangeControllerList);
+    TEST_METHOD(TestPropertyExchangeText);
     TEST_METHOD(TestPropertyExchangeProgramListCategories);
     TEST_METHOD(TestPropertyExchangeProgramListPagination);
     TEST_METHOD(TestChannelListSubscriptionNotification);
@@ -34,6 +36,7 @@ public:
     TEST_METHOD(TestIdentityReply);
     TEST_METHOD(TestMidiCiDiscovery);
     TEST_METHOD(TestMidiCiInquiriesAreAnswered);
+    TEST_METHOD(TestMidiMessageReport);
     TEST_METHOD(TestMasterVolume);
     TEST_METHOD(TestMasterTuning);
     TEST_METHOD(TestActiveSensing);
@@ -44,4 +47,11 @@ public:
     TEST_METHOD(TestPerNoteControllers);
     TEST_METHOD(TestPerNoteManagement);
     TEST_METHOD(TestUmpStreamDiscovery);
+
+    // Issue #1260: drum pan, sustain level and reverb.
+    TEST_METHOD(TestDlsPercentUnits);
+    TEST_METHOD(TestDrumKitPanIsGraded);
+    TEST_METHOD(TestSustainLevelIsOnTheDecibelScale);
+    TEST_METHOD(TestReverbTailIsDenseAndWide);
+    TEST_METHOD(TestReverbFillsBothSidesOfAPannedSound);
 };

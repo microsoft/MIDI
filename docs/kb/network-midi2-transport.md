@@ -25,7 +25,7 @@ To set any of this up, use the Network MIDI Setup app. This page does not repeat
 
 **The two ends must be on the same network and the same subnet.** Devices announce themselves locally, and those announcements do not normally cross between separate networks, or between a guest network and your main one.
 
-**To accept incoming connections, the service must be allowed through the firewall.** This is the single most common reason other devices can see this PC but cannot connect to it: they see the advertisement, and their connection request is dropped before the service ever sees it. See [Adding Network MIDI 2 to your firewall]({{ site.baseurl }}/kb/network-midi-firewall/).
+**To accept incoming connections, the service must be allowed through the firewall.** This is the single most common reason other devices can see this PC but cannot connect to it: they see the advertisement, and their connection request is dropped before the service ever sees it. The **Firewall** page in [Network MIDI Setup]({{ site.baseurl }}/tools/midinetworksetup/#windows-firewall) does it for you. To do it by hand, see [Adding Network MIDI 2 to your firewall]({{ site.baseurl }}/kb/network-midi-firewall/).
 
 Connecting *out* from this PC does not need a firewall change.
 
@@ -52,6 +52,8 @@ If you need to keep other devices off a host, put it on a network you control, o
 **Connections are remembered and re-established on their own.** A connection you set up survives a restart of the service or the PC, with no app running. If the device is switched off, the entry stays and connects when the device reappears.
 
 **A device that does not advertise can be connected by address.** Advertised connections are more efficient, because Windows waits for an announcement rather than repeatedly probing an address.
+
+**A device with more than one address is tried at each one in turn.** A device can have an IPv4 address and several IPv6 addresses, and its announcement doesn't say which one to use. Windows tries them in the same order it uses for every other app on this PC. That's usually IPv6 first, but an IPv6 address starting with `fd` comes after IPv4, and an address this PC has no way to reach is skipped. If the device doesn't answer at one address, Windows tries the next one right away. Once a connection works, Windows tries that address first next time. To always use one particular address, connect to the device by that address. An administrator can also make the whole PC [prefer IPv4 over IPv6](https://learn.microsoft.com/troubleshoot/windows-server/networking/configure-ipv6-in-windows).
 
 **Naming.** Leave the name empty and Windows uses whatever the device calls itself. Give a name and that is what appears everywhere in Windows, including your DAW's device list.
 

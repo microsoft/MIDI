@@ -144,20 +144,23 @@ private:
     ::WindowsMidiServicesInternal::MidiNetworkChangeMonitor m_networkChangeMonitor;
 
     // Only EndpointCreatorWorker may call this, so two callers can't build the same client.
+    // hostNameOrIPAddress is one of the remote's remoteAddressCount addresses.
     HRESULT StartNewClient(
         _In_ MidiNetworkClientDefinition const& clientDefinition,
         _In_ winrt::hstring const& hostNameOrIPAddress,
-        _In_ uint16_t const hostPort);
+        _In_ uint16_t const hostPort,
+        _In_ uint32_t const remoteAddressCount);
 
     // The two halves of each EndpointCreatorWorker pass
     void StartPendingHosts();
-    void StartPendingClients();
+    void StartPendingClients(_In_ std::stop_token const& stopToken);
 
-    // Where a client definition should connect: the advertised host it matches, or its direct
-    // address. False when there is nowhere to connect yet.
+    // Where a client definition should connect: the addresses of the advertised host it matches,
+    // or of its direct target, in the order to try them. False when there is nowhere to connect yet.
     bool TryResolveClientTarget(
         _In_ MidiNetworkClientDefinition const& definition,
-        _Out_ winrt::hstring& hostNameOrIPAddress,
+        _In_ std::stop_token const& stopToken,
+        _Out_ std::vector<std::wstring>& addresses,
         _Out_ uint16_t& port);
 
     STDMETHOD(CreateNewEndpoint(

@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "App.xaml.h"
+#include "LibraryWindow.xaml.h"
 #include "MainWindow.xaml.h"
 
 #include "AppSettings.h"
@@ -16,6 +17,114 @@ using namespace winrt::Microsoft::UI::Xaml;
 namespace winrt::midipatchbay::implementation
 {
     ::midipatchbay::CommandLineOptions App::s_startupOptions{};
+
+    namespace
+    {
+        // Strong references, released when a window closes. The library owns the patches and
+        // the routing, so an editor is only a view of one patch.
+        std::vector<midipatchbay::MainWindow> g_editorWindows{};
+
+        midipatchbay::LibraryWindow g_libraryWindow{ nullptr };
+
+        // Each new editor is nudged down and across from the last, so a second one does not
+        // land exactly on top of the first and look like nothing happened.
+        constexpr int32_t EditorCascadeStep = 28;
+    }
+
+    _Use_decl_annotations_
+    void App::OpenEditorWindow(std::wstring const& patchKey)
+    {
+        try
+        {
+            if (patchKey.empty())
+            {
+                return;
+            }
+
+            for (auto const& existing : g_editorWindows)
+            {
+                auto* const implementation = winrt::get_self<MainWindow>(existing);
+
+                if (implementation != nullptr && implementation->PatchKey() == patchKey)
+                {
+                    existing.Activate();
+                    return;
+                }
+            }
+
+            auto window = winrt::make_self<MainWindow>();
+
+            if (!window->OpenPatch(patchKey))
+            {
+                return;
+            }
+
+            auto const cascade = static_cast<int32_t>(g_editorWindows.size()) * EditorCascadeStep;
+
+            // Sized and positioned before the first paint, so it does not visibly jump.
+            window->RestoreWindowPlacement(cascade);
+
+            auto projected = window.as<midipatchbay::MainWindow>();
+
+            g_editorWindows.push_back(projected);
+
+            // Weak, so the window's own event does not keep the window alive.
+            projected.Closed([weak = winrt::make_weak(projected)](auto&&, auto&&)
+                {
+                    if (auto const closed = weak.get())
+                    {
+                        g_editorWindows.erase(
+                            std::remove(g_editorWindows.begin(), g_editorWindows.end(), closed),
+                            g_editorWindows.end());
+                    }
+                });
+
+            projected.Activate();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to open the patch.")
+    }
+
+    void App::ActivateLibraryWindow()
+    {
+        try
+        {
+            if (g_libraryWindow != nullptr)
+            {
+                winrt::get_self<LibraryWindow>(g_libraryWindow)->BringForward();
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to bring the library forward.")
+    }
+
+    void App::ApplyAppearanceToEditors()
+    {
+        try
+        {
+            // A copy, so a window closing part way through cannot change the list underneath.
+            auto const editors = g_editorWindows;
+
+            for (auto const& editor : editors)
+            {
+                winrt::get_self<MainWindow>(editor)->ApplyAppearance();
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to apply the appearance to the editors.")
+    }
+
+    void App::CloseAllEditors()
+    {
+        try
+        {
+            // A copy, because each close takes itself out of the list.
+            auto const editors = g_editorWindows;
+
+            for (auto const& editor : editors)
+            {
+                editor.Close();
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to close the editors.")
+    }
 
     App::App()
     {
@@ -61,12 +170,21 @@ namespace winrt::midipatchbay::implementation
 
             ::midipatchbay::AppSettings::Current().Load();
 
-            auto window = winrt::make_self<MainWindow>();
+            // The library is the main window. Each patch opens in an editor of its own from there.
+            auto window = winrt::make_self<LibraryWindow>();
 
             // sized and positioned before the first paint, so it does not visibly jump
             window->RestoreWindowPlacement();
 
+            g_libraryWindow = window.as<midipatchbay::LibraryWindow>();
             m_window = window.as<xaml::Window>();
+
+            // Let go of it while XAML is still running, rather than in a static destructor.
+            m_window.Closed([](auto&&, auto&&)
+                {
+                    g_libraryWindow = nullptr;
+                });
+
             m_window.Activate();
 
             if (s_startupOptions.StartMinimized || ::midipatchbay::AppSettings::Current().StartMinimized())

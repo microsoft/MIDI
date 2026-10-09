@@ -103,7 +103,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shlwapi.lib;shell32.lib;advapi32.lib;pathcch.lib;dwrite.lib;CoreMessaging.lib;dwmapi.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shlwapi.lib;shell32.lib;advapi32.lib;pathcch.lib;dwrite.lib;CoreMessaging.lib;dwmapi.lib;crypt32.lib;bcrypt.lib;ncrypt.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -128,7 +128,11 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="AppSettings.h" />
-    <ClInclude Include="FontCatalog.h" />
+    <ClInclude Include="AppProvenance.h" />
+    <ClInclude Include="SharingDialogs.h" />
+    <ClInclude Include="..\midi-app-shared\FontCatalog.h" />
+    <ClInclude Include="..\midi-app-shared\FontNames.h" />
+    <ClInclude Include="..\midi-app-shared\DialogSizing.h" />
     <ClInclude Include="CommandLine.h" />
     <ClInclude Include="LibraryItems.h" />
     <ClInclude Include="EditorItems.h" />
@@ -161,10 +165,18 @@
     <ClInclude Include="..\midi-app-shared\EndpointImageAssets.h" />
     <ClInclude Include="..\midi-app-shared\MidiServiceStatus.h" />
     <ClInclude Include="..\midi-app-shared\EndpointMatch.h" />
+    <ClInclude Include="..\midi-app-shared\LfoWave.h" />
+    <ClInclude Include="..\midi-app-shared\LfoSweep.h" />
+    <ClInclude Include="..\midi-app-shared\ChannelVoiceWords.h" />
     <ClInclude Include="..\midi-app-shared\EndpointCatalog.h" />
+    <ClInclude Include="..\midi-app-shared\ContentProvenance.h" />
+    <ClInclude Include="..\midi-app-shared\StoredZip.h" />
+    <ClInclude Include="..\midi-app-shared\ContentPack.h" />
     <ClInclude Include="document\JsonText.h" />
     <ClInclude Include="document\LayoutModel.h" />
     <ClInclude Include="document\LayoutPackage.h" />
+    <ClInclude Include="document\LayoutPack.h" />
+    <ClInclude Include="document\SignedItems.h" />
     <ClInclude Include="document\LayoutSerializer.h" />
     <ClInclude Include="document\LayoutStore.h" />
     <ClInclude Include="document\PageTemplates.h" />
@@ -211,6 +223,7 @@
     <ClInclude Include="editor\UndoStack.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
     <ClInclude Include="..\midi-app-shared\AssistantPrompt.h" />
+    <ClInclude Include="..\midi-app-shared\UmpPrimerLink.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -218,7 +231,7 @@
     </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="AppSettings.cpp" />
-    <ClCompile Include="FontCatalog.cpp" />
+    <ClCompile Include="..\midi-app-shared\FontCatalog.cpp" />
     <ClCompile Include="LibraryItems.cpp" />
     <ClCompile Include="EditorItems.cpp" />
     <ClCompile Include="StringResources.cpp" />
@@ -230,6 +243,7 @@
     </ClCompile>
     <ClCompile Include="MainWindowLibrary.cpp" />
     <ClCompile Include="MainWindowPackaging.cpp" />
+    <ClCompile Include="SharingDialogs.cpp" />
     <ClCompile Include="MainWindowDialogs.cpp" />
     <ClCompile Include="RuntimeWindow.xaml.cpp">
       <DependentUpon>RuntimeWindow.xaml</DependentUpon>
@@ -274,6 +288,26 @@
     <ClCompile Include="..\midi-app-shared\EndpointMatch.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <!-- shared with MIDI Patchbay's LFO step, and free of the pch for the unit tests -->
+    <ClCompile Include="..\midi-app-shared\LfoWave.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\LfoSweep.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\ChannelVoiceWords.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <!-- provenance and packs, shared with MIDI Patchbay and free of the pch for the unit tests -->
+    <ClCompile Include="..\midi-app-shared\ContentProvenance.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\StoredZip.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\ContentPack.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\midi-app-shared\EndpointCatalog.cpp" />
     <!-- the document layer is free of the pch, XAML and WinRT UI so the unit tests compile it unchanged -->
     <ClCompile Include="document\JsonText.cpp">
@@ -283,6 +317,12 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\LayoutPackage.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\LayoutPack.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\SignedItems.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\LayoutSerializer.cpp">

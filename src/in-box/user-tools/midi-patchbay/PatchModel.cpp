@@ -8,110 +8,18 @@
 #include "pch.h"
 #include "PatchModel.h"
 #include "StringResources.h"
+#include "TextMatch.h"
 
 namespace midipatchbay
 {
     _Use_decl_annotations_
-    PatchEndpoint* PatchDocument::FindEndpoint(std::wstring const& id) noexcept
-    {
-        auto it = std::find_if(Endpoints.begin(), Endpoints.end(),
-            [&id](PatchEndpoint const& e) { return e.Id == id; });
-
-        return it == Endpoints.end() ? nullptr : &(*it);
-    }
-
-    _Use_decl_annotations_
-    PatchEndpoint const* PatchDocument::FindEndpoint(std::wstring const& id) const noexcept
-    {
-        auto it = std::find_if(Endpoints.begin(), Endpoints.end(),
-            [&id](PatchEndpoint const& e) { return e.Id == id; });
-
-        return it == Endpoints.end() ? nullptr : &(*it);
-    }
-
-    _Use_decl_annotations_
-    PatchConnection* PatchDocument::FindConnection(std::wstring const& id) noexcept
-    {
-        auto it = std::find_if(Connections.begin(), Connections.end(),
-            [&id](PatchConnection const& c) { return c.Id == id; });
-
-        return it == Connections.end() ? nullptr : &(*it);
-    }
-
-    _Use_decl_annotations_
-    PatchConnection const* PatchDocument::FindConnection(std::wstring const& id) const noexcept
-    {
-        auto it = std::find_if(Connections.begin(), Connections.end(),
-            [&id](PatchConnection const& c) { return c.Id == id; });
-
-        return it == Connections.end() ? nullptr : &(*it);
-    }
-
-    _Use_decl_annotations_
-    bool PatchDocument::HasConnection(
-        std::wstring const& sourceEndpointId,
-        int32_t sourceGroupIndex,
-        std::wstring const& destinationEndpointId,
-        int32_t destinationGroupIndex) const noexcept
-    {
-        return std::any_of(Connections.begin(), Connections.end(),
-            [&](PatchConnection const& c)
-            {
-                return c.SourceEndpointId == sourceEndpointId &&
-                    c.SourceGroupIndex == sourceGroupIndex &&
-                    c.DestinationEndpointId == destinationEndpointId &&
-                    c.DestinationGroupIndex == destinationGroupIndex;
-            });
-    }
-
-    _Use_decl_annotations_
-    void PatchDocument::RemoveEndpoint(std::wstring const& id) noexcept
-    {
-        std::erase_if(Connections, [&id](PatchConnection const& c)
-            { return c.SourceEndpointId == id || c.DestinationEndpointId == id; });
-
-        std::erase_if(Endpoints, [&id](PatchEndpoint const& e) { return e.Id == id; });
-    }
-
-    _Use_decl_annotations_
-    void PatchDocument::RemoveConnection(std::wstring const& id) noexcept
-    {
-        std::erase_if(Connections, [&id](PatchConnection const& c) { return c.Id == id; });
-    }
-
-    std::wstring PatchDocument::NewId() noexcept
-    {
-        GUID value{};
-
-        if (FAILED(::CoCreateGuid(&value)))
-        {
-            return {};
-        }
-
-        wchar_t buffer[40]{};
-
-        if (::StringFromGUID2(value, buffer, ARRAYSIZE(buffer)) == 0)
-        {
-            return {};
-        }
-
-        std::wstring result{ buffer };
-
-        // braces only add noise inside a file the app owns end to end
-        std::erase(result, L'{');
-        std::erase(result, L'}');
-
-        return result;
-    }
-
-    _Use_decl_annotations_
-    winrt::hstring DescribeGroupIndex(int32_t groupIndex, std::wstring const& groupName) noexcept
+    winrt::hstring DescribeGroupIndex(int32_t groupIndex, std::wstring const& groupName, bool isInput) noexcept
     {
         try
         {
             if (groupIndex == AllGroups)
             {
-                return resources::GetString(L"PortAllGroups");
+                return resources::GetString(isInput ? L"PortAnyGroup" : L"PortAllGroups");
             }
 
             auto const groupNumber = groupIndex + 1;
@@ -139,5 +47,86 @@ namespace midipatchbay
     std::optional<LiveEndpoint> SuggestReplacementFor(PatchEndpoint const& endpoint) noexcept
     {
         return EndpointCatalog::Current().SuggestReplacement(endpoint.Match, endpoint.MatchMode, endpoint.DisplayName);
+    }
+
+    namespace
+    {
+        std::wstring const& MatchedName(_In_ PatchEndpoint const& endpoint) noexcept
+        {
+            return endpoint.Match.TransportSuppliedEndpointName.empty()
+                ? endpoint.DisplayName
+                : endpoint.Match.TransportSuppliedEndpointName;
+        }
+    }
+
+    _Use_decl_annotations_
+    bool IsSameDevice(PatchEndpoint const& left, PatchEndpoint const& right) noexcept
+    {
+        try
+        {
+            auto const liveLeft = ResolveEndpoint(left);
+            auto const liveRight = ResolveEndpoint(right);
+
+            // Connected, so the device each one finds is the answer, however it was matched.
+            if (liveLeft.has_value() && liveRight.has_value())
+            {
+                return SameText(liveLeft->EndpointDeviceId, liveRight->EndpointDeviceId);
+            }
+
+            if (!left.Match.EndpointDeviceId.empty() || !right.Match.EndpointDeviceId.empty())
+            {
+                return SameText(left.Match.EndpointDeviceId, right.Match.EndpointDeviceId);
+            }
+
+            return left.MatchMode == right.MatchMode &&
+                !MatchedName(left).empty() &&
+                SameText(MatchedName(left), MatchedName(right));
+        }
+        catch (...)
+        {
+        }
+
+        return false;
+    }
+
+    _Use_decl_annotations_
+    bool StandsFor(PatchEndpoint const& endpoint, std::wstring const& endpointDeviceId) noexcept
+    {
+        try
+        {
+            if (endpointDeviceId.empty())
+            {
+                return false;
+            }
+
+            if (auto const live = ResolveEndpoint(endpoint))
+            {
+                return SameText(live->EndpointDeviceId, endpointDeviceId);
+            }
+
+            return SameText(endpoint.Match.EndpointDeviceId, endpointDeviceId);
+        }
+        catch (...)
+        {
+        }
+
+        return false;
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring BlockDisplayName(PatchBlock const& block) noexcept
+    {
+        if (!block.Name.empty())
+        {
+            try
+            {
+                return winrt::hstring{ block.Name };
+            }
+            catch (...)
+            {
+            }
+        }
+
+        return BlockKindName(block.Kind);
     }
 }

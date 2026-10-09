@@ -65,6 +65,24 @@ namespace midiglass
         // A layout file renamed from one path to another keeps when it was last used.
         void RenameLayouts(_In_ std::vector<std::pair<std::wstring, std::wstring>> const& renamed) noexcept;
 
+        // Pinned to the top of the library. Kept here rather than in the layout file, because
+        // which layouts somebody reaches for first is about this PC, and a shared layout
+        // shouldn't arrive pinned. A renamed layout stays pinned.
+        bool IsFavoriteLayout(_In_ std::wstring const& layoutFilePath) const noexcept;
+        void FavoriteLayout(_In_ std::wstring const& layoutFilePath, _In_ bool favorite) noexcept;
+
+        // Older builds kept the star in the layout file. True once those have been moved here.
+        bool FavoritesMoved() const noexcept { return m_favoritesMoved; }
+        void MoveFavorites(_In_ std::vector<std::wstring> const& layoutFilePaths) noexcept;
+
+        // What a pack was last signed with, so a publisher doesn't pick it every time. The
+        // certificate's SHA-1 thumbprint in hex, which is how the certificate store finds it.
+        std::wstring SigningThumbprint() const noexcept;
+        void SigningThumbprint(_In_ std::wstring const& value) noexcept;
+
+        std::wstring TimestampServer() const noexcept;
+        void TimestampServer(_In_ std::wstring const& value) noexcept;
+
         // The designer keeps its own window placement and its own pane sizes. It is a different
         // window doing a different job, so sharing the library's would make opening one move the
         // other.
@@ -88,8 +106,12 @@ namespace midiglass
         void LoadRecentLayouts() noexcept;
         void SaveRecentLayouts() const noexcept;
 
+        void LoadFavoriteLayouts() noexcept;
+        void SaveFavoriteLayouts() const noexcept;
+
         // Bounded on purpose. A list nobody can see the end of is a list nobody can fix.
         static constexpr size_t MaximumRecentLayouts = 64;
+        static constexpr size_t MaximumFavoriteLayouts = 256;
 
         LibrarySort m_librarySort{ LibrarySort::LastUsed };
         bool m_libraryShowsList{ false };
@@ -107,5 +129,9 @@ namespace midiglass
         int32_t m_editorZoomPercent{ 0 };
 
         std::vector<std::pair<std::wstring, int64_t>> m_recentLayouts{};
+
+        // Lowercase paths, like the recent list.
+        std::vector<std::wstring> m_favoriteLayouts{};
+        bool m_favoritesMoved{ false };
     };
 }

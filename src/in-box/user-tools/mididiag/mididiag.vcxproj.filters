@@ -21,6 +21,9 @@
     <ClInclude Include="mididiag_field_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="mididiag_network_probe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="mididiag_output.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36,6 +39,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mididiag_main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mididiag_network_probe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mididiag_output.cpp">

@@ -72,6 +72,7 @@ namespace winrt::midiglass::implementation
         void OnSettingsExportClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSaveThemeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnImportThemeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnThemeGroupChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
         void OnSettingsNameChanged(
             foundation::IInspectable const& sender,
@@ -675,6 +676,11 @@ namespace winrt::midiglass::implementation
 
         // A painted miniature of a theme's own deck and controls, for its card in the gallery.
         xaml::FrameworkElement BuildThemeCardPreview(_In_ glass::Theme const& theme);
+
+        // One card in the gallery, for m_galleryThemes[index], with who made and who signed it.
+        controls::Primitives::ToggleButton BuildThemeCard(_In_ size_t index, _In_ std::wstring const& signer);
+
+        winrt::fire_and_forget ShareGalleryThemeAsync(_In_ std::wstring themeFilePath);
 
         void ChooseThemeByName(_In_ std::wstring const& name);
         void ShowSlotColorFlyout(_In_ xaml::FrameworkElement const& anchor, _In_ int32_t slot);

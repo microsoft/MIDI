@@ -1,0 +1,1301 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+// Pure: no precompiled header, so the unit tests compile this file exactly as it ships.
+
+#include <windows.h>
+
+#include "RouteGraph.h"
+#include "TextMatch.h"
+
+#include <algorithm>
+#include <unordered_set>
+
+// Uses PVOID and UNREFERENCED_PARAMETER, so it comes after windows.h.
+#include <ump_helpers.h>
+
+namespace internal = ::WindowsMidiServicesInternal;
+
+namespace midipatchbay
+{
+    namespace
+    {
+        constexpr uint8_t MaximumWordsPerMessage = 4;
+
+        enum class Expansion
+        {
+            // Reaches at least one destination that is here now.
+            Live,
+
+            // Reaches nothing that is here now, so it is left out.
+            Dead,
+
+            // The patch cannot route at all.
+            Refused,
+        };
+
+        // What an LFO that follows a clock listens to: timing clock, start, continue, stop and
+        // song position.
+        bool IsClockMessage(_In_ uint32_t word) noexcept
+        {
+            if ((word >> 28) != static_cast<uint32_t>(UmpMessageType::System))
+            {
+                return false;
+            }
+
+            auto const status = (word >> 16) & 0xFF;
+
+            return status == 0xF8 || status == 0xFA || status == 0xFB || status == 0xFC || status == 0xF2;
+        }
+
+        // A throttle with a limit is a queue with a thread of its own, so nothing after it knows
+        // where a message came from.
+        bool PacesMessages(_In_ PatchBlock const& block) noexcept
+        {
+            return block.Kind == BlockKind::Throttle && !block.Bypassed && block.Settings.SendSpeedLimit != 0;
+        }
+
+        // Whether what leaves a step by this link could still be answered. A way the step doesn't
+        // have, or doesn't use while it is bypassed, carries nothing at all.
+        bool CarriesAWayBack(_In_ PatchBlock const& source, _In_ PatchConnection const& link) noexcept
+        {
+            if (IsGenerator(source.Kind) || IsAnnotation(source.Kind) || PacesMessages(source))
+            {
+                return false;
+            }
+
+            if (!HasWays(source.Kind))
+            {
+                return true;
+            }
+
+            if (!IsWayOf(source, link.SourceGroupIndex))
+            {
+                return false;
+            }
+
+            auto const bypass = source.Kind == BlockKind::Branch ? source.Settings.Branch.Bypass : source.Settings.Switch.Bypass;
+
+            return !source.Bypassed || bypass != BypassWay::FirstWay ||
+                link.SourceGroupIndex == FirstWayOf(source.Kind, source.Settings);
+        }
+
+        // A responder's answers, held until the packet it passes on has gone, then sent back the
+        // way the question came. Sent at once, an answer to the same endpoint and group would land
+        // inside the question it forwards.
+        class HeldReplies final : public CiReplyWriter
+        {
+        public:
+            void Write(_In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept override
+            {
+                try
+                {
+                    m_words.insert(m_words.end(), words, words + wordCount);
+                    m_counts.push_back(wordCount);
+                }
+                catch (...)
+                {
+                }
+            }
+
+            // Each answer is counted on the reply cell, so live routing can show it going back.
+            void SendTo(_Inout_ RouteSink& sink, _In_ uint32_t leaf, _In_ std::optional<uint32_t> cell) const noexcept
+            {
+                size_t first = 0;
+
+                for (auto const count : m_counts)
+                {
+                    if (first + count > m_words.size())
+                    {
+                        break;
+                    }
+
+                    sink.Send(leaf, m_words.data() + first, count);
+
+                    if (cell.has_value())
+                    {
+                        sink.CountLink(cell.value());
+                    }
+
+                    first += count;
+                }
+            }
+
+        private:
+            std::vector<uint32_t> m_words{};
+            std::vector<uint8_t> m_counts{};
+        };
+
+        // A Branch, a Switch, Set tag, Set memory or Put value, on one message. The tags the
+        // message carries come from the links that brought it here; a tag this step sets is
+        // added on this thread's stack, so it lasts exactly as long as what comes after.
+        void RunLogicStage(
+            _In_ RouteGraph const& graph,
+            _In_ RouteStage const& stage,
+            _Inout_updates_(wordCount) uint32_t* words,
+            _In_ uint8_t wordCount,
+            _Inout_ RouteSink& sink,
+            _In_ ReturnPath const& from,
+            _In_opt_ TagLink const* tags) noexcept
+        {
+            auto const& settings = graph.Settings[stage.Index];
+
+            auto const valueOf = [&](LogicSource const& source) -> LogicValue
+                {
+                    switch (source.Kind)
+                    {
+                    case LogicSourceKind::Number:
+                        return ValueFromUnit(source.Number, source.Unit);
+
+                    case LogicSourceKind::Part:
+                        return ReadPart(source.Place, words, wordCount);
+
+                    case LogicSourceKind::Tag:
+                        return source.Index == NoLogicIndex ? LogicValue{} : FindTag(tags, source.Index);
+
+                    case LogicSourceKind::Memory:
+                        return source.Index == NoLogicIndex ? LogicValue{} : sink.Memory(source.Index);
+
+                    default:
+                        return {};
+                    }
+                };
+
+            auto const sendOn = [&](TagLink const* carried, WaySet const* ways)
+                {
+                    for (uint32_t i = 0; i < stage.EdgeCount; i++)
+                    {
+                        auto const& next = graph.Edges[stage.FirstEdge + i];
+
+                        if (ways == nullptr || ways->Contains(next.Way))
+                        {
+                            RunEdge(graph, next, words, wordCount, sink, from, carried);
+                        }
+                    }
+                };
+
+            switch (stage.Block)
+            {
+            case BlockKind::SetTag:
+            {
+                auto const& tag = settings.SetTag;
+
+                sink.CountBlock(stage.Cell, true);
+
+                if (tag.TagIndex == NoLogicIndex)
+                {
+                    sendOn(tags, nullptr);
+                    return;
+                }
+
+                TagLink const link{ tags, valueOf(tag.Value), tag.TagIndex };
+
+                sendOn(&link, nullptr);
+                return;
+            }
+
+            case BlockKind::PutValue:
+            {
+                auto const& put = settings.PutValue;
+                auto const value = valueOf(put.Value);
+
+                if (!value.HasValue && put.KeepsOutWhenEmpty)
+                {
+                    sink.CountBlock(stage.Cell, false);
+                    return;
+                }
+
+                WritePart(put.Target, value, words, wordCount);
+
+                sink.CountBlock(stage.Cell, true);
+                sendOn(tags, nullptr);
+                return;
+            }
+
+            case BlockKind::SetMemory:
+            {
+                auto const& memory = settings.SetMemory;
+                auto const triggered = memory.EveryMessage || memory.Trigger.Matches(words, wordCount);
+
+                if (triggered && memory.MemoryIndex != NoLogicIndex)
+                {
+                    sink.ChangeMemory(memory.MemoryIndex, memory,
+                        memory.Action == MemoryAction::Set ? valueOf(memory.Value) : LogicValue{});
+                }
+
+                auto const passes = !triggered || memory.PassesTriggers;
+
+                sink.CountBlock(stage.Cell, passes);
+
+                if (passes)
+                {
+                    sendOn(tags, nullptr);
+                }
+
+                return;
+            }
+
+            case BlockKind::Branch:
+            case BlockKind::Switch:
+            {
+                auto const isBranch = stage.Block == BlockKind::Branch;
+                auto const subject = valueOf(isBranch ? settings.Branch.Subject : settings.Switch.Subject);
+
+                auto ways = isBranch ? DecideBranch(settings.Branch, subject) : DecideSwitch(settings.Switch, subject);
+
+                if (auto* state = sink.StateOf(stage.State); state != nullptr && state->Ways != nullptr)
+                {
+                    ways = FollowWays(*state->Ways, words, wordCount, ways);
+                    state->Ways->LastTested.store(PackLogicValue(subject), std::memory_order_relaxed);
+                }
+
+                sink.CountBlock(stage.Cell, !ways.IsEmpty());
+
+                if (!ways.IsEmpty())
+                {
+                    sendOn(tags, &ways);
+                }
+
+                return;
+            }
+
+            default:
+                sink.CountBlock(stage.Cell, true);
+                sendOn(tags, nullptr);
+                return;
+            }
+        }
+
+        class PatchCompiler
+        {
+        public:
+            PatchCompiler(_Inout_ RouteGraph& graph, _In_ RoutePatch const& input) :
+                m_graph(graph),
+                m_input(input),
+                m_patch(*input.Patch)
+            {
+            }
+
+            bool Run(_Out_ RouteProblemKind& problem)
+            {
+                problem = RouteProblemKind::LoopBetweenBlocks;
+
+                // A muted link carries nothing, so it is as if it were not drawn.
+                for (auto const& link : m_patch.Connections)
+                {
+                    if (!link.Muted)
+                    {
+                        m_outgoing[link.SourceId].push_back(&link);
+                    }
+                }
+
+                // A responder answers whoever asked, so each source gets a way back.
+                auto const answers = std::any_of(m_patch.Blocks.begin(), m_patch.Blocks.end(),
+                    [](PatchBlock const& block) { return block.Kind == BlockKind::CiResponder && !block.Bypassed; });
+
+                for (auto const& endpoint : m_patch.Endpoints)
+                {
+                    auto const* device = DeviceIdOf(endpoint.Id);
+
+                    if (device == nullptr)
+                    {
+                        continue;
+                    }
+
+                    auto const links = m_outgoing.find(endpoint.Id);
+
+                    if (links == m_outgoing.end())
+                    {
+                        continue;
+                    }
+
+                    for (auto const* link : links->second)
+                    {
+                        std::vector<std::wstring> path{};
+                        RouteEdge edge{};
+
+                        auto const result = ExpandLink(*link, path, 0, edge);
+
+                        if (result == Expansion::Refused)
+                        {
+                            problem = m_problem;
+                            return false;
+                        }
+
+                        if (result == Expansion::Dead)
+                        {
+                            continue;
+                        }
+
+                        RouteRoot root{};
+                        root.SourceDeviceId = LowerCopy(*device);
+                        root.WaitForSendComplete = m_patch.WaitForSendComplete;
+                        root.SourceGroupIndex = link->SourceGroupIndex;
+                        root.Edge = edge;
+                        root.ReplyLeaf = answers ? ReplyLeafFor(endpoint.Id, *device) : NoReturnLeaf;
+
+                        m_graph.Roots.push_back(std::move(root));
+                    }
+                }
+
+                // A generator is a source of its own. Bypassed, or leading nowhere that is here
+                // now, it does not run at all.
+                for (auto const& block : m_patch.Blocks)
+                {
+                    if (!IsGenerator(block.Kind) || block.Bypassed)
+                    {
+                        continue;
+                    }
+
+                    std::vector<std::wstring> path{ block.Id };
+                    std::vector<RouteEdge> edges{};
+
+                    if (ExpandOutgoing(block.Id, path, 1, edges) == Expansion::Refused)
+                    {
+                        problem = m_problem;
+                        return false;
+                    }
+
+                    if (edges.empty())
+                    {
+                        continue;
+                    }
+
+                    RouteGenerator generator{};
+                    generator.Key = m_input.Key + L'|' + block.Id;
+                    generator.Kind = block.Kind;
+                    generator.Settings = SettingsFor(block);
+                    generator.Cell = CellFor(block.Id);
+                    generator.FollowsClock = HasInput(block.Kind) &&
+                        std::any_of(m_patch.Connections.begin(), m_patch.Connections.end(),
+                            [&block](PatchConnection const& link) { return link.DestinationId == block.Id; });
+                    generator.FirstEdge = static_cast<uint32_t>(m_graph.Edges.size());
+                    generator.EdgeCount = static_cast<uint32_t>(edges.size());
+
+                    m_graph.Edges.insert(m_graph.Edges.end(), edges.begin(), edges.end());
+                    m_graph.Generators.push_back(std::move(generator));
+                }
+
+                return true;
+            }
+
+        private:
+            std::wstring const* DeviceIdOf(_In_ std::wstring const& endpointId) const
+            {
+                auto const found = m_input.DeviceIds.find(endpointId);
+
+                if (found == m_input.DeviceIds.end() || found->second.empty())
+                {
+                    return nullptr;
+                }
+
+                return &found->second;
+            }
+
+            // Whether a responder at the end of this path could send an answer back: not from a
+            // generator, and not through a throttle.
+            bool HasWayBack(_In_ std::vector<std::wstring> const& path) const
+            {
+                return std::none_of(path.begin(), path.end(), [this](std::wstring const& id)
+                    {
+                        auto const* block = m_patch.FindBlock(id);
+
+                        return block != nullptr && (IsGenerator(block->Kind) || PacesMessages(*block));
+                    });
+            }
+
+            uint32_t CellFor(_In_ std::wstring const& elementId)
+            {
+                auto const found = m_cells.find(elementId);
+
+                if (found != m_cells.end())
+                {
+                    return found->second;
+                }
+
+                auto const cell = static_cast<uint32_t>(m_graph.Cells.size());
+
+                m_graph.Cells.push_back(m_input.Key + L'|' + elementId);
+                m_cells.emplace(elementId, cell);
+
+                return cell;
+            }
+
+            uint32_t SettingsFor(_In_ PatchBlock const& block)
+            {
+                auto const found = m_settings.find(block.Id);
+
+                if (found != m_settings.end())
+                {
+                    return found->second;
+                }
+
+                auto const index = static_cast<uint32_t>(m_graph.Settings.size());
+
+                auto settings = block.Settings;
+                ResolveLogicNames(block.Kind, settings);
+
+                m_graph.Settings.push_back(std::move(settings));
+                m_settings.emplace(block.Id, index);
+
+                return index;
+            }
+
+            // Which tag slot and which memory each name a logic step uses stands for. A name is
+            // the same name whatever its case.
+            void ResolveLogicNames(_In_ BlockKind kind, _Inout_ BlockSettings& settings)
+            {
+                auto const resolve = [this](LogicSource& source)
+                    {
+                        if (source.Kind == LogicSourceKind::Tag)
+                        {
+                            source.Index = TagSlotFor(source.Name);
+                        }
+                        else if (source.Kind == LogicSourceKind::Memory)
+                        {
+                            source.Index = MemoryFor(source.Name);
+                        }
+                    };
+
+                switch (kind)
+                {
+                case BlockKind::Branch:
+                    resolve(settings.Branch.Subject);
+                    break;
+
+                case BlockKind::Switch:
+                    resolve(settings.Switch.Subject);
+                    break;
+
+                case BlockKind::SetTag:
+                    settings.SetTag.TagIndex = TagSlotFor(settings.SetTag.Tag);
+                    resolve(settings.SetTag.Value);
+                    break;
+
+                case BlockKind::SetMemory:
+                    settings.SetMemory.MemoryIndex = MemoryFor(settings.SetMemory.Memory);
+                    resolve(settings.SetMemory.Value);
+                    break;
+
+                case BlockKind::PutValue:
+                    resolve(settings.PutValue.Value);
+                    break;
+
+                default:
+                    break;
+                }
+            }
+
+            // Past the most a patch can have, a name gets no slot and reads as empty.
+            uint32_t TagSlotFor(_In_ std::wstring const& name)
+            {
+                if (name.empty())
+                {
+                    return NoLogicIndex;
+                }
+
+                auto key = LowerCopy(name);
+
+                if (auto const found = m_tagSlots.find(key); found != m_tagSlots.end())
+                {
+                    return found->second;
+                }
+
+                if (m_tagSlots.size() >= MaximumTagsPerPatch)
+                {
+                    return NoLogicIndex;
+                }
+
+                auto const slot = static_cast<uint32_t>(m_tagSlots.size());
+                m_tagSlots.emplace(std::move(key), slot);
+
+                return slot;
+            }
+
+            uint32_t MemoryFor(_In_ std::wstring const& name)
+            {
+                if (name.empty())
+                {
+                    return NoLogicIndex;
+                }
+
+                auto key = LowerCopy(name);
+
+                if (auto const found = m_memories.find(key); found != m_memories.end())
+                {
+                    return found->second;
+                }
+
+                if (m_memories.size() >= MaximumMemoriesPerPatch)
+                {
+                    return NoLogicIndex;
+                }
+
+                auto const index = static_cast<uint32_t>(m_graph.Memories.size());
+
+                m_graph.Memories.push_back(m_input.Key + L'|' + key);
+                m_memories.emplace(std::move(key), index);
+
+                return index;
+            }
+
+            uint32_t StateFor(_In_ PatchBlock const& block)
+            {
+                auto const found = m_states.find(block.Id);
+
+                if (found != m_states.end())
+                {
+                    return found->second;
+                }
+
+                auto const index = static_cast<uint32_t>(m_graph.States.size());
+
+                m_graph.States.push_back(RouteState{ CellFor(block.Id), block.Kind });
+                m_states.emplace(block.Id, index);
+
+                return index;
+            }
+
+            // Sends back to a source, on whatever group each answer is for.
+            uint32_t ReplyLeafFor(_In_ std::wstring const& endpointId, _In_ std::wstring const& deviceId)
+            {
+                auto const found = m_replyLeaves.find(endpointId);
+
+                if (found != m_replyLeaves.end())
+                {
+                    return found->second;
+                }
+
+                RouteLeaf leaf{};
+                leaf.DestinationDeviceId = LowerCopy(deviceId);
+                leaf.WaitForSendComplete = m_patch.WaitForSendComplete;
+                leaf.DestinationGroupIndex = AllGroups;
+                leaf.LinkCell = CellFor(endpointId + L"|replies");
+
+                m_graph.Leaves.push_back(std::move(leaf));
+
+                auto const index = static_cast<uint32_t>(m_graph.Leaves.size() - 1);
+                m_replyLeaves.emplace(endpointId, index);
+
+                return index;
+            }
+
+            uint32_t ClockTargetFor(_In_ PatchBlock const& block)
+            {
+                auto const found = m_clockTargets.find(block.Id);
+
+                if (found != m_clockTargets.end())
+                {
+                    return found->second;
+                }
+
+                auto const index = static_cast<uint32_t>(m_graph.ClockTargets.size());
+
+                m_graph.ClockTargets.push_back(m_input.Key + L'|' + block.Id);
+                m_clockTargets.emplace(block.Id, index);
+
+                return index;
+            }
+
+            Expansion ExpandOutgoing(
+                _In_ std::wstring const& nodeId,
+                _Inout_ std::vector<std::wstring>& path,
+                _In_ size_t depth,
+                _Inout_ std::vector<RouteEdge>& edges)
+            {
+                auto const links = m_outgoing.find(nodeId);
+
+                if (links == m_outgoing.end())
+                {
+                    return Expansion::Live;
+                }
+
+                // A Branch or a Switch sends each message out only some of its ways, so each link
+                // remembers which way it leaves by.
+                auto const* source = m_patch.FindBlock(nodeId);
+                auto const hasWays = source != nullptr && HasWays(source->Kind);
+
+                for (auto const* link : links->second)
+                {
+                    // A way the step no longer has leads nowhere.
+                    if (hasWays && !IsWayOf(*source, link->SourceGroupIndex))
+                    {
+                        continue;
+                    }
+
+                    RouteEdge edge{};
+
+                    auto const result = ExpandLink(*link, path, depth, edge);
+
+                    if (result == Expansion::Refused)
+                    {
+                        return Expansion::Refused;
+                    }
+
+                    if (result == Expansion::Live)
+                    {
+                        if (hasWays)
+                        {
+                            edge.Way = static_cast<uint8_t>(link->SourceGroupIndex);
+                        }
+
+                        edges.push_back(edge);
+                    }
+                }
+
+                return Expansion::Live;
+            }
+
+            uint32_t AddStage(_In_ RouteStage stage, _In_ std::vector<RouteEdge> const& edges)
+            {
+                stage.FirstEdge = static_cast<uint32_t>(m_graph.Edges.size());
+                stage.EdgeCount = static_cast<uint32_t>(edges.size());
+
+                m_graph.Edges.insert(m_graph.Edges.end(), edges.begin(), edges.end());
+                m_graph.Stages.push_back(stage);
+
+                return static_cast<uint32_t>(m_graph.Stages.size() - 1);
+            }
+
+            Expansion ExpandLink(
+                _In_ PatchConnection const& link,
+                _Inout_ std::vector<std::wstring>& path,
+                _In_ size_t depth,
+                _Out_ RouteEdge& edge)
+            {
+                edge = RouteEdge{};
+
+                if (depth >= MaximumRouteDepth || m_graph.Stages.size() >= MaximumRouteStages)
+                {
+                    m_problem = RouteProblemKind::TooComplex;
+                    return Expansion::Refused;
+                }
+
+                auto const* block = m_patch.FindBlock(link.DestinationId);
+
+                if (block == nullptr)
+                {
+                    return ExpandDestination(link, edge);
+                }
+
+                // An annotation is text on the canvas. A link into one came from a file.
+                if (!HasInput(block->Kind) && !IsGenerator(block->Kind))
+                {
+                    return Expansion::Dead;
+                }
+
+                // Nothing goes into MIDI clock or MIDI Time Code, and only timing into an LFO. A
+                // link into one that can't take it came from a file, and carries nothing. A clock
+                // input goes no further, so it is never part of a circle.
+                if (IsGenerator(block->Kind))
+                {
+                    if (!HasInput(block->Kind) || block->Bypassed)
+                    {
+                        return Expansion::Dead;
+                    }
+
+                    RouteStage stage{};
+                    stage.Kind = RouteStageKind::ClockInput;
+                    stage.Block = block->Kind;
+                    stage.Index = ClockTargetFor(*block);
+                    stage.Cell = CellFor(block->Id);
+
+                    edge.Stage = AddStage(stage, {});
+                    edge.LinkCell = CellFor(link.Id);
+
+                    return Expansion::Live;
+                }
+
+                if (std::find(path.begin(), path.end(), block->Id) != path.end())
+                {
+                    m_problem = RouteProblemKind::LoopBetweenBlocks;
+                    return Expansion::Refused;
+                }
+
+                auto const paced = PacesMessages(*block);
+
+                if (paced)
+                {
+                    uint32_t stage{ 0 };
+
+                    auto const result = ExpandThrottle(*block, path, depth, stage);
+
+                    if (result != Expansion::Live)
+                    {
+                        return result;
+                    }
+
+                    edge.Stage = stage;
+                    edge.LinkCell = CellFor(link.Id);
+                    return Expansion::Live;
+                }
+
+                path.push_back(block->Id);
+
+                std::vector<RouteEdge> next{};
+                auto const result = ExpandOutgoing(block->Id, path, depth + 1, next);
+
+                path.pop_back();
+
+                if (result == Expansion::Refused)
+                {
+                    return Expansion::Refused;
+                }
+
+                // A memory is set, and a responder answers, whether or not anything comes after
+                // the step.
+                auto const remembers = block->Kind == BlockKind::SetMemory && !block->Bypassed &&
+                    !BlockChangesNothing(block->Kind, block->Settings);
+                auto const answers = block->Kind == BlockKind::CiResponder && !block->Bypassed && HasWayBack(path);
+
+                if (next.empty() && !remembers && !answers)
+                {
+                    return Expansion::Dead;
+                }
+
+                // A block that changes nothing only needs counting.
+                auto const runs = !block->Bypassed &&
+                    block->Kind != BlockKind::Throttle &&
+                    !BlockChangesNothing(block->Kind, block->Settings);
+
+                RouteStage stage{};
+                stage.Kind = runs ? RouteStageKind::Block : RouteStageKind::PassThrough;
+                stage.Block = block->Kind;
+                stage.Index = runs ? SettingsFor(*block) : 0;
+                stage.Cell = CellFor(block->Id);
+                stage.State = runs && IsStatefulBlock(block->Kind) ? StateFor(*block) : 0;
+
+                // A bypassed Branch or Switch can be set to send everything its first way.
+                if (block->Bypassed && HasWays(block->Kind))
+                {
+                    auto const bypass = block->Kind == BlockKind::Branch
+                        ? block->Settings.Branch.Bypass
+                        : block->Settings.Switch.Bypass;
+
+                    if (bypass == BypassWay::FirstWay)
+                    {
+                        stage.OnlyWay = static_cast<int16_t>(FirstWayOf(block->Kind, block->Settings));
+                    }
+                }
+
+                edge.Stage = AddStage(stage, next);
+                edge.LinkCell = CellFor(link.Id);
+
+                return Expansion::Live;
+            }
+
+            Expansion ExpandDestination(_In_ PatchConnection const& link, _Out_ RouteEdge& edge)
+            {
+                edge = RouteEdge{};
+
+                auto const* device = DeviceIdOf(link.DestinationId);
+
+                if (device == nullptr)
+                {
+                    return Expansion::Dead;
+                }
+
+                // One leaf for each link into a destination, however many paths reach it.
+                auto const found = m_leafStages.find(link.Id);
+                uint32_t stage{ 0 };
+
+                if (found != m_leafStages.end())
+                {
+                    stage = found->second;
+                }
+                else
+                {
+                    RouteLeaf leaf{};
+                    leaf.DestinationDeviceId = LowerCopy(*device);
+                    leaf.WaitForSendComplete = m_patch.WaitForSendComplete;
+                    leaf.DestinationGroupIndex = link.DestinationGroupIndex;
+                    leaf.LinkCell = CellFor(link.Id);
+
+                    m_graph.Leaves.push_back(std::move(leaf));
+
+                    RouteStage leafStage{};
+                    leafStage.Kind = RouteStageKind::Leaf;
+                    leafStage.Index = static_cast<uint32_t>(m_graph.Leaves.size() - 1);
+
+                    stage = AddStage(leafStage, {});
+                    m_leafStages.emplace(link.Id, stage);
+                }
+
+                edge.Stage = stage;
+                edge.LinkCell = CellFor(link.Id);
+
+                return Expansion::Live;
+            }
+
+            // A throttle is one queue however messages reach it, so what comes after it is
+            // worked out once, the first time it is reached. A loop through it is found then,
+            // because the path at that point leads into it.
+            Expansion ExpandThrottle(
+                _In_ PatchBlock const& block,
+                _Inout_ std::vector<std::wstring>& path,
+                _In_ size_t depth,
+                _Out_ uint32_t& stage)
+            {
+                stage = 0;
+
+                auto const done = m_throttleStages.find(block.Id);
+
+                if (done != m_throttleStages.end())
+                {
+                    stage = done->second;
+                    return Expansion::Live;
+                }
+
+                if (m_deadThrottles.count(block.Id) != 0)
+                {
+                    return Expansion::Dead;
+                }
+
+                path.push_back(block.Id);
+
+                std::vector<RouteEdge> next{};
+                auto const result = ExpandOutgoing(block.Id, path, depth + 1, next);
+
+                path.pop_back();
+
+                if (result == Expansion::Refused)
+                {
+                    return Expansion::Refused;
+                }
+
+                if (next.empty())
+                {
+                    m_deadThrottles.insert(block.Id);
+                    return Expansion::Dead;
+                }
+
+                RouteThrottle throttle{};
+                throttle.Speed = block.Settings.SendSpeedLimit;
+                throttle.Cell = CellFor(block.Id);
+                throttle.FirstEdge = static_cast<uint32_t>(m_graph.Edges.size());
+                throttle.EdgeCount = static_cast<uint32_t>(next.size());
+
+                m_graph.Edges.insert(m_graph.Edges.end(), next.begin(), next.end());
+                m_graph.Throttles.push_back(throttle);
+
+                RouteStage throttleStage{};
+                throttleStage.Kind = RouteStageKind::Throttle;
+                throttleStage.Block = BlockKind::Throttle;
+                throttleStage.Index = static_cast<uint32_t>(m_graph.Throttles.size() - 1);
+                throttleStage.Cell = throttle.Cell;
+
+                stage = AddStage(throttleStage, {});
+                m_throttleStages.emplace(block.Id, stage);
+
+                return Expansion::Live;
+            }
+
+            RouteGraph& m_graph;
+            RoutePatch const& m_input;
+            PatchDocument const& m_patch;
+
+            std::unordered_map<std::wstring, std::vector<PatchConnection const*>> m_outgoing{};
+            std::unordered_map<std::wstring, uint32_t> m_cells{};
+            std::unordered_map<std::wstring, uint32_t> m_settings{};
+            std::unordered_map<std::wstring, uint32_t> m_states{};
+            std::unordered_map<std::wstring, uint32_t> m_clockTargets{};
+            std::unordered_map<std::wstring, uint32_t> m_leafStages{};
+            std::unordered_map<std::wstring, uint32_t> m_replyLeaves{};
+            std::unordered_map<std::wstring, uint32_t> m_throttleStages{};
+            std::unordered_set<std::wstring> m_deadThrottles{};
+
+            // By lowercased name.
+            std::unordered_map<std::wstring, uint32_t> m_tagSlots{};
+            std::unordered_map<std::wstring, uint32_t> m_memories{};
+
+            RouteProblemKind m_problem{ RouteProblemKind::LoopBetweenBlocks };
+        };
+
+        // Everything that decides how a patch routes, so an unchanged plan is left running.
+        std::wstring PatchSignature(_In_ RoutePatch const& input)
+        {
+            auto const& patch = *input.Patch;
+
+            std::vector<std::wstring> parts{};
+
+            for (auto const& endpoint : patch.Endpoints)
+            {
+                auto const found = input.DeviceIds.find(endpoint.Id);
+
+                parts.push_back(L"e " + endpoint.Id + L'=' +
+                    (found == input.DeviceIds.end() ? std::wstring{} : LowerCopy(found->second)));
+            }
+
+            for (auto const& block : patch.Blocks)
+            {
+                // Text on the canvas: editing it never changes how the patch routes.
+                if (IsAnnotation(block.Kind))
+                {
+                    continue;
+                }
+
+                auto part = L"b " + block.Id + (block.Bypassed ? L" off " : L" on ") +
+                    BlockSettingsSignature(block.Kind, block.Settings);
+
+                // What a responder's file says, which is read when the patch routes.
+                if (block.Kind == BlockKind::CiResponder)
+                {
+                    auto const& description = block.Settings.CiResponder.Description;
+
+                    part += L" ci" + std::to_wstring(description == nullptr ? 0 : description->Fingerprint);
+                }
+
+                parts.push_back(std::move(part));
+            }
+
+            for (auto const& link : patch.Connections)
+            {
+                if (link.Muted)
+                {
+                    continue;
+                }
+
+                parts.push_back(L"l " + link.Id + L' ' +
+                    link.SourceId + L'/' + std::to_wstring(link.SourceGroupIndex) + L'>' +
+                    link.DestinationId + L'/' + std::to_wstring(link.DestinationGroupIndex));
+            }
+
+            std::sort(parts.begin(), parts.end());
+
+            std::wstring signature{ input.Key };
+            signature += patch.WaitForSendComplete ? L"|wait\n" : L"|now\n";
+
+            for (auto const& part : parts)
+            {
+                signature += part;
+                signature += L'\n';
+            }
+
+            return signature;
+        }
+    }
+
+    _Use_decl_annotations_
+    RouteGraph CompileRoutes(std::vector<RoutePatch> const& patches) noexcept
+    {
+        RouteGraph graph{};
+
+        try
+        {
+            std::vector<std::wstring> signatures{};
+
+            for (auto const& input : patches)
+            {
+                if (input.Patch == nullptr)
+                {
+                    continue;
+                }
+
+                // A patch either routes whole or not at all, so what it added is taken back when
+                // it cannot.
+                auto const settings = graph.Settings.size();
+                auto const cells = graph.Cells.size();
+                auto const stages = graph.Stages.size();
+                auto const edges = graph.Edges.size();
+                auto const roots = graph.Roots.size();
+                auto const leaves = graph.Leaves.size();
+                auto const throttles = graph.Throttles.size();
+                auto const generators = graph.Generators.size();
+                auto const states = graph.States.size();
+                auto const clockTargets = graph.ClockTargets.size();
+                auto const memories = graph.Memories.size();
+
+                PatchCompiler compiler{ graph, input };
+                RouteProblemKind problem{};
+
+                if (!compiler.Run(problem))
+                {
+                    graph.Settings.resize(settings);
+                    graph.Cells.resize(cells);
+                    graph.Stages.resize(stages);
+                    graph.Edges.resize(edges);
+                    graph.Roots.resize(roots);
+                    graph.Leaves.resize(leaves);
+                    graph.Throttles.resize(throttles);
+                    graph.Generators.resize(generators);
+                    graph.States.resize(states);
+                    graph.ClockTargets.resize(clockTargets);
+                    graph.Memories.resize(memories);
+
+                    graph.Problems.push_back(RouteProblem{ input.Key, problem });
+
+                    signatures.push_back(input.Key + L"|refused " + std::to_wstring(static_cast<int32_t>(problem)));
+                    continue;
+                }
+
+                signatures.push_back(PatchSignature(input));
+            }
+
+            std::sort(signatures.begin(), signatures.end());
+
+            for (auto const& signature : signatures)
+            {
+                graph.Signature += signature;
+                graph.Signature += L"\n\n";
+            }
+        }
+        catch (...)
+        {
+            // Nothing routes rather than half of something.
+            graph = RouteGraph{};
+            graph.Signature = L"failed";
+        }
+
+        return graph;
+    }
+
+    _Use_decl_annotations_
+    void RunEdge(
+        RouteGraph const& graph,
+        RouteEdge const& edge,
+        uint32_t const* words,
+        uint8_t wordCount,
+        RouteSink& sink,
+        ReturnPath const& from,
+        TagLink const* tags) noexcept
+    {
+        if (words == nullptr || wordCount == 0 || wordCount > MaximumWordsPerMessage ||
+            edge.Stage >= graph.Stages.size())
+        {
+            return;
+        }
+
+        sink.CountLink(edge.LinkCell);
+
+        auto const& stage = graph.Stages[edge.Stage];
+
+        uint32_t copy[MaximumWordsPerMessage]{};
+        std::copy_n(words, wordCount, copy);
+
+        switch (stage.Kind)
+        {
+        case RouteStageKind::Leaf:
+        {
+            auto const& leaf = graph.Leaves[stage.Index];
+
+            // Messages into one group take that group, whatever group they came from.
+            if (leaf.DestinationGroupIndex != AllGroups && internal::MessageHasGroupField(copy[0]))
+            {
+                copy[0] = internal::GetFirstWordWithNewGroup(copy[0], static_cast<uint8_t>(leaf.DestinationGroupIndex));
+            }
+
+            sink.Send(stage.Index, copy, wordCount);
+            return;
+        }
+
+        case RouteStageKind::Throttle:
+            sink.CountBlock(stage.Cell, true);
+            sink.Throttle(stage.Index, copy, wordCount);
+            return;
+
+        case RouteStageKind::ClockInput:
+            if (IsClockMessage(copy[0]))
+            {
+                sink.Clock(stage.Index, copy, wordCount);
+            }
+            return;
+
+        case RouteStageKind::Block:
+        {
+            if (IsLogicStep(stage.Block))
+            {
+                RunLogicStage(graph, stage, copy, wordCount, sink, from, tags);
+                return;
+            }
+
+            bool passed{ false };
+            StageOutput output{};
+
+            auto const& settings = graph.Settings[stage.Index];
+
+            if (stage.Block == BlockKind::CiResponder)
+            {
+                auto* state = sink.StateOf(stage.State);
+
+                if (state == nullptr || state->Ci == nullptr)
+                {
+                    passed = true;
+                }
+                else
+                {
+                    HeldReplies replies{};
+
+                    CiReturn const back{ from.Leaf < graph.Leaves.size(), from.Leaf, from.Group };
+
+                    passed = RunCiResponder(settings.CiResponder, *state->Ci, edge.Stage, back, copy, wordCount, replies);
+
+                    sink.CountBlock(stage.Cell, passed);
+
+                    if (passed)
+                    {
+                        for (uint32_t i = 0; i < stage.EdgeCount; i++)
+                        {
+                            RunEdge(graph, graph.Edges[stage.FirstEdge + i], copy, wordCount, sink, from, tags);
+                        }
+                    }
+
+                    replies.SendTo(sink, from.Leaf, from.Leaf < graph.Leaves.size()
+                        ? std::optional<uint32_t>{ graph.Leaves[from.Leaf].LinkCell }
+                        : std::nullopt);
+                    return;
+                }
+            }
+            else if (stage.Block == BlockKind::CiFilter)
+            {
+                auto* state = sink.StateOf(stage.State);
+
+                passed = state == nullptr || RunCiFilter(settings.CiFilter, state->CiFilter, edge.Stage, copy, wordCount);
+            }
+            else if (IsStatefulBlock(stage.Block))
+            {
+                auto* state = sink.StateOf(stage.State);
+
+                passed = state == nullptr ||
+                    RunStatefulBlock(stage.Block, settings, *state, copy, wordCount, stage.EdgeCount, output);
+            }
+            else
+            {
+                passed = ProcessBlock(stage.Block, settings, copy, wordCount);
+            }
+
+            sink.CountBlock(stage.Cell, passed);
+
+            if (!passed)
+            {
+                return;
+            }
+
+            // What the step sends instead, each to one connection or to all of them.
+            for (size_t m = 0; m < output.Count; m++)
+            {
+                auto const& message = output.Messages[m];
+
+                for (uint32_t i = 0; i < stage.EdgeCount; i++)
+                {
+                    if (message.Edge == EveryEdge || message.Edge == static_cast<int32_t>(i))
+                    {
+                        RunEdge(graph, graph.Edges[stage.FirstEdge + i], message.Words.data(), message.Count, sink, from, tags);
+                    }
+                }
+            }
+
+            if (output.Count > 0)
+            {
+                return;
+            }
+
+            break;
+        }
+
+        default:
+            sink.CountBlock(stage.Cell, true);
+            break;
+        }
+
+        for (uint32_t i = 0; i < stage.EdgeCount; i++)
+        {
+            auto const& next = graph.Edges[stage.FirstEdge + i];
+
+            if (stage.OnlyWay < 0 || next.Way == stage.OnlyWay)
+            {
+                RunEdge(graph, next, copy, wordCount, sink, from, tags);
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    void RunRoot(
+        RouteGraph const& graph,
+        RouteRoot const& root,
+        uint32_t const* words,
+        uint8_t wordCount,
+        RouteSink& sink) noexcept
+    {
+        if (words == nullptr || wordCount == 0 || !internal::MessageHasGroupField(words[0]))
+        {
+            return;
+        }
+
+        if (root.SourceGroupIndex != AllGroups &&
+            root.SourceGroupIndex != static_cast<int32_t>(internal::GetGroupIndexFromFirstWord(words[0])))
+        {
+            return;
+        }
+
+        // Answers go back on the group the question came in on, whatever the patch does to it.
+        ReturnPath const from{ root.ReplyLeaf, static_cast<uint8_t>(internal::GetGroupIndexFromFirstWord(words[0]) & 0x0F) };
+
+        RunEdge(graph, root.Edge, words, wordCount, sink, from);
+    }
+
+    _Use_decl_annotations_
+    std::vector<std::wstring> EndpointsAnsweredBy(PatchDocument const& patch, std::wstring const& responderId) noexcept
+    {
+        std::vector<std::wstring> answered{};
+
+        try
+        {
+            auto const* responder = patch.FindBlock(responderId);
+
+            if (responder == nullptr || responder->Kind != BlockKind::CiResponder || responder->Bypassed)
+            {
+                return answered;
+            }
+
+            // Back along every link into the responder, through the steps that keep a way back.
+            std::unordered_set<std::wstring> asking{};
+            std::unordered_set<std::wstring> visited{ responderId };
+            std::vector<std::wstring> pending{ responderId };
+
+            while (!pending.empty())
+            {
+                auto const nodeId = pending.back();
+                pending.pop_back();
+
+                for (auto const& link : patch.Connections)
+                {
+                    if (link.Muted || link.DestinationId != nodeId)
+                    {
+                        continue;
+                    }
+
+                    if (patch.FindEndpoint(link.SourceId) != nullptr)
+                    {
+                        asking.insert(link.SourceId);
+                        continue;
+                    }
+
+                    auto const* source = patch.FindBlock(link.SourceId);
+
+                    if (source != nullptr && CarriesAWayBack(*source, link) && visited.insert(source->Id).second)
+                    {
+                        pending.push_back(source->Id);
+                    }
+                }
+            }
+
+            for (auto const& endpoint : patch.Endpoints)
+            {
+                if (asking.count(endpoint.Id) != 0)
+                {
+                    answered.push_back(endpoint.Id);
+                }
+            }
+        }
+        catch (...)
+        {
+            answered.clear();
+        }
+
+        return answered;
+    }
+}

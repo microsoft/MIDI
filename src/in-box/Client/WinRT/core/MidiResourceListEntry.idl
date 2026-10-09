@@ -36,7 +36,10 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
         // The resource name, for example "DeviceInfo" or "ProgramList".
         [noexcept] String Resource;
 
-        // Defaults follow the specification: readable, not writable, not subscribable, not paged.
+        // Defaults follow the specification: readable, not writable, not subscribable, not paged,
+        // except where the named resource's own specification says otherwise. A ProgramList, for
+        // one, is paged and needs a resource id, so FromJson and the constructor taking a name
+        // start from that, and GetJson leaves out whatever matches it.
         [noexcept] Boolean CanGet;
         [noexcept] String CanSet;
         [noexcept] Boolean CanSubscribe;

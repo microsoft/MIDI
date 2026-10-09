@@ -236,7 +236,7 @@ namespace winrt::midiglass::implementation
 
             if (!style.FontFamily.empty())
             {
-                parts.push_back(::midiglass::fonts::IsInstalled(style.FontFamily)
+                parts.push_back(::midiapp::fonts::IsInstalled(style.FontFamily)
                     ? style.FontFamily
                     : std::wstring{ resources::FormatString(L"FontMissingFormat", style.FontFamily) });
             }
@@ -1247,6 +1247,13 @@ namespace winrt::midiglass::implementation
                             : page->Name);
                 }
 
+                if (message.Kind == glass::MessageKind::Unrecognized)
+                {
+                    text = resources::FormatString(
+                        L"MessageRowUnrecognizedFormat",
+                        resources::GetString(TriggerResourceKeys[IndexOf(TriggerOrder, message.Trigger)]));
+                }
+
                 // A Mackie Control row is its function, and a row that has none yet says so.
                 if (message.Kind == glass::MessageKind::MackieControl ||
                     RowProtocol(m_editor.Document(), message) == glass::DeviceProtocol::MackieControl)
@@ -1325,19 +1332,28 @@ namespace winrt::midiglass::implementation
                 m_messageIndex >= 0 &&
                 m_messageIndex < static_cast<int32_t>(control->Messages.size());
 
-            TriggerCombo().IsEnabled(valid);
-            KindMessageCombo().IsEnabled(valid);
-            DeviceCombo().IsEnabled(valid);
-            GroupCombo().IsEnabled(valid);
-            ChannelCombo().IsEnabled(valid);
-            MessageNumberBox().IsEnabled(valid);
-            MessageValueBox().IsEnabled(valid);
-            MessageSecondValueBox().IsEnabled(valid);
-            PerNoteControllerBox().IsEnabled(valid);
-            AttributeTypeBox().IsEnabled(valid);
-            AttributeDataBox().IsEnabled(valid);
+            // A row a newer version wrote is shown and kept exactly as the file has it.
+            auto const unrecognized = valid &&
+                control->Messages[static_cast<size_t>(m_messageIndex)].Kind == glass::MessageKind::Unrecognized;
 
-            if (!valid)
+            auto const editable = valid && !unrecognized;
+
+            MessageFieldsGrid().Visibility(unrecognized ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
+            TriggerCombo().IsEnabled(editable);
+            KindMessageCombo().IsEnabled(editable);
+            DeviceCombo().IsEnabled(editable);
+            GroupCombo().IsEnabled(editable);
+            ChannelCombo().IsEnabled(editable);
+            MessageNumberBox().IsEnabled(editable);
+            MessageValueBox().IsEnabled(editable);
+            MessageSecondValueBox().IsEnabled(editable);
+            PerNoteControllerBox().IsEnabled(editable);
+            AttributeTypeBox().IsEnabled(editable);
+            AttributeDataBox().IsEnabled(editable);
+            RemoveMessageButton().IsEnabled(editable);
+
+            if (!editable)
             {
                 SwitchPositionRow().Visibility(xaml::Visibility::Collapsed);
                 SysExPanel().Visibility(xaml::Visibility::Collapsed);
@@ -1349,6 +1365,12 @@ namespace winrt::midiglass::implementation
                 PerNoteControllerPanel().Visibility(xaml::Visibility::Collapsed);
                 MessageAttributeLabel().Visibility(xaml::Visibility::Collapsed);
                 AttributePanel().Visibility(xaml::Visibility::Collapsed);
+
+                if (unrecognized)
+                {
+                    MessageProtocolText().Text(resources::GetString(L"MessageUnrecognizedNote"));
+                    MessageProtocolText().Visibility(xaml::Visibility::Visible);
+                }
 
                 m_updatingInspector = previous;
                 return;

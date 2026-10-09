@@ -11,9 +11,7 @@ namespace midipatchbay
 {
     struct CommandLineOptions
     {
-        bool ShowHelp{ false };
         bool StartMinimized{ false };
-        bool HasError{ false };
 
         // Opens a named patch at startup, so another tool or a shortcut can bring up the one
         // the customer cares about.
@@ -22,8 +20,7 @@ namespace midipatchbay
         // Patch files to import, which is what a double-click in Explorer sends.
         std::vector<std::wstring> FilesToImport{};
 
-        std::wstring ErrorText{};
-
+        // Anything it doesn't recognize is ignored: the app has no console to report it on.
         static CommandLineOptions ParseProcessCommandLine() noexcept;
     };
 }

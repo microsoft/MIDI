@@ -8,9 +8,9 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 
-#include "AssistantPrompt.h"
 #include "BackgroundWork.h"
 #include "StringResources.h"
+#include "TextMatch.h"
 
 using namespace winrt::Microsoft::UI::Xaml;
 
@@ -21,18 +21,10 @@ namespace winrt::midipatchbay::implementation
 {
     namespace
     {
-        // New nodes land in a two column grid. A diagonal step looks tidier on paper but runs
-        // nodes over each other as soon as a patch has more than two or three endpoints.
-        constexpr double FirstNodeX = 48.0;
-        constexpr double FirstNodeY = 32.0;
-        constexpr double NodeColumnPitch = 340.0;
-        constexpr double NodeRowPitch = 230.0;
-
-        void PlaceNewNode(_Inout_ patchbay::PatchEndpoint& endpoint, _In_ size_t index) noexcept
-        {
-            endpoint.CanvasX = FirstNodeX + static_cast<double>(index % 2) * NodeColumnPitch;
-            endpoint.CanvasY = FirstNodeY + static_cast<double>(index / 2) * NodeRowPitch;
-        }
+        // Where a new endpoint goes relative to the point it is put at, so it lands under the
+        // pointer rather than hanging off it.
+        constexpr double EndpointHalfWidth = patchbay::PatchCanvas::MinimumNodeWidth / 2;
+        constexpr double EndpointHalfHeight = 40.0;
 
         // The other tools in this family all take an endpoint device id on the command line,
         // which is what makes testing a route a launch rather than a feature to rebuild here.
@@ -40,26 +32,30 @@ namespace winrt::midipatchbay::implementation
         constexpr wchar_t KeyboardExeName[] = L"midikeyboard.exe";
         constexpr wchar_t ScratchPadExeName[] = L"midiscratchpad.exe";
 
-        // A short link, so the guide can move without changing the app.
-        constexpr wchar_t AssistantGuideUrl[] = L"https://aka.ms/AgentGuideMidiPatchbay";
+        using patchbay::SameText;
 
         std::wstring ExecutableFolder() noexcept
         {
-            std::wstring buffer(MAX_PATH, L'\0');
-
-            auto const length = ::GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
-
-            if (length == 0 || length >= buffer.size())
+            try
             {
-                return {};
+                std::wstring buffer(MAX_PATH, L'\0');
+
+                auto const length = ::GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+
+                if (length == 0 || length >= buffer.size())
+                {
+                    return {};
+                }
+
+                buffer.resize(length);
+
+                return std::filesystem::path{ buffer }.parent_path().wstring();
+            }
+            catch (...)
+            {
             }
 
-            buffer.resize(length);
-
-            std::error_code ec{};
-            auto const parent = std::filesystem::path{ buffer }.parent_path();
-
-            return parent.wstring();
+            return {};
         }
     }
 
@@ -105,7 +101,7 @@ namespace winrt::midipatchbay::implementation
                 co_return;
             }
 
-            auto const previousKey = PatchKey(*patch);
+            auto const key = m_patchKey;
 
             SavePatchNameBox().Text(winrt::hstring{ patch->Name });
             SavePatchDescriptionBox().Text(winrt::hstring{ patch->Description });
@@ -124,11 +120,12 @@ namespace winrt::midipatchbay::implementation
                 co_return;
             }
 
-            // The patch pointer cannot survive the suspends above, so it is looked up again.
-            auto it = std::find_if(m_patches.begin(), m_patches.end(),
-                [&previousKey, this](patchbay::PatchDocument& p) { return PatchKey(p) == previousKey; });
+            // Looked up again: the patch can go while the dialog is open.
+            auto& library = patchbay::PatchLibrary::Current();
 
-            if (it == m_patches.end())
+            patch = library.Find(key);
+
+            if (patch == nullptr)
             {
                 co_return;
             }
@@ -140,11 +137,11 @@ namespace winrt::midipatchbay::implementation
                 co_return;
             }
 
-            it->Name = name;
-            it->Description = patchbay::SanitizeStoredString(std::wstring{ SavePatchDescriptionBox().Text() });
+            patch->Name = name;
+            patch->Description = patchbay::SanitizeStoredString(std::wstring{ SavePatchDescriptionBox().Text() });
 
             auto const startup = SavePatchStartupCheck().IsChecked();
-            it->ActivateAtStartup = startup && startup.Value();
+            patch->ActivateAtStartup = startup && startup.Value();
 
             auto const temporary = SavePatchTemporaryRadio().IsChecked();
 
@@ -152,210 +149,44 @@ namespace winrt::midipatchbay::implementation
             {
                 // A patch that was on disk and is now temporary has to leave disk, or it would
                 // come back on the next start having been asked not to.
-                if (!it->FilePath.empty())
+                if (!patch->FilePath.empty())
                 {
-                    patchbay::PatchStore::Current().Delete(*it);
-                    it->FilePath.clear();
+                    patchbay::PatchStore::Current().Delete(*patch);
+                    patch->FilePath.clear();
                 }
 
-                it->IsTemporary = true;
+                patch->IsTemporary = true;
+
+                // Not an edit Undo takes back, but the library and its tiles need the new name.
+                m_committing = true;
+                auto const reset = wil::scope_exit([this]() { m_committing = false; });
+
+                library.Changed(key, false);
 
                 ShowStatus(resources::GetString(L"StatusPatchTemporary"), controls::InfoBarSeverity::Informational);
             }
             else
             {
-                if (!patchbay::PatchStore::Current().Save(*it))
+                if (!library.Save(key))
                 {
-                    ShowStatus(patchbay::PatchStore::Current().LastErrorMessage(), controls::InfoBarSeverity::Error);
+                    ShowStatus(library.LastErrorMessage(), controls::InfoBarSeverity::Error);
                     co_return;
                 }
 
-                ShowStatus(resources::FormatString(L"StatusPatchSavedFormat", it->Name),
+                ShowStatus(resources::FormatString(L"StatusPatchSavedFormat", name),
                     controls::InfoBarSeverity::Success);
             }
 
-            auto const newKey = PatchKey(*it);
-
-            if (m_routingPatchKeys.erase(previousKey) > 0)
+            // A patch set to start by itself starts now, the way it would when the app starts.
+            if (auto const* saved = library.Find(key); saved != nullptr && saved->ActivateAtStartup)
             {
-                m_routingPatchKeys.insert(newKey);
+                library.SetRouting(key, true);
             }
-            else if (it->ActivateAtStartup)
-            {
-                m_routingPatchKeys.insert(newKey);
-            }
-
-            m_currentPatchKey = newKey;
-            m_unsavedPatchKeys.erase(previousKey);
-            m_unsavedPatchKeys.erase(newKey);
 
             UpdatePatchHeader();
-
-            RebuildNavigation();
-            ApplyRouting();
-            UpdateTray();
+            UpdateTitle();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to save the patch.")
-    }
-
-    // --------------------------------------------------------- import a patch
-
-    _Use_decl_annotations_
-    void MainWindow::OnImportPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
-    {
-        UNREFERENCED_PARAMETER(sender);
-        UNREFERENCED_PARAMETER(args);
-
-        try
-        {
-            // The Win32 common item dialog, never Windows.Storage.Pickers, which needs a package
-            // identity this unpackaged app does not have.
-            auto dialog = wil::CoCreateInstance<IFileOpenDialog>(CLSID_FileOpenDialog);
-
-            auto const filterName = resources::GetString(L"ImportPatchFilter");
-
-            COMDLG_FILTERSPEC const filters[]
-            {
-                { filterName.c_str(), L"*.midipatch" },
-            };
-
-            dialog->SetFileTypes(ARRAYSIZE(filters), filters);
-            dialog->SetTitle(resources::GetString(L"ImportPatchTitle").c_str());
-
-            if (FAILED(dialog->Show(m_chrome.WindowHandle())))
-            {
-                return;
-            }
-
-            winrt::com_ptr<IShellItem> item{};
-
-            if (FAILED(dialog->GetResult(item.put())) || item == nullptr)
-            {
-                return;
-            }
-
-            wil::unique_cotaskmem_string path{};
-
-            if (FAILED(item->GetDisplayName(SIGDN_FILESYSPATH, &path)) || path.get() == nullptr)
-            {
-                return;
-            }
-
-            ImportPatchFiles({ std::wstring{ path.get() } });
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to import a patch.")
-    }
-
-    _Use_decl_annotations_
-    bool MainWindow::ImportPatchFiles(std::vector<std::wstring> const& paths) noexcept
-    {
-        try
-        {
-            auto& store = patchbay::PatchStore::Current();
-
-            std::wstring selectKey{};
-            std::wstring selectName{};
-
-            for (auto const& path : paths)
-            {
-                auto imported = store.Import(path);
-
-                if (!imported.has_value())
-                {
-                    ShowStatus(store.LastErrorMessage(), controls::InfoBarSeverity::Error);
-                    continue;
-                }
-
-                auto const key = PatchKey(imported.value());
-
-                // A file that was in the folder all along is already in the list.
-                auto const existing = std::find_if(m_patches.begin(), m_patches.end(),
-                    [&key](patchbay::PatchDocument const& p) { return PatchKey(p) == key; });
-
-                selectKey = key;
-                selectName = imported->Name;
-
-                if (existing == m_patches.end())
-                {
-                    m_patches.push_back(std::move(imported.value()));
-                }
-            }
-
-            if (selectKey.empty())
-            {
-                return false;
-            }
-
-            // Never routed on the way in. Somebody else wrote this file, and the customer turns
-            // it on once they have looked at it.
-            RebuildNavigation();
-            SelectPatch(selectKey);
-            UpdateTray();
-
-            ShowStatus(resources::FormatString(L"StatusPatchImportedFormat", selectName),
-                controls::InfoBarSeverity::Success);
-
-            return true;
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to import the patches.")
-
-        return false;
-    }
-
-    // ------------------------------------------------------ ask an AI assistant
-
-    _Use_decl_annotations_
-    void MainWindow::OnAssistantClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
-    {
-        UNREFERENCED_PARAMETER(sender);
-        UNREFERENCED_PARAMETER(args);
-
-        ShowAssistantDialogAsync();
-    }
-
-    winrt::fire_and_forget MainWindow::ShowAssistantDialogAsync()
-    {
-        auto strong = get_strong();
-
-        try
-        {
-            std::wstring const guide{ AssistantGuideUrl };
-            auto const devices = midiapp::FormatPromptList(midiapp::EndpointNamesForPrompt());
-
-            std::wstring prompt{ resources::FormatString(L"AssistantPromptIntroFormat", guide) };
-            prompt += L"\r\n\r\n";
-
-            if (devices.empty())
-            {
-                prompt += resources::GetString(L"AssistantPromptNoDevices");
-            }
-            else
-            {
-                prompt += resources::GetString(L"AssistantPromptDevices");
-                prompt += L"\r\n";
-                prompt += devices;
-            }
-
-            prompt += L"\r\n\r\n";
-            prompt += resources::GetString(L"AssistantPromptRequest");
-
-            // The customer types their request straight after it.
-            prompt += L" ";
-
-            midiapp::AssistantPromptStrings strings{};
-            strings.Title = resources::GetString(L"AssistantTitle");
-            strings.Message = resources::GetString(L"AssistantMessage");
-            strings.PromptHeader = resources::GetString(L"AssistantPromptHeader");
-            strings.GuideLink = resources::GetString(L"AssistantGuideLink");
-            strings.CopyButton = resources::GetString(L"AssistantCopy");
-            strings.CopiedButton = resources::GetString(L"AssistantCopied");
-            strings.CopyFailedButton = resources::GetString(L"AssistantCopyFailed");
-            strings.CloseButton = resources::GetString(L"AssistantClose");
-
-            co_await midiapp::ShowAssistantPromptAsync(
-                Content().XamlRoot(), strings, winrt::hstring{ prompt }, foundation::Uri{ guide });
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the AI assistant prompt.")
     }
 
     // -------------------------------------------------------------- patch menu
@@ -381,22 +212,19 @@ namespace winrt::midipatchbay::implementation
                 return;
             }
 
-            auto const key = PatchKey(*patch);
+            auto const key = m_patchKey;
             auto weak = get_weak();
 
             controls::MenuFlyout menu{};
 
             controls::ToggleMenuFlyoutItem routingItem{};
             routingItem.Text(resources::GetString(L"MenuRouteThisPatch"));
-            routingItem.IsChecked(m_routingPatchKeys.count(key) != 0);
+            routingItem.IsChecked(patchbay::PatchLibrary::Current().IsRouting(key));
 
-            routingItem.Click([weak, key](foundation::IInspectable const& s, auto&&)
+            routingItem.Click([key](foundation::IInspectable const& s, auto&&)
                 {
-                    if (auto strong = weak.get())
-                    {
-                        auto const item = s.try_as<controls::ToggleMenuFlyoutItem>();
-                        strong->SetPatchRouting(key, item != nullptr && item.IsChecked());
-                    }
+                    auto const item = s.try_as<controls::ToggleMenuFlyoutItem>();
+                    patchbay::PatchLibrary::Current().SetRouting(key, item != nullptr && item.IsChecked());
                 });
 
             menu.Items().Append(routingItem);
@@ -421,8 +249,8 @@ namespace winrt::midipatchbay::implementation
                     auto const item = s.try_as<controls::ToggleMenuFlyoutItem>();
                     auto* current = strong->CurrentPatch();
 
-                    // The menu belongs to the patch that was on screen when it opened
-                    if (item == nullptr || current == nullptr || strong->PatchKey(*current) != key ||
+                    // The menu belongs to the patch that was showing when it opened
+                    if (item == nullptr || current == nullptr || strong->m_patchKey != key ||
                         current->WaitForSendComplete == item.IsChecked())
                     {
                         return;
@@ -430,8 +258,7 @@ namespace winrt::midipatchbay::implementation
 
                     current->WaitForSendComplete = item.IsChecked();
 
-                    strong->MarkDirty();
-                    strong->ApplyRouting();
+                    strong->CommitChange(true, false);
                 });
 
             menu.Items().Append(waitItem);
@@ -479,7 +306,7 @@ namespace winrt::midipatchbay::implementation
                 co_return;
             }
 
-            auto const key = PatchKey(*patch);
+            auto const key = m_patchKey;
 
             ConfirmDeleteText().Text(resources::FormatString(L"DeletePatchMessageFormat", patch->Name));
             ConfirmDeleteDialog().XamlRoot(Content().XamlRoot());
@@ -491,38 +318,13 @@ namespace winrt::midipatchbay::implementation
                 co_return;
             }
 
-            auto it = std::find_if(m_patches.begin(), m_patches.end(),
-                [&key, this](patchbay::PatchDocument& p) { return PatchKey(p) == key; });
+            // The library tells every window, and this one closes when it hears.
+            auto& library = patchbay::PatchLibrary::Current();
 
-            if (it == m_patches.end())
+            if (!library.Remove(key))
             {
-                co_return;
+                ShowStatus(library.LastErrorMessage(), controls::InfoBarSeverity::Error);
             }
-
-            if (!it->FilePath.empty() && !patchbay::PatchStore::Current().Delete(*it))
-            {
-                ShowStatus(patchbay::PatchStore::Current().LastErrorMessage(), controls::InfoBarSeverity::Error);
-                co_return;
-            }
-
-            m_routingPatchKeys.erase(key);
-            m_patches.erase(it);
-            m_currentPatchKey.clear();
-
-            RebuildNavigation();
-
-            if (!m_patches.empty())
-            {
-                SelectPatch(PatchKey(m_patches.front()));
-            }
-            else
-            {
-                RebuildCanvas();
-                RefreshInspector();
-            }
-
-            ApplyRouting();
-            UpdateTray();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to delete the patch.")
     }
@@ -540,28 +342,26 @@ namespace winrt::midipatchbay::implementation
         }
     }
 
-    std::vector<patchbay::PatchEndpoint> MainWindow::RememberedEndpoints() const noexcept
+    std::vector<patchbay::PatchEndpoint> MainWindow::RememberedEndpoints() noexcept
     {
         std::vector<patchbay::PatchEndpoint> remembered{};
 
         try
         {
-            for (auto const& patch : m_patches)
+            for (auto const* patch : patchbay::PatchLibrary::Current().Patches())
             {
-                for (auto const& endpoint : patch.Endpoints)
+                for (auto const& endpoint : patch->Endpoints)
                 {
-                    if (patchbay::ResolveEndpoint(endpoint).has_value())
+                    // Without a device ID there is no telling one of these from another, so it
+                    // can't be offered by itself. It still shows on its own patch.
+                    if (endpoint.Match.EndpointDeviceId.empty() || patchbay::ResolveEndpoint(endpoint).has_value())
                     {
                         continue;
                     }
 
                     auto const already = std::any_of(remembered.begin(), remembered.end(),
                         [&endpoint](patchbay::PatchEndpoint const& e)
-                        {
-                            return ::CompareStringOrdinal(
-                                e.Match.EndpointDeviceId.c_str(), -1,
-                                endpoint.Match.EndpointDeviceId.c_str(), -1, TRUE) == CSTR_EQUAL;
-                        });
+                        { return SameText(e.Match.EndpointDeviceId, endpoint.Match.EndpointDeviceId); });
 
                     if (!already)
                     {
@@ -576,37 +376,41 @@ namespace winrt::midipatchbay::implementation
     }
 
     _Use_decl_annotations_
+    bool MainWindow::IsOnCanvas(std::wstring const& endpointDeviceId) noexcept
+    {
+        auto const* patch = CurrentPatch();
+
+        return patch != nullptr && std::any_of(patch->Endpoints.begin(), patch->Endpoints.end(),
+            [&endpointDeviceId](patchbay::PatchEndpoint const& e) { return patchbay::StandsFor(e, endpointDeviceId); });
+    }
+
+    _Use_decl_annotations_
+    bool MainWindow::IsOnCanvas(patchbay::PatchEndpoint const& endpoint) noexcept
+    {
+        auto const* patch = CurrentPatch();
+
+        return patch != nullptr && std::any_of(patch->Endpoints.begin(), patch->Endpoints.end(),
+            [&endpoint](patchbay::PatchEndpoint const& e) { return patchbay::IsSameDevice(e, endpoint); });
+    }
+
+    _Use_decl_annotations_
     void MainWindow::ShowEndpointPalette(xaml::FrameworkElement const& anchor) noexcept
     {
         try
         {
-            auto* patch = CurrentPatch();
-
-            if (patch == nullptr)
+            if (CurrentPatch() == nullptr)
             {
-                ShowStatus(resources::GetString(L"StatusNoPatchOpen"), controls::InfoBarSeverity::Informational);
                 return;
             }
 
             controls::MenuFlyout menu{};
             auto weak = get_weak();
 
-            auto const alreadyOnCanvas = [patch](std::wstring const& endpointDeviceId)
-                {
-                    return std::any_of(patch->Endpoints.begin(), patch->Endpoints.end(),
-                        [&endpointDeviceId](patchbay::PatchEndpoint const& e)
-                        {
-                            return ::CompareStringOrdinal(
-                                e.Match.EndpointDeviceId.c_str(), -1,
-                                endpointDeviceId.c_str(), -1, TRUE) == CSTR_EQUAL;
-                        });
-                };
-
             size_t added{ 0 };
 
-            for (auto const& endpoint : m_liveEndpoints)
+            for (auto const& endpoint : patchbay::PatchLibrary::Current().LiveEndpoints())
             {
-                if (alreadyOnCanvas(endpoint.EndpointDeviceId))
+                if (IsOnCanvas(endpoint.EndpointDeviceId))
                 {
                     continue;
                 }
@@ -642,13 +446,11 @@ namespace winrt::midipatchbay::implementation
 
             // Devices the customer has used before but that are not here now, derived from the
             // saved patches rather than a list of their own.
-            auto const remembered = RememberedEndpoints();
-
             std::vector<patchbay::PatchEndpoint> offerable{};
 
-            for (auto const& endpoint : remembered)
+            for (auto const& endpoint : RememberedEndpoints())
             {
-                if (!alreadyOnCanvas(endpoint.Match.EndpointDeviceId))
+                if (!IsOnCanvas(endpoint))
                 {
                     offerable.push_back(endpoint);
                 }
@@ -690,53 +492,28 @@ namespace winrt::midipatchbay::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::AddEndpointToPatch(patchbay::LiveEndpoint const& endpoint) noexcept
+    void MainWindow::AddEndpointToPatch(
+        patchbay::LiveEndpoint const& endpoint,
+        std::optional<foundation::Point> const& center) noexcept
     {
         try
         {
-            auto* patch = CurrentPatch();
-
-            if (patch == nullptr)
-            {
-                return;
-            }
-
-            if (patch->Endpoints.size() >= patchbay::MaximumEndpointsPerPatch)
-            {
-                ShowStatus(resources::GetString(L"StatusEndpointLimit"), controls::InfoBarSeverity::Warning);
-                return;
-            }
-
             patchbay::PatchEndpoint added{};
 
-            added.Id = patchbay::PatchDocument::NewId();
             added.DisplayName = endpoint.Name;
             added.TransportCode = endpoint.TransportCode;
             added.Match = endpoint.BuildMatch();
             added.MatchMode = patchbay::EndpointMatchMode::EndpointDeviceId;
 
-            PlaceNewNode(added, patch->Endpoints.size());
-
-            auto const addedId = added.Id;
-
-            patch->Endpoints.push_back(std::move(added));
-
-            MarkDirty();
-            RefreshAnalysis();
-            RebuildCanvas();
-            UpdateMessages();
-            ApplyRouting();
-
-            m_canvas.MoveClearOfOtherNodes(addedId);
-
-            // a node dropped outside the viewport looks like nothing happened
-            m_canvas.FitToContent();
+            AddRememberedEndpointToPatch(added, center);
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to add the endpoint.")
     }
 
     _Use_decl_annotations_
-    void MainWindow::AddRememberedEndpointToPatch(patchbay::PatchEndpoint const& remembered) noexcept
+    void MainWindow::AddRememberedEndpointToPatch(
+        patchbay::PatchEndpoint const& remembered,
+        std::optional<foundation::Point> const& center) noexcept
     {
         try
         {
@@ -745,6 +522,16 @@ namespace winrt::midipatchbay::implementation
             if (patch == nullptr)
             {
                 return;
+            }
+
+            for (auto const& endpoint : patch->Endpoints)
+            {
+                if (patchbay::IsSameDevice(endpoint, remembered))
+                {
+                    m_canvas.Select(patchbay::CanvasSelectionKind::Endpoint, endpoint.Id);
+                    ShowStatus(resources::GetString(L"StatusEndpointAlreadyHere"), controls::InfoBarSeverity::Informational);
+                    return;
+                }
             }
 
             if (patch->Endpoints.size() >= patchbay::MaximumEndpointsPerPatch)
@@ -755,25 +542,40 @@ namespace winrt::midipatchbay::implementation
 
             auto added = remembered;
 
-            // a new identity within this patch; everything else about it is carried over
+            // A new identity within this patch; everything else about it is carried over.
             added.Id = patchbay::PatchDocument::NewId();
 
-            PlaceNewNode(added, patch->Endpoints.size());
+            auto const middle = center.value_or(m_canvas.ViewCenter());
+
+            added.CanvasX = (std::max)(0.0, middle.X - EndpointHalfWidth);
+            added.CanvasY = (std::max)(0.0, middle.Y - EndpointHalfHeight);
 
             auto const addedId = added.Id;
 
             patch->Endpoints.push_back(std::move(added));
 
-            MarkDirty();
-            RefreshAnalysis();
+            // Built first, so its real size is known before it is moved clear of the others,
+            // and the move is part of the same undo step.
             RebuildCanvas();
-            UpdateMessages();
-            ApplyRouting();
-
             m_canvas.MoveClearOfOtherNodes(addedId);
-            m_canvas.FitToContent();
+
+            CommitChange(true);
+
+            m_canvas.Select(patchbay::CanvasSelectionKind::Endpoint, addedId);
+
+            // Moved clear of the others, it can end up out of view, which looks like nothing
+            // happened. Added from a menu, the whole patch is fitted; dropped, the view moves only
+            // as far as it has to.
+            if (!center.has_value())
+            {
+                m_canvas.FitToContent();
+            }
+            else
+            {
+                m_canvas.BringIntoView(addedId);
+            }
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to add the remembered endpoint.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to add the endpoint.")
     }
 
     // ------------------------------------------------------- create a loopback
@@ -913,9 +715,15 @@ namespace winrt::midipatchbay::implementation
                     patchbay::EndpointCatalog::Current().Refresh();
                 });
 
-            m_liveEndpoints = patchbay::EndpointCatalog::Current().Snapshot();
+            if (m_closing)
+            {
+                co_return;
+            }
 
-            for (auto const& endpoint : m_liveEndpoints)
+            // The library hears about the new endpoint now rather than whenever the watcher says.
+            patchbay::PatchLibrary::Current().EndpointsChanged();
+
+            for (auto const& endpoint : patchbay::PatchLibrary::Current().LiveEndpoints())
             {
                 auto const matches = isBasic
                     ? endpoint.Name == name
@@ -930,8 +738,6 @@ namespace winrt::midipatchbay::implementation
 
             ShowStatus(resources::FormatString(L"StatusLoopbackCreatedFormat", name),
                 controls::InfoBarSeverity::Success);
-
-            RebuildCanvas();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to create the loopback.")
     }
@@ -956,7 +762,8 @@ namespace winrt::midipatchbay::implementation
                 co_return;
             }
 
-            auto const endpointId = m_canvas.SelectedEndpointId();
+            // Copies, because the dialog below gives the selection time to change.
+            auto const nodeIds = m_canvas.SelectedNodeIds();
             auto const connectionId = m_canvas.SelectedConnectionId();
 
             auto* patch = CurrentPatch();
@@ -968,16 +775,24 @@ namespace winrt::midipatchbay::implementation
 
             winrt::hstring what{};
 
-            if (kind == patchbay::CanvasSelectionKind::Endpoint)
+            if (nodeIds.size() > 1)
             {
-                auto const* endpoint = patch->FindEndpoint(endpointId);
-
-                if (endpoint == nullptr)
+                what = resources::FormatString(L"RemoveSelectionMessageFormat", nodeIds.size());
+            }
+            else if (nodeIds.size() == 1)
+            {
+                if (auto const* block = patch->FindBlock(nodeIds.front()))
+                {
+                    what = resources::FormatString(L"RemoveStepMessageFormat", patchbay::BlockDisplayName(*block));
+                }
+                else if (auto const* endpoint = patch->FindEndpoint(nodeIds.front()))
+                {
+                    what = resources::FormatString(L"RemoveEndpointMessageFormat", endpoint->DisplayName);
+                }
+                else
                 {
                     co_return;
                 }
-
-                what = resources::FormatString(L"RemoveEndpointMessageFormat", endpoint->DisplayName);
             }
             else
             {
@@ -1010,7 +825,7 @@ namespace winrt::midipatchbay::implementation
                 }
             }
 
-            // Re-fetched: the dialog gave the customer time to switch patches.
+            // Looked up again: the patch can go while the dialog is open.
             patch = CurrentPatch();
 
             if (patch == nullptr)
@@ -1018,348 +833,27 @@ namespace winrt::midipatchbay::implementation
                 co_return;
             }
 
-            if (kind == patchbay::CanvasSelectionKind::Endpoint)
-            {
-                patch->RemoveEndpoint(endpointId);
-            }
-            else
+            if (nodeIds.empty())
             {
                 patch->RemoveConnection(connectionId);
             }
 
-            m_canvas.ClearSelection();
+            for (auto const& id : nodeIds)
+            {
+                if (patch->IsBlock(id))
+                {
+                    patch->RemoveBlock(id);
+                }
+                else
+                {
+                    patch->RemoveEndpoint(id);
+                }
+            }
 
-            MarkDirty();
-            RefreshAnalysis();
-            RebuildCanvas();
-            RefreshInspector();
-            UpdateMessages();
-            ApplyRouting();
+            m_canvas.ClearSelection();
+            CommitChange(true);
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to remove the selection.")
-    }
-
-    // ------------------------------------------------------------ quick patch
-
-
-    _Use_decl_annotations_
-    void MainWindow::OnNewQuickPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
-    {
-        UNREFERENCED_PARAMETER(sender);
-        UNREFERENCED_PARAMETER(args);
-
-        ShowQuickPatchDialogAsync();
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::OnQuickPatchSourceChanged(
-        foundation::IInspectable const& sender,
-        controls::SelectionChangedEventArgs const& args)
-    {
-        UNREFERENCED_PARAMETER(sender);
-        UNREFERENCED_PARAMETER(args);
-
-        if (m_fillingQuickPatch)
-        {
-            return;
-        }
-
-        FillQuickPatchGroups(true);
-        ValidateQuickPatch();
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::OnQuickPatchDestinationChanged(
-        foundation::IInspectable const& sender,
-        controls::SelectionChangedEventArgs const& args)
-    {
-        UNREFERENCED_PARAMETER(sender);
-        UNREFERENCED_PARAMETER(args);
-
-        if (m_fillingQuickPatch)
-        {
-            return;
-        }
-
-        FillQuickPatchGroups(false);
-        ValidateQuickPatch();
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::OnQuickPatchGroupChanged(
-        foundation::IInspectable const& sender,
-        controls::SelectionChangedEventArgs const& args)
-    {
-        UNREFERENCED_PARAMETER(sender);
-        UNREFERENCED_PARAMETER(args);
-
-        if (m_fillingQuickPatch)
-        {
-            return;
-        }
-
-        ValidateQuickPatch();
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::FillQuickPatchGroups(bool isSource) noexcept
-    {
-        try
-        {
-            m_fillingQuickPatch = true;
-
-            auto const endpointCombo = isSource ? QuickPatchSourceCombo() : QuickPatchDestinationCombo();
-            auto const groupCombo = isSource ? QuickPatchSourceGroupCombo() : QuickPatchDestinationGroupCombo();
-            auto const& ids = isSource ? m_quickSourceIds : m_quickDestinationIds;
-
-            auto& groups = isSource ? m_quickSourceGroups : m_quickDestinationGroups;
-
-            groups.clear();
-            groups.push_back(patchbay::AllGroups);
-
-            auto const index = endpointCombo.SelectedIndex();
-
-            std::optional<patchbay::LiveEndpoint> live{};
-
-            if (index >= 0 && static_cast<size_t>(index) < ids.size())
-            {
-                live = patchbay::EndpointCatalog::Current().Find(ids[static_cast<size_t>(index)]);
-            }
-
-            if (live.has_value())
-            {
-                for (int32_t group = 0; group < patchbay::MaximumGroupCount; group++)
-                {
-                    if (live->DeclaredGroups[static_cast<size_t>(group)])
-                    {
-                        groups.push_back(group);
-                    }
-                }
-            }
-
-            auto items = winrt::single_threaded_vector<foundation::IInspectable>();
-
-            for (auto const group : groups)
-            {
-                if (group == patchbay::AllGroups)
-                {
-                    items.Append(winrt::box_value(resources::GetString(L"PortAllGroups")));
-                    continue;
-                }
-
-                items.Append(winrt::box_value(patchbay::DescribeGroupIndex(
-                    group, live.has_value() ? live->GroupName(group, isSource) : std::wstring{})));
-            }
-
-            groupCombo.ItemsSource(items);
-            groupCombo.SelectedIndex(0);
-            groupCombo.IsEnabled(groups.size() > 1);
-
-            m_fillingQuickPatch = false;
-        }
-        catch (...)
-        {
-            m_fillingQuickPatch = false;
-            MIDI_PATCHBAY_LOG_GENERAL_EXCEPTION(L"Unable to list the groups for the quick patch.");
-        }
-    }
-
-    void MainWindow::ValidateQuickPatch() noexcept
-    {
-        try
-        {
-            auto const sourceIndex = QuickPatchSourceCombo().SelectedIndex();
-            auto const destinationIndex = QuickPatchDestinationCombo().SelectedIndex();
-
-            winrt::hstring problem{};
-
-            if (sourceIndex < 0 || destinationIndex < 0)
-            {
-                problem = resources::GetString(L"QuickPatchPickBoth");
-            }
-            else if (static_cast<size_t>(sourceIndex) < m_quickSourceIds.size() &&
-                static_cast<size_t>(destinationIndex) < m_quickDestinationIds.size())
-            {
-                auto const sourceGroup = QuickPatchSourceGroupCombo().SelectedIndex();
-                auto const destinationGroup = QuickPatchDestinationGroupCombo().SelectedIndex();
-
-                // The same endpoint on both ends is a real routing, but only across groups.
-                if (m_quickSourceIds[static_cast<size_t>(sourceIndex)] ==
-                    m_quickDestinationIds[static_cast<size_t>(destinationIndex)] &&
-                    sourceGroup == destinationGroup)
-                {
-                    problem = resources::GetString(L"QuickPatchSameGroup");
-                }
-            }
-
-            QuickPatchErrorText().Text(problem);
-            QuickPatchErrorText().Visibility(problem.empty()
-                ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
-
-            QuickPatchDialog().IsPrimaryButtonEnabled(problem.empty());
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to validate the quick patch.")
-    }
-
-    winrt::fire_and_forget MainWindow::ShowQuickPatchDialogAsync()
-    {
-        auto strong = get_strong();
-
-        try
-        {
-            m_liveEndpoints = patchbay::EndpointCatalog::Current().Snapshot();
-
-            if (m_liveEndpoints.empty())
-            {
-                ShowStatus(resources::GetString(L"QuickPatchNoEndpoints"), controls::InfoBarSeverity::Warning);
-                co_return;
-            }
-
-            m_fillingQuickPatch = true;
-
-            m_quickSourceIds.clear();
-            m_quickDestinationIds.clear();
-
-            auto sourceItems = winrt::single_threaded_vector<foundation::IInspectable>();
-            auto destinationItems = winrt::single_threaded_vector<foundation::IInspectable>();
-
-            for (auto const& endpoint : m_liveEndpoints)
-            {
-                m_quickSourceIds.push_back(endpoint.EndpointDeviceId);
-                m_quickDestinationIds.push_back(endpoint.EndpointDeviceId);
-
-                sourceItems.Append(winrt::box_value(winrt::hstring{ endpoint.Name }));
-                destinationItems.Append(winrt::box_value(winrt::hstring{ endpoint.Name }));
-            }
-
-            QuickPatchSourceCombo().ItemsSource(sourceItems);
-            QuickPatchDestinationCombo().ItemsSource(destinationItems);
-
-            QuickPatchSourceCombo().SelectedIndex(0);
-            QuickPatchDestinationCombo().SelectedIndex(m_liveEndpoints.size() > 1 ? 1 : 0);
-
-            m_fillingQuickPatch = false;
-
-            FillQuickPatchGroups(true);
-            FillQuickPatchGroups(false);
-            ValidateQuickPatch();
-
-            QuickPatchDialog().XamlRoot(Content().XamlRoot());
-
-            auto const result = co_await QuickPatchDialog().ShowAsync();
-
-            if (result != controls::ContentDialogResult::Primary)
-            {
-                co_return;
-            }
-
-            CreateQuickPatch();
-        }
-        catch (...)
-        {
-            m_fillingQuickPatch = false;
-            MIDI_PATCHBAY_LOG_GENERAL_EXCEPTION(L"Unable to show the quick patch dialog.");
-        }
-    }
-
-    void MainWindow::CreateQuickPatch() noexcept
-    {
-        try
-        {
-            auto const sourceIndex = QuickPatchSourceCombo().SelectedIndex();
-            auto const destinationIndex = QuickPatchDestinationCombo().SelectedIndex();
-
-            if (sourceIndex < 0 || static_cast<size_t>(sourceIndex) >= m_quickSourceIds.size() ||
-                destinationIndex < 0 || static_cast<size_t>(destinationIndex) >= m_quickDestinationIds.size())
-            {
-                return;
-            }
-
-            auto const source = patchbay::EndpointCatalog::Current()
-                .Find(m_quickSourceIds[static_cast<size_t>(sourceIndex)]);
-            auto const destination = patchbay::EndpointCatalog::Current()
-                .Find(m_quickDestinationIds[static_cast<size_t>(destinationIndex)]);
-
-            if (!source.has_value() || !destination.has_value())
-            {
-                ShowStatus(resources::GetString(L"QuickPatchEndpointGone"), controls::InfoBarSeverity::Warning);
-                return;
-            }
-
-            auto const groupAt = [](std::vector<int32_t> const& groups, int32_t index)
-                {
-                    return index >= 0 && static_cast<size_t>(index) < groups.size()
-                        ? groups[static_cast<size_t>(index)] : patchbay::AllGroups;
-                };
-
-            auto const sourceGroup = groupAt(m_quickSourceGroups, QuickPatchSourceGroupCombo().SelectedIndex());
-            auto const destinationGroup = groupAt(m_quickDestinationGroups, QuickPatchDestinationGroupCombo().SelectedIndex());
-
-            CreateNewPatch(std::wstring{
-                resources::FormatString(L"QuickPatchNameFormat", source->Name, destination->Name) });
-
-            auto* patch = CurrentPatch();
-
-            if (patch == nullptr)
-            {
-                return;
-            }
-
-            auto const addNode = [&patch](patchbay::LiveEndpoint const& endpoint)
-                {
-                    patchbay::PatchEndpoint node{};
-
-                    node.Id = patchbay::PatchDocument::NewId();
-                    node.DisplayName = endpoint.Name;
-                    node.TransportCode = endpoint.TransportCode;
-                    node.Match = endpoint.BuildMatch();
-                    node.MatchMode = patchbay::EndpointMatchMode::EndpointDeviceId;
-
-                    PlaceNewNode(node, patch->Endpoints.size());
-
-                    auto const id = node.Id;
-
-                    patch->Endpoints.push_back(std::move(node));
-
-                    return id;
-                };
-
-            auto const sourceNodeId = addNode(source.value());
-
-            // One endpoint routed across its own groups needs one node, not two stacked copies.
-            auto const destinationNodeId = source->EndpointDeviceId == destination->EndpointDeviceId
-                ? sourceNodeId : addNode(destination.value());
-
-            patchbay::PatchConnection connection{};
-
-            connection.Id = patchbay::PatchDocument::NewId();
-            connection.SourceEndpointId = sourceNodeId;
-            connection.SourceGroupIndex = sourceGroup;
-            connection.DestinationEndpointId = destinationNodeId;
-            connection.DestinationGroupIndex = destinationGroup;
-
-            patch->Connections.push_back(connection);
-
-            MarkDirty();
-            RefreshAnalysis();
-            RebuildCanvas();
-            ApplyRouting();
-            UpdateMessages();
-
-            if (destinationNodeId != sourceNodeId)
-            {
-                m_canvas.MoveClearOfOtherNodes(destinationNodeId);
-            }
-
-            m_canvas.Select(patchbay::CanvasSelectionKind::Connection, connection.Id);
-
-            // Selecting opens the details panel, which takes its width from the canvas. Fitting
-            // before that lands leaves the second node half off the right edge.
-            RootGrid().UpdateLayout();
-
-            m_canvas.FitToContent();
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to create the quick patch.")
     }
 
     // ---------------------------------------------------------- test and menus
@@ -1390,6 +884,40 @@ namespace winrt::midipatchbay::implementation
 
             controls::MenuFlyout menu{};
             auto weak = get_weak();
+
+            // Works without a device, so it is there whatever is plugged in.
+            controls::MenuFlyoutItem trace{};
+            trace.Text(resources::GetString(L"TestTraceMessages"));
+            trace.Click([weak](auto&&, auto&&)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->ShowTraceDialogAsync();
+                    }
+                });
+
+            menu.Items().Append(trace);
+
+            controls::ToggleMenuFlyoutItem liveRouting{};
+            liveRouting.Text(resources::GetString(L"TestLiveRouting"));
+            liveRouting.IsChecked(m_showingLiveRouting);
+            controls::ToolTipService::SetToolTip(liveRouting, winrt::box_value(resources::GetString(L"TestLiveRoutingTip")));
+
+            liveRouting.Click([weak](foundation::IInspectable const& sender, auto&&)
+                {
+                    auto strong = weak.get();
+                    auto const item = sender.try_as<controls::ToggleMenuFlyoutItem>();
+
+                    if (strong != nullptr && item != nullptr)
+                    {
+                        strong->ShowLiveRouting(item.IsChecked());
+                    }
+                });
+
+            menu.Items().Append(liveRouting);
+            menu.Items().Append(controls::MenuFlyoutSeparator{});
+
+            uint32_t tools{ 0 };
 
             for (auto const& endpoint : patch->Endpoints)
             {
@@ -1426,9 +954,10 @@ namespace winrt::midipatchbay::implementation
                 addTool(resources::GetString(L"TestOpenScratchPad"), ScratchPadExeName);
 
                 menu.Items().Append(submenu);
+                tools++;
             }
 
-            if (menu.Items().Size() == 0)
+            if (tools == 0)
             {
                 controls::MenuFlyoutItem empty{};
                 empty.Text(resources::GetString(L"StatusNothingToTest"));
@@ -1442,7 +971,7 @@ namespace winrt::midipatchbay::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::ShowEndpointMenu(std::wstring const& endpointId, foundation::Point const& position) noexcept
+    void MainWindow::ShowNodeMenu(std::wstring const& nodeId, foundation::Point const& position) noexcept
     {
         try
         {
@@ -1453,112 +982,123 @@ namespace winrt::midipatchbay::implementation
                 return;
             }
 
-            auto const* endpoint = patch->FindEndpoint(endpointId);
-
-            if (endpoint == nullptr)
-            {
-                return;
-            }
-
-            m_canvas.Select(patchbay::CanvasSelectionKind::Endpoint, endpointId);
-
             controls::MenuFlyout menu{};
             auto weak = get_weak();
 
-            auto const live = patchbay::ResolveEndpoint(*endpoint);
+            auto const addItem = [&menu, weak](winrt::hstring const& text, std::function<void(MainWindow&)> action)
+                {
+                    controls::MenuFlyoutItem item{};
 
-            if (live.has_value())
-            {
-                auto const deviceId = live->EndpointDeviceId;
-
-                auto const addTool = [&menu, weak, deviceId](winrt::hstring const& text, std::wstring const& exe)
-                    {
-                        controls::MenuFlyoutItem item{};
-
-                        item.Text(text);
-                        item.Click([weak, deviceId, exe](auto&&, auto&&)
+                    item.Text(text);
+                    item.Click([weak, action](auto&&, auto&&)
+                        {
+                            if (auto strong = weak.get())
                             {
-                                if (auto strong = weak.get())
-                                {
-                                    strong->LaunchTool(exe, deviceId);
-                                }
-                            });
+                                action(*strong);
+                            }
+                        });
 
-                        menu.Items().Append(item);
-                    };
+                    menu.Items().Append(item);
+                };
 
-                addTool(resources::GetString(L"TestOpenMonitor"), MonitorExeName);
-                addTool(resources::GetString(L"TestOpenKeyboard"), KeyboardExeName);
-                addTool(resources::GetString(L"TestOpenScratchPad"), ScratchPadExeName);
+            auto const addSeparator = [&menu]()
+                {
+                    menu.Items().Append(controls::MenuFlyoutSeparator{});
+                };
 
-                controls::MenuFlyoutSeparator separator{};
-                menu.Items().Append(separator);
+            // Copy, cut, duplicate and remove act on everything selected, which is what a
+            // right click on part of a selection means.
+            auto const addEditItems = [&addItem, &addSeparator]()
+                {
+                    addItem(resources::GetString(L"ActionCopy"), [](MainWindow& window) { window.CopySelection(); });
+                    addItem(resources::GetString(L"ActionCut"), [](MainWindow& window) { window.CutSelection(); });
+                    addItem(resources::GetString(L"ActionDuplicate"), [](MainWindow& window) { window.DuplicateSelection(); });
+                    addSeparator();
+                    addItem(resources::GetString(L"ActionRemove"), [](MainWindow& window) { window.DeleteSelection(); });
+                };
+
+            if (auto const* block = patch->FindBlock(nodeId))
+            {
+                auto const blockId = block->Id;
+
+                // Nothing goes through an annotation, so there is nothing to bypass.
+                if (patchbay::IsAnnotation(block->Kind))
+                {
+                    addItem(resources::GetString(L"ActionEditAnnotation"),
+                        [blockId](MainWindow& window) { window.FocusAnnotationText(blockId); });
+                    addSeparator();
+                    addEditItems();
+                }
+                else
+                {
+                    if (!EditsInInspector(block->Kind))
+                    {
+                        addItem(resources::GetString(L"ActionEditStep"),
+                            [blockId](MainWindow& window) { window.ShowBlockDialogAsync(blockId); });
+                    }
+
+                    controls::ToggleMenuFlyoutItem bypassItem{};
+
+                    bypassItem.Text(resources::GetString(L"InspectorBypass"));
+                    bypassItem.IsChecked(block->Bypassed);
+
+                    bypassItem.Click([weak, blockId](foundation::IInspectable const& s, auto&&)
+                        {
+                            auto strong = weak.get();
+                            auto const item = s.try_as<controls::ToggleMenuFlyoutItem>();
+
+                            if (strong != nullptr && item != nullptr)
+                            {
+                                strong->SetBlockBypassed(blockId, item.IsChecked());
+                            }
+                        });
+
+                    menu.Items().Append(bypassItem);
+                    addSeparator();
+                    addEditItems();
+                }
             }
+            else if (auto const* endpoint = patch->FindEndpoint(nodeId))
+            {
+                auto const live = patchbay::ResolveEndpoint(*endpoint);
 
-            controls::MenuFlyoutItem groupsItem{};
-            groupsItem.Text(endpoint->ShowAllGroups
-                ? resources::GetString(L"ActionShowDeclaredGroups")
-                : resources::GetString(L"ActionShowAllGroups"));
-
-            groupsItem.Click([weak, endpointId](auto&&, auto&&)
+                if (live.has_value())
                 {
-                    auto strong = weak.get();
+                    auto const deviceId = live->EndpointDeviceId;
 
-                    if (strong == nullptr)
+                    addItem(resources::GetString(L"TestOpenMonitor"),
+                        [deviceId](MainWindow& window) { window.LaunchTool(MonitorExeName, deviceId); });
+                    addItem(resources::GetString(L"TestOpenKeyboard"),
+                        [deviceId](MainWindow& window) { window.LaunchTool(KeyboardExeName, deviceId); });
+                    addItem(resources::GetString(L"TestOpenScratchPad"),
+                        [deviceId](MainWindow& window) { window.LaunchTool(ScratchPadExeName, deviceId); });
+
+                    addSeparator();
+                }
+
+                auto const endpointId = endpoint->Id;
+
+                addItem(endpoint->ShowAllGroups
+                    ? resources::GetString(L"ActionShowDeclaredGroups")
+                    : resources::GetString(L"ActionShowAllGroups"),
+                    [endpointId](MainWindow& window)
                     {
-                        return;
-                    }
+                        auto* current = window.CurrentPatch();
 
-                    auto* current = strong->CurrentPatch();
+                        if (auto* target = current == nullptr ? nullptr : current->FindEndpoint(endpointId))
+                        {
+                            target->ShowAllGroups = !target->ShowAllGroups;
+                            window.CommitChange(false);
+                        }
+                    });
 
-                    if (current == nullptr)
-                    {
-                        return;
-                    }
-
-                    if (auto* target = current->FindEndpoint(endpointId))
-                    {
-                        target->ShowAllGroups = !target->ShowAllGroups;
-
-                        strong->MarkDirty();
-                        strong->RebuildCanvas();
-                        strong->RefreshInspector();
-                    }
-                });
-
-            menu.Items().Append(groupsItem);
-
-            controls::MenuFlyoutItem removeItem{};
-            removeItem.Text(resources::GetString(L"ActionRemoveEndpoint"));
-
-            removeItem.Click([weak, endpointId](auto&&, auto&&)
-                {
-                    auto strong = weak.get();
-
-                    if (strong == nullptr)
-                    {
-                        return;
-                    }
-
-                    auto* current = strong->CurrentPatch();
-
-                    if (current == nullptr)
-                    {
-                        return;
-                    }
-
-                    current->RemoveEndpoint(endpointId);
-
-                    strong->m_canvas.ClearSelection();
-                    strong->MarkDirty();
-                    strong->RefreshAnalysis();
-                    strong->RebuildCanvas();
-                    strong->RefreshInspector();
-                    strong->UpdateMessages();
-                    strong->ApplyRouting();
-                });
-
-            menu.Items().Append(removeItem);
+                addSeparator();
+                addEditItems();
+            }
+            else
+            {
+                return;
+            }
 
             primitives::FlyoutShowOptions options{};
 
@@ -1567,7 +1107,7 @@ namespace winrt::midipatchbay::implementation
 
             menu.ShowAt(CanvasScroller(), options);
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the endpoint menu.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the menu.")
     }
 
     _Use_decl_annotations_

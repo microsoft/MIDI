@@ -151,7 +151,7 @@ private:
     std::map<uint32_t, std::shared_ptr<RtpMidiConnection>> m_connections;
 
     RtpMidiNet::PortPair m_ports;
-    RtpMidiNet::DnssdAdvertiser m_advertiser;
+    WindowsMidiServicesInternal::MidiDnssdAdvertiser m_advertiser;
     bool m_usedPortFallback{ false };
     std::atomic<bool> m_advertised{ false };
     std::atomic<bool> m_running{ false };

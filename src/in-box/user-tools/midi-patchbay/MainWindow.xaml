@@ -15,13 +15,6 @@
         </Grid.RowDefinitions>
 
         <Grid.Resources>
-            <Style x:Key="CardBorderStyle" TargetType="Border">
-                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
-                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
-                <Setter Property="BorderThickness" Value="1" />
-                <Setter Property="CornerRadius" Value="6" />
-                <Setter Property="Padding" Value="12" />
-            </Style>
             <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
@@ -42,6 +35,21 @@
                    BasedOn="{StaticResource DefaultFlyoutPresenterStyle}">
                 <Setter Property="MaxWidth" Value="600" />
                 <Setter Property="MaxHeight" Value="720" />
+            </Style>
+
+            <!-- The palette's step tiles: three to a row, square, sized in code to the palette's width. -->
+            <!-- Not an ItemsWrapGrid: that one throws its tiles away and builds them again each
+                 time their size changes, which flickers while the palette is resized. -->
+            <ItemsPanelTemplate x:Key="PaletteTilesPanel">
+                <VariableSizedWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="3" />
+            </ItemsPanelTemplate>
+            <Style x:Key="PaletteTileContainerStyle" TargetType="GridViewItem">
+                <Setter Property="Margin" Value="0,0,4,4" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="MinHeight" Value="0" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="VerticalContentAlignment" Value="Stretch" />
             </Style>
         </Grid.Resources>
 
@@ -135,8 +143,9 @@
                            Foreground="{ThemeResource SystemFillColorCautionBrush}" />
             </Grid>
 
-            <Button x:Name="AppearanceButton"
-                    x:Uid="AppearanceButton"
+            <!-- Every patch has a window of its own, so the way back to the rest of them is here. -->
+            <Button x:Name="LibraryButton"
+                    x:Uid="LibraryButton"
                     Grid.Column="3"
                     Width="46"
                     Height="32"
@@ -144,167 +153,13 @@
                     Padding="0"
                     BorderThickness="0"
                     Background="Transparent"
-                    Click="OnAppearanceButtonClick">
-                <FontIcon Glyph="&#xE713;" FontSize="14" />
+                    Click="OnLibraryButtonClick">
+                <FontIcon Glyph="&#xE8F1;" FontSize="14" />
             </Button>
-
-            <ToggleButton x:Name="AlwaysOnTopToggle"
-                          x:Uid="AlwaysOnTopToggle"
-                          Grid.Column="4"
-                          Width="46"
-                          Height="32"
-                          VerticalAlignment="Top"
-                          Padding="0"
-                          BorderThickness="0"
-                          Click="OnAlwaysOnTopToggled">
-                <ToggleButton.Resources>
-                    <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
-                    <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
-                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
-                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
-                    <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
-                    <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
-                </ToggleButton.Resources>
-                <FontIcon Glyph="&#xE718;" FontSize="14" />
-            </ToggleButton>
         </Grid>
 
-        <!-- ================================= Navigation ================================= -->
-        <NavigationView x:Name="MainNavigation"
-                        Grid.Row="1"
-                        IsSettingsVisible="False"
-                        IsBackButtonVisible="Collapsed"
-                        IsPaneToggleButtonVisible="False"
-                        OpenPaneLength="250"
-                        PaneDisplayMode="Left"
-                        SelectionChanged="OnNavigationSelectionChanged">
-
-            <NavigationView.PaneHeader>
-                <StackPanel Margin="4,4,4,0">
-                    <Button x:Name="NewPatchButton"
-                            x:Uid="NewPatchButton"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Height="36"
-                            Padding="12,0,12,0"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Click="OnNewPatchClick">
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <FontIcon Glyph="&#xE710;"
-                                      FontSize="15"
-                                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                            <TextBlock x:Name="NewPatchText"
-                                       x:Uid="NewPatchText"
-                                       Text="New empty patch"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button x:Name="NewQuickPatchButton"
-                            x:Uid="NewQuickPatchButton"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Height="36"
-                            Padding="12,0,12,0"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Click="OnNewQuickPatchClick">
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <FontIcon Glyph="&#xE71B;"
-                                      FontSize="15"
-                                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                            <TextBlock x:Name="NewQuickPatchText"
-                                       x:Uid="NewQuickPatchText"
-                                       Text="New quick patch"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <!-- A patch written somewhere else, by an agent or a friend, comes in here. -->
-                    <Button x:Name="ImportPatchButton"
-                            x:Uid="ImportPatchButton"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Height="36"
-                            Padding="12,0,12,0"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Click="OnImportPatchClick">
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <FontIcon Glyph="&#xE8B5;"
-                                      FontSize="15"
-                                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                            <TextBlock x:Name="ImportPatchText"
-                                       x:Uid="ImportPatchText"
-                                       Text="Import patch…"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <!-- Copies a starting prompt for the customer's own AI assistant. Nothing is sent from here. -->
-                    <Button x:Name="AssistantButton"
-                            x:Uid="AssistantButton"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Height="36"
-                            Padding="12,0,12,0"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Click="OnAssistantClick">
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <FontIcon Glyph="&#xE8F2;"
-                                      FontSize="15"
-                                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                            <TextBlock x:Name="AssistantText"
-                                       x:Uid="AssistantText"
-                                       Text="Ask an AI assistant…"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Border Height="1" Margin="12,8,12,2"
-                            Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-
-                    <Grid Margin="12,6,0,2" Height="30">
-                        <TextBlock x:Name="PatchesHeaderText"
-                                   x:Uid="PatchesHeaderText"
-                                   Text="Patches"
-                                   FontSize="12"
-                                   FontWeight="SemiBold"
-                                   VerticalAlignment="Center"
-                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                        <Button x:Name="SortButton"
-                                x:Uid="SortButton"
-                                HorizontalAlignment="Right"
-                                Width="32"
-                                Height="28"
-                                Padding="0"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Click="OnSortClick">
-                            <FontIcon Glyph="&#xE8CB;" FontSize="13" />
-                        </Button>
-                    </Grid>
-                </StackPanel>
-            </NavigationView.PaneHeader>
-
-            <NavigationView.PaneFooter>
-                <StackPanel>
-                    <Border Height="1" Margin="12,8,12,8"
-                            Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                    <Button x:Name="OpenFolderButton"
-                            x:Uid="OpenFolderButton"
-                            Content="Open patch folder"
-                            Style="{StaticResource ToolbarButtonStyle}"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Margin="4,0,4,8"
-                            Click="OnOpenFolderClick" />
-                </StackPanel>
-            </NavigationView.PaneFooter>
-
-            <Grid x:Name="ContentRoot">
+        <!-- =================================== Editor =================================== -->
+            <Grid x:Name="ContentRoot" Grid.Row="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -336,17 +191,19 @@
                                    Margin="0,2,0,0" />
                     </StackPanel>
 
-                    <Border x:Name="StateChip"
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            CornerRadius="11"
-                            Padding="10,3,10,3"
-                            BorderThickness="1"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                    <Grid x:Name="StateChip"
+                          Grid.Column="1"
+                          VerticalAlignment="Center">
+                        <Rectangle RadiusX="10.5"
+                                   RadiusY="10.5"
+                                   StrokeThickness="1"
+                                   UseLayoutRounding="False"
+                                   Stroke="{ThemeResource CardStrokeColorDefaultBrush}" />
                         <TextBlock x:Name="StateChipText"
+                                   Margin="11,4,11,4"
                                    FontSize="12"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    </Border>
+                    </Grid>
 
                     <ToggleButton x:Name="RoutingToggle"
                                   x:Uid="RoutingToggle"
@@ -385,7 +242,22 @@
                 </Grid>
 
                 <!-- ============================== messages ============================== -->
-                <StackPanel Grid.Row="1" Margin="20,0,16,0" Spacing="6">
+                <StackPanel x:Name="MessageBars" Grid.Row="1" Margin="20,0,16,0" Spacing="6">
+                    <!-- A patch from an earlier version was turned into steps when it was read.
+                         The original file is kept, and this is where the customer finds it. -->
+                    <InfoBar x:Name="ConversionBar"
+                             Severity="Informational"
+                             IsOpen="False"
+                             IsClosable="True"
+                             CloseButtonClick="OnConversionBarCloseClick">
+                        <InfoBar.ActionButton>
+                            <Button x:Name="ConversionShowButton"
+                                    x:Uid="ConversionShowButton"
+                                    Content="Show the original"
+                                    Click="OnShowEarlierVersionClick" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+
                     <!-- The toggle in the header is easy to miss, and a patch that is not routing
                          looks exactly like one that is until a note fails to arrive. -->
                     <InfoBar x:Name="NotRoutingBar"
@@ -409,7 +281,7 @@
                              Severity="Warning"
                              IsOpen="False"
                              IsClosable="True"
-                             Title="This patch doesn't automatically start with the Patchbay app"
+                             Title="This patch doesn't automatically start with Windows MIDI Patchbay"
                              CloseButtonClick="OnAutoStartBarCloseClick" />
 
                     <InfoBar x:Name="ServiceBar"
@@ -437,6 +309,30 @@
                              IsOpen="False"
                              IsClosable="True" />
 
+                    <!-- Where a traced message went. The canvas shows the path of the one named
+                         here, and closing this puts the canvas back. -->
+                    <InfoBar x:Name="TraceBar"
+                             x:Uid="TraceBar"
+                             Severity="Informational"
+                             IsOpen="False"
+                             IsClosable="True"
+                             CloseButtonClick="OnTraceBarCloseClick">
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,8">
+                            <Button x:Name="TracePreviousButton"
+                                    x:Uid="TracePreviousButton"
+                                    Content="Previous"
+                                    Click="OnTracePreviousClick" />
+                            <Button x:Name="TraceNextButton"
+                                    x:Uid="TraceNextButton"
+                                    Content="Next"
+                                    Click="OnTraceNextClick" />
+                            <Button x:Name="TraceAgainButton"
+                                    x:Uid="TraceAgainButton"
+                                    Content="Change messages"
+                                    Click="OnTraceAgainClick" />
+                        </StackPanel>
+                    </InfoBar>
+
                     <InfoBar x:Name="StatusBar"
                              Severity="Informational"
                              IsOpen="False"
@@ -444,13 +340,70 @@
                 </StackPanel>
 
                 <!-- ============================== toolbar =============================== -->
-                <Grid x:Name="CanvasToolbar" Grid.Row="2" Height="48" Margin="16,4,16,0">
+                <Grid x:Name="CanvasToolbar"
+                      Grid.Row="2"
+                      Height="48"
+                      Margin="0,4,0,0"
+                      Padding="16,0,16,0"
+                      BorderThickness="0,0,0,1"
+                      BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="2">
+                        <Button x:Name="UndoButton"
+                                x:Uid="UndoButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Width="36"
+                                IsEnabled="False"
+                                Click="OnUndoClick">
+                            <FontIcon Glyph="&#xE7A7;" FontSize="14" />
+                        </Button>
+                        <Button x:Name="RedoButton"
+                                x:Uid="RedoButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Width="36"
+                                IsEnabled="False"
+                                Click="OnRedoClick">
+                            <FontIcon Glyph="&#xE7A6;" FontSize="14" />
+                        </Button>
+                        <Border Width="1" Height="20" Margin="4,0,4,0"
+                                Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                        <Button x:Name="CutButton"
+                                x:Uid="CutButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Width="36"
+                                IsEnabled="False"
+                                Click="OnCutClick">
+                            <FontIcon Glyph="&#xE8C6;" FontSize="14" />
+                        </Button>
+                        <Button x:Name="CopyButton"
+                                x:Uid="CopyButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Width="36"
+                                IsEnabled="False"
+                                Click="OnCopyClick">
+                            <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                        </Button>
+                        <Button x:Name="PasteButton"
+                                x:Uid="PasteButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Width="36"
+                                Click="OnPasteClick">
+                            <FontIcon Glyph="&#xE77F;" FontSize="14" />
+                        </Button>
+                        <Button x:Name="DeleteButton"
+                                x:Uid="DeleteButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Width="36"
+                                IsEnabled="False"
+                                Click="OnDeleteClick">
+                            <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                        </Button>
+                        <Border Width="1" Height="20" Margin="4,0,4,0"
+                                Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
                         <Button x:Name="AddEndpointButton"
                                 x:Uid="AddEndpointButton"
                                 Content="Add endpoint"
@@ -472,57 +425,6 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
-                        <Button x:Name="ZoomOutButton"
-                                x:Uid="ZoomOutButton"
-                                Style="{StaticResource ToolbarButtonStyle}"
-                                Width="32"
-                                Click="OnZoomOutClick">
-                            <FontIcon Glyph="&#xE71F;" FontSize="14" />
-                        </Button>
-                        <Button x:Name="ZoomButton"
-                                x:Uid="ZoomButton"
-                                Style="{StaticResource ToolbarButtonStyle}"
-                                MinWidth="52"
-                                Padding="4,0,4,0">
-                            <TextBlock x:Name="ZoomText"
-                                       TextAlignment="Center"
-                                       Style="{StaticResource StatusTextStyle}" />
-                            <Button.Flyout>
-                                <Flyout x:Name="ZoomFlyout" Opening="OnZoomFlyoutOpening">
-                                    <StackPanel Spacing="10" Width="188">
-                                        <Button x:Name="ZoomFitButton"
-                                                x:Uid="ZoomFitButton"
-                                                Content="Fit to screen"
-                                                HorizontalAlignment="Stretch"
-                                                Click="OnZoomFitClick" />
-                                        <NumberBox x:Name="ZoomInputBox"
-                                                   x:Uid="ZoomInputBox"
-                                                   Header="Zoom (%)"
-                                                   Minimum="10"
-                                                   Maximum="400"
-                                                   SmallChange="5"
-                                                   LargeChange="10"
-                                                   SpinButtonPlacementMode="Inline"
-                                                   ValidationMode="InvalidInputOverwritten"
-                                                   ValueChanged="OnZoomValueChanged" />
-                                        <Button x:Name="ZoomApplyButton"
-                                                x:Uid="ZoomApplyButton"
-                                                Content="Apply"
-                                                HorizontalAlignment="Right"
-                                                Click="OnZoomApplyClick" />
-                                    </StackPanel>
-                                </Flyout>
-                            </Button.Flyout>
-                        </Button>
-                        <Button x:Name="ZoomInButton"
-                                x:Uid="ZoomInButton"
-                                Style="{StaticResource ToolbarButtonStyle}"
-                                Width="32"
-                                Click="OnZoomInClick">
-                            <FontIcon Glyph="&#xE8A3;" FontSize="14" />
-                        </Button>
-                        <Border Width="1" Height="20" Margin="4,0,4,0"
-                                Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
                         <Button x:Name="TestButton"
                                 x:Uid="TestButton"
                                 Content="Test"
@@ -532,17 +434,112 @@
                 </Grid>
 
                 <!-- =============================== canvas =============================== -->
-                <Grid Grid.Row="3" Margin="16,8,16,0">
+                <Grid Grid.Row="3">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0"
-                            CornerRadius="6"
-                            BorderThickness="1"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                            Background="{ThemeResource LayerOnAcrylicFillColorDefaultBrush}">
+                    <!-- WinUI has no splitter, so each resize bar is a border with pointer handlers,
+                         the way MIDI Glass does it: a transparent grab area wide enough to hit,
+                         with a hairline down the middle that is also the canvas's edge, and that
+                         lights up under the pointer. -->
+                    <Border x:Name="PaletteSplitter"
+                            x:Uid="PaletteSplitter"
+                            Grid.Column="1"
+                            Width="6"
+                            Background="Transparent"
+                            Tag="palette"
+                            PointerPressed="OnSplitterPressed"
+                            PointerMoved="OnSplitterMoved"
+                            PointerReleased="OnSplitterReleased"
+                            PointerCaptureLost="OnSplitterReleased"
+                            PointerEntered="OnSplitterEntered"
+                            PointerExited="OnSplitterExited">
+                        <Grid>
+                            <Rectangle Width="2"
+                                       HorizontalAlignment="Center"
+                                       Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                            <Rectangle Width="2"
+                                       HorizontalAlignment="Center"
+                                       Opacity="0"
+                                       Fill="{ThemeResource AccentFillColorDefaultBrush}" />
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="InspectorSplitter"
+                            x:Uid="InspectorSplitter"
+                            Grid.Column="3"
+                            Width="6"
+                            Background="Transparent"
+                            Visibility="Collapsed"
+                            Tag="inspector"
+                            PointerPressed="OnSplitterPressed"
+                            PointerMoved="OnSplitterMoved"
+                            PointerReleased="OnSplitterReleased"
+                            PointerCaptureLost="OnSplitterReleased"
+                            PointerEntered="OnSplitterEntered"
+                            PointerExited="OnSplitterExited">
+                        <Grid>
+                            <Rectangle Width="2"
+                                       HorizontalAlignment="Center"
+                                       Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                            <Rectangle Width="2"
+                                       HorizontalAlignment="Center"
+                                       Opacity="0"
+                                       Fill="{ThemeResource AccentFillColorDefaultBrush}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- ============================== palette =============================== -->
+                    <Border x:Name="PalettePanel"
+                            Grid.Column="0"
+                            Width="240"
+                            Padding="0,6,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <SelectorBar x:Name="PaletteTabs"
+                                         x:Uid="PaletteTabs"
+                                         Grid.Row="0"
+                                         Margin="4,2,4,0"
+                                         SelectionChanged="OnPaletteTabChanged">
+                                <SelectorBarItem x:Name="PaletteStepsTab"
+                                                 x:Uid="PaletteStepsTab"
+                                                 Text="Steps"
+                                                 IsSelected="True" />
+                                <SelectorBarItem x:Name="PaletteEndpointsTab"
+                                                 x:Uid="PaletteEndpointsTab"
+                                                 Text="Endpoints" />
+                            </SelectorBar>
+
+                            <TextBox x:Name="PaletteSearchBox"
+                                     x:Uid="PaletteSearchBox"
+                                     Grid.Row="1"
+                                     Margin="10,4,10,8"
+                                     PlaceholderText="Search"
+                                     TextChanged="OnPaletteSearchChanged" />
+
+                            <ScrollViewer Grid.Row="2"
+                                          VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel x:Name="PaletteContent"
+                                            Spacing="4"
+                                            Padding="10,0,10,12"
+                                            SizeChanged="OnPaletteContentSizeChanged" />
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <!-- Darker than the window, so it reads as the surface everything sits on. -->
+                    <Border Grid.Column="2" Background="{ThemeResource CanvasSurfaceBrush}">
                         <Grid>
                             <ScrollViewer x:Name="CanvasScroller"
                                           HorizontalScrollMode="Enabled"
@@ -590,29 +587,98 @@
                                         Click="OnAddEndpointClick" />
                             </StackPanel>
 
-                            <Border x:Name="MinimapPanel"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Bottom"
-                                    Margin="0,0,14,14"
-                                    Padding="6"
-                                    CornerRadius="5"
-                                    BorderThickness="1"
-                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                                <Canvas x:Name="MinimapSurface" Width="170" Height="116" Background="Transparent" />
-                            </Border>
+                            <!-- The overview, and under it the zoom, in the corner of what they
+                                 describe rather than up in the toolbar. -->
+                            <StackPanel HorizontalAlignment="Right"
+                                        VerticalAlignment="Bottom"
+                                        Margin="0,0,14,14"
+                                        Spacing="8">
+                                <Grid x:Name="MinimapPanel">
+                                    <Rectangle RadiusX="4.5"
+                                               RadiusY="4.5"
+                                               StrokeThickness="1"
+                                               UseLayoutRounding="False"
+                                               Stroke="{ThemeResource CardStrokeColorDefaultBrush}"
+                                               Fill="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                                    <Canvas x:Name="MinimapSurface" Margin="7" Width="170" Height="116" Background="Transparent" />
+                                </Grid>
+
+                                <Grid HorizontalAlignment="Right">
+                                    <Rectangle RadiusX="4.5"
+                                               RadiusY="4.5"
+                                               StrokeThickness="1"
+                                               UseLayoutRounding="False"
+                                               Stroke="{ThemeResource CardStrokeColorDefaultBrush}"
+                                               Fill="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                                    <StackPanel Orientation="Horizontal" Spacing="2" Margin="3">
+                                        <!-- The zoom, which opens a box to type one into. -->
+                                        <Button x:Name="ZoomButton"
+                                                x:Uid="ZoomButton"
+                                                Style="{StaticResource ToolbarButtonStyle}"
+                                                Height="28"
+                                                MinWidth="48"
+                                                Padding="6,0,6,0">
+                                            <TextBlock x:Name="ZoomText"
+                                                       TextAlignment="Center"
+                                                       Style="{StaticResource StatusTextStyle}" />
+                                            <Button.Flyout>
+                                                <Flyout x:Name="ZoomFlyout" Opening="OnZoomFlyoutOpening">
+                                                    <StackPanel Spacing="10" Width="188">
+                                                        <NumberBox x:Name="ZoomInputBox"
+                                                                   x:Uid="ZoomInputBox"
+                                                                   Header="Zoom (%)"
+                                                                   Minimum="10"
+                                                                   Maximum="400"
+                                                                   SmallChange="5"
+                                                                   LargeChange="10"
+                                                                   SpinButtonPlacementMode="Inline"
+                                                                   ValidationMode="InvalidInputOverwritten"
+                                                                   ValueChanged="OnZoomValueChanged" />
+                                                        <Button x:Name="ZoomApplyButton"
+                                                                x:Uid="ZoomApplyButton"
+                                                                Content="Apply"
+                                                                HorizontalAlignment="Right"
+                                                                Click="OnZoomApplyClick" />
+                                                    </StackPanel>
+                                                </Flyout>
+                                            </Button.Flyout>
+                                        </Button>
+                                        <Button x:Name="ZoomOutButton"
+                                                x:Uid="ZoomOutButton"
+                                                Style="{StaticResource ToolbarButtonStyle}"
+                                                Width="28"
+                                                Height="28"
+                                                Padding="0"
+                                                Click="OnZoomOutClick">
+                                            <FontIcon Glyph="&#xE71F;" FontSize="12" />
+                                        </Button>
+                                        <Button x:Name="ZoomInButton"
+                                                x:Uid="ZoomInButton"
+                                                Style="{StaticResource ToolbarButtonStyle}"
+                                                Width="28"
+                                                Height="28"
+                                                Padding="0"
+                                                Click="OnZoomInClick">
+                                            <FontIcon Glyph="&#xE8A3;" FontSize="12" />
+                                        </Button>
+                                        <Button x:Name="ZoomFitButton"
+                                                x:Uid="ZoomFitButton"
+                                                Style="{StaticResource ToolbarButtonStyle}"
+                                                Height="28"
+                                                Padding="8,0,8,0"
+                                                Click="OnZoomFitClick">
+                                            <TextBlock x:Uid="ZoomFitLabel" Text="Fit" FontSize="12" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
                         </Grid>
                     </Border>
 
                     <Border x:Name="InspectorPanel"
-                            Grid.Column="1"
+                            Grid.Column="4"
                             Width="300"
-                            Margin="12,0,0,0"
-                            CornerRadius="6"
-                            BorderThickness="1"
-                            Visibility="Collapsed"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                            Visibility="Collapsed">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -665,9 +731,14 @@
                 </Grid>
 
                 <!-- ============================== status bar ============================ -->
-                <Grid Grid.Row="4" Height="34" Margin="20,4,20,4">
+                <Grid Grid.Row="4"
+                      Height="32"
+                      Padding="20,0,20,0"
+                      BorderThickness="0,1,0,0"
+                      BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
                     <StackPanel Orientation="Horizontal" Spacing="18" VerticalAlignment="Center">
                         <TextBlock x:Name="StatusEndpointsText" Style="{StaticResource StatusTextStyle}" />
+                        <TextBlock x:Name="StatusStepsText" Style="{StaticResource StatusTextStyle}" />
                         <TextBlock x:Name="StatusConnectionsText" Style="{StaticResource StatusTextStyle}" />
                         <TextBlock x:Name="StatusRateText" Style="{StaticResource StatusTextStyle}" />
                     </StackPanel>
@@ -676,7 +747,6 @@
                                Style="{StaticResource StatusTextStyle}" />
                 </Grid>
             </Grid>
-        </NavigationView>
 
         <!-- ================================== dialogs =================================== -->
         <ContentDialog x:Name="SavePatchDialog"
@@ -691,7 +761,7 @@
             <StackPanel Spacing="14" Width="480">
                 <TextBlock x:Name="SavePatchIntroText"
                            x:Uid="SavePatchIntroText"
-                           Text="Patches are files in Documents, MIDI Patchbay. You can copy one to another PC, but the endpoints have to be matched there."
+                           Text="Patches are files in Documents › MIDI Patches. You can copy one to another PC, but the endpoints have to be matched there."
                            TextWrapping="Wrap"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 <TextBox x:Name="SavePatchNameBox"
@@ -716,7 +786,7 @@
                              GroupName="SavePatchKind"
                              IsChecked="True" />
                 <TextBlock x:Uid="SavePatchKeepHint"
-                           Text="Saved to disk and offered again next time Patchbay starts."
+                           Text="Saved to disk and offered again next time Windows MIDI Patchbay starts."
                            FontSize="11"
                            Margin="30,-8,0,0"
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
@@ -725,7 +795,7 @@
                              Content="Temporary"
                              GroupName="SavePatchKind" />
                 <TextBlock x:Uid="SavePatchTemporaryHint"
-                           Text="Routes now, disappears when Patchbay closes. Nothing is written to disk."
+                           Text="Routes now, disappears when Windows MIDI Patchbay closes. Nothing is written to disk."
                            FontSize="11"
                            Margin="30,-8,0,0"
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
@@ -747,7 +817,7 @@
             </ContentDialog.Resources>
             <StackPanel Spacing="12" Width="480">
                 <TextBlock x:Uid="CreateLoopbackIntroText"
-                           Text="A loopback is what a DAW or another app connects to. Patchbay can only route a message source to a message destination, so a loopback is how you get messages into software that is not on this canvas."
+                           Text="A loopback is what a DAW or another app connects to. Windows MIDI Patchbay can only route a message source to a message destination, so a loopback is how you get messages into software that is not on this canvas."
                            TextWrapping="Wrap"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 <RadioButton x:Name="LoopbackBasicRadio"
@@ -756,7 +826,7 @@
                              GroupName="LoopbackKind"
                              IsChecked="True" />
                 <TextBlock x:Uid="LoopbackBasicHint"
-                           Text="One endpoint that echoes back to itself. The simplest thing for most apps."
+                           Text="One endpoint that echoes back to itself. The simplest thing for most apps, but not for a MIDI-CI responder."
                            FontSize="11"
                            Margin="30,-8,0,0"
                            TextWrapping="Wrap"
@@ -766,7 +836,7 @@
                              Content="MIDI 2.0 loopback pair (A and B)"
                              GroupName="LoopbackKind" />
                 <TextBlock x:Uid="LoopbackPairHint"
-                           Text="Two endpoints. Send into A, read from B. UMP, full MIDI 2.0."
+                           Text="Two endpoints. What goes into one comes out of the other. This patch gets A, so connect your app to B. Use a pair for a MIDI-CI responder: its answers reach the app, and nothing comes back."
                            FontSize="11"
                            Margin="30,-8,0,0"
                            TextWrapping="Wrap"
@@ -778,78 +848,14 @@
                          TextChanged="OnLoopbackNameChanged" />
                 <CheckBox x:Name="LoopbackKeepCheck"
                           x:Uid="LoopbackKeepCheck"
-                          Content="Keep after Patchbay closes"
+                          Content="Keep after Windows MIDI Patchbay closes"
                           IsChecked="True" />
                 <InfoBar x:Uid="LoopbackInfoBar"
                          Severity="Informational"
                          IsOpen="True"
                          IsClosable="False"
-                         Message="Loopbacks are real MIDI endpoints on this PC. Every app sees them, not just Patchbay." />
+                         Message="Loopbacks are real MIDI endpoints on this PC. Every app sees them, not just Windows MIDI Patchbay." />
                 <TextBlock x:Name="LoopbackErrorText"
-                           FontSize="12"
-                           TextWrapping="Wrap"
-                           Visibility="Collapsed"
-                           Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
-            </StackPanel>
-        </ContentDialog>
-
-        <ContentDialog x:Name="QuickPatchDialog"
-                       x:Uid="QuickPatchDialog"
-                       Title="New quick patch"
-                       PrimaryButtonText="Create"
-                       CloseButtonText="Cancel"
-                       DefaultButton="Primary">
-            <ContentDialog.Resources>
-                <x:Double x:Key="ContentDialogMaxWidth">560</x:Double>
-            </ContentDialog.Resources>
-            <StackPanel Spacing="12" Width="480">
-                <TextBlock x:Uid="QuickPatchIntroText"
-                           Text="One route, from one endpoint to another. It goes on the canvas as an ordinary patch, so you can add to it, edit it or save it afterwards."
-                           TextWrapping="Wrap"
-                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-
-                <Grid ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <ComboBox x:Name="QuickPatchSourceCombo"
-                              x:Uid="QuickPatchSourceCombo"
-                              Header="Source"
-                              HorizontalAlignment="Stretch"
-                              SelectionChanged="OnQuickPatchSourceChanged" />
-                    <ComboBox x:Name="QuickPatchSourceGroupCombo"
-                              x:Uid="QuickPatchSourceGroupCombo"
-                              Grid.Column="1"
-                              Width="190"
-                              Header="Group"
-                              SelectionChanged="OnQuickPatchGroupChanged" />
-                </Grid>
-
-                <FontIcon Glyph="&#xE70D;"
-                          FontSize="14"
-                          HorizontalAlignment="Center"
-                          Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-
-                <Grid ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <ComboBox x:Name="QuickPatchDestinationCombo"
-                              x:Uid="QuickPatchDestinationCombo"
-                              Header="Destination"
-                              HorizontalAlignment="Stretch"
-                              SelectionChanged="OnQuickPatchDestinationChanged" />
-                    <ComboBox x:Name="QuickPatchDestinationGroupCombo"
-                              x:Uid="QuickPatchDestinationGroupCombo"
-                              Grid.Column="1"
-                              Width="190"
-                              Header="Group"
-                              SelectionChanged="OnQuickPatchGroupChanged" />
-                </Grid>
-
-                <TextBlock x:Name="QuickPatchErrorText"
                            FontSize="12"
                            TextWrapping="Wrap"
                            Visibility="Collapsed"
@@ -880,91 +886,66 @@
             </StackPanel>
         </ContentDialog>
 
-        <ContentDialog x:Name="FilterDialog"
-                       x:Uid="FilterDialog"
-                       Title="Filters"
-                       PrimaryButtonText="Apply"
-                       SecondaryButtonText="Clear filters"
+        <!-- Follows messages through the patch without sending anything. Built in code. -->
+        <ContentDialog x:Name="TraceDialog"
+                       x:Uid="TraceDialog"
+                       Title="Trace messages"
+                       PrimaryButtonText="Trace"
                        CloseButtonText="Cancel"
                        DefaultButton="Primary">
             <ContentDialog.Resources>
-                <x:Double x:Key="ContentDialogMaxWidth">900</x:Double>
-                <x:Double x:Key="ContentDialogMaxHeight">760</x:Double>
+                <x:Double x:Key="ContentDialogMaxWidth">640</x:Double>
             </ContentDialog.Resources>
-            <Grid Width="760" MaxHeight="520">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-
-                <TextBlock x:Uid="FilterDialogIntroText"
-                           Grid.Row="0"
-                           Text="Everything is allowed until you clear something here. A message has to pass every section to be sent on."
-                           TextWrapping="Wrap"
-                           Margin="0,0,0,12"
-                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,14,0">
-                    <StackPanel x:Name="FilterContent" Spacing="16" />
-                </ScrollViewer>
-
-                <Border Grid.Row="2"
-                        Margin="0,14,0,0"
-                        Padding="12,10,12,10"
-                        CornerRadius="6"
-                        BorderThickness="1"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
-                    <TextBlock x:Name="FilterSummaryText"
-                               FontSize="12"
-                               TextWrapping="Wrap"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                </Border>
-            </Grid>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="540" Padding="0,0,14,0">
+                <StackPanel x:Name="TraceDialogContent" Spacing="12" Width="520" />
+            </ScrollViewer>
         </ContentDialog>
 
-        <ContentDialog x:Name="TransformDialog"
-                       x:Uid="TransformDialog"
-                       Title="Transforms"
+        <!-- One dialog for every kind of step. Its sections are built in code for the kind being
+             edited, and it works on a copy, so Cancel leaves a running patch alone. -->
+        <ContentDialog x:Name="BlockDialog"
+                       x:Uid="BlockDialog"
+                       Title="Step"
                        PrimaryButtonText="Apply"
-                       SecondaryButtonText="Clear transforms"
+                       SecondaryButtonText="Reset"
                        CloseButtonText="Cancel"
                        DefaultButton="Primary">
+            <!-- Sized in code to the window, so a long step shows all at once on a large screen. The
+                 template's own limits are lifted so the content decides. -->
             <ContentDialog.Resources>
-                <x:Double x:Key="ContentDialogMaxWidth">900</x:Double>
-                <x:Double x:Key="ContentDialogMaxHeight">760</x:Double>
+                <x:Double x:Key="ContentDialogMaxWidth">10000</x:Double>
+                <x:Double x:Key="ContentDialogMaxHeight">10000</x:Double>
             </ContentDialog.Resources>
-            <Grid Width="760" MaxHeight="520">
+            <Grid x:Name="BlockDialogBody" Width="760" MaxHeight="520">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock x:Uid="TransformDialogIntroText"
+                <TextBlock x:Name="BlockDialogIntroText"
                            Grid.Row="0"
-                           Text="Transforms run after the filters, on the copy sent to this destination. Nothing here changes what any other connection carries."
                            TextWrapping="Wrap"
                            Margin="0,0,0,12"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,14,0">
-                    <StackPanel x:Name="TransformContent" Spacing="16" />
+                    <StackPanel x:Name="BlockDialogContent" Spacing="16" />
                 </ScrollViewer>
 
-                <Border Grid.Row="2"
-                        Margin="0,14,0,0"
-                        Padding="12,10,12,10"
-                        CornerRadius="6"
-                        BorderThickness="1"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
-                    <TextBlock x:Name="TransformSummaryText"
+                <Grid Grid.Row="2" Margin="0,14,0,0">
+                    <Rectangle RadiusX="5.5"
+                               RadiusY="5.5"
+                               StrokeThickness="1"
+                               UseLayoutRounding="False"
+                               Stroke="{ThemeResource CardStrokeColorDefaultBrush}"
+                               Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
+                    <TextBlock x:Name="BlockSummaryText"
+                               Margin="13,11,13,11"
                                FontSize="12"
                                TextWrapping="Wrap"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                </Border>
+                </Grid>
             </Grid>
         </ContentDialog>
     </Grid>

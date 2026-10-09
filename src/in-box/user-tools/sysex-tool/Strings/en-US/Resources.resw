@@ -249,6 +249,9 @@
   <data name="SettingsTitle" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="UmpPrimerLink" xml:space="preserve">
+    <value>How to read and understand UMP messages</value>
+  </data>
   <data name="SettingsThemeLabel" xml:space="preserve">
     <value>Theme</value>
   </data>

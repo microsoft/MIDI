@@ -114,6 +114,7 @@ namespace appshared = ::winrt::MidiAppShared;
 #include "WindowChrome.h"
 #include "MidiEndpointHelpers.h"
 #include "AppearanceFlyout.h"
+#include "UmpPrimerLink.h"
 
 // XAML generated type info activates these shared types by name, so their declarations have to
 // be reachable from every translation unit.

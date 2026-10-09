@@ -278,6 +278,35 @@ namespace WindowsMidiServicesCapabilityInquiry
 
             return true;
         }
+
+        inline bool AppendUnsigned(
+            _Out_writes_opt_(capacity) char* const buffer,
+            _In_ size_t const capacity,
+            _Inout_ size_t& length,
+            _In_ uint32_t const value
+        ) noexcept
+        {
+            char text[10]{};
+            size_t digits = 0;
+
+            uint32_t remaining = value;
+
+            do
+            {
+                text[digits++] = static_cast<char>('0' + (remaining % 10));
+                remaining /= 10;
+            } while (remaining != 0);
+
+            while (digits > 0)
+            {
+                if (!AppendCharacter(buffer, capacity, length, text[--digits]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 
     // Writes the JSON array. Pass a null buffer to measure the length first. Returns zero when the
@@ -429,7 +458,66 @@ namespace WindowsMidiServicesCapabilityInquiry
         return ok ? length : 0;
     }
 
-    // Advertises which resources this device will answer for.
+    // What a ResourceList entry means by the properties it leaves out. M2-103-UM section 14 sets
+    // the general defaults, and a resource's own specification may set others, which a device
+    // "shall not" override for a resource the MMA and AMEI define. A reader has to apply these, or
+    // the minimal {"resource":"ProgramList"} reads as a list that cannot be paged.
+    struct ResourceListDefaults
+    {
+        bool RequireResourceId{ false };
+        bool CanPaginate{ false };
+
+        // "none", "full" or "partial".
+        char const* CanSet{ "none" };
+    };
+
+    inline ResourceListDefaults ResourceListDefaultsFor(_In_opt_z_ char const* const resource) noexcept
+    {
+        struct KnownResource
+        {
+            char const* Name;
+            ResourceListDefaults Defaults;
+        };
+
+        // Only the resources whose specification departs from the general defaults. M2-117-UM
+        // spells the key "requireId" in its own tables for ChCtrlList and CtrlMapList.
+        static constexpr KnownResource Known[]
+        {
+            { "ProgramList",    { true,  true,  "none" } },     // M2-107-UM section 2.4
+            { "ChCtrlList",     { true,  false, "none" } },     // M2-117-UM section 3.2
+            { "CtrlMapList",    { true,  false, "none" } },     // M2-117-UM section 4.2
+            { "State",          { true,  false, "full" } },     // M2-111-UM section 3.4
+            { "CurrentMode",    { false, false, "full" } },     // M2-106-UM
+            { "BasicChannelRx", { false, false, "full" } },     // M2-108-UM
+            { "BasicChannelTx", { false, false, "full" } },     // M2-108-UM
+            { "LocalOn",        { false, false, "full" } },     // M2-109-UM
+            { "ExternalSync",   { false, false, "full" } },     // M2-112-UM
+        };
+
+        if (resource != nullptr)
+        {
+            for (auto const& known : Known)
+            {
+                size_t i = 0;
+
+                while (known.Name[i] != '\0' && known.Name[i] == resource[i])
+                {
+                    i++;
+                }
+
+                // Names are case sensitive, so "programList" is somebody else's resource.
+                if (known.Name[i] == '\0' && resource[i] == '\0')
+                {
+                    return known.Defaults;
+                }
+            }
+        }
+
+        return ResourceListDefaults{};
+    }
+
+    // Advertises which resources this device will answer for. Each flag says what is true of the
+    // resource; the builder writes only those its specification does not already imply.
     struct ResourceListEntry
     {
         char const* Resource{ nullptr };
@@ -440,8 +528,7 @@ namespace WindowsMidiServicesCapabilityInquiry
 
         bool CanSubscribe{ false };
 
-        // Declaring this obliges every reply for the resource to carry "totalCount", per
-        // M2-103-UM section 8.6.2.
+        // Obliges every reply for the resource to carry "totalCount", per M2-103-UM section 8.6.2.
         bool CanPaginate{ false };
     };
 
@@ -471,11 +558,14 @@ namespace WindowsMidiServicesCapabilityInquiry
             ok = ok && Details::AppendText(buffer, limit, length, "{\"resource\":");
             ok = ok && Details::AppendJsonString(buffer, limit, length, entries[i].Resource);
 
-            // Both default to false, so they are written only when they are true. M2-105-UM
-            // section 4.7 shows a bare resource name as a complete entry.
-            if (entries[i].RequireResourceId)
+            // A bare name is a complete entry (M2-105-UM section 4.7), so a value the resource's
+            // specification already implies is left out.
+            auto const defaults = ResourceListDefaultsFor(entries[i].Resource);
+
+            if (entries[i].RequireResourceId != defaults.RequireResourceId)
             {
-                ok = ok && Details::AppendText(buffer, limit, length, ",\"requireResId\":true");
+                ok = ok && Details::AppendText(buffer, limit, length,
+                    entries[i].RequireResourceId ? ",\"requireResId\":true" : ",\"requireResId\":false");
             }
 
             if (entries[i].CanSubscribe)
@@ -483,9 +573,10 @@ namespace WindowsMidiServicesCapabilityInquiry
                 ok = ok && Details::AppendText(buffer, limit, length, ",\"canSubscribe\":true");
             }
 
-            if (entries[i].CanPaginate)
+            if (entries[i].CanPaginate != defaults.CanPaginate)
             {
-                ok = ok && Details::AppendText(buffer, limit, length, ",\"canPaginate\":true");
+                ok = ok && Details::AppendText(buffer, limit, length,
+                    entries[i].CanPaginate ? ",\"canPaginate\":true" : ",\"canPaginate\":false");
             }
 
             ok = ok && Details::AppendCharacter(buffer, limit, length, '}');
@@ -612,6 +703,131 @@ namespace WindowsMidiServicesCapabilityInquiry
 
                 ok = ok && Details::AppendCharacter(buffer, limit, length, ']');
             }
+
+            ok = ok && Details::AppendCharacter(buffer, limit, length, '}');
+        }
+
+        ok = ok && Details::AppendCharacter(buffer, limit, length, ']');
+
+        return ok ? length : 0;
+    }
+
+
+    // One controller a channel responds to, as listed by the ChCtrlList and AllCtrlList resources
+    // of M2-117-UM. Values are thirty two bit, the way the MIDI 2.0 Protocol carries them.
+    struct ControllerListEntry
+    {
+        // UTF-8, owned by the caller and only read during the call.
+        char const* Title{ nullptr };
+
+        // "cc", "chPress", "pPress", "rpn", "nrpn", "pBend", "pnrc", "pnac" or "pnp".
+        char const* ControllerType{ nullptr };
+
+        // The controller number, or the bank and then the index for a registered or assignable
+        // controller. Pressure and pitch bend have none.
+        uint8_t Index[2]{};
+        uint8_t IndexCount{ 0 };
+
+        // 1 is essential and 5 is hidden. Zero leaves it out.
+        uint8_t Priority{ 0 };
+
+        bool HasDefault{ false };
+        uint32_t Default{ 0 };
+
+        // Both mean "absolute" when left out, so a tone generator that sends nothing says "none".
+        char const* Transmit{ nullptr };
+        char const* Recognize{ nullptr };
+
+        // How many of the thirty two bits the device acts on. Zero leaves it out, which means 32.
+        uint8_t SignificantBits{ 0 };
+
+        char const* ParameterPath{ nullptr };
+        char const* TypeHint{ nullptr };
+    };
+
+    inline size_t BuildControllerListJson(
+        _In_reads_(entryCount) ControllerListEntry const* const entries,
+        _In_ size_t const entryCount,
+        _Out_writes_opt_(capacity) char* const buffer,
+        _In_ size_t const capacity
+    ) noexcept
+    {
+        if (entries == nullptr && entryCount > 0)
+        {
+            return 0;
+        }
+
+        const size_t limit = (buffer == nullptr) ? SIZE_MAX : capacity;
+
+        size_t length = 0;
+        bool ok = true;
+
+        const auto appendOptionalString = [&](char const* name, char const* value)
+        {
+            if (value != nullptr)
+            {
+                ok = ok && Details::AppendText(buffer, limit, length, name);
+                ok = ok && Details::AppendJsonString(buffer, limit, length, value);
+            }
+        };
+
+        ok = ok && Details::AppendCharacter(buffer, limit, length, '[');
+
+        for (size_t i = 0; ok && i < entryCount; i++)
+        {
+            const auto& entry = entries[i];
+
+            if (i > 0)
+            {
+                ok = ok && Details::AppendCharacter(buffer, limit, length, ',');
+            }
+
+            ok = ok && Details::AppendText(buffer, limit, length, "{\"title\":");
+            ok = ok && Details::AppendJsonString(buffer, limit, length, entry.Title);
+
+            ok = ok && Details::AppendText(buffer, limit, length, ",\"ctrlType\":");
+            ok = ok && Details::AppendJsonString(buffer, limit, length, entry.ControllerType);
+
+            if (entry.IndexCount > 0)
+            {
+                ok = ok && Details::AppendText(buffer, limit, length, ",\"ctrlIndex\":[");
+
+                for (uint8_t index = 0; ok && index < entry.IndexCount && index < 2; index++)
+                {
+                    if (index > 0)
+                    {
+                        ok = ok && Details::AppendCharacter(buffer, limit, length, ',');
+                    }
+
+                    ok = ok && Details::AppendNumber(buffer, limit, length, entry.Index[index] & 0x7F);
+                }
+
+                ok = ok && Details::AppendCharacter(buffer, limit, length, ']');
+            }
+
+            if (entry.Priority != 0)
+            {
+                ok = ok && Details::AppendText(buffer, limit, length, ",\"priority\":");
+                ok = ok && Details::AppendNumber(buffer, limit, length, entry.Priority);
+            }
+
+            if (entry.HasDefault)
+            {
+                ok = ok && Details::AppendText(buffer, limit, length, ",\"default\":");
+                ok = ok && Details::AppendUnsigned(buffer, limit, length, entry.Default);
+            }
+
+            appendOptionalString(",\"transmit\":", entry.Transmit);
+            appendOptionalString(",\"recognize\":", entry.Recognize);
+
+            if (entry.SignificantBits != 0)
+            {
+                ok = ok && Details::AppendText(buffer, limit, length, ",\"numSigBits\":");
+                ok = ok && Details::AppendNumber(buffer, limit, length, entry.SignificantBits);
+            }
+
+            appendOptionalString(",\"paramPath\":", entry.ParameterPath);
+            appendOptionalString(",\"typeHint\":", entry.TypeHint);
 
             ok = ok && Details::AppendCharacter(buffer, limit, length, '}');
         }

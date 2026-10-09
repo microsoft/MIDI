@@ -1653,7 +1653,8 @@ namespace winrt::midisysextool::implementation
                         strong->UpdateRowBrushes();
                     }
                 },
-                extra);
+                extra,
+                midiapp::MakeUmpPrimerLink(res::GetString(L"UmpPrimerLink")));
         }
         MIDI_SYSEXTOOL_CATCH_AND_LOG(L"Unable to open the settings.")
     }

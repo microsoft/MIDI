@@ -19,6 +19,13 @@ struct MidiNetworkClientDefinition
     // NETWORK_ERROR_CODE_* saying why the last invitation did not open a session, or 0
     uint32_t LastErrorCode{ 0 };
 
+    // A remote can have several addresses. They are tried in turn: the one the last session
+    // opened on first, then the others in the order Windows prefers. See midi_network_addresses.h.
+    winrt::hstring AttemptAddress{};        // where the last invitation went
+    uint32_t AttemptAddressCount{ 0 };      // how many addresses the remote had then
+    winrt::hstring ConnectedAddress{};      // where the last session opened
+    uint32_t UnansweredAttempts{ 0 };       // invitations nobody answered since then
+
     winrt::guid EntryIdentifier;            // internal
     bool Enabled{ true };
 

@@ -29,7 +29,7 @@ namespace glass
         namespace mjson = winrt::Windows::Data::Json;
 
         constexpr wchar_t CommentText[] =
-            L"Windows MIDI Glass theme. Written by the MIDI Glass app. The MIDI service does not read this file.";
+            L"Windows MIDI Glass theme. Written by the Windows MIDI Glass app. The MIDI service does not read this file.";
 
         constexpr wchar_t KeyComment[] = L"_comment";
         constexpr wchar_t KeyFileVersion[] = L"fileVersion";
@@ -496,6 +496,41 @@ namespace glass
                 return (value != nullptr && value.ValueType() == mjson::JsonValueType::Object)
                     ? value.GetObject()
                     : nullptr;
+            }
+            catch (...)
+            {
+                return nullptr;
+            }
+        }
+
+        // The keys this build writes are the ones it reads, so anything else came from a newer build.
+        mjson::JsonObject UnknownThemeKeys(_In_ mjson::JsonObject const& root) noexcept
+        {
+            try
+            {
+                static std::vector<std::wstring> const known = []()
+                    {
+                        std::vector<std::wstring> keys{ KeyComment, KeyFileVersion, midiapp::ProvenanceKey };
+
+                        JsonTextWriter writer{};
+                        writer.BeginObject();
+                        WriteThemeBody(writer, Theme{});
+                        writer.EndObject();
+
+                        mjson::JsonObject written{ nullptr };
+
+                        if (mjson::JsonObject::TryParse(winrt::hstring{ writer.Text() }, written) && written != nullptr)
+                        {
+                            for (auto const& pair : written)
+                            {
+                                keys.push_back(std::wstring{ pair.Key() });
+                            }
+                        }
+
+                        return keys;
+                    }();
+
+                return CaptureUnknown(root, std::vector<std::wstring_view>{ known.begin(), known.end() });
             }
             catch (...)
             {
@@ -1027,6 +1062,8 @@ namespace glass
 
             result.IsFromNewerVersion = version > ThemeFileVersion;
             result.Value = ReadThemeObject(root);
+            result.Value.Provenance = midiapp::ReadProvenance(root);
+            result.Value.Unknown = UnknownThemeKeys(root);
             result.Succeeded = true;
         }
         catch (...)
@@ -1261,7 +1298,13 @@ namespace glass
             writer.Write(KeyComment, std::wstring_view{ CommentText });
             writer.Write(KeyFileVersion, static_cast<int64_t>(ThemeFileVersion));
 
+            if (theme.Provenance.has_value() && !theme.Provenance->IsEmpty())
+            {
+                writer.WriteRaw(midiapp::ProvenanceKey, midiapp::ProvenanceToJsonText(*theme.Provenance, writer.Depth()));
+            }
+
             WriteThemeBody(writer, theme);
+            WriteUnknown(writer, theme.Unknown);
 
             writer.EndObject();
 
@@ -1416,6 +1459,11 @@ namespace glass
                 CP_UTF8, MB_ERR_INVALID_CHARS, bytes.data(), static_cast<int>(bytes.size()), text.data(), needed);
 
             result = ReadThemeFromJson(text);
+
+            if (result.Succeeded)
+            {
+                result.Value.FilePath = filePath;
+            }
         }
         catch (...)
         {

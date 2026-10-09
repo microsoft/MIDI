@@ -346,7 +346,17 @@ namespace winrt::midinetworksetup::implementation
 
                 int32_t selectedIndex{ 0 };
 
-                for (auto const multiple : { 0u, 1u, 2u, 4u, 8u, 16u, 32u })
+                std::vector<uint32_t> multiples{ 0u, 1u, 2u, 4u, 8u, 16u, 32u };
+
+                // The service takes any whole multiple up to 32, so one set some other way is listed
+                // too, rather than shown as no limit and then saved over.
+                if (selectedMultiple <= multiples.back() &&
+                    std::find(multiples.begin(), multiples.end(), selectedMultiple) == multiples.end())
+                {
+                    multiples.insert(std::upper_bound(multiples.begin(), multiples.end(), selectedMultiple), selectedMultiple);
+                }
+
+                for (auto const multiple : multiples)
                 {
                     if (multiple == selectedMultiple)
                     {
@@ -650,6 +660,7 @@ namespace winrt::midinetworksetup::implementation
             FillSendSpeedLimitChoices(ConnectSendSpeedLimitComboBox(), 0);
             ConnectReduceSendSpeedCheckBox().IsChecked(false);
             ConnectReduceSendSpeedPanel().Visibility(offerReduceAutomatically ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            ConnectRtpNoReduceSendSpeedText().Visibility(offerReduceAutomatically ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
 
             ConnectNameDialog().XamlRoot(Content().XamlRoot());
 
@@ -1171,9 +1182,10 @@ namespace winrt::midinetworksetup::implementation
             static_cast<uint8_t>(MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT) :
             savedClient.FallbackMidi1PortCount();
 
-        // How fast this PC sends to the device, from what was saved, or from the running entry
-        // when nothing was. An RTP-MIDI entry is changed by creating it again, which needs what
-        // was saved to copy everything else from, so it can only be changed once it is saved.
+        // How fast this PC sends to the device, from what was saved. As with the Change link on its
+        // row, only a saved entry can be changed: a Network MIDI 2.0 change also carries the MIDI
+        // 1.0 port settings, which only the saved entry records, and an RTP-MIDI entry is changed
+        // by creating it again from what was saved.
         winrt::guid clientEntryId{};
         auto const hasClientEntry = TryParseKey(clientKey, clientEntryId);
 
@@ -1208,19 +1220,6 @@ namespace winrt::midinetworksetup::implementation
                 currentSendSpeedLimit = static_cast<uint32_t>(savedClient.SendSpeedLimit());
                 currentReduceSendSpeed = savedClient.ReduceSendSpeedAutomatically();
                 canChangeSendSpeed = true;
-            }
-            else if (hasClientEntry)
-            {
-                for (auto const& configured : midi2net::MidiNetworkTransportManager::GetConfiguredClients())
-                {
-                    if (configured != nullptr && configured.ClientId() == clientEntryId)
-                    {
-                        currentSendSpeedLimit = static_cast<uint32_t>(configured.SendSpeedLimit());
-                        currentReduceSendSpeed = configured.ReduceSendSpeedAutomatically();
-                        canChangeSendSpeed = true;
-                        break;
-                    }
-                }
             }
         }
         catch (...)
@@ -1281,6 +1280,10 @@ namespace winrt::midinetworksetup::implementation
             CustomizeReduceSendSpeedCheckBox().IsChecked(currentReduceSendSpeed);
             CustomizeSendSpeedPanel().Visibility(canChangeSendSpeed ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             CustomizeReduceSendSpeedPanel().Visibility(isRtpMidi ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+            CustomizeRtpNoReduceSendSpeedText().Visibility(isRtpMidi ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            // an RTP-MIDI entry which is not saved has nothing for the second column
+            CustomizeConnectionPanel().Visibility((!isRtpMidi || canChangeSendSpeed) ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
             CustomizeDialog().XamlRoot(Content().XamlRoot());
 
@@ -3036,6 +3039,7 @@ namespace winrt::midinetworksetup::implementation
 
             ChangeReduceSendSpeedCheckBox().IsChecked(currentReduceAutomatically);
             ChangeReduceSendSpeedPanel().Visibility(offerReduceAutomatically ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            ChangeRtpNoReduceSendSpeedText().Visibility(offerReduceAutomatically ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
 
             ChangeSendSpeedDevicePanel().Visibility(offerHostSpeed ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             ChangeSendSpeedUseHostCheckBox().Content(winrt::box_value(res::FormatString(L"ChangeSendSpeedUseHostFormat", hostSendSpeedText)));

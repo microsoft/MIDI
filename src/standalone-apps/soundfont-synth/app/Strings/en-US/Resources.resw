@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ==================================== App ==================================== -->
+  <data name="AppDisplayName" xml:space="preserve">
+    <value>MIDI 2.0 SoundFont Synth</value>
+    <comment>Product name. Also the MIDI session name and the model name the synths report over MIDI-CI.</comment>
+  </data>
+  <data name="PreviewChicletText.Text" xml:space="preserve">
+    <value>PREVIEW</value>
+    <comment>Shown in the title bar. All capitals on purpose, so it reads as a badge.</comment>
+  </data>
+  <data name="DefaultSynthName" xml:space="preserve">
+    <value>SoundFont Synth</value>
+    <comment>Used when a file name gives nothing to name a synth after. 31 characters at most.</comment>
+  </data>
+  <data name="VirtualDeviceDescriptionFormat" xml:space="preserve">
+    <value>SoundFont synth playing {0}</value>
+    <comment>The description Windows shows for a synth's MIDI endpoint. {0} is the SoundFont file name.</comment>
+  </data>
+  <data name="VirtualDeviceManufacturer" xml:space="preserve">
+    <value>Microsoft</value>
+    <comment>The manufacturer Windows shows for a synth's MIDI endpoint.</comment>
+  </data>
+
+  <!-- ================================== Title bar ================================== -->
+  <data name="SettingsToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Always on top</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep this window above other windows</value>
+  </data>
+
+  <!-- ================================== Appearance ================================== -->
+  <data name="AppearanceTitle" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="AppearanceTheme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="AppearanceThemeSystem" xml:space="preserve">
+    <value>Use system setting</value>
+  </data>
+  <data name="AppearanceThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="AppearanceThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="AppearanceBackdrop" xml:space="preserve">
+    <value>Window background</value>
+  </data>
+  <data name="AppearanceBackdropSolid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="AppearanceBackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="AppearanceBackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="AppearanceCustomColor" xml:space="preserve">
+    <value>Use a custom window color</value>
+  </data>
+  <data name="AppearanceColorPickerName" xml:space="preserve">
+    <value>Window color</value>
+  </data>
+
+  <!-- =================================== Settings =================================== -->
+  <data name="SettingsAudioHeading" xml:space="preserve">
+    <value>Audio output</value>
+  </data>
+  <data name="SettingsAudioDevice" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="SettingsAudioDeviceDefault" xml:space="preserve">
+    <value>Windows default</value>
+  </data>
+  <data name="SettingsAudioDeviceMissing" xml:space="preserve">
+    <value>The device you chose (not connected)</value>
+    <comment>Shown when the saved audio device is unplugged. The Windows default plays until it comes back.</comment>
+  </data>
+  <data name="SettingsAudioMode" xml:space="preserve">
+    <value>Mode</value>
+  </data>
+  <data name="AudioModeShared" xml:space="preserve">
+    <value>Shared</value>
+  </data>
+  <data name="AudioModeExclusive" xml:space="preserve">
+    <value>Exclusive</value>
+  </data>
+  <data name="SettingsAudioModeHint" xml:space="preserve">
+    <value>Exclusive mode has the lowest latency. While a synth plays, no other app can make sound through that device.</value>
+  </data>
+  <data name="SettingsAudioBuffer" xml:space="preserve">
+    <value>Exclusive mode buffer</value>
+  </data>
+  <data name="MillisecondsFormat" xml:space="preserve">
+    <value>{0} ms</value>
+  </data>
+  <data name="SettingsAppHeading" xml:space="preserve">
+    <value>App</value>
+  </data>
+  <data name="SettingsStartWithWindows" xml:space="preserve">
+    <value>Start with Windows</value>
+  </data>
+  <data name="SettingsStartWithWindowsHint" xml:space="preserve">
+    <value>Your synths are ready for other apps as soon as you sign in.</value>
+  </data>
+  <data name="SettingsNotificationArea" xml:space="preserve">
+    <value>Keep running in the notification area</value>
+  </data>
+  <data name="SettingsNotificationAreaHint" xml:space="preserve">
+    <value>Closing or minimizing the window keeps your synths available to other apps. To exit, use the icon in the notification area.</value>
+  </data>
+  <data name="SettingsStartMinimized" xml:space="preserve">
+    <value>Start minimized</value>
+  </data>
+  <data name="StartupDisabledByUser" xml:space="preserve">
+    <value>Starting with Windows is turned off for this app in Settings or Task Manager. Turn it back on there, under Startup apps.</value>
+  </data>
+  <data name="StartupNotChanged" xml:space="preserve">
+    <value>The app couldn't be set to start with Windows.</value>
+  </data>
+
+  <!-- ================================== Synth cards ================================== -->
+  <data name="InUseIcon.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>An app is using this synth</value>
+  </data>
+  <data name="StatusOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="StatusLoading" xml:space="preserve">
+    <value>Loading the SoundFont</value>
+  </data>
+  <data name="StatusReady" xml:space="preserve">
+    <value>Ready for apps to use</value>
+  </data>
+  <data name="StatusReadyPartly" xml:space="preserve">
+    <value>Ready. Some of the bank couldn't be used.</value>
+  </data>
+  <data name="StatusInUse" xml:space="preserve">
+    <value>In use by an app</value>
+  </data>
+  <data name="StatusInUsePartly" xml:space="preserve">
+    <value>In use by an app. Some of the bank couldn't be used.</value>
+  </data>
+  <data name="FailureFileNotFound" xml:space="preserve">
+    <value>Can't find the SoundFont file.</value>
+  </data>
+  <data name="FailureFileUnreadable" xml:space="preserve">
+    <value>Can't read the SoundFont file.</value>
+  </data>
+  <data name="FailureFileTooLarge" xml:space="preserve">
+    <value>This file is too large to load.</value>
+  </data>
+  <data name="FailureNotASoundFont" xml:space="preserve">
+    <value>This file isn't a SoundFont 2 bank, or it's damaged.</value>
+  </data>
+  <data name="FailureNothingPlayable" xml:space="preserve">
+    <value>This bank has nothing that can be played.</value>
+  </data>
+  <data name="FailureCompressedSamples" xml:space="preserve">
+    <value>This bank uses compressed samples (SoundFont 3). Only SoundFont 2 banks work for now.</value>
+  </data>
+  <data name="FailureOutOfMemory" xml:space="preserve">
+    <value>There isn't enough memory to load this bank.</value>
+  </data>
+  <data name="FailureServiceUnavailable" xml:space="preserve">
+    <value>Windows MIDI Services isn't available on this PC.</value>
+  </data>
+  <data name="FailureEndpoint" xml:space="preserve">
+    <value>Windows couldn't create a MIDI endpoint for this synth.</value>
+  </data>
+  <data name="DetailFormat" xml:space="preserve">
+    <value>Programs: {0} · Drum kits: {1}</value>
+  </data>
+  <data name="VoicesFormat" xml:space="preserve">
+    <value>Voices: {0}</value>
+  </data>
+  <data name="VolumeFormat" xml:space="preserve">
+    <value>{:+.1f} dB</value>
+    <comment>The synth's volume in decibels, with its sign. A std::format pattern.</comment>
+  </data>
+  <data name="CardAccessibleNameFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>{0} is the synth's name, {1} its status.</comment>
+  </data>
+  <data name="ToggleAccessibleNameFormat" xml:space="preserve">
+    <value>Turn on {0}</value>
+  </data>
+  <data name="VolumeAccessibleNameFormat" xml:space="preserve">
+    <value>{0} volume</value>
+  </data>
+  <data name="MoreAccessibleNameFormat" xml:space="preserve">
+    <value>More options for {0}</value>
+  </data>
+  <data name="MenuRename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="MenuShowInFolder" xml:space="preserve">
+    <value>Show in File Explorer</value>
+  </data>
+  <data name="MenuRemove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+
+  <!-- ================================== Empty state ================================== -->
+  <data name="EmptyStateTitle.Text" xml:space="preserve">
+    <value>No synths yet</value>
+  </data>
+  <data name="EmptyStateDescription.Text" xml:space="preserve">
+    <value>Add a synth from a SoundFont 2 (.sf2) file anywhere on your PC. Each synth shows up as its own MIDI device that your apps can play.</value>
+  </data>
+
+  <!-- ================================== Command bar ================================== -->
+  <data name="AddSynthButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add a synth</value>
+  </data>
+  <data name="AddSynthButtonText.Text" xml:space="preserve">
+    <value>Add synth</value>
+  </data>
+  <data name="SilenceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Silence all synths</value>
+  </data>
+  <data name="SilenceButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Stop every note on every synth now</value>
+  </data>
+  <data name="SilenceButtonText.Text" xml:space="preserve">
+    <value>Silence all</value>
+  </data>
+  <data name="AudioStatusRunningFormat" xml:space="preserve">
+    <value>{0} · {1} · {2} Hz · {3:.1f} ms</value>
+    <comment>{0} audio device, {1} Shared or Exclusive, {2} sample rate, {3} buffer period. A std::format pattern.</comment>
+  </data>
+  <data name="AudioStatusFallback" xml:space="preserve">
+    <value>(standing in for the device you chose)</value>
+  </data>
+  <data name="AudioStatusIdle" xml:space="preserve">
+    <value>The audio device opens when a synth plays.</value>
+  </data>
+  <data name="AudioStatusNoSynths" xml:space="preserve">
+    <value>Add a synth to get started.</value>
+  </data>
+  <data name="AudioNoDevice" xml:space="preserve">
+    <value>No audio output is available. Synths answer MIDI but make no sound.</value>
+  </data>
+  <data name="AudioDeviceInUse" xml:space="preserve">
+    <value>Another app is using the audio device in exclusive mode.</value>
+  </data>
+  <data name="AudioExclusiveNotAllowed" xml:space="preserve">
+    <value>This audio device doesn't allow exclusive mode. Allow it in Sound settings, or switch to shared mode.</value>
+  </data>
+  <data name="AudioFormatNotSupported" xml:space="preserve">
+    <value>The audio device doesn't accept any format the synth can play in exclusive mode.</value>
+  </data>
+  <data name="AudioOpenFailed" xml:space="preserve">
+    <value>The audio device couldn't be opened.</value>
+  </data>
+
+  <!-- ==================================== Dialogs ==================================== -->
+  <data name="DialogCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="RenameDialog.Title" xml:space="preserve">
+    <value>Rename synth</value>
+  </data>
+  <data name="RenameDialogSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="RenameTextBox.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="RenameHint.Text" xml:space="preserve">
+    <value>Apps show this name in their list of MIDI devices. Keep it short: some older apps cut names off at 31 characters.</value>
+  </data>
+  <data name="RemoveDialog.Title" xml:space="preserve">
+    <value>Remove synth</value>
+  </data>
+  <data name="RemoveDialogRemove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="RemoveDialogFormat" xml:space="preserve">
+    <value>Remove {0}? The SoundFont file isn't deleted.</value>
+  </data>
+  <data name="RemoveDialogInUseFormat" xml:space="preserve">
+    <value>An app is using {0} right now. Removing it takes it out of Windows, and that app loses its sound. The SoundFont file isn't deleted.</value>
+  </data>
+  <data name="ExitDialog.Title" xml:space="preserve">
+    <value>Close MIDI 2.0 SoundFont Synth?</value>
+  </data>
+  <data name="ExitDialogClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="ExitDialogMessageOne" xml:space="preserve">
+    <value>An app is using one of your synths. Closing takes your synths out of Windows, and that app loses its sound.</value>
+  </data>
+  <data name="ExitDialogMessageFormat" xml:space="preserve">
+    <value>Apps are using {0} of your synths. Closing takes your synths out of Windows, and those apps lose their sound.</value>
+  </data>
+  <data name="OpenDialogTitle" xml:space="preserve">
+    <value>Choose a SoundFont</value>
+  </data>
+  <data name="OpenDialogFilter" xml:space="preserve">
+    <value>SoundFont 2 banks</value>
+  </data>
+  <data name="OpenDialogAllFiles" xml:space="preserve">
+    <value>All files</value>
+  </data>
+
+  <!-- ==================================== Errors ==================================== -->
+  <data name="ErrorSaving" xml:space="preserve">
+    <value>Your synths couldn't be saved. Changes may be lost when the app closes.</value>
+  </data>
+  <data name="ErrorTooManySynths" xml:space="preserve">
+    <value>You've reached the limit of 64 synths. Remove one to add another.</value>
+  </data>
+
+  <!-- =============================== Notification area =============================== -->
+  <data name="TrayHeader" xml:space="preserve">
+    <value>Synths</value>
+  </data>
+  <data name="TrayNoSynths" xml:space="preserve">
+    <value>No synths yet</value>
+  </data>
+  <data name="TrayTooltipFormat" xml:space="preserve">
+    <value>MIDI 2.0 SoundFont Synth: {0} of {1} synths on</value>
+  </data>
+  <data name="TrayInUse" xml:space="preserve">
+    <value>In use</value>
+  </data>
+  <data name="TrayFailed" xml:space="preserve">
+    <value>Not working</value>
+  </data>
+  <data name="TraySilence" xml:space="preserve">
+    <value>Silence all synths</value>
+  </data>
+  <data name="TrayOpen" xml:space="preserve">
+    <value>Open MIDI 2.0 SoundFont Synth</value>
+  </data>
+  <data name="TrayExit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+</root>

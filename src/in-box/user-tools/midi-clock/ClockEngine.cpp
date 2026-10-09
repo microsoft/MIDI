@@ -353,7 +353,14 @@ namespace midiclock
 
         try
         {
-            std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+            // The UI thread asks many times a second, and a start or stop holds this lock while
+            // it waits on the service.
+            std::unique_lock<std::recursive_mutex> const guard{ m_lock, std::try_to_lock };
+
+            if (!guard.owns_lock())
+            {
+                return false;
+            }
 
             auto const entry = m_running.find(id);
 
@@ -362,7 +369,7 @@ namespace midiclock
                 return false;
             }
 
-            position = entry->second.TimeCode->CurrentPosition();
+            position = entry->second.TimeCode->PositionAt(midi2::MidiClock::Now());
 
             return true;
         }

@@ -1,15 +1,15 @@
 ---
 layout: kb
-title: How to control your DAW with Mackie Control in MIDI Glass
+title: How to control your DAW with Mackie Control in Windows MIDI Glass
 audience: everyone
-description: Use Windows MIDI Glass as a Mackie Control surface, with faders your DAW moves and buttons your DAW lights, and choose how MIDI Glass talks to each of your devices.
+description: Use Windows MIDI Glass as a Mackie Control surface, with faders your DAW moves and buttons your DAW lights, and choose how Windows MIDI Glass talks to each of your devices.
 categories:
   - Getting Started
 ---
 
-Windows MIDI Glass ("MIDI Glass") is the Windows MIDI Services app for building your own touch control surface. Most DAWs can be run from a **Mackie Control** surface: a desk of faders, knobs and buttons that moves and lights up along with the DAW. MIDI Glass can be one. Its faders move when the DAW moves them, and its buttons light up when the DAW says a track is muted, soloed or ready to record.
+Windows MIDI Glass is the Windows MIDI Services app for building your own touch control surface. Most DAWs can be run from a **Mackie Control** surface: a desk of faders, knobs and buttons that moves and lights up along with the DAW. Windows MIDI Glass can be one. Its faders move when the DAW moves them, and its buttons light up when the DAW says a track is muted, soloed or ready to record.
 
-> **MIDI Glass is a preview app.** Names and settings in this article can change before it ships.
+> **Windows MIDI Glass is a preview app.** Names and settings in this article can change before it ships.
 
 On this page:
 
@@ -19,26 +19,26 @@ On this page:
 - [Set up your DAW](#set-up-your-daw)
 - [Using it](#using-it)
 - [Build your own](#build-your-own)
-- [How MIDI Glass talks to each device](#how-midi-glass-talks-to-each-device)
+- [How Windows MIDI Glass talks to each device](#how-midi-glass-talks-to-each-device)
 
 ## Mackie Control and HUI
 
 Mackie made two different control surface protocols, and a DAW has to be told which one it's talking to.
 
-- **Mackie Control**, sometimes called Mackie Control Universal or MCU, is the one MIDI Glass speaks. Most DAWs have a setting for it.
-- **HUI** is older, and it's what Pro Tools uses. MIDI Glass doesn't speak HUI yet.
+- **Mackie Control**, sometimes called Mackie Control Universal or MCU, is the one Windows MIDI Glass speaks. Most DAWs have a setting for it.
+- **HUI** is older, and it's what Pro Tools uses. Windows MIDI Glass doesn't speak HUI yet.
 
 That's why many hardware control surfaces have a switch between the two.
 
 ## What you need
 
-MIDI Glass and your DAW talk to each other through a **loopback**. A loopback is a pair of MIDI endpoints, A and B. Whatever goes into one side comes out of the other, in both directions.
+Windows MIDI Glass and your DAW talk to each other through a **loopback**. A loopback is a pair of MIDI endpoints, A and B. Whatever goes into one side comes out of the other, in both directions.
 
-Windows MIDI Services comes with one pair, **Default App Loopback (A)** and **Default App Loopback (B)**. MIDI Glass uses side A, and your DAW uses side B for both its input and its output. If you already use that pair for something else, make another one with [Windows MIDI Loopback Setup]({{ site.baseurl }}/tools/midiloopbacksetup/).
+Windows MIDI Services comes with one pair, **Default App Loopback (A)** and **Default App Loopback (B)**. Windows MIDI Glass uses side A, and your DAW uses side B for both its input and its output. If you already use that pair for something else, make another one with [Windows MIDI Loopback Setup]({{ site.baseurl }}/tools/midiloopbacksetup/).
 
 ## Start from the Mackie Control starter
 
-1. In the MIDI Glass library, select **New layout**.
+1. In the Windows MIDI Glass library, select **New layout**.
 2. Give it a name. Under **Send to**, pick **Default App Loopback (A)**.
 3. Under **Template**, pick **Mackie Control**.
 4. Select **Create**. The layout opens in the editor.
@@ -60,15 +60,15 @@ The starter has:
 Every DAW puts this in a different place, but the steps are the same:
 
 1. Open the DAW's settings for control surfaces or remote devices. Look for words like **Control Surfaces**, **Remote Devices** or **External Devices**.
-2. Add a **Mackie Control** surface. Don't let the DAW search for one on its own. MIDI Glass doesn't answer the handshake some DAWs use to find a surface, so add it by hand.
+2. Add a **Mackie Control** surface. Don't let the DAW search for one on its own. Windows MIDI Glass doesn't answer the handshake some DAWs use to find a surface, so add it by hand.
 3. Set the surface's MIDI input and its MIDI output to **Default App Loopback (B)**.
 4. Make sure side B isn't also turned on as an ordinary MIDI input for recording. If it is, the DAW can record your fader moves as notes and pitch bend.
 
-Then move a fader in MIDI Glass. The DAW's first track volume should move with it.
+Then move a fader in Windows MIDI Glass. The DAW's first track volume should move with it.
 
 ## Using it
 
-- **Faders** set each track's volume. While your finger is on a fader, the DAW knows you're holding it, which matters for automation. When the DAW moves a fader, for example while it plays back automation, the fader in MIDI Glass moves too.
+- **Faders** set each track's volume. While your finger is on a fader, the DAW knows you're holding it, which matters for automation. When the DAW moves a fader, for example while it plays back automation, the fader in Windows MIDI Glass moves too.
 - **Buttons** light up the way the DAW tells them to, and some blink. For example, a DAW might blink **Record** while it waits to start recording. If Windows is set to show fewer animations, a blinking button stays lit instead.
 - **V-Pots and the jog wheel** send how far you turn them, not where they are. Each springs back to the middle when you let go, so you can keep turning in steps.
 
@@ -92,7 +92,7 @@ A function sets its own message, so there's no channel, number or value to fill 
 
 If you switch a device that already has rows to Mackie Control, a row that already sends a Mackie Control message becomes that function, as long as it fits its control. For example, note 94 on channel 1 on a button becomes **Play**. Any other row says **Pick a function**, and it doesn't send anything until you pick one. Switch the device back, and each function becomes the plain message it stands for.
 
-## How MIDI Glass talks to each device
+## How Windows MIDI Glass talks to each device {#how-midi-glass-talks-to-each-device}
 
 Every device on the **Outputs** page has its own **Protocol** setting. It decides what the controls can send there and how you type their values.
 

@@ -70,6 +70,8 @@ A timecode clock has no tempo, no divider and no swing, so those fields go away 
 
 **Send a full timecode when starting and stopping** is on by default and should usually stay on. A running timecode is spelled out a piece at a time and takes two frames to say one position, so a receiver that joins in the middle has to wait. A full timecode says the whole position in one message, which lets the device you are driving find its place the moment you press Start.
 
+To watch a timecode clock count on its tile, turn on **Show the running time code** in Settings. It's off by default, because redrawing the time uses some CPU, and with it off a timecode tile shows no time at all. With it on, the time updates ten times a second, so the frames jump a few at a time, but the device you're driving still gets every frame. It stops updating while nobody can see the window: when it's minimized, covered by other windows, on another desktop, or the screen is locked or off. When you stop the clock, the tile goes back to its **Start at** time.
+
 The offset works the same way it does for a beat clock, and matters more here: lining sound up with picture is exactly the job it exists for.
 
 ## Running more than one

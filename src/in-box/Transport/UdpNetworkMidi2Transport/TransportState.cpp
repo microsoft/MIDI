@@ -723,6 +723,63 @@ TransportState::MarkClientDefinitionForRetry(
 }
 
 _Use_decl_annotations_
+bool
+TransportState::MarkClientDefinitionUnanswered(winrt::guid const& clientConfigEntryIdentifier)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            if (!definition.Enabled)
+            {
+                return false;
+            }
+
+            definition.State = MidiNetworkEntryState::Pending;
+            definition.LastErrorCode = NETWORK_ERROR_CODE_NO_REPLY_TO_INVITATION;
+            definition.UnansweredAttempts++;
+
+            if (::WindowsMidiServicesInternal::IsNextMidiNetworkAddressUntried(definition.UnansweredAttempts, definition.AttemptAddressCount))
+            {
+                definition.RetryNotBeforeTickCount = 0;
+
+                return true;
+            }
+
+            if (definition.IsDirectConnection())
+            {
+                definition.RetryNotBeforeTickCount = GetTickCount64() + TransportSettings.DirectConnectionScanInterval;
+            }
+
+            return false;
+        }
+    }
+
+    return false;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::MarkClientDefinitionAddressUnreachable(winrt::guid const& clientConfigEntryIdentifier)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            definition.UnansweredAttempts++;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
 HRESULT
 TransportState::MarkClientDefinitionForRetryAfter(
     winrt::guid const& clientConfigEntryIdentifier,
@@ -780,7 +837,7 @@ TransportState::MarkClientDefinitionFailed(
 
 _Use_decl_annotations_
 HRESULT
-TransportState::ClearClientDefinitionLastErrorCode(winrt::guid const& clientConfigEntryIdentifier)
+TransportState::MarkClientDefinitionSessionOpened(winrt::guid const& clientConfigEntryIdentifier)
 {
     auto lock = m_stateLock.lock_exclusive();
 
@@ -789,6 +846,8 @@ TransportState::ClearClientDefinitionLastErrorCode(winrt::guid const& clientConf
         if (definition.EntryIdentifier == clientConfigEntryIdentifier)
         {
             definition.LastErrorCode = 0;
+            definition.ConnectedAddress = definition.AttemptAddress;
+            definition.UnansweredAttempts = 0;
 
             return S_OK;
         }
@@ -821,7 +880,10 @@ TransportState::RearmClientDefinition(winrt::guid const& clientConfigEntryIdenti
 
 _Use_decl_annotations_
 HRESULT
-TransportState::MarkClientDefinitionLive(winrt::guid const& clientConfigEntryIdentifier)
+TransportState::MarkClientDefinitionLive(
+    winrt::guid const& clientConfigEntryIdentifier,
+    winrt::hstring const& remoteAddress,
+    uint32_t const remoteAddressCount)
 {
     auto lock = m_stateLock.lock_exclusive();
 
@@ -830,6 +892,8 @@ TransportState::MarkClientDefinitionLive(winrt::guid const& clientConfigEntryIde
         if (definition.EntryIdentifier == clientConfigEntryIdentifier)
         {
             definition.State = MidiNetworkEntryState::Live;
+            definition.AttemptAddress = remoteAddress;
+            definition.AttemptAddressCount = remoteAddressCount;
 
             return S_OK;
         }

@@ -628,6 +628,12 @@
   <data name="ReportSection_network" xml:space="preserve">
     <value>Network and firewall</value>
   </data>
+  <data name="ReportSection_mdns" xml:space="preserve">
+    <value>Network discovery (mDNS)</value>
+  </data>
+  <data name="ReportSection_network_history" xml:space="preserve">
+    <value>Network history</value>
+  </data>
   <data name="ReportSection_enum_winrt_midi1_api_input_ports" xml:space="preserve">
     <value>WinRT MIDI 1.0 input ports</value>
   </data>

@@ -2,7 +2,7 @@
 
 **Prototype. Nothing here ships, and the repository's build scripts don't build it.**
 
-It tries one idea: a customer asks their own AI assistant for a MIDI Patchbay patch or a MIDI Glass layout, answers a few questions, and gets a draft to review in the app. Nothing routes and no MIDI is sent until the customer says so in the app.
+It tries one idea: a customer asks their own AI assistant for a Windows MIDI Patchbay patch or a Windows MIDI Glass layout, answers a few questions, and gets a draft to review in the app. Nothing routes and no MIDI is sent until the customer says so in the app.
 
 Findings, options and the decisions still open are in [design/MIDI-AI-assist-investigation.md](design/MIDI-AI-assist-investigation.md).
 
@@ -11,7 +11,7 @@ Findings, options and the decisions still open are in [design/MIDI-AI-assist-inv
 | Folder | What it is |
 |---|---|
 | `mcp/` | `midi-mcp-spike.exe`, an MCP server written from scratch in C++. It talks to the assistant over stdin and stdout. |
-| `mcp/test/` | A script that runs the server and checks every tool, and a checker built from MIDI Patchbay's own filter and transform code. |
+| `mcp/test/` | A script that runs the server and checks every tool, and a checker built from Windows MIDI Patchbay's own filter and transform code. |
 | `design/comps/` | HTML mockups of how the apps could show drafts, and a script that turns them into pictures in `design/comps/shots/`. |
 
 ## Build
@@ -53,11 +53,11 @@ It has been tried with GitHub Copilot in VS Code. Run **MCP: Open User Configura
 | Option | What it does |
 |---|---|
 | `--app patchbay\|glass\|all` | Which app's tools to offer. The default is `all`. |
-| `--patch-folder <folder>` | Where patch drafts go. The default is `Documents\MIDI Patchbay`, the folder MIDI Patchbay reads. |
-| `--layout-folder <folder>` | Where layout drafts go. The default is `Documents\MIDI Layouts`, the folder MIDI Glass reads. |
+| `--patch-folder <folder>` | Where patch drafts go. The default is `Documents\MIDI Patches`, the folder Windows MIDI Patchbay reads. Earlier versions used `Documents\MIDI Patchbay`, and the server moves that folder the same way the app does. |
+| `--layout-folder <folder>` | Where layout drafts go. The default is `Documents\MIDI Layouts`, the folder Windows MIDI Glass reads. |
 | `--midiglass <path>` | The `midiglass.exe` that draws layout previews. By default the server looks in the installed tools folder, then in this repository's build output. |
 
-Drafts go into the apps' real folders unless you pass the folder options. A patch draft is saved with `activateAtStartup` turned off, so it never routes by itself. MIDI Patchbay reads its folder only when it starts, so restart it to see a new draft. MIDI Glass shows a new draft the next time it refreshes its library.
+Drafts go into the apps' real folders unless you pass the folder options. A patch draft is saved with `activateAtStartup` turned off, so it never routes by itself. Windows MIDI Patchbay reads its folder only when it starts, so restart it to see a new draft. Windows MIDI Glass shows a new draft the next time it refreshes its library.
 
 ## Tools
 
@@ -69,7 +69,7 @@ Drafts go into the apps' real folders unless you pass the folder options. A patc
 | `save_patch_draft` | One new file | Saves the patch as a draft. It never replaces an existing file. |
 | `list_glass_controls` | Nothing | Lists the kinds of control a layout can use. |
 | `list_glass_layouts` | Nothing | Lists saved layouts and marks drafts. |
-| `preview_layout` | Temporary files only | Checks a layout request and returns a picture of it drawn by MIDI Glass itself. The picture doesn't show labels, so the text lists them. |
+| `preview_layout` | Temporary files only | Checks a layout request and returns a picture of it drawn by Windows MIDI Glass itself. The picture doesn't show labels, so the text lists them. |
 | `save_layout_draft` | One new file | Saves the layout as a draft. It never replaces an existing file. |
 
 No tool sends MIDI, starts routing, changes or deletes an existing file, or reads the Windows MIDI Services configuration file.

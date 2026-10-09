@@ -31,6 +31,8 @@ bool DoSectionServiceStatus();
 bool DoSectionServiceHistory();
 bool DoSectionDeviceNodes();
 bool DoSectionNetwork();
+bool DoSectionMdns();
+bool DoSectionNetworkHistory();
 bool IsMidiServiceRunning();
 
 // 0 when the service is not installed or cannot be queried

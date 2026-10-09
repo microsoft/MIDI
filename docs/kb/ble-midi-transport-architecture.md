@@ -144,7 +144,14 @@ Writes go through a per-connection queue drained by a writer thread. The Central
 
 ## Disconnection and return
 
-`MaintainConnection(true)` asks Windows to re-establish a dropped link, and the transport also watches `ConnectionStatusChanged`. On the way down, the translation state is reset in both directions: a link drop can cut a SysEx transfer in half, and BLE MIDI 2.0 says UMP stream state is not preserved across disconnections. On the way back up, notifications are re-subscribed, because a device which returns without them looks alive to apps while delivering nothing, and a BLE MIDI 2.0 endpoint is queued for full discovery and protocol negotiation again.
+`MaintainConnection(true)` asks Windows to re-establish a dropped link. On the way down, the translation state is reset in both directions: a link drop can cut a SysEx transfer in half, and BLE MIDI 2.0 says UMP stream state is not preserved across disconnections.
+
+On the way back up, notifications have to be turned on again. A new link to a device that isn't bonded starts with notifications off, and a device that returns without them looks alive to apps while delivering nothing. The transport watches two events for the link coming back:
+
+- `BluetoothLEDevice.ConnectionStatusChanged` carries no status, so the handler reads the status when it runs. A device that's back before Windows notices it left, such as one that was reset, is dropped and reconnected within a fraction of a second, and every event then reads as connected. So any event that reads as connected counts as a possible new link, even if no drop was seen.
+- `GattSession.SessionStatusChanged` carries its own status, so it still shows a reconnect that the connection status missed.
+
+Either one asks the connection's writer thread to write the descriptor that turns notifications on, because a GATT call must not block a Bluetooth callback. Several requests before it runs become one write. A failed write is tried again a few times while the link stays up, waiting longer each time. If it still fails, the transport removes the connection and connects again from scratch, the same as pressing Disconnect and then Connect. After a successful write, a BLE MIDI 2.0 endpoint is queued for full discovery and protocol negotiation again. That waits until notifications are back on, because the device answers in notifications.
 
 ## Endpoint customization
 

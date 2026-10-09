@@ -11,12 +11,14 @@ Read these before you ask for anything. They say whether a resource can be read,
 
 `CanSet` is text instead of a true-or-false value because the list of possible values isn't fixed. The specification defines three values, and a device can add its own, so an enum couldn't hold everything a real device might send.
 
+A device can leave a property out of its list. When it does, the value comes from the specification for that resource. Most resources share the same defaults, but a few don't. For example, a `ProgramList` can be asked for a page at a time and needs a resource ID, even when the device's list says only `{"resource": "ProgramList"}`. `FromJson` and the constructor that takes a name start from those defaults, and `GetJson` leaves out anything that matches them.
+
 ## Constructors
 
 | Constructor | Description |
 | ----------- | ----------- |
 | `MidiResourceListEntry()` | Creates an empty entry |
-| `MidiResourceListEntry(resource)` | Creates an entry for a named resource |
+| `MidiResourceListEntry(resource)` | Creates an entry for a named resource, starting from that resource's defaults |
 
 ## Properties
 

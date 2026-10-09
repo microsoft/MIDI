@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Patchbay Preview 11 - 5 - message mask filter</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="v2.css">
+<script src="mock2.js" defer></script>
+<style>
+    .window.dlgwin { height: 1010px; }
+    .backdrop { flex: 1; position: relative; background: linear-gradient(160deg, #262626, #1F1F1F); }
+    .dialog.xwide { top: 50%; }
+    .dlg-body { gap: 11px; }
+    .fieldrow { position: relative; height: 20px; margin-left: 62px; }
+    .fieldrow .fieldspan { position: absolute; top: 0; }
+    .numrow { position: relative; height: 14px; margin-left: 62px; font-size: 10px; color: var(--text3); }
+    .numrow span { position: absolute; transform: translateX(-50%); }
+    .matchrow { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+    .matchrow .radio { align-items: center; padding: 0; }
+    .matchrow .radio .rb { margin-top: 0; }
+    .smallfield { height: 30px; min-width: 64px; font-size: 13px; }
+    .verdict { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--critical); }
+</style>
+</head>
+<body>
+<div class="page lib">
+
+<div class="caption-above"><b>5. The message mask filter.</b> The way out for anything the other filters don't cover. Pick the message size, drag across the bits to look at, then say which values match and what happens to them. The fields of a common message type can be drawn under the bits, and a test message shows the result before anything is applied.</div>
+
+<div class="window dlgwin">
+  <div class="titlebar">
+    <img src="appicon.png" alt="">
+    <div class="title">Studio Rig &mdash; Windows MIDI Patchbay</div>
+    <div class="preview-chiclet">PREVIEW</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+  <div class="backdrop">
+    <div class="scrim"></div>
+
+    <div class="dialog xwide">
+      <div class="dlg-body">
+        <h2>Message mask filter</h2>
+        <div class="dlg-sub">Picks out messages by the value at one place in the message.</div>
+
+        <div class="dlg-card">
+          <div class="h">Message size</div>
+          <div class="seg small" style="align-self:flex-start"><div>1 word</div><div class="sel">2 words</div><div>3 words</div><div>4 words</div></div>
+          <div class="ihelp">Two-word messages are MIDI 2.0 channel voice messages, and system exclusive (7-bit) in pieces. Messages of other sizes go through untouched.</div>
+        </div>
+
+        <div class="dlg-card">
+          <div style="display:flex; align-items:center; gap:10px">
+            <div class="h" style="flex:1">Where to look</div>
+            <div class="ilabel">Show the fields of</div>
+            <div class="field combo" style="width:220px; height:30px">MIDI 2.0 channel voice<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+          </div>
+
+          <div class="bits" id="bits"></div>
+
+          <div style="display:flex; align-items:center; gap:10px; margin-top:4px">
+            <div class="ilabel">Word</div>
+            <div class="field combo smallfield" style="width:70px">1<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+            <div class="ilabel" style="margin-left:8px">From bit</div>
+            <div class="numbox smallfield" style="width:86px">15<div class="spin"><div class="gl">&#xE70E;</div><div class="gl">&#xE70D;</div></div></div>
+            <div class="ilabel">to bit</div>
+            <div class="numbox smallfield" style="width:86px">8<div class="spin"><div class="gl">&#xE70E;</div><div class="gl">&#xE70D;</div></div></div>
+            <div class="ihelp" style="margin-left:8px">8 bits, values 0 to 255. In this kind of message, that's the note number.</div>
+          </div>
+        </div>
+
+        <div class="dlg-card">
+          <div style="display:flex; align-items:center">
+            <div class="h" style="flex:1">Match when the value is</div>
+            <div class="ilabel" style="margin-right:8px">Numbers in</div>
+            <div class="seg small"><div class="sel">Decimal</div><div>Hex</div></div>
+          </div>
+          <div class="matchrow">
+            <div class="radio on"><div class="rb"></div><div>Exactly</div></div>
+            <div class="field smallfield" style="width:80px">60</div>
+            <div class="radio" style="margin-left:10px"><div class="rb"></div><div>Any of</div></div>
+            <div class="field smallfield" style="width:150px; color:var(--text3)">36, 38, 42</div>
+            <div class="radio" style="margin-left:10px"><div class="rb"></div><div>From</div></div>
+            <div class="field smallfield" style="width:64px; color:var(--text3)">0</div>
+            <div class="ilabel">to</div>
+            <div class="field smallfield" style="width:64px; color:var(--text3)">63</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
+          <div class="dlg-card">
+            <div class="h">Messages that match are</div>
+            <div class="seg small full"><div>Let through</div><div class="sel">Kept out</div></div>
+            <div class="ihelp">Two-word messages that don't match go through.</div>
+          </div>
+          <div class="dlg-card">
+            <div class="h">Try a message</div>
+            <div class="field mono smallfield">40903C00 7FFF0000</div>
+            <div class="verdict"><span class="gl">&#xE711;</span>Matches, so it's kept out. That's a note on for note 60 (C3).</div>
+          </div>
+        </div>
+
+        <div class="summarybar">Keeps out two-word messages where bits 15 to 8 of word 1 are 60. Every other message goes through.</div>
+      </div>
+      <div class="dlg-foot">
+        <div class="btn accent">Apply</div>
+        <div class="btn">Reset</div>
+        <div class="btn">Cancel</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="notes">
+  <div class="n"><div class="pin" style="background:#666">i</div><div><b>Drag across the bits</b> to pick where to look, or type the word and the bits. The bits shown are the test message's, so it's easy to see what a value will be.</div></div>
+  <div class="n"><div class="pin" style="background:#666">i</div><div><b>Field names are only a guide.</b> A size takes in several message types, so this filter also sees system exclusive packets unless it looks at the type too. Question: allow an "and also" row, so one filter can check the type and the note together?</div></div>
+  <div class="n"><div class="pin" style="background:#666">i</div><div><b>Up to 32 bits at once,</b> inside one word. A value list holds up to 128 entries. The summary and the block on the canvas say the same thing in plain words.</div></div>
+</div>
+
+</div>
+
+<script>
+    // Bit grid for a two-word message, showing the test message 0x40903C00 0x7FFF0000, with
+    // bits 15 to 8 of word 1 selected and the MIDI 2.0 channel voice fields under each word.
+    (function () {
+        const words = [0x40903C00, 0x7FFF0000];
+        const selection = { word: 0, high: 15, low: 8 };
+        const fields = [
+            [["Type", 31, 28], ["Group", 27, 24], ["Status", 23, 20], ["Channel", 19, 16], ["Note", 15, 8], ["Attribute type", 7, 0]],
+            [["Velocity", 31, 16], ["Attribute data", 15, 0]],
+        ];
+
+        const host = document.getElementById("bits");
+
+        const numbers = document.createElement("div");
+        numbers.className = "numrow";
+        host.appendChild(numbers);
+
+        words.forEach((word, wordIndex) => {
+            const row = document.createElement("div");
+            row.className = "bitrow";
+            row.innerHTML = `<div class="wl">Word ${wordIndex + 1}</div>`;
+
+            const cells = document.createElement("div");
+            cells.className = "bitcells";
+
+            for (let nibble = 0; nibble < 8; nibble++) {
+                const group = document.createElement("div");
+                group.className = "nib";
+
+                for (let i = 0; i < 4; i++) {
+                    const bit = 31 - (nibble * 4 + i);
+                    const value = (word >>> bit) & 1;
+                    const cell = document.createElement("div");
+                    const selected = wordIndex === selection.word && bit <= selection.high && bit >= selection.low;
+                    cell.className = "cell" + (value ? " one" : "") + (selected ? " sel" : "");
+                    cell.dataset.bit = bit;
+                    cell.textContent = value;
+                    group.appendChild(cell);
+                }
+
+                cells.appendChild(group);
+            }
+
+            row.appendChild(cells);
+            host.appendChild(row);
+
+            const fieldRow = document.createElement("div");
+            fieldRow.className = "fieldrow";
+            host.appendChild(fieldRow);
+
+            const origin = cells.getBoundingClientRect().left;
+            const cellAt = bit => cells.querySelector(`[data-bit="${bit}"]`).getBoundingClientRect();
+
+            for (const [name, high, low] of fields[wordIndex]) {
+                const span = document.createElement("div");
+                const left = cellAt(high).left - origin;
+                const right = cellAt(low).right - origin;
+                const selected = wordIndex === selection.word && high === selection.high && low === selection.low;
+                span.className = "fieldspan" + (selected ? " sel" : "");
+                span.style.left = left + "px";
+                span.style.width = (right - left) + "px";
+                span.textContent = name;
+                fieldRow.appendChild(span);
+            }
+
+            if (wordIndex === 0) {
+                for (const bit of [31, 24, 16, 8, 0]) {
+                    const label = document.createElement("span");
+                    const rect = cellAt(bit);
+                    label.style.left = (rect.left - origin + rect.width / 2) + "px";
+                    label.textContent = bit;
+                    numbers.appendChild(label);
+                }
+            }
+        });
+    })();
+</script>
+</body>
+</html>

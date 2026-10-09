@@ -22,6 +22,71 @@ namespace midiapp
         constexpr uint8_t AllDevicesId = 0x7F;
         constexpr uint8_t MidiTimeCodeSubId = 0x01;
         constexpr uint8_t FullMessageSubId2 = 0x01;
+
+        // Drop frame keeps every number in the first minute of each ten and skips two in each of
+        // the other nine.
+        constexpr uint64_t DropFrameNumbersSkippedPerTenMinutes = 9 * 2;
+        constexpr uint64_t DropFrameFramesPerTenMinutes = (10 * 60 * 30) - DropFrameNumbersSkippedPerTenMinutes;
+        constexpr uint64_t DropFrameFramesPerShortMinute = (60 * 30) - 2;
+
+        uint64_t FramesPerDay(_In_ MidiTimeCodeFrameRate const rate) noexcept
+        {
+            if (rate == MidiTimeCodeFrameRate::Frames2997Drop)
+            {
+                return DropFrameFramesPerTenMinutes * 6 * 24;
+            }
+
+            return static_cast<uint64_t>(FramesPerSecondForCounting(rate)) * 60 * 60 * 24;
+        }
+
+        // How many frames into the day a valid position is.
+        uint64_t FrameIndexOf(_In_ MidiTimeCodePosition const& position, _In_ MidiTimeCodeFrameRate const rate) noexcept
+        {
+            auto const framesPerSecond = static_cast<uint64_t>(FramesPerSecondForCounting(rate));
+            auto const minutes = (static_cast<uint64_t>(position.Hours) * 60) + position.Minutes;
+
+            auto index = (((minutes * 60) + position.Seconds) * framesPerSecond) + position.Frames;
+
+            if (rate == MidiTimeCodeFrameRate::Frames2997Drop)
+            {
+                index -= 2 * (minutes - (minutes / 10));
+            }
+
+            return index;
+        }
+
+        MidiTimeCodePosition PositionOfFrameIndex(_In_ uint64_t index, _In_ MidiTimeCodeFrameRate const rate) noexcept
+        {
+            auto const framesPerSecond = static_cast<uint64_t>(FramesPerSecondForCounting(rate));
+
+            if (rate == MidiTimeCodeFrameRate::Frames2997Drop)
+            {
+                // Put the skipped numbers back, which leaves a plain count of thirty a second.
+                auto const intoTenMinutes = index % DropFrameFramesPerTenMinutes;
+
+                index += DropFrameNumbersSkippedPerTenMinutes * (index / DropFrameFramesPerTenMinutes);
+
+                if (intoTenMinutes > 1)
+                {
+                    index += 2 * ((intoTenMinutes - 2) / DropFrameFramesPerShortMinute);
+                }
+            }
+
+            MidiTimeCodePosition position{};
+
+            position.Frames = static_cast<uint8_t>(index % framesPerSecond);
+            index /= framesPerSecond;
+
+            position.Seconds = static_cast<uint8_t>(index % 60);
+            index /= 60;
+
+            position.Minutes = static_cast<uint8_t>(index % 60);
+            index /= 60;
+
+            position.Hours = static_cast<uint8_t>(index % 24);
+
+            return position;
+        }
     }
 
     _Use_decl_annotations_
@@ -166,6 +231,18 @@ namespace midiapp
     }
 
     _Use_decl_annotations_
+    MidiTimeCodePosition PositionAfterFrames(
+        MidiTimeCodePosition const& start,
+        MidiTimeCodeFrameRate const rate,
+        uint64_t const frameCount) noexcept
+    {
+        auto const framesPerDay = FramesPerDay(rate);
+        auto const first = FrameIndexOf(ClampPosition(start, rate), rate);
+
+        return PositionOfFrameIndex((first + (frameCount % framesPerDay)) % framesPerDay, rate);
+    }
+
+    _Use_decl_annotations_
     uint8_t QuarterFrameDataByte(
         MidiTimeCodePosition const& position,
         MidiTimeCodeFrameRate const rate,
@@ -303,8 +380,8 @@ namespace midiapp
             return false;
         }
 
-        // Fewer fields than four are read from the right, so "1:30" is a minute and a half and
-        // "12" is twelve frames. That is how a transport field behaves everywhere else.
+        // Fewer fields than four are read from the right, so "12" is twelve frames and "1:20" is
+        // a second and twenty frames. That is how a transport field behaves everywhere else.
         std::array<uint32_t, 4> parts{};
 
         for (size_t index = 0; index < fieldCount; index++)

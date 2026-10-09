@@ -170,68 +170,66 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0" Margin="0,0,0,8" ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                    <!-- Its own row: beside the buttons, it was squeezed a few letters wide. -->
+                    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+                        <TextBlock x:Uid="LoopbacksHeader"
+                                   Text="MIDI 2.0 Loopbacks"
+                                   Style="{StaticResource SectionHeaderTextStyle}" />
+                        <TextBlock x:Uid="LoopbacksDescription"
+                                   Text="A loopback is a pair of MIDI endpoints wired together. Anything an app sends to one side arrives on the other, so two apps on this PC can talk to each other."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
 
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock x:Uid="LoopbacksHeader"
-                                       Text="MIDI 2.0 Loopbacks"
-                                       Style="{StaticResource SectionHeaderTextStyle}" />
-                            <TextBlock x:Uid="LoopbacksDescription"
-                                       Text="A loopback is a pair of MIDI endpoints wired together. Anything an app sends to one side arrives on the other, so two apps on this PC can talk to each other."
-                                       TextWrapping="Wrap"
-                                       Style="{ThemeResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
+                    <StackPanel Grid.Row="1"
+                                Orientation="Horizontal"
+                                Spacing="8"
+                                Margin="0,0,0,8">
+                        <!-- Only offered while the well known default pair is missing, which
+                             is the one case where there is nothing to fill in. -->
+                        <Button x:Name="CreateDefaultLoopbackButton"
+                                x:Uid="CreateDefaultLoopbackButton"
+                                Content="Create default loopback"
+                                Visibility="Collapsed"
+                                Click="OnCreateDefaultLoopbackClick" />
 
-                        <StackPanel Grid.Column="1"
-                                    Orientation="Horizontal"
-                                    Spacing="8"
-                                    VerticalAlignment="Center">
-                            <!-- Only offered while the well known default pair is missing, which
-                                 is the one case where there is nothing to fill in. -->
-                            <Button x:Name="CreateDefaultLoopbackButton"
-                                    x:Uid="CreateDefaultLoopbackButton"
-                                    Content="Create default loopback"
-                                    Visibility="Collapsed"
-                                    Click="OnCreateDefaultLoopbackClick" />
-
-                            <Button x:Name="CreateLoopbackButton"
-                                    x:Uid="CreateLoopbackButton"
-                                    Style="{ThemeResource AccentButtonStyle}"
-                                    Click="OnCreateLoopbackClick">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE710;" FontSize="14" />
-                                    <TextBlock x:Uid="CreateLoopbackButtonText" Text="New loopback" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
+                        <Button x:Name="CreateLoopbackButton"
+                                x:Uid="CreateLoopbackButton"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                Click="OnCreateLoopbackClick">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE710;" FontSize="14" />
+                                <TextBlock x:Uid="CreateLoopbackButtonText" Text="New loopback" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
 
                     <!-- The diagram art carries no width or height of its own (the svg root is
                          100% x 100%), so both dimensions are set here. Keep them in the source's
-                         1467 x 230 ratio when changing the width. -->
-                    <Image x:Name="LoopbackDiagram"
-                           x:Uid="LoopbackDiagram"
-                           Grid.Row="1"
-                           Width="500"
-                           Height="78"
-                           Margin="0,4,0,12"
-                           Stretch="Uniform"
-                           HorizontalAlignment="Center" />
+                         1467 x 230 ratio when changing the width. The Viewbox shrinks it to fit a
+                         narrow window instead of cropping both ends. -->
+                    <Viewbox Grid.Row="2"
+                             StretchDirection="DownOnly"
+                             HorizontalAlignment="Center"
+                             Margin="0,4,0,12">
+                        <Image x:Name="LoopbackDiagram"
+                               x:Uid="LoopbackDiagram"
+                               Width="500"
+                               Height="78"
+                               Stretch="Uniform" />
+                    </Viewbox>
 
                     <!-- Says either that the transport is missing from this PC, or which of the
                          newer features the transport currently on it does not have yet. Title,
                          message and severity all depend on which, so all three are set from code
                          rather than declared here. -->
-                    <StackPanel Grid.Row="2">
+                    <StackPanel Grid.Row="3">
                         <InfoBar x:Name="LoopbackUnavailableBar"
                                  Margin="0,0,0,8"
                                  Severity="Error"
@@ -252,7 +250,7 @@
 
                     <ListView x:Name="LoopbacksListView"
                               x:Uid="LoopbacksListView"
-                              Grid.Row="3"
+                              Grid.Row="4"
                               SelectionMode="None"
                               IsItemClickEnabled="False"
                               AllowDrop="True"
@@ -413,7 +411,7 @@
 
                     <TextBlock x:Name="NoLoopbacksText"
                                x:Uid="NoLoopbacksText"
-                               Grid.Row="3"
+                               Grid.Row="4"
                                Text="There are no loopbacks on this PC yet. Create one so two apps can send MIDI to each other."
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
@@ -423,7 +421,7 @@
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                     <TextBlock x:Name="LoopbackStatusText"
-                               Grid.Row="4"
+                               Grid.Row="5"
                                Margin="0,8,0,0"
                                TextWrapping="Wrap"
                                Style="{ThemeResource CaptionTextBlockStyle}"
@@ -436,65 +434,62 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0" Margin="0,0,0,8" ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                    <!-- Its own row: beside the buttons, it was squeezed a few letters wide. -->
+                    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+                        <TextBlock x:Uid="BasicLoopbacksHeader"
+                                   Text="MIDI 1.0 Basic Loopbacks"
+                                   Style="{StaticResource SectionHeaderTextStyle}" />
+                        <TextBlock x:Uid="BasicLoopbacksDescription"
+                                   Text="A basic loopback is a single MIDI 1.0 endpoint which sends back everything it receives. Use one when an app expects a single port with matching input and output, the way older loopback drivers work."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
 
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock x:Uid="BasicLoopbacksHeader"
-                                       Text="MIDI 1.0 Basic Loopbacks"
-                                       Style="{StaticResource SectionHeaderTextStyle}" />
-                            <TextBlock x:Uid="BasicLoopbacksDescription"
-                                       Text="A basic loopback is a single MIDI 1.0 endpoint which sends back everything it receives. Use one when an app expects a single port with matching input and output, the way older loopback drivers work."
-                                       TextWrapping="Wrap"
-                                       Style="{ThemeResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
+                    <StackPanel Grid.Row="1"
+                                Orientation="Horizontal"
+                                Spacing="8"
+                                Margin="0,0,0,8">
+                        <Button x:Name="ImportLoopbacksButton"
+                                x:Uid="ImportLoopbacksButton"
+                                Content="Import from another provider..."
+                                Click="OnImportLoopbacksClick" />
 
-                        <StackPanel Grid.Column="1"
-                                    Orientation="Horizontal"
-                                    Spacing="8"
-                                    VerticalAlignment="Center">
-                            <Button x:Name="ImportLoopbacksButton"
-                                    x:Uid="ImportLoopbacksButton"
-                                    Content="Import from another provider..."
-                                    Click="OnImportLoopbacksClick" />
+                        <Button x:Name="CreateDefaultBasicLoopbackButton"
+                                x:Uid="CreateDefaultBasicLoopbackButton"
+                                Content="Create default basic loopback"
+                                Visibility="Collapsed"
+                                Click="OnCreateDefaultBasicLoopbackClick" />
 
-                            <Button x:Name="CreateDefaultBasicLoopbackButton"
-                                    x:Uid="CreateDefaultBasicLoopbackButton"
-                                    Content="Create default basic loopback"
-                                    Visibility="Collapsed"
-                                    Click="OnCreateDefaultBasicLoopbackClick" />
-
-                            <Button x:Name="CreateBasicLoopbackButton"
-                                    x:Uid="CreateBasicLoopbackButton"
-                                    Style="{ThemeResource AccentButtonStyle}"
-                                    Click="OnCreateBasicLoopbackClick">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE710;" FontSize="14" />
-                                    <TextBlock x:Uid="CreateBasicLoopbackButtonText" Text="New basic loopback" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
+                        <Button x:Name="CreateBasicLoopbackButton"
+                                x:Uid="CreateBasicLoopbackButton"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                Click="OnCreateBasicLoopbackClick">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE710;" FontSize="14" />
+                                <TextBlock x:Uid="CreateBasicLoopbackButtonText" Text="New basic loopback" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
 
                     <!-- source art is 1211 x 230; keep that ratio when changing the width -->
-                    <Image x:Name="BasicLoopbackDiagram"
-                           x:Uid="BasicLoopbackDiagram"
-                           Grid.Row="1"
-                           Width="500"
-                           Height="95"
-                           Margin="0,4,0,12"
-                           Stretch="Uniform"
-                           HorizontalAlignment="Center" />
+                    <Viewbox Grid.Row="2"
+                             StretchDirection="DownOnly"
+                             HorizontalAlignment="Center"
+                             Margin="0,4,0,12">
+                        <Image x:Name="BasicLoopbackDiagram"
+                               x:Uid="BasicLoopbackDiagram"
+                               Width="500"
+                               Height="95"
+                               Stretch="Uniform" />
+                    </Viewbox>
 
-                    <StackPanel Grid.Row="2">
+                    <StackPanel Grid.Row="3">
                         <InfoBar x:Name="BasicLoopbackUnavailableBar"
                                  x:Uid="BasicLoopbackUnavailableBar"
                                  Margin="0,0,0,8"
@@ -514,7 +509,7 @@
 
                     <ListView x:Name="BasicLoopbacksListView"
                               x:Uid="BasicLoopbacksListView"
-                              Grid.Row="3"
+                              Grid.Row="4"
                               SelectionMode="None"
                               IsItemClickEnabled="False"
                               AllowDrop="True"
@@ -680,7 +675,7 @@
 
                     <TextBlock x:Name="NoBasicLoopbacksText"
                                x:Uid="NoBasicLoopbacksText"
-                               Grid.Row="3"
+                               Grid.Row="4"
                                Text="There are no basic loopbacks on this PC yet."
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
@@ -690,7 +685,7 @@
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                     <TextBlock x:Name="BasicLoopbackStatusText"
-                               Grid.Row="4"
+                               Grid.Row="5"
                                Margin="0,8,0,0"
                                TextWrapping="Wrap"
                                Style="{ThemeResource CaptionTextBlockStyle}"

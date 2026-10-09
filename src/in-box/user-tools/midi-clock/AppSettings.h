@@ -26,7 +26,13 @@ namespace midiclock
 
         void Load() noexcept;
 
+        // Off by default: redrawing the time while a clock runs costs CPU the clock does not need.
+        bool ShowRunningTimeCode() const noexcept { return m_showRunningTimeCode; }
+        void ShowRunningTimeCode(_In_ bool value) noexcept;
+
     private:
         AppSettings() noexcept;
+
+        bool m_showRunningTimeCode{ false };
     };
 }

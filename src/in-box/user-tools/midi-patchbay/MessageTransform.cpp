@@ -5,9 +5,12 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "pch.h"
+// Pure: no precompiled header, so the unit tests compile this file exactly as it ships.
+
 #include "MessageTransform.h"
-#include "StringResources.h"
+
+#include <algorithm>
+#include <cmath>
 
 namespace midipatchbay
 {
@@ -85,50 +88,55 @@ namespace midipatchbay
 
             return false;
         }
+    }
 
-        size_t CountEntries(_In_ int16_t const* map, _In_ size_t count) noexcept
+    _Use_decl_annotations_
+    size_t CountMapEntries(int16_t const* map, size_t count) noexcept
+    {
+        size_t total{ 0 };
+
+        for (size_t i = 0; i < count; i++)
         {
-            size_t total{ 0 };
+            if (map[i] >= 0 && map[i] != static_cast<int16_t>(i))
+            {
+                total++;
+            }
+        }
 
+        return total;
+    }
+
+    _Use_decl_annotations_
+    json::JsonArray MapToJson(int16_t const* map, size_t count) noexcept
+    {
+        json::JsonArray array{};
+
+        try
+        {
             for (size_t i = 0; i < count; i++)
             {
-                if (map[i] >= 0 && map[i] != static_cast<int16_t>(i))
+                if (map[i] < 0 || map[i] == static_cast<int16_t>(i))
                 {
-                    total++;
+                    continue;
                 }
+
+                json::JsonObject entry{};
+
+                entry.SetNamedValue(KeyFrom, json::JsonValue::CreateNumberValue(static_cast<double>(i)));
+                entry.SetNamedValue(KeyTo, json::JsonValue::CreateNumberValue(map[i]));
+
+                array.Append(entry);
             }
-
-            return total;
         }
-
-        json::JsonArray MapToJson(_In_ int16_t const* map, _In_ size_t count) noexcept
+        catch (...)
         {
-            json::JsonArray array{};
-
-            try
-            {
-                for (size_t i = 0; i < count; i++)
-                {
-                    if (map[i] < 0 || map[i] == static_cast<int16_t>(i))
-                    {
-                        continue;
-                    }
-
-                    json::JsonObject entry{};
-
-                    entry.SetNamedValue(KeyFrom, json::JsonValue::CreateNumberValue(static_cast<double>(i)));
-                    entry.SetNamedValue(KeyTo, json::JsonValue::CreateNumberValue(map[i]));
-
-                    array.Append(entry);
-                }
-            }
-            catch (...)
-            {
-            }
-
-            return array;
         }
 
+        return array;
+    }
+
+    namespace
+    {
         // Where a value sits between the two ends, from 0 to 1. A range typed high to low runs
         // backwards, and a range with no width turns the value into a switch at that point.
         double PositionInRange(_In_ double value, _In_ double from, _In_ double to) noexcept
@@ -199,250 +207,284 @@ namespace midipatchbay
                 return CurveNameLinear;
             }
         }
+    }
 
-        std::wstring ShapeSignature(_In_ ValueShape const& shape)
+    _Use_decl_annotations_
+    std::wstring ShapeSignature(ValueShape const& shape)
+    {
+        return std::wstring{ shape.Invert ? L"i" : L"-" } +
+            std::to_wstring(static_cast<int32_t>(shape.Curve)) + L':' +
+            std::to_wstring(shape.InputMinimumHundredths) + L'-' +
+            std::to_wstring(shape.InputMaximumHundredths) + L':' +
+            std::to_wstring(shape.OutputMinimumHundredths) + L'-' +
+            std::to_wstring(shape.OutputMaximumHundredths);
+    }
+
+    // Aftertouch offers no invert, so its object never carries one.
+    _Use_decl_annotations_
+    json::JsonObject ShapeToJson(ValueShape const& shape, bool includeInvert) noexcept
+    {
+        json::JsonObject object{};
+
+        try
         {
-            return std::wstring{ shape.Invert ? L"i" : L"-" } +
-                std::to_wstring(static_cast<int32_t>(shape.Curve)) + L':' +
-                std::to_wstring(shape.InputMinimumHundredths) + L'-' +
-                std::to_wstring(shape.InputMaximumHundredths) + L':' +
-                std::to_wstring(shape.OutputMinimumHundredths) + L'-' +
-                std::to_wstring(shape.OutputMaximumHundredths);
+            if (includeInvert)
+            {
+                object.SetNamedValue(KeyInvert, json::JsonValue::CreateBooleanValue(shape.Invert));
+            }
+
+            object.SetNamedValue(KeyShapeCurve, json::JsonValue::CreateStringValue(CurveName(shape.Curve)));
+
+            object.SetNamedValue(KeyInputMinimumPercent,
+                json::JsonValue::CreateNumberValue(shape.InputMinimumHundredths / 100.0));
+            object.SetNamedValue(KeyInputMaximumPercent,
+                json::JsonValue::CreateNumberValue(shape.InputMaximumHundredths / 100.0));
+            object.SetNamedValue(KeyOutputMinimumPercent,
+                json::JsonValue::CreateNumberValue(shape.OutputMinimumHundredths / 100.0));
+            object.SetNamedValue(KeyOutputMaximumPercent,
+                json::JsonValue::CreateNumberValue(shape.OutputMaximumHundredths / 100.0));
+        }
+        catch (...)
+        {
         }
 
-        // Aftertouch offers no invert, so its object never carries one.
-        json::JsonObject ShapeToJson(_In_ ValueShape const& shape, _In_ bool includeInvert) noexcept
+        return object;
+    }
+
+    _Use_decl_annotations_
+    ValueShape ShapeFromJson(json::JsonObject const& object, bool includeInvert) noexcept
+    {
+        ValueShape shape{};
+
+        if (object == nullptr)
         {
-            json::JsonObject object{};
-
-            try
-            {
-                if (includeInvert)
-                {
-                    object.SetNamedValue(KeyInvert, json::JsonValue::CreateBooleanValue(shape.Invert));
-                }
-
-                object.SetNamedValue(KeyShapeCurve, json::JsonValue::CreateStringValue(CurveName(shape.Curve)));
-
-                object.SetNamedValue(KeyInputMinimumPercent,
-                    json::JsonValue::CreateNumberValue(shape.InputMinimumHundredths / 100.0));
-                object.SetNamedValue(KeyInputMaximumPercent,
-                    json::JsonValue::CreateNumberValue(shape.InputMaximumHundredths / 100.0));
-                object.SetNamedValue(KeyOutputMinimumPercent,
-                    json::JsonValue::CreateNumberValue(shape.OutputMinimumHundredths / 100.0));
-                object.SetNamedValue(KeyOutputMaximumPercent,
-                    json::JsonValue::CreateNumberValue(shape.OutputMaximumHundredths / 100.0));
-            }
-            catch (...)
-            {
-            }
-
-            return object;
-        }
-
-        ValueShape ShapeFromJson(_In_ json::JsonObject const& object, _In_ bool includeInvert) noexcept
-        {
-            ValueShape shape{};
-
-            if (object == nullptr)
-            {
-                return shape;
-            }
-
-            try
-            {
-                auto const readPercent = [&object](std::wstring_view key, int32_t fallback)
-                    {
-                        if (!object.HasKey(key))
-                        {
-                            return fallback;
-                        }
-
-                        auto const value = object.GetNamedValue(key);
-
-                        if (value == nullptr || value.ValueType() != json::JsonValueType::Number)
-                        {
-                            return fallback;
-                        }
-
-                        auto const number = value.GetNumber();
-
-                        return std::isfinite(number) && number >= 0 && number <= 100
-                            ? static_cast<int32_t>(std::lround(number * 100.0))
-                            : fallback;
-                    };
-
-                if (includeInvert && object.HasKey(KeyInvert))
-                {
-                    auto const value = object.GetNamedValue(KeyInvert);
-
-                    shape.Invert = value != nullptr && value.ValueType() == json::JsonValueType::Boolean &&
-                        value.GetBoolean();
-                }
-
-                if (object.HasKey(KeyShapeCurve))
-                {
-                    auto const value = object.GetNamedValue(KeyShapeCurve);
-
-                    if (value != nullptr && value.ValueType() == json::JsonValueType::String)
-                    {
-                        auto const name = value.GetString();
-
-                        shape.Curve = name == CurveNameSlowRise ? ValueCurve::SlowRise
-                            : name == CurveNameFastRise ? ValueCurve::FastRise
-                            : ValueCurve::Linear;
-                    }
-                }
-
-                shape.InputMinimumHundredths = readPercent(KeyInputMinimumPercent, 0);
-                shape.InputMaximumHundredths = readPercent(KeyInputMaximumPercent, FullScaleHundredths);
-                shape.OutputMinimumHundredths = readPercent(KeyOutputMinimumPercent, 0);
-                shape.OutputMaximumHundredths = readPercent(KeyOutputMaximumPercent, FullScaleHundredths);
-            }
-            catch (...)
-            {
-            }
-
             return shape;
         }
 
-        void ControlValueShapesFromJson(
-            _In_ json::JsonObject const& object,
-            _Inout_ std::array<ValueShape, ControlMapSize>& shapes) noexcept
+        try
         {
-            shapes.fill(ValueShape{});
+            auto const readPercent = [&object](std::wstring_view key, int32_t fallback)
+                {
+                    if (!object.HasKey(key))
+                    {
+                        return fallback;
+                    }
 
-            try
+                    auto const value = object.GetNamedValue(key);
+
+                    if (value == nullptr || value.ValueType() != json::JsonValueType::Number)
+                    {
+                        return fallback;
+                    }
+
+                    auto const number = value.GetNumber();
+
+                    return std::isfinite(number) && number >= 0 && number <= 100
+                        ? static_cast<int32_t>(std::lround(number * 100.0))
+                        : fallback;
+                };
+
+            if (includeInvert && object.HasKey(KeyInvert))
             {
-                if (!object.HasKey(KeyControlValueShapes))
+                auto const value = object.GetNamedValue(KeyInvert);
+
+                shape.Invert = value != nullptr && value.ValueType() == json::JsonValueType::Boolean &&
+                    value.GetBoolean();
+            }
+
+            if (object.HasKey(KeyShapeCurve))
+            {
+                auto const value = object.GetNamedValue(KeyShapeCurve);
+
+                if (value != nullptr && value.ValueType() == json::JsonValueType::String)
                 {
-                    return;
-                }
+                    auto const name = value.GetString();
 
-                auto const value = object.GetNamedValue(KeyControlValueShapes);
-
-                if (value == nullptr || value.ValueType() != json::JsonValueType::Array)
-                {
-                    return;
-                }
-
-                size_t added{ 0 };
-
-                for (auto const& item : value.GetArray())
-                {
-                    if (added >= MaximumMapEntries)
-                    {
-                        break;
-                    }
-
-                    if (item == nullptr || item.ValueType() != json::JsonValueType::Object)
-                    {
-                        continue;
-                    }
-
-                    auto const entry = item.GetObject();
-
-                    if (!entry.HasKey(KeyController))
-                    {
-                        continue;
-                    }
-
-                    auto const controllerValue = entry.GetNamedValue(KeyController);
-
-                    if (controllerValue == nullptr || controllerValue.ValueType() != json::JsonValueType::Number)
-                    {
-                        continue;
-                    }
-
-                    auto const controller = controllerValue.GetNumber();
-
-                    if (!std::isfinite(controller) || controller < 0 ||
-                        controller > static_cast<double>(ControlMapSize - 1))
-                    {
-                        continue;
-                    }
-
-                    shapes[static_cast<size_t>(controller)] = ShapeFromJson(entry, true);
-                    added++;
+                    shape.Curve = name == CurveNameSlowRise ? ValueCurve::SlowRise
+                        : name == CurveNameFastRise ? ValueCurve::FastRise
+                        : ValueCurve::Linear;
                 }
             }
-            catch (...)
-            {
-            }
+
+            shape.InputMinimumHundredths = readPercent(KeyInputMinimumPercent, 0);
+            shape.InputMaximumHundredths = readPercent(KeyInputMaximumPercent, FullScaleHundredths);
+            shape.OutputMinimumHundredths = readPercent(KeyOutputMinimumPercent, 0);
+            shape.OutputMaximumHundredths = readPercent(KeyOutputMaximumPercent, FullScaleHundredths);
+        }
+        catch (...)
+        {
         }
 
-        void MapFromJson(
-            _In_ json::JsonObject const& object,
-            _In_ std::wstring_view key,
-            _Out_writes_(count) int16_t* map,
-            _In_ size_t count) noexcept
+        return shape;
+    }
+
+    _Use_decl_annotations_
+    json::JsonArray ControlValueShapesToJson(std::array<ValueShape, ControlMapSize> const& shapes) noexcept
+    {
+        json::JsonArray valueShapes{};
+
+        try
         {
-            for (size_t i = 0; i < count; i++)
+            for (size_t i = 0; i < shapes.size(); i++)
             {
-                map[i] = -1;
-            }
+                auto const& shape = shapes[i];
 
-            try
-            {
-                if (!object.HasKey(key))
+                if (shape.ChangesNothing())
                 {
-                    return;
+                    continue;
                 }
 
-                auto const value = object.GetNamedValue(key);
+                auto entry = ShapeToJson(shape, true);
+                entry.SetNamedValue(KeyController, json::JsonValue::CreateNumberValue(static_cast<double>(i)));
 
-                if (value == nullptr || value.ValueType() != json::JsonValueType::Array)
-                {
-                    return;
-                }
-
-                size_t added{ 0 };
-
-                for (auto const& item : value.GetArray())
-                {
-                    if (added >= MaximumMapEntries)
-                    {
-                        break;
-                    }
-
-                    if (item == nullptr || item.ValueType() != json::JsonValueType::Object)
-                    {
-                        continue;
-                    }
-
-                    auto const entry = item.GetObject();
-
-                    if (!entry.HasKey(KeyFrom) || !entry.HasKey(KeyTo))
-                    {
-                        continue;
-                    }
-
-                    auto const fromValue = entry.GetNamedValue(KeyFrom);
-                    auto const toValue = entry.GetNamedValue(KeyTo);
-
-                    if (fromValue == nullptr || fromValue.ValueType() != json::JsonValueType::Number ||
-                        toValue == nullptr || toValue.ValueType() != json::JsonValueType::Number)
-                    {
-                        continue;
-                    }
-
-                    auto const from = fromValue.GetNumber();
-                    auto const to = toValue.GetNumber();
-                    auto const limit = static_cast<double>(count) - 1;
-
-                    if (!std::isfinite(from) || !std::isfinite(to) ||
-                        from < 0 || from > limit || to < 0 || to > limit)
-                    {
-                        continue;
-                    }
-
-                    map[static_cast<size_t>(from)] = static_cast<int16_t>(to);
-                    added++;
-                }
+                valueShapes.Append(entry);
             }
-            catch (...)
+        }
+        catch (...)
+        {
+        }
+
+        return valueShapes;
+    }
+
+    _Use_decl_annotations_
+    void ControlValueShapesFromJson(
+        json::JsonObject const& object,
+        std::array<ValueShape, ControlMapSize>& shapes) noexcept
+    {
+        shapes.fill(ValueShape{});
+
+        try
+        {
+            if (object == nullptr || !object.HasKey(KeyControlValueShapes))
             {
+                return;
             }
+
+            auto const value = object.GetNamedValue(KeyControlValueShapes);
+
+            if (value == nullptr || value.ValueType() != json::JsonValueType::Array)
+            {
+                return;
+            }
+
+            size_t added{ 0 };
+
+            for (auto const& item : value.GetArray())
+            {
+                if (added >= MaximumMapEntries)
+                {
+                    break;
+                }
+
+                if (item == nullptr || item.ValueType() != json::JsonValueType::Object)
+                {
+                    continue;
+                }
+
+                auto const entry = item.GetObject();
+
+                if (!entry.HasKey(KeyController))
+                {
+                    continue;
+                }
+
+                auto const controllerValue = entry.GetNamedValue(KeyController);
+
+                if (controllerValue == nullptr || controllerValue.ValueType() != json::JsonValueType::Number)
+                {
+                    continue;
+                }
+
+                auto const controller = controllerValue.GetNumber();
+
+                if (!std::isfinite(controller) || controller < 0 ||
+                    controller > static_cast<double>(ControlMapSize - 1))
+                {
+                    continue;
+                }
+
+                shapes[static_cast<size_t>(controller)] = ShapeFromJson(entry, true);
+                added++;
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void MapFromJson(
+        json::JsonObject const& object,
+        std::wstring_view key,
+        int16_t* map,
+        size_t count) noexcept
+    {
+        for (size_t i = 0; i < count; i++)
+        {
+            map[i] = -1;
+        }
+
+        try
+        {
+            if (object == nullptr || !object.HasKey(key))
+            {
+                return;
+            }
+
+            auto const value = object.GetNamedValue(key);
+
+            if (value == nullptr || value.ValueType() != json::JsonValueType::Array)
+            {
+                return;
+            }
+
+            size_t added{ 0 };
+
+            for (auto const& item : value.GetArray())
+            {
+                if (added >= MaximumMapEntries)
+                {
+                    break;
+                }
+
+                if (item == nullptr || item.ValueType() != json::JsonValueType::Object)
+                {
+                    continue;
+                }
+
+                auto const entry = item.GetObject();
+
+                if (!entry.HasKey(KeyFrom) || !entry.HasKey(KeyTo))
+                {
+                    continue;
+                }
+
+                auto const fromValue = entry.GetNamedValue(KeyFrom);
+                auto const toValue = entry.GetNamedValue(KeyTo);
+
+                if (fromValue == nullptr || fromValue.ValueType() != json::JsonValueType::Number ||
+                    toValue == nullptr || toValue.ValueType() != json::JsonValueType::Number)
+                {
+                    continue;
+                }
+
+                auto const from = fromValue.GetNumber();
+                auto const to = toValue.GetNumber();
+                auto const limit = static_cast<double>(count) - 1;
+
+                if (!std::isfinite(from) || !std::isfinite(to) ||
+                    from < 0 || from > limit || to < 0 || to > limit)
+                {
+                    continue;
+                }
+
+                map[static_cast<size_t>(from)] = static_cast<int16_t>(to);
+                added++;
+            }
+        }
+        catch (...)
+        {
         }
     }
 
@@ -484,28 +526,6 @@ namespace midipatchbay
         }
 
         return std::clamp(static_cast<int32_t>(std::lround(value * 100.0)), 0, FullScaleHundredths);
-    }
-
-    _Use_decl_annotations_
-    winrt::hstring DescribeScaledValue(int32_t hundredths, ValueScale scale) noexcept
-    {
-        try
-        {
-            if (scale == ValueScale::SevenBit)
-            {
-                return winrt::hstring{ std::to_wstring(SevenBitFromHundredths(hundredths)) };
-            }
-
-            auto const clamped = std::clamp(hundredths, 0, FullScaleHundredths);
-
-            return resources::FormatString(L"TransformPercentFormat",
-                clamped / 100, clamped % 100);
-        }
-        catch (...)
-        {
-        }
-
-        return {};
     }
 
     bool ValueShape::ChangesNothing() const noexcept
@@ -907,151 +927,6 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    winrt::hstring SummarizeTransform(MessageTransform const& transform) noexcept
-    {
-        try
-        {
-            if (transform.ChangesNothing())
-            {
-                return resources::GetString(L"TransformSummaryNothing");
-            }
-
-            std::vector<std::wstring> parts{};
-
-            auto const channels = CountEntries(transform.ChannelMap.data(), transform.ChannelMap.size());
-
-            if (channels > 0)
-            {
-                parts.push_back(std::wstring{ channels == 1
-                    ? resources::GetString(L"TransformSummaryOneChannelMap")
-                    : resources::FormatString(L"TransformSummaryChannelMapFormat", static_cast<int>(channels)) });
-            }
-
-            if (transform.TransposeSemitones != 0)
-            {
-                parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryTransposeFormat",
-                    transform.TransposeSemitones > 0
-                        ? std::wstring{ L"+" } + std::to_wstring(transform.TransposeSemitones)
-                        : std::to_wstring(transform.TransposeSemitones)) });
-            }
-
-            auto const notes = CountEntries(transform.NoteMap.data(), transform.NoteMap.size());
-
-            if (notes > 0)
-            {
-                parts.push_back(std::wstring{ notes == 1
-                    ? resources::GetString(L"TransformSummaryOneNoteMap")
-                    : resources::FormatString(L"TransformSummaryNoteMapFormat", static_cast<int>(notes)) });
-            }
-
-            if (transform.Curve == VelocityCurve::LinearToCurved)
-            {
-                parts.push_back(std::wstring{ resources::GetString(L"TransformSummaryCurved") });
-            }
-            else if (transform.Curve == VelocityCurve::CurvedToLinear)
-            {
-                parts.push_back(std::wstring{ resources::GetString(L"TransformSummaryLinear") });
-            }
-            else if (transform.Curve == VelocityCurve::Fixed)
-            {
-                parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryFixedVelocityFormat",
-                    DescribeScaledValue(transform.FixedVelocityHundredths, transform.Scale)) });
-            }
-
-            if (transform.RescaleVelocity && transform.Curve != VelocityCurve::Fixed)
-            {
-                parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryVelocityRangeFormat",
-                    DescribeScaledValue(transform.MinimumVelocityHundredths, transform.Scale),
-                    DescribeScaledValue(transform.MaximumVelocityHundredths, transform.Scale)) });
-            }
-
-            auto const& aftertouch = transform.AftertouchShape;
-
-            if (aftertouch.Curve == ValueCurve::SlowRise)
-            {
-                parts.push_back(std::wstring{ resources::GetString(L"TransformSummaryAftertouchSlowRise") });
-            }
-            else if (aftertouch.Curve == ValueCurve::FastRise)
-            {
-                parts.push_back(std::wstring{ resources::GetString(L"TransformSummaryAftertouchFastRise") });
-            }
-
-            if (aftertouch.InputMinimumHundredths != 0 || aftertouch.InputMaximumHundredths != FullScaleHundredths)
-            {
-                parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryAftertouchInputFormat",
-                    DescribeScaledValue(aftertouch.InputMinimumHundredths, transform.Scale),
-                    DescribeScaledValue(aftertouch.InputMaximumHundredths, transform.Scale)) });
-            }
-
-            if (aftertouch.OutputMinimumHundredths != 0 || aftertouch.OutputMaximumHundredths != FullScaleHundredths)
-            {
-                parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryAftertouchOutputFormat",
-                    DescribeScaledValue(aftertouch.OutputMinimumHundredths, transform.Scale),
-                    DescribeScaledValue(aftertouch.OutputMaximumHundredths, transform.Scale)) });
-            }
-
-            auto const controls = CountEntries(transform.ControlMap.data(), transform.ControlMap.size());
-
-            if (controls > 0)
-            {
-                parts.push_back(std::wstring{ controls == 1
-                    ? resources::GetString(L"TransformSummaryOneControlMap")
-                    : resources::FormatString(L"TransformSummaryControlMapFormat", static_cast<int>(controls)) });
-            }
-
-            auto const shapedControls = std::count_if(
-                transform.ControlValueShapes.begin(), transform.ControlValueShapes.end(),
-                [](ValueShape const& shape) { return !shape.ChangesNothing(); });
-
-            if (shapedControls > 0)
-            {
-                parts.push_back(std::wstring{ shapedControls == 1
-                    ? resources::GetString(L"TransformSummaryOneControlValue")
-                    : resources::FormatString(L"TransformSummaryControlValueFormat", static_cast<int>(shapedControls)) });
-            }
-
-            auto const programs = CountEntries(transform.ProgramMap.data(), transform.ProgramMap.size());
-
-            if (programs > 0)
-            {
-                parts.push_back(std::wstring{ programs == 1
-                    ? resources::GetString(L"TransformSummaryOneProgramMap")
-                    : resources::FormatString(L"TransformSummaryProgramMapFormat", static_cast<int>(programs)) });
-            }
-
-            auto const banks =
-                CountEntries(transform.BankMsbMap.data(), transform.BankMsbMap.size()) +
-                CountEntries(transform.BankLsbMap.data(), transform.BankLsbMap.size());
-
-            if (banks > 0)
-            {
-                parts.push_back(std::wstring{ banks == 1
-                    ? resources::GetString(L"TransformSummaryOneBankMap")
-                    : resources::FormatString(L"TransformSummaryBankMapFormat", static_cast<int>(banks)) });
-            }
-
-            std::wstring text{};
-
-            for (auto const& part : parts)
-            {
-                if (!text.empty())
-                {
-                    text += L". ";
-                }
-
-                text += part;
-            }
-
-            return text.empty() ? resources::GetString(L"TransformSummaryNothing") : winrt::hstring{ text };
-        }
-        catch (...)
-        {
-        }
-
-        return resources::GetString(L"TransformSummaryNothing");
-    }
-
-    _Use_decl_annotations_
     json::JsonObject TransformToJson(MessageTransform const& transform) noexcept
     {
         json::JsonObject object{};
@@ -1088,24 +963,7 @@ namespace midipatchbay
             object.SetNamedValue(KeyBankMsbMap, MapToJson(transform.BankMsbMap.data(), transform.BankMsbMap.size()));
             object.SetNamedValue(KeyBankLsbMap, MapToJson(transform.BankLsbMap.data(), transform.BankLsbMap.size()));
 
-            json::JsonArray valueShapes{};
-
-            for (size_t i = 0; i < transform.ControlValueShapes.size(); i++)
-            {
-                auto const& shape = transform.ControlValueShapes[i];
-
-                if (shape.ChangesNothing())
-                {
-                    continue;
-                }
-
-                auto entry = ShapeToJson(shape, true);
-                entry.SetNamedValue(KeyController, json::JsonValue::CreateNumberValue(static_cast<double>(i)));
-
-                valueShapes.Append(entry);
-            }
-
-            object.SetNamedValue(KeyControlValueShapes, valueShapes);
+            object.SetNamedValue(KeyControlValueShapes, ControlValueShapesToJson(transform.ControlValueShapes));
             object.SetNamedValue(KeyAftertouchShape, ShapeToJson(transform.AftertouchShape, false));
         }
         catch (...)

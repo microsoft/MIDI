@@ -476,6 +476,9 @@ Examples
   <data name="SettingsPageTitle.Text" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="UmpPrimerLink.Content" xml:space="preserve">
+    <value>How to read and understand UMP messages</value>
+  </data>
   <data name="SettingsAppearanceHeader.Text" xml:space="preserve">
     <value>Appearance</value>
   </data>

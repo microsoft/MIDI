@@ -16,7 +16,7 @@ namespace midimcp
 {
     struct PatchbayToolOptions
     {
-        // Where drafts are written and saved patches are read. Empty means Documents\MIDI Patchbay,
+        // Where drafts are written and saved patches are read. Empty means Documents\MIDI Patches,
         // the app's own folder. The test harness points it somewhere disposable.
         std::wstring PatchFolder{};
     };

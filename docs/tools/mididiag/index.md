@@ -22,11 +22,14 @@ The report tells you:
 - The MIDI driver entries in the Drivers32 part of the registry, a common source of past problems
 - The Windows MIDI Services registry entries, including any transport the service doesn't have permission to read
 - USB and MIDI devices with a problem, the ones Device Manager marks with a warning, and how many old MIDI device entries Windows is still keeping
-- Your network type and the firewall rules for the MIDI service, which matter for network MIDI
+- Your network type, your network adapters, and the firewall rules for the MIDI service, which matter for network MIDI
+- Whether multicast DNS (mDNS) can work on this PC. Network MIDI uses it so computers can find each other by name. The report shows the Windows service that answers it, the setting that turns it off, the firewall rules for it, and which programs listen for it.
+- When networks connected and disconnected, and when the PC slept, woke and restarted, over the last 3 days
 - Every Windows MIDI Services transport, endpoint and MIDI 1.0 port, with the other names each port could have had
 - The device behind each endpoint: its USB vendor and product IDs, its serial number, how many hubs it's plugged in through, when it was last connected and removed, and its driver
 - Every MIDI 1.0 port that WinMM apps see, and whether its number matches the one Windows MIDI Services expects
 - Bluetooth MIDI, Network MIDI 2.0, RTP-MIDI and loopback details, when those transports are installed
+- For each network MIDI host on this PC, whether looking it up by name still finds it
 - Saved names and pictures that no longer match any device
 - Every app that's connected to the MIDI service right now, and what it has open
 - The results of a ping test, and how long it takes to open a MIDI connection
@@ -63,12 +66,22 @@ The report reads everything it can from Windows before it asks the MIDI service 
 
 When that happens, the MIDI Troubleshooting and Repair app offers to save a memory dump of the MIDI service. The dump shows the developers where the service is stuck. Save it before you restart, because restarting the PC clears the problem and the evidence along with it. The dump can hold private information, such as device names and network MIDI passwords, so share it only with the developers who asked for it.
 
+## When other computers can't see your PC
+
+Other computers find Network MIDI 2.0 and RTP-MIDI hosts by name, using multicast DNS (mDNS). For each host that's running, the report looks it up by the same name other computers look for, and writes an `advertising_check` line with what came back. If nothing answers, the findings say other computers may not see the host. If a different computer or port answers, the findings say that too.
+
+This PC answers for its own hosts, so the check shows whether a host is still being advertised. It can't prove that other computers hear the answer. That also depends on your network and your firewall, which the `mdns` section covers. A host that doesn't answer adds about 2.5 seconds to the report.
+
+The `network_history` section lists when networks connected and disconnected, and when the PC slept, woke and restarted, over the last 3 days. Lining those times up with when the problem started often explains it.
+
 ## Privacy
 
 The report leaves out the things that identify you:
 
 - Folders inside your user profile are written as `%USERPROFILE%`, and other people's profile folders as `<user>`, so your user name isn't in the report.
-- Only the last part of an IP address is kept, for example `x.x.x.27`.
+- Only the last part of an IP address is kept, for example `x.x.x.27` or `x::7d8d`. That includes the addresses of your network adapters and the addresses in firewall rules.
+- Network names, such as the name of your Wi-Fi network, are left out. The network history gives each network a number instead.
+- The hardware (MAC) addresses of your network adapters are left out.
 
 Device serial numbers and Bluetooth addresses stay in, because they're how the developers tell two of the same device apart. The names you've given your devices stay in too. If any of that matters to you, read the report before you post it somewhere public.
 

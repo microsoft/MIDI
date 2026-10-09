@@ -30,7 +30,7 @@ IDI_APPICON ICON "Assets\\AppIcon.ico"
 
 STRINGTABLE
 BEGIN
-    IDS_PATCH_FILE_TYPE     "MIDI Patchbay patch"
-    IDS_FRIENDLY_APP_NAME   "MIDI Patchbay"
+    IDS_PATCH_FILE_TYPE     "Windows MIDI Patchbay patch"
+    IDS_FRIENDLY_APP_NAME   "Windows MIDI Patchbay"
     IDS_APP_DESCRIPTION     "Connects MIDI devices and apps, and filters or changes the messages between them."
 END

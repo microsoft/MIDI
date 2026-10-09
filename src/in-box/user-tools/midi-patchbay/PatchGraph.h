@@ -28,6 +28,7 @@ namespace midipatchbay
         LoopSeverity Severity{ LoopSeverity::Possible };
 
         // In travel order, so the message can name the hops the way the customer sees them.
+        // Blocks on the circle are named here too, alongside the endpoints.
         std::vector<std::wstring> EndpointIds{};
         std::vector<std::wstring> EndpointNames{};
 
@@ -59,12 +60,5 @@ namespace midipatchbay
     // detected" rather than "no loops".
     PatchAnalysis AnalyzePatch(
         _In_ PatchDocument const& patch,
-        _In_ std::vector<LiveEndpoint> const& liveEndpoints) noexcept;
-
-    // The same walk with one more connection added, for answering "can I drop this here" before
-    // the connection is committed.
-    bool WouldCreateCertainLoop(
-        _In_ PatchDocument const& patch,
-        _In_ PatchConnection const& proposed,
         _In_ std::vector<LiveEndpoint> const& liveEndpoints) noexcept;
 }

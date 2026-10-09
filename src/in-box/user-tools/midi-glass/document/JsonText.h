@@ -47,6 +47,7 @@ namespace glass
         // For an already-serialized fragment, which is how the parts of a file this build did
         // not understand are put back.
         void WriteRaw(_In_ std::wstring_view key, _In_ std::wstring_view json) noexcept;
+        void WriteArrayRaw(_In_ std::wstring_view json) noexcept;
 
         void WriteArrayValue(_In_ int64_t value) noexcept;
         void WriteArrayNumber(_In_ double value) noexcept;

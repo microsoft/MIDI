@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Patchbay Preview 11 design comps</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="v2.css">
+<style>
+    .page { width: 1076px; gap: 14px; }
+    h1 { font-size: 22px; margin: 6px 0 0 0; }
+    p { font-size: 13px; color: var(--text2); line-height: 1.6; margin: 0; max-width: 960px; }
+    .list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+    a.item { display: block; text-decoration: none; color: var(--text); border-radius: 8px; border: 1px solid var(--stroke-strong); background: var(--card); padding: 14px 16px; }
+    a.item .n { font-size: 14px; font-weight: 600; }
+    a.item .d { font-size: 12px; color: var(--text3); margin-top: 4px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>MIDI Patchbay, Preview 11 design</h1>
+  <p>Comps for the move from one connection that does everything to processing blocks on the canvas, and from one window to a library plus one editor window per patch. These are HTML: open any page in a browser, or run <span class="mono">capture.ps1</span> for pictures in <span class="mono">shots</span> and <span class="mono">check.ps1</span> for a layout check. Nothing here is built.</p>
+  <div class="list">
+    <a class="item" href="1-library.html"><div class="n">1. The library</div><div class="d">Every patch as a tile, with a map, device presence and a routing switch.</div></a>
+    <a class="item" href="2-editor.html"><div class="n">2. A patch in its own editor window</div><div class="d">Palette of blocks, blocks on the canvas, the inspector holding one block.</div></a>
+    <a class="item" href="3-converted.html"><div class="n">3. A Preview 10 patch, opened</div><div class="d">How one connection's settings become a chain of blocks.</div></a>
+    <a class="item" href="4-note-filter.html"><div class="n">4. The note filter's own dialog</div><div class="d">Range, one note or a list; let through or kept out; Press a key.</div></a>
+    <a class="item" href="5-message-mask.html"><div class="n">5. The message mask filter</div><div class="d">Size, bits, values, and a test message.</div></a>
+    <a class="item" href="6-inspectors.html"><div class="n">6. The inspector, one thing at a time</div><div class="d">A connection, a channel filter, a transpose and the throttler.</div></a>
+  </div>
+</div>
+</body>
+</html>

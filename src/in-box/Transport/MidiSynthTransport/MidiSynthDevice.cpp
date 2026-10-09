@@ -103,6 +103,52 @@ void MidiSynthDevice::QueuedUmpOutput::SendUmp(const uint32_t* words, uint32_t w
 }
 
 
+_Use_decl_annotations_
+void MidiSynthDevice::WholeMessageUmpOutput::SendUmp(const uint32_t* words, uint32_t wordCount) noexcept
+{
+    if (words == nullptr || wordCount == 0 || wordCount > 4)
+    {
+        return;
+    }
+
+    if (m_heldCount < m_held.size())
+    {
+        auto& held = m_held[m_heldCount++];
+
+        held = QueuedUmp{};
+
+        for (uint32_t i = 0; i < wordCount; i++)
+        {
+            held.Words[i] = words[i];
+        }
+
+        held.WordCount = static_cast<uint8_t>(wordCount);
+    }
+    else
+    {
+        m_overflowed = true;
+    }
+
+    // Status 1 is start and 2 is continue: more of this message is still to come.
+    auto const status = internal::GetStatusFromDataMessage64FirstWord(words[0]);
+
+    if (internal::GetUmpMessageTypeFromFirstWord(words[0]) == MIDI_UMP_MESSAGE_TYPE_DATA_MESSAGE_64 &&
+        (status == 1 || status == 2))
+    {
+        return;
+    }
+
+    // A message too long to hold, or one the queue has no room for, is dropped whole.
+    if (!m_overflowed)
+    {
+        (void)m_queue.TryPushAll(m_held.data(), m_heldCount);
+    }
+
+    m_heldCount = 0;
+    m_overflowed = false;
+}
+
+
 HRESULT
 MidiSynthDevice::EnsureSoundSetLoaded()
 {
@@ -136,7 +182,39 @@ MidiSynthDevice::EnsureSoundSetLoaded()
         RETURN_HR(HRESULT_FROM_WIN32(ERROR_FILE_CORRUPT));
     }
 
-    m_propertyExchange.Build(m_collection, SynthIdentity{});
+    PropertyExchangeText text{};
+
+    const std::pair<std::string*, UINT> localized[]
+    {
+        { &text.Manufacturer, IDS_DEVICE_INFO_MANUFACTURER },
+        { &text.Family, IDS_DEVICE_INFO_FAMILY },
+        { &text.Model, IDS_DEVICE_INFO_MODEL },
+        { &text.MelodicChannel, IDS_CHANNEL_TITLE_MELODIC },
+        { &text.PercussionChannel, IDS_CHANNEL_TITLE_PERCUSSION },
+        { &text.MelodicProgramList, IDS_LINK_TITLE_MELODIC_PROGRAMS },
+        { &text.DrumKitProgramList, IDS_LINK_TITLE_DRUM_KITS },
+        { &text.ControllerList, IDS_LINK_TITLE_CONTROLLERS },
+        { &text.Volume, IDS_CONTROLLER_VOLUME },
+        { &text.Modulation, IDS_CONTROLLER_MODULATION },
+        { &text.PitchBend, IDS_CONTROLLER_PITCH_BEND },
+        { &text.SustainPedal, IDS_CONTROLLER_SUSTAIN_PEDAL },
+        { &text.Pan, IDS_CONTROLLER_PAN },
+        { &text.Expression, IDS_CONTROLLER_EXPRESSION },
+        { &text.ReverbSend, IDS_CONTROLLER_REVERB_SEND },
+        { &text.ChorusSend, IDS_CONTROLLER_CHORUS_SEND },
+        { &text.NotePitchBend, IDS_CONTROLLER_NOTE_PITCH_BEND },
+        { &text.PitchBendSensitivity, IDS_CONTROLLER_PITCH_BEND_SENSITIVITY },
+        { &text.NoteVolume, IDS_CONTROLLER_NOTE_VOLUME },
+        { &text.NotePan, IDS_CONTROLLER_NOTE_PAN },
+        { &text.NotePitch, IDS_CONTROLLER_NOTE_PITCH },
+    };
+
+    for (auto const& [target, id] : localized)
+    {
+        *target = internal::Utf8FromWString(internal::ResourceGetWString(id));
+    }
+
+    m_propertyExchange.Build(m_collection, SynthIdentity{}, text);
 
     m_soundSetLoaded = true;
 
@@ -876,7 +954,13 @@ MidiSynthDevice::ServiceOutbound() noexcept
 {
     QueuedUmp message;
 
+    // Dispatcher replies go first: they answer messages that arrived before the property request.
     while (m_outbound.TryPop(message))
+    {
+        LOG_IF_FAILED(DeliverToCallback(message));
+    }
+
+    while (m_propertyOutbound.TryPop(message))
     {
         LOG_IF_FAILED(DeliverToCallback(message));
     }
@@ -951,6 +1035,17 @@ MidiSynthDevice::ServicePropertyRequestsInner()
             (void)m_propertyExchange.RemoveSubscription(withdrawn, {});
         }
 
+        // A MIDI Message Report goes out whole, in a pass that sends nothing else, so no property
+        // reply can land between its reply and its end. The queue is empty at this point, because
+        // every pass drains it, and the header checks that the largest report fits.
+        UmpDispatcher::PendingMessageReport report{};
+
+        if (m_dispatcher.TakePendingMessageReport(report))
+        {
+            UmpDispatcher::WriteMidiMessageReport(report, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), m_propertyOutput);
+            return;
+        }
+
         UmpDispatcher::PendingPropertyRequest request{};
 
         if (m_dispatcher.TakePendingPropertyRequest(request))
@@ -985,7 +1080,7 @@ MidiSynthDevice::ServicePropertyRequestsInner()
                     TraceLoggingString(asked.c_str(), "header")
                 );
 
-                m_propertyExchange.SendNotFound(m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request);
+                m_propertyExchange.SendNotFound(m_propertyOutput, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request);
 
                 return;
             }
@@ -1024,7 +1119,7 @@ MidiSynthDevice::ServicePropertyRequestsInner()
 
     // One chunk per pass. A full program list is far more system exclusive packets than the
     // outbound queue holds at once.
-    (void)m_propertyExchange.SendNextChunk(m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid());
+    (void)m_propertyExchange.SendNextChunk(m_propertyOutput, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid());
 }
 
 
@@ -1039,7 +1134,7 @@ MidiSynthDevice::HandleSubscriptionRequest(
     if (!json::JsonObject::TryParse(winrt::to_hstring(text), parsed))
     {
         m_propertyExchange.SendSubscriptionReply(
-            m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 400, nullptr);
+            m_propertyOutput, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 400, nullptr);
 
         return;
     }
@@ -1080,7 +1175,7 @@ MidiSynthDevice::HandleSubscriptionRequest(
         if (resource != L"ChannelList")
         {
             m_propertyExchange.SendSubscriptionReply(
-                m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 405, nullptr);
+                m_propertyOutput, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 405, nullptr);
 
             return;
         }
@@ -1090,7 +1185,7 @@ MidiSynthDevice::HandleSubscriptionRequest(
         // Out of room. 507 is what the specification uses for a responder that cannot take on
         // any more, and it tells the initiator to keep polling instead.
         m_propertyExchange.SendSubscriptionReply(
-            m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request,
+            m_propertyOutput, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request,
             (assigned[0] == '\0') ? 507 : 200, assigned);
 
         return;
@@ -1101,7 +1196,7 @@ MidiSynthDevice::HandleSubscriptionRequest(
         (void)m_propertyExchange.RemoveSubscription(request.InitiatorMuid, subscribeId);
 
         m_propertyExchange.SendSubscriptionReply(
-            m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 200, nullptr);
+            m_propertyOutput, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 200, nullptr);
 
         return;
     }
@@ -1109,7 +1204,7 @@ MidiSynthDevice::HandleSubscriptionRequest(
     // An initiator does not send full, partial or notify to a responder. Answering rather than
     // ignoring keeps it from waiting out a timeout.
     m_propertyExchange.SendSubscriptionReply(
-        m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 400, nullptr);
+        m_propertyOutput, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 400, nullptr);
 }
 
 
@@ -1212,6 +1307,24 @@ MidiSynthDevice::ResourceForHeader(
         result.Offset = readCount(L"offset", 0);
         result.Limit = readCount(L"limit", SIZE_MAX);
 
+        return ResourceLookup::Found;
+    }
+
+    if (resource == L"ChCtrlList")
+    {
+        std::string resourceId;
+
+        for (auto const character : readString(L"resId"))
+        {
+            resourceId += (character > 0 && character < 0x80) ? static_cast<char>(character) : '?';
+        }
+
+        if (!MidiSynth::PropertyExchangeSource::IsKnownControllerListResourceId(resourceId))
+        {
+            return ResourceLookup::UnknownResource;
+        }
+
+        result.Blob = &m_propertyExchange.ControllerListJson();
         return ResourceLookup::Found;
     }
 

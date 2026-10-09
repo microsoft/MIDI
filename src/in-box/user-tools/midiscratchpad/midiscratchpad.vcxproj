@@ -147,6 +147,7 @@
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\midi-app-shared\UmpPrimerLink.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">

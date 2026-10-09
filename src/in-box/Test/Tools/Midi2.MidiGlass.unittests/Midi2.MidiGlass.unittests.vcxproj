@@ -75,7 +75,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shell32.lib;ole32.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shell32.lib;ole32.lib;crypt32.lib;bcrypt.lib;ncrypt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -111,6 +111,8 @@
     <ClInclude Include="EditGeometryTests.h" />
     <ClInclude Include="EditorControllerTests.h" />
     <ClInclude Include="MackieControlTests.h" />
+    <ClInclude Include="ProvenanceTests.h" />
+    <ClInclude Include="ContentPackTests.h" />
     <ClInclude Include="TestLayoutFiles.h" />
     <!-- shared by source with midiglass, so the document layer is tested exactly as it ships -->
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\JsonText.h" />
@@ -124,6 +126,8 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\ThemeStore.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutStore.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutPackage.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutPack.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\document\SignedItems.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutTemplates.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\MackieControl.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\runtime\PanicMessages.h" />
@@ -146,6 +150,11 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\editor\RepeatPlan.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\editor\UndoStack.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\LfoWave.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\ChannelVoiceWords.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\StoredZip.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\ContentPack.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Module.cpp" />
@@ -167,6 +176,8 @@
     <ClCompile Include="EditGeometryTests.cpp" />
     <ClCompile Include="EditorControllerTests.cpp" />
     <ClCompile Include="MackieControlTests.cpp" />
+    <ClCompile Include="ProvenanceTests.cpp" />
+    <ClCompile Include="ContentPackTests.cpp" />
     <ClCompile Include="TestLayoutFiles.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\JsonText.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutModel.cpp" />
@@ -179,6 +190,8 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\ThemeStore.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutStore.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutPackage.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutPack.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\SignedItems.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutTemplates.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\MackieControl.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\runtime\PanicMessages.cpp" />
@@ -202,6 +215,11 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\RepeatPlan.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\UndoStack.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\LfoWave.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\ChannelVoiceWords.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\StoredZip.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\ContentPack.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

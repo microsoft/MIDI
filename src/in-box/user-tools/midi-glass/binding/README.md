@@ -78,7 +78,7 @@ Verified against an independent decoder rather than against the arithmetic that 
 
 ## The throttle
 
-A DIN cable carries about 350 three-byte messages a second, shared with everything else on that wire, so a continuous control needs a rate limit. It sits on the value-changed notification rather than inside the engine, so one limit governs both the send and the repaint and there is no way for the surface to show a value that was never sent.
+A DIN cable carries about a thousand three-byte messages a second, shared with everything else on that wire, so a continuous control needs a rate limit. It sits on the value-changed notification rather than inside the engine, so one limit governs both the send and the repaint and there is no way for the surface to show a value that was never sent.
 
 - **The first move of a gesture always goes**, however heavy the limit.
 - **The last value is always sent.** This is the rule that gets forgotten and the one that matters: without it a fader settles a few units from where the finger left it, and the surface and the desk disagree for the rest of the session.

@@ -314,17 +314,132 @@ void MidiCiProgramListTests::TestResourceListBytes()
 
     const auto length = BuildResourceListJson(resources, 3, buffer, sizeof(buffer));
 
-    // All three flags default to false in the specification, so a bare name is a complete entry
-    // and only the true ones are written.
+    // A bare name is a complete entry, and ProgramList's own specification already makes it paged
+    // and needing a resource id, so restating either is noise. M2-107-UM section 2.4.
     VERIFY_ARE_EQUAL(
         std::string(buffer, length),
         std::string("[{\"resource\":\"ResourceList\"},"
                     "{\"resource\":\"ChannelList\",\"canSubscribe\":true},"
-                    "{\"resource\":\"ProgramList\",\"requireResId\":true,\"canPaginate\":true}]"));
+                    "{\"resource\":\"ProgramList\"}]"));
 
     // An empty list is still a valid array.
     VERIFY_ARE_EQUAL(BuildResourceListJson(nullptr, 0, buffer, sizeof(buffer)), (size_t)2);
     VERIFY_ARE_EQUAL(std::string(buffer, 2), std::string("[]"));
+}
+
+void MidiCiProgramListTests::TestResourceListLeavesOutEachResourcesOwnDefaults()
+{
+    ResourceListEntry resources[4]{};
+
+    // A resource whose specification sets nothing special still has to say it pages.
+    resources[0].Resource = "X-Patches";
+    resources[0].RequireResourceId = true;
+    resources[0].CanPaginate = true;
+
+    // Paging is the default for ProgramList, so a list that cannot page has to say so.
+    resources[1].Resource = "ProgramList";
+    resources[1].RequireResourceId = true;
+    resources[1].CanPaginate = false;
+
+    // M2-117-UM makes a resource id the default for ChCtrlList.
+    resources[2].Resource = "ChCtrlList";
+    resources[2].RequireResourceId = true;
+
+    // Names are case sensitive, so this is not a ProgramList and gets the general defaults.
+    resources[3].Resource = "programList";
+    resources[3].RequireResourceId = true;
+
+    char buffer[256]{};
+
+    const auto length = BuildResourceListJson(resources, 4, buffer, sizeof(buffer));
+
+    VERIFY_ARE_EQUAL(
+        std::string(buffer, length),
+        std::string("[{\"resource\":\"X-Patches\",\"requireResId\":true,\"canPaginate\":true},"
+                    "{\"resource\":\"ProgramList\",\"canPaginate\":false},"
+                    "{\"resource\":\"ChCtrlList\"},"
+                    "{\"resource\":\"programList\",\"requireResId\":true}]"));
+
+    // Measuring has to agree with building, now that what is written depends on the name.
+    VERIFY_ARE_EQUAL(BuildResourceListJson(resources, 4, nullptr, 0), length);
+}
+
+void MidiCiProgramListTests::TestResourceListDefaultsComeFromTheResourceSpecification()
+{
+    auto const isDefault = [](ResourceListDefaults const& defaults, bool requireResourceId, bool canPaginate, char const* canSet)
+    {
+        return defaults.RequireResourceId == requireResourceId &&
+            defaults.CanPaginate == canPaginate &&
+            std::string(defaults.CanSet) == canSet;
+    };
+
+    // M2-107-UM section 2.4.
+    VERIFY_IS_TRUE(isDefault(ResourceListDefaultsFor("ProgramList"), true, true, "none"));
+
+    // M2-117-UM sections 3.2 and 4.2, and M2-111-UM section 3.4.
+    VERIFY_IS_TRUE(isDefault(ResourceListDefaultsFor("ChCtrlList"), true, false, "none"));
+    VERIFY_IS_TRUE(isDefault(ResourceListDefaultsFor("CtrlMapList"), true, false, "none"));
+    VERIFY_IS_TRUE(isDefault(ResourceListDefaultsFor("State"), true, false, "full"));
+
+    // Resources that can be written unless the device says otherwise.
+    VERIFY_IS_TRUE(isDefault(ResourceListDefaultsFor("LocalOn"), false, false, "full"));
+    VERIFY_IS_TRUE(isDefault(ResourceListDefaultsFor("BasicChannelRx"), false, false, "full"));
+
+    // Everything else, including ChannelList and a manufacturer's own resource, takes the general
+    // defaults from M2-103-UM section 14.
+    VERIFY_IS_TRUE(isDefault(ResourceListDefaultsFor("ChannelList"), false, false, "none"));
+    VERIFY_IS_TRUE(isDefault(ResourceListDefaultsFor("X-ProgramEdit"), false, false, "none"));
+    VERIFY_IS_TRUE(isDefault(ResourceListDefaultsFor("ProgramListX"), false, false, "none"));
+    VERIFY_IS_TRUE(isDefault(ResourceListDefaultsFor("Program"), false, false, "none"));
+    VERIFY_IS_TRUE(isDefault(ResourceListDefaultsFor(""), false, false, "none"));
+    VERIFY_IS_TRUE(isDefault(ResourceListDefaultsFor(nullptr), false, false, "none"));
+}
+
+void MidiCiProgramListTests::TestControllerListBytes()
+{
+    ControllerListEntry entries[3]{};
+
+    // Every property, and a default only a full thirty two bit number can hold.
+    entries[0].Title = "Volume";
+    entries[0].ControllerType = "cc";
+    entries[0].Index[0] = 7;
+    entries[0].IndexCount = 1;
+    entries[0].Priority = 1;
+    entries[0].HasDefault = true;
+    entries[0].Default = 4294967295u;
+    entries[0].Transmit = "none";
+    entries[0].Recognize = "both";
+    entries[0].SignificantBits = 7;
+    entries[0].ParameterPath = "/volume";
+    entries[0].TypeHint = "continuous";
+
+    // M2-117-UM requires no index for pitch bend, so none is written.
+    entries[1].Title = "Pitch Bend";
+    entries[1].ControllerType = "pBend";
+    entries[1].HasDefault = true;
+    entries[1].Default = 2147483648u;
+
+    // A registered controller is a bank and an index, and zero is a real default.
+    entries[2].Title = "Pitch Bend Sensitivity";
+    entries[2].ControllerType = "rpn";
+    entries[2].IndexCount = 2;
+    entries[2].HasDefault = true;
+
+    char buffer[512]{};
+
+    const auto length = BuildControllerListJson(entries, 3, buffer, sizeof(buffer));
+
+    VERIFY_ARE_EQUAL(
+        std::string(buffer, length),
+        std::string("[{\"title\":\"Volume\",\"ctrlType\":\"cc\",\"ctrlIndex\":[7],\"priority\":1,"
+                    "\"default\":4294967295,\"transmit\":\"none\",\"recognize\":\"both\",\"numSigBits\":7,"
+                    "\"paramPath\":\"/volume\",\"typeHint\":\"continuous\"},"
+                    "{\"title\":\"Pitch Bend\",\"ctrlType\":\"pBend\",\"default\":2147483648},"
+                    "{\"title\":\"Pitch Bend Sensitivity\",\"ctrlType\":\"rpn\",\"ctrlIndex\":[0,0],\"default\":0}]"));
+
+    VERIFY_ARE_EQUAL(BuildControllerListJson(entries, 3, nullptr, 0), length);
+    VERIFY_ARE_EQUAL(BuildControllerListJson(entries, 3, buffer, length - 1), (size_t)0);
+    VERIFY_ARE_EQUAL(BuildControllerListJson(nullptr, 0, buffer, sizeof(buffer)), (size_t)2);
 }
 
 void MidiCiProgramListTests::TestChannelListWithoutLinksBytes()

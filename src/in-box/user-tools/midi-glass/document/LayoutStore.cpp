@@ -545,6 +545,13 @@ namespace glass
     {
         try
         {
+            // What a newer version wrote is never written over with the part of it this one
+            // understood.
+            if (document.IsFromNewerVersion)
+            {
+                return false;
+            }
+
             auto const text = WriteLayoutToJson(document);
 
             if (text.empty() || filePath.empty())

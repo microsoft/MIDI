@@ -101,6 +101,9 @@
     <ClCompile Include="$(SolutionDir)inc\midi_network_adapters.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="$(SolutionDir)inc\midi_network_addresses.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rtpmidi_journal.h" />

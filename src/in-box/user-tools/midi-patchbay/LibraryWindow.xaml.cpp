@@ -1,0 +1,1168 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "pch.h"
+#include "LibraryWindow.xaml.h"
+#if __has_include("LibraryWindow.g.cpp")
+#include "LibraryWindow.g.cpp"
+#endif
+
+#include "App.xaml.h"
+#include "BackgroundWork.h"
+#include "DocumentHandoff.h"
+#include "PatchCanvas.h"
+#include "PatchLayout.h"
+#include "PatchProvenance.h"
+#include "PatchStore.h"
+#include "StringResources.h"
+#include "TextMatch.h"
+#include "resource.h"
+
+using namespace winrt::Microsoft::UI::Xaml;
+
+namespace patchbay = ::midipatchbay;
+namespace resources = ::midipatchbay::resources;
+
+namespace winrt::midipatchbay::implementation
+{
+    namespace
+    {
+        constexpr int32_t DefaultWindowWidth = 1280;
+        constexpr int32_t DefaultWindowHeight = 820;
+
+        constexpr int32_t RefreshIntervalMilliseconds = 500;
+
+        using patchbay::SameText;
+
+        media::Brush Brush(_In_ std::wstring_view key) noexcept
+        {
+            return patchbay::ThemeBrushes::Current().Get(key);
+        }
+    }
+
+    LibraryWindow::LibraryWindow()
+    {
+        // XAML objects must not call InitializeComponent during construction; winrt::make does it
+    }
+
+    winrt::weak_ref<LibraryWindow> LibraryWindow::s_instance{};
+
+    _Use_decl_annotations_
+    LRESULT CALLBACK LibraryWindow::HandoffSubclassProcedure(
+        HWND window,
+        UINT message,
+        WPARAM wParam,
+        LPARAM lParam,
+        UINT_PTR subclassId,
+        DWORD_PTR referenceData) noexcept
+    {
+        UNREFERENCED_PARAMETER(referenceData);
+
+        if (message == WM_COPYDATA)
+        {
+            try
+            {
+                auto paths = ::midiapp::ReadDocumentsFromCopyData(
+                    reinterpret_cast<COPYDATASTRUCT const*>(lParam));
+
+                // Imported after the sender has been answered, so a slow disk never holds the
+                // other process up.
+                if (!paths.empty())
+                {
+                    if (auto const queue = winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread())
+                    {
+                        queue.TryEnqueue([paths = std::move(paths)]()
+                            {
+                                if (auto strong = s_instance.get())
+                                {
+                                    strong->ImportPatchFiles(paths);
+                                }
+                            });
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return TRUE;
+        }
+
+        if (message == WM_NCDESTROY)
+        {
+            ::RemoveWindowSubclass(window, &LibraryWindow::HandoffSubclassProcedure, subclassId);
+        }
+
+        return ::DefSubclassProc(window, message, wParam, lParam);
+    }
+
+    void LibraryWindow::RestoreWindowPlacement() noexcept
+    {
+        midiapp::WindowChrome::RestorePlacement(
+            *this, patchbay::AppSettings::Current(), DefaultWindowWidth, DefaultWindowHeight);
+    }
+
+    void LibraryWindow::MinimizeAtStartup() noexcept
+    {
+        try
+        {
+            // From the window itself: this runs before the root has loaded, and the chrome only
+            // knows the window once it has, so asking the chrome gave no handle and no minimize.
+            HWND handle{ nullptr };
+
+            if (auto const native = xaml::Window{ *this }.try_as<::IWindowNative>())
+            {
+                LOG_IF_FAILED(native->get_WindowHandle(&handle));
+            }
+
+            if (handle != nullptr)
+            {
+                ::ShowWindow(handle, SW_MINIMIZE);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to start minimized.")
+    }
+
+    void LibraryWindow::BringForward() noexcept
+    {
+        try
+        {
+            auto const handle = m_chrome.WindowHandle();
+
+            if (handle != nullptr && (!::IsWindowVisible(handle) || ::IsIconic(handle)))
+            {
+                RestoreFromNotificationArea();
+                return;
+            }
+
+            Activate();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to bring the library forward.")
+    }
+
+    _Use_decl_annotations_
+    void LibraryWindow::OnRootLoaded(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            if (m_loaded)
+            {
+                return;
+            }
+
+            m_loaded = true;
+
+            // Before anything builds a visual in code, because that is where its brushes come
+            // from. Every editor uses these too: this window lives as long as the app.
+            patchbay::ThemeBrushes::Current().Initialize(ThemeBrushSource());
+
+            InitializeWindowChrome();
+            ApplyAssistantVisibility();
+
+            auto weak = get_weak();
+            auto queue = DispatcherQueue();
+
+            // Tiles built in code cannot re-theme themselves, and changing the Windows theme
+            // raises no settings change, so this is the one event that catches both.
+            RootGrid().ActualThemeChanged([weak](auto&&, auto&&)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->RebuildTiles();
+                        strong->UpdateServiceChip();
+                    }
+                });
+
+            m_libraryToken = patchbay::PatchLibrary::Current().Subscribe(
+                [weak](patchbay::LibraryChange change, std::wstring const& key)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->OnLibraryChanged(change, key);
+                    }
+                });
+
+            // The catalog raises its change on a watcher thread, so the library hears about it
+            // back on this one.
+            patchbay::EndpointCatalog::Current().SetChangedHandler([queue]()
+                {
+                    if (queue != nullptr)
+                    {
+                        queue.TryEnqueue([]()
+                            {
+                                patchbay::PatchLibrary::Current().EndpointsChanged();
+                            });
+                    }
+                });
+
+            auto& library = patchbay::PatchLibrary::Current();
+
+            library.Load();
+
+            if (auto const error = library.LastErrorMessage(); !error.empty())
+            {
+                ShowStatus(error, controls::InfoBarSeverity::Error);
+            }
+
+            InitializeLibraryControls();
+            RebuildTiles();
+            UpdateStatusStrip();
+
+            auto const& options = App::StartupOptions();
+
+            // A patch double-clicked in Explorer, which is what started the app.
+            if (!options.FilesToImport.empty())
+            {
+                ImportPatchFiles(options.FilesToImport);
+            }
+            else if (!options.PatchName.empty())
+            {
+                for (auto const* patch : library.Patches())
+                {
+                    if (SameText(patch->Name, options.PatchName))
+                    {
+                        OpenPatch(patch->SessionKey);
+                        break;
+                    }
+                }
+            }
+
+            m_refreshTimer = xaml::DispatcherTimer{};
+            m_refreshTimer.Interval(std::chrono::milliseconds{ RefreshIntervalMilliseconds });
+            m_refreshTimer.Tick([weak](auto&&, auto&&)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->OnRefreshTimerTick();
+                    }
+                });
+            m_refreshTimer.Start();
+
+            // Closing is turned into a hide when the customer has asked the app to keep running.
+            // Otherwise closing the library closes the app, which asks first if that stops a route.
+            AppWindow().Closing(
+                [weak](auto&&, windowing::AppWindowClosingEventArgs const& args)
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr)
+                    {
+                        return;
+                    }
+
+                    if (strong->TryHideToNotificationArea())
+                    {
+                        args.Cancel(true);
+                        return;
+                    }
+
+                    if (strong->m_exiting)
+                    {
+                        return;
+                    }
+
+                    args.Cancel(true);
+                    strong->ConfirmExitAsync();
+                });
+
+            // Minimizing goes the same way, so the app is in one place rather than two.
+            AppWindow().Changed(
+                [weak](windowing::AppWindow const& sender, windowing::AppWindowChangedEventArgs const& args)
+                {
+                    if (!args.DidPresenterChange() && !args.DidVisibilityChange())
+                    {
+                        return;
+                    }
+
+                    if (auto strong = weak.get())
+                    {
+                        if (auto const presenter = sender.Presenter().try_as<windowing::OverlappedPresenter>())
+                        {
+                            if (presenter.State() == windowing::OverlappedPresenterState::Minimized)
+                            {
+                                // the live state as well, so a change raised on the way back out
+                                // of the notification area cannot hide the window again
+                                if (::IsIconic(strong->m_chrome.WindowHandle()))
+                                {
+                                    strong->TryHideToNotificationArea();
+                                }
+                            }
+                        }
+                    }
+                });
+
+            this->Closed([weak](auto&&, auto&&)
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr)
+                    {
+                        return;
+                    }
+
+                    strong->m_closing = true;
+
+                    if (strong->m_refreshTimer != nullptr)
+                    {
+                        strong->m_refreshTimer.Stop();
+                    }
+
+                    // A window hidden in the notification area reports no useful placement, and
+                    // the one from just before it was hidden is already saved.
+                    if (::IsWindowVisible(strong->m_chrome.WindowHandle()))
+                    {
+                        strong->m_chrome.SavePlacement();
+                    }
+
+                    strong->m_chrome.Shutdown();
+
+                    auto& closingLibrary = patchbay::PatchLibrary::Current();
+
+                    closingLibrary.Unsubscribe(strong->m_libraryToken);
+                    strong->m_libraryToken = 0;
+
+                    // Changes still waiting for the quiet moment are written now, because that
+                    // moment is not coming.
+                    for (auto const* patch : closingLibrary.Patches())
+                    {
+                        if (!patch->FilePath.empty() && closingLibrary.IsUnsaved(patch->SessionKey))
+                        {
+                            closingLibrary.Save(patch->SessionKey);
+                        }
+                    }
+
+                    patchbay::EndpointCatalog::Current().SetChangedHandler(nullptr);
+                    patchbay::EndpointCatalog::Current().Stop();
+
+                    // The engine holds service connections, so it is torn down off the UI thread
+                    // and the window waits for nothing.
+                    std::thread([]() { patchbay::RouteEngine::Current().Shutdown(); }).detach();
+                });
+
+            // The catalog is shared with the other MIDI tools, so it cannot reach this app's
+            // telemetry by itself. Give it the same sink everything else here logs to.
+            midiapp::SetEndpointErrorHandler([](std::wstring_view message)
+                {
+                    MIDI_PATCHBAY_LOG_GENERAL_EXCEPTION(std::wstring{ message }.c_str());
+                });
+
+            // Starting the watcher blocks on the service, so it never happens on this thread.
+            patchbay::RunOnBackgroundAsync([]()
+                {
+                    patchbay::EndpointCatalog::Current().Start();
+                });
+
+            InitializeNotificationArea();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to finish loading the library.")
+    }
+
+    void LibraryWindow::InitializeWindowChrome() noexcept
+    {
+        try
+        {
+            midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
+
+            midiapp::WindowChromeElements elements{};
+
+            elements.Window = *this;
+            elements.Root = RootGrid();
+            elements.Fill = WindowFill();
+            elements.Tint = WindowTint();
+            elements.TitleBar = AppTitleBar();
+            elements.LeftInset = TitleBarLeftInsetColumn();
+            elements.RightInset = TitleBarRightInsetColumn();
+
+            m_chrome.Initialize(elements, patchbay::AppSettings::Current());
+
+            // Now that there is a window, a later launch has something to bring forward.
+            ::midiapp::SingleInstance::PublishMainWindow(m_chrome.WindowHandle());
+
+            // And something to hand a double-clicked patch to.
+            s_instance = get_weak();
+            ::SetWindowSubclass(m_chrome.WindowHandle(), &LibraryWindow::HandoffSubclassProcedure, 1, 0);
+
+            m_chrome.SetWindowIconFromResource(IDI_APPICON);
+
+            Title(resources::GetString(L"AppDisplayName"));
+            AppTitleTextBlock().Text(resources::GetString(L"AppDisplayName"));
+
+            // 32px source for a 16px slot, so it stays crisp on a high DPI display
+            if (auto const icon = midiapp::WindowChrome::LoadIconImageSource(IDI_APPICON, 32))
+            {
+                AppTitleBarIcon().Source(icon);
+            }
+
+            AlwaysOnTopToggle().IsChecked(patchbay::AppSettings::Current().AlwaysOnTop());
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to set up the window chrome.")
+    }
+
+    void LibraryWindow::ApplyAssistantVisibility() noexcept
+    {
+        try
+        {
+            AssistantButton().Visibility(patchbay::AppSettings::Current().ShowAssistant()
+                ? xaml::Visibility::Visible
+                : xaml::Visibility::Collapsed);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show or hide Ask an AI assistant.")
+    }
+
+    _Use_decl_annotations_
+    void LibraryWindow::OnAppearanceButtonClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            midiapp::AppearanceStrings strings{};
+
+            strings.Title = resources::GetString(L"AppearanceTitle");
+            strings.ThemeLabel = resources::GetString(L"AppearanceTheme");
+            strings.ThemeSystem = resources::GetString(L"AppearanceThemeSystem");
+            strings.ThemeLight = resources::GetString(L"AppearanceThemeLight");
+            strings.ThemeDark = resources::GetString(L"AppearanceThemeDark");
+            strings.BackdropLabel = resources::GetString(L"AppearanceBackdrop");
+            strings.BackdropSolid = resources::GetString(L"AppearanceBackdropSolid");
+            strings.BackdropMica = resources::GetString(L"AppearanceBackdropMica");
+            strings.BackdropAcrylic = resources::GetString(L"AppearanceBackdropAcrylic");
+            strings.CustomColorCheckBox = resources::GetString(L"AppearanceCustomColor");
+            strings.ColorPickerName = resources::GetString(L"AppearanceColorPicker");
+
+            controls::InfoBar note{};
+            note.Severity(controls::InfoBarSeverity::Informational);
+            note.IsOpen(true);
+            note.IsClosable(false);
+            note.Message(resources::GetString(L"AppearanceRoutingNote"));
+
+            controls::StackPanel topContent{};
+            topContent.Spacing(16.0);
+            topContent.Children().Append(midiapp::MakeUmpPrimerLink(resources::GetString(L"UmpPrimerLink")));
+            topContent.Children().Append(note);
+
+            auto weak = get_weak();
+
+            midiapp::ShowAppearanceFlyout(
+                AppearanceButton(),
+                patchbay::AppSettings::Current(),
+                strings,
+                [weak]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->m_chrome.ApplyTheme();
+                        strong->RebuildTiles();
+
+                        App::ApplyAppearanceToEditors();
+                    }
+                },
+                BuildAppSettingsPanel(),
+                topContent);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the appearance flyout.")
+    }
+
+    xaml::UIElement LibraryWindow::BuildAppSettingsPanel() noexcept
+    {
+        try
+        {
+            controls::StackPanel panel{};
+            panel.Spacing(10);
+            panel.Margin(xaml::ThicknessHelper::FromLengths(0, 12, 0, 0));
+
+            controls::TextBlock heading{};
+            heading.Text(resources::GetString(L"SettingsSectionHeading"));
+            heading.FontSize(12);
+            heading.Foreground(Brush(L"TextFillColorTertiaryBrush"));
+            panel.Children().Append(heading);
+
+            auto weak = get_weak();
+
+            auto const addToggle = [&panel](winrt::hstring const& header, winrt::hstring const& description,
+                bool isOn, std::function<void(bool)> onChanged)
+                {
+                    controls::ToggleSwitch toggle{};
+
+                    toggle.Header(winrt::box_value(header));
+                    toggle.IsOn(isOn);
+                    toggle.OnContent(winrt::box_value(winrt::hstring{ L"" }));
+                    toggle.OffContent(winrt::box_value(winrt::hstring{ L"" }));
+
+                    toggle.Toggled([onChanged](foundation::IInspectable const& s, xaml::RoutedEventArgs const&)
+                        {
+                            if (auto const control = s.try_as<controls::ToggleSwitch>())
+                            {
+                                onChanged(control.IsOn());
+                            }
+                        });
+
+                    panel.Children().Append(toggle);
+
+                    if (!description.empty())
+                    {
+                        controls::TextBlock hint{};
+                        hint.Text(description);
+                        hint.FontSize(11);
+                        hint.TextWrapping(xaml::TextWrapping::Wrap);
+                        hint.Margin(xaml::ThicknessHelper::FromLengths(0, -6, 0, 0));
+                        hint.Foreground(Brush(L"TextFillColorTertiaryBrush"));
+                        panel.Children().Append(hint);
+                    }
+                };
+
+            addToggle(
+                resources::GetString(L"SettingStartWithWindows"),
+                resources::GetString(L"SettingStartWithWindowsHint"),
+                patchbay::AppSettings::StartsWithWindows(),
+                [weak](bool value)
+                {
+                    if (!patchbay::AppSettings::TrySetStartsWithWindows(value))
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->ShowStatus(
+                                resources::GetString(L"ErrorStartupEntry"),
+                                controls::InfoBarSeverity::Warning);
+                        }
+                    }
+                });
+
+            addToggle(
+                resources::GetString(L"SettingNotificationArea"),
+                resources::GetString(L"SettingNotificationAreaHint"),
+                patchbay::AppSettings::Current().MinimizeToNotificationArea(),
+                [weak](bool value)
+                {
+                    patchbay::AppSettings::Current().MinimizeToNotificationArea(value);
+
+                    if (auto strong = weak.get())
+                    {
+                        if (value)
+                        {
+                            strong->m_tray.Show();
+                            strong->UpdateTray();
+                        }
+                        else
+                        {
+                            strong->m_tray.Hide();
+                        }
+                    }
+                });
+
+            addToggle(
+                resources::GetString(L"SettingStartMinimized"),
+                {},
+                patchbay::AppSettings::Current().StartMinimized(),
+                [](bool value) { patchbay::AppSettings::Current().StartMinimized(value); });
+
+            addToggle(
+                resources::GetString(L"SettingActivateAtStartup"),
+                {},
+                patchbay::AppSettings::Current().ActivateSavedPatchesAtStartup(),
+                [](bool value) { patchbay::AppSettings::Current().ActivateSavedPatchesAtStartup(value); });
+
+            addToggle(
+                resources::GetString(L"SettingWarnAboutLoops"),
+                {},
+                patchbay::AppSettings::Current().WarnAboutLoops(),
+                [](bool value) { patchbay::AppSettings::Current().WarnAboutLoops(value); });
+
+            addToggle(
+                resources::GetString(L"SettingAssistant"),
+                resources::GetString(L"SettingAssistantHint"),
+                patchbay::AppSettings::Current().ShowAssistant(),
+                [weak](bool value)
+                {
+                    patchbay::AppSettings::Current().ShowAssistant(value);
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->ApplyAssistantVisibility();
+                    }
+                });
+
+            return panel;
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the app settings panel.")
+
+        return nullptr;
+    }
+
+    _Use_decl_annotations_
+    void LibraryWindow::OnAlwaysOnTopToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            auto const isChecked = AlwaysOnTopToggle().IsChecked();
+
+            patchbay::AppSettings::Current().AlwaysOnTop(isChecked && isChecked.Value());
+            m_chrome.ApplyAlwaysOnTop();
+
+            App::ApplyAppearanceToEditors();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to change the always on top setting.")
+    }
+
+    // ------------------------------------------------------- notification area
+
+    void LibraryWindow::InitializeNotificationArea() noexcept
+    {
+        try
+        {
+            auto weak = get_weak();
+
+            // The handlers are wired up whether or not the icon is showing, because the setting
+            // can be turned on later and an icon whose menu does nothing is worse than no icon.
+            m_tray.SetOpenHandler([weak]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->RestoreFromNotificationArea();
+                    }
+                });
+
+            m_tray.SetExitHandler([weak]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->ExitApp();
+                    }
+                });
+
+            m_tray.SetStopAllHandler([]()
+                {
+                    patchbay::PatchLibrary::Current().StopAllRouting();
+                });
+
+            m_tray.SetTogglePatchHandler([](std::wstring const& key)
+                {
+                    auto& library = patchbay::PatchLibrary::Current();
+                    library.SetRouting(key, !library.IsRouting(key));
+                });
+
+            if (patchbay::AppSettings::Current().MinimizeToNotificationArea())
+            {
+                m_tray.Show();
+                UpdateTray();
+
+                // a start minimized launch happened before there was an icon to hide behind
+                if (auto const handle = m_chrome.WindowHandle())
+                {
+                    if (::IsIconic(handle))
+                    {
+                        TryHideToNotificationArea();
+                    }
+                }
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to set up the notification area.")
+    }
+
+    bool LibraryWindow::TryHideToNotificationArea() noexcept
+    {
+        try
+        {
+            if (m_exiting || m_closing || m_restoringFromNotificationArea)
+            {
+                return false;
+            }
+
+            // IsVisible rather than the setting, so a machine where the icon could not be added
+            // never hides the only way back to the app.
+            if (!m_tray.IsVisible())
+            {
+                return false;
+            }
+
+            auto const handle = m_chrome.WindowHandle();
+
+            if (handle == nullptr)
+            {
+                return false;
+            }
+
+            auto const minimized = ::IsIconic(handle) != FALSE;
+
+            // already hidden, so there is nothing to do and nothing to cancel for
+            if (!::IsWindowVisible(handle))
+            {
+                return false;
+            }
+
+            // a minimized window has no placement worth keeping, and the last good one is saved
+            if (!minimized)
+            {
+                m_chrome.SavePlacement();
+            }
+
+            ::ShowWindow(handle, SW_HIDE);
+
+            return true;
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to hide the window to the notification area.")
+
+        return false;
+    }
+
+    void LibraryWindow::RestoreFromNotificationArea() noexcept
+    {
+        try
+        {
+            auto const handle = m_chrome.WindowHandle();
+
+            if (handle == nullptr)
+            {
+                return;
+            }
+
+            m_restoringFromNotificationArea = true;
+
+            auto const reset = wil::scope_exit([this]() { m_restoringFromNotificationArea = false; });
+
+            // A window hidden while minimized needs both steps, and the flag above is what makes
+            // that safe: it is briefly visible and still minimized in between. Showing a window
+            // hidden while maximized keeps it maximized, so there is no restore in that case.
+            ::ShowWindow(handle, SW_SHOW);
+
+            if (::IsIconic(handle))
+            {
+                ::ShowWindow(handle, SW_RESTORE);
+            }
+
+            ::SetForegroundWindow(handle);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the window from the notification area.")
+    }
+
+    void LibraryWindow::UpdateTray() noexcept
+    {
+        try
+        {
+            if (!m_tray.IsVisible())
+            {
+                return;
+            }
+
+            auto& library = patchbay::PatchLibrary::Current();
+
+            std::vector<patchbay::TrayPatchItem> items{};
+
+            for (auto const* patch : library.Patches())
+            {
+                patchbay::TrayPatchItem item{};
+
+                item.PatchId = patch->SessionKey;
+                item.Name = patch->Name;
+                item.IsRouting = library.IsRouting(patch->SessionKey);
+                item.HasWarning = library.HasMissingEndpoint(patch->SessionKey);
+
+                if (item.HasWarning)
+                {
+                    item.Detail = std::wstring{ resources::GetString(L"TrayWaiting") };
+                }
+                else if (!item.IsRouting)
+                {
+                    item.Detail = std::wstring{ resources::GetString(L"TrayOff") };
+                }
+
+                items.push_back(std::move(item));
+            }
+
+            m_tray.Update(
+                std::wstring{ resources::FormatString(L"TrayTooltipFormat", library.RoutingCount()) },
+                std::move(items));
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to update the notification area.")
+    }
+
+    winrt::fire_and_forget LibraryWindow::ConfirmExitAsync()
+    {
+        auto strong = get_strong();
+
+        try
+        {
+            auto const routing = patchbay::PatchLibrary::Current().RoutingCount();
+
+            if (routing > 0)
+            {
+                ConfirmExitText().Text(routing == 1
+                    ? resources::GetString(L"ConfirmExitMessageOne")
+                    : resources::FormatString(L"ConfirmExitMessageFormat", routing));
+
+                ConfirmExitDialog().XamlRoot(Content().XamlRoot());
+
+                auto const result = co_await ConfirmExitDialog().ShowAsync();
+
+                if (result != controls::ContentDialogResult::Primary)
+                {
+                    co_return;
+                }
+            }
+
+            ExitApp();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to close the app.")
+    }
+
+    void LibraryWindow::ExitApp() noexcept
+    {
+        try
+        {
+            m_exiting = true;
+
+            App::CloseAllEditors();
+
+            Close();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to close the app.")
+    }
+
+    // ---------------------------------------------------------------- importing
+
+    _Use_decl_annotations_
+    void LibraryWindow::OnImportPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            // The Win32 common item dialog, never Windows.Storage.Pickers, which needs a package
+            // identity this unpackaged app does not have.
+            auto dialog = wil::CoCreateInstance<IFileOpenDialog>(CLSID_FileOpenDialog);
+
+            auto const filterName = resources::GetString(L"ImportPatchFilter");
+
+            COMDLG_FILTERSPEC const filters[]
+            {
+                { filterName.c_str(), L"*.midipatch" },
+            };
+
+            dialog->SetFileTypes(ARRAYSIZE(filters), filters);
+            dialog->SetTitle(resources::GetString(L"ImportPatchTitle").c_str());
+
+            if (FAILED(dialog->Show(m_chrome.WindowHandle())))
+            {
+                return;
+            }
+
+            winrt::com_ptr<IShellItem> item{};
+
+            if (FAILED(dialog->GetResult(item.put())) || item == nullptr)
+            {
+                return;
+            }
+
+            wil::unique_cotaskmem_string path{};
+
+            if (FAILED(item->GetDisplayName(SIGDN_FILESYSPATH, &path)) || path.get() == nullptr)
+            {
+                return;
+            }
+
+            ImportPatchFiles({ std::wstring{ path.get() } });
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to import a patch.")
+    }
+
+    _Use_decl_annotations_
+    bool LibraryWindow::ImportPatchFiles(std::vector<std::wstring> const& paths) noexcept
+    {
+        try
+        {
+            auto& store = patchbay::PatchStore::Current();
+            auto& library = patchbay::PatchLibrary::Current();
+
+            std::wstring openKey{};
+            std::wstring openName{};
+
+            for (auto const& path : paths)
+            {
+                auto imported = store.Import(path);
+
+                if (!imported.has_value())
+                {
+                    ShowStatus(store.LastErrorMessage(), controls::InfoBarSeverity::Error);
+                    continue;
+                }
+
+                // A file that was in the folder all along is here already.
+                patchbay::PatchDocument const* existing{ nullptr };
+
+                for (auto const* patch : library.Patches())
+                {
+                    if (!patch->FilePath.empty() && SameText(patch->FilePath, imported->FilePath))
+                    {
+                        existing = patch;
+                        break;
+                    }
+                }
+
+                if (existing != nullptr)
+                {
+                    openKey = existing->SessionKey;
+                    openName = existing->Name;
+                    continue;
+                }
+
+                // Never routed on the way in. Somebody else wrote this file, and the customer
+                // turns it on once they have looked at it.
+                auto const* added = library.Add(std::move(imported.value()), false);
+
+                if (added == nullptr)
+                {
+                    ShowStatus(library.LastErrorMessage(), controls::InfoBarSeverity::Error);
+                    continue;
+                }
+
+                openKey = added->SessionKey;
+                openName = added->Name;
+            }
+
+            if (openKey.empty())
+            {
+                return false;
+            }
+
+            OpenPatch(openKey);
+
+            ShowStatus(resources::FormatString(L"StatusPatchImportedFormat", openName),
+                controls::InfoBarSeverity::Success);
+
+            return true;
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to import the patches.")
+
+        return false;
+    }
+
+    // The tiles, the rows, the filter and the bar at the bottom are in LibraryWindowTiles.cpp.
+
+    _Use_decl_annotations_
+    void LibraryWindow::OpenPatch(std::wstring const& key) noexcept
+    {
+        App::OpenEditorWindow(key);
+    }
+
+    _Use_decl_annotations_
+    void LibraryWindow::DuplicatePatch(std::wstring const& key) noexcept
+    {
+        try
+        {
+            auto& library = patchbay::PatchLibrary::Current();
+            auto const* original = library.Find(key);
+
+            if (original == nullptr)
+            {
+                return;
+            }
+
+            auto copy = *original;
+
+            copy.Name = library.UniqueName(std::wstring{ resources::FormatString(L"PatchCopyNameFormat", original->Name) });
+            copy.Provenance = patchbay::CopyProvenance(original->Name, original->Provenance);
+            copy.FilePath.clear();
+            copy.CreatedTimestamp = 0;
+            copy.ModifiedTimestamp = 0;
+            copy.LoadedFileVersion = patchbay::CurrentPatchFileVersion;
+            copy.ConversionIssues.clear();
+            copy.EarlierVersionPath.clear();
+
+            // A copy of a saved patch is saved too, so it is still there next time.
+            auto const keepOnDisk = !original->FilePath.empty();
+            copy.IsTemporary = !keepOnDisk;
+
+            // Never routing: it would send everything the original sends a second time.
+            auto const* added = library.Add(std::move(copy), false);
+
+            if (added == nullptr)
+            {
+                ShowStatus(library.LastErrorMessage(), controls::InfoBarSeverity::Error);
+                return;
+            }
+
+            auto const addedKey = added->SessionKey;
+            auto const addedName = added->Name;
+
+            if (keepOnDisk && !library.Save(addedKey))
+            {
+                ShowStatus(library.LastErrorMessage(), controls::InfoBarSeverity::Error);
+                return;
+            }
+
+            ShowStatus(resources::FormatString(L"StatusPatchDuplicatedFormat", addedName),
+                controls::InfoBarSeverity::Success);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to duplicate the patch.")
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget LibraryWindow::DeletePatchAsync(std::wstring key)
+    {
+        auto strong = get_strong();
+
+        try
+        {
+            auto& library = patchbay::PatchLibrary::Current();
+            auto const* patch = library.Find(key);
+
+            if (patch == nullptr)
+            {
+                co_return;
+            }
+
+            ConfirmDeleteText().Text(resources::FormatString(L"DeletePatchMessageFormat", patch->Name));
+            ConfirmDeleteDialog().XamlRoot(Content().XamlRoot());
+
+            auto const result = co_await ConfirmDeleteDialog().ShowAsync();
+
+            if (result != controls::ContentDialogResult::Primary)
+            {
+                co_return;
+            }
+
+            // An editor showing the patch closes when the library says it is gone.
+            if (!patchbay::PatchLibrary::Current().Remove(key))
+            {
+                ShowStatus(patchbay::PatchLibrary::Current().LastErrorMessage(), controls::InfoBarSeverity::Error);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to delete the patch.")
+    }
+
+    _Use_decl_annotations_
+    void LibraryWindow::ShowInFolder(std::wstring const& path) noexcept
+    {
+        try
+        {
+            // Explorer opens on the folder with the file picked out, rather than opening the file.
+            wil::unique_any<PIDLIST_ABSOLUTE, decltype(&::ILFree), ::ILFree> item{ ::ILCreateFromPathW(path.c_str()) };
+
+            if (item)
+            {
+                LOG_IF_FAILED(::SHOpenFolderAndSelectItems(item.get(), 0, nullptr, 0));
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the patch in its folder.")
+    }
+
+    // ------------------------------------------------------------ toolbar
+
+    _Use_decl_annotations_
+    void LibraryWindow::OnNewPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            auto& library = patchbay::PatchLibrary::Current();
+
+            if (auto const* patch = library.Create())
+            {
+                OpenPatch(patch->SessionKey);
+            }
+            else
+            {
+                ShowStatus(library.LastErrorMessage(), controls::InfoBarSeverity::Error);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to create a patch.")
+    }
+
+    _Use_decl_annotations_
+    void LibraryWindow::OnNewQuickPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ShowQuickPatchDialogAsync();
+    }
+
+    _Use_decl_annotations_
+    void LibraryWindow::OnAssistantClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ShowAssistantDialogAsync();
+    }
+
+    _Use_decl_annotations_
+    void LibraryWindow::OnOpenFolderClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        patchbay::PatchStore::Current().ShowFolder();
+    }
+
+    // ------------------------------------------------------------------ status
+
+    void LibraryWindow::OnRefreshTimerTick() noexcept
+    {
+        try
+        {
+            if (m_closing)
+            {
+                return;
+            }
+
+            auto& library = patchbay::PatchLibrary::Current();
+
+            // Every window hears the new counts from the library.
+            library.RefreshActivity();
+            library.SaveDueChanges();
+
+            UpdateStatusStrip();
+            UpdateTileRates();
+            CheckServiceState();
+            UpdateTray();
+
+            ServiceBar().IsOpen(!patchbay::EndpointCatalog::Current().IsServiceAvailable());
+
+            auto const error = patchbay::RouteEngine::Current().LastErrorMessage();
+
+            if (error.empty())
+            {
+                m_lastEngineError = {};
+            }
+            else if (error != m_lastEngineError && !ServiceBar().IsOpen())
+            {
+                m_lastEngineError = error;
+                ShowStatus(error, controls::InfoBarSeverity::Error);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"The refresh timer failed.")
+    }
+
+    _Use_decl_annotations_
+    void LibraryWindow::ShowStatus(winrt::hstring const& message, controls::InfoBarSeverity severity) noexcept
+    {
+        try
+        {
+            if (message.empty())
+            {
+                StatusBar().IsOpen(false);
+                return;
+            }
+
+            StatusBar().Severity(severity);
+            StatusBar().Message(message);
+            StatusBar().IsOpen(true);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show a status message.")
+    }
+}

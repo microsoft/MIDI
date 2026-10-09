@@ -34,6 +34,8 @@ public:
     TEST_METHOD(TestHostDefinedBeforeTheEndpointManagerStarts);
     TEST_METHOD(TestRemoteInvitesHost);
     TEST_METHOD(TestClientConnectsToRemoteHost);
+    TEST_METHOD(TestClientInvitesTheAddressWindowsPrefers);
+    TEST_METHOD(TestClientTriesTheNextAddressWhenOneDoesNotAnswer);
     TEST_METHOD(TestSameNameFromTwoRemotesGetsTwoEndpoints);
     TEST_METHOD(TestRestartedRemoteReplacesItsOldConnection);
     TEST_METHOD(TestEndpointOpenedAgainBeforeTheOldOneCloses);

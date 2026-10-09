@@ -18,9 +18,8 @@
 #include <winrt/Windows.Data.Json.h>
 #include <winrt/Windows.Storage.Streams.h>
 
-// this mDNS/DNS-SD API is quite a bit easier to use than the win32 version
+// the host and client sockets, and the network adapters they run on
 #include <winrt/windows.networking.connectivity.h>
-#include <winrt/windows.networking.servicediscovery.dnssd.h>
 #include <winrt/windows.networking.sockets.h>
 #include <winrt/windows.networking.h>
 
@@ -124,6 +123,9 @@ namespace internal = ::WindowsMidiServicesInternal;
 // The adapters a host can be limited to, shared with the SDK and the setup app
 #include "midi_network_adapters.h"
 
+// Which of a remote's addresses a client tries, shared with the RTP-MIDI transport
+#include "midi_network_addresses.h"
+
 // The send speed limit, shared with the RTP-MIDI transport
 #include "midi_send_pacer.h"
 
@@ -156,6 +158,10 @@ struct MidiNetworkHostDefinition;
 
 #include "MidiNetworkClient.h"
 #include "MidiNetworkHost.h"
+
+// DNS-SD registration, shared with the RTP-MIDI transport. Why it is not the WinRT registration
+// is at the top of MidiNetworkAdvertiser.cpp.
+#include "midi_dnssd_advertiser.h"
 
 #include "MidiNetworkAdvertiser.h"
 

@@ -152,6 +152,7 @@ namespace glass
         case ControlKind::Panel:
         case ControlKind::TimeDisplay:
         case ControlKind::Line:
+        case ControlKind::Placeholder:
             return false;
 
         default:

@@ -1312,7 +1312,9 @@ namespace winrt::midiscratchpad::implementation
                     {
                         strong->m_chrome.ApplyTheme();
                     }
-                });
+                },
+                nullptr,
+                midiapp::MakeUmpPrimerLink(res::GetString(L"UmpPrimerLink")));
         }
         MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to open the settings.")
     }

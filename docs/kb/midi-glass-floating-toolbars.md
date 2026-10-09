@@ -1,17 +1,17 @@
 ---
 layout: kb
-title: How to make a floating toolbar or palette in MIDI Glass
+title: How to make a floating toolbar or palette in Windows MIDI Glass
 audience: everyone
 description: Build a strip or a square of buttons in Windows MIDI Glass that sits over your other apps, stays in front of them, and shows only its buttons.
 categories:
   - Getting Started
 ---
 
-Windows MIDI Glass ("MIDI Glass") is the Windows MIDI Services app for building your own touch control surface. Most layouts fill a window or the whole screen. A **floating toolbar** is different: it's a small strip of buttons that sits over another app, the way the tool strip in a drawing app does. A **floating palette** is the same idea in a square.
+Windows MIDI Glass is the Windows MIDI Services app for building your own touch control surface. Most layouts fill a window or the whole screen. A **floating toolbar** is different: it's a small strip of buttons that sits over another app, the way the tool strip in a drawing app does. A **floating palette** is the same idea in a square.
 
 They're handy when you want a few buttons over your DAW, a video app, or a live set, and you don't want to give up the screen to get them.
 
-> **MIDI Glass is a preview app.** Names and settings in this article can change before it ships.
+> **Windows MIDI Glass is a preview app.** Names and settings in this article can change before it ships.
 
 On this page:
 
@@ -39,7 +39,7 @@ These settings take effect the next time the layout runs. While it's running, yo
 
 The quickest way to get one is to start from one:
 
-1. In the MIDI Glass library, select **New layout**.
+1. In the Windows MIDI Glass library, select **New layout**.
 2. Give it a name, and under **Send to** pick the device the buttons should play.
 3. Under **Template**, pick one of these:
    - **Horizontal toolbar**: eight buttons in a row, on a page 800 × 120 pixels.
@@ -82,5 +82,5 @@ The menu has:
 
 - **Keep the page small.** You can see through the empty parts of a see-through page, but they still belong to the toolbar. A click there doesn't reach the app underneath. So a page that's just big enough for its buttons covers the least.
 - **Pick a theme for the buttons, not the background.** A see-through window doesn't draw the page's background, so only the controls show. Choose a theme whose controls stand out over the apps you'll use it with.
-- **It doesn't have to be buttons.** A toolbar can hold knobs, faders, or anything else MIDI Glass has. The starters use buttons because they fit a strip best.
+- **It doesn't have to be buttons.** A toolbar can hold knobs, faders, or anything else Windows MIDI Glass has. The starters use buttons because they fit a strip best.
 - **A transparent background works in a normal window too.** If you leave **Toolbar window** off, the title bar and the row of buttons above the page stay solid so you can still grab the window. Only the page is see-through.

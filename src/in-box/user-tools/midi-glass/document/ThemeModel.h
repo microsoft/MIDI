@@ -12,8 +12,11 @@
 #include <sal.h>
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
+
+#include "ContentProvenance.h"
 
 namespace glass
 {
@@ -913,6 +916,15 @@ namespace glass
         // press away - not to wash a palette out until every number clears 4.5 and the theme no
         // longer looks like the thing it was named after.
         std::wstring CautionResourceKey{};
+
+        // Who made it, from the theme file. Never set on a built-in theme or on one carried in a layout.
+        std::optional<midiapp::ContentProvenance> Provenance{};
+
+        // The file a customer theme was read from. Not written to the file.
+        std::wstring FilePath{};
+
+        // Top-level keys from a newer build, written back unchanged.
+        winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };
     };
 
     // The ones that ship. Studio Dark first, because it is the default and the one that stays

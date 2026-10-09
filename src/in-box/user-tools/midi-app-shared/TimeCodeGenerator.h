@@ -8,6 +8,7 @@
 #pragma once
 
 #include "MidiTimeCode.h"
+#include "GeneratorSink.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -51,6 +52,12 @@ namespace midiapp
             _In_ winrt::Windows::Devices::Midi2::MidiEndpointConnection const& connection,
             _In_ TimeCodeGeneratorOptions options);
 
+        // Hands every message to the sink rather than to a connection, for a caller that sends
+        // them on itself.
+        TimeCodeGenerator(
+            _In_ GeneratorSink sink,
+            _In_ TimeCodeGeneratorOptions options);
+
         ~TimeCodeGenerator();
 
         TimeCodeGenerator(TimeCodeGenerator const&) = delete;
@@ -72,6 +79,10 @@ namespace midiapp
         // Where the timecode has reached. Safe to read from any thread.
         MidiTimeCodePosition CurrentPosition() const noexcept;
 
+        // What a receiver is being told at that timestamp. CurrentPosition runs ahead of it by as
+        // much as the worker has queued. Safe to read from any thread.
+        MidiTimeCodePosition PositionAt(_In_ uint64_t timestamp) const noexcept;
+
         uint64_t QuarterFramesScheduled() const noexcept { return m_quarterFramesScheduled.load(); }
         uint64_t TicksPerQuarterFrame() const noexcept;
 
@@ -83,6 +94,7 @@ namespace midiapp
         void StorePosition(_In_ MidiTimeCodePosition const& position) noexcept;
 
         winrt::Windows::Devices::Midi2::MidiEndpointConnection m_connection{ nullptr };
+        GeneratorSink m_sink{};
         TimeCodeGeneratorOptions m_options;
 
         mutable std::mutex m_mutex;
@@ -98,6 +110,9 @@ namespace midiapp
         // Packed hours, minutes, seconds and frames, so the display can read a consistent
         // position without taking the lock the worker holds.
         std::atomic<uint32_t> m_packedPosition{ 0 };
+
+        // When the first quarter frame plays, offset included. Zero until the worker sets it.
+        std::atomic<uint64_t> m_originTimestamp{ 0 };
 
         std::thread m_worker;
         std::atomic<bool> m_running{ false };

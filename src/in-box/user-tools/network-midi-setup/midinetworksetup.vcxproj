@@ -134,6 +134,7 @@
       <DependentUpon>NetworkItems.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="StringResources.h" />
+    <ClInclude Include="ServiceFirewall.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="App.xaml.h">
       <DependentUpon>App.xaml</DependentUpon>
@@ -166,6 +167,7 @@
       <DependentUpon>NetworkItems.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="StringResources.cpp" />
+    <ClCompile Include="ServiceFirewall.cpp" />
     <ClCompile Include="App.xaml.cpp">
       <DependentUpon>App.xaml</DependentUpon>
     </ClCompile>
@@ -173,6 +175,9 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="MainWindowActions.cpp">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MainWindowFirewall.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />

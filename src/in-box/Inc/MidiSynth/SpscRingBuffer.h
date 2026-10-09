@@ -33,6 +33,26 @@ namespace MidiSynth
             return true;
         }
 
+        // Called only by the producer thread. The consumer sees all of the items or none of them.
+        bool TryPushAll(_In_reads_(count) const T* items, _In_ size_t count) noexcept
+        {
+            const size_t write = m_write.load(std::memory_order_relaxed);
+            const size_t used = (write + Capacity - m_read.load(std::memory_order_acquire)) % Capacity;
+
+            if (count > Capacity - 1 - used)
+            {
+                return false;
+            }
+
+            for (size_t i = 0; i < count; i++)
+            {
+                m_items[(write + i) % Capacity] = items[i];
+            }
+
+            m_write.store((write + count) % Capacity, std::memory_order_release);
+            return true;
+        }
+
         // Called only by the consumer thread.
         bool TryPop(_Out_ T& item) noexcept
         {

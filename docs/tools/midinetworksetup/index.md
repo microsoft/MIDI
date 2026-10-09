@@ -20,7 +20,7 @@ Devices that announce themselves on your network appear on their own, so there's
 
 ![The Windows MIDI Network Setup window, with numbered callouts on the list of pages, a device's name and address, its Connect button, a connected device's round trip graph, a device's Details, and Connect to a device by address]({{ site.baseurl }}/assets/images/midinetworksetup-quick-start.png)
 
-1. **The pages** are down the left. **Network devices** and **This PC** are described below the picture, and **Transport settings** holds the settings shared by every connection. The **RTP-MIDI** pages appear only when the RTP-MIDI transport is installed.
+1. **The pages** are down the left. **Network devices** and **This PC** are described below the picture, and **Transport settings** holds the settings shared by every connection. The **RTP-MIDI** pages appear only when the RTP-MIDI transport is installed. **Firewall**, at the bottom, lets the MIDI service through Windows Firewall.
 2. **Each device** shows its name, where it is on the network, and whether it's available or connected.
 3. **Connect** connects to the device. You're asked what to call it in Windows, and then it shows up in your DAW and other MIDI apps like any other MIDI device.
 4. **A connected device** shows a graph of its round trip time, which is how long a message takes to get there and back. **Disconnect and forget** ends the connection.
@@ -256,6 +256,34 @@ The two that matter most in practice are **How often to check a quiet connection
 
 For the exact defaults, ranges, and the configuration file keys behind these, see [How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/).
 
+## Windows Firewall
+
+Other devices connect to this PC's hosts through the MIDI service, and Windows Firewall blocks the service until you let it in. Most apps get a prompt from Windows the first time they listen on the network. The MIDI service runs in the background with no window, so it never gets that prompt. If Windows asked whether to let Network MIDI Setup through the firewall, your answer covers this app only, not the MIDI service.
+
+The usual sign is a PC that other devices can see but can't use. Windows announces this PC's hosts on the network for the MIDI service, so they show up in other devices' lists even while the firewall blocks the service. If a device lists this PC but can't connect to it, or it connects and no MIDI ever arrives, check the firewall first.
+
+The **Firewall** page, at the bottom of the list of pages, does this for you:
+
+1. Read what the page says about the network this PC is connected to now. It tells you whether Windows Firewall lets the MIDI service in there.
+2. Choose **Private networks**, **Public networks**, or both. The type of network this PC is connected to now is marked **(connected now)**.
+3. Select **Allow through Windows Firewall**, and say yes when Windows asks for administrator permission.
+
+Windows treats a network as public until you mark it as private, so your home or studio network might be public. Only allow public networks if you trust the other devices on them. **Private networks** also covers a network your school or company runs, which Windows calls a domain network.
+
+The button adds one rule to Windows Firewall, called **Windows MIDI Service (network MIDI)**. It lets in only the kind of network traffic that Network MIDI 2.0 and RTP-MIDI use (UDP), and only for the MIDI service. To change which networks the rule covers, change your choices and select the button again. The button is only available when your choices are different from what the rule already covers. Rules you made yourself in Windows Firewall are left alone.
+
+The page also tells you when the button can't help:
+
+- **A rule blocks the MIDI service.** A rule that blocks beats one that allows, so turn that rule off or remove it in Windows Firewall.
+- **Windows Firewall blocks all incoming connections** on the network you're on. That setting, in Windows Security, blocks allowed apps too.
+- **Your organization manages Windows Firewall** on this PC. A rule added here might not take effect, so ask whoever looks after the PC.
+
+### Other firewalls
+
+The **Firewall** page changes Windows Firewall only. Some PCs use a firewall from another company instead, often one that comes with antivirus software. If yours does, follow that company's instructions for letting a program accept incoming connections. The page shows the program to choose: `midisrv.exe`, and the folder it's in.
+
+To do the same thing by hand in Windows Firewall, see [Adding Network MIDI 2 to your firewall]({{ site.baseurl }}/kb/network-midi-firewall/).
+
 ## Settings
 
 The gear button in the title bar opens the settings.
@@ -273,6 +301,8 @@ The pin button next to the minimize button keeps the window above your other win
 A few things to check, roughly in order:
 
 **Look at the other device.** As above, it may be waiting for you to allow the connection there.
+
+**Check the firewall.** If other devices can see this PC's hosts but can't connect to them, or they connect and no MIDI arrives, Windows Firewall is probably blocking the MIDI service. See [Windows Firewall](#windows-firewall).
 
 **Check they're on the same network and same subnet.** Devices are found by announcing themselves locally, and those announcements don't usually cross between separate networks, or between a guest network and your main one. Usually the product manual for the other device will have information about how to ensure the subnet is the same, or how to set the IP address so it matches the network your PC is on.
 

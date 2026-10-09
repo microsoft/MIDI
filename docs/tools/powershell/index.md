@@ -11,7 +11,7 @@ PowerShell support for MIDI is currently experimental and in-development. Expect
 
 These cmdlets require a minimum of PowerShell 7.6. [We recommend using the latest official version](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows). Earlier 7.x releases run on an earlier .NET, which cannot load the module, so `Import-Module` refuses rather than failing later.
 
-PowerShell itself is not installed by the SDK Runtime and Tools installer. The .NET desktop runtime the cmdlets need is, currently .NET 10.
+PowerShell itself is not installed by the Windows MIDI Services Tools installer. The .NET desktop runtime the cmdlets need is, currently .NET 10.
 
 > The version of PowerShell which usually ships with Windows is currently the older Windows PowerShell. These cmdlets support the new cross-platform version of PowerShell. Please see the link above for how to install the latest 7.x version of PowerShell
 

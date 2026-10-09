@@ -4,6 +4,15 @@
 
 #include "MidiSynthUmpTests.h"
 
+#include <MidiSynth/DlsUnits.h>
+
+// windows.h defines GetObject, which collides with a member of the JSON projection.
+#pragma push_macro("GetObject")
+#undef GetObject
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Data.Json.h>
+#pragma pop_macro("GetObject")
+
 using namespace WEX::Common;
 using namespace WEX::Logging;
 using namespace MidiSynth;
@@ -283,6 +292,68 @@ namespace
     {
         return std::vector<uint8_t>{ 0x7F, 0x7F, 0x04, subId2,
             static_cast<uint8_t>(value & 0x7F), static_cast<uint8_t>((value >> 7) & 0x7F) };
+    }
+
+    // Interleaved stereo, rendered in the small blocks the transport uses.
+    std::vector<float> RenderSeconds(_In_ SynthEngine& engine, _In_ uint32_t sampleRate, _In_ double seconds)
+    {
+        const auto frames = static_cast<uint32_t>(seconds * sampleRate);
+        std::vector<float> buffer(static_cast<size_t>(frames) * 2, 0.0f);
+
+        uint32_t rendered = 0;
+
+        while (rendered < frames)
+        {
+            const uint32_t chunk = (std::min)(256u, frames - rendered);
+            engine.Render(buffer.data() + static_cast<size_t>(rendered) * 2, chunk);
+            rendered += chunk;
+        }
+
+        return buffer;
+    }
+
+    // Mean square of one side of interleaved stereo, side 0 left and 1 right, between two times.
+    double MeanSquare(
+        _In_ const std::vector<float>& stereo,
+        _In_ uint32_t sampleRate,
+        _In_ size_t side,
+        _In_ double fromSeconds,
+        _In_ double toSeconds)
+    {
+        const auto first = static_cast<size_t>(fromSeconds * sampleRate);
+        const auto last = (std::min)(static_cast<size_t>(toSeconds * sampleRate), stereo.size() / 2);
+
+        double energy = 0.0;
+
+        for (size_t frame = first; frame < last; frame++)
+        {
+            const double sample = stereo[frame * 2 + side];
+            energy += sample * sample;
+        }
+
+        return (last > first) ? energy / static_cast<double>(last - first) : 0.0;
+    }
+
+    double PowerDb(_In_ double meanSquare) noexcept
+    {
+        return (meanSquare > 0.0) ? 10.0 * std::log10(meanSquare) : -400.0;
+    }
+
+    _Ret_maybenull_ const DlsRegion* RegionFor(
+        _In_ const DlsInstrument& instrument,
+        _In_ uint8_t note,
+        _In_ uint8_t velocity7) noexcept
+    {
+        for (const auto& region : instrument.Regions)
+        {
+            if (note >= region.KeyLow && note <= region.KeyHigh &&
+                velocity7 >= region.VelocityLow && velocity7 <= region.VelocityHigh)
+            {
+                return &region;
+            }
+        }
+
+        return nullptr;
     }
 
     // A real Discovery Inquiry captured from the in-box MIDI Keyboard app.
@@ -1186,19 +1257,237 @@ void MidiSynthUmpTests::TestPropertyExchangeProgramListLinks()
                    "\"links\":[{\"resource\":\"ProgramList\",\"resId\":\"melodic\"") != std::string::npos,
         L"the channel it left goes back to the melodic programs");
 
-    // The resource list has to declare that a resource id is required, or a client is entitled to
-    // ask for the program list without one. Declaring pagination is what obliges every reply for
-    // the resource to carry a total count, so the two travel together.
+    // ProgramList's own specification already makes it paged and keyed by resource id, and the
+    // rules forbid a device overriding either, so the entry is the bare name. Stating them anyway
+    // was reported as noise by a member testing against us. M2-107-UM section 2.4, M2-103-UM
+    // section 14. The pagination test below proves the reply still carries totalCount.
     VERIFY_IS_TRUE(
-        contains(source.ResourceListJson(),
-            "{\"resource\":\"ProgramList\",\"requireResId\":true,\"canPaginate\":true}"),
-        L"ProgramList declares requireResId and canPaginate");
+        contains(source.ResourceListJson(), "{\"resource\":\"ProgramList\"}"),
+        L"ProgramList is listed by name alone");
 
     // M2-103-UM section 14 is explicit that the reply to a ResourceList inquiry does not list
     // ResourceList itself, and none of the examples in the specification do.
     VERIFY_IS_FALSE(
         contains(source.ResourceListJson(), "\"ResourceList\""),
         L"the resource list does not list itself");
+}
+
+
+// M2-117-UM ChCtrlList: the controllers a channel responds to, reached through a link from every
+// ChannelList entry. Asked for by a MIDI Association member testing against the synthesizer.
+void MidiSynthUmpTests::TestPropertyExchangeControllerList()
+{
+    namespace json = winrt::Windows::Data::Json;
+
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    SynthEngine engine;
+    UmpDispatcher dispatcher;
+    FreshEngine(*collection, engine, dispatcher, 0);
+
+    PropertyExchangeSource source;
+    source.Build(*collection, SynthIdentity{});
+
+    const auto text = [](const std::vector<char>& blob) { return std::string(blob.data(), blob.size()); };
+
+    const auto count = [](const std::string& haystack, const char* needle)
+    {
+        size_t found = 0;
+
+        for (auto at = haystack.find(needle); at != std::string::npos; at = haystack.find(needle, at + 1))
+        {
+            found++;
+        }
+
+        return found;
+    };
+
+    // The whole list, so neither a resource nor a restated default can slip in unnoticed. Both
+    // ProgramList and ChCtrlList need a resource id by their own specifications, so neither says so.
+    VERIFY_ARE_EQUAL(text(source.ResourceListJson()),
+        std::string("[{\"resource\":\"DeviceInfo\"},{\"resource\":\"ChannelList\",\"canSubscribe\":true},"
+                    "{\"resource\":\"ProgramList\"},{\"resource\":\"ChCtrlList\"}]"));
+
+    // M2-117-UM: ChCtrlList cannot be used without a reference from ChannelList.
+    const auto channels = text(source.RebuildChannelListJson(engine, *collection));
+
+    VERIFY_ARE_EQUAL(
+        count(channels, "{\"resource\":\"ChCtrlList\",\"resId\":\"channel\",\"title\":\"Controllers\"}"),
+        MidiChannelCount, L"every channel links to the controller list");
+
+    const auto controllers = text(source.ControllerListJson());
+
+    for (const auto& document : { text(source.ResourceListJson()), channels, controllers })
+    {
+        json::JsonArray parsed{ nullptr };
+
+        VERIFY_IS_TRUE(json::JsonArray::TryParse(winrt::to_hstring(document), parsed), L"the resource is a well formed JSON array");
+    }
+
+    // Defaults are the engine's power-up values scaled to thirty two bits the way M2-115-UM scales
+    // them: volume 100 repeats its low six bits under the top seven, reverb 40 is below the center
+    // and only shifts, and a bend range of two semitones sits in the top seven bits.
+    VERIFY_IS_TRUE(controllers.find(
+        "{\"title\":\"Volume\",\"ctrlType\":\"cc\",\"ctrlIndex\":[7],\"priority\":1,\"default\":3374617161,") != std::string::npos,
+        L"volume defaults to 100");
+    VERIFY_IS_TRUE(controllers.find("\"ctrlIndex\":[10],\"priority\":2,\"default\":2147483648,") != std::string::npos,
+        L"pan defaults to the center");
+    VERIFY_IS_TRUE(controllers.find("\"ctrlIndex\":[11],\"priority\":2,\"default\":4294967295,") != std::string::npos,
+        L"expression defaults to full");
+    VERIFY_IS_TRUE(controllers.find("\"ctrlIndex\":[91],\"priority\":3,\"default\":1342177280,") != std::string::npos,
+        L"reverb send defaults to 40, as GM2 sets it");
+    VERIFY_IS_TRUE(controllers.find("\"ctrlType\":\"rpn\",\"ctrlIndex\":[0,0],\"priority\":4,\"default\":67108864,") != std::string::npos,
+        L"pitch bend sensitivity defaults to two semitones");
+
+    // A tone generator sends no controllers, and every entry has to say so because the default
+    // is that it does.
+    const auto entries = count(controllers, "{\"title\":");
+
+    VERIFY_ARE_EQUAL(entries, (size_t)13);
+    VERIFY_ARE_EQUAL(count(controllers, "\"transmit\":\"none\""), entries, L"no entry claims the synth sends it");
+
+    // Listed most useful first, which is what lets a controller with eight knobs map the right ones.
+    json::JsonArray parsed{ nullptr };
+    json::JsonArray::TryParse(winrt::to_hstring(controllers), parsed);
+
+    double previous = 0.0;
+
+    for (uint32_t i = 0; parsed != nullptr && i < parsed.Size(); i++)
+    {
+        const double priority = parsed.GetObjectAt(i).GetNamedNumber(L"priority", 0.0);
+
+        VERIFY_IS_TRUE(priority >= previous, L"entries are ordered by priority");
+        previous = priority;
+    }
+
+    // The resource id the links hand out is answered, and so is a request without one.
+    VERIFY_IS_TRUE(PropertyExchangeSource::IsKnownControllerListResourceId(ControllerListResourceId));
+    VERIFY_IS_TRUE(PropertyExchangeSource::IsKnownControllerListResourceId(""));
+    VERIFY_IS_FALSE(PropertyExchangeSource::IsKnownControllerListResourceId("ch1"));
+}
+
+
+// What a customer reads in these resources comes from the host, so it can be translated. M2-105-UM
+// requires a title on every ChannelList entry, and here it says what the channel plays. Patch names
+// and the other names General MIDI and GS define are never translated.
+void MidiSynthUmpTests::TestPropertyExchangeText()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    SynthEngine engine;
+    UmpDispatcher dispatcher;
+    FreshEngine(*collection, engine, dispatcher, 0);
+
+    const auto text = [](const std::vector<char>& blob) { return std::string(blob.data(), blob.size()); };
+
+    const auto count = [](const std::string& haystack, const char* needle)
+    {
+        size_t found = 0;
+
+        for (auto at = haystack.find(needle); at != std::string::npos; at = haystack.find(needle, at + 1))
+        {
+            found++;
+        }
+
+        return found;
+    };
+
+    PropertyExchangeSource source;
+    source.Build(*collection, SynthIdentity{});
+
+    auto channels = text(source.RebuildChannelListJson(engine, *collection));
+
+    VERIFY_IS_TRUE(channels.find("{\"title\":\"Percussion\",\"channel\":10,") != std::string::npos,
+        L"channel 10 is called Percussion");
+    VERIFY_ARE_EQUAL(count(channels, "{\"title\":\"Melodic\",\"channel\":"), (size_t)15,
+        L"every other channel is called Melodic");
+
+    // Like the program list link, the title follows the rhythm part rather than the channel number.
+    engine.SetDrumChannel(5, true);
+
+    channels = text(source.RebuildChannelListJson(engine, *collection));
+
+    VERIFY_IS_TRUE(channels.find("{\"title\":\"Percussion\",\"channel\":6,") != std::string::npos,
+        L"a channel moved to drums is called Percussion");
+    VERIFY_ARE_EQUAL(count(channels, "{\"title\":\"Melodic\",\"channel\":"), (size_t)14);
+
+    // A translation arrives as UTF-8 and leaves escaped per code point, so it survives the trip.
+    PropertyExchangeText host{};
+    host.Manufacturer = "#Manufacturer";
+    host.Family = "#Family";
+    host.Model = "#Model";
+    host.MelodicChannel = "M\xC3\xA9lodique";
+    host.PercussionChannel = "#Percussion";
+    host.MelodicProgramList = "#MelodicPrograms";
+    host.DrumKitProgramList = "#DrumKits";
+    host.ControllerList = "#Controllers";
+
+    const std::pair<std::string*, const char*> controllerTitles[]
+    {
+        { &host.Volume, "#Volume" },
+        { &host.Modulation, "#Modulation" },
+        { &host.PitchBend, "#PitchBend" },
+        { &host.SustainPedal, "#SustainPedal" },
+        { &host.Pan, "#Pan" },
+        { &host.Expression, "#Expression" },
+        { &host.ReverbSend, "#ReverbSend" },
+        { &host.ChorusSend, "#ChorusSend" },
+        { &host.NotePitchBend, "#NotePitchBend" },
+        { &host.PitchBendSensitivity, "#PitchBendSensitivity" },
+        { &host.NoteVolume, "#NoteVolume" },
+        { &host.NotePan, "#NotePan" },
+        { &host.NotePitch, "#NotePitch" },
+    };
+
+    for (const auto& [field, value] : controllerTitles)
+    {
+        *field = value;
+    }
+
+    PropertyExchangeSource translated;
+    translated.Build(*collection, SynthIdentity{}, host);
+
+    const auto deviceInfo = text(translated.DeviceInfoJson());
+
+    VERIFY_IS_TRUE(
+        deviceInfo.find("\"manufacturer\":\"#Manufacturer\"") != std::string::npos &&
+        deviceInfo.find("\"family\":\"#Family\"") != std::string::npos &&
+        deviceInfo.find("\"model\":\"#Model\"") != std::string::npos,
+        L"DeviceInfo names come from the host");
+
+    channels = text(translated.RebuildChannelListJson(engine, *collection));
+
+    VERIFY_IS_TRUE(channels.find("{\"title\":\"M\\u00E9lodique\",\"channel\":1,") != std::string::npos,
+        L"the host's title is used, and a character beyond ASCII is escaped rather than mangled");
+    VERIFY_IS_TRUE(channels.find("{\"title\":\"#Percussion\",\"channel\":10,") != std::string::npos);
+    VERIFY_IS_TRUE(channels.find("{\"title\":\"#Percussion\",\"channel\":6,") != std::string::npos);
+    VERIFY_ARE_EQUAL(count(channels, "\"resId\":\"melodic\",\"title\":\"#MelodicPrograms\"}"), (size_t)14);
+    VERIFY_ARE_EQUAL(count(channels, "\"resId\":\"drums\",\"title\":\"#DrumKits\"}"), (size_t)2);
+    VERIFY_ARE_EQUAL(count(channels, "\"resId\":\"channel\",\"title\":\"#Controllers\"}"), MidiChannelCount,
+        L"link titles come from the host");
+
+    const auto controllers = text(translated.ControllerListJson());
+
+    for (const auto& [field, value] : controllerTitles)
+    {
+        VERIFY_IS_TRUE(controllers.find(std::string("{\"title\":\"") + value + "\",") != std::string::npos,
+            L"every controller name comes from the host");
+    }
+
+    VERIFY_IS_TRUE(
+        translated.ProgramListJson(MelodicProgramListResourceId) == source.ProgramListJson(MelodicProgramListResourceId) &&
+        translated.ProgramListJson(DrumKitProgramListResourceId) == source.ProgramListJson(DrumKitProgramListResourceId),
+        L"patch names and categories are left exactly as they were");
 }
 
 
@@ -1731,6 +2020,386 @@ void MidiSynthUmpTests::TestMidiCiInquiriesAreAnswered()
 
     VERIFY_IS_TRUE(endpoint == expectedEndpoint,
         L"Inquiry: Endpoint is answered with the product instance id");
+}
+
+
+namespace
+{
+    // Inquiry: MIDI Message Report from initiator MUID 0x42 to TestMuid, worked out by hand from
+    // M2-101-UM section 9. It also asks for every system message and every kind of note data,
+    // which this synthesizer does not report, so the reply has to say what it left out.
+    std::vector<uint8_t> MessageReportInquiry(
+        _In_ uint8_t deviceId,
+        _In_ uint8_t dataControl,
+        _In_ uint8_t channelControllers)
+    {
+        return std::vector<uint8_t>
+        {
+            0x7E, deviceId, 0x0D, 0x42, 0x02,
+            0x42, 0x00, 0x00, 0x00,
+            0x56, 0x68, 0x48, 0x00,
+            dataControl,
+            0x07,                           // every system message
+            0x00,                           // reserved
+            channelControllers,
+            0x1F                            // every kind of note data
+        };
+    }
+
+    std::vector<uint8_t> ExpectedReportReply(_In_ uint8_t deviceId, _In_ uint8_t channelControllers)
+    {
+        return std::vector<uint8_t>
+        {
+            0x7E, deviceId, 0x0D, 0x43, 0x02,
+            0x56, 0x68, 0x48, 0x00,
+            0x42, 0x00, 0x00, 0x00,
+            0x00,                           // no system messages
+            0x00,                           // reserved
+            channelControllers,
+            0x00                            // no note data
+        };
+    }
+
+    std::vector<uint8_t> ExpectedReportEnd(_In_ uint8_t deviceId)
+    {
+        return std::vector<uint8_t>
+        {
+            0x7E, deviceId, 0x0D, 0x44, 0x02,
+            0x56, 0x68, 0x48, 0x00,
+            0x42, 0x00, 0x00, 0x00
+        };
+    }
+
+    struct ReportParts
+    {
+        std::vector<uint8_t> Reply;
+        std::vector<std::pair<uint32_t, uint32_t>> Messages;
+        std::vector<uint8_t> End;
+        size_t PacketCount{ 0 };
+
+        // One reply, then nothing but channel voice messages, then one end.
+        bool WellFormed{ false };
+    };
+
+    // Every packet in a report is two words, system exclusive and MIDI 2.0 channel voice alike.
+    ReportParts SplitReport(_In_ const std::vector<uint32_t>& words)
+    {
+        ReportParts parts{};
+
+        std::vector<uint32_t> current{};
+        std::vector<std::vector<uint8_t>> sysex{};
+        bool strayMessage = false;
+
+        for (size_t i = 0; i + 1 < words.size(); i += 2)
+        {
+            parts.PacketCount++;
+
+            if ((words[i] >> 28) == 0x3)
+            {
+                current.push_back(words[i]);
+                current.push_back(words[i + 1]);
+
+                const auto status = (words[i] >> 20) & 0xF;
+
+                // 0 is a complete message and 3 is the end of one.
+                if (status == 0 || status == 3)
+                {
+                    sysex.push_back(DecodeSysEx7(current));
+                    current.clear();
+                }
+            }
+            else
+            {
+                if (sysex.size() != 1 || !current.empty())
+                {
+                    strayMessage = true;
+                }
+
+                parts.Messages.emplace_back(words[i], words[i + 1]);
+            }
+        }
+
+        parts.WellFormed =
+            (words.size() % 2) == 0 &&
+            sysex.size() == 2 &&
+            current.empty() &&
+            !strayMessage;
+
+        if (sysex.size() > 0)
+        {
+            parts.Reply = sysex[0];
+        }
+
+        if (sysex.size() > 1)
+        {
+            parts.End = sysex[1];
+        }
+
+        return parts;
+    }
+
+    // Sends the inquiry, then does what the transport's worker does with it.
+    ReportParts RequestReport(
+        _In_ UmpDispatcher& dispatcher,
+        _In_ uint8_t deviceId,
+        _In_ uint8_t dataControl,
+        _In_ uint8_t channelControllers)
+    {
+        SendSysExPayload(dispatcher, MessageReportInquiry(deviceId, dataControl, channelControllers));
+
+        UmpDispatcher::PendingMessageReport report{};
+
+        if (!dispatcher.TakePendingMessageReport(report))
+        {
+            return ReportParts{};
+        }
+
+        CaptureOutput output;
+        UmpDispatcher::WriteMidiMessageReport(report, 0, dispatcher.Muid(), output);
+
+        return SplitReport(output.Words);
+    }
+}
+
+
+// Process Inquiry, M2-101-UM section 9. The MIDI Message Report is how an initiator learns what a
+// device is set to without having sent those messages itself, such as an application that
+// connects after a song has already set the synthesizer up.
+void MidiSynthUmpTests::TestMidiMessageReport()
+{
+    namespace ci = WindowsMidiServicesCapabilityInquiry;
+
+    // No sound set: a report reads channel state, which is valid before one is loaded.
+    SynthEngine engine;
+    UmpDispatcher dispatcher;
+    dispatcher.Initialize(&engine, 0, TestMuid);
+
+    CaptureOutput output;
+    dispatcher.SetOutput(&output, SynthIdentity{});
+
+    dispatcher.ProcessWords(DiscoveryInquiry, 10);
+
+    const auto discovery = DecodeSysEx7(output.Words);
+
+    // Byte 24 is the capability category, after the preamble, two MUIDs and the identity.
+    VERIFY_IS_TRUE(discovery.size() == 31 && (discovery[24] & ci::CategoryProcessInquiry) != 0,
+        L"Discovery declares Process Inquiry");
+
+    output.Words.clear();
+
+    SendSysExPayload(dispatcher, std::vector<uint8_t>
+    {
+        0x7E, 0x7F, 0x0D, 0x40, 0x02,
+        0x42, 0x00, 0x00, 0x00,
+        0x56, 0x68, 0x48, 0x00
+    });
+
+    const std::vector<uint8_t> expectedCapabilities
+    {
+        0x7E, 0x7F, 0x0D, 0x41, 0x02,
+        0x56, 0x68, 0x48, 0x00,
+        0x42, 0x00, 0x00, 0x00,
+        0x01                                // MIDI Message Report
+    };
+
+    VERIFY_IS_TRUE(DecodeSysEx7(output.Words) == expectedCapabilities,
+        L"Inquiry: Process Inquiry Capabilities is answered");
+
+    const auto midi1 = [&](uint8_t status, uint8_t channel, uint8_t data1, uint8_t data2)
+    {
+        const uint32_t word = MakeMidi1Cv(0, status, channel, data1, data2);
+        dispatcher.ProcessWords(&word, 1);
+    };
+
+    const auto midi2 = [&](uint8_t status, uint8_t channel, uint8_t index1, uint32_t data)
+    {
+        uint32_t words[2]{};
+        MakeMidi2Cv(0, status, channel, index1, 0, data, words);
+        dispatcher.ProcessWords(words, 2);
+    };
+
+    // Values arriving every way a value can: MIDI 1.0, MIDI 2.0, and one set to what it already was.
+    midi1(0xB, 0, 0, 121);                  // channel 1: bank 121, 1, program 6
+    midi1(0xB, 0, 32, 1);
+    midi1(0xC, 0, 5, 0);
+
+    midi1(0xB, 2, 1, 64);                   // channel 3
+    midi1(0xB, 2, 7, 127);
+    midi2(0xB, 2, 10, 0x12345678);
+    midi2(0xB, 2, 11, 0x9ABCDEF0);
+    midi1(0xB, 2, 64, 127);
+    midi1(0xB, 2, 91, 40);                  // the power-up value, sent anyway
+    midi1(0xB, 2, 93, 64);
+    midi2(0xE, 2, 0, 0x89ABCDEF);
+    midi1(0xB, 2, 101, 0);                  // pitch bend sensitivity, 12 semitones
+    midi1(0xB, 2, 100, 0);
+    midi1(0xB, 2, 6, 12);
+
+    midi1(0xE, 3, 0x7F, 0x7F);              // channel 4: the top of a 14 bit bend
+
+    output.Words.clear();
+
+    SendSysExPayload(dispatcher, MessageReportInquiry(0x7F, ci::MessageDataControlFull, 0x3F));
+
+    VERIFY_IS_TRUE(output.Words.empty(),
+        L"the report is left for a worker rather than sent from the thread that renders audio");
+
+    UmpDispatcher::PendingMessageReport report{};
+
+    VERIFY_IS_TRUE(dispatcher.TakePendingMessageReport(report));
+
+    // The report describes the moment the inquiry arrived, not the moment it is sent.
+    midi1(0xB, 2, 7, 1);
+
+    CaptureOutput reportOutput;
+    UmpDispatcher::WriteMidiMessageReport(report, 0, dispatcher.Muid(), reportOutput);
+
+    midi1(0xB, 2, 7, 127);
+
+    const auto full = SplitReport(reportOutput.Words);
+
+    VERIFY_IS_TRUE(full.WellFormed, L"one reply, then channel voice messages only, then one end");
+    VERIFY_ARE_EQUAL(full.PacketCount, UmpDispatcher::MidiMessageReportMaximumPackets,
+        L"the largest report is the size the transport checks its queue against");
+
+    // Everything was asked for. Pitch bend, control change, registered controllers and program
+    // change are what this synthesizer has.
+    VERIFY_IS_TRUE(full.Reply == ExpectedReportReply(0x7F, 0x17), L"the reply says what is reported");
+    VERIFY_IS_TRUE(full.End == ExpectedReportEnd(0x7F), L"and the end closes it");
+
+    // Each channel in turn, each in the same order: the bend, controllers by number, pitch bend
+    // sensitivity, then the program with its bank marked valid.
+    constexpr uint8_t slotStatus[10]{ 0xE, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0x2, 0xC };
+    constexpr uint8_t slotIndex[10]{ 0, 1, 7, 10, 11, 64, 91, 93, 0, 0 };
+    constexpr uint8_t slotFlags[10]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01 };
+
+    bool ordered = full.Messages.size() == MidiChannelCount * 10;
+
+    for (size_t i = 0; ordered && i < full.Messages.size(); i++)
+    {
+        const auto word0 = full.Messages[i].first;
+        const auto slot = i % 10;
+
+        ordered =
+            (word0 >> 28) == 0x4 &&
+            ((word0 >> 24) & 0xF) == 0 &&
+            ((word0 >> 20) & 0xF) == slotStatus[slot] &&
+            ((word0 >> 16) & 0xF) == i / 10 &&
+            ((word0 >> 8) & 0xFF) == slotIndex[slot] &&
+            (word0 & 0xFF) == slotFlags[slot];
+
+        if (!ordered)
+        {
+            Log::Comment(String().Format(L"message %zu: 0x%08X", i, word0));
+        }
+    }
+
+    VERIFY_IS_TRUE(ordered, L"one whole channel after another, in a fixed order");
+
+    const auto value = [&](size_t channel, size_t slot) { return full.Messages[channel * 10 + slot].second; };
+
+    // A channel nobody touched reports the General MIDI power-up state. A 7 bit value goes back
+    // scaled up the way M2-115-UM scales it, so volume 100 is not simply 100 << 25.
+    const uint32_t powerUp[10]{ 0x80000000, 0, 3374617161, 0x80000000, 0xFFFFFFFF, 0, 1342177280, 0, 2u << 25, 0 };
+
+    for (size_t slot = 0; slot < 10; slot++)
+    {
+        VERIFY_ARE_EQUAL(value(1, slot), powerUp[slot]);
+    }
+
+    // A 32 bit value goes back exactly as it arrived.
+    const uint32_t changed[10]{ 0x89ABCDEF, 0x80000000, 0xFFFFFFFF, 0x12345678, 0x9ABCDEF0, 0xFFFFFFFF, 1342177280, 0x80000000, 12u << 25, 0 };
+
+    for (size_t slot = 0; slot < 10; slot++)
+    {
+        VERIFY_ARE_EQUAL(value(2, slot), changed[slot]);
+    }
+
+    VERIFY_ARE_EQUAL(value(0, 9), (5u << 24) | (121u << 8) | 1u, L"program 6 on bank 121, 1");
+    VERIFY_ARE_EQUAL(value(3, 0), 0xFFFFFFFFu, L"the top of a 14 bit bend is the top of a 32 bit one");
+
+    // Only what differs from power-up. Reverb on channel 3 was sent but not changed, so it stays out.
+    const std::vector<std::pair<uint32_t, uint32_t>> expectedChanges
+    {
+        { 0x40C00001, (5u << 24) | (121u << 8) | 1u },      // channel 1: program
+        { 0x40E20000, 0x89ABCDEF },                         // channel 3: bend
+        { 0x40B20100, 0x80000000 },                         // modulation
+        { 0x40B20700, 0xFFFFFFFF },                         // volume
+        { 0x40B20A00, 0x12345678 },                         // pan
+        { 0x40B20B00, 0x9ABCDEF0 },                         // expression
+        { 0x40B24000, 0xFFFFFFFF },                         // sustain
+        { 0x40B25D00, 0x80000000 },                         // chorus
+        { 0x40220000, 12u << 25 },                          // pitch bend sensitivity
+        { 0x40E30000, 0xFFFFFFFF },                         // channel 4: bend
+    };
+
+    const auto nonDefault = RequestReport(dispatcher, 0x7F, ci::MessageDataControlNonDefault, 0x3F);
+
+    VERIFY_IS_TRUE(nonDefault.WellFormed && nonDefault.Messages == expectedChanges,
+        L"data control 1 reports only what differs from power-up");
+
+    // One channel, and only the family asked for.
+    const auto oneChannel = RequestReport(
+        dispatcher, 0x02, ci::MessageDataControlFull, ci::ChannelControllerControlChange);
+
+    bool onlyThatChannel =
+        oneChannel.WellFormed &&
+        oneChannel.Messages.size() == 7 &&
+        oneChannel.Reply == ExpectedReportReply(0x02, ci::ChannelControllerControlChange) &&
+        oneChannel.End == ExpectedReportEnd(0x02);
+
+    for (const auto& message : oneChannel.Messages)
+    {
+        onlyThatChannel = onlyThatChannel &&
+            ((message.first >> 20) & 0xF) == 0xB &&
+            ((message.first >> 16) & 0xF) == 2;
+    }
+
+    VERIFY_IS_TRUE(onlyThatChannel, L"a report to one channel covers that channel and what was asked");
+
+    const auto none = RequestReport(dispatcher, 0x7F, ci::MessageDataControlNone, 0x3F);
+
+    VERIFY_IS_TRUE(
+        none.WellFormed && none.Messages.empty() && none.Reply == ExpectedReportReply(0x7F, 0x17),
+        L"data control 0 asks only what could be reported");
+
+    const auto nothing = RequestReport(
+        dispatcher, 0x7F, ci::MessageDataControlFull, ci::ChannelControllerChannelPressure);
+
+    VERIFY_IS_TRUE(
+        nothing.WellFormed && nothing.Messages.empty() && nothing.Reply == ExpectedReportReply(0x7F, 0x00),
+        L"asking only for what is not kept gets an empty report, not silence");
+
+    // A second inquiry while the first still waits is dropped. The initiator retries.
+    const auto ignoredBefore = dispatcher.Stats().Ignored;
+
+    SendSysExPayload(dispatcher, MessageReportInquiry(0x7F, ci::MessageDataControlFull, 0x3F));
+    SendSysExPayload(dispatcher, MessageReportInquiry(0x05, ci::MessageDataControlFull, 0x3F));
+
+    UmpDispatcher::PendingMessageReport first{};
+    UmpDispatcher::PendingMessageReport second{};
+
+    VERIFY_IS_TRUE(
+        dispatcher.TakePendingMessageReport(first) &&
+        first.DeviceId == 0x7F &&
+        !dispatcher.TakePendingMessageReport(second) &&
+        dispatcher.Stats().Ignored == ignoredBefore + 1,
+        L"a second inquiry does not overwrite the first while a worker may be reading it");
+
+    // Data control 0x02 is reserved. The initiator is told at once rather than left to time out.
+    output.Words.clear();
+
+    SendSysExPayload(dispatcher, MessageReportInquiry(0x7F, 0x02, 0x3F));
+
+    const auto nak = DecodeSysEx7(output.Words);
+
+    VERIFY_IS_TRUE(
+        nak.size() >= 16 && nak[3] == 0x7F && nak[13] == 0x42 && nak[14] == ci::NakStatusMessageMalformed,
+        L"a reserved data control is refused as malformed");
+
+    UmpDispatcher::PendingMessageReport refused{};
+
+    VERIFY_IS_FALSE(dispatcher.TakePendingMessageReport(refused), L"and nothing is left for the worker");
 }
 
 
@@ -2326,5 +2995,350 @@ void MidiSynthUmpTests::TestUmpStreamDiscovery()
     VERIFY_IS_TRUE(sawFunctionBlockInfo, L"a Function Block Info Notification was sent");
     VERIFY_ARE_EQUAL(textFor(0x012, true), std::string{ "Test Synthesizer" },
         L"the function block is named");
+}
+
+
+// DLS stores sustain level and pan in 0.1 percent units with sixteen bits of fraction, like every
+// other connection value (DLS Level 1, Appendix A). Reading them without the fraction made every
+// value but zero saturate: issue #1260.
+void MidiSynthUmpTests::TestDlsPercentUnits()
+{
+    VERIFY_ARE_EQUAL(PercentUnitsToFraction(0x03E80000), 1.0, L"0x03E80000 is 100 percent");
+
+    // The specification's own worked example.
+    VERIFY_ARE_EQUAL(PercentUnitsToFraction(0x01F40000), 0.5, L"0x01F40000 is 50 percent");
+
+    // A low floor tom in gm.dls's standard kit, and the sustain level of Atmosphere.
+    std::vector<DlsConnection> const none{};
+    std::vector<DlsConnection> const region
+    {
+        DlsConnection{ 0x0000, 0x0000, 0x0004, 0x0000, static_cast<int32_t>(0xFE950000) },
+        DlsConnection{ 0x0000, 0x0000, 0x020A, 0x0000, 0x03720000 },
+    };
+
+    const auto articulation = ResolveArticulation(none, region);
+
+    VERIFY_IS_TRUE(std::fabs(articulation.PanFraction + 0.363) < 1e-9, L"pan -36.3 percent survives as -0.363");
+    VERIFY_IS_TRUE(std::fabs(articulation.Eg1SustainFraction - 0.882) < 1e-9, L"sustain 88.2 percent survives as 0.882");
+}
+
+
+// The toms on white keys 41 to 50 are spread across the stereo field by the sound set, and the
+// reporter of issue #1260 heard them only in the center or hard to one side.
+void MidiSynthUmpTests::TestDrumKitPanIsGraded()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    const auto config = TestConfig();
+    const uint32_t rate = config.RenderSampleRate();
+
+    const auto* const kit = collection->FindInstrument(0, 0, 0, true);
+
+    VERIFY_IS_NOT_NULL(kit, L"the standard kit is in the sound set");
+
+    if (kit == nullptr)
+    {
+        return;
+    }
+
+    constexpr uint8_t Toms[]{ 41, 43, 45, 47, 48, 50 };
+    constexpr uint8_t Velocity7 = 100;
+    constexpr double Pi = 3.14159265358979323846;
+
+    double balances[std::size(Toms)]{};
+
+    for (size_t i = 0; i < std::size(Toms); i++)
+    {
+        const auto* const region = RegionFor(*kit, Toms[i], Velocity7);
+
+        VERIFY_IS_NOT_NULL(region, L"the kit has a region for the tom");
+
+        if (region == nullptr)
+        {
+            return;
+        }
+
+        // Equal power: the right to left ratio is the tangent of the pan angle.
+        const double pan = ResolveArticulation(kit->Connections, region->Connections).PanFraction;
+        const double expected = 20.0 * std::log10(std::tan((pan + 0.5) * Pi / 2.0));
+
+        SynthEngine engine;
+        UmpDispatcher dispatcher;
+        FreshEngine(*collection, engine, dispatcher, 0);
+
+        engine.NoteOn(9, Toms[i], static_cast<uint16_t>(Velocity7 << 9));
+
+        const auto buffer = RenderSeconds(engine, rate, 0.25);
+
+        balances[i] = PowerDb(MeanSquare(buffer, rate, 1, 0.0, 0.25)) - PowerDb(MeanSquare(buffer, rate, 0, 0.0, 0.25));
+
+        Log::Comment(String().Format(L"note %u: pan %.3f, right minus left %.2f dB, expected %.2f dB",
+            Toms[i], pan, balances[i], expected));
+
+        VERIFY_IS_TRUE(std::fabs(balances[i] - expected) < 0.25, L"the tom sits where the sound set places it");
+    }
+
+    // Neither centered nor hard to one side, and spread from left to right in key order.
+    VERIFY_IS_TRUE(balances[0] < -6.0 && balances[0] > -30.0, L"the low floor tom is left of center, not hard left");
+    VERIFY_IS_TRUE(balances[std::size(Toms) - 1] > 6.0 && balances[std::size(Toms) - 1] < 30.0,
+        L"the high tom is right of center, not hard right");
+
+    for (size_t i = 1; i < std::size(Toms); i++)
+    {
+        VERIFY_IS_TRUE(balances[i] > balances[i - 1], L"each higher tom sits further right");
+    }
+}
+
+
+// The volume envelope runs in dB, so a sustain level is a point on its 96 dB scale (DLS Level 2
+// section 1.7.2.7). Two instruments with different sustain levels pin the curve: the old reading
+// held both at full level, and a linear amplitude reading would leave both within half a dB of it.
+void MidiSynthUmpTests::TestSustainLevelIsOnTheDecibelScale()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    const auto config = TestConfig();
+    const uint32_t rate = config.RenderSampleRate();
+
+    struct Case
+    {
+        uint8_t Program;
+
+        // Before the decay reaches the sustain level, and after anything loud the sample itself
+        // starts with: Atmosphere's recording peaks about 5 dB over its steady level near 15 ms.
+        double EarlyFrom;
+        double EarlyTo;
+
+        double ToleranceDb;
+    };
+
+    // Square Wave sustains at 96.8 percent and Atmosphere, the reporter's example, at 88.2. Neither
+    // has a tremolo, so the level of the sample is steady once the envelope settles.
+    constexpr Case Cases[]{ { 80, 0.010, 0.040, 0.75 }, { 99, 0.080, 0.160, 1.0 } };
+
+    constexpr uint8_t Note = 60;
+    constexpr uint8_t Velocity7 = 100;
+
+    for (const auto& testCase : Cases)
+    {
+        const auto* const instrument = collection->FindInstrument(0, 0, testCase.Program, false);
+        const auto* const region = (instrument != nullptr) ? RegionFor(*instrument, Note, Velocity7) : nullptr;
+
+        VERIFY_IS_NOT_NULL(region, L"the instrument and its region are in the sound set");
+
+        if (region == nullptr)
+        {
+            return;
+        }
+
+        const auto articulation = ResolveArticulation(instrument->Connections, region->Connections);
+
+        // Key scaling applies to the decay the same way the engine applies it.
+        const double decaySeconds = articulation.Eg1DecaySeconds *
+            TimeCentsToSeconds(static_cast<int32_t>(articulation.Eg1KeyToDecayTimeCents * (Note / 128.0)));
+
+        const double sustainDb = -96.0 * (1.0 - articulation.Eg1SustainFraction);
+        const double earlyDb = -96.0 * ((testCase.EarlyFrom + testCase.EarlyTo) / 2.0) / decaySeconds;
+        const double expected = sustainDb - earlyDb;
+
+        // Measure well after the decay has reached the sustain level.
+        const double sustainFrom = (std::max)(0.5, decaySeconds * (1.0 - articulation.Eg1SustainFraction) + 0.25);
+        const double sustainTo = sustainFrom + 0.4;
+
+        SynthEngine engine;
+        UmpDispatcher dispatcher;
+        FreshEngine(*collection, engine, dispatcher, 0);
+
+        engine.ProgramChange(0, testCase.Program);
+        engine.NoteOn(0, Note, static_cast<uint16_t>(Velocity7 << 9));
+
+        const auto buffer = RenderSeconds(engine, rate, sustainTo + 0.05);
+
+        const double measured =
+            PowerDb(MeanSquare(buffer, rate, 0, sustainFrom, sustainTo)) -
+            PowerDb(MeanSquare(buffer, rate, 0, testCase.EarlyFrom, testCase.EarlyTo));
+
+        Log::Comment(String().Format(
+            L"program %u: sustain %.1f percent, decay %.2f s, drop %.2f dB, expected %.2f dB",
+            testCase.Program, articulation.Eg1SustainFraction * 100.0, decaySeconds, measured, expected));
+
+        VERIFY_IS_TRUE(articulation.Eg1SustainFraction > 0.5 && articulation.Eg1SustainFraction < 0.99,
+            L"the instrument sustains somewhere between silence and full level");
+
+        VERIFY_IS_TRUE(std::fabs(measured - expected) < testCase.ToleranceDb,
+            L"the note settles where the 96 dB envelope scale puts the sustain level");
+    }
+}
+
+
+// Issue #1260: the tail of a sound panned to one side stayed on that side, and sounded sparse and
+// grainy. The reverb is checked on its own here, with the engine's default settings.
+void MidiSynthUmpTests::TestReverbTailIsDenseAndWide()
+{
+    constexpr uint32_t Rate = 48000;
+    constexpr double Seconds = 2.0;
+    constexpr auto Frames = static_cast<uint32_t>(Seconds * Rate);
+
+    const auto impulse = [&](float left, float right)
+    {
+        ReverbEffect reverb;
+        reverb.Configure(Rate);
+        reverb.SetParameter(AudioEffectParameter::WetLevel, 0.9);
+        reverb.SetParameter(AudioEffectParameter::Time, 1.8);
+        reverb.SetParameter(AudioEffectParameter::Damping, 0.4);
+
+        std::vector<float> input(static_cast<size_t>(Frames) * 2, 0.0f);
+        std::vector<float> output(static_cast<size_t>(Frames) * 2, 0.0f);
+
+        input[0] = left;
+        input[1] = right;
+
+        for (uint32_t done = 0; done < Frames; done += 256)
+        {
+            reverb.Process(input.data() + static_cast<size_t>(done) * 2,
+                output.data() + static_cast<size_t>(done) * 2, (std::min)(256u, Frames - done));
+        }
+
+        return output;
+    };
+
+    // A sound hard to the left still fills the room on both sides.
+    {
+        const auto output = impulse(1.0f, 0.0f);
+
+        const double left = MeanSquare(output, Rate, 0, 0.0, Seconds);
+        const double right = MeanSquare(output, Rate, 1, 0.0, Seconds);
+
+        Log::Comment(String().Format(L"hard left impulse: right minus left %.2f dB", PowerDb(right) - PowerDb(left)));
+
+        VERIFY_IS_TRUE(right > 0.0, L"the tail of a sound panned hard left reaches the right side");
+        VERIFY_IS_TRUE(std::fabs(PowerDb(right) - PowerDb(left)) < 1.0, L"and is about as loud there");
+    }
+
+    const auto centered = impulse(0.70710678f, 0.70710678f);
+
+    // Abel and Huang's normalized echo density: the share of samples in a window lying outside one
+    // standard deviation, over what a Gaussian gives. Near 1 is a smooth tail; the four comb design
+    // read 0.13 at 100 ms and 0.33 at 400 ms, separate echoes rather than a room.
+    const auto echoDensity = [&](double centerSeconds)
+    {
+        constexpr size_t Window = Rate / 50;
+        const auto from = static_cast<size_t>(centerSeconds * Rate) - Window / 2;
+
+        double sumSquares = 0.0;
+
+        for (size_t i = from; i < from + Window; i++)
+        {
+            sumSquares += static_cast<double>(centered[i * 2]) * centered[i * 2];
+        }
+
+        const double sigma = std::sqrt(sumSquares / Window);
+        size_t outside = 0;
+
+        for (size_t i = from; i < from + Window; i++)
+        {
+            if (std::fabs(centered[i * 2]) > sigma)
+            {
+                outside++;
+            }
+        }
+
+        return (static_cast<double>(outside) / Window) / 0.3173;
+    };
+
+    for (const double at : { 0.1, 0.2, 0.4, 0.8 })
+    {
+        const double density = echoDensity(at);
+
+        Log::Comment(String().Format(L"echo density at %.1f s: %.2f", at, density));
+
+        VERIFY_IS_TRUE(density > 0.7, L"the tail is dense rather than a train of separate echoes");
+    }
+
+    // Pinned to the level the earlier design gave a centered sound, so a file's reverb send means
+    // what it always has.
+    const double total = PowerDb(
+        (MeanSquare(centered, Rate, 0, 0.0, Seconds) + MeanSquare(centered, Rate, 1, 0.0, Seconds)) * Frames);
+
+    Log::Comment(String().Format(L"centered impulse, total tail energy %.2f dB", total));
+
+    VERIFY_IS_TRUE(std::fabs(total - 1.22) < 0.5, L"the reverb is as loud as it was for a centered sound");
+}
+
+
+// Issue #1260 again, through the engine: the reverb is fed from before the pan, so a snare panned
+// hard left reverberates on both sides, and exactly as much as the same snare in the center.
+void MidiSynthUmpTests::TestReverbFillsBothSidesOfAPannedSound()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    auto config = TestConfig();
+    config.EnableEffects = true;
+
+    const uint32_t rate = config.RenderSampleRate();
+
+    constexpr uint8_t Snare = 38;
+
+    // The snare in gm.dls is over within 0.3 s, so this window holds nothing but reverb.
+    constexpr double TailFrom = 0.6;
+    constexpr double TailTo = 1.4;
+
+    const auto play = [&](uint8_t pan, bool effects)
+    {
+        auto playConfig = config;
+        playConfig.EnableEffects = effects;
+
+        SynthEngine engine;
+        engine.Initialize(collection, playConfig);
+
+        engine.ControlChange(9, 10, pan);
+        engine.ControlChange(9, 91, 127);
+        engine.NoteOn(9, Snare, static_cast<uint16_t>(110u << 9));
+
+        auto buffer = RenderSeconds(engine, rate, 0.1);
+        engine.NoteOff(9, Snare);
+
+        const auto rest = RenderSeconds(engine, rate, TailTo);
+        buffer.insert(buffer.end(), rest.begin(), rest.end());
+
+        return buffer;
+    };
+
+    VERIFY_ARE_EQUAL(MeanSquare(play(0, false), rate, 0, TailFrom, TailTo), 0.0,
+        L"without effects the window is silent, so what follows measures only the reverb");
+
+    const auto hardLeft = play(0, true);
+    const auto centered = play(64, true);
+
+    const double left = MeanSquare(hardLeft, rate, 0, TailFrom, TailTo);
+    const double right = MeanSquare(hardLeft, rate, 1, TailFrom, TailTo);
+
+    const double hardLeftTotal = PowerDb(left + right);
+    const double centeredTotal = PowerDb(
+        MeanSquare(centered, rate, 0, TailFrom, TailTo) + MeanSquare(centered, rate, 1, TailFrom, TailTo));
+
+    Log::Comment(String().Format(L"hard left snare tail: right minus left %.2f dB, total %.2f dB against %.2f dB centered",
+        PowerDb(right) - PowerDb(left), hardLeftTotal, centeredTotal));
+
+    VERIFY_IS_TRUE(right > 0.0 && std::fabs(PowerDb(right) - PowerDb(left)) < 3.0,
+        L"a snare panned hard left reverberates on both sides");
+
+    VERIFY_IS_TRUE(std::fabs(hardLeftTotal - centeredTotal) < 0.1,
+        L"panning a sound does not change how much of it reaches the reverb");
 }
 

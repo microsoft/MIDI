@@ -8,38 +8,25 @@
 #pragma once
 
 #include "PatchModel.h"
+#include "RouteGraph.h"
 #include "SendQueue.h"
 
 namespace midipatchbay
 {
-    // One hop in the flattened routing table. The UI turns patches plus the live endpoint list
-    // into these; the engine knows nothing about patches, which is what keeps the routing layer
-    // free of anything a future API would not want.
-    struct RoutePlanEntry
-    {
-        std::wstring ConnectionId{};
-        std::wstring SourceEndpointDeviceId{};
-        std::wstring DestinationEndpointDeviceId{};
-        int32_t SourceGroupIndex{ AllGroups };
-        int32_t DestinationGroupIndex{ AllGroups };
-
-        MessageFilter Filter{};
-        MessageTransform Transform{};
-
-        // A multiple of MIDI 1.0 wire speed, 0 for no limit
-        uint32_t SendSpeedLimit{ 0 };
-
-        // From the patch: each send waits until the service has taken it
-        bool WaitForSendComplete{ false };
-    };
-
+    // What one link or block has done since its patch started routing, keyed by
+    // "patch key|element id".
     struct RouteStats
     {
+        // A link: messages that went along it. A block: messages it let through.
         uint64_t MessagesForwarded{ 0 };
+
+        // A block: messages it kept out.
+        uint64_t MessagesKeptOut{ 0 };
+
+        // A link into a destination: sends the service turned down.
         uint64_t SendFailures{ 0 };
 
-        // Only a connection with a sending speed, or in a patch that waits for each send to
-        // complete, holds messages back
+        // A throttle, or a link into a destination in a patch that waits for each send.
         uint64_t MessagesWaiting{ 0 };
         uint64_t MessagesDropped{ 0 };
 
@@ -48,17 +35,27 @@ namespace midipatchbay
 
     // Owns the session, the open connections and the forwarding.
     //
-    // Receiving and sending both go through the COM extensions and the forward happens inline on
-    // the service callback thread: no queue, no worker, no allocation once the plan is applied.
-    // The timestamp the service delivered is the timestamp sent on, so a message scheduled for
-    // the future stays scheduled rather than being flattened to "now" by the hop.
+    // Receiving and sending both go through the COM extensions, and a message is walked through
+    // its patch on the service callback thread: no queue, no worker, no allocation once the
+    // graph is applied. The timestamp the service delivered is the timestamp sent on, so a
+    // message scheduled for the future stays scheduled rather than being flattened to "now".
     //
-    // The exception is a connection that has to hold messages back: one with a sending speed, or
-    // in a patch that waits for each send to complete. The callback thread must not wait for
-    // either, so it queues them, and a send thread for that destination sends them on.
+    // Two things hold messages back, and neither may make the callback thread wait. A throttle
+    // has a queue and a thread of its own, which runs what comes after it at its pace. A patch
+    // that waits for each send to complete queues what reaches a destination, and a send thread
+    // for that destination sends it on.
+    //
+    // A generator also has a thread of its own. It sends ahead of time, each message carrying the
+    // timestamp it is meant to play at, so its timing comes from the service and not from when the
+    // thread happens to wake.
+    //
+    // Applying a new graph changes only what it has to. A connection that is still wanted stays
+    // open, and a generator whose patch still routes keeps running, so an edit to one patch never
+    // restarts another patch's clock or drops the messages it already scheduled.
     //
     // Everything here must be called from a background thread. The SDK's session and connection
-    // calls block on the service, and blocking the STA UI thread hangs the app.
+    // calls block on the service, and blocking the STA UI thread hangs the app. The counts and
+    // the last error can be read from any thread, and never wait for a graph being applied.
     class RouteEngine
     {
     public:
@@ -66,9 +63,9 @@ namespace midipatchbay
 
         ~RouteEngine() noexcept;
 
-        // Replaces the whole routing table. A plan identical to the running one is a no-op, so
-        // an unrelated device arriving does not interrupt connections that did not change.
-        void Apply(_In_ std::vector<RoutePlanEntry> plan) noexcept;
+        // Replaces the whole routing table. A graph that routes the same way as the running one
+        // is a no-op, so an unrelated device arriving does not interrupt anything.
+        void Apply(_In_ RouteGraph graph) noexcept;
 
         void Shutdown() noexcept;
 
@@ -76,7 +73,17 @@ namespace midipatchbay
 
         winrt::hstring LastErrorMessage() const noexcept;
 
-        size_t ActiveRouteCount() const noexcept;
+        // What a MIDI-CI responder step has been doing, by its "patch key|block id". Nothing when
+        // it isn't routing.
+        std::optional<::midipatchbay::CiResponderSnapshot> CiResponderStatus(_In_ std::wstring const& cell) const noexcept;
+
+        // A patch's memory as it is now, by the patch's key and the memory's name. Nothing when no
+        // routing has used it since the app started.
+        std::optional<LogicValue> MemoryValue(_In_ std::wstring const& patchKey, _In_ std::wstring const& name) const noexcept;
+
+        // What a Branch or a Switch tested last, by its "patch key|block id". Nothing when it
+        // isn't routing.
+        std::optional<LogicValue> LastTestedValue(_In_ std::wstring const& cell) const noexcept;
 
         // Plays one note on an endpoint so a mapping can be heard. Reuses the open connection
         // when the patch is already routing, and otherwise opens one for the length of the note.
@@ -89,60 +96,59 @@ namespace midipatchbay
     private:
         RouteEngine() noexcept = default;
 
-        struct DestinationSender;
-
-        struct Target
-        {
-            winrt::com_ptr<IMidiEndpointConnectionRaw> Destination{ nullptr };
-
-            int32_t SourceGroupIndex{ AllGroups };
-            int32_t DestinationGroupIndex{ AllGroups };
-
-            // Copied when the plan is applied, then only read by the callback thread.
-            MessageFilter Filter{};
-            MessageTransform Transform{};
-
-            std::wstring ConnectionId{};
-
-            // Sized when the plan is applied, then only touched by the callback thread.
-            std::vector<uint32_t> SendBuffer{};
-            size_t SendBufferUsed{ 0 };
-            uint32_t SendBufferMessages{ 0 };
-
-            // Set when this connection holds messages back. The callback thread adds to the
-            // queue, and the sender takes from it.
-            std::unique_ptr<SendQueue> Queue{};
-            DestinationSender* Sender{ nullptr };
-
-            std::atomic<uint64_t> MessagesForwarded{ 0 };
-            std::atomic<uint64_t> SendFailures{ 0 };
-            std::atomic<uint64_t> MessagesDropped{ 0 };
-        };
-
+        struct Counters;
+        struct Leaf;
+        struct Context;
         struct SourceHub;
+        struct HubPlan;
+        struct ThrottleRunner;
+        struct DestinationSender;
+        struct Runtime;
+        struct Connection;
+        struct GeneratorPlan;
+        class GeneratorRunner;
 
-        // A destination connection, and whether its sends wait to complete. Each patch's setting
-        // gets connections of its own, so one patch's setting never changes another's.
+        // A connection, and whether its sends wait to complete. Each patch's setting gets
+        // connections of its own, so one patch's setting never changes another's.
         using ConnectionKey = std::pair<std::wstring, bool>;
 
+        // Stops every generator, lets what they scheduled play, and closes every connection.
         void TearDownLocked() noexcept;
 
-        static std::wstring BuildSignature(_In_ std::vector<RoutePlanEntry> const& plan) noexcept;
+        // Swaps in what the window reads, and hands back the graph it replaced.
+        std::shared_ptr<Runtime> Publish(_In_ std::shared_ptr<Runtime> runtime) noexcept;
 
-        mutable std::mutex m_lock{};
+        void SetLastError(_In_ winrt::hstring const& message) noexcept;
+
+        void CloseConnection(_Inout_ Connection& connection) noexcept;
+
+        // Held for the whole of Apply and Shutdown, and while a test note finds its connection.
+        std::mutex m_lock{};
+
+        // Held only to read or replace what the window asks about.
+        mutable std::mutex m_publishLock{};
 
         midi2::MidiSession m_session{ nullptr };
 
         // Keyed by lowercased endpoint device id, so one endpoint is only ever opened once for
-        // each setting even when several patches use it.
-        std::map<ConnectionKey, midi2::MidiEndpointConnection> m_connections{};
+        // each setting even when several patches use it. Kept from one graph to the next.
+        std::map<ConnectionKey, std::unique_ptr<Connection>> m_connections{};
 
-        std::vector<winrt::com_ptr<SourceHub>> m_hubs{};
+        // Keyed by "patch key|block id", and kept from one graph to the next.
+        std::map<std::wstring, std::unique_ptr<GeneratorRunner>> m_generators{};
 
-        std::vector<std::unique_ptr<DestinationSender>> m_senders{};
+        // Each clock divider's count, keyed by its cell, so a change elsewhere does not restart it.
+        std::unordered_map<std::wstring, std::shared_ptr<::midipatchbay::BlockState>> m_blockStates{};
+
+        // Every memory any patch has used, by "patch key|name". Kept for as long as the app runs,
+        // whether or not the patch is routing. Guarded by m_publishLock, because the window reads it.
+        std::unordered_map<std::wstring, std::shared_ptr<std::atomic<uint64_t>>> m_memories{};
+
+        // Shared with the source hubs and generators, so a callback that is still running when the
+        // graph is replaced finishes on the graph it started with.
+        std::shared_ptr<Runtime> m_runtime{};
 
         std::wstring m_signature{};
         winrt::hstring m_lastError{};
-        size_t m_activeRoutes{ 0 };
     };
 }

@@ -126,6 +126,8 @@ namespace WindowsMidiServicesCapabilityInquiry
     // NAK status codes from M2-101-UM section 5.11. 0x01 is the one a responder owes for anything
     // it does not implement.
     inline constexpr uint8_t NakStatusMessageNotSupported{ 0x01 };
+    inline constexpr uint8_t NakStatusNotInUse{ 0x03 };
+    inline constexpr uint8_t NakStatusMessageMalformed{ 0x41 };
 
     // The messages an initiator sends expecting an answer. A responder that does not implement one
     // of these still owes a NAK, because silence costs the initiator a three second timeout per
@@ -282,6 +284,45 @@ namespace WindowsMidiServicesCapabilityInquiry
         uint16_t InformationOffset{ 0 };
     };
 
+    // Process Inquiry, M2-101-UM section 9. Each bitmap names families of MIDI messages, one bit each.
+    struct MidiMessageReportFields
+    {
+        // The inquiry only. See the MessageDataControl values below.
+        uint8_t MessageDataControl{ 0 };
+
+        uint8_t SystemMessages{ 0 };
+        uint8_t ChannelControllerMessages{ 0 };
+        uint8_t NoteDataMessages{ 0 };
+    };
+
+    // Begin and End only, which is how an initiator asks what a responder can report.
+    inline constexpr uint8_t MessageDataControlNone{ 0x00 };
+
+    // Only what differs from its default, plus active notes.
+    inline constexpr uint8_t MessageDataControlNonDefault{ 0x01 };
+
+    inline constexpr uint8_t MessageDataControlFull{ 0x7F };
+
+    inline constexpr uint8_t SystemMessageMtcQuarterFrame{ 0x01 };
+    inline constexpr uint8_t SystemMessageSongPosition{ 0x02 };
+    inline constexpr uint8_t SystemMessageSongSelect{ 0x04 };
+
+    inline constexpr uint8_t ChannelControllerPitchBend{ 0x01 };
+    inline constexpr uint8_t ChannelControllerControlChange{ 0x02 };
+    inline constexpr uint8_t ChannelControllerRegistered{ 0x04 };
+    inline constexpr uint8_t ChannelControllerAssignable{ 0x08 };
+    inline constexpr uint8_t ChannelControllerProgramChange{ 0x10 };
+    inline constexpr uint8_t ChannelControllerChannelPressure{ 0x20 };
+
+    inline constexpr uint8_t NoteDataNotes{ 0x01 };
+    inline constexpr uint8_t NoteDataPolyPressure{ 0x02 };
+    inline constexpr uint8_t NoteDataPerNotePitchBend{ 0x04 };
+    inline constexpr uint8_t NoteDataRegisteredPerNoteController{ 0x08 };
+    inline constexpr uint8_t NoteDataAssignablePerNoteController{ 0x10 };
+
+    // The one Process Inquiry feature defined so far.
+    inline constexpr uint8_t ProcessInquiryFeatureMidiMessageReport{ 0x01 };
+
     struct ParsedMessage
     {
         MessageType Type{ MessageType::Unknown };
@@ -304,6 +345,14 @@ namespace WindowsMidiServicesCapabilityInquiry
         // Inquiry: Endpoint and the reply to it.
         bool HasEndpointFields{ false };
         EndpointFields Endpoint{};
+
+        // Reply to Process Inquiry Capabilities.
+        bool HasProcessInquiryFeatures{ false };
+        uint8_t ProcessInquiryFeatures{ 0 };
+
+        // Inquiry: MIDI Message Report and the reply to it.
+        bool HasMidiMessageReportFields{ false };
+        MidiMessageReportFields MidiMessageReport{};
 
         // Carried by Invalidate MUID only.
         uint32_t TargetMuid{ 0 };
@@ -408,6 +457,60 @@ namespace WindowsMidiServicesCapabilityInquiry
 
             message.Endpoint = fields;
             message.HasEndpointFields = true;
+
+            return ParseStatus::Ok;
+        }
+
+        if (message.Type == MessageType::ProcessInquiryCapabilitiesReply)
+        {
+            if (size < CommonHeaderByteCount + 1)
+            {
+                return ParseStatus::TooShort;
+            }
+
+            message.ProcessInquiryFeatures = data[CommonHeaderByteCount] & 0x7F;
+            message.HasProcessInquiryFeatures = true;
+
+            return ParseStatus::Ok;
+        }
+
+        if (message.Type == MessageType::MidiMessageReport)
+        {
+            // message data control, the system bitmap and the byte reserved beside it, then the
+            // channel controller and note data bitmaps. An inquiry that stops short is still owed
+            // a NAK, so it is reported rather than refused here, like Inquiry: Endpoint.
+            if (size >= CommonHeaderByteCount + 5)
+            {
+                size_t offset = CommonHeaderByteCount;
+
+                message.MidiMessageReport.MessageDataControl = data[offset++] & 0x7F;
+                message.MidiMessageReport.SystemMessages = data[offset++] & 0x7F;
+                offset++;
+                message.MidiMessageReport.ChannelControllerMessages = data[offset++] & 0x7F;
+                message.MidiMessageReport.NoteDataMessages = data[offset++] & 0x7F;
+
+                message.HasMidiMessageReportFields = true;
+            }
+
+            return ParseStatus::Ok;
+        }
+
+        if (message.Type == MessageType::MidiMessageReportReply)
+        {
+            // The same bitmaps as the inquiry, without the message data control.
+            if (size < CommonHeaderByteCount + 4)
+            {
+                return ParseStatus::TooShort;
+            }
+
+            size_t offset = CommonHeaderByteCount;
+
+            message.MidiMessageReport.SystemMessages = data[offset++] & 0x7F;
+            offset++;
+            message.MidiMessageReport.ChannelControllerMessages = data[offset++] & 0x7F;
+            message.MidiMessageReport.NoteDataMessages = data[offset++] & 0x7F;
+
+            message.HasMidiMessageReportFields = true;
 
             return ParseStatus::Ok;
         }
@@ -1251,6 +1354,119 @@ namespace WindowsMidiServicesCapabilityInquiry
         }
 
         return offset;
+    }
+
+
+    // Process Inquiry messages exist from MIDI-CI 1.2 on, so they always carry the extended header.
+    inline constexpr size_t ProcessInquiryCapabilitiesByteCount{ CommonHeaderByteCount };
+    inline constexpr size_t ProcessInquiryCapabilitiesReplyByteCount{ CommonHeaderByteCount + 1 };
+    inline constexpr size_t MidiMessageReportByteCount{ CommonHeaderByteCount + 5 };
+    inline constexpr size_t MidiMessageReportReplyByteCount{ CommonHeaderByteCount + 4 };
+    inline constexpr size_t MidiMessageReportEndByteCount{ CommonHeaderByteCount };
+
+    // Always addressed to the whole function block: M2-101-UM section 9.2 allows nothing narrower.
+    inline size_t BuildProcessInquiryCapabilities(
+        _In_ uint32_t const sourceMuid,
+        _In_ uint32_t const destinationMuid,
+        _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
+        _In_ size_t const capacity
+    ) noexcept
+    {
+        return WriteCommonHeader(
+            buffer, capacity, DeviceIdFunctionBlock, MessageType::ProcessInquiryCapabilities,
+            sourceMuid, destinationMuid);
+    }
+
+    inline size_t BuildProcessInquiryCapabilitiesReply(
+        _In_ uint32_t const sourceMuid,
+        _In_ uint32_t const destinationMuid,
+        _In_ uint8_t const supportedFeatures,
+        _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
+        _In_ size_t const capacity,
+        _In_ uint8_t const messageVersion = MessageVersionCurrent
+    ) noexcept
+    {
+        if (buffer == nullptr || capacity < ProcessInquiryCapabilitiesReplyByteCount)
+        {
+            return 0;
+        }
+
+        size_t offset = WriteCommonHeader(
+            buffer, capacity, DeviceIdFunctionBlock, MessageType::ProcessInquiryCapabilitiesReply,
+            sourceMuid, destinationMuid, messageVersion);
+
+        buffer[offset++] = supportedFeatures & 0x7F;
+
+        return offset;
+    }
+
+    // The device id is a channel from 0x00 to 0x0F, 0x7E for the group or 0x7F for the function block.
+    inline size_t BuildMidiMessageReport(
+        _In_ uint8_t const deviceId,
+        _In_ uint32_t const sourceMuid,
+        _In_ uint32_t const destinationMuid,
+        _In_ MidiMessageReportFields const& fields,
+        _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
+        _In_ size_t const capacity
+    ) noexcept
+    {
+        if (buffer == nullptr || capacity < MidiMessageReportByteCount)
+        {
+            return 0;
+        }
+
+        size_t offset = WriteCommonHeader(
+            buffer, capacity, deviceId, MessageType::MidiMessageReport, sourceMuid, destinationMuid);
+
+        buffer[offset++] = fields.MessageDataControl & 0x7F;
+        buffer[offset++] = fields.SystemMessages & 0x7F;
+        buffer[offset++] = 0x00;
+        buffer[offset++] = fields.ChannelControllerMessages & 0x7F;
+        buffer[offset++] = fields.NoteDataMessages & 0x7F;
+
+        return offset;
+    }
+
+    // The bitmaps say which of the requested families the report that follows carries.
+    inline size_t BuildMidiMessageReportReply(
+        _In_ uint8_t const deviceId,
+        _In_ uint32_t const sourceMuid,
+        _In_ uint32_t const destinationMuid,
+        _In_ MidiMessageReportFields const& fields,
+        _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
+        _In_ size_t const capacity,
+        _In_ uint8_t const messageVersion = MessageVersionCurrent
+    ) noexcept
+    {
+        if (buffer == nullptr || capacity < MidiMessageReportReplyByteCount)
+        {
+            return 0;
+        }
+
+        size_t offset = WriteCommonHeader(
+            buffer, capacity, deviceId, MessageType::MidiMessageReportReply,
+            sourceMuid, destinationMuid, messageVersion);
+
+        buffer[offset++] = fields.SystemMessages & 0x7F;
+        buffer[offset++] = 0x00;
+        buffer[offset++] = fields.ChannelControllerMessages & 0x7F;
+        buffer[offset++] = fields.NoteDataMessages & 0x7F;
+
+        return offset;
+    }
+
+    inline size_t BuildMidiMessageReportEnd(
+        _In_ uint8_t const deviceId,
+        _In_ uint32_t const sourceMuid,
+        _In_ uint32_t const destinationMuid,
+        _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
+        _In_ size_t const capacity,
+        _In_ uint8_t const messageVersion = MessageVersionCurrent
+    ) noexcept
+    {
+        return WriteCommonHeader(
+            buffer, capacity, deviceId, MessageType::MidiMessageReportEnd,
+            sourceMuid, destinationMuid, messageVersion);
     }
 
 

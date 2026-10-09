@@ -475,6 +475,9 @@ namespace glass
         bool SetLayoutName(_In_ std::wstring const& name);
         bool SetLayoutDescription(_In_ std::wstring const& description);
 
+        // What the layout says about who made it, as set when it is packed for sharing.
+        bool SetProvenance(_In_ midiapp::ContentProvenance const& provenance);
+
         // The customer picked a theme out of the gallery. The layout stops carrying one of its
         // own, so an improvement to the shipped theme still reaches this layout.
         bool ChooseTheme(_In_ Theme const& theme);

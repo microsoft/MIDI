@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Package manifest template for MIDI 2.0 SoundFont Synth. build\build-soundfont-synth.ps1 fills in
+  every token written between dollar signs and writes the result into each package layout as
+  AppxManifest.xml.
+
+  For a Store submission, the identity name, publisher and publisher display name come from the
+  app's Partner Center reservation and are passed to the build script.
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap desktop rescap">
+
+  <Identity
+    Name="$IdentityName$"
+    Publisher="$Publisher$"
+    Version="$Version$"
+    ProcessorArchitecture="$Architecture$" />
+
+  <Properties>
+    <DisplayName>MIDI 2.0 SoundFont Synth</DisplayName>
+    <PublisherDisplayName>$PublisherDisplayName$</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+
+    <!-- The Windows App SDK runtime the app was built against. The Store installs it with the app. -->
+    <PackageDependency
+      Name="Microsoft.WindowsAppRuntime.1.8"
+      MinVersion="8000.731.1532.0"
+      Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-US" />
+  </Resources>
+
+  <Applications>
+    <Application Id="App" Executable="midisoundfontsynth.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="MIDI 2.0 SoundFont Synth"
+        Description="Turns SoundFont banks into MIDI 2.0 synths that every MIDI app on your PC can play."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+      </uap:VisualElements>
+
+      <Extensions>
+        <!-- Off until the customer turns on "Start with Windows" in the app. Windows owns the
+             switch from then on, and it also shows in Task Manager's startup apps. -->
+        <desktop:Extension Category="windows.startupTask" Executable="midisoundfontsynth.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask TaskId="MidiSoundFontSynthStartup" Enabled="false" DisplayName="MIDI 2.0 SoundFont Synth" />
+        </desktop:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

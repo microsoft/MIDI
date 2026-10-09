@@ -62,7 +62,7 @@ namespace midimcp
     // Accepts 0 to 127, or a name such as "C4" or "F#2" in the same convention as NoteName.
     std::optional<uint8_t> ParseNote(_In_ json::IJsonValue const& value) noexcept;
 
-    // "Documents\MIDI Patchbay\Studio.midipatch" rather than a full path. A full path carries
+    // "Documents\MIDI Patches\Studio.midipatch" rather than a full path. A full path carries
     // the customer's account name, and the model has no use for it.
     std::wstring DisplayPathUnderDocuments(_In_ std::wstring const& fullPath);
 }

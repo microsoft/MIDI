@@ -13,6 +13,8 @@
 #include "App.xaml.h"
 
 #include "AppSettings.h"
+#include "AppProvenance.h"
+#include "SharingDialogs.h"
 #include "StringResources.h"
 #include "LayoutStore.h"
 #include "ThemeStore.h"
@@ -402,7 +404,7 @@ namespace winrt::midiglass::implementation
 
                         card.DisplayName = document.Name.empty() ? FallbackName(path) : document.Name;
                         card.Description = document.Description;
-                        card.IsFavorite = document.IsFavorite;
+                        card.FileSaysFavorite = document.IsFavorite;
 
                         card.DetailText = std::wstring{ resources::FormatString(
                             L"LibraryDetailFormat",
@@ -414,6 +416,23 @@ namespace winrt::midiglass::implementation
                                 : document.ThemeName) };
 
                         DescribeDevices(document, card.Status, card.StatusText);
+
+                        // Said on the card, so it is read out with everything else on it.
+                        card.SignerName = ::midiglass::sharing::SignerOf(path);
+
+                        if (!card.SignerName.empty())
+                        {
+                            card.DetailText = std::wstring{ resources::FormatString(
+                                L"LibraryDetailSignedFormat", card.DetailText, card.SignerName) };
+                        }
+
+                        // It opens and runs, but nothing here writes it, so that comes first.
+                        if (document.IsFromNewerVersion)
+                        {
+                            card.IsFromNewerVersion = true;
+                            card.Status = ::midiglass::LayoutCardStatus::NeedsAttention;
+                            card.StatusText = std::wstring{ resources::GetString(L"CardStatusNewerVersion") };
+                        }
 
                         auto const cardPath = glass::ThumbnailPathForLayout(path, glass::LargeThumbnailWidth);
 
@@ -552,9 +571,34 @@ namespace winrt::midiglass::implementation
     _Use_decl_annotations_
     void MainWindow::ApplyCards(std::vector<::midiglass::LayoutCardData> const& cards)
     {
+        auto& settings = ::midiglass::AppSettings::Current();
+
+        // Older builds kept the star in the layout file. It moves into this PC's settings once.
+        if (!settings.FavoritesMoved())
+        {
+            std::vector<std::wstring> starred{};
+
+            for (auto const& card : cards)
+            {
+                if (card.FileSaysFavorite)
+                {
+                    starred.push_back(card.FilePath);
+                }
+            }
+
+            settings.MoveFavorites(starred);
+        }
+
+        auto resolved = cards;
+
+        for (auto& card : resolved)
+        {
+            card.IsFavorite = settings.IsFavoriteLayout(card.FilePath);
+        }
+
         std::wstring signature{};
 
-        for (auto const& card : cards)
+        for (auto const& card : resolved)
         {
             signature += card.FilePath;
             signature += L'\x1';
@@ -576,7 +620,7 @@ namespace winrt::midiglass::implementation
         }
 
         m_cardSignature = std::move(signature);
-        m_allCards = cards;
+        m_allCards = std::move(resolved);
 
         RebuildSections();
         UpdateStatusBar();
@@ -1059,6 +1103,12 @@ namespace winrt::midiglass::implementation
 
         auto const path = std::wstring{ card.FilePath() };
 
+        if (auto const self = winrt::get_self<LayoutCard>(card); !self->SignerName().empty())
+        {
+            EditSignedCardAsync(card);
+            return;
+        }
+
         ::midiglass::AppSettings::Current().RecordLayoutUse(path);
 
         App::OpenEditorWindow(path);
@@ -1066,6 +1116,50 @@ namespace winrt::midiglass::implementation
         m_cardSignature.clear();
 
         RefreshLibrary();
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::EditSignedCardAsync(midiglass::LayoutCard card)
+    {
+        auto lifetime = get_strong();
+
+        try
+        {
+            auto const signer = winrt::get_self<LayoutCard>(card)->SignerName();
+
+            controls::TextBlock text{};
+            text.Text(resources::FormatString(L"EditSignedBodyFormat", std::wstring{ card.DisplayName() }, signer));
+            text.TextWrapping(xaml::TextWrapping::Wrap);
+            text.MaxWidth(420.0);
+
+            controls::ContentDialog dialog{};
+            dialog.XamlRoot(RootGrid().XamlRoot());
+            dialog.Title(box_value(resources::GetString(L"EditSignedTitle")));
+            dialog.Content(text);
+            dialog.PrimaryButtonText(resources::GetString(L"EditSignedCopyAction"));
+            dialog.CloseButtonText(resources::GetString(L"DialogCancel"));
+            dialog.DefaultButton(controls::ContentDialogButton::Primary);
+
+            if (co_await dialog.ShowAsync() != controls::ContentDialogResult::Primary)
+            {
+                co_return;
+            }
+
+            auto const copy = DuplicateLayout(std::wstring{ card.FilePath() });
+
+            if (copy.empty())
+            {
+                co_return;
+            }
+
+            ::midiglass::AppSettings::Current().RecordLayoutUse(copy);
+
+            App::OpenEditorWindow(copy);
+
+            m_cardSignature.clear();
+            RefreshLibrary();
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to copy the signed layout.")
     }
 
     _Use_decl_annotations_
@@ -1245,14 +1339,36 @@ namespace winrt::midiglass::implementation
 
             // Found by tag rather than by position, so reordering the menu cannot silently
             // relabel the wrong item.
+            auto const newer = winrt::get_self<LayoutCard>(m_menuCard)->IsFromNewerVersion();
+            auto const isSigned = !winrt::get_self<LayoutCard>(m_menuCard)->SignerName().empty();
+
             for (auto const& item : flyout.Items())
             {
                 auto const entry = item.try_as<controls::MenuFlyoutItem>();
 
-                if (entry != nullptr &&
-                    winrt::unbox_value_or<winrt::hstring>(entry.Tag(), L"") == L"favorite")
+                if (entry == nullptr)
+                {
+                    continue;
+                }
+
+                auto const tag = winrt::unbox_value_or<winrt::hstring>(entry.Tag(), L"");
+
+                if (tag == L"favorite")
                 {
                     entry.Text(m_menuCard.FavoriteMenuText());
+                }
+
+                // Each of these writes the layout, and a newer version's layout is never written
+                // from here. The star is kept in settings, so it is always allowed.
+                if (tag == L"duplicate" || tag == L"rename" || tag == L"describe")
+                {
+                    entry.IsEnabled(!newer);
+                }
+
+                // A signed layout stays exactly as it was signed. Its copy can be changed.
+                if (isSigned && (tag == L"rename" || tag == L"describe"))
+                {
+                    entry.IsEnabled(false);
                 }
             }
         }
@@ -1312,12 +1428,21 @@ namespace winrt::midiglass::implementation
         }
 
         auto const wanted = !m_menuCard.IsFavorite();
+        auto const path = std::wstring{ m_menuCard.FilePath() };
 
-        if (EditLayoutFile(std::wstring{ m_menuCard.FilePath() },
-            [wanted](glass::LayoutDocument& document) { document.IsFavorite = wanted; }))
+        ::midiglass::AppSettings::Current().FavoriteLayout(path, wanted);
+
+        for (auto& card : m_allCards)
         {
-            RefreshLibrary();
+            if (card.FilePath == path)
+            {
+                card.IsFavorite = wanted;
+            }
         }
+
+        // The next read of the folder has to rebuild, because what it compares against is now stale.
+        m_cardSignature.clear();
+        RebuildSections();
     }
 
     _Use_decl_annotations_
@@ -1331,27 +1456,39 @@ namespace winrt::midiglass::implementation
             return;
         }
 
+        if (!DuplicateLayout(std::wstring{ m_menuCard.FilePath() }).empty())
+        {
+            RefreshLibrary();
+        }
+    }
+
+    _Use_decl_annotations_
+    std::wstring MainWindow::DuplicateLayout(std::wstring const& filePath)
+    {
         try
         {
-            auto read = glass::ReadLayoutFile(std::wstring{ m_menuCard.FilePath() });
+            auto read = glass::ReadLayoutFile(filePath);
 
             if (!read.Succeeded)
             {
-                return;
+                return {};
             }
 
             auto const folder = glass::LayoutsFolder();
 
             if (folder.empty())
             {
-                return;
+                return {};
             }
+
+            auto const originalName = read.Document.Name;
 
             read.Document.Name = std::wstring{ resources::FormatString(
                 L"DuplicateNameFormat", read.Document.Name) };
 
-            // A copy is not a favorite. Somebody duplicating a layout is about to change it.
-            read.Document.IsFavorite = false;
+            // A copy is a new layout made from this one, so it gets its own identity and credits
+            // the original.
+            read.Document.Provenance = ::midiglass::CopyProvenance(originalName, read.Document.Provenance, false);
 
             auto const path = glass::MakeUnusedLayoutPath(folder, read.Document.Name);
 
@@ -1359,10 +1496,12 @@ namespace winrt::midiglass::implementation
 
             if (glass::WriteLayoutFile(read.Document, path))
             {
-                RefreshLibrary();
+                return path;
             }
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to duplicate the layout.")
+
+        return {};
     }
 
     _Use_decl_annotations_

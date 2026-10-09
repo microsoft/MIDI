@@ -56,6 +56,10 @@ namespace NetworkMidiTest
         TEST_METHOD(ClientEntryFailsWhenHostRequiresAuthentication);
         TEST_METHOD(ClientTriesAHostNameAgainAfterNoAnswer);
 
+        // A name with an IPv4 and an IPv6 address. The client tries them in the order Windows
+        // lists them, moves on when one does not answer, and goes back to the one that worked.
+        TEST_METHOD(ClientTriesTheNextAddressWhenOneDoesNotAnswer);
+
         // Liveness, spec 6.14
         TEST_METHOD(ClientAnswersHostPingWithMatchingId);
         TEST_METHOD(ClientSendsPingsWhenSessionIdle);

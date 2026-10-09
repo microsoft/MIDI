@@ -135,6 +135,8 @@ namespace winrt::midiglass::implementation
         void OnCardMenuRestore(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCardMenuPackage(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnImportPackageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCardMenuDetails(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAuthorInfoClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnShowBackupsFolderClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnKeepAwakeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
@@ -184,6 +186,12 @@ namespace winrt::midiglass::implementation
 
         void RunCard(_In_ midiglass::LayoutCard const& card);
         void EditCard(_In_ midiglass::LayoutCard const& card);
+
+        // A signed layout is edited as the customer's own copy, so the signed one stays as it was.
+        winrt::fire_and_forget EditSignedCardAsync(_In_ midiglass::LayoutCard card);
+
+        // The new layout's path, or empty. The copy gets its own identity and credits the original.
+        std::wstring DuplicateLayout(_In_ std::wstring const& filePath);
 
         // Which backup to put back. A dialog rather than a straight overwrite, because there is
         // usually more than one and they are only told apart by their number.

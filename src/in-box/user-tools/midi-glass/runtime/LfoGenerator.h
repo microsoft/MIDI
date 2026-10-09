@@ -21,6 +21,7 @@
 
 #include "LayoutModel.h"
 #include "LfoShape.h"
+#include "LfoSweep.h"
 
 namespace glass
 {
@@ -76,16 +77,9 @@ namespace glass
             uint32_t ControlIndex{ 0 };
             LfoSpec Spec{};
 
-            double BeatsPerMinute{ 120.0 };
-
-            // Where the sweep started and how many samples have gone out since. Everything is
-            // placed against these two rather than against the previous sample.
-            uint64_t OriginMicroseconds{ 0 };
-            uint64_t SamplesSent{ 0 };
-
-            // How far through the cycle the origin already was. Set when the tempo changes, so
-            // the wave carries on from where it was instead of restarting.
-            double PhaseAtOrigin{ 0.0 };
+            // When each sample is due and where in the cycle it falls, in microseconds. Shared
+            // with MIDI Patchbay's LFO step.
+            ::midiapp::LfoSweep Sweep{};
 
             LfoNoise Noise{};
         };
@@ -96,14 +90,6 @@ namespace glass
         void RaiseOnDispatcher(_In_ std::function<void(LfoGenerator&)> const& work);
 
         static uint64_t NowMicroseconds() noexcept;
-
-        // Microseconds between two samples of this sweep.
-        static uint64_t IntervalOf(_In_ RunningLfo const& lfo) noexcept;
-
-        static uint64_t DueMicrosecondsOf(_In_ RunningLfo const& lfo) noexcept;
-
-        // Where in the cycle the sample at this index falls, 0 to 1.
-        static double PhaseOf(_In_ RunningLfo const& lfo, _In_ uint64_t sampleIndex) noexcept;
 
         mutable std::mutex m_lock{};
         std::condition_variable m_wakeup{};

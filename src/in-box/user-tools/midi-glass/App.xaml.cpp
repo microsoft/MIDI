@@ -99,11 +99,15 @@ namespace winrt::midiglass::implementation
 
             g_editorWindows.push_back(projected);
 
-            projected.Closed([projected](auto&&, auto&&)
+            // Weak, so the window's own event does not keep the window alive.
+            projected.Closed([weak = winrt::make_weak(projected)](auto&&, auto&&)
                 {
-                    g_editorWindows.erase(
-                        std::remove(g_editorWindows.begin(), g_editorWindows.end(), projected),
-                        g_editorWindows.end());
+                    if (auto const closed = weak.get())
+                    {
+                        g_editorWindows.erase(
+                            std::remove(g_editorWindows.begin(), g_editorWindows.end(), closed),
+                            g_editorWindows.end());
+                    }
                 });
 
             projected.Activate();
@@ -143,11 +147,15 @@ namespace winrt::midiglass::implementation
 
             g_runtimeWindows.push_back(projected);
 
-            projected.Closed([projected](auto&&, auto&&)
+            // Weak, so the window's own event does not keep the window alive.
+            projected.Closed([weak = winrt::make_weak(projected)](auto&&, auto&&)
                 {
-                    g_runtimeWindows.erase(
-                        std::remove(g_runtimeWindows.begin(), g_runtimeWindows.end(), projected),
-                        g_runtimeWindows.end());
+                    if (auto const closed = weak.get())
+                    {
+                        g_runtimeWindows.erase(
+                            std::remove(g_runtimeWindows.begin(), g_runtimeWindows.end(), closed),
+                            g_runtimeWindows.end());
+                    }
                 });
 
             projected.Activate();
@@ -211,6 +219,13 @@ namespace winrt::midiglass::implementation
 
             m_window = window.as<xaml::Window>();
             g_libraryWindow = m_window;
+
+            // Let go of it while XAML is still running, rather than in a static destructor.
+            m_window.Closed([](auto&&, auto&&)
+                {
+                    g_libraryWindow = nullptr;
+                });
+
             m_window.Activate();
 
             // midiglass --run "<layout file>" opens a runtime window beside the library.

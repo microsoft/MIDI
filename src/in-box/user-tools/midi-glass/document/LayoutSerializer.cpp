@@ -21,7 +21,7 @@ namespace glass
         namespace mjson = winrt::Windows::Data::Json;
 
         constexpr wchar_t CommentText[] =
-            L"Windows MIDI Glass layout. Written by the MIDI Glass app. The MIDI service does not read this file.";
+            L"Windows MIDI Glass layout. Written by the Windows MIDI Glass app. The MIDI service does not read this file.";
 
         constexpr wchar_t KeyComment[] = L"_comment";
         constexpr wchar_t KeyFileVersion[] = L"fileVersion";
@@ -549,6 +549,41 @@ namespace glass
             return fallback;
         }
 
+        // Set while a file is read when it names a kind of control or message this build does
+        // not have. A file is read on one thread from start to finish.
+        thread_local bool t_readUnknownKind{ false };
+
+        // ValueOf for a kind. A name this build doesn't know means a newer build wrote the file,
+        // and what it stands in for would be lost if the layout were written back.
+        template <typename TEnum, size_t N>
+        TEnum KindOf(
+            _In_ EnumName<TEnum> const (&table)[N],
+            _In_ std::wstring_view name,
+            _In_ TEnum fallback) noexcept
+        {
+            for (auto const& entry : table)
+            {
+                if (entry.Name == name)
+                {
+                    return entry.Value;
+                }
+            }
+
+            if (!name.empty())
+            {
+                t_readUnknownKind = true;
+            }
+
+            return fallback;
+        }
+
+        template <typename TEnum, size_t N>
+        bool HasName(_In_ EnumName<TEnum> const (&table)[N], _In_ std::wstring_view name) noexcept
+        {
+            return std::any_of(std::begin(table), std::end(table),
+                [name](EnumName<TEnum> const& entry) { return entry.Name == name; });
+        }
+
         // ---- reading helpers. None of these trust the file. ----
 
         std::wstring ReadString(_In_ mjson::JsonObject const& object, _In_ std::wstring_view key) noexcept
@@ -876,7 +911,21 @@ namespace glass
             ControlMessage message{};
 
             message.Trigger = ValueOf(TriggerNames, ReadString(object, KeyTrigger), MessageTrigger::Changes);
-            message.Kind = ValueOf(MessageKindNames, ReadString(object, KeyKind), MessageKind::ControlChange);
+
+            auto const kindName = ReadString(object, KeyKind);
+
+            // Guessing at a kind this build doesn't know would send a message nobody asked for.
+            if (!kindName.empty() && !HasName(MessageKindNames, kindName))
+            {
+                t_readUnknownKind = true;
+
+                message.Kind = MessageKind::Unrecognized;
+                message.Original = object;
+
+                return message;
+            }
+
+            message.Kind = KindOf(MessageKindNames, kindName, MessageKind::ControlChange);
             message.DeviceName = ReadString(object, KeyDevice);
             message.GroupIndex = ReadInt(object, KeyGroup, 0, AllGroups, MaximumGroupCount - 1);
             message.ChannelIndex = ReadInt(object, KeyChannel, 0, 0, 15);
@@ -944,9 +993,22 @@ namespace glass
         {
             FeedbackBinding feedback{};
 
+            auto const kindName = ReadString(object, KeyKind);
+
+            // What a newer version listens for is kept as it came, and nothing here listens for it.
+            if (!kindName.empty() && !HasName(MessageKindNames, kindName))
+            {
+                t_readUnknownKind = true;
+
+                feedback.Kind = MessageKind::Unrecognized;
+                feedback.Original = object;
+
+                return feedback;
+            }
+
             feedback.Enabled = ReadBool(object, KeyEnabled, false);
             feedback.Mode = ValueOf(FeedbackModeNames, ReadString(object, KeyMode), FeedbackMode::Message);
-            feedback.Kind = ValueOf(MessageKindNames, ReadString(object, KeyKind), MessageKind::ControlChange);
+            feedback.Kind = KindOf(MessageKindNames, kindName, MessageKind::ControlChange);
             feedback.DeviceName = ReadString(object, KeyDevice);
             feedback.GroupIndex = ReadInt(object, KeyGroup, 0, AllGroups, MaximumGroupCount - 1);
             feedback.ChannelIndex = ReadInt(object, KeyChannel, 0, 0, 15);
@@ -1266,11 +1328,43 @@ namespace glass
             return pads;
         }
 
+        // Only what drawing it takes is read. It sends nothing, and its object is written back as is.
+        Control ReadPlaceholder(_In_ mjson::JsonObject const& object) noexcept
+        {
+            Control control{};
+
+            control.Kind = ControlKind::Placeholder;
+            control.Id = ReadString(object, KeyId);
+            control.Label = ReadString(object, KeyLabel);
+            control.X = ReadNumber(object, KeyX, 0);
+            control.Y = ReadNumber(object, KeyY, 0);
+            control.Width = ReadNumber(object, KeyWidth, 56);
+            control.Height = ReadNumber(object, KeyHeight, 56);
+            control.KeyboardOrder = ReadInt(object, KeyKeyboardOrder, 0, 0, 0x7FFFFFFF);
+
+            // Clicks on the page go through it, and nothing moves or resizes it.
+            control.Locked = true;
+
+            control.Original = object;
+
+            return control;
+        }
+
         Control ReadControl(_In_ mjson::JsonObject const& object) noexcept
-        {            Control control{};
+        {
+            auto const kindName = ReadString(object, KeyKind);
+
+            if (!kindName.empty() && !HasName(ControlKindNames, kindName))
+            {
+                t_readUnknownKind = true;
+
+                return ReadPlaceholder(object);
+            }
+
+            Control control{};
 
             control.Id = ReadString(object, KeyId);
-            control.Kind = ValueOf(ControlKindNames, ReadString(object, KeyKind), ControlKind::Knob);
+            control.Kind = KindOf(ControlKindNames, kindName, ControlKind::Knob);
             control.Label = ReadString(object, KeyLabel);
             control.X = ReadNumber(object, KeyX, 0);
             control.Y = ReadNumber(object, KeyY, 0);
@@ -1664,6 +1758,8 @@ namespace glass
                 return result;
             }
 
+            t_readUnknownKind = false;
+
             auto& document = result.Document;
 
             document.FileVersion = static_cast<uint32_t>(
@@ -1673,6 +1769,7 @@ namespace glass
 
             document.Name = ReadString(root, KeyName);
             document.Description = ReadString(root, KeyDescription);
+            document.Provenance = midiapp::ReadProvenance(root);
             document.CreatedTimestamp = static_cast<int64_t>(ReadNumber(root, KeyCreated, 0));
             document.ModifiedTimestamp = static_cast<int64_t>(ReadNumber(root, KeyModified, 0));
 
@@ -1711,6 +1808,8 @@ namespace glass
             document.ToolbarWindow = ReadBool(root, KeyToolbarWindow, false);
             document.AlwaysOnTop = ReadBool(root, KeyAlwaysOnTop, false);
             document.SeeThrough = ReadBool(root, KeySeeThrough, false);
+
+            // Only for the library's one-time move into settings. Known, so it isn't written back.
             document.IsFavorite = ReadBool(root, KeyFavorite, false);
 
             if (auto const tempo = ReadObject(root, KeyTempo))
@@ -1761,13 +1860,19 @@ namespace glass
             }
 
             document.Unknown = CaptureUnknown(root,
-                { KeyComment, KeyFileVersion, KeyName, KeyDescription, KeyCreated, KeyModified,
+                { KeyComment, KeyFileVersion, KeyName, KeyDescription, midiapp::ProvenanceKey, KeyCreated, KeyModified,
                   KeyPageWidth, KeyPageHeight, KeyCanvasWidth, KeyCanvasHeight, KeyTheme,
                   KeyThemeColors,
                   KeyBackgroundImage, KeyBackgroundFit, KeyBackgroundOpacity,
                   KeyScaleMode, KeyCustomScalePercent, KeyCornerButton, RetiredPreferredDisplay,
                   KeySuppressStartup, KeyVirtualDevice, KeyToolbarWindow, KeyAlwaysOnTop, KeySeeThrough,
                   KeyFavorite, KeyTempo, KeyDevices, KeyPages, KeySequences });
+
+            // A kind this build doesn't know is read as the nearest one it does, so the layout
+            // still opens. Written back, the original would be gone.
+            result.IsFromNewerVersion = result.IsFromNewerVersion || t_readUnknownKind;
+            document.IsFromNewerVersion = result.IsFromNewerVersion;
+            t_readUnknownKind = false;
 
             result.Succeeded = true;
         }
@@ -1786,6 +1891,12 @@ namespace glass
     {
         void WriteMessage(_Inout_ JsonTextWriter& writer, _In_ ControlMessage const& message) noexcept
         {
+            if (message.Kind == MessageKind::Unrecognized)
+            {
+                WriteUnknown(writer, message.Original);
+                return;
+            }
+
             writer.Write(KeyTrigger, NameOf(TriggerNames, message.Trigger));
             writer.Write(KeyKind, NameOf(MessageKindNames, message.Kind));
             writer.Write(KeyDevice, message.DeviceName);
@@ -1867,6 +1978,16 @@ namespace glass
 
         void WriteControl(_Inout_ JsonTextWriter& writer, _In_ Control const& control) noexcept
         {
+            if (control.Kind == ControlKind::Placeholder)
+            {
+                if (control.Original != nullptr)
+                {
+                    writer.WriteArrayRaw(CanonicalJson(control.Original, writer.Depth()));
+                }
+
+                return;
+            }
+
             writer.BeginObject();
 
             writer.Write(KeyId, control.Id);
@@ -2168,7 +2289,16 @@ namespace glass
 
             writer.EndArray();
 
-            if (control.Feedback.Enabled || control.Feedback.Unknown != nullptr)
+            if (control.Feedback.Kind == MessageKind::Unrecognized)
+            {
+                if (control.Feedback.Original != nullptr)
+                {
+                    writer.BeginObject(KeyFeedback);
+                    WriteUnknown(writer, control.Feedback.Original);
+                    writer.EndObject();
+                }
+            }
+            else if (control.Feedback.Enabled || control.Feedback.Unknown != nullptr)
             {
                 writer.BeginObject(KeyFeedback);
                 writer.Write(KeyEnabled, control.Feedback.Enabled);
@@ -2206,6 +2336,12 @@ namespace glass
             writer.Write(KeyFileVersion, static_cast<int64_t>(document.FileVersion));
             writer.Write(KeyName, document.Name);
             writer.Write(KeyDescription, document.Description);
+
+            if (document.Provenance.has_value() && !document.Provenance->IsEmpty())
+            {
+                writer.WriteRaw(midiapp::ProvenanceKey, midiapp::ProvenanceToJsonText(*document.Provenance, writer.Depth()));
+            }
+
             writer.Write(KeyCreated, document.CreatedTimestamp);
             writer.Write(KeyModified, document.ModifiedTimestamp);
             writer.Write(KeyPageWidth, static_cast<int64_t>(document.PageWidth));
@@ -2248,8 +2384,6 @@ namespace glass
             {
                 writer.Write(KeySeeThrough, document.SeeThrough);
             }
-
-            writer.Write(KeyFavorite, document.IsFavorite);
 
             writer.BeginObject(KeyTempo);
             writer.Write(KeyKind, NameOf(TempoKindNames, document.Tempo.Kind));

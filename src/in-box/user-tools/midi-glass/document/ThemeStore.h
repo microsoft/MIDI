@@ -23,8 +23,8 @@ namespace glass
 {
     struct LayoutDocument;
     // A theme is its own small file, so one can be saved, reused across layouts, and shared.
-    // Same rules as a layout: the platform parses, we write, and anything this build did not
-    // understand comes back out again.
+    // Same rules as a layout: the platform parses, we write, and a top-level key this build did
+    // not understand comes back out again. Unknown keys inside deck and deckOverlay do not.
     constexpr wchar_t ThemeFolderName[] = L"Themes";
     constexpr wchar_t ThemeFileExtension[] = L".miditheme";
 

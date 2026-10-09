@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "ChannelVoiceWords.h"
 #include "LayoutModel.h"
 
 namespace glass
@@ -370,14 +371,12 @@ namespace glass
 
     // ---- the wire, exposed so it can be tested on its own ----
 
-    // A fraction of full scale to an unsigned value of the given width. 0.0 is the bottom of the
-    // range and 1.0 is the top, so a fader at the top of its travel sends the maximum the wire can
-    // carry rather than one short of it.
-    uint32_t ScaleToBits(_In_ double fraction, _In_ uint32_t bits) noexcept;
-
-    // An exact value into the same field, clamped rather than scaled. This is what a customer
-    // copying a device's documentation gets.
-    uint32_t ClampToBits(_In_ double value, _In_ uint32_t bits) noexcept;
+    // Shared with MIDI Patchbay, in midi-app-shared: a fraction or an exact value into a field of
+    // a given width, and the words of a MIDI 1.0 or MIDI 2.0 channel voice message.
+    using ::midiapp::ScaleToBits;
+    using ::midiapp::ClampToBits;
+    using ::midiapp::BuildMidi1ChannelVoice;
+    using ::midiapp::BuildMidi2ChannelVoice;
 
     // Where a control sitting at this position lands between the two ends. Rounding is what
     // quantizes a fader limited to 0 to 127 onto whole numbers.
@@ -397,24 +396,6 @@ namespace glass
     // How wide the field this message lands in is, which is what the two ends and the stops are
     // measured against. MIDI 2.0 protocol unless the message asked for MIDI 1.0.
     uint32_t FieldBitsFor(_In_ PreparedMessage const& message) noexcept;
-
-    // MIDI 1.0 channel voice, message type 2. One word.
-    uint32_t BuildMidi1ChannelVoice(
-        _In_ uint8_t group,
-        _In_ uint8_t status,
-        _In_ uint8_t channel,
-        _In_ uint8_t data1,
-        _In_ uint8_t data2) noexcept;
-
-    // MIDI 2.0 channel voice, message type 4. Two words.
-    void BuildMidi2ChannelVoice(
-        _In_ uint8_t group,
-        _In_ uint8_t status,
-        _In_ uint8_t channel,
-        _In_ uint8_t index1,
-        _In_ uint8_t index2,
-        _In_ uint32_t data,
-        _Out_writes_(2) uint32_t* words) noexcept;
 
     // The words one prepared message produces at this value.
     //

@@ -1452,3 +1452,166 @@ void MidiCiMessageTests::TestEndpointReplyLengthCannotExceedBuffer()
     // A reply that stops inside its length field cannot say how much information it carries.
     VERIFY_ARE_EQUAL((int)Parse(overlong, 15, parsed), (int)ParseStatus::TooShort);
 }
+
+void MidiCiMessageTests::TestBuildProcessInquiryCapabilitiesBytes()
+{
+    uint8_t buffer[64]{};
+
+    const auto inquiryBytes = BuildProcessInquiryCapabilities(1, 2, buffer, sizeof(buffer));
+
+    // Worked out from the message table, not from the builder.
+    const uint8_t expectedInquiry[]
+    {
+        0x7E, 0x7F, 0x0D, 0x40, 0x02,       // to the function block, process inquiry capabilities, version 2
+        0x01, 0x00, 0x00, 0x00,             // source muid 1
+        0x02, 0x00, 0x00, 0x00              // destination muid 2
+    };
+
+    VERIFY_ARE_EQUAL(inquiryBytes, sizeof(expectedInquiry));
+    VERIFY_ARE_EQUAL(memcmp(buffer, expectedInquiry, sizeof(expectedInquiry)), 0);
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(buffer, inquiryBytes, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::ProcessInquiryCapabilities);
+
+    const auto replyBytes = BuildProcessInquiryCapabilitiesReply(
+        2, 1, ProcessInquiryFeatureMidiMessageReport, buffer, sizeof(buffer));
+
+    const uint8_t expectedReply[]
+    {
+        0x7E, 0x7F, 0x0D, 0x41, 0x02,       // from the function block, reply, version 2
+        0x02, 0x00, 0x00, 0x00,             // source muid 2
+        0x01, 0x00, 0x00, 0x00,             // destination muid 1
+        0x01                                // supports MIDI Message Report
+    };
+
+    VERIFY_ARE_EQUAL(replyBytes, sizeof(expectedReply));
+    VERIFY_ARE_EQUAL(memcmp(buffer, expectedReply, sizeof(expectedReply)), 0);
+
+    VERIFY_ARE_EQUAL((int)Parse(buffer, replyBytes, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::ProcessInquiryCapabilitiesReply);
+    VERIFY_IS_TRUE(parsed.HasProcessInquiryFeatures);
+    VERIFY_ARE_EQUAL(parsed.ProcessInquiryFeatures, ProcessInquiryFeatureMidiMessageReport);
+
+    // A reply without its feature byte says nothing, so it cannot be read as "no features".
+    VERIFY_ARE_EQUAL((int)Parse(buffer, replyBytes - 1, parsed), (int)ParseStatus::TooShort);
+
+    VERIFY_ARE_EQUAL(
+        BuildProcessInquiryCapabilitiesReply(2, 1, 0x01, buffer, sizeof(expectedReply) - 1),
+        (size_t)0);
+}
+
+void MidiCiMessageTests::TestBuildMidiMessageReportBytes()
+{
+    MidiMessageReportFields fields{};
+
+    fields.MessageDataControl = MessageDataControlFull;
+    fields.SystemMessages = SystemMessageSongPosition;
+    fields.ChannelControllerMessages = ChannelControllerPitchBend | ChannelControllerProgramChange;
+    fields.NoteDataMessages = NoteDataNotes;
+
+    uint8_t buffer[64]{};
+
+    const auto inquiryBytes = BuildMidiMessageReport(0x03, 1, 2, fields, buffer, sizeof(buffer));
+
+    // Worked out from the message table, not from the builder.
+    const uint8_t expectedInquiry[]
+    {
+        0x7E, 0x03, 0x0D, 0x42, 0x02,       // to channel 4, inquiry: MIDI message report, version 2
+        0x01, 0x00, 0x00, 0x00,             // source muid 1
+        0x02, 0x00, 0x00, 0x00,             // destination muid 2
+        0x7F,                               // full message data
+        0x02,                               // song position
+        0x00,                               // reserved
+        0x11,                               // pitch bend and program change
+        0x01                                // notes
+    };
+
+    VERIFY_ARE_EQUAL(inquiryBytes, sizeof(expectedInquiry));
+    VERIFY_ARE_EQUAL(memcmp(buffer, expectedInquiry, sizeof(expectedInquiry)), 0);
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(buffer, inquiryBytes, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::MidiMessageReport);
+    VERIFY_ARE_EQUAL(parsed.DeviceId, (uint8_t)0x03);
+    VERIFY_IS_TRUE(parsed.HasMidiMessageReportFields);
+    VERIFY_ARE_EQUAL(parsed.MidiMessageReport.MessageDataControl, MessageDataControlFull);
+    VERIFY_ARE_EQUAL(parsed.MidiMessageReport.SystemMessages, SystemMessageSongPosition);
+    VERIFY_ARE_EQUAL(parsed.MidiMessageReport.ChannelControllerMessages, (uint8_t)0x11);
+    VERIFY_ARE_EQUAL(parsed.MidiMessageReport.NoteDataMessages, NoteDataNotes);
+
+    // The reply drops the data control and says which of the families it is about to report.
+    fields.ChannelControllerMessages = ChannelControllerProgramChange;
+
+    const auto replyBytes = BuildMidiMessageReportReply(0x03, 2, 1, fields, buffer, sizeof(buffer));
+
+    const uint8_t expectedReply[]
+    {
+        0x7E, 0x03, 0x0D, 0x43, 0x02,
+        0x02, 0x00, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x00,
+        0x02,                               // song position
+        0x00,                               // reserved
+        0x10,                               // program change
+        0x01                                // notes
+    };
+
+    VERIFY_ARE_EQUAL(replyBytes, sizeof(expectedReply));
+    VERIFY_ARE_EQUAL(memcmp(buffer, expectedReply, sizeof(expectedReply)), 0);
+
+    VERIFY_ARE_EQUAL((int)Parse(buffer, replyBytes, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::MidiMessageReportReply);
+    VERIFY_IS_TRUE(parsed.HasMidiMessageReportFields);
+    VERIFY_ARE_EQUAL(parsed.MidiMessageReport.ChannelControllerMessages, ChannelControllerProgramChange);
+
+    VERIFY_ARE_EQUAL((int)Parse(buffer, replyBytes - 1, parsed), (int)ParseStatus::TooShort);
+
+    const auto endBytes = BuildMidiMessageReportEnd(0x03, 2, 1, buffer, sizeof(buffer));
+
+    const uint8_t expectedEnd[]
+    {
+        0x7E, 0x03, 0x0D, 0x44, 0x02,
+        0x02, 0x00, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x00
+    };
+
+    VERIFY_ARE_EQUAL(endBytes, sizeof(expectedEnd));
+    VERIFY_ARE_EQUAL(memcmp(buffer, expectedEnd, sizeof(expectedEnd)), 0);
+
+    VERIFY_ARE_EQUAL((int)Parse(buffer, endBytes, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::MidiMessageReportEnd);
+
+    VERIFY_ARE_EQUAL(BuildMidiMessageReport(0x03, 1, 2, fields, buffer, sizeof(expectedInquiry) - 1), (size_t)0);
+    VERIFY_ARE_EQUAL(BuildMidiMessageReportReply(0x03, 2, 1, fields, buffer, sizeof(expectedReply) - 1), (size_t)0);
+    VERIFY_ARE_EQUAL(BuildMidiMessageReportEnd(0x03, 2, 1, buffer, sizeof(expectedEnd) - 1), (size_t)0);
+}
+
+void MidiCiMessageTests::TestParseMidiMessageReportStoppingShort()
+{
+    const uint8_t message[]
+    {
+        0x7E, 0x7F, 0x0D, 0x42, 0x02,
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x3F, 0x1F
+    };
+
+    ParsedMessage parsed{};
+
+    // An inquiry cut off before its last bitmap is still an inquiry, and is still owed a NAK, so
+    // it is read as one with no fields rather than refused before a responder sees it.
+    for (size_t size = CommonHeaderByteCount; size < sizeof(message); size++)
+    {
+        VERIFY_ARE_EQUAL((int)Parse(message, size, parsed), (int)ParseStatus::Ok);
+        VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::MidiMessageReport);
+        VERIFY_IS_FALSE(parsed.HasMidiMessageReportFields);
+    }
+
+    VERIFY_ARE_EQUAL((int)Parse(message, sizeof(message), parsed), (int)ParseStatus::Ok);
+    VERIFY_IS_TRUE(parsed.HasMidiMessageReportFields);
+    VERIFY_ARE_EQUAL(parsed.MidiMessageReport.MessageDataControl, MessageDataControlNonDefault);
+    VERIFY_ARE_EQUAL(parsed.MidiMessageReport.ChannelControllerMessages, (uint8_t)0x3F);
+    VERIFY_ARE_EQUAL(parsed.MidiMessageReport.NoteDataMessages, (uint8_t)0x1F);
+}

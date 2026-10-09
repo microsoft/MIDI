@@ -954,8 +954,8 @@ namespace NetworkMidiTest
     {
         if (!RequireService()) return;
 
-        // A client given "localhost" connects to ::1. Each attempt comes from a new socket, so
-        // from a new port.
+        // A client given "localhost" invites ::1 first, where Windows puts it, then 127.0.0.1.
+        // Each attempt comes from a new socket, so from a new port.
         FakeNetworkHost host;
         host.SetListenOnIPv6Loopback(true);
         host.SetRelatchOnInvitation(true);
@@ -997,6 +997,77 @@ namespace NetworkMidiTest
 
         VERIFY_ARE_EQUAL(static_cast<uint32_t>(0), WaitForClientLastErrorCode(entryIdentifier, 0, ShortTimeout),
             L"The reason is cleared once a session opens.");
+    }
+
+
+    void ClientTests::ClientTriesTheNextAddressWhenOneDoesNotAnswer()
+    {
+        if (!RequireService()) return;
+
+        // The client puts a name's addresses in the order Windows lists them, so the fake host
+        // listens at the loopback address Windows lists second.
+        ADDRINFOW hints{ };
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_socktype = SOCK_DGRAM;
+
+        PADDRINFOW results{ nullptr };
+        std::vector<int> families{ };
+
+        if (GetAddrInfoW(L"localhost", nullptr, &hints, &results) == 0)
+        {
+            for (auto result = results; result != nullptr; result = result->ai_next)
+            {
+                if (std::find(families.begin(), families.end(), result->ai_family) == families.end()) families.push_back(result->ai_family);
+            }
+
+            FreeAddrInfoW(results);
+        }
+
+        if (families.size() < 2)
+        {
+            Log::Result(TestResults::Skipped, L"localhost has only one address on this PC.");
+            return;
+        }
+
+        bool const ipv6First = families.front() == AF_INET6;
+
+        Log::Comment(String().Format(L"Windows lists %s first for localhost. Nothing answers there, so this waits out one round of invitations, about ten seconds.",
+            ipv6First ? L"::1" : L"127.0.0.1"));
+
+        FakeNetworkHost host;
+        host.SetListenOnIPv6Loopback(!ipv6First);
+        host.SetRelatchOnInvitation(true);
+
+        VERIFY_IS_TRUE(host.Start(), L"The fake host started.");
+
+        auto const entryIdentifier = MakeEntryIdentifier();
+        auto const started = std::chrono::steady_clock::now();
+        auto const created = CreateDirectClient(entryIdentifier, L"localhost", host.Port());
+
+        VERIFY_IS_TRUE(created.CallSucceeded, L"Client created");
+
+        if (!created.CallSucceeded) return;
+
+        auto removeClient = wil::scope_exit([&entryIdentifier]() { DisconnectClient(entryIdentifier); });
+
+        auto const data = host.WaitForCommand(CommandCode::UmpData, SessionTimeout);
+        auto const elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - started).count();
+
+        Log::Comment(String().Format(L"Session after %lld ms", elapsed));
+
+        VERIFY_IS_TRUE(data.has_value(), L"The client moved on to the second address, and the session established.");
+
+        // the scan interval is 1 s here, and the first round of five invitations takes about ten
+        VERIFY_IS_GREATER_THAN_OR_EQUAL(elapsed, 5000ll, L"The first invitations went to the address Windows lists first.");
+
+        // the host restarts, and the client comes back to the address the session was on. Going to
+        // the first address again would cost another unanswered round of about ten seconds.
+        host.ClearHistory();
+
+        VERIFY_IS_TRUE(host.SendBye(ByeReason::PowerDown, "restarting"), L"Could not send the Bye which ends the session.");
+
+        VERIFY_IS_TRUE(host.WaitForCommand(CommandCode::Invitation, std::chrono::milliseconds(8000)).has_value(),
+            L"The client invited the address that worked straight away, rather than starting again at the first.");
     }
 
 

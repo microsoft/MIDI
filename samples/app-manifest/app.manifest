@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Example application manifest for Windows MIDI Services (Windows.Devices.Midi2)
+
+  For an unpackaged desktop app that ships its own copy of Windows.Devices.Midi2.dll next to its
+  .exe. Use this file as your app's manifest, or copy the <file> section into the one you have.
+  Change the assemblyIdentity name and version to your app's own.
+
+  Windows looks up a Windows Runtime class in its registration, and your copy of the DLL isn't
+  registered. The <file> section tells Windows where each class is, so RoGetActivationFactory and
+  RoActivateInstance can find it from any language. C++/WinRT, C#/WinRT, and the Rust windows
+  crate already load the DLL from your app's folder when a class isn't registered, so apps built
+  with those work without this.
+
+  The list has every class an app asks for by name: each class with a constructor or static
+  members. Every other class only comes back from calls into the API, so it doesn't need an entry.
+
+  On a PC where Windows MIDI Services is part of Windows, Windows uses its own copy for each class
+  it registers, and ignores the entry here for that class.
+
+  Made from version 0.99.91-preview.11 of the Windows.Devices.Midi2 NuGet package. If you ship a
+  different version, check the list against it. A missing class fails with REGDB_E_CLASSNOTREG
+  (0x80040154).
+
+  https://learn.microsoft.com/windows/win32/sbscs/application-manifests#activatableclass
+-->
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity type="win32" name="Contoso.MidiApp" version="1.0.0.0" />
+
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <!-- Windows 10 and Windows 11 -->
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
+    </application>
+  </compatibility>
+
+  <file name="Windows.Devices.Midi2.dll">
+    <!-- Windows.Devices.Midi2 -->
+    <activatableClass name="Windows.Devices.Midi2.MidiApi" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.MidiChannel" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.MidiClock" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.MidiEndpointConnection" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.MidiEndpointConnectionSettings" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.MidiGroup" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.MidiMessage128" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.MidiMessage32" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.MidiMessage64" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.MidiMessage96" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.MidiSession" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.MidiUniversalSystemExclusiveChannel" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.CapabilityInquiry -->
+    <activatableClass name="Windows.Devices.Midi2.CapabilityInquiry.MidiCapabilityInquiryMessage" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.CapabilityInquiry.MidiCapabilityInquiryMessageBuilder" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.CapabilityInquiry.MidiCapabilityInquirySession" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.CapabilityInquiry.MidiChannelList" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.CapabilityInquiry.MidiChannelListEntry" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.CapabilityInquiry.MidiDeviceInfo" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.CapabilityInquiry.MidiProfileId" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.CapabilityInquiry.MidiProgramList" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.CapabilityInquiry.MidiProgramListEntry" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.CapabilityInquiry.MidiResourceLink" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.CapabilityInquiry.MidiResourceList" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.CapabilityInquiry.MidiResourceListEntry" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.CapabilityInquiry.MidiUniqueId" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.ClientPlugins -->
+    <activatableClass name="Windows.Devices.Midi2.ClientPlugins.MidiChannelEndpointListener" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.ClientPlugins.MidiGroupEndpointListener" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.ClientPlugins.MidiMessageTypeEndpointListener" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Diagnostics -->
+    <activatableClass name="Windows.Devices.Midi2.Diagnostics.MidiDiagnostics" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Enumeration -->
+    <activatableClass name="Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Enumeration.MidiDeclaredEndpointInfo" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Enumeration.MidiDeclaredStreamConfiguration" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceHelper" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Enumeration.MidiEndpointDevicePropertyHelper" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceWatcher" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Enumeration.MidiEndpointTransportSuppliedInfo" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Enumeration.MidiEndpointUserSuppliedInfo" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Enumeration.MidiFunctionBlock" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Enumeration.MidiGroupTerminalBlock" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Enumeration.Legacy -->
+    <activatableClass name="Windows.Devices.Midi2.Enumeration.Legacy.MidiLegacyPortDeviceInformation" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Enumeration.Legacy.MidiLegacyPortDeviceWatcher" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Reporting -->
+    <activatableClass name="Windows.Devices.Midi2.Reporting.MidiReporting" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.ServiceConfig -->
+    <activatableClass name="Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.ServiceConfig.MidiServiceEndpointCustomizationConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.ServiceConfig.MidiServiceEndpointCustomizationProvenance" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.ServiceConfig.MidiServiceEndpointCustomizationRemovalConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.ServiceConfig.MidiServiceTransportCommand" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.ServiceConfig.MidiServiceTransportCommonCommands" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.ServiceConfig.MidiServiceTransportPluginConfigManager" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Transports.BasicLoopback -->
+    <activatableClass name="Windows.Devices.Midi2.Transports.BasicLoopback.MidiBasicLoopbackCreationConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.BasicLoopback.MidiBasicLoopbackEndpointDefinition" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.BasicLoopback.MidiBasicLoopbackManager" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.BasicLoopback.MidiBasicLoopbackRemovalConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.BasicLoopback.MidiBasicLoopbackUpdateConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Transports.Bluetooth -->
+    <activatableClass name="Windows.Devices.Midi2.Transports.Bluetooth.MidiBluetoothDeviceConnectConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Bluetooth.MidiBluetoothDeviceDisconnectConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Bluetooth.MidiBluetoothOfflineRetentionConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Bluetooth.MidiBluetoothPeripheralClientListConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Bluetooth.MidiBluetoothPeripheralConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Bluetooth.MidiBluetoothTransportManager" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Transports.Loopback -->
+    <activatableClass name="Windows.Devices.Midi2.Transports.Loopback.MidiLoopbackCreationConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Loopback.MidiLoopbackEndpointDefinition" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Loopback.MidiLoopbackManager" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Loopback.MidiLoopbackRemovalConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Loopback.MidiLoopbackUpdateConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Transports.Network -->
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkAdvertisedHostWatcher" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkClientConnectConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkClientDisconnectConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkClientMatchCriteria" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkClientUpdateConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkHostCreationConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkHostKnownClientsConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkHostRemoteClientSettingsConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkHostRemovalConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkHostUpdateConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkKnownRemoteClient" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkRemoteClientApprovalConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkRemoteClientDisconnectConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkRemoteClientForgetConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkRemoteClientSettings" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkTransportManager" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkTransportSettings" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Transports.Rtp -->
+    <activatableClass name="Windows.Devices.Midi2.Transports.Rtp.MidiRtpClientConnectConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Rtp.MidiRtpClientDisconnectConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Rtp.MidiRtpClientMatchCriteria" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Rtp.MidiRtpHostCreationConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Rtp.MidiRtpHostKnownClientsConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Rtp.MidiRtpHostRemoteClientSettingsConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Rtp.MidiRtpHostRemovalConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Rtp.MidiRtpKnownRemoteClient" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Rtp.MidiRtpRemoteClientApprovalConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Rtp.MidiRtpRemoteClientDisconnectConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Rtp.MidiRtpRemoteClientForgetConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Rtp.MidiRtpRemoteClientSettings" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Rtp.MidiRtpTransportManager" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Transports.Synth -->
+    <activatableClass name="Windows.Devices.Midi2.Transports.Synth.MidiSynthConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Synth.MidiSynthManager" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Transports.Virtual -->
+    <activatableClass name="Windows.Devices.Midi2.Transports.Virtual.MidiVirtualDeviceCreationConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Virtual.MidiVirtualDeviceManager" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Utilities.Files -->
+    <activatableClass name="Windows.Devices.Midi2.Utilities.Files.MidiFileReadOptions" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Utilities.Files.MidiFileWriteOptions" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Utilities.Files.MidiStandardFileReader" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Utilities.Files.MidiStandardFileWriter" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Utilities.Messages -->
+    <activatableClass name="Windows.Devices.Midi2.Utilities.Messages.MidiBytestreamToUmpMessageConverterState" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Utilities.Messages.MidiMessageBuilder" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Utilities.Messages.MidiMessageConverter" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Utilities.Messages.MidiMessageHelper" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Utilities.Messages.MidiStreamMessageBuilder" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Utilities.Messages.MidiSystemExclusive7MessageBuilder" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Utilities.Messages.MidiSystemExclusive7MessageHelper" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Utilities.Sequencing -->
+    <activatableClass name="Windows.Devices.Midi2.Utilities.Sequencing.MidiSequenceBuilder" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Utilities.Sequencing.MidiSequencePlayer" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Utilities.Sequencing.MidiSequenceTrackRouting" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+    <!-- Windows.Devices.Midi2.Utilities.SysExTransfer -->
+    <activatableClass name="Windows.Devices.Midi2.Utilities.SysExTransfer.MidiSystemExclusiveReceiver" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Utilities.SysExTransfer.MidiSystemExclusiveSender" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+  </file>
+</assembly>

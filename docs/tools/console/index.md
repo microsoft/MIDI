@@ -18,7 +18,7 @@ This page documents every command and option. To get the same information at the
 
 ## Where to get it
 
-The console is installed with the Windows MIDI Services SDK Runtime and Tools package. Developers and technical users can download the latest preview release from [GitHub](https://aka.ms/midireleases).
+The console is installed with the Windows MIDI Services Tools package. Developers and technical users can download the latest preview release from [GitHub](https://aka.ms/midireleases).
 
 ## Commands, arguments and options
 

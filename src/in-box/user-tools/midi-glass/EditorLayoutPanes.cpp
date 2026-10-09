@@ -19,6 +19,9 @@
 #include "ThemeStore.h"
 #include "LayoutStore.h"
 #include "LayoutPackage.h"
+#include "LayoutPack.h"
+#include "AppProvenance.h"
+#include "SharingDialogs.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -912,6 +915,18 @@ namespace winrt::midiglass::implementation
             saved.Name = name;
             saved.IsBuiltIn = false;
 
+            // Under a new name it is a new theme made from this one. Under its own name it is the
+            // same theme carried on.
+            if (name != m_theme.Name)
+            {
+                saved.Provenance = ::midiglass::CopyProvenance(
+                    m_theme.Name, m_theme.Provenance, glass::FindBuiltInTheme(m_theme.Name) != nullptr);
+            }
+            else if (!saved.Provenance.has_value())
+            {
+                saved.Provenance = ::midiglass::NewProvenance();
+            }
+
             // Not a theme's to carry: it is a sentence about one of ours, and a customer theme
             // has no business claiming it.
             saved.CautionResourceKey.clear();
@@ -972,12 +987,44 @@ namespace winrt::midiglass::implementation
                 false,
                 L"ImportThemeTitle",
                 resources::GetString(L"ImportThemeFilter").c_str(),
-                L"*.miditheme;*.miditheme.json",
+                L"*.midithemepack;*.miditheme;*.miditheme.json",
                 L"miditheme",
                 {});
 
             if (source.empty())
             {
+                return;
+            }
+
+            // A pack is checked, shows who made it and asks before it replaces anything.
+            if (glass::HasFileExtension(source, glass::ThemePackExtension))
+            {
+                auto weak = get_weak();
+
+                ::midiglass::sharing::ImportPackAsync(
+                    Content().XamlRoot(),
+                    source,
+                    [weak](::midiglass::sharing::ImportOutcome outcome, std::wstring const& path)
+                    {
+                        auto strong = weak.get();
+
+                        if (strong == nullptr || outcome != ::midiglass::sharing::ImportOutcome::Theme)
+                        {
+                            return;
+                        }
+
+                        auto const read = glass::ReadThemeFile(path);
+
+                        if (read.Succeeded && strong->m_editor.ChooseTheme(read.Value))
+                        {
+                            strong->m_theme = read.Value;
+                            strong->MarkChanged();
+                            strong->ApplyThemeEverywhere();
+                        }
+
+                        strong->RefreshAppearancePane();
+                    });
+
                 return;
             }
 
@@ -1016,7 +1063,21 @@ namespace winrt::midiglass::implementation
             auto const path = (std::filesystem::path{ folder } /
                 (SafeThemeFileName(theme.Name) + glass::ThemeFileExtension)).wstring();
 
-            glass::WriteThemeFile(theme, path);
+            // A newer version's theme is filed exactly as it came, so nothing this version can't
+            // read is lost on the way.
+            if (read.IsFromNewerVersion)
+            {
+                if (::CopyFileW(source.c_str(), path.c_str(), FALSE))
+                {
+                    ShowEditorNotice(
+                        resources::GetString(L"ImportThemeNewerTitle"),
+                        resources::GetString(L"ImportThemeNewerDetail"));
+                }
+            }
+            else
+            {
+                glass::WriteThemeFile(theme, path);
+            }
 
             if (m_editor.ChooseTheme(theme))
             {
@@ -1041,46 +1102,32 @@ namespace winrt::midiglass::implementation
                 return;
             }
 
-            auto suggested = std::filesystem::path{ m_filePath }.filename().wstring();
+            auto weak = get_weak();
 
-            if (auto const dot = suggested.find(L'.'); dot != std::wstring::npos)
-            {
-                suggested = suggested.substr(0, dot);
-            }
-
-            auto const target = PickFilePath(
+            // The layout is open here, so a change to who made it goes through the editor and
+            // its save rather than being written underneath it.
+            ::midiglass::sharing::ShareLayoutAsync(
+                Content().XamlRoot(),
                 m_chrome.WindowHandle(),
-                true,
-                L"PackageSaveTitle",
-                L"MIDI Glass layout package (*.zip)",
-                L"*.zip",
-                L"zip",
-                suggested + glass::LayoutPackageExtension);
+                m_filePath,
+                [weak](midiapp::ContentProvenance const& provenance)
+                {
+                    auto strong = weak.get();
 
-            if (target.empty())
-            {
-                return;
-            }
+                    if (strong == nullptr)
+                    {
+                        return false;
+                    }
 
-            auto const result = glass::WriteLayoutPackage(m_filePath, target, true);
+                    if (strong->m_editor.SetProvenance(provenance))
+                    {
+                        strong->MarkChanged();
+                    }
 
-            if (!result.Succeeded)
-            {
-                ShowEditorNotice(
-                    resources::GetString(L"PackageFailedTitle"),
-                    resources::GetString(result.FailureKey.empty()
-                        ? std::wstring{ L"PackageFailedWrite" }
-                        : result.FailureKey));
+                    strong->SaveNow();
 
-                return;
-            }
-
-            ShowEditorNotice(
-                resources::GetString(L"PackageDoneTitle"),
-                resources::FormatString(
-                    L"PackageDoneFormat",
-                    std::filesystem::path{ result.Path }.filename().wstring(),
-                    std::to_wstring(result.FileCount)));
+                    return !strong->m_saveFailed;
+                });
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to export the layout.")
     }

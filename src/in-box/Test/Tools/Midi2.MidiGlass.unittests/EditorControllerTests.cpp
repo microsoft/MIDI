@@ -2764,3 +2764,91 @@ void EditorControllerTests::LockingIsOneStepAndTravelsInTheFile()
     // A layout nobody locked writes no key for it, so its file is the same as before.
     VERIFY_IS_TRUE(glass::WriteLayoutToJson(controller.Document()).find(L"\"locked\"") == std::wstring::npos);
 }
+
+void EditorControllerTests::APlaceholderIsNeverSelectedOrPasted()
+{
+    // No way of picking reaches a placeholder, so no edit can change what the file says about it.
+    auto const read = glass::ReadLayoutFromJson(
+        LR"({ "fileVersion": 1, "name": "T", "pageWidth": 1280, "pageHeight": 800,
+              "pages": [ { "id": "p", "name": "P", "controls": [
+            { "id": "knob", "kind": "knob", "x": 100, "y": 100, "width": 56, "height": 56 },
+            { "id": "holo", "kind": "hologram", "x": 300, "y": 100, "width": 120, "height": 120 },
+            { "id": "away", "kind": "hologram", "x": 5000, "y": 100, "width": 120, "height": 120 } ] } ] })");
+
+    VERIFY_IS_TRUE(read.Succeeded);
+
+    glass::EditorController controller{};
+    controller.Load(read.Document);
+
+    controller.SelectOnly(L"holo");
+    VERIFY_ARE_EQUAL(size_t{ 0 }, controller.Selection().size());
+
+    controller.AddToSelection(L"holo");
+    controller.ToggleSelected(L"holo");
+    VERIFY_ARE_EQUAL(size_t{ 0 }, controller.Selection().size());
+
+    controller.SelectAll();
+    VERIFY_ARE_EQUAL(size_t{ 1 }, controller.Selection().size());
+    VERIFY_IS_TRUE(controller.IsSelected(L"knob"));
+
+    controller.SelectInRectangle({ 0, 0, 1280, 800 }, false);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, controller.Selection().size());
+
+    controller.SelectOutsidePage();
+    VERIFY_ARE_EQUAL(size_t{ 0 }, controller.Selection().size());
+
+    VERIFY_IS_FALSE(glass::SendsAnything(glass::ControlKind::Placeholder));
+
+    // A pasted placeholder would need a new id, so it stays behind and the knob comes in.
+    auto const before = controller.CurrentPage()->Controls.size();
+
+    VERIFY_IS_TRUE(controller.PasteControls(glass::WriteLayoutToJson(read.Document)));
+    VERIFY_ARE_EQUAL(before + 1, controller.CurrentPage()->Controls.size());
+
+    auto const& controls = controller.CurrentPage()->Controls;
+
+    VERIFY_ARE_EQUAL(ptrdiff_t{ 2 }, std::count_if(controls.begin(), controls.end(),
+        [](glass::Control const& control) { return control.Kind == glass::ControlKind::Placeholder; }));
+}
+
+void EditorControllerTests::AMessageThisVersionDoesNotKnowIsNeverChangedOrPasted()
+{
+    auto const read = glass::ReadLayoutFromJson(
+        LR"({ "fileVersion": 1, "name": "T", "pageWidth": 1280, "pageHeight": 800, "devices": [ { "name": "Synth" } ],
+              "pages": [ { "id": "p", "name": "P", "controls": [
+            { "id": "knob", "kind": "knob", "x": 100, "y": 100, "width": 56, "height": 56,
+              "messages": [
+                { "kind": "controlChange", "device": "Synth", "number": 74 },
+                { "kind": "noteAttribute", "device": "Synth", "number": 60 } ],
+              "feedback": { "enabled": true, "kind": "quantumChange" } } ] } ] })");
+
+    VERIFY_IS_TRUE(read.Succeeded);
+
+    glass::EditorController controller{};
+    controller.Load(read.Document);
+
+    glass::ControlMessage replacement{};
+    replacement.Kind = glass::MessageKind::ControlChange;
+    replacement.Number = 1;
+
+    VERIFY_IS_FALSE(controller.SetMessage(L"knob", 1, replacement));
+    VERIFY_IS_FALSE(controller.RemoveMessage(L"knob", 1));
+
+    glass::FeedbackBinding follow{};
+    follow.Enabled = true;
+
+    VERIFY_IS_FALSE(controller.SetFeedback(L"knob", follow));
+
+    // Pasted here, it would make this a layout this version can't save, so only the row it knows comes in.
+    VERIFY_IS_TRUE(controller.PasteControls(glass::WriteLayoutToJson(read.Document)));
+
+    auto const& pasted = controller.CurrentPage()->Controls.back();
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, pasted.Messages.size());
+    VERIFY_IS_TRUE(pasted.Messages[0].Kind == glass::MessageKind::ControlChange);
+    VERIFY_IS_TRUE(pasted.Feedback.Kind != glass::MessageKind::Unrecognized);
+    VERIFY_IS_FALSE(pasted.Feedback.Enabled);
+
+    // The row it knows can still be changed.
+    VERIFY_IS_TRUE(controller.SetMessage(L"knob", 0, replacement));
+}

@@ -22,6 +22,7 @@
     <ClCompile Include="MainWindowEditor.cpp" />
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="TapTempo.cpp" />
+    <ClCompile Include="WindowVisibility.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
@@ -43,6 +44,7 @@
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="TapTempo.h" />
     <ClInclude Include="Telemetry.h" />
+    <ClInclude Include="WindowVisibility.h" />
     <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
     <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />

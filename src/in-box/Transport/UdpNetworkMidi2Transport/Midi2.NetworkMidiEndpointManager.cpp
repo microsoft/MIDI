@@ -1061,7 +1061,8 @@ HRESULT
 CMidi2NetworkMidiEndpointManager::StartNewClient(
     MidiNetworkClientDefinition const& clientDefinition, 
     winrt::hstring const& hostNameOrIPAddress, 
-    uint16_t const hostPort)
+    uint16_t const hostPort,
+    uint32_t const remoteAddressCount)
 {
     // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
     // escaping WinRT exception would unwind past them into a worker thread.
@@ -1150,10 +1151,25 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
         // != 0 for the hostPort is hacky, but for MIDI, we shouldn't expect ports < 1024 anyway
         if (!hostNameOrIPAddress.empty() && hostPort != 0)
         {
-            HostName hostName(hostNameOrIPAddress);
             winrt::hstring portNumberString = winrt::to_hstring(hostPort);
 
-            auto startHr = client->Start(hostName, portNumberString);
+            HRESULT startHr{ E_FAIL };
+
+            try
+            {
+                startHr = client->Start(HostName{ hostNameOrIPAddress }, portNumberString);
+            }
+            catch (...)
+            {
+                startHr = wil::ResultFromCaughtException();
+            }
+
+            if (FAILED(startHr))
+            {
+                // so the next attempt goes to the remote's next address, if it has another
+                LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionAddressUnreachable(definition.EntryIdentifier));
+            }
+
             RETURN_IF_FAILED(startHr);
 
             // Building a client means an invitation, a reply and then endpoint creation, and the
@@ -1176,7 +1192,7 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
                 return S_OK;
             }
 
-            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionLive(definition.EntryIdentifier));
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionLive(definition.EntryIdentifier, hostNameOrIPAddress, remoteAddressCount));
 
             // Only now. A host can answer within a millisecond, and its answer can change the entry.
             LOG_IF_FAILED(client->SendFirstInvitation());
@@ -1230,7 +1246,7 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
             // Negotiation runs on its own thread. It calls into the service and can block there
             // behind a PnP notification, which used to stop this loop creating any client at all.
             StartPendingHosts();
-            StartPendingClients();
+            StartPendingClients(stopToken);
 
             ReconcileHostNetworkAdapters();
 
@@ -1371,11 +1387,17 @@ CMidi2NetworkMidiEndpointManager::RequestNetworkAdapterReconcile() noexcept
 
 // Client definitions aren't clients. They are what is needed to connect to a host once it can be
 // reached, so each pass only connects the ones whose remote can be found.
+_Use_decl_annotations_
 void
-CMidi2NetworkMidiEndpointManager::StartPendingClients()
+CMidi2NetworkMidiEndpointManager::StartPendingClients(std::stop_token const& stopToken)
 {
     for (auto const& definition : TransportState::Current().GetClientDefinitions())
     {
+        if (stopToken.stop_requested())
+        {
+            return;
+        }
+
         if (definition.State != MidiNetworkEntryState::Pending || !definition.Enabled)
         {
             continue;
@@ -1387,12 +1409,17 @@ CMidi2NetworkMidiEndpointManager::StartPendingClients()
             continue;
         }
 
-        winrt::hstring hostNameOrIPAddress{ };
+        std::vector<std::wstring> addresses{ };
         uint16_t port{ 0 };
 
-        if (TryResolveClientTarget(definition, hostNameOrIPAddress, port))
+        if (TryResolveClientTarget(definition, stopToken, addresses, port))
         {
-            LOG_IF_FAILED(StartNewClient(definition, hostNameOrIPAddress, port));
+            auto const address = ::WindowsMidiServicesInternal::ChooseMidiNetworkAddress(
+                addresses,
+                std::wstring{ definition.ConnectedAddress.c_str() },
+                definition.UnansweredAttempts);
+
+            LOG_IF_FAILED(StartNewClient(definition, winrt::hstring{ address }, port, static_cast<uint32_t>(addresses.size())));
         }
     }
 }
@@ -1401,10 +1428,11 @@ _Use_decl_annotations_
 bool
 CMidi2NetworkMidiEndpointManager::TryResolveClientTarget(
     MidiNetworkClientDefinition const& definition,
-    winrt::hstring& hostNameOrIPAddress,
+    std::stop_token const& stopToken,
+    std::vector<std::wstring>& addresses,
     uint16_t& port)
 {
-    hostNameOrIPAddress = winrt::hstring{ };
+    addresses.clear();
     port = 0;
 
     // --- connect via mDNS entry
@@ -1450,34 +1478,22 @@ CMidi2NetworkMidiEndpointManager::TryResolveClientTarget(
             TraceLoggingWideString(advertisedHost.DeviceId().c_str(), "id")
         );
 
-        // IP address first, as that is the most reliable. The host name relies on
-        // DNS being set up properly, which is often not the case on a network with
-        // just some devices and a laptop.
-        if (!advertisedHost.IPv4Addresses.empty())
-        {
-            // we only take the top one right now. We should take the others as well
-            hostNameOrIPAddress = winrt::hstring{ advertisedHost.IPv4Addresses.front() };
-        }
-        else if (!advertisedHost.IPv6Addresses.empty())
-        {
-            // A routable address first. A link-local one, in fe80::/10, carries the %scope of the
-            // adapter it was seen on, which is what makes it reachable at all.
-            auto const routable = std::find_if(advertisedHost.IPv6Addresses.begin(), advertisedHost.IPv6Addresses.end(),
-                [](std::wstring const& address)
-                {
-                    return !(address.size() > 3 && _wcsnicmp(address.c_str(), L"fe", 2) == 0 && wcschr(L"89abAB", address[2]) != nullptr);
-                });
+        // Every address it advertised, in the order Windows prefers, as for any name it looks up.
+        // The host name is the last resort. It relies on DNS being set up properly, which is often
+        // not the case on a network with just some devices and a laptop.
+        std::vector<std::wstring> advertised{ advertisedHost.IPv4Addresses };
+        advertised.insert(advertised.end(), advertisedHost.IPv6Addresses.begin(), advertisedHost.IPv6Addresses.end());
 
-            hostNameOrIPAddress = winrt::hstring{ routable != advertisedHost.IPv6Addresses.end() ? *routable : advertisedHost.IPv6Addresses.front() };
-        }
-        else if (!advertisedHost.HostName.empty())
+        addresses = ::WindowsMidiServicesInternal::SortMidiNetworkAddresses(advertised);
+
+        if (addresses.empty() && !advertisedHost.HostName.empty())
         {
-            hostNameOrIPAddress = winrt::hstring{ advertisedHost.HostName };
+            addresses.push_back(advertisedHost.HostName);
         }
 
         port = advertisedHost.Port;
 
-        return true;
+        return !addresses.empty();
     }
 
     // --- connect via direct host information / ip
@@ -1511,12 +1527,48 @@ CMidi2NetworkMidiEndpointManager::TryResolveClientTarget(
                 TraceLoggingWideString(definition.MatchDirectPort.c_str(), "remote port")
             );
 
-            hostNameOrIPAddress = definition.MatchDirectHostNameOrIPAddress;
+            std::wstring const target{ definition.MatchDirectHostNameOrIPAddress.c_str() };
+            bool isName{ false };
+
+            try
+            {
+                isName = HostName{ definition.MatchDirectHostNameOrIPAddress }.Type() == winrt::Windows::Networking::HostNameType::DomainName;
+            }
+            catch (...)
+            {
+                LOG_CAUGHT_EXCEPTION();
+                return false;
+            }
+
+            // A name can stand for several addresses, which are tried in turn in the order Windows
+            // prefers. An address is used as it was typed.
+            if (isName)
+            {
+                addresses = ::WindowsMidiServicesInternal::SortMidiNetworkAddresses(
+                    ::WindowsMidiServicesInternal::ResolveMidiNetworkHostName(target, MIDI_NETWORK_CLIENT_NAME_RESOLUTION_TIMEOUT_SECONDS, stopToken));
+
+                if (addresses.empty())
+                {
+                    TraceLoggingWrite(
+                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Could not look up the host name. Trying again on a later pass.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(target.c_str(), "host name")
+                    );
+                }
+            }
+            else
+            {
+                addresses.push_back(target);
+            }
         }
 
         // TODO: Check to see if the client is actually online
 
-        return true;
+        return !addresses.empty();
     }
 
     return false;

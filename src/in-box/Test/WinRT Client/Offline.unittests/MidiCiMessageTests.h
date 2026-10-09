@@ -57,6 +57,10 @@ public:
     TEST_METHOD(TestBuildEndpointReplyBytes);
     TEST_METHOD(TestEndpointReplyLengthCannotExceedBuffer);
 
+    TEST_METHOD(TestBuildProcessInquiryCapabilitiesBytes);
+    TEST_METHOD(TestBuildMidiMessageReportBytes);
+    TEST_METHOD(TestParseMidiMessageReportStoppingShort);
+
 private:
 
 };

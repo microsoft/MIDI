@@ -76,6 +76,9 @@ namespace glass
             // The same for hexagons, whose rows nest half a pad into each other and whose
             // second row sits half a pad to the right.
             case ControlKind::HexPads: return { 456, 160 };
+
+            // Only ever read from a file, never placed new.
+            case ControlKind::Placeholder: return { 56, 56 };
             }
 
             return { 56, 56 };

@@ -57,6 +57,24 @@ namespace midipatchbay
         bool ShowAssistant() const noexcept { return m_showAssistant; }
         void ShowAssistant(_In_ bool value) noexcept;
 
+        // Whether an annotation's font list has every font on this PC, or only the ones every PC has.
+        bool ShowAllFonts() const noexcept { return m_showAllFonts; }
+        void ShowAllFonts(_In_ bool value) noexcept;
+
+        // Whether the library shows the patches as a list rather than as tiles.
+        bool LibraryShowsList() const noexcept { return m_libraryShowsList; }
+        void LibraryShowsList(_In_ bool value) noexcept;
+
+        // Where the last patch editor was. Every editor opens there, nudged along from the last.
+        WindowPlacementInfo const& EditorPlacement() const noexcept { return m_editorPlacement; }
+        void EditorPlacement(_In_ WindowPlacementInfo const& value) noexcept;
+
+        // How wide the palette and the details panel were dragged, for every editor. 0 is the
+        // width they start at.
+        int32_t EditorPaletteWidth() const noexcept { return m_editorPaletteWidth; }
+        int32_t EditorInspectorWidth() const noexcept { return m_editorInspectorWidth; }
+        void EditorPaneWidths(_In_ int32_t paletteWidth, _In_ int32_t inspectorWidth) noexcept;
+
         // The per-user Run entry. Reads and writes HKCU directly rather than caching, because the
         // customer can change it outside the app.
         static bool StartsWithWindows() noexcept;
@@ -72,5 +90,11 @@ namespace midipatchbay
         bool m_confirmCanvasRemove{ true };
         bool m_activateSavedPatchesAtStartup{ true };
         bool m_showAssistant{ true };
+        bool m_showAllFonts{ false };
+        bool m_libraryShowsList{ false };
+
+        WindowPlacementInfo m_editorPlacement{};
+        int32_t m_editorPaletteWidth{ 0 };
+        int32_t m_editorInspectorWidth{ 0 };
     };
 }

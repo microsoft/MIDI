@@ -191,7 +191,16 @@ try
     RETURN_HR_IF(E_ILLEGAL_STATE_CHANGE, !m_running.load());
     RETURN_HR_IF(E_INVALIDARG, instanceLabel.empty());
 
-    RETURN_IF_FAILED(m_advertiser.Register(instanceLabel, m_ports.Control().Port(), 10000, stopToken, interfaceIndex));
+    // AppleMIDI peers ignore TXT content, but the record may not go out empty
+    RETURN_IF_FAILED(m_advertiser.Register(
+        instanceLabel,
+        MIDI_RTP_DNSSD_SERVICE_TYPE,
+        L"",
+        m_ports.Control().Port(),
+        { { L"txtvers", L"1" } },
+        WindowsMidiServicesInternal::MidiDnssdRegistrationTimeoutMilliseconds,
+        stopToken,
+        interfaceIndex));
 
     m_advertised = true;
 

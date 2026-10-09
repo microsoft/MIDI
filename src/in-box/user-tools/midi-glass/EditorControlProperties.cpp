@@ -909,13 +909,19 @@ namespace winrt::midiglass::implementation
         {
             auto const& feedback = control.Feedback;
 
+            // What a newer version set this control to follow is kept as it is, and not followed.
+            auto const unrecognized = feedback.Kind == glass::MessageKind::Unrecognized;
+
             FeedbackEnabledSwitch().IsOn(feedback.Enabled);
+            FeedbackEnabledSwitch().IsEnabled(!unrecognized);
             FeedbackFieldsPanel().IsEnabled(feedback.Enabled);
 
             auto const modeIndex = IndexOfValue(FeedbackModeOrder, feedback.Mode);
 
             FeedbackModeCombo().SelectedIndex(modeIndex);
-            FeedbackModeCaption().Text(resources::GetString(FeedbackModeCaptionKeys[modeIndex]));
+            FeedbackModeCaption().Text(unrecognized
+                ? resources::GetString(L"FeedbackUnrecognized")
+                : resources::GetString(FeedbackModeCaptionKeys[modeIndex]));
 
             RefreshFeedbackDeviceChoices(feedback.DeviceName);
             RefreshFeedbackGroupChoices(feedback.GroupIndex);
@@ -935,8 +941,8 @@ namespace winrt::midiglass::implementation
 
             FeedbackKindCombo().SelectedIndex(IndexOfValue(FeedbackKinds, feedback.Kind));
 
-            auto const message = feedback.Mode == glass::FeedbackMode::Message;
-            auto const tempo = feedback.Mode == glass::FeedbackMode::Tempo;
+            auto const message = feedback.Mode == glass::FeedbackMode::Message && !unrecognized;
+            auto const tempo = feedback.Mode == glass::FeedbackMode::Tempo && !unrecognized;
 
             FeedbackMessagePanel().Visibility(
                 message ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);

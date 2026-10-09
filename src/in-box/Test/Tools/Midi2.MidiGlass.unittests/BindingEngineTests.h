@@ -75,6 +75,7 @@ public:
     // ---- feedback ----
     TEST_METHOD(FeedbackMovesAControlFromADevice);
     TEST_METHOD(FeedbackIgnoresAMessageNobodyWants);
+    TEST_METHOD(AMessageThisVersionDoesNotKnowIsNeverSentOrFollowed);
 
     // ---- the hot path ----
     TEST_METHOD(EvaluateWritesNoMoreThanTheCallerAllowed);

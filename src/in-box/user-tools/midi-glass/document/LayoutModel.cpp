@@ -7,6 +7,9 @@
 
 #include "LayoutModel.h"
 
+// Shared with MIDI Patchbay, in midi-app-shared.
+#include "FontNames.h"
+
 #include <windows.h>
 #include <combaseapi.h>
 
@@ -397,7 +400,8 @@ namespace glass
     bool SendsToADevice(MessageKind kind) noexcept
     {
         return kind != MessageKind::Sequence &&
-            kind != MessageKind::GoToPage;
+            kind != MessageKind::GoToPage &&
+            kind != MessageKind::Unrecognized;
     }
 
     _Use_decl_annotations_
@@ -1346,26 +1350,6 @@ namespace glass
     _Use_decl_annotations_
     bool IsSafeFontFamilyName(std::wstring_view name) noexcept
     {
-        // Longer than any family name on a PC, and short enough that nobody can use it to carry
-        // anything else.
-        constexpr size_t MaximumFontFamilyLength = 128;
-
-        if (name.empty() || name.size() > MaximumFontFamilyLength)
-        {
-            return false;
-        }
-
-        // A path, a link or a font file is written with these, and a comma makes a list of
-        // families. None of them is part of a family's own name.
-        for (auto const ch : name)
-        {
-            if (ch < L' ' || ch == L'\\' || ch == L'/' || ch == L':' || ch == L'#' || ch == L',' ||
-                ch == L'%' || ch == L'?' || ch == L'*' || ch == L'"' || ch == L'<' || ch == L'>' || ch == L'|')
-            {
-                return false;
-            }
-        }
-
-        return name.find_first_not_of(L' ') != std::wstring_view::npos;
+        return midiapp::IsSafeFontFamilyName(name);
     }
 }

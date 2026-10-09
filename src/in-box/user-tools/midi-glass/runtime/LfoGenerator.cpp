@@ -43,45 +43,6 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    uint64_t LfoGenerator::IntervalOf(RunningLfo const& lfo) noexcept
-    {
-        auto const milliseconds = std::clamp(
-            lfo.Spec.UpdateIntervalMilliseconds,
-            MinimumLfoIntervalMilliseconds,
-            MaximumLfoIntervalMilliseconds);
-
-        return static_cast<uint64_t>(milliseconds) * 1000ull;
-    }
-
-    _Use_decl_annotations_
-    uint64_t LfoGenerator::DueMicrosecondsOf(RunningLfo const& lfo) noexcept
-    {
-        return lfo.OriginMicroseconds + lfo.SamplesSent * IntervalOf(lfo);
-    }
-
-    _Use_decl_annotations_
-    double LfoGenerator::PhaseOf(RunningLfo const& lfo, uint64_t sampleIndex) noexcept
-    {
-        auto const beats = std::clamp(
-            lfo.Spec.BeatsPerCycle, MinimumBeatsPerCycle, MaximumBeatsPerCycle);
-
-        auto const bpm = std::clamp(
-            lfo.BeatsPerMinute, MinimumBeatsPerMinute, MaximumBeatsPerMinute);
-
-        auto const cycleMicroseconds = 60.0 * 1000000.0 * beats / bpm;
-
-        if (cycleMicroseconds <= 0.0)
-        {
-            return 0.0;
-        }
-
-        auto const elapsed = static_cast<double>(sampleIndex * IntervalOf(lfo));
-        auto const turns = lfo.PhaseAtOrigin + elapsed / cycleMicroseconds;
-
-        return turns - std::floor(turns);
-    }
-
-    _Use_decl_annotations_
     void LfoGenerator::Start(winrt::Microsoft::UI::Dispatching::DispatcherQueue const& dispatcher)
     {
         std::lock_guard guard{ m_lock };
@@ -187,11 +148,12 @@ namespace glass
 
                 lfo.ControlIndex = controlIndex;
                 lfo.Spec = spec;
-                lfo.BeatsPerMinute = std::clamp(
-                    beatsPerMinute, MinimumBeatsPerMinute, MaximumBeatsPerMinute);
-                lfo.OriginMicroseconds = NowMicroseconds();
-                lfo.SamplesSent = 0;
-                lfo.PhaseAtOrigin = 0.0;
+                lfo.Sweep.Begin(
+                    NowMicroseconds(),
+                    1'000'000,
+                    spec.BeatsPerCycle,
+                    beatsPerMinute,
+                    spec.UpdateIntervalMilliseconds);
 
                 m_sweeps.push_back(std::move(lfo));
 
@@ -230,7 +192,7 @@ namespace glass
                     // middle of its own range.
                     restValue = lfo.Spec.ReturnsToRestWhenStopped
                         ? std::clamp((lfo.Spec.Lowest + lfo.Spec.Highest) * 0.5, 0.0, 1.0)
-                        : LfoValueAt(lfo.Spec, PhaseOf(lfo, lfo.SamplesSent), 0.5);
+                        : LfoValueAt(lfo.Spec, lfo.Sweep.NextPhase(), 0.5);
 
                     break;
                 }
@@ -323,17 +285,14 @@ namespace glass
 
             for (auto& lfo : m_sweeps)
             {
-                if (std::abs(wanted - lfo.BeatsPerMinute) < 0.01)
+                if (std::abs(wanted - lfo.Sweep.BeatsPerMinute()) < 0.01)
                 {
                     continue;
                 }
 
                 // Rebase on the sample that has just gone out, keeping the phase it had reached.
                 // Re-timing the whole history at the new rate would jump the wave.
-                lfo.PhaseAtOrigin = PhaseOf(lfo, lfo.SamplesSent);
-                lfo.OriginMicroseconds = DueMicrosecondsOf(lfo);
-                lfo.SamplesSent = 0;
-                lfo.BeatsPerMinute = wanted;
+                lfo.Sweep.Retime(lfo.Spec.BeatsPerCycle, wanted, lfo.Spec.UpdateIntervalMilliseconds);
 
                 m_signaled = true;
             }
@@ -372,7 +331,7 @@ namespace glass
 
                 for (auto& lfo : m_sweeps)
                 {
-                    auto const at = DueMicrosecondsOf(lfo);
+                    auto const at = lfo.Sweep.NextDue();
 
                     if (at <= now)
                     {
@@ -380,19 +339,12 @@ namespace glass
                         // dragging the phase along behind it. Far enough behind and the sweep
                         // is rebased instead: a page fault must not turn into a burst of forty
                         // messages at once.
-                        auto const interval = IntervalOf(lfo);
-
-                        if (now - at > interval * 8)
-                        {
-                            lfo.PhaseAtOrigin = PhaseOf(lfo, lfo.SamplesSent);
-                            lfo.OriginMicroseconds = now;
-                            lfo.SamplesSent = 0;
-                        }
+                        lfo.Sweep.CatchUp(now);
 
                         Sample sample{};
 
                         sample.ControlIndex = lfo.ControlIndex;
-                        sample.Phase = PhaseOf(lfo, lfo.SamplesSent);
+                        sample.Phase = lfo.Sweep.NextPhase();
                         sample.Value = LfoValueAt(
                             lfo.Spec,
                             sample.Phase,
@@ -400,10 +352,10 @@ namespace glass
 
                         due.push_back(sample);
 
-                        lfo.SamplesSent++;
+                        lfo.Sweep.Advance();
                     }
 
-                    auto const after = DueMicrosecondsOf(lfo);
+                    auto const after = lfo.Sweep.NextDue();
 
                     if (nextDue == 0 || after < nextDue)
                     {

@@ -10,6 +10,7 @@
 #include "RuntimeWindow.g.cpp"
 
 #include "AppSettings.h"
+#include "SharingDialogs.h"
 #include "StringResources.h"
 #include "LayoutStore.h"
 #include "ThemeStore.h"
@@ -44,6 +45,7 @@ namespace winrt::midiglass::implementation
 
             m_filePath = filePath;
             m_document = read.Document;
+            m_isSigned = !::midiglass::sharing::SignerOf(filePath).empty();
 
             m_toolbar = m_document.ToolbarWindow;
             m_seeThrough = m_document.SeeThrough;
@@ -583,10 +585,11 @@ namespace winrt::midiglass::implementation
     void RuntimeWindow::RememberScale()
     {
         // The last used mode is remembered per layout, which is the whole reason it is on the
-        // document rather than in app settings.
+        // document rather than in app settings. A signed layout stays exactly as it was signed,
+        // so it keeps the mode for this run only.
         try
         {
-            if (!m_filePath.empty())
+            if (!m_filePath.empty() && !m_isSigned)
             {
                 glass::WriteLayoutFile(m_document, m_filePath);
             }

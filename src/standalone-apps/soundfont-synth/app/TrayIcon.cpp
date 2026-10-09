@@ -1,0 +1,345 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "pch.h"
+#include "TrayIcon.h"
+#include "StringResources.h"
+#include "resource.h"
+
+namespace midisoundfontsynth
+{
+    namespace
+    {
+        constexpr wchar_t WindowClassName[] = L"MidiSoundFontSynthTrayWindow";
+
+        constexpr UINT TrayCallbackMessage = WM_APP + 1;
+
+        constexpr UINT CommandOpen = 1;
+        constexpr UINT CommandExit = 2;
+        constexpr UINT CommandSilence = 3;
+        constexpr UINT CommandFirstSynth = 100;
+
+        constexpr UINT TrayIconId = 1;
+
+        constexpr size_t MaximumMenuSynths = 40;
+
+        // Registered once and never unregistered, which is how this broadcast is meant to work.
+        UINT TaskbarCreatedMessage() noexcept
+        {
+            static UINT const message = ::RegisterWindowMessageW(L"TaskbarCreated");
+
+            return message;
+        }
+    }
+
+    TrayIcon::~TrayIcon()
+    {
+        Hide();
+
+        if (m_window != nullptr)
+        {
+            ::DestroyWindow(m_window);
+            m_window = nullptr;
+        }
+    }
+
+    _Use_decl_annotations_
+    LRESULT CALLBACK TrayIcon::WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam) noexcept
+    {
+        if (message == WM_NCCREATE)
+        {
+            auto const* create = reinterpret_cast<CREATESTRUCTW const*>(lParam);
+
+            ::SetWindowLongPtrW(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(create->lpCreateParams));
+        }
+
+        auto* self = reinterpret_cast<TrayIcon*>(::GetWindowLongPtrW(window, GWLP_USERDATA));
+
+        if (self != nullptr)
+        {
+            return self->HandleMessage(window, message, wParam, lParam);
+        }
+
+        return ::DefWindowProcW(window, message, wParam, lParam);
+    }
+
+    _Use_decl_annotations_
+    LRESULT TrayIcon::HandleMessage(HWND window, UINT message, WPARAM wParam, LPARAM lParam) noexcept
+    {
+        try
+        {
+            // Explorer restarting empties the notification area, and an app whose window is
+            // hidden behind the icon has no other way back.
+            if (message != 0 && message == TaskbarCreatedMessage())
+            {
+                if (m_visible)
+                {
+                    m_visible = false;
+                    Show();
+                }
+
+                return 0;
+            }
+
+            switch (message)
+            {
+            case TrayCallbackMessage:
+                switch (LOWORD(lParam))
+                {
+                case WM_LBUTTONUP:
+                    if (m_onOpen)
+                    {
+                        m_onOpen();
+                    }
+                    return 0;
+
+                case WM_RBUTTONUP:
+                case WM_CONTEXTMENU:
+                    ShowContextMenu();
+                    return 0;
+
+                default:
+                    break;
+                }
+                break;
+
+            case WM_COMMAND:
+            {
+                auto const command = static_cast<UINT>(LOWORD(wParam));
+
+                if (command == CommandOpen && m_onOpen)
+                {
+                    m_onOpen();
+                }
+                else if (command == CommandExit && m_onExit)
+                {
+                    m_onExit();
+                }
+                else if (command == CommandSilence && m_onSilence)
+                {
+                    m_onSilence();
+                }
+                else if (command >= CommandFirstSynth)
+                {
+                    auto const index = static_cast<size_t>(command - CommandFirstSynth);
+
+                    if (index < m_items.size() && m_onToggleSynth)
+                    {
+                        m_onToggleSynth(m_items[index].Id);
+                    }
+                }
+
+                return 0;
+            }
+
+            default:
+                break;
+            }
+        }
+        MIDI_SF2SYNTH_CATCH_AND_LOG(L"A notification area message handler failed.")
+
+        return ::DefWindowProcW(window, message, wParam, lParam);
+    }
+
+    bool TrayIcon::EnsureWindow() noexcept
+    {
+        if (m_window != nullptr)
+        {
+            return true;
+        }
+
+        WNDCLASSEXW windowClass{};
+
+        windowClass.cbSize = sizeof(windowClass);
+        windowClass.lpfnWndProc = &TrayIcon::WindowProcedure;
+        windowClass.hInstance = ::GetModuleHandleW(nullptr);
+        windowClass.lpszClassName = WindowClassName;
+
+        // A second registration of the same class is not an error here.
+        ::RegisterClassExW(&windowClass);
+
+        // A plain top level window rather than a message only one, because message only windows
+        // do not receive the TaskbarCreated broadcast. It is never shown, and WS_EX_TOOLWINDOW
+        // keeps it out of the taskbar and out of Alt-Tab.
+        m_window = ::CreateWindowExW(
+            WS_EX_TOOLWINDOW, WindowClassName, WindowClassName, WS_POPUP,
+            0, 0, 0, 0,
+            nullptr, nullptr, ::GetModuleHandleW(nullptr), this);
+
+        return m_window != nullptr;
+    }
+
+    bool TrayIcon::Show() noexcept
+    {
+        try
+        {
+            if (m_visible)
+            {
+                return true;
+            }
+
+            if (!EnsureWindow())
+            {
+                return false;
+            }
+
+            NOTIFYICONDATAW data{};
+
+            data.cbSize = sizeof(data);
+            data.hWnd = m_window;
+            data.uID = TrayIconId;
+            data.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_SHOWTIP;
+            data.uCallbackMessage = TrayCallbackMessage;
+            data.hIcon = static_cast<HICON>(::LoadImageW(
+                ::GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDI_APPICON), IMAGE_ICON,
+                ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), LR_SHARED));
+
+            auto const tooltip = m_tooltip.empty()
+                ? std::wstring{ resources::GetString(L"AppDisplayName") }
+                : m_tooltip;
+
+            ::wcsncpy_s(data.szTip, ARRAYSIZE(data.szTip), tooltip.c_str(), _TRUNCATE);
+
+            if (!::Shell_NotifyIconW(NIM_ADD, &data))
+            {
+                return false;
+            }
+
+            data.uVersion = NOTIFYICON_VERSION_4;
+            ::Shell_NotifyIconW(NIM_SETVERSION, &data);
+
+            m_visible = true;
+
+            return true;
+        }
+        MIDI_SF2SYNTH_CATCH_AND_LOG(L"Unable to show the notification area icon.")
+
+        return false;
+    }
+
+    void TrayIcon::Hide() noexcept
+    {
+        try
+        {
+            if (!m_visible || m_window == nullptr)
+            {
+                return;
+            }
+
+            NOTIFYICONDATAW data{};
+
+            data.cbSize = sizeof(data);
+            data.hWnd = m_window;
+            data.uID = TrayIconId;
+
+            ::Shell_NotifyIconW(NIM_DELETE, &data);
+
+            m_visible = false;
+        }
+        MIDI_SF2SYNTH_CATCH_AND_LOG(L"Unable to remove the notification area icon.")
+    }
+
+    _Use_decl_annotations_
+    void TrayIcon::Update(std::wstring const& tooltip, std::vector<TraySynthItem> items) noexcept
+    {
+        try
+        {
+            m_items = std::move(items);
+
+            if (tooltip == m_tooltip)
+            {
+                return;
+            }
+
+            m_tooltip = tooltip;
+
+            if (!m_visible || m_window == nullptr)
+            {
+                return;
+            }
+
+            NOTIFYICONDATAW data{};
+
+            data.cbSize = sizeof(data);
+            data.hWnd = m_window;
+            data.uID = TrayIconId;
+            data.uFlags = NIF_TIP | NIF_SHOWTIP;
+
+            ::wcsncpy_s(data.szTip, ARRAYSIZE(data.szTip), m_tooltip.c_str(), _TRUNCATE);
+
+            ::Shell_NotifyIconW(NIM_MODIFY, &data);
+        }
+        MIDI_SF2SYNTH_CATCH_AND_LOG(L"Unable to update the notification area icon.")
+    }
+
+    void TrayIcon::ShowContextMenu() noexcept
+    {
+        try
+        {
+            if (m_window == nullptr)
+            {
+                return;
+            }
+
+            wil::unique_hmenu menu{ ::CreatePopupMenu() };
+
+            if (!menu)
+            {
+                return;
+            }
+
+            auto const header = m_items.empty()
+                ? std::wstring{ resources::GetString(L"TrayNoSynths") }
+                : std::wstring{ resources::GetString(L"TrayHeader") };
+
+            ::AppendMenuW(menu.get(), MF_STRING | MF_DISABLED | MF_GRAYED, 0, header.c_str());
+            ::AppendMenuW(menu.get(), MF_SEPARATOR, 0, nullptr);
+
+            auto const count = (std::min)(m_items.size(), MaximumMenuSynths);
+
+            for (size_t i = 0; i < count; i++)
+            {
+                auto const& item = m_items[i];
+
+                auto text = item.Name;
+
+                if (!item.Detail.empty())
+                {
+                    text += L"\t" + item.Detail;
+                }
+
+                ::AppendMenuW(menu.get(), MF_STRING | (item.IsOn ? MF_CHECKED : 0u),
+                    CommandFirstSynth + i, text.c_str());
+            }
+
+            if (count > 0)
+            {
+                ::AppendMenuW(menu.get(), MF_SEPARATOR, 0, nullptr);
+                ::AppendMenuW(menu.get(), MF_STRING, CommandSilence,
+                    std::wstring{ resources::GetString(L"TraySilence") }.c_str());
+            }
+
+            ::AppendMenuW(menu.get(), MF_STRING, CommandOpen,
+                std::wstring{ resources::GetString(L"TrayOpen") }.c_str());
+            ::AppendMenuW(menu.get(), MF_STRING, CommandExit,
+                std::wstring{ resources::GetString(L"TrayExit") }.c_str());
+
+            POINT cursor{};
+            ::GetCursorPos(&cursor);
+
+            // without this the menu does not dismiss when the customer clicks elsewhere
+            ::SetForegroundWindow(m_window);
+
+            ::TrackPopupMenuEx(
+                menu.get(), TPM_RIGHTBUTTON | TPM_RIGHTALIGN | TPM_BOTTOMALIGN,
+                cursor.x, cursor.y, m_window, nullptr);
+
+            ::PostMessageW(m_window, WM_NULL, 0, 0);
+        }
+        MIDI_SF2SYNTH_CATCH_AND_LOG(L"Unable to show the notification area menu.")
+    }
+}

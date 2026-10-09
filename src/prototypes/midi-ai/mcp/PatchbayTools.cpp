@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "PatchbayTools.h"
 #include "EndpointTools.h"
+#include "PatchFolderMove.h"
 #include "ToolText.h"
 
 // The file this writes is MIDI Patchbay's own .midipatch, key for key: see PatchStore.cpp,
@@ -19,7 +20,8 @@ namespace midimcp
 {
     namespace
     {
-        constexpr wchar_t PatchFolderName[] = L"MIDI Patchbay";
+        constexpr wchar_t PatchFolderName[] = L"MIDI Patches";
+        constexpr wchar_t PreviousPatchFolderName[] = L"MIDI Patchbay";
         constexpr wchar_t PatchFileExtension[] = L".midipatch";
 
         // What the first builds of MIDI Patchbay wrote. It renames them when it starts.
@@ -197,7 +199,11 @@ namespace midimcp
 
             if (SUCCEEDED(::SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, nullptr, &documents)) && documents)
             {
-                return (std::filesystem::path{ documents.get() } / PatchFolderName).wstring();
+                std::filesystem::path const root{ documents.get() };
+
+                // The same move the app makes, so a draft never lands apart from the customer's earlier patches.
+                return midipatchbay::MoveEarlierPatchFolder(
+                    (root / PreviousPatchFolderName).wstring(), (root / PatchFolderName).wstring());
             }
 
             return {};
@@ -1163,7 +1169,7 @@ namespace midimcp
                 {
                     problems.Errors.push_back(L"Route " + std::to_wstring(edge.RouteIndex + 1) + L" (\"" + route.From.Endpoint.Name +
                         L"\" to \"" + route.To.Endpoint.Name + L"\") makes a feedback loop together with the saved patch \"" + other +
-                        L"\", which routes when MIDI Patchbay starts. Messages would circle forever.");
+                        L"\", which routes when Windows MIDI Patchbay starts. Messages would circle forever.");
                 }
                 else
                 {
@@ -1432,7 +1438,7 @@ namespace midimcp
             json::JsonObject root{};
             root.SetNamedValue(L"_comment", json::JsonValue::CreateStringValue(
                 L"Windows MIDI Patchbay. Drafted by an AI assistant through the MIDI MCP prototype. "
-                L"It does not route until the customer turns routing on in MIDI Patchbay."));
+                L"It does not route until the customer turns routing on in Windows MIDI Patchbay."));
             root.SetNamedValue(L"fileVersion", json::JsonValue::CreateNumberValue(1));
             root.SetNamedValue(L"name", json::JsonValue::CreateStringValue(request.Name));
             root.SetNamedValue(L"description", json::JsonValue::CreateStringValue(request.Description));
@@ -1742,10 +1748,10 @@ namespace midimcp
         {
             ToolDefinition tool{};
             tool.Name = L"list_patches";
-            tool.Title = L"List MIDI Patchbay patches";
+            tool.Title = L"List Windows MIDI Patchbay patches";
             tool.Description =
-                L"Lists the patches saved in MIDI Patchbay: name, description, the endpoints each one uses, how many routes "
-                L"it has, whether it routes when MIDI Patchbay starts, and which of its endpoints are missing right now. "
+                L"Lists the patches saved in Windows MIDI Patchbay: name, description, the endpoints each one uses, how many routes "
+                L"it has, whether it routes when Windows MIDI Patchbay starts, and which of its endpoints are missing right now. "
                 L"Drafts written by an assistant are marked.";
             tool.InputSchema = LR"({ "type": "object", "additionalProperties": false })";
             tool.Annotations = { true, false, true, false };
@@ -1794,7 +1800,7 @@ namespace midimcp
         {
             ToolDefinition tool{};
             tool.Name = L"preview_patch";
-            tool.Title = L"Check a MIDI Patchbay patch";
+            tool.Title = L"Check a Windows MIDI Patchbay patch";
             tool.Description =
                 L"Checks a patch without saving anything, and says in plain words what it would do. Use it to confirm the "
                 L"plan with the customer, and to find out what is still missing: when an endpoint name matches more than one "
@@ -1833,10 +1839,10 @@ namespace midimcp
         {
             ToolDefinition tool{};
             tool.Name = L"save_patch_draft";
-            tool.Title = L"Save a MIDI Patchbay draft";
+            tool.Title = L"Save a Windows MIDI Patchbay draft";
             tool.Description =
-                L"Saves the patch as a new draft in MIDI Patchbay. A draft never routes by itself: the customer opens it "
-                L"in MIDI Patchbay, looks it over and turns routing on. It never replaces an existing patch; to change one, "
+                L"Saves the patch as a new draft in Windows MIDI Patchbay. A draft never routes by itself: the customer opens it "
+                L"in Windows MIDI Patchbay, looks it over and turns routing on. It never replaces an existing patch; to change one, "
                 L"save a new draft beside it. Call preview_patch first and get the customer's agreement.";
             tool.InputSchema = PatchSchemaText();
             tool.Annotations = { false, false, false, false };
@@ -1865,12 +1871,12 @@ namespace midimcp
 
                     if (!path)
                     {
-                        return ToolResult::Error(L"The draft could not be written to the MIDI Patchbay folder.");
+                        return ToolResult::Error(L"The draft could not be written to the MIDI Patches folder.");
                     }
 
                     std::wstring text = L"Saved a draft: " + DisplayPathUnderDocuments(*path) + L"\n\n" + DescribeRequest(request, live) +
-                        L"\nIt does not route yet. The customer opens MIDI Patchbay, picks \"" + request.Name +
-                        L"\" in the patch list, checks it and turns routing on. MIDI Patchbay reads new patches when it starts, "
+                        L"\nIt does not route yet. The customer opens Windows MIDI Patchbay, picks \"" + request.Name +
+                        L"\" in the patch list, checks it and turns routing on. Windows MIDI Patchbay reads new patches when it starts, "
                         L"so if it is already open it shows this one the next time it starts.\n";
                     problems.AppendTo(text);
 

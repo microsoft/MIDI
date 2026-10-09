@@ -240,10 +240,10 @@ The synthesizer is a MIDI-CI responder. It never starts a conversation; it answe
 | Item | Value |
 | --- | --- |
 | MIDI-CI version | 1.2, and it replies in whichever version the initiator asked in |
-| Device ID in replies | Function block (`7F`) |
-| Capability categories declared | Property Exchange only |
+| Device ID in replies | Function block (`7F`). MIDI Message Report replies use the device ID they were asked with |
+| Capability categories declared | Property Exchange and Process Inquiry |
 | Profile Configuration | Not declared, not supported |
-| Process Inquiry | Not declared, not supported |
+| Process Inquiry | Declared. MIDI Message Report is supported |
 | Protocol Negotiation | Not declared. This is an endpoint reached through UMP Stream, where protocol is negotiated there instead |
 | Maximum receivable SysEx size declared | 1024 bytes |
 | Function block number declared | 0 |
@@ -260,7 +260,8 @@ These are the messages it acts on. Anything addressed to another device's MUID i
 | `0x38` Subscription | Yes, answered with `0x39` |
 | `0x36` Inquiry: Set Property Data | No, answered with a NAK |
 | `0x20` Profile Inquiry, `0x22` Set Profile On, `0x23` Set Profile Off, `0x28` Profile Details Inquiry | No, answered with a NAK |
-| `0x40` Inquiry: Process Inquiry Capabilities, `0x42` MIDI Message Report | No, answered with a NAK |
+| `0x40` Inquiry: Process Inquiry Capabilities | Yes, answered with `0x41`, which declares MIDI Message Report |
+| `0x42` Inquiry: MIDI Message Report | Yes, answered with `0x43`, then the messages that report the current values, then `0x44`. See [Process Inquiry](#process-inquiry) |
 | Profile reports, process inquiry replies, and anything else that is not an inquiry | Ignored |
 
 **It always answers an inquiry.** One it doesn't implement gets a NAK with status `0x01`, "MIDI-CI message not supported", rather than silence, so an initiator doesn't spend a three second timeout on every message. Replies, reports, ACK, NAK, and Invalidate MUID are not NAKed, because nothing is waiting on an answer to those and answering them can start a loop.
@@ -277,6 +278,8 @@ These are the messages it acts on. Anything addressed to another device's MUID i
 | Chunking | Replies are chunked to fit the initiator's declared maximum SysEx size |
 | Subscriptions | Up to 8 at once |
 
+Text a person reads, such as the channel titles, the link titles, the controller names, and the names in `DeviceInfo`, comes from the synthesizer's string resources, so it can be translated. Patch names and category names are never translated.
+
 #### Resources
 
 | Resource | Resource ID | Cache | Subscribe | Paginate |
@@ -285,8 +288,9 @@ These are the messages it acts on. Anything addressed to another device's MUID i
 | `DeviceInfo` | — | 3600 seconds | No | No |
 | `ChannelList` | — | No, it reflects what is set right now | Yes | No |
 | `ProgramList` | `melodic` or `drums`, and a resource ID is required | 3600 seconds | No | Yes |
+| `ChCtrlList` | `channel`, and a resource ID is required | 3600 seconds | No | No |
 
-`ResourceList` does not list itself, per Common Rules for Property Exchange section 14.
+`ResourceList` does not list itself, per Common Rules for Property Exchange section 14. Its entries also leave out any setting that's already the default for that resource. For example, `ProgramList` and `ChCtrlList` both need a resource ID, but their own specifications already say so, so the list doesn't repeat it.
 
 #### DeviceInfo
 
@@ -294,7 +298,9 @@ Carries the same manufacturer, family, model, and version as the Identity Reply 
 
 #### ChannelList
 
-One entry per MIDI channel, 16 in all. Each entry carries its title, its channel number, the bank MSB, bank LSB, and program currently selected, the name of the instrument those select, and one link to the program list that applies to that channel: `melodic` for a normal channel, `drums` for the rhythm channel. The link moves with the rhythm channel, so if a file moves drums off channel 10 with the GS message, the link moves too.
+One entry per MIDI channel, 16 in all. Each entry carries its title, its channel number, the bank MSB, bank LSB, and program currently selected, and the name of the instrument those select. It also carries two links: one to the program list that applies to that channel, `melodic` for a normal channel or `drums` for the rhythm channel, and one to `ChCtrlList`.
+
+The title says what the channel plays: "Percussion" for the rhythm channel and "Melodic" for every other channel. The title and the program list link both follow the rhythm channel, so if a file moves drums off channel 10 with the GS message, they move with it.
 
 This is the one resource that can be subscribed to. When a channel's program or bank changes, every subscriber is sent a `notify`, and answers it with an ordinary Get when it wants the new list.
 
@@ -309,12 +315,34 @@ Each entry carries its `title`, its `bankPC` as a three-element array of bank MS
 
 Both lists support pagination through `offset` and `limit` in the request header, and every reply carries `totalCount` whether it was paginated or not.
 
+#### ChCtrlList
+
+One list, with resource ID `channel`, shared by all 16 channels, because every channel responds to the same controllers. It lists 13 controllers, most useful first: volume, modulation, pitch bend, sustain pedal, pan, expression, reverb send, chorus send, per-note pitch bend, pitch bend sensitivity, and per-note volume, pan, and pitch.
+
+Every entry says `"transmit":"none"`, because the synthesizer only receives controllers. Each default is the value a reset returns to, written as a 32-bit MIDI 2.0 value. For example, the default volume of 100 is `3374617161`.
+
+### Process Inquiry
+
+The synthesizer supports MIDI Message Report. An app that connects after a song has started can use it to find out what each channel is set to, without having sent those messages itself.
+
+| Item | Value |
+| --- | --- |
+| Features declared | MIDI Message Report |
+| Device ID | One channel (`00` to `0F`), the group (`7E`), or the function block (`7F`). The group and the function block cover the same 16 channels |
+| Message data control | `00` sends only the reply and the end, `01` sends only values that differ from the power-up state, and `7F` sends everything |
+| System messages | None |
+| Channel controller messages | Pitch bend, control change, registered controllers, and program change |
+| Note data messages | None |
+
+The reply lists only the kinds of message the synthesizer can report, whatever the inquiry asked for. The report itself is sent as MIDI 2.0 channel voice messages, because this endpoint always uses the MIDI 2.0 protocol. Each channel is reported in full before the next one starts, in this order: pitch bend, controllers 1, 7, 10, 11, 64, 91, and 93, pitch bend sensitivity (registered controller 0, 0), and then the program with its bank. A value that was sent as a 32-bit MIDI 2.0 value comes back exactly. A value that was sent as a 7-bit MIDI 1.0 value comes back scaled up to 32 bits, the same way a MIDI 1.0 to MIDI 2.0 translator would do it. A full report on all 16 channels is 166 packets.
+
+An inquiry with a reserved message data control value, or one that's cut off before its bitmaps, gets a NAK with status `0x41`, "message was malformed". One addressed to a reserved device ID gets a NAK with status `0x03`, "channel, group, or function block not in use".
+
 ### Not-implemented MIDI-CI features
 
 - **Profiles.** No profile is published, and no profile message is acted on. The most likely candidate if this changes is the Default Control Change Mapping profile, whose reset behavior the synthesizer already follows.
-- **Process Inquiry**, including MIDI Message Report.
 - **Set Property Data**, so nothing here can be written over Property Exchange, only read.
-- **Any resource beyond the four above**, including `JSONSchema`, `LocalOn`, `CMList`, and proprietary `X-` resources.
+- **Any resource beyond the five above**, including `JSONSchema`, `LocalOn`, `CMList`, and proprietary `X-` resources.
 
 ---
 

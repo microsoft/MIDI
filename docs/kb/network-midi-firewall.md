@@ -12,7 +12,13 @@ Can other Network MIDI 2.0-enabled PCs or devices see your PC, but cannot connec
 
 By default, the Windows MIDI Service is not allowed to listen to incoming connections through the firewall. That means that external Network MIDI 2.0 devices will see the service advertised, but their connection requests will be ignored, because they are blocked before the service sees them.
 
-## How to fix it
+## Using Network MIDI Setup
+
+[Windows MIDI Network Setup]({{ site.baseurl }}/tools/midinetworksetup/#windows-firewall) can do this for you. Open it and select **Firewall** at the bottom of the list of pages. Choose the types of network to allow, then select **Allow through Windows Firewall**, and say yes when Windows asks for administrator permission. The page also tells you whether Windows Firewall lets the MIDI service in on the network you're connected to now. It covers RTP-MIDI hosts too, because they use the same MIDI service.
+
+That page changes Windows Firewall only. If your PC uses a firewall from another company, such as one that comes with antivirus software, follow that company's instructions for letting a program accept incoming connections. Choose `midisrv.exe` from the folder described in step 6 below.
+
+## Using Windows Settings
 
 1. Go into Windows settings and search for "Firewall". You'll receive several hits. You want the "Allow an app through Windows Firewall"
 
@@ -39,4 +45,10 @@ By default, the Windows MIDI Service is not allowed to listen to incoming connec
 8. When complete, you should see the Windows MIDI Service listed in the firewall for the network types you have selected.
 
 ![midisrv in the firewall permit list](midisrv-in-the-firewall-permit-list.png)
+
+## Checking with the diagnostics report
+
+The [MIDI diagnostics report]({{ site.baseurl }}/tools/mididiag/) checks the firewall for you. If a network MIDI host is running and the firewall blocks the MIDI service on a network you're connected to, its findings say so.
+
+Other computers find your PC's hosts by name using multicast DNS (mDNS), which Windows answers in its DNS Client service, not in the MIDI service. So if the firewall blocks mDNS, other computers can't see your PC in their lists at all, even when the MIDI service is allowed through. The report checks for that too, and looks up each host by name to show whether it's still being advertised.
 

@@ -68,6 +68,13 @@
 // advertise, or a request to connect it, starts the gap over.
 #define MIDI_BLE_CONNECT_RETRY_MAX_INTERVAL_MS                          60000
 
+// Turning notifications back on after a link returns. A failed attempt is retried while the link
+// stays up, each wait twice the one before, and after the last one the connection is rebuilt from
+// scratch, because a link which will not take the subscription delivers nothing.
+#define MIDI_BLE_SUBSCRIPTION_RENEWAL_MAX_ATTEMPTS                      4
+#define MIDI_BLE_SUBSCRIPTION_RENEWAL_RETRY_BASE_MS                     1000
+#define MIDI_BLE_SUBSCRIPTION_RENEWAL_RETRY_MAX_MS                      4000
+
 // A link which comes up and goes away again this quickly did not fail for range or power reasons.
 // Devices which demand security over SMP rather than through a GATT error look exactly like this.
 #define MIDI_BLE_UNPAIRED_EARLY_DROP_MS                                 10000

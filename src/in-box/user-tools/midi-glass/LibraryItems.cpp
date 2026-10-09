@@ -13,6 +13,23 @@
 
 namespace resources = ::midiglass::resources;
 
+namespace
+{
+    // The spoken name puts a period after each piece, so a piece ending in one would get two.
+    winrt::hstring WithoutClosingPeriod(_In_ winrt::hstring const& text)
+    {
+        std::wstring_view view{ text };
+
+        while (!view.empty() && (view.back() == L'.' || view.back() == L' ' || view.back() == L'\t' ||
+            view.back() == L'\r' || view.back() == L'\n'))
+        {
+            view.remove_suffix(1);
+        }
+
+        return view.empty() ? text : winrt::hstring{ view };
+    }
+}
+
 namespace winrt::midiglass::implementation
 {
     _Use_decl_annotations_
@@ -27,6 +44,8 @@ namespace winrt::midiglass::implementation
         m_status = data.Status;
         m_isFavorite = data.IsFavorite;
         m_isNewTile = data.IsNewTile;
+        m_isFromNewerVersion = data.IsFromNewerVersion;
+        m_signerName = data.SignerName;
         m_lastUsedTicks = data.LastUsedTicks;
         m_lastChangedTicks = data.LastChangedTicks;
 
@@ -45,12 +64,17 @@ namespace winrt::midiglass::implementation
 
         // A card shows four separate pieces of text but only the container's name is spoken, so
         // everything a sighted customer can read has to be in here.
+        auto const name = WithoutClosingPeriod(m_displayName);
+        auto const description = WithoutClosingPeriod(m_description);
+        auto const status = WithoutClosingPeriod(m_statusText);
+        auto const date = WithoutClosingPeriod(m_relativeDate);
+
         m_cardAccessibleName = m_description.empty()
             ? resources::FormatString(
-                L"LibraryCardAccessibleFormat", m_displayName, m_statusText, m_relativeDate, m_detailText)
+                L"LibraryCardAccessibleFormat", name, status, date, m_detailText)
             : resources::FormatString(
                 L"LibraryCardWithDescriptionAccessibleFormat",
-                m_displayName, m_description, m_statusText, m_relativeDate, m_detailText);
+                name, description, status, date, m_detailText);
     }
 
     _Use_decl_annotations_

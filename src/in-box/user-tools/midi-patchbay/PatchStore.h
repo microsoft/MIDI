@@ -11,7 +11,7 @@
 
 namespace midipatchbay
 {
-    // Patches are one JSON file each, in Documents\MIDI Patchbay.
+    // Patches are one JSON file each, in Documents\MIDI Patches.
     //
     // Deliberately NOT the Windows MIDI Services configuration file: the service does not read
     // routing, a canvas full of connections can get large, and a customer should be able to copy
@@ -67,6 +67,11 @@ namespace midipatchbay
         PatchStore() noexcept;
 
         std::optional<PatchDocument> LoadFile(_In_ std::wstring const& path) noexcept;
+
+        // Copies a file an earlier version wrote into the "Earlier versions" folder, under a
+        // name no other copy has, and records where. False leaves the original as the only copy,
+        // so the caller must not rewrite it.
+        bool KeepEarlierVersion(_Inout_ PatchDocument& patch) noexcept;
 
         // Gives every old ".midipatch.json" in the folder the new extension, unless a file
         // already has that name.

@@ -13,5 +13,5 @@ namespace midipatchbay
     // asked for the work, so a continuation which touches XAML is always on the UI thread.
     // The MIDI session and connection calls block on the service over RPC and must never be
     // made from the XAML thread.
-    winrt::Windows::Foundation::IAsyncAction RunOnBackgroundAsync(std::function<void()> work) noexcept;
+    winrt::Windows::Foundation::IAsyncAction RunOnBackgroundAsync(_In_ std::function<void()> work) noexcept;
 }

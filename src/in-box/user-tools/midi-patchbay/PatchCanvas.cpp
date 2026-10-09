@@ -7,7 +7,13 @@
 
 #include "pch.h"
 #include "PatchCanvas.h"
+#include "PatchLayout.h"
+#include "RoundedShape.h"
+#include "RouteGraph.h"
 #include "StringResources.h"
+
+// Shared with MIDI Glass, in midi-app-shared.
+#include "FontCatalog.h"
 
 namespace midipatchbay
 {
@@ -22,8 +28,6 @@ namespace midipatchbay
         constexpr double MinimapHeight = 116.0;
 
         constexpr double DefaultColumnX[2] = { 60.0, 460.0 };
-        constexpr double ArrangeTopMargin = 48.0;
-        constexpr double ArrangeRowGap = 32.0;
 
         // How close a drop has to be to a connection point to land on it.
         constexpr double PortSnapRadius = 36.0;
@@ -46,6 +50,51 @@ namespace midipatchbay
         constexpr int HitAreaZIndex = 2;
         constexpr int PillZIndex = 3;
 
+        // Blocks are smaller than endpoints, and have one way in and one way out.
+        constexpr double BlockCornerRadius = 12.0;
+        constexpr double BlockPortColumnWidth = 16.0;
+        constexpr double BlockDotDiameter = 13.0;
+        constexpr double BlockLineHeight = 16.0;
+        constexpr double BlockFallbackHeight = 99.0;
+        constexpr double EndpointFallbackHeight = 200.0;
+
+        // A Branch or a Switch has a row for each way out, under what it does.
+        constexpr double WayRowHeight = 24.0;
+
+        // A responder's answers run under both nodes and come into the endpoint's In from its left.
+        constexpr double AnswerPathClearance = 36.0;
+        constexpr double AnswerPathLead = 36.0;
+        constexpr double AnswerPathCornerRadius = 14.0;
+
+        // How long something lit by live routing takes to fade, and how far a node's glow reaches.
+        constexpr int32_t LightUpMilliseconds = 650;
+        constexpr double HaloReach = 5.0;
+
+        // What a trace didn't reach, faded enough to read the path through it.
+        constexpr double TraceFadedOpacity = 0.4;
+
+        // A selected node is lifted, and the lift casts a shadow, which reads as selection without
+        // relying on the border color alone.
+        constexpr float SelectedNodeLift = 28.0f;
+
+        // The soft shadow under every node: how far it reaches past each edge, furthest below so
+        // the node seems lifted off the canvas, and how dark it is. Multiples of 4, so the pieces
+        // land on whole pixels at the usual display scales.
+        constexpr double ShadowReachAbove = 8.0;
+        constexpr double ShadowReachBeside = 12.0;
+        constexpr double ShadowReachBelow = 16.0;
+        constexpr double ShadowStrengthDark = 0.44;
+        constexpr double ShadowStrengthLight = 0.22;
+
+        // Within this of a connection, a block dropped from the palette goes into it.
+        constexpr double ConnectionHitDistance = 14.0;
+        constexpr int SamplesPerCurve = 24;
+
+        // Room around an annotation's text, so the edge drawn when it is selected clears it.
+        constexpr double AnnotationPaddingX = 6.0;
+        constexpr double AnnotationPaddingY = 2.0;
+        constexpr double AnnotationCornerRadius = 4.0;
+
         winrt::Windows::UI::Color Rgb(_In_ uint8_t r, _In_ uint8_t g, _In_ uint8_t b, _In_ uint8_t a = 255) noexcept
         {
             winrt::Windows::UI::Color color{};
@@ -60,7 +109,7 @@ namespace midipatchbay
             _In_ winrt::hstring const& text,
             _In_ double fontSize,
             _In_ media::Brush const& brush,
-            _In_ bool bold = false) noexcept
+            _In_ bool bold = false)
         {
             controls::TextBlock block{};
 
@@ -86,7 +135,7 @@ namespace midipatchbay
         controls::FontIcon MakeGlyph(
             _In_ winrt::hstring const& glyph,
             _In_ double fontSize,
-            _In_ media::Brush const& brush) noexcept
+            _In_ media::Brush const& brush)
         {
             controls::FontIcon icon{};
 
@@ -101,46 +150,52 @@ namespace midipatchbay
             return icon;
         }
 
-        // DoubleCollection has no initializer list constructor in this projection.
-        media::DoubleCollection MakeDashArray(_In_ double on, _In_ double off) noexcept
+        // A button fills itself, square, on hover and press. Nothing clips a connection point's
+        // row now, so that fill would show past the node's rounded corners. The rows draw their own.
+        void ClearStateFills(_In_ controls::Button const& button)
         {
-            media::DoubleCollection collection{};
+            auto const dictionary = button.Resources();
 
-            collection.Append(on);
-            collection.Append(off);
-
-            return collection;
+            for (auto const key : { L"ButtonBackground", L"ButtonBackgroundPointerOver",
+                                    L"ButtonBackgroundPressed", L"ButtonBackgroundDisabled" })
+            {
+                dictionary.Insert(winrt::box_value(key), media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+            }
         }
 
-        // BitmapImage cannot render SVG and the shipped default endpoint art is SVG, so the
-        // decoder is chosen by extension, the same way the Settings app does it.
-        media::ImageSource LoadEndpointImage(_In_ std::wstring const& path, _In_ int32_t pixelHeight) noexcept
+        // The block's color down its header, strongest at the top. A bypassed block's is fainter.
+        // It fills the whole card, so it has the card's corners, and is clear from the header's
+        // rule down. Past its end a gradient keeps its last color, so the last stop is clear.
+        media::Brush HeaderShade(_In_ BlockCategory category, _In_ double strength) noexcept
         {
-            if (path.empty())
-            {
-                return nullptr;
-            }
-
             try
             {
-                foundation::Uri const uri{ L"file:///" + winrt::hstring{ path } };
+                auto const top = PatchCanvas::CategoryBrush(category, 0.28 * strength).try_as<media::SolidColorBrush>();
+                auto const bottom = PatchCanvas::CategoryBrush(category, 0.08 * strength).try_as<media::SolidColorBrush>();
 
-                if (midiapp::EndpointImageAssets::IsScalableVector(path))
+                if (top == nullptr || bottom == nullptr)
                 {
-                    media::Imaging::SvgImageSource source{};
-
-                    source.RasterizePixelHeight(pixelHeight);
-                    source.UriSource(uri);
-
-                    return source;
+                    return nullptr;
                 }
 
-                media::Imaging::BitmapImage bitmap{};
+                media::LinearGradientBrush brush{};
+                brush.MappingMode(media::BrushMappingMode::Absolute);
+                brush.StartPoint(foundation::Point{ 0, 0 });
+                brush.EndPoint(foundation::Point{ 0, static_cast<float>(HeaderHeight + 1) });
 
-                bitmap.DecodePixelHeight(pixelHeight);
-                bitmap.UriSource(uri);
+                auto const rule = HeaderHeight / (HeaderHeight + 1);
 
-                return bitmap;
+                for (auto const& [offset, color] : { std::pair{ 0.0, top.Color() },
+                                                     std::pair{ rule, bottom.Color() },
+                                                     std::pair{ rule, Rgb(0, 0, 0, 0) } })
+                {
+                    media::GradientStop stop{};
+                    stop.Color(color);
+                    stop.Offset(offset);
+                    brush.GradientStops().Append(stop);
+                }
+
+                return brush;
             }
             catch (...)
             {
@@ -148,6 +203,430 @@ namespace midipatchbay
 
             return nullptr;
         }
+
+        // The category colors need a darker shade on a light background to stay readable.
+        bool IsDarkTheme() noexcept
+        {
+            try
+            {
+                if (auto const brush = ThemeBrushes::Current().Get(L"TextFillColorPrimaryBrush").try_as<media::SolidColorBrush>())
+                {
+                    auto const color = brush.Color();
+
+                    return static_cast<int>(color.R) + color.G + color.B > 3 * 128;
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return true;
+        }
+
+        bool IsHighContrast() noexcept
+        {
+            HIGHCONTRASTW contrast{};
+            contrast.cbSize = sizeof(contrast);
+
+            return ::SystemParametersInfoW(SPI_GETHIGHCONTRAST, sizeof(contrast), &contrast, 0) &&
+                (contrast.dwFlags & HCF_HIGHCONTRASTON) != 0;
+        }
+
+        // How dark the shadow is a fraction of the way out from the center of a card's corner to
+        // where the shadow ends. Beside the node it is a blur's bell curve, half strength at the
+        // card's edge. The same curve is squeezed above the node and stretched below it, so the
+        // sides and the corners all use it and meet without a seam.
+        double ShadowAlpha(_In_ double fraction, _In_ double cornerRadius, _In_ double strength) noexcept
+        {
+            auto const spread = ShadowReachBeside / 3.0;
+            auto const distance = fraction * (cornerRadius + ShadowReachBeside) - cornerRadius;
+
+            return std::clamp(strength * 0.5 * std::erfc(distance / (spread * std::sqrt(2.0))), 0.0, 1.0);
+        }
+
+        // Stops for a gradient that runs between two fractions of the way out. A radial brush
+        // hands back its stops as an observable vector, not a GradientStopCollection.
+        void AddShadowStops(
+            _In_ winrt::Windows::Foundation::Collections::IVector<media::GradientStop> const& stops,
+            _In_ double from,
+            _In_ double to,
+            _In_ double cornerRadius,
+            _In_ double strength)
+        {
+            constexpr int samples = 16;
+
+            for (int i = 0; i <= samples; i++)
+            {
+                auto const fraction = from + (to - from) * i / samples;
+                auto const alpha = ShadowAlpha(fraction, cornerRadius, strength);
+
+                media::GradientStop stop{};
+                stop.Offset(static_cast<double>(i) / samples);
+                stop.Color(Rgb(0, 0, 0, static_cast<uint8_t>(std::lround(255.0 * alpha))));
+                stops.Append(stop);
+            }
+        }
+
+        // A point on a corner's outline, reached in a straight line or round the card's corner.
+        struct OutlineStep
+        {
+            double X{ 0 };
+            double Y{ 0 };
+            bool RoundCard{ false };
+        };
+
+        // The part of a corner's cell outside the card, as one figure. A shape paints a gradient
+        // from the top left of what it draws, so the figure covers the cell from 0,0 and nothing
+        // outside it, or the gradient lands in the wrong place.
+        media::PathGeometry MakeOutline(_In_ double cornerRadius, _In_ std::initializer_list<OutlineStep> steps)
+        {
+            media::PathFigure figure{};
+            figure.IsClosed(true);
+            figure.IsFilled(true);
+
+            bool first{ true };
+
+            for (auto const& step : steps)
+            {
+                foundation::Point const point{ static_cast<float>(step.X), static_cast<float>(step.Y) };
+
+                if (first)
+                {
+                    figure.StartPoint(point);
+                    first = false;
+                }
+                else if (step.RoundCard)
+                {
+                    media::ArcSegment segment{};
+                    segment.Point(point);
+                    segment.Size(foundation::Size{ static_cast<float>(cornerRadius), static_cast<float>(cornerRadius) });
+                    segment.SweepDirection(media::SweepDirection::Counterclockwise);
+                    figure.Segments().Append(segment);
+                }
+                else
+                {
+                    media::LineSegment segment{};
+                    segment.Point(point);
+                    figure.Segments().Append(segment);
+                }
+            }
+
+            media::PathGeometry geometry{};
+            geometry.Figures().Append(figure);
+
+            return geometry;
+        }
+
+        // A soft shadow under a node. A theme shadow barely shows on a dark canvas, so this one is
+        // drawn: a gradient down each side and round each corner, in a 3 by 3 grid whose lines
+        // run through the centers of the card's corners, so the pieces meet without a seam.
+        // Nothing is drawn where the card is, so a card that isn't opaque never shows it through.
+        // None in high contrast, where it is only noise.
+        xaml::UIElement MakeSoftShadow(_In_ double cornerRadius) noexcept
+        {
+            controls::Grid shadow{};
+
+            try
+            {
+                shadow.IsHitTestVisible(false);
+
+                if (IsHighContrast())
+                {
+                    return shadow;
+                }
+
+                // Black shows more on a light canvas, so it is used more lightly there.
+                auto const strength = IsDarkTheme() ? ShadowStrengthDark : ShadowStrengthLight;
+
+                auto const radius = cornerRadius;
+                auto const above = ShadowReachAbove;
+                auto const beside = ShadowReachBeside;
+                auto const below = ShadowReachBelow;
+
+                // The corner cells run from where the shadow ends in to the center of the card's corner.
+                auto const cornerWidth = radius + beside;
+                auto const topHeight = radius + above;
+                auto const bottomHeight = radius + below;
+
+                // Placed exactly, so the inside edge of each piece meets the card's edge.
+                shadow.UseLayoutRounding(false);
+                shadow.Margin(xaml::ThicknessHelper::FromLengths(-beside, -above, -beside, -below));
+
+                xaml::GridLength const middle{ 1, xaml::GridUnitType::Star };
+
+                for (auto const length : { xaml::GridLength{ topHeight, xaml::GridUnitType::Pixel },
+                                           middle,
+                                           xaml::GridLength{ bottomHeight, xaml::GridUnitType::Pixel } })
+                {
+                    controls::RowDefinition row{};
+                    row.Height(length);
+                    shadow.RowDefinitions().Append(row);
+                }
+
+                for (auto const length : { xaml::GridLength{ cornerWidth, xaml::GridUnitType::Pixel },
+                                           middle,
+                                           xaml::GridLength{ cornerWidth, xaml::GridUnitType::Pixel } })
+                {
+                    controls::ColumnDefinition column{};
+                    column.Width(length);
+                    shadow.ColumnDefinitions().Append(column);
+                }
+
+                // A side: only the part outside the card, fading out from the card's edge over `reach`.
+                auto const addSide = [&shadow, strength, radius](
+                    int row,
+                    int column,
+                    xaml::HorizontalAlignment horizontal,
+                    xaml::VerticalAlignment vertical,
+                    double reach,
+                    foundation::Point start,
+                    foundation::Point end)
+                    {
+                        media::LinearGradientBrush brush{};
+                        brush.MappingMode(media::BrushMappingMode::Absolute);
+                        brush.StartPoint(start);
+                        brush.EndPoint(end);
+                        AddShadowStops(brush.GradientStops(), radius / (radius + reach), 1.0, radius, strength);
+
+                        controls::Border piece{};
+                        piece.UseLayoutRounding(false);
+                        piece.HorizontalAlignment(horizontal);
+                        piece.VerticalAlignment(vertical);
+                        piece.Background(brush);
+
+                        if (horizontal == xaml::HorizontalAlignment::Stretch)
+                        {
+                            piece.Height(reach);
+                        }
+                        else
+                        {
+                            piece.Width(reach);
+                        }
+
+                        controls::Grid::SetRow(piece, row);
+                        controls::Grid::SetColumn(piece, column);
+                        shadow.Children().Append(piece);
+                    };
+
+                auto const aboveEdge = static_cast<float>(above);
+                auto const belowEdge = static_cast<float>(below);
+                auto const besideEdge = static_cast<float>(beside);
+
+                addSide(0, 1, xaml::HorizontalAlignment::Stretch, xaml::VerticalAlignment::Top, above,
+                    { 0, aboveEdge }, { 0, 0 });
+                addSide(2, 1, xaml::HorizontalAlignment::Stretch, xaml::VerticalAlignment::Bottom, below,
+                    { 0, 0 }, { 0, belowEdge });
+                addSide(1, 0, xaml::HorizontalAlignment::Left, xaml::VerticalAlignment::Stretch, beside,
+                    { besideEdge, 0 }, { 0, 0 });
+                addSide(1, 2, xaml::HorizontalAlignment::Right, xaml::VerticalAlignment::Stretch, beside,
+                    { 0, 0 }, { besideEdge, 0 });
+
+                // A corner: an oval gradient round the center of the card's corner, wider than it
+                // is tall above the node and taller than it is wide below, with the card cut out.
+                auto const addCorner = [&shadow, strength, radius, cornerWidth](
+                    int row,
+                    int column,
+                    double height,
+                    foundation::Point center,
+                    media::PathGeometry const& outline)
+                    {
+                        media::RadialGradientBrush brush{};
+                        brush.MappingMode(media::BrushMappingMode::Absolute);
+                        brush.Center(center);
+                        brush.GradientOrigin(center);
+                        brush.RadiusX(cornerWidth);
+                        brush.RadiusY(height);
+                        AddShadowStops(brush.GradientStops(), 0.0, 1.0, radius, strength);
+
+                        shapes::Path piece{};
+                        piece.UseLayoutRounding(false);
+                        piece.Width(cornerWidth);
+                        piece.Height(height);
+                        piece.Data(outline);
+                        piece.Fill(brush);
+
+                        controls::Grid::SetRow(piece, row);
+                        controls::Grid::SetColumn(piece, column);
+                        shadow.Children().Append(piece);
+                    };
+
+                auto const right = static_cast<float>(cornerWidth);
+                auto const lower = static_cast<float>(topHeight);
+
+                addCorner(0, 0, topHeight, { right, lower }, MakeOutline(radius,
+                    { { 0, 0 }, { cornerWidth, 0 }, { cornerWidth, above }, { beside, topHeight, true }, { 0, topHeight } }));
+                addCorner(0, 2, topHeight, { 0, lower }, MakeOutline(radius,
+                    { { 0, 0 }, { cornerWidth, 0 }, { cornerWidth, topHeight }, { radius, topHeight }, { 0, above, true } }));
+                addCorner(2, 0, bottomHeight, { right, 0 }, MakeOutline(radius,
+                    { { 0, 0 }, { beside, 0 }, { cornerWidth, radius, true }, { cornerWidth, bottomHeight }, { 0, bottomHeight } }));
+                addCorner(2, 2, bottomHeight, { 0, 0 }, MakeOutline(radius,
+                    { { radius, 0 }, { cornerWidth, 0 }, { cornerWidth, bottomHeight }, { 0, bottomHeight }, { 0, radius }, { radius, 0, true } }));
+            }
+            catch (...)
+            {
+            }
+
+            return shadow;
+        }
+
+        void AppendCurveSamples(
+            _Inout_ std::vector<foundation::Point>& samples,
+            _In_ foundation::Point const& p0,
+            _In_ foundation::Point const& p1,
+            _In_ foundation::Point const& p2,
+            _In_ foundation::Point const& p3)
+        {
+            for (int i = 0; i <= SamplesPerCurve; i++)
+            {
+                auto const t = static_cast<float>(i) / SamplesPerCurve;
+                auto const u = 1.0f - t;
+
+                samples.push_back(foundation::Point{
+                    u * u * u * p0.X + 3 * u * u * t * p1.X + 3 * u * t * t * p2.X + t * t * t * p3.X,
+                    u * u * u * p0.Y + 3 * u * u * t * p1.Y + 3 * u * t * t * p2.Y + t * t * t * p3.Y });
+            }
+        }
+
+        double DistanceToSegment(
+            _In_ foundation::Point const& point,
+            _In_ foundation::Point const& a,
+            _In_ foundation::Point const& b) noexcept
+        {
+            auto const dx = static_cast<double>(b.X) - a.X;
+            auto const dy = static_cast<double>(b.Y) - a.Y;
+            auto const lengthSquared = dx * dx + dy * dy;
+
+            auto t = lengthSquared <= 0 ? 0.0 : ((point.X - a.X) * dx + (point.Y - a.Y) * dy) / lengthSquared;
+            t = std::clamp(t, 0.0, 1.0);
+
+            auto const x = a.X + t * dx - point.X;
+            auto const y = a.Y + t * dy - point.Y;
+
+            return std::sqrt(x * x + y * y);
+        }
+
+        // The point this far from one toward another, or the first when they are the same.
+        foundation::Point Toward(_In_ foundation::Point const& from, _In_ foundation::Point const& to, _In_ double distance) noexcept
+        {
+            auto const dx = static_cast<double>(to.X) - from.X;
+            auto const dy = static_cast<double>(to.Y) - from.Y;
+            auto const length = std::sqrt(dx * dx + dy * dy);
+
+            if (length <= 0)
+            {
+                return from;
+            }
+
+            return foundation::Point{
+                static_cast<float>(from.X + dx / length * distance),
+                static_cast<float>(from.Y + dy / length * distance) };
+        }
+
+        // Straight lines through the points, with each corner rounded off.
+        media::PathGeometry MakeRoundedPolyline(_In_ std::vector<foundation::Point> const& points, _In_ double radius)
+        {
+            media::PathGeometry geometry{};
+
+            if (points.size() < 2)
+            {
+                return geometry;
+            }
+
+            media::PathFigure figure{};
+            figure.StartPoint(points.front());
+
+            auto const lengthOf = [](foundation::Point const& a, foundation::Point const& b)
+                {
+                    auto const dx = static_cast<double>(b.X) - a.X;
+                    auto const dy = static_cast<double>(b.Y) - a.Y;
+
+                    return std::sqrt(dx * dx + dy * dy);
+                };
+
+            for (size_t i = 1; i + 1 < points.size(); i++)
+            {
+                auto const& corner = points[i];
+                auto const round = std::min({ radius, lengthOf(points[i - 1], corner) / 2, lengthOf(corner, points[i + 1]) / 2 });
+
+                media::LineSegment line{};
+                line.Point(Toward(corner, points[i - 1], round));
+                figure.Segments().Append(line);
+
+                media::QuadraticBezierSegment curve{};
+                curve.Point1(corner);
+                curve.Point2(Toward(corner, points[i + 1], round));
+                figure.Segments().Append(curve);
+            }
+
+            media::LineSegment last{};
+            last.Point(points.back());
+            figure.Segments().Append(last);
+
+            geometry.Figures().Append(figure);
+
+            return geometry;
+        }
+
+        // Lit at once, then faded out. Opacity fades run on the compositor, so they cost the UI
+        // thread nothing once started.
+        void FadeOut(_In_ xaml::UIElement const& element, _In_ int32_t milliseconds) noexcept
+        {
+            try
+            {
+                animation::DoubleAnimation fade{};
+                fade.From(winrt::box_value(1.0).as<foundation::IReference<double>>());
+                fade.To(winrt::box_value(0.0).as<foundation::IReference<double>>());
+                fade.Duration(xaml::DurationHelper::FromTimeSpan(std::chrono::milliseconds{ milliseconds }));
+
+                animation::Storyboard::SetTarget(fade, element);
+                animation::Storyboard::SetTargetProperty(fade, L"Opacity");
+
+                animation::Storyboard board{};
+                board.Children().Append(fade);
+                board.Begin();
+            }
+            catch (...)
+            {
+            }
+        }
+    }
+
+    // BitmapImage cannot render SVG and the shipped default endpoint art is SVG, so the decoder
+    // is chosen by extension, the same way the Settings app does it.
+    _Use_decl_annotations_
+    media::ImageSource PatchCanvas::LoadEndpointImage(std::wstring const& path, int32_t pixelHeight) noexcept
+    {
+        if (path.empty())
+        {
+            return nullptr;
+        }
+
+        try
+        {
+            foundation::Uri const uri{ L"file:///" + winrt::hstring{ path } };
+
+            if (midiapp::EndpointImageAssets::IsScalableVector(path))
+            {
+                media::Imaging::SvgImageSource source{};
+
+                source.RasterizePixelHeight(pixelHeight);
+                source.UriSource(uri);
+
+                return source;
+            }
+
+            media::Imaging::BitmapImage bitmap{};
+
+            bitmap.DecodePixelHeight(pixelHeight);
+            bitmap.UriSource(uri);
+
+            return bitmap;
+        }
+        catch (...)
+        {
+        }
+
+        return nullptr;
     }
 
     _Use_decl_annotations_
@@ -158,7 +637,144 @@ namespace midipatchbay
             return brush;
         }
 
-        return media::SolidColorBrush{ fallback };
+        try
+        {
+            return media::SolidColorBrush{ fallback };
+        }
+        catch (...)
+        {
+        }
+
+        return nullptr;
+    }
+
+    _Use_decl_annotations_
+    media::Brush PatchCanvas::CategoryBrush(BlockCategory category, double opacity) noexcept
+    {
+        try
+        {
+            auto const dark = IsDarkTheme();
+
+            winrt::Windows::UI::Color color{};
+
+            switch (category)
+            {
+            case BlockCategory::Transform:
+                color = dark ? Rgb(0xB4, 0xA7, 0xFF) : Rgb(0x5B, 0x4B, 0xC4);
+                break;
+
+            case BlockCategory::Sending:
+                color = dark ? Rgb(0x5B, 0xE0, 0xB0) : Rgb(0x0B, 0x7A, 0x55);
+                break;
+
+            case BlockCategory::Generator:
+                color = dark ? Rgb(0x6C, 0xC8, 0xFF) : Rgb(0x00, 0x5A, 0x9E);
+                break;
+
+            case BlockCategory::Annotation:
+                color = dark ? Rgb(0xB8, 0xB8, 0xB8) : Rgb(0x5C, 0x5C, 0x5C);
+                break;
+
+            case BlockCategory::Distribution:
+                color = dark ? Rgb(0xFF, 0x8F, 0xC8) : Rgb(0xA8, 0x1F, 0x6B);
+                break;
+
+            case BlockCategory::CapabilityInquiry:
+                color = dark ? Rgb(0x8E, 0xE0, 0x4F) : Rgb(0x3D, 0x6E, 0x00);
+                break;
+
+            case BlockCategory::Logic:
+                color = dark ? Rgb(0xFF, 0x7A, 0x5C) : Rgb(0xB3, 0x36, 0x14);
+                break;
+
+            default:
+                color = dark ? Rgb(0xFF, 0xB5, 0x47) : Rgb(0x9A, 0x5B, 0x00);
+                break;
+            }
+
+            color.A = static_cast<uint8_t>(std::lround(std::clamp(opacity, 0.0, 1.0) * 255.0));
+
+            return media::SolidColorBrush{ color };
+        }
+        catch (...)
+        {
+        }
+
+        return nullptr;
+    }
+
+    _Use_decl_annotations_
+    std::optional<winrt::Windows::UI::Color> PatchCanvas::ParseColorCode(std::wstring_view code) noexcept
+    {
+        try
+        {
+            auto const normal = AnnotationColorFrom(code);
+
+            if (normal.empty())
+            {
+                return std::nullopt;
+            }
+
+            auto const value = std::stoul(normal.substr(1), nullptr, 16);
+
+            return Rgb(
+                static_cast<uint8_t>((value >> 16) & 0xFF),
+                static_cast<uint8_t>((value >> 8) & 0xFF),
+                static_cast<uint8_t>(value & 0xFF));
+        }
+        catch (...)
+        {
+        }
+
+        return std::nullopt;
+    }
+
+    _Use_decl_annotations_
+    std::wstring PatchCanvas::ColorCode(winrt::Windows::UI::Color const& color)
+    {
+        return std::format(L"#{:02X}{:02X}{:02X}", color.R, color.G, color.B);
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::ApplyAnnotationLook(controls::TextBlock const& text, AnnotationSettings const& settings) noexcept
+    {
+        try
+        {
+            auto const empty = settings.Text.empty();
+
+            text.Text(empty ? resources::GetString(L"AnnotationPlaceholder") : winrt::hstring{ settings.Text });
+            text.FontFamily(midiapp::fonts::FamilyFor(settings.FontFamily));
+            text.FontSize(std::clamp(settings.FontSize, MinimumAnnotationFontSize, MaximumAnnotationFontSize));
+
+            text.FontWeight(settings.Bold
+                ? winrt::Microsoft::UI::Text::FontWeights::Bold()
+                : winrt::Microsoft::UI::Text::FontWeights::Normal());
+
+            // The hint is in italics, so an empty annotation is not mistaken for one that says so.
+            text.FontStyle(settings.Italic || empty
+                ? winrt::Windows::UI::Text::FontStyle::Italic
+                : winrt::Windows::UI::Text::FontStyle::Normal);
+
+            text.TextDecorations(settings.Underline
+                ? winrt::Windows::UI::Text::TextDecorations::Underline
+                : winrt::Windows::UI::Text::TextDecorations::None);
+
+            auto const color = empty ? std::nullopt : ParseColorCode(settings.Color);
+
+            if (color.has_value())
+            {
+                text.Foreground(media::SolidColorBrush{ color.value() });
+            }
+            else
+            {
+                text.Foreground(empty
+                    ? ThemeBrush(L"TextFillColorTertiaryBrush", Rgb(0x90, 0x90, 0x90))
+                    : ThemeBrush(L"TextFillColorPrimaryBrush", Rgb(0xFF, 0xFF, 0xFF)));
+            }
+        }
+        catch (...)
+        {
+        }
     }
 
     _Use_decl_annotations_
@@ -192,6 +808,12 @@ namespace midipatchbay
 
             m_overlayLayer.Children().Append(m_dragLine);
 
+            m_bandRectangle = shapes::Rectangle{};
+            m_bandRectangle.IsHitTestVisible(false);
+            m_bandRectangle.Visibility(xaml::Visibility::Collapsed);
+
+            m_overlayLayer.Children().Append(m_bandRectangle);
+
             // Dragging deliberately does NOT depend on pointer capture. The connection points
             // are Buttons and the canvas sits in a ScrollViewer, and both take capture for their
             // own purposes; treating the resulting PointerCaptureLost as "the drag ended" is what
@@ -224,14 +846,13 @@ namespace midipatchbay
             // would deliver every move and release twice.
             watch(m_scrollViewer);
 
-            // Clicking empty canvas clears the selection; the node handlers mark their own
-            // events handled so this only fires for the background.
+            // A press on empty canvas starts a band, or clears the selection when it ends up a
+            // click. The node handlers mark their own events handled, so this is only the background.
             m_surface.PointerPressed([this](auto&&, input::PointerRoutedEventArgs const& args)
                 {
-                    UNREFERENCED_PARAMETER(args);
                     FocusCanvas();
                     ClearArmedPort();
-                    ClearSelection();
+                    BeginBand(args);
                 });
 
             if (m_scrollViewer != nullptr)
@@ -281,9 +902,36 @@ namespace midipatchbay
                 }
             }
 
+            if (m_scrollViewer != nullptr)
+            {
+                // Blocks and endpoints arrive from the palette by drag and drop.
+                AcceptDrops(m_scrollViewer);
+            }
+
             m_initialized = true;
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to initialize the canvas.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::AcceptDrops(xaml::UIElement const& element) noexcept
+    {
+        try
+        {
+            if (element == nullptr)
+            {
+                return;
+            }
+
+            element.AllowDrop(true);
+
+            // DragEnter as well, so a drop made the moment the pointer arrives isn't turned away.
+            element.DragEnter([this](auto&&, xaml::DragEventArgs const& args) { OnDragOver(args); });
+            element.DragOver([this](auto&&, xaml::DragEventArgs const& args) { OnDragOver(args); });
+            element.DragLeave([this](auto&&, auto&&) { SetDropTarget({}); });
+            element.Drop([this](auto&&, xaml::DragEventArgs const& args) { OnDrop(args); });
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to take drops on the canvas.")
     }
 
     void PatchCanvas::Shutdown() noexcept
@@ -292,15 +940,86 @@ namespace midipatchbay
         m_patch = nullptr;
         m_nodes.clear();
         m_connections.clear();
+        m_answerPaths.clear();
+        m_nodeHalos.clear();
     }
 
     _Use_decl_annotations_
-    PatchCanvas::NodeVisual* PatchCanvas::FindNode(std::wstring const& endpointId) noexcept
+    PatchCanvas::NodeVisual* PatchCanvas::FindNode(std::wstring const& nodeId) noexcept
     {
         auto it = std::find_if(m_nodes.begin(), m_nodes.end(),
-            [&endpointId](NodeVisual const& n) { return n.EndpointId == endpointId; });
+            [&nodeId](NodeVisual const& n) { return n.NodeId == nodeId; });
 
         return it == m_nodes.end() ? nullptr : &(*it);
+    }
+
+    _Use_decl_annotations_
+    PatchCanvas::NodeVisual const* PatchCanvas::FindNode(std::wstring const& nodeId) const noexcept
+    {
+        auto it = std::find_if(m_nodes.begin(), m_nodes.end(),
+            [&nodeId](NodeVisual const& n) { return n.NodeId == nodeId; });
+
+        return it == m_nodes.end() ? nullptr : &(*it);
+    }
+
+    _Use_decl_annotations_
+    std::optional<foundation::Point> PatchCanvas::NodePosition(std::wstring const& nodeId) const noexcept
+    {
+        if (m_patch == nullptr)
+        {
+            return std::nullopt;
+        }
+
+        if (auto const* endpoint = m_patch->FindEndpoint(nodeId))
+        {
+            return foundation::Point{ static_cast<float>(endpoint->CanvasX), static_cast<float>(endpoint->CanvasY) };
+        }
+
+        if (auto const* block = m_patch->FindBlock(nodeId))
+        {
+            return foundation::Point{ static_cast<float>(block->CanvasX), static_cast<float>(block->CanvasY) };
+        }
+
+        return std::nullopt;
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::SetNodePosition(std::wstring const& nodeId, double x, double y) noexcept
+    {
+        if (m_patch == nullptr)
+        {
+            return;
+        }
+
+        // The model is const to the canvas everywhere else. Moving nodes is the one change it
+        // makes itself, and the window is told so it can mark the patch unsaved.
+        auto* patch = const_cast<PatchDocument*>(m_patch);
+
+        if (auto* nodeX = patch->NodeX(nodeId))
+        {
+            *nodeX = x;
+        }
+
+        if (auto* nodeY = patch->NodeY(nodeId))
+        {
+            *nodeY = y;
+        }
+
+        if (auto* node = FindNode(nodeId); node != nullptr && node->Root != nullptr)
+        {
+            try
+            {
+                controls::Canvas::SetLeft(node->Root, x);
+                controls::Canvas::SetTop(node->Root, y);
+            }
+            MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to move a node.")
+        }
+    }
+
+    _Use_decl_annotations_
+    bool PatchCanvas::IsNodeSelected(std::wstring const& nodeId) const noexcept
+    {
+        return std::find(m_selectedNodeIds.begin(), m_selectedNodeIds.end(), nodeId) != m_selectedNodeIds.end();
     }
 
     _Use_decl_annotations_
@@ -322,6 +1041,8 @@ namespace midipatchbay
 
             m_nodes.clear();
             m_connections.clear();
+            m_answerPaths.clear();
+            m_nodeHalos.clear();
 
             m_nodeLayer.Children().Clear();
             m_connectionLayer.Children().Clear();
@@ -343,6 +1064,42 @@ namespace midipatchbay
                 BuildNode(endpoint, resolved.has_value() ? &resolved.value() : nullptr, suggestion);
             }
 
+            for (auto const& block : patch->Blocks)
+            {
+                if (IsAnnotation(block.Kind))
+                {
+                    BuildAnnotationNode(block);
+                }
+                else
+                {
+                    BuildBlockNode(block);
+                }
+            }
+
+            // Whatever was selected and is gone now is let go of, without telling the window:
+            // it is the one rebuilding, and it refreshes what depends on the selection itself.
+            std::erase_if(m_selectedNodeIds, [this](std::wstring const& id) { return FindNode(id) == nullptr; });
+
+            if ((m_selectionKind == CanvasSelectionKind::Endpoint || m_selectionKind == CanvasSelectionKind::Block) &&
+                FindNode(m_selectedNodeId) == nullptr)
+            {
+                m_selectedNodeId = m_selectedNodeIds.empty() ? std::wstring{} : m_selectedNodeIds.back();
+                m_selectionKind = m_selectedNodeId.empty()
+                    ? CanvasSelectionKind::None
+                    : (patch->IsBlock(m_selectedNodeId) ? CanvasSelectionKind::Block : CanvasSelectionKind::Endpoint);
+            }
+
+            if (m_selectionKind == CanvasSelectionKind::Connection && patch->FindConnection(m_selectedConnectionId) == nullptr)
+            {
+                m_selectionKind = CanvasSelectionKind::None;
+                m_selectedConnectionId.clear();
+            }
+
+            for (auto& node : m_nodes)
+            {
+                ApplyNodeAppearance(node);
+            }
+
             // Port offsets are measured once here, so dragging a node afterwards is arithmetic
             // rather than a visual tree walk per frame.
             m_surface.UpdateLayout();
@@ -353,6 +1110,7 @@ namespace midipatchbay
             }
 
             BuildConnections(analysis);
+            BuildAnswerPaths();
             RedrawConnections();
             UpdateExtent();
             UpdateMinimap();
@@ -365,10 +1123,11 @@ namespace midipatchbay
         PatchEndpoint const& endpoint,
         LiveEndpoint const* live,
         std::optional<LiveEndpoint> const& suggestion) noexcept
+    try
     {
         NodeVisual node{};
 
-        node.EndpointId = endpoint.Id;
+        node.NodeId = endpoint.Id;
         node.IsOffline = live == nullptr;
         node.Width = MinimumNodeWidth;
 
@@ -398,19 +1157,14 @@ namespace midipatchbay
             header.ColumnDefinitions().Append(column);
         }
 
-        controls::Border art{};
-        art.Width(28);
-        art.Height(28);
-        art.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(6));
-        art.VerticalAlignment(xaml::VerticalAlignment::Center);
-        art.Background(ThemeBrush(L"ControlAltFillColorSecondaryBrush", Rgb(0x30, 0x3A, 0x45)));
-
         auto const isLoopback = live != nullptr && live->IsLoopback;
 
         // The customer's own picture wins where there is one. It is small at this size, but it
         // is the thing they chose to recognize the device by.
         auto const artwork = node.IsOffline || live == nullptr
             ? nullptr : LoadEndpointImage(live->ImagePath, 56);
+
+        xaml::UIElement picture{ nullptr };
 
         if (artwork != nullptr)
         {
@@ -420,15 +1174,26 @@ namespace midipatchbay
             image.Stretch(media::Stretch::Uniform);
             image.Margin(xaml::ThicknessHelper::FromUniformLength(3));
 
-            art.Child(image);
+            picture = image;
         }
         else
         {
-            art.Child(MakeGlyph(
+            picture = MakeGlyph(
                 node.IsOffline ? L"\uE711" : (isLoopback ? L"\uE895" : L"\uE7F6"),
                 14,
-                node.IsOffline ? critical : accent));
+                node.IsOffline ? critical : accent);
         }
+
+        auto const art = MakeRoundedPanel(
+            6,
+            ThemeBrush(L"ControlAltFillColorSecondaryBrush", Rgb(0x30, 0x3A, 0x45)),
+            nullptr,
+            xaml::Thickness{},
+            picture).Panel;
+
+        art.Width(28);
+        art.Height(28);
+        art.VerticalAlignment(xaml::VerticalAlignment::Center);
 
         controls::Grid::SetColumn(art, 0);
         header.Children().Append(art);
@@ -545,7 +1310,7 @@ namespace midipatchbay
             for (auto const groupIndex : rows)
             {
                 PortKey key{};
-                key.EndpointId = endpoint.Id;
+                key.NodeId = endpoint.Id;
                 key.IsOutput = isOutput;
                 key.GroupIndex = groupIndex;
 
@@ -553,13 +1318,21 @@ namespace midipatchbay
                 row.Height(PortRowHeight);
                 row.Padding(xaml::ThicknessHelper::FromUniformLength(0));
                 row.BorderThickness(xaml::ThicknessHelper::FromUniformLength(0));
-                row.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(4));
+                row.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(0));
                 row.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
                 row.HorizontalContentAlignment(xaml::HorizontalAlignment::Stretch);
                 row.VerticalContentAlignment(xaml::VerticalAlignment::Center);
                 row.Background(media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+                ClearStateFills(row);
 
                 controls::Grid rowGrid{};
+
+                // Inside the node and rounded like it, with the dot hanging over the edge beside it.
+                auto highlight = MakeRoundedShape(4, media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+                highlight.Margin(isOutput
+                    ? xaml::ThicknessHelper::FromLengths(0, 1, 3, 1)
+                    : xaml::ThicknessHelper::FromLengths(3, 1, 0, 1));
+                rowGrid.Children().Append(highlight);
 
                 std::wstring groupName{};
 
@@ -568,7 +1341,7 @@ namespace midipatchbay
                     groupName = live->GroupName(groupIndex, isOutput);
                 }
 
-                auto const groupLabel = DescribeGroupIndex(groupIndex, groupName);
+                auto const groupLabel = DescribeGroupIndex(groupIndex, groupName, !isOutput);
 
                 // A name longer than the widest node allowed is trimmed.
                 if (!groupName.empty())
@@ -585,8 +1358,8 @@ namespace midipatchbay
                 label.HorizontalAlignment(isOutput ? xaml::HorizontalAlignment::Right : xaml::HorizontalAlignment::Left);
 
                 label.Margin(isOutput
-                    ? xaml::ThicknessHelper::FromLengths(8, 0, 22, 0)
-                    : xaml::ThicknessHelper::FromLengths(22, 0, 8, 0));
+                    ? xaml::ThicknessHelper::FromLengths(8, 0, 14, 0)
+                    : xaml::ThicknessHelper::FromLengths(14, 0, 8, 0));
 
                 rowGrid.Children().Append(label);
 
@@ -598,11 +1371,10 @@ namespace midipatchbay
                 dot.Fill(ThemeBrush(L"SolidBackgroundFillColorSecondaryBrush", Rgb(0x2B, 0x2B, 0x2B)));
                 dot.VerticalAlignment(xaml::VerticalAlignment::Center);
                 dot.HorizontalAlignment(isOutput ? xaml::HorizontalAlignment::Right : xaml::HorizontalAlignment::Left);
-                // Just inside the edge, not straddling it: the node's rounded border clips its
-                // child, and a dot hanging over the edge renders as a half circle.
+                // Centered on the node's edge, half in and half out.
                 dot.Margin(isOutput
-                    ? xaml::ThicknessHelper::FromLengths(0, 0, 4, 0)
-                    : xaml::ThicknessHelper::FromLengths(4, 0, 0, 0));
+                    ? xaml::ThicknessHelper::FromLengths(0, 0, -DotDiameter / 2, 0)
+                    : xaml::ThicknessHelper::FromLengths(-DotDiameter / 2, 0, 0, 0));
 
                 rowGrid.Children().Append(dot);
 
@@ -614,42 +1386,7 @@ namespace midipatchbay
                         groupLabel,
                         endpoint.DisplayName));
 
-                auto const keyText = key.ToString();
-
-                row.PointerEntered([this, key](auto&&, auto&&)
-                    {
-                        m_hoverRowPort = key;
-                        RefreshPortAppearance();
-                    });
-
-                row.PointerExited([this, keyText](auto&&, auto&&)
-                    {
-                        if (m_hoverRowPort.has_value() && m_hoverRowPort->ToString() == keyText)
-                        {
-                            m_hoverRowPort.reset();
-                            RefreshPortAppearance();
-                        }
-                    });
-
-                // Either end can start the drag. Insisting on Out first is a rule the customer
-                // cannot see, and a drag that does nothing reads as a broken hit target.
-                // AddHandler, not row.PointerPressed: ButtonBase marks PointerPressed handled in
-                // its class handler, and a plain instance handler never sees a handled event.
-                // This is what stopped a drag from ever starting.
-                row.AddHandler(xaml::UIElement::PointerPressedEvent(),
-                    winrt::box_value(input::PointerEventHandler{
-                        [this, key](auto&&, input::PointerRoutedEventArgs const& args)
-                        {
-                            args.Handled(true);
-
-                            FocusCanvas();
-                            CancelDrags();
-
-                            BeginConnectionDrag(key);
-                        } }),
-                    true);
-
-                row.Click([this, key](auto&&, auto&&) { OnPortClicked(key); });
+                AttachPortHandlers(row, key);
 
                 PortVisual port{};
                 port.Key = key;
@@ -657,6 +1394,7 @@ namespace midipatchbay
                 port.Row = row;
                 port.Label = label;
                 port.LabelBrush = groupIndex == AllGroups ? textPrimary : textSecondary;
+                port.Highlight = highlight;
 
                 node.Ports.push_back(std::move(port));
 
@@ -672,15 +1410,6 @@ namespace midipatchbay
         // ---------------------------------------------------------------- alert
         if (node.IsOffline)
         {
-            controls::Border alert{};
-
-            alert.Margin(xaml::ThicknessHelper::FromLengths(8, 0, 8, 8));
-            alert.Padding(xaml::ThicknessHelper::FromLengths(10, 8, 10, 8));
-            alert.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(5));
-            alert.Background(ThemeBrush(L"SystemFillColorCriticalBackgroundBrush", Rgb(0x44, 0x27, 0x2A)));
-            alert.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-            alert.BorderBrush(critical);
-
             controls::StackPanel alertBody{};
             alertBody.Spacing(6);
 
@@ -695,49 +1424,42 @@ namespace midipatchbay
             message.TextTrimming(xaml::TextTrimming::None);
             alertBody.Children().Append(message);
 
-            alert.Child(alertBody);
+            auto const alert = MakeRoundedPanel(
+                5,
+                ThemeBrush(L"SystemFillColorCriticalBackgroundBrush", Rgb(0x44, 0x27, 0x2A)),
+                critical,
+                xaml::ThicknessHelper::FromLengths(10, 8, 10, 8),
+                alertBody).Panel;
 
-            node.AlertPanel = alert;
+            alert.Margin(xaml::ThicknessHelper::FromLengths(8, 0, 8, 8));
+
             body.Children().Append(alert);
         }
 
         // ---------------------------------------------------------------- root
-        controls::Border root{};
+        auto card = MakeRoundedShape(NodeCornerRadius, ThemeBrush(L"CardBackgroundFillColorDefaultBrush", Rgb(0x2B, 0x2B, 0x2B)));
+        card.Shadow(media::ThemeShadow{});
+
+        // Its color and width come with the selection.
+        auto edge = MakeRoundedShape(NodeCornerRadius, nullptr);
+        edge.IsHitTestVisible(false);
+
+        controls::Grid root{};
 
         root.Width(node.Width);
-        root.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(NodeCornerRadius));
-        root.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-        root.Background(ThemeBrush(L"CardBackgroundFillColorDefaultBrush", Rgb(0x2B, 0x2B, 0x2B)));
-        root.Shadow(media::ThemeShadow{});
-        root.Child(body);
+        root.Children().Append(MakeSoftShadow(NodeCornerRadius));
+        root.Children().Append(card);
+        root.Children().Append(edge);
+        root.Children().Append(body);
 
         controls::Canvas::SetLeft(root, endpoint.CanvasX);
         controls::Canvas::SetTop(root, endpoint.CanvasY);
 
-        auto const endpointId = endpoint.Id;
-
-        root.PointerPressed([this, endpointId](auto&&, input::PointerRoutedEventArgs const& args)
-            {
-                args.Handled(true);
-
-                FocusCanvas();
-                CancelDrags();
-
-                OnNodePointerPressed(endpointId, args);
-            });
-
-        root.RightTapped([this, endpointId](auto&&, input::RightTappedRoutedEventArgs const& args)
-            {
-                args.Handled(true);
-
-                if (m_callbacks.EndpointContextMenuRequested)
-                {
-                    m_callbacks.EndpointContextMenuRequested(endpointId,
-                        m_scrollViewer == nullptr ? foundation::Point{} : args.GetPosition(m_scrollViewer));
-                }
-            });
+        AttachNodeHandlers(root, endpoint.Id, false);
 
         node.Root = root;
+        node.Card = card;
+        node.Edge = edge;
 
         m_nodeLayer.Children().Append(root);
 
@@ -763,6 +1485,500 @@ namespace midipatchbay
         m_nodes.push_back(std::move(node));
 
         ApplyNodeAppearance(m_nodes.back());
+    }
+    MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build an endpoint node.")
+
+    _Use_decl_annotations_
+    void PatchCanvas::AttachNodeHandlers(xaml::UIElement const& root, std::wstring const& nodeId, bool isBlock) noexcept
+    {
+        try
+        {
+            root.PointerPressed([this, nodeId](auto&&, input::PointerRoutedEventArgs const& args)
+                {
+                    args.Handled(true);
+
+                    FocusCanvas();
+                    CancelDrags();
+
+                    OnNodePointerPressed(nodeId, args);
+                });
+
+            root.RightTapped([this, nodeId, isBlock](auto&&, input::RightTappedRoutedEventArgs const& args)
+                {
+                    args.Handled(true);
+
+                    // The menu acts on what is selected, so a node right-clicked on its own is
+                    // selected first.
+                    if (!IsNodeSelected(nodeId))
+                    {
+                        Select(isBlock ? CanvasSelectionKind::Block : CanvasSelectionKind::Endpoint, nodeId);
+                    }
+
+                    if (m_callbacks.NodeContextMenuRequested)
+                    {
+                        m_callbacks.NodeContextMenuRequested(nodeId,
+                            m_scrollViewer == nullptr ? foundation::Point{} : args.GetPosition(m_scrollViewer));
+                    }
+                });
+
+            if (isBlock)
+            {
+                root.DoubleTapped([this, nodeId](auto&&, input::DoubleTappedRoutedEventArgs const& args)
+                    {
+                        args.Handled(true);
+
+                        // The second press started a drag, and its release goes to whatever the
+                        // double-click opens.
+                        FinishNodeDrag();
+
+                        if (m_callbacks.BlockActivated)
+                        {
+                            m_callbacks.BlockActivated(nodeId);
+                        }
+                    });
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to wire up a node.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::AttachPortHandlers(controls::Button const& row, PortKey const& key) noexcept
+    {
+        try
+        {
+            auto const keyText = key.ToString();
+
+            row.PointerEntered([this, key](auto&&, auto&&)
+                {
+                    m_hoverRowPort = key;
+                    RefreshPortAppearance();
+                });
+
+            row.PointerExited([this, keyText](auto&&, auto&&)
+                {
+                    if (m_hoverRowPort.has_value() && m_hoverRowPort->ToString() == keyText)
+                    {
+                        m_hoverRowPort.reset();
+                        RefreshPortAppearance();
+                    }
+                });
+
+            // Either end can start the drag. Insisting on Out first is a rule the customer
+            // cannot see, and a drag that does nothing reads as a broken hit target.
+            // AddHandler, not row.PointerPressed: ButtonBase marks PointerPressed handled in
+            // its class handler, and a plain instance handler never sees a handled event.
+            // This is what stopped a drag from ever starting.
+            row.AddHandler(xaml::UIElement::PointerPressedEvent(),
+                winrt::box_value(input::PointerEventHandler{
+                    [this, key](auto&&, input::PointerRoutedEventArgs const& args)
+                    {
+                        args.Handled(true);
+
+                        FocusCanvas();
+                        CancelDrags();
+
+                        BeginConnectionDrag(key);
+                    } }),
+                true);
+
+            row.Click([this, key](auto&&, auto&&) { OnPortClicked(key); });
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to wire up a connection point.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::BuildBlockNode(PatchBlock const& block) noexcept
+    {
+        try
+        {
+            NodeVisual node{};
+
+            node.NodeId = block.Id;
+            node.IsBlock = true;
+            node.Category = CategoryOf(block.Kind);
+            node.IsBypassed = block.Bypassed;
+            node.Width = BlockNodeWidth;
+
+            auto const textPrimary = ThemeBrush(L"TextFillColorPrimaryBrush", Rgb(0xFF, 0xFF, 0xFF));
+            auto const textSecondary = ThemeBrush(L"TextFillColorSecondaryBrush", Rgb(0xC8, 0xC8, 0xC8));
+            auto const textTertiary = ThemeBrush(L"TextFillColorTertiaryBrush", Rgb(0x90, 0x90, 0x90));
+
+            auto const name = BlockDisplayName(block);
+
+            // The way in and the way out, over the whole block. The middle column is empty, so
+            // a press there reaches the card.
+            controls::Grid body{};
+
+            for (auto const width : { xaml::GridLength{ BlockPortColumnWidth, xaml::GridUnitType::Pixel },
+                                      xaml::GridLength{ 1, xaml::GridUnitType::Star },
+                                      xaml::GridLength{ BlockPortColumnWidth, xaml::GridUnitType::Pixel } })
+            {
+                controls::ColumnDefinition column{};
+                column.Width(width);
+                body.ColumnDefinitions().Append(column);
+            }
+
+            // ------------------------------------------------- what it is, what it does
+            // Inside the card's edge, which is drawn over it.
+            controls::Grid content{};
+            content.Margin(xaml::ThicknessHelper::FromUniformLength(1));
+
+            for (auto const height : { xaml::GridLength{ HeaderHeight - 1, xaml::GridUnitType::Pixel },
+                                       xaml::GridLength{ 1, xaml::GridUnitType::Pixel },
+                                       xaml::GridLength{ 1, xaml::GridUnitType::Star } })
+            {
+                controls::RowDefinition row{};
+                row.Height(height);
+                content.RowDefinitions().Append(row);
+            }
+
+            // The icon sits where an endpoint's picture does, measured from the outside edge.
+            controls::Grid header{};
+            header.Padding(xaml::ThicknessHelper::FromLengths(9, 9, 10, 0));
+            header.ColumnSpacing(9);
+
+            for (auto const width : { xaml::GridLength{ 0, xaml::GridUnitType::Auto },
+                                      xaml::GridLength{ 1, xaml::GridUnitType::Star } })
+            {
+                controls::ColumnDefinition column{};
+                column.Width(width);
+                header.ColumnDefinitions().Append(column);
+            }
+
+            auto const badgeLabel = BlockKindBadge(block.Kind);
+
+            auto badgeText = MakeText(badgeLabel, badgeLabel.size() >= 3 ? 9.0 : 12.0, CategoryBrush(node.Category), true);
+            badgeText.TextTrimming(xaml::TextTrimming::None);
+            badgeText.HorizontalAlignment(xaml::HorizontalAlignment::Center);
+
+            auto const badge = MakeRoundedPanel(
+                6, CategoryBrush(node.Category, 0.18), nullptr, xaml::Thickness{}, badgeText).Panel;
+
+            badge.Width(28);
+            badge.Height(28);
+            badge.VerticalAlignment(xaml::VerticalAlignment::Top);
+
+            header.Children().Append(badge);
+
+            node.NameText = MakeText(name, 13, textPrimary, true);
+            node.NameText.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 9));
+            controls::Grid::SetColumn(node.NameText, 1);
+            header.Children().Append(node.NameText);
+
+            content.Children().Append(header);
+
+            controls::Border rule{};
+            rule.Background(ThemeBrush(L"DividerStrokeColorDefaultBrush", Rgb(0x55, 0x55, 0x55)));
+            controls::Grid::SetRow(rule, 1);
+            content.Children().Append(rule);
+
+            // Always room for two lines, so blocks line up whatever they say.
+            node.SubtitleText = MakeText(
+                block.Bypassed
+                    ? resources::GetString(IsGenerator(block.Kind) ? L"BlockBypassedGeneratorCaption" : L"BlockBypassedCaption")
+                    : DescribeBlock(block.Kind, block.Settings),
+                11.5,
+                block.Bypassed ? textTertiary : textSecondary);
+            node.SubtitleText.TextWrapping(xaml::TextWrapping::Wrap);
+            node.SubtitleText.MaxLines(2);
+            node.SubtitleText.LineHeight(BlockLineHeight);
+            node.SubtitleText.LineStackingStrategy(xaml::LineStackingStrategy::BlockLineHeight);
+            node.SubtitleText.Height(2 * BlockLineHeight);
+            node.SubtitleText.VerticalAlignment(xaml::VerticalAlignment::Top);
+            node.SubtitleText.Margin(xaml::ThicknessHelper::FromLengths(11, 7, 11, 10));
+            controls::Grid::SetRow(node.SubtitleText, 2);
+            content.Children().Append(node.SubtitleText);
+
+            // ------------------------------------------------- the ways out of a Branch or a Switch
+            auto const ways = HasWays(block.Kind) ? WaysOf(block.Kind, block.Settings) : std::vector<int32_t>{};
+
+            if (!ways.empty())
+            {
+                controls::RowDefinition waysRow{};
+                waysRow.Height(xaml::GridLengthHelper::Auto());
+                content.RowDefinitions().Append(waysRow);
+
+                controls::StackPanel waysPanel{};
+                waysPanel.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 6));
+                controls::Grid::SetRow(waysPanel, 3);
+
+                controls::Border waysRule{};
+                waysRule.Height(1);
+                waysRule.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 3));
+                waysRule.Background(ThemeBrush(L"DividerStrokeColorDefaultBrush", Rgb(0x55, 0x55, 0x55)));
+                waysPanel.Children().Append(waysRule);
+
+                for (auto const way : ways)
+                {
+                    PortKey key{};
+                    key.NodeId = block.Id;
+                    key.IsOutput = true;
+                    key.GroupIndex = way;
+
+                    auto const wayName = DescribeWay(block.Kind, block.Settings, way);
+
+                    controls::Button row{};
+                    row.Height(WayRowHeight);
+                    row.Padding(xaml::ThicknessHelper::FromUniformLength(0));
+                    row.BorderThickness(xaml::ThicknessHelper::FromUniformLength(0));
+                    row.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(0));
+                    row.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+                    row.HorizontalContentAlignment(xaml::HorizontalAlignment::Stretch);
+                    row.VerticalContentAlignment(xaml::VerticalAlignment::Stretch);
+                    row.Background(media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+                    ClearStateFills(row);
+
+                    controls::Grid inner{};
+
+                    auto label = MakeText(wayName, 11.5, textSecondary);
+                    label.HorizontalAlignment(xaml::HorizontalAlignment::Right);
+                    label.Margin(xaml::ThicknessHelper::FromLengths(BlockPortColumnWidth + 4, 0, BlockPortColumnWidth, 0));
+                    inner.Children().Append(label);
+
+                    shapes::Ellipse dot{};
+                    dot.Width(BlockDotDiameter);
+                    dot.Height(BlockDotDiameter);
+                    dot.StrokeThickness(2);
+                    dot.Stroke(textTertiary);
+                    dot.Fill(ThemeBrush(L"SolidBackgroundFillColorSecondaryBrush", Rgb(0x2B, 0x2B, 0x2B)));
+                    dot.VerticalAlignment(xaml::VerticalAlignment::Center);
+                    dot.HorizontalAlignment(xaml::HorizontalAlignment::Right);
+                    dot.Margin(xaml::ThicknessHelper::FromLengths(0, 0, -BlockDotDiameter / 2, 0));
+                    inner.Children().Append(dot);
+
+                    row.Content(inner);
+
+                    xaml::Automation::AutomationProperties::SetName(row,
+                        resources::FormatString(L"BlockWayAccessibleNameFormat", wayName, name));
+
+                    AttachPortHandlers(row, key);
+
+                    PortVisual port{};
+                    port.Key = key;
+                    port.Dot = dot;
+                    port.Row = row;
+                    port.Label = label;
+                    port.LabelBrush = textSecondary;
+
+                    node.Ports.push_back(std::move(port));
+                    waysPanel.Children().Append(row);
+                }
+
+                content.Children().Append(waysPanel);
+            }
+
+            // ------------------------------------------------- the way in and the way out
+            for (int side = 0; side < 2; side++)
+            {
+                bool const isOutput = side == 1;
+
+                // MIDI clock and MIDI Time Code make their own messages, so they take nothing in.
+                if (!isOutput && !HasInput(block.Kind))
+                {
+                    continue;
+                }
+
+                // A Branch or a Switch goes out by the rows under what it does.
+                if (isOutput && !ways.empty())
+                {
+                    continue;
+                }
+
+                PortKey key{};
+                key.NodeId = block.Id;
+                key.IsOutput = isOutput;
+                key.GroupIndex = AllGroups;
+
+                controls::Button row{};
+                row.Padding(xaml::ThicknessHelper::FromUniformLength(0));
+                row.BorderThickness(xaml::ThicknessHelper::FromUniformLength(0));
+                row.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(0));
+                row.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+                row.VerticalAlignment(xaml::VerticalAlignment::Stretch);
+                row.HorizontalContentAlignment(xaml::HorizontalAlignment::Stretch);
+                row.VerticalContentAlignment(xaml::VerticalAlignment::Center);
+                row.Background(media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+                ClearStateFills(row);
+
+                shapes::Ellipse dot{};
+                dot.Width(BlockDotDiameter);
+                dot.Height(BlockDotDiameter);
+                dot.StrokeThickness(2);
+                dot.Stroke(textTertiary);
+                dot.Fill(ThemeBrush(L"SolidBackgroundFillColorSecondaryBrush", Rgb(0x2B, 0x2B, 0x2B)));
+                dot.VerticalAlignment(xaml::VerticalAlignment::Center);
+                dot.HorizontalAlignment(isOutput ? xaml::HorizontalAlignment::Right : xaml::HorizontalAlignment::Left);
+                dot.Margin(isOutput
+                    ? xaml::ThicknessHelper::FromLengths(0, 0, -BlockDotDiameter / 2, 0)
+                    : xaml::ThicknessHelper::FromLengths(-BlockDotDiameter / 2, 0, 0, 0));
+
+                row.Content(dot);
+
+                xaml::Automation::AutomationProperties::SetName(row,
+                    resources::FormatString(L"BlockPortAccessibleNameFormat",
+                        resources::GetString(isOutput ? L"PortColumnOut" : L"PortColumnIn"),
+                        name));
+
+                AttachPortHandlers(row, key);
+
+                PortVisual port{};
+                port.Key = key;
+                port.Dot = dot;
+                port.Row = row;
+
+                node.Ports.push_back(std::move(port));
+
+                controls::Grid::SetColumn(row, isOutput ? 2 : 0);
+                body.Children().Append(row);
+            }
+
+            // ------------------------------------------------- where a responder's answers go
+            if (block.Kind == BlockKind::CiResponder && m_patch != nullptr)
+            {
+                node.AnsweredEndpointIds = EndpointsAnsweredBy(*m_patch, block.Id);
+            }
+
+            if (!node.AnsweredEndpointIds.empty())
+            {
+                std::wstring names{};
+
+                for (auto const& endpointId : node.AnsweredEndpointIds)
+                {
+                    if (auto const* endpoint = m_patch->FindEndpoint(endpointId))
+                    {
+                        names += names.empty() ? std::wstring{} : std::wstring{ resources::GetString(L"ListSeparator") };
+                        names += endpoint->DisplayName;
+                    }
+                }
+
+                node.AnswersDot = shapes::Ellipse{};
+                node.AnswersDot.Width(BlockDotDiameter);
+                node.AnswersDot.Height(BlockDotDiameter);
+                node.AnswersDot.StrokeThickness(2);
+                node.AnswersDot.Stroke(CategoryBrush(node.Category));
+                node.AnswersDot.Fill(ThemeBrush(L"SolidBackgroundFillColorSecondaryBrush", Rgb(0x2B, 0x2B, 0x2B)));
+                node.AnswersDot.HorizontalAlignment(xaml::HorizontalAlignment::Center);
+                node.AnswersDot.VerticalAlignment(xaml::VerticalAlignment::Bottom);
+                node.AnswersDot.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, -BlockDotDiameter / 2));
+
+                controls::ToolTipService::SetToolTip(node.AnswersDot, winrt::box_value(resources::FormatString(
+                    node.AnsweredEndpointIds.size() == 1 ? L"AnswersToOneFormat" : L"AnswersToSeveralFormat", names)));
+            }
+
+            // ------------------------------------------------- root
+            auto card = MakeRoundedShape(BlockCornerRadius, ThemeBrush(L"CardBackgroundFillColorDefaultBrush", Rgb(0x2B, 0x2B, 0x2B)));
+            card.Shadow(media::ThemeShadow{});
+
+            // As big as the card, so it has the card's corners.
+            auto shade = MakeRoundedShape(BlockCornerRadius, HeaderShade(node.Category, block.Bypassed ? 0.5 : 1.0));
+            shade.IsHitTestVisible(false);
+
+            // Its color and width come with the selection.
+            auto edge = MakeRoundedShape(BlockCornerRadius, nullptr);
+            edge.IsHitTestVisible(false);
+
+            // A bypassed block gets a dashed outline too. Its color is set with the edge's.
+            node.DashedOutline = MakeRoundedShape(BlockCornerRadius, nullptr, media::SolidColorBrush{ Rgb(0, 0, 0, 0) }, 1.5);
+            node.DashedOutline.StrokeDashArray(MakeDashArray(4.0, 3.0));
+            node.DashedOutline.IsHitTestVisible(false);
+            node.DashedOutline.Visibility(block.Bypassed ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            controls::Grid root{};
+
+            root.Width(node.Width);
+            root.Children().Append(MakeSoftShadow(BlockCornerRadius));
+            root.Children().Append(card);
+            root.Children().Append(shade);
+            root.Children().Append(content);
+            root.Children().Append(edge);
+            root.Children().Append(node.DashedOutline);
+            root.Children().Append(body);
+
+            if (node.AnswersDot != nullptr)
+            {
+                root.Children().Append(node.AnswersDot);
+            }
+
+            controls::ToolTipService::SetToolTip(root, winrt::box_value(winrt::hstring{
+                std::wstring{ BlockKindName(block.Kind) } + L"\n" + std::wstring{ BlockKindHint(block.Kind) } }));
+
+            xaml::Automation::AutomationProperties::SetName(root, name);
+            xaml::Automation::AutomationProperties::SetHelpText(root, node.SubtitleText.Text());
+
+            controls::Canvas::SetLeft(root, block.CanvasX);
+            controls::Canvas::SetTop(root, block.CanvasY);
+
+            AttachNodeHandlers(root, block.Id, true);
+
+            node.Root = root;
+            node.Card = card;
+            node.Edge = edge;
+
+            m_nodeLayer.Children().Append(root);
+            m_nodes.push_back(std::move(node));
+
+            ApplyNodeAppearance(m_nodes.back());
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build a block on the canvas.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::BuildAnnotationNode(PatchBlock const& block) noexcept
+    {
+        try
+        {
+            NodeVisual node{};
+
+            node.NodeId = block.Id;
+            node.IsBlock = true;
+            node.IsAnnotation = true;
+            node.Category = BlockCategory::Annotation;
+
+            controls::TextBlock text{};
+            text.TextWrapping(xaml::TextWrapping::NoWrap);
+            text.TextTrimming(xaml::TextTrimming::None);
+
+            ApplyAnnotationLook(text, block.Settings.Annotation);
+
+            // Clear rather than empty, so a press between the letters still picks it up. Its edge
+            // shows only while it is selected.
+            auto const card = MakeRoundedPanel(
+                AnnotationCornerRadius,
+                media::SolidColorBrush{ Rgb(0, 0, 0, 0) },
+                media::SolidColorBrush{ Rgb(0, 0, 0, 0) },
+                xaml::ThicknessHelper::FromLengths(AnnotationPaddingX, AnnotationPaddingY, AnnotationPaddingX, AnnotationPaddingY),
+                text,
+                1.5);
+
+            controls::Grid root{};
+            root.Children().Append(card.Panel);
+
+            xaml::Automation::AutomationProperties::SetName(root, text.Text());
+
+            controls::Canvas::SetLeft(root, block.CanvasX);
+            controls::Canvas::SetTop(root, block.CanvasY);
+
+            AttachNodeHandlers(root, block.Id, true);
+
+            node.Root = root;
+            node.Card = card.Shape;
+            node.Edge = card.Shape;
+            node.AnnotationText = text;
+
+            m_nodeLayer.Children().Append(root);
+
+            // Measured in the tree, where the text has its real font.
+            root.Measure(foundation::Size{
+                std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() });
+
+            node.Width = std::ceil(root.DesiredSize().Width);
+            node.Height = std::ceil(root.DesiredSize().Height);
+
+            m_nodes.push_back(std::move(node));
+
+            ApplyNodeAppearance(m_nodes.back());
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build an annotation on the canvas.")
     }
 
     _Use_decl_annotations_
@@ -791,6 +2007,15 @@ namespace midipatchbay
                 port.OffsetX = center.X;
                 port.OffsetY = center.Y;
             }
+
+            if (node.AnswersDot != nullptr)
+            {
+                auto const center = node.AnswersDot.TransformToVisual(node.Root).TransformPoint(
+                    foundation::Point{ static_cast<float>(BlockDotDiameter / 2), static_cast<float>(BlockDotDiameter / 2) });
+
+                node.AnswersOffsetX = center.X;
+                node.AnswersOffsetY = center.Y;
+            }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to measure the node connection points.")
     }
@@ -798,16 +2023,10 @@ namespace midipatchbay
     _Use_decl_annotations_
     std::optional<foundation::Point> PatchCanvas::PortPoint(PortKey const& key) noexcept
     {
-        auto* node = FindNode(key.EndpointId);
+        auto* node = FindNode(key.NodeId);
+        auto const origin = NodePosition(key.NodeId);
 
-        if (node == nullptr || m_patch == nullptr)
-        {
-            return std::nullopt;
-        }
-
-        auto const* endpoint = m_patch->FindEndpoint(key.EndpointId);
-
-        if (endpoint == nullptr)
+        if (node == nullptr || !origin.has_value())
         {
             return std::nullopt;
         }
@@ -817,8 +2036,8 @@ namespace midipatchbay
             if (port.Key == key)
             {
                 return foundation::Point{
-                    static_cast<float>(endpoint->CanvasX + port.OffsetX),
-                    static_cast<float>(endpoint->CanvasY + port.OffsetY) };
+                    origin->X + static_cast<float>(port.OffsetX),
+                    origin->Y + static_cast<float>(port.OffsetY) };
             }
         }
 
@@ -830,8 +2049,8 @@ namespace midipatchbay
             if (port.Key.IsOutput == key.IsOutput && port.Key.GroupIndex == AllGroups)
             {
                 return foundation::Point{
-                    static_cast<float>(endpoint->CanvasX + port.OffsetX),
-                    static_cast<float>(endpoint->CanvasY + port.OffsetY) };
+                    origin->X + static_cast<float>(port.OffsetX),
+                    origin->Y + static_cast<float>(port.OffsetY) };
             }
         }
 
@@ -840,6 +2059,7 @@ namespace midipatchbay
 
     _Use_decl_annotations_
     void PatchCanvas::BuildConnections(PatchAnalysis const& analysis) noexcept
+    try
     {
         UNREFERENCED_PARAMETER(analysis);
 
@@ -867,6 +2087,18 @@ namespace midipatchbay
             controls::Canvas::SetZIndex(visual.Glow, GlowZIndex);
 
             m_connectionLayer.Children().Append(visual.Glow);
+
+            visual.Flash = shapes::Path{};
+            visual.Flash.StrokeThickness(6.0);
+            visual.Flash.StrokeStartLineCap(xaml::Media::PenLineCap::Round);
+            visual.Flash.StrokeEndLineCap(xaml::Media::PenLineCap::Round);
+            visual.Flash.Stroke(ThemeBrush(L"AccentFillColorDefaultBrush", Rgb(0x60, 0xCD, 0xFF)));
+            visual.Flash.IsHitTestVisible(false);
+            visual.Flash.Opacity(0.0);
+
+            controls::Canvas::SetZIndex(visual.Flash, GlowZIndex);
+
+            m_connectionLayer.Children().Append(visual.Flash);
 
             visual.Line = shapes::Path{};
             visual.Line.StrokeThickness(2.0);
@@ -903,9 +2135,9 @@ namespace midipatchbay
                         ? nullptr : m_patch->FindConnection(connectionId))
                     {
                         auto const sourcePoint = PortPoint(PortKey{
-                            connection->SourceEndpointId, true, connection->SourceGroupIndex });
+                            connection->SourceId, true, connection->SourceGroupIndex });
                         auto const destinationPoint = PortPoint(PortKey{
-                            connection->DestinationEndpointId, false, connection->DestinationGroupIndex });
+                            connection->DestinationId, false, connection->DestinationGroupIndex });
 
                         if (sourcePoint.has_value() && destinationPoint.has_value())
                         {
@@ -924,29 +2156,29 @@ namespace midipatchbay
 
             m_connectionLayer.Children().Append(visual.HitArea);
 
-            controls::Border pill{};
-
-            controls::Canvas::SetZIndex(pill, PillZIndex);
-
-            pill.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(11));
-            pill.Padding(xaml::ThicknessHelper::FromLengths(9, 2, 9, 2));
-            pill.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
+            auto pillText = MakeText(L"", 11, textSecondary);
 
             // Opaque on purpose. The card brushes are a few percent white in dark mode, so the
-            // line the label sits on would show straight through it.
-            pill.Background(ThemeBrush(L"SolidBackgroundFillColorTertiaryBrush", Rgb(0x28, 0x28, 0x28)));
+            // line the label sits on would show straight through it. Its edge's color comes with
+            // the selection.
+            auto const pill = MakeRoundedPanel(
+                11,
+                ThemeBrush(L"SolidBackgroundFillColorTertiaryBrush", Rgb(0x28, 0x28, 0x28)),
+                media::SolidColorBrush{ Rgb(0, 0, 0, 0) },
+                xaml::ThicknessHelper::FromLengths(9, 2, 9, 2),
+                pillText);
 
-            auto pillText = MakeText(L"", 11, textSecondary);
-            pill.Child(pillText);
+            controls::Canvas::SetZIndex(pill.Panel, PillZIndex);
 
-            pill.PointerPressed([this, connectionId](auto&&, input::PointerRoutedEventArgs const& args)
+            pill.Panel.PointerPressed([this, connectionId](auto&&, input::PointerRoutedEventArgs const& args)
                 {
                     args.Handled(true);
                     FocusCanvas();
                     Select(CanvasSelectionKind::Connection, connectionId);
                 });
 
-            visual.Pill = pill;
+            visual.Pill = pill.Panel;
+            visual.PillShape = pill.Shape;
             visual.PillText = pillText;
 
             m_connections.push_back(std::move(visual));
@@ -967,6 +2199,7 @@ namespace midipatchbay
             ApplyConnectionAppearance(visual);
         }
     }
+    MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the connections.")
 
     void PatchCanvas::RedrawConnections() noexcept
     {
@@ -986,11 +2219,13 @@ namespace midipatchbay
                     continue;
                 }
 
-                PortKey sourceKey{ connection->SourceEndpointId, true, connection->SourceGroupIndex };
-                PortKey destinationKey{ connection->DestinationEndpointId, false, connection->DestinationGroupIndex };
+                PortKey sourceKey{ connection->SourceId, true, connection->SourceGroupIndex };
+                PortKey destinationKey{ connection->DestinationId, false, connection->DestinationGroupIndex };
 
                 auto const from = PortPoint(sourceKey);
                 auto const to = PortPoint(destinationKey);
+
+                visual.Samples.clear();
 
                 if (!from.has_value() || !to.has_value())
                 {
@@ -1006,6 +2241,11 @@ namespace midipatchbay
                         visual.HitArea.Visibility(xaml::Visibility::Collapsed);
                     }
 
+                    if (visual.Flash != nullptr)
+                    {
+                        visual.Flash.Visibility(xaml::Visibility::Collapsed);
+                    }
+
                     if (visual.Pill != nullptr)
                     {
                         visual.Pill.Visibility(xaml::Visibility::Collapsed);
@@ -1019,6 +2259,11 @@ namespace midipatchbay
                 if (visual.HitArea != nullptr)
                 {
                     visual.HitArea.Visibility(xaml::Visibility::Visible);
+                }
+
+                if (visual.Flash != nullptr)
+                {
+                    visual.Flash.Visibility(xaml::Visibility::Visible);
                 }
 
                 if (visual.Pill != nullptr)
@@ -1075,9 +2320,31 @@ namespace midipatchbay
 
                 visual.Line.Data(buildGeometry());
 
+                // The same curves, as points, for finding what a drop landed on.
+                if (to->X < from->X + 20)
+                {
+                    auto const bow = static_cast<float>(std::max(from->Y, to->Y) + 130.0);
+                    auto const mid = (from->X + to->X) / 2;
+
+                    AppendCurveSamples(visual.Samples, from.value(),
+                        foundation::Point{ from->X + 90, from->Y }, foundation::Point{ mid + 80, bow }, foundation::Point{ mid, bow });
+                    AppendCurveSamples(visual.Samples, foundation::Point{ mid, bow },
+                        foundation::Point{ mid - 80, bow }, foundation::Point{ to->X - 90, to->Y }, to.value());
+                }
+                else
+                {
+                    AppendCurveSamples(visual.Samples, from.value(),
+                        foundation::Point{ from->X + reach, from->Y }, foundation::Point{ to->X - reach, to->Y }, to.value());
+                }
+
                 if (visual.HitArea != nullptr)
                 {
                     visual.HitArea.Data(buildGeometry());
+                }
+
+                if (visual.Flash != nullptr)
+                {
+                    visual.Flash.Data(buildGeometry());
                 }
 
                 if (visual.Glow != nullptr)
@@ -1088,19 +2355,43 @@ namespace midipatchbay
 
                 if (visual.PillText != nullptr)
                 {
-                    visual.PillText.Text(connection->SourceGroupIndex == AllGroups &&
-                        connection->DestinationGroupIndex == AllGroups
-                        ? resources::GetString(L"ConnectionPillAllGroups")
-                        : resources::FormatString(L"ConnectionPillFormat",
-                            connection->SourceGroupIndex == AllGroups
-                                ? std::wstring{ resources::GetString(L"ConnectionPillAny") }
-                                : std::to_wstring(connection->SourceGroupIndex + 1),
+                    auto const sourceIsBlock = m_patch->IsBlock(connection->SourceId);
+                    auto const destinationIsBlock = m_patch->IsBlock(connection->DestinationId);
+
+                    winrt::hstring pill{};
+
+                    if (!sourceIsBlock && !destinationIsBlock)
+                    {
+                        pill = connection->SourceGroupIndex == AllGroups &&
                             connection->DestinationGroupIndex == AllGroups
-                                ? std::wstring{ resources::GetString(L"ConnectionPillSame") }
-                                : std::to_wstring(connection->DestinationGroupIndex + 1)));
+                            ? resources::GetString(L"ConnectionPillAllGroups")
+                            : resources::FormatString(L"ConnectionPillFormat",
+                                connection->SourceGroupIndex == AllGroups
+                                    ? std::wstring{ resources::GetString(L"ConnectionPillAny") }
+                                    : std::to_wstring(connection->SourceGroupIndex + 1),
+                                connection->DestinationGroupIndex == AllGroups
+                                    ? std::wstring{ resources::GetString(L"ConnectionPillSame") }
+                                    : std::to_wstring(connection->DestinationGroupIndex + 1));
+                    }
+                    else if (!sourceIsBlock && connection->SourceGroupIndex != AllGroups)
+                    {
+                        // Only an endpoint end has a group, so only that end can say one.
+                        pill = resources::FormatString(L"ConnectionPillFromGroupFormat", connection->SourceGroupIndex + 1);
+                    }
+                    else if (!destinationIsBlock && connection->DestinationGroupIndex != AllGroups)
+                    {
+                        pill = resources::FormatString(L"ConnectionPillToGroupFormat", connection->DestinationGroupIndex + 1);
+                    }
+
+                    visual.PillText.Text(pill);
+
+                    if (visual.Pill != nullptr)
+                    {
+                        visual.Pill.Visibility(pill.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+                    }
                 }
 
-                if (visual.Pill != nullptr)
+                if (visual.Pill != nullptr && visual.Pill.Visibility() == xaml::Visibility::Visible)
                 {
                     visual.Pill.Measure(foundation::Size{ 400, 40 });
 
@@ -1126,12 +2417,131 @@ namespace midipatchbay
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw the connections.")
+
+        RedrawAnswerPaths();
+    }
+
+    void PatchCanvas::BuildAnswerPaths() noexcept
+    {
+        try
+        {
+            for (auto const& node : m_nodes)
+            {
+                for (auto const& endpointId : node.AnsweredEndpointIds)
+                {
+                    AnswerPathVisual visual{};
+                    visual.ResponderId = node.NodeId;
+                    visual.EndpointId = endpointId;
+
+                    visual.Line = shapes::Path{};
+                    visual.Line.StrokeDashArray(MakeDashArray(4.0, 3.0));
+                    visual.Line.StrokeLineJoin(media::PenLineJoin::Round);
+                    visual.Line.IsHitTestVisible(false);
+
+                    controls::Canvas::SetZIndex(visual.Line, LineZIndex);
+
+                    m_connectionLayer.Children().Append(visual.Line);
+
+                    visual.Flash = shapes::Path{};
+                    visual.Flash.StrokeThickness(4.0);
+                    visual.Flash.StrokeLineJoin(media::PenLineJoin::Round);
+                    visual.Flash.Stroke(CategoryBrush(BlockCategory::CapabilityInquiry));
+                    visual.Flash.IsHitTestVisible(false);
+                    visual.Flash.Opacity(0.0);
+
+                    controls::Canvas::SetZIndex(visual.Flash, GlowZIndex);
+
+                    m_connectionLayer.Children().Append(visual.Flash);
+                    m_answerPaths.push_back(std::move(visual));
+                }
+            }
+
+            ApplyAnswerPathAppearance();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build where the answers go.")
+    }
+
+    void PatchCanvas::RedrawAnswerPaths() noexcept
+    {
+        try
+        {
+            for (auto& visual : m_answerPaths)
+            {
+                auto const* responder = FindNode(visual.ResponderId);
+                auto const* endpoint = FindNode(visual.EndpointId);
+                auto const responderOrigin = NodePosition(visual.ResponderId);
+                auto const endpointOrigin = NodePosition(visual.EndpointId);
+                auto const to = PortPoint(PortKey{ visual.EndpointId, false, AllGroups });
+
+                if (responder == nullptr || endpoint == nullptr || responder->AnswersDot == nullptr ||
+                    !responderOrigin.has_value() || !endpointOrigin.has_value() || !to.has_value())
+                {
+                    visual.Line.Visibility(xaml::Visibility::Collapsed);
+                    visual.Flash.Visibility(xaml::Visibility::Collapsed);
+                    continue;
+                }
+
+                foundation::Point const from{
+                    responderOrigin->X + static_cast<float>(responder->AnswersOffsetX),
+                    responderOrigin->Y + static_cast<float>(responder->AnswersOffsetY) };
+
+                auto const heightOf = [](NodeVisual const& node)
+                    {
+                        return node.Height > 0 ? node.Height : (node.IsBlock ? BlockFallbackHeight : EndpointFallbackHeight);
+                    };
+
+                // Down from the responder, along under both nodes, up the endpoint's left side and into its In.
+                auto const floor = static_cast<float>(std::max(
+                    responderOrigin->Y + heightOf(*responder),
+                    endpointOrigin->Y + heightOf(*endpoint)) + AnswerPathClearance);
+                auto const side = static_cast<float>(std::max(to->X - AnswerPathLead, 2.0));
+
+                std::vector<foundation::Point> const corners{
+                    from,
+                    foundation::Point{ from.X, floor },
+                    foundation::Point{ side, floor },
+                    foundation::Point{ side, to->Y },
+                    to.value() };
+
+                // Twice: a geometry can be the Data of only one path.
+                visual.Line.Data(MakeRoundedPolyline(corners, AnswerPathCornerRadius));
+                visual.Flash.Data(MakeRoundedPolyline(corners, AnswerPathCornerRadius));
+
+                visual.Line.Visibility(xaml::Visibility::Visible);
+                visual.Flash.Visibility(xaml::Visibility::Visible);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw where the answers go.")
+    }
+
+    void PatchCanvas::ApplyAnswerPathAppearance() noexcept
+    {
+        try
+        {
+            auto const brush = CategoryBrush(BlockCategory::CapabilityInquiry, 0.9);
+
+            for (auto& visual : m_answerPaths)
+            {
+                if (visual.Line == nullptr)
+                {
+                    continue;
+                }
+
+                auto const selected = IsNodeSelected(visual.ResponderId) || IsNodeSelected(visual.EndpointId);
+
+                visual.Line.Stroke(brush);
+                visual.Line.StrokeThickness(selected ? 2.5 : 1.5);
+                visual.Line.Opacity(m_tracing ? TraceFadedOpacity / 2 : 1.0);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw where the answers go.")
     }
 
     _Use_decl_annotations_
     void PatchCanvas::ApplyNodeAppearance(NodeVisual& node) noexcept
+    try
     {
-        if (node.Root == nullptr)
+        if (node.Root == nullptr || node.Card == nullptr || node.Edge == nullptr)
         {
             return;
         }
@@ -1139,20 +2549,74 @@ namespace midipatchbay
         auto const critical = ThemeBrush(L"SystemFillColorCriticalBrush", Rgb(0xFF, 0x99, 0xA4));
         auto const accent = ThemeBrush(L"AccentFillColorDefaultBrush", Rgb(0x60, 0xCD, 0xFF));
         auto const stroke = ThemeBrush(L"CardStrokeColorDefaultBrush", Rgb(0x40, 0x40, 0x40));
+        auto const tertiary = ThemeBrush(L"TextFillColorTertiaryBrush", Rgb(0x90, 0x90, 0x90));
 
-        auto const selected = m_selectionKind == CanvasSelectionKind::Endpoint &&
-            m_selectedEndpointId == node.EndpointId;
+        auto const selected = IsNodeSelected(node.NodeId);
 
-        node.Root.BorderBrush(selected ? accent : (node.IsOffline ? critical : stroke));
-        node.Root.BorderThickness(xaml::ThicknessHelper::FromUniformLength(selected ? 2.0 : 1.0));
+        // Text has no edge of its own, so only a selected annotation shows one.
+        if (node.IsAnnotation)
+        {
+            SetRoundedEdge(node.Edge, AnnotationCornerRadius,
+                selected ? accent : media::SolidColorBrush{ Rgb(0, 0, 0, 0) }, 1.5);
+            return;
+        }
 
-        // Lifting the card casts the shadow, which reads as selection without relying on the
-        // border color alone.
-        node.Root.Translation(winrt::Windows::Foundation::Numerics::float3{ 0, 0, selected ? 28.0f : 0.0f });
+        media::Brush edge{ nullptr };
+
+        if (node.IsBlock)
+        {
+            // The edge carries the category, so a filter and a transform are told apart at a
+            // glance; a bypassed block keeps only its dashed outline.
+            edge = selected
+                ? accent
+                : (node.IsBypassed ? media::SolidColorBrush{ Rgb(0, 0, 0, 0) } : CategoryBrush(node.Category, 0.55));
+
+            if (node.DashedOutline != nullptr)
+            {
+                node.DashedOutline.Stroke(tertiary);
+            }
+        }
+        else
+        {
+            edge = selected ? accent : (node.IsOffline ? critical : stroke);
+        }
+
+        auto thickness = selected ? 2.0 : 1.0;
+
+        // A trace marks where the message went and where it was kept out, and fades the rest.
+        if (m_tracing)
+        {
+            auto const keptOut = m_traceKeptOutIds.count(node.NodeId) != 0;
+            auto const reached = m_traceNodeIds.count(node.NodeId) != 0;
+
+            if (keptOut)
+            {
+                edge = critical;
+                thickness = 2.5;
+            }
+            else if (reached)
+            {
+                edge = ThemeBrush(L"SystemFillColorSuccessBrush", Rgb(0x6C, 0xCB, 0x5F));
+                thickness = 2.5;
+            }
+
+            node.Root.Opacity(keptOut || reached || selected ? 1.0 : TraceFadedOpacity);
+        }
+        else
+        {
+            node.Root.Opacity(1.0);
+        }
+
+        SetRoundedEdge(node.Edge, node.IsBlock ? BlockCornerRadius : NodeCornerRadius, edge, thickness);
+
+        // The lift is what casts the shadow.
+        node.Card.Translation(winrt::Windows::Foundation::Numerics::float3{ 0, 0, selected ? SelectedNodeLift : 0.0f });
     }
+    MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw a node.")
 
     _Use_decl_annotations_
     void PatchCanvas::ApplyConnectionAppearance(ConnectionVisual& visual) noexcept
+    try
     {
         if (visual.Line == nullptr)
         {
@@ -1167,14 +2631,17 @@ namespace midipatchbay
         // depend on judging two widths against each other.
         auto const selectedStroke = ThemeBrush(L"TextFillColorPrimaryBrush", Rgb(0xFF, 0xFF, 0xFF));
 
-        auto const selected = m_selectionKind == CanvasSelectionKind::Connection &&
-            m_selectedConnectionId == visual.ConnectionId;
+        auto const selected = (m_selectionKind == CanvasSelectionKind::Connection &&
+            m_selectedConnectionId == visual.ConnectionId) || IsLinkInSelectedGroup(visual.ConnectionId);
+
+        // A block being dragged from the palette would go into this one.
+        auto const dropTarget = !m_dropTargetConnectionId.empty() && m_dropTargetConnectionId == visual.ConnectionId;
 
         if (visual.Glow != nullptr)
         {
-            visual.Glow.Visibility(selected ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            visual.Glow.Visibility(selected || dropTarget ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             visual.Glow.Stroke(visual.IsLoopMuted ? critical : accent);
-            visual.Glow.Opacity(0.35);
+            visual.Glow.Opacity(dropTarget ? 0.6 : 0.35);
         }
 
         if (visual.IsLoopMuted)
@@ -1197,11 +2664,45 @@ namespace midipatchbay
             visual.Line.Opacity(selected ? 1.0 : 0.72);
         }
 
+        if (visual.PillShape != nullptr)
+        {
+            visual.PillShape.Stroke(visual.IsLoopMuted ? critical : (selected ? accent : stroke));
+        }
+
+        auto const onTrace = m_tracing && m_traceLinkIds.count(visual.ConnectionId) != 0;
+
+        // A trace draws the message's path over everything else, and fades the links it didn't use.
+        if (onTrace)
+        {
+            auto const traced = ThemeBrush(L"SystemFillColorSuccessBrush", Rgb(0x6C, 0xCB, 0x5F));
+
+            visual.Line.Stroke(traced);
+            visual.Line.StrokeThickness(3.5);
+            visual.Line.StrokeDashArray(nullptr);
+            visual.Line.Opacity(1.0);
+
+            if (visual.Glow != nullptr)
+            {
+                visual.Glow.Visibility(xaml::Visibility::Visible);
+                visual.Glow.Stroke(traced);
+                visual.Glow.Opacity(0.45);
+            }
+        }
+        else if (m_tracing)
+        {
+            visual.Line.Opacity(TraceFadedOpacity / 2);
+        }
+        else if (visual.IsLoopMuted || visual.IsMuted)
+        {
+            visual.Line.Opacity(1.0);
+        }
+
         if (visual.Pill != nullptr)
         {
-            visual.Pill.BorderBrush(visual.IsLoopMuted ? critical : (selected ? accent : stroke));
+            visual.Pill.Opacity(m_tracing && !onTrace ? TraceFadedOpacity : 1.0);
         }
     }
+    MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw a connection.")
 
     _Use_decl_annotations_
     void PatchCanvas::RefreshStatus(std::unordered_map<std::wstring, RouteStats> const& stats) noexcept
@@ -1213,6 +2714,12 @@ namespace midipatchbay
                 auto const it = stats.find(visual.ConnectionId);
 
                 if (visual.Line == nullptr)
+                {
+                    continue;
+                }
+
+                // A trace decides how faint a link is while it is up.
+                if (m_tracing)
                 {
                     continue;
                 }
@@ -1229,11 +2736,25 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    void PatchCanvas::Select(CanvasSelectionKind kind, std::wstring const& id) noexcept
+    void PatchCanvas::ShowTrace(
+        std::vector<std::wstring> const& nodeIds,
+        std::vector<std::wstring> const& linkIds,
+        std::vector<std::wstring> const& keptOutIds) noexcept
     {
-        m_selectionKind = kind;
-        m_selectedEndpointId = kind == CanvasSelectionKind::Endpoint ? id : std::wstring{};
-        m_selectedConnectionId = kind == CanvasSelectionKind::Connection ? id : std::wstring{};
+        try
+        {
+            m_traceNodeIds = { nodeIds.begin(), nodeIds.end() };
+            m_traceLinkIds = { linkIds.begin(), linkIds.end() };
+            m_traceKeptOutIds = { keptOutIds.begin(), keptOutIds.end() };
+            m_tracing = true;
+        }
+        catch (...)
+        {
+            m_traceNodeIds.clear();
+            m_traceLinkIds.clear();
+            m_traceKeptOutIds.clear();
+            m_tracing = false;
+        }
 
         for (auto& node : m_nodes)
         {
@@ -1244,6 +2765,221 @@ namespace midipatchbay
         {
             ApplyConnectionAppearance(visual);
         }
+
+        ApplyAnswerPathAppearance();
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::LightUp(std::vector<std::wstring> const& ids) noexcept
+    {
+        try
+        {
+            if (m_patch == nullptr || m_tracing || ids.empty())
+            {
+                return;
+            }
+
+            constexpr std::wstring_view repliesSuffix{ L"|replies" };
+
+            std::vector<std::wstring> nodes{};
+
+            auto const addNode = [&nodes](std::wstring const& id)
+                {
+                    if (std::find(nodes.begin(), nodes.end(), id) == nodes.end())
+                    {
+                        nodes.push_back(id);
+                    }
+                };
+
+            for (auto const& id : ids)
+            {
+                if (id.size() > repliesSuffix.size() && id.ends_with(repliesSuffix))
+                {
+                    auto const endpointId = id.substr(0, id.size() - repliesSuffix.size());
+
+                    for (auto const& path : m_answerPaths)
+                    {
+                        if (path.EndpointId == endpointId && path.Flash != nullptr)
+                        {
+                            FadeOut(path.Flash, LightUpMilliseconds);
+                            addNode(path.ResponderId);
+                        }
+                    }
+
+                    addNode(endpointId);
+                    continue;
+                }
+
+                if (auto const* connection = m_patch->FindConnection(id))
+                {
+                    for (auto const& visual : m_connections)
+                    {
+                        if (visual.ConnectionId == id && visual.Flash != nullptr)
+                        {
+                            FadeOut(visual.Flash, LightUpMilliseconds);
+                            break;
+                        }
+                    }
+
+                    addNode(connection->SourceId);
+                    addNode(connection->DestinationId);
+                    continue;
+                }
+
+                if (m_patch->IsBlock(id))
+                {
+                    addNode(id);
+                }
+            }
+
+            for (auto const& nodeId : nodes)
+            {
+                auto const* node = FindNode(nodeId);
+                auto const origin = NodePosition(nodeId);
+
+                if (node == nullptr || node->IsAnnotation || !origin.has_value())
+                {
+                    continue;
+                }
+
+                // Behind the node, in the connection layer, so a rebuild takes it away with the rest.
+                // Not operator[]: a default-constructed Rectangle is a new one, never null.
+                auto found = m_nodeHalos.find(nodeId);
+
+                if (found == m_nodeHalos.end())
+                {
+                    shapes::Rectangle created{};
+                    created.IsHitTestVisible(false);
+                    created.UseLayoutRounding(false);
+                    created.StrokeThickness(3.0);
+                    created.Opacity(0.0);
+
+                    controls::Canvas::SetZIndex(created, GlowZIndex);
+                    m_connectionLayer.Children().Append(created);
+
+                    found = m_nodeHalos.emplace(nodeId, created).first;
+                }
+
+                auto const& halo = found->second;
+
+                auto const height = node->Height > 0
+                    ? node->Height
+                    : (node->IsBlock ? BlockFallbackHeight : EndpointFallbackHeight);
+                auto const radius = (node->IsBlock ? BlockCornerRadius : NodeCornerRadius) + HaloReach;
+
+                halo.Width(node->Width + 2 * HaloReach);
+                halo.Height(height + 2 * HaloReach);
+                halo.RadiusX(radius);
+                halo.RadiusY(radius);
+                halo.Stroke(node->IsBlock
+                    ? CategoryBrush(node->Category)
+                    : ThemeBrush(L"AccentFillColorDefaultBrush", Rgb(0x60, 0xCD, 0xFF)));
+
+                controls::Canvas::SetLeft(halo, origin->X - HaloReach);
+                controls::Canvas::SetTop(halo, origin->Y - HaloReach);
+
+                FadeOut(halo, LightUpMilliseconds);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to light up the routing.")
+    }
+
+    void PatchCanvas::ClearTrace() noexcept
+    {
+        if (!m_tracing)
+        {
+            return;
+        }
+
+        m_tracing = false;
+        m_traceNodeIds.clear();
+        m_traceLinkIds.clear();
+        m_traceKeptOutIds.clear();
+
+        for (auto& node : m_nodes)
+        {
+            ApplyNodeAppearance(node);
+        }
+
+        for (auto& visual : m_connections)
+        {
+            ApplyConnectionAppearance(visual);
+        }
+
+        ApplyAnswerPathAppearance();
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::Select(CanvasSelectionKind kind, std::wstring const& id) noexcept
+    {
+        try
+        {
+            m_selectionKind = id.empty() ? CanvasSelectionKind::None : kind;
+            m_selectedNodeId = kind == CanvasSelectionKind::Endpoint || kind == CanvasSelectionKind::Block ? id : std::wstring{};
+            m_selectedConnectionId = kind == CanvasSelectionKind::Connection ? id : std::wstring{};
+
+            m_selectedNodeIds.clear();
+
+            if (!m_selectedNodeId.empty())
+            {
+                m_selectedNodeIds.push_back(m_selectedNodeId);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to change the selection.")
+
+        for (auto& node : m_nodes)
+        {
+            ApplyNodeAppearance(node);
+        }
+
+        for (auto& visual : m_connections)
+        {
+            ApplyConnectionAppearance(visual);
+        }
+
+        ApplyAnswerPathAppearance();
+
+        if (m_callbacks.SelectionChanged)
+        {
+            m_callbacks.SelectionChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::SelectNodes(std::vector<std::wstring> const& nodeIds) noexcept
+    {
+        try
+        {
+            m_selectedNodeIds.clear();
+
+            for (auto const& id : nodeIds)
+            {
+                if (FindNode(id) != nullptr && !IsNodeSelected(id))
+                {
+                    m_selectedNodeIds.push_back(id);
+                }
+            }
+
+            m_selectedConnectionId.clear();
+            m_selectedNodeId = m_selectedNodeIds.empty() ? std::wstring{} : m_selectedNodeIds.back();
+
+            m_selectionKind = m_selectedNodeId.empty()
+                ? CanvasSelectionKind::None
+                : (m_patch != nullptr && m_patch->IsBlock(m_selectedNodeId) ? CanvasSelectionKind::Block : CanvasSelectionKind::Endpoint);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to select several nodes.")
+
+        for (auto& node : m_nodes)
+        {
+            ApplyNodeAppearance(node);
+        }
+
+        for (auto& visual : m_connections)
+        {
+            ApplyConnectionAppearance(visual);
+        }
+
+        ApplyAnswerPathAppearance();
 
         if (m_callbacks.SelectionChanged)
         {
@@ -1257,24 +2993,237 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
+    void PatchCanvas::BeginBand(input::PointerRoutedEventArgs const& args) noexcept
+    {
+        try
+        {
+            auto const point = args.GetCurrentPoint(m_surface);
+            auto const modifiers = args.KeyModifiers();
+
+            auto const adds =
+                (modifiers & winrt::Windows::System::VirtualKeyModifiers::Control) == winrt::Windows::System::VirtualKeyModifiers::Control ||
+                (modifiers & winrt::Windows::System::VirtualKeyModifiers::Shift) == winrt::Windows::System::VirtualKeyModifiers::Shift;
+
+            // A finger pans the canvas, so only a mouse or a pen draws a band.
+            if (args.Pointer().PointerDeviceType() == winrt::Microsoft::UI::Input::PointerDeviceType::Touch ||
+                !point.Properties().IsLeftButtonPressed())
+            {
+                if (!adds)
+                {
+                    ClearSelection();
+                }
+
+                return;
+            }
+
+            m_banding = true;
+            m_bandAdds = adds;
+            m_bandStart = point.Position();
+            m_bandBaseSelection = adds ? m_selectedNodeIds : std::vector<std::wstring>{};
+
+            // Read each time, so the band follows the accent color.
+            auto const accent = ThemeBrush(L"AccentFillColorDefaultBrush", Rgb(0x60, 0xCD, 0xFF));
+            m_bandRectangle.Stroke(accent);
+
+            if (auto const solid = accent.try_as<media::SolidColorBrush>())
+            {
+                auto color = solid.Color();
+                color.A = 0x26;
+                m_bandRectangle.Fill(media::SolidColorBrush{ color });
+            }
+
+            UpdateBand(m_bandStart);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to start a selection band.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::UpdateBand(foundation::Point const& point) noexcept
+    {
+        try
+        {
+            if (!m_banding)
+            {
+                return;
+            }
+
+            auto const left = std::min(m_bandStart.X, point.X);
+            auto const top = std::min(m_bandStart.Y, point.Y);
+            auto const zoom = m_scrollViewer != nullptr && m_scrollViewer.ZoomFactor() > 0 ? m_scrollViewer.ZoomFactor() : 1.0f;
+
+            controls::Canvas::SetLeft(m_bandRectangle, left);
+            controls::Canvas::SetTop(m_bandRectangle, top);
+            m_bandRectangle.Width(std::abs(point.X - m_bandStart.X));
+            m_bandRectangle.Height(std::abs(point.Y - m_bandStart.Y));
+
+            // One pixel on screen, whatever the zoom.
+            m_bandRectangle.StrokeThickness(1.0 / zoom);
+            m_bandRectangle.Visibility(xaml::Visibility::Visible);
+
+            // Shown as selected while the band moves, and only made the selection when it's let go,
+            // so the details panel isn't rebuilt on every move.
+            m_selectedNodeIds = NodesInBand(point);
+
+            for (auto& node : m_nodes)
+            {
+                ApplyNodeAppearance(node);
+            }
+
+            for (auto& visual : m_connections)
+            {
+                ApplyConnectionAppearance(visual);
+            }
+
+            ApplyAnswerPathAppearance();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw the selection band.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::EndBand(foundation::Point const& point) noexcept
+    {
+        if (!m_banding)
+        {
+            return;
+        }
+
+        m_banding = false;
+
+        try
+        {
+            m_bandRectangle.Visibility(xaml::Visibility::Collapsed);
+
+            // Hardly moved on screen: a click on empty canvas, which lets go of the selection.
+            auto const zoom = m_scrollViewer != nullptr && m_scrollViewer.ZoomFactor() > 0 ? m_scrollViewer.ZoomFactor() : 1.0f;
+            auto const slop = 4.0f / zoom;
+
+            if (std::abs(point.X - m_bandStart.X) < slop && std::abs(point.Y - m_bandStart.Y) < slop)
+            {
+                if (m_bandAdds)
+                {
+                    SelectNodes(m_bandBaseSelection);
+                }
+                else
+                {
+                    ClearSelection();
+                }
+
+                return;
+            }
+
+            SelectNodes(NodesInBand(point));
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to finish the selection band.")
+    }
+
+    _Use_decl_annotations_
+    std::vector<std::wstring> PatchCanvas::NodesInBand(foundation::Point const& point) const noexcept
+    {
+        std::vector<std::wstring> selected{};
+
+        try
+        {
+            selected = m_bandBaseSelection;
+
+            auto const left = std::min(m_bandStart.X, point.X);
+            auto const top = std::min(m_bandStart.Y, point.Y);
+            auto const right = std::max(m_bandStart.X, point.X);
+            auto const bottom = std::max(m_bandStart.Y, point.Y);
+
+            for (auto const& node : m_nodes)
+            {
+                auto const origin = NodePosition(node.NodeId);
+
+                if (!origin.has_value())
+                {
+                    continue;
+                }
+
+                auto const height = node.Height > 0
+                    ? node.Height
+                    : (node.IsBlock ? BlockFallbackHeight : EndpointFallbackHeight);
+
+                // Touching it is enough.
+                auto const touches = origin->X <= right && origin->X + node.Width >= left &&
+                    origin->Y <= bottom && origin->Y + height >= top;
+
+                if (touches && std::find(selected.begin(), selected.end(), node.NodeId) == selected.end())
+                {
+                    selected.push_back(node.NodeId);
+                }
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to find what the selection band touches.")
+
+        return selected;
+    }
+
+    _Use_decl_annotations_
+    bool PatchCanvas::IsLinkInSelectedGroup(std::wstring const& connectionId) const noexcept
+    {
+        if (m_patch == nullptr || m_selectedNodeIds.size() < 2)
+        {
+            return false;
+        }
+
+        auto const* connection = m_patch->FindConnection(connectionId);
+
+        return connection != nullptr && IsNodeSelected(connection->SourceId) && IsNodeSelected(connection->DestinationId);
+    }
+
+    _Use_decl_annotations_
     void PatchCanvas::OnNodePointerPressed(
-        std::wstring const& endpointId,
+        std::wstring const& nodeId,
         input::PointerRoutedEventArgs const& args) noexcept
     {
         try
         {
-            Select(CanvasSelectionKind::Endpoint, endpointId);
-
             if (m_patch == nullptr)
             {
                 return;
             }
 
-            auto const* endpoint = m_patch->FindEndpoint(endpointId);
+            auto const kind = m_patch->IsBlock(nodeId) ? CanvasSelectionKind::Block : CanvasSelectionKind::Endpoint;
 
-            if (endpoint == nullptr)
+            auto const modifiers = args.KeyModifiers();
+            auto const control = (modifiers & winrt::Windows::System::VirtualKeyModifiers::Control) ==
+                winrt::Windows::System::VirtualKeyModifiers::Control;
+            auto const shift = (modifiers & winrt::Windows::System::VirtualKeyModifiers::Shift) ==
+                winrt::Windows::System::VirtualKeyModifiers::Shift;
+
+            if (control || shift)
             {
+                // Ctrl or Shift adds a node to what is selected, or takes it away again.
+                auto next = m_selectedNodeIds;
+
+                if (IsNodeSelected(nodeId))
+                {
+                    std::erase(next, nodeId);
+                }
+                else
+                {
+                    next.push_back(nodeId);
+                }
+
+                SelectNodes(next);
                 return;
+            }
+
+            if (!IsNodeSelected(nodeId))
+            {
+                Select(kind, nodeId);
+            }
+            else if (m_selectedNodeId != nodeId)
+            {
+                // Pressing one of several selected nodes makes it the one the inspector shows,
+                // and keeps the rest so they can be dragged together.
+                m_selectedNodeId = nodeId;
+                m_selectionKind = kind;
+
+                if (m_callbacks.SelectionChanged)
+                {
+                    m_callbacks.SelectionChanged();
+                }
             }
 
             auto const point = args.GetCurrentPoint(m_surface);
@@ -1285,10 +3234,16 @@ namespace midipatchbay
             }
 
             m_draggingNode = true;
-            m_dragNodeId = endpointId;
             m_dragStartPointer = point.Position();
-            m_dragStartX = endpoint->CanvasX;
-            m_dragStartY = endpoint->CanvasY;
+            m_dragStartPositions.clear();
+
+            for (auto const& id : m_selectedNodeIds)
+            {
+                if (auto const position = NodePosition(id))
+                {
+                    m_dragStartPositions.emplace_back(id, position.value());
+                }
+            }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to start a node drag.")
     }
@@ -1298,12 +3253,37 @@ namespace midipatchbay
     {
         try
         {
+            if (m_banding)
+            {
+                auto const point = args.GetCurrentPoint(m_surface);
+
+                // The button came up somewhere this never heard about.
+                if (!point.Properties().IsLeftButtonPressed())
+                {
+                    EndBand(point.Position());
+                    return;
+                }
+
+                UpdateBand(point.Position());
+                return;
+            }
+
             if (!m_draggingNode && !m_draggingConnection)
             {
                 return;
             }
 
-            ApplyDragPosition(args.GetCurrentPoint(m_surface).Position());
+            auto const point = args.GetCurrentPoint(m_surface);
+
+            // The release went somewhere else, such as a dialog that opened in the middle of the
+            // drag. A cord can be drawn with two clicks, so only a node drag ends here.
+            if (m_draggingNode && !point.Properties().IsLeftButtonPressed())
+            {
+                FinishNodeDrag();
+                return;
+            }
+
+            ApplyDragPosition(point.Position());
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to move a node.")
     }
@@ -1319,27 +3299,28 @@ namespace midipatchbay
                 return;
             }
 
-            auto* node = FindNode(m_dragNodeId);
-
-            if (node == nullptr || node->Root == nullptr || m_patch == nullptr)
+            if (m_patch == nullptr || m_dragStartPositions.empty())
             {
                 return;
             }
 
-            // The model is const to the canvas everywhere else; this is the one place it moves,
-            // and the window is told so it can mark the patch unsaved.
-            auto* endpoint = const_cast<PatchDocument*>(m_patch)->FindEndpoint(m_dragNodeId);
+            // The group moves as one, so it stops at the edge as a whole rather than squashing.
+            double left{ std::numeric_limits<double>::max() };
+            double top{ std::numeric_limits<double>::max() };
 
-            if (endpoint == nullptr)
+            for (auto const& [id, start] : m_dragStartPositions)
             {
-                return;
+                left = std::min(left, static_cast<double>(start.X));
+                top = std::min(top, static_cast<double>(start.Y));
             }
 
-            endpoint->CanvasX = std::max(0.0, m_dragStartX + (position.X - m_dragStartPointer.X));
-            endpoint->CanvasY = std::max(0.0, m_dragStartY + (position.Y - m_dragStartPointer.Y));
+            auto const dx = std::max(-left, static_cast<double>(position.X - m_dragStartPointer.X));
+            auto const dy = std::max(-top, static_cast<double>(position.Y - m_dragStartPointer.Y));
 
-            controls::Canvas::SetLeft(node->Root, endpoint->CanvasX);
-            controls::Canvas::SetTop(node->Root, endpoint->CanvasY);
+            for (auto const& [id, start] : m_dragStartPositions)
+            {
+                SetNodePosition(id, start.X + dx, start.Y + dy);
+            }
 
             RedrawConnections();
             UpdateMinimap();
@@ -1352,6 +3333,12 @@ namespace midipatchbay
     {
         try
         {
+            if (m_banding)
+            {
+                EndBand(args.GetCurrentPoint(m_surface).Position());
+                return;
+            }
+
             // Move events are coalesced and a quick drag can deliver none near the target, so
             // where the button came up is what decides the result, for cords and nodes alike.
             if (m_draggingConnection || m_draggingNode)
@@ -1365,6 +3352,15 @@ namespace midipatchbay
                 return;
             }
 
+            FinishNodeDrag();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to finish a node drag.")
+    }
+
+    void PatchCanvas::FinishNodeDrag() noexcept
+    {
+        try
+        {
             if (!m_draggingNode)
             {
                 return;
@@ -1375,7 +3371,17 @@ namespace midipatchbay
             UpdateExtent();
             UpdateMinimap();
 
-            if (m_callbacks.LayoutChanged)
+            // A press that never moved anything is a click: nothing to save, nothing to undo.
+            auto const moved = std::any_of(m_dragStartPositions.begin(), m_dragStartPositions.end(),
+                [this](auto const& entry)
+                {
+                    auto const now = NodePosition(entry.first);
+                    return now.has_value() && (now->X != entry.second.X || now->Y != entry.second.Y);
+                });
+
+            m_dragStartPositions.clear();
+
+            if (moved && m_callbacks.LayoutChanged)
             {
                 m_callbacks.LayoutChanged();
             }
@@ -1396,10 +3402,14 @@ namespace midipatchbay
         auto const anchor = PortPoint(key);
         m_dragAnchor = anchor.value_or(foundation::Point{});
 
-        if (m_dragLine != nullptr)
+        try
         {
-            m_dragLine.Visibility(xaml::Visibility::Visible);
+            if (m_dragLine != nullptr)
+            {
+                m_dragLine.Visibility(xaml::Visibility::Visible);
+            }
         }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the connection being drawn.")
 
         RefreshPortAppearance();
     }
@@ -1423,8 +3433,8 @@ namespace midipatchbay
 
             // The end that is NOT moving stays pinned, so the line rubber bands from there.
             auto const anchor = movingSource
-                ? PortPoint(PortKey{ connection->DestinationEndpointId, false, connection->DestinationGroupIndex })
-                : PortPoint(PortKey{ connection->SourceEndpointId, true, connection->SourceGroupIndex });
+                ? PortPoint(PortKey{ connection->DestinationId, false, connection->DestinationGroupIndex })
+                : PortPoint(PortKey{ connection->SourceId, true, connection->SourceGroupIndex });
 
             if (!anchor.has_value())
             {
@@ -1463,9 +3473,9 @@ namespace midipatchbay
 
         for (auto const& node : m_nodes)
         {
-            auto const* endpoint = m_patch->FindEndpoint(node.EndpointId);
+            auto const origin = NodePosition(node.NodeId);
 
-            if (endpoint == nullptr)
+            if (!origin.has_value())
             {
                 continue;
             }
@@ -1477,8 +3487,8 @@ namespace midipatchbay
                     continue;
                 }
 
-                auto const dx = point.X - (endpoint->CanvasX + port.OffsetX);
-                auto const dy = point.Y - (endpoint->CanvasY + port.OffsetY);
+                auto const dx = point.X - (origin->X + port.OffsetX);
+                auto const dy = point.Y - (origin->Y + port.OffsetY);
                 auto const distance = std::sqrt(dx * dx + dy * dy);
 
                 if (distance < bestDistance)
@@ -1633,12 +3643,12 @@ namespace midipatchbay
 
             if (movingSource)
             {
-                updated.SourceEndpointId = port.EndpointId;
+                updated.SourceId = port.NodeId;
                 updated.SourceGroupIndex = port.GroupIndex;
             }
             else
             {
-                updated.DestinationEndpointId = port.EndpointId;
+                updated.DestinationId = port.NodeId;
                 updated.DestinationGroupIndex = port.GroupIndex;
             }
 
@@ -1711,15 +3721,32 @@ namespace midipatchbay
     // Delete is handled on the scroll viewer, which only sees it while the canvas has focus.
     void PatchCanvas::FocusCanvas() noexcept
     {
-        if (m_scrollViewer != nullptr)
+        try
         {
-            m_scrollViewer.Focus(xaml::FocusState::Pointer);
+            if (m_scrollViewer != nullptr)
+            {
+                m_scrollViewer.Focus(xaml::FocusState::Pointer);
+            }
         }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to focus the canvas.")
     }
 
     void PatchCanvas::CancelDrags() noexcept
     {
         m_draggingNode = false;
+
+        if (m_banding)
+        {
+            m_banding = false;
+
+            try
+            {
+                m_bandRectangle.Visibility(xaml::Visibility::Collapsed);
+            }
+            MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to hide the selection band.")
+
+            SelectNodes(m_bandBaseSelection);
+        }
 
         if (m_draggingConnection)
         {
@@ -1727,10 +3754,14 @@ namespace midipatchbay
             m_retargeting = false;
             m_hoverPort.reset();
 
-            if (m_dragLine != nullptr)
+            try
             {
-                m_dragLine.Visibility(xaml::Visibility::Collapsed);
+                if (m_dragLine != nullptr)
+                {
+                    m_dragLine.Visibility(xaml::Visibility::Collapsed);
+                }
             }
+            MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to hide the connection being drawn.")
 
             RefreshPortAppearance();
         }
@@ -1738,6 +3769,7 @@ namespace midipatchbay
 
     _Use_decl_annotations_
     void PatchCanvas::ApplyPortAppearance(PortVisual& port) noexcept
+    try
     {
         if (port.Dot == nullptr)
         {
@@ -1768,9 +3800,9 @@ namespace midipatchbay
             ? accent
             : ThemeBrush(L"SolidBackgroundFillColorSecondaryBrush", Rgb(0x2B, 0x2B, 0x2B)));
 
-        if (port.Row != nullptr)
+        if (port.Highlight != nullptr)
         {
-            port.Row.Background(hovered
+            port.Highlight.Fill(hovered
                 ? ThemeBrush(L"SubtleFillColorSecondaryBrush", Rgb(0xFF, 0xFF, 0xFF, 0x0F))
                 : media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
         }
@@ -1780,6 +3812,7 @@ namespace midipatchbay
             port.Label.Foreground(hovered || filled ? secondary : port.LabelBrush);
         }
     }
+    MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw a connection point.")
 
     _Use_decl_annotations_
     void PatchCanvas::RequestConnection(PortKey const& source, PortKey const& destination) noexcept
@@ -1792,9 +3825,9 @@ namespace midipatchbay
         PatchConnection candidate{};
 
         candidate.Id = PatchDocument::NewId();
-        candidate.SourceEndpointId = source.EndpointId;
+        candidate.SourceId = source.NodeId;
         candidate.SourceGroupIndex = source.GroupIndex;
-        candidate.DestinationEndpointId = destination.EndpointId;
+        candidate.DestinationId = destination.NodeId;
         candidate.DestinationGroupIndex = destination.GroupIndex;
 
         m_callbacks.ConnectionRequested(candidate);
@@ -1807,16 +3840,21 @@ namespace midipatchbay
             double right{ 0 };
             double bottom{ 0 };
 
-            if (m_patch != nullptr)
+            for (auto const& node : m_nodes)
             {
-                for (auto const& endpoint : m_patch->Endpoints)
-                {
-                    auto const* node = FindNode(endpoint.Id);
-                    auto const height = node != nullptr && node->Height > 0 ? node->Height : 200.0;
+                auto const origin = NodePosition(node.NodeId);
 
-                    right = std::max(right, endpoint.CanvasX + (node != nullptr ? node->Width : MinimumNodeWidth));
-                    bottom = std::max(bottom, endpoint.CanvasY + height);
+                if (!origin.has_value())
+                {
+                    continue;
                 }
+
+                auto const height = node.Height > 0
+                    ? node.Height
+                    : (node.IsBlock ? BlockFallbackHeight : EndpointFallbackHeight);
+
+                right = std::max(right, origin->X + node.Width);
+                bottom = std::max(bottom, origin->Y + height);
             }
 
             // The canvas is always bigger than what is on it, so there is somewhere to drag a
@@ -1847,7 +3885,7 @@ namespace midipatchbay
     {
         try
         {
-            if (m_scrollViewer == nullptr || m_patch == nullptr || m_patch->Endpoints.empty())
+            if (m_scrollViewer == nullptr || m_patch == nullptr || m_nodes.empty())
             {
                 return;
             }
@@ -1872,12 +3910,20 @@ namespace midipatchbay
                     bottom = std::max(bottom, y + height);
                 };
 
-            for (auto const& endpoint : m_patch->Endpoints)
+            for (auto const& node : m_nodes)
             {
-                auto const* node = FindNode(endpoint.Id);
-                auto const height = node != nullptr && node->Height > 0 ? node->Height : 200.0;
+                auto const origin = NodePosition(node.NodeId);
 
-                include(endpoint.CanvasX, endpoint.CanvasY, node != nullptr ? node->Width : MinimumNodeWidth, height);
+                if (!origin.has_value())
+                {
+                    continue;
+                }
+
+                auto const height = node.Height > 0
+                    ? node.Height
+                    : (node.IsBlock ? BlockFallbackHeight : EndpointFallbackHeight);
+
+                include(origin->X, origin->Y, node.Width, height);
             }
 
             // A connection back to an earlier node bows below the nodes, label and all.
@@ -1897,6 +3943,15 @@ namespace midipatchbay
 
                     include(controls::Canvas::GetLeft(visual.Pill), controls::Canvas::GetTop(visual.Pill),
                         size.Width, size.Height);
+                }
+            }
+
+            for (auto const& visual : m_answerPaths)
+            {
+                if (visual.Line != nullptr && visual.Line.Visibility() == xaml::Visibility::Visible && visual.Line.Data() != nullptr)
+                {
+                    auto const bounds = visual.Line.Data().Bounds();
+                    include(bounds.X, bounds.Y, bounds.Width, bounds.Height);
                 }
             }
 
@@ -1921,54 +3976,30 @@ namespace midipatchbay
     {
         try
         {
-            if (m_patch == nullptr || m_patch->Endpoints.empty())
+            if (m_patch == nullptr || m_nodes.empty())
             {
                 return;
             }
 
-            auto* patch = const_cast<PatchDocument*>(m_patch);
-
-            // Anything that only sends goes in the left column; everything else on the right.
-            // That is the shape nearly every patch ends up in when arranged by hand.
-            std::unordered_set<std::wstring> hasIncoming{};
-
-            for (auto const& connection : patch->Connections)
-            {
-                hasIncoming.insert(connection.DestinationEndpointId);
-            }
-
-            // The right column moves over by however much the widest node on the left grew.
-            double leftColumnWidth{ MinimumNodeWidth };
-
-            for (auto const& endpoint : patch->Endpoints)
-            {
-                auto const* node = FindNode(endpoint.Id);
-
-                if (hasIncoming.count(endpoint.Id) == 0 && node != nullptr)
+            // The real sizes, now that the nodes are built.
+            ArrangeInColumns(*const_cast<PatchDocument*>(m_patch), [this](std::wstring const& id) -> NodeSize
                 {
-                    leftColumnWidth = std::max(leftColumnWidth, node->Width);
-                }
-            }
+                    if (auto const* node = FindNode(id))
+                    {
+                        return NodeSize{ node->Width, node->Height > 0
+                            ? node->Height
+                            : (node->IsBlock ? BlockFallbackHeight : EndpointFallbackHeight) };
+                    }
 
-            double const columnX[2] = { DefaultColumnX[0], DefaultColumnX[1] + leftColumnWidth - MinimumNodeWidth };
-            double columnY[2] = { ArrangeTopMargin, ArrangeTopMargin };
+                    return EstimatedNodeSize(*m_patch, id);
+                });
 
-            for (auto& endpoint : patch->Endpoints)
+            for (auto const& node : m_nodes)
             {
-                auto const column = hasIncoming.count(endpoint.Id) != 0 ? 1 : 0;
-
-                auto const* node = FindNode(endpoint.Id);
-                auto const height = node != nullptr && node->Height > 0 ? node->Height : 200.0;
-
-                endpoint.CanvasX = columnX[column];
-                endpoint.CanvasY = columnY[column];
-
-                columnY[column] += height + ArrangeRowGap;
-
-                if (node != nullptr && node->Root != nullptr)
+                if (auto const origin = NodePosition(node.NodeId); origin.has_value() && node.Root != nullptr)
                 {
-                    controls::Canvas::SetLeft(node->Root, endpoint.CanvasX);
-                    controls::Canvas::SetTop(node->Root, endpoint.CanvasY);
+                    controls::Canvas::SetLeft(node.Root, origin->X);
+                    controls::Canvas::SetTop(node.Root, origin->Y);
                 }
             }
 
@@ -1984,6 +4015,34 @@ namespace midipatchbay
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to arrange the canvas.")
     }
 
+    _Use_decl_annotations_
+    void PatchCanvas::RefreshAnnotation(std::wstring const& blockId) noexcept
+    {
+        try
+        {
+            auto* node = FindNode(blockId);
+            auto const* block = m_patch == nullptr ? nullptr : m_patch->FindBlock(blockId);
+
+            if (node == nullptr || block == nullptr || node->AnnotationText == nullptr || node->Root == nullptr)
+            {
+                return;
+            }
+
+            ApplyAnnotationLook(node->AnnotationText, block->Settings.Annotation);
+            xaml::Automation::AutomationProperties::SetName(node->Root, node->AnnotationText.Text());
+
+            node->Root.Measure(foundation::Size{
+                std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() });
+
+            node->Width = std::ceil(node->Root.DesiredSize().Width);
+            node->Height = std::ceil(node->Root.DesiredSize().Height);
+
+            UpdateExtent();
+            UpdateMinimap();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to redraw an annotation.")
+    }
+
     void PatchCanvas::UpdateMinimap() noexcept
     {
         try
@@ -1995,7 +4054,7 @@ namespace midipatchbay
 
             m_minimap.Children().Clear();
 
-            if (m_patch == nullptr || m_patch->Endpoints.empty() || m_extent.Width <= 0 || m_extent.Height <= 0)
+            if (m_patch == nullptr || m_nodes.empty() || m_extent.Width <= 0 || m_extent.Height <= 0)
             {
                 m_minimap.Visibility(xaml::Visibility::Collapsed);
                 return;
@@ -2022,21 +4081,32 @@ namespace midipatchbay
             auto const critical = ThemeBrush(L"SystemFillColorCriticalBrush", Rgb(0xFF, 0x99, 0xA4));
             auto const nodeBrush = ThemeBrush(L"TextFillColorTertiaryBrush", Rgb(0x90, 0x90, 0x90));
 
-            for (auto const& endpoint : m_patch->Endpoints)
+            for (auto const& node : m_nodes)
             {
-                auto const* node = FindNode(endpoint.Id);
-                auto const height = node != nullptr && node->Height > 0 ? node->Height : 200.0;
+                auto const origin = NodePosition(node.NodeId);
+
+                if (!origin.has_value())
+                {
+                    continue;
+                }
+
+                auto const height = node.Height > 0
+                    ? node.Height
+                    : (node.IsBlock ? BlockFallbackHeight : EndpointFallbackHeight);
 
                 shapes::Rectangle rectangle{};
 
-                rectangle.Width(std::max(2.0, (node != nullptr ? node->Width : MinimumNodeWidth) * scale));
+                rectangle.Width(std::max(2.0, node.Width * scale));
                 rectangle.Height(std::max(2.0, height * scale));
                 rectangle.RadiusX(1);
                 rectangle.RadiusY(1);
-                rectangle.Fill(node != nullptr && node->IsOffline ? critical : nodeBrush);
+                rectangle.UseLayoutRounding(false);
+                rectangle.Fill(node.IsBlock
+                    ? CategoryBrush(node.Category)
+                    : (node.IsOffline ? critical : nodeBrush));
 
-                controls::Canvas::SetLeft(rectangle, endpoint.CanvasX * scale);
-                controls::Canvas::SetTop(rectangle, endpoint.CanvasY * scale);
+                controls::Canvas::SetLeft(rectangle, origin->X * scale);
+                controls::Canvas::SetTop(rectangle, origin->Y * scale);
 
                 m_minimap.Children().Append(rectangle);
             }
@@ -2180,24 +4250,20 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    void PatchCanvas::MoveClearOfOtherNodes(std::wstring const& endpointId) noexcept
+    void PatchCanvas::MoveClearOfOtherNodes(std::wstring const& nodeId) noexcept
     {
         try
         {
-            if (m_patch == nullptr)
+            auto* node = FindNode(nodeId);
+            auto const start = NodePosition(nodeId);
+
+            if (node == nullptr || node->Root == nullptr || !start.has_value())
             {
                 return;
             }
 
-            auto* endpoint = const_cast<PatchDocument*>(m_patch)->FindEndpoint(endpointId);
-            auto* node = FindNode(endpointId);
-
-            if (endpoint == nullptr || node == nullptr || node->Root == nullptr)
-            {
-                return;
-            }
-
-            auto const startX = endpoint->CanvasX;
+            double x = start->X;
+            double const y = start->Y;
 
             // Only ever moves right, and each pass gets past one more node, so this ends.
             for (size_t pass = 0; pass <= m_nodes.size(); pass++)
@@ -2206,23 +4272,27 @@ namespace midipatchbay
 
                 for (auto const& other : m_nodes)
                 {
-                    auto const* placed = other.EndpointId == endpointId
-                        ? nullptr : m_patch->FindEndpoint(other.EndpointId);
+                    if (other.NodeId == nodeId)
+                    {
+                        continue;
+                    }
 
-                    if (placed == nullptr)
+                    auto const placed = NodePosition(other.NodeId);
+
+                    if (!placed.has_value())
                     {
                         continue;
                     }
 
                     auto const overlaps =
-                        endpoint->CanvasX < placed->CanvasX + other.Width + NodeClearance &&
-                        placed->CanvasX < endpoint->CanvasX + node->Width + NodeClearance &&
-                        endpoint->CanvasY < placed->CanvasY + other.Height &&
-                        placed->CanvasY < endpoint->CanvasY + node->Height;
+                        x < placed->X + other.Width + NodeClearance &&
+                        placed->X < x + node->Width + NodeClearance &&
+                        y < placed->Y + other.Height &&
+                        placed->Y < y + node->Height;
 
                     if (overlaps)
                     {
-                        endpoint->CanvasX = placed->CanvasX + other.Width + NodeClearance;
+                        x = placed->X + other.Width + NodeClearance;
                         clear = false;
                     }
                 }
@@ -2233,17 +4303,247 @@ namespace midipatchbay
                 }
             }
 
-            if (endpoint->CanvasX == startX)
+            if (x == start->X)
             {
                 return;
             }
 
-            controls::Canvas::SetLeft(node->Root, endpoint->CanvasX);
+            SetNodePosition(nodeId, x, y);
 
             RedrawConnections();
             UpdateExtent();
             UpdateMinimap();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to move a new node clear of the others.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::BringIntoView(std::wstring const& nodeId) noexcept
+    {
+        try
+        {
+            auto const* node = FindNode(nodeId);
+            auto const origin = NodePosition(nodeId);
+
+            if (node == nullptr || !origin.has_value() || m_scrollViewer == nullptr)
+            {
+                return;
+            }
+
+            // So the scroll range already takes in a node that was just moved past the old edge.
+            m_scrollViewer.UpdateLayout();
+
+            auto const zoom = static_cast<double>(m_scrollViewer.ZoomFactor());
+
+            if (zoom <= 0 || m_scrollViewer.ViewportWidth() <= 0 || m_scrollViewer.ViewportHeight() <= 0)
+            {
+                return;
+            }
+
+            auto const height = node->Height > 0
+                ? node->Height
+                : (node->IsBlock ? BlockFallbackHeight : EndpointFallbackHeight);
+
+            // In canvas units. Bigger than the view, its top left corner is what shows.
+            auto const reveal = [](double start, double size, double viewStart, double viewSize)
+                {
+                    if (start - FitMargin < viewStart || size + 2 * FitMargin > viewSize)
+                    {
+                        return start - FitMargin;
+                    }
+
+                    if (start + size + FitMargin > viewStart + viewSize)
+                    {
+                        return start + size + FitMargin - viewSize;
+                    }
+
+                    return viewStart;
+                };
+
+            auto const viewLeft = m_scrollViewer.HorizontalOffset() / zoom;
+            auto const viewTop = m_scrollViewer.VerticalOffset() / zoom;
+
+            auto const left = reveal(origin->X, node->Width, viewLeft, m_scrollViewer.ViewportWidth() / zoom);
+            auto const top = reveal(origin->Y, height, viewTop, m_scrollViewer.ViewportHeight() / zoom);
+
+            if (left == viewLeft && top == viewTop)
+            {
+                return;
+            }
+
+            m_scrollViewer.ChangeView(
+                winrt::box_value((std::max)(0.0, left) * zoom).as<foundation::IReference<double>>(),
+                winrt::box_value((std::max)(0.0, top) * zoom).as<foundation::IReference<double>>(),
+                nullptr);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to bring a node into view.")
+    }
+
+    foundation::Point PatchCanvas::ViewCenter() const noexcept
+    {
+        try
+        {
+            if (m_scrollViewer != nullptr && m_scrollViewer.ZoomFactor() > 0)
+            {
+                auto const zoom = static_cast<double>(m_scrollViewer.ZoomFactor());
+
+                return foundation::Point{
+                    static_cast<float>((m_scrollViewer.HorizontalOffset() + m_scrollViewer.ViewportWidth() / 2) / zoom),
+                    static_cast<float>((m_scrollViewer.VerticalOffset() + m_scrollViewer.ViewportHeight() / 2) / zoom) };
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return foundation::Point{ 240, 160 };
+    }
+
+    _Use_decl_annotations_
+    std::wstring PatchCanvas::ConnectionAt(foundation::Point const& point) const noexcept
+    {
+        try
+        {
+            std::wstring best{};
+            double bestDistance = ConnectionHitDistance;
+
+            for (auto const& visual : m_connections)
+            {
+                if (visual.Line == nullptr || visual.Line.Visibility() != xaml::Visibility::Visible)
+                {
+                    continue;
+                }
+
+                for (size_t i = 1; i < visual.Samples.size(); i++)
+                {
+                    auto const distance = DistanceToSegment(point, visual.Samples[i - 1], visual.Samples[i]);
+
+                    if (distance < bestDistance)
+                    {
+                        bestDistance = distance;
+                        best = visual.ConnectionId;
+                    }
+                }
+            }
+
+            return best;
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::OnDragOver(xaml::DragEventArgs const& args) noexcept
+    {
+        try
+        {
+            namespace transfer = winrt::Windows::ApplicationModel::DataTransfer;
+
+            auto const view = args.DataView();
+            auto const properties = view == nullptr ? nullptr : view.Properties();
+
+            auto const isBlock = properties != nullptr && properties.HasKey(PaletteBlockKindProperty);
+            auto const isEndpoint = properties != nullptr && properties.HasKey(PaletteEndpointProperty);
+
+            if (!isBlock && !isEndpoint)
+            {
+                args.AcceptedOperation(transfer::DataPackageOperation::None);
+                SetDropTarget({});
+                return;
+            }
+
+            args.AcceptedOperation(transfer::DataPackageOperation::Copy);
+
+            // Only a step that passes on what a connection carries can go into one: not a
+            // generator, which passes on only what it makes, and not an annotation.
+            auto canInsert = false;
+
+            if (isBlock)
+            {
+                auto const key = winrt::unbox_value_or<winrt::hstring>(properties.Lookup(PaletteBlockKindProperty), L"");
+                auto const kind = BlockKindFromKey(key);
+
+                canInsert = kind.has_value() && CanGoIntoConnection(kind.value());
+            }
+
+            auto const target = canInsert ? ConnectionAt(args.GetPosition(m_surface)) : std::wstring{};
+
+            SetDropTarget(target);
+
+            if (auto const ui = args.DragUIOverride())
+            {
+                ui.Caption(target.empty()
+                    ? resources::GetString(L"DropAddToPatch")
+                    : resources::GetString(L"DropIntoConnection"));
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to follow a drag over the canvas.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::OnDrop(xaml::DragEventArgs const& args) noexcept
+    {
+        try
+        {
+            SetDropTarget({});
+
+            auto const view = args.DataView();
+            auto const properties = view == nullptr ? nullptr : view.Properties();
+
+            if (properties == nullptr)
+            {
+                return;
+            }
+
+            auto const point = args.GetPosition(m_surface);
+
+            if (properties.HasKey(PaletteBlockKindProperty))
+            {
+                auto const key = winrt::unbox_value_or<winrt::hstring>(properties.Lookup(PaletteBlockKindProperty), L"");
+                auto const kind = BlockKindFromKey(key);
+
+                if (kind.has_value() && m_callbacks.BlockDropped)
+                {
+                    m_callbacks.BlockDropped(kind.value(), point,
+                        CanGoIntoConnection(kind.value()) ? ConnectionAt(point) : std::wstring{});
+                }
+
+                return;
+            }
+
+            if (properties.HasKey(PaletteEndpointProperty) && m_callbacks.EndpointDropped)
+            {
+                auto const id = winrt::unbox_value_or<winrt::hstring>(properties.Lookup(PaletteEndpointProperty), L"");
+
+                if (!id.empty())
+                {
+                    m_callbacks.EndpointDropped(std::wstring{ id }, point);
+                }
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to take a drop on the canvas.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::SetDropTarget(std::wstring const& connectionId) noexcept
+    {
+        try
+        {
+            if (m_dropTargetConnectionId == connectionId)
+            {
+                return;
+            }
+
+            m_dropTargetConnectionId = connectionId;
+
+            for (auto& visual : m_connections)
+            {
+                ApplyConnectionAppearance(visual);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show where a drop would land.")
     }
 }

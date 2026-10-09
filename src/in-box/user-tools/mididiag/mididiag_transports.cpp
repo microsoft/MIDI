@@ -12,6 +12,7 @@
 #include "pch.h"
 #include "mididiag_output.h"
 #include "mididiag_sections.h"
+#include "mididiag_network_probe.h"
 
 #include <winrt/Windows.Devices.Midi2.Transports.Bluetooth.h>
 #include <winrt/Windows.Devices.Midi2.Transports.Network.h>
@@ -133,6 +134,136 @@ namespace
         if (anyHostRunning && context.FirewallStateKnown && context.AnyConnectedNetworkBlocksMidiService)
         {
             AddFinding(L"firewall_blocks_host", internal::ResourceGetWString(IDS_FINDING_FIREWALL_BLOCKS_HOST));
+        }
+    }
+
+    // the DNS-SD service types the network transports advertise their hosts under
+    constexpr wchar_t NetworkMidi2ServiceType[] = L"._midi2._udp.local";
+    constexpr wchar_t RtpMidiServiceType[] = L"._apple-midi._udp.local";
+
+    // this PC answers for its own hosts in a few milliseconds
+    constexpr uint32_t AdvertisingCheckTimeoutMilliseconds{ 2500 };
+
+    // how much later than the MIDI service the DNS Client service has to start before it matters
+    constexpr uint64_t DnsClientLateStartSeconds{ 60 };
+
+    // "studio-pc.local", the name this PC answers to on the local network
+    std::wstring const& ThisPcLocalHostName()
+    {
+        static std::wstring const name = []()
+            {
+                wchar_t computerName[256]{};
+                DWORD size = ARRAYSIZE(computerName);
+
+                return ::GetComputerNameExW(ComputerNameDnsHostname, computerName, &size) ?
+                    std::wstring{ computerName } + L".local" : std::wstring{};
+            }();
+
+        return name;
+    }
+
+    bool IsThisPcHostName(_In_ std::wstring_view hostName)
+    {
+        if (!hostName.empty() && hostName.back() == L'.')
+        {
+            hostName.remove_suffix(1);
+        }
+
+        auto const& thisPc = ThisPcLocalHostName();
+
+        return !thisPc.empty() && hostName.size() == thisPc.size() &&
+            ::_wcsnicmp(hostName.data(), thisPc.c_str(), thisPc.size()) == 0;
+    }
+
+    // Looks a started host up by its advertised name and writes what came back. advertised is
+    // empty for a host with no saved settings to say whether it should be.
+    void CheckHostAdvertising(
+        _In_ std::wstring_view const transportName,
+        _In_ winrt::guid const& hostId,
+        _In_ std::wstring const& serviceInstanceName,
+        _In_ PCWSTR const serviceType,
+        _In_ std::wstring const& actualPort,
+        _In_ std::optional<bool> const advertised,
+        _In_ std::wstring const& name)
+    {
+        KeyValueText values{};
+        values.Add(L"host", GuidText(hostId));
+
+        if (advertised.has_value() && !advertised.value())
+        {
+            values.Add(L"result", L"not_advertised")
+                .Add(L"lookup_ms", L"")
+                .Add(L"status", L"")
+                .Add(L"answered_host", L"")
+                .Add(L"answered_port", L"")
+                .Add(L"matches", L"");
+        }
+        else
+        {
+            auto const lookup = netprobe::LookUpServiceInstance(serviceInstanceName + serviceType, AdvertisingCheckTimeoutMilliseconds);
+            bool const matches = lookup.Answered && IsThisPcHostName(lookup.HostName) && std::to_wstring(lookup.Port) == actualPort;
+
+            values.Add(L"result", lookup.Answered ? L"answered" : lookup.Status == ERROR_TIMEOUT ? L"no_answer" : L"lookup_failed")
+                .AddNumber(L"lookup_ms", lookup.ElapsedMilliseconds)
+                .AddNumber(L"status", lookup.Status)
+                .Add(L"answered_host", lookup.HostName)
+                .Add(L"answered_port", lookup.Answered ? std::to_wstring(lookup.Port) : std::wstring{})
+                .Add(L"matches", lookup.Answered ? (matches ? L"true" : L"false") : L"");
+
+            if (advertised.has_value() && !lookup.Answered)
+            {
+                AddFinding(L"host_not_advertised",
+                    FormatResourceString(IDS_FINDING_HOST_NOT_ADVERTISED, std::wstring{ transportName }, serviceInstanceName));
+            }
+            else if (advertised.has_value() && !matches)
+            {
+                AddFinding(L"host_answered_elsewhere",
+                    FormatResourceString(IDS_FINDING_HOST_ANSWERED_ELSEWHERE, std::wstring{ transportName }, serviceInstanceName));
+            }
+        }
+
+        values.Add(L"service_instance", serviceInstanceName)
+            .Add(L"name", name);
+
+        WriteField(MIDIDIAG_FIELD_LABEL_ADVERTISING_CHECK, values);
+    }
+
+    // Network MIDI hosts are found by multicast DNS, so its problems are findings only when a
+    // network transport is in use. Both network transport sections call this, and the findings
+    // are added once.
+    void AddMdnsFindingsIfInUse(_In_ bool const transportInUse)
+    {
+        auto& context = Context();
+
+        if (!transportInUse || context.MdnsFindingsAdded)
+        {
+            return;
+        }
+
+        context.MdnsFindingsAdded = true;
+
+        if (context.MdnsTurnedOff)
+        {
+            AddFinding(L"mdns_turned_off", internal::ResourceGetWString(IDS_FINDING_MDNS_TURNED_OFF));
+        }
+
+        if (context.MdnsBlockedOnConnectedNetwork)
+        {
+            AddFinding(L"mdns_blocked_by_firewall", internal::ResourceGetWString(IDS_FINDING_MDNS_BLOCKED_BY_FIREWALL));
+        }
+
+        auto const ticks = [](FILETIME const& time)
+            {
+                return (static_cast<uint64_t>(time.dwHighDateTime) << 32) | time.dwLowDateTime;
+            };
+
+        auto const dnsClientStart = ticks(context.DnsClientStartTime);
+        auto const midiServiceStart = ticks(context.MidiServiceStartTime);
+
+        // what the MIDI service advertised or browsed for before then went away with the old DNS Client
+        if (dnsClientStart != 0 && midiServiceStart != 0 && dnsClientStart > midiServiceStart + DnsClientLateStartSeconds * 10'000'000)
+        {
+            AddFinding(L"dns_client_restarted", internal::ResourceGetWString(IDS_FINDING_DNS_CLIENT_RESTARTED));
         }
     }
 }
@@ -381,6 +512,7 @@ bool DoSectionNetworkMidi2()
     try
     {
         bool anyHostRunning{ false };
+        bool anyClient{ false };
         uint32_t pendingCount{ 0 };
 
         auto const policyName = [](net::MidiNetworkRemoteClientPolicy const policy)
@@ -388,7 +520,23 @@ bool DoSectionNetworkMidi2()
                 return policy == net::MidiNetworkRemoteClientPolicy::RequireApproval ? L"require_approval" : L"allow_any";
             };
 
-        for (auto const& host : net::MidiNetworkTransportManager::GetConfiguredHosts())
+        // what the service is running with. An older service that doesn't know the request
+        // reports the defaults, which is what it runs with.
+        if (auto const settings = net::MidiNetworkTransportManager::GetTransportSettings(); settings != nullptr)
+        {
+            WriteField(MIDIDIAG_FIELD_LABEL_TRANSPORT_SETTINGS, KeyValueText{}
+                .AddNumber(L"fec_packets", settings.MaxForwardErrorCorrectionCommandPackets())
+                .AddNumber(L"resend_buffer_packets", settings.MaxRetransmitBufferCommandPackets())
+                .AddNumber(L"ping_interval_ms", settings.OutboundPingIntervalMilliseconds())
+                .AddNumber(L"invitation_timeout_ms", settings.InvitationPendingTimeoutMilliseconds())
+                .AddNumber(L"max_host_connections", settings.MaxHostConnections())
+                .AddNumber(L"direct_scan_interval_ms", settings.DirectConnectionScanIntervalMilliseconds()));
+        }
+
+        auto const hosts = net::MidiNetworkTransportManager::GetConfiguredHosts();
+        auto const savedHosts = net::MidiNetworkTransportManager::GetSavedHosts();
+
+        for (auto const& host : hosts)
         {
             anyHostRunning = anyHostRunning || host.HasStarted();
 
@@ -408,6 +556,7 @@ bool DoSectionNetworkMidi2()
                 .AddBool(L"reduce_send_speed", host.ReduceSendSpeedAutomatically())
                 .AddNumber(L"connections", host.Connections() == nullptr ? 0 : host.Connections().Size())
                 .Add(L"service_instance", host.ActualServiceInstanceName())
+                .AddBool(L"renamed", host.ServiceInstanceNameWasChanged())
                 .Add(L"name", host.UmpEndpointName()));
 
             if (host.Connections() == nullptr)
@@ -433,8 +582,33 @@ bool DoSectionNetworkMidi2()
             }
         }
 
+        // Each started host, looked up by its advertised name. A host whose saved settings turn
+        // advertising off is not looked up.
+        for (auto const& host : hosts)
+        {
+            if (!host.HasStarted() || host.ActualServiceInstanceName().empty())
+            {
+                continue;
+            }
+
+            std::optional<bool> advertised{};
+
+            for (auto const& saved : savedHosts)
+            {
+                if (saved.HostId() == host.HostId())
+                {
+                    advertised = saved.Advertise();
+                }
+            }
+
+            CheckHostAdvertising(L"Network MIDI 2.0", host.HostId(), std::wstring{ host.ActualServiceInstanceName() },
+                NetworkMidi2ServiceType, std::wstring{ host.ActualPort() }, advertised, std::wstring{ host.UmpEndpointName() });
+        }
+
         for (auto const& client : net::MidiNetworkTransportManager::GetConfiguredClients())
         {
+            anyClient = true;
+
             std::wstring state{};
 
             switch (client.EntryState())
@@ -486,10 +660,11 @@ bool DoSectionNetworkMidi2()
                 .AddNumber(L"port", advertised.Port())
                 .Add(L"addresses", JoinMaskedAddresses(advertised.IPAddresses()))
                 .Add(L"last_seen", FormatLocalTime(advertised.LastSeenTime()))
+                .AddBool(L"this_pc", IsThisPcHostName(advertised.HostName()))
                 .Add(L"name", advertised.UmpEndpointName()));
         }
 
-        for (auto const& saved : net::MidiNetworkTransportManager::GetSavedHosts())
+        for (auto const& saved : savedHosts)
         {
             WriteField(MIDIDIAG_FIELD_LABEL_SAVED_HOST, KeyValueText{}
                 .Add(L"id", GuidText(saved.HostId()))
@@ -525,6 +700,7 @@ bool DoSectionNetworkMidi2()
 
         AddFirewallFindingIfBlocked(anyHostRunning);
         AddPendingApprovalFinding(pendingCount);
+        AddMdnsFindingsIfInUse(anyHostRunning || anyClient);
     }
     catch (...)
     {
@@ -547,6 +723,7 @@ bool DoSectionRtpMidi()
     try
     {
         bool anyHostRunning{ false };
+        bool anyClient{ false };
         uint32_t pendingCount{ 0 };
 
         auto const policyName = [](rtp::MidiRtpRemoteClientPolicy const policy)
@@ -575,7 +752,9 @@ bool DoSectionRtpMidi()
                 return values;
             };
 
-        for (auto const& host : rtp::MidiRtpTransportManager::GetConfiguredHosts())
+        auto const hosts = rtp::MidiRtpTransportManager::GetConfiguredHosts();
+
+        for (auto const& host : hosts)
         {
             anyHostRunning = anyHostRunning || host.HasStarted();
 
@@ -595,6 +774,7 @@ bool DoSectionRtpMidi()
                 .AddNumber(L"send_speed_limit", static_cast<uint32_t>(host.SendSpeedLimit()))
                 .AddNumber(L"connections", connections == nullptr ? 0 : connections.Size())
                 .Add(L"service_instance", host.ActualServiceInstanceName())
+                .AddBool(L"renamed", host.ServiceInstanceNameWasChanged())
                 .Add(L"name", host.Name()));
 
             if (connections == nullptr)
@@ -608,8 +788,22 @@ bool DoSectionRtpMidi()
             }
         }
 
+        // each started host, looked up by its advertised name
+        for (auto const& host : hosts)
+        {
+            if (!host.HasStarted() || host.ActualServiceInstanceName().empty())
+            {
+                continue;
+            }
+
+            CheckHostAdvertising(L"RTP-MIDI", host.HostId(), std::wstring{ host.ActualServiceInstanceName() },
+                RtpMidiServiceType, std::to_wstring(host.ActualPort()), std::optional<bool>{ host.Advertise() }, std::wstring{ host.Name() });
+        }
+
         for (auto const& client : rtp::MidiRtpTransportManager::GetConfiguredClients())
         {
+            anyClient = true;
+
             std::wstring state{};
 
             switch (client.EntryState())
@@ -701,6 +895,7 @@ bool DoSectionRtpMidi()
 
         AddFirewallFindingIfBlocked(anyHostRunning);
         AddPendingApprovalFinding(pendingCount);
+        AddMdnsFindingsIfInUse(anyHostRunning || anyClient);
     }
     catch (...)
     {

@@ -35,7 +35,7 @@ IDR_THEME_VISOR_DOTS        RCDATA "Assets\\Themes\\visor-dots.png"
 
 STRINGTABLE
 BEGIN
-    IDS_LAYOUT_FILE_TYPE    "MIDI Glass layout"
-    IDS_FRIENDLY_APP_NAME   "MIDI Glass"
+    IDS_LAYOUT_FILE_TYPE    "Windows MIDI Glass layout"
+    IDS_FRIENDLY_APP_NAME   "Windows MIDI Glass"
     IDS_APP_DESCRIPTION     "Touch control surfaces that send MIDI to your devices."
 END

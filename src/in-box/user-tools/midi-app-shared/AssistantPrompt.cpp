@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "AssistantPrompt.h"
+#include "DialogSizing.h"
 #include "EndpointCatalog.h"
 
 #include <winrt/Windows.ApplicationModel.DataTransfer.h>
@@ -68,17 +69,25 @@ namespace midiapp
         winrt::hstring prompt,
         winrt::Windows::Foundation::Uri guide)
     {
+        // As much of the prompt as the window has room for. The message, the link and the
+        // spacing take about this much of the height.
+        constexpr double OtherContentHeight = 160.0;
+
+        auto const space = DialogContentSpace(root);
+
         wuxc::TextBlock message{};
         message.Text(strings.Message);
         message.TextWrapping(wux::TextWrapping::Wrap);
 
         wuxc::TextBox promptBox{};
         promptBox.Header(winrt::box_value(strings.PromptHeader));
-        promptBox.Text(prompt);
-        promptBox.IsReadOnly(true);
+
+        // Multi-line before the text goes in: a single-line box keeps only the first line.
         promptBox.AcceptsReturn(true);
         promptBox.TextWrapping(wux::TextWrapping::Wrap);
-        promptBox.Height(240.0);
+        promptBox.Text(prompt);
+        promptBox.IsReadOnly(true);
+        promptBox.Height(std::clamp(space.Height - OtherContentHeight, 240.0, 640.0));
         wuxc::ScrollViewer::SetVerticalScrollBarVisibility(promptBox, wuxc::ScrollBarVisibility::Auto);
 
         wuxc::HyperlinkButton guideLink{};
@@ -87,13 +96,14 @@ namespace midiapp
 
         wuxc::StackPanel panel{};
         panel.Spacing(12.0);
-        panel.Width(480.0);
+        panel.Width(std::clamp(static_cast<double>(space.Width), 480.0, 760.0));
         panel.Children().Append(message);
         panel.Children().Append(promptBox);
         panel.Children().Append(guideLink);
 
         wuxc::ContentDialog dialog{};
         dialog.XamlRoot(root);
+        LetDialogGrow(dialog);
         dialog.Title(winrt::box_value(strings.Title));
         dialog.Content(panel);
         dialog.PrimaryButtonText(strings.CopyButton);

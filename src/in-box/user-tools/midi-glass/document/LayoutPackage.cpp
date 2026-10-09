@@ -10,6 +10,7 @@
 #include "LayoutPackage.h"
 #include "LayoutStore.h"
 #include "LayoutSerializer.h"
+#include "StoredZip.h"
 
 #include <windows.h>
 
@@ -22,108 +23,6 @@ namespace glass
 {
     namespace
     {
-        // ---- the little bit of zip we actually need ----
-        //
-        // Stored entries only. The whole format used here is three records: a local header in
-        // front of each file, a central directory listing them all, and an end record pointing
-        // at the directory. No compression, no encryption, no spanning, no zip64.
-
-        constexpr uint32_t LocalHeaderSignature = 0x04034b50;
-        constexpr uint32_t CentralHeaderSignature = 0x02014b50;
-        constexpr uint32_t EndOfDirectorySignature = 0x06054b50;
-
-        constexpr uint16_t MethodStored = 0;
-
-        // 2.0, which is what every tool expects to see even on a stored entry.
-        constexpr uint16_t VersionNeeded = 20;
-
-        // Names are UTF-8. Bit 11 is what says so; without it a name with anything but ASCII
-        // in it is read as the OEM code page and comes out as mojibake.
-        constexpr uint16_t FlagUtf8Names = 0x0800;
-
-        void Put16(_Inout_ std::vector<uint8_t>& bytes, _In_ uint16_t value) noexcept
-        {
-            bytes.push_back(static_cast<uint8_t>(value & 0xFF));
-            bytes.push_back(static_cast<uint8_t>((value >> 8) & 0xFF));
-        }
-
-        void Put32(_Inout_ std::vector<uint8_t>& bytes, _In_ uint32_t value) noexcept
-        {
-            for (int shift = 0; shift < 32; shift += 8)
-            {
-                bytes.push_back(static_cast<uint8_t>((value >> shift) & 0xFF));
-            }
-        }
-
-        uint16_t Read16(_In_reads_(2) uint8_t const* at) noexcept
-        {
-            return static_cast<uint16_t>(at[0] | (at[1] << 8));
-        }
-
-        uint32_t Read32(_In_reads_(4) uint8_t const* at) noexcept
-        {
-            return static_cast<uint32_t>(at[0]) |
-                (static_cast<uint32_t>(at[1]) << 8) |
-                (static_cast<uint32_t>(at[2]) << 16) |
-                (static_cast<uint32_t>(at[3]) << 24);
-        }
-
-        uint32_t Crc32(_In_ std::vector<uint8_t> const& bytes) noexcept
-        {
-            static uint32_t table[256]{};
-            static bool built{ false };
-
-            if (!built)
-            {
-                for (uint32_t i = 0; i < 256; ++i)
-                {
-                    auto value = i;
-
-                    for (int bit = 0; bit < 8; ++bit)
-                    {
-                        value = (value & 1) ? (0xEDB88320u ^ (value >> 1)) : (value >> 1);
-                    }
-
-                    table[i] = value;
-                }
-
-                built = true;
-            }
-
-            uint32_t crc{ 0xFFFFFFFFu };
-
-            for (auto const byte : bytes)
-            {
-                crc = table[(crc ^ byte) & 0xFF] ^ (crc >> 8);
-            }
-
-            return crc ^ 0xFFFFFFFFu;
-        }
-
-        std::string ToUtf8(_In_ std::wstring const& text) noexcept
-        {
-            if (text.empty())
-            {
-                return {};
-            }
-
-            auto const needed = ::WideCharToMultiByte(
-                CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
-
-            if (needed <= 0)
-            {
-                return {};
-            }
-
-            std::string utf8(static_cast<size_t>(needed), '\0');
-
-            ::WideCharToMultiByte(
-                CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()),
-                utf8.data(), needed, nullptr, nullptr);
-
-            return utf8;
-        }
-
         std::wstring FromUtf8(_In_ std::string const& text) noexcept
         {
             if (text.empty())
@@ -195,141 +94,23 @@ namespace glass
             }
         }
 
-        struct PackedFile
-        {
-            std::wstring Name{};
-            std::vector<uint8_t> Bytes{};
-        };
+        using PackedFile = midiapp::StoredZipEntry;
 
         std::vector<uint8_t> BuildZip(_In_ std::vector<PackedFile> const& files) noexcept
         {
-            std::vector<uint8_t> zip{};
-            std::vector<uint8_t> directory{};
-
-            uint32_t count{ 0 };
-
-            for (auto const& file : files)
-            {
-                auto const name = ToUtf8(file.Name);
-                auto const crc = Crc32(file.Bytes);
-                auto const size = static_cast<uint32_t>(file.Bytes.size());
-                auto const offset = static_cast<uint32_t>(zip.size());
-
-                Put32(zip, LocalHeaderSignature);
-                Put16(zip, VersionNeeded);
-                Put16(zip, FlagUtf8Names);
-                Put16(zip, MethodStored);
-
-                // No timestamp. A backup's time is the file's own, and a package that changes
-                // its bytes every time it is written cannot be compared against the last one.
-                Put16(zip, 0);
-                Put16(zip, 0);
-
-                Put32(zip, crc);
-                Put32(zip, size);
-                Put32(zip, size);
-                Put16(zip, static_cast<uint16_t>(name.size()));
-                Put16(zip, 0);
-
-                zip.insert(zip.end(), name.begin(), name.end());
-                zip.insert(zip.end(), file.Bytes.begin(), file.Bytes.end());
-
-                Put32(directory, CentralHeaderSignature);
-                Put16(directory, VersionNeeded);
-                Put16(directory, VersionNeeded);
-                Put16(directory, FlagUtf8Names);
-                Put16(directory, MethodStored);
-                Put16(directory, 0);
-                Put16(directory, 0);
-                Put32(directory, crc);
-                Put32(directory, size);
-                Put32(directory, size);
-                Put16(directory, static_cast<uint16_t>(name.size()));
-                Put16(directory, 0);
-                Put16(directory, 0);
-                Put16(directory, 0);
-                Put16(directory, 0);
-                Put32(directory, 0);
-                Put32(directory, offset);
-
-                directory.insert(directory.end(), name.begin(), name.end());
-
-                count++;
-            }
-
-            auto const directoryOffset = static_cast<uint32_t>(zip.size());
-
-            zip.insert(zip.end(), directory.begin(), directory.end());
-
-            Put32(zip, EndOfDirectorySignature);
-            Put16(zip, 0);
-            Put16(zip, 0);
-            Put16(zip, static_cast<uint16_t>(count));
-            Put16(zip, static_cast<uint16_t>(count));
-            Put32(zip, static_cast<uint32_t>(directory.size()));
-            Put32(zip, directoryOffset);
-            Put16(zip, 0);
-
-            return zip;
+            return midiapp::BuildStoredZip(files);
         }
 
-        // Walks the local headers rather than the central directory. Both describe the same
-        // entries; the headers are what the bytes actually follow, so reading them cannot be
-        // led somewhere else by a directory that disagrees with them.
         bool ReadZip(
             _In_ std::vector<uint8_t> const& zip,
             _Out_ std::vector<PackedFile>& files,
             _Out_ bool& compressed) noexcept
         {
-            files.clear();
-            compressed = false;
+            auto const status = midiapp::ReadStoredZip(zip, MaximumPackageEntries, files);
 
-            size_t at{ 0 };
+            compressed = status == midiapp::StoredZipStatus::Compressed;
 
-            while (at + 30 <= zip.size())
-            {
-                if (Read32(&zip[at]) != LocalHeaderSignature)
-                {
-                    break;
-                }
-
-                auto const method = Read16(&zip[at + 8]);
-                auto const size = Read32(&zip[at + 18]);
-                auto const nameLength = Read16(&zip[at + 26]);
-                auto const extraLength = Read16(&zip[at + 28]);
-
-                auto const nameAt = at + 30;
-                auto const dataAt = nameAt + nameLength + extraLength;
-
-                if (dataAt > zip.size() || dataAt + size > zip.size())
-                {
-                    return false;
-                }
-
-                if (method != MethodStored)
-                {
-                    compressed = true;
-                    return false;
-                }
-
-                if (files.size() >= MaximumPackageEntries)
-                {
-                    return false;
-                }
-
-                PackedFile file{};
-
-                file.Name = FromUtf8(std::string{
-                    reinterpret_cast<char const*>(&zip[nameAt]), nameLength });
-
-                file.Bytes.assign(zip.begin() + dataAt, zip.begin() + dataAt + size);
-
-                files.push_back(std::move(file));
-
-                at = dataAt + size;
-            }
-
-            return !files.empty();
+            return status == midiapp::StoredZipStatus::Read;
         }
 
         // Every file a layout points at, as bare names. Only the layout's own folder is ever
@@ -839,6 +620,14 @@ namespace glass
                 if (!parsed.Succeeded)
                 {
                     result.FailureKey = L"ImportFailedUnreadable";
+                    return result;
+                }
+
+                // Pointing it at the renamed pictures means writing it, and a newer version's
+                // layout is never written from the part of it this version understood.
+                if (parsed.IsFromNewerVersion)
+                {
+                    result.FailureKey = L"ImportFailedNewerVersion";
                     return result;
                 }
 

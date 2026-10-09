@@ -503,9 +503,9 @@ namespace MidiSynth
         voice.DecaySeconds = articulation.Eg1DecaySeconds * ((keyDecayScale > 0.0) ? keyDecayScale : 1.0);
         voice.ReleaseSeconds = articulation.Eg1ReleaseSeconds;
 
-        voice.SustainDb = (articulation.Eg1SustainFraction <= 0.0)
-            ? DlsSilenceDb
-            : 20.0 * std::log10(articulation.Eg1SustainFraction);
+        // The envelope runs in dB, so sustain is a point on its 96 dB scale rather than a fraction
+        // of the amplitude (DLS Level 2 section 1.7.2.7), which is also what the in-box synth does.
+        voice.SustainDb = DlsSilenceDb * (1.0 - articulation.Eg1SustainFraction);
 
         if (voice.AttackSeconds > 0.0)
         {
@@ -1239,6 +1239,24 @@ namespace MidiSynth
 
         const size_t sendOffset = static_cast<size_t>(output - m_renderCursor) ;
 
+        // The reverb is fed from before the pan, so how much of a sound reaches the room does not
+        // depend on where the sound sits. The pan law is equal power, so the two gains give back the
+        // unpanned one, and the half power factor keeps a centered sound exactly where it was.
+        constexpr double HalfPower = 0.70710678118654752;
+
+        double reverbGainNow{ 0.0 };
+        double reverbGainStep{ 0.0 };
+
+        if (reverbSend != nullptr)
+        {
+            reverbGainNow = HalfPower * std::sqrt(
+                voice.CurrentGainLeft * voice.CurrentGainLeft + voice.CurrentGainRight * voice.CurrentGainRight);
+
+            reverbGainStep = (HalfPower * std::sqrt(
+                voice.TargetGainLeft * voice.TargetGainLeft + voice.TargetGainRight * voice.TargetGainRight)
+                - reverbGainNow) / frames;
+        }
+
         for (uint32_t frame = 0; frame < frames; frame++)
         {
             if (voice.Phase >= static_cast<double>(voice.SampleFrameCount))
@@ -1251,6 +1269,7 @@ namespace MidiSynth
 
             voice.CurrentGainLeft += gainStepLeft;
             voice.CurrentGainRight += gainStepRight;
+            reverbGainNow += reverbGainStep;
 
             const auto left = static_cast<float>(sample * voice.CurrentGainLeft);
             const auto right = static_cast<float>(sample * voice.CurrentGainRight);
@@ -1260,8 +1279,10 @@ namespace MidiSynth
 
             if (reverbSend != nullptr)
             {
-                reverbSend[sendOffset + frame * 2] += left * reverbGain;
-                reverbSend[sendOffset + frame * 2 + 1] += right * reverbGain;
+                const auto unpanned = static_cast<float>(sample * reverbGainNow) * reverbGain;
+
+                reverbSend[sendOffset + frame * 2] += unpanned;
+                reverbSend[sendOffset + frame * 2 + 1] += unpanned;
             }
 
             if (chorusSend != nullptr)

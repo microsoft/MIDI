@@ -12,10 +12,11 @@ namespace midipatchbay
 {
     namespace
     {
-        // A vertex is "messages present at this endpoint, on this group, on this side".
-        // Keeping the two sides apart is what stops a plain two-way link between a keyboard and
-        // a synth from being reported as a loop: material sent to a device only comes back if
-        // that device echoes it, and that is modeled as an explicit edge below.
+        // A vertex is "messages present at this endpoint, on this group, on this side", or
+        // "messages arriving at this block on this group".
+        // Keeping the two sides of an endpoint apart is what stops a plain two-way link between a
+        // keyboard and a synth from being reported as a loop: material sent to a device only
+        // comes back if that device echoes it, and that is modeled as an explicit edge below.
         constexpr int32_t SideOut = 0;
         constexpr int32_t SideIn = 1;
 
@@ -26,16 +27,19 @@ namespace midipatchbay
             // Empty for an echo edge inside a device.
             std::wstring ConnectionId{};
 
-            // The endpoint reached after taking this edge.
-            size_t EndpointIndex{ 0 };
+            // The endpoint or block reached after taking this edge.
+            size_t NodeIndex{ 0 };
 
             bool IsAssumedEcho{ false };
         };
 
         struct Builder
         {
-            std::vector<std::wstring> EndpointIds{};
-            std::vector<std::wstring> EndpointNames{};
+            // Endpoints first, then blocks.
+            std::vector<std::wstring> NodeIds{};
+            std::vector<std::wstring> NodeNames{};
+            size_t EndpointCount{ 0 };
+
             std::unordered_map<std::wstring, size_t> IndexById{};
             std::vector<std::vector<Edge>> Adjacency{};
 
@@ -44,9 +48,20 @@ namespace midipatchbay
                 return static_cast<int32_t>(endpointIndex) * (MaximumGroupCount * 2) + groupIndex * 2 + side;
             }
 
+            int32_t BlockVertex(_In_ size_t nodeIndex, _In_ int32_t groupIndex) const noexcept
+            {
+                return static_cast<int32_t>(EndpointCount * MaximumGroupCount * 2 +
+                    (nodeIndex - EndpointCount) * MaximumGroupCount) + groupIndex;
+            }
+
+            bool IsBlock(_In_ size_t nodeIndex) const noexcept
+            {
+                return nodeIndex >= EndpointCount;
+            }
+
             size_t VertexCount() const noexcept
             {
-                return EndpointIds.size() * MaximumGroupCount * 2;
+                return EndpointCount * MaximumGroupCount * 2 + (NodeIds.size() - EndpointCount) * MaximumGroupCount;
             }
         };
 
@@ -69,28 +84,29 @@ namespace midipatchbay
             return it == liveEndpoints.end() ? nullptr : &(*it);
         }
 
-        // Expands a connection into the concrete group pairs it carries.
-        void ForEachGroupPair(
-            _In_ PatchConnection const& connection,
-            _In_ std::function<void(int32_t, int32_t)> const& callback)
+        // The group a message leaves a block on, or -1 when the block keeps that group out.
+        // Every other kind of block is taken to pass every group, because whether it keeps a
+        // particular message out depends on the message.
+        int32_t GroupLeavingBlock(_In_ PatchBlock const& block, _In_ int32_t groupIndex) noexcept
         {
-            if (connection.SourceGroupIndex == AllGroups)
+            if (block.Bypassed)
             {
-                for (int32_t group = 0; group < MaximumGroupCount; group++)
-                {
-                    // "all groups" into a specific group folds everything onto that group;
-                    // into "all groups" it passes the group through untouched
-                    callback(group, connection.DestinationGroupIndex == AllGroups
-                        ? group
-                        : connection.DestinationGroupIndex);
-                }
-
-                return;
+                return groupIndex;
             }
 
-            callback(connection.SourceGroupIndex, connection.DestinationGroupIndex == AllGroups
-                ? connection.SourceGroupIndex
-                : connection.DestinationGroupIndex);
+            if (block.Kind == BlockKind::GroupFilter)
+            {
+                return block.Settings.Groups[static_cast<size_t>(groupIndex)] ? groupIndex : -1;
+            }
+
+            if (block.Kind == BlockKind::GroupMap)
+            {
+                auto const mapped = block.Settings.GroupMap[static_cast<size_t>(groupIndex)];
+
+                return mapped >= 0 && mapped < MaximumGroupCount ? mapped : groupIndex;
+            }
+
+            return groupIndex;
         }
 
         Builder BuildGraph(
@@ -102,17 +118,26 @@ namespace midipatchbay
 
             for (auto const& endpoint : patch.Endpoints)
             {
-                builder.IndexById[endpoint.Id] = builder.EndpointIds.size();
-                builder.EndpointIds.push_back(endpoint.Id);
-                builder.EndpointNames.push_back(endpoint.DisplayName);
+                builder.IndexById[endpoint.Id] = builder.NodeIds.size();
+                builder.NodeIds.push_back(endpoint.Id);
+                builder.NodeNames.push_back(endpoint.DisplayName);
+            }
+
+            builder.EndpointCount = builder.NodeIds.size();
+
+            for (auto const& block : patch.Blocks)
+            {
+                builder.IndexById[block.Id] = builder.NodeIds.size();
+                builder.NodeIds.push_back(block.Id);
+                builder.NodeNames.push_back(std::wstring{ BlockDisplayName(block) });
             }
 
             builder.Adjacency.resize(builder.VertexCount());
 
             for (auto const& connection : patch.Connections)
             {
-                auto const sourceIt = builder.IndexById.find(connection.SourceEndpointId);
-                auto const destinationIt = builder.IndexById.find(connection.DestinationEndpointId);
+                auto const sourceIt = builder.IndexById.find(connection.SourceId);
+                auto const destinationIt = builder.IndexById.find(connection.DestinationId);
 
                 if (sourceIt == builder.IndexById.end() || destinationIt == builder.IndexById.end())
                 {
@@ -125,16 +150,65 @@ namespace midipatchbay
                     continue;
                 }
 
-                ForEachGroupPair(connection, [&](int32_t sourceGroup, int32_t destinationGroup)
-                    {
-                        Edge edge{};
-                        edge.To = builder.Vertex(destinationIt->second, destinationGroup, SideIn);
-                        edge.ConnectionId = connection.Id;
-                        edge.EndpointIndex = destinationIt->second;
+                auto const source = sourceIt->second;
+                auto const destination = destinationIt->second;
 
-                        builder.Adjacency[static_cast<size_t>(
-                            builder.Vertex(sourceIt->second, sourceGroup, SideOut))].push_back(std::move(edge));
-                    });
+                // What goes into an LFO is the clock it follows, and what comes out is its own
+                // sweep, so nothing that goes in can come round again.
+                if (builder.IsBlock(destination) && IsGenerator(patch.Blocks[destination - builder.EndpointCount].Kind))
+                {
+                    continue;
+                }
+
+                PatchBlock const* sourceBlock = builder.IsBlock(source)
+                    ? &patch.Blocks[source - builder.EndpointCount]
+                    : nullptr;
+
+                for (int32_t group = 0; group < MaximumGroupCount; group++)
+                {
+                    int32_t from{ 0 };
+                    int32_t carried{ group };
+
+                    if (sourceBlock == nullptr)
+                    {
+                        if (connection.SourceGroupIndex != AllGroups && connection.SourceGroupIndex != group)
+                        {
+                            continue;
+                        }
+
+                        from = builder.Vertex(source, group, SideOut);
+                    }
+                    else
+                    {
+                        carried = GroupLeavingBlock(*sourceBlock, group);
+
+                        if (carried < 0)
+                        {
+                            continue;
+                        }
+
+                        from = builder.BlockVertex(source, group);
+                    }
+
+                    Edge edge{};
+                    edge.ConnectionId = connection.Id;
+                    edge.NodeIndex = destination;
+
+                    if (builder.IsBlock(destination))
+                    {
+                        edge.To = builder.BlockVertex(destination, carried);
+                    }
+                    else
+                    {
+                        // "all groups" into a specific group folds everything onto that group;
+                        // into "all groups" it passes the group through untouched
+                        edge.To = builder.Vertex(destination,
+                            connection.DestinationGroupIndex == AllGroups ? carried : connection.DestinationGroupIndex,
+                            SideIn);
+                    }
+
+                    builder.Adjacency[static_cast<size_t>(from)].push_back(std::move(edge));
+                }
             }
 
             // The echo edges: what turns "sent to a device" back into "available from a device".
@@ -177,7 +251,7 @@ namespace midipatchbay
                 {
                     Edge edge{};
                     edge.To = builder.Vertex(echoTargetIndex, group, SideOut);
-                    edge.EndpointIndex = echoTargetIndex;
+                    edge.NodeIndex = echoTargetIndex;
                     edge.IsAssumedEcho = !isLoopback;
 
                     builder.Adjacency[static_cast<size_t>(
@@ -288,10 +362,10 @@ namespace midipatchbay
                     continue;
                 }
 
-                if (edge->EndpointIndex < graph.EndpointIds.size())
+                if (edge->NodeIndex < graph.NodeIds.size())
                 {
-                    auto const& id = graph.EndpointIds[edge->EndpointIndex];
-                    auto const& name = graph.EndpointNames[edge->EndpointIndex];
+                    auto const& id = graph.NodeIds[edge->NodeIndex];
+                    auto const& name = graph.NodeNames[edge->NodeIndex];
 
                     if (finding.EndpointIds.empty() || finding.EndpointIds.back() != id)
                     {
@@ -388,27 +462,5 @@ namespace midipatchbay
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to analyze the patch for loops.")
 
         return analysis;
-    }
-
-    _Use_decl_annotations_
-    bool WouldCreateCertainLoop(
-        PatchDocument const& patch,
-        PatchConnection const& proposed,
-        std::vector<LiveEndpoint> const& liveEndpoints) noexcept
-    {
-        try
-        {
-            PatchDocument working{ patch };
-            working.Connections.push_back(proposed);
-
-            auto const graph = BuildGraph(working, liveEndpoints, false);
-
-            std::vector<Edge const*> cycle{};
-
-            return FindCycle(graph, cycle);
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to test a connection for loops.")
-
-        return false;
     }
 }

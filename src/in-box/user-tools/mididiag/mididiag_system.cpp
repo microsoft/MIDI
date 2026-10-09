@@ -12,12 +12,14 @@
 #include "pch.h"
 #include "mididiag_output.h"
 #include "mididiag_sections.h"
+#include "mididiag_network_probe.h"
 
 #include <cfgmgr32.h>
 #include <devpkey.h>
 #include <wbemidl.h>
 #include <netfw.h>
 #include <netlistmgr.h>
+#include <tlhelp32.h>
 
 #pragma comment(lib, "advapi32.lib")
 #pragma comment(lib, "cfgmgr32.lib")
@@ -36,6 +38,19 @@ namespace
     constexpr uint32_t HistoryDays{ 30 };
     constexpr uint32_t MaxHistoryEntries{ 20 };
     constexpr uint32_t MaxProblemDeviceFindings{ 5 };
+
+    // Windows answers multicast DNS in the DNS Client service, and the network MIDI transports
+    // advertise their hosts through it
+    constexpr wchar_t DnsClientServiceName[] = L"Dnscache";
+    constexpr wchar_t DnsClientParametersKey[] = LR"(SYSTEM\CurrentControlSet\Services\Dnscache\Parameters)";
+    constexpr wchar_t DnsClientPolicyKey[] = LR"(SOFTWARE\Policies\Microsoft\Windows NT\DNSClient)";
+    constexpr uint16_t MdnsPort{ 5353 };
+
+    // Network changes matter close to when a problem started. A laptop logs a lot of them, so
+    // network and power events are capped separately and one kind can't crowd out the other.
+    constexpr uint32_t NetworkHistoryDays{ 3 };
+    constexpr size_t MaxNetworkHistoryEntries{ 40 };
+    constexpr size_t MaxPowerHistoryEntries{ 20 };
 
     // Activation slowed to several seconds per endpoint at about 1,800 of these on a test PC
     constexpr uint32_t LeftoverEndpointNodeFindingThreshold{ 1000 };
@@ -175,7 +190,7 @@ namespace
 
     ServiceQuery g_serviceBeforeReport{};
 
-    ServiceQuery QueryMidiService(_In_ bool const includeConfiguration)
+    ServiceQuery QueryServiceByName(_In_ PCWSTR const serviceName, _In_ bool const includeConfiguration)
     {
         ServiceQuery result{};
 
@@ -188,7 +203,7 @@ namespace
         }
 
         DWORD const access = SERVICE_QUERY_STATUS | (includeConfiguration ? SERVICE_QUERY_CONFIG : 0);
-        wil::unique_schandle service{ ::OpenServiceW(manager.get(), MidiServiceName, access) };
+        wil::unique_schandle service{ ::OpenServiceW(manager.get(), serviceName, access) };
 
         if (!service)
         {
@@ -261,6 +276,11 @@ namespace
         }
 
         return result;
+    }
+
+    ServiceQuery QueryMidiService(_In_ bool const includeConfiguration)
+    {
+        return QueryServiceByName(MidiServiceName, includeConfiguration);
     }
 
     std::wstring ServiceStateName(_In_ DWORD const state)
@@ -365,7 +385,8 @@ namespace
         return true;
     }
 
-    std::vector<ServiceProcess> FindMidiServiceProcesses()
+    // condition is a WQL WHERE clause, such as Name = 'midisrv.exe'
+    std::vector<ServiceProcess> FindProcesses(_In_ std::wstring const& condition)
     {
         std::vector<ServiceProcess> processes{};
 
@@ -381,7 +402,7 @@ namespace
         wil::com_ptr<IEnumWbemClassObject> results{};
         THROW_IF_FAILED(services->ExecQuery(
             wil::make_bstr(L"WQL").get(),
-            wil::make_bstr(L"SELECT ProcessId, CreationDate, ThreadCount, HandleCount FROM Win32_Process WHERE Name = 'midisrv.exe'").get(),
+            wil::make_bstr((L"SELECT ProcessId, CreationDate, ThreadCount, HandleCount FROM Win32_Process WHERE " + condition).c_str()).get(),
             WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
             nullptr,
             results.put()));
@@ -423,6 +444,11 @@ namespace
         }
 
         return processes;
+    }
+
+    std::vector<ServiceProcess> FindMidiServiceProcesses()
+    {
+        return FindProcesses(L"Name = 'midisrv.exe'");
     }
 
     std::chrono::seconds SecondsSince(_In_ FILETIME const& utcTime)
@@ -552,6 +578,18 @@ namespace
             }
 
             return time;
+        }
+
+        GUID Guid(_In_ size_t const index) const
+        {
+            auto const value = Value(index);
+
+            if (value != nullptr && value->Type == EvtVarTypeGuid && value->GuidVal != nullptr)
+            {
+                return *value->GuidVal;
+            }
+
+            return GUID{};
         }
 
         // the service control manager puts the service's key name here as UTF-16
@@ -810,6 +848,273 @@ namespace
     std::wstring BstrText(_In_ wil::unique_bstr const& text)
     {
         return text ? std::wstring{ text.get() } : std::wstring{};
+    }
+
+    void ForEachFirewallRule(_In_ INetFwPolicy2* const policy, _In_ std::function<void(INetFwRule*)> const& callback)
+    {
+        wil::com_ptr<INetFwRules> rules{};
+        THROW_IF_FAILED(policy->get_Rules(rules.put()));
+
+        wil::com_ptr<IUnknown> enumerator{};
+        THROW_IF_FAILED(rules->get__NewEnum(enumerator.put()));
+
+        auto const ruleList = enumerator.query<IEnumVARIANT>();
+
+        for (;;)
+        {
+            wil::unique_variant item{};
+            ULONG fetched{ 0 };
+
+            if (ruleList->Next(1, item.addressof(), &fetched) != S_OK || fetched == 0)
+            {
+                break;
+            }
+
+            if (item.vt != VT_DISPATCH || item.pdispVal == nullptr)
+            {
+                continue;
+            }
+
+            if (auto const rule = wil::try_com_query<INetFwRule>(item.pdispVal); rule)
+            {
+                callback(rule.get());
+            }
+        }
+    }
+
+    std::optional<uint32_t> ParsePortNumber(_In_ std::wstring_view text)
+    {
+        while (!text.empty() && text.front() == L' ')
+        {
+            text.remove_prefix(1);
+        }
+
+        while (!text.empty() && text.back() == L' ')
+        {
+            text.remove_suffix(1);
+        }
+
+        if (text.empty() || text.size() > 5)
+        {
+            return std::nullopt;
+        }
+
+        uint32_t value{ 0 };
+
+        for (auto const ch : text)
+        {
+            if (ch < L'0' || ch > L'9')
+            {
+                return std::nullopt;
+            }
+
+            value = value * 10 + static_cast<uint32_t>(ch - L'0');
+        }
+
+        return value <= UINT16_MAX ? std::optional<uint32_t>{ value } : std::nullopt;
+    }
+
+    // A rule's port list is "*", or ports and ranges such as "5000-5010,5353"
+    bool PortListIncludes(_In_ std::wstring_view const ports, _In_ uint16_t const port)
+    {
+        if (ports.empty() || ports == L"*")
+        {
+            return true;
+        }
+
+        size_t start{ 0 };
+
+        for (;;)
+        {
+            auto const comma = ports.find(L',', start);
+            auto const part = ports.substr(start, comma == std::wstring_view::npos ? std::wstring_view::npos : comma - start);
+            auto const dash = part.find(L'-');
+
+            auto const first = ParsePortNumber(part.substr(0, dash));
+            auto const last = dash == std::wstring_view::npos ? first : ParsePortNumber(part.substr(dash + 1));
+
+            if (first.has_value() && last.has_value() && port >= first.value() && port <= last.value())
+            {
+                return true;
+            }
+
+            if (comma == std::wstring_view::npos)
+            {
+                return false;
+            }
+
+            start = comma + 1;
+        }
+    }
+
+    // A rule's remote addresses are keywords such as LocalSubnet, or addresses, ranges and
+    // subnets such as 10.0.0.1-10.0.0.9 and 10.0.0.0/255.0.0.0. Only the addresses are masked.
+    std::wstring MaskAddressList(_In_ std::wstring_view const list)
+    {
+        std::wstring masked{};
+        std::wstring part{};
+
+        for (auto const ch : list)
+        {
+            if (ch == L',' || ch == L'-' || ch == L'/')
+            {
+                masked += MaskIpAddress(part);
+                masked.push_back(ch);
+                part.clear();
+            }
+            else
+            {
+                part.push_back(ch);
+            }
+        }
+
+        masked += MaskIpAddress(part);
+
+        return masked;
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // Networks and processes
+
+    std::wstring NetworkCategoryName(_In_ NLM_NETWORK_CATEGORY const category)
+    {
+        switch (category)
+        {
+        case NLM_NETWORK_CATEGORY_PRIVATE:                  return L"private";
+        case NLM_NETWORK_CATEGORY_DOMAIN_AUTHENTICATED:     return L"domain";
+        default:                                            return L"public";
+        }
+    }
+
+    std::wstring LowerGuidText(_In_ GUID const& id)
+    {
+        wchar_t text[64]{};
+
+        return ::StringFromGUID2(id, text, ARRAYSIZE(text)) > 0 ? LowerCopy(text) : std::wstring{};
+    }
+
+    // A network is a place this PC connects to, and a connection joins one to an adapter
+    struct NetworkConnectionInfo
+    {
+        // in braces and lower case, so they compare with the adapter ids
+        std::wstring AdapterId{};
+        std::wstring NetworkId{};
+
+        std::wstring Category{};
+    };
+
+    std::vector<NetworkConnectionInfo> GetNetworkConnections(_In_ INetworkListManager* const networkList)
+    {
+        std::vector<NetworkConnectionInfo> results{};
+
+        wil::com_ptr<IEnumNetworkConnections> connections{};
+        THROW_IF_FAILED(networkList->GetNetworkConnections(connections.put()));
+
+        for (;;)
+        {
+            wil::com_ptr<INetworkConnection> connection{};
+            ULONG fetched{ 0 };
+
+            if (connections->Next(1, connection.put(), &fetched) != S_OK || fetched == 0)
+            {
+                break;
+            }
+
+            GUID adapterId{};
+            GUID networkId{};
+            wil::com_ptr<INetwork> connectedNetwork{};
+            NLM_NETWORK_CATEGORY category{ NLM_NETWORK_CATEGORY_PUBLIC };
+
+            if (FAILED(connection->GetAdapterId(&adapterId)) ||
+                FAILED(connection->GetNetwork(connectedNetwork.put())) || !connectedNetwork ||
+                FAILED(connectedNetwork->GetNetworkId(&networkId)) ||
+                FAILED(connectedNetwork->GetCategory(&category)))
+            {
+                continue;
+            }
+
+            results.push_back(NetworkConnectionInfo{ LowerGuidText(adapterId), LowerGuidText(networkId), NetworkCategoryName(category) });
+        }
+
+        return results;
+    }
+
+    // Every process's file name, from a snapshot that needs no special rights
+    std::map<uint32_t, std::wstring> ProcessNamesById()
+    {
+        std::map<uint32_t, std::wstring> names{};
+
+        wil::unique_hfile snapshot{ ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) };
+
+        if (!snapshot)
+        {
+            return names;
+        }
+
+        PROCESSENTRY32W entry{};
+        entry.dwSize = sizeof(entry);
+
+        for (auto found = ::Process32FirstW(snapshot.get(), &entry); found; found = ::Process32NextW(snapshot.get(), &entry))
+        {
+            names[entry.th32ProcessID] = entry.szExeFile;
+        }
+
+        return names;
+    }
+
+    // The key names of the running services in each process
+    std::map<uint32_t, std::wstring> ServiceNamesByProcessId()
+    {
+        std::map<uint32_t, std::wstring> names{};
+
+        wil::unique_schandle manager{ ::OpenSCManagerW(nullptr, nullptr, SC_MANAGER_ENUMERATE_SERVICE) };
+
+        if (!manager)
+        {
+            return names;
+        }
+
+        std::vector<uint64_t> buffer{};
+        DWORD bytesNeeded{ 0 };
+        DWORD count{ 0 };
+        bool listed{ false };
+
+        // the first call only asks for the size, and services can start between calls
+        for (uint32_t attempt = 0; attempt < 3 && !listed; attempt++)
+        {
+            buffer.resize(bytesNeeded == 0 ? 0 : (bytesNeeded + 4096) / sizeof(uint64_t));
+
+            DWORD resume{ 0 };
+            listed = ::EnumServicesStatusExW(manager.get(), SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_ACTIVE,
+                buffer.empty() ? nullptr : reinterpret_cast<LPBYTE>(buffer.data()), static_cast<DWORD>(buffer.size() * sizeof(uint64_t)),
+                &bytesNeeded, &count, &resume, nullptr) != FALSE;
+
+            if (!listed && ::GetLastError() != ERROR_MORE_DATA)
+            {
+                break;
+            }
+        }
+
+        if (!listed)
+        {
+            return names;
+        }
+
+        auto const services = reinterpret_cast<ENUM_SERVICE_STATUS_PROCESSW const*>(buffer.data());
+
+        for (DWORD i = 0; i < count; i++)
+        {
+            if (services[i].lpServiceName == nullptr)
+            {
+                continue;
+            }
+
+            auto& list = names[services[i].ServiceStatusProcess.dwProcessId];
+            list += list.empty() ? L"" : L",";
+            list += services[i].lpServiceName;
+        }
+
+        return names;
     }
 }
 
@@ -1239,6 +1544,11 @@ bool DoSectionServiceStatus()
                     values.Add(L"uptime", FormatDuration(SecondsSince(process.StartTime)));
                 }
 
+                if (service.State == SERVICE_RUNNING && process.ProcessId == service.ProcessId)
+                {
+                    context.MidiServiceStartTime = process.StartTime;
+                }
+
                 values.AddNumber(L"threads", process.ThreadCount);
                 values.AddNumber(L"handles", process.HandleCount);
 
@@ -1598,20 +1908,44 @@ bool DoSectionNetwork()
 
         long enabledProfiles{ 0 };
 
+        // "Block all incoming connections", which overrides every rule that lets something in
+        long blockAllProfiles{ 0 };
+
+        // profiles that let in whatever no rule blocks
+        long defaultAllowProfiles{ 0 };
+
         for (auto const profile : { NET_FW_PROFILE2_DOMAIN, NET_FW_PROFILE2_PRIVATE, NET_FW_PROFILE2_PUBLIC })
         {
             VARIANT_BOOL enabled{ VARIANT_FALSE };
 
             if (SUCCEEDED(policy->get_FirewallEnabled(profile, &enabled)))
             {
+                VARIANT_BOOL blockAll{ VARIANT_FALSE };
+                NET_FW_ACTION defaultInbound{ NET_FW_ACTION_BLOCK };
+
+                policy->get_BlockAllInboundTraffic(profile, &blockAll);
+                policy->get_DefaultInboundAction(profile, &defaultInbound);
+
                 if (enabled != VARIANT_FALSE)
                 {
                     enabledProfiles |= profile;
                 }
 
+                if (blockAll != VARIANT_FALSE)
+                {
+                    blockAllProfiles |= profile;
+                }
+
+                if (defaultInbound == NET_FW_ACTION_ALLOW)
+                {
+                    defaultAllowProfiles |= profile;
+                }
+
                 WriteField(MIDIDIAG_FIELD_LABEL_FIREWALL_PROFILE, KeyValueText{}
                     .Add(L"profile", FirewallProfileNames(profile))
-                    .AddBool(L"enabled", enabled != VARIANT_FALSE));
+                    .AddBool(L"enabled", enabled != VARIANT_FALSE)
+                    .AddBool(L"block_all_inbound", blockAll != VARIANT_FALSE)
+                    .Add(L"default_inbound", defaultInbound == NET_FW_ACTION_ALLOW ? L"allow" : L"block"));
             }
         }
 
@@ -1693,14 +2027,438 @@ bool DoSectionNetwork()
             }
         }
 
-        // a host is only blocked where the firewall is on and nothing lets the service through
+        // A host is only blocked where the firewall is on and nothing lets the service through.
+        // "Block all incoming connections" overrides the rules that would.
         auto& context = Context();
         context.FirewallStateKnown = connectedProfiles != 0;
-        context.AnyConnectedNetworkBlocksMidiService = (connectedProfiles & enabledProfiles & ~allowedProfiles) != 0;
+        context.AnyConnectedNetworkBlocksMidiService =
+            (connectedProfiles & enabledProfiles & (~(allowedProfiles | defaultAllowProfiles) | blockAllProfiles)) != 0;
+
+        context.ConnectedFirewallProfiles = connectedProfiles;
+        context.EnabledFirewallProfiles = enabledProfiles;
+        context.BlockAllInboundProfiles = blockAllProfiles;
+        context.DefaultInboundAllowProfiles = defaultAllowProfiles;
     }
     catch (...)
     {
         WriteError(internal::ResourceGetWString(IDS_ERROR_CANNOT_READ_FIREWALL));
+    }
+
+    // the adapters the network transports can use. Only the last part of each address is kept.
+    try
+    {
+        std::vector<netprobe::AdapterInfo> adapters{};
+
+        if (!netprobe::TryGetAdapters(adapters))
+        {
+            WriteError(internal::ResourceGetWString(IDS_ERROR_CANNOT_READ_ADAPTERS));
+        }
+
+        std::map<std::wstring, std::wstring> categories{};
+
+        try
+        {
+            auto const networkList = wil::CoCreateInstance<NetworkListManager, INetworkListManager>(CLSCTX_ALL);
+
+            for (auto const& connection : GetNetworkConnections(networkList.get()))
+            {
+                categories[connection.AdapterId] = connection.Category;
+            }
+        }
+        catch (...)
+        {
+            // the adapters are still listed, without the category of their network
+        }
+
+        for (auto const& adapter : adapters)
+        {
+            std::wstring ipv4{};
+            std::wstring ipv6LinkLocal{};
+            std::wstring ipv6UniqueLocal{};
+            std::wstring ipv6Global{};
+
+            for (auto const& address : adapter.Addresses)
+            {
+                auto& list =
+                    address.Kind == netprobe::AddressKind::IPv4 ? ipv4 :
+                    address.Kind == netprobe::AddressKind::IPv6LinkLocal ? ipv6LinkLocal :
+                    address.Kind == netprobe::AddressKind::IPv6UniqueLocal ? ipv6UniqueLocal : ipv6Global;
+
+                list += list.empty() ? L"" : L",";
+                list += MaskIpAddress(address.Text);
+                list += address.Autoconfigured ? L"(autoconfigured)" : L"";
+                list += address.Temporary ? L"(temporary)" : L"";
+                list += address.Deprecated ? L"(deprecated)" : L"";
+            }
+
+            auto const category = categories.find(LowerCopy(adapter.Id));
+
+            WriteField(MIDIDIAG_FIELD_LABEL_NETWORK_ADAPTER, KeyValueText{}
+                .AddNumber(L"index", adapter.InterfaceIndex)
+                .Add(L"kind", adapter.Kind)
+                .AddBool(L"hardware", adapter.IsHardware)
+                .AddBool(L"up", adapter.IsUp)
+                .AddBool(L"multicast", adapter.SupportsMulticast)
+                .AddBool(L"dhcp", adapter.DhcpEnabled)
+                .AddNumber(L"metric", adapter.Metric)
+                .Add(L"category", category == categories.end() ? std::wstring{} : category->second)
+                .Add(L"ipv4", ipv4)
+                .Add(L"ipv6_link_local", ipv6LinkLocal)
+                .Add(L"ipv6_unique_local", ipv6UniqueLocal)
+                .Add(L"ipv6_global", ipv6Global)
+                .Add(L"name", adapter.Name)
+                .Add(L"description", adapter.Description));
+        }
+    }
+    catch (...)
+    {
+        WriteError(internal::ResourceGetWString(IDS_ERROR_CANNOT_READ_ADAPTERS));
+    }
+
+    return true;
+}
+
+bool DoSectionMdns()
+{
+    WriteSection(MIDIDIAG_SECTION_LABEL_MDNS);
+
+    auto& context = Context();
+
+    try
+    {
+        auto service = QueryServiceByName(DnsClientServiceName, true);
+
+        if (!service.Queried)
+        {
+            WriteError(FormatResourceString(IDS_ERROR_CANNOT_QUERY_DNS_CLIENT, FormatHResult(HRESULT_FROM_WIN32(service.Error))));
+        }
+        else
+        {
+            std::wstring start{};
+            std::wstring uptime{};
+
+            if (service.State == SERVICE_RUNNING && service.ProcessId != 0)
+            {
+                try
+                {
+                    for (auto const& process : FindProcesses(std::format(L"ProcessId = {}", service.ProcessId)))
+                    {
+                        start = FormatLocalTime(process.StartTime);
+
+                        if (!start.empty())
+                        {
+                            uptime = FormatDuration(SecondsSince(process.StartTime));
+                            context.DnsClientStartTime = process.StartTime;
+                        }
+                    }
+                }
+                catch (...)
+                {
+                    // the line is still written, without the start time
+                }
+            }
+
+            WriteField(MIDIDIAG_FIELD_LABEL_DNS_CLIENT_SERVICE, KeyValueText{}
+                .Add(L"state", service.Installed ? ServiceStateName(service.State) : std::wstring{ L"not_installed" })
+                .Add(L"start_type", ServiceStartTypeName(service))
+                .AddNumber(L"pid", service.ProcessId)
+                .Add(L"start", start)
+                .Add(L"uptime", uptime));
+        }
+    }
+    catch (...)
+    {
+        WriteError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_COLLECTING_SECTION));
+    }
+
+    try
+    {
+        auto const enableMdns = TryReadRegistryDword(HKEY_LOCAL_MACHINE, DnsClientParametersKey, L"EnableMDNS");
+        auto const enableMulticastPolicy = TryReadRegistryDword(HKEY_LOCAL_MACHINE, DnsClientPolicyKey, L"EnableMulticast");
+
+        auto const valueText = [](std::optional<DWORD> const& value)
+            {
+                return value.has_value() ? std::to_wstring(value.value()) : std::wstring{ L"not_set" };
+            };
+
+        WriteField(MIDIDIAG_FIELD_LABEL_MDNS_SETTING, KeyValueText{}
+            .Add(L"enable_mdns", valueText(enableMdns))
+            .Add(L"enable_multicast_policy", valueText(enableMulticastPolicy)));
+
+        // 0 turns multicast DNS off in the DNS Client service. Not set means on.
+        context.MdnsTurnedOff = enableMdns.has_value() && enableMdns.value() == 0;
+    }
+    catch (...)
+    {
+        WriteError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_COLLECTING_SECTION));
+    }
+
+    // the inbound rules for the DNS Client service on the multicast DNS port
+    try
+    {
+        auto const policy = wil::CoCreateInstance<NetFwPolicy2, INetFwPolicy2>(CLSCTX_INPROC_SERVER);
+
+        long allowedProfiles{ 0 };
+        long blockedProfiles{ 0 };
+
+        ForEachFirewallRule(policy.get(), [&allowedProfiles, &blockedProfiles](INetFwRule* const rule)
+            {
+                wil::unique_bstr serviceName{};
+                NET_FW_RULE_DIRECTION direction{ NET_FW_RULE_DIR_OUT };
+
+                rule->get_ServiceName(serviceName.put());
+                rule->get_Direction(&direction);
+
+                if (direction != NET_FW_RULE_DIR_IN || LowerCopy(BstrText(serviceName)) != LowerCopy(DnsClientServiceName))
+                {
+                    return;
+                }
+
+                long protocol{ 0 };
+                wil::unique_bstr localPorts{};
+
+                rule->get_Protocol(&protocol);
+                rule->get_LocalPorts(localPorts.put());
+
+                if ((protocol != NET_FW_IP_PROTOCOL_UDP && protocol != NET_FW_IP_PROTOCOL_ANY) ||
+                    !PortListIncludes(BstrText(localPorts), MdnsPort))
+                {
+                    return;
+                }
+
+                NET_FW_ACTION action{ NET_FW_ACTION_BLOCK };
+                VARIANT_BOOL enabled{ VARIANT_FALSE };
+                long profiles{ 0 };
+                wil::unique_bstr remoteAddresses{};
+                wil::unique_bstr name{};
+
+                rule->get_Action(&action);
+                rule->get_Enabled(&enabled);
+                rule->get_Profiles(&profiles);
+                rule->get_RemoteAddresses(remoteAddresses.put());
+                rule->get_Name(name.put());
+
+                WriteField(MIDIDIAG_FIELD_LABEL_MDNS_FIREWALL_RULE, KeyValueText{}
+                    .Add(L"action", action == NET_FW_ACTION_ALLOW ? L"allow" : L"block")
+                    .AddBool(L"enabled", enabled != VARIANT_FALSE)
+                    .Add(L"profiles", FirewallProfileNames(profiles))
+                    .Add(L"protocol", FirewallProtocolName(protocol))
+                    .Add(L"local_ports", BstrText(localPorts))
+                    .Add(L"remote_addresses", MaskAddressList(BstrText(remoteAddresses)))
+                    .Add(L"name", BstrText(name)));
+
+                if (enabled != VARIANT_FALSE)
+                {
+                    (action == NET_FW_ACTION_ALLOW ? allowedProfiles : blockedProfiles) |= profiles;
+                }
+            });
+
+        // Where the firewall is on, multicast DNS needs a rule that lets it in and nothing that
+        // stops it
+        long const blockingProfiles = context.ConnectedFirewallProfiles & context.EnabledFirewallProfiles &
+            (~(allowedProfiles | context.DefaultInboundAllowProfiles) | blockedProfiles | context.BlockAllInboundProfiles);
+
+        context.MdnsBlockedOnConnectedNetwork = context.FirewallStateKnown && blockingProfiles != 0;
+    }
+    catch (...)
+    {
+        WriteError(internal::ResourceGetWString(IDS_ERROR_CANNOT_READ_FIREWALL));
+    }
+
+    // Bonjour and some browsers listen on the port too. That is normal, but it shows what else
+    // on this PC takes part in multicast DNS.
+    try
+    {
+        std::vector<netprobe::UdpPortUser> users{};
+
+        if (!netprobe::TryGetUdpPortUsers(MdnsPort, users))
+        {
+            WriteError(internal::ResourceGetWString(IDS_ERROR_CANNOT_LIST_PORT_USERS));
+        }
+
+        if (!users.empty())
+        {
+            auto const processNames = ProcessNamesById();
+            auto const serviceNames = ServiceNamesByProcessId();
+
+            for (auto const& user : users)
+            {
+                auto const process = processNames.find(user.ProcessId);
+                auto const services = serviceNames.find(user.ProcessId);
+
+                WriteField(MIDIDIAG_FIELD_LABEL_MDNS_PORT_USER, KeyValueText{}
+                    .AddNumber(L"pid", user.ProcessId)
+                    .AddNumber(L"ipv4_sockets", user.IPv4Sockets)
+                    .AddNumber(L"ipv6_sockets", user.IPv6Sockets)
+                    .Add(L"services", services == serviceNames.end() ? std::wstring{} : services->second)
+                    .Add(L"process", process == processNames.end() ? std::wstring{} : process->second));
+            }
+        }
+    }
+    catch (...)
+    {
+        WriteError(internal::ResourceGetWString(IDS_ERROR_CANNOT_LIST_PORT_USERS));
+    }
+
+    return true;
+}
+
+bool DoSectionNetworkHistory()
+{
+    WriteSection(MIDIDIAG_SECTION_LABEL_NETWORK_HISTORY);
+
+    try
+    {
+        WriteNumberField(MIDIDIAG_FIELD_LABEL_HISTORY_DAYS, NetworkHistoryDays);
+
+        struct HistoryEntry
+        {
+            FILETIME Time{};
+            std::wstring Event{};
+            std::wstring Network{};
+            std::wstring Category{};
+            std::wstring Adapter{};
+        };
+
+        auto const newestFirst = [](HistoryEntry const& left, HistoryEntry const& right)
+            {
+                return ::CompareFileTime(&left.Time, &right.Time) > 0;
+            };
+
+        auto const timeFilter = std::format(L"TimeCreated[timediff(@SystemTime) <= {}]",
+            static_cast<uint64_t>(NetworkHistoryDays) * 86'400'000);
+
+        std::vector<HistoryEntry> networkEntries{};
+        std::vector<HistoryEntry> powerEntries{};
+
+        // The connect and disconnect events name the network, and a network's name can be a
+        // person's name or address. Each network gets a number instead. Its adapter is known
+        // only while this PC is still connected to it.
+        std::map<std::wstring, std::wstring> adaptersByNetwork{};
+
+        try
+        {
+            std::vector<netprobe::AdapterInfo> adapters{};
+            netprobe::TryGetAdapters(adapters);
+
+            auto const networkList = wil::CoCreateInstance<NetworkListManager, INetworkListManager>(CLSCTX_ALL);
+
+            for (auto const& connection : GetNetworkConnections(networkList.get()))
+            {
+                for (auto const& adapter : adapters)
+                {
+                    if (LowerCopy(adapter.Id) == connection.AdapterId)
+                    {
+                        adaptersByNetwork[connection.NetworkId] = adapter.Name;
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            // the events are still listed, without adapters
+        }
+
+        std::map<std::wstring, uint32_t> networkNumbers{};
+
+        bool const profileLogRead = ForEachEvent(L"Microsoft-Windows-NetworkProfile/Operational",
+            std::format(L"*[System[(EventID=10000 or EventID=10001) and {}]]", timeFilter),
+            {
+                L"Event/System/TimeCreated/@SystemTime",
+                L"Event/System/EventID",
+                L"Event/EventData/Data[@Name='Guid']",
+                L"Event/EventData/Data[@Name='Category']"
+            },
+            [&](RenderedEvent const& event)
+            {
+                auto const networkId = LowerGuidText(event.Guid(2));
+                auto const number = networkNumbers.try_emplace(networkId, static_cast<uint32_t>(networkNumbers.size() + 1)).first->second;
+                auto const adapter = adaptersByNetwork.find(networkId);
+
+                networkEntries.push_back(HistoryEntry{
+                    event.Time(0),
+                    event.Number(1) == 10000 ? L"network_connected" : L"network_disconnected",
+                    std::to_wstring(number),
+                    NetworkCategoryName(static_cast<NLM_NETWORK_CATEGORY>(event.Number(3))),
+                    adapter == adaptersByNetwork.end() ? std::wstring{} : adapter->second });
+            });
+
+        if (!profileLogRead)
+        {
+            WriteError(FormatResourceString(IDS_ERROR_CANNOT_READ_EVENT_LOG, std::wstring{ L"Microsoft-Windows-NetworkProfile/Operational" }));
+        }
+
+        // sleep and wake, starts and shutdowns, and the DNS Client service stopping on its own
+        bool systemLogRead = ForEachEvent(L"System",
+            std::format(L"*[System[Provider[@Name='Microsoft-Windows-Kernel-Power'] and "
+                L"(EventID=42 or EventID=107 or EventID=506 or EventID=507) and {}]]", timeFilter),
+            { L"Event/System/TimeCreated/@SystemTime", L"Event/System/EventID" },
+            [&](RenderedEvent const& event)
+            {
+                PCWSTR name{ L"standby_end" };
+
+                switch (event.Number(1))
+                {
+                case 42:    name = L"sleep"; break;
+                case 107:   name = L"wake"; break;
+                case 506:   name = L"standby_start"; break;
+                default:    break;
+                }
+
+                powerEntries.push_back(HistoryEntry{ event.Time(0), name });
+            });
+
+        systemLogRead = ForEachEvent(L"System",
+            std::format(L"*[System[Provider[@Name='Microsoft-Windows-Kernel-General'] and (EventID=12 or EventID=13) and {}]]", timeFilter),
+            { L"Event/System/TimeCreated/@SystemTime", L"Event/System/EventID" },
+            [&](RenderedEvent const& event)
+            {
+                powerEntries.push_back(HistoryEntry{ event.Time(0), event.Number(1) == 12 ? L"windows_start" : L"windows_shutdown" });
+            }) && systemLogRead;
+
+        systemLogRead = ForEachEvent(L"System",
+            std::format(L"*[System[Provider[@Name='Service Control Manager'] and (EventID=7031 or EventID=7034) and {}]]", timeFilter),
+            { L"Event/System/TimeCreated/@SystemTime", L"Event/EventData/Binary" },
+            [&](RenderedEvent const& event)
+            {
+                // the key name is the same in every language
+                if (LowerCopy(event.BinaryText(1)) == LowerCopy(DnsClientServiceName))
+                {
+                    networkEntries.push_back(HistoryEntry{ event.Time(0), L"dns_client_stopped" });
+                }
+            }) && systemLogRead;
+
+        if (!systemLogRead)
+        {
+            WriteError(FormatResourceString(IDS_ERROR_CANNOT_READ_EVENT_LOG, std::wstring{ L"System" }));
+        }
+
+        WriteNumberField(MIDIDIAG_FIELD_LABEL_NETWORK_EVENT_COUNT, networkEntries.size() + powerEntries.size());
+
+        std::sort(networkEntries.begin(), networkEntries.end(), newestFirst);
+        std::sort(powerEntries.begin(), powerEntries.end(), newestFirst);
+
+        networkEntries.resize((std::min)(networkEntries.size(), MaxNetworkHistoryEntries));
+        powerEntries.resize((std::min)(powerEntries.size(), MaxPowerHistoryEntries));
+
+        auto entries = std::move(networkEntries);
+        entries.insert(entries.end(), powerEntries.begin(), powerEntries.end());
+        std::sort(entries.begin(), entries.end(), newestFirst);
+
+        for (auto const& entry : entries)
+        {
+            WriteField(MIDIDIAG_FIELD_LABEL_NETWORK_EVENT, KeyValueText{}
+                .Add(L"time", FormatLocalTime(entry.Time))
+                .Add(L"event", entry.Event)
+                .Add(L"network", entry.Network)
+                .Add(L"category", entry.Category)
+                .Add(L"adapter", entry.Adapter));
+        }
+    }
+    catch (...)
+    {
+        WriteError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_COLLECTING_SECTION));
+        return false;
     }
 
     return true;

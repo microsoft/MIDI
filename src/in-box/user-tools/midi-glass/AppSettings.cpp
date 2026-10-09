@@ -20,6 +20,10 @@ namespace midiglass
         constexpr wchar_t ValueShowAllFonts[] = L"ShowAllFonts";
         constexpr wchar_t ValueShowAssistant[] = L"ShowAssistant";
         constexpr wchar_t ValueRecentLayouts[] = L"RecentLayouts";
+        constexpr wchar_t ValueFavoriteLayouts[] = L"FavoriteLayouts";
+        constexpr wchar_t ValueFavoritesMoved[] = L"FavoritesMoved";
+        constexpr wchar_t ValueSigningThumbprint[] = L"PackSigningThumbprint";
+        constexpr wchar_t ValueTimestampServer[] = L"PackTimestampServer";
 
         constexpr wchar_t ValueEditorX[] = L"EditorWindowX";
         constexpr wchar_t ValueEditorY[] = L"EditorWindowY";
@@ -88,6 +92,9 @@ namespace midiglass
         m_editorZoomPercent = static_cast<int32_t>(ReadDword(ValueEditorZoom, 0));
 
         LoadRecentLayouts();
+
+        m_favoritesMoved = ReadDword(ValueFavoritesMoved, 0) != 0;
+        LoadFavoriteLayouts();
     }
 
     _Use_decl_annotations_
@@ -297,9 +304,187 @@ namespace midiglass
             {
                 SaveRecentLayouts();
             }
+
+            auto favoritesChanged = false;
+
+            for (auto const& [from, to] : renamed)
+            {
+                auto const oldKey = LowerCopy(from);
+
+                for (auto& favorite : m_favoriteLayouts)
+                {
+                    if (favorite == oldKey)
+                    {
+                        favorite = LowerCopy(to);
+                        favoritesChanged = true;
+                    }
+                }
+            }
+
+            if (favoritesChanged)
+            {
+                SaveFavoriteLayouts();
+            }
         }
         catch (...)
         {
         }
+    }
+
+    void AppSettings::LoadFavoriteLayouts() noexcept
+    {
+        m_favoriteLayouts.clear();
+
+        try
+        {
+            auto const stored = ReadString(ValueFavoriteLayouts, {});
+
+            size_t position{ 0 };
+
+            while (position < stored.size() && m_favoriteLayouts.size() < MaximumFavoriteLayouts)
+            {
+                auto const end = stored.find(RecordSeparator, position);
+                auto const line = stored.substr(
+                    position, end == std::wstring::npos ? std::wstring::npos : end - position);
+
+                if (!line.empty())
+                {
+                    m_favoriteLayouts.push_back(LowerCopy(line));
+                }
+
+                if (end == std::wstring::npos)
+                {
+                    break;
+                }
+
+                position = end + 1;
+            }
+        }
+        catch (...)
+        {
+            m_favoriteLayouts.clear();
+        }
+    }
+
+    void AppSettings::SaveFavoriteLayouts() const noexcept
+    {
+        try
+        {
+            std::wstring stored{};
+
+            for (auto const& path : m_favoriteLayouts)
+            {
+                stored += path;
+                stored += RecordSeparator;
+            }
+
+            WriteString(ValueFavoriteLayouts, stored);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    bool AppSettings::IsFavoriteLayout(std::wstring const& layoutFilePath) const noexcept
+    {
+        try
+        {
+            auto const key = LowerCopy(layoutFilePath);
+
+            return std::find(m_favoriteLayouts.begin(), m_favoriteLayouts.end(), key) != m_favoriteLayouts.end();
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::FavoriteLayout(std::wstring const& layoutFilePath, bool favorite) noexcept
+    {
+        try
+        {
+            if (layoutFilePath.empty())
+            {
+                return;
+            }
+
+            auto const key = LowerCopy(layoutFilePath);
+            auto const existing = std::find(m_favoriteLayouts.begin(), m_favoriteLayouts.end(), key);
+
+            if (favorite == (existing != m_favoriteLayouts.end()))
+            {
+                return;
+            }
+
+            if (favorite)
+            {
+                if (m_favoriteLayouts.size() >= MaximumFavoriteLayouts)
+                {
+                    return;
+                }
+
+                m_favoriteLayouts.push_back(key);
+            }
+            else
+            {
+                m_favoriteLayouts.erase(existing);
+            }
+
+            SaveFavoriteLayouts();
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::MoveFavorites(std::vector<std::wstring> const& layoutFilePaths) noexcept
+    {
+        try
+        {
+            for (auto const& path : layoutFilePaths)
+            {
+                auto const key = LowerCopy(path);
+
+                if (!key.empty() &&
+                    m_favoriteLayouts.size() < MaximumFavoriteLayouts &&
+                    std::find(m_favoriteLayouts.begin(), m_favoriteLayouts.end(), key) == m_favoriteLayouts.end())
+                {
+                    m_favoriteLayouts.push_back(key);
+                }
+            }
+
+            SaveFavoriteLayouts();
+
+            m_favoritesMoved = true;
+            WriteDword(ValueFavoritesMoved, 1u);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    std::wstring AppSettings::SigningThumbprint() const noexcept
+    {
+        return ReadString(ValueSigningThumbprint, {});
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::SigningThumbprint(std::wstring const& value) noexcept
+    {
+        WriteString(ValueSigningThumbprint, value);
+    }
+
+    std::wstring AppSettings::TimestampServer() const noexcept
+    {
+        return ReadString(ValueTimestampServer, {});
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::TimestampServer(std::wstring const& value) noexcept
+    {
+        WriteString(ValueTimestampServer, value);
     }
 }

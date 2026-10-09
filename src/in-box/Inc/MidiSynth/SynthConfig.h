@@ -82,7 +82,7 @@ namespace MidiSynth
         // Applied to the whole mix. Set so output level matches the in-box synth, measured by
         // capturing it and correcting for the loopback path gain: a drop-in replacement that is
         // quieter or louder than what it replaces changes how every existing MIDI file sounds.
-        double MasterGainDb{ -1.3 };
+        double MasterGainDb{ 0.0 };
 
         // Measured: the mix reaches full scale at about 20 simultaneous notes. The in-box synth
         // clips too and is documented as doing so, so Compatible keeps that; Modern cannot, since

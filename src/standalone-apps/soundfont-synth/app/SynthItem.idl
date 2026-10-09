@@ -1,0 +1,41 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace midisoundfontsynth
+{
+    // One synth card. Everything is read only to XAML; the window changes it through the
+    // implementation, so a value set from the host never comes back as a customer's change.
+    [default_interface]
+    runtimeclass SynthItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        SynthItem();
+
+        String Id{ get; };
+        String Name{ get; };
+        String FileName{ get; };
+        String FilePath{ get; };
+        String DetailText{ get; };
+        String StatusText{ get; };
+        String VoicesText{ get; };
+
+        Double VolumeDb{ get; };
+        String VolumeText{ get; };
+
+        Boolean IsOn{ get; };
+        Boolean IsBusy{ get; };
+
+        Microsoft.UI.Xaml.Visibility BusyVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility WarningVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility InUseVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility DetailVisibility{ get; };
+
+        String AccessibleName{ get; };
+        String ToggleAccessibleName{ get; };
+        String VolumeAccessibleName{ get; };
+        String MoreAccessibleName{ get; };
+    }
+}

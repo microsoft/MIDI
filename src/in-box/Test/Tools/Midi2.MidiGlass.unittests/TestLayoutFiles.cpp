@@ -168,7 +168,7 @@ namespace glasstests
             "controls": [
                 {
                     "id": "c1",
-                    "kind": "teapot",
+                    "kind": "knob",
                     "x": 1e308, "y": -1e308,
                     "width": 0, "height": 0,
                     "hueSlot": -99,
@@ -187,6 +187,15 @@ namespace glasstests
                         "a string where an object belongs",
                         null
                     ]
+                },
+                {
+                    "id": "c2",
+                    "kind": "teapot",
+                    "label": 12,
+                    "x": "left", "y": -1e308,
+                    "width": -40, "height": 1e308,
+                    "keyboardOrder": -7,
+                    "messages": [ { "kind": "noteOn", "number": 999 } ]
                 },
                 12345
             ]

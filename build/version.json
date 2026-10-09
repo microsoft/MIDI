@@ -21,14 +21,14 @@
 
   "major": 0,
   "minor": 99,
-  "patch": 88,
+  "patch": 92,
 
   "channel": "preview",
-  "channelNumber": 10,
+  "channelNumber": 11,
 
   "build": 0,
 
-  "versionName": "API and Tools Preview 10",
+  "versionName": "API and Tools Preview 11",
 
   "nuGetPackageId": "Windows.Devices.Midi2"
 }

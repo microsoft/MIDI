@@ -78,6 +78,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="MidiSynthDlsTests.h" />
+    <ClInclude Include="MidiSynthQueueTests.h" />
     <ClInclude Include="MidiSynthUmpTests.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
@@ -85,6 +86,7 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="MidiSynthDlsTests.cpp" />
+    <ClCompile Include="MidiSynthQueueTests.cpp" />
     <ClCompile Include="MidiSynthUmpTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

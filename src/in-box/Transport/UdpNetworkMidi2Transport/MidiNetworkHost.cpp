@@ -10,37 +10,6 @@
 
 #include <chrono>
 
-namespace
-{
-    // The WinRT object DNS-SD registration takes for an adapter. An adapter with an IPv4 address
-    // is behind one of the host names, and a connected one behind a connection profile.
-    winrt::Windows::Networking::Connectivity::NetworkAdapter FindWinRTNetworkAdapter(_In_ winrt::guid const& id)
-    {
-        using namespace winrt::Windows::Networking::Connectivity;
-
-        try
-        {
-            for (auto const& hostName : NetworkInformation::GetHostNames())
-            {
-                auto const info = hostName.IPInformation();
-                auto const adapter = info != nullptr ? info.NetworkAdapter() : nullptr;
-
-                if (adapter != nullptr && adapter.NetworkAdapterId() == id) return adapter;
-            }
-
-            for (auto const& profile : NetworkInformation::GetConnectionProfiles())
-            {
-                auto const adapter = profile != nullptr ? profile.NetworkAdapter() : nullptr;
-
-                if (adapter != nullptr && adapter.NetworkAdapterId() == id) return adapter;
-            }
-        }
-        CATCH_LOG();
-
-        return nullptr;
-    }
-}
-
 _Use_decl_annotations_
 HRESULT 
 MidiNetworkHost::Initialize(
@@ -59,7 +28,7 @@ MidiNetworkHost::Initialize(
     RETURN_HR_IF(E_INVALIDARG, hostDefinition.ServiceInstanceName.empty());
 
     // An empty host name is not fatal. It means no resolvable .local name was found for this
-    // machine, and DNS-SD still advertises correctly against a null host name. Logged because
+    // machine, and the registration uses the DNS host name in .local instead. Logged because
     // it is otherwise invisible and changes which name remote peers resolve.
     if (hostDefinition.HostName.empty())
     {
@@ -69,7 +38,7 @@ MidiNetworkHost::Initialize(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"No .local host name was resolved for this machine. Advertising without an explicit host name.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(L"No .local host name was resolved for this machine. Advertising with the DNS host name in .local instead.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(hostDefinition.ServiceInstanceName.c_str(), "service instance name")
         );
     }
@@ -534,10 +503,10 @@ try
 
     // Before anything is created, because a host which has to wait for its adapter creates nothing
     winrt::guid networkAdapterId{};
-    winrt::Windows::Networking::Connectivity::NetworkAdapter networkAdapter{ nullptr };
+    uint32_t networkInterfaceIndex{ 0 };
     bool networkAdapterFallbackUsed{ false };
 
-    if (!ChooseNetworkAdapter(networkAdapterId, networkAdapter, networkAdapterFallbackUsed))
+    if (!ChooseNetworkAdapter(networkAdapterId, networkInterfaceIndex, networkAdapterFallbackUsed))
     {
         return HRESULT_FROM_WIN32(ERROR_DEV_NOT_EXIST);
     }
@@ -563,31 +532,6 @@ try
         RETURN_HR_IF(E_UNEXPECTED, parentDeviceInstanceId.empty());
 
         m_parentDeviceInstanceId = parentDeviceInstanceId;
-    }
-   
-    // HostName's constructor throws on an empty string, which would escape this HRESULT
-    // function. A null HostName is valid for DNS-SD registration.
-    HostName hostName{ nullptr };
-
-    if (!m_hostDefinition.HostName.empty())
-    {
-        try
-        {
-            hostName = HostName(m_hostDefinition.HostName);
-        }
-        catch (...)
-        {
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_WARNING,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Host name is not a valid HostName. Advertising without an explicit host name.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(m_hostDefinition.HostName.c_str(), "host name"),
-                TraceLoggingHResult(wil::ResultFromCaughtException(), MIDI_TRACE_EVENT_HRESULT_FIELD)
-            );
-        }
     }
 
     DatagramSocket socket;
@@ -645,7 +589,7 @@ try
 
     if (m_hostDefinition.Advertise)
     {
-        RETURN_IF_FAILED(StartAdvertising(socket, hostName, boundPort, networkAdapter));
+        RETURN_IF_FAILED(StartAdvertising(boundPort, networkAdapterId, networkInterfaceIndex));
     }
 
     unbindOnFailure.release();
@@ -749,28 +693,35 @@ MidiNetworkHost::BindSocket(DatagramSocket const& socket, uint16_t& boundPort)
 _Use_decl_annotations_
 HRESULT
 MidiNetworkHost::StartAdvertising(
-    DatagramSocket const& socket,
-    HostName const& hostName,
     uint16_t const boundPort,
-    winrt::Windows::Networking::Connectivity::NetworkAdapter const& adapter)
+    winrt::guid const& networkAdapterId,
+    uint32_t const networkInterfaceIndex)
 {
     auto advertiser = std::make_shared<MidiNetworkAdvertiser>();
 
     RETURN_IF_FAILED(advertiser->Initialize());
 
-    RETURN_IF_FAILED(advertiser->Advertise(
+    auto const advertiseResult = advertiser->Advertise(
         m_hostDefinition.ServiceInstanceName,
-        hostName,
-        socket,
+        m_hostDefinition.HostName,
         boundPort,
         m_hostDefinition.UmpEndpointName,
         m_hostDefinition.ProductInstanceId,
-        adapter
-    ));
+        networkInterfaceIndex
+    );
+
+    RETURN_IF_FAILED(advertiseResult);
 
     {
         auto lock = m_advertiserLock.lock();
         m_advertiser = advertiser;
+    }
+
+    // Not repeated while the DNS client is still working on it, because it may yet settle on
+    // another label
+    if (advertiseResult != S_OK)
+    {
+        return S_OK;
     }
 
     // The DNS client announces a new registration only once and marks it wrongly, so the
@@ -779,9 +730,7 @@ MidiNetworkHost::StartAdvertising(
     {
         try
         {
-            endpointManager->OnHostRegistered(
-                ActualServiceInstanceName(advertiser),
-                adapter != nullptr ? adapter.NetworkAdapterId() : winrt::guid{});
+            endpointManager->OnHostRegistered(ActualServiceInstanceName(advertiser), networkAdapterId);
         }
         CATCH_LOG();
     }
@@ -793,11 +742,11 @@ _Use_decl_annotations_
 bool
 MidiNetworkHost::ChooseNetworkAdapter(
     winrt::guid& adapterId,
-    winrt::Windows::Networking::Connectivity::NetworkAdapter& adapter,
+    uint32_t& interfaceIndex,
     bool& fallbackUsed)
 {
     adapterId = winrt::guid{};
-    adapter = nullptr;
+    interfaceIndex = 0;
     fallbackUsed = false;
 
     auto const definition = GetDefinition();
@@ -815,14 +764,10 @@ MidiNetworkHost::ChooseNetworkAdapter(
             std::wstring{ definition.NetworkAdapterPhysicalAddress },
             found))
     {
-        adapter = FindWinRTNetworkAdapter(found.Id);
+        adapterId = found.Id;
+        interfaceIndex = found.InterfaceIndex();
 
-        if (adapter != nullptr)
-        {
-            adapterId = found.Id;
-
-            return true;
-        }
+        return true;
     }
 
     if (definition.AllowNetworkAdapterFallback)

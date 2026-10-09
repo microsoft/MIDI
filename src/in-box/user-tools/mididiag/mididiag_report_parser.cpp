@@ -702,10 +702,13 @@ namespace mididiag::report
             { L"clsid", L"CLSID" },
             { L"dbm", L"dBm" },
             { L"desc", L"description" },
+            { L"dhcp", L"DHCP" },
             { L"dll", L"DLL" },
+            { L"dns", L"DNS" },
             { L"drivers32", L"Drivers32" },
             { L"drivers32wow", L"Drivers32 WOW" },
             { L"exe", L"EXE" },
+            { L"fec", L"FEC" },
             { L"gtb", L"GTB" },
             { L"guid", L"GUID" },
             { L"hresult", L"HRESULT" },
@@ -713,9 +716,12 @@ namespace mididiag::report
             { L"ids", L"IDs" },
             { L"inf", L"INF" },
             { L"ip", L"IP" },
+            { L"ipv4", L"IPv4" },
+            { L"ipv6", L"IPv6" },
             { L"jr", L"JR" },
             { L"ks", L"KS" },
             { L"ksa", L"KSA" },
+            { L"mdns", L"mDNS" },
             { L"mid", L"MID" },
             { L"midi", L"MIDI" },
             { L"midi1", L"MIDI 1.0" },
@@ -724,6 +730,7 @@ namespace mididiag::report
             { L"mpe", L"MPE" },
             { L"num", L"number" },
             { L"os", L"OS" },
+            { L"pc", L"PC" },
             { L"pid", L"PID" },
             { L"pnp", L"PnP" },
             { L"reg", L"registry" },
@@ -1105,7 +1112,12 @@ namespace mididiag::report
             readable += replacement != std::end(WordReplacements) ? replacement->Replacement : std::wstring_view{ word };
         }
 
-        if (!readable.empty())
+        // "mDNS" keeps its small first letter even at the start of a name. Words are lower case
+        // by now, so only a replacement can start with a small letter and then a capital.
+        bool const keepsSmallFirstLetter = readable.size() > 1 &&
+            readable[0] >= L'a' && readable[0] <= L'z' && readable[1] >= L'A' && readable[1] <= L'Z';
+
+        if (!readable.empty() && !keepsSmallFirstLetter)
         {
             readable.front() = ToAsciiUpper(readable.front());
         }

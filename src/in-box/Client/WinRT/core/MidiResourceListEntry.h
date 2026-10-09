@@ -15,8 +15,9 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
     {
         MidiResourceListEntry() = default;
 
-        MidiResourceListEntry(_In_ winrt::hstring const& resource) noexcept
-            : m_resource(resource) {}
+        // Starts from the named resource's own specification defaults, so a ProgramList entry is
+        // already paged and already asks for a resource id.
+        MidiResourceListEntry(_In_ winrt::hstring const& resource) noexcept;
 
         static winrt::hstring CanSetNone() noexcept { return L"none"; }
         static winrt::hstring CanSetFull() noexcept { return L"full"; }

@@ -22,7 +22,9 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Data.Json.h>
 
+#include "ContentProvenance.h"
 #include "EndpointMatch.h"
+#include "LfoWave.h"
 #include "ThemeModel.h"
 
 namespace glass
@@ -150,34 +152,14 @@ namespace glass
         // A step sequencer: a row of notes and rests played in time with the layout's tempo
         // while it runs. Pressed, it starts or stops, the way an LFO does.
         Steps = 26,
+
+        // Not a kind a file can name: a control of a kind this version doesn't know, kept as read.
+        Placeholder = 1000,
     };
 
-    // The shape an LFO sweeps. The first five repeat, so one cycle of them can be drawn with a
-    // bead running along it; the noises do not, so there is no cycle to draw and the bead only
-    // moves up and down.
-    enum class LfoWave
-    {
-        Sine = 0,
-        Triangle = 1,
-        Square = 2,
-
-        // A sawtooth. Up is the one that climbs and falls off a cliff; down is the reverse.
-        RampUp = 3,
-        RampDown = 4,
-
-        // Flat spectrum. Every sample is as likely to be anything as any other.
-        WhiteNoise = 5,
-
-        // Falls away three decibels an octave. Sounds and reads as more natural than white.
-        PinkNoise = 6,
-
-        // Six decibels an octave: a random walk, so it wanders rather than jumps. Also called
-        // red noise, which is the same thing under a different name rather than a sixth shape.
-        BrownNoise = 7,
-
-        // The mirror of pink. Rises three decibels an octave, so it is all jitter and no drift.
-        BlueNoise = 8,
-    };
+    // The shape an LFO sweeps. Shared with MIDI Patchbay's LFO step, so one wave is the same
+    // wave in both apps.
+    using LfoWave = ::midiapp::LfoWave;
 
     // When a control sends. A control has a list of messages, not one, so a single button can
     // send a note on press and a control change to a different device on release.
@@ -211,6 +193,9 @@ namespace glass
         // A per-note controller whose meaning the instrument decides. PerNoteController is the
         // registered kind, whose numbers MIDI 2.0 defines.
         AssignablePerNoteController = 14,
+
+        // Not a kind a file can name: one this version doesn't know, kept as read and never sent.
+        Unrecognized = 1000,
     };
 
     // How the layout talks to one device. It decides what a row sent there can say.
@@ -627,11 +612,11 @@ namespace glass
 
     // One pass may not be so slow that nobody can tell it is running, nor so fast that the
     // update rate is doing all the shaping.
-    constexpr double MinimumBeatsPerCycle = 0.0625;
-    constexpr double MaximumBeatsPerCycle = 64.0;
+    constexpr double MinimumBeatsPerCycle = ::midiapp::MinimumLfoBeatsPerCycle;
+    constexpr double MaximumBeatsPerCycle = ::midiapp::MaximumLfoBeatsPerCycle;
 
-    constexpr int32_t MinimumLfoIntervalMilliseconds = 5;
-    constexpr int32_t MaximumLfoIntervalMilliseconds = 1000;
+    constexpr int32_t MinimumLfoIntervalMilliseconds = ::midiapp::MinimumLfoIntervalMilliseconds;
+    constexpr int32_t MaximumLfoIntervalMilliseconds = ::midiapp::MaximumLfoIntervalMilliseconds;
 
     // The platter. There is only one thing to set on it, because everything else a jog wheel
     // does already falls out of the ordinary message rows: the control's value is how far it
@@ -1048,6 +1033,9 @@ namespace glass
         int32_t Position{ -1 };
 
         UnknownFields Unknown{ nullptr };
+
+        // An unrecognized message's whole object as the file had it. Null on every other message.
+        UnknownFields Original{ nullptr };
     };
 
     // An RPN or NRPN is named by a bank and an index, 0 to 127 each: in MIDI 1.0, the values of
@@ -1127,6 +1115,9 @@ namespace glass
         int32_t HoldMilliseconds{ 120 };
 
         UnknownFields Unknown{ nullptr };
+
+        // When Kind is Unrecognized, the whole object as the file had it.
+        UnknownFields Original{ nullptr };
     };
 
     struct Control
@@ -1230,8 +1221,8 @@ namespace glass
 
         // The least time between two sends while this control is being moved. Zero is no limit.
         //
-        // A DIN cable carries about 350 three byte messages a second, shared with everything else
-        // on that wire, and a fader dragged across a high rate digitizer will out-run it. Only a
+        // A DIN cable carries about a thousand three-byte messages a second, shared with everything
+        // else on that wire, and a fader dragged across a high rate digitizer can fill it. Only a
         // continuous control is ever limited; rate limiting a note on would be a defect.
         int32_t SendIntervalMilliseconds{ 0 };
 
@@ -1239,6 +1230,9 @@ namespace glass
         FeedbackBinding Feedback{};
 
         UnknownFields Unknown{ nullptr };
+
+        // A placeholder's whole object as the file had it. Null on every other control.
+        UnknownFields Original{ nullptr };
     };
 
     // How many stops a control snaps to, or zero when it is smooth all the way.
@@ -1392,6 +1386,9 @@ namespace glass
         std::wstring Name{};
         std::wstring Description{};
 
+        // Who made it, and from what. Self-stated; only a signed pack proves a publisher.
+        std::optional<midiapp::ContentProvenance> Provenance{};
+
         // Empty while the layout has never been written.
         std::wstring FilePath{};
 
@@ -1447,9 +1444,13 @@ namespace glass
         // sending system exclusive, because arbitrary SysEx can damage a device.
         bool IsImported{ false };
 
-        // Pinned to the top of the library. It travels with the file rather than living in this
-        // PC's settings, because the customer who made the layout is the one who cares about it
-        // and a layout carried to another machine should arrive where they left it.
+        // Set when a newer version of the app wrote the file: a higher file version, or a kind of
+        // control or message this build doesn't know. Never in the file. Such a layout opens and
+        // runs, but is never written, because writing it would lose what this build can't read.
+        bool IsFromNewerVersion{ false };
+
+        // Read from files older builds wrote, only so the library can move it into this PC's
+        // settings once. Never written: whether a layout is a favorite is a fact about this PC.
         bool IsFavorite{ false };
 
         // Appears to other apps while the layout runs, and goes away with it. Off unless asked

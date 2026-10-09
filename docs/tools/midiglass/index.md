@@ -10,21 +10,21 @@ categories:
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
 
-Windows MIDI Glass ("MIDI Glass") lets you build your own MIDI controller on screen. You put faders, knobs, buttons, pads and keys on a page, choose what each one sends, and then play it with your fingers, a pen or a mouse. It's at its best on a touch screen, or on a second monitor next to your keyboard, but it works on any PC.
+Windows MIDI Glass lets you build your own MIDI controller on screen. You put faders, knobs, buttons, pads and keys on a page, choose what each one sends, and then play it with your fingers, a pen or a mouse. It's at its best on a touch screen, or on a second monitor next to your keyboard, but it works on any PC.
 
 Each design is called a **layout**. A layout can have several pages and send to several devices. Its controls can also move and light up when your gear or your DAW sends something back.
 
 ## Quick start
 
-![The MIDI Glass library, with numbered callouts on the New layout button, a layout card, a card's device status, the search and sort controls, the Ask an AI assistant, Open a file and More options buttons, the Appearance and settings button, and the status bar]({{ site.baseurl }}/assets/images/midiglass-quick-start.png)
+![The Windows MIDI Glass library, with numbered callouts on the New layout button, a layout card, a card's device status, the search and sort controls, the Ask an AI assistant, Open a file and More options buttons, the Appearance and settings button, and the status bar]({{ site.baseurl }}/assets/images/midiglass-quick-start.png)
 
-MIDI Glass opens to the **library**, where all your layouts are.
+Windows MIDI Glass opens to the **library**, where all your layouts are.
 
 1. **New layout** makes a layout. You give it a name, pick the device it sends to, and pick a template to start from.
 2. **Each card is a layout.** Click a card to run it. Point at a card to see **Run**, **Edit** and **…** for more options. You can also right-click a card for the same options.
 3. **The status chip** on each card says whether the devices that layout sends to are connected right now.
 4. **Search, sort and view.** Type to find a layout. Sort by last used, by name or by last changed. Switch between cards and a list. The list shows each layout's description under its name.
-5. **Open a file…** runs a layout from any folder. **Ask an AI assistant…**, next to it, helps an AI assistant build a layout for you. **…** (More options) imports a layout package, opens the backups folder, and can keep the PC awake while a layout runs.
+5. **Open a file…** runs a layout from any folder. **Ask an AI assistant…**, next to it, helps an AI assistant build a layout for you. **…** (More options) imports a pack, sets the name and license that go on what you make, opens the backups folder, and can keep the PC awake while a layout runs.
 6. **Appearance and settings** sets the app's light or dark theme and its window background, and turns **Ask an AI assistant** on or off.
 7. **The status bar** shows how many layouts you have and where they're saved. The chip on the right says whether the MIDI service is running.
 
@@ -34,13 +34,13 @@ MIDI Glass opens to the **library**, where all your layouts are.
 2. Type a name. Under **Send to**, pick the device you want to play.
 3. Pick a **Template**, then select **Create**. The layout opens in the editor.
 4. Select **Try** near the top left, and play the page. The **Sending** list under the page shows what goes out.
-5. Select **Library** to go back. You don't need to save, because MIDI Glass saves as you go. Click the new card to run your layout.
+5. Select **Library** to go back. You don't need to save, because Windows MIDI Glass saves as you go. Click the new card to run your layout.
 
 To play an app on the same PC, such as a DAW, pick **Default App Loopback (A)** under **Send to**. Then set the app to listen to **Default App Loopback (B)**. A loopback passes whatever goes into one side out of the other side.
 
 ## The editor
 
-![The MIDI Glass editor, with numbered callouts on the Add pane, a selected fader on the page, the inspector tabs, the Edit and Try switch, the toolbar, the Layout button, and the page tabs and Sending list under the page]({{ site.baseurl }}/assets/images/midiglass-editor.png)
+![The Windows MIDI Glass editor, with numbered callouts on the Add pane, a selected fader on the page, the inspector tabs, the Edit and Try switch, the toolbar, the Layout button, and the page tabs and Sending list under the page]({{ site.baseurl }}/assets/images/midiglass-editor.png)
 
 1. **Add** lists every kind of control. Click one, then click the page where you want it. You can also drag one onto the page, or double-click one to drop it in the first open spot. **Outline**, next to **Add**, lists every control on the page.
 2. **The page.** Click a control to select it. Drag it to move it, or drag a corner or an edge to resize it. The arrow keys move it one pixel at a time. Hold Shift to move it one grid square at a time.
@@ -50,7 +50,7 @@ To play an app on the same PC, such as a DAW, pick **Default App Loopback (A)** 
 6. **Layout…** has the settings for the whole layout: its theme and colors, its pages and devices, the page size, a background picture or video, its name, and its keyboard order. **Save and run** is here too.
 7. **Under the page** are the page tabs. **+ Page** adds a page. **Sending** lists each message the layout sends while you try it.
 
-MIDI Glass saves your layout a moment after each change. The chip near the top right says **Saved** once it's done. Press Ctrl+S to save right away.
+Windows MIDI Glass saves your layout a moment after each change. The chip near the top right says **Saved** once it's done. Press Ctrl+S to save right away.
 
 ## Starting a new layout
 
@@ -66,13 +66,13 @@ MIDI Glass saves your layout a moment after each change. The chip near the top r
 | **DJ deck** | Two decks with filters, three band EQ, cue pads and a crossfader. |
 | **Drum pads** | A four by four grid on channel 10, with the lowest note at the bottom left. |
 | **Transport** | Play, stop, record and loop, plus eight track faders. |
-| **Mackie Control** | Eight channel strips, a master fader, transport and a jog wheel, for a DAW set up to use a Mackie Control surface. See [How to control your DAW with Mackie Control in MIDI Glass]({{ site.baseurl }}/kb/midi-glass-mackie-control/). |
+| **Mackie Control** | Eight channel strips, a master fader, transport and a jog wheel, for a DAW set up to use a Mackie Control surface. See [How to control your DAW with Mackie Control in Windows MIDI Glass]({{ site.baseurl }}/kb/midi-glass-mackie-control/). |
 | **Horizontal toolbar** | Eight buttons in a see-through strip that stays in front of your other apps. |
 | **Vertical toolbar** | Eight buttons in a see-through column that stays in front of your other apps. |
 | **Floating palette** | Sixteen buttons in a see-through square that stays in front of your other apps. |
 | **Blank** | An empty page, ready for you to build on. |
 
-The toolbar and palette templates are explained in [How to make a floating toolbar or palette in MIDI Glass]({{ site.baseurl }}/kb/midi-glass-floating-toolbars/).
+The toolbar and palette templates are explained in [How to make a floating toolbar or palette in Windows MIDI Glass]({{ site.baseurl }}/kb/midi-glass-floating-toolbars/).
 
 If no devices show up under **Send to**, plug one in, or make a loopback with [Windows MIDI Loopback Setup]({{ site.baseurl }}/tools/midiloopbacksetup/).
 
@@ -143,11 +143,11 @@ A few types need more than a number:
 
 ![The Sends tab for a knob that sends a registered per-note controller, with Note 60 and Controller 7, which the list names Volume]({{ site.baseurl }}/assets/images/midiglass-per-note-controller.png) ![The Sends tab for a pad's note on row, with the attribute type 02 and the attribute data 0001]({{ site.baseurl }}/assets/images/midiglass-note-attribute.png)
 
-MIDI Glass names notes the same way the rest of Windows MIDI Services does: note 60, middle C, is C3.
+Windows MIDI Glass names notes the same way the rest of Windows MIDI Services does: note 60, middle C, is C3.
 
-The fastest way to fill in a row is **MIDI Learn**. Turn on **Learn**, then move a knob or press a key on your hardware, and MIDI Glass copies what it sends. **Learn a bank** fills several controls in a row: touch the knobs on your hardware one after another, and each one fills the next control in keyboard order. MIDI Learn listens to the devices in the layout's device list, so add your hardware there first.
+The fastest way to fill in a row is **MIDI Learn**. Turn on **Learn**, then move a knob or press a key on your hardware, and Windows MIDI Glass copies what it sends. **Learn a bank** fills several controls in a row: touch the knobs on your hardware one after another, and each one fills the next control in keyboard order. MIDI Learn listens to the devices in the layout's device list, so add your hardware there first.
 
-Each device has a **Protocol** setting: **MIDI 2.0**, **MIDI 1.0** or **Mackie Control**. It decides how you type values on the **Sends** tab. [How MIDI Glass talks to each device]({{ site.baseurl }}/kb/midi-glass-mackie-control/#how-midi-glass-talks-to-each-device) explains the choices.
+Each device has a **Protocol** setting: **MIDI 2.0**, **MIDI 1.0** or **Mackie Control**. It decides how you type values on the **Sends** tab. [How Windows MIDI Glass talks to each device]({{ site.baseurl }}/kb/midi-glass-mackie-control/#how-midi-glass-talks-to-each-device) explains the choices.
 
 ## Controls that listen
 
@@ -186,7 +186,7 @@ To follow another device instead, such as your DAW, set **Tempo source** to **In
 
 ## Running a layout
 
-To run a layout, click its card in the library, or select **Run** on the card. You can also double-click a layout file in File Explorer. The first time you do, Windows asks which app to open it with, so pick MIDI Glass.
+To run a layout, click its card in the library, or select **Run** on the card. You can also double-click a layout file in File Explorer. The first time you do, Windows asks which app to open it with, so pick Windows MIDI Glass.
 
 A running layout has its own window. The bar along the top has:
 
@@ -194,7 +194,7 @@ A running layout has its own window. The bar along the top has:
 - **Size on screen**: **Actual size**, **Fit to window**, or a custom size.
 - **Always on top**, to keep the window in front of your other apps.
 - **Full screen**. In full screen, everything on the bar moves behind one small button in a corner of the screen. It fades after a few seconds so it's out of the way. You can move it to another corner. Press Esc to leave full screen, or F11 to switch in and out.
-- **Panic**, which stops every note on every device MIDI Glass is sending to. Ctrl+Shift+P does the same thing. Use it when a note gets stuck.
+- **Panic**, which stops every note on every device Windows MIDI Glass is sending to. Ctrl+Shift+P does the same thing. Use it when a note gets stuck.
 
 You can move more than one control at once with more than one finger: two faders, or a fader and a pad.
 
@@ -206,7 +206,7 @@ If a layout runs for a long time while nobody touches the PC, such as one that o
 
 A layout keeps its own list of devices. Each one has a name, and the controls send to that name rather than straight to the hardware. So if you move to a different MIDI interface, you only change the device in one place, and every control follows.
 
-Open **Layout…**, then **Pages and devices…**, and select **Outputs** to see the list. You can add a device, change which hardware one points to, and set how MIDI Glass talks to it.
+Open **Layout…**, then **Pages and devices…**, and select **Outputs** to see the list. You can add a device, change which hardware one points to, and set how Windows MIDI Glass talks to it.
 
 A device that isn't connected is normal, not an error. The library card says how many are missing, and the layout sends to the rest. The status bar in the library says whether the MIDI service is running. If it isn't, nothing can be sent.
 
@@ -218,18 +218,53 @@ Each control uses one of the theme's six colors, chosen on its **Look** tab. A c
 
 **Layout…**, then **Background image…**, puts a picture or a video behind the controls. You can set how it fits the page and how see-through it is.
 
-[How MIDI Glass themes work]({{ site.baseurl }}/kb/midi-glass-themes/) covers every theme setting, where theme files go, and how to make your own.
+The theme gallery shows who made each theme under its name. **Group themes by**, above the gallery, sorts the themes by who made them or by who signed them. Right-click a theme to see **About this theme…**, or, for one of your own, **Pack for sharing…**.
+
+[How Windows MIDI Glass themes work]({{ site.baseurl }}/kb/midi-glass-themes/) covers every theme setting, where theme files go, and how to make your own.
 
 ## Your layout files
 
 Layouts are saved in **Documents › MIDI Layouts**, one file per layout. The files end in `.midilayout`. A picture or a video you add to a layout is copied next to it, so the layout and its pictures stay together.
 
 - **Back up now**, on a card's **…** menu, saves a copy of the layout in the **Backups** folder next to your layouts.
-- **Restore from a backup…** puts a backup back. MIDI Glass backs up the layout as it is now first, so you can change your mind.
-- **Package for another PC…** makes one file that holds the layout and its pictures. Copy it to the other PC, and in the library there, select **…** (More options), then **Import a layout package…**.
-- **Duplicate** makes a copy to try ideas on, and **Add to favorites** puts the layout in a **Favorites** section at the top of the library.
+- **Restore from a backup…** puts a backup back. Windows MIDI Glass backs up the layout as it is now first, so you can change your mind.
+- **Pack for sharing…** makes one file that holds the layout and everything it uses. See [Sharing layouts and themes](#sharing-layouts-and-themes).
+- **Duplicate** makes a copy to try ideas on. The copy says which layout it's based on.
+- **Add to favorites** puts the layout in a **Favorites** section at the top of the library. Favorites belong to this PC, so a layout you share doesn't arrive as someone else's favorite.
 
-To have an AI assistant build a layout for you, select **Ask an AI assistant…** in the library, next to **Open a file…**. It shows a starting prompt to paste into the AI assistant you use, such as a chat in your web browser. The prompt has the link to [MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/), the names of your MIDI devices, and the themes you have, so the layout the assistant makes can find your devices. MIDI Glass doesn't send anything itself. If you'd rather not see it, open **Appearance and settings** and turn off **Ask an AI assistant**.
+To have an AI assistant build a layout for you, select **Ask an AI assistant…** in the library, next to **Open a file…**. It shows a starting prompt to paste into the AI assistant you use, such as a chat in your web browser. The prompt has the link to [Windows MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/), the names of your MIDI devices, and the themes you have, so the layout the assistant makes can find your devices. Windows MIDI Glass doesn't send anything itself. If you'd rather not see it, open **Appearance and settings** and turn off **Ask an AI assistant**.
+
+## Sharing layouts and themes
+
+To give a layout to someone else, or move it to another PC, select **Pack for sharing…** on its card's **…** menu. In the editor, open **Layout…**, then **Pages and devices…**, and select **Export…**. Windows MIDI Glass makes a **pack**: one `.midilayoutpack` file that holds the layout, every picture and video it uses, and the theme it uses if that theme is one of yours. To share a theme on its own, right-click it in the theme gallery and select **Pack for sharing…**. That makes a `.midithemepack` file.
+
+A pack lists every file inside it, with its size and a fingerprint called a SHA-256 hash. When someone imports the pack, Windows MIDI Glass checks every file against that list, so it can tell if anything was changed or added after the pack was made.
+
+### Who made it
+
+Each layout and theme can say who made it: a name, a company or group, a website, a license, a version, and whether AI was used to make it. Windows MIDI Glass fills this in for everything you make, from **Your info for sharing…** on the library's **…** (More options) menu. Other Windows MIDI Services tools use the same info. Before you pack something, Windows MIDI Glass shows what it says and lets you change it.
+
+To see what a layout says about who made it, select **About this layout…** on its card's **…** menu. For a theme, right-click it in the theme gallery and select **About this theme…**.
+
+Anyone can type any name into a file. So unless a signature backs it, Windows MIDI Glass shows the name with **(unverified)** after it.
+
+### Signed packs
+
+A publisher, such as an instrument maker, can **sign** a pack with a code-signing certificate. The signature proves who published the pack and that nothing in it changed since. It doesn't mean the layout is safe or that it works.
+
+- **To sign a pack,** pick your certificate under **Sign it** when you pack it. You need a code-signing certificate from a certificate provider, in your personal certificate store. A certificate on a hardware token or in a cloud signing service works when the provider's software puts it in that store. Add a **Timestamp server** from your certificate provider, so the signature stays good after your certificate runs out.
+- **When you import a signed pack,** Windows MIDI Glass shows **Signed by** and the name on the certificate. Windows checks the certificate, including whether the company that issued it has withdrawn it. A pack whose signature doesn't match what's in it, or whose certificate was withdrawn, isn't imported.
+- **A layout from a signed pack** says **Signed by** on its card for as long as its files are exactly what was signed. When you select **Edit**, Windows MIDI Glass offers to make your own copy, so the signed layout stays as it was published. The copy says which layout it's based on.
+
+### Importing a pack
+
+Select **…** (More options) > **Import a pack…** in the library. For a theme pack, you can also use **Import a theme…** on the **Appearance** page in the editor. Windows MIDI Glass shows what's in the pack, who made it, and whether it's signed, before it writes anything. If you already have the same layout or theme, it asks whether to replace it or keep both.
+
+Windows MIDI Glass still imports the `.zip` layout packages that earlier versions made.
+
+### Layouts from a newer version
+
+A layout made by a newer version of Windows MIDI Glass says **From a newer version** on its card. You can run it, and you can open it in the editor to look around and try it. Windows MIDI Glass won't save changes to it, so nothing the newer version added gets lost. That's also why **Duplicate**, **Rename…** and **Edit description…** are turned off for it. A control this version doesn't have shows as a dashed outline with its name. It doesn't respond to touch and doesn't send anything. To change the layout, update Windows MIDI Glass.
 
 ## Keyboard and screen readers
 
@@ -241,7 +276,7 @@ Open **Layout…**, then **Pages and devices…**, and select **Accessibility ch
 
 ## Learn more
 
-- [How MIDI Glass themes work]({{ site.baseurl }}/kb/midi-glass-themes/)
-- [How to control your DAW with Mackie Control in MIDI Glass]({{ site.baseurl }}/kb/midi-glass-mackie-control/)
-- [How to make a floating toolbar or palette in MIDI Glass]({{ site.baseurl }}/kb/midi-glass-floating-toolbars/)
-- [MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/)
+- [How Windows MIDI Glass themes work]({{ site.baseurl }}/kb/midi-glass-themes/)
+- [How to control your DAW with Mackie Control in Windows MIDI Glass]({{ site.baseurl }}/kb/midi-glass-mackie-control/)
+- [How to make a floating toolbar or palette in Windows MIDI Glass]({{ site.baseurl }}/kb/midi-glass-floating-toolbars/)
+- [Windows MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/)

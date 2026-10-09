@@ -13,66 +13,89 @@
 #include "EndpointCatalog.h"
 #include "PatchCanvas.h"
 #include "PatchGraph.h"
+#include "PatchLibrary.h"
 #include "PatchModel.h"
 #include "PatchStore.h"
+#include "PatchTrace.h"
 #include "RouteEngine.h"
 #include "ThemeBrushes.h"
-#include "TrayIcon.h"
 
 namespace winrt::midipatchbay::implementation
 {
+    // One patch, open for editing. Each patch gets a window of its own, opened from the library.
+    // The library owns the patches, the routing and the notification area; this window shows
+    // one patch and changes it.
     struct MainWindow : MainWindowT<MainWindow>
     {
         MainWindow();
 
-        void RestoreWindowPlacement() noexcept;
-        void MinimizeAtStartup() noexcept;
+        // Called before Activate. False when there is no such patch.
+        bool OpenPatch(_In_ std::wstring const& patchKey) noexcept;
 
-        void OnRootLoaded(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        std::wstring const& PatchKey() const noexcept { return m_patchKey; }
 
-        void OnAppearanceButtonClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnAlwaysOnTopToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        // Each editor is nudged down and across from the last, so a second one is seen to open.
+        void RestoreWindowPlacement(_In_ int32_t cascade) noexcept;
 
-        void OnNavigationSelectionChanged(
-            controls::NavigationView const& sender,
-            controls::NavigationViewSelectionChangedEventArgs const& args);
+        // The theme or the backdrop changed in the library.
+        void ApplyAppearance() noexcept;
 
-        void OnOpenFolderClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnNewPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnNewQuickPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnImportPatchClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
-        void OnAssistantClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
-        void OnNotRoutingStartClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
-        void OnSortClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnSavePatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnPatchMenuClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnRoutingToggleClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnRootLoaded(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
+        void OnSavePatchClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPatchMenuClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnRoutingToggleClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnAutoStartToggled(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnAutoStartBarCloseClick(_In_ controls::InfoBar const& sender, _In_ foundation::IInspectable const& args);
+        void OnNotRoutingStartClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnShowEarlierVersionClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
-        void OnAddEndpointClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnCreateLoopbackClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnAutoArrangeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnZoomFitClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnZoomInClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnZoomOutClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnZoomApplyClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnZoomFlyoutOpening(foundation::IInspectable const& sender, foundation::IInspectable const& args);
-        void OnZoomValueChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
-        void OnTestClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnUndoClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnRedoClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnCutClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnCopyClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPasteClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnDeleteClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
-        void OnShowLoopClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnInspectorCloseClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAddEndpointClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnCreateLoopbackClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnAutoArrangeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnZoomFitClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnZoomInClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnZoomOutClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnZoomApplyClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnZoomFlyoutOpening(_In_ foundation::IInspectable const& sender, _In_ foundation::IInspectable const& args);
+        void OnZoomValueChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnTestClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
-        void OnSavePatchNameChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
-        void OnLoopbackNameChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
+        void OnShowLoopClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnInspectorCloseClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnLibraryButtonClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnConversionBarCloseClick(_In_ controls::InfoBar const& sender, _In_ foundation::IInspectable const& args);
 
-        void OnQuickPatchSourceChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
-        void OnQuickPatchDestinationChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
-        void OnQuickPatchGroupChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnTraceBarCloseClick(_In_ controls::InfoBar const& sender, _In_ foundation::IInspectable const& args);
+        void OnTracePreviousClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnTraceNextClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnTraceAgainClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
-        // Which of the transform dialog's mapping tables a row belongs to. Public only so the
-        // helpers in MainWindowTransforms.cpp can name it; nothing is projected from here.
+        void OnSavePatchNameChanged(_In_ foundation::IInspectable const& sender, _In_ controls::TextChangedEventArgs const& args);
+        void OnLoopbackNameChanged(_In_ foundation::IInspectable const& sender, _In_ controls::TextChangedEventArgs const& args);
+
+        void OnPaletteTabChanged(
+            _In_ controls::SelectorBar const& sender,
+            _In_ controls::SelectorBarSelectionChangedEventArgs const& args);
+        void OnPaletteSearchChanged(_In_ foundation::IInspectable const& sender, _In_ controls::TextChangedEventArgs const& args);
+        void OnPaletteContentSizeChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::SizeChangedEventArgs const& args);
+
+        // The bars between the palette, the canvas and the details panel, in MainWindowPanes.cpp.
+        void OnSplitterPressed(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
+        void OnSplitterMoved(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
+        void OnSplitterReleased(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
+        void OnSplitterEntered(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
+        void OnSplitterExited(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
+
+        // Which mapping list a row belongs to. Public only so the helpers in MainWindowMapSteps.cpp
+        // can name it; nothing is projected from here.
         enum class TransformMap : int32_t
         {
             Note = 0,
@@ -99,55 +122,48 @@ namespace winrt::midipatchbay::implementation
         static constexpr int32_t AftertouchShapeIndex = -1;
 
     private:
-        // ---- startup and chrome ----
+        // ---- startup and chrome, in MainWindow.xaml.cpp ----
         void InitializeWindowChrome() noexcept;
         void InitializeStaticText() noexcept;
-        void ApplyAssistantVisibility() noexcept;
-        xaml::UIElement BuildAppSettingsPanel() noexcept;
+        void UpdateTitle() noexcept;
+        void SaveEditorPlacement() noexcept;
+        void HandleKeyDown(_In_ input::KeyRoutedEventArgs const& args) noexcept;
 
-        // ---- notification area ----
-        void InitializeNotificationArea() noexcept;
-
-        // True when the close was turned into a hide, which is what keeps the routes running.
-        // False means the window really is going away.
-        bool TryHideToNotificationArea() noexcept;
-
-        void RestoreFromNotificationArea() noexcept;
-
-        // ---- patch list and navigation ----
-        void LoadPatches() noexcept;
-        void RebuildNavigation() noexcept;
-        void RefreshNavigationBadges() noexcept;
-        std::wstring NavigationBadgeSignature() const noexcept;
-        void SelectPatch(_In_ std::wstring const& patchId) noexcept;
-
-        // An empty preferred name gives the numbered untitled name.
-        void CreateNewPatch(_In_ std::wstring const& preferredName = {}) noexcept;
-
-        // Patch files from the Import button, from the command line, or double-clicked while the
-        // app was already open. Each is copied into the patch folder and none of them routes. The
-        // last one is selected. False when none of them could be imported.
-        bool ImportPatchFiles(_In_ std::vector<std::wstring> const& paths) noexcept;
-
-        // A patch double-clicked while the app is open arrives from the second copy as
-        // WM_COPYDATA, which XAML does not pass on, so the window is subclassed to see it.
-        static LRESULT CALLBACK HandoffSubclassProcedure(
-            _In_ HWND window,
-            _In_ UINT message,
-            _In_ WPARAM wParam,
-            _In_ LPARAM lParam,
-            _In_ UINT_PTR subclassId,
-            _In_ DWORD_PTR referenceData) noexcept;
-
-        static winrt::weak_ref<MainWindow> s_instance;
-
+        // Null once the patch is gone. Looked up every time, so nothing here holds a pointer
+        // across a suspend or a library change.
         ::midipatchbay::PatchDocument* CurrentPatch() noexcept;
+        ::midipatchbay::PatchAnalysis const& Analysis() noexcept;
 
-        // A patch's identity in the UI is its file path, or a session id while it has never been
-        // written. Both are stable for as long as the patch exists.
-        static std::wstring PatchKey(_In_ ::midipatchbay::PatchDocument const& patch) noexcept;
+        void OnLibraryChanged(_In_ ::midipatchbay::LibraryChange change, _In_ std::wstring const& key) noexcept;
 
-        // ---- canvas ----
+        // Every change to the patch ends here: it becomes a step that Undo can take back, the
+        // library saves it and rebuilds the routes, and the window shows the result. A change the
+        // canvas already shows, such as a node moved, needs no redraw.
+        void CommitChange(_In_ bool routingAffected = true, _In_ bool redraw = true) noexcept;
+
+        // ---- undo, in MainWindow.xaml.cpp ----
+        // Each state is the patch file text of the parts the canvas edits. That is far smaller
+        // than a copy of every step's settings, and comparing two is a string compare.
+        std::wstring CaptureState() noexcept;
+        void RestoreState(_In_ std::wstring const& state) noexcept;
+        void Undo() noexcept;
+        void Redo() noexcept;
+        void UpdateCommandStates() noexcept;
+
+        // ---- clipboard, in MainWindow.xaml.cpp ----
+        // The selected nodes and the links between them, as patch file text, so a copy can be
+        // pasted into another patch, or read by a person.
+        std::wstring SelectionAsText() noexcept;
+        void CopySelection() noexcept;
+        void CutSelection() noexcept;
+        void DuplicateSelection() noexcept;
+        winrt::fire_and_forget PasteAsync();
+
+        // Endpoints already on this patch are reused rather than added twice. False when nothing
+        // in the text could be pasted.
+        bool PasteText(_In_ std::wstring const& text) noexcept;
+
+        // ---- canvas, in MainWindow.xaml.cpp ----
         void RebuildCanvas() noexcept;
         void OnCanvasSelectionChanged() noexcept;
         void OnConnectionRequested(_In_ ::midipatchbay::PatchConnection connection) noexcept;
@@ -155,36 +171,105 @@ namespace winrt::midipatchbay::implementation
             _In_ std::wstring const& connectionId,
             _In_ ::midipatchbay::PatchConnection updated) noexcept;
         void OnCanvasLayoutChanged() noexcept;
-        void ShowEndpointMenu(_In_ std::wstring const& endpointId, _In_ foundation::Point const& position) noexcept;
+
+        // True when the link can be added. Says why when it can't. The link being moved, if any,
+        // is left out of the checks.
+        bool CanConnect(
+            _In_ ::midipatchbay::PatchConnection const& candidate,
+            _In_ std::wstring const& ignoreConnectionId) noexcept;
+
+        // The part of the canvas in view, in canvas units.
+        foundation::Rect VisibleCanvasRect() noexcept;
 
         void ApplyZoom(_In_ float zoom) noexcept;
         void UpdateZoomText(_In_ float zoom) noexcept;
 
-        void DeleteSelection() noexcept;
-        winrt::fire_and_forget DeleteSelectionAsync();
+        // ---- palette and steps, in MainWindow.xaml.cpp ----
+        void RebuildPalette() noexcept;
+        xaml::UIElement BuildBlockTile(_In_ ::midipatchbay::BlockKind kind) noexcept;
+        xaml::UIElement BuildEndpointTile(
+            _In_ std::wstring const& endpointDeviceId,
+            _In_ std::wstring const& name,
+            _In_ std::wstring const& detail,
+            _In_ std::wstring const& imagePath,
+            _In_ bool onCanvas) noexcept;
 
-        // ---- filters, in MainWindowFilters.cpp ----
-        winrt::fire_and_forget ShowFilterDialogAsync(std::wstring connectionId);
-        void BuildFilterDialog() noexcept;
-        xaml::UIElement BuildNoteRangeSection() noexcept;
-        void SetNoteRangeEnd(_In_ uint8_t note, _In_ bool isLow) noexcept;
-        void RefreshNoteRangeUi() noexcept;
-        void UpdateFilterSummary() noexcept;
+        // ---- panels, in MainWindowPanes.cpp ----
+        void InitializeSplitters() noexcept;
+        void SetInspectorVisible(_In_ bool visible) noexcept;
 
-        // ---- transforms, in MainWindowTransforms.cpp ----
+        // Three square tiles to a row, whatever width the palette has been dragged to.
+        void SizePaletteTiles() noexcept;
 
-        // The mapping tables are edited the same way, so one set of row functions drives them all.
-        winrt::fire_and_forget ShowTransformDialogAsync(std::wstring connectionId);
-        void BuildTransformDialog() noexcept;
-        controls::StackPanel BuildMapSection(_In_ TransformMap which) noexcept;
-        void RebuildMapRows(_In_ TransformMap which) noexcept;
-        void RefreshMapRowLabels(_In_ TransformMap which) noexcept;
+        // As big as the window allows, so a long step shows without scrolling on a large screen.
+        void FitBlockDialogToWindow() noexcept;
+
+        // The point is where the middle of the step goes. Returns the new step's id, or empty.
+        std::wstring AddBlock(_In_ ::midipatchbay::BlockKind kind, _In_ foundation::Point const& center) noexcept;
+
+        // Splits a link in two with a new step in the middle. The first half keeps the link's id
+        // and its mute, so its counts carry on.
+        void InsertBlockIntoConnection(
+            _In_ ::midipatchbay::BlockKind kind,
+            _In_ std::wstring const& connectionId,
+            _In_ std::optional<foundation::Point> const& center) noexcept;
+
+        void OnBlockDropped(
+            _In_ ::midipatchbay::BlockKind kind,
+            _In_ foundation::Point const& point,
+            _In_ std::wstring const& connectionId) noexcept;
+        void OnEndpointDropped(_In_ std::wstring const& endpointDeviceId, _In_ foundation::Point const& point) noexcept;
+
+        void SetBlockBypassed(_In_ std::wstring const& blockId, _In_ bool bypassed) noexcept;
+
+        // ---- step settings, in MainWindowFilters.cpp ----
+        winrt::fire_and_forget ShowBlockDialogAsync(_In_ std::wstring blockId);
+        void BuildBlockDialog() noexcept;
+        void UpdateBlockSummary() noexcept;
+
+        // What the dialog holds right now, in the shape a step stores.
+        ::midipatchbay::BlockSettings EditedSettings() noexcept;
+
+        void BuildMessageTypeSections() noexcept;
+        void BuildValueSetSection() noexcept;
+        void RefreshValueSetUi() noexcept;
+        void OnValueKeyPressed(_In_ uint8_t value, _In_ bool shift) noexcept;
+        void BuildMaskSection() noexcept;
+        void RebuildMaskConditions() noexcept;
+
+        // Fills the value set from what a device plays, for as long as the dialog is open.
+        winrt::fire_and_forget StartLearningAsync();
+        void StopLearning() noexcept;
+        void OnLearnedValue(_In_ uint8_t value) noexcept;
+        std::vector<std::wstring> SourcesFeeding(_In_ std::wstring const& blockId) noexcept;
+
+        // ---- step settings that change messages, in MainWindowTransforms.cpp ----
+        void PrepareTransformRows() noexcept;
+        void BuildTransformSections() noexcept;
+        void BuildValueScaleSection() noexcept;
+        void BuildVelocitySection() noexcept;
+
+        // ---- generators, in MainWindowGenerators.cpp ----
+        void BuildLfoGeneratorSections() noexcept;
+        void RefreshLfoMessageUi() noexcept;
+        void RefreshGeneratorCaptions() noexcept;
+        bool LfoFollowsClock(_In_ std::wstring const& blockId) noexcept;
+
+        // ---- (N)RPN filter and transform, and the gate, in MainWindowParameterSteps.cpp ----
+        void BuildParameterFilterSection() noexcept;
+        void BuildParameterTransformSection() noexcept;
+        void RebuildParameterRows() noexcept;
+        void BuildGateSections() noexcept;
+        void RebuildGateTrigger(_In_ bool open) noexcept;
+
         void ApplyValueScale() noexcept;
         void RefreshVelocityEnabledState() noexcept;
         void CommitTransformMaps() noexcept;
-        void UpdateTransformSummary() noexcept;
         void DrawVelocityCurve() noexcept;
         winrt::fire_and_forget PlayTestNoteAsync(_In_ uint8_t note);
+
+        // The first endpoint a step's messages reach, for the buttons that play a note there.
+        void FindTestDestination(_In_ std::wstring const& blockId) noexcept;
 
         // Controller values and aftertouch share one editor, found through EditingShape.
         xaml::UIElement BuildAftertouchSection() noexcept;
@@ -200,106 +285,224 @@ namespace winrt::midipatchbay::implementation
         void RefreshInspector() noexcept;
         void BuildEndpointInspector(_In_ ::midipatchbay::PatchEndpoint const& endpoint) noexcept;
         void BuildConnectionInspector(_In_ ::midipatchbay::PatchConnection const& connection) noexcept;
+        void BuildBlockInspector(_In_ ::midipatchbay::PatchBlock const& block) noexcept;
+        void BuildAnnotationInspector(_In_ ::midipatchbay::PatchBlock const& block) noexcept;
+        void BuildSelectionInspector(_In_ size_t count) noexcept;
+
+        // Selects the annotation and puts the cursor in its text, ready to type.
+        void FocusAnnotationText(_In_ std::wstring const& blockId) noexcept;
+
+        // ---- settings edited in the inspector, in MainWindowStepSettings.cpp ----
+        static bool EditsInInspector(_In_ ::midipatchbay::BlockKind kind) noexcept;
+        void BuildStepSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
+        void FocusStepSettings(_In_ std::wstring const& blockId) noexcept;
+
+        // Kept and routed at once. Returns what was kept, or nothing when nothing changed.
+        std::optional<::midipatchbay::BlockSettings> ChangeStepSettings(
+            _In_ std::wstring const& blockId,
+            _In_ std::function<void(::midipatchbay::BlockSettings&)> const& change) noexcept;
+
+        // ---- mapping steps edited in the inspector, in MainWindowMapSteps.cpp ----
+        // Channels and groups are a table of sixteen. Notes, programs, banks and controllers are
+        // lists of rows.
+        void BuildSixteenMapSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
+        void BuildListMapSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
+        void RebuildInlineMapRows(_In_ TransformMap which) noexcept;
+        void SaveInlineMap(_In_ TransformMap which) noexcept;
+
+        // ---- MIDI-CI steps, in MainWindowCapabilityInquiry.cpp ----
+        void BuildCiResponderSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
+        void BuildCiFilterSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
+
+        // What a responder's file says and what it has been answering, for the activity section.
+        winrt::hstring CiStatusText(_In_ std::wstring const& blockId) noexcept;
+
+        // A file from anywhere, copied into the patch folder when it isn't there already.
+        void ChooseCiFile(_In_ std::wstring const& blockId, _In_ controls::TextBox const& nameBox) noexcept;
+
+        // ---- logic steps, in MainWindowLogicSteps.cpp ----
+        void BuildLogicStepSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
+
+        // Into a panel of their own, so a change that adds or takes away fields shows only them again.
+        void FillLogicStepSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& host) noexcept;
+
+        // The tag and memory names in this patch, one of each, for the name boxes.
+        void CollectPatchLogicNames(_Out_ std::vector<std::wstring>& tags, _Out_ std::vector<std::wstring>& memories) noexcept;
+
+        // What a Branch or a Switch tested last and the memories a step uses, for the activity section.
+        winrt::hstring LogicStatusText(_In_ std::wstring const& blockId) noexcept;
+
+        // ---- tracing messages through the patch, in MainWindowTrace.cpp ----
+        winrt::fire_and_forget ShowTraceDialogAsync();
+
+        // The trace of the message the bar names, on the canvas and in the bar.
+        void ShowTraceStep() noexcept;
+
+        // Puts the canvas back. Any change to the patch does this, because the trace is of the
+        // patch as it was.
+        void ClearTrace() noexcept;
+
+        // Lights up each link and step as messages go through it. Off until asked for, because
+        // it redraws parts of the canvas many times a second.
+        void ShowLiveRouting(_In_ bool shown) noexcept;
+        void OnLiveRoutingTick() noexcept;
+
+        // The steps a customer can put into a link, by category.
+        controls::MenuFlyout BuildAddStepMenu(_In_ std::wstring const& connectionId) noexcept;
 
         // The activity line is the only part of the inspector that changes on its own, so it is
-        // updated in place rather than rebuilding the panel on every timer tick.
+        // updated in place rather than rebuilding the panel on every tick.
         void UpdateInspectorActivity() noexcept;
-        winrt::hstring ConnectionActivityText(_In_ std::wstring const& connectionId) const noexcept;
+        winrt::hstring ActivityText(_In_ std::wstring const& elementId) noexcept;
+
+        // "Iridium, group 3" or a step's name, for either end of a link.
+        winrt::hstring DescribeLinkEnd(_In_ std::wstring const& nodeId, _In_ int32_t groupIndex, _In_ bool isSource) noexcept;
 
         // ---- dialogs and menus, in MainWindowDialogs.cpp ----
         // True ticks the dialog's startup box, for the Start automatically switch on a temporary patch.
         winrt::fire_and_forget ShowSavePatchDialogAsync(_In_ bool startAutomatically = false);
         winrt::fire_and_forget ShowCreateLoopbackDialogAsync();
-        winrt::fire_and_forget ShowQuickPatchDialogAsync();
         winrt::fire_and_forget ShowDeletePatchDialogAsync();
-        winrt::fire_and_forget ShowAssistantDialogAsync();
 
-        // The group lists depend on the endpoint picked above them, so they are filled after it.
-        void FillQuickPatchGroups(_In_ bool isSource) noexcept;
-        void ValidateQuickPatch() noexcept;
-        void CreateQuickPatch() noexcept;
         void ShowEndpointPalette(_In_ xaml::FrameworkElement const& anchor) noexcept;
         void ShowTestMenu(_In_ xaml::FrameworkElement const& anchor) noexcept;
-        void AddEndpointToPatch(_In_ ::midipatchbay::LiveEndpoint const& endpoint) noexcept;
-        void AddRememberedEndpointToPatch(_In_ ::midipatchbay::PatchEndpoint const& remembered) noexcept;
+        void ShowNodeMenu(_In_ std::wstring const& nodeId, _In_ foundation::Point const& position) noexcept;
+
+        // Without a point, the node goes in the middle of what is in view.
+        void AddEndpointToPatch(
+            _In_ ::midipatchbay::LiveEndpoint const& endpoint,
+            _In_ std::optional<foundation::Point> const& center = std::nullopt) noexcept;
+        void AddRememberedEndpointToPatch(
+            _In_ ::midipatchbay::PatchEndpoint const& remembered,
+            _In_ std::optional<foundation::Point> const& center = std::nullopt) noexcept;
 
         // Endpoints the customer has used in a saved patch but that are not here now. Derived
         // from the patches themselves rather than a separate list, so nothing extra is stored.
-        std::vector<::midipatchbay::PatchEndpoint> RememberedEndpoints() const noexcept;
+        std::vector<::midipatchbay::PatchEndpoint> RememberedEndpoints() noexcept;
+
+        // Whether an endpoint is on this patch already, by endpoint device id.
+        bool IsOnCanvas(_In_ std::wstring const& endpointDeviceId) noexcept;
+        bool IsOnCanvas(_In_ ::midipatchbay::PatchEndpoint const& endpoint) noexcept;
+
+        void DeleteSelection() noexcept;
+        winrt::fire_and_forget DeleteSelectionAsync();
 
         void LaunchTool(_In_ std::wstring const& toolExeName, _In_ std::wstring const& endpointDeviceId) noexcept;
 
-        // ---- routing, in MainWindowRouting.cpp ----
-        void MarkDirty() noexcept;
-        void AutoSaveIfDue() noexcept;
-        void RefreshAnalysis() noexcept;
-        void ApplyRouting() noexcept;
-        void OnRefreshTimerTick() noexcept;
-        void UpdateStatusStrip() noexcept;
-        void UpdateMessages() noexcept;
-        void UpdateTray() noexcept;
-        void SetPatchRouting(_In_ std::wstring const& patchKey, _In_ bool routing) noexcept;
-        void StopAllRouting() noexcept;
-
-        void ShowStatus(_In_ winrt::hstring const& message, _In_ controls::InfoBarSeverity severity) noexcept;
-
-        // Name, description, saved state and whether the patch is routing.
+        // ---- header and messages, in MainWindowRouting.cpp ----
         void UpdatePatchHeader() noexcept;
+        void UpdateMessages() noexcept;
+        void UpdateConversionNotice() noexcept;
+        void UpdateStatusStrip() noexcept;
+        void OnActivity() noexcept;
+        void ShowStatus(_In_ winrt::hstring const& message, _In_ controls::InfoBarSeverity severity) noexcept;
 
         // ---- state ----
         midiapp::WindowChrome m_chrome{};
         ::midipatchbay::PatchCanvas m_canvas{};
-        ::midipatchbay::TrayIcon m_tray{};
 
-        std::vector<::midipatchbay::PatchDocument> m_patches{};
-        std::wstring m_currentPatchKey{};
+        // The patch's SessionKey in the library. Cleared when the patch goes away.
+        std::wstring m_patchKey{};
+        uint32_t m_libraryToken{ 0 };
 
-        // Patches whose routes are live. A patch can be open without routing, and routing
-        // without being open, which is why this is a set rather than a flag on the document.
-        std::unordered_set<std::wstring> m_routingPatchKeys{};
+        // Set while this window tells the library about its own change, so the change it hears
+        // back is not mistaken for somebody else's.
+        bool m_committing{ false };
 
-        // Patches whose "doesn't start automatically" bar was closed, until the app closes.
-        std::unordered_set<std::wstring> m_autoStartNoticeDismissedKeys{};
+        std::vector<std::wstring> m_undoStates{};
+        std::vector<std::wstring> m_redoStates{};
+        std::wstring m_committedState{};
 
-        ::midipatchbay::PatchAnalysis m_analysis{};
-        std::vector<::midipatchbay::LiveEndpoint> m_liveEndpoints{};
-        std::unordered_map<std::wstring, ::midipatchbay::RouteStats> m_routeStats{};
+        // Pasting the same thing again lands a step further along each time.
+        std::wstring m_lastPastedText{};
+        int32_t m_pasteRepeat{ 0 };
+
+        // Keyed by link or step id.
+        std::unordered_map<std::wstring, ::midipatchbay::RouteStats> m_activity{};
 
         controls::TextBlock m_activityText{ nullptr };
-        std::wstring m_activityConnectionId{};
+        std::wstring m_activityElementId{};
 
-        // What the quick patch combos are showing, by position, because a ComboBox of strings
-        // cannot carry an endpoint id or a group number on its own.
-        std::vector<std::wstring> m_quickSourceIds{};
-        std::vector<std::wstring> m_quickDestinationIds{};
-        std::vector<int32_t> m_quickSourceGroups{};
-        std::vector<int32_t> m_quickDestinationGroups{};
-        bool m_fillingQuickPatch{ false };
-        bool m_settingZoomBox{ false };
+        // A MIDI-CI responder's file and what it has been answering, under its activity.
+        controls::TextBlock m_ciStatusText{ nullptr };
 
-        // The filter dialog edits a copy, so Cancel leaves a live route untouched.
-        ::midipatchbay::MessageFilter m_editingFilter{};
-        std::wstring m_editingFilterConnectionId{};
-        bool m_updatingNoteRange{ false };
+        // A logic step's last test and its memories, under its activity.
+        controls::TextBlock m_logicStatusText{ nullptr };
 
-        controls::NumberBox m_noteLowBox{ nullptr };
-        controls::NumberBox m_noteHighBox{ nullptr };
-        controls::CheckBox m_noteLimitCheck{ nullptr };
-        controls::TextBlock m_noteRangeText{ nullptr };
-        controls::Canvas m_noteKeyboard{ nullptr };
-        std::vector<std::pair<uint8_t, shapes::Rectangle>> m_noteKeyFills{};
+        // The messages last traced, kept for the next trace, and where each one went.
+        std::vector<::midipatchbay::TraceMessage> m_traceMessages{};
+        std::wstring m_traceSourceId{};
+        uint8_t m_traceGroup{ 0 };
+        ::midipatchbay::TraceResult m_trace{};
+        size_t m_traceIndex{ 0 };
 
-        // The transform dialog also edits a copy. The mapping tables are edited as row lists and
-        // collected back into the sparse arrays on Apply.
-        ::midipatchbay::MessageTransform m_editingTransform{};
-        std::wstring m_editingTransformConnectionId{};
+        // Live routing, and the counts it saw last by link or step id, so only what moved lights up.
+        bool m_showingLiveRouting{ false };
+        xaml::DispatcherTimer m_liveRoutingTimer{ nullptr };
+        std::unordered_map<std::wstring, uint64_t> m_liveRoutingCounts{};
 
-        std::array<std::vector<std::pair<int32_t, int32_t>>, TransformMapCount> m_mapRows{};
+        // The selected annotation's text box, so double-clicking the annotation goes straight to it.
+        controls::TextBox m_annotationTextBox{ nullptr };
 
-        std::array<controls::StackPanel, TransformMapCount> m_mapPanels{
+        // The selected step's summary and the control a double-click goes to.
+        controls::TextBlock m_inspectorSummary{ nullptr };
+        controls::Control m_stepSettingsFocus{ nullptr };
+
+        // Set while code changes a settings control, so its handler doesn't save it again.
+        bool m_updatingStepSettings{ false };
+
+        // The selected step's mapping rows. Kept here, so a row that maps nothing yet, such as one
+        // just added, stays on screen until the step is selected again.
+        std::wstring m_inlineMapBlockId{};
+        std::array<std::vector<std::pair<int32_t, int32_t>>, TransformMapCount> m_inlineMapRows{};
+        std::array<controls::StackPanel, TransformMapCount> m_inlineMapHosts{
             nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 
-        std::array<std::vector<controls::TextBlock>, TransformMapCount> m_mapLabels{};
+        // Typed into the patch but not yet a step for Undo.
+        bool m_annotationTextChanged{ false };
+
+        bool m_settingZoomBox{ false };
+
+        // A resize bar being dragged: which one, and where the drag started.
+        bool m_draggingSplitter{ false };
+        std::wstring m_splitterTag{};
+        double m_splitterStartX{ 0 };
+        double m_splitterStartWidth{ 0 };
+        uint32_t m_splitterPointerId{ 0 };
+
+        // The palette's tile grids, so a new palette width can resize their tiles.
+        std::vector<controls::GridView> m_paletteGrids{};
+
+        // ---- the step dialog works on a copy, so Cancel leaves a running patch alone ----
+        std::wstring m_editingBlockId{};
+        ::midipatchbay::BlockKind m_editingKind{ ::midipatchbay::BlockKind::MessageTypeFilter };
+        ::midipatchbay::BlockSettings m_editingSettings{};
+        ::midipatchbay::MessageFilter m_editingFilter{};
+        ::midipatchbay::MessageTransform m_editingTransform{};
+
+        bool m_updatingValueSet{ false };
+        controls::RadioButtons m_valueModeButtons{ nullptr };
+        controls::NumberBox m_valueLowBox{ nullptr };
+        controls::NumberBox m_valueHighBox{ nullptr };
+        controls::NumberBox m_valueOneBox{ nullptr };
+        controls::StackPanel m_valueRangePanel{ nullptr };
+        controls::StackPanel m_valueOnePanel{ nullptr };
+        controls::TextBlock m_valueSetText{ nullptr };
+        primitives::ToggleButton m_learnButton{ nullptr };
+        controls::TextBlock m_learnStatusText{ nullptr };
+
+        // The keyboard for notes, a grid of numbers for controllers. One fill per value.
+        std::vector<std::pair<uint8_t, shapes::Rectangle>> m_valueKeyFills{};
+        std::vector<std::pair<uint8_t, primitives::ToggleButton>> m_valueToggles{};
+
+        // What a range click sets next: the bottom first, then the top.
+        bool m_learnedLow{ false };
+
+        // Owned here and closed off the UI thread, because closing waits on the service.
+        midi2::MidiSession m_learnSession{ nullptr };
+        uint64_t m_learnGeneration{ 0 };
+
+        controls::StackPanel m_maskConditionsPanel{ nullptr };
 
         // Every box that shows a fraction of full scale, so switching between 0 to 127 and
         // percent can retext them all in place.
@@ -307,7 +510,6 @@ namespace winrt::midipatchbay::implementation
         controls::NumberBox m_minimumVelocityBox{ nullptr };
         controls::NumberBox m_maximumVelocityBox{ nullptr };
         controls::CheckBox m_velocityRescaleCheck{ nullptr };
-        controls::TextBlock m_transposeExampleText{ nullptr };
         controls::Canvas m_velocityCurveCanvas{ nullptr };
         bool m_applyingValueScale{ false };
 
@@ -338,37 +540,30 @@ namespace winrt::midipatchbay::implementation
 
         std::vector<ShapeRangeBoxEntry> m_shapeRangeBoxes{};
 
-        // Where the audition button plays, captured when the dialog opens.
+        // The generator sections' parts that follow another setting.
+        controls::TextBlock m_lfoRateCaption{ nullptr };
+        controls::TextBlock m_lfoIntervalCaption{ nullptr };
+        controls::NumberBox m_lfoNumberBox{ nullptr };
+        controls::NumberBox m_lfoBankBox{ nullptr };
+        controls::NumberBox m_lfoIndexBox{ nullptr };
+        controls::RadioButtons m_lfoProtocolButtons{ nullptr };
+
+        // The (N)RPN rows and the gate's two triggers, rebuilt as they change.
+        controls::StackPanel m_parameterRowsPanel{ nullptr };
+        std::array<controls::StackPanel, 2> m_gateTriggerPanels{ nullptr, nullptr };
+
+        // Each (N)RPN transform row's curve, by row.
+        std::vector<controls::Canvas> m_parameterCurveCanvases{};
+
+        // Where the audition button plays: the first endpoint the step's messages reach.
         std::wstring m_testEndpointDeviceId{};
         int32_t m_testGroupIndex{ ::midipatchbay::AllGroups };
 
         uint64_t m_lastTotalMessages{ 0 };
         std::chrono::steady_clock::time_point m_lastRateSample{};
 
-        // A patch that already has a file is written back a moment after it changes, so closing
-        // the window never loses work the customer asked to keep. Temporary patches are not.
-        std::unordered_set<std::wstring> m_unsavedPatchKeys{};
-        std::chrono::steady_clock::time_point m_lastChangeTime{};
-
         bool m_loaded{ false };
         bool m_closing{ false };
-        bool m_rebuildingNavigation{ false };
-
-        // Set by the notification area's Exit, so that close is not turned into a hide again.
-        bool m_exiting{ false };
-
-        // Guards the window briefly reporting itself minimized on its way out of the
-        // notification area, which would otherwise hide it again straight away.
-        bool m_restoringFromNotificationArea{ false };
-
-        // Which patches were showing a missing-endpoint badge the last time the list was built.
-        std::wstring m_navigationBadgeSignature{};
-
-        xaml::DispatcherTimer m_refreshTimer{ nullptr };
-
-        winrt::event_token m_closedToken{};
-        winrt::event_token m_closingToken{};
-        winrt::event_token m_windowChangedToken{};
     };
 }
 

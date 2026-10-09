@@ -33,6 +33,8 @@ public:
     TEST_METHOD(TestMuidCollisionIsResolved);
     TEST_METHOD(TestUnsupportedInquiryIsRefused);
     TEST_METHOD(TestEndpointInquiryReturnsProductInstanceId);
+    TEST_METHOD(TestProcessInquiryIsDeclaredAndAnswered);
+    TEST_METHOD(TestMidiMessageReportIsHandedToTheCaller);
 
 private:
 

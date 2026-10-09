@@ -47,6 +47,9 @@ public:
     // ---- the forward rule ----
     TEST_METHOD(KeepsFieldsFromANewerVersion);
     TEST_METHOD(SaysWhenAFileIsFromANewerVersion);
+    TEST_METHOD(AKindThisVersionDoesNotKnowMeansANewerVersion);
+    TEST_METHOD(AControlThisVersionDoesNotKnowIsWrittenBackAsItCame);
+    TEST_METHOD(AMessageThisVersionDoesNotKnowIsWrittenBackAsItCame);
     TEST_METHOD(UnknownFieldsSurviveAtEveryLevel);
     TEST_METHOD(SettingsThatNeverWorkedAreDroppedWhenRead);
 

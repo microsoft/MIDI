@@ -51,10 +51,11 @@ namespace MidiSynth
         return static_cast<double>(gainUnits) / 655360.0;
     }
 
-    // Sustain level and pan both use 0.1 percent units, so 1000 is 100 percent.
+    // Sustain level and pan are in 0.1 percent units carried with sixteen bits of fraction like
+    // every other connection value: percent = pcunits / (10 * 65536), so 100 percent is 0x03E80000.
     inline double PercentUnitsToFraction(_In_ int32_t percentUnits) noexcept
     {
-        return static_cast<double>(percentUnits) / 1000.0;
+        return static_cast<double>(percentUnits) / (1000.0 * 65536.0);
     }
 
     inline double DecibelsToLinear(_In_ double decibels) noexcept
