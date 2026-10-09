@@ -276,55 +276,8 @@ namespace winrt::midipatchbay::implementation
             m_editingTransform = block->Settings.Transform;
             m_learnedLow = false;
 
-            // Where the audition button plays: the first endpoint this step's messages reach,
-            // captured now so a change behind the dialog cannot move it.
-            m_testEndpointDeviceId.clear();
-            m_testGroupIndex = patchbay::AllGroups;
-
-            {
-                std::vector<std::wstring> pending{ blockId };
-                std::unordered_set<std::wstring> seen{};
-
-                while (!pending.empty() && m_testEndpointDeviceId.empty())
-                {
-                    auto const current = pending.front();
-                    pending.erase(pending.begin());
-
-                    if (!seen.insert(current).second)
-                    {
-                        continue;
-                    }
-
-                    for (auto const& link : patch->Connections)
-                    {
-                        if (link.SourceId != current)
-                        {
-                            continue;
-                        }
-
-                        if (auto const* next = patch->FindBlock(link.DestinationId))
-                        {
-                            // What goes into an LFO doesn't come out of it.
-                            if (!patchbay::IsGenerator(next->Kind))
-                            {
-                                pending.push_back(link.DestinationId);
-                            }
-
-                            continue;
-                        }
-
-                        if (auto const* destination = patch->FindEndpoint(link.DestinationId))
-                        {
-                            if (auto const live = patchbay::ResolveEndpoint(*destination))
-                            {
-                                m_testEndpointDeviceId = live->EndpointDeviceId;
-                                m_testGroupIndex = link.DestinationGroupIndex;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
+            // Captured now, so a change behind the dialog cannot move where a test note plays.
+            FindTestDestination(blockId);
 
             PrepareTransformRows();
             BuildBlockDialog();
@@ -452,17 +405,8 @@ namespace winrt::midipatchbay::implementation
             m_lfoIndexBox = nullptr;
             m_lfoProtocolButtons = nullptr;
             m_parameterRowsPanel = nullptr;
+            m_parameterCurveCanvases.clear();
             m_gateTriggerPanels = { nullptr, nullptr };
-
-            for (auto& panel : m_mapPanels)
-            {
-                panel = nullptr;
-            }
-
-            for (auto& labels : m_mapLabels)
-            {
-                labels.clear();
-            }
 
             switch (m_editingKind)
             {

@@ -16,6 +16,7 @@
 #include "PatchLibrary.h"
 #include "PatchStore.h"
 #include "RouteEngine.h"
+#include "RouteGraph.h"
 #include "StringResources.h"
 #include "TextMatch.h"
 
@@ -36,9 +37,72 @@ namespace winrt::midipatchbay::implementation
         // Problems listed under a file that has them.
         constexpr size_t ShownProblems = 3;
 
+        // Sends everything it's given back to every app that has it open.
+        constexpr wchar_t BasicLoopbackTransportCode[] = L"BLOOP";
+
         using patchbay::HexDigit;
         using patchbay::parts::Check;
         using patchbay::parts::Hint;
+
+        struct AnswerDestination
+        {
+            winrt::hstring Text{};
+
+            // The basic loopbacks among them, by name.
+            std::vector<std::wstring> BasicLoopbacks{};
+        };
+
+        AnswerDestination DescribeAnswerDestination(
+            _In_opt_ patchbay::PatchDocument const* patch,
+            _In_ patchbay::PatchBlock const& block)
+        {
+            AnswerDestination destination{};
+
+            if (block.Bypassed)
+            {
+                destination.Text = resources::GetString(L"CiAnswerDestinationBypassed");
+                return destination;
+            }
+
+            auto const answered = patch == nullptr
+                ? std::vector<std::wstring>{}
+                : patchbay::EndpointsAnsweredBy(*patch, block.Id);
+
+            std::wstring names{};
+
+            for (auto const& endpointId : answered)
+            {
+                auto const* endpoint = patch->FindEndpoint(endpointId);
+
+                if (endpoint == nullptr)
+                {
+                    continue;
+                }
+
+                if (!names.empty())
+                {
+                    names += resources::GetString(L"ListSeparator");
+                }
+
+                names += endpoint->DisplayName;
+
+                // The transport it had when it was last here, for one that isn't now.
+                auto const live = patchbay::ResolveEndpoint(*endpoint);
+                auto const transport = live.has_value() ? live->TransportCode : endpoint->TransportCode;
+
+                if (patchbay::SameText(transport, BasicLoopbackTransportCode))
+                {
+                    destination.BasicLoopbacks.push_back(endpoint->DisplayName);
+                }
+            }
+
+            destination.Text = answered.empty()
+                ? resources::GetString(L"CiAnswerDestinationNone")
+                : resources::FormatString(
+                    answered.size() == 1 ? L"CiAnswerDestinationOneFormat" : L"CiAnswerDestinationSeveralFormat", names);
+
+            return destination;
+        }
 
         controls::TextBlock Caption()
         {
@@ -299,7 +363,28 @@ namespace winrt::midipatchbay::implementation
                     return strong->ChangeStepSettings(blockId, apply);
                 };
 
-            // ------------------------------------------------- who it says it is
+            // ------------------------------------------------- answer destination
+            body.Children().Append(Heading(resources::GetString(L"CiAnswerDestinationHeading")));
+
+            auto const destination = DescribeAnswerDestination(CurrentPatch(), block);
+
+            auto destinationText = Caption();
+            destinationText.Text(destination.Text);
+            body.Children().Append(destinationText);
+
+            for (auto const& loopback : destination.BasicLoopbacks)
+            {
+                controls::InfoBar warning{};
+                warning.Severity(controls::InfoBarSeverity::Warning);
+                warning.IsClosable(false);
+                warning.IsOpen(true);
+                warning.Title(resources::GetString(L"CiBasicLoopbackTitle"));
+                warning.Message(resources::FormatString(L"CiBasicLoopbackMessageFormat", loopback));
+
+                body.Children().Append(warning);
+            }
+
+            // ------------------------------------------------- identity
             body.Children().Append(Heading(resources::GetString(L"CiIdentityHeading")));
             body.Children().Append(Hint(resources::GetString(L"CiIdentityHint")));
 
@@ -421,7 +506,7 @@ namespace winrt::midipatchbay::implementation
             body.Children().Append(instance);
             body.Children().Append(Hint(resources::GetString(L"CiProductInstanceIdHint")));
 
-            // ------------------------------------------------- what it answers
+            // ------------------------------------------------- options
             body.Children().Append(Heading(resources::GetString(L"CiAnswersHeading")));
 
             auto report = Check(resources::GetString(L"CiProcessInquiry"), responder.ProcessInquiry);

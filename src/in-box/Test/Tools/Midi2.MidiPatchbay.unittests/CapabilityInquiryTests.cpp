@@ -351,7 +351,17 @@ namespace
             }
         }
 
-        void CountLink(uint32_t) noexcept override {}
+        void CountLink(uint32_t cell) noexcept override
+        {
+            try
+            {
+                Links[m_graph.Cells[cell]]++;
+            }
+            catch (...)
+            {
+            }
+        }
+
         void CountBlock(uint32_t, bool) noexcept override {}
         void Throttle(uint32_t, uint32_t const*, uint8_t) noexcept override {}
         void Clock(uint32_t, uint32_t const*, uint8_t) noexcept override {}
@@ -399,6 +409,7 @@ namespace
         }
 
         std::vector<std::pair<std::wstring, Message>> Sent{};
+        std::map<std::wstring, uint64_t> Links{};
 
     private:
         RouteGraph const& m_graph;
@@ -1276,6 +1287,9 @@ void CapabilityInquiryTests::AnswersGoBackWhereTheQuestionCameFrom()
     VERIFY_IS_TRUE(answers[0].Parsed.Type == ci::MessageType::DiscoveryReply);
     VERIFY_IS_TRUE(sink.To(L"dev-synth").empty());
 
+    // Each packet of the answer is counted on the way back, for live routing.
+    VERIFY_ARE_EQUAL(static_cast<uint64_t>(sink.To(L"dev-app").size()), sink.Links[L"k|app|replies"]);
+
     // Everything else goes on to the device.
     sink.Arrive(L"dev-app", Midi1(3, NoteOn, 0, 60, 100));
 
@@ -1338,4 +1352,118 @@ void CapabilityInquiryTests::APassedQuestionGoesOutBeforeItsAnswer()
 
     VERIFY_ARE_EQUAL(size_t{ 1 }, answers.size());
     VERIFY_IS_TRUE(answers[0].Parsed.Type == ci::MessageType::DiscoveryReply);
+}
+
+void CapabilityInquiryTests::AResponderAnswersWithNothingAfterIt()
+{
+    PatchDocument patch{};
+    AddEndpoint(patch, L"app");
+    AddBlock(patch, L"ci", BlockKind::CiResponder);
+    Link(patch, L"1", L"app", L"ci");
+
+    auto const graph = CompileRoutes({ Input(patch) });
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, graph.Roots.size());
+
+    Sink sink{ graph };
+
+    for (auto const& packet : Packets(0, Discovery()))
+    {
+        sink.Arrive(L"dev-app", packet);
+    }
+
+    auto const answers = Answers(sink.To(L"dev-app"));
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, answers.size());
+    VERIFY_IS_TRUE(answers[0].Parsed.Type == ci::MessageType::DiscoveryReply);
+
+    // Its device isn't here, and it still answers.
+    AddEndpoint(patch, L"synth");
+    Link(patch, L"2", L"ci", L"synth");
+
+    auto input = Input(patch);
+    input.DeviceIds.erase(L"synth");
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, CompileRoutes({ input }).Roots.size());
+
+    // Bypassed, it has nothing to do.
+    patch.Blocks[0].Bypassed = true;
+
+    VERIFY_IS_TRUE(CompileRoutes({ input }).Roots.empty());
+
+    // Behind a throttle it could never answer, so nothing routes for it.
+    PatchDocument paced{};
+    AddEndpoint(paced, L"app");
+    AddBlock(paced, L"slow", BlockKind::Throttle);
+    paced.Blocks[0].Settings.SendSpeedLimit = 2;
+    AddBlock(paced, L"ci", BlockKind::CiResponder);
+    Link(paced, L"1", L"app", L"slow");
+    Link(paced, L"2", L"slow", L"ci");
+
+    auto const behind = CompileRoutes({ Input(paced) });
+
+    VERIFY_IS_TRUE(behind.Roots.empty());
+    VERIFY_IS_TRUE(behind.Throttles.empty());
+}
+
+void CapabilityInquiryTests::TheEndpointsAResponderAnswers()
+{
+    PatchDocument patch{};
+    AddEndpoint(patch, L"synth");
+    AddEndpoint(patch, L"app");
+    AddEndpoint(patch, L"keys");
+    AddEndpoint(patch, L"clock");
+    AddBlock(patch, L"filter", BlockKind::ChannelFilter);
+    AddBlock(patch, L"slow", BlockKind::Throttle);
+    patch.Blocks[1].Settings.SendSpeedLimit = 2;
+    AddBlock(patch, L"ci", BlockKind::CiResponder);
+    Link(patch, L"1", L"app", L"filter");
+    Link(patch, L"2", L"filter", L"ci");
+    Link(patch, L"3", L"keys", L"ci");
+    Link(patch, L"4", L"clock", L"slow");
+    Link(patch, L"5", L"slow", L"ci");
+    Link(patch, L"6", L"ci", L"synth");
+
+    // In the patch's order, never the device it leads to, and nothing through a throttle.
+    auto answered = EndpointsAnsweredBy(patch, L"ci");
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, answered.size());
+    VERIFY_IS_TRUE(answered[0] == L"app");
+    VERIFY_IS_TRUE(answered[1] == L"keys");
+
+    // The router does the same.
+    auto const graph = CompileRoutes({ Input(patch) });
+    Sink sink{ graph };
+
+    for (auto const* device : { L"dev-app", L"dev-keys", L"dev-clock" })
+    {
+        for (auto const& packet : Packets(2, Discovery()))
+        {
+            sink.Arrive(device, packet);
+        }
+    }
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, Answers(sink.To(L"dev-app")).size());
+    VERIFY_ARE_EQUAL(size_t{ 1 }, Answers(sink.To(L"dev-keys")).size());
+    VERIFY_IS_TRUE(sink.To(L"dev-clock").empty());
+    VERIFY_IS_TRUE(sink.To(L"dev-synth").empty());
+
+    // A throttle with no limit is only counted, so it keeps the way back.
+    patch.Blocks[1].Settings.SendSpeedLimit = 0;
+
+    VERIFY_ARE_EQUAL(size_t{ 3 }, EndpointsAnsweredBy(patch, L"ci").size());
+
+    // A muted link carries nothing.
+    patch.Connections[2].Muted = true;
+    answered = EndpointsAnsweredBy(patch, L"ci");
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, answered.size());
+    VERIFY_IS_TRUE(answered[0] == L"app");
+    VERIFY_IS_TRUE(answered[1] == L"clock");
+
+    // Bypassed, it answers nobody. A step that isn't a responder answers nobody either.
+    patch.Blocks[2].Bypassed = true;
+
+    VERIFY_IS_TRUE(EndpointsAnsweredBy(patch, L"ci").empty());
+    VERIFY_IS_TRUE(EndpointsAnsweredBy(patch, L"filter").empty());
 }

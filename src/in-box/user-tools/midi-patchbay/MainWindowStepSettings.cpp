@@ -134,6 +134,11 @@ namespace winrt::midipatchbay::implementation
         case patchbay::BlockKind::ChannelFilter:
         case patchbay::BlockKind::GroupFilter:
         case patchbay::BlockKind::VelocityFilter:
+        case patchbay::BlockKind::ChannelMap:
+        case patchbay::BlockKind::GroupMap:
+        case patchbay::BlockKind::NoteMap:
+        case patchbay::BlockKind::ControlChangeMap:
+        case patchbay::BlockKind::ProgramMap:
         case patchbay::BlockKind::Transpose:
         case patchbay::BlockKind::Throttle:
         case patchbay::BlockKind::ClockDivider:
@@ -944,6 +949,17 @@ namespace winrt::midipatchbay::implementation
 
             case patchbay::BlockKind::CiResponder:
                 BuildCiResponderSettings(block, body);
+                break;
+
+            case patchbay::BlockKind::ChannelMap:
+            case patchbay::BlockKind::GroupMap:
+                BuildSixteenMapSettings(block, body);
+                break;
+
+            case patchbay::BlockKind::NoteMap:
+            case patchbay::BlockKind::ControlChangeMap:
+            case patchbay::BlockKind::ProgramMap:
+                BuildListMapSettings(block, body);
                 break;
 
             case patchbay::BlockKind::CiFilter:

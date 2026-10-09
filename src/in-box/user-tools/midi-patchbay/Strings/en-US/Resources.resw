@@ -143,7 +143,7 @@
     <value>Copy this and paste it into the AI assistant you use, such as a chat in your web browser. Then tell it what you want the patch to do. When it gives you a patch file, select Import patch… to bring it in. This includes the names of the MIDI devices on this PC, so the patch can find them. Windows MIDI Patchbay doesn't send anything itself.</value>
   </data>
   <data name="AssistantPromptHeader" xml:space="preserve">
-    <value>What gets copied</value>
+    <value>Prompt</value>
   </data>
   <data name="AssistantGuideLink" xml:space="preserve">
     <value>Read the guide the assistant will use</value>
@@ -583,19 +583,7 @@
     <value>Channel mapping</value>
   </data>
   <data name="TransformSectionChannelMapHint" xml:space="preserve">
-    <value>Moves everything on one channel to another, the way the old Windows MIDI Mapper did. Only messages that carry a channel are affected, and channels you do not list are passed through.</value>
-  </data>
-  <data name="TransformAddChannelMapping" xml:space="preserve">
-    <value>Add a channel mapping</value>
-  </data>
-  <data name="TransformNoChannelMappings" xml:space="preserve">
-    <value>No channels are remapped.</value>
-  </data>
-  <data name="TransformChannelFrom" xml:space="preserve">
-    <value>From channel</value>
-  </data>
-  <data name="TransformChannelTo" xml:space="preserve">
-    <value>To channel</value>
+    <value>Moves everything on one channel to another, the way the old Windows MIDI Mapper did. Only messages that carry a channel are affected. Channels left unchanged keep their messages where they are.</value>
   </data>
   <data name="TransformSectionProgramMap" xml:space="preserve">
     <value>Program mapping</value>
@@ -1130,13 +1118,13 @@
     <value>MIDI 1.0 basic loopback</value>
   </data>
   <data name="LoopbackBasicHint.Text" xml:space="preserve">
-    <value>One endpoint that echoes back to itself. The simplest thing for most apps.</value>
+    <value>One endpoint that echoes back to itself. The simplest thing for most apps, but not for a MIDI-CI responder.</value>
   </data>
   <data name="LoopbackPairRadio.Content" xml:space="preserve">
     <value>MIDI 2.0 loopback pair (A and B)</value>
   </data>
   <data name="LoopbackPairHint.Text" xml:space="preserve">
-    <value>Two endpoints. Send into A, read from B. UMP, full MIDI 2.0.</value>
+    <value>Two endpoints. What goes into one comes out of the other. This patch gets A, so connect your app to B. Use a pair for a MIDI-CI responder: its answers reach the app, and nothing comes back.</value>
   </data>
   <data name="LoopbackNameBox.Header" xml:space="preserve">
     <value>Name</value>
@@ -2250,7 +2238,7 @@
 
   <!-- =============================================================== palette -->
   <data name="PaletteTabs.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>What to add</value>
+    <value>Palette</value>
   </data>
   <data name="PaletteStepsTab.Text" xml:space="preserve">
     <value>Steps</value>
@@ -2301,7 +2289,7 @@
     <value>Cancel</value>
   </data>
   <data name="BlockDialogSummaryFormat" xml:space="preserve">
-    <value>What this step does: {0}</value>
+    <value>Behavior: {0}</value>
   </data>
 
   <!-- ============================================================ inspector -->
@@ -2313,7 +2301,7 @@
     <value>Name</value>
   </data>
   <data name="InspectorWhatItDoes" xml:space="preserve">
-    <value>What it does</value>
+    <value>Behavior</value>
   </data>
   <data name="InspectorBypass" xml:space="preserve">
     <value>Bypass</value>
@@ -2384,7 +2372,7 @@
 
   <!-- ======================================================= filter settings -->
   <data name="FilterActionHeader" xml:space="preserve">
-    <value>What happens to them</value>
+    <value>Action</value>
   </data>
   <data name="FilterActionLetThrough" xml:space="preserve">
     <value>Let only these through</value>
@@ -2393,7 +2381,7 @@
     <value>Keep these out</value>
   </data>
   <data name="FilterValuesHeader" xml:space="preserve">
-    <value>Which ones</value>
+    <value>Selection</value>
   </data>
   <data name="FilterModeRange" xml:space="preserve">
     <value>A range</value>
@@ -2519,7 +2507,7 @@
     <value>32 bits: utility, system and MIDI 1.0 channel voice messages. 64 bits: MIDI 2.0 channel voice and 7-bit system exclusive messages. 128 bits: 8-bit data, flex data and stream messages.</value>
   </data>
   <data name="MaskActionHeader" xml:space="preserve">
-    <value>Messages that match</value>
+    <value>Action</value>
   </data>
   <data name="MaskShowHex" xml:space="preserve">
     <value>Show numbers in hexadecimal</value>
@@ -2573,7 +2561,7 @@
     <value>MIDI 2.0 controller value</value>
   </data>
   <data name="MaskMatch" xml:space="preserve">
-    <value>Matches when it</value>
+    <value>Comparison</value>
   </data>
   <data name="MaskMatchExactly" xml:space="preserve">
     <value>Is exactly</value>
@@ -2611,19 +2599,35 @@
 
   <!-- ===================================================== transform settings -->
   <data name="TransformSectionGroupMap" xml:space="preserve">
-    <value>Groups</value>
+    <value>Group mapping</value>
   </data>
   <data name="TransformSectionGroupMapHint" xml:space="preserve">
-    <value>Groups you leave unchanged keep their messages where they are.</value>
+    <value>Moves everything in one group to another. Groups left unchanged keep their messages where they are.</value>
   </data>
   <data name="TransformGroupUnchanged" xml:space="preserve">
     <value>Unchanged</value>
   </data>
   <data name="TransformGroupMapAccessibleFormat" xml:space="preserve">
-    <value>Where messages in group {0} go</value>
+    <value>Destination for group {0}</value>
   </data>
-  <data name="TransformSectionExactPitch" xml:space="preserve">
-    <value>Notes with their own pitch</value>
+  <data name="TransformChannelMapAccessibleFormat" xml:space="preserve">
+    <value>Destination for channel {0}</value>
+  </data>
+  <data name="MapReset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="MapResetChannelsAccessible" xml:space="preserve">
+    <value>Set every channel back to unchanged</value>
+  </data>
+  <data name="MapResetGroupsAccessible" xml:space="preserve">
+    <value>Set every group back to unchanged</value>
+  </data>
+  <data name="MapRemoveRowFormat" xml:space="preserve">
+    <value>Remove row {0}</value>
+  </data>
+  <data name="MapRowBoxAccessibleFormat" xml:space="preserve">
+    <value>{0}, row {1}</value>
+    <comment>{0} is a column title such as "From note", {1} is the row number.</comment>
   </data>
 
   <!-- ============================================ generators and the clock divider -->
@@ -2876,7 +2880,7 @@
     <comment>{0} is a whole number from 51 to 75.</comment>
   </data>
   <data name="GeneratorSwingAppliesTo" xml:space="preserve">
-    <value>Swing applies to</value>
+    <value>Swing note value</value>
   </data>
   <data name="GeneratorSwingEighths" xml:space="preserve">
     <value>Eighth notes</value>
@@ -2913,7 +2917,7 @@
     <value>Waveform</value>
   </data>
   <data name="GeneratorRate" xml:space="preserve">
-    <value>One pass takes</value>
+    <value>Cycle length</value>
   </data>
   <data name="GeneratorLfoRateCaptionFormat" xml:space="preserve">
     <value>{0}, which is about {1} at {2} BPM. A change here takes effect while the patch is routing.</value>
@@ -2946,7 +2950,7 @@
     <value>Maximum %</value>
   </data>
   <data name="GeneratorSectionMessage" xml:space="preserve">
-    <value>What it sends</value>
+    <value>Output</value>
   </data>
   <data name="GeneratorMessage" xml:space="preserve">
     <value>Message</value>
@@ -3113,10 +3117,10 @@
     <value>Resize the details panel</value>
   </data>
   <data name="InspectorChannelsThrough" xml:space="preserve">
-    <value>Channels that get through</value>
+    <value>Allowed channels</value>
   </data>
   <data name="InspectorGroupsThrough" xml:space="preserve">
-    <value>Groups that get through</value>
+    <value>Allowed groups</value>
   </data>
   <data name="InspectorAll" xml:space="preserve">
     <value>All</value>
@@ -3454,18 +3458,16 @@
     <value>Empty</value>
   </data>
   <data name="LogicBranchSubject" xml:space="preserve">
-    <value>What it tests</value>
+    <value>Tested value</value>
   </data>
   <data name="LogicSwitchSubject" xml:space="preserve">
-    <value>What picks the way</value>
+    <value>Deciding value</value>
   </data>
   <data name="LogicBranchTest" xml:space="preserve">
-    <value>Yes when it</value>
-    <comment>Read together with the test chosen under it, such as "Is at least".</comment>
+    <value>Condition for Yes</value>
   </data>
   <data name="LogicSwitchCaseTest" xml:space="preserve">
-    <value>Goes this way when it</value>
-    <comment>Read together with the test chosen under it, such as "Is at least".</comment>
+    <value>Condition</value>
   </data>
   <data name="LogicSwitchWays" xml:space="preserve">
     <value>Ways</value>
@@ -3492,7 +3494,7 @@
     <value>Messages that pass the test go out Yes. The rest go out No. Connect either way, or both.</value>
   </data>
   <data name="LogicHoldsHeader" xml:space="preserve">
-    <value>It holds</value>
+    <value>Value type</value>
   </data>
   <data name="LogicNumberKindHeader" xml:space="preserve">
     <value>Kind of number</value>
@@ -3558,7 +3560,7 @@
     <value>Use numbers in range, with commas between them, such as 1, 5, 9.</value>
   </data>
   <data name="LogicUnreadableHeader" xml:space="preserve">
-    <value>When there's nothing to test</value>
+    <value>Missing value</value>
   </data>
   <data name="LogicUnreadableEvery" xml:space="preserve">
     <value>Send it every way</value>
@@ -3585,7 +3587,7 @@
     <value>Such as a control change reaching a Switch that picks by note number, or a tag or memory that is empty.</value>
   </data>
   <data name="LogicBypassHeader" xml:space="preserve">
-    <value>When bypassed</value>
+    <value>Bypass behavior</value>
   </data>
   <data name="LogicBypassEvery" xml:space="preserve">
     <value>Send messages every way</value>
@@ -3597,19 +3599,19 @@
     <value>Send messages the first way</value>
   </data>
   <data name="LogicSetToHeader" xml:space="preserve">
-    <value>Set it to</value>
+    <value>New value</value>
   </data>
   <data name="LogicSetTagHint" xml:space="preserve">
     <value>The tag goes with the message through every step after this one. It ends when the message reaches a device, and devices never see it.</value>
   </data>
   <data name="LogicWhenHeader" xml:space="preserve">
-    <value>Changes on</value>
+    <value>Trigger</value>
   </data>
   <data name="LogicWhenEveryMessage" xml:space="preserve">
     <value>Every message that gets here</value>
   </data>
   <data name="LogicActionHeader" xml:space="preserve">
-    <value>What it does</value>
+    <value>Action</value>
   </data>
   <data name="LogicToggleFirst" xml:space="preserve">
     <value>First number</value>
@@ -3639,10 +3641,10 @@
     <value>Later messages in this patch can use the memory, until the app closes.</value>
   </data>
   <data name="LogicPutIntoHeader" xml:space="preserve">
-    <value>Put it into</value>
+    <value>Target</value>
   </data>
   <data name="LogicPutWhatHeader" xml:space="preserve">
-    <value>What to put</value>
+    <value>Value</value>
   </data>
   <data name="LogicKeepOutWhenEmpty" xml:space="preserve">
     <value>Keep the message out when there's no value</value>
@@ -3751,13 +3753,22 @@
     <value>MIDI 1.0 sends a parameter as several control changes: the bank and index first, then the value. The bank and index always go through, and the values that follow are let through or kept out.</value>
   </data>
   <data name="ParameterTransformSection" xml:space="preserve">
-    <value>Parameters to change</value>
+    <value>Parameter changes</value>
   </data>
   <data name="ParameterTransformHint" xml:space="preserve">
     <value>The first row that matches is used. Leave a From bank or index empty to match any, and a To bank or index empty to keep it as it came in. The value is reshaped across its whole range, 32 bits for MIDI 2.0.</value>
   </data>
   <data name="ParameterAddRow" xml:space="preserve">
     <value>Add a change</value>
+  </data>
+  <data name="ParameterCurveAccessibleFormat" xml:space="preserve">
+    <value>Value curve for row {0}</value>
+  </data>
+  <data name="TestLiveRouting" xml:space="preserve">
+    <value>Show live routing</value>
+  </data>
+  <data name="TestLiveRoutingTip" xml:space="preserve">
+    <value>Lights up each link and step as messages go through it. It redraws the canvas many times a second, so turn it off when you're done.</value>
   </data>
   <data name="ParameterNoRows" xml:space="preserve">
     <value>Nothing to change yet, so this step changes nothing.</value>
@@ -3895,7 +3906,7 @@
     <value>Write one to four words of up to eight hex digits each, with spaces between them.</value>
   </data>
   <data name="DistributorMode" xml:space="preserve">
-    <value>How notes are shared out</value>
+    <value>Note sharing</value>
   </data>
   <data name="DistributorModeTurns" xml:space="preserve">
     <value>Take turns</value>
@@ -4083,8 +4094,40 @@
   <data name="CiProblemPropertyTooLargeFormat" xml:space="preserve">
     <value>Property {0} is larger than 256 KB, so it's left out.</value>
   </data>
+  <data name="CiAnswerDestinationHeading" xml:space="preserve">
+    <value>Answer destination</value>
+  </data>
+  <data name="CiAnswerDestinationOneFormat" xml:space="preserve">
+    <value>Answers go straight back to {0}, on the group each question came in on. The steps before this one don't change them.</value>
+    <comment>{0} is an endpoint's name.</comment>
+  </data>
+  <data name="CiAnswerDestinationSeveralFormat" xml:space="preserve">
+    <value>Answers go straight back to whichever of these asked, on the group the question came in on: {0}. The steps before this one don't change them.</value>
+    <comment>{0} is a list of endpoint names.</comment>
+  </data>
+  <data name="CiAnswerDestinationNone" xml:space="preserve">
+    <value>Nothing can ask this step anything yet. Connect the Out of the endpoint your app sends to, straight to this step or through other steps. Questions that come through a message throttler or from a generator can't be answered.</value>
+  </data>
+  <data name="CiAnswerDestinationBypassed" xml:space="preserve">
+    <value>None. A bypassed responder doesn't answer.</value>
+  </data>
+  <data name="CiBasicLoopbackTitle" xml:space="preserve">
+    <value>Use a loopback pair instead</value>
+  </data>
+  <data name="CiBasicLoopbackMessageFormat" xml:space="preserve">
+    <value>{0} is a basic loopback. Everything sent into it comes back out to every app that has it open, this patch included. So the app also hears what it sends, and the notes and controllers in a MIDI message report come back through this patch and go on to the device. With a MIDI 2.0 loopback pair, the app opens one side and this patch uses the other, so nothing comes back.</value>
+    <comment>{0} is the loopback's name.</comment>
+  </data>
+  <data name="AnswersToOneFormat" xml:space="preserve">
+    <value>MIDI-CI answers go back to {0}</value>
+    <comment>{0} is an endpoint's name.</comment>
+  </data>
+  <data name="AnswersToSeveralFormat" xml:space="preserve">
+    <value>MIDI-CI answers go back to whichever of these asked: {0}</value>
+    <comment>{0} is a list of endpoint names.</comment>
+  </data>
   <data name="CiIdentityHeading" xml:space="preserve">
-    <value>Who it says it is</value>
+    <value>Identity</value>
   </data>
   <data name="CiIdentityHint" xml:space="preserve">
     <value>MIDI-CI Discovery answers with these. Use the numbers from the device's manual if it has them.</value>
@@ -4117,7 +4160,7 @@
     <value>Tells this device apart from others of the same model, like a serial number. Up to 42 letters, numbers and symbols. Leave it empty if there isn't one.</value>
   </data>
   <data name="CiAnswersHeading" xml:space="preserve">
-    <value>What it answers</value>
+    <value>Options</value>
   </data>
   <data name="CiProcessInquiry" xml:space="preserve">
     <value>Answer MIDI message reports</value>
@@ -4174,7 +4217,7 @@
     <value>Let only this MIDI-CI through, and keep everything else out</value>
   </data>
   <data name="CiFilterWhich" xml:space="preserve">
-    <value>Which MIDI-CI</value>
+    <value>Categories</value>
   </data>
   <data name="CiFilterHint" xml:space="preserve">
     <value>Discovery and management covers Discovery, endpoint inquiries, Invalidate MUID, ACK and NAK. System exclusive that isn't MIDI-CI is never any of these.</value>

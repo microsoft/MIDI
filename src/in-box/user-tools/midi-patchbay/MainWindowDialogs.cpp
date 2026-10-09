@@ -897,6 +897,24 @@ namespace winrt::midipatchbay::implementation
                 });
 
             menu.Items().Append(trace);
+
+            controls::ToggleMenuFlyoutItem liveRouting{};
+            liveRouting.Text(resources::GetString(L"TestLiveRouting"));
+            liveRouting.IsChecked(m_showingLiveRouting);
+            controls::ToolTipService::SetToolTip(liveRouting, winrt::box_value(resources::GetString(L"TestLiveRoutingTip")));
+
+            liveRouting.Click([weak](foundation::IInspectable const& sender, auto&&)
+                {
+                    auto strong = weak.get();
+                    auto const item = sender.try_as<controls::ToggleMenuFlyoutItem>();
+
+                    if (strong != nullptr && item != nullptr)
+                    {
+                        strong->ShowLiveRouting(item.IsChecked());
+                    }
+                });
+
+            menu.Items().Append(liveRouting);
             menu.Items().Append(controls::MenuFlyoutSeparator{});
 
             uint32_t tools{ 0 };

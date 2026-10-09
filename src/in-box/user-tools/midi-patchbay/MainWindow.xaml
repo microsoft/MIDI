@@ -826,7 +826,7 @@
                              GroupName="LoopbackKind"
                              IsChecked="True" />
                 <TextBlock x:Uid="LoopbackBasicHint"
-                           Text="One endpoint that echoes back to itself. The simplest thing for most apps."
+                           Text="One endpoint that echoes back to itself. The simplest thing for most apps, but not for a MIDI-CI responder."
                            FontSize="11"
                            Margin="30,-8,0,0"
                            TextWrapping="Wrap"
@@ -836,7 +836,7 @@
                              Content="MIDI 2.0 loopback pair (A and B)"
                              GroupName="LoopbackKind" />
                 <TextBlock x:Uid="LoopbackPairHint"
-                           Text="Two endpoints. Send into A, read from B. UMP, full MIDI 2.0."
+                           Text="Two endpoints. What goes into one comes out of the other. This patch gets A, so connect your app to B. Use a pair for a MIDI-CI responder: its answers reach the app, and nothing comes back."
                            FontSize="11"
                            Margin="30,-8,0,0"
                            TextWrapping="Wrap"

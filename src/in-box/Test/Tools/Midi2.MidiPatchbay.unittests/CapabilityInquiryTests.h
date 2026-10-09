@@ -36,4 +36,6 @@ public:
     TEST_METHOD(TheFilterSortsByCategory);
     TEST_METHOD(AnswersGoBackWhereTheQuestionCameFrom);
     TEST_METHOD(APassedQuestionGoesOutBeforeItsAnswer);
+    TEST_METHOD(AResponderAnswersWithNothingAfterIt);
+    TEST_METHOD(TheEndpointsAResponderAnswers);
 };

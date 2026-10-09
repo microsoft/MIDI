@@ -165,6 +165,11 @@ namespace midipatchbay
 
         bool IsShowingTrace() const noexcept { return m_tracing; }
 
+        // Lights up what messages just went through, then fades it: links and steps by id, and
+        // "endpoint id|replies" for a responder's answers to that endpoint. Ends lit along a link
+        // light up too.
+        void LightUp(_In_ std::vector<std::wstring> const& ids) noexcept;
+
         // Nodes grow from here to fit their longest name.
         static constexpr double MinimumNodeWidth = 252.0;
         static constexpr double BlockNodeWidth = 208.0;
@@ -230,6 +235,22 @@ namespace midipatchbay
             double Width{ MinimumNodeWidth };
             double Height{ 0 };
             bool IsOffline{ false };
+
+            // Where a MIDI-CI responder's answers leave, for the endpoints it answers. Not a
+            // connection point: the answers go back to whatever asked, so nothing is wired to it.
+            shapes::Ellipse AnswersDot{ nullptr };
+            double AnswersOffsetX{ 0 };
+            double AnswersOffsetY{ 0 };
+            std::vector<std::wstring> AnsweredEndpointIds{};
+        };
+
+        // A responder's answers going back to one endpoint. Drawn from the patch, never edited.
+        struct AnswerPathVisual
+        {
+            std::wstring ResponderId{};
+            std::wstring EndpointId{};
+            shapes::Path Line{ nullptr };
+            shapes::Path Flash{ nullptr };
         };
 
         struct ConnectionVisual
@@ -244,6 +265,9 @@ namespace midipatchbay
             // Invisible and much thicker than the line, because a two pixel cord is unreasonable
             // to expect anyone to hit.
             shapes::Path HitArea{ nullptr };
+
+            // Lit when a message goes along it, then faded out.
+            shapes::Path Flash{ nullptr };
 
             controls::Grid Pill{ nullptr };
             shapes::Rectangle PillShape{ nullptr };
@@ -271,6 +295,10 @@ namespace midipatchbay
         void AttachPortHandlers(_In_ controls::Button const& row, _In_ PortKey const& key) noexcept;
 
         void BuildConnections(_In_ PatchAnalysis const& analysis) noexcept;
+
+        void BuildAnswerPaths() noexcept;
+        void RedrawAnswerPaths() noexcept;
+        void ApplyAnswerPathAppearance() noexcept;
 
         void MeasurePorts(_Inout_ NodeVisual& node) noexcept;
 
@@ -329,6 +357,16 @@ namespace midipatchbay
 
         // Abandons whatever drag is in progress without committing it.
         void CancelDrags() noexcept;
+
+        // Dragging on empty canvas draws a band, and selects every node it touches when let go.
+        // Ctrl or Shift adds to what is selected already.
+        void BeginBand(_In_ input::PointerRoutedEventArgs const& args) noexcept;
+        void UpdateBand(_In_ foundation::Point const& point) noexcept;
+        void EndBand(_In_ foundation::Point const& point) noexcept;
+        std::vector<std::wstring> NodesInBand(_In_ foundation::Point const& point) const noexcept;
+
+        // A link between two nodes of a selection of several is part of it.
+        bool IsLinkInSelectedGroup(_In_ std::wstring const& connectionId) const noexcept;
         void RequestConnection(_In_ PortKey const& source, _In_ PortKey const& destination) noexcept;
         void RequestRetarget(
             _In_ std::wstring const& connectionId,
@@ -361,6 +399,10 @@ namespace midipatchbay
 
         std::vector<NodeVisual> m_nodes{};
         std::vector<ConnectionVisual> m_connections{};
+        std::vector<AnswerPathVisual> m_answerPaths{};
+
+        // A glow behind each node that has lit up, made the first time it does.
+        std::unordered_map<std::wstring, shapes::Rectangle> m_nodeHalos{};
         std::unordered_set<std::wstring> m_loopMutedConnectionIds{};
 
         CanvasSelectionKind m_selectionKind{ CanvasSelectionKind::None };
@@ -396,6 +438,13 @@ namespace midipatchbay
         bool m_retargeting{ false };
         std::wstring m_retargetConnectionId{};
         bool m_retargetMovingSource{ false };
+
+        // rubber band
+        bool m_banding{ false };
+        bool m_bandAdds{ false };
+        foundation::Point m_bandStart{};
+        std::vector<std::wstring> m_bandBaseSelection{};
+        shapes::Rectangle m_bandRectangle{ nullptr };
 
         std::optional<PortKey> m_hoverPort{};
         std::optional<PortKey> m_armedPort{};

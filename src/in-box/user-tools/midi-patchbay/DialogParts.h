@@ -105,4 +105,81 @@ namespace midipatchbay::parts
     {
         return std::round(std::clamp(value, MinimumGeneratorBeatsPerMinute, MaximumGeneratorBeatsPerMinute) * 100.0) / 100.0;
     }
+
+    // A square frame for a curve preview, with the canvas the curve is drawn on inside it.
+    inline controls::Grid CurveFrame(_In_ controls::Canvas const& canvas, _In_ double size)
+    {
+        canvas.Width(size);
+        canvas.Height(size);
+
+        auto const frame = MakeRoundedPanel(
+            4,
+            ThemeBrushes::Current().Get(L"SolidBackgroundFillColorTertiaryBrush"),
+            ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"),
+            xaml::Thickness{},
+            canvas).Panel;
+
+        frame.Width(size);
+        frame.Height(size);
+        frame.VerticalAlignment(xaml::VerticalAlignment::Top);
+
+        return frame;
+    }
+
+    // A dashed straight line for reference and the shaped line over it, both running 0 to 1
+    // across and up.
+    inline void DrawCurve(
+        _In_ controls::Canvas const& canvas,
+        _In_ double size,
+        _In_ std::function<double(double)> const& shape) noexcept
+    {
+        constexpr int32_t sampleCount = 33;
+
+        try
+        {
+            if (canvas == nullptr)
+            {
+                return;
+            }
+
+            canvas.Children().Clear();
+
+            shapes::Polyline reference{};
+            shapes::Polyline shaped{};
+
+            media::PointCollection referencePoints{};
+            media::PointCollection shapedPoints{};
+
+            for (int32_t i = 0; i < sampleCount; i++)
+            {
+                auto const unit = static_cast<double>(i) / (sampleCount - 1);
+                auto const x = static_cast<float>(unit * size);
+
+                referencePoints.Append(foundation::Point{
+                    x, static_cast<float>(size - unit * size) });
+
+                shapedPoints.Append(foundation::Point{
+                    x, static_cast<float>(size - shape(unit) * size) });
+            }
+
+            reference.Points(referencePoints);
+            reference.StrokeThickness(1.0);
+            reference.Stroke(ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
+            reference.StrokeDashArray([]()
+                {
+                    media::DoubleCollection dashes{};
+                    dashes.Append(3.0);
+                    dashes.Append(3.0);
+                    return dashes;
+                }());
+
+            shaped.Points(shapedPoints);
+            shaped.StrokeThickness(2.0);
+            shaped.Stroke(ThemeBrushes::Current().Get(L"AccentFillColorDefaultBrush"));
+
+            canvas.Children().Append(reference);
+            canvas.Children().Append(shaped);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw a curve preview.")
+    }
 }

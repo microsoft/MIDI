@@ -216,6 +216,13 @@ namespace midipatchbay
     // to route, each reported in Problems.
     RouteGraph CompileRoutes(_In_ std::vector<RoutePatch> const& patches) noexcept;
 
+    // The endpoints a MIDI-CI responder sends its answers to, in the order the patch lists them:
+    // each one whose messages reach it, other than through a throttle or from a generator. None
+    // while it is bypassed.
+    std::vector<std::wstring> EndpointsAnsweredBy(
+        _In_ PatchDocument const& patch,
+        _In_ std::wstring const& responderId) noexcept;
+
     // Told about everything one message does on its way through.
     class RouteSink
     {

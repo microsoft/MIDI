@@ -52,6 +52,38 @@ namespace midipatchbay
             return status == 0xF8 || status == 0xFA || status == 0xFB || status == 0xFC || status == 0xF2;
         }
 
+        // A throttle with a limit is a queue with a thread of its own, so nothing after it knows
+        // where a message came from.
+        bool PacesMessages(_In_ PatchBlock const& block) noexcept
+        {
+            return block.Kind == BlockKind::Throttle && !block.Bypassed && block.Settings.SendSpeedLimit != 0;
+        }
+
+        // Whether what leaves a step by this link could still be answered. A way the step doesn't
+        // have, or doesn't use while it is bypassed, carries nothing at all.
+        bool CarriesAWayBack(_In_ PatchBlock const& source, _In_ PatchConnection const& link) noexcept
+        {
+            if (IsGenerator(source.Kind) || IsAnnotation(source.Kind) || PacesMessages(source))
+            {
+                return false;
+            }
+
+            if (!HasWays(source.Kind))
+            {
+                return true;
+            }
+
+            if (!IsWayOf(source, link.SourceGroupIndex))
+            {
+                return false;
+            }
+
+            auto const bypass = source.Kind == BlockKind::Branch ? source.Settings.Branch.Bypass : source.Settings.Switch.Bypass;
+
+            return !source.Bypassed || bypass != BypassWay::FirstWay ||
+                link.SourceGroupIndex == FirstWayOf(source.Kind, source.Settings);
+        }
+
         // A responder's answers, held until the packet it passes on has gone, then sent back the
         // way the question came. Sent at once, an answer to the same endpoint and group would land
         // inside the question it forwards.
@@ -70,7 +102,8 @@ namespace midipatchbay
                 }
             }
 
-            void SendTo(_Inout_ RouteSink& sink, _In_ uint32_t leaf) const noexcept
+            // Each answer is counted on the reply cell, so live routing can show it going back.
+            void SendTo(_Inout_ RouteSink& sink, _In_ uint32_t leaf, _In_ std::optional<uint32_t> cell) const noexcept
             {
                 size_t first = 0;
 
@@ -82,6 +115,12 @@ namespace midipatchbay
                     }
 
                     sink.Send(leaf, m_words.data() + first, count);
+
+                    if (cell.has_value())
+                    {
+                        sink.CountLink(cell.value());
+                    }
+
                     first += count;
                 }
             }
@@ -355,6 +394,18 @@ namespace midipatchbay
                 }
 
                 return &found->second;
+            }
+
+            // Whether a responder at the end of this path could send an answer back: not from a
+            // generator, and not through a throttle.
+            bool HasWayBack(_In_ std::vector<std::wstring> const& path) const
+            {
+                return std::none_of(path.begin(), path.end(), [this](std::wstring const& id)
+                    {
+                        auto const* block = m_patch.FindBlock(id);
+
+                        return block != nullptr && (IsGenerator(block->Kind) || PacesMessages(*block));
+                    });
             }
 
             uint32_t CellFor(_In_ std::wstring const& elementId)
@@ -665,9 +716,7 @@ namespace midipatchbay
                     return Expansion::Refused;
                 }
 
-                auto const paced = block->Kind == BlockKind::Throttle &&
-                    !block->Bypassed &&
-                    block->Settings.SendSpeedLimit != 0;
+                auto const paced = PacesMessages(*block);
 
                 if (paced)
                 {
@@ -697,11 +746,13 @@ namespace midipatchbay
                     return Expansion::Refused;
                 }
 
-                // A memory is set whether or not anything comes after the step.
+                // A memory is set, and a responder answers, whether or not anything comes after
+                // the step.
                 auto const remembers = block->Kind == BlockKind::SetMemory && !block->Bypassed &&
                     !BlockChangesNothing(block->Kind, block->Settings);
+                auto const answers = block->Kind == BlockKind::CiResponder && !block->Bypassed && HasWayBack(path);
 
-                if (next.empty() && !remembers)
+                if (next.empty() && !remembers && !answers)
                 {
                     return Expansion::Dead;
                 }
@@ -1092,7 +1143,9 @@ namespace midipatchbay
                         }
                     }
 
-                    replies.SendTo(sink, from.Leaf);
+                    replies.SendTo(sink, from.Leaf, from.Leaf < graph.Leaves.size()
+                        ? std::optional<uint32_t>{ graph.Leaves[from.Leaf].LinkCell }
+                        : std::nullopt);
                     return;
                 }
             }
@@ -1182,5 +1235,67 @@ namespace midipatchbay
         ReturnPath const from{ root.ReplyLeaf, static_cast<uint8_t>(internal::GetGroupIndexFromFirstWord(words[0]) & 0x0F) };
 
         RunEdge(graph, root.Edge, words, wordCount, sink, from);
+    }
+
+    _Use_decl_annotations_
+    std::vector<std::wstring> EndpointsAnsweredBy(PatchDocument const& patch, std::wstring const& responderId) noexcept
+    {
+        std::vector<std::wstring> answered{};
+
+        try
+        {
+            auto const* responder = patch.FindBlock(responderId);
+
+            if (responder == nullptr || responder->Kind != BlockKind::CiResponder || responder->Bypassed)
+            {
+                return answered;
+            }
+
+            // Back along every link into the responder, through the steps that keep a way back.
+            std::unordered_set<std::wstring> asking{};
+            std::unordered_set<std::wstring> visited{ responderId };
+            std::vector<std::wstring> pending{ responderId };
+
+            while (!pending.empty())
+            {
+                auto const nodeId = pending.back();
+                pending.pop_back();
+
+                for (auto const& link : patch.Connections)
+                {
+                    if (link.Muted || link.DestinationId != nodeId)
+                    {
+                        continue;
+                    }
+
+                    if (patch.FindEndpoint(link.SourceId) != nullptr)
+                    {
+                        asking.insert(link.SourceId);
+                        continue;
+                    }
+
+                    auto const* source = patch.FindBlock(link.SourceId);
+
+                    if (source != nullptr && CarriesAWayBack(*source, link) && visited.insert(source->Id).second)
+                    {
+                        pending.push_back(source->Id);
+                    }
+                }
+            }
+
+            for (auto const& endpoint : patch.Endpoints)
+            {
+                if (asking.count(endpoint.Id) != 0)
+                {
+                    answered.push_back(endpoint.Id);
+                }
+            }
+        }
+        catch (...)
+        {
+            answered.clear();
+        }
+
+        return answered;
     }
 }

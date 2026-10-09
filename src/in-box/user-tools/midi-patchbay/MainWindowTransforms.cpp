@@ -10,7 +10,6 @@
 
 #include "BackgroundWork.h"
 #include "DialogParts.h"
-#include "GeneralMidi.h"
 #include "RoundedShape.h"
 #include "StringResources.h"
 #include "ThemeBrushes.h"
@@ -27,63 +26,10 @@ namespace winrt::midipatchbay::implementation
     {
         constexpr double CurvePreviewSize = 132.0;
         constexpr double ShapeRowPreviewSize = 64.0;
-        constexpr int32_t CurveSampleCount = 33;
-
-        // Everything one of the mapping tables needs to draw itself. The stored value is always
-        // the number on the wire; DisplayOffset is only what the customer sees, so channels can
-        // be counted from one the way musicians count them.
-        struct MapSectionInfo
-        {
-            wchar_t const* Heading;
-            wchar_t const* Hint;
-            wchar_t const* AddButton;
-            wchar_t const* EmptyText;
-            wchar_t const* FromHeader;
-            wchar_t const* ToHeader;
-            int32_t Maximum;
-            int32_t DefaultValue;
-            int32_t DisplayOffset;
-            bool HasPlayButton;
-            bool HasNames;
-        };
-
-        MapSectionInfo const& SectionInfo(_In_ MainWindow::TransformMap which) noexcept
-        {
-            static constexpr MapSectionInfo sections[]
-            {
-                // Note
-                { L"TransformSectionNoteMap", L"TransformSectionNoteMapHint", L"TransformAddNoteMapping",
-                  L"TransformNoNoteMappings", L"TransformNoteFrom", L"TransformNoteTo", 127, 60, 0, true, true },
-
-                // Control
-                { L"TransformSectionControlMap", L"TransformSectionControlMapHint", L"TransformAddControlMapping",
-                  L"TransformNoControlMappings", L"TransformControlFrom", L"TransformControlTo", 127, 1, 0, false, false },
-
-                // Channel
-                { L"TransformSectionChannelMap", L"TransformSectionChannelMapHint", L"TransformAddChannelMapping",
-                  L"TransformNoChannelMappings", L"TransformChannelFrom", L"TransformChannelTo", 15, 0, 1, false, false },
-
-                // Program
-                { L"TransformSectionProgramMap", L"TransformSectionProgramMapHint", L"TransformAddProgramMapping",
-                  L"TransformNoProgramMappings", L"TransformProgramFrom", L"TransformProgramTo", 127, 0, 0, false, true },
-
-                // BankMsb
-                { L"TransformSectionBankMsbMap", L"TransformSectionBankMsbMapHint", L"TransformAddBankMsbMapping",
-                  L"TransformNoBankMsbMappings", L"TransformBankFrom", L"TransformBankTo", 127, 0, 0, false, false },
-
-                // BankLsb
-                { L"TransformSectionBankLsbMap", L"TransformSectionBankLsbMapHint", L"TransformAddBankLsbMapping",
-                  L"TransformNoBankLsbMappings", L"TransformBankFrom", L"TransformBankTo", 127, 0, 0, false, false },
-            };
-
-            static_assert(std::size(sections) == MainWindow::TransformMapCount);
-
-            auto const index = static_cast<size_t>(which);
-
-            return sections[index < std::size(sections) ? index : 0];
-        }
 
         using patchbay::parts::Card;
+        using patchbay::parts::CurveFrame;
+        using patchbay::parts::DrawCurve;
         using patchbay::parts::Heading;
         using patchbay::parts::HeadingHint;
 
@@ -146,110 +92,14 @@ namespace winrt::midipatchbay::implementation
                 return L"TransformShapeInputLow";
             }
         }
-
-        controls::Grid CurveFrame(_In_ controls::Canvas const& canvas, _In_ double size)
-        {
-            canvas.Width(size);
-            canvas.Height(size);
-
-            auto const frame = patchbay::MakeRoundedPanel(
-                4,
-                patchbay::ThemeBrushes::Current().Get(L"SolidBackgroundFillColorTertiaryBrush"),
-                patchbay::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"),
-                xaml::Thickness{},
-                canvas).Panel;
-
-            frame.Width(size);
-            frame.Height(size);
-            frame.VerticalAlignment(xaml::VerticalAlignment::Top);
-
-            return frame;
-        }
-
-        // A dashed straight line for reference and the shaped line over it, both running 0 to 1
-        // across and up.
-        void DrawCurve(
-            _In_ controls::Canvas const& canvas,
-            _In_ double size,
-            _In_ std::function<double(double)> const& shape) noexcept
-        {
-            try
-            {
-                if (canvas == nullptr)
-                {
-                    return;
-                }
-
-                canvas.Children().Clear();
-
-                shapes::Polyline reference{};
-                shapes::Polyline shaped{};
-
-                media::PointCollection referencePoints{};
-                media::PointCollection shapedPoints{};
-
-                for (int32_t i = 0; i < CurveSampleCount; i++)
-                {
-                    auto const unit = static_cast<double>(i) / (CurveSampleCount - 1);
-                    auto const x = static_cast<float>(unit * size);
-
-                    referencePoints.Append(foundation::Point{
-                        x, static_cast<float>(size - unit * size) });
-
-                    shapedPoints.Append(foundation::Point{
-                        x, static_cast<float>(size - shape(unit) * size) });
-                }
-
-                reference.Points(referencePoints);
-                reference.StrokeThickness(1.0);
-                reference.Stroke(patchbay::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
-                reference.StrokeDashArray([]()
-                    {
-                        media::DoubleCollection dashes{};
-                        dashes.Append(3.0);
-                        dashes.Append(3.0);
-                        return dashes;
-                    }());
-
-                shaped.Points(shapedPoints);
-                shaped.StrokeThickness(2.0);
-                shaped.Stroke(patchbay::ThemeBrushes::Current().Get(L"AccentFillColorDefaultBrush"));
-
-                canvas.Children().Append(reference);
-                canvas.Children().Append(shaped);
-            }
-            MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw a curve preview.")
-        }
     }
 
-    // The mapping tables are edited as row lists, filled here from the sparse arrays the step
-    // keeps, and collected back into them by CommitTransformMaps.
+    // The controller value rules are edited as a row list, filled here from the array the step
+    // keeps, and collected back into it by CommitTransformMaps.
     void MainWindow::PrepareTransformRows() noexcept
     {
         try
         {
-            auto const fillRows = [this](TransformMap which, int16_t const* map, size_t count)
-                {
-                    auto& rows = m_mapRows[static_cast<size_t>(which)];
-
-                    rows.clear();
-
-                    for (size_t i = 0; i < count; i++)
-                    {
-                        if (map[i] >= 0)
-                        {
-                            rows.emplace_back(static_cast<int32_t>(i), map[i]);
-                        }
-                    }
-                };
-
-            fillRows(TransformMap::Note, m_editingTransform.NoteMap.data(), m_editingTransform.NoteMap.size());
-            fillRows(TransformMap::Control, m_editingTransform.ControlMap.data(), m_editingTransform.ControlMap.size());
-            fillRows(TransformMap::Channel, m_editingTransform.ChannelMap.data(), m_editingTransform.ChannelMap.size());
-            fillRows(TransformMap::Program, m_editingTransform.ProgramMap.data(), m_editingTransform.ProgramMap.size());
-            fillRows(TransformMap::BankMsb, m_editingTransform.BankMsbMap.data(), m_editingTransform.BankMsbMap.size());
-            fillRows(TransformMap::BankLsb, m_editingTransform.BankLsbMap.data(), m_editingTransform.BankLsbMap.size());
-
             m_controlValueRows.clear();
 
             for (size_t i = 0; i < m_editingTransform.ControlValueShapes.size(); i++)
@@ -268,32 +118,7 @@ namespace winrt::midipatchbay::implementation
     {
         try
         {
-            auto const collect = [this](TransformMap which, int16_t* map, size_t count)
-                {
-                    for (size_t i = 0; i < count; i++)
-                    {
-                        map[i] = -1;
-                    }
-
-                    // A repeated source wins on its last row, which is what the customer sees last.
-                    for (auto const& [from, to] : m_mapRows[static_cast<size_t>(which)])
-                    {
-                        if (from >= 0 && from < static_cast<int32_t>(count) &&
-                            to >= 0 && to < static_cast<int32_t>(count))
-                        {
-                            map[static_cast<size_t>(from)] = static_cast<int16_t>(to);
-                        }
-                    }
-                };
-
-            collect(TransformMap::Note, m_editingTransform.NoteMap.data(), m_editingTransform.NoteMap.size());
-            collect(TransformMap::Control, m_editingTransform.ControlMap.data(), m_editingTransform.ControlMap.size());
-            collect(TransformMap::Channel, m_editingTransform.ChannelMap.data(), m_editingTransform.ChannelMap.size());
-            collect(TransformMap::Program, m_editingTransform.ProgramMap.data(), m_editingTransform.ProgramMap.size());
-            collect(TransformMap::BankMsb, m_editingTransform.BankMsbMap.data(), m_editingTransform.BankMsbMap.size());
-            collect(TransformMap::BankLsb, m_editingTransform.BankLsbMap.data(), m_editingTransform.BankLsbMap.size());
-
-            // A repeated controller wins on its last row, the same as the mapping tables.
+            // A repeated controller wins on its last row, the same as the mapping lists.
             m_editingTransform.ControlValueShapes.fill(patchbay::ValueShape{});
 
             for (auto const& row : m_controlValueRows)
@@ -315,19 +140,6 @@ namespace winrt::midipatchbay::implementation
 
             switch (m_editingKind)
             {
-            case patchbay::BlockKind::ChannelMap:
-                content.Children().Append(Card(BuildMapSection(TransformMap::Channel)));
-                break;
-
-            case patchbay::BlockKind::GroupMap:
-                BuildGroupMapSection();
-                break;
-
-            case patchbay::BlockKind::NoteMap:
-                content.Children().Append(Card(BuildMapSection(TransformMap::Note)));
-                BuildTransposeSection();
-                break;
-
             case patchbay::BlockKind::Velocity:
                 BuildValueScaleSection();
                 BuildVelocitySection();
@@ -338,41 +150,13 @@ namespace winrt::midipatchbay::implementation
                 content.Children().Append(Card(BuildAftertouchSection()));
                 break;
 
-            case patchbay::BlockKind::ControlChangeMap:
-                content.Children().Append(Card(BuildMapSection(TransformMap::Control)));
-                break;
-
             case patchbay::BlockKind::ControlChangeValue:
                 BuildValueScaleSection();
                 content.Children().Append(Card(BuildControlValueSection()));
                 break;
 
-            case patchbay::BlockKind::ProgramMap:
-            {
-                content.Children().Append(Card(BuildMapSection(TransformMap::Program)));
-
-                controls::StackPanel body{};
-                body.Spacing(4);
-
-                body.Children().Append(BuildMapSection(TransformMap::BankMsb));
-
-                auto lsb = BuildMapSection(TransformMap::BankLsb);
-                lsb.Margin(xaml::ThicknessHelper::FromLengths(0, 10, 0, 0));
-
-                body.Children().Append(lsb);
-
-                content.Children().Append(Card(body));
-                break;
-            }
-
             default:
                 break;
-            }
-
-            // Each does nothing for a table or a list this kind doesn't show.
-            for (int32_t i = 0; i < static_cast<int32_t>(TransformMapCount); i++)
-            {
-                RebuildMapRows(static_cast<TransformMap>(i));
             }
 
             RebuildControlValueRows();
@@ -433,44 +217,6 @@ namespace winrt::midipatchbay::implementation
             BlockDialogContent().Children().Append(Card(body));
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the value scale section.")
-    }
-
-    void MainWindow::BuildTransposeSection() noexcept
-    {
-        try
-        {
-            auto weak = get_weak();
-
-            controls::StackPanel body{};
-            body.Spacing(4);
-
-            body.Children().Append(Heading(resources::GetString(L"TransformSectionExactPitch")));
-
-            // The note map moves the note number the same way a transpose does, so both need to
-            // know what to do with a MIDI 2.0 note that carries its own pitch.
-            controls::CheckBox exactPitch{};
-
-            exactPitch.Content(winrt::box_value(resources::GetString(L"TransformIgnoreExactPitch")));
-            exactPitch.IsChecked(m_editingTransform.IgnoreExactPitchNotes);
-
-            auto const setIgnoreExactPitch = [weak](bool value)
-                {
-                    if (auto s = weak.get())
-                    {
-                        s->m_editingTransform.IgnoreExactPitchNotes = value;
-                        s->UpdateBlockSummary();
-                    }
-                };
-
-            exactPitch.Checked([setIgnoreExactPitch](auto&&, auto&&) { setIgnoreExactPitch(true); });
-            exactPitch.Unchecked([setIgnoreExactPitch](auto&&, auto&&) { setIgnoreExactPitch(false); });
-
-            body.Children().Append(exactPitch);
-            body.Children().Append(HeadingHint(resources::GetString(L"TransformIgnoreExactPitchHint")));
-
-            BlockDialogContent().Children().Append(Card(body));
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the transpose section.")
     }
 
     void MainWindow::BuildVelocitySection() noexcept
@@ -640,343 +386,6 @@ namespace winrt::midipatchbay::implementation
             BlockDialogContent().Children().Append(Card(body));
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the velocity section.")
-    }
-
-    void MainWindow::BuildGroupMapSection() noexcept
-    {
-        try
-        {
-            auto weak = get_weak();
-
-            controls::StackPanel body{};
-            body.Spacing(4);
-
-            body.Children().Append(Heading(resources::GetString(L"TransformSectionGroupMap")));
-            body.Children().Append(HeadingHint(resources::GetString(L"TransformSectionGroupMapHint")));
-
-            controls::VariableSizedWrapGrid grid{};
-            grid.Orientation(controls::Orientation::Horizontal);
-            grid.MaximumRowsOrColumns(2);
-            grid.ItemWidth(350);
-            grid.ItemHeight(44);
-
-            for (size_t group = 0; group < m_editingSettings.GroupMap.size(); group++)
-            {
-                controls::StackPanel row{};
-                row.Orientation(controls::Orientation::Horizontal);
-                row.Spacing(10);
-
-                // Groups are counted from one on screen and from zero in the file.
-                controls::TextBlock label{};
-                label.Text(resources::FormatString(L"FilterGroupFormat", static_cast<int>(group) + 1));
-                label.Width(80);
-                label.VerticalAlignment(xaml::VerticalAlignment::Center);
-                row.Children().Append(label);
-
-                auto arrow = MapRowArrow();
-                arrow.VerticalAlignment(xaml::VerticalAlignment::Center);
-                arrow.Margin(xaml::ThicknessHelper::FromUniformLength(0));
-                row.Children().Append(arrow);
-
-                controls::ComboBox target{};
-                target.Width(170);
-                target.Items().Append(winrt::box_value(resources::GetString(L"TransformGroupUnchanged")));
-
-                for (int32_t to = 0; to < 16; to++)
-                {
-                    target.Items().Append(winrt::box_value(resources::FormatString(L"FilterGroupFormat", to + 1)));
-                }
-
-                auto const mapped = m_editingSettings.GroupMap[group];
-                target.SelectedIndex(mapped < 0 || mapped > 15 ? 0 : mapped + 1);
-
-                xaml::Automation::AutomationProperties::SetName(target,
-                    resources::FormatString(L"TransformGroupMapAccessibleFormat", static_cast<int>(group) + 1));
-
-                target.SelectionChanged([weak, group](foundation::IInspectable const& sender, auto&&)
-                    {
-                        auto s = weak.get();
-                        auto const combo = sender.try_as<controls::ComboBox>();
-
-                        if (s == nullptr || combo == nullptr || combo.SelectedIndex() < 0)
-                        {
-                            return;
-                        }
-
-                        s->m_editingSettings.GroupMap[group] = static_cast<int8_t>(combo.SelectedIndex() - 1);
-                        s->UpdateBlockSummary();
-                    });
-
-                row.Children().Append(target);
-                grid.Children().Append(row);
-            }
-
-            body.Children().Append(grid);
-
-            BlockDialogContent().Children().Append(Card(body));
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the group map section.")
-    }
-
-    _Use_decl_annotations_
-    controls::StackPanel MainWindow::BuildMapSection(TransformMap which) noexcept
-    {
-        controls::StackPanel body{};
-
-        try
-        {
-            auto const& info = SectionInfo(which);
-            auto const index = static_cast<size_t>(which);
-
-            body.Spacing(4);
-
-            body.Children().Append(Heading(resources::GetString(info.Heading)));
-            body.Children().Append(HeadingHint(resources::GetString(info.Hint)));
-
-            m_mapPanels[index] = controls::StackPanel{};
-            m_mapPanels[index].Spacing(6);
-            m_mapPanels[index].Margin(xaml::ThicknessHelper::FromLengths(0, 4, 0, 6));
-
-            body.Children().Append(m_mapPanels[index]);
-
-            controls::Button add{};
-            add.Content(winrt::box_value(resources::GetString(info.AddButton)));
-
-            auto weak = get_weak();
-
-            add.Click([weak, which](auto&&, auto&&)
-                {
-                    auto s = weak.get();
-
-                    if (s == nullptr)
-                    {
-                        return;
-                    }
-
-                    auto& rows = s->m_mapRows[static_cast<size_t>(which)];
-                    auto const& added = SectionInfo(which);
-
-                    if (rows.size() >= std::min(patchbay::MaximumMapEntries,
-                        static_cast<size_t>(added.Maximum) + 1))
-                    {
-                        return;
-                    }
-
-                    rows.emplace_back(added.DefaultValue, added.DefaultValue);
-
-                    s->RebuildMapRows(which);
-                    s->UpdateBlockSummary();
-                });
-
-            body.Children().Append(add);
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build a mapping section.")
-
-        return body;
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::RebuildMapRows(TransformMap which) noexcept
-    {
-        try
-        {
-            auto const index = static_cast<size_t>(which);
-
-            if (m_mapPanels[index] == nullptr)
-            {
-                return;
-            }
-
-            auto const& info = SectionInfo(which);
-            auto& rows = m_mapRows[index];
-
-            m_mapPanels[index].Children().Clear();
-            m_mapLabels[index].clear();
-
-            auto weak = get_weak();
-
-            if (rows.empty())
-            {
-                auto empty = HeadingHint(resources::GetString(info.EmptyText));
-                empty.Margin(xaml::ThicknessHelper::FromUniformLength(0));
-                m_mapPanels[index].Children().Append(empty);
-
-                return;
-            }
-
-            for (size_t position = 0; position < rows.size(); position++)
-            {
-                controls::StackPanel row{};
-                row.Orientation(controls::Orientation::Horizontal);
-                row.Spacing(8);
-
-                auto const addBox = [weak, which, &info, &rows, position, &row](bool isSource)
-                    {
-                        auto box = SmallNumberBox(info.DisplayOffset, info.Maximum + info.DisplayOffset,
-                            (isSource ? rows[position].first : rows[position].second) + info.DisplayOffset);
-
-                        box.Header(winrt::box_value(resources::GetString(
-                            isSource ? info.FromHeader : info.ToHeader)));
-
-                        box.ValueChanged([weak, which, position, isSource](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
-                            {
-                                auto s = weak.get();
-
-                                if (s == nullptr || std::isnan(args.NewValue()))
-                                {
-                                    return;
-                                }
-
-                                auto& target = s->m_mapRows[static_cast<size_t>(which)];
-
-                                if (position >= target.size())
-                                {
-                                    return;
-                                }
-
-                                auto const& bounds = SectionInfo(which);
-
-                                auto const value = static_cast<int32_t>(std::clamp(args.NewValue(),
-                                    static_cast<double>(bounds.DisplayOffset),
-                                    static_cast<double>(bounds.Maximum + bounds.DisplayOffset))) - bounds.DisplayOffset;
-
-                                if (isSource)
-                                {
-                                    target[position].first = value;
-                                }
-                                else
-                                {
-                                    target[position].second = value;
-                                }
-
-                                s->RefreshMapRowLabels(which);
-                                s->UpdateBlockSummary();
-                            });
-
-                        row.Children().Append(box);
-                    };
-
-                addBox(true);
-                row.Children().Append(MapRowArrow());
-                addBox(false);
-
-                if (info.HasNames)
-                {
-                    controls::TextBlock names{};
-                    names.FontSize(12);
-                    names.VerticalAlignment(xaml::VerticalAlignment::Bottom);
-                    names.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 8));
-                    names.MinWidth(120);
-                    names.MaxWidth(240);
-                    names.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
-                    names.Foreground(patchbay::ThemeBrushes::Current().Get(L"TextFillColorSecondaryBrush"));
-                    row.Children().Append(names);
-
-                    m_mapLabels[index].push_back(names);
-                }
-
-                if (info.HasPlayButton)
-                {
-                    controls::Button play{};
-                    play.Content(winrt::box_value(resources::GetString(L"TransformPlay")));
-                    play.VerticalAlignment(xaml::VerticalAlignment::Bottom);
-
-                    xaml::Automation::AutomationProperties::SetName(play,
-                        resources::GetString(L"TransformPlayAccessibleName"));
-
-                    play.Click([weak, which, position](auto&&, auto&&)
-                        {
-                            auto s = weak.get();
-
-                            if (s == nullptr)
-                            {
-                                return;
-                            }
-
-                            auto const& target = s->m_mapRows[static_cast<size_t>(which)];
-
-                            if (position >= target.size())
-                            {
-                                return;
-                            }
-
-                            s->PlayTestNoteAsync(static_cast<uint8_t>(
-                                std::clamp(target[position].second, 0, 127)));
-                        });
-
-                    row.Children().Append(play);
-                }
-
-                controls::Button remove{};
-                remove.Content(winrt::box_value(resources::GetString(L"TransformRemove")));
-                remove.VerticalAlignment(xaml::VerticalAlignment::Bottom);
-
-                remove.Click([weak, which, position](auto&&, auto&&)
-                    {
-                        auto s = weak.get();
-
-                        if (s == nullptr)
-                        {
-                            return;
-                        }
-
-                        auto& target = s->m_mapRows[static_cast<size_t>(which)];
-
-                        if (position >= target.size())
-                        {
-                            return;
-                        }
-
-                        target.erase(target.begin() + static_cast<ptrdiff_t>(position));
-
-                        s->RebuildMapRows(which);
-                        s->UpdateBlockSummary();
-                    });
-
-                row.Children().Append(remove);
-
-                m_mapPanels[index].Children().Append(row);
-            }
-
-            RefreshMapRowLabels(which);
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to list the mappings.")
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::RefreshMapRowLabels(TransformMap which) noexcept
-    {
-        try
-        {
-            auto const index = static_cast<size_t>(which);
-
-            if (!SectionInfo(which).HasNames)
-            {
-                return;
-            }
-
-            auto const count = std::min(m_mapLabels[index].size(), m_mapRows[index].size());
-
-            for (size_t i = 0; i < count; i++)
-            {
-                if (m_mapLabels[index][i] == nullptr)
-                {
-                    continue;
-                }
-
-                auto const from = static_cast<uint8_t>(std::clamp(m_mapRows[index][i].first, 0, 127));
-                auto const to = static_cast<uint8_t>(std::clamp(m_mapRows[index][i].second, 0, 127));
-
-                // The General MIDI names are what an instrument without a program list would
-                // play. A device with its own names is not consulted here.
-                m_mapLabels[index][i].Text(which == TransformMap::Program
-                    ? resources::FormatString(L"TransformMapLabelFormat",
-                        midiapp::GeneralMidiProgramName(from), midiapp::GeneralMidiProgramName(to))
-                    : resources::FormatString(L"TransformMapLabelFormat",
-                        patchbay::DescribeNote(from), patchbay::DescribeNote(to)));
-            }
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to label the mappings.")
     }
 
     void MainWindow::ApplyValueScale() noexcept
@@ -1354,6 +763,17 @@ namespace winrt::midipatchbay::implementation
                 DrawCurve(m_controlValuePreviews[i], ShapeRowPreviewSize,
                     [&shape](double unit) { return shape.ShapeUnit(unit); });
             }
+
+            auto const& parameterRows = m_editingSettings.ParameterTransform.Rows;
+            auto const parameterCount = std::min(m_parameterCurveCanvases.size(), parameterRows.size());
+
+            for (size_t i = 0; i < parameterCount; i++)
+            {
+                auto const shape = parameterRows[i].Shape;
+
+                DrawCurve(m_parameterCurveCanvases[i], ShapeRowPreviewSize,
+                    [&shape](double unit) { return shape.ShapeUnit(unit); });
+            }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw the value previews.")
     }
@@ -1538,5 +958,66 @@ namespace winrt::midipatchbay::implementation
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to play the test note.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::FindTestDestination(std::wstring const& blockId) noexcept
+    {
+        m_testEndpointDeviceId.clear();
+        m_testGroupIndex = patchbay::AllGroups;
+
+        try
+        {
+            auto const* patch = CurrentPatch();
+
+            if (patch == nullptr)
+            {
+                return;
+            }
+
+            std::vector<std::wstring> pending{ blockId };
+            std::unordered_set<std::wstring> seen{};
+
+            while (!pending.empty() && m_testEndpointDeviceId.empty())
+            {
+                auto const current = pending.front();
+                pending.erase(pending.begin());
+
+                if (!seen.insert(current).second)
+                {
+                    continue;
+                }
+
+                for (auto const& link : patch->Connections)
+                {
+                    if (link.SourceId != current)
+                    {
+                        continue;
+                    }
+
+                    if (auto const* next = patch->FindBlock(link.DestinationId))
+                    {
+                        // What goes into an LFO doesn't come out of it.
+                        if (!patchbay::IsGenerator(next->Kind))
+                        {
+                            pending.push_back(link.DestinationId);
+                        }
+
+                        continue;
+                    }
+
+                    if (auto const* destination = patch->FindEndpoint(link.DestinationId))
+                    {
+                        if (auto const live = patchbay::ResolveEndpoint(*destination))
+                        {
+                            m_testEndpointDeviceId = live->EndpointDeviceId;
+                            m_testGroupIndex = link.DestinationGroupIndex;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to find where a test note plays.")
     }
 }

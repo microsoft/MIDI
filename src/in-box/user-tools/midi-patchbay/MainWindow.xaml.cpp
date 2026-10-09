@@ -282,6 +282,7 @@ namespace winrt::midipatchbay::implementation
                     {
                         strong->m_closing = true;
                         strong->StopLearning();
+                        strong->ShowLiveRouting(false);
 
                         patchbay::PatchLibrary::Current().Unsubscribe(strong->m_libraryToken);
                         strong->m_libraryToken = 0;

@@ -142,6 +142,12 @@ namespace winrt::midipatchbay::implementation
             m_annotationTextBox = nullptr;
             m_inspectorSummary = nullptr;
             m_stepSettingsFocus = nullptr;
+            m_inlineMapBlockId.clear();
+
+            for (auto& host : m_inlineMapHosts)
+            {
+                host = nullptr;
+            }
 
             auto* patch = CurrentPatch();
             auto const kind = m_canvas.SelectionKind();

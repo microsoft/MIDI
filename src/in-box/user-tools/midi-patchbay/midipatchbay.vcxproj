@@ -266,6 +266,7 @@
     <ClCompile Include="MainWindowDialogs.cpp" />
     <ClCompile Include="MainWindowInspector.cpp" />
     <ClCompile Include="MainWindowStepSettings.cpp" />
+    <ClCompile Include="MainWindowMapSteps.cpp" />
     <ClCompile Include="MainWindowCapabilityInquiry.cpp" />
     <ClCompile Include="MainWindowLogicSteps.cpp" />
     <ClCompile Include="MainWindowTrace.cpp" />

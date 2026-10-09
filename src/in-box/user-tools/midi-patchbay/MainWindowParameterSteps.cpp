@@ -22,6 +22,9 @@ namespace winrt::midipatchbay::implementation
 {
     namespace
     {
+        // The same size as a controller value row's curve.
+        constexpr double ParameterCurveSize = 64.0;
+
         using patchbay::parts::Card;
         using patchbay::parts::Heading;
         using patchbay::parts::Hint;
@@ -341,6 +344,7 @@ namespace winrt::midipatchbay::implementation
             }
 
             m_parameterRowsPanel.Children().Clear();
+            m_parameterCurveCanvases.clear();
 
             auto weak = get_weak();
             auto const isFilter = m_editingKind == patchbay::BlockKind::ParameterFilter;
@@ -639,8 +643,27 @@ namespace winrt::midipatchbay::implementation
                     rowBody.Children().Append(line);
                 }
 
-                m_parameterRowsPanel.Children().Append(Card(rowBody));
+                // The curve the value takes, the same picture the velocity and controller steps show.
+                controls::Canvas curve{};
+                auto frame = patchbay::parts::CurveFrame(curve, ParameterCurveSize);
+                frame.VerticalAlignment(xaml::VerticalAlignment::Bottom);
+
+                xaml::Automation::AutomationProperties::SetName(frame,
+                    resources::FormatString(L"ParameterCurveAccessibleFormat", static_cast<int>(i) + 1));
+
+                m_parameterCurveCanvases.push_back(curve);
+
+                controls::StackPanel layout{};
+                layout.Orientation(controls::Orientation::Horizontal);
+                layout.Spacing(16);
+
+                layout.Children().Append(rowBody);
+                layout.Children().Append(frame);
+
+                m_parameterRowsPanel.Children().Append(Card(layout));
             }
+
+            DrawShapePreviews();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the parameters.")
     }

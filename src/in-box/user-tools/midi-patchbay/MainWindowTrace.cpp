@@ -33,6 +33,9 @@ namespace winrt::midipatchbay::implementation
         // MakeTraceMessage makes.
         constexpr int32_t TraceKindWordsIndex = 6;
 
+        // Often enough that a key press lights up as it's played.
+        constexpr int32_t LiveRoutingIntervalMilliseconds = 40;
+
         // What a trace starts with when nothing has been traced yet: a note played and let go.
         std::vector<patchbay::TraceMessage> FirstTraceMessages()
         {
@@ -669,5 +672,94 @@ namespace winrt::midipatchbay::implementation
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to put the canvas back after a trace.")
+    }
+
+    // ---------------------------------------------------------------- live routing
+
+    _Use_decl_annotations_
+    void MainWindow::ShowLiveRouting(bool shown) noexcept
+    {
+        try
+        {
+            m_showingLiveRouting = shown;
+            m_liveRoutingCounts.clear();
+
+            if (!shown)
+            {
+                if (m_liveRoutingTimer != nullptr)
+                {
+                    m_liveRoutingTimer.Stop();
+                }
+
+                return;
+            }
+
+            if (m_liveRoutingTimer == nullptr)
+            {
+                m_liveRoutingTimer = xaml::DispatcherTimer{};
+                m_liveRoutingTimer.Interval(std::chrono::milliseconds{ LiveRoutingIntervalMilliseconds });
+                m_liveRoutingTimer.Tick([weak = get_weak()](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->OnLiveRoutingTick();
+                        }
+                    });
+            }
+
+            // What has gone through already is where it starts from, so nothing lights up at once.
+            OnLiveRoutingTick();
+            m_liveRoutingTimer.Start();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the live routing.")
+    }
+
+    void MainWindow::OnLiveRoutingTick() noexcept
+    {
+        try
+        {
+            if (m_closing || !m_showingLiveRouting || m_patchKey.empty())
+            {
+                return;
+            }
+
+            // Nobody can see a minimized window.
+            if (::IsIconic(m_chrome.WindowHandle()))
+            {
+                return;
+            }
+
+            auto const first = m_liveRoutingCounts.empty();
+            auto const prefix = m_patchKey + L'|';
+
+            std::vector<std::wstring> lit{};
+
+            for (auto const& [cell, stats] : patchbay::RouteEngine::Current().Stats())
+            {
+                if (cell.size() <= prefix.size() || cell.compare(0, prefix.size(), prefix) != 0)
+                {
+                    continue;
+                }
+
+                auto const reached = stats.MessagesForwarded + stats.MessagesKeptOut;
+                auto const [entry, added] = m_liveRoutingCounts.try_emplace(cell.substr(prefix.size()), reached);
+
+                // A link or step that's new since the last look lights up if anything reached it.
+                if (added ? (!first && reached > 0) : reached > entry->second)
+                {
+                    lit.push_back(entry->first);
+                }
+
+                // Counts start again from nothing when the routing is applied again, so this can
+                // go down.
+                entry->second = reached;
+            }
+
+            if (!lit.empty())
+            {
+                m_canvas.LightUp(lit);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to light up the live routing.")
     }
 }

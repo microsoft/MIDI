@@ -94,8 +94,8 @@ namespace winrt::midipatchbay::implementation
         void OnSplitterEntered(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
         void OnSplitterExited(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
 
-        // Which of the transform dialog's mapping tables a row belongs to. Public only so the
-        // helpers in MainWindowTransforms.cpp can name it; nothing is projected from here.
+        // Which mapping list a row belongs to. Public only so the helpers in MainWindowMapSteps.cpp
+        // can name it; nothing is projected from here.
         enum class TransformMap : int32_t
         {
             Note = 0,
@@ -247,9 +247,7 @@ namespace winrt::midipatchbay::implementation
         void PrepareTransformRows() noexcept;
         void BuildTransformSections() noexcept;
         void BuildValueScaleSection() noexcept;
-        void BuildTransposeSection() noexcept;
         void BuildVelocitySection() noexcept;
-        void BuildGroupMapSection() noexcept;
 
         // ---- generators, in MainWindowGenerators.cpp ----
         void BuildLfoGeneratorSections() noexcept;
@@ -264,15 +262,14 @@ namespace winrt::midipatchbay::implementation
         void BuildGateSections() noexcept;
         void RebuildGateTrigger(_In_ bool open) noexcept;
 
-        // The mapping tables are edited the same way, so one set of row functions drives them all.
-        controls::StackPanel BuildMapSection(_In_ TransformMap which) noexcept;
-        void RebuildMapRows(_In_ TransformMap which) noexcept;
-        void RefreshMapRowLabels(_In_ TransformMap which) noexcept;
         void ApplyValueScale() noexcept;
         void RefreshVelocityEnabledState() noexcept;
         void CommitTransformMaps() noexcept;
         void DrawVelocityCurve() noexcept;
         winrt::fire_and_forget PlayTestNoteAsync(_In_ uint8_t note);
+
+        // The first endpoint a step's messages reach, for the buttons that play a note there.
+        void FindTestDestination(_In_ std::wstring const& blockId) noexcept;
 
         // Controller values and aftertouch share one editor, found through EditingShape.
         xaml::UIElement BuildAftertouchSection() noexcept;
@@ -305,6 +302,14 @@ namespace winrt::midipatchbay::implementation
             _In_ std::wstring const& blockId,
             _In_ std::function<void(::midipatchbay::BlockSettings&)> const& change) noexcept;
 
+        // ---- mapping steps edited in the inspector, in MainWindowMapSteps.cpp ----
+        // Channels and groups are a table of sixteen. Notes, programs, banks and controllers are
+        // lists of rows.
+        void BuildSixteenMapSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
+        void BuildListMapSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
+        void RebuildInlineMapRows(_In_ TransformMap which) noexcept;
+        void SaveInlineMap(_In_ TransformMap which) noexcept;
+
         // ---- MIDI-CI steps, in MainWindowCapabilityInquiry.cpp ----
         void BuildCiResponderSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
         void BuildCiFilterSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
@@ -336,6 +341,11 @@ namespace winrt::midipatchbay::implementation
         // Puts the canvas back. Any change to the patch does this, because the trace is of the
         // patch as it was.
         void ClearTrace() noexcept;
+
+        // Lights up each link and step as messages go through it. Off until asked for, because
+        // it redraws parts of the canvas many times a second.
+        void ShowLiveRouting(_In_ bool shown) noexcept;
+        void OnLiveRoutingTick() noexcept;
 
         // The steps a customer can put into a link, by category.
         controls::MenuFlyout BuildAddStepMenu(_In_ std::wstring const& connectionId) noexcept;
@@ -426,6 +436,11 @@ namespace winrt::midipatchbay::implementation
         ::midipatchbay::TraceResult m_trace{};
         size_t m_traceIndex{ 0 };
 
+        // Live routing, and the counts it saw last by link or step id, so only what moved lights up.
+        bool m_showingLiveRouting{ false };
+        xaml::DispatcherTimer m_liveRoutingTimer{ nullptr };
+        std::unordered_map<std::wstring, uint64_t> m_liveRoutingCounts{};
+
         // The selected annotation's text box, so double-clicking the annotation goes straight to it.
         controls::TextBox m_annotationTextBox{ nullptr };
 
@@ -435,6 +450,13 @@ namespace winrt::midipatchbay::implementation
 
         // Set while code changes a settings control, so its handler doesn't save it again.
         bool m_updatingStepSettings{ false };
+
+        // The selected step's mapping rows. Kept here, so a row that maps nothing yet, such as one
+        // just added, stays on screen until the step is selected again.
+        std::wstring m_inlineMapBlockId{};
+        std::array<std::vector<std::pair<int32_t, int32_t>>, TransformMapCount> m_inlineMapRows{};
+        std::array<controls::StackPanel, TransformMapCount> m_inlineMapHosts{
+            nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 
         // Typed into the patch but not yet a step for Undo.
         bool m_annotationTextChanged{ false };
@@ -481,14 +503,6 @@ namespace winrt::midipatchbay::implementation
         uint64_t m_learnGeneration{ 0 };
 
         controls::StackPanel m_maskConditionsPanel{ nullptr };
-
-        // The transform sections edit row lists and collect them back into the sparse arrays.
-        std::array<std::vector<std::pair<int32_t, int32_t>>, TransformMapCount> m_mapRows{};
-
-        std::array<controls::StackPanel, TransformMapCount> m_mapPanels{
-            nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
-
-        std::array<std::vector<controls::TextBlock>, TransformMapCount> m_mapLabels{};
 
         // Every box that shows a fraction of full scale, so switching between 0 to 127 and
         // percent can retext them all in place.
@@ -538,7 +552,10 @@ namespace winrt::midipatchbay::implementation
         controls::StackPanel m_parameterRowsPanel{ nullptr };
         std::array<controls::StackPanel, 2> m_gateTriggerPanels{ nullptr, nullptr };
 
-        // Where the audition button plays, captured when the dialog opens.
+        // Each (N)RPN transform row's curve, by row.
+        std::vector<controls::Canvas> m_parameterCurveCanvases{};
+
+        // Where the audition button plays: the first endpoint the step's messages reach.
         std::wstring m_testEndpointDeviceId{};
         int32_t m_testGroupIndex{ ::midipatchbay::AllGroups };
 
