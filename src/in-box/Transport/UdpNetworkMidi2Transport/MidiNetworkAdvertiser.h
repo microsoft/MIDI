@@ -8,43 +8,36 @@
 
 #pragma once
 
-using namespace winrt::Windows::Networking;
-using namespace winrt::Windows::Networking::Sockets;
-//using namespace winrt::Windows::Networking::ServiceDiscovery::Dnssd;
-
-
-
-// One host's DNS-SD registration. Why it uses the WinRT registration, and why the transport
-// repeats the announcements the DNS client makes for it, is at the top of MidiNetworkAdvertiser.cpp.
+// One host's DNS-SD registration. Why it is made the way it is, and why the transport repeats the
+// announcements the DNS client makes for it, is at the top of MidiNetworkAdvertiser.cpp.
 class MidiNetworkAdvertiser
 {
 public:
     HRESULT Initialize();
 
-    // A null adapter advertises on every adapter
+    // An empty host name is this PC's .local name, and a zero interface index is every adapter.
+    // S_FALSE when the DNS client was still working on it at the timeout: the host is advertised
+    // once the DNS client finishes, and Shutdown withdraws it either way.
     HRESULT Advertise(
         _In_ winrt::hstring const& serviceInstanceNameWithoutSuffix,
-        _In_ HostName const& hostName,
-        _In_ DatagramSocket const& boundSocket,
+        _In_ winrt::hstring const& hostName,
         _In_ uint16_t const port,
         _In_ winrt::hstring const& midiEndpointName,
         _In_ winrt::hstring const& midiProductInstanceId,
-        _In_ winrt::Windows::Networking::Connectivity::NetworkAdapter const& adapter
+        _In_ uint32_t const interfaceIndex
     );
 
+    // Withdraws the registration, which sends the goodbye
     HRESULT Shutdown();
 
     // A DNS-SD responder renames a colliding instance label instead of refusing to register it,
     // so what is on the network is not necessarily what was configured.
-    bool InstanceNameWasChanged() const { return m_instanceNameWasChanged; }
+    bool InstanceNameWasChanged() const noexcept { return m_registration.WasRenamed(); }
 
-    // The label actually on the network, without the service type suffix. Empty if the platform
-    // did not tell us what it chose.
-    winrt::hstring ActualInstanceNameWithoutSuffix() const { return m_actualInstanceNameWithoutSuffix; }
+    // The label actually on the network, without the service type suffix. The requested one until
+    // the DNS client says what it chose, and empty if it cannot be copied.
+    winrt::hstring ActualInstanceNameWithoutSuffix() const noexcept;
 
 private:
-    winrt::Windows::Networking::ServiceDiscovery::Dnssd::DnssdServiceInstance m_serviceInstance{ nullptr };
-
-    bool m_instanceNameWasChanged{ false };
-    winrt::hstring m_actualInstanceNameWithoutSuffix{ };
+    ::WindowsMidiServicesInternal::MidiDnssdAdvertiser m_registration;
 };

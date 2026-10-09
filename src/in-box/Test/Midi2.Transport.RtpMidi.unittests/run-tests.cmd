@@ -1,6 +1,8 @@
 @echo off
-REM Runs the RTP-MIDI transport unit tests. They need no service, no admin rights and no network:
-REM the transport DLL is loaded into the test process, and remote devices talk to it over loopback.
+REM Runs the RTP-MIDI transport unit tests. They need no MIDI service and no admin rights: the
+REM transport DLL is loaded into the test process, and remote devices talk to it over loopback.
+REM MidiDnssdAdvertiserTests register a made-up service with the Windows DNS client, which
+REM announces it on the local network until the test withdraws it.
 REM A .cmd because PowerShell mangles the /name: filter argument.
 
 setlocal

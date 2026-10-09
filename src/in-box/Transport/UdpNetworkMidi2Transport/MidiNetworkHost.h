@@ -10,7 +10,6 @@
 
 using namespace winrt::Windows::Networking;
 using namespace winrt::Windows::Networking::Sockets;
-using namespace winrt::Windows::Networking::ServiceDiscovery::Dnssd;
 
 #include <queue>
 
@@ -282,18 +281,18 @@ private:
     HRESULT BindSocket(_In_ DatagramSocket const& socket, _Out_ uint16_t& boundPort);
 
     // Registers the host with DNS-SD and publishes the advertiser only once that succeeded. A
-    // non-null adapter limits the advertisement to it.
+    // non-zero interface index limits the advertisement to that adapter, and the follow-up
+    // announcements to the adapter with that id.
     HRESULT StartAdvertising(
-        _In_ DatagramSocket const& socket,
-        _In_ HostName const& hostName,
         _In_ uint16_t const boundPort,
-        _In_ winrt::Windows::Networking::Connectivity::NetworkAdapter const& adapter);
+        _In_ winrt::guid const& networkAdapterId,
+        _In_ uint32_t const networkInterfaceIndex);
 
     // Where Start should run the host. False, with waiting set, when it has to wait for its
-    // adapter. A null adapter id means every adapter.
+    // adapter. A null adapter id and a zero interface index mean every adapter.
     bool ChooseNetworkAdapter(
         _Out_ winrt::guid& adapterId,
-        _Out_ winrt::Windows::Networking::Connectivity::NetworkAdapter& adapter,
+        _Out_ uint32_t& interfaceIndex,
         _Out_ bool& fallbackUsed);
 
     // Records a change, and tells the notifications app so it can say why the host is not running

@@ -81,6 +81,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MidiDnssdAdvertiserTests.h" />
     <ClInclude Include="MidiNetworkAddressTests.h" />
     <ClInclude Include="MidiSendPacerTests.h" />
     <ClInclude Include="pch.h" />
@@ -95,6 +96,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiDnssdAdvertiserTests.cpp" />
     <ClCompile Include="MidiNetworkAddressTests.cpp" />
     <ClCompile Include="MidiSendPacerTests.cpp" />
     <ClCompile Include="pch.cpp">

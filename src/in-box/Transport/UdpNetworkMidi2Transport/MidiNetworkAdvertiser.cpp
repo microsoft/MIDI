@@ -10,11 +10,14 @@
 
 // DNS-SD registration, and the workaround that goes with it. Measured on the wire, Sep 2026.
 //
-// Registration uses the Windows DNS client through WinRT on purpose. Discovery stopped using
-// Windows.Devices.Enumeration because its watcher never reports a host leaving, but registration
-// has no such fault: the DNS client probes, renames a colliding label, answers queries correctly
-// and sends a goodbye when the registration ends. The Win32 DnsServiceRegister API goes through
-// the same DNS client and behaves the same on the wire, so switching to it would fix nothing.
+// Registration goes through DnsServiceRegister (midi_dnssd_advertiser.h, shared with the RTP-MIDI
+// transport), not the WinRT DnssdServiceInstance used before. A WinRT registration lasts exactly as
+// long as its socket, so it could only be made again by closing the socket and ending every session.
+// And on a customer's PC (issue #1249), Windows twice stopped answering correctly for the WinRT
+// registration while the host kept running: once by not answering at all, and once by listing the
+// PC's other services under _midi2._udp. The RTP-MIDI host's DnsServiceRegister registration beside
+// it stayed right. Both APIs go through the same DNS client, which probes, renames a colliding
+// label, answers queries and sends a goodbye the same way for either.
 //
 // What the DNS client gets wrong is the announcement of a new registration. It sends one, where
 // RFC 6762 section 8.3 asks for at least two, and it sets the cache-flush bit on the shared PTR
@@ -46,28 +49,19 @@ MidiNetworkAdvertiser::Initialize()
 
 
 
-inline const winrt::hstring BuildFullServiceInstanceName(_In_ winrt::hstring const& nameWithoutSuffix)
-{
-    return nameWithoutSuffix + L"." + DNS_PTR_SERVICE_TYPE;
-}
-
-
-// TODO: Change this method to "Start" and have the parameters passed into Initialize instead of this.
-
 _Use_decl_annotations_
 HRESULT 
 MidiNetworkAdvertiser::Advertise(
     winrt::hstring const& serviceInstanceNameWithoutSuffix,
-    HostName const& hostName,
-    DatagramSocket const& boundSocket,
+    winrt::hstring const& hostName,
     uint16_t const port,
     winrt::hstring const& midiEndpointName,
     winrt::hstring const& midiProductInstanceId,
-    winrt::Windows::Networking::Connectivity::NetworkAdapter const& adapter
+    uint32_t const interfaceIndex
 )
 {
     // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
-    // escaping WinRT exception would unwind past them into a worker thread.
+    // escaping exception would unwind past them into a worker thread.
     try
     {
         TraceLoggingWrite(
@@ -79,136 +73,67 @@ MidiNetworkAdvertiser::Advertise(
             TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
-        auto fullServiceName = BuildFullServiceInstanceName(serviceInstanceNameWithoutSuffix);
-
-        m_instanceNameWasChanged = false;
-        m_actualInstanceNameWithoutSuffix = serviceInstanceNameWithoutSuffix;
-
-        m_serviceInstance = DnssdServiceInstance(
-            fullServiceName,
-            hostName,
-            port);
-
-        // add the txt attributes per the spec
-        m_serviceInstance.TextAttributes().Insert(L"UMPEndpointName", midiEndpointName);
-        m_serviceInstance.TextAttributes().Insert(L"ProductInstanceId", midiProductInstanceId);
-
-        // register with the socket that's bound to the port, on the one adapter when the host
-        // is limited to it, so devices on other networks are not shown a host they cannot reach
-        auto registration = adapter != nullptr ?
-            m_serviceInstance.RegisterDatagramSocketAsync(boundSocket, adapter).get() :
-            m_serviceInstance.RegisterDatagramSocketAsync(boundSocket).get();
-
-        switch (registration.Status())
-        {
-        case DnssdRegistrationStatus::Success:
-            // The responder renames a colliding instance label rather than refusing it, so the name
-            // on the wire is not necessarily the one we asked for. Recorded because everything else
-            // reports the configured name, and the two disagreeing is otherwise invisible.
-            if (registration.HasInstanceNameChanged())
+        auto const hr = m_registration.Register(
+            std::wstring{ serviceInstanceNameWithoutSuffix },
+            DNS_PTR_SERVICE_TYPE,
+            std::wstring{ hostName },
+            port,
             {
-                m_instanceNameWasChanged = true;
+                { L"UMPEndpointName", std::wstring{ midiEndpointName } },
+                { L"ProductInstanceId", std::wstring{ midiProductInstanceId } }
+            },
+            ::WindowsMidiServicesInternal::MidiDnssdRegistrationTimeoutMilliseconds,
+            std::stop_token{ },
+            interfaceIndex);
 
-                // The platform updates the instance in place with whatever it settled on. Read back
-                // rather than assumed, and the service type suffix trimmed off again so this is the
-                // same shape as the configured name.
-                std::wstring registered{ };
-
-                try
-                {
-                    registered = m_serviceInstance.DnssdServiceInstanceName();
-                }
-                CATCH_LOG();
-
-                std::wstring const suffix{ L"." DNS_PTR_SERVICE_TYPE };
-
-                if (registered.length() > suffix.length() &&
-                    _wcsicmp(registered.c_str() + (registered.length() - suffix.length()), suffix.c_str()) == 0)
-                {
-                    registered.resize(registered.length() - suffix.length());
-                }
-
-                if (!registered.empty())
-                {
-                    m_actualInstanceNameWithoutSuffix = winrt::hstring{ registered };
-                }
-
-                TraceLoggingWrite(
-                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_WARNING,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"DNS-SD renamed this host because its service instance name collided on the network", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(fullServiceName.c_str(), "requested name"),
-                    TraceLoggingWideString(m_actualInstanceNameWithoutSuffix.c_str(), "actual name")
-                );
-            }
-
+        if (hr == HRESULT_FROM_WIN32(ERROR_TIMEOUT))
+        {
             TraceLoggingWrite(
                 MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
+                MIDI_TRACE_EVENT_WARNING,
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Registered socket successfully", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-
+                TraceLoggingWideString(L"The DNS client has not finished registering this host. It is advertised once it does.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(serviceInstanceNameWithoutSuffix.c_str(), "requested name")
             );
-            return S_OK;
 
-            // The service was not registered because security settings did not allow it.
-        case DnssdRegistrationStatus::SecurityError:
+            return S_FALSE;
+        }
+
+        if (FAILED(hr))
+        {
             TraceLoggingWrite(
                 MidiNetworkMidiTransportTelemetryProvider::Provider(),
                 MIDI_TRACE_EVENT_ERROR,
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Unable to register datagram socket. Security settings did not allow it", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                TraceLoggingWideString(L"Unable to register this host with DNS-SD", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(serviceInstanceNameWithoutSuffix.c_str(), "requested name"),
+                TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
             );
 
-            RETURN_IF_FAILED(E_ACCESSDENIED);
-            break;
+            return hr;
+        }
 
-            // The service was not registered because the service name provided is not valid.
-        case DnssdRegistrationStatus::InvalidServiceName:
+        auto const registeredLabel = m_registration.RegisteredLabel();
+
+        // The responder renames a colliding instance label rather than refusing it, so the name
+        // on the wire is not necessarily the one we asked for. Recorded because everything else
+        // reports the configured name, and the two disagreeing is otherwise invisible.
+        if (m_registration.WasRenamed())
+        {
             TraceLoggingWrite(
                 MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
+                MIDI_TRACE_EVENT_WARNING,
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Unable to register datagram socket. Invalid service name", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                TraceLoggingWideString(L"DNS-SD renamed this host because its service instance name collided on the network", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(serviceInstanceNameWithoutSuffix.c_str(), "requested name"),
+                TraceLoggingWideString(registeredLabel.c_str(), "actual name")
             );
-
-            RETURN_IF_FAILED(E_INVALIDARG);
-            break;
-
-            // The service was not registered because of an error on the DNS server.
-        case DnssdRegistrationStatus::ServerError:
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Unable to register datagram socket. Server error", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
-
-            RETURN_IF_FAILED(E_FAIL);
-            break;
-
-        default:
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Unable to register datagram socket for unknown reason", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
-
-
-            RETURN_IF_FAILED(E_FAIL);
         }
 
         TraceLoggingWrite(
@@ -217,8 +142,13 @@ MidiNetworkAdvertiser::Advertise(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            TraceLoggingWideString(L"Registered with DNS-SD", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(registeredLabel.c_str(), "name"),
+            TraceLoggingUInt16(port, "port"),
+            TraceLoggingUInt32(interfaceIndex, "interface index")
         );
+
+        return S_OK;
     }
     CATCH_RETURN()
 }
@@ -237,8 +167,20 @@ MidiNetworkAdvertiser::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_serviceInstance = nullptr;
-
+    m_registration.Unregister();
 
     return S_OK;
+}
+
+winrt::hstring
+MidiNetworkAdvertiser::ActualInstanceNameWithoutSuffix() const noexcept
+{
+    try
+    {
+        return winrt::hstring{ m_registration.RegisteredLabel() };
+    }
+    catch (...)
+    {
+        return winrt::hstring{ };
+    }
 }
