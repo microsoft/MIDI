@@ -150,6 +150,14 @@ namespace winrt::midiglass::implementation
             UpdateSavedChip();
             UpdateStatusBar();
             UpdateMonitorEmptyText();
+
+            // Nothing in a newer version's layout is saved, so this stays up while it is open.
+            if (m_editor.Document().IsFromNewerVersion)
+            {
+                NewerVersionBar().Title(resources::GetString(L"NewerLayoutTitle"));
+                NewerVersionBar().Message(resources::GetString(L"NewerLayoutMessage"));
+                NewerVersionBar().IsOpen(true);
+            }
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to set up the editor window.")
     }

@@ -304,6 +304,19 @@ namespace midipatchbay
             _In_reads_(wordCount) uint32_t const* words,
             _In_ uint8_t wordCount) noexcept override;
 
+        LogicValue Memory(_In_ uint32_t memory) noexcept override;
+
+        void ChangeMemory(
+            _In_ uint32_t memory,
+            _In_ SetMemorySettings const& settings,
+            _In_ LogicValue const& source) noexcept override;
+
+        // Before each message, so it reads the memories as they are when it arrives.
+        void BeginMessage() noexcept
+        {
+            m_message++;
+        }
+
     private:
         struct Buffer
         {
@@ -313,6 +326,13 @@ namespace midipatchbay
             bool Touched{ false };
         };
 
+        // A memory as the message on this thread saw it, and which message that was.
+        struct SeenMemory
+        {
+            uint64_t Packed{ 0 };
+            uint64_t Message{ 0 };
+        };
+
         void Flush(_In_ uint32_t leaf) noexcept;
 
         // One for each leaf, sized when the graph is applied.
@@ -320,6 +340,10 @@ namespace midipatchbay
 
         // Reserved for every leaf, so adding to it never allocates.
         std::vector<uint32_t> m_touched{};
+
+        // One for each memory, sized when the graph is applied.
+        std::vector<SeenMemory> m_memories{};
+        uint64_t m_message{ 1 };
     };
 
     // A throttle's queue, and the thread that runs what comes after the throttle at its pace.
@@ -482,6 +506,9 @@ namespace midipatchbay
         // graph and never changed after. Empty where that LFO isn't running.
         std::vector<std::shared_ptr<midiapp::LfoMessageGenerator>> ClockTargets{};
 
+        // Each of the graph's memories, shared with every graph before and after this one.
+        std::vector<std::shared_ptr<std::atomic<uint64_t>>> Memories{};
+
         // Each throttle finishes the message it is on, then each send thread the send it is in,
         // and whatever is still queued goes with the graph. All are told first, so they stop
         // together.
@@ -557,6 +584,8 @@ namespace midipatchbay
                 {
                     break;
                 }
+
+                Work.BeginMessage();
 
                 for (uint32_t i = 0; i < throttle.EdgeCount; i++)
                 {
@@ -643,6 +672,8 @@ namespace midipatchbay
                     // upstream is malformed. Stop rather than read past the end of the buffer.
                     break;
                 }
+
+                work.BeginMessage();
 
                 for (auto const root : plan->Roots)
                 {
@@ -913,6 +944,7 @@ namespace midipatchbay
             auto& work = plan->Work;
 
             work.Timestamp = timestamp;
+            work.BeginMessage();
             work.CountBlock(generator.Cell, true);
 
             for (uint32_t i = 0; i < generator.EdgeCount; i++)
@@ -950,6 +982,8 @@ namespace midipatchbay
 
         m_touched.clear();
         m_touched.reserve(owner.Leaves.size());
+
+        m_memories.assign(owner.Memories.size(), SeenMemory{});
     }
 
     _Use_decl_annotations_
@@ -1079,6 +1113,49 @@ namespace midipatchbay
         }
 
         Owner->ClockTargets[target]->ReceiveClock(Timestamp, words, wordCount);
+    }
+
+    _Use_decl_annotations_
+    LogicValue RouteEngine::Context::Memory(uint32_t memory) noexcept
+    {
+        if (memory >= m_memories.size() || memory >= Owner->Memories.size() || Owner->Memories[memory] == nullptr)
+        {
+            return {};
+        }
+
+        auto& seen = m_memories[memory];
+
+        if (seen.Message != m_message)
+        {
+            seen.Packed = Owner->Memories[memory]->load(std::memory_order_relaxed);
+            seen.Message = m_message;
+        }
+
+        return UnpackLogicValue(seen.Packed);
+    }
+
+    _Use_decl_annotations_
+    void RouteEngine::Context::ChangeMemory(uint32_t memory, SetMemorySettings const& settings, LogicValue const& source) noexcept
+    {
+        if (memory >= m_memories.size() || memory >= Owner->Memories.size() || Owner->Memories[memory] == nullptr)
+        {
+            return;
+        }
+
+        auto& cell = *Owner->Memories[memory];
+
+        // Two sources can change it at once, so each change is made to what is there now and
+        // neither is lost: two presses of a toggle at the same moment toggle it twice.
+        auto current = cell.load(std::memory_order_relaxed);
+        uint64_t next{ 0 };
+
+        do
+        {
+            next = PackLogicValue(NextMemoryValue(settings, UnpackLogicValue(current), source));
+        }
+        while (!cell.compare_exchange_weak(current, next, std::memory_order_relaxed));
+
+        m_memories[memory] = SeenMemory{ next, m_message };
     }
 
     namespace
@@ -1279,9 +1356,11 @@ namespace midipatchbay
 
                     std::shared_ptr<::midipatchbay::BlockState> state{};
 
-                    // A responder's state is made before anything can reach it, never after.
+                    // A responder's state, and a Branch or Switch's way memory, are made before
+                    // anything can reach them, never after.
                     if (kept != m_blockStates.end() &&
-                        (planned.Kind != ::midipatchbay::BlockKind::CiResponder || kept->second->Ci != nullptr))
+                        (planned.Kind != ::midipatchbay::BlockKind::CiResponder || kept->second->Ci != nullptr) &&
+                        (!::midipatchbay::HasWays(planned.Kind) || kept->second->Ways != nullptr))
                     {
                         state = kept->second;
                     }
@@ -1296,6 +1375,24 @@ namespace midipatchbay
                 }
 
                 m_blockStates = std::move(states);
+            }
+
+            // Every memory the graph uses. One that was set before keeps its value, however the
+            // patches change, for as long as the app runs.
+            {
+                std::scoped_lock memoryGuard{ m_publishLock };
+
+                for (auto const& key : routes.Memories)
+                {
+                    auto& cell = m_memories[key];
+
+                    if (cell == nullptr)
+                    {
+                        cell = std::make_shared<std::atomic<uint64_t>>(0);
+                    }
+
+                    runtime.Memories.push_back(cell);
+                }
             }
 
             // Pass one: work out which connections are needed and which of them are sources.
@@ -1823,6 +1920,70 @@ namespace midipatchbay
     {
         std::scoped_lock guard{ m_publishLock };
         return m_lastError;
+    }
+
+    _Use_decl_annotations_
+    std::optional<LogicValue> RouteEngine::MemoryValue(std::wstring const& patchKey, std::wstring const& name) const noexcept
+    {
+        try
+        {
+            auto const trimmed = LogicNameFrom(name);
+
+            if (trimmed.empty())
+            {
+                return std::nullopt;
+            }
+
+            std::scoped_lock guard{ m_publishLock };
+
+            auto const found = m_memories.find(patchKey + L'|' + LowerCopy(trimmed));
+
+            if (found == m_memories.end() || found->second == nullptr)
+            {
+                return std::nullopt;
+            }
+
+            return UnpackLogicValue(found->second->load(std::memory_order_relaxed));
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to read a memory.")
+
+        return std::nullopt;
+    }
+
+    _Use_decl_annotations_
+    std::optional<LogicValue> RouteEngine::LastTestedValue(std::wstring const& cell) const noexcept
+    {
+        std::shared_ptr<Runtime> runtime{};
+
+        {
+            std::scoped_lock guard{ m_publishLock };
+            runtime = m_runtime;
+        }
+
+        if (runtime == nullptr)
+        {
+            return std::nullopt;
+        }
+
+        try
+        {
+            auto const& routes = runtime->Graph;
+
+            for (size_t i = 0; i < routes.States.size() && i < runtime->States.size(); i++)
+            {
+                auto const& planned = routes.States[i];
+                auto const& state = runtime->States[i];
+
+                if (planned.Cell < routes.Cells.size() && routes.Cells[planned.Cell] == cell &&
+                    state != nullptr && state->Ways != nullptr)
+                {
+                    return UnpackLogicValue(state->Ways->LastTested.load(std::memory_order_relaxed));
+                }
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to read what a step tested last.")
+
+        return std::nullopt;
     }
 
     _Use_decl_annotations_

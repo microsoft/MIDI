@@ -14,7 +14,7 @@ namespace glass
 {
     namespace
     {
-        constexpr wchar_t SessionName[] = L"MIDI Glass";
+        constexpr wchar_t SessionName[] = L"Windows MIDI Glass";
 
         constexpr uint32_t MaximumWordsPerUmp = 4;
 

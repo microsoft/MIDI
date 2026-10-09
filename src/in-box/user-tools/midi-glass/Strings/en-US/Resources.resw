@@ -164,7 +164,7 @@
     <value>Open a layout</value>
   </data>
   <data name="OpenFileFilterLayouts" xml:space="preserve">
-    <value>MIDI Glass layouts</value>
+    <value>Windows MIDI Glass layouts</value>
   </data>
   <data name="FavoritesHeading.Text" xml:space="preserve">
     <value>Favorites</value>
@@ -246,6 +246,9 @@
   </data>
   <data name="CardStatusUnreadable" xml:space="preserve">
     <value>This file could not be read</value>
+  </data>
+  <data name="CardStatusNewerVersion" xml:space="preserve">
+    <value>From a newer version</value>
   </data>
   <data name="DateJustNow" xml:space="preserve">
     <value>Just now</value>
@@ -349,7 +352,7 @@
     <value>No layouts yet</value>
   </data>
   <data name="EmptyBody.Text" xml:space="preserve">
-    <value>Make one from a template and it is ready to play. Pick the device it should send to and MIDI Glass builds the rest.</value>
+    <value>Make one from a template and it is ready to play. Pick the device it should send to and Windows MIDI Glass builds the rest.</value>
   </data>
   <data name="NewLayoutTitle" xml:space="preserve">
     <value>New layout</value>
@@ -439,7 +442,7 @@
     <value>Cancel</value>
   </data>
   <data name="RuntimeWindowTitleFormat" xml:space="preserve">
-    <value>{0} — MIDI Glass</value>
+    <value>{0} — Windows MIDI Glass</value>
     <comment>{0} is the layout name</comment>
   </data>
   <data name="RuntimeNoPages" xml:space="preserve">
@@ -1332,6 +1335,15 @@
   <data name="OffPageBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Controls outside the page</value>
   </data>
+  <data name="NewerVersionBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Layout from a newer version</value>
+  </data>
+  <data name="NewerLayoutTitle" xml:space="preserve">
+    <value>Made by a newer version of Windows MIDI Glass</value>
+  </data>
+  <data name="NewerLayoutMessage" xml:space="preserve">
+    <value>You can look around and try it, but changes can't be saved here. Saving would lose the parts this version doesn't know. Update Windows MIDI Glass to change this layout.</value>
+  </data>
   <data name="SelectOffPageButton.Content" xml:space="preserve">
     <value>Select them</value>
   </data>
@@ -2200,7 +2212,7 @@
     <value>Restore from a backup…</value>
   </data>
   <data name="CardMenuPackage.Text" xml:space="preserve">
-    <value>Package for another PC…</value>
+    <value>Pack for sharing…</value>
   </data>
   <data name="LibraryMoreButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>More options</value>
@@ -2209,7 +2221,7 @@
     <value>More options</value>
   </data>
   <data name="LibraryMenuImport.Text" xml:space="preserve">
-    <value>Import a layout package…</value>
+    <value>Import a pack…</value>
   </data>
   <data name="LibraryMenuBackupsFolder.Text" xml:space="preserve">
     <value>Show the backups folder</value>
@@ -2227,7 +2239,7 @@
     <value>Ask an AI assistant</value>
   </data>
   <data name="AssistantMessage" xml:space="preserve">
-    <value>Copy this and paste it into the AI assistant you use, such as a chat in your web browser. Then tell it what you want the layout to do. When it gives you a layout file, select Open a file… to try it. This includes the names of the MIDI devices on this PC, so the layout can find them. MIDI Glass doesn't send anything itself.</value>
+    <value>Copy this and paste it into the AI assistant you use, such as a chat in your web browser. Then tell it what you want the layout to do. When it gives you a layout file, select Open a file… to try it. This includes the names of the MIDI devices on this PC, so the layout can find them. Windows MIDI Glass doesn't send anything itself.</value>
   </data>
   <data name="AssistantPromptHeader" xml:space="preserve">
     <value>What gets copied</value>
@@ -2256,25 +2268,22 @@
     <value>I couldn't list the MIDI devices on my PC, so ask me for their names.</value>
   </data>
   <data name="AssistantPromptThemes" xml:space="preserve">
-    <value>These are the themes in MIDI Glass on my PC. Use one of them, by its exact name:</value>
+    <value>These are the themes in Windows MIDI Glass on my PC. Use one of them, by its exact name:</value>
   </data>
   <data name="AssistantPromptRequest" xml:space="preserve">
     <value>Here's what I want the layout to do:</value>
   </data>
   <data name="SettingsSectionHeading" xml:space="preserve">
-    <value>MIDI Glass</value>
+    <value>Windows MIDI Glass</value>
   </data>
   <data name="SettingAssistant" xml:space="preserve">
     <value>Ask an AI assistant</value>
   </data>
   <data name="SettingAssistantHint" xml:space="preserve">
-    <value>Shows Ask an AI assistant on the toolbar. It copies a starting prompt for the AI assistant you use. MIDI Glass doesn't send anything itself.</value>
-  </data>
-  <data name="PackageSaveTitle" xml:space="preserve">
-    <value>Save the layout package</value>
+    <value>Shows Ask an AI assistant on the toolbar. It copies a starting prompt for the AI assistant you use. Windows MIDI Glass doesn't send anything itself.</value>
   </data>
   <data name="ImportOpenTitle" xml:space="preserve">
-    <value>Choose a layout package</value>
+    <value>Choose a pack to import</value>
   </data>
   <data name="BackupDoneTitle" xml:space="preserve">
     <value>Backed up</value>
@@ -2312,12 +2321,6 @@
   <data name="RestoreFailedNoBackup" xml:space="preserve">
     <value>That backup is not there any more.</value>
   </data>
-  <data name="PackageDoneTitle" xml:space="preserve">
-    <value>Packaged</value>
-  </data>
-  <data name="PackageDoneFormat" xml:space="preserve">
-    <value>Saved as {0}, with {1} file(s) inside. Copy it to the other PC and use Import a layout package.</value>
-  </data>
   <data name="PackageFailedTitle" xml:space="preserve">
     <value>The package was not made</value>
   </data>
@@ -2353,6 +2356,9 @@
   </data>
   <data name="ImportFailedWrite" xml:space="preserve">
     <value>The files could not be written into your layouts folder.</value>
+  </data>
+  <data name="ImportFailedNewerVersion" xml:space="preserve">
+    <value>A newer version of Windows MIDI Glass made this layout, and its pictures have the same names as pictures already in your layouts folder. Update Windows MIDI Glass to import it.</value>
   </data>
   <data name="SizeBytesFormat" xml:space="preserve">
     <value>{0} bytes</value>
@@ -4969,7 +4975,7 @@
     <value>The file could not be written. Check that Documents › MIDI Layouts › Themes can be written to.</value>
   </data>
   <data name="SaveThemeNameTaken" xml:space="preserve">
-    <value>"{0}" is the name of a theme that ships with MIDI Glass, so it cannot be written over. Pick another name and both will be in the gallery.</value>
+    <value>"{0}" is the name of a theme that ships with Windows MIDI Glass, so it cannot be written over. Pick another name and both will be in the gallery.</value>
   </data>
   <data name="SaveThemeNoFolder" xml:space="preserve">
     <value>The themes folder could not be found or created.</value>
@@ -4978,13 +4984,19 @@
     <value>Import a theme</value>
   </data>
   <data name="ImportThemeFilter" xml:space="preserve">
-    <value>MIDI Glass themes</value>
+    <value>Windows MIDI Glass themes</value>
   </data>
   <data name="ImportThemeFailedTitle" xml:space="preserve">
     <value>The theme was not imported</value>
   </data>
   <data name="ImportThemeFailedDetail" xml:space="preserve">
-    <value>That file is not a MIDI Glass theme.</value>
+    <value>That file is not a Windows MIDI Glass theme.</value>
+  </data>
+  <data name="ImportThemeNewerTitle" xml:space="preserve">
+    <value>A theme from a newer version</value>
+  </data>
+  <data name="ImportThemeNewerDetail" xml:space="preserve">
+    <value>It's kept exactly as it came. Parts of it this version doesn't know won't show here.</value>
   </data>
   <data name="ThemeRowDeckRepeats" xml:space="preserve">
     <value>Tile image</value>
@@ -5390,5 +5402,387 @@
   </data>
   <data name="ThemeFloorNote" xml:space="preserve">
     <value>A grid running away to the horizon, under the controls. Leave the color empty for the theme's first color. The horizon is measured down the background picture, or down the page when there's no picture. The grid holds still while you're editing, and whenever Windows is set to show fewer animations.</value>
+  </data>
+  <!-- Packs: sharing a layout or theme, who made it, and whether a signature backs that -->
+  <data name="CardMenuDetails.Text" xml:space="preserve">
+    <value>About this layout…</value>
+  </data>
+  <data name="LibraryMenuAuthor.Text" xml:space="preserve">
+    <value>Your info for sharing…</value>
+  </data>
+  <data name="ThemeGroupPicker.Header" xml:space="preserve">
+    <value>Group themes by</value>
+  </data>
+  <data name="ThemeGroupNone" xml:space="preserve">
+    <value>Nothing</value>
+  </data>
+  <data name="ThemeGroupAuthor" xml:space="preserve">
+    <value>Who made them</value>
+  </data>
+  <data name="ThemeGroupSigner" xml:space="preserve">
+    <value>Who signed them</value>
+  </data>
+  <data name="ThemeGroupBuiltIn" xml:space="preserve">
+    <value>Comes with Windows MIDI Glass</value>
+  </data>
+  <data name="ThemeGroupNoAuthor" xml:space="preserve">
+    <value>Doesn't say who made it</value>
+  </data>
+  <data name="ThemeGroupNotSigned" xml:space="preserve">
+    <value>Not signed</value>
+  </data>
+  <data name="ThemeBuiltInByline" xml:space="preserve">
+    <value>Comes with Windows MIDI Glass</value>
+  </data>
+  <data name="ThemeByFormat" xml:space="preserve">
+    <value>by {0}</value>
+    <comment>{0} is who made the theme</comment>
+  </data>
+  <data name="ThemeCardMenuDetails" xml:space="preserve">
+    <value>About this theme…</value>
+  </data>
+  <data name="ThemeCardMenuShare" xml:space="preserve">
+    <value>Pack for sharing…</value>
+  </data>
+  <data name="ShareTitleFormat" xml:space="preserve">
+    <value>Pack {0} for sharing</value>
+    <comment>{0} is the name of the layout or theme</comment>
+  </data>
+  <data name="ShareIntroLayout" xml:space="preserve">
+    <value>A pack holds the layout and every picture, video and theme it uses. It also lists each file, so anyone can tell if something was changed after you packed it.</value>
+  </data>
+  <data name="ShareIntroTheme" xml:space="preserve">
+    <value>A pack holds the theme and its background picture. It also lists each file, so anyone can tell if something was changed after you packed it.</value>
+  </data>
+  <data name="ShareAboutHeading" xml:space="preserve">
+    <value>Who made it</value>
+  </data>
+  <data name="ShareAboutNote" xml:space="preserve">
+    <value>This is what the pack says about itself. Unless you sign the pack, people who import it see the name marked (unverified).</value>
+  </data>
+  <data name="ShareSaveAction" xml:space="preserve">
+    <value>Save pack…</value>
+  </data>
+  <data name="ShareSignHeading" xml:space="preserve">
+    <value>Sign it</value>
+  </data>
+  <data name="ShareSignNote" xml:space="preserve">
+    <value>Signing shows the pack came from you and wasn't changed after you packed it. You need a code-signing certificate from a certificate provider. A pack that isn't signed is still fine to share.</value>
+  </data>
+  <data name="ShareCertificateLabel" xml:space="preserve">
+    <value>Certificate</value>
+  </data>
+  <data name="ShareSignNone" xml:space="preserve">
+    <value>Don't sign</value>
+  </data>
+  <data name="ShareCertificateFormat" xml:space="preserve">
+    <value>{0}, from {1}, good until {2}</value>
+    <comment>{0} is who the certificate is for, {1} is the company that issued it, {2} is a date</comment>
+  </data>
+  <data name="ShareNoCertificates" xml:space="preserve">
+    <value>There's no code-signing certificate on this PC, so the pack won't be signed.</value>
+  </data>
+  <data name="ShareTimestampLabel" xml:space="preserve">
+    <value>Timestamp server</value>
+  </data>
+  <data name="ShareTimestampNote" xml:space="preserve">
+    <value>A timestamp keeps the signature good after your certificate runs out. Your certificate provider gives you the address. Leave it empty to sign without one.</value>
+  </data>
+  <data name="ShareTimestampProblem" xml:space="preserve">
+    <value>The timestamp server address has to start with http:// or https://.</value>
+  </data>
+  <data name="PackSaveTitle" xml:space="preserve">
+    <value>Save the pack</value>
+  </data>
+  <data name="PackFilterLayout" xml:space="preserve">
+    <value>Windows MIDI Glass layout packs</value>
+  </data>
+  <data name="PackFilterTheme" xml:space="preserve">
+    <value>Windows MIDI Glass theme packs</value>
+  </data>
+  <data name="PackFilterImport" xml:space="preserve">
+    <value>Windows MIDI Glass packs and layout packages</value>
+  </data>
+  <data name="PackDoneTitle" xml:space="preserve">
+    <value>Packed</value>
+  </data>
+  <data name="PackDoneFormat" xml:space="preserve">
+    <value>Saved as {0}, with {1} file(s) inside.</value>
+    <comment>{0} is a file name, {1} is a number</comment>
+  </data>
+  <data name="PackDoneNotSigned" xml:space="preserve">
+    <value>It isn't signed.</value>
+  </data>
+  <data name="PackDoneSignedFormat" xml:space="preserve">
+    <value>Signed by {0}. Windows on this PC trusts the signature.</value>
+    <comment>{0} is who the certificate is for</comment>
+  </data>
+  <data name="PackDoneSignedUntrustedFormat" xml:space="preserve">
+    <value>Signed by {0}, but Windows on this PC doesn't trust that certificate. People who import the pack will see it as not signed.</value>
+    <comment>{0} is who the certificate is for</comment>
+  </data>
+  <data name="PackFailedTitle" xml:space="preserve">
+    <value>The pack wasn't made</value>
+  </data>
+  <data name="PackFailedTooBig" xml:space="preserve">
+    <value>The layout and everything it uses are too big for one pack. A pack can hold up to 512 MB.</value>
+  </data>
+  <data name="PackSignFailedFormat" xml:space="preserve">
+    <value>The pack couldn't be signed, so it wasn't saved. Check that the certificate is still on this PC, and that you can reach the timestamp server. Error code: {0}</value>
+    <comment>{0} is an error code such as 0x80092004</comment>
+  </data>
+  <data name="ImportPackTitleFormat" xml:space="preserve">
+    <value>Import {0}?</value>
+    <comment>{0} is the name of the layout or theme</comment>
+  </data>
+  <data name="ImportSignedFormat" xml:space="preserve">
+    <value>Signed by {0}</value>
+    <comment>{0} is who the certificate is for</comment>
+  </data>
+  <data name="ImportSignedNote" xml:space="preserve">
+    <value>Windows checked the signature. It shows who published this pack and that nothing in it changed since. It doesn't mean the pack is safe or that it works.</value>
+  </data>
+  <data name="ImportSignedOfflineNote" xml:space="preserve">
+    <value>Windows checked the signature, but couldn't check online whether the certificate was withdrawn. It shows who published this pack. It doesn't mean the pack is safe or that it works.</value>
+  </data>
+  <data name="ImportUntrustedFormat" xml:space="preserve">
+    <value>Signed by {0}, but not with a certificate Windows trusts</value>
+    <comment>{0} is who the certificate is for</comment>
+  </data>
+  <data name="ImportUntrustedNote" xml:space="preserve">
+    <value>Treat it like a pack that isn't signed. The names in it haven't been checked.</value>
+  </data>
+  <data name="ImportNotSigned" xml:space="preserve">
+    <value>Not signed</value>
+  </data>
+  <data name="ImportNotSignedNote" xml:space="preserve">
+    <value>Anyone could have made this pack. The names in it haven't been checked.</value>
+  </data>
+  <data name="ImportContainsFormat" xml:space="preserve">
+    <value>{0} file(s), {1} in all.</value>
+    <comment>{0} is a number, {1} is a size such as 2 MB</comment>
+  </data>
+  <data name="ImportUpdateFormat" xml:space="preserve">
+    <value>You already have this, version {0}. This pack has version {1}.</value>
+    <comment>{0} and {1} are version numbers such as 1.2</comment>
+  </data>
+  <data name="ImportUpdateNoVersion" xml:space="preserve">
+    <value>You already have this. You can replace it, or keep both.</value>
+  </data>
+  <data name="ImportWasSignedFormat" xml:space="preserve">
+    <value>The one you have was signed by {0}. This pack isn't signed by them.</value>
+    <comment>{0} is who the certificate is for</comment>
+  </data>
+  <data name="ImportThemeNameTakenFormat" xml:space="preserve">
+    <value>You already have a different theme called {0}. Replace it, or keep both and give this one a new name.</value>
+    <comment>{0} is the name of a theme</comment>
+  </data>
+  <data name="ImportThemeNameBuiltInFormat" xml:space="preserve">
+    <value>A theme that comes with Windows MIDI Glass is called {0}, so this one gets a new name.</value>
+    <comment>{0} is the name of a theme</comment>
+  </data>
+  <data name="ImportAction" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="ImportReplaceAction" xml:space="preserve">
+    <value>Replace it</value>
+  </data>
+  <data name="ImportKeepBothAction" xml:space="preserve">
+    <value>Keep both</value>
+  </data>
+  <data name="ImportThemeDoneFormat" xml:space="preserve">
+    <value>{0} is in your themes now. Pick it from the theme gallery when you edit a layout.</value>
+    <comment>{0} is the name of a theme</comment>
+  </data>
+  <data name="PackProblemDamaged" xml:space="preserve">
+    <value>This pack is damaged, or something in it was changed after it was made. Ask for a new copy.</value>
+  </data>
+  <data name="PackProblemNotAPack" xml:space="preserve">
+    <value>That file isn't a pack this version of Windows MIDI Glass can read.</value>
+  </data>
+  <data name="PackProblemTooBig" xml:space="preserve">
+    <value>This pack is bigger than Windows MIDI Glass will open.</value>
+  </data>
+  <data name="PackProblemNewer" xml:space="preserve">
+    <value>A newer version of Windows MIDI Glass made this pack. Update Windows MIDI Glass to open it.</value>
+  </data>
+  <data name="PackProblemWrongKind" xml:space="preserve">
+    <value>That isn't a Windows MIDI Glass layout or theme pack.</value>
+  </data>
+  <data name="PackProblemBrokenSignature" xml:space="preserve">
+    <value>The signature on this pack doesn't match what's in it. Something may have been changed after it was signed, so it wasn't imported.</value>
+  </data>
+  <data name="PackProblemRevoked" xml:space="preserve">
+    <value>The company that issued the certificate this pack was signed with has withdrawn it, so the pack wasn't imported.</value>
+  </data>
+  <data name="DetailsTitleFormat" xml:space="preserve">
+    <value>About {0}</value>
+    <comment>{0} is the name of the layout or theme</comment>
+  </data>
+  <data name="DetailsFailedTitle" xml:space="preserve">
+    <value>The details can't be shown</value>
+  </data>
+  <data name="DetailsSignedFormat" xml:space="preserve">
+    <value>Signed by {0}</value>
+    <comment>{0} is who the certificate is for</comment>
+  </data>
+  <data name="DetailsSignedNoteFormat" xml:space="preserve">
+    <value>Installed from a signed pack and not changed since. The certificate was issued by {0}.</value>
+    <comment>{0} is the company that issued the certificate</comment>
+  </data>
+  <data name="DetailsNotSigned" xml:space="preserve">
+    <value>Not signed</value>
+  </data>
+  <data name="DetailsNotSignedNote" xml:space="preserve">
+    <value>The names here are what the file says about itself. They haven't been checked.</value>
+  </data>
+  <data name="DetailsBuiltIn" xml:space="preserve">
+    <value>Comes with Windows MIDI Glass</value>
+  </data>
+  <data name="DetailsBuiltInNote" xml:space="preserve">
+    <value>Made by Microsoft as part of Windows MIDI Glass.</value>
+  </data>
+  <data name="ProvenanceNobody" xml:space="preserve">
+    <value>This doesn't say who made it.</value>
+  </data>
+  <data name="ProvenanceAuthorLabel" xml:space="preserve">
+    <value>Made by</value>
+  </data>
+  <data name="ProvenanceOrganizationLabel" xml:space="preserve">
+    <value>Company or group</value>
+  </data>
+  <data name="ProvenanceWebsiteLabel" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="ProvenanceLicenseLabel" xml:space="preserve">
+    <value>License</value>
+  </data>
+  <data name="ProvenanceVersionLabel" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="ProvenanceCreatedLabel" xml:space="preserve">
+    <value>Made on</value>
+  </data>
+  <data name="ProvenanceToolLabel" xml:space="preserve">
+    <value>Made with</value>
+  </data>
+  <data name="ProvenanceSourceLabel" xml:space="preserve">
+    <value>How it was made</value>
+  </data>
+  <data name="ProvenanceAiLabel" xml:space="preserve">
+    <value>AI</value>
+  </data>
+  <data name="ProvenanceBasedOnLabel" xml:space="preserve">
+    <value>Based on</value>
+  </data>
+  <data name="ProvenanceIdLabel" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="ProvenanceModelFormat" xml:space="preserve">
+    <value>AI model: {0}.</value>
+    <comment>{0} is the name of an AI model</comment>
+  </data>
+  <data name="ProvenanceBasedOnFormat" xml:space="preserve">
+    <value>{0}, by {1}</value>
+    <comment>{0} is the name of a layout or theme, {1} is who made it</comment>
+  </data>
+  <data name="ProvenanceBasedOnBuiltInFormat" xml:space="preserve">
+    <value>{0}, which comes with Windows MIDI Glass</value>
+    <comment>{0} is the name of a theme</comment>
+  </data>
+  <data name="ProvenanceUnverifiedFormat" xml:space="preserve">
+    <value>{0} (unverified)</value>
+    <comment>{0} is the name a file gives for who made it. Unverified means no signature backs the name.</comment>
+  </data>
+  <data name="SourcePerson" xml:space="preserve">
+    <value>Made by a person</value>
+  </data>
+  <data name="SourceAi" xml:space="preserve">
+    <value>Made by AI</value>
+  </data>
+  <data name="SourcePersonWithAi" xml:space="preserve">
+    <value>Made by a person with help from AI</value>
+  </data>
+  <data name="SourceProgram" xml:space="preserve">
+    <value>Made by a program</value>
+  </data>
+  <data name="SourceAsWrittenFormat" xml:space="preserve">
+    <value>As the file says: {0}</value>
+    <comment>{0} is a term from the file that this version has no words for</comment>
+  </data>
+  <data name="OversightNone" xml:space="preserve">
+    <value>No person checked what the AI made.</value>
+  </data>
+  <data name="OversightPrompted" xml:space="preserve">
+    <value>A person told the AI what to make.</value>
+  </data>
+  <data name="OversightChecked" xml:space="preserve">
+    <value>A person checked what the AI made.</value>
+  </data>
+  <data name="AuthorTitle" xml:space="preserve">
+    <value>Your info for sharing</value>
+  </data>
+  <data name="AuthorIntro" xml:space="preserve">
+    <value>Windows MIDI Glass puts this in each layout and theme you make on this PC, so people you share with know who made it. Leave out anything you don't want to share. Other Windows MIDI Services tools use it too.</value>
+  </data>
+  <data name="AuthorNameLabel" xml:space="preserve">
+    <value>Your name</value>
+  </data>
+  <data name="AuthorOrganizationLabel" xml:space="preserve">
+    <value>Company or group</value>
+  </data>
+  <data name="AuthorWebsiteLabel" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="AuthorLicenseLabel" xml:space="preserve">
+    <value>License for what you make</value>
+  </data>
+  <data name="AuthorLicensePlaceholder" xml:space="preserve">
+    <value>For example, CC-BY-4.0</value>
+  </data>
+  <data name="AuthorLicenseNote" xml:space="preserve">
+    <value>A license tells people what they may do with your work. CC-BY-4.0 lets people share and change it if they give you credit. CC0-1.0 gives it away with no conditions.</value>
+  </data>
+  <data name="AuthorWebsiteProblem" xml:space="preserve">
+    <value>The website has to start with https:// and can't have a user name in it.</value>
+  </data>
+  <data name="LibraryDetailSignedFormat" xml:space="preserve">
+    <value>{0} · Signed by {1}</value>
+    <comment>{0} is the rest of the card's details, {1} is who signed the pack the layout came from</comment>
+  </data>
+  <data name="EditSignedTitle" xml:space="preserve">
+    <value>Edit your own copy?</value>
+  </data>
+  <data name="EditSignedBodyFormat" xml:space="preserve">
+    <value>{0} is signed by {1}. So the signed layout stays exactly as it was published, you edit your own copy. The copy says it's based on this one.</value>
+    <comment>{0} is the layout's name, {1} is who signed it</comment>
+  </data>
+  <data name="EditSignedCopyAction" xml:space="preserve">
+    <value>Make my own copy</value>
+  </data>
+  <data name="SurfacePlaceholderNote" xml:space="preserve">
+    <value>Needs a newer version of Windows MIDI Glass</value>
+    <comment>Printed inside a control that a newer version of the app made, under the control's name</comment>
+  </data>
+  <data name="SurfacePlaceholderAccessibleFormat" xml:space="preserve">
+    <value>{0}, needs a newer version of Windows MIDI Glass</value>
+    <comment>Screen reader name of a control that a newer version of the app made. {0} is the control's name</comment>
+  </data>
+  <data name="OutlinePlaceholderKind" xml:space="preserve">
+    <value>Control from a newer version</value>
+    <comment>The kind shown in the editor's outline for a control that a newer version of the app made</comment>
+  </data>
+  <data name="MessageRowUnrecognizedFormat" xml:space="preserve">
+    <value>{0}  ·  Needs a newer version of Windows MIDI Glass</value>
+    <comment>A row in a control's message list for a message a newer version of the app wrote. {0} is when it sends, such as Value change</comment>
+  </data>
+  <data name="MessageUnrecognizedNote" xml:space="preserve">
+    <value>A newer version of Windows MIDI Glass made this message. It's kept as it is, and this version never sends it.</value>
+  </data>
+  <data name="FeedbackUnrecognized" xml:space="preserve">
+    <value>A newer version of Windows MIDI Glass set what this control follows. It's kept as it is, and this version doesn't follow it.</value>
+  </data>
+  <data name="StepUnrecognized" xml:space="preserve">
+    <value>A step that needs a newer version of Windows MIDI Glass</value>
   </data>
 </root>

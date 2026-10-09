@@ -127,6 +127,11 @@ namespace winrt::midiglass::implementation
 
             default:
             {
+                if (!step.UnrecognizedKind.empty() || step.Message.Kind == glass::MessageKind::Unrecognized)
+                {
+                    return std::wstring{ resources::GetString(L"StepUnrecognized") };
+                }
+
                 auto const number = std::to_wstring(step.Message.Number);
 
                 auto const what = step.Message.Kind == glass::MessageKind::Note

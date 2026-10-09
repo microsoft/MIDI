@@ -101,6 +101,8 @@
     <ClInclude Include="RouteGraphTests.h" />
     <ClInclude Include="SharedGeneratorTests.h" />
     <ClInclude Include="CapabilityInquiryTests.h" />
+    <ClInclude Include="LogicStepTests.h" />
+    <ClInclude Include="PatchFolderMoveTests.h" />
     <!-- shared by source with midipatchbay, so the patch model is tested exactly as it ships -->
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\MessageFilter.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\MessageTransform.h" />
@@ -109,10 +111,14 @@
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\PatchLayout.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\PatchSerializer.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\RouteGraph.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\LogicSteps.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\PatchTrace.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\CapabilityInquiry.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\SpinGuard.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\TextMatch.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\PatchFolderMove.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\LfoWave.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\LfoSweep.h" />
@@ -129,6 +135,8 @@
     <ClCompile Include="SharedGeneratorTests.cpp" />
     <ClCompile Include="StatefulBlockTests.cpp" />
     <ClCompile Include="CapabilityInquiryTests.cpp" />
+    <ClCompile Include="LogicStepTests.cpp" />
+    <ClCompile Include="PatchFolderMoveTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\MessageFilter.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\MessageTransform.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\ProcessingBlock.cpp" />
@@ -137,8 +145,12 @@
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchSerializer.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\RouteGraph.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\StatefulBlocks.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\LogicSteps.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchTrace.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\CapabilityInquiry.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchFolderMove.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\LfoWave.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\LfoSweep.cpp" />

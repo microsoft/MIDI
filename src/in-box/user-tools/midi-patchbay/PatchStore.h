@@ -11,7 +11,7 @@
 
 namespace midipatchbay
 {
-    // Patches are one JSON file each, in Documents\MIDI Patchbay.
+    // Patches are one JSON file each, in Documents\MIDI Patches.
     //
     // Deliberately NOT the Windows MIDI Services configuration file: the service does not read
     // routing, a canvas full of connections can get large, and a customer should be able to copy

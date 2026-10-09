@@ -35,7 +35,8 @@
             <Style x:Key="ToolButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="BorderThickness" Value="0" />
-                <Setter Property="Padding" Value="8,6,8,6" />
+                <!-- narrow sides leave the label room for "Windows MIDI" on one line -->
+                <Setter Property="Padding" Value="4,6,4,6" />
                 <Setter Property="Width" Value="92" />
                 <Setter Property="Height" Value="74" />
                 <!-- so the icons line up across the row whether the label wraps or not -->
@@ -54,7 +55,7 @@
             </Style>
 
             <Style x:Key="ToolButtonTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
-                <Setter Property="MaxWidth" Value="76" />
+                <Setter Property="MaxWidth" Value="84" />
                 <Setter Property="TextWrapping" Value="Wrap" />
                 <Setter Property="TextAlignment" Value="Center" />
                 <Setter Property="MaxLines" Value="2" />
@@ -484,7 +485,7 @@
                                 <Image x:Name="PatchbayIcon" Width="24" Height="24" HorizontalAlignment="Center" />
                                 <TextBlock x:Name="PatchbayLabel"
                                            x:Uid="PatchbayButtonText"
-                                           Text="Patchbay"
+                                           Text="Windows MIDI Patchbay"
                                            Style="{StaticResource ToolButtonTextStyle}" />
                             </StackPanel>
                         </Button>
@@ -562,7 +563,7 @@
                                 <Image x:Name="GlassIcon" Width="24" Height="24" HorizontalAlignment="Center" />
                                 <TextBlock x:Name="GlassLabel"
                                            x:Uid="GlassButtonText"
-                                           Text="MIDI Glass"
+                                           Text="Windows MIDI Glass"
                                            Style="{StaticResource ToolButtonTextStyle}" />
                             </StackPanel>
                         </Button>

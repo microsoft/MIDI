@@ -19,6 +19,8 @@
 #include "AppSettings.h"
 #include "LayoutStore.h"
 #include "LayoutPackage.h"
+#include "LayoutPack.h"
+#include "SharingDialogs.h"
 
 #include <shobjidl.h>
 #include <shlobj_core.h>
@@ -30,67 +32,6 @@ namespace winrt::midiglass::implementation
 {
     namespace
     {
-        // Somewhere to put a package, or one to read. The Win32 common item dialog, never
-        // Windows.Storage.Pickers: this is an unpackaged desktop app.
-        std::wstring PickPackagePath(
-            _In_ HWND owner,
-            _In_ bool saving,
-            _In_ std::wstring const& suggestedName)
-        {
-            try
-            {
-                auto dialog = saving
-                    ? winrt::create_instance<IFileDialog>(CLSID_FileSaveDialog)
-                    : winrt::create_instance<IFileDialog>(CLSID_FileOpenDialog);
-
-                if (dialog == nullptr)
-                {
-                    return {};
-                }
-
-                COMDLG_FILTERSPEC const filters[]
-                {
-                    { L"MIDI Glass layout package (*.zip)", L"*.zip" },
-                };
-
-                dialog->SetFileTypes(static_cast<UINT>(std::size(filters)), filters);
-                dialog->SetDefaultExtension(L"zip");
-
-                dialog->SetTitle(resources::GetString(
-                    saving ? L"PackageSaveTitle" : L"ImportOpenTitle").c_str());
-
-                if (!suggestedName.empty())
-                {
-                    dialog->SetFileName(suggestedName.c_str());
-                }
-
-                if (FAILED(dialog->Show(owner)))
-                {
-                    return {};
-                }
-
-                winrt::com_ptr<IShellItem> item{};
-
-                if (FAILED(dialog->GetResult(item.put())) || item == nullptr)
-                {
-                    return {};
-                }
-
-                wil::unique_cotaskmem_string path{};
-
-                if (FAILED(item->GetDisplayName(SIGDN_FILESYSPATH, path.put())))
-                {
-                    return {};
-                }
-
-                return std::wstring{ path.get() };
-            }
-            catch (...)
-            {
-                return {};
-            }
-        }
-
         std::wstring DescribeSize(_In_ uint64_t bytes) noexcept
         {
             return resources::DescribeFileSize(bytes);
@@ -494,45 +435,18 @@ namespace winrt::midiglass::implementation
         {
             auto const path = std::wstring{ card.FilePath() };
 
-            // Asked before the save dialog, so nobody names a file and then finds out.
+            // A pack carries video too, so a big one is mentioned before anything is asked.
             if (static_cast<PackageChoice>(co_await ConfirmPackageSizeAsync(path, true)) ==
                 PackageChoice::Cancel)
             {
                 co_return;
             }
 
-            auto suggested = std::filesystem::path{ path }.filename().wstring();
+            co_await ::midiglass::sharing::ShareLayoutAsync(RootGrid().XamlRoot(), m_chrome.WindowHandle(), path);
 
-            if (auto const dot = suggested.find(L'.'); dot != std::wstring::npos)
-            {
-                suggested = suggested.substr(0, dot);
-            }
-
-            auto const target = PickPackagePath(
-                m_chrome.WindowHandle(), true, suggested + glass::LayoutPackageExtension);
-
-            if (target.empty())
-            {
-                co_return;
-            }
-
-            auto const result = glass::WriteLayoutPackage(path, target, true);
-
-            if (!result.Succeeded)
-            {
-                ShowNoticeAsync(
-                    std::wstring{ resources::GetString(L"PackageFailedTitle") },
-                    Explain(result.FailureKey));
-
-                co_return;
-            }
-
-            ShowNoticeAsync(
-                std::wstring{ resources::GetString(L"PackageDoneTitle") },
-                std::wstring{ resources::FormatString(
-                    L"PackageDoneFormat",
-                    std::filesystem::path{ result.Path }.filename().wstring(),
-                    std::to_wstring(result.FileCount)) });
+            // Packing can write what the layout says about who made it.
+            m_cardSignature.clear();
+            RefreshLibrary();
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to package the layout.")
     }
@@ -549,10 +463,30 @@ namespace winrt::midiglass::implementation
 
         try
         {
-            auto const source = PickPackagePath(m_chrome.WindowHandle(), false, {});
+            auto const source = ::midiglass::sharing::PickImportPath(m_chrome.WindowHandle());
 
             if (source.empty())
             {
+                return;
+            }
+
+            // A pack lists and can sign what it holds. A .zip is what older builds wrote.
+            if (!glass::HasFileExtension(source, L".zip"))
+            {
+                auto weak = get_weak();
+
+                ::midiglass::sharing::ImportPackAsync(
+                    RootGrid().XamlRoot(),
+                    source,
+                    [weak](::midiglass::sharing::ImportOutcome outcome, std::wstring const&)
+                    {
+                        if (auto strong = weak.get(); strong && outcome == ::midiglass::sharing::ImportOutcome::Layout)
+                        {
+                            strong->m_cardSignature.clear();
+                            strong->RefreshLibrary();
+                        }
+                    });
+
                 return;
             }
 
@@ -578,6 +512,41 @@ namespace winrt::midiglass::implementation
                     std::to_wstring(result.FileCount)) });
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to import the layout package.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnCardMenuDetails(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            if (m_menuCard == nullptr || m_menuCard.IsNewTile())
+            {
+                return;
+            }
+
+            ::midiglass::sharing::ShowLayoutDetailsAsync(RootGrid().XamlRoot(), std::wstring{ m_menuCard.FilePath() });
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the layout's details.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAuthorInfoClick(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            ::midiglass::sharing::EditAuthorProfileAsync(RootGrid().XamlRoot());
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to change your info.")
     }
 
     // ---------------------------------------------------- the app-wide options

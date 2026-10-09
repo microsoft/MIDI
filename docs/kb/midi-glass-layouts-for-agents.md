@@ -1,36 +1,37 @@
 ---
 layout: kb
-title: MIDI Glass layout files, a guide for AI agents
+title: Windows MIDI Glass layout files, a guide for AI agents
 audience: everyone
-description: How an AI agent or an online AI chat designs a Windows MIDI Glass layout for someone. What to ask, the .midilayout file format, using a built-in theme, showing the customer a mockup, and getting the file into MIDI Glass.
+description: How an AI agent or an online AI chat designs a Windows MIDI Glass layout for someone. What to ask, the .midilayout file format, using a built-in theme, showing the customer a mockup, and getting the file into Windows MIDI Glass.
 categories:
   - Developer Guidance
 ---
 
-Windows MIDI Glass ("MIDI Glass") is the Windows MIDI Services app for building your own touch control surface. You put knobs, faders, pads, buttons, and keys on a page, choose what MIDI each one sends, and play it with a finger, a pen, or a mouse. Each design is called a **layout**, and each layout is one `.midilayout` file.
+Windows MIDI Glass is the Windows MIDI Services app for building your own touch control surface. You put knobs, faders, pads, buttons, and keys on a page, choose what MIDI each one sends, and play it with a finger, a pen, or a mouse. Each design is called a **layout**, and each layout is one `.midilayout` file.
 
 This article is written for AI agents and online AI chats that build layouts for people. It's also for anyone who wants to write or check a layout file by hand. If you're asking an AI to build a layout for you, give it the link to this article and ask it to read the whole page before it starts.
 
-> **MIDI Glass is a preview app.** The layout file described here is version 1. Later versions can add settings, and MIDI Glass keeps reading version 1 files when they do.
+> **Windows MIDI Glass is a preview app.** The layout file described here is version 1. Later versions can add settings, and Windows MIDI Glass keeps reading version 1 files when they do.
 
-> **For AI agents:** Read this article from start to finish before you write anything. Follow [Building a layout for someone](#building-a-layout-for-someone) as your process, and use [The layout file](#the-layout-file) as your reference. You usually can't see MIDI Glass yourself, so the notes marked **For agents** point out mistakes that load without an error and give the customer the wrong layout.
+> **For AI agents:** Read this article from start to finish before you write anything. Follow [Building a layout for someone](#building-a-layout-for-someone) as your process, and use [The layout file](#the-layout-file) as your reference. You usually can't see Windows MIDI Glass yourself, so the notes marked **For agents** point out mistakes that load without an error and give the customer the wrong layout.
 
 The rules that matter most:
 
 1. **Ask before you build.** Get the device names, the manual, the screen, and what goes on the page. Don't guess controller numbers.
 2. **Use a built-in theme, by its exact name.** Don't invent theme settings.
-3. **Count groups and channels from 0 in the file.** People, manuals, and MIDI Glass's own screens count them from 1.
+3. **Count groups and channels from 0 in the file.** People, manuals, and Windows MIDI Glass's own screens count them from 1.
 4. **Name each device the way Windows shows it, and match it by name.** You can't know a device's ID.
 5. **Write strict JSON.** No comments, no comma after the last item, and no hexadecimal numbers.
-6. **Say what MIDI Glass can't do** before the customer finds out. See [What MIDI Glass can't do](#what-midi-glass-cant-do).
+6. **Say what Windows MIDI Glass can't do** before the customer finds out. See [What Windows MIDI Glass can't do](#what-midi-glass-cant-do).
 7. **Draw a mockup from your file** and get a yes before you hand it over.
+8. **Say who made it.** Write a `provenance` block that says an AI made the layout, and ask the customer whose name and which license go on it. See [Who made it](#who-made-it).
 
 On this page:
 
 - [What a layout is](#what-a-layout-is)
 - [Building a layout for someone](#building-a-layout-for-someone)
 - [Where layout files go, and how to bring one in](#where-layout-files-go-and-how-to-bring-one-in)
-- [What MIDI Glass can't do](#what-midi-glass-cant-do)
+- [What Windows MIDI Glass can't do](#what-midi-glass-cant-do)
 - [The layout file](#the-layout-file)
 - [Mistakes that are easy to miss](#mistakes-that-are-easy-to-miss)
 
@@ -48,12 +49,12 @@ On this page:
 
 Ask these before you write anything. Put them in one message, in plain words, and offer a sensible answer for each so the customer can just say yes.
 
-If the customer pasted a prompt from **Ask an AI assistant…** in MIDI Glass, it already lists the MIDI devices and the themes on their PC. Use those names exactly. You still need to ask which device the layout is for.
+If the customer pasted a prompt from **Ask an AI assistant…** in Windows MIDI Glass, it already lists the MIDI devices and the themes on their PC. Use those names exactly. You still need to ask which device the layout is for.
 
 | Ask | Why it matters |
 | --- | --- |
-| What will the layout control? Get each device's name exactly as Windows shows it, for example in MIDI Settings or in the **Send to** list in MIDI Glass's **New layout** dialog. | The file finds devices by name. A name that's only close doesn't match. |
-| Is it hardware, a plug-in, or an app like a DAW? An app on the same PC is reached through a loopback, such as **Default App Loopback (A)**, with the app listening on **Default App Loopback (B)**. | You need a device that MIDI Glass can send to. |
+| What will the layout control? Get each device's name exactly as Windows shows it, for example in MIDI Settings or in the **Send to** list in Windows MIDI Glass's **New layout** dialog. | The file finds devices by name. A name that's only close doesn't match. |
+| Is it hardware, a plug-in, or an app like a DAW? An app on the same PC is reached through a loopback, such as **Default App Loopback (A)**, with the app listening on **Default App Loopback (B)**. | You need a device that Windows MIDI Glass can send to. |
 | Do they have the device's manual or its MIDI implementation chart? Ask for it, or for a link to it. | The same name means different numbers on different gear. Don't guess. |
 | Does the device use MIDI 1.0 or MIDI 2.0? | It changes how you write values that are codes, like pad colors. Most hardware is MIDI 1.0. |
 | What screen will it run on, and which way up? | It decides the page size. |
@@ -65,8 +66,9 @@ If the customer pasted a prompt from **Ask an AI assistant…** in MIDI Glass, i
 | Should anything follow the device, like a fader the DAW moves or a light that shows notes arriving? | Those controls need to listen as well as send. |
 | Do the colors already mean something to them, like drums in red? | Keep the meaning. |
 | Does anyone who will use it have trouble telling colors apart, or use a screen reader? | Pick a theme that doesn't depend on color alone, and give every control a clear name. |
+| Whose name should go on the layout, and may others share or change it? Offer to leave the name off. | It goes in the `provenance` block, so anyone the customer shares the layout with can see who made it and what they may do with it. See [Who made it](#who-made-it). |
 
-> **For agents:** If the customer can't give you a device name yet, use a short placeholder and tell them that MIDI Glass will show the device as missing until they pick it. Don't make up a name that looks real.
+> **For agents:** If the customer can't give you a device name yet, use a short placeholder and tell them that Windows MIDI Glass will show the device as missing until they pick it. Don't make up a name that looks real.
 
 ### 2. Find the messages
 
@@ -75,9 +77,9 @@ Take every number from the manual or a published MIDI implementation chart, and 
 | The manual says | Message kind in the file | Notes |
 | --- | --- | --- |
 | Control change (CC) 74 | `controlChange`, `number` 74 | |
-| NRPN with MSB 7 and LSB 54, sent as CC 99 = 7 and CC 98 = 54 | `assignedController`, `number` 950 | The number is MSB × 128 + LSB. MIDI Glass sends one MIDI 2.0 message, and Windows turns it into CC 99, CC 98, CC 6 and CC 38 for a MIDI 1.0 device. |
+| NRPN with MSB 7 and LSB 54, sent as CC 99 = 7 and CC 98 = 54 | `assignedController`, `number` 950 | The number is MSB × 128 + LSB. Windows MIDI Glass sends one MIDI 2.0 message, and Windows turns it into CC 99, CC 98, CC 6 and CC 38 for a MIDI 1.0 device. |
 | RPN 0, pitch bend sensitivity, sent as CC 101 = 0 and CC 100 = 0 | `registeredController`, `number` 0 | The same rule, with CC 101 and CC 100. |
-| Note 36 | `note`, `number` 36 | Go by the note number. Manuals don't agree on note names: note 60, middle C, is C3 in some and C4 in others. MIDI Glass calls it C3, the same as the rest of Windows MIDI Services. |
+| Note 36 | `note`, `number` 36 | Go by the note number. Manuals don't agree on note names: note 60, middle C, is C3 in some and C4 in others. Windows MIDI Glass calls it C3, the same as the rest of Windows MIDI Services. |
 | Program 1 to 128 | `programChange`, `number` 0 to 127 | The file uses the number sent on the wire, one less than most manuals print. |
 | Bank select, then a program | Two `controlChange` rows (0 and 32), then a `programChange` row, all on the same trigger | Rows on the same trigger go out in the order they're listed. |
 | Pitch bend | `pitchBend` | No number. The middle is 0.5. |
@@ -88,7 +90,7 @@ Take every number from the manual or a published MIDI implementation chart, and 
 | Any other single message, in Universal MIDI Packet form | `rawUmp`, with one to four 32-bit words | See [Raw messages](#raw-messages). |
 | A DAW set up for a Mackie Control surface | `mackieControl`, with a `function` name | See [Mackie Control functions](#mackie-control-functions). |
 
-**MIDI 2.0 profiles.** MIDI Glass sends messages. It doesn't use MIDI-CI, so it can't turn a profile on or ask a device what it supports. Check that the device or plug-in already uses the profile, then send the messages the profile describes. Where the profile needs something MIDI Glass can't do, such as a button that changes the articulation a keyboard plays, say so and offer what it can do instead.
+**MIDI 2.0 profiles.** Windows MIDI Glass sends messages. It doesn't use MIDI-CI, so it can't turn a profile on or ask a device what it supports. Check that the device or plug-in already uses the profile, then send the messages the profile describes. Where the profile needs something Windows MIDI Glass can't do, such as a button that changes the articulation a keyboard plays, say so and offer what it can do instead.
 
 ### 3. Pick a page size and a theme
 
@@ -106,9 +108,9 @@ Pick the page size closest to the shape of the customer's screen. The page scale
 | Vertical toolbar | 120 × 800 |
 | Floating palette | 360 × 360 |
 
-For a toolbar or a palette, also read [How to make a floating toolbar or palette in MIDI Glass]({{ site.baseurl }}/kb/midi-glass-floating-toolbars/).
+For a toolbar or a palette, also read [How to make a floating toolbar or palette in Windows MIDI Glass]({{ site.baseurl }}/kb/midi-glass-floating-toolbars/).
 
-**Use a built-in theme.** MIDI Glass comes with twenty-five, and they've been checked for contrast and readability. Write its exact name in `theme`, capital letters and all, and leave `themeColors` out. A name MIDI Glass doesn't know silently gives the customer Studio Dark.
+**Use a built-in theme.** Windows MIDI Glass comes with twenty-five, and they've been checked for contrast and readability. Write its exact name in `theme`, capital letters and all, and leave `themeColors` out. A name Windows MIDI Glass doesn't know silently gives the customer Studio Dark.
 
 The built-in themes are: **Studio Dark**, **Airy System**, **Bigwig**, **Blueprint**, **Bone**, **Cathode**, **Chicago**, **Daylight**, **Five-iSH**, **Good Form**, **Groovy**, **Groovy Dark**, **Hard Sector**, **High contrast**, **Insert Coin**, **Jove**, **Night Drive**, **Off-world Colonies**, **Soft Sector**, **Supersaw**, **Terminal Amber**, **Terminal Green**, **Tonal Dark**, **Tonal Light**, and **Visor**.
 
@@ -174,8 +176,9 @@ If the customer wants a look of their own, design a theme file as well, followin
 - **JSON, saved as UTF-8.** A byte order mark is allowed, but not needed.
 - **Strict JSON.** No comments, no comma after the last item in a list or an object, and no hexadecimal numbers. JSON has no `0x`.
 - **Names for choices,** spelled exactly as this article shows them, capital letters included: `"controlChange"`, `"fitToScreen"`.
-- **Leave out what you don't need.** Anything you leave out takes the default in [The layout file](#the-layout-file). MIDI Glass writes every setting back the next time it saves the layout.
-- **Ids are text,** unique in the whole layout: every page's `id`, and every control's `id` on every page. MIDI Glass writes GUIDs, but any unique text works, such as `cutoff` or `page-mix`.
+- **Leave out what you don't need.** Anything you leave out takes the default in [The layout file](#the-layout-file). Windows MIDI Glass writes every setting back the next time it saves the layout.
+- **Ids are text,** unique in the whole layout: every page's `id`, and every control's `id` on every page. Windows MIDI Glass writes GUIDs, but any unique text works, such as `cutoff` or `page-mix`.
+- **Say who made it.** Write a `provenance` block with a new GUID for `id`, `trainedAlgorithmicMedia` for `digitalSourceType`, and the names and license the customer gave you. See [Who made it](#who-made-it).
 
 If you can run commands on the customer's PC, write the file with PowerShell 7, which finds the Documents folder even when it has been moved into OneDrive:
 
@@ -191,11 +194,11 @@ if (Test-Path -LiteralPath $path) { throw 'A layout with that name is already th
 
 If you're an online chat, give the customer the file as a download named after the layout, ending in `.midilayout`. If you can only show text, put the whole file in one code block and tell them how to save it: paste it into Notepad, select **File** > **Save as**, set **Save as type** to **All files**, type a name that ends in `.midilayout`, and leave **Encoding** at **UTF-8**.
 
-> **For agents:** Don't change a layout file that's open in MIDI Glass. The app saves its own copy as the customer works, and it can write over your change. Write a new file instead.
+> **For agents:** Don't change a layout file that's open in Windows MIDI Glass. The app saves its own copy as the customer works, and it can write over your change. Write a new file instead.
 
 ### 6. Check it
 
-Go through [Mistakes that are easy to miss](#mistakes-that-are-easy-to-miss) for every file. If you can run PowerShell 7, save this as `Test-MidiGlassLayout.ps1` and run `pwsh -File Test-MidiGlassLayout.ps1 -Path "<layout file>"`. It reads the file as strictly as MIDI Glass does, and lists the mistakes that load without an error.
+Go through [Mistakes that are easy to miss](#mistakes-that-are-easy-to-miss) for every file. If you can run PowerShell 7, save this as `Test-MidiGlassLayout.ps1` and run `pwsh -File Test-MidiGlassLayout.ps1 -Path "<layout file>"`. It reads the file as strictly as Windows MIDI Glass does, and lists the mistakes that load without an error.
 
 ```powershell
 param([Parameter(Mandatory)][string]$Path)
@@ -229,7 +232,7 @@ foreach ($page in $layout.pages) {
     foreach ($c in $page.controls) {
         $where = "'$($c.label)' ($($c.id)) on page '$($page.name)'"
         if (-not $c.id -or -not $controlIds.Add($c.id)) { $problems.Add("$where needs an id of its own.") }
-        if ($c.kind -cnotin $controlKinds) { $problems.Add("$where has the kind '$($c.kind)', which MIDI Glass opens as a knob.") }
+        if ($c.kind -cnotin $controlKinds) { $problems.Add("$where has the kind '$($c.kind)', which Windows MIDI Glass doesn't know. It shows the control as an outline that does nothing, and won't save changes to the layout.") }
         if (-not $c.label) { $problems.Add("$where has no label, so a screen reader can't name it.") }
         $x = $c.x ?? 0; $y = $c.y ?? 0; $w = $c.width ?? 56; $h = $c.height ?? 56
         if ($w -le 0 -or $h -le 0) { $problems.Add("$where has no size.") }
@@ -271,6 +274,21 @@ foreach ($page in $layout.pages) {
     }
 }
 
+$sourceTypes = 'digitalCreation', 'trainedAlgorithmicMedia', 'compositeWithTrainedAlgorithmicMedia', 'compositeSynthetic', 'algorithmicMedia'
+$oversight = 'fully_autonomous', 'prompt_guided', 'human_validated'
+$p = $layout.provenance
+if ($null -eq $p) { $problems.Add('There is no provenance block, so nothing says an AI made this layout.') }
+else {
+    foreach ($name in $p.PSObject.Properties.Name) { if ($name -cnotin 'id', 'version', 'author', 'organization', 'url', 'license', 'created', 'tool', 'digitalSourceType', 'aiDisclosure', 'basedOn') { $problems.Add("Windows MIDI Glass doesn't know the key 'provenance.$name', so it does nothing.") } }
+    if ($p.aiDisclosure) { foreach ($name in $p.aiDisclosure.PSObject.Properties.Name) { if ($name -cnotin 'humanOversightLevel', 'modelName') { $problems.Add("Windows MIDI Glass doesn't know the key 'provenance.aiDisclosure.$name', so it does nothing.") } } }
+    if ($p.basedOn) { foreach ($name in $p.basedOn.PSObject.Properties.Name) { if ($name -cnotin 'name', 'author', 'id', 'version', 'builtIn') { $problems.Add("Windows MIDI Glass doesn't know the key 'provenance.basedOn.$name', so it does nothing.") } } }
+    if ($p.id -cnotmatch '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$') { $problems.Add('provenance.id needs a lowercase GUID with no braces.') }
+    if ($p.digitalSourceType -cnotin $sourceTypes) { $problems.Add("provenance.digitalSourceType '$($p.digitalSourceType)' isn't a type Windows MIDI Glass knows. A layout you made is trainedAlgorithmicMedia.") }
+    if ($p.aiDisclosure -and $p.aiDisclosure.humanOversightLevel -cnotin $oversight) { $problems.Add("provenance.aiDisclosure.humanOversightLevel '$($p.aiDisclosure.humanOversightLevel)' isn't a level Windows MIDI Glass knows.") }
+    if ($p.url -and $p.url -notmatch '^https://[^/@\s]+(/\S*)?$') { $problems.Add('provenance.url has to start with https:// and have no user name, or Windows MIDI Glass shows it as plain text.') }
+    if ($p.created -and $p.created -isnot [datetime] -and $p.created -notmatch '^\d{4}-\d{2}-\d{2}') { $problems.Add('provenance.created needs a date and time like 2026-10-08T21:14:00Z.') }
+}
+
 if ($problems.Count -gt 0) { $problems; exit 1 }
 'No problems found.'
 ```
@@ -281,7 +299,7 @@ A file that passes can still send the wrong controller. Only the manual and the 
 
 Show the customer what they'll get before you hand it over, and ask them to confirm the controls, the names, the colors, and what each one sends. **Draw the mockup from the file you wrote,** using its own positions and sizes, so what they approve is what they get.
 
-**If MIDI Glass is installed and you can run commands,** it can draw the first page for you:
+**If Windows MIDI Glass is installed and you can run commands,** it can draw the first page for you:
 
 ```powershell
 midiglass --thumbnail "<layout file>" "<picture.png>" 1600
@@ -289,7 +307,7 @@ midiglass --thumbnail "<layout file>" "<picture.png>" 1600
 
 The last number is the width of the picture in pixels. The picture shows the page in the layout's theme, with each control as an outline in its color. It doesn't show names or values, so it's a check on positions and colors rather than a finished picture. It's drawn without opening a window or touching any device. The command returns 0 when it works, 2 when an argument is missing, 3 when the file can't be read as a layout, and 4 when the picture can't be written.
 
-The real thing is better still: `midiglass --run "<layout file>"` opens the layout in MIDI Glass, so the customer can look at every page and try it. Opening it sends nothing until a control is touched, unless a control is set to send its value when the layout starts, or a beat clock, LFO, or Steps control is set to start running.
+The real thing is better still: `midiglass --run "<layout file>"` opens the layout in Windows MIDI Glass, so the customer can look at every page and try it. Opening it sends nothing until a control is touched, unless a control is set to send its value when the layout starts, or a beat clock, LFO, or Steps control is set to start running.
 
 **If you're an online chat,** draw the mockup yourself as HTML, SVG, or a picture. This page draws every page of a layout file in Studio Dark's colors. Paste the whole layout file where it says, and change the six colors to your theme's if you know them:
 
@@ -308,7 +326,7 @@ The real thing is better still: `midiglass --run "<layout file>"` opens the layo
   .name { position: absolute; left: -40px; right: -40px; text-align: center; color: #D7DAE0; font: 12px "Segoe UI Variable Text", "Segoe UI", sans-serif; }
   .caption { left: 10px; right: auto; text-align: left; }
 </style>
-<p>A mockup drawn from the layout file. It isn't a MIDI Glass screenshot.</p>
+<p>A mockup drawn from the layout file. It isn't a Windows MIDI Glass screenshot.</p>
 <div id="pages"></div>
 <script type="application/json" id="layout">
 PASTE THE WHOLE LAYOUT FILE HERE
@@ -352,30 +370,32 @@ PASTE THE WHOLE LAYOUT FILE HERE
 
 Beside the mockup, list what each control sends in plain words, such as "Cutoff: CC 74 on channel 1" or "Filter: NRPN 7:54 on channel 1". Customers check that list more carefully than the picture.
 
-Label the mockup as a mockup. A theme draws much more than outlines: knob arcs, fader caps, lights, and textures. If the customer wants to see the real thing, they can open the file in MIDI Glass and look before they play it.
+Label the mockup as a mockup. A theme draws much more than outlines: knob arcs, fader caps, lights, and textures. If the customer wants to see the real thing, they can open the file in Windows MIDI Glass and look before they play it.
 
 ### 8. Hand it over
 
-Tell the customer how to get the file into MIDI Glass, using [Where layout files go, and how to bring one in](#where-layout-files-go-and-how-to-bring-one-in). Then tell them:
+Tell the customer how to get the file into Windows MIDI Glass, using [Where layout files go, and how to bring one in](#where-layout-files-go-and-how-to-bring-one-in). Then tell them:
 
 - Which device each name in the layout stands for, and how to point it at different hardware if a device shows as missing: open the layout in the editor, select **Layout…** > **Pages and devices…** > **Outputs**, and pick the device.
 - What the layout can't do that they asked for, and what you did instead.
 - Where each number came from, so they can check it against the manual.
+- That **About this layout…** on the layout's card in the library shows what the file says about who made it, and that **Pack for sharing…** on the same menu makes a file they can give to other people.
 
 ## Where layout files go, and how to bring one in
 
-MIDI Glass keeps its layouts in **Documents › MIDI Layouts**, one `.midilayout` file per layout. The library shows every layout file in that folder. A picture or a video a layout uses sits next to it, in the same folder.
+Windows MIDI Glass keeps its layouts in **Documents › MIDI Layouts**, one `.midilayout` file per layout. The library shows every layout file in that folder. A picture or a video a layout uses sits next to it, in the same folder.
 
 - **The Documents folder isn't always `C:\Users\<name>\Documents`.** On many PCs it has been moved into OneDrive. In File Explorer, select **Documents** and look for **MIDI Layouts** there.
-- **To add a layout to the library,** copy its file into that folder. MIDI Glass reads the folder when it starts, so if it's already open, close it and open it again to see the new layout.
-- **To try a layout without adding it,** double-click the file in File Explorer, or select **Open a file…** in the MIDI Glass library. It runs in its own window from wherever the file is. The first time you double-click one, Windows asks which app to open it with: pick MIDI Glass.
-- **A layout with pictures** travels as a `.zip` package. In the library, select **…** (More options) > **Import a layout package…**. Make one in MIDI Glass with **Package for another PC…** on a card's **…** menu. A package holds its files without compression, and MIDI Glass refuses a zip whose files are compressed, which is what most zip tools do. So rather than making a package yourself, give the customer the layout file and its pictures, and ask them to put them all in the layouts folder.
-- Older versions of MIDI Glass named layout files `.midilayout.json`. The app still reads those, and renames them to `.midilayout` when it starts.
+- **To add a layout to the library,** copy its file into that folder. Windows MIDI Glass reads the folder when it starts, so if it's already open, close it and open it again to see the new layout.
+- **To try a layout without adding it,** double-click the file in File Explorer, or select **Open a file…** in the Windows MIDI Glass library. It runs in its own window from wherever the file is. The first time you double-click one, Windows asks which app to open it with: pick Windows MIDI Glass.
+- **A layout with pictures** travels as a pack, a `.midilayoutpack` file. In the library, select **…** (More options) > **Import a pack…**. Make one in Windows MIDI Glass with **Pack for sharing…** on a card's **…** menu. A pack lists every file it holds with its size and SHA-256 hash, so Windows MIDI Glass can tell if anything was changed, and it can be signed. Don't make a pack yourself: give the customer the layout file and its pictures, and ask them to put them all in the layouts folder. Windows MIDI Glass still imports the `.zip` packages that older versions made.
+- **A signed pack** shows who published it when it's imported, as **Signed by** and the name on the publisher's code-signing certificate. A pack that isn't signed shows the author's name marked **(unverified)**, because anyone could have typed it. A signature says who published the pack. It doesn't say the layout is safe or that it works.
+- Older versions of Windows MIDI Glass named layout files `.midilayout.json`. The app still reads those, and renames them to `.midilayout` when it starts.
 - Themes live in **Documents › MIDI Layouts › Themes**. See [Where theme files live]({{ site.baseurl }}/kb/midi-glass-themes/#where-theme-files-live).
 
 **System exclusive.** A layout opened from outside the layouts folder asks before it sends system exclusive, because the wrong system exclusive can harm a device. If your layout sends system exclusive, give the customer the file outside the layouts folder, such as in Downloads, so they see that question the first time. They can copy it into the folder once they trust it.
 
-## What MIDI Glass can't do
+## What Windows MIDI Glass can't do {#what-midi-glass-cant-do}
 
 Tell the customer about these before they find out on their own.
 
@@ -383,9 +403,9 @@ Tell the customer about these before they find out on their own.
 - **A keyboard plays one attribute.** A keyboard or a pad grid can put a MIDI 2.0 note attribute, such as an articulation, on every note it plays, but it's the same attribute on every key. For two articulations, use two keyboards, or a page for each.
 - **Following a clock follows only its tempo.** A layout that follows incoming MIDI clock takes its speed, but doesn't line its beat up with it, and doesn't start or stop with it.
 - **Nothing shows text from a device.** A readout shows a value, and a meter and a lamp show levels and activity. There's no track name, no patch name, and no list of messages on a running page.
-- **No MIDI-CI.** MIDI Glass can't turn a profile on, or ask a device what it supports.
+- **No MIDI-CI.** Windows MIDI Glass can't turn a profile on, or ask a device what it supports.
 - **No logic.** No conditions, no variables, and no scripts.
-- **Mackie Control is partial.** MIDI Glass doesn't speak HUI, doesn't answer the handshake some DAWs use to find a surface, and doesn't show the DAW's meters, V-Pot rings, or display text.
+- **Mackie Control is partial.** Windows MIDI Glass doesn't speak HUI, doesn't answer the handshake some DAWs use to find a surface, and doesn't show the DAW's meters, V-Pot rings, or display text.
 - **Saved, but not working yet.** The layout's `publishesVirtualDevice` is kept in the file but doesn't do anything yet, so leave it out.
 
 ## The layout file
@@ -399,6 +419,18 @@ This layout has a section with two knobs, a volume fader, a pitch wheel, a hold 
   "fileVersion": 1,
   "name": "Synth basics",
   "description": "Filter, volume, pitch bend, hold, and a pad for one synth.",
+  "provenance": {
+    "id": "2f1c7d0e-9b8a-4c6d-8e5f-3a2b1c0d9e8f",
+    "version": "1.0",
+    "author": "Pat Example",
+    "license": "CC-BY-4.0",
+    "created": "2026-10-08T21:14:00Z",
+    "tool": "Example Assistant 2.1",
+    "digitalSourceType": "trainedAlgorithmicMedia",
+    "aiDisclosure": {
+      "humanOversightLevel": "prompt_guided"
+    }
+  },
   "pageWidth": 1280,
   "pageHeight": 800,
   "canvasWidth": 1280,
@@ -479,7 +511,7 @@ This layout has a section with two knobs, a volume fader, a pitch wheel, a hold 
 }
 ```
 
-The tables below list every setting. **If left out** is what MIDI Glass uses when a file doesn't have the key.
+The tables below list every setting. **If left out** is what Windows MIDI Glass uses when a file doesn't have the key.
 
 ### The top level
 
@@ -488,6 +520,7 @@ The tables below list every setting. **If left out** is what MIDI Glass uses whe
 | `fileVersion` | 1 | 1 | The file format version. Write 1. |
 | `name` | text | empty | The layout's name in the library. |
 | `description` | text | empty | One line about the layout, shown on its card. |
+| `provenance` | object | none | Who made the layout, with what, and from what. See [Who made it](#who-made-it). |
 | `created`, `modified` | numbers | 0 | Kept by the app. Write 0 or leave them out. |
 | `pageWidth`, `pageHeight` | 32 to 8192 | 1280, 800 | The page size in pixels. |
 | `canvasWidth`, `canvasHeight` | at least the page size | the page size | The editor's working area around the page. Write the page size. |
@@ -501,22 +534,22 @@ The tables below list every setting. **If left out** is what MIDI Glass uses whe
 | `fullScreenButtonCorner` | `topLeft`, `topRight`, `bottomLeft`, `bottomRight` | `topRight` | Where the one button sits in full screen. |
 | `suppressAllStartupValues` | `true`, `false` | `false` | Stops every control from sending its starting value when the layout opens. |
 | `toolbarWindow`, `alwaysOnTop`, `seeThrough` | `true`, `false` | `false` | For a floating toolbar. See the [floating toolbar article]({{ site.baseurl }}/kb/midi-glass-floating-toolbars/). |
-| `isFavorite` | `true`, `false` | `false` | Puts the layout in the library's **Favorites**. |
+| `isFavorite` | `true`, `false` | `false` | Leave it out. Older versions kept a layout's star in the file. Windows MIDI Glass now keeps favorites on each PC, so a layout someone shares doesn't arrive starred. |
 | `tempo` | object | 120 beats a minute | `{ "kind": "internal", "beatsPerMinute": 120 }`. LFO and Steps controls run at this tempo. A beat clock keeps its own. To follow the MIDI clock a device sends, write `{ "kind": "followIncomingClock", "beatsPerMinute": 120, "device": "DAW" }` with a name from `devices`. They run at `beatsPerMinute` until the clock arrives, then at the clock's tempo, and keep the last tempo if the clock stops. |
 | `devices` | list | none | The device table. See [Devices](#devices). |
 | `pages` | list | none | At least one page. See [Pages](#pages). |
 | `sequences` | list | none | See [Sequences](#sequences). |
 
-`_comment` is ignored. Any other key MIDI Glass doesn't know is kept and written back, but it doesn't do anything.
+`_comment` is ignored. Any other key Windows MIDI Glass doesn't know is kept and written back, but it doesn't do anything.
 
 ### Devices
 
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
 | `name` | text | required | The name messages use. Short and clear, such as `Synth` or `DAW`. Each name used once. |
-| `match` | object | empty | How MIDI Glass finds the real device. |
+| `match` | object | empty | How Windows MIDI Glass finds the real device. |
 | `matchMode` | `endpointDeviceId`, `usbVendorAndProduct`, `endpointName` | `endpointDeviceId` | Which part of `match` it uses. |
-| `protocol` | `midi2`, `midi1`, `mackieControl` | `midi2` | How MIDI Glass talks to the device. See [Values](#values) and [Mackie Control functions](#mackie-control-functions). |
+| `protocol` | `midi2`, `midi1`, `mackieControl` | `midi2` | How Windows MIDI Glass talks to the device. See [Values](#values) and [Mackie Control functions](#mackie-control-functions). |
 
 **Matching a device by name.** You can't know a device's ID, so match by name:
 
@@ -524,7 +557,7 @@ The tables below list every setting. **If left out** is what MIDI Glass uses whe
 { "name": "Synth", "match": { "transportSuppliedEndpointName": "Prophet Rev2" }, "matchMode": "endpointName" }
 ```
 
-MIDI Glass compares the name in `match` with each device's own name and with the name Windows shows for it, which the customer may have changed in MIDI Settings. Capital letters don't matter, but everything else must be the same. If `match` has no name, it compares the device's `name` instead. When MIDI Glass saves a device the customer picked, `match` also holds the device's ID and USB details, which is how it tells two identical devices apart.
+Windows MIDI Glass compares the name in `match` with each device's own name and with the name Windows shows for it, which the customer may have changed in MIDI Settings. Capital letters don't matter, but everything else must be the same. If `match` has no name, it compares the device's `name` instead. When Windows MIDI Glass saves a device the customer picked, `match` also holds the device's ID and USB details, which is how it tells two identical devices apart.
 
 ### Pages
 
@@ -544,7 +577,7 @@ These keys work on every kind of control.
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
 | `id` | text | required | Unique in the whole layout. |
-| `kind` | see the table in [Lay out the page](#4-lay-out-the-page) | `knob` | What the control is. A kind MIDI Glass doesn't know opens as a knob. |
+| `kind` | see the table in [Lay out the page](#4-lay-out-the-page) | `knob` | What the control is. A kind Windows MIDI Glass doesn't know shows as an outline that does nothing, and Windows MIDI Glass won't save changes to that layout. |
 | `label` | text | empty | The control's name, on the page and for screen readers. Always set it. |
 | `x`, `y` | numbers | 0 | The top left corner, in page pixels. |
 | `width`, `height` | numbers above 0 | 56 | The size, in page pixels. |
@@ -605,7 +638,7 @@ The message kinds are `note`, `controlChange`, `programChange`, `pitchBend`, `ch
 - A `touched` row is sent when a finger first touches the control, and sends its `maximum`. A `released` row is sent when the finger lets go, and sends its `minimum`.
 - Rows on the same trigger go out in the order they're listed.
 
-**What each kind of control usually sends.** These are the rows MIDI Glass gives a new control. Copy their shape.
+**What each kind of control usually sends.** These are the rows Windows MIDI Glass gives a new control. Copy their shape.
 
 | Control | Rows |
 | --- | --- |
@@ -623,7 +656,7 @@ The message kinds are `note`, `controlChange`, `programChange`, `pitchBend`, `ch
 
 The two ends of a row, `minimum` and `maximum`, are each an object with a `value` and a `scaling`. A control at rest sends the minimum, a control at full travel sends the maximum, and anything between is in proportion. Leave both out for the full range.
 
-- **`fraction`** is a share of the full range, from 0 to 1. It works on MIDI 1.0 and MIDI 2.0 devices alike, so use it unless you have a reason not to. To send exactly 100 out of 127, write 100 ÷ 127, about `0.7874`. MIDI Glass rounds to the nearest step.
+- **`fraction`** is a share of the full range, from 0 to 1. It works on MIDI 1.0 and MIDI 2.0 devices alike, so use it unless you have a reason not to. To send exactly 100 out of 127, write 100 ÷ 127, about `0.7874`. Windows MIDI Glass rounds to the nearest step.
 - **`absolute`** is the exact number that goes on the wire. Its range depends on the message: 0 to 127 for a MIDI 1.0 note velocity, controller, or channel pressure; 0 to 16383 for MIDI 1.0 pitch bend; 0 to 65535 for a MIDI 2.0 note velocity; and 0 to 4294967295 for every other MIDI 2.0 value.
 - **A row goes out as MIDI 1.0** when its device's `protocol` is `midi1`, or when the row has `"midi1Protocol": true`. That only applies to notes, controllers, program changes, pitch bend, and channel pressure. RPNs, NRPNs, and per-note controllers always go out as MIDI 2.0, and Windows converts them for a MIDI 1.0 device. Every other row goes out as MIDI 2.0, and Windows converts it for a MIDI 1.0 device too.
 - **When a value is a code,** such as a pad color where 5 is red and 21 is green, set the device's `protocol` to `midi1` and write the code as an `absolute` value, so the device gets exactly that number.
@@ -863,7 +896,7 @@ Write the bytes as hexadecimal text with no spaces, in `systemExclusive`, with o
 
 ### Raw messages
 
-A `rawUmp` row sends one to four 32-bit words exactly as written. It's how a button sends a message MIDI Glass has no row for.
+A `rawUmp` row sends one to four 32-bit words exactly as written. It's how a button sends a message Windows MIDI Glass has no row for.
 
 - **The words are decimal numbers.** JSON has no hexadecimal, so `0x40903C02` must be written as `1083194370`. In PowerShell, `[Convert]::ToUInt32('40903C02', 16)` does the conversion.
 - **The words carry their own group and channel.** The row's `group` and `channel` aren't used, but its `device` is.
@@ -885,7 +918,7 @@ Those words are `40903C02 C0000001` and `40803C00 00000000`.
 
 ### Mackie Control functions
 
-To control a DAW set up for a Mackie Control surface, give its device `"protocol": "mackieControl"`, and give each control one `changes` row of kind `mackieControl` with a `function` instead of a `number`: `{ "trigger": "changes", "kind": "mackieControl", "device": "DAW", "function": "play" }`. The function sends the press and the release, or the position and the touch, by itself. [How to control your DAW with Mackie Control in MIDI Glass]({{ site.baseurl }}/kb/midi-glass-mackie-control/) explains the DAW side.
+To control a DAW set up for a Mackie Control surface, give its device `"protocol": "mackieControl"`, and give each control one `changes` row of kind `mackieControl` with a `function` instead of a `number`: `{ "trigger": "changes", "kind": "mackieControl", "device": "DAW", "function": "play" }`. The function sends the press and the release, or the position and the touch, by itself. [How to control your DAW with Mackie Control in Windows MIDI Glass]({{ site.baseurl }}/kb/midi-glass-mackie-control/) explains the DAW side.
 
 | Controls | Functions |
 | --- | --- |
@@ -893,9 +926,51 @@ To control a DAW set up for a Mackie Control surface, give its device `"protocol
 | Fader | `fader1` to `fader8`, `masterFader` |
 | Knob, wheel, or turntable | `vpot1` to `vpot8`, `jog` |
 
+### Who made it
+
+The `provenance` block says who made the layout, with what, and from what. Windows MIDI Glass shows it in **About this layout…** and when someone imports a pack. The names follow [C2PA Content Credentials](https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html), and `digitalSourceType` uses the [IPTC digital source type](https://cv.iptc.org/newscodes/digitalsourcetype/) terms, so the block can be carried into a C2PA manifest later.
+
+```json
+"provenance": {
+  "id": "2f1c7d0e-9b8a-4c6d-8e5f-3a2b1c0d9e8f",
+  "version": "1.0",
+  "author": "Pat Example",
+  "organization": "Example Studio",
+  "url": "https://example.com",
+  "license": "CC-BY-4.0",
+  "created": "2026-10-08T21:14:00Z",
+  "tool": "Example Assistant 2.1",
+  "digitalSourceType": "trainedAlgorithmicMedia",
+  "aiDisclosure": {
+    "humanOversightLevel": "prompt_guided",
+    "modelName": "Example Model 4"
+  }
+}
+```
+
+| Key | Values | What to put |
+| --- | --- | --- |
+| `id` | a GUID, lowercase, with no braces | A new one for every new layout. Keep the same one when you give the customer a changed version of a layout you made for them, so Windows MIDI Glass offers to replace the old one instead of adding a second. |
+| `version` | text, such as `1.0` | Start at `1.0`. Raise it each time you hand over a changed layout with the same `id`. Versions are compared number by number, so `1.10` comes after `1.9`. |
+| `author` | text | The name the customer wants shown. Ask. Never your own name: the person you made it for is the author. |
+| `organization` | text | The customer's company, band, or group, if they want one. Leave it out otherwise. |
+| `url` | an `https://` address | The customer's website, if they want one. Windows MIDI Glass shows it in full, and as a link only when it starts with `https://` and has no user name in it. |
+| `license` | an [SPDX](https://spdx.org/licenses/) license name | What others may do with the layout. Ask. `CC-BY-4.0` lets people share and change it if they give credit, and `CC0-1.0` gives it away with no conditions. Leave it out if the customer doesn't want to choose. |
+| `created` | date and time, in UTC | When you made the file, such as `2026-10-08T21:14:00Z`. |
+| `tool` | text | What made the file: your own name and version, such as `Example Assistant 2.1`. Windows MIDI Glass writes its own name here for layouts made in the app. |
+| `digitalSourceType` | `trainedAlgorithmicMedia`, `compositeWithTrainedAlgorithmicMedia`, `digitalCreation`, `algorithmicMedia` | `trainedAlgorithmicMedia` for a layout you made. `compositeWithTrainedAlgorithmicMedia` for one the customer made that you changed. `digitalCreation` is a layout a person made in Windows MIDI Glass, and `algorithmicMedia` is one a program made without AI. |
+| `aiDisclosure` | object | How a person guided the AI. Leave it out of a layout no AI touched. |
+| `aiDisclosure.humanOversightLevel` | `prompt_guided`, `human_validated`, `fully_autonomous` | `prompt_guided` when the customer told you what to build. `human_validated` only after the customer checked your mockup and the list of messages, and said yes. |
+| `aiDisclosure.modelName` | text | The AI model you are, if you know it. |
+| `basedOn` | object | What the layout was made from, such as a layout the customer gave you to change. Copy `name`, `author`, `id`, and `version` from that layout's own `provenance`. For a built-in theme or template, write `{ "name": "Studio Dark", "builtIn": true }`. |
+
+> **For agents:** Always write this block when you make a layout, and never leave out `digitalSourceType`. Ask the customer for the name, group, website, and license, and offer to leave each one off. Don't write a name the customer didn't give you, and don't write that a person made what you made. Text in these fields is what the file says about itself: Windows MIDI Glass shows the author marked **(unverified)** unless a signed pack backs it, and only the customer can sign a pack.
+
+Windows MIDI Glass removes characters that can disguise a name, such as direction overrides and zero-width spaces, and cuts names at 256 characters. A key it doesn't know inside the block is kept and written back.
+
 ### Limits
 
-MIDI Glass reads a layout up to 16 megabytes, with up to 64 pages, 1,024 controls on a page, 32 rows on a control, 32 devices, and 256 sequences of up to 512 steps. Text is cut off at 1,024 characters. Anything past a limit is dropped.
+Windows MIDI Glass reads a layout up to 16 megabytes, with up to 64 pages, 1,024 controls on a page, 32 rows on a control, 32 devices, and 256 sequences of up to 512 steps. Text is cut off at 1,024 characters. Anything past a limit is dropped.
 
 ## Mistakes that are easy to miss
 
@@ -918,7 +993,9 @@ MIDI Glass reads a layout up to 16 megabytes, with up to 64 pages, 1,024 control
 > - A Group is listed after the controls it frames, so it's drawn over them.
 > - Two controls share an id, often page tabs copied from one page to the next.
 > - A control has no `label`, so a screen reader has nothing to say.
-> - A control's `kind` is misspelled, such as `xypad` or `slider`, so it opens as a knob.
+> - A control's `kind` is misspelled, such as `xypad` or `slider`. Windows MIDI Glass shows it as an outline that does nothing, and won't save changes to the layout.
 > - A picture is named by a path. Only a plain file name, of a file next to the layout, is used.
 > - A control is set to send its value when the layout opens, and it's a volume at 0, which mutes the device the moment the layout opens.
-> - The layout depends on something in [What MIDI Glass can't do](#what-midi-glass-cant-do).
+> - The layout depends on something in [What Windows MIDI Glass can't do](#what-midi-glass-cant-do).
+> - There's no `provenance` block, or it names you as the author, or it says `digitalCreation` for a layout an AI made.
+> - A changed layout you hand over again has a new `provenance.id`, so it arrives beside the old one instead of replacing it.

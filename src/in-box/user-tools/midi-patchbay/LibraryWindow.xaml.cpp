@@ -16,6 +16,7 @@
 #include "DocumentHandoff.h"
 #include "PatchCanvas.h"
 #include "PatchLayout.h"
+#include "PatchProvenance.h"
 #include "PatchStore.h"
 #include "StringResources.h"
 #include "TextMatch.h"
@@ -971,6 +972,7 @@ namespace winrt::midipatchbay::implementation
             auto copy = *original;
 
             copy.Name = library.UniqueName(std::wstring{ resources::FormatString(L"PatchCopyNameFormat", original->Name) });
+            copy.Provenance = patchbay::CopyProvenance(original->Name, original->Provenance);
             copy.FilePath.clear();
             copy.CreatedTimestamp = 0;
             copy.ModifiedTimestamp = 0;

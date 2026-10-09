@@ -884,6 +884,8 @@ namespace midipatchbay
         case BlockKind::Gate:
         case BlockKind::CiResponder:
         case BlockKind::CiFilter:
+        case BlockKind::Branch:
+        case BlockKind::Switch:
             return true;
 
         default:
@@ -897,6 +899,11 @@ namespace midipatchbay
         if (kind == BlockKind::CiResponder && state.Ci == nullptr)
         {
             state.Ci = std::make_unique<CiResponderState>();
+        }
+
+        if (HasWays(kind) && state.Ways == nullptr)
+        {
+            state.Ways = std::make_unique<WayMemory>();
         }
     }
 

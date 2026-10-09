@@ -102,6 +102,9 @@ namespace
             Clocked.emplace_back(target, message);
         }
 
+        LogicValue Memory(uint32_t) noexcept override { return {}; }
+        void ChangeMemory(uint32_t, SetMemorySettings const&, LogicValue const&) noexcept override {}
+
     private:
         RouteGraph const& m_graph;
         std::unique_ptr<BlockState[]> m_states{};

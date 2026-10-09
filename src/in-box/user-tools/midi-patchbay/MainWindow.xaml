@@ -281,7 +281,7 @@
                              Severity="Warning"
                              IsOpen="False"
                              IsClosable="True"
-                             Title="This patch doesn't automatically start with the Patchbay app"
+                             Title="This patch doesn't automatically start with Windows MIDI Patchbay"
                              CloseButtonClick="OnAutoStartBarCloseClick" />
 
                     <InfoBar x:Name="ServiceBar"
@@ -308,6 +308,30 @@
                              Severity="Warning"
                              IsOpen="False"
                              IsClosable="True" />
+
+                    <!-- Where a traced message went. The canvas shows the path of the one named
+                         here, and closing this puts the canvas back. -->
+                    <InfoBar x:Name="TraceBar"
+                             x:Uid="TraceBar"
+                             Severity="Informational"
+                             IsOpen="False"
+                             IsClosable="True"
+                             CloseButtonClick="OnTraceBarCloseClick">
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,8">
+                            <Button x:Name="TracePreviousButton"
+                                    x:Uid="TracePreviousButton"
+                                    Content="Previous"
+                                    Click="OnTracePreviousClick" />
+                            <Button x:Name="TraceNextButton"
+                                    x:Uid="TraceNextButton"
+                                    Content="Next"
+                                    Click="OnTraceNextClick" />
+                            <Button x:Name="TraceAgainButton"
+                                    x:Uid="TraceAgainButton"
+                                    Content="Change messages"
+                                    Click="OnTraceAgainClick" />
+                        </StackPanel>
+                    </InfoBar>
 
                     <InfoBar x:Name="StatusBar"
                              Severity="Informational"
@@ -737,7 +761,7 @@
             <StackPanel Spacing="14" Width="480">
                 <TextBlock x:Name="SavePatchIntroText"
                            x:Uid="SavePatchIntroText"
-                           Text="Patches are files in Documents, MIDI Patchbay. You can copy one to another PC, but the endpoints have to be matched there."
+                           Text="Patches are files in Documents › MIDI Patches. You can copy one to another PC, but the endpoints have to be matched there."
                            TextWrapping="Wrap"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 <TextBox x:Name="SavePatchNameBox"
@@ -762,7 +786,7 @@
                              GroupName="SavePatchKind"
                              IsChecked="True" />
                 <TextBlock x:Uid="SavePatchKeepHint"
-                           Text="Saved to disk and offered again next time Patchbay starts."
+                           Text="Saved to disk and offered again next time Windows MIDI Patchbay starts."
                            FontSize="11"
                            Margin="30,-8,0,0"
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
@@ -771,7 +795,7 @@
                              Content="Temporary"
                              GroupName="SavePatchKind" />
                 <TextBlock x:Uid="SavePatchTemporaryHint"
-                           Text="Routes now, disappears when Patchbay closes. Nothing is written to disk."
+                           Text="Routes now, disappears when Windows MIDI Patchbay closes. Nothing is written to disk."
                            FontSize="11"
                            Margin="30,-8,0,0"
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
@@ -793,7 +817,7 @@
             </ContentDialog.Resources>
             <StackPanel Spacing="12" Width="480">
                 <TextBlock x:Uid="CreateLoopbackIntroText"
-                           Text="A loopback is what a DAW or another app connects to. Patchbay can only route a message source to a message destination, so a loopback is how you get messages into software that is not on this canvas."
+                           Text="A loopback is what a DAW or another app connects to. Windows MIDI Patchbay can only route a message source to a message destination, so a loopback is how you get messages into software that is not on this canvas."
                            TextWrapping="Wrap"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 <RadioButton x:Name="LoopbackBasicRadio"
@@ -824,13 +848,13 @@
                          TextChanged="OnLoopbackNameChanged" />
                 <CheckBox x:Name="LoopbackKeepCheck"
                           x:Uid="LoopbackKeepCheck"
-                          Content="Keep after Patchbay closes"
+                          Content="Keep after Windows MIDI Patchbay closes"
                           IsChecked="True" />
                 <InfoBar x:Uid="LoopbackInfoBar"
                          Severity="Informational"
                          IsOpen="True"
                          IsClosable="False"
-                         Message="Loopbacks are real MIDI endpoints on this PC. Every app sees them, not just Patchbay." />
+                         Message="Loopbacks are real MIDI endpoints on this PC. Every app sees them, not just Windows MIDI Patchbay." />
                 <TextBlock x:Name="LoopbackErrorText"
                            FontSize="12"
                            TextWrapping="Wrap"
@@ -860,6 +884,21 @@
                           x:Uid="ConfirmRemoveSkipCheck"
                           Content="Don't ask again" />
             </StackPanel>
+        </ContentDialog>
+
+        <!-- Follows messages through the patch without sending anything. Built in code. -->
+        <ContentDialog x:Name="TraceDialog"
+                       x:Uid="TraceDialog"
+                       Title="Trace messages"
+                       PrimaryButtonText="Trace"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <ContentDialog.Resources>
+                <x:Double x:Key="ContentDialogMaxWidth">640</x:Double>
+            </ContentDialog.Resources>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="540" Padding="0,0,14,0">
+                <StackPanel x:Name="TraceDialogContent" Spacing="12" Width="520" />
+            </ScrollViewer>
         </ContentDialog>
 
         <!-- One dialog for every kind of step. Its sections are built in code for the kind being

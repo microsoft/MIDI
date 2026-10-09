@@ -10,6 +10,7 @@
 #include <array>
 
 #include "BindingEngine.h"
+#include "LayoutSerializer.h"
 
 using namespace WEX::Common;
 using namespace WEX::Logging;
@@ -1216,4 +1217,37 @@ void BindingEngineTests::EachAxisIsDescribedByItsOwnRow()
 
     VERIFY_IS_TRUE(engine.TryDescribeValue(0, glass::ValueAxis::Y, 1.0, value, isAbsolute));
     VERIFY_ARE_EQUAL(uint32_t{ 63 }, value);
+}
+
+void BindingEngineTests::AMessageThisVersionDoesNotKnowIsNeverSentOrFollowed()
+{
+    // Read the old way, the second row went out as control change 60 and the fader followed it.
+    auto const read = glass::ReadLayoutFromJson(
+        LR"({ "fileVersion": 1, "name": "T", "devices": [ { "name": "Desk" } ],
+              "pages": [ { "id": "p", "name": "P", "controls": [
+            { "id": "f", "kind": "fader", "width": 40, "height": 180, "defaultValue": 0.5, "sendsValueOnStart": true,
+              "messages": [
+                { "trigger": "changes", "kind": "controlChange", "device": "Desk", "number": 7 },
+                { "trigger": "changes", "kind": "noteAttribute", "device": "Desk", "number": 60 } ],
+              "feedback": { "enabled": true, "kind": "quantumChange", "device": "Desk", "number": 60 } } ] } ] })");
+
+    VERIFY_IS_TRUE(read.Succeeded);
+
+    glass::BindingEngine engine{};
+    engine.Prepare(read.Document, DeskOn(glass::DestinationProtocol::Midi2));
+
+    std::array<glass::PreparedSend, glass::MaximumSendsPerEvent> sends{};
+
+    VERIFY_ARE_EQUAL(uint32_t{ 1 }, engine.Evaluate(0, glass::MessageTrigger::Changes, 1.0, sends));
+    VERIFY_ARE_EQUAL(0x40B00700u, sends[0].Words[0]);
+
+    VERIFY_ARE_EQUAL(uint32_t{ 1 }, engine.EvaluateStartupValues(sends));
+    VERIFY_ARE_EQUAL(0x40B00700u, sends[0].Words[0]);
+
+    uint32_t const incoming[] { 0x20B03C40u };
+
+    size_t controlIndex{ 999 };
+    double value{ -1.0 };
+
+    VERIFY_IS_FALSE(engine.TryResolveFeedback(incoming, 1, controlIndex, value));
 }

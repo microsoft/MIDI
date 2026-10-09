@@ -437,6 +437,11 @@ namespace glass
 
                     for (auto const& message : control.Messages)
                     {
+                        if (message.Kind == MessageKind::Unrecognized)
+                        {
+                            continue;
+                        }
+
                         auto const protocol = document.ProtocolOf(message.DeviceName);
 
                         // Only a function reaches a Mackie Control device, and a function means
@@ -475,7 +480,7 @@ namespace glass
 
                     prepared.MessageCount = static_cast<uint32_t>(m_messages.size()) - prepared.FirstMessage;
 
-                    if (control.Feedback.Enabled)
+                    if (control.Feedback.Enabled && control.Feedback.Kind != MessageKind::Unrecognized)
                     {
                         PreparedFeedback feedback{};
 

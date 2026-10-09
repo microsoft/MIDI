@@ -30,4 +30,5 @@ public:
     TEST_METHOD(TextThatIsNotAPatchIsRejected);
     TEST_METHOD(RemovingABlockRemovesItsLinks);
     TEST_METHOD(AnAnnotationKeepsItsTextAndNoLinks);
+    TEST_METHOD(APatchKeepsWhoMadeIt);
 };

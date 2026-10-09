@@ -1,26 +1,26 @@
 ---
 layout: kb
-title: How MIDI Glass themes work
+title: How Windows MIDI Glass themes work
 audience: everyone
 description: What a Windows MIDI Glass theme is, where theme files go, what every setting in a theme file changes on screen, and how to design a theme for someone else.
 categories:
   - Developer Guidance
 ---
 
-Windows MIDI Glass ("MIDI Glass") is the Windows MIDI Services app for building your own touch control surface. You put knobs, faders, pads, and buttons on a page, tell each one what MIDI to send, and play it with a finger, a pen, or a mouse.
+Windows MIDI Glass is the Windows MIDI Services app for building your own touch control surface. You put knobs, faders, pads, and buttons on a page, tell each one what MIDI to send, and play it with a finger, a pen, or a mouse.
 
 Two things decide what you see. A **layout** says what's on the page: where each control sits, how big it is, what it's called, and what it sends. A **theme** says how the page looks. Put a different theme on a layout and every control keeps its place, its name, and its messages. Only the look changes.
 
-This article is about themes: the theme file, where it goes, and how MIDI Glass turns each setting into what's on the screen. It doesn't cover building layouts. For that, see [MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/).
+This article is about themes: the theme file, where it goes, and how Windows MIDI Glass turns each setting into what's on the screen. It doesn't cover building layouts. For that, see [Windows MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/).
 
-> **MIDI Glass is a preview app.** The theme file described here is version 1. Later versions can add settings, and a theme file written for an older version keeps loading when they do.
+> **Windows MIDI Glass is a preview app.** The theme file described here is version 1. Later versions can add settings, and a theme file written for an older version keeps loading when they do.
 
-> **For AI agents:** This article is written so you can design a theme for someone without reading the MIDI Glass source code. Read it once from start to finish. Then use [Designing a theme for someone else](#designing-a-theme-for-someone-else) as your process and [Every key in a theme file](#every-key-in-a-theme-file) as your reference. Notes marked **For agents** point out mistakes that are easy to make and hard to see, because you usually can't look at the result yourself.
+> **For AI agents:** This article is written so you can design a theme for someone without reading the Windows MIDI Glass source code. Read it once from start to finish. Then use [Designing a theme for someone else](#designing-a-theme-for-someone-else) as your process and [Every key in a theme file](#every-key-in-a-theme-file) as your reference. Notes marked **For agents** point out mistakes that are easy to make and hard to see, because you usually can't look at the result yourself.
 
 On this page:
 
 - [What a theme decides](#what-a-theme-decides)
-- [The look MIDI Glass is built on](#the-look-midi-glass-is-built-on)
+- [The look Windows MIDI Glass is built on](#the-look-midi-glass-is-built-on)
 - [Colors: six slots and a neutral](#colors-six-slots-and-a-neutral)
 - [Where theme files live](#where-theme-files-live)
 - [Inside a theme file](#inside-a-theme-file)
@@ -42,7 +42,7 @@ On this page:
 
 **A theme never picks a font.** A theme that changed fonts would reflow the labels on a page that somebody laid out carefully around them. Fonts belong to the layout.
 
-## The look MIDI Glass is built on
+## The look Windows MIDI Glass is built on {#the-look-midi-glass-is-built-on}
 
 The default look, and the starting point for most themes, is four ideas:
 
@@ -63,7 +63,7 @@ Several shipping themes bend these rules on purpose. Jove's buttons are solid co
 
 A theme has six colors, called **hue slots**. A control doesn't store a color. It stores a slot. Change the theme and every control on slot 3 changes together, so a row of mute buttons still matches, and still stands apart from the row of solo buttons next to it.
 
-- MIDI Glass numbers the slots 1 to 6. In a theme file they're a list of six colors, and the first one is slot 1.
+- Windows MIDI Glass numbers the slots 1 to 6. In a theme file they're a list of six colors, and the first one is slot 1.
 - New controls start on slot 1, so make it a color you'd be happy to see on most of the page.
 - The **neutral** is a seventh choice, and it means "no color." It's for controls that aren't part of any color group, like a row of plain utility buttons. A control on the neutral slot stays uncolored when the theme changes. On a theme with no neutral, those controls use slot 1.
 - A control can also use a literal color, like `#FF0000`. A literal color ignores the theme, so it's only for the rare control that has to be one exact color.
@@ -76,7 +76,7 @@ If you're designing a theme for layouts that already exist, keep each slot's job
 
 ### The built-in themes
 
-Twenty-five themes come with MIDI Glass. They're part of the app rather than files on disk, so nothing can delete or change them. When you edit one in the app, you're editing a copy.
+Twenty-five themes come with Windows MIDI Glass. They're part of the app rather than files on disk, so nothing can delete or change them. When you edit one in the app, you're editing a copy.
 
 ### Your own theme files
 
@@ -86,12 +86,12 @@ Your own themes are files in this folder, one theme per file, each ending in `.m
 Documents\MIDI Layouts\Themes
 ```
 
-- MIDI Glass creates the folder the first time it needs it. You can also create it yourself.
+- Windows MIDI Glass creates the folder the first time it needs it. You can also create it yourself.
 - **The Documents folder isn't always `C:\Users\<name>\Documents`.** On many PCs it has been moved into OneDrive. Open File Explorer, select **Documents**, and look for **MIDI Layouts** there.
 - Every theme in the folder shows up in the gallery for every layout on that PC, after the twenty-five built-in ones.
-- The file name doesn't have to match the theme's name. When MIDI Glass saves a theme, it names the file after the theme and swaps any character Windows doesn't allow in a file name (`\ / : * ? " < > |`) for an underscore.
-- MIDI Glass reads the folder each time it shows the gallery. If you add a file while the app is open, open the layout's **Appearance** settings again to see it.
-- Older versions of MIDI Glass named theme files `.miditheme.json`. The app still reads those, and renames them to `.miditheme` the next time it starts.
+- The file name doesn't have to match the theme's name. When Windows MIDI Glass saves a theme, it names the file after the theme and swaps any character Windows doesn't allow in a file name (`\ / : * ? " < > |`) for an underscore.
+- Windows MIDI Glass reads the folder each time it shows the gallery. If you add a file while the app is open, open the layout's **Appearance** settings again to see it.
+- Older versions of Windows MIDI Glass named theme files `.miditheme.json`. The app still reads those, and renames them to `.miditheme` the next time it starts.
 
 A theme file shows up in the gallery only if all of these are true:
 
@@ -100,7 +100,7 @@ A theme file shows up in the gallery only if all of these are true:
 - That name isn't a built-in theme's name. Three older names count too: **Pigment Light**, **Pigment Dark**, and **Amber Console**.
 - No other file in the folder with the same `name` sorts ahead of it. When two files share a name, the one whose file name comes first alphabetically wins.
 
-MIDI Glass doesn't show an error for a file it skips. The theme just isn't there.
+Windows MIDI Glass doesn't show an error for a file it skips. The theme just isn't there.
 
 ### A theme inside a layout
 
@@ -117,7 +117,7 @@ A layout file names its theme in its `theme` value. It can also carry a whole th
 }
 ```
 
-When you change a theme's settings in the MIDI Glass editor, the edited theme is stored in the layout this way. That's why a layout you send to a friend still looks the way you built it, even if they've never seen your theme.
+When you change a theme's settings in the Windows MIDI Glass editor, the edited theme is stored in the layout this way. That's why a layout you send to a friend still looks the way you built it, even if they've never seen your theme.
 
 > **For agents:** A `themeColors` block isn't a list of changes to the theme the layout names. It's a whole theme, and anything it leaves out comes from Studio Dark, exactly as in a theme file. The short example above would draw Studio Dark's look in Supersaw's colors, not Supersaw. The app always writes every setting into this block, and so should you.
 
@@ -131,10 +131,33 @@ Picking a theme in the gallery drops any copy the layout was carrying and makes 
 
 ### Sharing and installing a theme
 
-- **To share a theme,** send its `.miditheme` file.
-- **To install a theme you were sent,** copy the file into `Documents\MIDI Layouts\Themes`, or open a layout in the editor and use **Import a theme…** on its **Appearance** page. Import copies the file into the Themes folder under the theme's name, replacing an older file with that name, and puts the theme on the layout you have open.
-- **To save a theme from the app,** use **Save as theme…** on the **Appearance** page. MIDI Glass won't save under a built-in theme's name. After saving, the layout points at the new file by name instead of carrying its own copy.
-- **To share a layout that uses a theme of your own,** make sure the layout carries the theme. Exporting a layout package doesn't include files from your Themes folder, so if the layout only names your theme, the person you send it to sees Studio Dark. Send the theme file along with it, or change any setting on the layout's **Appearance** page so the layout stores its own copy.
+- **To share a theme,** right-click its card in the gallery and select **Pack for sharing…**. That makes a `.midithemepack` file holding the theme and its background picture, with a list of every file and its SHA-256 hash, so anyone can tell if something was changed after it was packed. You can sign the pack with a code-signing certificate. Before it packs, Windows MIDI Glass shows what the theme says about who made it, and you can change it.
+- **To install a theme pack you were sent,** open a layout in the editor and use **Import a theme…** on its **Appearance** page, or select **…** (More options) > **Import a pack…** in the library. Windows MIDI Glass checks the pack, shows who made it and whether it's signed, and asks before it replaces anything. If you already have a different theme with the same name, you can replace it or keep both, and the new one gets a new name.
+- **To install a single `.miditheme` file,** copy it into `Documents\MIDI Layouts\Themes`, or use **Import a theme…**. Import copies the file into the Themes folder under the theme's name, replacing an older file with that name, and puts the theme on the layout you have open. A file on its own has no list of files and can't be signed, so a pack is the better way to share.
+- **To save a theme from the app,** use **Save as theme…** on the **Appearance** page. Windows MIDI Glass won't save under a built-in theme's name. After saving, the layout points at the new file by name instead of carrying its own copy. A theme saved under a new name says what it was based on.
+- **To share a layout that uses a theme of your own,** use **Pack for sharing…** on the layout's card in the library. The pack carries the theme file and its picture too. If the person who imports it already has a different theme with that name, the layout carries its own copy of yours instead, so it still looks the way you made it.
+
+### Who made a theme
+
+A theme file can say who made it in a `provenance` block, the same block a layout has. The gallery shows the name under each theme, marked **(unverified)** unless the theme came from a signed pack and hasn't changed since. Right-click a theme and select **About this theme…** to see everything the block says. **Group themes by** sorts the gallery by who made each theme, or by who signed it.
+
+```json
+"provenance": {
+  "id": "8c2d4e6f-1a3b-4c5d-9e7f-0a1b2c3d4e5f",
+  "version": "1.0",
+  "author": "Pat Example",
+  "license": "CC-BY-4.0",
+  "created": "2026-10-08T21:14:00Z",
+  "tool": "Example Assistant 2.1",
+  "digitalSourceType": "trainedAlgorithmicMedia",
+  "aiDisclosure": { "humanOversightLevel": "prompt_guided" },
+  "basedOn": { "name": "Studio Dark", "builtIn": true }
+}
+```
+
+Every key, and what to put in it, is in [Who made it]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/#who-made-it) in the layout guide. For a theme, `basedOn` names the theme you started from: write `"builtIn": true` for one that comes with Windows MIDI Glass.
+
+> **For agents:** Write this block in every theme you make, with `trainedAlgorithmicMedia` in `digitalSourceType`. Ask the customer whose name and which license go on it, and offer to leave them off. Never put your own name in `author`.
 
 ## Inside a theme file
 
@@ -170,7 +193,7 @@ The app reads a theme file by these rules:
 - **A number outside its range is ignored, not clamped.** `"cornerRadius": 500` doesn't give you the roundest corners. It gives you Studio Dark's 7.
 - **Choices are text,** spelled exactly as this article shows them, capital letters included: `"gradient"`, `"neutralEdge"`, `"filledBar"`. A choice the app doesn't know is ignored.
 - **On and off are JSON `true` and `false`,** not `"true"` or `1`.
-- **A key the app doesn't know is ignored,** and it's gone the next time the app saves the theme. `_comment` is ignored too. Don't keep notes in a theme file.
+- **A key the app doesn't know is kept** and written back the next time the app saves the theme, but it does nothing. That's only true at the top level of the file: inside `deck` and `deckOverlay`, an unknown key is gone after a save. `_comment` is ignored. Don't keep notes in a theme file.
 - **`name` is required.** It's trimmed at both ends and cut off at 1,024 characters.
 
 > **For agents:** The two mistakes that cost the most time are the byte order mark and the alpha order. A theme saved with a byte order mark never appears in the gallery, and nothing says why. A CSS-style `#RRGGBBAA` color loads without complaint and draws the wrong color. Check every percentage too: `"fillAtRest": 14` is out of range and quietly ignored. You meant `0.14`.
@@ -508,7 +531,7 @@ A tube has no white and no black, so Cathode draws its keys in its phosphor and 
 
 ## How a theme draws each control
 
-The names here are the ones in the MIDI Glass palette. Everything a control draws comes from the settings above; this section says which ones matter for each control, and why the control is drawn the way it is.
+The names here are the ones in the Windows MIDI Glass palette. Everything a control draws comes from the settings above; this section says which ones matter for each control, and why the control is drawn the way it is.
 
 A layout can also give one control its own **style**, which the editor shows as five choices. **Theme** and **Plate** both follow the theme, and Theme is what almost every control uses. **Outline** drops the plate, **Solid** fills the plate with the control's own color, and **Bare** drops both the plate and the rim, leaving only the value and the label. New Text arrives Bare. Apart from that, a style other than Theme is for the odd control that has to stand apart, like a panic button.
 
@@ -636,6 +659,7 @@ This part is for anyone building a theme for someone else, and it's written with
 4. **What do their colors mean now?** Which slot is drums, which is the DAW, which is effects. Keep those jobs.
 5. **How should a button look when it's on?** A colored block, a lamp, or a solid tab that brightens.
 6. **Does anyone who plays it have trouble telling colors apart?** If so, make the slots a rising brightness, and say plainly what the theme can't do.
+7. **Whose name goes on it, and may others share or change it?** It goes in the theme's [provenance block](#who-made-a-theme). Offer to leave the name off.
 
 ### Start from the nearest shipping theme
 
@@ -735,9 +759,9 @@ $null = [System.Text.Json.JsonDocument]::Parse([IO.File]::ReadAllText($path))   
 
 `GetFolderPath('MyDocuments')` finds the Documents folder even when it has been moved into OneDrive. Windows PowerShell 5.1's `Set-Content -Encoding UTF8` and .NET's `[Text.Encoding]::UTF8` both write a byte order mark, so don't use them for a theme file.
 
-Then tell the customer how to use it: open a layout in MIDI Glass, go to the layout's **Appearance** settings, and pick the theme in the gallery.
+Then tell the customer how to use it: open a layout in Windows MIDI Glass, go to the layout's **Appearance** settings, and pick the theme in the gallery.
 
-> **For agents:** Don't edit a layout file to add a `themeColors` block while that layout is open in MIDI Glass. The app saves its own copy of the layout and can write over your change. A theme file in the Themes folder is always the safer delivery.
+> **For agents:** Don't edit a layout file to add a `themeColors` block while that layout is open in Windows MIDI Glass. The app saves its own copy of the layout and can write over your change. A theme file in the Themes folder is always the safer delivery.
 
 ### Check it
 
@@ -757,7 +781,7 @@ The layout's **Accessibility check** page in the editor measures the slots again
 > **For agents:** Each of these loads without an error and gives the customer the wrong theme.
 >
 > - The file has a byte order mark, so the theme never shows up.
-> - A color is written CSS style, `#RRGGBBAA`. MIDI Glass reads it as `#AARRGGBB`.
+> - A color is written CSS style, `#RRGGBBAA`. Windows MIDI Glass reads it as `#AARRGGBB`.
 > - A fraction is written as a percentage: `"fillAtRest": 14` instead of `0.14`. Out of range, so it's ignored.
 > - Any number out of range is ignored, not clamped. `"shadowSpread": 100` is Studio Dark's 3.
 > - A number or a `true` is written in quotes.
@@ -775,18 +799,20 @@ The layout's **Accessibility check** page in the editor measures the slots again
 > - `switchRingColor` or `padsFollowSwitchShape` is set while `switchShape` isn't `"round"`. Neither does anything.
 > - `chromeCaps` is on, but the theme has no knob cap. Set `knobCapColor` too, or turn on `knobCapFromHue`.
 > - `panelColor` is set while `panelFill` isn't `"color"`, or `insetPanelColor` is set while sections aren't filled.
-> - The customer's Groups have the **Outline** style, so none of the section settings show. Groups added in earlier versions of MIDI Glass arrived that way. Ask them to set their Groups to **Theme**.
+> - The customer's Groups have the **Outline** style, so none of the section settings show. Groups added in earlier versions of Windows MIDI Glass arrived that way. Ask them to set their Groups to **Theme**.
 > - `meterSlots` counted from 1 instead of 0.
 > - The theme is expected to set fonts, sizes, positions, or one control's color. A theme can't do any of those.
+> - There's no `provenance` block, or it names you as the author, or it says `digitalCreation` for a theme an AI made.
 
 ## Every key in a theme file
 
-Keys are in the order MIDI Glass writes them. **If left out** is the value the app uses when a file doesn't have the key, which is Studio Dark's. A color shown as `#00000000` is "not set," and the last column says what the app does instead. **In the app** is the matching row on the layout's **Appearance** page. Where the app's slider stops short of what a file can hold, the slider's range is in parentheses. Keep to that range so the customer can still edit the theme in the app.
+Keys are in the order Windows MIDI Glass writes them. **If left out** is the value the app uses when a file doesn't have the key, which is Studio Dark's. A color shown as `#00000000` is "not set," and the last column says what the app does instead. **In the app** is the matching row on the layout's **Appearance** page. Where the app's slider stops short of what a file can hold, the slider's range is in parentheses. Keep to that range so the customer can still edit the theme in the app.
 
 | Key | Values | If left out | In the app | What it does |
 | --- | --- | --- | --- | --- |
 | `_comment` | text | | | Ignored. The app writes a line here saying what the file is. |
 | `fileVersion` | 1 | 1 | | The file format version. Write 1. A file with a higher number still loads. |
+| `provenance` | object | none | **About this theme…** | Who made the theme, with what, and from what. See [Who made a theme](#who-made-a-theme). |
 | `name` | text | required | (the name you save under) | The theme's name in the gallery. It can't be a built-in theme's name, or Pigment Light, Pigment Dark, or Amber Console. |
 | `hueSlots` | six colors | `#4FC3F7`, `#81C784`, `#FFC247`, `#FF7043`, `#BA68C8`, `#4DD0E1` | Colors | Slots 1 to 6. A missing or unreadable entry keeps Studio Dark's color for that slot. |
 | `deck.kind` | `solidColor`, `gradient`, `image` | `gradient` with no `deck` block; `solidColor` in a block without it | Background | A flat deck, a deck lit from above, or a picture. |
@@ -951,7 +977,7 @@ This is Studio Dark written out in full, under a new name so it can sit in the T
 
 ```json
 {
-  "_comment": "Windows MIDI Glass theme. Written by the MIDI Glass app. The MIDI service does not read this file.",
+  "_comment": "Windows MIDI Glass theme. Written by the Windows MIDI Glass app. The MIDI service does not read this file.",
   "fileVersion": 1,
   "name": "My Studio Dark",
   "hueSlots": [

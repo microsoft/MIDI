@@ -154,6 +154,17 @@ namespace midipatchbay
         // The connection nearest the point, in canvas units, when one is close enough to hit.
         std::wstring ConnectionAt(_In_ foundation::Point const& point) const noexcept;
 
+        // Where a traced message went: its nodes and links stand out, the steps that kept it out
+        // are marked, and everything else fades. It stays through a rebuild until ClearTrace.
+        void ShowTrace(
+            _In_ std::vector<std::wstring> const& nodeIds,
+            _In_ std::vector<std::wstring> const& linkIds,
+            _In_ std::vector<std::wstring> const& keptOutIds) noexcept;
+
+        void ClearTrace() noexcept;
+
+        bool IsShowingTrace() const noexcept { return m_tracing; }
+
         // Nodes grow from here to fit their longest name.
         static constexpr double MinimumNodeWidth = 252.0;
         static constexpr double BlockNodeWidth = 208.0;
@@ -360,6 +371,12 @@ namespace midipatchbay
         // The connection a palette drag would land on, shown so the customer knows before
         // letting go.
         std::wstring m_dropTargetConnectionId{};
+
+        // A trace being shown, by node and link id.
+        bool m_tracing{ false };
+        std::unordered_set<std::wstring> m_traceNodeIds{};
+        std::unordered_set<std::wstring> m_traceLinkIds{};
+        std::unordered_set<std::wstring> m_traceKeptOutIds{};
 
         // node drag: every selected node moves together
         bool m_draggingNode{ false };

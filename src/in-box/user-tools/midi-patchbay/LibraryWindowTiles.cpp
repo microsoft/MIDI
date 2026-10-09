@@ -189,6 +189,12 @@ namespace winrt::midipatchbay::implementation
                     return { ChipTone::Critical, resources::GetString(L"TileStateProblem") };
                 }
 
+                // It can be looked at, but not changed here and not started on its own.
+                if (patch.IsFromNewerVersion)
+                {
+                    return { ChipTone::Caution, resources::GetString(L"TileNewerVersion") };
+                }
+
                 if (auto const& analysis = library.Analysis(patch.SessionKey); analysis.HasCertainLoop())
                 {
                     return { ChipTone::Critical, resources::FormatString(L"TileLoopFormat",

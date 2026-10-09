@@ -91,6 +91,146 @@ namespace midipatchbay
             std::vector<uint8_t> m_counts{};
         };
 
+        // A Branch, a Switch, Set tag, Set memory or Put value, on one message. The tags the
+        // message carries come from the links that brought it here; a tag this step sets is
+        // added on this thread's stack, so it lasts exactly as long as what comes after.
+        void RunLogicStage(
+            _In_ RouteGraph const& graph,
+            _In_ RouteStage const& stage,
+            _Inout_updates_(wordCount) uint32_t* words,
+            _In_ uint8_t wordCount,
+            _Inout_ RouteSink& sink,
+            _In_ ReturnPath const& from,
+            _In_opt_ TagLink const* tags) noexcept
+        {
+            auto const& settings = graph.Settings[stage.Index];
+
+            auto const valueOf = [&](LogicSource const& source) -> LogicValue
+                {
+                    switch (source.Kind)
+                    {
+                    case LogicSourceKind::Number:
+                        return ValueFromUnit(source.Number, source.Unit);
+
+                    case LogicSourceKind::Part:
+                        return ReadPart(source.Place, words, wordCount);
+
+                    case LogicSourceKind::Tag:
+                        return source.Index == NoLogicIndex ? LogicValue{} : FindTag(tags, source.Index);
+
+                    case LogicSourceKind::Memory:
+                        return source.Index == NoLogicIndex ? LogicValue{} : sink.Memory(source.Index);
+
+                    default:
+                        return {};
+                    }
+                };
+
+            auto const sendOn = [&](TagLink const* carried, WaySet const* ways)
+                {
+                    for (uint32_t i = 0; i < stage.EdgeCount; i++)
+                    {
+                        auto const& next = graph.Edges[stage.FirstEdge + i];
+
+                        if (ways == nullptr || ways->Contains(next.Way))
+                        {
+                            RunEdge(graph, next, words, wordCount, sink, from, carried);
+                        }
+                    }
+                };
+
+            switch (stage.Block)
+            {
+            case BlockKind::SetTag:
+            {
+                auto const& tag = settings.SetTag;
+
+                sink.CountBlock(stage.Cell, true);
+
+                if (tag.TagIndex == NoLogicIndex)
+                {
+                    sendOn(tags, nullptr);
+                    return;
+                }
+
+                TagLink const link{ tags, valueOf(tag.Value), tag.TagIndex };
+
+                sendOn(&link, nullptr);
+                return;
+            }
+
+            case BlockKind::PutValue:
+            {
+                auto const& put = settings.PutValue;
+                auto const value = valueOf(put.Value);
+
+                if (!value.HasValue && put.KeepsOutWhenEmpty)
+                {
+                    sink.CountBlock(stage.Cell, false);
+                    return;
+                }
+
+                WritePart(put.Target, value, words, wordCount);
+
+                sink.CountBlock(stage.Cell, true);
+                sendOn(tags, nullptr);
+                return;
+            }
+
+            case BlockKind::SetMemory:
+            {
+                auto const& memory = settings.SetMemory;
+                auto const triggered = memory.EveryMessage || memory.Trigger.Matches(words, wordCount);
+
+                if (triggered && memory.MemoryIndex != NoLogicIndex)
+                {
+                    sink.ChangeMemory(memory.MemoryIndex, memory,
+                        memory.Action == MemoryAction::Set ? valueOf(memory.Value) : LogicValue{});
+                }
+
+                auto const passes = !triggered || memory.PassesTriggers;
+
+                sink.CountBlock(stage.Cell, passes);
+
+                if (passes)
+                {
+                    sendOn(tags, nullptr);
+                }
+
+                return;
+            }
+
+            case BlockKind::Branch:
+            case BlockKind::Switch:
+            {
+                auto const isBranch = stage.Block == BlockKind::Branch;
+                auto const subject = valueOf(isBranch ? settings.Branch.Subject : settings.Switch.Subject);
+
+                auto ways = isBranch ? DecideBranch(settings.Branch, subject) : DecideSwitch(settings.Switch, subject);
+
+                if (auto* state = sink.StateOf(stage.State); state != nullptr && state->Ways != nullptr)
+                {
+                    ways = FollowWays(*state->Ways, words, wordCount, ways);
+                    state->Ways->LastTested.store(PackLogicValue(subject), std::memory_order_relaxed);
+                }
+
+                sink.CountBlock(stage.Cell, !ways.IsEmpty());
+
+                if (!ways.IsEmpty())
+                {
+                    sendOn(tags, &ways);
+                }
+
+                return;
+            }
+
+            default:
+                sink.CountBlock(stage.Cell, true);
+                sendOn(tags, nullptr);
+                return;
+            }
+        }
+
         class PatchCompiler
         {
         public:
@@ -245,8 +385,109 @@ namespace midipatchbay
 
                 auto const index = static_cast<uint32_t>(m_graph.Settings.size());
 
-                m_graph.Settings.push_back(block.Settings);
+                auto settings = block.Settings;
+                ResolveLogicNames(block.Kind, settings);
+
+                m_graph.Settings.push_back(std::move(settings));
                 m_settings.emplace(block.Id, index);
+
+                return index;
+            }
+
+            // Which tag slot and which memory each name a logic step uses stands for. A name is
+            // the same name whatever its case.
+            void ResolveLogicNames(_In_ BlockKind kind, _Inout_ BlockSettings& settings)
+            {
+                auto const resolve = [this](LogicSource& source)
+                    {
+                        if (source.Kind == LogicSourceKind::Tag)
+                        {
+                            source.Index = TagSlotFor(source.Name);
+                        }
+                        else if (source.Kind == LogicSourceKind::Memory)
+                        {
+                            source.Index = MemoryFor(source.Name);
+                        }
+                    };
+
+                switch (kind)
+                {
+                case BlockKind::Branch:
+                    resolve(settings.Branch.Subject);
+                    break;
+
+                case BlockKind::Switch:
+                    resolve(settings.Switch.Subject);
+                    break;
+
+                case BlockKind::SetTag:
+                    settings.SetTag.TagIndex = TagSlotFor(settings.SetTag.Tag);
+                    resolve(settings.SetTag.Value);
+                    break;
+
+                case BlockKind::SetMemory:
+                    settings.SetMemory.MemoryIndex = MemoryFor(settings.SetMemory.Memory);
+                    resolve(settings.SetMemory.Value);
+                    break;
+
+                case BlockKind::PutValue:
+                    resolve(settings.PutValue.Value);
+                    break;
+
+                default:
+                    break;
+                }
+            }
+
+            // Past the most a patch can have, a name gets no slot and reads as empty.
+            uint32_t TagSlotFor(_In_ std::wstring const& name)
+            {
+                if (name.empty())
+                {
+                    return NoLogicIndex;
+                }
+
+                auto key = LowerCopy(name);
+
+                if (auto const found = m_tagSlots.find(key); found != m_tagSlots.end())
+                {
+                    return found->second;
+                }
+
+                if (m_tagSlots.size() >= MaximumTagsPerPatch)
+                {
+                    return NoLogicIndex;
+                }
+
+                auto const slot = static_cast<uint32_t>(m_tagSlots.size());
+                m_tagSlots.emplace(std::move(key), slot);
+
+                return slot;
+            }
+
+            uint32_t MemoryFor(_In_ std::wstring const& name)
+            {
+                if (name.empty())
+                {
+                    return NoLogicIndex;
+                }
+
+                auto key = LowerCopy(name);
+
+                if (auto const found = m_memories.find(key); found != m_memories.end())
+                {
+                    return found->second;
+                }
+
+                if (m_memories.size() >= MaximumMemoriesPerPatch)
+                {
+                    return NoLogicIndex;
+                }
+
+                auto const index = static_cast<uint32_t>(m_graph.Memories.size());
+
+                m_graph.Memories.push_back(m_input.Key + L'|' + key);
+                m_memories.emplace(std::move(key), index);
 
                 return index;
             }
@@ -322,8 +563,19 @@ namespace midipatchbay
                     return Expansion::Live;
                 }
 
+                // A Branch or a Switch sends each message out only some of its ways, so each link
+                // remembers which way it leaves by.
+                auto const* source = m_patch.FindBlock(nodeId);
+                auto const hasWays = source != nullptr && HasWays(source->Kind);
+
                 for (auto const* link : links->second)
                 {
+                    // A way the step no longer has leads nowhere.
+                    if (hasWays && !IsWayOf(*source, link->SourceGroupIndex))
+                    {
+                        continue;
+                    }
+
                     RouteEdge edge{};
 
                     auto const result = ExpandLink(*link, path, depth, edge);
@@ -335,6 +587,11 @@ namespace midipatchbay
 
                     if (result == Expansion::Live)
                     {
+                        if (hasWays)
+                        {
+                            edge.Way = static_cast<uint8_t>(link->SourceGroupIndex);
+                        }
+
                         edges.push_back(edge);
                     }
                 }
@@ -440,7 +697,11 @@ namespace midipatchbay
                     return Expansion::Refused;
                 }
 
-                if (next.empty())
+                // A memory is set whether or not anything comes after the step.
+                auto const remembers = block->Kind == BlockKind::SetMemory && !block->Bypassed &&
+                    !BlockChangesNothing(block->Kind, block->Settings);
+
+                if (next.empty() && !remembers)
                 {
                     return Expansion::Dead;
                 }
@@ -456,6 +717,19 @@ namespace midipatchbay
                 stage.Index = runs ? SettingsFor(*block) : 0;
                 stage.Cell = CellFor(block->Id);
                 stage.State = runs && IsStatefulBlock(block->Kind) ? StateFor(*block) : 0;
+
+                // A bypassed Branch or Switch can be set to send everything its first way.
+                if (block->Bypassed && HasWays(block->Kind))
+                {
+                    auto const bypass = block->Kind == BlockKind::Branch
+                        ? block->Settings.Branch.Bypass
+                        : block->Settings.Switch.Bypass;
+
+                    if (bypass == BypassWay::FirstWay)
+                    {
+                        stage.OnlyWay = static_cast<int16_t>(FirstWayOf(block->Kind, block->Settings));
+                    }
+                }
 
                 edge.Stage = AddStage(stage, next);
                 edge.LinkCell = CellFor(link.Id);
@@ -583,6 +857,10 @@ namespace midipatchbay
             std::unordered_map<std::wstring, uint32_t> m_throttleStages{};
             std::unordered_set<std::wstring> m_deadThrottles{};
 
+            // By lowercased name.
+            std::unordered_map<std::wstring, uint32_t> m_tagSlots{};
+            std::unordered_map<std::wstring, uint32_t> m_memories{};
+
             RouteProblemKind m_problem{ RouteProblemKind::LoopBetweenBlocks };
         };
 
@@ -678,6 +956,7 @@ namespace midipatchbay
                 auto const generators = graph.Generators.size();
                 auto const states = graph.States.size();
                 auto const clockTargets = graph.ClockTargets.size();
+                auto const memories = graph.Memories.size();
 
                 PatchCompiler compiler{ graph, input };
                 RouteProblemKind problem{};
@@ -694,6 +973,7 @@ namespace midipatchbay
                     graph.Generators.resize(generators);
                     graph.States.resize(states);
                     graph.ClockTargets.resize(clockTargets);
+                    graph.Memories.resize(memories);
 
                     graph.Problems.push_back(RouteProblem{ input.Key, problem });
 
@@ -729,7 +1009,8 @@ namespace midipatchbay
         uint32_t const* words,
         uint8_t wordCount,
         RouteSink& sink,
-        ReturnPath const& from) noexcept
+        ReturnPath const& from,
+        TagLink const* tags) noexcept
     {
         if (words == nullptr || wordCount == 0 || wordCount > MaximumWordsPerMessage ||
             edge.Stage >= graph.Stages.size())
@@ -774,6 +1055,12 @@ namespace midipatchbay
 
         case RouteStageKind::Block:
         {
+            if (IsLogicStep(stage.Block))
+            {
+                RunLogicStage(graph, stage, copy, wordCount, sink, from, tags);
+                return;
+            }
+
             bool passed{ false };
             StageOutput output{};
 
@@ -801,7 +1088,7 @@ namespace midipatchbay
                     {
                         for (uint32_t i = 0; i < stage.EdgeCount; i++)
                         {
-                            RunEdge(graph, graph.Edges[stage.FirstEdge + i], copy, wordCount, sink, from);
+                            RunEdge(graph, graph.Edges[stage.FirstEdge + i], copy, wordCount, sink, from, tags);
                         }
                     }
 
@@ -843,7 +1130,7 @@ namespace midipatchbay
                 {
                     if (message.Edge == EveryEdge || message.Edge == static_cast<int32_t>(i))
                     {
-                        RunEdge(graph, graph.Edges[stage.FirstEdge + i], message.Words.data(), message.Count, sink, from);
+                        RunEdge(graph, graph.Edges[stage.FirstEdge + i], message.Words.data(), message.Count, sink, from, tags);
                     }
                 }
             }
@@ -863,7 +1150,12 @@ namespace midipatchbay
 
         for (uint32_t i = 0; i < stage.EdgeCount; i++)
         {
-            RunEdge(graph, graph.Edges[stage.FirstEdge + i], copy, wordCount, sink, from);
+            auto const& next = graph.Edges[stage.FirstEdge + i];
+
+            if (stage.OnlyWay < 0 || next.Way == stage.OnlyWay)
+            {
+                RunEdge(graph, next, copy, wordCount, sink, from, tags);
+            }
         }
     }
 

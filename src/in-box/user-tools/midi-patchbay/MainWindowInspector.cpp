@@ -138,6 +138,7 @@ namespace winrt::midipatchbay::implementation
             m_activityText = nullptr;
             m_activityElementId.clear();
             m_ciStatusText = nullptr;
+            m_logicStatusText = nullptr;
             m_annotationTextBox = nullptr;
             m_inspectorSummary = nullptr;
             m_stepSettingsFocus = nullptr;
@@ -253,9 +254,11 @@ namespace winrt::midipatchbay::implementation
 
                 auto const& stats = found->second;
 
-                // The MIDI-CI steps keep messages out too: MIDI-CI, packet by packet.
+                // The MIDI-CI steps keep messages out too: MIDI-CI, packet by packet. So can a
+                // logic step, when it can't tell where a message goes.
                 if (patchbay::CategoryOf(block->Kind) == patchbay::BlockCategory::Filter ||
-                    patchbay::CategoryOf(block->Kind) == patchbay::BlockCategory::CapabilityInquiry)
+                    patchbay::CategoryOf(block->Kind) == patchbay::BlockCategory::CapabilityInquiry ||
+                    patchbay::IsLogicStep(block->Kind))
                 {
                     return resources::FormatString(L"ActivityFilterFormat", stats.MessagesForwarded, stats.MessagesKeptOut);
                 }
@@ -340,6 +343,17 @@ namespace winrt::midipatchbay::implementation
                 if (m_ciStatusText.Text() != status)
                 {
                     m_ciStatusText.Text(status);
+                }
+            }
+
+            if (m_logicStatusText != nullptr)
+            {
+                auto const status = LogicStatusText(m_activityElementId);
+
+                if (m_logicStatusText.Text() != status)
+                {
+                    m_logicStatusText.Text(status);
+                    m_logicStatusText.Visibility(status.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
                 }
             }
         }
@@ -1049,6 +1063,18 @@ namespace winrt::midipatchbay::implementation
                     section.Children().Append(m_ciStatusText);
                 }
 
+                if (patchbay::IsLogicStep(kind))
+                {
+                    auto const status = LogicStatusText(blockId);
+
+                    m_logicStatusText = ValueText(status, 12, true);
+                    m_logicStatusText.Margin(xaml::ThicknessHelper::FromLengths(0, 8, 0, 0));
+                    m_logicStatusText.IsTextSelectionEnabled(true);
+                    m_logicStatusText.Visibility(status.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
+                    section.Children().Append(m_logicStatusText);
+                }
+
                 InspectorContent().Children().Append(section);
             }
 
@@ -1633,7 +1659,7 @@ namespace winrt::midipatchbay::implementation
         {
             auto weak = get_weak();
 
-            for (auto const category : { patchbay::BlockCategory::Filter, patchbay::BlockCategory::Transform, patchbay::BlockCategory::Sending, patchbay::BlockCategory::Distribution, patchbay::BlockCategory::CapabilityInquiry })
+            for (auto const category : { patchbay::BlockCategory::Filter, patchbay::BlockCategory::Transform, patchbay::BlockCategory::Sending, patchbay::BlockCategory::Distribution, patchbay::BlockCategory::Logic, patchbay::BlockCategory::CapabilityInquiry })
             {
                 std::vector<patchbay::BlockKind> kinds{};
 

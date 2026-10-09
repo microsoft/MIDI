@@ -865,50 +865,60 @@
                     </Border>
                 </Grid>
 
-                <!-- Counted rather than hidden, and never moved back on their own: clamping is
-                     what would make a page resize unrecoverable. -->
-                <InfoBar x:Name="OffPageBar"
-                         x:Uid="OffPageBar"
-                         Grid.Row="1"
-                         IsOpen="False"
-                         IsClosable="False"
-                         Severity="Warning"
-                         Margin="8,0,8,8">
-                    <InfoBar.ActionButton>
-                        <Button x:Name="SelectOffPageButton"
-                                x:Uid="SelectOffPageButton"
-                                Content="Select them"
-                                Click="OnSelectOffPageClick" />
-                    </InfoBar.ActionButton>
-                </InfoBar>
+                <!-- Stacked, so more than one can be up at once. A closed one takes no room. -->
+                <StackPanel Grid.Row="1">
+                    <!-- A layout from a newer version of the app. Nothing here is saved, so
+                         this stays up for as long as the layout is open. -->
+                    <InfoBar x:Name="NewerVersionBar"
+                             x:Uid="NewerVersionBar"
+                             IsOpen="False"
+                             IsClosable="False"
+                             Severity="Warning"
+                             Margin="8,0,8,8" />
 
-                <!-- Setting the keyboard order by clicking through the page. An order somebody
-                     cannot see is one they cannot fix, so every control wears its number for as
-                     long as this is up. -->
-                <InfoBar x:Name="KeyboardOrderBar"
-                         x:Uid="KeyboardOrderBar"
-                         Grid.Row="1"
-                         IsOpen="False"
-                         IsClosable="False"
-                         Severity="Informational"
-                         Margin="8,0,8,8">
-                    <!-- ActionButton takes one button, so the three live in the content. -->
-                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4,0,4">
-                        <Button x:Name="KeyboardOrderDoneButton"
-                                x:Uid="KeyboardOrderDoneButton"
-                                Content="Done"
-                                Style="{StaticResource AccentButtonStyle}"
-                                Click="OnKeyboardOrderDoneClick" />
-                        <Button x:Name="KeyboardOrderRestartButton"
-                                x:Uid="KeyboardOrderRestartButton"
-                                Content="Start over"
-                                Click="OnKeyboardOrderRestartClick" />
-                        <Button x:Name="KeyboardOrderCancelButton"
-                                x:Uid="KeyboardOrderCancelButton"
-                                Content="Cancel"
-                                Click="OnKeyboardOrderCancelClick" />
-                    </StackPanel>
-                </InfoBar>
+                    <!-- Counted rather than hidden, and never moved back on their own: clamping is
+                         what would make a page resize unrecoverable. -->
+                    <InfoBar x:Name="OffPageBar"
+                             x:Uid="OffPageBar"
+                             IsOpen="False"
+                             IsClosable="False"
+                             Severity="Warning"
+                             Margin="8,0,8,8">
+                        <InfoBar.ActionButton>
+                            <Button x:Name="SelectOffPageButton"
+                                    x:Uid="SelectOffPageButton"
+                                    Content="Select them"
+                                    Click="OnSelectOffPageClick" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+
+                    <!-- Setting the keyboard order by clicking through the page. An order somebody
+                         cannot see is one they cannot fix, so every control wears its number for as
+                         long as this is up. -->
+                    <InfoBar x:Name="KeyboardOrderBar"
+                             x:Uid="KeyboardOrderBar"
+                             IsOpen="False"
+                             IsClosable="False"
+                             Severity="Informational"
+                             Margin="8,0,8,8">
+                        <!-- ActionButton takes one button, so the three live in the content. -->
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4,0,4">
+                            <Button x:Name="KeyboardOrderDoneButton"
+                                    x:Uid="KeyboardOrderDoneButton"
+                                    Content="Done"
+                                    Style="{StaticResource AccentButtonStyle}"
+                                    Click="OnKeyboardOrderDoneClick" />
+                            <Button x:Name="KeyboardOrderRestartButton"
+                                    x:Uid="KeyboardOrderRestartButton"
+                                    Content="Start over"
+                                    Click="OnKeyboardOrderRestartClick" />
+                            <Button x:Name="KeyboardOrderCancelButton"
+                                    x:Uid="KeyboardOrderCancelButton"
+                                    Content="Cancel"
+                                    Click="OnKeyboardOrderCancelClick" />
+                        </StackPanel>
+                    </InfoBar>
+                </StackPanel>
 
                 <!-- The page rail: one tab per page in that page's own hue, then the tools that
                      act on the page rather than on a control. -->
@@ -2264,7 +2274,7 @@
                                                   HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
                                     </Grid>
 
-                                    <Grid ColumnSpacing="8" RowSpacing="6" Margin="0,8,0,0">
+                                    <Grid x:Name="MessageFieldsGrid" ColumnSpacing="8" RowSpacing="6" Margin="0,8,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
@@ -3360,6 +3370,16 @@
                                            Style="{StaticResource SettingsCaptionStyle}"
                                            Margin="0,0,0,9" />
 
+                                <!-- Themes can be grouped by who made them or who signed them.
+                                     Filled in and selected in code, so a selection made while
+                                     the window loads can't rebuild a gallery that isn't there. -->
+                                <ComboBox x:Name="ThemeGroupPicker"
+                                          x:Uid="ThemeGroupPicker"
+                                          Header="Group themes by"
+                                          MinWidth="220"
+                                          Margin="0,0,0,10"
+                                          SelectionChanged="OnThemeGroupChanged" />
+
                                 <!-- Filled in code: a theme card is a painted miniature of its own
                                      deck, because a row of swatches cannot say what a theme is.
                                      Five across, fewer on a narrow window. The width above leaves
@@ -3367,6 +3387,11 @@
                                 <VariableSizedWrapGrid x:Name="ThemeGallery"
                                                        Orientation="Horizontal"
                                                        HorizontalAlignment="Left" />
+
+                                <!-- The same cards under a heading for each group, when grouped. -->
+                                <StackPanel x:Name="ThemeGalleryGroups"
+                                            Spacing="6"
+                                            Visibility="Collapsed" />
 
                                 <TextBlock x:Uid="ThemeColorsHeading"
                                            Text="Colors"

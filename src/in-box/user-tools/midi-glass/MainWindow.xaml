@@ -134,13 +134,13 @@
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE70F;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
                 <MenuFlyoutSeparator />
-                <MenuFlyoutItem x:Uid="CardMenuDuplicate" Text="Duplicate" Click="OnCardMenuDuplicate">
+                <MenuFlyoutItem x:Uid="CardMenuDuplicate" Tag="duplicate" Text="Duplicate" Click="OnCardMenuDuplicate">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Uid="CardMenuRename" Text="Rename…" Click="OnCardMenuRename">
+                <MenuFlyoutItem x:Uid="CardMenuRename" Tag="rename" Text="Rename…" Click="OnCardMenuRename">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Uid="CardMenuDescribe" Text="Edit description…" Click="OnCardMenuDescribe">
+                <MenuFlyoutItem x:Uid="CardMenuDescribe" Tag="describe" Text="Edit description…" Click="OnCardMenuDescribe">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8A5;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
                 <MenuFlyoutSeparator />
@@ -150,6 +150,9 @@
                 <MenuFlyoutItem x:Uid="CardMenuShowInFolder" Text="Show in folder" Click="OnCardMenuShowInFolder">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8DA;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
+                <MenuFlyoutItem x:Uid="CardMenuDetails" Text="About this layout…" Click="OnCardMenuDetails">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE946;" /></MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Uid="CardMenuBackUp" Text="Back up now" Click="OnCardMenuBackUp">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon>
@@ -157,7 +160,7 @@
                 <MenuFlyoutItem x:Uid="CardMenuRestore" Text="Restore from a backup…" Click="OnCardMenuRestore">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE777;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Uid="CardMenuPackage" Text="Package for another PC…" Click="OnCardMenuPackage">
+                <MenuFlyoutItem x:Uid="CardMenuPackage" Text="Pack for sharing…" Click="OnCardMenuPackage">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B5;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
                 <MenuFlyoutSeparator />
@@ -709,8 +712,11 @@
                         Style="{StaticResource SubtleToolbarButtonStyle}">
                     <Button.Flyout>
                         <MenuFlyout>
-                            <MenuFlyoutItem x:Uid="LibraryMenuImport" Text="Import a layout package…" Click="OnImportPackageClick">
+                            <MenuFlyoutItem x:Uid="LibraryMenuImport" Text="Import a pack…" Click="OnImportPackageClick">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B5;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="LibraryMenuAuthor" Text="Your info for sharing…" Click="OnAuthorInfoClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE77B;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutItem x:Uid="LibraryMenuBackupsFolder" Text="Show the backups folder" Click="OnShowBackupsFolderClick">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8DA;" /></MenuFlyoutItem.Icon>
@@ -853,7 +859,7 @@
 
                     <TextBlock x:Name="EmptyBody"
                                x:Uid="EmptyBody"
-                               Text="Make one from a template and it is ready to play. Pick the device it should send to and MIDI Glass builds the rest."
+                               Text="Make one from a template and it is ready to play. Pick the device it should send to and Windows MIDI Glass builds the rest."
                                HorizontalAlignment="Center"
                                TextAlignment="Center"
                                TextWrapping="Wrap"

@@ -57,6 +57,12 @@ namespace midipatchbay
         constexpr double BlockFallbackHeight = 99.0;
         constexpr double EndpointFallbackHeight = 200.0;
 
+        // A Branch or a Switch has a row for each way out, under what it does.
+        constexpr double WayRowHeight = 24.0;
+
+        // What a trace didn't reach, faded enough to read the path through it.
+        constexpr double TraceFadedOpacity = 0.4;
+
         // A selected node is lifted, and the lift casts a shadow, which reads as selection without
         // relying on the border color alone.
         constexpr float SelectedNodeLift = 28.0f;
@@ -580,6 +586,10 @@ namespace midipatchbay
 
             case BlockCategory::CapabilityInquiry:
                 color = dark ? Rgb(0x8E, 0xE0, 0x4F) : Rgb(0x3D, 0x6E, 0x00);
+                break;
+
+            case BlockCategory::Logic:
+                color = dark ? Rgb(0xFF, 0x7A, 0x5C) : Rgb(0xB3, 0x36, 0x14);
                 break;
 
             default:
@@ -1574,6 +1584,84 @@ namespace midipatchbay
             controls::Grid::SetRow(node.SubtitleText, 2);
             content.Children().Append(node.SubtitleText);
 
+            // ------------------------------------------------- the ways out of a Branch or a Switch
+            auto const ways = HasWays(block.Kind) ? WaysOf(block.Kind, block.Settings) : std::vector<int32_t>{};
+
+            if (!ways.empty())
+            {
+                controls::RowDefinition waysRow{};
+                waysRow.Height(xaml::GridLengthHelper::Auto());
+                content.RowDefinitions().Append(waysRow);
+
+                controls::StackPanel waysPanel{};
+                waysPanel.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 6));
+                controls::Grid::SetRow(waysPanel, 3);
+
+                controls::Border waysRule{};
+                waysRule.Height(1);
+                waysRule.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 3));
+                waysRule.Background(ThemeBrush(L"DividerStrokeColorDefaultBrush", Rgb(0x55, 0x55, 0x55)));
+                waysPanel.Children().Append(waysRule);
+
+                for (auto const way : ways)
+                {
+                    PortKey key{};
+                    key.NodeId = block.Id;
+                    key.IsOutput = true;
+                    key.GroupIndex = way;
+
+                    auto const wayName = DescribeWay(block.Kind, block.Settings, way);
+
+                    controls::Button row{};
+                    row.Height(WayRowHeight);
+                    row.Padding(xaml::ThicknessHelper::FromUniformLength(0));
+                    row.BorderThickness(xaml::ThicknessHelper::FromUniformLength(0));
+                    row.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(0));
+                    row.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+                    row.HorizontalContentAlignment(xaml::HorizontalAlignment::Stretch);
+                    row.VerticalContentAlignment(xaml::VerticalAlignment::Stretch);
+                    row.Background(media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+                    ClearStateFills(row);
+
+                    controls::Grid inner{};
+
+                    auto label = MakeText(wayName, 11.5, textSecondary);
+                    label.HorizontalAlignment(xaml::HorizontalAlignment::Right);
+                    label.Margin(xaml::ThicknessHelper::FromLengths(BlockPortColumnWidth + 4, 0, BlockPortColumnWidth, 0));
+                    inner.Children().Append(label);
+
+                    shapes::Ellipse dot{};
+                    dot.Width(BlockDotDiameter);
+                    dot.Height(BlockDotDiameter);
+                    dot.StrokeThickness(2);
+                    dot.Stroke(textTertiary);
+                    dot.Fill(ThemeBrush(L"SolidBackgroundFillColorSecondaryBrush", Rgb(0x2B, 0x2B, 0x2B)));
+                    dot.VerticalAlignment(xaml::VerticalAlignment::Center);
+                    dot.HorizontalAlignment(xaml::HorizontalAlignment::Right);
+                    dot.Margin(xaml::ThicknessHelper::FromLengths(0, 0, -BlockDotDiameter / 2, 0));
+                    inner.Children().Append(dot);
+
+                    row.Content(inner);
+
+                    xaml::Automation::AutomationProperties::SetName(row,
+                        resources::FormatString(L"BlockWayAccessibleNameFormat", wayName, name));
+
+                    AttachPortHandlers(row, key);
+
+                    PortVisual port{};
+                    port.Key = key;
+                    port.Dot = dot;
+                    port.Row = row;
+                    port.Label = label;
+                    port.LabelBrush = textSecondary;
+
+                    node.Ports.push_back(std::move(port));
+                    waysPanel.Children().Append(row);
+                }
+
+                content.Children().Append(waysPanel);
+            }
+
             // ------------------------------------------------- the way in and the way out
             for (int side = 0; side < 2; side++)
             {
@@ -1581,6 +1669,12 @@ namespace midipatchbay
 
                 // MIDI clock and MIDI Time Code make their own messages, so they take nothing in.
                 if (!isOutput && !HasInput(block.Kind))
+                {
+                    continue;
+                }
+
+                // A Branch or a Switch goes out by the rows under what it does.
+                if (isOutput && !ways.empty())
                 {
                     continue;
                 }
@@ -2190,7 +2284,33 @@ namespace midipatchbay
             edge = selected ? accent : (node.IsOffline ? critical : stroke);
         }
 
-        SetRoundedEdge(node.Edge, node.IsBlock ? BlockCornerRadius : NodeCornerRadius, edge, selected ? 2.0 : 1.0);
+        auto thickness = selected ? 2.0 : 1.0;
+
+        // A trace marks where the message went and where it was kept out, and fades the rest.
+        if (m_tracing)
+        {
+            auto const keptOut = m_traceKeptOutIds.count(node.NodeId) != 0;
+            auto const reached = m_traceNodeIds.count(node.NodeId) != 0;
+
+            if (keptOut)
+            {
+                edge = critical;
+                thickness = 2.5;
+            }
+            else if (reached)
+            {
+                edge = ThemeBrush(L"SystemFillColorSuccessBrush", Rgb(0x6C, 0xCB, 0x5F));
+                thickness = 2.5;
+            }
+
+            node.Root.Opacity(keptOut || reached || selected ? 1.0 : TraceFadedOpacity);
+        }
+        else
+        {
+            node.Root.Opacity(1.0);
+        }
+
+        SetRoundedEdge(node.Edge, node.IsBlock ? BlockCornerRadius : NodeCornerRadius, edge, thickness);
 
         // The lift is what casts the shadow.
         node.Card.Translation(winrt::Windows::Foundation::Numerics::float3{ 0, 0, selected ? SelectedNodeLift : 0.0f });
@@ -2251,6 +2371,39 @@ namespace midipatchbay
         {
             visual.PillShape.Stroke(visual.IsLoopMuted ? critical : (selected ? accent : stroke));
         }
+
+        auto const onTrace = m_tracing && m_traceLinkIds.count(visual.ConnectionId) != 0;
+
+        // A trace draws the message's path over everything else, and fades the links it didn't use.
+        if (onTrace)
+        {
+            auto const traced = ThemeBrush(L"SystemFillColorSuccessBrush", Rgb(0x6C, 0xCB, 0x5F));
+
+            visual.Line.Stroke(traced);
+            visual.Line.StrokeThickness(3.5);
+            visual.Line.StrokeDashArray(nullptr);
+            visual.Line.Opacity(1.0);
+
+            if (visual.Glow != nullptr)
+            {
+                visual.Glow.Visibility(xaml::Visibility::Visible);
+                visual.Glow.Stroke(traced);
+                visual.Glow.Opacity(0.45);
+            }
+        }
+        else if (m_tracing)
+        {
+            visual.Line.Opacity(TraceFadedOpacity / 2);
+        }
+        else if (visual.IsLoopMuted || visual.IsMuted)
+        {
+            visual.Line.Opacity(1.0);
+        }
+
+        if (visual.Pill != nullptr)
+        {
+            visual.Pill.Opacity(m_tracing && !onTrace ? TraceFadedOpacity : 1.0);
+        }
     }
     MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw a connection.")
 
@@ -2268,6 +2421,12 @@ namespace midipatchbay
                     continue;
                 }
 
+                // A trace decides how faint a link is while it is up.
+                if (m_tracing)
+                {
+                    continue;
+                }
+
                 // A route with no live endpoints is drawn faded so "waiting for a device" reads
                 // differently from "wired up and quiet".
                 if (!visual.IsLoopMuted && !visual.IsMuted)
@@ -2277,6 +2436,61 @@ namespace midipatchbay
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to refresh the canvas status.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::ShowTrace(
+        std::vector<std::wstring> const& nodeIds,
+        std::vector<std::wstring> const& linkIds,
+        std::vector<std::wstring> const& keptOutIds) noexcept
+    {
+        try
+        {
+            m_traceNodeIds = { nodeIds.begin(), nodeIds.end() };
+            m_traceLinkIds = { linkIds.begin(), linkIds.end() };
+            m_traceKeptOutIds = { keptOutIds.begin(), keptOutIds.end() };
+            m_tracing = true;
+        }
+        catch (...)
+        {
+            m_traceNodeIds.clear();
+            m_traceLinkIds.clear();
+            m_traceKeptOutIds.clear();
+            m_tracing = false;
+        }
+
+        for (auto& node : m_nodes)
+        {
+            ApplyNodeAppearance(node);
+        }
+
+        for (auto& visual : m_connections)
+        {
+            ApplyConnectionAppearance(visual);
+        }
+    }
+
+    void PatchCanvas::ClearTrace() noexcept
+    {
+        if (!m_tracing)
+        {
+            return;
+        }
+
+        m_tracing = false;
+        m_traceNodeIds.clear();
+        m_traceLinkIds.clear();
+        m_traceKeptOutIds.clear();
+
+        for (auto& node : m_nodes)
+        {
+            ApplyNodeAppearance(node);
+        }
+
+        for (auto& visual : m_connections)
+        {
+            ApplyConnectionAppearance(visual);
+        }
     }
 
     _Use_decl_annotations_

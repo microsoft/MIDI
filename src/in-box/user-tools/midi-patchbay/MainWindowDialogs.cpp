@@ -885,6 +885,22 @@ namespace winrt::midipatchbay::implementation
             controls::MenuFlyout menu{};
             auto weak = get_weak();
 
+            // Works without a device, so it is there whatever is plugged in.
+            controls::MenuFlyoutItem trace{};
+            trace.Text(resources::GetString(L"TestTraceMessages"));
+            trace.Click([weak](auto&&, auto&&)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->ShowTraceDialogAsync();
+                    }
+                });
+
+            menu.Items().Append(trace);
+            menu.Items().Append(controls::MenuFlyoutSeparator{});
+
+            uint32_t tools{ 0 };
+
             for (auto const& endpoint : patch->Endpoints)
             {
                 auto const live = patchbay::ResolveEndpoint(endpoint);
@@ -920,9 +936,10 @@ namespace winrt::midipatchbay::implementation
                 addTool(resources::GetString(L"TestOpenScratchPad"), ScratchPadExeName);
 
                 menu.Items().Append(submenu);
+                tools++;
             }
 
-            if (menu.Items().Size() == 0)
+            if (tools == 0)
             {
                 controls::MenuFlyoutItem empty{};
                 empty.Text(resources::GetString(L"StatusNothingToTest"));

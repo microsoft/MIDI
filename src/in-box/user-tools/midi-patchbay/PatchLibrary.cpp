@@ -11,6 +11,7 @@
 #include "AppSettings.h"
 #include "BackgroundWork.h"
 #include "CiFileStore.h"
+#include "PatchProvenance.h"
 #include "PatchStore.h"
 #include "RouteGraph.h"
 #include "StringResources.h"
@@ -61,7 +62,9 @@ namespace midipatchbay
             {
                 patch.SessionKey = PatchDocument::NewId();
 
-                if (startRouting && patch.ActivateAtStartup)
+                // A newer version's patch only routes when the customer starts it, knowing some of
+                // it can't run here.
+                if (startRouting && patch.ActivateAtStartup && !patch.IsFromNewerVersion)
                 {
                     m_routing.insert(patch.SessionKey);
                 }
@@ -156,6 +159,7 @@ namespace midipatchbay
             patch.Name = UniqueName(preferredName);
             patch.IsTemporary = true;
             patch.ActivateAtStartup = true;
+            patch.Provenance = NewProvenance();
 
             return Add(std::move(patch), true);
         }
@@ -345,12 +349,13 @@ namespace midipatchbay
                 return;
             }
 
-            // Temporary patches stay in memory until the customer names them.
+            // Temporary patches stay in memory until the customer names them, and a newer
+            // version's patch is never written by this one.
             std::vector<std::wstring> due{};
 
             for (auto const& patch : m_patches)
             {
-                if (!patch->FilePath.empty() && m_unsaved.count(patch->SessionKey) != 0)
+                if (!patch->FilePath.empty() && !patch->IsFromNewerVersion && m_unsaved.count(patch->SessionKey) != 0)
                 {
                     due.push_back(patch->SessionKey);
                 }

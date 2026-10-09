@@ -293,7 +293,7 @@ namespace glass
 
                 // A step this build does not understand does nothing. Guessing at it would mean
                 // sending a message the customer never asked for.
-                if (!step.UnrecognizedKind.empty())
+                if (!step.UnrecognizedKind.empty() || step.Message.Kind == MessageKind::Unrecognized)
                 {
                     ++index;
                     continue;

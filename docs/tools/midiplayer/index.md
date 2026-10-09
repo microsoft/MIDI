@@ -134,6 +134,6 @@ You can find the endpoint device id for a device using the [MIDI Console]({{ sit
 
 ## Learn more
 
-- [MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/) to route the player's output through filters and transforms on its way to an instrument
+- [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/) to route the player's output through filters and transforms on its way to an instrument
 - [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/) to see exactly what the player is sending
 - The sequencing and file reading used here are available to your own applications as [Windows.Devices.Midi2.Utilities.Sequencing]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/) and [Windows.Devices.Midi2.Utilities.Files]({{ site.baseurl }}/sdk-reference/Utilities/Files/)

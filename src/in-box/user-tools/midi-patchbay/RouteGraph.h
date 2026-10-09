@@ -52,6 +52,9 @@ namespace midipatchbay
     {
         uint32_t Stage{ 0 };
         uint32_t LinkCell{ 0 };
+
+        // The way out of a Branch or a Switch the link leaves by.
+        uint8_t Way{ 0 };
     };
 
     // No way back: a message from a throttle or a generator.
@@ -82,6 +85,9 @@ namespace midipatchbay
         // Where this stage sends on to, as a run in RouteGraph::Edges.
         uint32_t FirstEdge{ 0 };
         uint32_t EdgeCount{ 0 };
+
+        // A bypassed Branch or Switch set to send only its first way: that way. -1 is every way.
+        int16_t OnlyWay{ -1 };
     };
 
     // A link out of a source endpoint, and the tree it starts.
@@ -195,6 +201,10 @@ namespace midipatchbay
         // The LFOs that clock inputs feed, by generator key. One that isn't running gets nothing.
         std::vector<std::wstring> ClockTargets{};
 
+        // Each patch's memories, as "patch key|name" with the name in lower case. The engine keeps
+        // them for as long as the app runs, whatever happens to the graph.
+        std::vector<std::wstring> Memories{};
+
         std::vector<RouteProblem> Problems{};
 
         // Equal for two graphs that route the same way, so applying an unchanged plan does
@@ -236,20 +246,32 @@ namespace midipatchbay
             _In_ uint32_t target,
             _In_reads_(wordCount) uint32_t const* words,
             _In_ uint8_t wordCount) noexcept = 0;
+
+        // A memory as this message sees it. It is read once for each message and is then the same
+        // wherever the message goes, so a change made on another thread never lands halfway.
+        virtual LogicValue Memory(_In_ uint32_t memory) noexcept = 0;
+
+        // Changes a memory the way a Set memory step says. The message that changes it sees the
+        // new value from here on, and so does every message after it.
+        virtual void ChangeMemory(
+            _In_ uint32_t memory,
+            _In_ SetMemorySettings const& settings,
+            _In_ LogicValue const& source) noexcept = 0;
     };
 
     // Sends one message down one link and everything after it. Every branch works on its own
-    // copy, because blocks change the words in place. Runs on the service callback thread: no
-    // allocation, no locks and nothing that throws, and no deeper than MaximumRouteDepth. A
-    // MIDI-CI responder is the exception: it takes a lock and allocates while it answers, which
-    // only MIDI-CI makes it do.
+    // copy, because blocks change the words in place, and carries the tags set on its way there.
+    // Runs on the service callback thread: no allocation, no locks and nothing that throws, and no
+    // deeper than MaximumRouteDepth. A MIDI-CI responder is the exception: it takes a lock and
+    // allocates while it answers, which only MIDI-CI makes it do.
     void RunEdge(
         _In_ RouteGraph const& graph,
         _In_ RouteEdge const& edge,
         _In_reads_(wordCount) uint32_t const* words,
         _In_ uint8_t wordCount,
         _Inout_ RouteSink& sink,
-        _In_ ReturnPath const& from = ReturnPath{}) noexcept;
+        _In_ ReturnPath const& from = ReturnPath{},
+        _In_opt_ TagLink const* tags = nullptr) noexcept;
 
     // A message arriving from a root's source endpoint. Messages without a group are never
     // routed, as before: nothing says which route they were meant for.

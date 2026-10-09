@@ -13,6 +13,7 @@
 
 #include "ProcessingBlock.h"
 #include "EndpointMatch.h"
+#include "ContentProvenance.h"
 
 namespace midipatchbay
 {
@@ -77,7 +78,9 @@ namespace midipatchbay
     };
 
     // One link. Each end is an endpoint or a block, by id. An endpoint end is one group or all
-    // of them; a block has one input and one output, so its group is always AllGroups.
+    // of them; a block has one input and one output, so its group is always AllGroups. A Branch
+    // or a Switch has several outputs, and the source group of a link from one is the way it
+    // leaves by: see BranchYesWay and SwitchOtherwiseWay.
     struct PatchConnection
     {
         std::wstring Id{};
@@ -119,6 +122,9 @@ namespace midipatchbay
         std::wstring Name{};
         std::wstring Description{};
 
+        // Who made it, with what, and from what. The same block MIDI Glass writes.
+        std::optional<midiapp::ContentProvenance> Provenance{};
+
         // Empty while the patch has never been written, which is also what makes it temporary.
         std::wstring FilePath{};
 
@@ -141,6 +147,10 @@ namespace midipatchbay
         // converted on the way in.
         int32_t LoadedFileVersion{ CurrentPatchFileVersion };
         std::vector<ConversionIssue> ConversionIssues{};
+
+        // Written by a newer version of the app, or holding a step this version doesn't know.
+        // What this version can't read would be lost if it saved the file, so it never does.
+        bool IsFromNewerVersion{ false };
 
         // Where the app kept the file as the earlier version wrote it. Empty when it didn't
         // need to.
@@ -179,4 +189,11 @@ namespace midipatchbay
 
         static std::wstring NewId() noexcept;
     };
+
+    // The source group a new link from a block starts with: Yes on a Branch, "Anything else" on a
+    // Switch, and AllGroups on every other kind.
+    int32_t DefaultWayOf(_In_ BlockKind kind) noexcept;
+
+    // Whether a link from this block leaves by a way it has.
+    bool IsWayOf(_In_ PatchBlock const& block, _In_ int32_t way) noexcept;
 }

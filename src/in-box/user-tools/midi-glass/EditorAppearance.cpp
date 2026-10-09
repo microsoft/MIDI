@@ -27,9 +27,11 @@
 #include "ThemeStore.h"
 #include "LayoutStore.h"
 #include "DeckBrush.h"
+#include "SharingDialogs.h"
 
 #include <algorithm>
 #include <cmath>
+#include <map>
 
 namespace resources = ::midiglass::resources;
 namespace shapes = ::winrt::Microsoft::UI::Xaml::Shapes;
@@ -334,14 +336,125 @@ namespace winrt::midiglass::implementation
     {
         ThemeGallery().Children().Clear();
         ThemeGallery().MaximumRowsOrColumns(GalleryColumns);
+        ThemeGalleryGroups().Children().Clear();
+
+        if (ThemeGroupPicker().Items().Size() == 0)
+        {
+            m_updatingSettings = true;
+            ThemeGroupPicker().Items().Append(box_value(resources::GetString(L"ThemeGroupNone")));
+            ThemeGroupPicker().Items().Append(box_value(resources::GetString(L"ThemeGroupAuthor")));
+            ThemeGroupPicker().Items().Append(box_value(resources::GetString(L"ThemeGroupSigner")));
+            ThemeGroupPicker().SelectedIndex(0);
+            m_updatingSettings = false;
+        }
 
         m_galleryThemes = glass::AllThemes();
 
-        // The selected card is the one the layout is actually drawn with, which is the theme it
-        // names only while it has not been edited. An edited layout carries its own.
-        auto const& document = m_editor.Document();
+        // Who signed each customer theme, while its files are still what was signed.
+        std::vector<std::wstring> signers(m_galleryThemes.size());
 
         for (size_t index = 0; index < m_galleryThemes.size(); ++index)
+        {
+            if (!m_galleryThemes[index].FilePath.empty())
+            {
+                signers[index] = ::midiglass::sharing::SignerOf(m_galleryThemes[index].FilePath);
+            }
+        }
+
+        auto const grouping = ThemeGroupPicker().SelectedIndex();
+
+        if (grouping <= 0)
+        {
+            ThemeGallery().Visibility(xaml::Visibility::Visible);
+            ThemeGalleryGroups().Visibility(xaml::Visibility::Collapsed);
+
+            for (size_t index = 0; index < m_galleryThemes.size(); ++index)
+            {
+                ThemeGallery().Children().Append(BuildThemeCard(index, signers[index]));
+            }
+
+            return;
+        }
+
+        ThemeGallery().Visibility(xaml::Visibility::Collapsed);
+        ThemeGalleryGroups().Visibility(xaml::Visibility::Visible);
+
+        // The ones that ship first, then by name, then the ones that don't say.
+        std::map<std::pair<int32_t, std::wstring>, std::vector<size_t>> groups{};
+
+        for (size_t index = 0; index < m_galleryThemes.size(); ++index)
+        {
+            auto const& theme = m_galleryThemes[index];
+
+            if (theme.FilePath.empty())
+            {
+                groups[{ 0, std::wstring{ resources::GetString(L"ThemeGroupBuiltIn") } }].push_back(index);
+                continue;
+            }
+
+            auto const key = grouping == 1
+                ? (theme.Provenance.has_value() ? theme.Provenance->Author : std::wstring{})
+                : signers[index];
+
+            if (key.empty())
+            {
+                groups[{ 2, std::wstring{ resources::GetString(grouping == 1 ? L"ThemeGroupNoAuthor" : L"ThemeGroupNotSigned") } }].push_back(index);
+            }
+            else
+            {
+                groups[{ 1, key }].push_back(index);
+            }
+        }
+
+        for (auto const& [key, members] : groups)
+        {
+            auto heading = MakeText(winrt::hstring{ key.second }, 12.0, L"TextFillColorSecondaryBrush");
+            heading.Margin({ 0, 6, 0, 2 });
+            heading.FontWeight(winrt::Windows::UI::Text::FontWeights::SemiBold());
+
+            ThemeGalleryGroups().Children().Append(heading);
+
+            controls::VariableSizedWrapGrid grid{};
+            grid.Orientation(controls::Orientation::Horizontal);
+            grid.HorizontalAlignment(xaml::HorizontalAlignment::Left);
+            grid.MaximumRowsOrColumns(GalleryColumns);
+
+            automation::AutomationProperties::SetName(grid, winrt::hstring{ key.second });
+
+            for (auto const index : members)
+            {
+                grid.Children().Append(BuildThemeCard(index, signers[index]));
+            }
+
+            ThemeGalleryGroups().Children().Append(grid);
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnThemeGroupChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingSettings)
+        {
+            return;
+        }
+
+        try
+        {
+            RebuildThemeGallery();
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to group the themes.")
+    }
+
+    _Use_decl_annotations_
+    controls::Primitives::ToggleButton EditorWindow::BuildThemeCard(size_t index, std::wstring const& signer)
+    {
+        auto const& document = m_editor.Document();
+
         {
             auto const& theme = m_galleryThemes[index];
 
@@ -357,8 +470,6 @@ namespace winrt::midiglass::implementation
 
             card.IsChecked(selected);
             card.Tag(box_value(winrt::hstring{ theme.Name }));
-
-            automation::AutomationProperties::SetName(card, winrt::hstring{ theme.Name });
 
             controls::Grid inner{};
 
@@ -393,19 +504,42 @@ namespace winrt::midiglass::implementation
             auto name = MakeText(winrt::hstring{ theme.Name }, 11.0, L"TextFillColorSecondaryBrush");
             name.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
 
-            controls::Grid::SetColumn(name, 0);
-            nameLine.Children().Append(name);
+            // Who made it, under its name. Unless a signature backs the name, it says so.
+            std::wstring byline{};
 
-            // The check on the selected one, and the accessibility mark on the theme that is
-            // there for exactly that reason.
-            if (selected || !theme.CautionResourceKey.empty())
+            if (theme.FilePath.empty())
+            {
+                byline = resources::GetString(L"ThemeBuiltInByline");
+            }
+            else if (auto const maker = ::midiglass::sharing::DescribeMaker(theme.Provenance, signer); !maker.empty())
+            {
+                byline = resources::FormatString(L"ThemeByFormat", maker);
+            }
+
+            controls::StackPanel words{};
+            words.Children().Append(name);
+
+            if (!byline.empty())
+            {
+                auto by = MakeText(winrt::hstring{ byline }, 10.0, L"TextFillColorTertiaryBrush");
+                by.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
+                controls::ToolTipService::SetToolTip(by, box_value(winrt::hstring{ byline }));
+                words.Children().Append(by);
+            }
+
+            controls::Grid::SetColumn(words, 0);
+            nameLine.Children().Append(words);
+
+            // The check on the selected one, a seal on a signed one, and the accessibility mark
+            // on the theme that is there for exactly that reason.
+            if (selected || !theme.CautionResourceKey.empty() || !signer.empty())
             {
                 controls::FontIcon glyph{};
 
-                glyph.Glyph(selected ? L"\uE73E" : L"\uE7B3");
+                glyph.Glyph(selected ? L"\uE73E" : (!signer.empty() ? L"\uEB95" : L"\uE7B3"));
                 glyph.FontSize(11.0);
                 glyph.VerticalAlignment(xaml::VerticalAlignment::Center);
-                glyph.Foreground(BrushFromKey(selected
+                glyph.Foreground(BrushFromKey(selected || !signer.empty()
                     ? L"AccentTextFillColorPrimaryBrush"
                     : L"TextFillColorTertiaryBrush"));
 
@@ -413,6 +547,11 @@ namespace winrt::midiglass::implementation
                 {
                     controls::ToolTipService::SetToolTip(
                         glyph, box_value(resources::GetString(theme.CautionResourceKey)));
+                }
+                else if (!signer.empty())
+                {
+                    controls::ToolTipService::SetToolTip(
+                        glyph, box_value(resources::FormatString(L"DetailsSignedFormat", signer)));
                 }
 
                 controls::Grid::SetColumn(glyph, 1);
@@ -423,6 +562,40 @@ namespace winrt::midiglass::implementation
             inner.Children().Append(nameLine);
 
             card.Content(inner);
+
+            automation::AutomationProperties::SetName(card, byline.empty()
+                ? winrt::hstring{ theme.Name }
+                : winrt::hstring{ theme.Name + L", " + byline });
+
+            // About it, and for one of the customer's own, packing it to share.
+            controls::MenuFlyout menu{};
+
+            controls::MenuFlyoutItem about{};
+            about.Text(resources::GetString(L"ThemeCardMenuDetails"));
+            about.Click([weak = get_weak(), theme](auto&&, auto&&)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        ::midiglass::sharing::ShowThemeDetailsAsync(strong->Content().XamlRoot(), theme);
+                    }
+                });
+            menu.Items().Append(about);
+
+            if (!theme.FilePath.empty())
+            {
+                controls::MenuFlyoutItem share{};
+                share.Text(resources::GetString(L"ThemeCardMenuShare"));
+                share.Click([weak = get_weak(), path = theme.FilePath](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->ShareGalleryThemeAsync(path);
+                        }
+                    });
+                menu.Items().Append(share);
+            }
+
+            card.ContextFlyout(menu);
 
             card.Checked([weak = get_weak(), name = theme.Name](auto const& sender, auto&&)
                 {
@@ -456,8 +629,23 @@ namespace winrt::midiglass::implementation
                     }
                 });
 
-            ThemeGallery().Children().Append(card);
+            return card;
         }
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget EditorWindow::ShareGalleryThemeAsync(std::wstring themeFilePath)
+    {
+        auto lifetime = get_strong();
+
+        try
+        {
+            co_await ::midiglass::sharing::ShareThemeAsync(Content().XamlRoot(), m_chrome.WindowHandle(), themeFilePath);
+
+            // Packing can write what the theme says about who made it.
+            RebuildThemeGallery();
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to pack the theme.")
     }
 
     // The miniature inside a theme card, drawn from the theme's own numbers: a knob, two faders,

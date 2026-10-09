@@ -355,6 +355,8 @@ namespace
         void CountBlock(uint32_t, bool) noexcept override {}
         void Throttle(uint32_t, uint32_t const*, uint8_t) noexcept override {}
         void Clock(uint32_t, uint32_t const*, uint8_t) noexcept override {}
+        LogicValue Memory(uint32_t) noexcept override { return {}; }
+        void ChangeMemory(uint32_t, SetMemorySettings const&, LogicValue const&) noexcept override {}
 
         void Send(uint32_t leaf, uint32_t const* words, uint8_t wordCount) noexcept override
         {

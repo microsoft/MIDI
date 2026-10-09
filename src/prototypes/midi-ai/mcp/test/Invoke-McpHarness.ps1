@@ -13,7 +13,7 @@ $ErrorActionPreference = 'Stop'
 $Exe = (Resolve-Path $Exe).Path
 
 $work = Join-Path $env:TEMP ("midi-mcp-harness-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
-$patchFolder = Join-Path $work 'MIDI Patchbay'
+$patchFolder = Join-Path $work 'MIDI Patches'
 $layoutFolder = Join-Path $work 'MIDI Layouts'
 New-Item -ItemType Directory -Path $patchFolder, $layoutFolder -Force | Out-Null
 

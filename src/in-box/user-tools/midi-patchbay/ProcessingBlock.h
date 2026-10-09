@@ -64,9 +64,15 @@ namespace midipatchbay
 
         CiResponder = 26,
         CiFilter = 27,
+
+        Branch = 28,
+        Switch = 29,
+        SetTag = 30,
+        SetMemory = 31,
+        PutValue = 32,
     };
 
-    constexpr size_t BlockKindCount = 28;
+    constexpr size_t BlockKindCount = 33;
 
     // The order the palette shows them in.
     constexpr BlockKind AllBlockKinds[BlockKindCount] =
@@ -79,7 +85,9 @@ namespace midipatchbay
         BlockKind::ControlChangeValue, BlockKind::ProgramMap, BlockKind::ParameterTransform,
         BlockKind::ClockDivider,
         BlockKind::Throttle,
-        BlockKind::NoteDistributor, BlockKind::Gate,
+        BlockKind::NoteDistributor,
+        BlockKind::Branch, BlockKind::Switch, BlockKind::SetMemory, BlockKind::SetTag, BlockKind::PutValue,
+        BlockKind::Gate,
         BlockKind::CiResponder, BlockKind::CiFilter,
         BlockKind::ClockGenerator, BlockKind::TimeCodeGenerator, BlockKind::LfoGenerator,
         BlockKind::Annotation,
@@ -102,6 +110,9 @@ namespace midipatchbay
 
         // Answers MIDI-CI for a device that can't, or keeps MIDI-CI away from one.
         CapabilityInquiry = 6,
+
+        // Decides by a value, remembers one, or puts one into the message.
+        Logic = 7,
     };
 
     BlockCategory CategoryOf(_In_ BlockKind kind) noexcept;
@@ -425,6 +436,243 @@ namespace midipatchbay
         bool PassesTriggers{ true };
     };
 
+    // ------------------------------------------------------------------ logic
+
+    // The part of a message a logic step reads or writes.
+    enum class MessagePart : int32_t
+    {
+        Group = 0,
+        Channel = 1,
+        Note = 2,
+        Velocity = 3,
+        ControllerNumber = 4,
+        ControllerValue = 5,
+        Program = 6,
+        BankMsb = 7,
+        BankLsb = 8,
+        Pressure = 9,
+        PitchBend = 10,
+
+        // Any bits of any word, the same way the message mask filter finds them.
+        Bits = 11,
+    };
+
+    constexpr size_t MessagePartCount = 12;
+
+    // What a number counts, which decides how it is shown and how it is compared. Channels and
+    // groups count from 0 in the file and from 1 on screen. A value is a share of its whole
+    // range, so a MIDI 1.0 and a MIDI 2.0 message compare the same: hundredths of a percent here,
+    // a percent in the file.
+    enum class LogicUnit : int32_t
+    {
+        Number = 0,
+        Channel = 1,
+        Group = 2,
+        Note = 3,
+        Value = 4,
+    };
+
+    LogicUnit UnitOfPart(_In_ MessagePart part) noexcept;
+
+    // Where a part is. The word and the bits only mean something for MessagePart::Bits.
+    struct PartPlace
+    {
+        MessagePart Part{ MessagePart::Channel };
+        uint8_t Word{ 0 };
+        uint8_t HighBit{ 31 };
+        uint8_t LowBit{ 0 };
+    };
+
+    enum class LogicSourceKind : int32_t
+    {
+        Number = 0,
+        Part = 1,
+        Tag = 2,
+        Memory = 3,
+    };
+
+    // Names are compared without regard to case, and only this many tags and memories in one
+    // patch get a place. The rest read as empty.
+    constexpr size_t MaximumLogicNameLength = 32;
+    constexpr size_t MaximumTagsPerPatch = 64;
+    constexpr size_t MaximumMemoriesPerPatch = 64;
+    constexpr uint32_t NoLogicIndex = 0xFFFFFFFF;
+
+    // Where a value comes from: a number typed in, a part of the message, a tag or a memory.
+    struct LogicSource
+    {
+        LogicSourceKind Kind{ LogicSourceKind::Part };
+
+        // A number typed in. Channels and groups from 0, a value in hundredths of a percent.
+        LogicUnit Unit{ LogicUnit::Number };
+        uint32_t Number{ 0 };
+
+        PartPlace Place{};
+
+        // The tag or the memory.
+        std::wstring Name{};
+
+        // The tag's slot or the memory's place, filled in when the patch routes. Never in the file.
+        uint32_t Index{ NoLogicIndex };
+    };
+
+    enum class LogicTest : int32_t
+    {
+        // Not a test: everything goes out the first way. What a new Branch starts as.
+        Anything = 0,
+
+        Is = 1,
+        IsNot = 2,
+        AtLeast = 3,
+        Below = 4,
+
+        // Both ends included.
+        Between = 5,
+        OneOf = 6,
+
+        HasValue = 7,
+        IsEmpty = 8,
+    };
+
+    constexpr size_t MaximumLogicListValues = 128;
+
+    // One comparison, in the unit of the step it belongs to.
+    struct LogicCondition
+    {
+        LogicTest Test{ LogicTest::Is };
+        uint32_t Value{ 0 };
+        uint32_t Lowest{ 0 };
+        uint32_t Highest{ 0 };
+        std::vector<uint32_t> Values{};
+    };
+
+    // Where a message goes that a Branch or a Switch can't look at: one without the part it
+    // tests, or a tag or memory that is empty.
+    enum class UnreadableWay : int32_t
+    {
+        EveryWay = 0,
+        KeepOut = 1,
+
+        // Yes on a Branch.
+        FirstWay = 2,
+
+        // No on a Branch, "Anything else" on a Switch.
+        LastWay = 3,
+    };
+
+    // What a bypassed Branch or Switch does.
+    enum class BypassWay : int32_t
+    {
+        EveryWay = 0,
+        FirstWay = 1,
+    };
+
+    // The ways out of a Branch.
+    constexpr int32_t BranchYesWay = 0;
+    constexpr int32_t BranchNoWay = 1;
+
+    // A Switch's ways: "Anything else" is 0, and each case keeps an id of its own from 1 up, so
+    // its connections stay with it when cases are added, taken away or moved.
+    constexpr int32_t SwitchOtherwiseWay = 0;
+    constexpr size_t MaximumSwitchCases = 64;
+    constexpr int32_t MaximumSwitchCaseId = 64;
+
+    struct BranchSettings
+    {
+        LogicSource Subject{};
+        LogicUnit Unit{ LogicUnit::Channel };
+        LogicCondition Condition{};
+
+        UnreadableWay Unreadable{ UnreadableWay::EveryWay };
+        BypassWay Bypass{ BypassWay::EveryWay };
+
+        // Display only, for a value.
+        ValueScale Scale{ ValueScale::SevenBit };
+    };
+
+    struct SwitchCase
+    {
+        int32_t Id{ 1 };
+        LogicCondition Condition{};
+    };
+
+    // The first case that matches is the way a message goes.
+    struct SwitchSettings
+    {
+        LogicSource Subject{};
+        LogicUnit Unit{ LogicUnit::Channel };
+        std::vector<SwitchCase> Cases{};
+
+        UnreadableWay Unreadable{ UnreadableWay::EveryWay };
+        BypassWay Bypass{ BypassWay::EveryWay };
+
+        ValueScale Scale{ ValueScale::SevenBit };
+    };
+
+    // Gives the message a value to carry for the rest of its trip through the patch.
+    struct SetTagSettings
+    {
+        std::wstring Tag{};
+        uint32_t TagIndex{ NoLogicIndex };
+
+        LogicSource Value{};
+
+        ValueScale Scale{ ValueScale::SevenBit };
+    };
+
+    enum class MemoryAction : int32_t
+    {
+        Set = 0,
+
+        // Between the two numbers. An empty memory takes the first.
+        Toggle = 1,
+
+        StepUp = 2,
+        StepDown = 3,
+
+        // Back to empty.
+        Clear = 4,
+    };
+
+    // Remembers a value for later messages to use. A memory lasts as long as the app runs.
+    struct SetMemorySettings
+    {
+        std::wstring Memory{};
+        uint32_t MemoryIndex{ NoLogicIndex };
+
+        // Every message that reaches the step, or only the trigger.
+        bool EveryMessage{ true };
+        GateTrigger Trigger{ GateTriggerKind::ProgramChange };
+
+        MemoryAction Action{ MemoryAction::Set };
+        LogicSource Value{};
+
+        // Toggle: the two numbers. Steps: the range, ends included.
+        LogicUnit Unit{ LogicUnit::Number };
+        uint32_t First{ 0 };
+        uint32_t Second{ 1 };
+        uint32_t Lowest{ 0 };
+        uint32_t Highest{ 7 };
+        bool Wraps{ true };
+
+        // Off keeps out the messages that change the memory.
+        bool PassesTriggers{ true };
+
+        ValueScale Scale{ ValueScale::SevenBit };
+    };
+
+    // Writes a value into one part of the message.
+    struct PutValueSettings
+    {
+        PartPlace Target{};
+        LogicSource Value{};
+
+        // Off sends a message on unchanged when the value is empty.
+        bool KeepsOutWhenEmpty{ false };
+
+        ValueScale Scale{ ValueScale::SevenBit };
+    };
+
     // What a MIDI-CI file next to the patch describes: profiles and properties. Read when the patch
     // routes, so it is never part of the patch file itself. In CapabilityInquiry.h.
     struct CiDescription;
@@ -550,6 +798,12 @@ namespace midipatchbay
         CiResponderSettings CiResponder{};
         CiFilterSettings CiFilter{};
 
+        BranchSettings Branch{};
+        SwitchSettings Switch{};
+        SetTagSettings SetTag{};
+        SetMemorySettings SetMemory{};
+        PutValueSettings PutValue{};
+
         AnnotationSettings Annotation{};
     };
 
@@ -600,4 +854,35 @@ namespace midipatchbay
     // differ in what it can change while it runs, such as the tempo. Starting a generator again
     // is something the receiving device notices, so this is kept to what it has to.
     std::wstring GeneratorRestartSignature(_In_ BlockKind kind, _In_ BlockSettings const& settings) noexcept;
+
+    // Branch, Switch, Set tag, Set memory and Put value.
+    bool IsLogicStep(_In_ BlockKind kind) noexcept;
+
+    // A Branch and a Switch have more than one way out. A connection from one names its way in
+    // its source group: see BranchYesWay and SwitchOtherwiseWay.
+    bool HasWays(_In_ BlockKind kind) noexcept;
+
+    // The ways out, in the order the canvas shows them. Empty for a kind with one way out.
+    std::vector<int32_t> WaysOf(_In_ BlockKind kind, _In_ BlockSettings const& settings);
+
+    // The way a bypassed step sends on when its settings say only the first way: Yes, or the
+    // first case, or "Anything else" when there are none.
+    int32_t FirstWayOf(_In_ BlockKind kind, _In_ BlockSettings const& settings) noexcept;
+
+    // A Switch case id that isn't taken: the smallest from 1 up, or 0 when all of them are.
+    int32_t NewSwitchCaseId(_In_ SwitchSettings const& settings) noexcept;
+
+    // The names a step reads or writes, for the editor's lists. Trimmed, never empty.
+    void CollectLogicNames(
+        _In_ BlockKind kind,
+        _In_ BlockSettings const& settings,
+        _Inout_ std::vector<std::wstring>& tags,
+        _Inout_ std::vector<std::wstring>& memories);
+
+    // A tag or memory name as a patch keeps it: trimmed, no control characters, and no longer
+    // than the most a name holds.
+    std::wstring LogicNameFrom(_In_ std::wstring_view text);
+
+    // Whether two tag or memory names are the same name.
+    bool SameLogicName(_In_ std::wstring_view left, _In_ std::wstring_view right) noexcept;
 }

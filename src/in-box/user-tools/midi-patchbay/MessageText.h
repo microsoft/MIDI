@@ -12,6 +12,7 @@
 
 #include "ProcessingBlock.h"
 #include "CapabilityInquiry.h"
+#include "LogicSteps.h"
 
 namespace midipatchbay
 {
@@ -89,4 +90,39 @@ namespace midipatchbay
 
     // One problem with a MIDI-CI file, in a sentence.
     winrt::hstring DescribeCiFileProblem(_In_ CiFileProblem const& problem) noexcept;
+
+    // "Velocity", for a picker.
+    winrt::hstring DescribeMessagePart(_In_ MessagePart part) noexcept;
+
+    // "Velocity", or "Bits 15 to 8 of word 1" for bits, counting words from 1 the way the screen does.
+    winrt::hstring DescribePartPlace(_In_ PartPlace const& place) noexcept;
+
+    // "Is", "At least", for a picker.
+    winrt::hstring DescribeLogicTest(_In_ LogicTest test) noexcept;
+
+    // "Number", "Channel", for the picker that says what a tag or a memory holds.
+    winrt::hstring DescribeLogicUnit(_In_ LogicUnit unit) noexcept;
+
+    // "Set it to", "Toggle it", for a picker.
+    winrt::hstring DescribeMemoryAction(_In_ MemoryAction action) noexcept;
+
+    // A number in its unit: "C4", "64" or "50.39%", and for a channel or a group "Channel 2" on its
+    // own or "2" after a word that already says what it is.
+    winrt::hstring DescribeUnitNumber(_In_ uint32_t number, _In_ LogicUnit unit, _In_ ValueScale scale, _In_ bool standalone) noexcept;
+
+    // Where a value comes from: "Velocity", the tag "Played on", the memory "Scene", "Channel 2".
+    winrt::hstring DescribeLogicSource(_In_ LogicSource const& source, _In_ ValueScale scale) noexcept;
+
+    // "100 or more", "C3 to B4", "Empty". Standalone reads on its own, as a way's label.
+    winrt::hstring DescribeCondition(
+        _In_ LogicCondition const& condition,
+        _In_ LogicUnit unit,
+        _In_ ValueScale scale,
+        _In_ bool standalone) noexcept;
+
+    // The label on one way out of a Branch or a Switch: "Yes", "Channel 2", "Anything else".
+    winrt::hstring DescribeWay(_In_ BlockKind kind, _In_ BlockSettings const& settings, _In_ int32_t way) noexcept;
+
+    // A tag or memory as it is now, for the inspector: "Empty", "Channel 2", "64".
+    winrt::hstring DescribeLogicValue(_In_ LogicValue const& value, _In_ LogicUnit unit, _In_ ValueScale scale) noexcept;
 }

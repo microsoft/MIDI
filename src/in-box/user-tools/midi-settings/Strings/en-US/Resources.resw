@@ -145,13 +145,13 @@
     <value>Network Setup</value>
   </data>
   <data name="PatchbayButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>MIDI Patchbay</value>
+    <value>Windows MIDI Patchbay</value>
   </data>
   <data name="PatchbayButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>MIDI Patchbay</value>
+    <value>Windows MIDI Patchbay</value>
   </data>
   <data name="PatchbayButtonText.Text" xml:space="preserve">
-    <value>Patchbay</value>
+    <value>Windows MIDI Patchbay</value>
   </data>
   <data name="SysExButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>MIDI SysEx Tool</value>
@@ -199,13 +199,13 @@
     <value>MIDI Clock</value>
   </data>
   <data name="GlassButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>MIDI Glass control surfaces</value>
+    <value>Windows MIDI Glass control surfaces</value>
   </data>
   <data name="GlassButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>MIDI Glass control surfaces</value>
+    <value>Windows MIDI Glass control surfaces</value>
   </data>
   <data name="GlassButtonText.Text" xml:space="preserve">
-    <value>MIDI Glass</value>
+    <value>Windows MIDI Glass</value>
   </data>
   <data name="TroubleshooterButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>MIDI Troubleshooting and Repair</value>

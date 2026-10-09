@@ -1330,7 +1330,8 @@ namespace glass
     {
         auto* const control = MutableControl(id);
 
-        if (control == nullptr || index >= control->Messages.size())
+        if (control == nullptr || index >= control->Messages.size() ||
+            control->Messages[index].Kind == MessageKind::Unrecognized)
         {
             return false;
         }
@@ -1346,7 +1347,8 @@ namespace glass
     {
         auto* const control = MutableControl(id);
 
-        if (control == nullptr || index >= control->Messages.size())
+        if (control == nullptr || index >= control->Messages.size() ||
+            control->Messages[index].Kind == MessageKind::Unrecognized)
         {
             return false;
         }
@@ -1388,7 +1390,8 @@ namespace glass
     {
         auto* const control = MutableControl(id);
 
-        if (control == nullptr || SameFeedback(control->Feedback, feedback))
+        if (control == nullptr || control->Feedback.Kind == MessageKind::Unrecognized ||
+            SameFeedback(control->Feedback, feedback))
         {
             return false;
         }
@@ -1995,6 +1998,21 @@ namespace glass
 
         m_document.Description = description;
         CommitCoalesced(EditNames::LayoutProperties, L"layoutdescription");
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetProvenance(midiapp::ContentProvenance const& provenance)
+    {
+        if (m_document.Provenance.has_value() &&
+            midiapp::ProvenanceToJsonText(*m_document.Provenance, 0) == midiapp::ProvenanceToJsonText(provenance, 0))
+        {
+            return false;
+        }
+
+        m_document.Provenance = provenance;
+        CommitCoalesced(EditNames::LayoutProperties, L"provenance");
 
         return true;
     }
@@ -2813,6 +2831,24 @@ namespace glass
         auto copies = std::move(read.Document.Pages.front().Controls);
         auto const copiedGroups = std::move(read.Document.Pages.front().Groups);
 
+        // A copy needs a new id, which a control this version doesn't know can't take unchanged.
+        copies.erase(
+            std::remove_if(copies.begin(), copies.end(),
+                [](Control const& copy) { return copy.Kind == ControlKind::Placeholder; }),
+            copies.end());
+
+        // Pasted here, what this version doesn't know would make this a layout it can't save.
+        for (auto& copy : copies)
+        {
+            std::erase_if(copy.Messages,
+                [](ControlMessage const& message) { return message.Kind == MessageKind::Unrecognized; });
+
+            if (copy.Feedback.Kind == MessageKind::Unrecognized)
+            {
+                copy.Feedback = FeedbackBinding{};
+            }
+        }
+
         if (copies.empty() || page->Controls.size() + copies.size() > MaximumControlsPerPage)
         {
             return false;
@@ -2875,6 +2911,9 @@ namespace glass
         {
             if (m_document.FindSequence(sequence.Name) == nullptr)
             {
+                std::erase_if(sequence.Steps,
+                    [](SequenceStep const& step) { return step.Message.Kind == MessageKind::Unrecognized; });
+
                 for (auto& step : sequence.Steps)
                 {
                     follow(step.TargetControlId);

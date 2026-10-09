@@ -16,6 +16,7 @@
 #include "PatchLibrary.h"
 #include "PatchModel.h"
 #include "PatchStore.h"
+#include "PatchTrace.h"
 #include "RouteEngine.h"
 #include "ThemeBrushes.h"
 
@@ -71,6 +72,11 @@ namespace winrt::midipatchbay::implementation
         void OnInspectorCloseClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnLibraryButtonClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnConversionBarCloseClick(_In_ controls::InfoBar const& sender, _In_ foundation::IInspectable const& args);
+
+        void OnTraceBarCloseClick(_In_ controls::InfoBar const& sender, _In_ foundation::IInspectable const& args);
+        void OnTracePreviousClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnTraceNextClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnTraceAgainClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         void OnSavePatchNameChanged(_In_ foundation::IInspectable const& sender, _In_ controls::TextChangedEventArgs const& args);
         void OnLoopbackNameChanged(_In_ foundation::IInspectable const& sender, _In_ controls::TextChangedEventArgs const& args);
@@ -309,6 +315,28 @@ namespace winrt::midipatchbay::implementation
         // A file from anywhere, copied into the patch folder when it isn't there already.
         void ChooseCiFile(_In_ std::wstring const& blockId, _In_ controls::TextBox const& nameBox) noexcept;
 
+        // ---- logic steps, in MainWindowLogicSteps.cpp ----
+        void BuildLogicStepSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
+
+        // Into a panel of their own, so a change that adds or takes away fields shows only them again.
+        void FillLogicStepSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& host) noexcept;
+
+        // The tag and memory names in this patch, one of each, for the name boxes.
+        void CollectPatchLogicNames(_Out_ std::vector<std::wstring>& tags, _Out_ std::vector<std::wstring>& memories) noexcept;
+
+        // What a Branch or a Switch tested last and the memories a step uses, for the activity section.
+        winrt::hstring LogicStatusText(_In_ std::wstring const& blockId) noexcept;
+
+        // ---- tracing messages through the patch, in MainWindowTrace.cpp ----
+        winrt::fire_and_forget ShowTraceDialogAsync();
+
+        // The trace of the message the bar names, on the canvas and in the bar.
+        void ShowTraceStep() noexcept;
+
+        // Puts the canvas back. Any change to the patch does this, because the trace is of the
+        // patch as it was.
+        void ClearTrace() noexcept;
+
         // The steps a customer can put into a link, by category.
         controls::MenuFlyout BuildAddStepMenu(_In_ std::wstring const& connectionId) noexcept;
 
@@ -387,6 +415,16 @@ namespace winrt::midipatchbay::implementation
 
         // A MIDI-CI responder's file and what it has been answering, under its activity.
         controls::TextBlock m_ciStatusText{ nullptr };
+
+        // A logic step's last test and its memories, under its activity.
+        controls::TextBlock m_logicStatusText{ nullptr };
+
+        // The messages last traced, kept for the next trace, and where each one went.
+        std::vector<::midipatchbay::TraceMessage> m_traceMessages{};
+        std::wstring m_traceSourceId{};
+        uint8_t m_traceGroup{ 0 };
+        ::midipatchbay::TraceResult m_trace{};
+        size_t m_traceIndex{ 0 };
 
         // The selected annotation's text box, so double-clicking the annotation goes straight to it.
         controls::TextBox m_annotationTextBox{ nullptr };

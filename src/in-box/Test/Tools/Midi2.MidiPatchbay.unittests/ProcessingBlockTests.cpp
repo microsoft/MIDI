@@ -101,11 +101,12 @@ void ProcessingBlockTests::ANewBlockChangesNothing()
 
         // A throttle with no limit, or a clock divider dividing by one, would be pointless to
         // add, so a new one starts out doing something. A distributor and a gate decide where
-        // each message goes, so they always run. A MIDI-CI responder always answers, and a new
-        // MIDI-CI filter keeps all MIDI-CI out.
+        // each message goes, so they always run, and so do a Branch and a Switch. A MIDI-CI
+        // responder always answers, and a new MIDI-CI filter keeps all MIDI-CI out.
         auto const startsDoingSomething = kind == BlockKind::Throttle || kind == BlockKind::ClockDivider ||
             kind == BlockKind::NoteDistributor || kind == BlockKind::Gate ||
-            kind == BlockKind::CiResponder || kind == BlockKind::CiFilter;
+            kind == BlockKind::CiResponder || kind == BlockKind::CiFilter ||
+            kind == BlockKind::Branch || kind == BlockKind::Switch;
 
         VERIFY_ARE_EQUAL(!startsDoingSomething, BlockChangesNothing(kind, settings));
 
@@ -560,6 +561,44 @@ void ProcessingBlockTests::SettingsSurviveTheFile()
         case BlockKind::CiFilter:
             settings.CiFilter.Action = FilterAction::LetThrough;
             settings.CiFilter.Categories = CiCategoryProfiles | CiCategoryPropertyExchange;
+            break;
+
+        case BlockKind::Branch:
+            settings.Branch.Subject.Place.Part = MessagePart::Velocity;
+            settings.Branch.Unit = LogicUnit::Value;
+            settings.Branch.Condition.Test = LogicTest::AtLeast;
+            settings.Branch.Condition.Value = 7874;
+            settings.Branch.Unreadable = UnreadableWay::FirstWay;
+            break;
+
+        case BlockKind::Switch:
+        {
+            SwitchCase entry{};
+            entry.Id = 5;
+            entry.Condition.Test = LogicTest::Is;
+            entry.Condition.Value = 9;
+
+            settings.Switch.Cases.push_back(entry);
+            settings.Switch.Bypass = BypassWay::FirstWay;
+            break;
+        }
+
+        case BlockKind::SetTag:
+            settings.SetTag.Tag = L"Played on";
+            break;
+
+        case BlockKind::SetMemory:
+            settings.SetMemory.Memory = L"Scene";
+            settings.SetMemory.EveryMessage = false;
+            settings.SetMemory.Action = MemoryAction::StepUp;
+            settings.SetMemory.Highest = 4;
+            settings.SetMemory.Wraps = false;
+            break;
+
+        case BlockKind::PutValue:
+            settings.PutValue.Target.Part = MessagePart::Program;
+            settings.PutValue.Value.Name = L"Scene";
+            settings.PutValue.KeepsOutWhenEmpty = true;
             break;
         }
 

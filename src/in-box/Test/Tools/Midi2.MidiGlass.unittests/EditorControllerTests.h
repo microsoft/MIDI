@@ -199,4 +199,9 @@ public:
     TEST_METHOD(ALockedControlCannotBePickedOnThePage);
     TEST_METHOD(ALockedControlStaysWhereItIs);
     TEST_METHOD(LockingIsOneStepAndTravelsInTheFile);
+
+    // ---- a control a newer version made ----
+
+    TEST_METHOD(APlaceholderIsNeverSelectedOrPasted);
+    TEST_METHOD(AMessageThisVersionDoesNotKnowIsNeverChangedOrPasted);
 };

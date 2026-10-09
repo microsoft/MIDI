@@ -142,6 +142,11 @@ namespace winrt::midipatchbay::implementation
         case patchbay::BlockKind::NoteDistributor:
         case patchbay::BlockKind::CiResponder:
         case patchbay::BlockKind::CiFilter:
+        case patchbay::BlockKind::Branch:
+        case patchbay::BlockKind::Switch:
+        case patchbay::BlockKind::SetTag:
+        case patchbay::BlockKind::SetMemory:
+        case patchbay::BlockKind::PutValue:
             return true;
 
         default:
@@ -182,6 +187,15 @@ namespace winrt::midipatchbay::implementation
             }
 
             target->Settings = settings;
+
+            // A way taken away takes its connections with it.
+            if (patchbay::HasWays(target->Kind))
+            {
+                std::erase_if(patch->Connections, [target](patchbay::PatchConnection const& c)
+                    {
+                        return c.SourceId == target->Id && !patchbay::IsWayOf(*target, c.SourceGroupIndex);
+                    });
+            }
 
             if (m_inspectorSummary != nullptr)
             {
@@ -934,6 +948,14 @@ namespace winrt::midipatchbay::implementation
 
             case patchbay::BlockKind::CiFilter:
                 BuildCiFilterSettings(block, body);
+                break;
+
+            case patchbay::BlockKind::Branch:
+            case patchbay::BlockKind::Switch:
+            case patchbay::BlockKind::SetTag:
+            case patchbay::BlockKind::SetMemory:
+            case patchbay::BlockKind::PutValue:
+                BuildLogicStepSettings(block, body);
                 break;
 
             default:

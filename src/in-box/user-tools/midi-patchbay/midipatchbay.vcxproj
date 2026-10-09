@@ -142,9 +142,12 @@
     <ClInclude Include="PatchModel.h" />
     <ClInclude Include="PatchSerializer.h" />
     <ClInclude Include="PatchStore.h" />
+    <ClInclude Include="PatchFolderMove.h" />
     <ClInclude Include="ProcessingBlock.h" />
     <ClInclude Include="RouteGraph.h" />
     <ClInclude Include="StatefulBlocks.h" />
+    <ClInclude Include="LogicSteps.h" />
+    <ClInclude Include="PatchTrace.h" />
     <ClInclude Include="CapabilityInquiry.h" />
     <ClInclude Include="CiFileStore.h" />
     <ClInclude Include="RouteEngine.h" />
@@ -175,6 +178,8 @@
     <ClInclude Include="..\midi-app-shared\DocumentHandoff.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
     <ClInclude Include="..\midi-app-shared\EndpointMatch.h" />
+    <ClInclude Include="..\midi-app-shared\ContentProvenance.h" />
+    <ClInclude Include="PatchProvenance.h" />
     <ClInclude Include="..\midi-app-shared\EndpointCatalog.h" />
     <ClInclude Include="..\midi-app-shared\MidiServiceStatus.h" />
     <ClInclude Include="..\midi-app-shared\EndpointImageAssets.h" />
@@ -228,7 +233,16 @@
     <ClCompile Include="StatefulBlocks.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="LogicSteps.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="PatchTrace.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="CapabilityInquiry.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="PatchFolderMove.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MessageText.cpp" />
@@ -253,6 +267,8 @@
     <ClCompile Include="MainWindowInspector.cpp" />
     <ClCompile Include="MainWindowStepSettings.cpp" />
     <ClCompile Include="MainWindowCapabilityInquiry.cpp" />
+    <ClCompile Include="MainWindowLogicSteps.cpp" />
+    <ClCompile Include="MainWindowTrace.cpp" />
     <ClCompile Include="MainWindowParameterSteps.cpp" />
     <ClCompile Include="MainWindowFilters.cpp" />
     <ClCompile Include="MainWindowGenerators.cpp" />
@@ -272,6 +288,10 @@
     <ClCompile Include="..\midi-app-shared\DocumentHandoff.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointMatch.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <!-- who made a patch, in the same block MIDI Glass writes for layouts and themes -->
+    <ClCompile Include="..\midi-app-shared\ContentProvenance.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\midi-app-shared\EndpointCatalog.cpp" />

@@ -657,3 +657,28 @@ void ActionPlanTests::AStepKindThisBuildDoesNotKnowSendsNothing()
     VERIFY_ARE_EQUAL(size_t{ 1 }, plan->Actions.size());
     VERIFY_ARE_EQUAL(0x20B00740u, plan->Actions[0].Words[0]);
 }
+
+void ActionPlanTests::AStepMessageThisBuildDoesNotKnowSendsNothing()
+{
+    glass::Sequence sequence{};
+
+    glass::SequenceStep mystery{};
+    mystery.Kind = glass::SequenceStepKind::SendMidiMessage;
+    mystery.Message.Kind = glass::MessageKind::Unrecognized;
+    mystery.Message.DeviceName = L"Synth";
+
+    sequence.Name = L"Riff";
+    sequence.Steps.push_back(mystery);
+    sequence.Steps.push_back(ChannelVoiceStep(glass::MessageKind::ControlChange, 7, 64));
+
+    auto const document = DocumentPlaying(sequence);
+
+    glass::ActionPlanSet plans{};
+    plans.Prepare(document, OneDevice());
+
+    auto const* const plan = plans.Find(0, glass::MessageTrigger::TurnsOn);
+
+    VERIFY_IS_NOT_NULL(plan);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, plan->Actions.size());
+    VERIFY_ARE_EQUAL(0x20B00740u, plan->Actions[0].Words[0]);
+}

@@ -13,6 +13,7 @@
 #include "App.xaml.h"
 
 #include "AppSettings.h"
+#include "AppProvenance.h"
 #include "AssistantPrompt.h"
 #include "StringResources.h"
 #include "LayoutStore.h"
@@ -326,6 +327,8 @@ namespace winrt::midiglass::implementation
                 endpoint.BuildMatch(),
                 midiapp::EndpointMatchMode::EndpointDeviceId);
 
+            document.Provenance = ::midiglass::NewProvenance();
+
             auto const folder = glass::LayoutsFolder();
 
             if (folder.empty())
@@ -418,6 +421,9 @@ namespace winrt::midiglass::implementation
                 std::error_code error{};
                 std::filesystem::remove(oldPath, error);
 
+                // When it was last used, and whether it is a favorite, follow the file.
+                ::midiglass::AppSettings::Current().RenameLayouts({ { oldPath, newPath } });
+
                 auto const oldCard = glass::ThumbnailPathForLayout(oldPath, glass::LargeThumbnailWidth);
 
                 if (!oldCard.empty())
@@ -507,6 +513,9 @@ namespace winrt::midiglass::implementation
             {
                 co_return;
             }
+
+            // A new layout given this name later shouldn't arrive starred.
+            ::midiglass::AppSettings::Current().FavoriteLayout(path, false);
 
             // The card is derived, so losing it costs nothing and leaving it behind would show a
             // layout that is gone.

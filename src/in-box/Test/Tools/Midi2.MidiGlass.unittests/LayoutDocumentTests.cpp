@@ -13,6 +13,7 @@
 #include "LayoutModel.h"
 #include "LayoutSerializer.h"
 #include "HexText.h"
+#include "JsonText.h"
 #include "ThemeModel.h"
 
 using namespace WEX::Common;
@@ -493,6 +494,144 @@ void LayoutDocumentTests::SaysWhenAFileIsFromANewerVersion()
     VERIFY_IS_FALSE(ours.IsFromNewerVersion);
 }
 
+void LayoutDocumentTests::AKindThisVersionDoesNotKnowMeansANewerVersion()
+{
+    // A control of a kind that came later reads as a placeholder, so the layout still opens.
+    auto const control = glass::ReadLayoutFromJson(
+        LR"({ "fileVersion": 1, "name": "T", "pages": [ { "id": "p", "name": "P", "controls": [
+            { "id": "a", "kind": "hologram" } ] } ] })");
+
+    VERIFY_IS_TRUE(control.Succeeded);
+    VERIFY_IS_TRUE(control.IsFromNewerVersion);
+    VERIFY_IS_TRUE(control.Document.IsFromNewerVersion);
+    VERIFY_IS_TRUE(control.Document.Pages[0].Controls[0].Kind == glass::ControlKind::Placeholder);
+
+    // and the same for a message a newer version can send
+    auto const message = glass::ReadLayoutFromJson(
+        LR"({ "fileVersion": 1, "name": "T", "pages": [ { "id": "p", "name": "P", "controls": [
+            { "id": "a", "kind": "knob", "messages": [ { "kind": "quantumChange" } ] } ] } ] })");
+
+    VERIFY_IS_TRUE(message.Succeeded);
+    VERIFY_IS_TRUE(message.Document.IsFromNewerVersion);
+    VERIFY_IS_TRUE(message.Document.Pages[0].Controls[0].Messages[0].Kind == glass::MessageKind::Unrecognized);
+
+    // An old name for a kind this version knows, and a retired row, are neither. Read right
+    // after the two above, so nothing they set is carried over.
+    auto const ours = glass::ReadLayoutFromJson(
+        LR"({ "fileVersion": 1, "name": "T", "pages": [ { "id": "p", "name": "P", "controls": [
+            { "id": "a", "kind": "encoder", "messages": [ { "kind": "holdLayer" }, { "kind": "controlChange" } ] } ] } ] })");
+
+    VERIFY_IS_TRUE(ours.Succeeded);
+    VERIFY_IS_FALSE(ours.IsFromNewerVersion);
+    VERIFY_IS_FALSE(ours.Document.IsFromNewerVersion);
+}
+
+void LayoutDocumentTests::AControlThisVersionDoesNotKnowIsWrittenBackAsItCame()
+{
+    std::wstring const json = LR"({ "fileVersion": 1, "name": "T", "pages": [ { "id": "p", "name": "P", "controls": [
+        { "id": "knob", "kind": "knob", "label": "Cutoff", "x": 10, "y": 10, "width": 56, "height": 56 },
+        { "id": "holo", "kind": "hologram", "label": "From the future", "x": 360.5, "y": 112, "width": 240,
+          "height": 200, "keyboardOrder": 3, "hueSlot": 1, "shimmer": 7,
+          "beam": { "color": "#FFFFFF", "angles": [ 1, 2.5 ] },
+          "messages": [ { "trigger": "changes", "kind": "controlChange", "device": "Synth", "number": 74 } ],
+          "feedback": { "kind": "controlChange", "device": "Synth", "number": 74 } } ] } ] })";
+
+    auto const read = glass::ReadLayoutFromJson(json);
+    VERIFY_IS_TRUE(read.Succeeded);
+    VERIFY_IS_TRUE(read.IsFromNewerVersion);
+
+    auto const* holo = read.Document.FindControl(L"holo");
+    VERIFY_IS_NOT_NULL(holo);
+
+    // Drawn where the file puts it, under its own name, with nothing to send or listen for.
+    VERIFY_IS_TRUE(holo->Kind == glass::ControlKind::Placeholder);
+    VERIFY_ARE_EQUAL(std::wstring{ L"From the future" }, holo->Label);
+    VERIFY_ARE_EQUAL(360.5, holo->X);
+    VERIFY_ARE_EQUAL(112.0, holo->Y);
+    VERIFY_ARE_EQUAL(240.0, holo->Width);
+    VERIFY_ARE_EQUAL(200.0, holo->Height);
+    VERIFY_ARE_EQUAL(3, holo->KeyboardOrder);
+    VERIFY_IS_TRUE(holo->Locked);
+    VERIFY_IS_TRUE(holo->Messages.empty());
+    VERIFY_IS_FALSE(holo->Feedback.Enabled);
+    VERIFY_IS_FALSE(holo->SendsValueOnStart);
+
+    // Written back, its object is the one the file had, key for key and value for value.
+    auto const text = glass::WriteLayoutToJson(read.Document);
+
+    auto const controlsIn = [](std::wstring const& source)
+        {
+            return winrt::Windows::Data::Json::JsonObject::Parse(winrt::hstring{ source })
+                .GetNamedArray(L"pages").GetObjectAt(0).GetNamedArray(L"controls");
+        };
+
+    VERIFY_ARE_EQUAL(
+        glass::CanonicalJson(controlsIn(json).GetObjectAt(1), 0),
+        glass::CanonicalJson(controlsIn(text).GetObjectAt(1), 0));
+
+    // The control beside it is written the usual way, and a second trip changes nothing.
+    VERIFY_ARE_EQUAL(std::wstring{ L"knob" }, std::wstring{ controlsIn(text).GetObjectAt(0).GetNamedString(L"kind") });
+
+    auto const again = glass::ReadLayoutFromJson(text);
+    VERIFY_IS_TRUE(again.Succeeded);
+    VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(again.Document));
+}
+
+void LayoutDocumentTests::AMessageThisVersionDoesNotKnowIsWrittenBackAsItCame()
+{
+    std::wstring const json = LR"({ "fileVersion": 1, "name": "T", "devices": [ { "name": "Synth" } ],
+        "pages": [ { "id": "p", "name": "P", "controls": [
+        { "id": "knob", "kind": "knob",
+          "messages": [
+            { "trigger": "changes", "kind": "controlChange", "device": "Synth", "number": 74 },
+            { "trigger": "turnsOn", "kind": "noteAttribute", "device": "Synth", "number": 60, "shape": { "a": 1.5 } } ],
+          "feedback": { "enabled": true, "kind": "quantumChange", "device": "Synth", "glow": 3 } } ] } ],
+        "sequences": [ { "name": "S", "mode": "once", "steps": [
+          { "kind": "sendMessage", "message": { "kind": "noteAttribute", "device": "Synth", "number": 61 } } ] } ] })";
+
+    auto const read = glass::ReadLayoutFromJson(json);
+    VERIFY_IS_TRUE(read.Succeeded);
+    VERIFY_IS_TRUE(read.IsFromNewerVersion);
+
+    auto const* knob = read.Document.FindControl(L"knob");
+    VERIFY_IS_NOT_NULL(knob);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, knob->Messages.size());
+
+    // The row it knows is read as usual. The others are kept, and nothing here sends or follows them.
+    VERIFY_IS_TRUE(knob->Messages[0].Kind == glass::MessageKind::ControlChange);
+    VERIFY_IS_TRUE(knob->Messages[1].Kind == glass::MessageKind::Unrecognized);
+    VERIFY_IS_TRUE(knob->Messages[1].Trigger == glass::MessageTrigger::TurnsOn);
+    VERIFY_IS_TRUE(knob->Feedback.Kind == glass::MessageKind::Unrecognized);
+    VERIFY_IS_FALSE(knob->Feedback.Enabled);
+    VERIFY_IS_TRUE(read.Document.Sequences[0].Steps[0].Message.Kind == glass::MessageKind::Unrecognized);
+
+    auto const text = glass::WriteLayoutToJson(read.Document);
+
+    auto const canonical = [](std::wstring const& source, int32_t part)
+        {
+            auto const root = winrt::Windows::Data::Json::JsonObject::Parse(winrt::hstring{ source });
+            auto const control = root.GetNamedArray(L"pages").GetObjectAt(0).GetNamedArray(L"controls").GetObjectAt(0);
+
+            switch (part)
+            {
+            case 0: return glass::CanonicalJson(control.GetNamedArray(L"messages").GetObjectAt(1), 0);
+            case 1: return glass::CanonicalJson(control.GetNamedObject(L"feedback"), 0);
+            default:
+                return glass::CanonicalJson(
+                    root.GetNamedArray(L"sequences").GetObjectAt(0).GetNamedArray(L"steps").GetObjectAt(0).GetNamedObject(L"message"), 0);
+            }
+        };
+
+    for (int32_t part = 0; part < 3; ++part)
+    {
+        VERIFY_ARE_EQUAL(canonical(json, part), canonical(text, part));
+    }
+
+    auto const again = glass::ReadLayoutFromJson(text);
+    VERIFY_IS_TRUE(again.Succeeded);
+    VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(again.Document));
+}
+
 void LayoutDocumentTests::UnknownFieldsSurviveAtEveryLevel()
 {
     auto const result = glass::ReadLayoutFromJson(glasstests::LayoutFromANewerVersion());
@@ -596,6 +735,15 @@ void LayoutDocumentTests::SurvivesAHostileFile()
         VERIFY_IS_TRUE(message.ChannelIndex >= 0 && message.ChannelIndex <= 15);
         VERIFY_IS_TRUE(message.RawWords.size() <= 4);
     }
+
+    // A kind nobody has heard of is a placeholder, and sends nothing whatever its messages say.
+    auto const* unknown = document.FindControl(L"c2");
+    VERIFY_IS_NOT_NULL(unknown);
+
+    VERIFY_IS_TRUE(unknown->Kind == glass::ControlKind::Placeholder);
+    VERIFY_IS_TRUE(unknown->Label.empty());
+    VERIFY_IS_TRUE(unknown->KeyboardOrder >= 0);
+    VERIFY_IS_TRUE(unknown->Messages.empty());
 
     // and it still writes out as well formed JSON that reads back
     auto const text = glass::WriteLayoutToJson(document);

@@ -356,6 +356,19 @@ namespace glass
         constexpr float ColorTagSize = 8.0f;
         constexpr float ColorTagGap = 6.0f;
 
+        // A placeholder's outline: its weight, and its dashes and gaps in multiples of it.
+        constexpr float PlaceholderStroke = 1.5f;
+        constexpr float PlaceholderDash = 3.0f;
+        constexpr float PlaceholderGap = 2.0f;
+
+        // What a placeholder prints in the middle of its outline.
+        std::wstring PlaceholderText(_In_ Control const& control)
+        {
+            std::wstring const note{ resources::GetString(L"SurfacePlaceholderNote") };
+
+            return control.Label.empty() ? note : control.Label + L"\n" + note;
+        }
+
         bool IsWindowKind(_In_ ControlKind kind) noexcept
         {
             switch (kind)
@@ -478,6 +491,7 @@ namespace glass
             case ControlKind::Label:
             case ControlKind::Image:
             case ControlKind::Panel:
+            case ControlKind::Placeholder:
                 return false;
 
             default:
@@ -553,6 +567,7 @@ namespace glass
             case ControlKind::Panel:
             case ControlKind::TimeDisplay:
             case ControlKind::Line:
+            case ControlKind::Placeholder:
                 return projected::SurfaceControlRole::Text;
 
             default:
@@ -1129,16 +1144,23 @@ namespace glass
 
         GlassControlElement element{};
 
+        auto const& name = control.Label.empty() ? control.Id : control.Label;
+
         element.Width(width);
         element.Height(height);
-        element.SurfaceName(winrt::hstring{ control.Label.empty() ? control.Id : control.Label });
+        element.SurfaceName(control.Kind == ControlKind::Placeholder
+            ? resources::FormatString(L"SurfacePlaceholderAccessibleFormat", name)
+            : winrt::hstring{ name });
         element.SurfaceRole(RoleFor(control.Kind));
         element.IsTabStop(RoleFor(control.Kind) != projected::SurfaceControlRole::Text);
         element.UseSystemFocusVisuals(true);
 
         // A grouping panel sits under the controls it frames. A finger landing on the empty part
-        // of it should reach the deck rather than being swallowed by a frame. A rule is print.
-        element.IsHitTestVisible(control.Kind != ControlKind::Panel && control.Kind != ControlKind::Line);
+        // of it should reach the deck rather than being swallowed by a frame. A rule is print,
+        // and a placeholder does nothing.
+        element.IsHitTestVisible(control.Kind != ControlKind::Panel &&
+            control.Kind != ControlKind::Line &&
+            control.Kind != ControlKind::Placeholder);
 
         // A rule is decoration. A screen reader stopping on it would read out an id nobody gave
         // it and a role that does nothing.
@@ -1742,6 +1764,25 @@ namespace glass
         visual.Shape.Size(float2{ width, height });
         visual.ValueShape.Size(float2{ width, height });
         visual.Unavailable.Size(float2{ width, height });
+
+        // A control a newer version made: a dashed outline, and nothing that lights or moves.
+        if (control.Kind == ControlKind::Placeholder)
+        {
+            auto outline = compositor.CreateRoundedRectangleGeometry();
+            outline.Offset(float2{ PlaceholderStroke * 0.5f, PlaceholderStroke * 0.5f });
+            outline.Size(float2{ std::max(width - PlaceholderStroke, 1.0f), std::max(height - PlaceholderStroke, 1.0f) });
+            outline.CornerRadius(float2{ corner, corner });
+
+            auto shape = compositor.CreateSpriteShape(outline);
+            shape.StrokeBrush(BrushFor(compositor, colors.Label));
+            shape.StrokeThickness(PlaceholderStroke);
+            shape.StrokeDashArray().Append(PlaceholderDash);
+            shape.StrokeDashArray().Append(PlaceholderGap);
+
+            visual.Shape.Shapes().Append(shape);
+
+            return;
+        }
 
         // The theme decides how a surface looks; one control can disagree with it. Outline drops
         // the plate, Solid fills it in the control's own hue, Bare drops both.
@@ -3854,7 +3895,15 @@ namespace glass
         // application puts it.
         auto const isPanel = control.Kind == ControlKind::Panel;
 
-        auto const wanted = placed != LabelPlacementOverride::None && !control.Label.empty();
+        // A placeholder's words go in the middle of its outline, whatever the theme does with names.
+        auto const placeholder = control.Kind == ControlKind::Placeholder;
+
+        if (placeholder)
+        {
+            placed = LabelPlacementOverride::InsideCenter;
+        }
+
+        auto const wanted = placed != LabelPlacementOverride::None && (placeholder || !control.Label.empty());
 
         if (!wanted)
         {
@@ -3906,7 +3955,7 @@ namespace glass
         auto const& label = m_labels[itemIndex];
         auto const& look = control.LabelLook;
 
-        label.Text(winrt::hstring{ control.Label });
+        label.Text(placeholder ? winrt::hstring{ PlaceholderText(control) } : winrt::hstring{ control.Label });
 
         // ---- type ----
 

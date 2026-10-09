@@ -396,6 +396,7 @@ void RuntimeSurfaceTests::ADisplayOnlyControlTakesNoInput()
     VERIFY_IS_FALSE(glass::IsInteractive(glass::ControlKind::Label));
     VERIFY_IS_FALSE(glass::IsInteractive(glass::ControlKind::Readout));
     VERIFY_IS_FALSE(glass::IsInteractive(glass::ControlKind::Image));
+    VERIFY_IS_FALSE(glass::IsInteractive(glass::ControlKind::Placeholder));
 
     VERIFY_IS_TRUE(glass::IsInteractive(glass::ControlKind::Fader));
     VERIFY_IS_TRUE(glass::IsMomentary(glass::ControlKind::Pad));

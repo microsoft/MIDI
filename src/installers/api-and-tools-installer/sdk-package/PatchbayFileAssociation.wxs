@@ -25,7 +25,7 @@
                Guid="7e765993-e17e-44a6-b562-3ab3a3c41c93">
 
       <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\WindowsMidiServices.MidiPatch" ForceDeleteOnUninstall="yes">
-        <RegistryValue Type="string" Value="MIDI Patchbay patch" />
+        <RegistryValue Type="string" Value="Windows MIDI Patchbay patch" />
         <RegistryValue Type="string" Name="FriendlyTypeName" Value="@[#midipatchbayExe],-101" />
         <RegistryKey Key="DefaultIcon">
           <RegistryValue Type="string" Value="[#midipatchbayExe],0" />

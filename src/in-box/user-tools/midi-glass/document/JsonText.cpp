@@ -168,6 +168,13 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    void JsonTextWriter::WriteArrayRaw(std::wstring_view json) noexcept
+    {
+        Separate();
+        m_text += json;
+    }
+
+    _Use_decl_annotations_
     void JsonTextWriter::WriteArrayValue(int64_t value) noexcept
     {
         Separate();

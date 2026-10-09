@@ -10,15 +10,15 @@ needs step 1, 2 and the `$(ProjectDir)` part of step 4 below.
 
 `GeneralMidi` is the same kind of exception: plain C++, no pch, no WinRT. A project that takes it
 must set `<PrecompiledHeader>NotUsing</PrecompiledHeader>` on its `ClCompile` entry. MIDI Player
-and MIDI Patchbay both use it, so the General MIDI names they show agree.
+and Windows MIDI Patchbay both use it, so the General MIDI names they show agree.
 
-The generators are shared too. `BeatClockGenerator` and `TimeCodeGenerator` take either an endpoint connection, which is how MIDI Clock and the console use them, or a `GeneratorSink` from `GeneratorSink.h`: a function that gets each message with its timestamp. MIDI Patchbay's clock and time code steps use the sink, so what they send goes through the patch's other steps on the way out. `LfoMessageGenerator` is MIDI Patchbay's LFO step, and sends through a sink the same way. It can follow a clock instead of its own tempo: hand it timing clock, start and song position with `ReceiveClock`.
+The generators are shared too. `BeatClockGenerator` and `TimeCodeGenerator` take either an endpoint connection, which is how MIDI Clock and the console use them, or a `GeneratorSink` from `GeneratorSink.h`: a function that gets each message with its timestamp. Windows MIDI Patchbay's clock and time code steps use the sink, so what they send goes through the patch's other steps on the way out. `LfoMessageGenerator` is Windows MIDI Patchbay's LFO step, and sends through a sink the same way. It can follow a clock instead of its own tempo: hand it timing clock, start and song position with `ReceiveClock`.
 
-`LfoWave`, `LfoSweep` and `ChannelVoiceWords` are plain C++ like `GeneralMidi`, so a project marks them `NotUsing` and the unit tests compile them as they ship. `LfoWave` has the LFO shapes, the noise, and the names files use for them. `LfoSweep` says when each sample of a running LFO is due and where it falls in the cycle. `ChannelVoiceWords` builds MIDI 1.0 and MIDI 2.0 channel voice messages, including a single value as a control change, pitch bend, pressure, RPN or NRPN. MIDI Glass and MIDI Patchbay both use all three, so an LFO sweeps the same way in both apps.
+`LfoWave`, `LfoSweep` and `ChannelVoiceWords` are plain C++ like `GeneralMidi`, so a project marks them `NotUsing` and the unit tests compile them as they ship. `LfoWave` has the LFO shapes, the noise, and the names files use for them. `LfoSweep` says when each sample of a running LFO is due and where it falls in the cycle. `ChannelVoiceWords` builds MIDI 1.0 and MIDI 2.0 channel voice messages, including a single value as a control change, pitch bend, pressure, RPN or NRPN. Windows MIDI Glass and Windows MIDI Patchbay both use all three, so an LFO sweeps the same way in both apps.
 
-`ClockFollower` is plain C++ too. It keeps track of where an incoming MIDI clock has got to between its pulses, including pulses that arrive before the time they play, which is how `LfoMessageGenerator` follows a clock. Only MIDI Patchbay uses it so far.
+`ClockFollower` is plain C++ too. It keeps track of where an incoming MIDI clock has got to between its pulses, including pulses that arrive before the time they play, which is how `LfoMessageGenerator` follows a clock. Only Windows MIDI Patchbay uses it so far.
 
-`FontCatalog` lists the font families a customer can pick: the ones every Windows PC has, or every family installed on this PC. It reads them from DirectWrite, so a project that takes it links `dwrite.lib`. `FontNames.h` is plain C++ and header only: the default family, and the check a family name read from a file has to pass. MIDI Glass uses both for control labels and MIDI Patchbay for annotations, so the two apps offer the same fonts.
+`FontCatalog` lists the font families a customer can pick: the ones every Windows PC has, or every family installed on this PC. It reads them from DirectWrite, so a project that takes it links `dwrite.lib`. `FontNames.h` is plain C++ and header only: the default family, and the check a family name read from a file has to pass. Windows MIDI Glass uses both for control labels and Windows MIDI Patchbay for annotations, so the two apps offer the same fonts.
 
 `EndpointCatalog` watches the live endpoints and answers "which live endpoint does this saved one
 mean". It owns `EndpointMatch`, `EndpointMatchMode` and `LiveEndpoint`, and it matches on criteria
@@ -31,7 +31,7 @@ Because shared code cannot reach any one app's telemetry, a swallowed exception 
 
 `DocumentHandoff` is for a tool that opens files by double-click. When a copy is already running, the new one sends its paths to the running window with `WM_COPYDATA` and exits. The receiving window has to subclass itself to see the message, because XAML does not pass it on.
 
-`AssistantPrompt` is the **Ask an AI assistant** dialog in MIDI Glass and MIDI Patchbay. It shows a starting prompt the customer pastes into the AI assistant they use, and copies it to the clipboard. The app sends nothing anywhere. Each app builds its own prompt text from its own resources.
+`AssistantPrompt` is the **Ask an AI assistant** dialog in Windows MIDI Glass and Windows MIDI Patchbay. It shows a starting prompt the customer pastes into the AI assistant they use, and copies it to the clipboard. The app sends nothing anywhere. Each app builds its own prompt text from its own resources.
 
 ## What a consuming project has to do
 

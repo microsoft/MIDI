@@ -49,8 +49,16 @@ namespace winrt::midiglass::implementation
             return found >= 0;
         }
 
+        // A control a newer version made has no palette entry of its own.
+        constexpr wchar_t PlaceholderGlyph = L'\uE9CE';
+
         wchar_t GlyphForKind(_In_ glass::ControlKind kind) noexcept
         {
+            if (kind == glass::ControlKind::Placeholder)
+            {
+                return PlaceholderGlyph;
+            }
+
             for (auto const& entry : glass::Palette())
             {
                 // Several of the not-yet-built kinds borrow a real one's enum value to sit in
@@ -66,6 +74,11 @@ namespace winrt::midiglass::implementation
 
         std::wstring NameForKind(_In_ glass::ControlKind kind)
         {
+            if (kind == glass::ControlKind::Placeholder)
+            {
+                return std::wstring{ resources::GetString(L"OutlinePlaceholderKind") };
+            }
+
             for (auto const& entry : glass::Palette())
             {
                 if (!entry.IsComing && entry.Kind == kind)
@@ -79,6 +92,16 @@ namespace winrt::midiglass::implementation
 
         glass::PaletteArt ArtForKind(_In_ glass::ControlKind kind)
         {
+            if (kind == glass::ControlKind::Placeholder)
+            {
+                glass::PaletteArt art{};
+
+                art.Shape = glass::PaletteArtShape::Glyph;
+                art.Sample = std::wstring(1, PlaceholderGlyph);
+
+                return art;
+            }
+
             for (auto const& entry : glass::Palette())
             {
                 if (!entry.IsComing && entry.Kind == kind)
@@ -1227,7 +1250,15 @@ namespace winrt::midiglass::implementation
 
                 data.IsLocked = control->Locked;
 
-                if (control->Locked)
+                if (control->Kind == glass::ControlKind::Placeholder)
+                {
+                    if (!control->Label.empty())
+                    {
+                        data.AccessibleName = std::wstring{ resources::FormatString(
+                            L"SurfacePlaceholderAccessibleFormat", data.DisplayName) };
+                    }
+                }
+                else if (control->Locked)
                 {
                     data.AccessibleName = std::wstring{ resources::FormatString(
                         L"OutlineLockedAccessibleFormat",
@@ -1348,6 +1379,8 @@ namespace winrt::midiglass::implementation
 
             m_editor.ClearSelection();
 
+            auto refused = false;
+
             for (auto const& entry : OutlineList().SelectedItems())
             {
                 auto const item = entry.try_as<midiglass::EditorItem>();
@@ -1363,8 +1396,18 @@ namespace winrt::midiglass::implementation
                 }
                 else
                 {
-                    m_editor.AddToSelection(std::wstring{ item.Key() });
+                    std::wstring const key{ item.Key() };
+
+                    m_editor.AddToSelection(key);
+
+                    // A control a newer version made can't be selected.
+                    refused = refused || !m_editor.IsSelected(key);
                 }
+            }
+
+            if (refused)
+            {
+                SelectOutlineRowForSelection();
             }
 
             UpdateOverlay();

@@ -38,4 +38,8 @@ class PackageSurveyTests
     TEST_METHOD(AnOldLayoutFileIsRenamedOnce);
     TEST_METHOD(ARenameNeverWritesOverAFile);
     TEST_METHOD(APackageFromAnOlderBuildImportsUnderTheNewName);
+
+    // ---- a layout from a newer version ----
+
+    TEST_METHOD(ANewerLayoutIsNeverWrittenOver);
 };

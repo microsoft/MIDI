@@ -33,8 +33,19 @@ namespace midiglass
 
         LayoutCardStatus Status{ LayoutCardStatus::Ready };
 
+        // From this PC's settings.
         bool IsFavorite{ false };
+
+        // What an older build wrote in the file, read only for the one-time move into settings.
+        bool FileSaysFavorite{ false };
+
         bool IsNewTile{ false };
+
+        // Made by a newer version of the app, so it is never written from here.
+        bool IsFromNewerVersion{ false };
+
+        // Who signed the pack it came from, while its files are unchanged. Empty otherwise.
+        std::wstring SignerName{};
 
         // Sort keys, kept beside the display text so the library never re-parses what it shows.
         int64_t LastUsedTicks{ 0 };
@@ -99,6 +110,12 @@ namespace winrt::midiglass::implementation
         int64_t LastUsedTicks() const noexcept { return m_lastUsedTicks; }
         int64_t LastChangedTicks() const noexcept { return m_lastChangedTicks; }
 
+        // Not projected. The menu turns off what would write the file.
+        bool IsFromNewerVersion() const noexcept { return m_isFromNewerVersion; }
+
+        // Not projected. A signed layout is edited as a copy, so the signed one stays as it is.
+        std::wstring const& SignerName() const noexcept { return m_signerName; }
+
     private:
         xaml::Visibility VisibilityFor(_In_ ::midiglass::LayoutCardStatus status) const noexcept
         {
@@ -123,6 +140,9 @@ namespace winrt::midiglass::implementation
 
         bool m_isFavorite{ false };
         bool m_isNewTile{ false };
+        bool m_isFromNewerVersion{ false };
+
+        std::wstring m_signerName{};
 
         int64_t m_lastUsedTicks{ 0 };
         int64_t m_lastChangedTicks{ 0 };

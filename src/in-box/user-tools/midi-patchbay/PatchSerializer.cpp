@@ -46,6 +46,7 @@ namespace midipatchbay
 
         constexpr wchar_t KeySource[] = L"source";
         constexpr wchar_t KeySourceGroup[] = L"sourceGroup";
+        constexpr wchar_t KeySourceOutput[] = L"sourceOutput";
         constexpr wchar_t KeyDestination[] = L"destination";
         constexpr wchar_t KeyDestinationGroup[] = L"destinationGroup";
         constexpr wchar_t KeyMuted[] = L"muted";
@@ -58,8 +59,8 @@ namespace midipatchbay
         constexpr wchar_t KeySendSpeedLimit[] = L"sendSpeedLimit";
 
         constexpr wchar_t CommentText[] =
-            L"Windows MIDI Patchbay. Written by the MIDI Patchbay app. The MIDI service does not "
-            L"read this file.";
+            L"Windows MIDI Patchbay patch. Written by the Windows MIDI Patchbay app. The MIDI "
+            L"service does not read this file.";
 
         constexpr wchar_t MatchModeDeviceId[] = L"endpointDeviceId";
         constexpr wchar_t MatchModeUsb[] = L"usbVendorAndProduct";
@@ -222,6 +223,86 @@ namespace midipatchbay
             return std::clamp(value, -MaximumCanvasCoordinate, MaximumCanvasCoordinate);
         }
 
+        // "yes" or "no" for a Branch. A Switch's case by its id, or "otherwise".
+        json::JsonValue WayToJson(_In_ BlockKind kind, _In_ int32_t way)
+        {
+            if (kind == BlockKind::Branch)
+            {
+                return json::JsonValue::CreateStringValue(way == BranchNoWay ? L"no" : L"yes");
+            }
+
+            if (way == SwitchOtherwiseWay)
+            {
+                return json::JsonValue::CreateStringValue(L"otherwise");
+            }
+
+            return json::JsonValue::CreateNumberValue(way);
+        }
+
+        // Nothing when the link names a way the step doesn't have, so the link is left out. A link
+        // that names none takes the way a new one would.
+        std::optional<int32_t> WayFromJson(_In_ PatchBlock const& block, _In_ json::JsonValue const& value) noexcept
+        {
+            try
+            {
+                auto way = DefaultWayOf(block.Kind);
+
+                if (value != nullptr && value.ValueType() == json::JsonValueType::String)
+                {
+                    auto const text = std::wstring{ value.GetString() };
+
+                    if (text == L"yes")
+                    {
+                        way = BranchYesWay;
+                    }
+                    else if (text == L"no")
+                    {
+                        way = BranchNoWay;
+                    }
+                    else if (text == L"otherwise")
+                    {
+                        way = SwitchOtherwiseWay;
+                    }
+                    else
+                    {
+                        return std::nullopt;
+                    }
+
+                    // "yes" and "otherwise" are both way 0, so the kind has to agree with the word.
+                    if ((block.Kind == BlockKind::Branch) == (text == L"otherwise"))
+                    {
+                        return std::nullopt;
+                    }
+                }
+                else if (value != nullptr && value.ValueType() == json::JsonValueType::Number)
+                {
+                    auto const number = value.GetNumber();
+
+                    if (block.Kind != BlockKind::Switch || !std::isfinite(number) || std::floor(number) != number ||
+                        number < 1 || number > MaximumSwitchCaseId)
+                    {
+                        return std::nullopt;
+                    }
+
+                    way = static_cast<int32_t>(number);
+                }
+                else if (value != nullptr)
+                {
+                    return std::nullopt;
+                }
+
+                if (IsWayOf(block, way))
+                {
+                    return way;
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return std::nullopt;
+        }
+
         EndpointMatchMode MatchModeFromString(_In_ std::wstring const& value) noexcept
         {
             if (value == MatchModeUsb)
@@ -314,11 +395,17 @@ namespace midipatchbay
                 auto const item = entry.GetObject();
 
                 // A kind this version does not know is left out, along with its links, rather
-                // than guessed at.
-                auto const kind = BlockKindFromKey(ReadString(item, KeyType));
+                // than guessed at. The patch is then one this version must never save.
+                auto const typeName = ReadString(item, KeyType);
+                auto const kind = BlockKindFromKey(typeName);
 
                 if (!kind.has_value())
                 {
+                    if (!typeName.empty())
+                    {
+                        patch.IsFromNewerVersion = true;
+                    }
+
                     continue;
                 }
 
@@ -395,10 +482,27 @@ namespace midipatchbay
                     continue;
                 }
 
-                // A block has one way in and one way out; only an endpoint end has a group.
-                connection.SourceGroupIndex = patch.IsBlock(connection.SourceId)
-                    ? AllGroups
-                    : ReadGroupIndex(item, KeySourceGroup);
+                // A block has one way in and one way out; only an endpoint end has a group. A
+                // Branch or a Switch has more than one way out, and a link names the one it takes.
+                auto const* sourceBlock = patch.FindBlock(connection.SourceId);
+
+                if (sourceBlock != nullptr && HasWays(sourceBlock->Kind))
+                {
+                    auto const way = WayFromJson(*sourceBlock, GetValue(item, KeySourceOutput));
+
+                    if (!way.has_value())
+                    {
+                        continue;
+                    }
+
+                    connection.SourceGroupIndex = *way;
+                }
+                else
+                {
+                    connection.SourceGroupIndex = sourceBlock != nullptr
+                        ? AllGroups
+                        : ReadGroupIndex(item, KeySourceGroup);
+                }
 
                 connection.DestinationGroupIndex = patch.IsBlock(connection.DestinationId)
                     ? AllGroups
@@ -911,6 +1015,7 @@ namespace midipatchbay
 
             patch.Name = ReadString(root, KeyName);
             patch.Description = ReadString(root, KeyDescription);
+            patch.Provenance = midiapp::ReadProvenance(root);
             patch.ActivateAtStartup = ReadBool(root, KeyActivateAtStartup, true);
             patch.WaitForSendComplete = ReadBool(root, KeyWaitForSendComplete, false);
             patch.CreatedTimestamp = static_cast<int64_t>(std::clamp(ReadNumber(root, KeyCreated, 0.0), 0.0, 1.0e12));
@@ -924,6 +1029,7 @@ namespace midipatchbay
             auto const version = ReadNumber(root, KeyFileVersion, 1.0);
 
             patch.LoadedFileVersion = version < 2.0 ? 1 : static_cast<int32_t>((std::min)(version, 1000000.0));
+            patch.IsFromNewerVersion = patch.LoadedFileVersion > CurrentPatchFileVersion;
 
             ReadEndpoints(root, patch);
 
@@ -964,6 +1070,12 @@ namespace midipatchbay
             root.SetNamedValue(KeyFileVersion, json::JsonValue::CreateNumberValue(CurrentPatchFileVersion));
             root.SetNamedValue(KeyName, json::JsonValue::CreateStringValue(patch.Name));
             root.SetNamedValue(KeyDescription, json::JsonValue::CreateStringValue(patch.Description));
+
+            if (patch.Provenance.has_value() && !patch.Provenance->IsEmpty())
+            {
+                root.SetNamedValue(midiapp::ProvenanceKey, midiapp::ProvenanceToJson(*patch.Provenance));
+            }
+
             root.SetNamedValue(KeyCreated, json::JsonValue::CreateNumberValue(static_cast<double>(patch.CreatedTimestamp)));
             root.SetNamedValue(KeyModified, json::JsonValue::CreateNumberValue(static_cast<double>(patch.ModifiedTimestamp)));
             root.SetNamedValue(KeyActivateAtStartup, json::JsonValue::CreateBooleanValue(patch.ActivateAtStartup));
@@ -1027,6 +1139,10 @@ namespace midipatchbay
                 if (!patch.IsBlock(connection.SourceId))
                 {
                     item.SetNamedValue(KeySourceGroup, json::JsonValue::CreateNumberValue(connection.SourceGroupIndex));
+                }
+                else if (auto const* source = patch.FindBlock(connection.SourceId); source != nullptr && HasWays(source->Kind))
+                {
+                    item.SetNamedValue(KeySourceOutput, WayToJson(source->Kind, connection.SourceGroupIndex));
                 }
 
                 item.SetNamedValue(KeyDestination, json::JsonValue::CreateStringValue(connection.DestinationId));

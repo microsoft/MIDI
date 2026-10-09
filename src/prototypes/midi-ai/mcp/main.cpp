@@ -24,19 +24,19 @@ namespace
     constexpr wchar_t PrototypeVersion[] = L"0.1.0-prototype";
 
     constexpr wchar_t PatchbayInstructions[] =
-        L"These tools turn what the customer asks for into a MIDI Patchbay patch: which devices connect to which, "
+        L"These tools turn what the customer asks for into a Windows MIDI Patchbay patch: which devices connect to which, "
         L"and what is filtered or changed on the way. Work in this order. Call list_midi_endpoints to see what is "
         L"connected. Ask the customer about anything that is not clear, such as which keyboard, which channel or "
         L"where to split. Call preview_patch and read its summary back to the customer in plain words. Call "
         L"save_patch_draft only after they agree. A draft never routes by itself: the customer turns routing on in "
-        L"MIDI Patchbay. Use the endpoint and group names the tools give you, and never invent an endpoint id.";
+        L"Windows MIDI Patchbay. Use the endpoint and group names the tools give you, and never invent an endpoint id.";
 
     constexpr wchar_t GlassInstructions[] =
-        L"These tools design MIDI Glass layouts: touch control surfaces that send MIDI to the customer's devices. "
+        L"These tools design Windows MIDI Glass layouts: touch control surfaces that send MIDI to the customer's devices. "
         L"Work in this order. Call list_midi_endpoints and list_glass_controls. Ask the customer what the surface is "
         L"for and what it should control. Call preview_layout, look at the picture it returns and fix what looks wrong, "
         L"then show it to the customer. Call save_layout_draft only after they agree. Nothing is sent to a device until "
-        L"the customer runs the layout in MIDI Glass.";
+        L"the customer runs the layout in Windows MIDI Glass.";
 
     void Log(std::wstring const& text) noexcept
     {
@@ -97,7 +97,7 @@ int __cdecl wmain(int argc, wchar_t** argv)
         if (wantPatchbay && wantGlass)
         {
             identity.Name = L"windows-midi-tools-prototype";
-            identity.Title = L"Windows MIDI Patchbay and MIDI Glass (prototype)";
+            identity.Title = L"Windows MIDI Patchbay and Windows MIDI Glass (prototype)";
             identity.Instructions = std::wstring{ PatchbayInstructions } + L"\n\n" + GlassInstructions;
         }
         else if (wantPatchbay)

@@ -288,7 +288,7 @@ namespace midimcp
             else
             {
                 problems.Errors.push_back(role + L": this prototype can draft controlChange, note, pitchBend, channelPressure, rpn and nrpn. \"" +
-                    kind + L"\" has to be set up in MIDI Glass itself.");
+                    kind + L"\" has to be set up in Windows MIDI Glass itself.");
                 return false;
             }
 
@@ -671,7 +671,7 @@ namespace midimcp
 
                 if (glass::FindBuiltInTheme(current) == nullptr)
                 {
-                    problems.Errors.push_back(L"\"" + theme + L"\" is not a MIDI Glass theme. Use one of: " + Join(ThemeNames(), L", ") + L".");
+                    problems.Errors.push_back(L"\"" + theme + L"\" is not a Windows MIDI Glass theme. Use one of: " + Join(ThemeNames(), L", ") + L".");
                 }
                 else
                 {
@@ -994,7 +994,7 @@ namespace midimcp
             if (!::CreateProcessW(midiGlass.c_str(), commandLine.data(), nullptr, nullptr, FALSE,
                 CREATE_NO_WINDOW, nullptr, nullptr, &startup, &process))
             {
-                failure = L"MIDI Glass could not be started to draw the preview.";
+                failure = L"Windows MIDI Glass could not be started to draw the preview.";
                 return std::nullopt;
             }
 
@@ -1004,7 +1004,7 @@ namespace midimcp
             if (::WaitForSingleObject(processHandle.get(), PreviewTimeoutMilliseconds) != WAIT_OBJECT_0)
             {
                 ::TerminateProcess(processHandle.get(), 1);
-                failure = L"MIDI Glass took too long to draw the preview.";
+                failure = L"Windows MIDI Glass took too long to draw the preview.";
                 return std::nullopt;
             }
 
@@ -1013,7 +1013,7 @@ namespace midimcp
 
             if (exitCode != 0)
             {
-                failure = L"MIDI Glass could not draw the preview (exit code " + std::to_wstring(exitCode) + L").";
+                failure = L"Windows MIDI Glass could not draw the preview (exit code " + std::to_wstring(exitCode) + L").";
                 return std::nullopt;
             }
 
@@ -1021,7 +1021,7 @@ namespace midimcp
 
             if (!bytes)
             {
-                failure = L"MIDI Glass drew nothing.";
+                failure = L"Windows MIDI Glass drew nothing.";
             }
 
             return bytes;
@@ -1129,9 +1129,9 @@ namespace midimcp
         {
             ToolDefinition tool{};
             tool.Name = L"list_glass_controls";
-            tool.Title = L"List MIDI Glass controls and themes";
+            tool.Title = L"List Windows MIDI Glass controls and themes";
             tool.Description =
-                L"Lists every kind of control a MIDI Glass layout can hold, what each is for, its starting size on a "
+                L"Lists every kind of control a Windows MIDI Glass layout can hold, what each is for, its starting size on a "
                 L"1280 x 800 page and what it sends when it is first placed, plus the themes and the usual page sizes. "
                 L"Read this before designing a layout.";
             tool.InputSchema = LR"({ "type": "object", "additionalProperties": false })";
@@ -1185,8 +1185,8 @@ namespace midimcp
         {
             ToolDefinition tool{};
             tool.Name = L"list_glass_layouts";
-            tool.Title = L"List MIDI Glass layouts";
-            tool.Description = L"Lists the layouts saved in MIDI Glass: name, description, page size, theme, devices, and how many controls each has.";
+            tool.Title = L"List Windows MIDI Glass layouts";
+            tool.Description = L"Lists the layouts saved in Windows MIDI Glass: name, description, page size, theme, devices, and how many controls each has.";
             tool.InputSchema = LR"({ "type": "object", "additionalProperties": false })";
             tool.Annotations = { true, false, true, false };
             tool.Handler = [options](json::JsonObject const&, CallContext const&)
@@ -1253,9 +1253,9 @@ namespace midimcp
         {
             ToolDefinition tool{};
             tool.Name = L"preview_layout";
-            tool.Title = L"Preview a MIDI Glass layout";
+            tool.Title = L"Preview a Windows MIDI Glass layout";
             tool.Description =
-                L"Builds a layout without saving it and returns a picture drawn by MIDI Glass itself, plus what each "
+                L"Builds a layout without saving it and returns a picture drawn by Windows MIDI Glass itself, plus what each "
                 L"control sends and anything that is wrong. The picture shows where controls sit, their sizes and their "
                 L"colors; labels are listed in the text, not drawn. Look at the picture and fix overlaps, crowding and "
                 L"wasted space before showing it to the customer. When a device name matches more than one endpoint the "
@@ -1285,7 +1285,7 @@ namespace midimcp
 
                     if (midiGlass.empty())
                     {
-                        text += L"\nNo picture: MIDI Glass is not installed on this PC.\n";
+                        text += L"\nNo picture: Windows MIDI Glass is not installed on this PC.\n";
                     }
                     else if (auto const picture = RenderPreview(midiGlass, draft->Document, failure); picture)
                     {
@@ -1308,9 +1308,9 @@ namespace midimcp
         {
             ToolDefinition tool{};
             tool.Name = L"save_layout_draft";
-            tool.Title = L"Save a MIDI Glass draft";
+            tool.Title = L"Save a Windows MIDI Glass draft";
             tool.Description =
-                L"Saves the layout as a new draft in MIDI Glass. Nothing is sent to any device until the customer opens it and "
+                L"Saves the layout as a new draft in Windows MIDI Glass. Nothing is sent to any device until the customer opens it and "
                 L"runs it. It never replaces an existing layout. Call preview_layout first, look at the picture, and get the "
                 L"customer's agreement.";
             tool.InputSchema = LayoutSchemaText();
@@ -1341,7 +1341,7 @@ namespace midimcp
                     }
 
                     std::wstring text = L"Saved a draft: " + DisplayPathUnderDocuments(*path) + L"\n\n" + DescribeDraft(*draft) +
-                        L"\nThe customer finds it in the MIDI Glass library, where Edit opens it for changes and Run starts it.\n";
+                        L"\nThe customer finds it in the Windows MIDI Glass library, where Edit opens it for changes and Run starts it.\n";
                     problems.AppendTo(text);
 
                     ToolResult result{};

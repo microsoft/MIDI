@@ -35,6 +35,20 @@ namespace glass
             control.Height = rect.Height;
         }
 
+        // A control a newer version made is never selected, which keeps every edit away from it.
+        bool IsPlaceholder(_In_ Page const* page, _In_ std::wstring const& id) noexcept
+        {
+            if (page == nullptr)
+            {
+                return false;
+            }
+
+            return std::any_of(page->Controls.begin(), page->Controls.end(), [&id](Control const& control)
+                {
+                    return control.Kind == ControlKind::Placeholder && control.Id == id;
+                });
+        }
+
         // One thing to arrange, and the controls that move with it.
         struct ArrangeBlock
         {
@@ -321,7 +335,7 @@ namespace glass
     {
         m_selection.clear();
 
-        if (!id.empty())
+        if (!id.empty() && !IsPlaceholder(CurrentPage(), id))
         {
             m_selection.push_back(id);
         }
@@ -330,7 +344,7 @@ namespace glass
     _Use_decl_annotations_
     void EditorController::AddToSelection(std::wstring const& id)
     {
-        if (!id.empty() && !IsSelected(id))
+        if (!id.empty() && !IsSelected(id) && !IsPlaceholder(CurrentPage(), id))
         {
             m_selection.push_back(id);
         }
@@ -343,7 +357,10 @@ namespace glass
 
         if (found == m_selection.end())
         {
-            m_selection.push_back(id);
+            if (!IsPlaceholder(CurrentPage(), id))
+            {
+                m_selection.push_back(id);
+            }
         }
         else
         {
@@ -385,7 +402,8 @@ namespace glass
 
         for (auto const& control : page->Controls)
         {
-            if (IsOutsidePage(RectOf(control), m_document.PageWidth, m_document.PageHeight))
+            if (IsOutsidePage(RectOf(control), m_document.PageWidth, m_document.PageHeight) &&
+                control.Kind != ControlKind::Placeholder)
             {
                 m_selection.push_back(control.Id);
             }

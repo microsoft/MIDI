@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "PatchStore.h"
 #include "CapabilityInquiry.h"
+#include "PatchFolderMove.h"
 #include "PatchSerializer.h"
 #include "StringResources.h"
 
@@ -15,7 +16,10 @@ namespace midipatchbay
 {
     namespace
     {
-        constexpr wchar_t FolderName[] = L"MIDI Patchbay";
+        constexpr wchar_t FolderName[] = L"MIDI Patches";
+
+        // Where earlier versions kept patches. Its contents move to FolderName.
+        constexpr wchar_t PreviousFolderName[] = L"MIDI Patchbay";
 
         // Inside the patch folder. The app only reads the files directly in that folder, so
         // nothing in here is ever loaded as a patch by mistake.
@@ -240,10 +244,15 @@ namespace midipatchbay
             if (SUCCEEDED(::SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, nullptr, &documents)) &&
                 documents)
             {
-                std::filesystem::path root{ documents.get() };
-                root /= FolderName;
+                std::filesystem::path const root{ documents.get() };
+                auto const previous = (root / PreviousFolderName).wstring();
 
-                m_folder = root.wstring();
+                m_folder = MoveEarlierPatchFolder(previous, (root / FolderName).wstring());
+
+                if (m_folder == previous)
+                {
+                    MIDI_PATCHBAY_LOG_WARNING(L"The earlier patch folder could not be moved yet, so it is still the one in use.");
+                }
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to resolve the patch folder.")
@@ -569,7 +578,34 @@ namespace midipatchbay
                 return std::nullopt;
             }
 
-            if (std::filesystem::equivalent(std::filesystem::path{ sourcePath }.parent_path(), m_folder, ec))
+            auto const inFolder = std::filesystem::equivalent(std::filesystem::path{ sourcePath }.parent_path(), m_folder, ec);
+
+            // A newer version's patch holds what this one can't read, so it is copied as it is and
+            // never written again from the part this version understood.
+            if (patch->IsFromNewerVersion)
+            {
+                patch->ActivateAtStartup = false;
+
+                if (inFolder)
+                {
+                    return patch;
+                }
+
+                auto const target = BuildUniqueFilePath(patch->Name, {});
+
+                if (target.empty() || !::CopyFileW(sourcePath.c_str(), target.c_str(), TRUE))
+                {
+                    m_lastError = resources::FormatString(L"ErrorSavePatchFormat", target);
+                    return std::nullopt;
+                }
+
+                patch->FilePath = target;
+                patch->IsTemporary = false;
+
+                return patch;
+            }
+
+            if (inFolder)
             {
                 if (patch->LoadedFileVersion < CurrentPatchFileVersion && KeepEarlierVersion(patch.value()))
                 {
@@ -627,6 +663,13 @@ namespace midipatchbay
     {
         try
         {
+            // Writing it would throw away everything in it this version couldn't read.
+            if (patch.IsFromNewerVersion)
+            {
+                m_lastError = resources::GetString(L"ErrorSaveNewerPatch");
+                return false;
+            }
+
             if (!EnsureFolder())
             {
                 return false;

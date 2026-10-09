@@ -184,4 +184,31 @@ namespace midipatchbay
 
         return result;
     }
+
+    _Use_decl_annotations_
+    int32_t DefaultWayOf(BlockKind kind) noexcept
+    {
+        return HasWays(kind) ? (kind == BlockKind::Branch ? BranchYesWay : SwitchOtherwiseWay) : AllGroups;
+    }
+
+    _Use_decl_annotations_
+    bool IsWayOf(PatchBlock const& block, int32_t way) noexcept
+    {
+        if (!HasWays(block.Kind))
+        {
+            return way == AllGroups;
+        }
+
+        try
+        {
+            auto const ways = WaysOf(block.Kind, block.Settings);
+
+            return std::find(ways.begin(), ways.end(), way) != ways.end();
+        }
+        catch (...)
+        {
+        }
+
+        return false;
+    }
 }

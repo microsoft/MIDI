@@ -698,6 +698,11 @@ namespace midipatchbay
             { BlockKind::Gate, L"BlockNameGate", L"BlockShortGate", L"BlockBadgeGate", L"BlockHintGate" },
             { BlockKind::CiResponder, L"BlockNameCiResponder", L"BlockShortCiResponder", L"BlockBadgeCiResponder", L"BlockHintCiResponder" },
             { BlockKind::CiFilter, L"BlockNameCiFilter", L"BlockShortCiFilter", L"BlockBadgeCiFilter", L"BlockHintCiFilter" },
+            { BlockKind::Branch, L"BlockNameBranch", L"BlockShortBranch", L"BlockBadgeBranch", L"BlockHintBranch" },
+            { BlockKind::Switch, L"BlockNameSwitch", L"BlockShortSwitch", L"BlockBadgeSwitch", L"BlockHintSwitch" },
+            { BlockKind::SetTag, L"BlockNameSetTag", L"BlockShortSetTag", L"BlockBadgeSetTag", L"BlockHintSetTag" },
+            { BlockKind::SetMemory, L"BlockNameSetMemory", L"BlockShortSetMemory", L"BlockBadgeSetMemory", L"BlockHintSetMemory" },
+            { BlockKind::PutValue, L"BlockNamePutValue", L"BlockShortPutValue", L"BlockBadgePutValue", L"BlockHintPutValue" },
         };
 
         KindText const* FindKindText(_In_ BlockKind kind) noexcept
@@ -753,6 +758,7 @@ namespace midipatchbay
         case BlockCategory::Annotation: return resources::GetString(L"BlockCategoryAnnotations");
         case BlockCategory::Distribution: return resources::GetString(L"BlockCategoryDistribution");
         case BlockCategory::CapabilityInquiry: return resources::GetString(L"BlockCategoryCapabilityInquiry");
+        case BlockCategory::Logic:      return resources::GetString(L"BlockCategoryLogic");
         default:                        return resources::GetString(L"BlockCategoryFilters");
         }
     }
@@ -1345,6 +1351,99 @@ namespace midipatchbay
                 break;
             }
 
+            case BlockKind::Branch:
+            {
+                auto const& branch = settings.Branch;
+
+                text = branch.Condition.Test == LogicTest::Anything
+                    ? Text(resources::GetString(L"BlockDescBranchAnything"))
+                    : Text(resources::FormatString(L"BlockDescBranchFormat",
+                        DescribeLogicSource(branch.Subject, branch.Scale),
+                        DescribeCondition(branch.Condition, branch.Unit, branch.Scale, false)));
+                break;
+            }
+
+            case BlockKind::Switch:
+            {
+                auto const& choice = settings.Switch;
+
+                text = choice.Cases.empty()
+                    ? Text(resources::GetString(L"BlockDescSwitchNone"))
+                    : Text(resources::FormatString(L"BlockDescSwitchFormat",
+                        DescribeLogicSource(choice.Subject, choice.Scale), static_cast<int>(choice.Cases.size() + 1)));
+                break;
+            }
+
+            case BlockKind::SetTag:
+                if (!settings.SetTag.Tag.empty())
+                {
+                    text = Text(resources::FormatString(L"BlockDescAssignFormat",
+                        resources::FormatString(L"LogicTagFormat", settings.SetTag.Tag),
+                        DescribeLogicSource(settings.SetTag.Value, settings.SetTag.Scale)));
+                }
+                break;
+
+            case BlockKind::SetMemory:
+            {
+                auto const& memory = settings.SetMemory;
+
+                if (memory.Memory.empty())
+                {
+                    break;
+                }
+
+                auto const name = resources::FormatString(L"LogicMemoryFormat", memory.Memory);
+
+                switch (memory.Action)
+                {
+                case MemoryAction::Toggle:
+                    text = Text(resources::FormatString(L"BlockDescToggleFormat", name,
+                        DescribeUnitNumber(memory.First, memory.Unit, memory.Scale, true),
+                        DescribeUnitNumber(memory.Second, memory.Unit, memory.Scale, true)));
+                    break;
+
+                case MemoryAction::StepUp:
+                case MemoryAction::StepDown:
+                {
+                    // Steps are whole numbers, shown the way the memory's unit counts them.
+                    auto const unit = memory.Unit == LogicUnit::Value ? LogicUnit::Number : memory.Unit;
+
+                    text = Text(resources::FormatString(memory.Action == MemoryAction::StepUp ? L"BlockDescStepUpFormat" : L"BlockDescStepDownFormat",
+                        name,
+                        DescribeUnitNumber(memory.Lowest, unit, memory.Scale, false),
+                        DescribeUnitNumber(memory.Highest, unit, memory.Scale, false)));
+                    break;
+                }
+
+                case MemoryAction::Clear:
+                    text = Text(resources::FormatString(L"BlockDescClearFormat", name));
+                    break;
+
+                default:
+                    text = Text(resources::FormatString(L"BlockDescAssignFormat", name, DescribeLogicSource(memory.Value, memory.Scale)));
+                    break;
+                }
+
+                if (!memory.EveryMessage)
+                {
+                    text = Text(resources::FormatString(L"BlockDescOnTriggerFormat", DescribeGateTrigger(memory.Trigger), text));
+                }
+                break;
+            }
+
+            case BlockKind::PutValue:
+            {
+                auto const& put = settings.PutValue;
+                auto const named = put.Value.Kind == LogicSourceKind::Tag || put.Value.Kind == LogicSourceKind::Memory;
+
+                if (!named || !put.Value.Name.empty())
+                {
+                    text = Text(resources::FormatString(L"BlockDescAssignFormat",
+                        DescribePartPlace(put.Target), DescribeLogicSource(put.Value, put.Scale)));
+                }
+                break;
+            }
+
             default:
                 break;
             }
@@ -1486,5 +1585,232 @@ namespace midipatchbay
         default:
             return resources::GetString(L"CiProblemNotJson");
         }
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeMessagePart(MessagePart part) noexcept
+    {
+        constexpr wchar_t const* keys[]{
+            L"MessagePartGroup", L"MessagePartChannel", L"MessagePartNote", L"MessagePartVelocity",
+            L"MessagePartController", L"MessagePartControllerValue", L"MessagePartProgram",
+            L"MessagePartBankMsb", L"MessagePartBankLsb", L"MessagePartPressure",
+            L"MessagePartPitchBend", L"MessagePartBits" };
+
+        static_assert(std::size(keys) == MessagePartCount);
+
+        auto const index = static_cast<size_t>(part);
+
+        return index < std::size(keys) ? resources::GetString(keys[index]) : winrt::hstring{};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribePartPlace(PartPlace const& place) noexcept
+    {
+        if (place.Part != MessagePart::Bits)
+        {
+            return DescribeMessagePart(place.Part);
+        }
+
+        return resources::FormatString(L"MessagePartBitsFormat",
+            static_cast<int>(place.HighBit), static_cast<int>(place.LowBit), static_cast<int>(place.Word) + 1);
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeLogicTest(LogicTest test) noexcept
+    {
+        constexpr wchar_t const* keys[]{
+            L"LogicTestAnything", L"LogicTestIs", L"LogicTestIsNot", L"LogicTestAtLeast", L"LogicTestBelow",
+            L"LogicTestBetween", L"LogicTestOneOf", L"LogicTestHasValue", L"LogicTestIsEmpty" };
+
+        auto const index = static_cast<size_t>(test);
+
+        return index < std::size(keys) ? resources::GetString(keys[index]) : winrt::hstring{};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeLogicUnit(LogicUnit unit) noexcept
+    {
+        constexpr wchar_t const* keys[]{
+            L"LogicUnitNumber", L"LogicUnitChannel", L"LogicUnitGroup", L"LogicUnitNote", L"LogicUnitValue" };
+
+        auto const index = static_cast<size_t>(unit);
+
+        return index < std::size(keys) ? resources::GetString(keys[index]) : winrt::hstring{};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeMemoryAction(MemoryAction action) noexcept
+    {
+        constexpr wchar_t const* keys[]{
+            L"MemoryActionSet", L"MemoryActionToggle", L"MemoryActionStepUp", L"MemoryActionStepDown", L"MemoryActionClear" };
+
+        auto const index = static_cast<size_t>(action);
+
+        return index < std::size(keys) ? resources::GetString(keys[index]) : winrt::hstring{};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeUnitNumber(uint32_t number, LogicUnit unit, ValueScale scale, bool standalone) noexcept
+    {
+        try
+        {
+            switch (unit)
+            {
+            case LogicUnit::Channel:
+            case LogicUnit::Group:
+            {
+                // Counted from 1 on screen, like every channel and group in the app.
+                auto const shown = static_cast<int64_t>(number) + 1;
+
+                if (!standalone)
+                {
+                    return winrt::to_hstring(shown);
+                }
+
+                return resources::FormatString(unit == LogicUnit::Channel ? L"UnitChannelFormat" : L"UnitGroupFormat", shown);
+            }
+
+            case LogicUnit::Note:
+                return DescribeNote(static_cast<uint8_t>((std::min)(number, 127u)));
+
+            case LogicUnit::Value:
+                return DescribeScaledValue(static_cast<int32_t>((std::min)(number, static_cast<uint32_t>(FullScaleHundredths))), scale);
+
+            default:
+                return winrt::to_hstring(number);
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeLogicSource(LogicSource const& source, ValueScale scale) noexcept
+    {
+        switch (source.Kind)
+        {
+        case LogicSourceKind::Number:
+            return DescribeUnitNumber(source.Number, source.Unit, scale, true);
+
+        case LogicSourceKind::Part:
+            return DescribePartPlace(source.Place);
+
+        case LogicSourceKind::Tag:
+            return resources::FormatString(L"LogicTagFormat", source.Name);
+
+        case LogicSourceKind::Memory:
+            return resources::FormatString(L"LogicMemoryFormat", source.Name);
+
+        default:
+            return {};
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeCondition(LogicCondition const& condition, LogicUnit unit, ValueScale scale, bool standalone) noexcept
+    {
+        try
+        {
+            auto const value = [&](uint32_t number) { return DescribeUnitNumber(number, unit, scale, standalone); };
+
+            switch (condition.Test)
+            {
+            case LogicTest::Anything:
+                return resources::GetString(standalone ? L"ConditionAnythingLabel" : L"ConditionAnything");
+
+            case LogicTest::Is:
+                return value(condition.Value);
+
+            case LogicTest::IsNot:
+                return resources::FormatString(standalone ? L"ConditionIsNotLabelFormat" : L"ConditionIsNotFormat", value(condition.Value));
+
+            case LogicTest::AtLeast:
+                return resources::FormatString(L"ConditionAtLeastFormat", value(condition.Value));
+
+            case LogicTest::Below:
+                return resources::FormatString(standalone ? L"ConditionBelowLabelFormat" : L"ConditionBelowFormat", value(condition.Value));
+
+            case LogicTest::Between:
+                return resources::FormatString(L"ConditionBetweenFormat",
+                    value((std::min)(condition.Lowest, condition.Highest)), value((std::max)(condition.Lowest, condition.Highest)));
+
+            case LogicTest::OneOf:
+            {
+                if (condition.Values.empty())
+                {
+                    return resources::GetString(standalone ? L"ConditionNothingLabel" : L"ConditionNothing");
+                }
+
+                std::vector<std::wstring> items{};
+
+                for (size_t i = 0; i < condition.Values.size() && i < MaximumNamesInSummary; i++)
+                {
+                    items.push_back(std::wstring{ value(condition.Values[i]) });
+                }
+
+                auto text = JoinList(items, L"BlockDescListOrFormat");
+
+                if (condition.Values.size() > MaximumNamesInSummary)
+                {
+                    text = Text(resources::FormatString(L"FilterSummaryMoreFormat",
+                        text, static_cast<int>(condition.Values.size() - MaximumNamesInSummary)));
+                }
+
+                return winrt::hstring{ text };
+            }
+
+            case LogicTest::HasValue:
+                return resources::GetString(standalone ? L"ConditionHasValueLabel" : L"ConditionHasValue");
+
+            case LogicTest::IsEmpty:
+                return resources::GetString(standalone ? L"ConditionIsEmptyLabel" : L"ConditionIsEmpty");
+
+            default:
+                return {};
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeWay(BlockKind kind, BlockSettings const& settings, int32_t way) noexcept
+    {
+        if (kind == BlockKind::Branch)
+        {
+            return resources::GetString(way == BranchNoWay ? L"WayNo" : L"WayYes");
+        }
+
+        if (way == SwitchOtherwiseWay)
+        {
+            return resources::GetString(L"WayOtherwise");
+        }
+
+        for (auto const& entry : settings.Switch.Cases)
+        {
+            if (entry.Id == way)
+            {
+                return DescribeCondition(entry.Condition, settings.Switch.Unit, settings.Switch.Scale, true);
+            }
+        }
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeLogicValue(LogicValue const& value, LogicUnit unit, ValueScale scale) noexcept
+    {
+        if (!value.HasValue)
+        {
+            return resources::GetString(L"LogicValueEmpty");
+        }
+
+        return DescribeUnitNumber(ValueInUnit(value, unit), unit, scale, true);
     }
 }

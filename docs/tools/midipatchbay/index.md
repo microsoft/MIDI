@@ -26,7 +26,7 @@ It's the software version of the patchbay in a studio rack: keys into a sound mo
 6. **Appearance and settings** changes the theme and the window background, and has settings such as **Run in notification area** and **Start patches automatically**. The pin keeps the window on top of other windows.
 7. **The status bar** shows where your patches are, how many are routing, how many messages go through each second, and whether the MIDI service is running.
 
-Routing happens only while Windows MIDI Patchbay is running. [Routing only runs while Patchbay is running](#routing-only-runs-while-patchbay-is-running) explains how to keep it going in the background.
+Routing happens only while Windows MIDI Patchbay is running. [Routing only runs while Windows MIDI Patchbay is running](#routing-only-runs-while-patchbay-is-running) explains how to keep it going in the background.
 
 ## The patch window
 
@@ -38,60 +38,68 @@ Routing happens only while Windows MIDI Patchbay is running. [Routing only runs 
 4. **Routing** turns the patch on and off. **Start automatically** starts it each time Windows MIDI Patchbay starts.
 5. **The toolbar** has **Undo**, **Redo**, **Cut**, **Copy**, **Paste**, and **Remove**, and buttons to add an endpoint, create a loopback, or arrange the canvas for you.
 6. **The zoom controls**, at the bottom right of the canvas, change how much of the canvas you see. **Fit** shows all of it. The overview above them shows the whole patch.
-7. **Test** opens a monitor, a keyboard, or a scratch pad pointed at the selected endpoint.
+7. **Test** opens a monitor, a keyboard, or a scratch pad pointed at the selected endpoint, or traces messages through the patch. See [Testing a route](#testing-a-route).
 
 To give the canvas more room, or the panels more, drag the bar between the left panel and the canvas, or between the canvas and the details panel. Each patch window opens with the widths you last used.
 
 ## Your patches
 
-A **patch** is one canvas: the endpoints on it, the steps, the connections between them, and a name. Patches are saved as files in **Documents &rsaquo; MIDI Patchbay**, one file per patch, so you can back one up or copy it to another PC.
+A **patch** is one canvas: the endpoints on it, the steps, the connections between them, and a name. Patches are saved as files in **Documents &rsaquo; MIDI Patches**, one file per patch, so you can back one up or copy it to another PC.
 
-The main MIDI Patchbay window shows each patch as a tile. A tile has a map of the patch, its name and description, and words that say whether its devices are here, such as **4 devices ready** or **1 device missing**. A missing device is dashed and red on the map. A routing patch has a green edge, and the number in its corner is how many messages go through it each second. The power mark beside the device count means the patch starts automatically, and **Not saved** means the patch is temporary.
+The main Windows MIDI Patchbay window shows each patch as a tile. A tile has a map of the patch, its name and description, and words that say whether its devices are here, such as **4 devices ready** or **1 device missing**. A missing device is dashed and red on the map. A routing patch has a green edge, and the number in its corner is how many messages go through it each second. The power mark beside the device count means the patch starts automatically, and **Not saved** means the patch is temporary.
 
 Turn on the switch on a tile to start that patch. To open a patch, select its tile, or point at the tile and select **Edit**. Right-click a tile, or select **…** on it, to duplicate the patch, find its file, or delete it.
 
 **All**, **Routing**, **Not routing**, and **Needs attention** show only some of your patches. **Needs attention** is any patch with a missing device, a loop, or a problem that keeps it from routing. The search box finds a patch by its name, its description, or the devices on it. The sort list puts your patches in order by when they last changed or by name. The two buttons beside it switch between tiles and a list. The list fits more patches on the screen, and it also shows how many steps and connections each one has.
 
-Patch files end in `.midipatch`. To add one that somebody sent you, or one an AI assistant saved in another folder, select **Import patch…** and pick the file. You can also double-click it in File Explorer. The first time you do, Windows asks which app to open it with, so pick MIDI Patchbay. Either way, the patch is copied into your patches. It doesn't route, and it doesn't start automatically, until you turn those on. A file from somewhere else shouldn't connect your devices before you've looked at it.
+Patch files end in `.midipatch`. To add one that somebody sent you, or one an AI assistant saved in another folder, select **Import patch…** and pick the file. You can also double-click it in File Explorer. The first time you do, Windows asks which app to open it with, so pick Windows MIDI Patchbay. Either way, the patch is copied into your patches. It doesn't route, and it doesn't start automatically, until you turn those on. A file from somewhere else shouldn't connect your devices before you've looked at it.
 
-To have an AI assistant build a patch for you, select **Ask an AI assistant…** next to **Import patch…**. It shows a starting prompt to paste into the AI assistant you use, such as a chat in your web browser. The prompt has the link to [MIDI Patchbay patch files, a guide for AI agents]({{ site.baseurl }}/kb/midi-patchbay-patches-for-agents/), and the names of your MIDI devices and the groups they use, so the patch the assistant makes can find them. Patchbay doesn't send anything itself. If you'd rather not see it, turn off **Ask an AI assistant** in the appearance and settings flyout.
+To have an AI assistant build a patch for you, select **Ask an AI assistant…** next to **Import patch…**. It shows a starting prompt to paste into the AI assistant you use, such as a chat in your web browser. The prompt has the link to [Windows MIDI Patchbay patch files, a guide for AI agents]({{ site.baseurl }}/kb/midi-patchbay-patches-for-agents/), and the names of your MIDI devices and the groups they use, so the patch the assistant makes can find them. Windows MIDI Patchbay doesn't send anything itself. If you'd rather not see it, turn off **Ask an AI assistant** in the appearance and settings flyout.
 
-Older versions of Patchbay named patch files `.midipatch.json`. Patchbay renames them to `.midipatch` the next time it starts. If a file with the new name is already there, the old one is left alone.
+Older versions of Windows MIDI Patchbay named patch files `.midipatch.json`. The current version renames them to `.midipatch` the next time it starts. If a file with the new name is already there, the old one is left alone.
+
+Older versions also kept patches in **Documents &rsaquo; MIDI Patchbay**. The current version moves them to **MIDI Patches** the first time it starts. If **MIDI Patches** already has a file with the same name, that file stays, and the older one is left in **MIDI Patchbay**. If another app has a file in the old folder open, the move waits until the next time Windows MIDI Patchbay starts, and the app uses the old folder until then.
 
 You can have as many patches as you like, and more than one can be routing at the same time. Each patch opens in a window of its own, and a patch keeps routing after you close its window.
 
 When a patch isn't routing, a warning bar across the top of its window says so. Select **Start routing** on the bar to turn it on, and the bar goes away.
 
-To have a saved patch start routing by itself every time Patchbay starts, turn on **Start automatically** next to the routing button. While it's off, another bar reminds you that you'll need to start the patch yourself each time. You can close that reminder. A temporary patch can't start by itself, so turning the switch on for one asks you to save it first. Turn off the **Start patches automatically** setting to stop every patch from starting by itself.
+To have a saved patch start routing by itself every time Windows MIDI Patchbay starts, turn on **Start automatically** next to the routing button. While it's off, another bar reminds you that you'll need to start the patch yourself each time. You can close that reminder. A temporary patch can't start by itself, so turning the switch on for one asks you to save it first. Turn off the **Start patches automatically** setting to stop every patch from starting by itself.
 
-A patch you don't name is **temporary**: it routes right now and disappears when Patchbay closes. Nothing is written to disk. Give it a name and it sticks around.
+A patch you don't name is **temporary**: it routes right now and disappears when Windows MIDI Patchbay closes. Nothing is written to disk. Give it a name and it sticks around.
 
 **New quick patch** is the fastest way to get going: pick a source, pick a destination, and you have a patch with one connection in it. **New patch** gives you a blank canvas to build on instead.
 
 ### Patches from earlier versions
 
-Earlier versions of Patchbay kept the filters, the changes, and the sending speed of a connection on the connection itself. Now each of those is a step on the canvas. When you open a patch made with an earlier version, Patchbay turns them into steps, and the patch routes exactly the way it did. A bar across the top of the patch says so.
+Earlier versions of Windows MIDI Patchbay kept the filters, the changes, and the sending speed of a connection on the connection itself. Now each of those is a step on the canvas. When you open a patch made with an earlier version, Windows MIDI Patchbay turns them into steps, and the patch routes exactly the way it did. A bar across the top of the patch says so.
 
-Patchbay keeps a copy of the original file in **Documents &rsaquo; MIDI Patchbay &rsaquo; Earlier versions**. Select **Show the original** on the bar to find it. Earlier versions of Patchbay can't open the new files, so keep that copy if you might go back.
+Windows MIDI Patchbay keeps a copy of the original file in **Documents &rsaquo; MIDI Patches &rsaquo; Earlier versions**. Select **Show the original** on the bar to find it. Earlier versions of Windows MIDI Patchbay can't open the new files, so keep that copy if you might go back.
 
 In a few rare cases, a note mapping next to a transpose can't be carried over exactly, because the transpose would push the note past the top or bottom of the keyboard. The bar lists any note that's affected.
+
+### Patches from a newer version
+
+A patch made by a newer version of Windows MIDI Patchbay can have steps this version doesn't know. It still opens, and you can look at it and route it, but the steps it doesn't know are left out, along with their connections. A bar across the top of the patch says so, and its tile says **From a newer version**.
+
+Windows MIDI Patchbay never saves a patch like that, because saving would lose what it couldn't read. Changes you make to it are lost when the app closes, and it doesn't start by itself when the app starts. Update Windows MIDI Services to change it.
 
 ## Connection points
 
 Each endpoint on the canvas has two columns.
 
-- **In** is what Patchbay sends *to* that device.
-- **Out** is what Patchbay receives *from* it.
+- **In** is what Windows MIDI Patchbay sends *to* that device.
+- **Out** is what Windows MIDI Patchbay receives *from* it.
 
 There's a row for each group the endpoint declares, labeled with the group's number and the name the device gives that group. The name comes from the device's function blocks, or from its group terminal blocks when no function block names the group. Each endpoint grows wide enough to show its longest name. If a name is longer still, point at the row to see all of it. Above them is an **All groups** row: connect that and everything passes through with its group untouched, which is usually what you want when you just mean "send this device to that one".
 
-Connect a specific group to a different specific group and Patchbay rewrites the group as the message goes past. That's how you fold four groups of one device onto one group of another.
+Connect a specific group to a different specific group and Windows MIDI Patchbay rewrites the group as the message goes past. That's how you fold four groups of one device onto one group of another.
 
-A step has one **In** and one **Out**, and both carry every group.
+A step has one **In** and one **Out**, and both carry every group. A **Branch** and a **Switch** are different: they have an **Out** for each way a message can go. See [Logic steps](#logic-steps).
 
 You can draw a connection by dragging from an Out point to an In point, or by clicking the Out point and then clicking the In point. The second way also works from the keyboard. You don't have to land exactly on the point &mdash; get close and the connection snaps to it.
 
-To change where an existing connection goes, drag the end of the cord onto a different point. Drag an endpoint or a step by its title bar to move it out of the way. Select a connection, an endpoint, or a step and press **Delete** to remove it. The first time, Patchbay asks, and offers to stop asking.
+To change where an existing connection goes, drag the end of the cord onto a different point. Drag an endpoint or a step by its title bar to move it out of the way. Select a connection, an endpoint, or a step and press **Delete** to remove it. The first time, Windows MIDI Patchbay asks, and offers to stop asking.
 
 The zoom controls at the bottom right of the canvas go from 10% to 400%. **Fit** shows everything on the patch at once, as large as the window allows. To type a zoom level, click the percentage. The overview above the zoom controls shows the whole patch, with a box around the part on screen. Drag the box to move around, or click anywhere in the overview to jump there.
 
@@ -105,12 +113,13 @@ To work with more than one endpoint or step at once, hold Ctrl and click each on
 
 Steps sit between the endpoints and do something to the messages that pass through them. Drag one from the **Steps** tab on the left, or select a connection and choose **Add a step here**. Drop a step on a connection and the connection is split in two, with the step in the middle. A generator or an annotation is never put into a connection, so it's added on its own instead.
 
-There are six kinds:
+There are seven kinds:
 
 - **Filters** keep some messages out and let the rest through.
 - **Transforms** change messages on the way past.
 - The **message throttler** slows messages down for a device that can't keep up.
-- **Distribution** steps decide which connection out a message takes, or whether it goes at all. See [Distribution steps](#distribution-steps).
+- **Distribution** steps decide which connection out a message takes. See [Distribution steps](#distribution-steps).
+- **Logic** steps send a message one way or another by what's in it, and remember things from one message to the next. See [Logic steps](#logic-steps).
 - **MIDI-CI** steps answer MIDI-CI for a MIDI 1.0 device that can't, or keep MIDI-CI away from a device. See [MIDI-CI steps](#midi-ci-steps).
 - **Generators** make messages of their own: MIDI clock, MIDI Time Code, and an LFO. See [Generators](#generators).
 
@@ -118,11 +127,11 @@ The **Steps** tab also has **Annotation**, a note on the canvas. It isn't a step
 
 Messages go through the steps in the order the connections lead them, and each step only sees what the steps before it let through. When an **Out** leads to more than one place, each one gets its own copy of every message, so a step on one path never changes what another path carries. When more than one connection leads into the same **In**, their messages are merged.
 
-Select a step to see what it does, in a sentence, under **What it does**. When a step's settings are short, they're right there in the panel on the right, and a change takes effect as soon as you make it: the channel, group, and velocity filters, transpose, the message throttler, the clock divider, the note distributor, the MIDI-CI responder and filter, MIDI clock, and MIDI Time Code. Double-click one of those, and the panel is ready for you to change it. For the other steps, **Edit settings…**, or a double-click, opens their settings, as large as the patch window allows, so on a big screen a step with a lot of settings fits without scrolling. Nothing changes until you select **Apply**, and **Reset** puts the step back the way it started. Under **Name**, you can give a step a name of its own, such as "Bass side".
+Select a step to see what it does, in a sentence, under **What it does**. When a step's settings are short, they're right there in the panel on the right, and a change takes effect as soon as you make it: the channel, group, and velocity filters, transpose, the message throttler, the clock divider, the note distributor, the logic steps except the gate, the MIDI-CI responder and filter, MIDI clock, and MIDI Time Code. Double-click one of those, and the panel is ready for you to change it. For the other steps, **Edit settings…**, or a double-click, opens their settings, as large as the patch window allows, so on a big screen a step with a lot of settings fits without scrolling. Nothing changes until you select **Apply**, and **Reset** puts the step back the way it started. Under **Name**, you can give a step a name of its own, such as "Bass side".
 
 **Bypass** lets everything through a step unchanged, so you can hear the patch with and without it. A bypassed generator sends nothing.
 
-Steps can't be connected in a circle, because nothing would ever leave it. Patchbay won't draw a connection that would close one.
+Steps can't be connected in a circle, because nothing would ever leave it. Windows MIDI Patchbay won't draw a connection that would close one.
 
 ### Filter steps
 
@@ -174,7 +183,7 @@ Rules work on one message at a time. Some controllers split a value across two c
 
 ### Showing values as 0 to 127 or as a percentage
 
-MIDI 2.0 carries velocity in sixteen bits and controller values in thirty-two, so a percentage is what those values really mean, and that's how Patchbay stores them. But plenty of controllers give each of the 128 MIDI 1.0 steps its own meaning, such as a pad color, and typing 0.79% when you mean step 1 is no fun.
+MIDI 2.0 carries velocity in sixteen bits and controller values in thirty-two, so a percentage is what those values really mean, and that's how Windows MIDI Patchbay stores them. But plenty of controllers give each of the 128 MIDI 1.0 steps its own meaning, such as a pad color, and typing 0.79% when you mean step 1 is no fun.
 
 So the settings for the velocity rescaler, the aftertouch rescaler, and control change values steps start with a choice: **0 to 127** or **Percentage**. The value is the same either way; only the way you type it changes. A patch saved before this choice existed opens as 0 to 127, because that's all it could have meant. A new step starts as a percentage.
 
@@ -189,13 +198,40 @@ Leave **Bypass exact-pitch notes** clear and the pitch moves with the note, so t
 These decide where a message goes, rather than changing it.
 
 - **Note distributor** plays several one-note synths as one bigger synth. Connect one synth to its **Out** for each voice you want. Each connection is a voice, in the order you connected them, and each new note goes to one of them. Its note off, poly pressure, and MIDI 2.0 per-note messages follow it there. **Take turns** moves on to the next voice for each note. **First free voice** uses the first one that isn't playing. When every voice is playing, both cut the oldest note short. **Keep the highest notes** and **Keep the lowest notes** only cut a note short for a higher or a lower one. Control changes, channel pressure, and pitch bend go to every voice, or, with their box cleared, only to the voice that played the latest note. All notes off, program changes, and everything else always go to every voice.
+
+## Logic steps
+
+Logic steps look at what's in a message and decide what happens to it. They can also remember something from one message for the messages that come after it. That's how a footswitch can pick which synth a keyboard plays, or how hard notes and soft notes can go to different places with one step.
+
+- **Branch** sends each message one of two ways, **Yes** or **No**, by a test. It can test a part of the message, such as its channel, note, velocity, or a controller's value, or a tag or a memory. The tests are **Is**, **Is not**, **Is at least**, **Is below**, **Is between**, **Is one of**, **Is empty**, and **Is not empty**. A new Branch sends everything Yes until you give it a test.
+- **Switch** sends each message one of several ways. Each way has a test, and a message goes out the first way it matches, from the top. A message that matches none of them goes out **Anything else**. **Add a way for each channel**, or for each group, fills in sixteen ways at once. A Switch can have up to 64 ways.
+- **Set tag** gives each message a value to carry through the rest of the patch, such as the channel it came in on before a channel mapper moved it. A step further along can test the tag, or put it back into the message. A tag lasts only for that message's trip through the patch. Devices never see it.
+- **Set memory** remembers a value for the messages that come later. It can remember a part of the message, such as the last program change, or a number. It can also switch between two numbers each time, step up or down through a range, or empty the memory. It can change on every message that reaches it, or only on one kind, such as a control change from a footswitch. You can keep the messages that change it out, or send them on.
+- **Put value** writes a number, a tag, or a memory into one part of each message, such as its channel or its velocity. A value keeps its share of the range, so 50% of a velocity becomes 50% of a controller value.
 - **Gate** lets messages through only between one message and another. Pick what opens it and what closes it: a note on or off, a control change with a value at or above or below a number, a program change, Start, Continue, Stop, or an exact message typed in hex. When the same message opens and closes it, each one turns it the other way, like a footswitch. You can keep the opening and closing messages out or send them on, and choose whether it starts open. Note offs always get through, so no note is left sounding.
 
 To play notes only while a sequencer is playing, connect the sequencer's clock and the keyboard into a gate left as it starts: it opens on Start and closes on Stop.
 
+**Tags and memories have names.** Type a name, such as **Scene**, in the step that sets it, and pick the same name in the steps that read it. Capital letters don't matter. A patch can have up to 64 tags and 64 memories.
+
+- A tag belongs to one message. It starts empty, and a message that leaves a message throttler leaves its tags behind.
+- A memory belongs to the patch. It starts empty and keeps its value until Windows MIDI Patchbay closes, even while the patch isn't routing. It isn't saved in the patch. Select a step that uses a memory to see its value under **Activity**.
+
+**Notes stay together.** A Branch or a Switch sends a note off the same way its note on went, even when the note off wouldn't pass the test on its own. A sustain pedal let go reaches every way it went down on, and the rest of a long message, such as system exclusive, follows its first packet.
+
+**When there's nothing to test.** A Branch that tests the note can get a control change, and a memory can be empty. Choose what happens to those messages: send them every way, send them one way, or keep them out. Every way is the default, the same as two filters side by side would do.
+
+**Bypass.** A bypassed Branch or Switch sends messages every way, or only its first way, as you choose in its settings.
+
+What logic steps can't do:
+
+- **No math.** They compare values and copy them. They don't add, subtract, or multiply.
+- **They don't compare two tags or memories with each other.** A test compares one value with numbers you type.
+- **A message stays the kind it is.** Put value can move a program number into the channel, but it can't turn a note into a controller.
+
 ## MIDI-CI steps
 
-MIDI-CI lets an app ask a device what it is and what it can do. A MIDI 2.0 device answers for itself. A MIDI 1.0 device can't, so Patchbay can answer for it.
+MIDI-CI lets an app ask a device what it is and what it can do. A MIDI 2.0 device answers for itself. A MIDI 1.0 device can't, so Windows MIDI Patchbay can answer for it.
 
 - **MIDI-CI responder** answers MIDI-CI for the device it leads to. Put it on the path from the app to the device, usually right after the loopback the app uses. When the app looks for MIDI-CI devices, it finds one with the manufacturer ID, family, model, and software version you give the step. Use the numbers from the device's manual if it has them. The answers go back the way the question came, on the same group. Everything that isn't MIDI-CI, such as notes, goes on to the device as usual. MIDI-CI doesn't, unless you check **Send MIDI-CI on to the device too**, because most MIDI 1.0 devices don't understand it.
 - **MIDI-CI filter** keeps MIDI-CI away from a device, or lets only MIDI-CI through. Pick which kinds: discovery and management, profiles, Property Exchange, and Process Inquiry. System exclusive that isn't MIDI-CI goes through when MIDI-CI is kept out, and is kept out when only MIDI-CI is let through.
@@ -204,7 +240,7 @@ With **Answer MIDI message reports** on, a responder tells an app which notes ar
 
 **Profiles and properties.** A MIDI-CI file tells the responder which profiles the device follows, such as one for drawbar organs, and gives an app properties to read, such as the device's program list. Put the file in the patch folder, then type its name under **MIDI-CI file**, or select **Choose…**. A file from somewhere else is copied into the patch folder first. **Open patch folder** opens the folder in File Explorer. While the patch routes, changes to the file are picked up straight away.
 
-The file is JSON. [MIDI Patchbay patch files, a guide for AI agents]({{ site.baseurl }}/kb/midi-patchbay-patches-for-agents/#the-midi-ci-file) describes it, and an AI assistant can write one for you from the device's manual.
+The file is JSON. [Windows MIDI Patchbay patch files, a guide for AI agents]({{ site.baseurl }}/kb/midi-patchbay-patches-for-agents/#the-midi-ci-file) describes it, and an AI assistant can write one for you from the device's manual.
 
 Under **Activity**, a responder shows what its file adds, any problems in the file, its MUID, and the last questions it answered.
 
@@ -222,7 +258,7 @@ Generators make messages of their own. MIDI clock and MIDI Time Code only have a
 
 - **MIDI clock** sends 24 timing clock pulses for every beat, at the tempo you set. With **Send Start and Stop messages** on, it sends Start as routing starts and Stop as it stops, so a sequencer or drum machine plays along. It can swing eighth notes or sixteenth notes, up to 75%. Select the step to change its tempo right in the panel on the right.
 - **MIDI Time Code** sends quarter frame messages at 24, 25, 29.97 drop frame, or 30 frames per second, counting from the start time you set. It starts from that time each time the patch starts routing. With **Send a full timecode when starting and stopping** on, a device finds its place at once.
-- **LFO** sweeps a value up and down in the same shapes as an LFO control in MIDI Glass: sine, triangle, square, a ramp up or down, or one of four kinds of noise. Pick how long one pass takes, in beats at a tempo you set, and how much of the range it covers. It can send a control change, pitch bend, channel pressure, poly pressure on one note, or an RPN or NRPN, on the channel and group you pick. **Return to center when routing stops** sends the value halfway between the two ends as it stops, so a pitch bend that sweeps its whole range ends up back in the middle.
+- **LFO** sweeps a value up and down in the same shapes as an LFO control in Windows MIDI Glass: sine, triangle, square, a ramp up or down, or one of four kinds of noise. Pick how long one pass takes, in beats at a tempo you set, and how much of the range it covers. It can send a control change, pitch bend, channel pressure, poly pressure on one note, or an RPN or NRPN, on the channel and group you pick. **Return to center when routing stops** sends the value halfway between the two ends as it stops, so a pitch bend that sweeps its whole range ends up back in the middle.
 
 **Keeping an LFO in step with a clock.** Connect a clock to the LFO's **In**: a device that sends MIDI clock, a MIDI clock step, or a clock divider. The LFO then follows that clock instead of its own tempo. One pass takes that many beats of the clock, a Start from the clock puts the LFO back at the beginning of a pass, and when the clock stops, the LFO stops moving. Only timing clock, Start, Continue, Stop and Song Position reach the LFO. Anything else that comes in stops there. With nothing connected to its **In**, an LFO keeps its own tempo. A muted connection still counts, so muting the clock holds the LFO still.
 
@@ -260,38 +296,38 @@ Put the throttler last, right before the device, so its speed is spent only on t
 
 **A single note or knob turn is never held back.** After a quiet moment, a short burst goes out right away: 64 bytes at MIDI 1.0 wire speed, and twice that at twice the speed. Only what comes after that is spaced out. So playing a keyboard feels the same, while a 3,000-byte SysEx dump at MIDI 1.0 wire speed takes about a second, just as it would over a cable.
 
-**Patchbay holds the messages that are waiting** and sends them as fast as the speed allows. It never slows down the device or app that's sending to it. Select the throttler to see how many messages are waiting, under **Activity**. A throttler can hold minutes' worth of messages at MIDI 1.0 wire speed. If even more arrives, the newest messages are dropped, and **Activity** says how many.
+**Windows MIDI Patchbay holds the messages that are waiting** and sends them as fast as the speed allows. It never slows down the device or app that's sending to it. Select the throttler to see how many messages are waiting, under **Activity**. A throttler can hold minutes' worth of messages at MIDI 1.0 wire speed. If even more arrives, the newest messages are dropped, and **Activity** says how many.
 
 Everything connected into one throttler shares its speed. Connect everything that goes to a slow device through one throttler, and the device never gets more than that. Two throttlers in front of the same device each send at their own speed, so together they can send it twice as much. A patch from an earlier version gets a throttler for each connection that had a sending speed, so it works the way it did.
 
-When the routing changes, such as when you edit a step or a connection, Patchbay keeps its connections to devices open, but messages that are still waiting to be sent are dropped. Let a long transfer finish before you change things.
+When the routing changes, such as when you edit a step or a connection, Windows MIDI Patchbay keeps its connections to devices open, but messages that are still waiting to be sent are dropped. Let a long transfer finish before you change things.
 
 ### Waiting for each send to complete
 
 When an app sends MIDI, it can ask Windows to wait until the device's driver has taken each message before the app sends the next one. That keeps a fast app from piling messages up in front of a slow device. Older apps that use the Windows multimedia MIDI API (WinMM) always wait like this.
 
-That waiting stops at a loopback, though. An app sending to a loopback only waits for the loopback, and Patchbay then passes the messages on to the device as fast as they come. To put the waiting back, open the patch's **…** menu and turn on **Wait for send complete**. Patchbay then waits until the device's driver has taken each message before it sends the next one.
+That waiting stops at a loopback, though. An app sending to a loopback only waits for the loopback, and Windows MIDI Patchbay then passes the messages on to the device as fast as they come. To put the waiting back, open the patch's **…** menu and turn on **Wait for send complete**. Windows MIDI Patchbay then waits until the device's driver has taken each message before it sends the next one.
 
-It applies to every connection in the patch, because it changes how Patchbay connects to each device. Like a throttler, it never holds up the device or app that's sending to Patchbay. Patchbay holds the messages that are waiting, and **Activity** shows how many there are.
+It applies to every connection in the patch, because it changes how Windows MIDI Patchbay connects to each device. Like a throttler, it never holds up the device or app that's sending to Windows MIDI Patchbay. The app holds the messages that are waiting, and **Activity** shows how many there are.
 
 You can use both together. The throttler sets the most it sends in a second, and waiting makes sure the device has taken each message before the next one goes.
 
-## Routing only runs while Patchbay is running
+## Routing only runs while Windows MIDI Patchbay is running {#routing-only-runs-while-patchbay-is-running}
 
-This is the important limitation. Patchbay routes by receiving messages in its own process and sending them back out, so the routes exist only while the app is open. Two settings in the appearance and settings flyout, in the main MIDI Patchbay window, deal with that:
+This is the important limitation. Windows MIDI Patchbay routes by receiving messages in its own process and sending them back out, so the routes exist only while the app is open. Two settings in the appearance and settings flyout, in the main Windows MIDI Patchbay window, deal with that:
 
-- **Start with Windows** launches Patchbay when you sign in.
-- **Run in notification area** means closing or minimizing the main window puts Patchbay in the notification area with the routes still up. Click the icon to bring the window back, or right-click it for the list of patches, to stop everything, or to exit properly.
+- **Start with Windows** launches Windows MIDI Patchbay when you sign in.
+- **Run in notification area** means closing or minimizing the main window puts Windows MIDI Patchbay in the notification area with the routes still up. Click the icon to bring the window back, or right-click it for the list of patches, to stop everything, or to exit properly.
 
-Both are off unless you turn them on. Patchbay doesn't put itself in the notification area uninvited.
+Both are off unless you turn them on. Windows MIDI Patchbay doesn't put itself in the notification area uninvited.
 
-Closing a patch's own window never stops it routing. Closing the main window with **Run in notification area** off closes Patchbay, so Patchbay asks first when a patch is routing.
+Closing a patch's own window never stops it routing. Closing the main window with **Run in notification area** off closes Windows MIDI Patchbay, so it asks first when a patch is routing.
 
 ## Loopbacks
 
-Because Patchbay works inside its own process, it can only route *from* a message source *to* a message destination. It can't reach inside another app. A **loopback** is how you bridge that gap: it's a real MIDI endpoint on the PC that any app can open, so your DAW connects to the loopback and Patchbay feeds the loopback.
+Because Windows MIDI Patchbay works inside its own process, it can only route *from* a message source *to* a message destination. It can't reach inside another app. A **loopback** is how you bridge that gap: it's a real MIDI endpoint on the PC that any app can open, so your DAW connects to the loopback and Windows MIDI Patchbay feeds the loopback.
 
-**Create loopback** on the toolbar of a patch window, or at the bottom of the **Endpoints** tab, makes one without leaving the canvas, and drops it straight onto the patch. It uses the same Windows MIDI Services feature that [MIDI Loopback Setup]({{ site.baseurl }}/tools/midiloopbacksetup/) does, so a loopback made here is a normal endpoint that every app sees, and it can stick around after Patchbay closes.
+**Create loopback** on the toolbar of a patch window, or at the bottom of the **Endpoints** tab, makes one without leaving the canvas, and drops it straight onto the patch. It uses the same Windows MIDI Services feature that [MIDI Loopback Setup]({{ site.baseurl }}/tools/midiloopbacksetup/) does, so a loopback made here is a normal endpoint that every app sees, and it can stick around after Windows MIDI Patchbay closes.
 
 > **Tip:** Some apps remember a device by its name. To filter what one of those apps receives from a device without breaking that, give a loopback the device's name. First rename the device with **Customize** in [MIDI Settings]({{ site.baseurl }}/tools/settings/). Older apps see the device's MIDI 1.0 ports rather than the device itself, so rename those too, with **Edit port names**. New port names take effect when the MIDI service restarts. Then create a **MIDI 1.0 basic loopback** with the device's original name, connect the device's **Out** to the loopback's **In**, and put the filter steps you want between them. The app finds the loopback under the name it remembers, and gets only what your filters let through.
 >
@@ -303,7 +339,7 @@ Gear gets unplugged. That's a normal state, not an error.
 
 An endpoint that isn't connected right now is drawn with a dashed outline and a warning badge, its patch's tile says a device is missing, and the connections to it sit idle. Everything else in the patch keeps routing. The moment the device comes back, its connections start carrying messages again without you doing anything.
 
-If the device came back with a different identity &mdash; a USB device with no serial number moved to another port, for example &mdash; Patchbay notices a likely match and offers it. It never binds to a different device on its own.
+If the device came back with a different identity &mdash; a USB device with no serial number moved to another port, for example &mdash; Windows MIDI Patchbay notices a likely match and offers it. It never binds to a different device on its own.
 
 Selecting an endpoint shows **Match by** in the details panel:
 
@@ -313,16 +349,30 @@ Selecting an endpoint shows **Match by** in the details panel:
 
 ## Loops
 
-Sending a device's output back to its own input, directly or the long way around, floods every device on the path within a second. Patchbay walks the patch after every change and looks for that.
+Sending a device's output back to its own input, directly or the long way around, floods every device on the path within a second. Windows MIDI Patchbay walks the patch after every change and looks for that.
 
 When the circle is certain &mdash; when every endpoint on it is a loopback, so it's known that what goes in comes back out &mdash; the connection that closes it is left in place but held muted, and the whole circle is drawn in red. The message names the hops in order so you can see which one to remove.
 
-When the circle only closes *if* a piece of hardware echoes what it receives, which Patchbay can't see from outside, it says so and mutes nothing.
+When the circle only closes *if* a piece of hardware echoes what it receives, which Windows MIDI Patchbay can't see from outside, it says so and mutes nothing.
 
-Patchbay only knows about the connections it routes itself. A DIN cable between two devices, or another routing app, can close a circle it can't see. That's why the status bar says "no loops detected" rather than "no loops".
+Windows MIDI Patchbay only knows about the connections it routes itself. A DIN cable between two devices, or another routing app, can close a circle it can't see. That's why the status bar says "no loops detected" rather than "no loops".
 
-Steps can't be connected in a circle at all. Patchbay won't draw a connection that would close one, and a patch file that has one doesn't route until it's fixed.
+Steps can't be connected in a circle at all. Windows MIDI Patchbay won't draw a connection that would close one, and a patch file that has one doesn't route until it's fixed.
 
 ## Testing a route
 
 Right-click an endpoint, or use **Test** on the toolbar, to open [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/), the MIDI keyboard or the [scratch pad]({{ site.baseurl }}/tools/midiscratchpad/) already pointed at that endpoint. Selecting a connection shows a running count of what it has forwarded, and selecting a step shows how much it let through and kept out. That's how you tell "nothing is arriving" apart from "arriving and going nowhere".
+
+### Tracing messages
+
+**Trace messages…**, under **Test**, shows where messages go in the patch, one step at a time, without sending anything to a device. It works on a patch that isn't routing, and on devices that aren't plugged in.
+
+1. Pick the endpoint the messages come in from, and the group.
+2. Make a list of messages, in order, such as a note on and its note off. Pick the kind, the channel, and the numbers, then select **Add to the list**. Check **Send it as a MIDI 2.0 message** for a MIDI 2.0 device, or type the words in hex for any other message.
+3. Select **Trace**.
+
+The canvas shows where the first message went. The connections and steps it went through are drawn in green, a step that kept it out has a red edge, and everything else fades. The bar at the top says which devices it reached, and what it looked like when it got there. **Next** and **Previous** step through the list, and **Change messages** opens the list again. Close the bar to put the canvas back. Any change to the patch puts the canvas back too.
+
+The messages in a trace go through the patch one after another, the same way they would while it routes. A note off goes where its note on went, and memories start empty and carry from one message to the next. So to see how a footswitch changes where notes go, trace the footswitch message, then a note.
+
+A trace doesn't run generators, and it doesn't wait for a message throttler. What comes after a throttler is shown at once.

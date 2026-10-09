@@ -231,6 +231,20 @@ namespace winrt::midipatchbay::implementation
         {
             auto const* patch = CurrentPatch();
 
+            // Changes to a patch from a newer version are never saved, so this one can't be closed.
+            if (patch != nullptr && patch->IsFromNewerVersion)
+            {
+                ConversionBar().Title(resources::GetString(L"NewerPatchTitle"));
+                ConversionBar().Message(resources::GetString(L"NewerPatchMessage"));
+                ConversionBar().Severity(controls::InfoBarSeverity::Warning);
+                ConversionBar().IsClosable(false);
+                ConversionShowButton().Visibility(xaml::Visibility::Collapsed);
+                ConversionBar().IsOpen(true);
+                return;
+            }
+
+            ConversionBar().IsClosable(true);
+
             if (patch == nullptr ||
                 patch->LoadedFileVersion >= patchbay::CurrentPatchFileVersion ||
                 g_conversionNoticeDismissed.count(m_patchKey) != 0)

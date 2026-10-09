@@ -49,4 +49,5 @@ public:
     TEST_METHOD(AControlChangeInASequenceIsBuiltIntoWords);
     TEST_METHOD(ARepeatedNoteIsPlayedEveryTime);
     TEST_METHOD(AStepKindThisBuildDoesNotKnowSendsNothing);
+    TEST_METHOD(AStepMessageThisBuildDoesNotKnowSendsNothing);
 };

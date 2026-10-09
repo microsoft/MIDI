@@ -400,7 +400,8 @@ namespace glass
     bool SendsToADevice(MessageKind kind) noexcept
     {
         return kind != MessageKind::Sequence &&
-            kind != MessageKind::GoToPage;
+            kind != MessageKind::GoToPage &&
+            kind != MessageKind::Unrecognized;
     }
 
     _Use_decl_annotations_

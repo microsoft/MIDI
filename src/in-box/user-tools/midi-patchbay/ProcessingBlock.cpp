@@ -60,9 +60,14 @@ namespace midipatchbay
             { BlockKind::ParameterFilter, BlockCategory::Filter, L"rpnFilter" },
             { BlockKind::ParameterTransform, BlockCategory::Transform, L"rpnTransform" },
             { BlockKind::NoteDistributor, BlockCategory::Distribution, L"noteDistributor" },
-            { BlockKind::Gate, BlockCategory::Distribution, L"gate" },
+            { BlockKind::Gate, BlockCategory::Logic, L"gate" },
             { BlockKind::CiResponder, BlockCategory::CapabilityInquiry, L"ciResponder" },
             { BlockKind::CiFilter, BlockCategory::CapabilityInquiry, L"ciFilter" },
+            { BlockKind::Branch, BlockCategory::Logic, L"branch" },
+            { BlockKind::Switch, BlockCategory::Logic, L"switch" },
+            { BlockKind::SetTag, BlockCategory::Logic, L"setTag" },
+            { BlockKind::SetMemory, BlockCategory::Logic, L"setMemory" },
+            { BlockKind::PutValue, BlockCategory::Logic, L"putValue" },
         };
 
         static_assert(std::size(Kinds) == BlockKindCount);
@@ -178,6 +183,38 @@ namespace midipatchbay
 
         // In the order of the CiCategory bits.
         constexpr wchar_t const* CiCategoryNames[]{ L"management", L"profiles", L"propertyExchange", L"processInquiry" };
+
+        // Logic steps.
+        constexpr wchar_t KeySubject[] = L"subject";
+        constexpr wchar_t KeySource[] = L"source";
+        constexpr wchar_t KeyKind[] = L"kind";
+        constexpr wchar_t KeyPart[] = L"part";
+        constexpr wchar_t KeyName[] = L"name";
+        constexpr wchar_t KeyUnit[] = L"unit";
+        constexpr wchar_t KeyCases[] = L"cases";
+        constexpr wchar_t KeyCaseId[] = L"id";
+        constexpr wchar_t KeyUnreadable[] = L"unreadable";
+        constexpr wchar_t KeyBypass[] = L"bypass";
+        constexpr wchar_t KeyTag[] = L"tag";
+        constexpr wchar_t KeyMemory[] = L"memory";
+        constexpr wchar_t KeyEveryMessage[] = L"everyMessage";
+        constexpr wchar_t KeyTrigger[] = L"trigger";
+        constexpr wchar_t KeyFirst[] = L"first";
+        constexpr wchar_t KeySecond[] = L"second";
+        constexpr wchar_t KeyWraps[] = L"wraps";
+        constexpr wchar_t KeyKeepOutWhenEmpty[] = L"keepOutWhenEmpty";
+
+        constexpr wchar_t const* MessagePartNames[]{
+            L"group", L"channel", L"note", L"velocity", L"controller", L"controllerValue",
+            L"program", L"bankMsb", L"bankLsb", L"pressure", L"pitchBend", L"bits" };
+        constexpr wchar_t const* LogicUnitNames[]{ L"number", L"channel", L"group", L"note", L"value" };
+        constexpr wchar_t const* LogicSourceNames[]{ L"number", L"part", L"tag", L"memory" };
+        constexpr wchar_t const* LogicTestNames[]{
+            L"anything", L"is", L"isNot", L"atLeast", L"below", L"between", L"oneOf", L"hasValue", L"isEmpty" };
+        constexpr wchar_t const* MemoryActionNames[]{ L"set", L"toggle", L"stepUp", L"stepDown", L"clear" };
+        constexpr wchar_t const* BypassWayNames[]{ L"everyWay", L"firstWay" };
+
+        static_assert(std::size(MessagePartNames) == MessagePartCount);
 
         constexpr size_t MaximumCiFileNameLength = 200;
         constexpr size_t MaximumProductInstanceIdLength = 42;
@@ -905,6 +942,319 @@ namespace midipatchbay
 
             return signature;
         }
+
+        // ------------------------------------------------------------- logic steps
+
+        // The largest number of a unit, as it is held: a value in hundredths of a percent.
+        uint32_t UnitMaximum(_In_ LogicUnit unit) noexcept
+        {
+            switch (unit)
+            {
+            case LogicUnit::Channel:
+            case LogicUnit::Group:  return 15;
+            case LogicUnit::Note:   return 127;
+            case LogicUnit::Value:  return static_cast<uint32_t>(FullScaleHundredths);
+            default:                return 0xFFFFFFFFu;
+            }
+        }
+
+        // A value is a percent in the file, the same as everywhere else in it.
+        json::JsonValue UnitNumberToJson(_In_ LogicUnit unit, _In_ uint32_t number)
+        {
+            return json::JsonValue::CreateNumberValue(unit == LogicUnit::Value
+                ? static_cast<double>(number) / 100.0
+                : static_cast<double>(number));
+        }
+
+        std::optional<uint32_t> UnitNumberFrom(_In_ json::IJsonValue const& value, _In_ LogicUnit unit) noexcept
+        {
+            try
+            {
+                if (value == nullptr || value.ValueType() != json::JsonValueType::Number)
+                {
+                    return std::nullopt;
+                }
+
+                auto const number = value.GetNumber();
+
+                if (!std::isfinite(number) || number < 0)
+                {
+                    return std::nullopt;
+                }
+
+                if (unit == LogicUnit::Value)
+                {
+                    if (number > 100.0)
+                    {
+                        return std::nullopt;
+                    }
+
+                    return static_cast<uint32_t>(std::lround(number * 100.0));
+                }
+
+                if (std::floor(number) != number || number > static_cast<double>(UnitMaximum(unit)))
+                {
+                    return std::nullopt;
+                }
+
+                return static_cast<uint32_t>(number);
+            }
+            catch (...)
+            {
+            }
+
+            return std::nullopt;
+        }
+
+        uint32_t ReadUnitNumber(
+            _In_ json::JsonObject const& object,
+            _In_ std::wstring_view key,
+            _In_ LogicUnit unit,
+            _In_ uint32_t fallback) noexcept
+        {
+            return UnitNumberFrom(GetValue(object, key), unit).value_or((std::min)(fallback, UnitMaximum(unit)));
+        }
+
+        PartPlace PartPlaceFromJson(_In_ json::JsonObject const& object, _In_ MessagePart fallback) noexcept
+        {
+            PartPlace place{};
+
+            place.Part = ReadName(object, KeyPart, MessagePartNames, fallback);
+            place.Word = static_cast<uint8_t>(ReadNumber(object, KeyWord, 0, MaximumUmpWords - 1, 0));
+            place.HighBit = static_cast<uint8_t>(ReadNumber(object, KeyHighBit, 0, 31, 31));
+            place.LowBit = static_cast<uint8_t>(ReadNumber(object, KeyLowBit, 0, 31, 0));
+
+            // Bits the wrong way round would read nothing at all.
+            if (place.LowBit > place.HighBit)
+            {
+                std::swap(place.LowBit, place.HighBit);
+            }
+
+            return place;
+        }
+
+        void PartPlaceToJson(_Inout_ json::JsonObject& object, _In_ PartPlace const& place)
+        {
+            SetString(object, KeyPart, MessagePartNames[static_cast<size_t>(place.Part)]);
+
+            if (place.Part == MessagePart::Bits)
+            {
+                SetNumber(object, KeyWord, place.Word);
+                SetNumber(object, KeyHighBit, place.HighBit);
+                SetNumber(object, KeyLowBit, place.LowBit);
+            }
+        }
+
+        // The word and the bits only matter for Bits, which is also the only part they are written for.
+        std::wstring PartPlaceSignature(_In_ PartPlace const& place)
+        {
+            auto signature = std::to_wstring(static_cast<int32_t>(place.Part));
+
+            if (place.Part == MessagePart::Bits)
+            {
+                signature += L'w' + std::to_wstring(place.Word) + L'b' +
+                    std::to_wstring(place.HighBit) + L'-' + std::to_wstring(place.LowBit);
+            }
+
+            return signature;
+        }
+
+        json::JsonObject LogicSourceToJson(_In_ LogicSource const& source)
+        {
+            json::JsonObject object{};
+
+            SetString(object, KeyKind, LogicSourceNames[static_cast<size_t>(source.Kind)]);
+
+            switch (source.Kind)
+            {
+            case LogicSourceKind::Number:
+                SetString(object, KeyUnit, LogicUnitNames[static_cast<size_t>(source.Unit)]);
+                object.SetNamedValue(KeyNumber, UnitNumberToJson(source.Unit, source.Number));
+                break;
+
+            case LogicSourceKind::Part:
+                PartPlaceToJson(object, source.Place);
+                break;
+
+            default:
+                SetString(object, KeyName, source.Name);
+                break;
+            }
+
+            return object;
+        }
+
+        // A Branch or a Switch tests something that can change, so a number is not one of its
+        // choices.
+        LogicSource LogicSourceFromJson(
+            _In_ json::JsonObject const& object,
+            _In_ LogicSource const& fallback,
+            _In_ bool allowsNumber) noexcept
+        {
+            if (object == nullptr)
+            {
+                return fallback;
+            }
+
+            LogicSource source{};
+
+            source.Kind = ReadName(object, KeyKind, LogicSourceNames, fallback.Kind);
+
+            if (source.Kind == LogicSourceKind::Number && !allowsNumber)
+            {
+                source.Kind = LogicSourceKind::Part;
+            }
+
+            source.Place = PartPlaceFromJson(object, fallback.Place.Part);
+            source.Unit = ReadName(object, KeyUnit, LogicUnitNames, LogicUnit::Number);
+            source.Number = ReadUnitNumber(object, KeyNumber, source.Unit, 0);
+
+            if (source.Kind == LogicSourceKind::Tag || source.Kind == LogicSourceKind::Memory)
+            {
+                source.Name = LogicNameFrom(ReadString(object, KeyName));
+            }
+
+            return source;
+        }
+
+        // Only what the kind of source uses, the same as the file keeps.
+        std::wstring LogicSourceSignature(_In_ LogicSource const& source)
+        {
+            switch (source.Kind)
+            {
+            case LogicSourceKind::Number:
+                return L"n" + std::to_wstring(static_cast<int32_t>(source.Unit)) + L'.' + std::to_wstring(source.Number) + L'|';
+
+            case LogicSourceKind::Part:
+                return L"p" + PartPlaceSignature(source.Place) + L'|';
+
+            default:
+                return std::to_wstring(static_cast<int32_t>(source.Kind)) + L'|' + source.Name + L'|';
+            }
+        }
+
+        // Every key is written, so changing the test and changing it back keeps what was there.
+        void LogicConditionToJson(_Inout_ json::JsonObject& object, _In_ LogicCondition const& condition, _In_ LogicUnit unit)
+        {
+            SetString(object, KeyTest, LogicTestNames[static_cast<size_t>(condition.Test)]);
+            object.SetNamedValue(KeyValue, UnitNumberToJson(unit, condition.Value));
+            object.SetNamedValue(KeyLowest, UnitNumberToJson(unit, condition.Lowest));
+            object.SetNamedValue(KeyHighest, UnitNumberToJson(unit, condition.Highest));
+
+            json::JsonArray values{};
+
+            for (auto const value : condition.Values)
+            {
+                values.Append(UnitNumberToJson(unit, value));
+            }
+
+            object.SetNamedValue(KeyValues, values);
+        }
+
+        LogicCondition LogicConditionFromJson(
+            _In_ json::JsonObject const& object,
+            _In_ LogicUnit unit,
+            _In_ LogicTest fallback) noexcept
+        {
+            LogicCondition condition{};
+
+            condition.Test = ReadName(object, KeyTest, LogicTestNames, fallback);
+            condition.Value = ReadUnitNumber(object, KeyValue, unit, 0);
+            condition.Lowest = ReadUnitNumber(object, KeyLowest, unit, 0);
+            condition.Highest = ReadUnitNumber(object, KeyHighest, unit, UnitMaximum(unit));
+
+            if (condition.Lowest > condition.Highest)
+            {
+                std::swap(condition.Lowest, condition.Highest);
+            }
+
+            try
+            {
+                if (auto const values = ReadArray(object, KeyValues))
+                {
+                    for (auto const& entry : values)
+                    {
+                        if (condition.Values.size() >= MaximumLogicListValues)
+                        {
+                            break;
+                        }
+
+                        auto const value = UnitNumberFrom(entry, unit);
+
+                        if (value.has_value() &&
+                            std::find(condition.Values.begin(), condition.Values.end(), *value) == condition.Values.end())
+                        {
+                            condition.Values.push_back(*value);
+                        }
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return condition;
+        }
+
+        std::wstring LogicConditionSignature(_In_ LogicCondition const& condition)
+        {
+            auto signature = std::to_wstring(static_cast<int32_t>(condition.Test)) + L'=' +
+                std::to_wstring(condition.Value) + L'/' + std::to_wstring(condition.Lowest) + L'-' +
+                std::to_wstring(condition.Highest) + L'/';
+
+            for (auto const value : condition.Values)
+            {
+                signature += std::to_wstring(value) + L',';
+            }
+
+            return signature;
+        }
+
+        // "yes" and "no" on a Branch; "firstCase" and "otherwise" on a Switch. Each reads back as
+        // the other kind's word too, so a step's setting means the same whichever word a file uses.
+        wchar_t const* UnreadableName(_In_ BlockKind kind, _In_ UnreadableWay way) noexcept
+        {
+            switch (way)
+            {
+            case UnreadableWay::KeepOut:  return L"keepOut";
+            case UnreadableWay::FirstWay: return kind == BlockKind::Branch ? L"yes" : L"firstCase";
+            case UnreadableWay::LastWay:  return kind == BlockKind::Branch ? L"no" : L"otherwise";
+            default:                      return L"everyWay";
+            }
+        }
+
+        UnreadableWay ReadUnreadable(_In_ json::JsonObject const& object) noexcept
+        {
+            auto const text = ReadString(object, KeyUnreadable);
+
+            if (text == L"keepOut")
+            {
+                return UnreadableWay::KeepOut;
+            }
+
+            if (text == L"yes" || text == L"firstCase")
+            {
+                return UnreadableWay::FirstWay;
+            }
+
+            if (text == L"no" || text == L"otherwise")
+            {
+                return UnreadableWay::LastWay;
+            }
+
+            return UnreadableWay::EveryWay;
+        }
+
+        // A test on a part of the message is in that part's unit, whatever the file says.
+        LogicUnit SubjectUnit(_In_ LogicSource const& subject, _In_ LogicUnit unit) noexcept
+        {
+            return subject.Kind == LogicSourceKind::Part ? UnitOfPart(subject.Place.Part) : unit;
+        }
+
+        ValueScale ReadScaleOrSevenBit(_In_ json::JsonObject const& object) noexcept
+        {
+            return ReadString(object, KeyScale) == ScalePercent ? ValueScale::Percent : ValueScale::SevenBit;
+        }
     }
 
     _Use_decl_annotations_
@@ -1221,6 +1571,25 @@ namespace midipatchbay
         // The mod wheel is the controller people reach for first.
         settings.Values.One = kind == BlockKind::ControlChangeFilter ? 1 : 60;
 
+        // A new Branch sends everything out Yes until it has a test, and middle C is where a
+        // split usually starts.
+        settings.Branch.Subject.Place.Part = MessagePart::Note;
+        settings.Branch.Unit = LogicUnit::Note;
+        settings.Branch.Condition.Test = LogicTest::Anything;
+        settings.Branch.Condition.Value = 60;
+        settings.Branch.Condition.Lowest = 60;
+        settings.Branch.Condition.Highest = 127;
+
+        settings.Switch.Subject.Place.Part = MessagePart::Channel;
+        settings.Switch.Unit = LogicUnit::Channel;
+
+        settings.SetTag.Value.Place.Part = MessagePart::Channel;
+
+        settings.SetMemory.Value.Place.Part = MessagePart::Program;
+
+        settings.PutValue.Target.Part = MessagePart::Channel;
+        settings.PutValue.Value.Kind = LogicSourceKind::Memory;
+
         return settings;
     }
 
@@ -1408,6 +1777,23 @@ namespace midipatchbay
         case BlockKind::NoteDistributor:
         case BlockKind::Gate:
             return false;
+
+        // Which way a message goes out is the step's whole job, even with no test.
+        case BlockKind::Branch:
+        case BlockKind::Switch:
+            return false;
+
+        case BlockKind::SetTag:
+            return settings.SetTag.Tag.empty();
+
+        // With no name nothing is remembered, but the messages it is set to keep out still are.
+        case BlockKind::SetMemory:
+            return settings.SetMemory.Memory.empty() && settings.SetMemory.PassesTriggers;
+
+        case BlockKind::PutValue:
+            return (settings.PutValue.Value.Kind == LogicSourceKind::Tag ||
+                    settings.PutValue.Value.Kind == LogicSourceKind::Memory) &&
+                settings.PutValue.Value.Name.empty();
 
         // Answers MIDI-CI, whatever else it is set to do.
         case BlockKind::CiResponder:
@@ -1672,6 +2058,84 @@ namespace midipatchbay
                 }
 
                 object.SetNamedValue(KeyCategories, categories);
+                break;
+            }
+
+            case BlockKind::Branch:
+            {
+                auto const& branch = settings.Branch;
+                auto const unit = SubjectUnit(branch.Subject, branch.Unit);
+
+                object.SetNamedValue(KeySubject, LogicSourceToJson(branch.Subject));
+                SetString(object, KeyUnit, LogicUnitNames[static_cast<size_t>(unit)]);
+                LogicConditionToJson(object, branch.Condition, unit);
+                SetString(object, KeyUnreadable, UnreadableName(kind, branch.Unreadable));
+                SetString(object, KeyBypass, BypassWayNames[static_cast<size_t>(branch.Bypass)]);
+                SetString(object, KeyScale, ScaleName(branch.Scale));
+                break;
+            }
+
+            case BlockKind::Switch:
+            {
+                auto const& choice = settings.Switch;
+                auto const unit = SubjectUnit(choice.Subject, choice.Unit);
+
+                object.SetNamedValue(KeySubject, LogicSourceToJson(choice.Subject));
+                SetString(object, KeyUnit, LogicUnitNames[static_cast<size_t>(unit)]);
+
+                json::JsonArray cases{};
+
+                for (auto const& entry : choice.Cases)
+                {
+                    json::JsonObject item{};
+
+                    SetNumber(item, KeyCaseId, entry.Id);
+                    LogicConditionToJson(item, entry.Condition, unit);
+
+                    cases.Append(item);
+                }
+
+                object.SetNamedValue(KeyCases, cases);
+                SetString(object, KeyUnreadable, UnreadableName(kind, choice.Unreadable));
+                SetString(object, KeyBypass, BypassWayNames[static_cast<size_t>(choice.Bypass)]);
+                SetString(object, KeyScale, ScaleName(choice.Scale));
+                break;
+            }
+
+            case BlockKind::SetTag:
+                SetString(object, KeyTag, settings.SetTag.Tag);
+                object.SetNamedValue(KeySource, LogicSourceToJson(settings.SetTag.Value));
+                SetString(object, KeyScale, ScaleName(settings.SetTag.Scale));
+                break;
+
+            case BlockKind::SetMemory:
+            {
+                auto const& memory = settings.SetMemory;
+
+                SetString(object, KeyMemory, memory.Memory);
+                SetBool(object, KeyEveryMessage, memory.EveryMessage);
+                object.SetNamedValue(KeyTrigger, GateTriggerToJson(memory.Trigger));
+                SetString(object, KeyAction, MemoryActionNames[static_cast<size_t>(memory.Action)]);
+                object.SetNamedValue(KeySource, LogicSourceToJson(memory.Value));
+                SetString(object, KeyUnit, LogicUnitNames[static_cast<size_t>(memory.Unit)]);
+                object.SetNamedValue(KeyFirst, UnitNumberToJson(memory.Unit, memory.First));
+                object.SetNamedValue(KeySecond, UnitNumberToJson(memory.Unit, memory.Second));
+                SetNumber(object, KeyLowest, memory.Lowest);
+                SetNumber(object, KeyHighest, memory.Highest);
+                SetBool(object, KeyWraps, memory.Wraps);
+                SetBool(object, KeyPassTriggers, memory.PassesTriggers);
+                SetString(object, KeyScale, ScaleName(memory.Scale));
+                break;
+            }
+
+            case BlockKind::PutValue:
+            {
+                auto const& put = settings.PutValue;
+
+                PartPlaceToJson(object, put.Target);
+                object.SetNamedValue(KeySource, LogicSourceToJson(put.Value));
+                SetBool(object, KeyKeepOutWhenEmpty, put.KeepsOutWhenEmpty);
+                SetString(object, KeyScale, ScaleName(put.Scale));
                 break;
             }
 
@@ -2062,6 +2526,118 @@ namespace midipatchbay
                 break;
             }
 
+            case BlockKind::Branch:
+            {
+                auto& branch = settings.Branch;
+
+                branch.Subject = LogicSourceFromJson(ReadObject(object, KeySubject), branch.Subject, false);
+                branch.Unit = SubjectUnit(branch.Subject, ReadName(object, KeyUnit, LogicUnitNames, branch.Unit));
+                branch.Condition = LogicConditionFromJson(object, branch.Unit, LogicTest::Anything);
+                branch.Unreadable = ReadUnreadable(object);
+                branch.Bypass = ReadName(object, KeyBypass, BypassWayNames, BypassWay::EveryWay);
+                branch.Scale = ReadScaleOrSevenBit(object);
+                break;
+            }
+
+            case BlockKind::Switch:
+            {
+                auto& choice = settings.Switch;
+
+                choice.Subject = LogicSourceFromJson(ReadObject(object, KeySubject), choice.Subject, false);
+                choice.Unit = SubjectUnit(choice.Subject, ReadName(object, KeyUnit, LogicUnitNames, choice.Unit));
+
+                if (auto const cases = ReadArray(object, KeyCases))
+                {
+                    for (auto const& value : cases)
+                    {
+                        if (choice.Cases.size() >= MaximumSwitchCases)
+                        {
+                            break;
+                        }
+
+                        if (value == nullptr || value.ValueType() != json::JsonValueType::Object)
+                        {
+                            continue;
+                        }
+
+                        auto const item = value.GetObject();
+
+                        SwitchCase entry{};
+                        entry.Condition = LogicConditionFromJson(item, choice.Unit, LogicTest::Is);
+
+                        // A case with no test of its own would take every message.
+                        if (entry.Condition.Test == LogicTest::Anything)
+                        {
+                            entry.Condition.Test = LogicTest::Is;
+                        }
+
+                        // Connections find their way by id, so one id means one case.
+                        auto const id = static_cast<int32_t>(std::floor(ReadNumber(item, KeyCaseId, 1, MaximumSwitchCaseId, 0)));
+                        auto const taken = std::any_of(choice.Cases.begin(), choice.Cases.end(),
+                            [id](SwitchCase const& other) { return other.Id == id; });
+
+                        entry.Id = id >= 1 && !taken ? id : NewSwitchCaseId(choice);
+
+                        if (entry.Id >= 1)
+                        {
+                            choice.Cases.push_back(std::move(entry));
+                        }
+                    }
+                }
+
+                choice.Unreadable = ReadUnreadable(object);
+                choice.Bypass = ReadName(object, KeyBypass, BypassWayNames, BypassWay::EveryWay);
+                choice.Scale = ReadScaleOrSevenBit(object);
+                break;
+            }
+
+            case BlockKind::SetTag:
+            {
+                auto& tag = settings.SetTag;
+
+                tag.Tag = LogicNameFrom(ReadString(object, KeyTag));
+                tag.Value = LogicSourceFromJson(ReadObject(object, KeySource), tag.Value, true);
+                tag.Scale = ReadScaleOrSevenBit(object);
+                break;
+            }
+
+            case BlockKind::SetMemory:
+            {
+                auto& memory = settings.SetMemory;
+
+                memory.Memory = LogicNameFrom(ReadString(object, KeyMemory));
+                memory.EveryMessage = ReadBool(object, KeyEveryMessage, true);
+                memory.Trigger = GateTriggerFromJson(ReadObject(object, KeyTrigger), memory.Trigger);
+                memory.Action = ReadName(object, KeyAction, MemoryActionNames, MemoryAction::Set);
+                memory.Value = LogicSourceFromJson(ReadObject(object, KeySource), memory.Value, true);
+                memory.Unit = ReadName(object, KeyUnit, LogicUnitNames, LogicUnit::Number);
+                memory.First = ReadUnitNumber(object, KeyFirst, memory.Unit, 0);
+                memory.Second = ReadUnitNumber(object, KeySecond, memory.Unit, 1);
+                memory.Lowest = static_cast<uint32_t>(std::floor(ReadNumber(object, KeyLowest, 0, 0xFFFFFFFF, 0)));
+                memory.Highest = static_cast<uint32_t>(std::floor(ReadNumber(object, KeyHighest, 0, 0xFFFFFFFF, 7)));
+
+                if (memory.Lowest > memory.Highest)
+                {
+                    std::swap(memory.Lowest, memory.Highest);
+                }
+
+                memory.Wraps = ReadBool(object, KeyWraps, true);
+                memory.PassesTriggers = ReadBool(object, KeyPassTriggers, true);
+                memory.Scale = ReadScaleOrSevenBit(object);
+                break;
+            }
+
+            case BlockKind::PutValue:
+            {
+                auto& put = settings.PutValue;
+
+                put.Target = PartPlaceFromJson(object, put.Target.Part);
+                put.Value = LogicSourceFromJson(ReadObject(object, KeySource), put.Value, true);
+                put.KeepsOutWhenEmpty = ReadBool(object, KeyKeepOutWhenEmpty, false);
+                put.Scale = ReadScaleOrSevenBit(object);
+                break;
+            }
+
             case BlockKind::Annotation:
             {
                 auto& note = settings.Annotation;
@@ -2263,6 +2839,56 @@ namespace midipatchbay
                     std::to_wstring(settings.CiFilter.Categories);
                 break;
 
+            case BlockKind::Branch:
+            {
+                auto const& branch = settings.Branch;
+
+                signature += LogicSourceSignature(branch.Subject) + std::to_wstring(static_cast<int32_t>(branch.Unit)) + L'.' +
+                    LogicConditionSignature(branch.Condition) + L'u' + std::to_wstring(static_cast<int32_t>(branch.Unreadable)) +
+                    L'b' + std::to_wstring(static_cast<int32_t>(branch.Bypass)) + L's' + std::to_wstring(static_cast<int32_t>(branch.Scale));
+                break;
+            }
+
+            case BlockKind::Switch:
+            {
+                auto const& choice = settings.Switch;
+
+                signature += LogicSourceSignature(choice.Subject) + std::to_wstring(static_cast<int32_t>(choice.Unit)) + L'.';
+
+                for (auto const& entry : choice.Cases)
+                {
+                    signature += L'#' + std::to_wstring(entry.Id) + L':' + LogicConditionSignature(entry.Condition);
+                }
+
+                signature += L'u' + std::to_wstring(static_cast<int32_t>(choice.Unreadable)) +
+                    L'b' + std::to_wstring(static_cast<int32_t>(choice.Bypass)) + L's' + std::to_wstring(static_cast<int32_t>(choice.Scale));
+                break;
+            }
+
+            case BlockKind::SetTag:
+                signature += settings.SetTag.Tag + L'|' + LogicSourceSignature(settings.SetTag.Value) +
+                    L's' + std::to_wstring(static_cast<int32_t>(settings.SetTag.Scale));
+                break;
+
+            case BlockKind::SetMemory:
+            {
+                auto const& memory = settings.SetMemory;
+
+                signature += memory.Memory + L'|' + (memory.EveryMessage ? L"e." : L"t.") + GateTriggerSignature(memory.Trigger) +
+                    L'a' + std::to_wstring(static_cast<int32_t>(memory.Action)) + L'.' + LogicSourceSignature(memory.Value) +
+                    L'u' + std::to_wstring(static_cast<int32_t>(memory.Unit)) + L'.' + std::to_wstring(memory.First) + L'/' +
+                    std::to_wstring(memory.Second) + L'.' + std::to_wstring(memory.Lowest) + L'-' + std::to_wstring(memory.Highest) +
+                    (memory.Wraps ? L".w" : L".-") + (memory.PassesTriggers ? L"p" : L"-") +
+                    L's' + std::to_wstring(static_cast<int32_t>(memory.Scale));
+                break;
+            }
+
+            case BlockKind::PutValue:
+                signature += PartPlaceSignature(settings.PutValue.Target) + L'.' + LogicSourceSignature(settings.PutValue.Value) +
+                    (settings.PutValue.KeepsOutWhenEmpty ? L".k" : L".-") +
+                    L's' + std::to_wstring(static_cast<int32_t>(settings.PutValue.Scale));
+                break;
+
             case BlockKind::Annotation:
             {
                 auto const& note = settings.Annotation;
@@ -2414,5 +3040,199 @@ namespace midipatchbay
         }
 
         return {};
+    }
+
+    _Use_decl_annotations_
+    LogicUnit UnitOfPart(MessagePart part) noexcept
+    {
+        switch (part)
+        {
+        case MessagePart::Group:            return LogicUnit::Group;
+        case MessagePart::Channel:          return LogicUnit::Channel;
+        case MessagePart::Note:             return LogicUnit::Note;
+        case MessagePart::Velocity:
+        case MessagePart::ControllerValue:
+        case MessagePart::Pressure:
+        case MessagePart::PitchBend:        return LogicUnit::Value;
+        default:                            return LogicUnit::Number;
+        }
+    }
+
+    _Use_decl_annotations_
+    bool IsLogicStep(BlockKind kind) noexcept
+    {
+        switch (kind)
+        {
+        case BlockKind::Branch:
+        case BlockKind::Switch:
+        case BlockKind::SetTag:
+        case BlockKind::SetMemory:
+        case BlockKind::PutValue:
+            return true;
+
+        default:
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
+    bool HasWays(BlockKind kind) noexcept
+    {
+        return kind == BlockKind::Branch || kind == BlockKind::Switch;
+    }
+
+    _Use_decl_annotations_
+    std::vector<int32_t> WaysOf(BlockKind kind, BlockSettings const& settings)
+    {
+        std::vector<int32_t> ways{};
+
+        if (kind == BlockKind::Branch)
+        {
+            ways = { BranchYesWay, BranchNoWay };
+        }
+        else if (kind == BlockKind::Switch)
+        {
+            for (auto const& entry : settings.Switch.Cases)
+            {
+                ways.push_back(entry.Id);
+            }
+
+            ways.push_back(SwitchOtherwiseWay);
+        }
+
+        return ways;
+    }
+
+    _Use_decl_annotations_
+    int32_t FirstWayOf(BlockKind kind, BlockSettings const& settings) noexcept
+    {
+        if (kind == BlockKind::Switch && !settings.Switch.Cases.empty())
+        {
+            return settings.Switch.Cases.front().Id;
+        }
+
+        return kind == BlockKind::Branch ? BranchYesWay : SwitchOtherwiseWay;
+    }
+
+    _Use_decl_annotations_
+    int32_t NewSwitchCaseId(SwitchSettings const& settings) noexcept
+    {
+        for (int32_t id = 1; id <= MaximumSwitchCaseId; id++)
+        {
+            auto const taken = std::any_of(settings.Cases.begin(), settings.Cases.end(),
+                [id](SwitchCase const& entry) { return entry.Id == id; });
+
+            if (!taken)
+            {
+                return id;
+            }
+        }
+
+        return 0;
+    }
+
+    _Use_decl_annotations_
+    void CollectLogicNames(
+        BlockKind kind,
+        BlockSettings const& settings,
+        std::vector<std::wstring>& tags,
+        std::vector<std::wstring>& memories)
+    {
+        auto const add = [](std::vector<std::wstring>& list, std::wstring const& name)
+            {
+                if (name.empty())
+                {
+                    return;
+                }
+
+                auto const known = std::any_of(list.begin(), list.end(),
+                    [&name](std::wstring const& other) { return SameLogicName(other, name); });
+
+                if (!known)
+                {
+                    list.push_back(name);
+                }
+            };
+
+        auto const addSource = [&](LogicSource const& source)
+            {
+                if (source.Kind == LogicSourceKind::Tag)
+                {
+                    add(tags, source.Name);
+                }
+                else if (source.Kind == LogicSourceKind::Memory)
+                {
+                    add(memories, source.Name);
+                }
+            };
+
+        switch (kind)
+        {
+        case BlockKind::Branch:
+            addSource(settings.Branch.Subject);
+            break;
+
+        case BlockKind::Switch:
+            addSource(settings.Switch.Subject);
+            break;
+
+        case BlockKind::SetTag:
+            add(tags, settings.SetTag.Tag);
+            addSource(settings.SetTag.Value);
+            break;
+
+        case BlockKind::SetMemory:
+            add(memories, settings.SetMemory.Memory);
+            addSource(settings.SetMemory.Value);
+            break;
+
+        case BlockKind::PutValue:
+            addSource(settings.PutValue.Value);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    _Use_decl_annotations_
+    std::wstring LogicNameFrom(std::wstring_view text)
+    {
+        std::wstring kept{};
+
+        for (auto const ch : text)
+        {
+            if (kept.size() >= MaximumLogicNameLength)
+            {
+                break;
+            }
+
+            auto const control = ch < L' ' || (ch >= 0x7F && ch <= 0x9F) || ch == 0x2028 || ch == 0x2029;
+
+            kept.push_back(control ? L' ' : ch);
+        }
+
+        // Cut between the halves of a character outside the basic plane, which is not a character.
+        if (!kept.empty() && kept.back() >= 0xD800 && kept.back() <= 0xDBFF)
+        {
+            kept.pop_back();
+        }
+
+        auto const first = kept.find_first_not_of(L' ');
+
+        if (first == std::wstring::npos)
+        {
+            return {};
+        }
+
+        return kept.substr(first, kept.find_last_not_of(L' ') - first + 1);
+    }
+
+    _Use_decl_annotations_
+    bool SameLogicName(std::wstring_view left, std::wstring_view right) noexcept
+    {
+        return ::CompareStringOrdinal(
+            left.data(), static_cast<int>(left.size()),
+            right.data(), static_cast<int>(right.size()), TRUE) == CSTR_EQUAL;
     }
 }

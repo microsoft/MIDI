@@ -31,6 +31,10 @@ namespace midipatchbay
         constexpr double BlockWidth = 208.0;
         constexpr double BlockHeight = 99.0;
 
+        // Under that, a Branch or a Switch has a line and a row for each way out.
+        constexpr double WayRowHeight = 24.0;
+        constexpr double WaysSpacing = 10.0;
+
         // Roughly how wide a character of an annotation is, against its font size, and the space
         // around the text.
         constexpr double AnnotationCharacterWidth = 0.55;
@@ -74,6 +78,19 @@ namespace midipatchbay
 
             return { characters * note.FontSize * AnnotationCharacterWidth + AnnotationPadding,
                 static_cast<double>(lines) * note.FontSize * AnnotationLineHeight + AnnotationPadding };
+        }
+
+        if (auto const* block = patch.FindBlock(nodeId); block != nullptr && HasWays(block->Kind))
+        {
+            try
+            {
+                auto const ways = static_cast<double>(WaysOf(block->Kind, block->Settings).size());
+
+                return { BlockWidth, BlockHeight + WaysSpacing + ways * WayRowHeight };
+            }
+            catch (...)
+            {
+            }
         }
 
         return { BlockWidth, BlockHeight };

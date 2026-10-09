@@ -564,6 +564,7 @@ namespace winrt::midipatchbay::implementation
                 {
                     m_committedState = CaptureState();
 
+                    ClearTrace();
                     RebuildCanvas();
                     RefreshInspector();
                     UpdatePatchHeader();
@@ -610,6 +611,12 @@ namespace winrt::midipatchbay::implementation
     _Use_decl_annotations_
     void MainWindow::CommitChange(bool routingAffected, bool redraw) noexcept
     {
+        // A trace is of the patch as it was. Moving a node changes nothing it showed.
+        if (routingAffected)
+        {
+            ClearTrace();
+        }
+
         try
         {
             if (CurrentPatch() == nullptr)
@@ -737,6 +744,7 @@ namespace winrt::midipatchbay::implementation
 
             m_redoStates.push_back(std::move(m_committedState));
 
+            ClearTrace();
             RestoreState(previous);
 
             // Read back rather than kept, so the next change compares like with like.
@@ -771,6 +779,7 @@ namespace winrt::midipatchbay::implementation
 
             m_undoStates.push_back(std::move(m_committedState));
 
+            ClearTrace();
             RestoreState(next);
             m_committedState = CaptureState();
 
@@ -1638,6 +1647,7 @@ namespace winrt::midipatchbay::implementation
             {
                 for (auto const category : { patchbay::BlockCategory::Filter, patchbay::BlockCategory::Transform,
                                              patchbay::BlockCategory::Sending, patchbay::BlockCategory::Distribution,
+                                             patchbay::BlockCategory::Logic,
                                              patchbay::BlockCategory::CapabilityInquiry,
                                              patchbay::BlockCategory::Generator,
                                              patchbay::BlockCategory::Annotation })
@@ -2107,7 +2117,7 @@ namespace winrt::midipatchbay::implementation
 
             second.Id = patchbay::PatchDocument::NewId();
             second.SourceId = block.Id;
-            second.SourceGroupIndex = patchbay::AllGroups;
+            second.SourceGroupIndex = patchbay::DefaultWayOf(kind);
             second.DestinationId = original.DestinationId;
             second.DestinationGroupIndex = original.DestinationGroupIndex;
 

@@ -77,6 +77,14 @@ namespace midipatchbay
         // it isn't routing.
         std::optional<::midipatchbay::CiResponderSnapshot> CiResponderStatus(_In_ std::wstring const& cell) const noexcept;
 
+        // A patch's memory as it is now, by the patch's key and the memory's name. Nothing when no
+        // routing has used it since the app started.
+        std::optional<LogicValue> MemoryValue(_In_ std::wstring const& patchKey, _In_ std::wstring const& name) const noexcept;
+
+        // What a Branch or a Switch tested last, by its "patch key|block id". Nothing when it
+        // isn't routing.
+        std::optional<LogicValue> LastTestedValue(_In_ std::wstring const& cell) const noexcept;
+
         // Plays one note on an endpoint so a mapping can be heard. Reuses the open connection
         // when the patch is already routing, and otherwise opens one for the length of the note.
         // Blocks for the duration, so it has to be called from a background thread.
@@ -131,6 +139,10 @@ namespace midipatchbay
 
         // Each clock divider's count, keyed by its cell, so a change elsewhere does not restart it.
         std::unordered_map<std::wstring, std::shared_ptr<::midipatchbay::BlockState>> m_blockStates{};
+
+        // Every memory any patch has used, by "patch key|name". Kept for as long as the app runs,
+        // whether or not the patch is routing. Guarded by m_publishLock, because the window reads it.
+        std::unordered_map<std::wstring, std::shared_ptr<std::atomic<uint64_t>>> m_memories{};
 
         // Shared with the source hubs and generators, so a callback that is still running when the
         // graph is replaced finishes on the graph it started with.

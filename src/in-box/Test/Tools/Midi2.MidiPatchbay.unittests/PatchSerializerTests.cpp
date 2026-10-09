@@ -960,3 +960,30 @@ void PatchSerializerTests::AnAnnotationKeepsItsTextAndNoLinks()
     VERIFY_IS_NOT_NULL(back);
     VERIFY_IS_TRUE(back->Settings.Annotation == note->Settings.Annotation);
 }
+
+void PatchSerializerTests::APatchKeepsWhoMadeIt()
+{
+    auto patch = TwoEndpoints();
+
+    midiapp::ContentProvenance provenance{};
+    provenance.Id = L"5e4d3c2b-1a09-4f8e-9d7c-6b5a4f3e2d1c";
+    provenance.Author = L"Pat Example";
+    provenance.License = L"CC-BY-4.0";
+    provenance.DigitalSourceType = midiapp::DigitalSourceTypes::TrainedAlgorithmicMedia;
+    provenance.HumanOversightLevel = midiapp::HumanOversightLevels::HumanValidated;
+
+    patch.Provenance = provenance;
+
+    auto const again = ReadPatchJson(WritePatchJson(patch), L"fallback");
+
+    VERIFY_IS_TRUE(again.has_value());
+    VERIFY_IS_TRUE(again->Provenance.has_value());
+    VERIFY_ARE_EQUAL(provenance.Id, again->Provenance->Id);
+    VERIFY_ARE_EQUAL(provenance.Author, again->Provenance->Author);
+    VERIFY_ARE_EQUAL(provenance.License, again->Provenance->License);
+    VERIFY_ARE_EQUAL(provenance.DigitalSourceType, again->Provenance->DigitalSourceType);
+    VERIFY_ARE_EQUAL(provenance.HumanOversightLevel, again->Provenance->HumanOversightLevel);
+
+    // A patch that says nothing about who made it writes no block at all.
+    VERIFY_ARE_EQUAL(std::wstring::npos, WritePatchJson(TwoEndpoints()).find(L"provenance"));
+}

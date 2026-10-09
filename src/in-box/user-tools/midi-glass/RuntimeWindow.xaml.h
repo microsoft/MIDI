@@ -219,6 +219,9 @@ namespace winrt::midiglass::implementation
         midiapp::WindowChrome m_chrome{};
 
         std::wstring m_filePath{};
+
+        // Installed from a signed pack and unchanged since, so this window never writes it.
+        bool m_isSigned{ false };
         glass::LayoutDocument m_document{};
         glass::Theme m_theme{};
 
