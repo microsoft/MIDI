@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer - 7 - import and export</title>
+<link rel="stylesheet" href="seq.css">
+<script src="seq.js" defer></script>
+<style>
+    .grid2 { display: grid; grid-template-columns: 650px 650px; gap: 20px; align-items: stretch; }
+    .dialog { width: 650px; }
+    .dialog .dlg-body { gap: 12px; }
+    .sect { font-size: 13px; font-weight: 600; margin-top: 2px; }
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .lose { font-size: 11px; color: var(--caution); margin-top: 3px; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<div class="caption-above"><b>7. Getting MIDI in and out.</b> Import reads Standard MIDI Files, MIDI 2.0 clip files, and captures saved by MIDI Monitor or the console. Export writes MIDI 2.0 clip files (the format MIDI 2.0 calls SMF2) or Standard MIDI Files, for one clip, some tracks or the whole project, and says up front what a format can't hold.</div>
+
+<div class="grid2">
+
+  <div class="dialog static">
+    <div class="dlg-body">
+      <h2>Import Rainy Day.mid</h2>
+      <div class="dlg-sub">Standard MIDI File, format 1 &middot; 9 tracks &middot; 2,148 notes &middot; 3:12</div>
+      <table class="table">
+        <tr><th></th><th>Track in the file</th><th>Channel</th><th>Notes</th><th>Program</th></tr>
+        <tr><td><span class="cb on">&#xE73E;</span></td><td class="n">Piano</td><td>1</td><td>812</td><td>1 Acoustic Grand Piano</td></tr>
+        <tr><td><span class="cb on">&#xE73E;</span></td><td class="n">Fretless</td><td>2</td><td>244</td><td>36 Fretless Bass</td></tr>
+        <tr><td><span class="cb on">&#xE73E;</span></td><td class="n">Strings</td><td>3</td><td>196</td><td>49 String Ensemble 1</td></tr>
+        <tr><td><span class="cb on">&#xE73E;</span></td><td class="n">Drums</td><td>10</td><td>702</td><td>Standard kit</td></tr>
+        <tr><td><span class="cb">&#xE73E;</span></td><td class="n">Click</td><td>16</td><td>194</td><td>Woodblock</td></tr>
+        <tr><td colspan="5" style="color:var(--text3)">4 more tracks, all selected</td></tr>
+      </table>
+      <div class="sect">Put each track</div>
+      <div class="radio on"><div class="rb"></div><div>On a new track in this project, as one clip</div></div>
+      <div class="radio"><div class="rb"></div><div>On the selected track, as clips laid end to end</div></div>
+      <div class="row"><span style="font-size:13px;width:150px">New tracks play to</span><div class="field small combo grow">General MIDI Synth, keeping each track's channel<span class="spacer"></span><span class="gl">&#xE70D;</span></div></div>
+      <div class="sect">Tempo</div>
+      <div class="radio on"><div class="rb"></div><div>Use the file's tempo changes<div class="sub">This project's Tempo and meter track is empty, so nothing is lost.</div></div></div>
+      <div class="radio"><div class="rb"></div><div>Keep this project's tempo<div class="sub">Notes keep their bar and beat and play at 124 BPM.</div></div></div>
+      <div class="check on"><div class="cb">&#xE73E;</div><div>Make the file's program, volume and pan changes into start-up messages</div></div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.45">The file's own text is kept with the clips it came from: &ldquo;Copyright 1998 Example Music.&rdquo;</div>
+    </div>
+    <div class="dlg-foot"><div class="btn accent">Import</div><div class="btn">Cancel</div></div>
+  </div>
+
+  <div class="dialog static">
+    <div class="dlg-body">
+      <h2>Import a capture</h2>
+      <div class="dlg-sub">Thursday jam.csv &middot; saved by MIDI Monitor &middot; 1,204 messages over 0:48</div>
+      <div class="chips"><span class="chip on"><span class="gl">&#xE73E;</span>Exact times</span><span class="chip on"><span class="gl">&#xE73E;</span>MIDI 2.0 messages kept as they are</span><span class="chip">Groups 1 and 2</span></div>
+      <table class="table">
+        <tr><th>Group</th><th>Notes</th><th>Controllers</th><th>Other</th><th>Becomes</th></tr>
+        <tr><td class="n">1 - Keys</td><td>612</td><td>48</td><td>0</td><td>A new track, Keys</td></tr>
+        <tr><td class="n">2 - Pads</td><td>0</td><td>544</td><td>0</td><td>A new track, Pads</td></tr>
+      </table>
+      <div class="sect">Timing</div>
+      <div class="radio on"><div class="rb"></div><div>Keep it as played, starting at the playhead (bar 9)<div class="sub">The times are real seconds. At 124 BPM they land where they fall, between the grid lines.</div></div></div>
+      <div class="radio"><div class="rb"></div><div>Keep it as played, starting at bar 1</div></div>
+      <div class="row"><span style="font-size:13px;width:150px">Then snap notes to</span><div class="field small combo" style="width:150px">Don't snap<span class="spacer"></span><span class="gl">&#xE70D;</span></div></div>
+      <div class="sect">Leave out</div>
+      <div class="row" style="gap:20px">
+        <div class="check on"><div class="cb">&#xE73E;</div><div>Clock, start and stop</div></div>
+        <div class="check on"><div class="cb">&#xE73E;</div><div>Active sensing</div></div>
+        <div class="check"><div class="cb">&#xE73E;</div><div>System exclusive</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.45">Also opens a .mid saved by MIDI Monitor or the console. A capture with no times (UMP text, or MIDI Monitor's .bin) is laid out one message per grid step, which suits a set-up dump better than a performance.</div>
+    </div>
+    <div class="dlg-foot"><div class="btn accent">Import</div><div class="btn">Cancel</div></div>
+  </div>
+
+  <div class="dialog static">
+    <div class="dlg-body">
+      <h2>Export</h2>
+      <div class="row"><span style="font-size:13px;width:60px">What</span><div class="seg"><div class="sel">Whole project</div><div>Selected tracks (2)</div><div>Selected clip</div></div></div>
+      <div class="sect">Format</div>
+      <div class="radio on"><div class="rb"></div><div>MIDI 2.0 clip files (.midi2), one per track<div class="sub">Keeps everything: 16-bit velocity, per-note changes, exact pitch, 32-bit controllers. One file per track, in a folder named after the project.</div></div></div>
+      <div class="radio"><div class="rb"></div><div>One MIDI 2.0 clip file (.midi2)<div class="sub">Every track in one file. Tracks are told apart only by group and channel, so two tracks that play on the same channel would merge.</div></div></div>
+      <div class="radio"><div class="rb"></div><div>Standard MIDI File (.mid), one track per track<div class="sub">MIDI 1.0. Opens almost anywhere.</div><div class="lose">This project would lose 412 per-note pitch bend messages and 3 exact pitches, and its velocities would be rounded to 0 to 127.</div></div></div>
+      <div class="infobar info"><span class="gl">&#xE946;</span><div class="bd">The MIDI Association hasn't published the MIDI Container File yet. That's the format meant to hold several MIDI 2.0 tracks in one file. When it's out, whole-project export can use it.</div></div>
+      <div class="check on"><div class="cb">&#xE73E;</div><div>Tempo, meter and markers</div></div>
+      <div class="check on"><div class="cb">&#xE73E;</div><div>Start-up messages: program, bank, volume and pan</div></div>
+      <div class="check on"><div class="cb">&#xE73E;</div><div>Project name, composer and copyright<div class="sub">From About this project. MIDI 2.0 files carry them as standard text messages.</div></div></div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.45">Pattern, generator and chance notes are written the way they play from bar 1 with their saved seeds. A file holds notes, not the settings that made them.</div>
+    </div>
+    <div class="dlg-foot"><div class="btn accent">Export</div><div class="btn">Cancel</div></div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="dialog static" style="flex:0 0 auto">
+      <div class="dlg-body">
+        <h2>Paste from MIDI Monitor</h2>
+        <div class="dlg-sub">You copied 24 messages as UMP words in MIDI Monitor. The clipboard has the messages but not their times.</div>
+        <div class="radio on"><div class="rb"></div><div style="flex:1">One message per step, from the playhead<div class="row" style="margin-top:6px"><span class="sub" style="margin:0">Each step is</span><div class="field small combo" style="width:84px">1/16<span class="spacer"></span><span class="gl">&#xE70D;</span></div></div></div></div>
+        <div class="radio"><div class="rb"></div><div>All at the playhead, in the order copied<div class="sub">Good for a set-up dump: sound select, then a system exclusive patch.</div></div></div>
+      </div>
+      <div class="dlg-foot"><div class="btn accent">Paste</div><div class="btn">Cancel</div></div>
+    </div>
+    <div class="card" style="font-size:12px;color:var(--text2);line-height:1.55">
+      <div style="font-weight:600;color:var(--text);margin-bottom:6px">What each capture format brings</div>
+      <div class="kv"><span class="k">CSV</span><span class="v">Exact times and every MIDI 2.0 message. Best choice.</span></div>
+      <div class="kv"><span class="k">.mid</span><span class="v">Times at 960 ticks per beat, MIDI 1.0 only.</span></div>
+      <div class="kv"><span class="k">UMP text, .bin</span><span class="v">Messages only, no times.</span></div>
+    </div>
+  </div>
+
+</div>
+
+<ol class="callouts">
+  <li><b>Standard MIDI Files</b> come in track by track, each as a clip on a new track (or on the selected track). The file's tempo is used when the project has none, and its copyright text stays with the clips it came from.</li>
+  <li><b>Captures from MIDI Monitor and the console.</b> A CSV capture keeps exact times and MIDI 2.0 messages, so a jam you captured becomes a clip that plays back just as it happened. One track per group.</li>
+  <li><b>Paste.</b> Messages copied in MIDI Monitor paste straight into a clip. They have no times, so you choose how to lay them out.</li>
+  <li><b>MIDI 2.0 clip files</b> keep everything the project can hold. Whole-project export writes one per track until the MIDI Container File is published.</li>
+  <li><b>Standard MIDI Files</b> are still the way to reach most other software. The dialog counts what would be lost before you export, instead of after.</li>
+  <li><b>Chance and generators</b> export as the notes they play, from their saved seeds, so the file matches what you heard from bar 1.</li>
+</ol>
+
+</div>
+</body>
+</html>

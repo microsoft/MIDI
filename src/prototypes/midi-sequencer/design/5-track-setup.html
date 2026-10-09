@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer - 5 - track setup</title>
+<link rel="stylesheet" href="seq.css">
+<script src="seq.js" defer></script>
+<style>
+    .arrange { --launch-w: 0px; --hdr-w: 292px; }
+    .epitem { display: flex; align-items: center; gap: 10px; padding: 6px 12px; }
+    .epitem .art { width: 26px; height: 26px; border-radius: 6px; flex: 0 0 26px; display: flex; align-items: center; justify-content: center; font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 13px; color: var(--accent); background: linear-gradient(140deg, #3A5470, #24303E); }
+    .epitem .art.net { color: #9DF0C8; background: linear-gradient(140deg, #2F5A48, #1F3328); }
+    .epitem .art.bt { color: #B4A7FF; background: linear-gradient(140deg, #43396E, #29243F); }
+    .epitem .art.loop { color: #FFA3EF; background: linear-gradient(140deg, #6B3A63, #3A2338); }
+    .epitem .art.off { color: var(--critical); background: #383036; }
+    .epitem .tx { flex: 1; min-width: 0; }
+    .epitem .n { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .epitem .s { font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .epitem.sel { background: rgba(96, 205, 255, .10); }
+    .epitem.sel .n { color: var(--accent); }
+    .epitem.offline .n { color: var(--text3); }
+    .recchips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .recchips .chip.on { color: var(--text); border-color: rgba(96, 205, 255, .45); background: rgba(96, 205, 255, .12); }
+    .insp-body { gap: 14px; }
+    .secthead { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .secthead .gl { font-size: 12px; color: var(--text2); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="appicon" viewBox="0 0 16 16"><rect x=".5" y=".5" width="15" height="15" rx="3.5" fill="#25303D" stroke="#60CDFF" stroke-width=".8"/><rect x="3" y="3.6" width="7" height="2.2" rx="1" fill="#FF8A65"/><rect x="6" y="6.9" width="7" height="2.2" rx="1" fill="#60CDFF"/><rect x="3" y="10.2" width="5" height="2.2" rx="1" fill="#6CCB5F"/></symbol>
+</svg>
+
+<div class="page">
+
+<div class="caption-above"><b>5. Where a track records from and plays to.</b> The launcher is hidden here, which gives the timeline the width, and the inspector is open for the Lead track. Its destination list is open. A device that's missing stays on its track and comes back by itself, the same way MIDI Patchbay handles it.</div>
+
+<div class="window">
+
+  <div class="titlebar">
+    <svg class="appicon"><use href="#appicon"/></svg>
+    <div class="title">Night Drive Sketch &mdash; Windows MIDI Sequencer</div>
+    <div class="preview-chiclet">PREVIEW</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="transport">
+    <div class="tbtn">&#xE892;</div>
+    <div class="tbtn play">&#xE768;</div>
+    <div class="tbtn">&#xE71A;</div>
+    <div class="tbtn rec">&#xE7C8;</div>
+    <div class="tbtn on">&#xE8EE;</div>
+    <div class="sep"></div>
+    <div class="lcd"><div class="big">9.1.000</div><div class="small">0:15.484</div></div>
+    <div class="lcd" style="min-width:118px"><div class="big">124.00<span class="unit">BPM</span></div><div class="small">4/4</div></div>
+    <div class="btn small"><span class="gl">&#xE823;</span>Internal clock<span class="gl" style="font-size:9px">&#xE70D;</span></div>
+    <div class="spacer"></div>
+    <div class="btn small"><span class="gl">&#xE74F;</span>Silence</div>
+    <div class="sep"></div>
+    <div class="btn subtle icon"><span class="gl">&#xE7A7;</span></div>
+    <div class="btn subtle icon"><span class="gl">&#xE7A6;</span></div>
+    <div class="chip on"><span class="gl">&#xE73E;</span>Saved</div>
+  </div>
+
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+
+      <div style="padding:10px 12px;border-bottom:1px solid var(--divider)">
+        <div class="infobar caution"><span class="gl">&#xE7BA;</span><div class="bd"><span class="tt">Moog One isn't connected.</span> Bass keeps it as its destination and plays to it as soon as it's back. Until then, Bass is silent.</div><div class="btn small">Choose another</div></div>
+      </div>
+
+      <div class="arrange" data-bars="22" data-playhead="9" style="--bar:34px">
+        <div class="arow ruler">
+          <div class="hdr">
+            <div class="btn small"><span class="gl">&#xE710;</span>Track</div>
+            <div class="btn small subtle"><span class="gl">&#xE8B7;</span>Folder</div>
+            <div class="spacer" style="flex:1"></div>
+            <div class="btn small" title="Show the clip launcher">Launcher</div>
+          </div>
+          <div class="lane"><div class="loop-range" data-at="9" data-len="4"></div></div>
+        </div>
+
+        <div class="pinned">
+          <div class="arow tempo">
+            <div class="hdr">
+              <div class="strip" style="--tc:#BDBDBD"></div><div class="chev"></div><div class="ticon" style="color:var(--text2)">&#xE916;</div>
+              <div class="tinfo"><div class="tname">Tempo and meter<span class="pin">&#xE718;</span></div><div class="tsub">124 BPM &middot; 4/4 &middot; 5 markers</div></div>
+            </div>
+            <div class="lane" data-tempo='{"min":118,"max":132,"points":[[1,124],[17,124],[19,128],[23,128]],"labels":[[1,"124"],[19,"128"]]}'>
+              <div class="marker" data-at="1">Intro</div>
+              <div class="marker" data-at="5">Groove</div>
+              <div class="marker" data-at="13">Break</div>
+              <div class="marker" data-at="17">Drop</div>
+            </div>
+          </div>
+          <div class="arow track" style="--tc:#FF8A65">
+            <div class="hdr">
+              <div class="strip"></div><div class="chev">&#xE70D;</div>
+              <div class="tinfo"><div class="tname">Drums<span class="pin">&#xE718;</span></div><div class="tsub"><span class="gl">&#xE72A;</span>TR-8S &middot; Ch 10</div></div>
+              <div class="tbtns"><div class="tb m">M</div><div class="tb s">S</div><div class="tb r">R</div></div><div class="led"></div>
+            </div>
+            <div class="lane">
+              <div class="tclip pattern" data-at="1" data-len="4" data-draw="drums"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Beat A &times;4</span></div><div class="body"></div></div>
+              <div class="tclip pattern" data-at="5" data-len="4" data-draw="drums"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Beat A</span></div><div class="body"></div></div>
+              <div class="tclip pattern" data-at="9" data-len="4" data-draw="drums"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Beat A</span></div><div class="body"></div></div>
+              <div class="tclip pattern" data-at="17" data-len="4" data-draw="drumsB"><div class="cap"><span class="t">Beat B</span></div><div class="body"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="pin-edge"></div>
+
+        <div class="scrollpart">
+          <div class="arow folder" style="--tc:#9C8CFF">
+            <div class="hdr">
+              <div class="strip"></div><div class="chev">&#xE76C;</div><div class="ticon">&#xE8B7;</div>
+              <div class="tinfo"><div class="tname">Synths<span class="cnt">4 tracks</span></div></div>
+              <div class="tbtns"><div class="tb m">M</div><div class="tb s">S</div><div class="tb blank">R</div></div><div class="led"></div>
+            </div>
+            <div class="lane"><div class="tclip summary" data-at="1" data-len="22"><div class="body"></div></div></div>
+          </div>
+
+          <div class="arow folder" style="--tc:#F7C948">
+            <div class="hdr">
+              <div class="strip"></div><div class="chev">&#xE70D;</div><div class="ticon">&#xE8B7;</div>
+              <div class="tinfo"><div class="tname">Keys<span class="cnt">2 tracks</span></div></div>
+              <div class="tbtns"><div class="tb m">M</div><div class="tb s">S</div><div class="tb blank">R</div></div><div class="led"></div>
+            </div>
+            <div class="lane"><div class="tclip summary" data-at="1" data-len="12"><div class="body"></div></div><div class="tclip summary" data-at="17" data-len="6"><div class="body"></div></div></div>
+          </div>
+          <div class="arow track" style="--tc:#F7C948">
+            <div class="hdr">
+              <div class="strip"></div><div class="indent"></div><div class="chev">&#xE76C;</div>
+              <div class="tinfo"><div class="tname">Piano</div><div class="tsub"><span class="gl">&#xE72A;</span>General MIDI Synth &middot; Ch 2</div></div>
+              <div class="tbtns"><div class="tb m">M</div><div class="tb s">S</div><div class="tb r">R</div></div><div class="led"></div>
+            </div>
+            <div class="lane">
+              <div class="tclip notes" data-at="1" data-len="8" data-draw="pad"><div class="cap"><span class="t">Piano verse</span></div><div class="body"></div></div>
+              <div class="tclip notes" data-at="17" data-len="6" data-draw="stabs"><div class="cap"><span class="t">Piano drop</span></div><div class="body"></div></div>
+            </div>
+          </div>
+          <div class="arow track" style="--tc:#E0B43C">
+            <div class="hdr">
+              <div class="strip"></div><div class="indent"></div><div class="chev">&#xE76C;</div>
+              <div class="tinfo"><div class="tname">Organ</div><div class="tsub"><span class="gl">&#xE72A;</span>Studio Mac &middot; Ch 1</div></div>
+              <div class="tbtns"><div class="tb m">M</div><div class="tb s">S</div><div class="tb r">R</div></div><div class="led"></div>
+            </div>
+            <div class="lane"><div class="tclip notes" data-at="5" data-len="8" data-draw="swell"><div class="cap"><span class="t">Organ bed</span></div><div class="body"></div></div></div>
+          </div>
+
+          <div class="arow track" style="--tc:#FF6F91">
+            <div class="hdr" style="background:rgba(96,205,255,.06)">
+              <div class="strip"></div><div class="chev">&#xE76C;</div>
+              <div class="tinfo"><div class="tname">Lead</div><div class="tsub recx"><span class="gl">&#xE72B;</span>Keystep 37 &middot; any channel</div></div>
+              <div class="tbtns"><div class="tb m">M</div><div class="tb s">S</div><div class="tb r on">R</div></div><div class="led in"></div>
+            </div>
+            <div class="lane">
+              <div class="tclip notes sel" data-at="9" data-len="4" data-draw="take"><div class="cap"><span class="t">Lead take 1</span></div><div class="body"></div></div>
+              <div class="tclip notes" data-at="17" data-len="4" data-draw="lead"><div class="cap"><span class="t">Lead hook</span></div><div class="body"></div></div>
+            </div>
+          </div>
+
+          <div class="arow track" style="--tc:#FFB547">
+            <div class="hdr">
+              <div class="strip"></div><div class="chev">&#xE76C;</div>
+              <div class="tinfo"><div class="tname">Chords</div><div class="tsub"><span class="gl">&#xE72A;</span>General MIDI Synth &middot; Ch 4</div></div>
+              <div class="tbtns"><div class="tb m on">M</div><div class="tb s">S</div><div class="tb r">R</div></div><div class="led"></div>
+            </div>
+            <div class="lane">
+              <div class="tclip notes muted" data-at="5" data-len="8" data-draw="stabs"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Stabs &times;2</span></div><div class="body"></div></div>
+              <div class="tclip notes muted" data-at="17" data-len="6" data-draw="stabs"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Stabs</span></div><div class="body"></div></div>
+            </div>
+          </div>
+
+          <div class="arow filler"><div class="hdr"></div><div class="lane"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="inspector">
+      <div class="insp-head"><div class="t">Lead</div><div class="chip">Track</div></div>
+      <div class="insp-body">
+        <div class="insp-section">
+          <div class="row"><div class="field small grow">Lead</div><div class="btn small subtle"><span class="gl">&#xE718;</span>Pin</div></div>
+          <div class="swatches"><i style="background:#FF8A65"></i><i style="background:#F7C948"></i><i style="background:#FFB547"></i><i style="background:#6CCB5F"></i><i style="background:#4DD0C4"></i><i style="background:#5BC0EB"></i><i style="background:#9C8CFF"></i><i style="background:#B4A7FF"></i><i class="sel" style="background:#FF6F91"></i><i style="background:#BDBDBD"></i></div>
+        </div>
+
+        <div class="insp-section">
+          <div class="secthead"><span class="gl">&#xE72B;</span>Record from</div>
+          <div class="field small combo">Keystep 37<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+          <div class="field small combo">Group 1 - Keystep 37<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+          <div class="field small combo">Any channel<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+          <div class="recchips"><span class="chip on">Notes</span><span class="chip on">Controllers</span><span class="chip on">Pitch bend</span><span class="chip on">Pressure</span><span class="chip on">Program</span><span class="chip">System exclusive</span></div>
+          <div class="switch-row"><div class="toggle-sw"></div><div class="tx">Echo to the destination while armed<div class="sub">So you hear what you play.</div></div></div>
+        </div>
+
+        <div class="insp-section">
+          <div class="secthead"><span class="gl">&#xE72A;</span>Play to</div>
+          <div class="field small combo" style="border-color:var(--accent)">General MIDI Synth<span class="spacer"></span><span class="gl">&#xE70E;</span></div>
+          <div class="row"><div class="field small combo grow">Group 1 - General MIDI<span class="spacer"></span><span class="gl">&#xE70D;</span></div><div class="field small combo" style="width:72px">Ch 1<span class="spacer"></span><span class="gl">&#xE70D;</span></div></div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.4">Sends MIDI 2.0, because the device's function block for group 1 says it speaks MIDI 2.0.</div>
+        </div>
+
+        <div class="insp-section">
+          <div class="secthead">When playback starts</div>
+          <div class="kv"><span class="k">Program</span><span class="v">81 Lead 1 (square)</span></div>
+          <div class="kv"><span class="k">Also sends</span><span class="v">Volume 100, Pan center</span></div>
+          <div class="btn small" style="align-self:flex-start">Edit start-up messages</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <span class="ok"><span class="gl">&#xE73E;</span>MIDI service running</span>
+    <span>9 devices in use, 1 missing</span>
+    <span class="spacer"></span>
+    <span>Program names come from the device when it shares them (MIDI-CI), or from General MIDI</span>
+  </div>
+
+  <div class="flyout" style="right:306px;top:430px;width:340px">
+    <div class="menu-head">Play Lead to</div>
+    <div class="epitem sel"><div class="art">&#xE8D6;</div><div class="tx"><div class="n">General MIDI Synth</div><div class="s">Built in &middot; MIDI 2.0</div></div><span class="gl" style="font-size:12px;color:var(--accent)">&#xE73E;</span></div>
+    <div class="epitem"><div class="art">&#xE765;</div><div class="tx"><div class="n">Iridium</div><div class="s">USB &middot; MIDI 1.0</div></div></div>
+    <div class="epitem"><div class="art">&#xE765;</div><div class="tx"><div class="n">Hydrasynth</div><div class="s">USB &middot; MIDI 1.0</div></div></div>
+    <div class="epitem offline"><div class="art off">&#xE765;</div><div class="tx"><div class="n">Moog One</div><div class="s">Not connected &middot; Bass uses it</div></div></div>
+    <div class="epitem"><div class="art net">&#xE839;</div><div class="tx"><div class="n">Studio Mac</div><div class="s">Network MIDI 2.0</div></div></div>
+    <div class="epitem"><div class="art bt">&#xE702;</div><div class="tx"><div class="n">WIDI Master</div><div class="s">Bluetooth MIDI</div></div></div>
+    <div class="epitem"><div class="art loop">&#xE895;</div><div class="tx"><div class="n">Lights loopback (A)</div><div class="s">Loopback &middot; for another app</div></div></div>
+    <div class="menu-sep"></div>
+    <div class="menu-item"><span class="gl">&#xE710;</span>Make a loopback for another app</div>
+  </div>
+</div>
+
+<ol class="callouts">
+  <li><b>Record from.</b> A device, a group and a channel, or any channel. Choose what gets recorded. System exclusive is off unless you turn it on, so a device's chatter doesn't fill your clips.</li>
+  <li><b>Echo while armed.</b> What you play goes straight to the track's destination, translated the same way playback is, so you hear the sound you're recording for.</li>
+  <li><b>Play to.</b> A device, a group and a channel. The list shows how each device is connected and whether it speaks MIDI 2.0. The app sends MIDI 2.0 or MIDI 1.0 to match what the device's function block says, because Windows doesn't translate based on function blocks.</li>
+  <li><b>Missing devices.</b> Moog One is unplugged. Bass keeps it, plays nothing to it, and picks it up again when it's back. Nothing silently goes somewhere else.</li>
+  <li><b>When playback starts.</b> Program, bank and any other set-up messages go out before the first note. Program names come from the device over MIDI-CI when it offers them.</li>
+  <li><b>Loopbacks.</b> To feed another app (a DAW, a lighting program), play to a loopback. The sequencer can make one from this list.</li>
+</ol>
+
+</div>
+</body>
+</html>

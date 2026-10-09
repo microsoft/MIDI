@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer - 1 - main window</title>
+<link rel="stylesheet" href="seq.css">
+<script src="seq.js" defer></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="k-notes" viewBox="0 0 16 16"><rect x="1" y="3" width="6" height="2.4" rx="1" fill="currentColor"/><rect x="6" y="7" width="8" height="2.4" rx="1" fill="currentColor"/><rect x="3" y="11" width="5" height="2.4" rx="1" fill="currentColor"/></symbol>
+  <symbol id="k-pattern" viewBox="0 0 16 16"><rect x="1" y="2" width="3.6" height="3.6" rx=".8" fill="currentColor"/><rect x="6.2" y="2" width="3.6" height="3.6" rx=".8" fill="none" stroke="currentColor" stroke-width="1"/><rect x="11.4" y="2" width="3.6" height="3.6" rx=".8" fill="currentColor"/><rect x="1" y="7.2" width="3.6" height="3.6" rx=".8" fill="none" stroke="currentColor" stroke-width="1"/><rect x="6.2" y="7.2" width="3.6" height="3.6" rx=".8" fill="currentColor"/><rect x="11.4" y="7.2" width="3.6" height="3.6" rx=".8" fill="none" stroke="currentColor" stroke-width="1"/><rect x="1" y="12.4" width="3.6" height="3.6" rx=".8" fill="currentColor"/><rect x="6.2" y="12.4" width="3.6" height="3.6" rx=".8" fill="none" stroke="currentColor" stroke-width="1"/><rect x="11.4" y="12.4" width="3.6" height="3.6" rx=".8" fill="currentColor"/></symbol>
+  <symbol id="k-gen" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="2.4" r="2" fill="currentColor"/><circle cx="13.3" cy="9.7" r="2" fill="currentColor"/><circle cx="4" cy="12" r="2" fill="currentColor"/></symbol>
+  <symbol id="appicon" viewBox="0 0 16 16"><rect x=".5" y=".5" width="15" height="15" rx="3.5" fill="#25303D" stroke="#60CDFF" stroke-width=".8"/><rect x="3" y="3.6" width="7" height="2.2" rx="1" fill="#FF8A65"/><rect x="6" y="6.9" width="7" height="2.2" rx="1" fill="#60CDFF"/><rect x="3" y="10.2" width="5" height="2.2" rx="1" fill="#6CCB5F"/></symbol>
+</svg>
+
+<div class="page wide">
+
+<div class="caption-above"><b>1. The main window.</b> One window per project. Tracks run down the left. Each track has a row of clip slots (the clip launcher) and a timeline, side by side, so a track either follows the timeline or plays a clip you launched. Two rows are pinned to the top, two tracks sit in folders, and the selected clip is open in the editor at the bottom.</div>
+
+<div class="window main">
+
+  <div class="titlebar">
+    <svg class="appicon"><use href="#appicon"/></svg>
+    <div class="title">Night Drive Sketch &mdash; Windows MIDI Sequencer</div>
+    <div class="preview-chiclet">PREVIEW</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="transport">
+    <div class="tbtn" title="Back to the start">&#xE892;</div>
+    <div class="tbtn play on" title="Play">&#xE768;</div>
+    <div class="tbtn" title="Stop">&#xE71A;</div>
+    <div class="tbtn rec" title="Record on the timeline">&#xE7C8;</div>
+    <div class="tbtn on" title="Loop">&#xE8EE;</div>
+    <div class="sep"></div>
+    <div class="lcd"><div class="big">11.3.240</div><div class="small">0:20.613</div></div>
+    <div class="lcd" style="min-width:118px"><div class="big">124.00<span class="unit">BPM</span></div><div class="small">4/4</div></div>
+    <div class="btn small"><span class="gl">&#xE823;</span>Internal clock<span class="gl" style="font-size:9px">&#xE70D;</span></div>
+    <div class="sep"></div>
+    <span class="tlabel">Launch</span><div class="field small combo" style="width:84px">1 bar<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <span class="tlabel">Snap</span><div class="field small combo" style="width:72px">1/16<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <div class="btn small" title="Turn what you just played into a clip"><span class="gl">&#xE81C;</span>Capture</div>
+    <div class="spacer"></div>
+    <div class="btn small">Back to timeline</div>
+    <div class="btn small"><span class="gl">&#xE74F;</span>Silence</div>
+    <div class="sep"></div>
+    <div class="btn subtle icon"><span class="gl">&#xE7A7;</span></div>
+    <div class="btn subtle icon"><span class="gl">&#xE7A6;</span></div>
+    <div class="chip on"><span class="gl">&#xE73E;</span>Saved</div>
+  </div>
+
+  <div class="arrange" data-bars="25" data-playhead="11.5" style="--bar:34px">
+
+    <!-- ===================================================== ruler + scene headers -->
+    <div class="arow ruler">
+      <div class="hdr">
+        <div class="btn small"><span class="gl">&#xE710;</span>Track</div>
+        <div class="btn small subtle"><span class="gl">&#xE8B7;</span>Folder</div>
+        <div class="spacer" style="flex:1"></div>
+        <div class="btn small toggled" title="Show the clip launcher">Launcher</div>
+      </div>
+      <div class="launch">
+        <div class="scene"><span class="n">1</span><span class="nm">Intro</span><span class="spacer" style="flex:1"></span><span class="gl">&#xE768;</span></div>
+        <div class="scene"><span class="n">2</span><span class="nm">Groove</span><span class="spacer" style="flex:1"></span><span class="gl">&#xE768;</span></div>
+        <div class="scene"><span class="n">3</span><span class="nm">Break</span><span class="spacer" style="flex:1"></span><span class="gl">&#xE768;</span></div>
+        <div class="scene"><span class="n">4</span><span class="nm">Drop</span><span class="spacer" style="flex:1"></span><span class="gl">&#xE768;</span></div>
+        <div class="scene"><span class="n">5</span><span class="nm">Outro</span><span class="spacer" style="flex:1"></span><span class="gl">&#xE768;</span></div>
+      </div>
+      <div class="lane">
+        <div class="loop-range" data-at="9" data-len="4"></div>
+      </div>
+    </div>
+
+    <!-- ===================================================== pinned rows -->
+    <div class="pinned">
+
+      <div class="arow tempo" style="--tc:#BDBDBD">
+        <div class="hdr">
+          <div class="strip"></div>
+          <div class="chev"></div>
+          <div class="ticon" style="color:var(--text2)">&#xE916;</div>
+          <div class="tinfo">
+            <div class="tname">Tempo and meter<span class="pin">&#xE718;</span></div>
+            <div class="tsub">124 BPM &middot; 4/4 &middot; 5 markers</div>
+          </div>
+        </div>
+        <div class="launch"></div>
+        <div class="lane" data-tempo='{"min":118,"max":132,"points":[[1,124],[17,124],[19,128],[26.4,128]],"labels":[[1,"124"],[19,"128"]]}'>
+          <div class="marker" data-at="1">Intro</div>
+          <div class="marker" data-at="5">Groove</div>
+          <div class="marker" data-at="13">Break</div>
+          <div class="marker" data-at="17">Drop</div>
+          <div class="marker" data-at="23">Outro</div>
+        </div>
+      </div>
+
+      <div class="arow track" style="--tc:#FF8A65">
+        <div class="hdr">
+          <div class="strip"></div>
+          <div class="chev">&#xE70D;</div>
+          <div class="tinfo">
+            <div class="tname">Drums<span class="pin">&#xE718;</span></div>
+            <div class="tsub"><span class="gl">&#xE72A;</span>TR-8S &middot; Ch 10</div>
+          </div>
+          <div class="tbtns"><div class="tb m">M</div><div class="tb s">S</div><div class="tb r">R</div></div>
+          <div class="led out"></div>
+        </div>
+        <div class="launch">
+          <div class="slot"><div class="cell"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Beat A</span><svg class="kind"><use href="#k-pattern"/></svg></div><div class="mini" data-draw="drums" data-bars="1"></div></div></div>
+          <div class="slot"><div class="cell"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Beat A</span><svg class="kind"><use href="#k-pattern"/></svg></div><div class="mini" data-draw="drums" data-bars="1"></div></div></div>
+          <div class="slot"><div class="empty">&#xE71A;</div></div>
+          <div class="slot"><div class="cell"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Beat B</span><svg class="kind"><use href="#k-pattern"/></svg></div><div class="mini" data-draw="drumsB" data-bars="1"></div></div></div>
+          <div class="slot"><div class="cell"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Beat A fill</span><svg class="kind"><use href="#k-pattern"/></svg></div><div class="mini" data-draw="drumsFill" data-bars="1"></div></div></div>
+        </div>
+        <div class="lane">
+          <div class="tclip pattern" data-at="1" data-len="4" data-draw="drums"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Beat A &times;4</span></div><div class="body"></div></div>
+          <div class="tclip pattern" data-at="5" data-len="4" data-draw="drums"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Beat A</span></div><div class="body"></div></div>
+          <div class="tclip pattern" data-at="9" data-len="4" data-draw="drums"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Beat A</span></div><div class="body"></div></div>
+          <div class="tclip pattern" data-at="17" data-len="4" data-draw="drumsB"><div class="cap"><span class="t">Beat B</span></div><div class="body"></div></div>
+          <div class="tclip pattern" data-at="21" data-len="4" data-draw="drumsFill"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Beat A</span></div><div class="body"></div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="pin-edge"></div>
+
+    <!-- ===================================================== everything else scrolls -->
+    <div class="scrollpart">
+
+      <div class="arow folder" style="--tc:#9C8CFF">
+        <div class="hdr">
+          <div class="strip"></div>
+          <div class="chev">&#xE70D;</div>
+          <div class="ticon">&#xE8B7;</div>
+          <div class="tinfo"><div class="tname">Synths<span class="cnt">4 tracks</span></div></div>
+          <div class="tbtns"><div class="tb m">M</div><div class="tb s">S</div><div class="tb blank">R</div></div>
+          <div class="led out"></div>
+        </div>
+        <div class="launch"></div>
+        <div class="lane">
+          <div class="tclip summary" data-at="1" data-len="24"><div class="body"></div></div>
+        </div>
+      </div>
+
+      <div class="arow track" style="--tc:#5BC0EB">
+        <div class="hdr" style="background:rgba(96,205,255,.06)">
+          <div class="strip"></div>
+          <div class="indent"></div>
+          <div class="chev">&#xE70D;</div>
+          <div class="tinfo">
+            <div class="tname">Bass</div>
+            <div class="tsub"><span class="gl">&#xE72A;</span>Moog One &middot; Ch 2</div>
+          </div>
+          <div class="tbtns"><div class="tb m">M</div><div class="tb s">S</div><div class="tb r">R</div></div>
+          <div class="led out"></div>
+        </div>
+        <div class="launch">
+          <div class="slot"><div class="empty">&#xE71A;</div></div>
+          <div class="slot"><div class="cell"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Bass line A</span><svg class="kind"><use href="#k-notes"/></svg></div><div class="mini" data-draw="bass" data-bars="1"></div></div></div>
+          <div class="slot"><div class="cell"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Bass line B</span><svg class="kind"><use href="#k-notes"/></svg></div><div class="mini" data-draw="bassB" data-bars="1"></div></div></div>
+          <div class="slot"><div class="cell"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Bass line A</span><svg class="kind"><use href="#k-notes"/></svg></div><div class="mini" data-draw="bass" data-bars="1"></div></div></div>
+          <div class="slot"><div class="empty">&#xE71A;</div></div>
+        </div>
+        <div class="lane">
+          <div class="tclip notes" data-at="5" data-len="4" data-draw="bass"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Bass line A &times;4</span></div><div class="body"></div></div>
+          <div class="tclip notes sel" data-at="9" data-len="4" data-draw="bass"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Bass line A</span></div><div class="body"></div></div>
+          <div class="tclip notes" data-at="13" data-len="4" data-draw="bassB"><div class="cap"><span class="t">Bass line B</span></div><div class="body"></div></div>
+          <div class="tclip notes" data-at="17" data-len="4" data-draw="bass"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Bass line A</span></div><div class="body"></div></div>
+          <div class="tclip notes" data-at="21" data-len="4" data-draw="bass"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Bass line A</span></div><div class="body"></div></div>
+        </div>
+      </div>
+
+      <div class="arow auto" style="--tc:#5BC0EB">
+        <div class="hdr">
+          <div class="strip" style="opacity:.35"></div>
+          <div class="indent"></div>
+          <div class="indent"></div>
+          <div class="tinfo">
+            <div class="tname" style="font-weight:600;font-size:12px">SVF cutoff</div>
+            <div class="tsub">NRPN 7:54 &middot; 14-bit</div>
+          </div>
+          <div class="chip" style="height:20px;padding:0 7px">80%</div>
+          <div class="btn subtle icon" style="width:24px;height:24px"><span class="gl" style="font-size:11px">&#xE710;</span></div>
+        </div>
+        <div class="launch"></div>
+        <div class="lane" data-auto='{"points":[[1,0.35],[5,0.35],[9,0.8],[13,0.8],[13,0.3],[17,0.55],[21,0.9],[25,0.6],[26.4,0.6]],"selected":2}'></div>
+      </div>
+
+      <div class="arow track" style="--tc:#B4A7FF">
+        <div class="hdr">
+          <div class="strip"></div>
+          <div class="indent"></div>
+          <div class="chev">&#xE76C;</div>
+          <div class="tinfo">
+            <div class="tname">Pad</div>
+            <div class="tsub accent">Playing a launched clip</div>
+          </div>
+          <div class="tbtns"><div class="tb m">M</div><div class="tb s">S</div><div class="tb r">R</div></div>
+          <div class="led out"></div>
+        </div>
+        <div class="launch">
+          <div class="slot"><div class="cell"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Pad intro</span><svg class="kind"><use href="#k-notes"/></svg></div><div class="mini" data-draw="swell" data-bars="2"></div></div></div>
+          <div class="slot"><div class="cell playing"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Pad chords</span><svg class="kind"><use href="#k-notes"/></svg></div><div class="mini" data-draw="pad" data-bars="4"></div><div class="prog" style="width:62%"></div></div></div>
+          <div class="slot"><div class="empty">&#xE71A;</div></div>
+          <div class="slot"><div class="cell queued"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Pad swell</span><svg class="kind"><use href="#k-notes"/></svg></div><div class="mini" data-draw="swell" data-bars="2"></div><div class="when">Bar 12</div></div></div>
+          <div class="slot"><div class="empty">&#xE71A;</div></div>
+        </div>
+        <div class="lane">
+          <div class="tclip notes" data-at="1" data-len="16" data-loop="4" data-draw="pad"><div class="cap"><span class="t">Pad chords</span></div><div class="body"></div></div>
+          <div class="tclip notes" data-at="17" data-len="8" data-draw="swell"><div class="cap"><span class="t">Pad swell</span></div><div class="body"></div></div>
+          <div class="lane-overlay">Playing a launched clip<div class="btn small">Back to timeline</div></div>
+        </div>
+      </div>
+
+      <div class="arow track" style="--tc:#6CCB5F">
+        <div class="hdr">
+          <div class="strip"></div>
+          <div class="indent"></div>
+          <div class="chev">&#xE76C;</div>
+          <div class="tinfo">
+            <div class="tname">Arp</div>
+            <div class="tsub"><span class="gl">&#xE72A;</span>Hydrasynth &middot; Ch 1</div>
+          </div>
+          <div class="tbtns"><div class="tb m">M</div><div class="tb s">S</div><div class="tb r">R</div></div>
+          <div class="led out"></div>
+        </div>
+        <div class="launch">
+          <div class="slot"><div class="empty">&#xE71A;</div></div>
+          <div class="slot"><div class="cell"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Euclid 5/16</span><svg class="kind"><use href="#k-gen"/></svg></div><div class="mini" data-draw="euclid" data-bars="1"></div></div></div>
+          <div class="slot"><div class="empty">&#xE71A;</div></div>
+          <div class="slot"><div class="cell"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Euclid 7/16</span><svg class="kind"><use href="#k-gen"/></svg></div><div class="mini" data-draw="euclid" data-bars="1"></div></div></div>
+          <div class="slot"><div class="empty">&#xE71A;</div></div>
+        </div>
+        <div class="lane">
+          <div class="tclip gen" data-at="9" data-len="16" data-draw="euclid"><div class="cap"><span class="t">Euclid 5/16 &middot; generated as it plays</span></div><div class="body"></div></div>
+        </div>
+      </div>
+
+      <div class="arow track" style="--tc:#4DD0C4">
+        <div class="hdr">
+          <div class="strip"></div>
+          <div class="indent"></div>
+          <div class="chev">&#xE76C;</div>
+          <div class="tinfo">
+            <div class="tname">Texture</div>
+            <div class="tsub"><span class="gl">&#xE72A;</span>Iridium &middot; Ch 3</div>
+          </div>
+          <div class="tbtns"><div class="tb m">M</div><div class="tb s">S</div><div class="tb r">R</div></div>
+          <div class="led"></div>
+        </div>
+        <div class="launch">
+          <div class="slot"><div class="empty">&#xE71A;</div></div>
+          <div class="slot"><div class="empty">&#xE71A;</div></div>
+          <div class="slot"><div class="cell"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Wander</span><svg class="kind"><use href="#k-gen"/></svg></div><div class="mini" data-draw="chance" data-bars="2"></div></div></div>
+          <div class="slot"><div class="cell"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Drift</span><svg class="kind"><use href="#k-gen"/></svg></div><div class="mini" data-draw="drift" data-bars="2"></div></div></div>
+          <div class="slot"><div class="empty">&#xE71A;</div></div>
+        </div>
+        <div class="lane">
+          <div class="tclip gen" data-at="13" data-len="12" data-draw="chance"><div class="cap"><span class="t">Wander &middot; chance melody &middot; seed 4F2A</span></div><div class="body"></div></div>
+        </div>
+      </div>
+
+      <div class="arow folder" style="--tc:#F7C948">
+        <div class="hdr">
+          <div class="strip"></div>
+          <div class="chev">&#xE76C;</div>
+          <div class="ticon">&#xE8B7;</div>
+          <div class="tinfo"><div class="tname">Keys<span class="cnt">2 tracks, closed</span></div></div>
+          <div class="tbtns"><div class="tb m">M</div><div class="tb s">S</div><div class="tb blank">R</div></div>
+          <div class="led"></div>
+        </div>
+        <div class="launch"></div>
+        <div class="lane">
+          <div class="tclip summary" data-at="1" data-len="12"><div class="body"></div></div>
+          <div class="tclip summary" data-at="17" data-len="8"><div class="body"></div></div>
+        </div>
+      </div>
+
+      <div class="arow track" style="--tc:#FF6F91">
+        <div class="hdr">
+          <div class="strip"></div>
+          <div class="chev">&#xE76C;</div>
+          <div class="tinfo">
+            <div class="tname">Lead</div>
+            <div class="tsub recx"><span class="gl">&#xE72B;</span>Keystep 37 &middot; any channel</div>
+          </div>
+          <div class="tbtns"><div class="tb m">M</div><div class="tb s">S</div><div class="tb r on">R</div></div>
+          <div class="led in"></div>
+        </div>
+        <div class="launch">
+          <div class="slot"><div class="cell"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Lead hook</span><svg class="kind"><use href="#k-notes"/></svg></div><div class="mini" data-draw="lead" data-bars="2"></div></div></div>
+          <div class="slot"><div class="empty armed">&#xE7C8;</div></div>
+          <div class="slot"><div class="cell rec"><div class="top"><span class="tri">&#xE7C8;</span><span class="nm">Recording</span></div><div class="mini" data-draw="take" data-bars="2"></div><div class="prog" style="width:38%"></div><div class="when">2 of 4</div></div></div>
+          <div class="slot"><div class="empty armed">&#xE7C8;</div></div>
+          <div class="slot"><div class="empty armed">&#xE7C8;</div></div>
+        </div>
+        <div class="lane">
+          <div class="tclip notes" data-at="9" data-len="4" data-draw="take"><div class="cap"><span class="t">Lead take 1</span></div><div class="body"></div></div>
+          <div class="tclip notes" data-at="17" data-len="4" data-draw="lead"><div class="cap"><span class="t">Lead hook</span></div><div class="body"></div></div>
+        </div>
+      </div>
+
+      <div class="arow track" style="--tc:#FFB547">
+        <div class="hdr">
+          <div class="strip"></div>
+          <div class="chev">&#xE76C;</div>
+          <div class="tinfo">
+            <div class="tname">Chords</div>
+            <div class="tsub"><span class="gl">&#xE72A;</span>General MIDI Synth &middot; Ch 4</div>
+          </div>
+          <div class="tbtns"><div class="tb m on">M</div><div class="tb s">S</div><div class="tb r">R</div></div>
+          <div class="led"></div>
+        </div>
+        <div class="launch">
+          <div class="slot"><div class="empty">&#xE71A;</div></div>
+          <div class="slot"><div class="cell muted"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Stabs</span><svg class="kind"><use href="#k-notes"/></svg></div><div class="mini" data-draw="stabs" data-bars="2"></div></div></div>
+          <div class="slot"><div class="empty">&#xE71A;</div></div>
+          <div class="slot"><div class="cell muted"><div class="top"><span class="tri">&#xE768;</span><span class="nm">Stabs 2</span><svg class="kind"><use href="#k-notes"/></svg></div><div class="mini" data-draw="stabs" data-bars="2"></div></div></div>
+          <div class="slot"><div class="empty">&#xE71A;</div></div>
+        </div>
+        <div class="lane">
+          <div class="tclip notes muted" data-at="5" data-len="8" data-draw="stabs"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Stabs &times;2</span></div><div class="body"></div></div>
+          <div class="tclip notes muted" data-at="17" data-len="8" data-draw="stabs"><div class="cap"><span class="lnk">&#xE71B;</span><span class="t">Stabs</span></div><div class="body"></div></div>
+        </div>
+      </div>
+
+      <div class="arow addrow">
+        <div class="hdr" style="padding-left:12px"><div class="btn small subtle" style="color:var(--text3)"><span class="gl">&#xE710;</span>Add a track</div></div>
+        <div class="launch"></div>
+        <div class="lane"></div>
+      </div>
+
+      <div class="arow filler">
+        <div class="hdr"></div>
+        <div class="launch"></div>
+        <div class="lane"></div>
+      </div>
+
+      <div class="vbar" style="top:6px;height:210px"></div>
+    </div>
+  </div>
+
+  <!-- ===================================================== clip editor -->
+  <div class="editor" style="height:300px">
+    <div class="ed-head">
+      <svg class="kindmark" style="color:#5BC0EB"><use href="#k-notes"/></svg>
+      <div class="cname">Bass line A</div>
+      <div class="chip">Notes clip</div>
+      <div class="chip">4 bars, loops</div>
+      <div class="chip info"><span class="gl">&#xE71B;</span>Used in 4 places</div>
+      <div class="sep"></div>
+      <div class="btn small subtle"><span class="gl">&#xE70F;</span>Draw</div>
+      <div class="btn small subtle">Quantize</div>
+      <div class="btn small subtle">Transpose</div>
+      <div class="spacer"></div>
+      <span class="tlabel">Show values as</span>
+      <div class="field small combo" style="width:150px">MIDI 2.0 (16-bit)<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+      <div class="btn small"><span class="gl">&#xE8A7;</span>Open in a window</div>
+      <div class="btn subtle icon" style="width:28px;height:28px"><span class="gl" style="font-size:11px">&#xE711;</span></div>
+    </div>
+    <div class="ed-body">
+      <div class="ed-main">
+        <div class="rruler"><div class="corner" style="width:56px"></div><div class="marks" data-bars="4" data-first="1"><div class="loopbar"></div></div></div>
+        <div class="rollwrap">
+          <div class="keys" data-keys="bassA" style="width:56px"></div>
+          <div class="roll" data-roll="bassA" style="--tc:#5BC0EB"></div>
+        </div>
+        <div class="lanes">
+          <div class="lanerow" style="height:54px">
+            <div class="lanehead" style="width:56px"><div class="ln">Velocity</div><div class="ls">16-bit</div></div>
+            <div class="vlane" data-vel="bassA" style="--tc:#5BC0EB"></div>
+          </div>
+        </div>
+      </div>
+      <div class="inspector narrow">
+        <div class="insp-head"><div class="t">Selected note</div></div>
+        <div class="insp-body" style="gap:2px">
+          <div class="kv"><span class="k">Note</span><span class="v">E1 (40)</span></div>
+          <div class="kv"><span class="k">Starts at</span><span class="v mono">2.1.000</span></div>
+          <div class="kv"><span class="k">Length</span><span class="v mono">0.0.403</span></div>
+          <div class="kv"><span class="k">Velocity</span><span class="v">41,287 (63%)</span></div>
+          <div class="kv"><span class="k">Release velocity</span><span class="v">32,768 (50%)</span></div>
+          <div class="kv"><span class="k">Channel</span><span class="v">2</span></div>
+          <div class="kv"><span class="k">Per-note changes</span><span class="v">None</span></div>
+          <div class="hint" style="font-size:11px;color:var(--text3);line-height:1.4;margin-top:8px">The Moog One speaks MIDI 1.0, so it gets velocity 80.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <span class="ok"><span class="gl">&#xE73E;</span>MIDI service running</span>
+    <span><span class="gl">&#xE823;</span>Internal clock, 124 BPM</span>
+    <span>Sending clock to TR-8S and Hydrasynth</span>
+    <span>8 devices in use</span>
+    <span class="spacer"></span>
+    <span class="recx"><span class="gl">&#xE7C8;</span>Recording Lead into scene 3, Break (2 of 4 bars)</span>
+    <span>Autosaved 10:42 PM</span>
+  </div>
+
+</div>
+
+<ol class="callouts">
+  <li><b>Pinned rows.</b> Tempo and meter, and Drums, are pinned. They stay at the top of the track list, the launcher and the timeline while everything under the shaded edge scrolls, like frozen rows in Excel.</li>
+  <li><b>Folders.</b> Synths is open and Keys is closed. A closed folder shows an outline of what its tracks play. M and S on a folder apply to every track inside it.</li>
+  <li><b>Launcher and timeline share rows.</b> A track follows the timeline until you launch a clip. Pad is playing a launched clip, so its timeline is covered, and Back to timeline returns it. Pad swell waits for bar 12.</li>
+  <li><b>Three kinds of clip.</b> Notes (Bass, Pad, Lead), pattern (Drums) and generator (Arp, Texture). Generator clips have a dashed edge because what they play is decided as they play.</li>
+  <li><b>Linked clips.</b> Bass line A is one clip placed four times. Edit it once and every copy changes. Make a copy to break the link.</li>
+  <li><b>Automation on the track.</b> SVF cutoff is drawn right under Bass. The Moog One is a MIDI 1.0 synth, so it gets NRPN 7:54 at 14 bits. A MIDI 2.0 device would get the same lane as a 32-bit assignable controller.</li>
+  <li><b>Recording.</b> Lead is armed (R) and recording into an empty slot in scene 3. What you play is echoed to its destination so you hear it. Capture turns what you just played into a clip, even if you never pressed record.</li>
+  <li><b>The clip editor.</b> The selected clip opens at the bottom, or in its own window. Values show at MIDI 2.0 resolution, with the MIDI 1.0 value next to them when it matters.</li>
+</ol>
+
+</div>
+</body>
+</html>
