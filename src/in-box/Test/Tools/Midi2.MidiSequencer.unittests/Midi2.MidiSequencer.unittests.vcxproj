@@ -99,6 +99,7 @@
     <ClInclude Include="MeasurementTests.h" />
     <ClInclude Include="ServiceTimingTests.h" />
     <ClInclude Include="PlaybackEngineTests.h" />
+    <ClInclude Include="AppModelTests.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.h" />
@@ -109,6 +110,9 @@
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceUndo.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\MidiClipFile.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\StandardMidiFileBridge.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceEdits.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\RecordingTake.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\ArrangeLayout.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.h" />
   </ItemGroup>
   <ItemGroup>
@@ -122,6 +126,7 @@
     <ClCompile Include="MeasurementTests.cpp" />
     <ClCompile Include="ServiceTimingTests.cpp" />
     <ClCompile Include="PlaybackEngineTests.cpp" />
+    <ClCompile Include="AppModelTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.cpp" />
@@ -131,6 +136,10 @@
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceUndo.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\MidiClipFile.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\StandardMidiFileBridge.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceEdits.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\RecordingTake.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\ArrangeLayout.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\SampleSequence.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.cpp" />
     <ClCompile Include="..\..\..\Inc\midi_file_sequence.cpp" />
     <ClCompile Include="..\..\..\Inc\midi_file_smf_reader.cpp" />

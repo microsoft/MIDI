@@ -229,6 +229,7 @@ $GuiTools = @(
     [pscustomobject]@{ Name = 'midi2monitor';       Display = 'MIDI Monitor' }
     [pscustomobject]@{ Name = 'midipatchbay';       Display = 'MIDI Patchbay' }
     [pscustomobject]@{ Name = 'midiglass';          Display = 'MIDI Glass' }
+    [pscustomobject]@{ Name = 'midisequencer';      Display = 'MIDI Sequencer' }
     [pscustomobject]@{ Name = 'miditroubleshooter'; Display = 'MIDI Troubleshooting and Repair' }
     # Aumid: the notification platform will not accept a toast from an unpackaged app unless the
     # identity it publishes under is on a Start Menu shortcut. RunAtLogon means the installer
@@ -280,6 +281,7 @@ $ToolsFolderPayloads = @(
 # Themes\Generic.xbf, which ships inside midiglass.pri.
 $AppRequiredFiles = @{
     'midiglass' = @('Microsoft.Graphics.Canvas.dll', 'Themes\Generic.xbf')
+    'midisequencer' = @('Microsoft.Graphics.Canvas.dll')
 }
 
 # Transports, built by Midi2.sln and staged to build/staging/api/<platform>.

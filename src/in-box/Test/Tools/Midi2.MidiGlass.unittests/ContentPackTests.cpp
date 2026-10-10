@@ -8,7 +8,7 @@
 #include "ContentPackTests.h"
 
 #include "ContentPack.h"
-#include "StoredZip.h"
+#include "ZipArchive.h"
 #include "LayoutModel.h"
 #include "LayoutPack.h"
 #include "LayoutStore.h"

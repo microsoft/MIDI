@@ -31,6 +31,8 @@
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
+    <ClCompile Include="..\midi-app-shared\Deflate.cpp" />
+    <ClCompile Include="..\midi-app-shared\ZipArchive.cpp" />
     <ClCompile Include="..\mididiag\mididiag_report_parser.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
@@ -55,6 +57,8 @@
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\midi-app-shared\Deflate.h" />
+    <ClInclude Include="..\midi-app-shared\ZipArchive.h" />
     <ClInclude Include="..\mididiag\mididiag_report_parser.h" />
     <ClInclude Include="..\mididiag\mididiag_field_defs.h" />
     <ClInclude Include="resource.h">

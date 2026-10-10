@@ -248,7 +248,7 @@ void PlaybackEngineTests::SoloLeavesOnlyTheSoloedTracks()
 void PlaybackEngineTests::AMidi1DestinationGetsMidi1()
 {
     Fixture f{};
-    f.Engine.SetDestinationLookup([](EndpointRef const&) { return DestinationInfo{ false, 0 }; });
+    f.Engine.SetDestinationLookup([](EndpointRef const&, uint8_t) { return DestinationInfo{ false, 0 }; });
     f.Engine.SetSequence(Snapshot(KeysSequence()));
     f.Engine.Play(0);
 
@@ -423,7 +423,7 @@ void PlaybackEngineTests::ClockOutSends24PulsesAQuarterNote()
 void PlaybackEngineTests::ADestinationOffsetHandsOverSooner()
 {
     Fixture f{};
-    f.Engine.SetDestinationLookup([](EndpointRef const&) { return DestinationInfo{ true, 600000 }; });
+    f.Engine.SetDestinationLookup([](EndpointRef const&, uint8_t) { return DestinationInfo{ true, 600000 }; });
     f.Engine.SetSequence(Snapshot(KeysSequence()));
     f.Engine.Play(0);
 
@@ -462,6 +462,198 @@ void PlaybackEngineTests::TheThreadPlaysOnItsOwn()
     // About 140 sweeps in 0.7 s at 5 ms each, and the first two beats.
     VERIFY_IS_TRUE(counters.Sweeps > 40);
     VERIFY_ARE_EQUAL(size_t{ 2 }, NoteOns(output.All()).size());
+}
+
+namespace
+{
+    uint8_t NoteNumber(SentMessage const& message) noexcept
+    {
+        return static_cast<uint8_t>((message.Words[0] >> 8) & 0x7F);
+    }
+
+    // Sweeps every 5 ms of fake time up to (not including) the end.
+    void RunUntil(Fixture& f, uint64_t end)
+    {
+        for (; f.Now < end; f.Now += 5000)
+        {
+            f.Engine.Sweep();
+        }
+    }
+}
+
+void PlaybackEngineTests::TheLoopGoesRoundAtItsEnd()
+{
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(KeysSequence()));
+
+    EngineSettings settings{};
+    settings.LoopEnabled = true;
+    settings.LoopStart = 0;
+    settings.LoopEnd = Bar;
+    f.Engine.SetSettings(settings);
+
+    f.Engine.Play(0);
+    RunUntil(f, At(Bar * 2 + Bar / 2));
+
+    // Three passes of the bar's three notes, each pass starting where the last one ended.
+    auto const ons = NoteOns(f.Output.All());
+    VERIFY_ARE_EQUAL(size_t{ 9 }, ons.size());
+
+    for (size_t i = 0; i < ons.size(); ++i)
+    {
+        auto const pass = static_cast<int64_t>(i / 3);
+        auto const beat = static_cast<int64_t>(i % 3);
+        VERIFY_ARE_EQUAL(At(pass * Bar + beat * TicksPerQuarterNote), ons[i].Timestamp);
+    }
+
+    VERIFY_IS_TRUE(f.Engine.Counters().LoopPasses >= 2);
+
+    // A moment in the second pass maps back onto the loop, which is what recording needs.
+    VERIFY_ARE_EQUAL(int64_t{ 960 }, f.Engine.TickAtTime(At(Bar + 960)));
+    VERIFY_ARE_EQUAL(int64_t{ 1920 }, f.Engine.TickAtTime(At(Bar * 2 + 1920)));
+}
+
+void PlaybackEngineTests::ANoteHeldOverTheLoopEndEndsThere()
+{
+    auto sequence = KeysSequence();
+    sequence.Clips[0].Notes = { testdata::MakeNote(0, Bar * 2, 60) };
+    sequence.Clips[0].Length = Bar * 2;
+
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(sequence));
+
+    EngineSettings settings{};
+    settings.LoopEnabled = true;
+    settings.LoopStart = 0;
+    settings.LoopEnd = Bar;
+    f.Engine.SetSettings(settings);
+
+    f.Engine.Play(0);
+    RunUntil(f, At(Bar + Bar / 2));
+
+    auto const sent = f.Output.All();
+    auto const firstOff = std::find_if(sent.begin(), sent.end(), [](SentMessage const& m)
+    {
+        return (m.Words[0] & 0xFFF0FF00u) == 0x40803C00u && m.Timestamp != 0;
+    });
+
+    VERIFY_IS_TRUE(firstOff != sent.end());
+    VERIFY_ARE_EQUAL(At(Bar), firstOff->Timestamp);
+}
+
+void PlaybackEngineTests::ALaunchedClipStartsAtTheNextBar()
+{
+    auto sequence = KeysSequence();
+
+    Clip loop{};
+    loop.Id = L"c-loop";
+    loop.Length = Bar / 2;
+    loop.Loop = true;
+    loop.Notes = { testdata::MakeNote(0, 240, 72) };
+    sequence.Clips.push_back(loop);
+    NormalizeSequence(sequence);
+
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(sequence));
+    f.Engine.Play(0);
+    RunUntil(f, At(480));
+
+    f.Engine.LaunchClip(L"t-keys", L"c-loop", -1);
+
+    auto const pending = f.Engine.LaunchState();
+    VERIFY_ARE_EQUAL(size_t{ 1 }, pending.size());
+    VERIFY_IS_TRUE(pending[0].Pending);
+    VERIFY_ARE_EQUAL(Bar, pending[0].PendingTick);
+
+    RunUntil(f, At(Bar * 2));
+
+    // The timeline plays its bar, then the launched clip loops from bar 2.
+    auto const ons = NoteOns(f.Output.All());
+    VERIFY_ARE_EQUAL(size_t{ 6 }, ons.size());
+    VERIFY_ARE_EQUAL(uint8_t{ 60 }, NoteNumber(ons[0]));
+    VERIFY_ARE_EQUAL(uint8_t{ 64 }, NoteNumber(ons[2]));
+
+    for (size_t i = 3; i < ons.size(); ++i)
+    {
+        VERIFY_ARE_EQUAL(uint8_t{ 72 }, NoteNumber(ons[i]));
+        VERIFY_ARE_EQUAL(At(Bar + static_cast<int64_t>(i - 3) * (Bar / 2)), ons[i].Timestamp);
+    }
+
+    auto const playing = f.Engine.LaunchState();
+    VERIFY_ARE_EQUAL(size_t{ 1 }, playing.size());
+    VERIFY_IS_TRUE(playing[0].Mode == TrackPlayMode::Clip);
+    VERIFY_IS_FALSE(playing[0].Pending);
+}
+
+void PlaybackEngineTests::StoppingATrackSilencesItFromTheNextBar()
+{
+    auto sequence = KeysSequence();
+    sequence.Clips[0].Loop = true;
+    sequence.Tracks[0].Timeline[0].Length = Bar * 4;
+
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(sequence));
+    f.Engine.Play(0);
+    RunUntil(f, At(480));
+
+    f.Engine.StopTrack(L"t-keys", -1);
+    RunUntil(f, At(Bar * 3));
+
+    // Only the first bar's three notes.
+    VERIFY_ARE_EQUAL(size_t{ 3 }, NoteOns(f.Output.All()).size());
+}
+
+void PlaybackEngineTests::BackToTimelinePicksUpTheTimeline()
+{
+    auto sequence = KeysSequence();
+    sequence.Clips[0].Loop = true;
+    sequence.Tracks[0].Timeline[0].Length = Bar * 4;
+
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(sequence));
+    f.Engine.Play(0);
+    RunUntil(f, At(480));
+
+    f.Engine.StopTrack(L"t-keys", -1);
+    RunUntil(f, At(Bar + 480));
+
+    f.Engine.ReturnToTimeline(std::wstring{}, -1);
+    RunUntil(f, At(Bar * 3 - 480));
+
+    // Bar 1 plays, bar 2 is silent, bar 3 plays again from the timeline.
+    auto const ons = NoteOns(f.Output.All());
+    VERIFY_ARE_EQUAL(size_t{ 6 }, ons.size());
+    VERIFY_ARE_EQUAL(At(Bar * 2), ons[3].Timestamp);
+    VERIFY_IS_TRUE(f.Engine.LaunchState().empty());
+}
+
+void PlaybackEngineTests::AGroupCanSpeakADifferentProtocol()
+{
+    auto sequence = KeysSequence();
+    sequence.Tracks[0].Destination.Group = 2;
+
+    Fixture f{};
+
+    // Group 3 of this device is a MIDI 1.0 function block; the rest speak MIDI 2.0.
+    f.Engine.SetDestinationLookup([](EndpointRef const&, uint8_t group) { return DestinationInfo{ group != 2, 0 }; });
+    f.Engine.SetSequence(Snapshot(sequence));
+    f.Engine.Play(0);
+
+    auto const ons = NoteOns(f.Output.All());
+    VERIFY_ARE_EQUAL(size_t{ 1 }, ons.size());
+    VERIFY_ARE_EQUAL(0x22903C60u, ons[0].Words[0]);
+
+    // A track that says MIDI 2.0 gets it, whatever the device says.
+    sequence.Tracks[0].Destination.Protocol = ProtocolChoice::Midi2;
+
+    Fixture g{};
+    g.Engine.SetDestinationLookup([](EndpointRef const&, uint8_t group) { return DestinationInfo{ group != 2, 0 }; });
+    g.Engine.SetSequence(Snapshot(sequence));
+    g.Engine.Play(0);
+
+    auto const forced = NoteOns(g.Output.All());
+    VERIFY_ARE_EQUAL(size_t{ 1 }, forced.size());
+    VERIFY_ARE_EQUAL(0x42903C00u, forced[0].Words[0]);
 }
 
 void MessageTranslationTests::Midi2NotesAndControllersBecomeMidi1()

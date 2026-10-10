@@ -170,7 +170,8 @@
     <ClInclude Include="..\midi-app-shared\ChannelVoiceWords.h" />
     <ClInclude Include="..\midi-app-shared\EndpointCatalog.h" />
     <ClInclude Include="..\midi-app-shared\ContentProvenance.h" />
-    <ClInclude Include="..\midi-app-shared\StoredZip.h" />
+    <ClInclude Include="..\midi-app-shared\Deflate.h" />
+    <ClInclude Include="..\midi-app-shared\ZipArchive.h" />
     <ClInclude Include="..\midi-app-shared\ContentPack.h" />
     <ClInclude Include="document\JsonText.h" />
     <ClInclude Include="document\LayoutModel.h" />
@@ -302,7 +303,10 @@
     <ClCompile Include="..\midi-app-shared\ContentProvenance.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\midi-app-shared\StoredZip.cpp">
+    <ClCompile Include="..\midi-app-shared\Deflate.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\ZipArchive.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\midi-app-shared\ContentPack.cpp">

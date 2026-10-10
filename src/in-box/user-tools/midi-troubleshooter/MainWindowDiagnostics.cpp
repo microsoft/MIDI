@@ -14,6 +14,7 @@
 #include "ReportFile.h"
 #include "StringResources.h"
 #include "ToolPaths.h"
+#include "ZipArchive.h"
 
 namespace native = ::miditroubleshooter;
 namespace res = ::miditroubleshooter::resources;
@@ -130,9 +131,6 @@ namespace winrt::miditroubleshooter::implementation
         constexpr DWORD MidiDiagServiceNotResponding{ 5 };
         constexpr DWORD MidiDiagSectionTimedOut{ 6 };
 
-        // a memory dump of a busy service can be several hundred megabytes before compression
-        constexpr std::chrono::seconds ZipTimeout{ 900 };
-
         // a folder of its own under the temp folder, so the zip holds only the one file
         std::wstring CreateWorkFolder(_In_ std::wstring_view const prefix) noexcept
         {
@@ -171,39 +169,15 @@ namespace winrt::miditroubleshooter::implementation
             }
         }
 
-        // bsdtar has been in Windows since 1803 and is the only in-box way to write a zip. It
-        // can't open a path with a character outside the system's ANSI code page, so it runs in
-        // the work folder and is given plain names, and the zip is moved into place afterward.
         bool ZipOneFile(_In_ std::wstring const& folder, _In_ std::wstring_view const fileName, _In_ std::wstring const& zipPath) noexcept
         {
             try
             {
-                constexpr std::wstring_view workZipName{ L"archive.zip" };
+                midiapp::ZipWriter zip{};
 
-                auto const tarPath = native::GetNativeSystem32Folder() + L"\\tar.exe";
-
-                if (!native::FileExists(tarPath))
-                {
-                    return false;
-                }
-
-                auto const workZipPath = std::format(L"{}\\{}", folder, workZipName);
-
-                auto const removeWorkZip = wil::scope_exit([&workZipPath]() noexcept
-                    {
-                        ::DeleteFileW(workZipPath.c_str());
-                    });
-
-                auto const run = native::RunCaptureIn(tarPath,
-                    std::format(L"-a -c -f \"{}\" \"{}\"", workZipName, fileName), folder, ZipTimeout);
-
-                if (!run.Started || run.TimedOut || run.ExitCode != 0 || !native::FileExists(workZipPath))
-                {
-                    return false;
-                }
-
-                // the folder the customer picked can be on another drive
-                return ::MoveFileExW(workZipPath.c_str(), zipPath.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED) != FALSE;
+                return zip.Create(zipPath) == midiapp::ZipStatus::Written &&
+                    zip.AddFile(fileName, std::filesystem::path{ folder } / fileName, midiapp::ZipCompression::Deflate) == midiapp::ZipStatus::Written &&
+                    zip.Finish() == midiapp::ZipStatus::Written;
             }
             catch (...)
             {

@@ -162,12 +162,25 @@ namespace midisequencer
 
     inline constexpr uint16_t AllChannels = 0xFFFF;
 
+    // What a track records, one bit each. System exclusive has its own switch because it's off
+    // unless asked for.
+    inline constexpr uint8_t RecordNotes = 0x01;
+    inline constexpr uint8_t RecordControllers = 0x02;
+    inline constexpr uint8_t RecordPitchBend = 0x04;
+    inline constexpr uint8_t RecordPressure = 0x08;
+    inline constexpr uint8_t RecordProgram = 0x10;
+    inline constexpr uint8_t RecordEverything = 0x1F;
+
     struct TrackSource
     {
         EndpointRef Endpoint{};
         int8_t Group{ -1 };                     // -1 is any group
         uint16_t Channels{ AllChannels };       // one bit per channel
         bool SystemExclusive{ false };
+        uint8_t Record{ RecordEverything };
+
+        // What's played on the source goes straight to the destination while the track is armed.
+        bool Echo{ true };
 
         bool operator==(TrackSource const&) const = default;
     };

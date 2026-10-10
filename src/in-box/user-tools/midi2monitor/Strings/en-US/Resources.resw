@@ -629,6 +629,10 @@ Examples
   <data name="DecodeLabelTimeSignature" xml:space="preserve">
     <value>Time signature</value>
   </data>
+  <data name="DecodeTimeSignatureNonStandardFormat" xml:space="preserve">
+    <value>{0} beats, non-standard denominator</value>
+    <comment>{0} is the number of beats in a bar.</comment>
+  </data>
   <data name="DecodeLabelKeySignature" xml:space="preserve">
     <value>Key signature</value>
   </data>

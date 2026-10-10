@@ -33,6 +33,8 @@ Because shared code cannot reach any one app's telemetry, a swallowed exception 
 
 `AssistantPrompt` is the **Ask an AI assistant** dialog in Windows MIDI Glass and Windows MIDI Patchbay. It shows a starting prompt the customer pastes into the AI assistant they use, and copies it to the clipboard. The app sends nothing anywhere. Each app builds its own prompt text from its own resources.
 
+`ZipArchive` is the one zip reader and writer for every tool, and `Deflate` is the compression underneath it, written from RFC 1951 so no tool needs a compression library or Windows' own `tar.exe`. Both are plain C++ with no pch, so a project marks them `NotUsing`. `ReadStoredZip` and `BuildStoredZip` are the strict, uncompressed form Windows MIDI Glass content packs need: the local headers and the directory have to describe exactly the same files. `ZipReader` opens zips other apps made, including ones that put each file's sizes after its data, and checks every file against its checksum. `ZipWriter` writes a zip file under a temporary name and renames it when it's done, so a failure never leaves half a zip behind. The MIDI Troubleshooting app uses them for its report viewer and its zips. The tests are in the Windows MIDI Glass unit tests (`ZipArchiveTests`), which also check the deflate code against Windows' own MSZIP codec in both directions.
+
 ## What a consuming project has to do
 
 There is no `.props` file and no MSBuild import. Each app's `.vcxproj` lists these files with

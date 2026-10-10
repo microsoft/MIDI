@@ -1,0 +1,1246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ==================================== App ==================================== -->
+  <data name="AppDisplayName" xml:space="preserve">
+    <value>Windows MIDI Sequencer</value>
+  </data>
+  <data name="WindowTitleFormat" xml:space="preserve">
+    <value>{0} — Windows MIDI Sequencer</value>
+    <comment>{0} is the sequence's name.</comment>
+  </data>
+  <data name="UntitledSequence" xml:space="preserve">
+    <value>Untitled sequence</value>
+  </data>
+  <data name="PreviewChicletText.Text" xml:space="preserve">
+    <value>PREVIEW</value>
+    <comment>Shown in the title bar. All capitals on purpose, so it reads as a badge.</comment>
+  </data>
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Always on top</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Always on top</value>
+  </data>
+
+  <!-- ==================================== Appearance ==================================== -->
+  <data name="AppearanceTitle" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="AppearanceTheme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="AppearanceThemeSystem" xml:space="preserve">
+    <value>Use the Windows setting</value>
+  </data>
+  <data name="AppearanceThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="AppearanceThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="AppearanceBackdrop" xml:space="preserve">
+    <value>Background</value>
+  </data>
+  <data name="AppearanceBackdropSolid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="AppearanceBackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="AppearanceBackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="AppearanceCustomColor" xml:space="preserve">
+    <value>Use a color of my own</value>
+  </data>
+  <data name="AppearanceColorPickerName" xml:space="preserve">
+    <value>Window color</value>
+  </data>
+
+  <!-- ==================================== File menu ==================================== -->
+  <data name="FileMenuButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="FileMenuButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="MenuNew.Text" xml:space="preserve">
+    <value>New sequence</value>
+  </data>
+  <data name="MenuOpen.Text" xml:space="preserve">
+    <value>Open…</value>
+  </data>
+  <data name="MenuSave.Text" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="MenuSaveAs.Text" xml:space="preserve">
+    <value>Save as…</value>
+  </data>
+  <data name="MenuImport.Text" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="MenuImportStandardMidiFile.Text" xml:space="preserve">
+    <value>Standard MIDI File…</value>
+  </data>
+  <data name="MenuImportClipFile.Text" xml:space="preserve">
+    <value>MIDI 2.0 clip file…</value>
+  </data>
+  <data name="MenuExport.Text" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="MenuExportClipFiles.Text" xml:space="preserve">
+    <value>MIDI 2.0 clip files, one for each track…</value>
+  </data>
+  <data name="MenuExportStandardMidiFile.Text" xml:space="preserve">
+    <value>Standard MIDI File…</value>
+  </data>
+  <data name="MenuClose.Text" xml:space="preserve">
+    <value>Close window</value>
+  </data>
+  <data name="FileTypeSequence" xml:space="preserve">
+    <value>Windows MIDI Sequencer sequence</value>
+  </data>
+  <data name="FileTypeAllMidi" xml:space="preserve">
+    <value>Sequences and MIDI files</value>
+  </data>
+  <data name="FileTypeStandardMidiFile" xml:space="preserve">
+    <value>Standard MIDI File</value>
+  </data>
+  <data name="FileTypeClipFile" xml:space="preserve">
+    <value>MIDI 2.0 clip file</value>
+  </data>
+
+  <!-- ==================================== Transport ==================================== -->
+  <data name="GoToStartButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Go to the start</value>
+  </data>
+  <data name="GoToStartButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Go to the start (Home)</value>
+  </data>
+  <data name="PlayButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="PlayButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Play (Space)</value>
+  </data>
+  <data name="StopButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="StopButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Stop. Select it again to go back to the start.</value>
+  </data>
+  <data name="RecordButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Record</value>
+  </data>
+  <data name="RecordButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Record on the armed tracks (R)</value>
+  </data>
+  <data name="LoopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Loop</value>
+  </data>
+  <data name="LoopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Loop (L). Drag along the ruler to set where.</value>
+  </data>
+  <data name="MetronomeToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Metronome</value>
+  </data>
+  <data name="MetronomeToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Metronome</value>
+  </data>
+  <data name="MetronomeMenuButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Metronome settings</value>
+  </data>
+  <data name="MetronomeMenuButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Metronome settings</value>
+  </data>
+  <data name="BpmUnit.Text" xml:space="preserve">
+    <value>BPM</value>
+  </data>
+  <data name="ClockInternal.Text" xml:space="preserve">
+    <value>Internal clock</value>
+  </data>
+  <data name="ClockNotYet" xml:space="preserve">
+    <value>The sequencer keeps its own time. Following another device's clock, and sending clock to other devices, come in a later preview.</value>
+  </data>
+  <data name="LaunchLabel.Text" xml:space="preserve">
+    <value>Launch</value>
+  </data>
+  <data name="LaunchCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>When a launched clip starts</value>
+  </data>
+  <data name="LaunchCombo.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>When a launched clip starts</value>
+  </data>
+  <data name="SnapLabel.Text" xml:space="preserve">
+    <value>Snap</value>
+  </data>
+  <data name="SnapCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Snap to grid</value>
+  </data>
+  <data name="SnapCombo.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Snap to grid</value>
+  </data>
+  <data name="CaptureButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Capture</value>
+  </data>
+  <data name="CaptureButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Make a clip from what you just played on the armed tracks, even if you weren't recording</value>
+  </data>
+  <data name="CaptureButtonText.Text" xml:space="preserve">
+    <value>Capture</value>
+  </data>
+  <data name="BackToTimelineButton.Content" xml:space="preserve">
+    <value>Back to timeline</value>
+  </data>
+  <data name="BackToTimelineButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Every track back to its timeline</value>
+  </data>
+  <data name="BackToTimelineButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Every track back to its timeline</value>
+  </data>
+  <data name="SilenceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Silence</value>
+  </data>
+  <data name="SilenceButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Stop every note on every device the sequence plays to</value>
+  </data>
+  <data name="SilenceButtonText.Text" xml:space="preserve">
+    <value>Silence</value>
+  </data>
+  <data name="UndoButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="UndoButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Undo (Ctrl+Z)</value>
+  </data>
+  <data name="RedoButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Redo</value>
+  </data>
+  <data name="RedoButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Redo (Ctrl+Y)</value>
+  </data>
+  <data name="UndoFormat" xml:space="preserve">
+    <value>Undo: {0} (Ctrl+Z)</value>
+    <comment>{0} is what the step did, such as "Move clip".</comment>
+  </data>
+  <data name="RedoFormat" xml:space="preserve">
+    <value>Redo: {0} (Ctrl+Y)</value>
+  </data>
+  <data name="UndoNothing" xml:space="preserve">
+    <value>Nothing to undo</value>
+  </data>
+  <data name="RedoNothing" xml:space="preserve">
+    <value>Nothing to redo</value>
+  </data>
+  <data name="LaunchImmediately" xml:space="preserve">
+    <value>Now</value>
+  </data>
+  <data name="GridOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="GridThirtySecond" xml:space="preserve">
+    <value>1/32</value>
+  </data>
+  <data name="GridSixteenth" xml:space="preserve">
+    <value>1/16</value>
+  </data>
+  <data name="GridEighth" xml:space="preserve">
+    <value>1/8</value>
+  </data>
+  <data name="GridQuarter" xml:space="preserve">
+    <value>1/4</value>
+  </data>
+  <data name="GridHalf" xml:space="preserve">
+    <value>1/2</value>
+  </data>
+  <data name="GridOneBar" xml:space="preserve">
+    <value>1 bar</value>
+  </data>
+  <data name="GridTwoBars" xml:space="preserve">
+    <value>2 bars</value>
+  </data>
+  <data name="GridFourBars" xml:space="preserve">
+    <value>4 bars</value>
+  </data>
+
+  <!-- ==================================== Saved state ==================================== -->
+  <data name="ChipSaved" xml:space="preserve">
+    <value>Saved</value>
+  </data>
+  <data name="ChipSaving" xml:space="preserve">
+    <value>Saving</value>
+  </data>
+  <data name="ChipNotSaved" xml:space="preserve">
+    <value>Not saved</value>
+  </data>
+  <data name="ChipReadOnly" xml:space="preserve">
+    <value>Read only</value>
+  </data>
+  <data name="SavedAtFormat" xml:space="preserve">
+    <value>Saved at {0}</value>
+    <comment>{0} is a time of day.</comment>
+  </data>
+  <data name="AutosavedAtFormat" xml:space="preserve">
+    <value>Saved automatically at {0}</value>
+    <comment>{0} is a time of day.</comment>
+  </data>
+  <data name="SaveChangesTitle" xml:space="preserve">
+    <value>Save this sequence?</value>
+  </data>
+  <data name="SaveChangesBody" xml:space="preserve">
+    <value>It hasn't been saved yet. If you close without saving, it's gone.</value>
+  </data>
+  <data name="SaveChangesSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="SaveChangesDiscard" xml:space="preserve">
+    <value>Don't save</value>
+  </data>
+  <data name="SaveChangesCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+
+  <!-- ==================================== Files ==================================== -->
+  <data name="OpenFailedFormat" xml:space="preserve">
+    <value>Couldn't open {0}.</value>
+    <comment>{0} is a file name.</comment>
+  </data>
+  <data name="OpenNotASequenceFormat" xml:space="preserve">
+    <value>{0} isn't a sequence this app can read.</value>
+  </data>
+  <data name="OpenedNewerVersion" xml:space="preserve">
+    <value>This sequence was saved by a newer version. You can play and change it, but save it under a new name so nothing the newer version added is lost.</value>
+  </data>
+  <data name="OpenedWithSkippedFormat" xml:space="preserve">
+    <value>Opened. {0} damaged or oversized items were left out.</value>
+  </data>
+  <data name="ReadOnlyEdit" xml:space="preserve">
+    <value>This sequence came from a newer version, so saving asks for a new name.</value>
+  </data>
+  <data name="SaveFailedFormat" xml:space="preserve">
+    <value>Couldn't save {0}.</value>
+  </data>
+  <data name="ImportFailedFormat" xml:space="preserve">
+    <value>Couldn't import {0}.</value>
+  </data>
+  <data name="ImportNothingFormat" xml:space="preserve">
+    <value>{0} has nothing to play.</value>
+  </data>
+  <data name="ImportedFormat" xml:space="preserve">
+    <value>Imported {0}. Tracks added: {1}.</value>
+  </data>
+  <data name="ExportFailedFormat" xml:space="preserve">
+    <value>Couldn't export {0}.</value>
+  </data>
+  <data name="ExportedFormat" xml:space="preserve">
+    <value>Exported {0}.</value>
+  </data>
+  <data name="ExportedSkippedFormat" xml:space="preserve">
+    <value>Exported {0}. Messages MIDI 1.0 can't carry, such as per-note pitch bend, were left out: {1}.</value>
+  </data>
+  <data name="ExportedClipFilesFormat" xml:space="preserve">
+    <value>Exported clip files: {0}.</value>
+  </data>
+  <data name="ExportClipFilesFailedFormat" xml:space="preserve">
+    <value>Some clip files couldn't be written: {0}.</value>
+  </data>
+  <data name="UndoImport" xml:space="preserve">
+    <value>Import</value>
+  </data>
+
+  <!-- ==================================== Track list ==================================== -->
+  <data name="AddTrackButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add a track</value>
+  </data>
+  <data name="AddTrackButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Add a track (Ctrl+T)</value>
+  </data>
+  <data name="AddTrackButtonText.Text" xml:space="preserve">
+    <value>Track</value>
+  </data>
+  <data name="AddFolderButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add a folder</value>
+  </data>
+  <data name="AddFolderButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Add a folder</value>
+  </data>
+  <data name="AddFolderButtonText.Text" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="LauncherToggle.Content" xml:space="preserve">
+    <value>Launcher</value>
+  </data>
+  <data name="LauncherToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show the clip launcher</value>
+  </data>
+  <data name="LauncherToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show the clip launcher</value>
+  </data>
+  <data name="AddTrackRowText" xml:space="preserve">
+    <value>Add a track</value>
+  </data>
+  <data name="VerticalScroll.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Scroll the tracks</value>
+  </data>
+  <data name="HorizontalScroll.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Scroll the timeline</value>
+  </data>
+  <data name="TimelineCanvasName" xml:space="preserve">
+    <value>Timeline</value>
+  </data>
+  <data name="LauncherCanvasName" xml:space="preserve">
+    <value>Clip launcher</value>
+  </data>
+  <data name="EditorCanvasName" xml:space="preserve">
+    <value>Piano roll</value>
+  </data>
+  <data name="DefaultTrackName" xml:space="preserve">
+    <value>Track</value>
+    <comment>A number follows: "Track 3".</comment>
+  </data>
+  <data name="DefaultFolderName" xml:space="preserve">
+    <value>Folder</value>
+    <comment>A number follows: "Folder 2".</comment>
+  </data>
+  <data name="DefaultClipName" xml:space="preserve">
+    <value>Clip</value>
+    <comment>A number follows: "Clip 4".</comment>
+  </data>
+  <data name="TempoTrackName" xml:space="preserve">
+    <value>Tempo and meter</value>
+  </data>
+  <data name="TempoTrackSubFormat" xml:space="preserve">
+    <value>{0} BPM · {1}/{2}</value>
+    <comment>{0} is the tempo; {1}/{2} is the time signature, such as 4/4.</comment>
+  </data>
+  <data name="TagCountOneFormat" xml:space="preserve">
+    <value>{0} tag</value>
+  </data>
+  <data name="TagCountFormat" xml:space="preserve">
+    <value>{0} tags</value>
+  </data>
+  <data name="FolderCountOneFormat" xml:space="preserve">
+    <value>{0} track</value>
+  </data>
+  <data name="FolderCountFormat" xml:space="preserve">
+    <value>{0} tracks</value>
+  </data>
+  <data name="OpenFolderFormat" xml:space="preserve">
+    <value>Open {0}</value>
+    <comment>{0} is a folder's name.</comment>
+  </data>
+  <data name="CloseFolderFormat" xml:space="preserve">
+    <value>Close {0}</value>
+  </data>
+  <data name="MuteTrackFormat" xml:space="preserve">
+    <value>Mute {0}</value>
+    <comment>{0} is a track's name.</comment>
+  </data>
+  <data name="SoloTrackFormat" xml:space="preserve">
+    <value>Solo {0}</value>
+  </data>
+  <data name="ArmTrackFormat" xml:space="preserve">
+    <value>Arm {0} to record</value>
+  </data>
+  <data name="ArmedWithoutSource" xml:space="preserve">
+    <value>This track doesn't record from anything yet. Choose a device under Record from in its setup.</value>
+  </data>
+  <data name="NoDestination" xml:space="preserve">
+    <value>Not playing to anything</value>
+  </data>
+  <data name="NoSource" xml:space="preserve">
+    <value>Not recording from anything</value>
+  </data>
+  <data name="RecordingFromFormat" xml:space="preserve">
+    <value>From {0}</value>
+    <comment>{0} is a device's name.</comment>
+  </data>
+  <data name="UnknownEndpoint" xml:space="preserve">
+    <value>Unknown device</value>
+  </data>
+  <data name="NotConnectedSuffix" xml:space="preserve">
+    <value>(not connected)</value>
+  </data>
+  <data name="GroupShortFormat" xml:space="preserve">
+    <value>Group {0}</value>
+  </data>
+  <data name="ChannelShortFormat" xml:space="preserve">
+    <value>Ch {0}</value>
+    <comment>Short for channel, as in "Ch 10".</comment>
+  </data>
+
+  <!-- ==================================== Menus ==================================== -->
+  <data name="MenuTrackSetup" xml:space="preserve">
+    <value>Track setup</value>
+  </data>
+  <data name="MenuRename" xml:space="preserve">
+    <value>Rename…</value>
+  </data>
+  <data name="MenuPin" xml:space="preserve">
+    <value>Pin to the top</value>
+  </data>
+  <data name="MenuUnpin" xml:space="preserve">
+    <value>Unpin</value>
+  </data>
+  <data name="MenuColor" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="MenuMoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="MenuMoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="MenuMoveToFolder" xml:space="preserve">
+    <value>Move to folder</value>
+  </data>
+  <data name="MenuTopLevel" xml:space="preserve">
+    <value>Out of its folder</value>
+  </data>
+  <data name="MenuDeleteTrack" xml:space="preserve">
+    <value>Delete track</value>
+  </data>
+  <data name="MenuDeleteFolder" xml:space="preserve">
+    <value>Delete folder and its tracks</value>
+  </data>
+  <data name="MenuEditClip" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="MenuRenameClip" xml:space="preserve">
+    <value>Rename…</value>
+  </data>
+  <data name="MenuDuplicateClip" xml:space="preserve">
+    <value>Duplicate (Ctrl+D)</value>
+  </data>
+  <data name="MenuMakeUnique" xml:space="preserve">
+    <value>Make unique</value>
+  </data>
+  <data name="MenuDeleteClip" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="MenuNewClipHere" xml:space="preserve">
+    <value>New clip here</value>
+  </data>
+  <data name="MenuAddTagHere" xml:space="preserve">
+    <value>Add a tag here…</value>
+  </data>
+  <data name="MenuPlayFromHere" xml:space="preserve">
+    <value>Play from here</value>
+  </data>
+  <data name="MenuNewClip" xml:space="preserve">
+    <value>New clip</value>
+  </data>
+  <data name="MenuStopTrack" xml:space="preserve">
+    <value>Stop this track</value>
+  </data>
+  <data name="MenuLaunchClip" xml:space="preserve">
+    <value>Launch</value>
+  </data>
+  <data name="MenuPlaceOnTimeline" xml:space="preserve">
+    <value>Put on the timeline at the playhead</value>
+  </data>
+  <data name="MenuRenameScene" xml:space="preserve">
+    <value>Rename scene…</value>
+  </data>
+  <data name="MenuAddScene" xml:space="preserve">
+    <value>Add a scene</value>
+  </data>
+  <data name="MenuDeleteScene" xml:space="preserve">
+    <value>Delete scene</value>
+  </data>
+  <data name="SwatchName0" xml:space="preserve">
+    <value>Coral</value>
+  </data>
+  <data name="SwatchName1" xml:space="preserve">
+    <value>Yellow</value>
+  </data>
+  <data name="SwatchName2" xml:space="preserve">
+    <value>Orange</value>
+  </data>
+  <data name="SwatchName3" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="SwatchName4" xml:space="preserve">
+    <value>Teal</value>
+  </data>
+  <data name="SwatchName5" xml:space="preserve">
+    <value>Blue</value>
+  </data>
+  <data name="SwatchName6" xml:space="preserve">
+    <value>Violet</value>
+  </data>
+  <data name="SwatchName7" xml:space="preserve">
+    <value>Lavender</value>
+  </data>
+  <data name="SwatchName8" xml:space="preserve">
+    <value>Pink</value>
+  </data>
+  <data name="SwatchName9" xml:space="preserve">
+    <value>Gray</value>
+  </data>
+
+  <!-- ==================================== Prompts ==================================== -->
+  <data name="DialogOk" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="DialogCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="RenameTrackTitle" xml:space="preserve">
+    <value>Rename track</value>
+  </data>
+  <data name="RenameFolderTitle" xml:space="preserve">
+    <value>Rename folder</value>
+  </data>
+  <data name="RenameClipTitle" xml:space="preserve">
+    <value>Rename clip</value>
+  </data>
+  <data name="RenameSceneTitle" xml:space="preserve">
+    <value>Rename scene</value>
+  </data>
+  <data name="AddTagTitle" xml:space="preserve">
+    <value>Add a tag</value>
+  </data>
+
+  <!-- ==================================== Undo names ==================================== -->
+  <data name="UndoAddTrack" xml:space="preserve">
+    <value>Add track</value>
+  </data>
+  <data name="UndoAddFolder" xml:space="preserve">
+    <value>Add folder</value>
+  </data>
+  <data name="UndoDeleteTrack" xml:space="preserve">
+    <value>Delete track</value>
+  </data>
+  <data name="UndoRenameTrack" xml:space="preserve">
+    <value>Rename track</value>
+  </data>
+  <data name="UndoMoveTrack" xml:space="preserve">
+    <value>Move track</value>
+  </data>
+  <data name="UndoPin" xml:space="preserve">
+    <value>Pin</value>
+  </data>
+  <data name="UndoColor" xml:space="preserve">
+    <value>Change color</value>
+  </data>
+  <data name="UndoMute" xml:space="preserve">
+    <value>Mute</value>
+  </data>
+  <data name="UndoUnmute" xml:space="preserve">
+    <value>Unmute</value>
+  </data>
+  <data name="UndoSolo" xml:space="preserve">
+    <value>Solo</value>
+  </data>
+  <data name="UndoUnsolo" xml:space="preserve">
+    <value>Unsolo</value>
+  </data>
+  <data name="UndoNewClip" xml:space="preserve">
+    <value>New clip</value>
+  </data>
+  <data name="UndoDeleteClip" xml:space="preserve">
+    <value>Delete clip</value>
+  </data>
+  <data name="UndoDuplicateClip" xml:space="preserve">
+    <value>Duplicate clip</value>
+  </data>
+  <data name="UndoMakeUnique" xml:space="preserve">
+    <value>Make unique</value>
+  </data>
+  <data name="UndoMoveClip" xml:space="preserve">
+    <value>Move clip</value>
+  </data>
+  <data name="UndoResizeClip" xml:space="preserve">
+    <value>Change clip length</value>
+  </data>
+  <data name="UndoRenameClip" xml:space="preserve">
+    <value>Rename clip</value>
+  </data>
+  <data name="UndoPlaceClip" xml:space="preserve">
+    <value>Put clip on the timeline</value>
+  </data>
+  <data name="UndoAddTag" xml:space="preserve">
+    <value>Add tag</value>
+  </data>
+  <data name="UndoAddScene" xml:space="preserve">
+    <value>Add scene</value>
+  </data>
+  <data name="UndoDeleteScene" xml:space="preserve">
+    <value>Delete scene</value>
+  </data>
+  <data name="UndoRenameScene" xml:space="preserve">
+    <value>Rename scene</value>
+  </data>
+  <data name="UndoEditNotes" xml:space="preserve">
+    <value>Edit notes</value>
+  </data>
+  <data name="UndoRecord" xml:space="preserve">
+    <value>Record</value>
+  </data>
+  <data name="UndoCapture" xml:space="preserve">
+    <value>Capture</value>
+  </data>
+  <data name="UndoChangeSource" xml:space="preserve">
+    <value>Change what the track records</value>
+  </data>
+  <data name="UndoChangeDestination" xml:space="preserve">
+    <value>Change where the track plays</value>
+  </data>
+  <data name="UniqueClipNameFormat" xml:space="preserve">
+    <value>{0} (copy)</value>
+  </data>
+
+  <!-- ==================================== Launcher ==================================== -->
+  <data name="LaunchSceneFormat" xml:space="preserve">
+    <value>Launch scene {0}</value>
+  </data>
+  <data name="LaunchNamedSceneFormat" xml:space="preserve">
+    <value>Launch scene {0}, {1}</value>
+    <comment>{0} is the scene's number, {1} its name.</comment>
+  </data>
+  <data name="PlayingLaunchedClip" xml:space="preserve">
+    <value>Playing a launched clip</value>
+  </data>
+  <data name="BackToTimelineCaption" xml:space="preserve">
+    <value>Back to timeline</value>
+  </data>
+  <data name="BarFormat" xml:space="preserve">
+    <value>Bar {0}</value>
+  </data>
+  <data name="RecordingCaption" xml:space="preserve">
+    <value>Recording</value>
+  </data>
+  <data name="GeneratedAsItPlays" xml:space="preserve">
+    <value>Made as it plays</value>
+  </data>
+
+  <!-- ==================================== Status bar ==================================== -->
+  <data name="ServiceRunning" xml:space="preserve">
+    <value>MIDI service running</value>
+  </data>
+  <data name="ServiceStopped" xml:space="preserve">
+    <value>MIDI service not running</value>
+  </data>
+  <data name="ClockStatusInternalFormat" xml:space="preserve">
+    <value>Internal clock, {0} BPM</value>
+  </data>
+  <data name="DevicesInUseOneFormat" xml:space="preserve">
+    <value>{0} device in use</value>
+  </data>
+  <data name="DevicesInUseFormat" xml:space="preserve">
+    <value>{0} devices in use</value>
+  </data>
+  <data name="DevicesInUseMissingFormat" xml:space="preserve">
+    <value>{0} devices in use, {1} not connected</value>
+  </data>
+  <data name="RecordingStatusFormat" xml:space="preserve">
+    <value>Recording · notes so far: {0}</value>
+  </data>
+  <data name="MidiUnavailable" xml:space="preserve">
+    <value>Windows MIDI Services isn't available, so nothing can play. You can still open and edit sequences.</value>
+  </data>
+  <data name="MidiNotReady" xml:space="preserve">
+    <value>MIDI isn't ready yet.</value>
+  </data>
+  <data name="Silenced" xml:space="preserve">
+    <value>Sent all notes off to every device.</value>
+  </data>
+  <data name="RecordNothingArmed" xml:space="preserve">
+    <value>Arm a track first: select R on the track you want to record.</value>
+  </data>
+  <data name="RecordedNothing" xml:space="preserve">
+    <value>Nothing was played, so nothing was recorded.</value>
+  </data>
+  <data name="RecordedFormat" xml:space="preserve">
+    <value>Recorded. Notes: {0}.</value>
+  </data>
+  <data name="CaptureNothing" xml:space="preserve">
+    <value>Nothing has been played on an armed track yet.</value>
+  </data>
+  <data name="CapturedFormat" xml:space="preserve">
+    <value>Captured. Notes: {0}.</value>
+  </data>
+  <data name="KeyboardNotFound" xml:space="preserve">
+    <value>Windows MIDI Keyboard isn't installed beside this app.</value>
+  </data>
+  <data name="LoopbackMissing" xml:space="preserve">
+    <value>The Default App Loopback pair isn't on this PC. Create it again in Windows MIDI Loopback Setup.</value>
+  </data>
+
+  <!-- ==================================== Track setup ==================================== -->
+  <data name="InspectorTrackChip.Text" xml:space="preserve">
+    <value>Track</value>
+  </data>
+  <data name="InspectorCloseButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Close track setup</value>
+  </data>
+  <data name="InspectorCloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Close track setup</value>
+  </data>
+  <data name="TrackNameBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Track name</value>
+  </data>
+  <data name="TrackPinToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pin to the top</value>
+  </data>
+  <data name="TrackPinToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep this track at the top, above everything that scrolls</value>
+  </data>
+  <data name="TrackPinText.Text" xml:space="preserve">
+    <value>Pin</value>
+  </data>
+  <data name="RecordFromHeading.Text" xml:space="preserve">
+    <value>Record from</value>
+  </data>
+  <data name="SourceEndpointCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Device to record from</value>
+  </data>
+  <data name="SourceGroupCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Group to record from</value>
+  </data>
+  <data name="SourceChannelCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Channel to record from</value>
+  </data>
+  <data name="RecordKindNotes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="RecordKindControllers" xml:space="preserve">
+    <value>Controllers</value>
+  </data>
+  <data name="RecordKindPitchBend" xml:space="preserve">
+    <value>Pitch bend</value>
+  </data>
+  <data name="RecordKindPressure" xml:space="preserve">
+    <value>Pressure</value>
+  </data>
+  <data name="RecordKindProgram" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="RecordKindSystemExclusive" xml:space="preserve">
+    <value>System exclusive</value>
+  </data>
+  <data name="EchoSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Echo while armed</value>
+  </data>
+  <data name="EchoTitle.Text" xml:space="preserve">
+    <value>Echo while armed</value>
+  </data>
+  <data name="EchoSub.Text" xml:space="preserve">
+    <value>Hear what you play through this track's device</value>
+  </data>
+  <data name="RecordFromKeyboardButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Record from MIDI Keyboard</value>
+  </data>
+  <data name="RecordFromKeyboardButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Records from Default App Loopback (B) and opens MIDI Keyboard on Default App Loopback (A)</value>
+  </data>
+  <data name="RecordFromKeyboardText.Text" xml:space="preserve">
+    <value>Record from MIDI Keyboard</value>
+  </data>
+  <data name="PlayToHeading.Text" xml:space="preserve">
+    <value>Play to</value>
+  </data>
+  <data name="DestinationEndpointCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Device to play to</value>
+  </data>
+  <data name="DestinationGroupCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Group to play to</value>
+  </data>
+  <data name="DestinationChannelCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Channel to play to</value>
+  </data>
+  <data name="TrySoundButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Try this sound in MIDI Keyboard</value>
+  </data>
+  <data name="TrySoundButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Opens MIDI Keyboard on this track's device, group and channel</value>
+  </data>
+  <data name="TrySoundText.Text" xml:space="preserve">
+    <value>Try this sound in MIDI Keyboard</value>
+  </data>
+  <data name="StartupHeading.Text" xml:space="preserve">
+    <value>Start-up messages</value>
+  </data>
+  <data name="StartupNone" xml:space="preserve">
+    <value>None. Messages here are sent before the first note, such as a bank and program.</value>
+  </data>
+  <data name="NoSourceChoice" xml:space="preserve">
+    <value>Nothing</value>
+  </data>
+  <data name="NoDestinationChoice" xml:space="preserve">
+    <value>Nothing</value>
+  </data>
+  <data name="AnyGroup" xml:space="preserve">
+    <value>Any group</value>
+  </data>
+  <data name="AnyChannel" xml:space="preserve">
+    <value>Any channel</value>
+  </data>
+  <data name="KeepChannel" xml:space="preserve">
+    <value>Each note's own channel</value>
+  </data>
+  <data name="GroupChoiceFormat" xml:space="preserve">
+    <value>Group {0}</value>
+  </data>
+  <data name="ChannelChoiceFormat" xml:space="preserve">
+    <value>Channel {0}</value>
+  </data>
+  <data name="ProtocolNoteMidi2" xml:space="preserve">
+    <value>Sends MIDI 2.0. This group speaks it, so notes keep their full detail.</value>
+  </data>
+  <data name="ProtocolNoteMidi1" xml:space="preserve">
+    <value>Sends MIDI 1.0, because this group speaks MIDI 1.0. Per-note pitch bend and per-note controllers aren't sent.</value>
+  </data>
+  <data name="ProtocolNoteMissing" xml:space="preserve">
+    <value>This device isn't connected. The track plays to it again when it's back.</value>
+  </data>
+
+  <!-- ==================================== Metronome ==================================== -->
+  <data name="MetronomeTitle" xml:space="preserve">
+    <value>Metronome</value>
+  </data>
+  <data name="MetronomeEndpoint" xml:space="preserve">
+    <value>Play the click on</value>
+  </data>
+  <data name="MetronomeGroup" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="MetronomeChannel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="MetronomeNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="MetronomeOnlyRecording" xml:space="preserve">
+    <value>Only while recording</value>
+  </data>
+
+  <!-- ==================================== Clip editor ==================================== -->
+  <data name="EditorDrawToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Draw notes</value>
+  </data>
+  <data name="EditorDrawToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Draw notes (B). You can also double-click to add a note.</value>
+  </data>
+  <data name="EditorDrawText.Text" xml:space="preserve">
+    <value>Draw</value>
+  </data>
+  <data name="EditorQuantizeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Quantize</value>
+  </data>
+  <data name="EditorQuantizeButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Move the selected notes, or all of them, onto the grid (Q)</value>
+  </data>
+  <data name="EditorQuantizeToGrid" xml:space="preserve">
+    <value>Quantize</value>
+  </data>
+  <data name="EditorQuantizeSixteenths" xml:space="preserve">
+    <value>Quantize to 1/16</value>
+  </data>
+  <data name="EditorTransposeButton.Content" xml:space="preserve">
+    <value>Transpose</value>
+  </data>
+  <data name="EditorTransposeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Transpose</value>
+  </data>
+  <data name="TransposeUpOctave.Text" xml:space="preserve">
+    <value>Up an octave</value>
+  </data>
+  <data name="TransposeUpSemitone.Text" xml:space="preserve">
+    <value>Up a semitone</value>
+  </data>
+  <data name="TransposeDownSemitone.Text" xml:space="preserve">
+    <value>Down a semitone</value>
+  </data>
+  <data name="TransposeDownOctave.Text" xml:space="preserve">
+    <value>Down an octave</value>
+  </data>
+  <data name="EditorKeyboardText.Text" xml:space="preserve">
+    <value>MIDI Keyboard</value>
+  </data>
+  <data name="EditorKeyboardNameFormat" xml:space="preserve">
+    <value>Open MIDI Keyboard on {0}</value>
+    <comment>{0} is where the track plays, such as "General MIDI Synth · Ch 1".</comment>
+  </data>
+  <data name="ShowValuesAsLabel.Text" xml:space="preserve">
+    <value>Show values as</value>
+  </data>
+  <data name="ValuesAsCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show values as</value>
+  </data>
+  <data name="ValuesMidi2" xml:space="preserve">
+    <value>MIDI 2.0 (16-bit)</value>
+  </data>
+  <data name="ValuesMidi1" xml:space="preserve">
+    <value>MIDI 1.0 (0 to 127)</value>
+  </data>
+  <data name="ValuesPercent" xml:space="preserve">
+    <value>Percent</value>
+  </data>
+  <data name="EditorCloseButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Close the editor</value>
+  </data>
+  <data name="EditorCloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Close the editor</value>
+  </data>
+  <data name="ClipKindNotes" xml:space="preserve">
+    <value>Notes clip</value>
+  </data>
+  <data name="ClipKindPattern" xml:space="preserve">
+    <value>Pattern clip</value>
+  </data>
+  <data name="ClipKindGenerator" xml:space="preserve">
+    <value>Generator clip</value>
+  </data>
+  <data name="ClipLengthOneBarFormat" xml:space="preserve">
+    <value>{0} bar</value>
+  </data>
+  <data name="ClipLengthBarsFormat" xml:space="preserve">
+    <value>{0} bars</value>
+  </data>
+  <data name="ClipLengthBarsBeatsFormat" xml:space="preserve">
+    <value>{0} bars, {1} beats</value>
+  </data>
+  <data name="ClipLoopsFormat" xml:space="preserve">
+    <value>{0}, loops</value>
+    <comment>{0} is a length, such as "4 bars".</comment>
+  </data>
+  <data name="ClipUsesFormat" xml:space="preserve">
+    <value>Used in {0} places</value>
+    <comment>Shown when the same clip is placed more than once, so editing it changes every copy.</comment>
+  </data>
+  <data name="EditorNoClip" xml:space="preserve">
+    <value>Double-click to add a note, or turn on Draw.</value>
+  </data>
+  <data name="LaneVelocity" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="LaneVelocity16" xml:space="preserve">
+    <value>16-bit</value>
+  </data>
+  <data name="LaneVelocity7" xml:space="preserve">
+    <value>0 to 127</value>
+  </data>
+  <data name="LaneVelocityPercent" xml:space="preserve">
+    <value>Percent</value>
+  </data>
+  <data name="NoteInspectorTitle.Text" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="NoteInspectorNone" xml:space="preserve">
+    <value>No note selected</value>
+  </data>
+  <data name="NoteInspectorOne" xml:space="preserve">
+    <value>Selected note</value>
+  </data>
+  <data name="NoteInspectorManyFormat" xml:space="preserve">
+    <value>Selected notes: {0}</value>
+  </data>
+  <data name="NoteInspectorHint" xml:space="preserve">
+    <value>Select a note to see it here. Drag to move, drag an edge to change its length, and drag in the velocity lane to change how hard it plays.</value>
+  </data>
+  <data name="NoteFieldNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="NoteFieldStart" xml:space="preserve">
+    <value>Starts at</value>
+  </data>
+  <data name="NoteFieldLength" xml:space="preserve">
+    <value>Length</value>
+  </data>
+  <data name="NoteFieldVelocity" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="NoteFieldRelease" xml:space="preserve">
+    <value>Release velocity</value>
+  </data>
+  <data name="NoteFieldChannel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="NoteFieldChance" xml:space="preserve">
+    <value>Chance</value>
+  </data>
+  <data name="NoteFieldAttribute" xml:space="preserve">
+    <value>Attribute</value>
+  </data>
+  <data name="NoteFieldRange" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+
+  <!-- ==================================== Sample sequence ==================================== -->
+  <data name="MenuOpenSample.Text" xml:space="preserve">
+    <value>Open the sample sequence</value>
+  </data>
+  <data name="SampleSequenceName" xml:space="preserve">
+    <value>Night Drive Sketch</value>
+    <comment>The name of the sample sequence. Every Sample string is part of it.</comment>
+  </data>
+  <data name="SampleSceneIntro" xml:space="preserve">
+    <value>Intro</value>
+  </data>
+  <data name="SampleSceneGroove" xml:space="preserve">
+    <value>Groove</value>
+  </data>
+  <data name="SampleSceneBreak" xml:space="preserve">
+    <value>Break</value>
+  </data>
+  <data name="SampleSceneDrop" xml:space="preserve">
+    <value>Drop</value>
+  </data>
+  <data name="SampleSceneOutro" xml:space="preserve">
+    <value>Outro</value>
+  </data>
+  <data name="SampleDrums" xml:space="preserve">
+    <value>Drums</value>
+  </data>
+  <data name="SampleSynths" xml:space="preserve">
+    <value>Synths</value>
+  </data>
+  <data name="SampleBass" xml:space="preserve">
+    <value>Bass</value>
+  </data>
+  <data name="SamplePad" xml:space="preserve">
+    <value>Pad</value>
+  </data>
+  <data name="SampleArp" xml:space="preserve">
+    <value>Arp</value>
+  </data>
+  <data name="SampleTexture" xml:space="preserve">
+    <value>Texture</value>
+  </data>
+  <data name="SampleKeys" xml:space="preserve">
+    <value>Keys</value>
+  </data>
+  <data name="SampleRhodes" xml:space="preserve">
+    <value>Electric piano</value>
+  </data>
+  <data name="SampleOrgan" xml:space="preserve">
+    <value>Organ</value>
+  </data>
+  <data name="SampleLead" xml:space="preserve">
+    <value>Lead</value>
+  </data>
+  <data name="SampleChords" xml:space="preserve">
+    <value>Chords</value>
+  </data>
+  <data name="SampleBeatA" xml:space="preserve">
+    <value>Beat A</value>
+  </data>
+  <data name="SampleBeatB" xml:space="preserve">
+    <value>Beat B</value>
+  </data>
+  <data name="SampleBeatFill" xml:space="preserve">
+    <value>Beat A fill</value>
+  </data>
+  <data name="SampleBassLineA" xml:space="preserve">
+    <value>Bass line A</value>
+  </data>
+  <data name="SampleBassLineB" xml:space="preserve">
+    <value>Bass line B</value>
+  </data>
+  <data name="SamplePadIntro" xml:space="preserve">
+    <value>Pad intro</value>
+  </data>
+  <data name="SamplePadChords" xml:space="preserve">
+    <value>Pad chords</value>
+  </data>
+  <data name="SamplePadSwell" xml:space="preserve">
+    <value>Pad swell</value>
+  </data>
+  <data name="SampleEuclidFive" xml:space="preserve">
+    <value>Euclid 5/16</value>
+  </data>
+  <data name="SampleEuclidSeven" xml:space="preserve">
+    <value>Euclid 7/16</value>
+  </data>
+  <data name="SampleWander" xml:space="preserve">
+    <value>Wander</value>
+  </data>
+  <data name="SampleDrift" xml:space="preserve">
+    <value>Drift</value>
+  </data>
+  <data name="SampleComping" xml:space="preserve">
+    <value>Comping</value>
+  </data>
+  <data name="SampleOrganPads" xml:space="preserve">
+    <value>Organ pads</value>
+  </data>
+  <data name="SampleLeadHook" xml:space="preserve">
+    <value>Lead hook</value>
+  </data>
+  <data name="SampleStabs" xml:space="preserve">
+    <value>Stabs</value>
+  </data>
+  <data name="SampleTagFilterOpens" xml:space="preserve">
+    <value>Filter opens here</value>
+  </data>
+  <data name="SampleTagRetake" xml:space="preserve">
+    <value>Retake this</value>
+  </data>
+</root>

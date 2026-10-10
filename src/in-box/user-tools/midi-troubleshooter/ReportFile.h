@@ -42,8 +42,8 @@ namespace miditroubleshooter
     LoadedReport LoadReportText(_In_ std::wstring_view const text) noexcept;
 
     // A report file, or a zip with one in it, such as a zip a customer attached to an issue.
-    // Blocking, so it's called from a background thread. A zip is read with the tar program in
-    // Windows, one text file at a time, and nothing from it is written to disk.
+    // Blocking, so it's called from a background thread. A zip is read one text file at a time,
+    // and nothing from it is written to disk.
     LoadedReport LoadReportFile(_In_ std::wstring const& path) noexcept;
 
     // The Win32 open dialog, because the WinRT picker never completes in an elevated process.

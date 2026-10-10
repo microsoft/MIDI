@@ -56,6 +56,8 @@ namespace midisequencer
         constexpr wchar_t KeyChannels[] = L"channels";
         constexpr wchar_t KeyChannel[] = L"channel";
         constexpr wchar_t KeySystemExclusive[] = L"systemExclusive";
+        constexpr wchar_t KeyRecord[] = L"record";
+        constexpr wchar_t KeyEcho[] = L"echo";
         constexpr wchar_t KeyProtocol[] = L"protocol";
         constexpr wchar_t KeyClip[] = L"clip";
         constexpr wchar_t KeyLength[] = L"length";
@@ -73,6 +75,15 @@ namespace midisequencer
         constexpr wchar_t ValueAsRecorded[] = L"asRecorded";
         constexpr wchar_t ValueTrack[] = L"track";
         constexpr wchar_t ValueFolder[] = L"folder";
+
+        // What a track records, as written in the file.
+        constexpr std::array<std::pair<uint8_t, wchar_t const*>, 5> RecordKindNames{ {
+            { RecordNotes, L"notes" },
+            { RecordControllers, L"controllers" },
+            { RecordPitchBend, L"pitchBend" },
+            { RecordPressure, L"pressure" },
+            { RecordProgram, L"program" },
+        } };
 
         // ---- reading ----
 
@@ -427,6 +438,32 @@ namespace midisequencer
                 track.Source.Endpoint = ReadEndpoint(context, ReadObject(source, KeyEndpoint));
                 track.Source.Group = static_cast<int8_t>(ReadInteger(source, KeyGroup, -1, 0, 15));
                 track.Source.SystemExclusive = ReadBool(source, KeySystemExclusive, false);
+                track.Source.Echo = ReadBool(source, KeyEcho, true);
+
+                if (auto const kinds = ReadArray(source, KeyRecord); kinds != nullptr)
+                {
+                    uint8_t mask{ 0 };
+
+                    for (auto const& value : kinds)
+                    {
+                        if (!IsType(value, mjson::JsonValueType::String))
+                        {
+                            continue;
+                        }
+
+                        auto const name = value.GetString();
+
+                        for (auto const& [bit, text] : RecordKindNames)
+                        {
+                            if (name == text)
+                            {
+                                mask |= bit;
+                            }
+                        }
+                    }
+
+                    track.Source.Record = mask;
+                }
 
                 if (auto const channels = ReadArray(source, KeyChannels); channels != nullptr)
                 {
@@ -950,6 +987,30 @@ namespace midisequencer
                 if (track.Source.SystemExclusive)
                 {
                     sourceMembers.Bool(KeySystemExclusive, true);
+                }
+
+                if (track.Source.Record != RecordEverything)
+                {
+                    std::wstring kinds{ L"[" };
+                    size_t written{ 0 };
+
+                    for (auto const& [bit, text] : RecordKindNames)
+                    {
+                        if ((track.Source.Record & bit) != 0)
+                        {
+                            kinds += written++ == 0 ? L" \"" : L", \"";
+                            kinds += text;
+                            kinds += L"\"";
+                        }
+                    }
+
+                    kinds += written == 0 ? L"]" : L" ]";
+                    sourceMembers.Raw(KeyRecord, kinds);
+                }
+
+                if (!track.Source.Echo)
+                {
+                    sourceMembers.Bool(KeyEcho, false);
                 }
 
                 sourceMembers.Close();

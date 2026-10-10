@@ -30,6 +30,12 @@ public:
     TEST_METHOD(ClockOutSends24PulsesAQuarterNote);
     TEST_METHOD(ADestinationOffsetHandsOverSooner);
     TEST_METHOD(TheThreadPlaysOnItsOwn);
+    TEST_METHOD(TheLoopGoesRoundAtItsEnd);
+    TEST_METHOD(ANoteHeldOverTheLoopEndEndsThere);
+    TEST_METHOD(ALaunchedClipStartsAtTheNextBar);
+    TEST_METHOD(StoppingATrackSilencesItFromTheNextBar);
+    TEST_METHOD(BackToTimelinePicksUpTheTimeline);
+    TEST_METHOD(AGroupCanSpeakADifferentProtocol);
 };
 
 class MessageTranslationTests : public WEX::TestClass<MessageTranslationTests>
