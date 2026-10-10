@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer - 8 - project info and provenance</title>
+<link rel="stylesheet" href="seq.css">
+<script src="seq.js" defer></script>
+<style>
+    .dialog { width: 1040px; }
+    .dialog .dlg-body { gap: 12px; }
+    .cols { display: flex; gap: 26px; }
+    .colL { width: 340px; flex: 0 0 340px; display: flex; flex-direction: column; gap: 10px; }
+    .colR { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+    .sect { font-size: 13px; font-weight: 600; }
+    .origin .gl { width: 14px; text-align: center; }
+    .o-rec { color: #FFB3B5; }
+    .o-drawn { color: var(--accent); }
+    .o-gen { color: #9DE38F; }
+    .o-imp { color: #F7C948; }
+    .o-ai { color: #D7B8FF; }
+    .radio { padding: 3px 0; }
+    .tag { font-size: 10px; color: var(--accent); border: 1px solid rgba(96, 205, 255, .45); border-radius: 9px; padding: 0 7px; margin-left: 8px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="appicon" viewBox="0 0 16 16"><rect x=".5" y=".5" width="15" height="15" rx="3.5" fill="#25303D" stroke="#60CDFF" stroke-width=".8"/><rect x="3" y="3.6" width="7" height="2.2" rx="1" fill="#FF8A65"/><rect x="6" y="6.9" width="7" height="2.2" rx="1" fill="#60CDFF"/><rect x="3" y="10.2" width="5" height="2.2" rx="1" fill="#6CCB5F"/></symbol>
+</svg>
+
+<div class="page">
+
+<div class="caption-above"><b>8. About this project: who made it, and how.</b> The same provenance block MIDI Glass and MIDI Patchbay write, with one thing they don't need: because the sequencer knows how each clip came to be, it can suggest how the project was made and list where every clip came from.</div>
+
+<div class="window" style="height:860px">
+
+  <div class="titlebar">
+    <svg class="appicon"><use href="#appicon"/></svg>
+    <div class="title">Night Drive Sketch &mdash; Windows MIDI Sequencer</div>
+    <div class="preview-chiclet">PREVIEW</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="transport">
+    <div class="tbtn">&#xE892;</div><div class="tbtn play">&#xE768;</div><div class="tbtn">&#xE71A;</div><div class="tbtn rec">&#xE7C8;</div><div class="tbtn on">&#xE8EE;</div>
+    <div class="sep"></div>
+    <div class="lcd"><div class="big">1.1.000</div><div class="small">0:00.000</div></div>
+    <div class="spacer"></div>
+  </div>
+
+  <div class="arrange" data-bars="30" style="--bar:34px">
+    <div class="arow ruler"><div class="hdr"></div><div class="launch"></div><div class="lane"></div></div>
+    <div class="arow track" style="--tc:#FF8A65"><div class="hdr"><div class="strip"></div><div class="tinfo"><div class="tname">Drums</div></div></div><div class="launch"></div><div class="lane"><div class="tclip pattern" data-at="1" data-len="8" data-draw="drums"><div class="cap"><span class="t">Beat A</span></div><div class="body"></div></div></div></div>
+    <div class="arow track" style="--tc:#5BC0EB"><div class="hdr"><div class="strip"></div><div class="tinfo"><div class="tname">Bass</div></div></div><div class="launch"></div><div class="lane"><div class="tclip notes" data-at="5" data-len="8" data-draw="bass"><div class="cap"><span class="t">Bass line A</span></div><div class="body"></div></div></div></div>
+    <div class="arow track" style="--tc:#FF6F91"><div class="hdr"><div class="strip"></div><div class="tinfo"><div class="tname">Lead</div></div></div><div class="launch"></div><div class="lane"><div class="tclip notes" data-at="9" data-len="4" data-draw="take"><div class="cap"><span class="t">Lead take 1</span></div><div class="body"></div></div></div></div>
+    <div class="arow filler"><div class="hdr"></div><div class="launch"></div><div class="lane"></div></div>
+  </div>
+
+  <div class="scrim"></div>
+  <div class="dialog">
+    <div class="dlg-body">
+      <h2>About this project</h2>
+      <div class="dlg-sub">Saved in the project file and shown to anyone you share it with. It's what you say about your work: nothing here is checked by Windows.</div>
+
+      <div class="cols">
+        <div class="colL">
+          <div><div class="lbl">Name</div><div class="field">Night Drive Sketch</div></div>
+          <div><div class="lbl">Author</div><div class="field">Pete Brown</div></div>
+          <div><div class="lbl">Organization</div><div class="field"><span class="ph">Optional</span></div></div>
+          <div><div class="lbl">Web page</div><div class="field"><span class="ph">https://</span></div></div>
+          <div><div class="lbl">License</div><div class="field combo">CC-BY-4.0<span class="spacer"></span><span class="gl">&#xE70D;</span></div></div>
+          <div><div class="lbl">Copyright notice in exported files</div><div class="field">Copyright 2026 Pete Brown</div></div>
+          <div class="kv" style="margin-top:4px"><span class="k">Created</span><span class="v">October 9, 2026, 9:14 PM</span></div>
+          <div class="kv"><span class="k">Made with</span><span class="v">Windows MIDI Sequencer (preview)</span></div>
+          <div class="btn small subtle" style="align-self:flex-start;color:var(--accent);padding:0">Your info for sharing&hellip;</div>
+        </div>
+
+        <div class="colR">
+          <div class="sect">How it was made</div>
+          <div class="radio on"><div class="rb"></div><div>A mix of things played, drawn and generated in this app<span class="tag">Suggested from the clips</span></div></div>
+          <div class="radio"><div class="rb"></div><div>Played and recorded</div></div>
+          <div class="radio"><div class="rb"></div><div>Drawn or typed in by a person</div></div>
+          <div class="radio"><div class="rb"></div><div>Made by an algorithm, like this app's generators</div></div>
+          <div class="radio"><div class="rb"></div><div>Includes parts made with generative AI</div></div>
+
+          <div class="sect" style="margin-top:6px">Where the clips came from</div>
+          <table class="table">
+            <tr><th>Clip</th><th>How it was made</th><th>Details</th></tr>
+            <tr><td class="n">Lead take 1</td><td><span class="origin o-rec"><span class="gl">&#xE7C8;</span>Recorded</span></td><td>From Keystep 37, October 9, 2026</td></tr>
+            <tr><td class="n">Bass line A</td><td><span class="origin o-drawn"><span class="gl">&#xE70F;</span>Drawn</span></td><td>Edited 14 times</td></tr>
+            <tr><td class="n">Beat A</td><td><span class="origin o-drawn"><span class="gl">&#xE70F;</span>Pattern</span></td><td>Steps set by hand, chance from seed 91C3</td></tr>
+            <tr><td class="n">Wander</td><td><span class="origin o-gen"><span class="gl">&#xE8B1;</span>Generated</span></td><td>Chance melody, seed 4F2A</td></tr>
+            <tr><td class="n">Piano verse</td><td><span class="origin o-imp"><span class="gl">&#xE8B5;</span>Imported</span></td><td>Rainy Day.mid, &ldquo;Copyright 1998 Example Music&rdquo;</td></tr>
+            <tr><td class="n">Stabs</td><td><span class="origin o-ai"><span class="gl">&#xE99A;</span>AI assistant</span></td><td>Written from a prompt, then checked and edited by you</td></tr>
+          </table>
+          <div style="font-size:11px;color:var(--text3);line-height:1.5">An imported clip keeps its file's name and text. A MIDI file only has room for a name, a composer and a copyright notice, so that is all an export writes. The rest stays in the project file.</div>
+        </div>
+      </div>
+    </div>
+    <div class="dlg-foot"><div class="btn accent">Save</div><div class="btn">Cancel</div></div>
+  </div>
+
+</div>
+
+<ol class="callouts">
+  <li><b>The same block as MIDI Glass and MIDI Patchbay.</b> Author, organization, web page, license, created, the tool that made it, and how it was made, in the same words, so one author profile fills all three.</li>
+  <li><b>A suggestion, not a verdict.</b> The app knows which clips were recorded, drawn, generated, imported or written by an assistant, so it can suggest how the whole project was made. You choose.</li>
+  <li><b>Clip by clip.</b> Every clip remembers how it began. An imported clip keeps its file name and copyright text, which is what you need before you share or sell a piece that uses it.</li>
+  <li><b>AI help is labeled.</b> A clip written by an AI assistant says so, and records whether a person checked it, using the same AI disclosure terms as the other tools.</li>
+  <li><b>What reaches an exported file.</b> MIDI 2.0 clip files carry project name, clip name, composer and copyright as standard messages, and a Standard MIDI File carries the copyright and names as text. The full record stays in the project.</li>
+</ol>
+
+</div>
+</body>
+</html>

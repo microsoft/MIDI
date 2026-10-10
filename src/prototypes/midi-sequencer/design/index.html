@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer design comps</title>
+<link rel="stylesheet" href="seq.css">
+<script src="seq.js" defer></script>
+<style>
+    .page { width: 1100px; gap: 14px; }
+    h1 { font-size: 22px; margin: 6px 0 0 0; }
+    p { font-size: 13px; color: var(--text2); line-height: 1.6; margin: 0; max-width: 1000px; }
+    .list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+    a.item { display: block; text-decoration: none; color: var(--text); border-radius: 8px; border: 1px solid var(--stroke-strong); background: var(--card); padding: 14px 16px; }
+    a.item .n { font-size: 14px; font-weight: 600; }
+    a.item .d { font-size: 12px; color: var(--text3); margin-top: 4px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Windows MIDI Sequencer, design comps</h1>
+  <p>A MIDI 2.0 sequencer that records and plays MIDI only, with clip launching, step patterns, generators and an ordinary timeline in one window. These are HTML: open any page in a browser, or run <span class="mono">capture.ps1</span> for pictures in <span class="mono">shots</span> and <span class="mono">check.ps1</span> for a layout check. The written design is <span class="mono">MIDI-Sequencer-design.md</span> in this folder. Nothing here is built.</p>
+  <div class="list">
+    <a class="item" href="1-main.html"><div class="n">1. The main window</div><div class="d">Tracks, pinned rows, folders, the clip launcher beside the timeline, automation on a track, recording into a slot, and the clip editor at the bottom.</div></a>
+    <a class="item" href="2-piano-roll.html"><div class="n">2. A notes clip in its own window</div><div class="d">Piano roll with MIDI 2.0 per-note pitch bend, exact pitch, 16-bit velocity, per-note pan, ghost notes and a scale.</div></a>
+    <a class="item" href="3-pattern-clip.html"><div class="n">3. Pattern clips</div><div class="d">The step sequencer: lanes with their own length, chance, ratchets, conditions, nudges and locks, plus a melodic mode.</div></a>
+    <a class="item" href="4-generator-clips.html"><div class="n">4. Generator clips</div><div class="d">Euclidean rhythm, a chance melody that drifts from pass to pass, and an arpeggiator.</div></a>
+    <a class="item" href="5-track-setup.html"><div class="n">5. Where a track records from and plays to</div><div class="d">Source and destination, echo while armed, MIDI 2.0 or MIDI 1.0 per destination, start-up messages, missing devices.</div></a>
+    <a class="item" href="6-clock-sync.html"><div class="n">6. Clock and sync</div><div class="d">Internal tempo or another device's clock, clock out with offsets, MIDI 2.0 tempo messages, MIDI Time Code out.</div></a>
+    <a class="item" href="7-import-export.html"><div class="n">7. Getting MIDI in and out</div><div class="d">Standard MIDI Files, captures from MIDI Monitor and the console, paste, and MIDI 2.0 clip file export.</div></a>
+    <a class="item" href="8-provenance.html"><div class="n">8. About this project</div><div class="d">Author and license like MIDI Glass and MIDI Patchbay, plus where each clip came from.</div></a>
+  </div>
+</div>
+</body>
+</html>

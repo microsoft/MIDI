@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer - 3 - pattern clips</title>
+<link rel="stylesheet" href="seq.css">
+<script src="seq.js" defer></script>
+<style>
+    .stepwin { height: 660px; }
+    .melwin { height: 268px; }
+    .main-pad { flex: 1; min-width: 0; padding: 14px 14px 10px 14px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+    .sec-title { font-size: 12px; color: var(--text3); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .sec-title .spacer { flex: 1; }
+    .acc { --tc: #F7C948; }
+    .sld { --tc: #B4A7FF; }
+    .gate { --tc: #5BC0EB; }
+    .legend .box.p::after { content: "35%"; position: absolute; left: 2px; top: 1px; font-size: 7px; color: #FFF; }
+    .legend .box.r::after { content: ""; position: absolute; left: 2px; right: 2px; bottom: 2px; height: 2px; background: repeating-linear-gradient(to right, #FFF 0 3px, transparent 3px 5px); }
+    .legend .box.o { background: repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0 3px, transparent 3px 6px); border-style: dashed; border-color: rgba(255,255,255,.2); }
+    .legend .box.c::after { content: "1:2"; position: absolute; left: 2px; top: 1px; font-size: 7px; color: #FFF; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="k-pattern" viewBox="0 0 16 16"><rect x="1" y="2" width="3.6" height="3.6" rx=".8" fill="currentColor"/><rect x="6.2" y="2" width="3.6" height="3.6" rx=".8" fill="none" stroke="currentColor" stroke-width="1"/><rect x="11.4" y="2" width="3.6" height="3.6" rx=".8" fill="currentColor"/><rect x="1" y="7.2" width="3.6" height="3.6" rx=".8" fill="none" stroke="currentColor" stroke-width="1"/><rect x="6.2" y="7.2" width="3.6" height="3.6" rx=".8" fill="currentColor"/><rect x="11.4" y="7.2" width="3.6" height="3.6" rx=".8" fill="none" stroke="currentColor" stroke-width="1"/><rect x="1" y="12.4" width="3.6" height="3.6" rx=".8" fill="currentColor"/><rect x="6.2" y="12.4" width="3.6" height="3.6" rx=".8" fill="none" stroke="currentColor" stroke-width="1"/><rect x="11.4" y="12.4" width="3.6" height="3.6" rx=".8" fill="currentColor"/></symbol>
+  <symbol id="appicon" viewBox="0 0 16 16"><rect x=".5" y=".5" width="15" height="15" rx="3.5" fill="#25303D" stroke="#60CDFF" stroke-width=".8"/><rect x="3" y="3.6" width="7" height="2.2" rx="1" fill="#FF8A65"/><rect x="6" y="6.9" width="7" height="2.2" rx="1" fill="#60CDFF"/><rect x="3" y="10.2" width="5" height="2.2" rx="1" fill="#6CCB5F"/></symbol>
+</svg>
+
+<div class="page">
+
+<div class="caption-above"><b>3. Pattern clips: the step sequencer.</b> A pattern is a clip like any other: it sits in a launcher slot or on the timeline, loops, and plays to the track's destination. Inside, it's a grid of steps. Each lane has its own length, so a 12-step hat against a 16-step kick drifts and comes back, and each step can have a chance, a ratchet, a condition, a nudge and controller locks.</div>
+
+<div class="window stepwin">
+
+  <div class="titlebar">
+    <svg class="appicon"><use href="#appicon"/></svg>
+    <div class="title">Beat A &mdash; Night Drive Sketch &mdash; Windows MIDI Sequencer</div>
+    <div class="preview-chiclet">PREVIEW</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="etoolbar">
+    <svg class="kindmark" style="color:#FF8A65"><use href="#k-pattern"/></svg>
+    <div class="chip">Pattern clip</div>
+    <div class="sep"></div>
+    <span class="tlabel">Steps</span><div class="field small combo" style="width:62px">16<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <span class="tlabel">Each step</span><div class="field small combo" style="width:70px">1/16<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <span class="tlabel">Swing</span><div class="field small" style="width:62px">56<span class="spacer"></span><span class="unit">%</span></div>
+    <div class="btn small toggled">Lanes keep their own length</div>
+    <div class="sep"></div>
+    <span class="tlabel">Lane names</span><div class="field small combo" style="width:172px">General MIDI drums<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <div class="spacer"></div>
+    <div class="btn small"><span class="gl">&#xE8B1;</span>Vary&hellip;</div>
+    <div class="btn small">Make notes</div>
+  </div>
+
+  <div class="ed-body">
+    <div class="main-pad">
+      <div class="sec-title">Drum lanes<span class="spacer"></span><span style="font-weight:400">Playing pass 3 &middot; step 10</span></div>
+      <div class="stepnums"><span>1</span><span>2</span><span>3</span><span>4</span><i class="gap"></i><span>5</span><span>6</span><span>7</span><span>8</span><i class="gap"></i><span>9</span><span>10</span><span>11</span><span>12</span><i class="gap"></i><span>13</span><span>14</span><span>15</span><span>16</span></div>
+      <div class="steps" style="--tc:#FF8A65">
+        <div class="srow">
+          <div class="slabel"><div class="sw"></div><div class="tx"><div class="n">Kick</div><div class="s">C1 (36) &middot; 16 steps</div></div><div class="tb m">M</div><div class="tb s">S</div></div>
+          <div class="scells" data-steps='{"n":16,"on":[0,4,8,10,12],"vel":{"0":1,"4":0.9,"8":1,"10":0.55,"12":0.92},"cur":9}'></div>
+        </div>
+        <div class="srow">
+          <div class="slabel"><div class="sw"></div><div class="tx"><div class="n">Snare</div><div class="s">D1 (38) &middot; 16 steps</div></div><div class="tb m">M</div><div class="tb s">S</div></div>
+          <div class="scells" data-steps='{"n":16,"on":[4,12,15],"vel":{"4":0.95,"12":0.95,"15":0.32},"prob":{"15":35},"cur":9}'></div>
+        </div>
+        <div class="srow">
+          <div class="slabel"><div class="sw"></div><div class="tx"><div class="n">Hand clap</div><div class="s">D#1 (39) &middot; 16 steps</div></div><div class="tb m">M</div><div class="tb s">S</div></div>
+          <div class="scells" data-steps='{"n":16,"on":[4,12],"vel":{"4":0.7,"12":0.75},"nudge":{"4":-1,"12":-1},"cur":9}'></div>
+        </div>
+        <div class="srow">
+          <div class="slabel"><div class="sw"></div><div class="tx"><div class="n">Closed hi-hat</div><div class="s">F#1 (42) &middot; 12 steps</div></div><div class="tb m">M</div><div class="tb s">S</div></div>
+          <div class="scells" data-steps='{"n":16,"len":12,"on":[0,1,2,4,5,6,8,9,10],"vel":{"0":0.85,"1":0.45,"2":0.6,"4":0.85,"5":0.45,"6":0.73,"8":0.85,"9":0.4,"10":0.6},"rt":{"6":3},"sel":6,"cur":9}'></div>
+        </div>
+        <div class="srow">
+          <div class="slabel"><div class="sw"></div><div class="tx"><div class="n">Open hi-hat</div><div class="s">A#1 (46) &middot; 16 steps</div></div><div class="tb m">M</div><div class="tb s">S</div></div>
+          <div class="scells" data-steps='{"n":16,"on":[2,10],"vel":{"2":0.6,"10":0.7},"cond":{"10":"1:2"},"cur":9}'></div>
+        </div>
+        <div class="srow">
+          <div class="slabel"><div class="sw"></div><div class="tx"><div class="n">Side stick</div><div class="s">C#1 (37) &middot; 7 steps</div></div><div class="tb m on">M</div><div class="tb s">S</div></div>
+          <div class="scells" data-steps='{"n":16,"len":7,"on":[0,3,5],"vel":{"0":0.7,"3":0.5,"5":0.6},"cur":2}'></div>
+        </div>
+        <div class="srow" style="height:34px">
+          <div class="slabel" style="background:transparent;border-style:dashed;justify-content:center;color:var(--text3);font-size:12px"><span class="gl" style="font-size:11px">&#xE710;</span>Add a lane</div>
+          <div class="scells"></div>
+        </div>
+      </div>
+      <div class="legend" style="margin-top:4px">
+        <span class="k"><i class="box"></i>Bar height is velocity</span>
+        <span class="k"><i class="box p"></i>Chance</span>
+        <span class="k"><i class="box r"></i>Ratchet</span>
+        <span class="k"><i class="box c"></i>Condition: every 2nd pass</span>
+        <span class="k"><span style="font-size:10px;color:#FFF">&#x25C2;</span>Nudged early</span>
+        <span class="k"><i class="box o"></i>Past this lane's end</span>
+      </div>
+    </div>
+
+    <div class="inspector">
+      <div class="insp-head"><div class="t">Step 7 &middot; Closed hi-hat</div><div class="toggle-sw"></div></div>
+      <div class="insp-body">
+        <div class="insp-section">
+          <div class="insp-label">Velocity</div>
+          <div class="row"><div class="field small grow">47,841</div><span class="muted-text" style="font-size:12px">73%</span></div>
+          <div class="valuebar"><i style="width:73%"></i></div>
+        </div>
+        <div class="insp-section">
+          <div class="insp-label">Chance</div>
+          <div class="row"><div class="field small" style="width:84px">100<span class="spacer"></span><span class="unit">%</span></div><span class="muted-text" style="font-size:11px">Plays every time</span></div>
+        </div>
+        <div class="insp-section">
+          <div class="insp-label">Ratchet</div>
+          <div class="seg" style="height:28px"><div>1</div><div>2</div><div class="sel">3</div><div>4</div><div>6</div><div>8</div></div>
+          <div class="field small combo">Each repeat a little softer<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+        </div>
+        <div class="insp-section">
+          <div class="insp-label">Condition</div>
+          <div class="field small combo">Every time<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+        </div>
+        <div class="insp-section">
+          <div class="insp-label">Nudge and length</div>
+          <div class="row"><div class="field small grow">On the step<span class="spacer"></span><span class="unit">0 ticks</span></div><div class="field small" style="width:96px">50<span class="spacer"></span><span class="unit">% long</span></div></div>
+        </div>
+        <div class="insp-section">
+          <div class="insp-label">Locks on this step</div>
+          <div class="hint" style="font-size:11px;color:var(--text3);line-height:1.45">A lock sends a controller value on this step only, then puts it back.</div>
+          <div class="btn small" style="align-self:flex-start"><span class="gl">&#xE710;</span>Add a lock</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <span>Plays to TR-8S, channel 10</span>
+    <span>The 16, 12 and 7 step lanes line up again every 336 steps (21 bars)</span>
+    <span class="spacer"></span>
+    <span>Seed 91C3 &middot; chance and conditions come out the same each time you play from the start</span>
+  </div>
+</div>
+
+<div class="caption-above" style="margin-top:6px">The same editor in <b>melodic mode</b>, for one line of notes, the way classic bass-line boxes work: each step holds a note, and accent and slide are rows of their own.</div>
+
+<div class="window melwin">
+
+  <div class="titlebar">
+    <svg class="appicon"><use href="#appicon"/></svg>
+    <div class="title">Acid line &mdash; Night Drive Sketch &mdash; Windows MIDI Sequencer</div>
+    <div class="preview-chiclet">PREVIEW</div>
+    <div class="spacer"></div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="etoolbar">
+    <svg class="kindmark" style="color:#5BC0EB"><use href="#k-pattern"/></svg>
+    <div class="chip">Pattern clip &middot; melodic</div>
+    <div class="sep"></div>
+    <span class="tlabel">Steps</span><div class="field small combo" style="width:62px">16<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <span class="tlabel">Each step</span><div class="field small combo" style="width:70px">1/16<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <span class="tlabel">Scale</span><div class="field small combo" style="width:96px">E minor<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <span class="tlabel">Slide time</span><div class="field small" style="width:70px">60<span class="spacer"></span><span class="unit">ms</span></div>
+    <div class="spacer"></div>
+    <div class="btn small">Make notes</div>
+  </div>
+
+  <div class="main-pad" style="padding-top:10px">
+    <div class="stepnums"><span>1</span><span>2</span><span>3</span><span>4</span><i class="gap"></i><span>5</span><span>6</span><span>7</span><span>8</span><i class="gap"></i><span>9</span><span>10</span><span>11</span><span>12</span><i class="gap"></i><span>13</span><span>14</span><span>15</span><span>16</span></div>
+    <div class="steps" style="--tc:#5BC0EB">
+      <div class="srow">
+        <div class="slabel"><div class="sw"></div><div class="tx"><div class="n">Note</div><div class="s">Click a step, then a key</div></div></div>
+        <div class="scells" data-steps='{"n":16,"on":[0,1,2,4,5,6,8,9,10,12,13,14,15],"v":0.7,"note":{"0":"E1","1":"E1","2":"G1","4":"E2","5":"E1","6":"A1","8":"D1","9":"D1","10":"F1","12":"D2","13":"D1","14":"G1","15":"A1"},"sel":4}'></div>
+      </div>
+      <div class="srow acc" style="height:30px">
+        <div class="slabel"><div class="sw"></div><div class="tx"><div class="n">Accent</div></div></div>
+        <div class="scells" data-steps='{"n":16,"on":[0,4,8,12],"v":1}'></div>
+      </div>
+      <div class="srow sld" style="height:30px">
+        <div class="slabel"><div class="sw"></div><div class="tx"><div class="n">Slide</div></div></div>
+        <div class="scells" data-steps='{"n":16,"on":[5,13],"v":1}'></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ol class="callouts">
+  <li><b>A pattern is a clip.</b> It launches, loops, links and sits on the timeline like a notes clip, so a step sequencer needs no transport, clock or routing of its own.</li>
+  <li><b>Lanes keep their own length.</b> The hi-hat repeats every 12 steps and the side stick every 7, against a 16-step kick. The status bar says when everything lines up again.</li>
+  <li><b>Per-step chance, ratchet, condition and nudge.</b> The snare ghost plays 35% of the time, the hat on step 7 plays three quick hits, the open hat plays every second pass, and both claps are nudged a little early.</li>
+  <li><b>Locks.</b> A step can send a controller value for that step only. On a MIDI 2.0 destination a lock can be a per-note controller, so it changes just that hit.</li>
+  <li><b>The same result every time.</b> Chance and conditions are worked out from a seed saved in the project, so playing from the start, jumping back, or exporting all give the same hits. Vary picks a new seed.</li>
+  <li><b>Make notes</b> turns the pattern into an ordinary notes clip for detailed editing. The pattern itself is left alone.</li>
+</ol>
+
+</div>
+</body>
+</html>

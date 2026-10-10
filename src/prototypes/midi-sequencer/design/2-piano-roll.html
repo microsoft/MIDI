@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer - 2 - piano roll</title>
+<link rel="stylesheet" href="seq.css">
+<script src="seq.js" defer></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="k-notes" viewBox="0 0 16 16"><rect x="1" y="3" width="6" height="2.4" rx="1" fill="currentColor"/><rect x="6" y="7" width="8" height="2.4" rx="1" fill="currentColor"/><rect x="3" y="11" width="5" height="2.4" rx="1" fill="currentColor"/></symbol>
+  <symbol id="appicon" viewBox="0 0 16 16"><rect x=".5" y=".5" width="15" height="15" rx="3.5" fill="#25303D" stroke="#60CDFF" stroke-width=".8"/><rect x="3" y="3.6" width="7" height="2.2" rx="1" fill="#FF8A65"/><rect x="6" y="6.9" width="7" height="2.2" rx="1" fill="#60CDFF"/><rect x="3" y="10.2" width="5" height="2.2" rx="1" fill="#6CCB5F"/></symbol>
+</svg>
+
+<div class="page">
+
+<div class="caption-above"><b>2. A notes clip in its own window.</b> The clip editor can sit at the bottom of the main window or open on its own, which helps on a second monitor. This clip goes to the General MIDI Synth in Windows MIDI Services, which speaks MIDI 2.0, so everything MIDI 2.0 can say about a single note is drawn right on the note and in the lanes under it.</div>
+
+<div class="window">
+
+  <div class="titlebar">
+    <svg class="appicon"><use href="#appicon"/></svg>
+    <div class="title">Lead hook &mdash; Night Drive Sketch &mdash; Windows MIDI Sequencer</div>
+    <div class="preview-chiclet">PREVIEW</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="etoolbar">
+    <div class="seg">
+      <div>Select</div>
+      <div class="sel"><span class="gl">&#xE70F;</span>Draw</div>
+      <div><span class="gl">&#xE75C;</span>Erase</div>
+      <div><span class="gl">&#xE8C6;</span>Split</div>
+    </div>
+    <div class="sep"></div>
+    <span class="tlabel">Snap</span><div class="field small combo" style="width:70px">1/16<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <div class="btn small">Quantize<span class="gl" style="font-size:9px">&#xE70D;</span></div>
+    <div class="btn small">Transpose</div>
+    <div class="sep"></div>
+    <span class="tlabel">Scale</span><div class="field small combo" style="width:100px">E minor<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <span class="tlabel">Ghost notes</span><div class="field small combo" style="width:116px">Pad chords<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <div class="spacer"></div>
+    <span class="tlabel">Show values as</span>
+    <div class="field small combo" style="width:140px">MIDI 2.0 (16-bit)<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <div class="btn subtle icon"><span class="gl">&#xE71F;</span></div>
+    <div class="btn subtle icon"><span class="gl">&#xE8A3;</span></div>
+  </div>
+
+  <div style="padding:10px 12px 10px 12px; border-bottom:1px solid var(--divider)">
+    <div class="infobar info"><span class="gl">&#xE946;</span><div class="bd"><span class="tt">General MIDI Synth speaks MIDI 2.0 on group 1.</span> Per-note pitch bend, per-note pan, exact pitch and 16-bit velocity in this clip all play as written.</div></div>
+  </div>
+
+  <div class="ed-body">
+    <div class="ed-main">
+      <div class="rruler"><div class="corner" style="width:64px"></div><div class="marks" data-bars="4" data-first="1"><div class="loopbar"></div></div></div>
+      <div class="rollwrap">
+        <div class="keys" data-keys="leadHook" style="width:64px"></div>
+        <div class="roll" data-roll="leadHook" style="--tc:#FF6F91">
+          <div class="tooltip" style="left:244px; top:104px"><b>B3</b> &middot; velocity 52,428 (80%)<br>Per-note pitch bend: vibrato, 8 points</div>
+        </div>
+      </div>
+      <div class="lanes">
+        <div class="lanerow" style="height:84px">
+          <div class="lanehead" style="width:64px"><div class="ln">Velocity</div><div class="ls">16-bit</div></div>
+          <div class="vlane" data-vel="leadHook" style="--tc:#FF6F91"></div>
+        </div>
+        <div class="lanerow" style="height:74px">
+          <div class="lanehead" style="width:64px"><div class="ln">Bend</div><div class="ls">per note</div><div class="ls">&plusmn;2 semi</div></div>
+          <div class="tlane" data-bend="leadHook" style="--tc:#FF6F91"></div>
+        </div>
+        <div class="lanerow" style="height:64px">
+          <div class="lanehead" style="width:64px"><div class="ln">Pan</div><div class="ls">per note</div></div>
+          <div class="tlane" data-curve='{"bars":4,"center":true,"color":"#4DD0C4","segments":[[[12,0.5],[12.8,0.5],[13.4,0.15],[14.3,0.85],[15.1,0.3],[15.8,0.5]]]}'></div>
+        </div>
+        <div class="lanerow" style="height:34px">
+          <div class="lanehead" style="width:64px;justify-content:center;padding:0"><div class="btn small subtle" style="padding:0 6px"><span class="gl">&#xE710;</span>Lane</div></div>
+          <div class="tlane" style="background:transparent"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="inspector">
+      <div class="insp-head"><svg class="kindmark" style="color:#FF6F91;width:16px;height:16px"><use href="#k-notes"/></svg><div class="t">Selected note</div><div class="chip">B3</div></div>
+      <div class="insp-body">
+        <div class="insp-section" style="gap:1px">
+          <div class="kv"><span class="k">Note</span><span class="v">B3 (71)</span></div>
+          <div class="kv"><span class="k">Starts at</span><span class="v mono">1.3.000</span></div>
+          <div class="kv"><span class="k">Length</span><span class="v mono">0.1.864</span></div>
+          <div class="kv"><span class="k">Channel</span><span class="v">1</span></div>
+        </div>
+        <div class="insp-section">
+          <div class="insp-label">Velocity</div>
+          <div class="row"><div class="field small grow">52,428</div><span class="muted-text" style="font-size:12px">80%</span></div>
+          <div class="valuebar"><i style="width:80%"></i></div>
+        </div>
+        <div class="insp-section">
+          <div class="insp-label">Release velocity</div>
+          <div class="row"><div class="field small grow">32,768</div><span class="muted-text" style="font-size:12px">50%</span></div>
+        </div>
+        <div class="insp-section">
+          <div class="insp-label">Exact pitch</div>
+          <div class="field small combo">Off (plays B3)<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+        </div>
+        <div class="insp-section">
+          <div class="insp-label">Per-note changes</div>
+          <div class="kv"><span class="k">Pitch bend</span><span class="v">Vibrato, 8 points</span></div>
+          <div class="kv"><span class="k">Pan</span><span class="v">None</span></div>
+        </div>
+        <div class="insp-section">
+          <div class="insp-label">Chance</div>
+          <div class="row"><div class="field small" style="width:84px">100<span class="spacer"></span><span class="unit">%</span></div><span class="muted-text" style="font-size:11px;line-height:1.35">Lower it and the note sometimes stays silent.</span></div>
+        </div>
+        <div class="card" style="padding:10px 12px">
+          <div style="font-size:12px;font-weight:600;margin-bottom:4px">On a MIDI 1.0 device</div>
+          <div class="hint" style="font-size:11px;color:var(--text3);line-height:1.45">Velocity 102. No per-note pitch bend or pan. G3 +50&cent; would play as G3. MIDI 1.0 has no way to say those things about one note.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <span>4 bars &middot; 16 notes &middot; 1 selected</span>
+    <span>Loops bars 1 to 5</span>
+    <span>Plays to General MIDI Synth, group 1, channel 1</span>
+    <span class="spacer"></span>
+    <span>Draw: click to add a note, drag its end to set the length, drag inside it to bend it</span>
+  </div>
+
+</div>
+
+<ol class="callouts">
+  <li><b>Draw or record.</b> Click to add a note, drag to set its length, or record from the track's source. Softer notes are drawn fainter.</li>
+  <li><b>Per-note pitch bend.</b> Each note carries its own bend, drawn as a line inside the note: a vibrato on B3, a fall on A3 and a scoop into D4. Edit it there or in the Bend lane.</li>
+  <li><b>Exact pitch.</b> G3 +50&cent; uses the MIDI 2.0 Pitch 7.9 note attribute, so one note can be a quarter tone sharp without retuning the whole channel.</li>
+  <li><b>Values at full size.</b> Velocity is 16-bit here. Show values as switches every number in the window to 0 to 127, or to percent.</li>
+  <li><b>Per-note controllers.</b> The Pan lane is a registered per-note controller, so the long E4 moves on its own while other notes stay put.</li>
+  <li><b>Writing parts that fit.</b> Ghost notes from Pad chords and the E minor shading are guides only. Nothing about them is sent.</li>
+  <li><b>No silent losses.</b> The bar at the top says what this destination does with all of this, and the inspector says what a MIDI 1.0 device would get instead.</li>
+  <li><b>Chance.</b> Any note can have a chance below 100%, the same idea as a pattern step. That makes this clip play differently each time through, which export has to deal with (see comp 7).</li>
+</ol>
+
+</div>
+</body>
+</html>

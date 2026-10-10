@@ -262,6 +262,56 @@ The contract is that the driver may still own the buffer after `midiOutLongMsg` 
 
 This matters more for a library than for an application, because you do not control which driver is underneath you. WinMM still supports third-party `.drv` drivers, and how eagerly any particular one consumes a buffer is not something you can probe for or rely on. Write to the contract and you are correct everywhere. Write to the behavior of whichever driver you happened to test against and you are correct until your user installs something else.
 
+### Re-queuing SysEx input buffers from another thread
+
+**Hand each SysEx buffer back to the driver from your input callback, right after you've copied out what you need.** The driver can only store incoming SysEx in buffers you've queued with `midiInAddBuffer`. When none are queued, the data is thrown away and you don't get an error, because there's no buffer to send one in. That's the documented behavior of `midiInStart`. Windows MIDI Services waits briefly for a buffer before it gives up, but only for a few milliseconds. That's a courtesy, not something to design around.
+
+A thread that your callback wakes up to do the re-queuing can easily be kept waiting longer than that on a busy PC. While it waits, your buffers run out and SysEx disappears without a trace. A loopback or a virtual port can deliver data far faster than a 5-pin DIN cable, so this shows up there first.
+
+- **Re-queue the buffer you were handed, on both `MIM_LONGDATA` and `MIM_LONGERROR`.** You get `MIM_LONGERROR` when a SysEx message is cut short, for example by another status byte. If you don't re-queue on it, that buffer never returns to your pool.
+- **Don't find buffers to re-queue by looking for `MHDR_DONE`.** The driver sets that flag just before it calls you. It means the driver is finished with the buffer, not that your callback has read it. Another thread that scans for the flag can take a buffer back before your callback sees the data.
+
+If you really do need another thread to re-queue, have the callback hand that thread each header it has finished with. Also queue much more buffer space than one burst of SysEx needs.
+
+### Stopping an input whose callback re-queues buffers
+
+**Don't call `midiInAddBuffer`, or any other `midiIn` function, from an input's callback while another thread is stopping, resetting or closing that same input.** `midiInStop`, `midiInReset` and `midiInClose` all wait for a callback that's already running to return. If that callback is itself waiting to call `midiInAddBuffer` on the same handle, neither thread can go on, and your app hangs. We reproduced this on Windows MIDI Services with both `midiInStop` and `midiInReset`. The timing window is small, so in a real app it shows up as an occasional hang when an input is stopped while data is arriving. It's one reason the WinMM documentation warns against calling multimedia functions from a callback.
+
+With Windows MIDI Services, re-queuing from the callback is safe as long as your stop path follows that rule. A flag and a critical section are enough:
+
+```cpp
+// Shared by the input callback and the code that stops the input.
+CRITICAL_SECTION g_requeueLock;   // initialize before you open the input
+bool g_stopping = false;
+
+// In the callback, for MIM_LONGDATA and MIM_LONGERROR,
+// after you've copied the data out of the header:
+EnterCriticalSection(&g_requeueLock);
+if (!g_stopping)
+{
+    midiInAddBuffer(hMidiIn, header, sizeof(MIDIHDR));
+}
+LeaveCriticalSection(&g_requeueLock);
+
+// When you stop the input:
+EnterCriticalSection(&g_requeueLock);
+g_stopping = true;
+LeaveCriticalSection(&g_requeueLock);   // leave before calling into WinMM
+
+midiInStop(hMidiIn);
+midiInReset(hMidiIn);                   // hands every queued buffer back to the callback
+// call midiInUnprepareHeader for each header here
+midiInClose(hMidiIn);
+```
+
+`EnterCriticalSection` and `LeaveCriticalSection` are safe to call from a WinMM callback. A few things to get right:
+
+- **Leave the critical section before you call `midiInStop`.** Holding it across the call brings the hang straight back.
+- **Expect your callback to run on the stopping thread.** `midiInStop` and `midiInReset` hand buffers back on the thread that called them, before they return. Don't hold any lock there that your callback needs. The flag also stops you from re-queuing those buffers, which would keep `midiInReset` from ever returning.
+- **Stop and reset before you unprepare and close.** `midiInClose` fails while buffers are still queued, and an input that's still running can still call you.
+- **Don't free anything your callback uses until `midiInClose` has returned.** Some drivers can still call you after `midiInStop` returns.
+- Some libraries find the input object through a list. If removing the object from that list waits for a running callback to finish, removing it before you stop does the same job as the flag.
+
 ### Closing a handle that was never opened
 
 **Initialize your handle members, and make your destructor check before closing.** More than one library declares `HMIDIOUT outHandle;` without an initializer and then calls `midiOutClose(outHandle)` in the destructor. If the object is constructed and destroyed without ever opening a port, that is a close on an indeterminate value. Debug allocators fill memory with a recognizable pattern, so this reproduces reliably in a debug build and only intermittently in a release build, which is exactly the wrong way round for finding it.
@@ -361,8 +411,13 @@ If you still have a WinMM backend:
 
 - [ ] Buffers and callbacks are in place before the port is opened
 - [ ] Headers are unprepared and completion is observed before buffers are freed
+- [ ] SysEx buffers are re-queued from the input callback, the header you were handed, on both `MIM_LONGDATA` and `MIM_LONGERROR`
+- [ ] Nothing finds buffers to re-queue by scanning for `MHDR_DONE`
+- [ ] The callback stops re-queuing before the input is stopped, and that lock isn't held across any WinMM call
 - [ ] Handles are initialized, and the destructor checks before closing
 - [ ] `midiInStop` precedes `midiInReset`
+- [ ] `midiInStop` and `midiInReset` come before unpreparing headers and `midiInClose`
+- [ ] Nothing the callback uses is freed until `midiInClose` returns
 - [ ] Retries are bounded and backed off
 - [ ] Every part of a SysEx message goes through the long-message path, whatever its length
 

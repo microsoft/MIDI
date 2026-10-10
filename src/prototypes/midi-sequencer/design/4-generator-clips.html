@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer - 4 - generator clips</title>
+<link rel="stylesheet" href="seq.css">
+<script src="seq.js" defer></script>
+<style>
+    .main-pad { flex: 1; min-width: 0; padding: 14px 16px 12px 16px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+    .sec-title { font-size: 12px; color: var(--text3); font-weight: 600; }
+    .typeitem { padding: 7px 14px; display: flex; gap: 10px; align-items: flex-start; }
+    .typeitem .gl { font-size: 14px; color: var(--text2); width: 16px; margin-top: 2px; }
+    .typeitem .n { font-size: 13px; }
+    .typeitem .s { font-size: 11px; color: var(--text3); line-height: 1.35; margin-top: 1px; white-space: normal; }
+    .typeitem.sel { background: rgba(96, 205, 255, .10); }
+    .typeitem.sel .n { color: var(--accent); }
+    .pairrow { display: flex; gap: 20px; align-items: flex-start; }
+    .passrow { display: flex; gap: 10px; align-items: stretch; height: 70px; }
+    .passrow .pl { width: 84px; flex: 0 0 84px; font-size: 12px; font-weight: 600; padding-top: 6px; }
+    .passrow .pl .s { font-size: 11px; color: var(--text3); font-weight: 400; margin-top: 2px; }
+    .passrow .roll { border-radius: 4px; border: 1px solid var(--stroke); }
+    .setcol { width: 300px; flex: 0 0 300px; padding: 14px 16px; border-right: 1px solid var(--divider); display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="k-gen" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="2.4" r="2" fill="currentColor"/><circle cx="13.3" cy="9.7" r="2" fill="currentColor"/><circle cx="4" cy="12" r="2" fill="currentColor"/></symbol>
+  <symbol id="appicon" viewBox="0 0 16 16"><rect x=".5" y=".5" width="15" height="15" rx="3.5" fill="#25303D" stroke="#60CDFF" stroke-width=".8"/><rect x="3" y="3.6" width="7" height="2.2" rx="1" fill="#FF8A65"/><rect x="6" y="6.9" width="7" height="2.2" rx="1" fill="#60CDFF"/><rect x="3" y="10.2" width="5" height="2.2" rx="1" fill="#6CCB5F"/></symbol>
+</svg>
+
+<div class="page">
+
+<div class="caption-above"><b>4. Generator clips.</b> A generator is a clip whose notes are worked out as it plays, from a few settings and a seed. It launches, loops and sits on the timeline like any other clip. The type list is open here: a Euclidean rhythm, a chance melody that can drift a little each pass, and an arpeggiator.</div>
+
+<div class="window" style="height:580px">
+
+  <div class="titlebar">
+    <svg class="appicon"><use href="#appicon"/></svg>
+    <div class="title">Euclid 5/16 &mdash; Night Drive Sketch &mdash; Windows MIDI Sequencer</div>
+    <div class="preview-chiclet">PREVIEW</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="etoolbar">
+    <svg class="kindmark" style="color:#6CCB5F"><use href="#k-gen"/></svg>
+    <div class="chip">Generator clip</div>
+    <div class="sep"></div>
+    <span class="tlabel">Type</span><div class="field small combo" style="width:160px;border-color:var(--accent)">Euclidean rhythm<span class="spacer"></span><span class="gl">&#xE70E;</span></div>
+    <span class="tlabel">Length</span><div class="field small combo" style="width:76px">1 bar<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <span class="tlabel">Each step</span><div class="field small combo" style="width:70px">1/16<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <div class="spacer"></div>
+    <span class="tlabel">Seed</span><div class="field small mono" style="width:64px">2D7E</div>
+    <div class="btn small icon" title="New seed" style="width:28px"><span class="gl">&#xE8B1;</span></div>
+    <span class="tlabel">Each pass</span>
+    <div class="seg"><div class="sel">Same</div><div>Changes</div></div>
+    <div class="btn small">Make notes</div>
+  </div>
+
+  <div class="ed-body">
+    <div style="width:400px;flex:0 0 400px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-right:1px solid var(--divider)">
+      <svg class="euclid" data-play="5" data-rings='[{"k":5,"n":16,"rot":0,"color":"#6CCB5F"},{"k":7,"n":16,"rot":2,"color":"#B5E86A"},{"k":3,"n":16,"rot":1,"color":"#4DD0C4"}]' style="width:330px;height:330px"></svg>
+      <div class="muted-text" style="font-size:12px">Pass 2 &middot; step 6 of 16</div>
+    </div>
+
+    <div class="main-pad">
+      <div class="sec-title">Rings</div>
+      <table class="table">
+        <tr><th></th><th>Ring</th><th>Note</th><th>Pulses</th><th>Steps</th><th>Rotate</th><th>Velocity</th><th>Chance</th></tr>
+        <tr style="--tc:#6CCB5F"><td><span class="dot"></span></td><td class="n">1</td><td>E2 (52)</td><td>5</td><td>16</td><td>0</td><td>90%</td><td>100%</td></tr>
+        <tr style="--tc:#B5E86A"><td><span class="dot"></span></td><td class="n">2</td><td>B2 (59)</td><td>7</td><td>16</td><td>2</td><td>70%</td><td>100%</td></tr>
+        <tr style="--tc:#4DD0C4"><td><span class="dot"></span></td><td class="n">3</td><td>G3 (67)</td><td>3</td><td>16</td><td>1</td><td>80%</td><td>100%</td></tr>
+      </table>
+      <div class="btn small" style="align-self:flex-start"><span class="gl">&#xE710;</span>Add a ring</div>
+      <div class="sec-title" style="margin-top:6px">What it plays, two bars</div>
+      <div class="rollwrap" style="flex:0 0 190px;border:1px solid var(--stroke);border-radius:4px;overflow:hidden">
+        <div class="keys" data-keys="euclidOut" style="width:44px"></div>
+        <div class="roll" data-roll="euclidOut" style="--tc:#6CCB5F"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <span>Plays to Hydrasynth, channel 1</span>
+    <span>Same each pass: the seed only matters if a ring's chance is under 100%</span>
+  </div>
+
+  <div class="flyout" style="left:204px;top:92px;width:330px">
+    <div class="typeitem sel"><span class="gl">&#xE73E;</span><div><div class="n">Euclidean rhythm</div><div class="s">Spreads a number of hits as evenly as it can over a number of steps. Stack rings for interlocking parts.</div></div></div>
+    <div class="typeitem"><span class="gl"></span><div><div class="n">Chance melody</div><div class="s">Picks notes from a scale. You set how busy it is, how wide, and how much it changes from one pass to the next.</div></div></div>
+    <div class="typeitem"><span class="gl"></span><div><div class="n">Arpeggiator</div><div class="s">Plays the notes you hold, or another track's notes, one after another.</div></div></div>
+  </div>
+</div>
+
+<div class="pairrow">
+
+  <div class="window" style="width:860px;height:470px">
+    <div class="titlebar">
+      <svg class="appicon"><use href="#appicon"/></svg>
+      <div class="title">Wander &mdash; Night Drive Sketch</div>
+      <div class="preview-chiclet">PREVIEW</div>
+      <div class="spacer"></div>
+      <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+    </div>
+    <div class="etoolbar">
+      <svg class="kindmark" style="color:#4DD0C4"><use href="#k-gen"/></svg>
+      <span class="tlabel">Type</span><div class="field small combo" style="width:130px">Chance melody<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+      <span class="tlabel">Length</span><div class="field small combo" style="width:86px">2 bars<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+      <div class="spacer"></div>
+      <span class="tlabel">Seed</span><div class="field small mono" style="width:60px">4F2A</div>
+      <div class="btn small icon" title="New seed" style="width:28px"><span class="gl">&#xE8B1;</span></div>
+      <div class="seg"><div>Same</div><div class="sel">Changes</div></div>
+    </div>
+    <div class="ed-body">
+      <div class="setcol">
+        <div><div class="lbl">Scale</div><div class="field small combo">E minor pentatonic<span class="spacer"></span><span class="gl">&#xE70D;</span></div></div>
+        <div><div class="lbl">Range</div><div class="row"><div class="field small grow">E3</div><span class="muted-text" style="font-size:12px">to</span><div class="field small grow">E4</div></div></div>
+        <div><div class="lbl">How busy</div><div class="row"><div class="valuebar grow"><i style="width:50%"></i></div><span style="font-size:12px;width:34px;text-align:right">50%</span></div></div>
+        <div><div class="lbl">Keep from the last pass</div><div class="row"><div class="valuebar grow"><i style="width:75%"></i></div><span style="font-size:12px;width:34px;text-align:right">75%</span></div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.4;margin-top:5px">100% plays the same notes every pass. 0% is new every time.</div></div>
+        <div><div class="lbl">Velocity</div><div class="row"><div class="field small grow">50%</div><span class="muted-text" style="font-size:12px">to</span><div class="field small grow">95%</div></div></div>
+        <div class="btn small" style="align-self:flex-start">Make notes from these passes</div>
+      </div>
+      <div class="main-pad" style="gap:8px">
+        <div class="sec-title">The first four passes (new notes are outlined)</div>
+        <div class="passrow"><div class="pl">Pass 1<div class="s" data-count-changed="wander1"></div></div><div class="roll" data-roll="wander1" style="--tc:#4DD0C4"></div></div>
+        <div class="passrow"><div class="pl">Pass 2<div class="s" data-count-changed="wander2"></div></div><div class="roll" data-roll="wander2" style="--tc:#4DD0C4"></div></div>
+        <div class="passrow"><div class="pl">Pass 3<div class="s" data-count-changed="wander3"></div></div><div class="roll" data-roll="wander3" style="--tc:#4DD0C4"></div></div>
+        <div class="passrow"><div class="pl">Pass 4<div class="s" data-count-changed="wander4"></div></div><div class="roll" data-roll="wander4" style="--tc:#4DD0C4"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="window" style="width:440px;height:470px">
+    <div class="titlebar">
+      <svg class="appicon"><use href="#appicon"/></svg>
+      <div class="title">Arp from keys &mdash; Night Drive Sketch</div>
+      <div class="spacer"></div>
+      <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+    </div>
+    <div class="etoolbar">
+      <svg class="kindmark" style="color:#FF6F91"><use href="#k-gen"/></svg>
+      <span class="tlabel">Type</span><div class="field small combo" style="width:130px">Arpeggiator<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    </div>
+    <div class="main-pad" style="gap:12px">
+      <div>
+        <div class="lbl">Notes from</div>
+        <div class="radio on"><div class="rb"></div><div>What you hold on this track's source<div class="sub">Keystep 37, any channel</div></div></div>
+        <div class="radio"><div class="rb"></div><div>Another track's notes<div class="sub">For example, the chords on Chords</div></div></div>
+      </div>
+      <div>
+        <div class="lbl">Order</div>
+        <div class="seg"><div class="sel">Up</div><div>Down</div><div>Up and down</div><div>As held</div><div>Random</div></div>
+      </div>
+      <div class="row">
+        <div class="grow"><div class="lbl">Rate</div><div class="field small combo">1/16<span class="spacer"></span><span class="gl">&#xE70D;</span></div></div>
+        <div class="grow"><div class="lbl">Octaves</div><div class="field small">2</div></div>
+        <div class="grow"><div class="lbl">Length</div><div class="field small">60<span class="spacer"></span><span class="unit">%</span></div></div>
+      </div>
+      <div class="switch-row"><div class="toggle-sw off"></div><div class="tx">Keep playing after you let go<div class="sub">With this off and nothing held, the clip plays nothing.</div></div></div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.45">Capture and Make notes keep the notes the arpeggiator played, not the keys you held.</div>
+    </div>
+  </div>
+
+</div>
+
+<ol class="callouts">
+  <li><b>Generators are clips.</b> They launch, loop, link and sit on the timeline, and they play to the track's destination. Nothing new to route or clock.</li>
+  <li><b>Euclidean rhythm.</b> Each ring spreads its pulses as evenly as it can over its steps, and Rotate turns the ring. Three rings on three notes give an interlocking part from one clip.</li>
+  <li><b>Chance melody.</b> Picks notes from a scale inside a range. Keep from the last pass decides how much changes each time around, so a part can drift slowly instead of jumping.</li>
+  <li><b>Arpeggiator.</b> Plays what you hold on the track's source, or the notes another track is playing. Order, rate, octaves and length are the usual controls.</li>
+  <li><b>Repeatable.</b> Every result comes from the clip's seed and the pass number. Jumping back replays the same notes, and export writes what you heard. Same plays one fixed result on every pass.</li>
+  <li><b>Make notes</b> writes passes into an ordinary notes clip you can edit by hand. The project remembers that those notes came from a generator (see comp 8).</li>
+</ol>
+
+</div>
+</body>
+</html>

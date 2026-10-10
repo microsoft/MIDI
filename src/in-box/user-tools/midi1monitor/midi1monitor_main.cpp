@@ -51,6 +51,9 @@ byte m_buffer[MIDI_BUFFER_SIZE]{ 0 };
 MIDIHDR m_header{ };
 HMIDIIN m_hMidiIn{ };
 
+wil::critical_section m_requeueLock;
+bool m_stoppingInput{ false };
+
 
 void WriteInputPortSelector(_In_ MidiInputPort const& port)
 {
@@ -407,6 +410,19 @@ void EnqueueMidiLongDataMessage(
     m_messages.push(msg);
 }
 
+// midiInStop and midiInReset wait for a running callback, so re-queuing once teardown starts would hang.
+void RequeueSysExBuffer(
+    _In_ HMIDIIN hMidiIn,
+    _In_ LPMIDIHDR header)
+{
+    auto lock = m_requeueLock.lock();
+
+    if (!m_stoppingInput)
+    {
+        midiInAddBuffer(hMidiIn, header, sizeof(MIDIHDR));
+    }
+}
+
 
 void CALLBACK OnMidiMessageReceived(
     HMIDIIN hMidiIn,
@@ -417,7 +433,6 @@ void CALLBACK OnMidiMessageReceived(
 )
 {
     UNREFERENCED_PARAMETER(dwInstance);
-    UNREFERENCED_PARAMETER(hMidiIn);
 
     switch (wMsg)
     {
@@ -440,14 +455,18 @@ void CALLBACK OnMidiMessageReceived(
         break;
 
     case MIM_LONGDATA:
-        m_timestampLastMessageReceived = WindowsMidiServicesInternal::GetCurrentMidiTimestamp();
-        EnqueueMidiLongDataMessage(
-            m_timestampLastMessageReceived,
-            (LPMIDIHDR)dwParam1,
-            static_cast<DWORD>(dwParam2),
-            false);
+        // midiInReset hands back unused buffers with no data in them.
+        if (((LPMIDIHDR)dwParam1)->dwBytesRecorded > 0)
+        {
+            m_timestampLastMessageReceived = WindowsMidiServicesInternal::GetCurrentMidiTimestamp();
+            EnqueueMidiLongDataMessage(
+                m_timestampLastMessageReceived,
+                (LPMIDIHDR)dwParam1,
+                static_cast<DWORD>(dwParam2),
+                false);
+        }
 
-        midiInAddBuffer(m_hMidiIn, &m_header, sizeof(MIDIHDR));
+        RequeueSysExBuffer(hMidiIn, (LPMIDIHDR)dwParam1);
         break;
 
     case MIM_LONGERROR:
@@ -458,7 +477,7 @@ void CALLBACK OnMidiMessageReceived(
             static_cast<DWORD>(dwParam2),
             true);
 
-        midiInAddBuffer(m_hMidiIn, &m_header, sizeof(MIDIHDR));
+        RequeueSysExBuffer(hMidiIn, (LPMIDIHDR)dwParam1);
         break;
 
     case MIM_MOREDATA:
@@ -618,12 +637,18 @@ int __cdecl main(int argc, char* argv[])
         Sleep(0);
     }
 
-    midiInUnprepareHeader(m_hMidiIn, &m_header, sizeof(MIDIHDR));
-
-    m_displayThread.request_stop();
+    // Release the lock before stopping: midiInStop waits for the callback, which may be waiting for it.
+    {
+        auto lock = m_requeueLock.lock();
+        m_stoppingInput = true;
+    }
 
     midiInStop(m_hMidiIn);
+    midiInReset(m_hMidiIn);
+    midiInUnprepareHeader(m_hMidiIn, &m_header, sizeof(MIDIHDR));
     midiInClose(m_hMidiIn);
+
+    m_displayThread.request_stop();
 
 
 
