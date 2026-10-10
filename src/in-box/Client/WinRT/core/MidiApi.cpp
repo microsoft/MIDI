@@ -10,6 +10,38 @@
 #include "MidiApi.h"
 #include "MidiApi.g.cpp"
 
+#include <wil\stl.h>
+
+namespace
+{
+    // A file id names the file itself, whatever form of path was used to open it.
+    HRESULT GetFileId(_In_z_ wchar_t const* path, _Out_ FILE_ID_INFO& id) noexcept
+    {
+        id = {};
+
+        wil::unique_hfile file{ ::CreateFileW(
+            path,
+            FILE_READ_ATTRIBUTES,
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_ATTRIBUTE_NORMAL,
+            nullptr) };
+
+        if (!file)
+        {
+            return HRESULT_FROM_WIN32(::GetLastError());
+        }
+
+        if (!::GetFileInformationByHandleEx(file.get(), FileIdInfo, &id, sizeof(id)))
+        {
+            return HRESULT_FROM_WIN32(::GetLastError());
+        }
+
+        return S_OK;
+    }
+}
+
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
@@ -223,6 +255,81 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
                 TraceLoggingWideString(L"An unknown error occurred checking connectivity to the service. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+            return false;
+        }
+    }
+
+
+    bool MidiApi::IsProvidedByWindows() noexcept
+    {
+        try
+        {
+            std::wstring modulePath{};
+            std::wstring systemFolder{};
+            FILE_ID_INFO loadedCopy{};
+
+            auto hr = wil::GetModuleFileNameW(wil::GetModuleInstanceHandle(), modulePath);
+
+            if (SUCCEEDED(hr))
+            {
+                hr = wil::GetSystemDirectoryW(systemFolder);
+            }
+
+            if (SUCCEEDED(hr))
+            {
+                hr = GetFileId(modulePath.c_str(), loadedCopy);
+            }
+
+            if (FAILED(hr))
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Unable to identify the file this copy of the API was loaded from.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingHResult(hr, MIDI_SDK_TRACE_HRESULT_FIELD)
+                );
+
+                return false;
+            }
+
+            auto const systemCopyPath = std::filesystem::path{ systemFolder } / std::filesystem::path{ modulePath }.filename();
+
+            // Files are compared rather than path strings, because a module path can be a short name or carry a \\?\ prefix.
+            FILE_ID_INFO systemCopy{};
+
+            bool const providedByWindows =
+                SUCCEEDED(GetFileId(systemCopyPath.c_str(), systemCopy)) &&
+                loadedCopy.VolumeSerialNumber == systemCopy.VolumeSerialNumber &&
+                memcmp(&loadedCopy.FileId, &systemCopy.FileId, sizeof(loadedCopy.FileId)) == 0;
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Checked whether this copy of the API is the one in the Windows system folder.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingBoolean(providedByWindows, "provided by Windows")
+            );
+
+            return providedByWindows;
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception checking whether this copy of the API is the one in the Windows system folder.", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
             return false;
