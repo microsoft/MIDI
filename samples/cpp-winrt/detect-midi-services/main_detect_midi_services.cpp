@@ -27,7 +27,7 @@
 //   2. Is the API present? Windows.Devices.Midi2.MidiApi either resolves on
 //      this machine or it does not. It resolves from the copy that comes with
 //      Windows, or from a copy your app ships next to itself, and
-//      MidiApi.IsProvidedByWindows() tells you which one you got. When Windows
+//      MidiApi.IsSystemProvided() tells you which one you got. When Windows
 //      has its own copy, that is always the one you get.
 //
 //   3. Is it usable? A PC can have the API and still be set to use the old
@@ -212,14 +212,14 @@ bool TryGetMidiApiStatics(midi2::IMidiApiStatics& statics)
     return true;
 }
 
-// midi2::MidiApi::IsProvidedByWindows() is the short form, but it throws when the
+// midi2::MidiApi::IsSystemProvided() is the short form, but it throws when the
 // copy that loaded is too old to have it. Every copy that comes with Windows has
 // it, so a copy without it can only be one that came with an app.
-bool IsProvidedByWindows(midi2::IMidiApiStatics const& statics)
+bool IsSystemProvided(midi2::IMidiApiStatics const& statics)
 {
     auto const statics2 = statics.try_as<midi2::IMidiApiStatics2>();
 
-    return statics2 && statics2.IsProvidedByWindows();
+    return statics2 && statics2.IsSystemProvided();
 }
 
 
@@ -241,7 +241,7 @@ namespace abi
 
     struct __declspec(uuid("8087b303-0519-c0de-31d1-ee0010000002")) IMidiApiStatics2 : ::IInspectable
     {
-        virtual HRESULT __stdcall IsProvidedByWindows(::boolean* result) = 0;
+        virtual HRESULT __stdcall IsSystemProvided(::boolean* result) = 0;
     };
 }
 
@@ -322,15 +322,15 @@ void ReportDetectionWithoutProjection()
         return;
     }
 
-    ::boolean providedByWindows{};
+    ::boolean systemProvided{};
     winrt::com_ptr<abi::IMidiApiStatics2> statics2;
 
     // Left false for a copy too old to have IMidiApiStatics2, which can only be one that came with an app.
     if (SUCCEEDED(statics->QueryInterface(__uuidof(abi::IMidiApiStatics2), statics2.put_void())))
     {
-        if (FAILED(statics2->IsProvidedByWindows(&providedByWindows)))
+        if (FAILED(statics2->IsSystemProvided(&systemProvided)))
         {
-            providedByWindows = false;
+            systemProvided = false;
         }
     }
 
@@ -341,7 +341,7 @@ void ReportDetectionWithoutProjection()
         SUCCEEDED(statics->GetCurrentlySelectedApiMode(&mode)))
     {
         std::wcout
-            << L"  API present: " << (providedByWindows ? L"the copy that comes with Windows" : L"the app's own copy")
+            << L"  API present: " << (systemProvided ? L"the copy that comes with Windows" : L"the app's own copy")
             << L". Service available: " << (serviceAvailable ? L"yes" : L"no")
             << L". " << ApiModeName(static_cast<midi2::MidiApiMode>(mode)) << L"." << std::endl;
     }
@@ -392,7 +392,7 @@ MidiBackend ChooseBackend(DWORD const windowsBuild)
         return MidiBackend::LegacyMidi1Api;
     }
 
-    if (IsProvidedByWindows(statics))
+    if (IsSystemProvided(statics))
     {
         std::wcout << L"  Yes. It's the copy that comes with Windows." << std::endl << std::endl;
     }

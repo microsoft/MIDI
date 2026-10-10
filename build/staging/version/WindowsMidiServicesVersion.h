@@ -7,14 +7,14 @@
 
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_IS_PREVIEW                         true
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE                             L"GitHub Preview"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_DATE                               L"2026-10-07"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_DATE                               L"2026-10-10"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME                       L"API and Tools Preview 11"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L"0.99.91-preview.11"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L"0.99.92-preview.11"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      0
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR                      99
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      91
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      92
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER               0
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L"preview.11"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L"0.99.91.0"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L"0.99.92.0"
 
 #endif

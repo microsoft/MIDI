@@ -5,9 +5,16 @@
   <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
 
   <Fragment>
+    <DirectoryRef Id="TOOLSROOT_INSTALLFOLDER">
+      <Directory Id="TOOLSROOT_INSTALLFOLDER_Assets" Name="Assets" />
+    </DirectoryRef>
+
     <ComponentGroup Id="SdkRedistFiles">
 
       <!-- app-sdk\$(var.Platform) -->
+      <Component Id="c7E8B17D66ACC18FF" Guid="11c465b3-99bb-5ad7-9150-436d9f3b3ef8" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER_Assets"> <!-- Assets\AppIcon.ico -->
+        <File Id="f7E8B17D66ACC18FF" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Assets\AppIcon.ico" Vital="true" />
+      </Component>
       <Component Id="c95D3F84EFCBD455B" Guid="15251297-ff85-5d52-bb71-3533703ef73c" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- Microsoft.Graphics.Canvas.dll -->
         <File Id="f95D3F84EFCBD455B" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Graphics.Canvas.dll" Vital="true" />
       </Component>
@@ -91,6 +98,12 @@
       </Component>
       <Component Id="c79AC2E64BF174D71" Guid="476635f0-99f7-5be7-97cd-f40e88061a2d" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midiscratchpad.pri -->
         <File Id="f79AC2E64BF174D71" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiscratchpad.pri" Vital="true" />
+      </Component>
+      <Component Id="c245879FDB6EFAAB8" Guid="04f6f141-2294-508a-88dc-2d506281dd8a" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midisequencer.exe -->
+        <File Id="midisequencerExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midisequencer.exe" Vital="true" />
+      </Component>
+      <Component Id="cCD1EFE7953A7547C" Guid="d0b07909-4e57-5cf1-8eec-5828135efe62" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midisequencer.pri -->
+        <File Id="fCD1EFE7953A7547C" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midisequencer.pri" Vital="true" />
       </Component>
       <Component Id="cC680BE25EC5BC596" Guid="dd619743-cc67-5a2f-8e77-1178727ef6a6" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midisettings.exe -->
         <File Id="midisettingsExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midisettings.exe" Vital="true" />
