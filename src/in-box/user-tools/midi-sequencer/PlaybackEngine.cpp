@@ -139,6 +139,52 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
+    uint64_t PlaybackEngine::EarlierBy(uint64_t timestamp, int64_t microseconds) const noexcept
+    {
+        auto const ticks = microseconds * static_cast<int64_t>(m_clock.TicksPerSecond) / 1000000;
+        return static_cast<uint64_t>(std::max<int64_t>(1, static_cast<int64_t>(timestamp) - ticks));
+    }
+
+    // How much earlier than the beat a clock output's pulses go: its device's offset, less the
+    // output's own. Negative means later.
+    _Use_decl_annotations_
+    int64_t PlaybackEngine::ClockLeadMicroseconds(ClockOutput const& output) const
+    {
+        return static_cast<int64_t>(LookupDestination(output.Endpoint, output.Group).OffsetMicroseconds) - output.OffsetMicroseconds;
+    }
+
+    // The furthest ahead of the beat anything is sent.
+    uint64_t PlaybackEngine::LongestLeadMicroseconds() const
+    {
+        int64_t longest{ 0 };
+
+        if (m_sequence != nullptr)
+        {
+            ForEachTrack(*m_sequence, [this, &longest](Track const& track, size_t)
+            {
+                if (!track.IsFolder)
+                {
+                    longest = std::max<int64_t>(longest, LookupDestination(track.Destination).OffsetMicroseconds);
+                }
+
+                return true;
+            });
+        }
+
+        if (m_settings.Metronome.Enabled && !m_settings.Metronome.Endpoint.IsEmpty())
+        {
+            longest = std::max<int64_t>(longest, LookupDestination(m_settings.Metronome.Endpoint, m_settings.Metronome.Group).OffsetMicroseconds);
+        }
+
+        for (auto const& output : m_settings.ClockOutputs)
+        {
+            longest = std::max(longest, ClockLeadMicroseconds(output));
+        }
+
+        return static_cast<uint64_t>(longest);
+    }
+
+    _Use_decl_annotations_
     int64_t PlaybackEngine::TickAtTimestamp(uint64_t timestamp) const noexcept
     {
         auto const elapsed = timestamp >= m_segment.StartTimestamp
@@ -300,7 +346,9 @@ namespace midisequencer
             auto const now = m_clock.Now();
 
             m_segment.StartTick = std::max<int64_t>(0, fromTick);
-            m_segment.StartTimestamp = now + StartLeadMicroseconds * m_clock.TicksPerSecond / 1000000;
+
+            // Late enough that the device needing its messages earliest still gets them in time.
+            m_segment.StartTimestamp = now + (StartLeadMicroseconds + LongestLeadMicroseconds()) * m_clock.TicksPerSecond / 1000000;
             m_segment.StartSeconds = m_tempo.SecondsAtTick(m_segment.StartTick);
             m_segment.UnwrappedStart = m_segment.StartTick;
             m_history.clear();
@@ -347,7 +395,7 @@ namespace midisequencer
                 if (startTick == 0)
                 {
                     auto const start = SystemWord(output.Group, 0xFA);
-                    m_output.Send(output.Endpoint, m_segment.StartTimestamp, &start, 1);
+                    m_output.Send(output.Endpoint, EarlierBy(m_segment.StartTimestamp, ClockLeadMicroseconds(output)), &start, 1);
                 }
                 else
                 {
@@ -355,7 +403,7 @@ namespace midisequencer
                     auto const pointer = SystemWord(output.Group, 0xF2, static_cast<uint8_t>(position & 0x7F), static_cast<uint8_t>(position >> 7));
                     auto const resume = SystemWord(output.Group, 0xFB);
                     m_output.Send(output.Endpoint, 0, &pointer, 1);
-                    m_output.Send(output.Endpoint, m_segment.StartTimestamp, &resume, 1);
+                    m_output.Send(output.Endpoint, EarlierBy(m_segment.StartTimestamp, ClockLeadMicroseconds(output)), &resume, 1);
                 }
             }
 
@@ -547,7 +595,7 @@ namespace midisequencer
     {
         auto const info = LookupDestination(track.Destination);
 
-        // A destination the service sends to early needs its messages that much sooner.
+        // A destination that needs its messages early is handed them that much sooner.
         auto const horizon = now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + info.OffsetMicroseconds) * m_clock.TicksPerSecond / 1000000;
         auto const horizonTick = std::min(TickAtTimestamp(horizon), SegmentEnd());
 
@@ -599,7 +647,7 @@ namespace midisequencer
                 // Back on the timeline part way through: each channel gets what it would have by now.
                 if (state.Mode == TrackPlayMode::Timeline && audible)
                 {
-                    SendChase(track, Wrap(stretchEnd), TimestampAtTick(Wrap(stretchEnd)));
+                    SendChase(track, Wrap(stretchEnd), EarlierBy(TimestampAtTick(Wrap(stretchEnd)), info.OffsetMicroseconds));
                 }
             }
 
@@ -663,7 +711,7 @@ namespace midisequencer
 
             ApplyDestination(track.Destination, message.Words, message.WordCount);
 
-            auto const timestamp = TimestampAtTick(message.Tick);
+            auto const timestamp = EarlierBy(TimestampAtTick(message.Tick), info.OffsetMicroseconds);
             SendTo(track.Destination.Endpoint, info.SpeaksMidi2, timestamp, message.Words.data(), message.WordCount);
 
             if (message.Kind == RenderedKind::NoteOff && !track.Destination.Endpoint.IsEmpty())
@@ -723,10 +771,10 @@ namespace midisequencer
 
             uint32_t words[2]{};
             BuildNoteOn(click, metronome.Group, words);
-            SendTo(metronome.Endpoint, info.SpeaksMidi2, TimestampAtTick(tick), words, 2);
+            SendTo(metronome.Endpoint, info.SpeaksMidi2, EarlierBy(TimestampAtTick(tick), info.OffsetMicroseconds), words, 2);
 
             BuildNoteOff(click, metronome.Group, words);
-            SendTo(metronome.Endpoint, info.SpeaksMidi2, TimestampAtTick(tick + ClickTicks), words, 2);
+            SendTo(metronome.Endpoint, info.SpeaksMidi2, EarlierBy(TimestampAtTick(tick + ClickTicks), info.OffsetMicroseconds), words, 2);
 
             tick += TicksPerBeat(MeterAtTick(meter, tick));
         }
@@ -743,28 +791,29 @@ namespace midisequencer
         }
 
         // Far enough ahead for the output that wants its pulses earliest.
-        int32_t earliest{ 0 };
+        std::vector<int64_t> leads{};
+        int64_t longest{ 0 };
 
         for (auto const& output : m_settings.ClockOutputs)
         {
-            earliest = std::min(earliest, output.OffsetMicroseconds);
+            leads.push_back(ClockLeadMicroseconds(output));
+            longest = std::max(longest, leads.back());
         }
 
-        auto const horizon = now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + static_cast<uint64_t>(-earliest)) * m_clock.TicksPerSecond / 1000000;
+        auto const horizon = now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + static_cast<uint64_t>(longest)) * m_clock.TicksPerSecond / 1000000;
         auto const horizonTick = std::min(TickAtTimestamp(horizon), SegmentEnd());
 
         auto tick = ((m_clockUntil + TicksPerClock - 1) / TicksPerClock) * TicksPerClock;
 
         for (; tick < horizonTick; tick += TicksPerClock)
         {
-            auto const base = static_cast<int64_t>(TimestampAtTick(tick));
+            auto const base = TimestampAtTick(tick);
 
-            for (auto const& output : m_settings.ClockOutputs)
+            for (size_t i = 0; i < m_settings.ClockOutputs.size(); ++i)
             {
-                auto const offset = static_cast<int64_t>(output.OffsetMicroseconds) * static_cast<int64_t>(m_clock.TicksPerSecond) / 1000000;
-                auto const timestamp = static_cast<uint64_t>(std::max<int64_t>(1, base + offset));
+                auto const& output = m_settings.ClockOutputs[i];
                 auto const pulse = SystemWord(output.Group, 0xF8);
-                m_output.Send(output.Endpoint, timestamp, &pulse, 1);
+                m_output.Send(output.Endpoint, EarlierBy(base, leads[i]), &pulse, 1);
             }
         }
 
@@ -812,18 +861,8 @@ namespace midisequencer
                 return;
             }
 
-            // The furthest ahead any destination is handed messages.
-            uint64_t offset{ 0 };
-
-            ForEachTrack(*m_sequence, [this, &offset](Track const& track, size_t)
-            {
-                if (!track.IsFolder)
-                {
-                    offset = std::max<uint64_t>(offset, LookupDestination(track.Destination).OffsetMicroseconds);
-                }
-
-                return true;
-            });
+            // The furthest ahead anything is handed over.
+            auto const offset = LongestLeadMicroseconds();
 
             auto const loopEndTimestamp = TimestampAtTick(m_settings.LoopEnd);
             auto const horizon = now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + offset) * m_clock.TicksPerSecond / 1000000;
@@ -1004,6 +1043,85 @@ namespace midisequencer
         {
             QueueLaunch(id, TrackPlayMode::Timeline, std::wstring{}, quantize);
         }
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::QueueLaunchAt(std::wstring const& trackId, TrackPlayMode mode, std::wstring const& clipId, int64_t unwrappedTick)
+    {
+        if (!m_playing)
+        {
+            QueueLaunch(trackId, mode, clipId, 0);
+            return;
+        }
+
+        auto& state = m_launch[trackId];
+        state.Pending = true;
+        state.PendingMode = mode;
+        state.PendingClipId = clipId;
+        state.PendingAtUnwrapped = std::max(unwrappedTick, Unwrap(FurthestRendered()));
+    }
+
+    _Use_decl_annotations_
+    int64_t PlaybackEngine::NextLaunchPoint(LaunchQuantize quantize) const
+    {
+        std::scoped_lock guard{ m_lock };
+        return QuantizePoint(quantize);
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::LaunchClipAt(std::wstring const& trackId, std::wstring const& clipId, int64_t unwrappedTick)
+    {
+        std::scoped_lock guard{ m_lock };
+
+        if (!trackId.empty() && !clipId.empty())
+        {
+            QueueLaunchAt(trackId, TrackPlayMode::Clip, clipId, unwrappedTick);
+        }
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::StopTrackAt(std::wstring const& trackId, int64_t unwrappedTick)
+    {
+        std::scoped_lock guard{ m_lock };
+
+        if (!trackId.empty())
+        {
+            QueueLaunchAt(trackId, TrackPlayMode::Stopped, std::wstring{}, unwrappedTick);
+        }
+    }
+
+    _Use_decl_annotations_
+    int64_t PlaybackEngine::UnwrappedTickAtTime(uint64_t timestamp) const
+    {
+        std::scoped_lock guard{ m_lock };
+
+        if (!m_playing)
+        {
+            return -1;
+        }
+
+        // The stretch of playback the moment fell in. Unlike TickAtTime, a moment just before a
+        // stretch began isn't held at its start: unwrapped ticks run on across a loop.
+        auto segment = &m_segment;
+
+        if (timestamp < m_segment.StartTimestamp)
+        {
+            for (auto it = m_history.rbegin(); it != m_history.rend(); ++it)
+            {
+                if (timestamp >= it->StartTimestamp)
+                {
+                    segment = &*it;
+                    break;
+                }
+            }
+        }
+
+        auto const elapsed = timestamp >= segment->StartTimestamp
+            ? static_cast<double>(timestamp - segment->StartTimestamp)
+            : -static_cast<double>(segment->StartTimestamp - timestamp);
+
+        auto const tick = m_tempo.TickAtSeconds(segment->StartSeconds + elapsed / static_cast<double>(m_clock.TicksPerSecond));
+        return segment->UnwrappedStart + (tick - segment->StartTick);
     }
 
     std::vector<TrackLaunchView> PlaybackEngine::LaunchState() const

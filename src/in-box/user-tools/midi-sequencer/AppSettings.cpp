@@ -25,6 +25,7 @@ namespace midisequencer
         constexpr wchar_t ValueBarWidth[] = L"BarWidthTenths";
         constexpr wchar_t ValueSnapTicks[] = L"SnapTicks";
         constexpr wchar_t ValueLaunchQuantizeTicks[] = L"LaunchQuantizeTicks";
+        constexpr wchar_t ValueSlotRecordBars[] = L"SlotRecordBars";
         constexpr wchar_t ValueEditorHeight[] = L"EditorHeight";
         constexpr wchar_t ValueValuesAs[] = L"ValuesAs";
         constexpr wchar_t ValueLastFolder[] = L"LastFolder";
@@ -40,6 +41,11 @@ namespace midisequencer
             default:
                 return false;
             }
+        }
+
+        bool IsKnownBarCount(uint32_t bars) noexcept
+        {
+            return bars == 1 || bars == 2 || bars == 4 || bars == 8 || bars == 16;
         }
     }
 
@@ -75,6 +81,9 @@ namespace midisequencer
 
         auto const launch = ReadDword(ValueLaunchQuantizeTicks, 3840);
         m_launchQuantizeTicks = IsKnownGrid(launch) ? launch : 3840;
+
+        auto const bars = ReadDword(ValueSlotRecordBars, 4);
+        m_slotRecordBars = IsKnownBarCount(bars) ? bars : 4;
 
         m_editorHeight = std::clamp(static_cast<double>(ReadDword(ValueEditorHeight, 300)), 120.0, 2000.0);
 
@@ -150,6 +159,15 @@ namespace midisequencer
         {
             m_launchQuantizeTicks = value;
             WriteDword(ValueLaunchQuantizeTicks, value);
+        }
+    }
+
+    void AppSettings::SlotRecordBars(uint32_t value) noexcept
+    {
+        if (IsKnownBarCount(value))
+        {
+            m_slotRecordBars = value;
+            WriteDword(ValueSlotRecordBars, value);
         }
     }
 

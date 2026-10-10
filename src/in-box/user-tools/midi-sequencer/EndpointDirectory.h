@@ -25,6 +25,10 @@ namespace midisequencer
 
         // What each group speaks as a destination, from its function block or group terminal block.
         std::array<bool, 16> GroupSpeaksMidi2{};
+
+        // How early to send to the device: set in MIDI Settings, or worked out by its transport.
+        uint32_t OffsetMicroseconds{ 0 };
+
         bool Detailed{ false };
     };
 

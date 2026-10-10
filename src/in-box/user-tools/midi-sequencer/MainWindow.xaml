@@ -44,6 +44,8 @@
                         <SolidColorBrush x:Key="SeqChipOnStrokeBrush" Color="#736CCB5F" />
                         <SolidColorBrush x:Key="SeqChipWarnBrush" Color="#1CFCE100" />
                         <SolidColorBrush x:Key="SeqChipWarnStrokeBrush" Color="#66FCE100" />
+                        <SolidColorBrush x:Key="SeqChipSelectedBrush" Color="#1F60CDFF" />
+                        <SolidColorBrush x:Key="SeqChipSelectedStrokeBrush" Color="#7360CDFF" />
                         <SolidColorBrush x:Key="SeqWarnTextBrush" Color="#FFFCE100" />
                         <Color x:Key="SeqPinEdgeTopColor">#33FFFFFF</Color>
                         <Color x:Key="SeqPinEdgeBottomColor">#0FFFFFFF</Color>
@@ -82,6 +84,8 @@
                         <SolidColorBrush x:Key="SeqChipOnStrokeBrush" Color="#730F7B0F" />
                         <SolidColorBrush x:Key="SeqChipWarnBrush" Color="#FFFFF4CE" />
                         <SolidColorBrush x:Key="SeqChipWarnStrokeBrush" Color="#669D5D00" />
+                        <SolidColorBrush x:Key="SeqChipSelectedBrush" Color="#12005FB8" />
+                        <SolidColorBrush x:Key="SeqChipSelectedStrokeBrush" Color="#66005FB8" />
                         <SolidColorBrush x:Key="SeqWarnTextBrush" Color="#FF9D5D00" />
                         <Color x:Key="SeqPinEdgeTopColor">#1A000000</Color>
                         <Color x:Key="SeqPinEdgeBottomColor">#05000000</Color>
@@ -171,6 +175,83 @@
                     <Setter Property="Padding" Value="8,0,0,0" />
                     <Setter Property="FontSize" Value="12" />
                     <Setter Property="VerticalAlignment" Value="Center" />
+                </Style>
+
+                <!-- 5-track-setup.html .recchips .chip: a pill, lit when on. -->
+                <Style x:Key="ChipToggleStyle" TargetType="ToggleButton">
+                    <Setter Property="Height" Value="22" />
+                    <Setter Property="MinWidth" Value="0" />
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="Padding" Value="9,0,9,1" />
+                    <Setter Property="FontSize" Value="11" />
+                    <Setter Property="CornerRadius" Value="11" />
+                    <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <Setter Property="UseSystemFocusVisuals" Value="True" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ToggleButton">
+                                <Grid x:Name="Root" Background="Transparent">
+                                    <Rectangle x:Name="Plate" RadiusX="10.5" RadiusY="10.5" StrokeThickness="1" UseLayoutRounding="False"
+                                               Fill="{ThemeResource SeqChipBrush}" Stroke="{ThemeResource SeqStrokeStrongBrush}" />
+                                    <ContentPresenter x:Name="Presenter" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"
+                                                      Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                      Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}" />
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup x:Name="CommonStates">
+                                            <VisualState x:Name="Normal" />
+                                            <VisualState x:Name="PointerOver">
+                                                <VisualState.Setters>
+                                                    <Setter Target="Presenter.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="Pressed">
+                                                <VisualState.Setters>
+                                                    <Setter Target="Presenter.Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="Disabled">
+                                                <VisualState.Setters>
+                                                    <Setter Target="Root.Opacity" Value="0.45" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="Checked">
+                                                <VisualState.Setters>
+                                                    <Setter Target="Plate.Fill" Value="{ThemeResource SeqChipSelectedBrush}" />
+                                                    <Setter Target="Plate.Stroke" Value="{ThemeResource SeqChipSelectedStrokeBrush}" />
+                                                    <Setter Target="Presenter.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="CheckedPointerOver">
+                                                <VisualState.Setters>
+                                                    <Setter Target="Plate.Fill" Value="{ThemeResource SeqChipSelectedBrush}" />
+                                                    <Setter Target="Plate.Stroke" Value="{ThemeResource SeqChipSelectedStrokeBrush}" />
+                                                    <Setter Target="Presenter.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="CheckedPressed">
+                                                <VisualState.Setters>
+                                                    <Setter Target="Plate.Fill" Value="{ThemeResource SeqChipSelectedBrush}" />
+                                                    <Setter Target="Plate.Stroke" Value="{ThemeResource SeqChipSelectedStrokeBrush}" />
+                                                    <Setter Target="Presenter.Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="CheckedDisabled">
+                                                <VisualState.Setters>
+                                                    <Setter Target="Plate.Fill" Value="{ThemeResource SeqChipSelectedBrush}" />
+                                                    <Setter Target="Plate.Stroke" Value="{ThemeResource SeqChipSelectedStrokeBrush}" />
+                                                    <Setter Target="Root.Opacity" Value="0.45" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="Indeterminate" />
+                                            <VisualState x:Name="IndeterminatePointerOver" />
+                                            <VisualState x:Name="IndeterminatePressed" />
+                                            <VisualState x:Name="IndeterminateDisabled" />
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
                 </Style>
 
                 <Style x:Key="TransportLabelStyle" TargetType="TextBlock">
@@ -775,7 +856,7 @@
                                       ItemTemplate="{StaticResource NamedChoiceTemplate}" SelectionChanged="OnSourceChanged" />
                             <ComboBox x:Name="SourceChannelCombo" x:Uid="SourceChannelCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
                                       ItemTemplate="{StaticResource NamedChoiceTemplate}" SelectionChanged="OnSourceChanged" />
-                            <VariableSizedWrapGrid x:Name="RecordKinds" Orientation="Horizontal" ItemHeight="28" />
+                            <local:WrapPanel x:Name="RecordKinds" />
                             <Grid ColumnSpacing="12">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -813,7 +894,7 @@
                             <Grid ColumnSpacing="8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="84" />
                                 </Grid.ColumnDefinitions>
                                 <ComboBox x:Name="DestinationGroupCombo" x:Uid="DestinationGroupCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
                                           ItemTemplate="{StaticResource NamedChoiceTemplate}" SelectionChanged="OnDestinationChanged" />

@@ -567,7 +567,7 @@ namespace winrt::midisequencer::implementation
             }
             else
             {
-                DevicesStatusText().Text(res::FormatString(L"DevicesInUseMissingFormat", used.size(), missing));
+                DevicesStatusText().Text(res::FormatString(used.size() == 1 ? L"DevicesInUseOneMissingFormat" : L"DevicesInUseMissingFormat", used.size(), missing));
             }
 
             ClockOutStatusText().Text(L"");
@@ -613,6 +613,7 @@ namespace winrt::midisequencer::implementation
 
             UpdatePlayhead();
             UpdateDisplays(m_position);
+            UpdateSlotRecording();
 
             m_launchViews.clear();
 
@@ -643,7 +644,7 @@ namespace winrt::midisequencer::implementation
                 InvalidateEditor();
             }
 
-            if (!playing && !m_recording)
+            if (!playing && !m_recording && !m_slotTake.has_value())
             {
                 m_frameTimer.Stop();
                 UpdateTransport();

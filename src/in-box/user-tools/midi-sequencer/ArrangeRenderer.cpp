@@ -607,10 +607,12 @@ namespace midisequencer
                     ds.DrawLine(stripe, top + height, stripe + height, top, colors.OverlayStripeA, 6.0f);
                 }
 
-                auto const textWidth = MeasureWidth(ds, context.PlayingLaunchedClip, m_overlayText);
-                ds.DrawText(context.PlayingLaunchedClip, 12.0f, top, textWidth + 4.0f, height - 1.0f, colors.Text2, m_overlayText);
+                auto const& caption = found->second.Mode == TrackPlayMode::Stopped ? context.StoppedFromLauncher : context.PlayingLaunchedClip;
+                auto const textWidth = MeasureWidth(ds, caption, m_overlayText);
+                ds.DrawText(caption, 12.0f, top, textWidth + 4.0f, height - 1.0f, colors.Text2, m_overlayText);
 
-                m_overlayTextWidth = textWidth;
+                // The button is in the same place on every row, whichever caption it follows.
+                m_overlayTextWidth = std::max(MeasureWidth(ds, context.PlayingLaunchedClip, m_overlayText), MeasureWidth(ds, context.StoppedFromLauncher, m_overlayText));
                 m_overlayButtonWidth = MeasureWidth(ds, context.BackToTimeline, m_overlayButton) + 18.0f;
 
                 auto const button = BackToTimelineButtonBounds(top, height);

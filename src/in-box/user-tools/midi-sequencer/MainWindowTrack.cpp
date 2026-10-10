@@ -30,12 +30,16 @@ namespace winrt::midisequencer::implementation
             wchar_t const* Key{ nullptr };
         };
 
-        constexpr std::array<RecordKind, 5> RecordKindChoices{ {
+        // System exclusive has its own flag rather than a bit in Record.
+        constexpr uint8_t SystemExclusiveChip = 0;
+
+        constexpr std::array<RecordKind, 6> RecordKindChoices{ {
             { seq::RecordNotes, L"RecordKindNotes" },
             { seq::RecordControllers, L"RecordKindControllers" },
             { seq::RecordPitchBend, L"RecordKindPitchBend" },
             { seq::RecordPressure, L"RecordKindPressure" },
-            { seq::RecordProgram, L"RecordKindProgram" } } };
+            { seq::RecordProgram, L"RecordKindProgram" },
+            { SystemExclusiveChip, L"RecordKindSystemExclusive" } } };
 
         int32_t FirstChannel(uint16_t channels) noexcept
         {
@@ -172,72 +176,60 @@ namespace winrt::midisequencer::implementation
             FillGroupCombo(SourceGroupCombo(), true, track->Source.Endpoint, track->Source.Group, true);
             FillChannelCombo(SourceChannelCombo(), FirstChannel(track->Source.Channels), true);
 
-            RecordKinds().Children().Clear();
-
-            for (auto const& kind : RecordKindChoices)
+            // Built once and then only updated, so a chip keeps keyboard focus when it's toggled.
+            if (RecordKinds().Children().Size() == 0)
             {
-                controls::CheckBox box{};
-                box.Content(winrt::box_value(res::GetString(kind.Key)));
-                box.IsChecked((track->Source.Record & kind.Bit) != 0);
-                box.MinWidth(0);
-                box.FontSize(12);
-                box.Margin(xaml::Thickness{ 0, 0, 12, 0 });
+                auto const style = RootGrid().Resources().Lookup(winrt::box_value(L"ChipToggleStyle")).as<xaml::Style>();
 
-                box.Click([weak = get_weak(), bit = kind.Bit](foundation::IInspectable const& sender, auto&&)
+                for (auto const& kind : RecordKindChoices)
                 {
-                    auto strong = weak.get();
-                    auto const check = sender.try_as<controls::CheckBox>();
+                    primitives::ToggleButton chip{};
+                    chip.Style(style);
+                    chip.Content(winrt::box_value(res::GetString(kind.Key)));
+                    chip.Tag(winrt::box_value(static_cast<int32_t>(kind.Bit)));
 
-                    if (!strong || check == nullptr || strong->m_inspectorUpdating)
+                    auto const changed = [weak = get_weak(), bit = kind.Bit](foundation::IInspectable const& sender, auto&&)
                     {
-                        return;
-                    }
+                        auto strong = weak.get();
+                        auto const toggle = sender.try_as<primitives::ToggleButton>();
 
-                    auto const on = check.IsChecked() != nullptr && check.IsChecked().GetBoolean();
-                    auto const id = strong->m_inspectorTrackId;
-
-                    strong->EditTracks(std::wstring{ res::GetString(L"UndoChangeSource") }, [&](seq::Sequence& doc)
-                    {
-                        if (auto t = seq::FindTrack(doc, id); t != nullptr)
+                        if (!strong || toggle == nullptr || strong->m_inspectorUpdating)
                         {
-                            t->Source.Record = on ? static_cast<uint8_t>(t->Source.Record | bit) : static_cast<uint8_t>(t->Source.Record & ~bit);
+                            return;
                         }
-                    });
-                });
 
-                RecordKinds().Children().Append(box);
+                        auto const on = toggle.IsChecked() != nullptr && toggle.IsChecked().GetBoolean();
+                        auto const id = strong->m_inspectorTrackId;
+
+                        strong->EditTracks(std::wstring{ res::GetString(L"UndoChangeSource") }, [&](seq::Sequence& doc)
+                        {
+                            if (auto t = seq::FindTrack(doc, id); t != nullptr)
+                            {
+                                if (bit == SystemExclusiveChip)
+                                {
+                                    t->Source.SystemExclusive = on;
+                                }
+                                else
+                                {
+                                    t->Source.Record = on ? static_cast<uint8_t>(t->Source.Record | bit) : static_cast<uint8_t>(t->Source.Record & ~bit);
+                                }
+                            }
+                        });
+                    };
+
+                    chip.Checked(changed);
+                    chip.Unchecked(changed);
+                    RecordKinds().Children().Append(chip);
+                }
             }
 
+            for (auto const& child : RecordKinds().Children())
             {
-                controls::CheckBox sysex{};
-                sysex.Content(winrt::box_value(res::GetString(L"RecordKindSystemExclusive")));
-                sysex.IsChecked(track->Source.SystemExclusive);
-                sysex.MinWidth(0);
-                sysex.FontSize(12);
-
-                sysex.Click([weak = get_weak()](foundation::IInspectable const& sender, auto&&)
+                if (auto const chip = child.try_as<primitives::ToggleButton>(); chip != nullptr)
                 {
-                    auto strong = weak.get();
-                    auto const check = sender.try_as<controls::CheckBox>();
-
-                    if (!strong || check == nullptr || strong->m_inspectorUpdating)
-                    {
-                        return;
-                    }
-
-                    auto const on = check.IsChecked() != nullptr && check.IsChecked().GetBoolean();
-                    auto const id = strong->m_inspectorTrackId;
-
-                    strong->EditTracks(std::wstring{ res::GetString(L"UndoChangeSource") }, [&](seq::Sequence& doc)
-                    {
-                        if (auto t = seq::FindTrack(doc, id); t != nullptr)
-                        {
-                            t->Source.SystemExclusive = on;
-                        }
-                    });
-                });
-
-                RecordKinds().Children().Append(sysex);
+                    auto const bit = static_cast<uint8_t>(winrt::unbox_value_or<int32_t>(chip.Tag(), 0));
+                    chip.IsChecked(bit == SystemExclusiveChip ? track->Source.SystemExclusive : (track->Source.Record & bit) != 0);
+                }
             }
 
             EchoSwitch().IsOn(track->Source.Echo);
@@ -379,6 +371,9 @@ namespace winrt::midisequencer::implementation
         auto const items = winrt::single_threaded_observable_vector<foundation::IInspectable>();
         int32_t selectedIndex{ 0 };
 
+        // The destination's box shares a row with the group, so it gets the short names.
+        auto const format = combo == DestinationChannelCombo() ? L"ChannelShortFormat" : L"ChannelChoiceFormat";
+
         if (allowAny)
         {
             auto const key = combo == SourceChannelCombo() ? L"AnyChannel" : L"KeepChannel";
@@ -392,7 +387,7 @@ namespace winrt::midisequencer::implementation
                 selectedIndex = static_cast<int32_t>(items.Size());
             }
 
-            items.Append(winrt::make<appshared::implementation::NamedChoice>(res::FormatString(L"ChannelChoiceFormat", channel + 1), channel));
+            items.Append(winrt::make<appshared::implementation::NamedChoice>(res::FormatString(format, channel + 1), channel));
         }
 
         combo.ItemsSource(items);
@@ -417,7 +412,8 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
-            auto midi2 = m_directory->Lookup(track->Destination.Endpoint, track->Destination.Group).SpeaksMidi2;
+            auto const info = m_directory->Lookup(track->Destination.Endpoint, track->Destination.Group);
+            auto midi2 = info.SpeaksMidi2;
 
             if (track->Destination.Protocol == seq::ProtocolChoice::Midi1)
             {
@@ -428,7 +424,22 @@ namespace winrt::midisequencer::implementation
                 midi2 = true;
             }
 
-            ProtocolNote().Text(res::GetString(midi2 ? L"ProtocolNoteMidi2" : L"ProtocolNoteMidi1"));
+            std::wstring note{ res::GetString(midi2 ? L"ProtocolNoteMidi2" : L"ProtocolNoteMidi1") };
+
+            if (info.OffsetMicroseconds > 0)
+            {
+                auto milliseconds = std::format(L"{:.1f}", info.OffsetMicroseconds / 1000.0);
+
+                if (milliseconds.ends_with(L".0"))
+                {
+                    milliseconds.resize(milliseconds.size() - 2);
+                }
+
+                note += L" ";
+                note += res::FormatString(L"ProtocolNoteOffsetFormat", milliseconds);
+            }
+
+            ProtocolNote().Text(winrt::hstring{ note });
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to describe the protocol.")
     }

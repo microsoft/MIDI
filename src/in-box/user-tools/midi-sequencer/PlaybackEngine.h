@@ -55,8 +55,9 @@ namespace midisequencer
         uint64_t TicksPerSecond{ 10000000 };
     };
 
-    // What the app knows about a destination: what it speaks, and how early the service sends to it
-    // (from MIDI Settings, or worked out by the transport).
+    // What the app knows about a destination: what it speaks, and how early to send to it (from
+    // MIDI Settings, or worked out by the transport). The engine sends that much early itself,
+    // because the in-box service doesn't.
     struct DestinationInfo
     {
         bool SpeaksMidi2{ true };
@@ -150,8 +151,8 @@ namespace midisequencer
         void SetSequence(_In_ std::shared_ptr<Sequence const> sequence);
         void SetSettings(_In_ EngineSettings const& settings);
 
-        // What a destination speaks on a group, and how early the service sends to it. A track's
-        // own protocol choice overrides what this says.
+        // What a destination speaks on a group, and how early to send to it. A track's own
+        // protocol choice overrides what this says.
         void SetDestinationLookup(_In_ std::function<DestinationInfo(EndpointRef const&, uint8_t group)> lookup);
 
         // Sends each track's start-up messages and, part way in, the program, controllers and
@@ -178,6 +179,16 @@ namespace midisequencer
         void ReturnToTimeline(_In_ std::wstring const& trackId, _In_ LaunchQuantize quantize);
 
         std::vector<TrackLaunchView> LaunchState() const;
+
+        // The same at an exact place, for recording into a slot. Places here are unwrapped ticks,
+        // which keep counting when the timeline loop goes round. A place already handed over moves
+        // to the first one that isn't.
+        int64_t NextLaunchPoint(_In_ LaunchQuantize quantize) const;
+        void LaunchClipAt(_In_ std::wstring const& trackId, _In_ std::wstring const& clipId, _In_ int64_t unwrappedTick);
+        void StopTrackAt(_In_ std::wstring const& trackId, _In_ int64_t unwrappedTick);
+
+        // Where on the unwrapped timeline a moment was. -1 when not playing.
+        int64_t UnwrappedTickAtTime(_In_ uint64_t timestamp) const;
 
         // Hands over everything due before now plus the look-ahead.
         void Sweep();
@@ -229,6 +240,9 @@ namespace midisequencer
         };
 
         uint64_t TimestampAtTick(_In_ int64_t tick) const noexcept;
+        uint64_t EarlierBy(_In_ uint64_t timestamp, _In_ int64_t microseconds) const noexcept;
+        int64_t ClockLeadMicroseconds(_In_ ClockOutput const& output) const;
+        uint64_t LongestLeadMicroseconds() const;
         int64_t TickAtTimestamp(_In_ uint64_t timestamp) const noexcept;
         int64_t TickAtTimeLocked(_In_ uint64_t timestamp) const;
         int64_t Unwrap(_In_ int64_t tick) const noexcept { return m_segment.UnwrappedStart + (tick - m_segment.StartTick); }
@@ -237,6 +251,7 @@ namespace midisequencer
         int64_t QuantizePoint(_In_ LaunchQuantize quantize) const;
         int64_t FurthestRendered() const noexcept;
         void QueueLaunch(_In_ std::wstring const& trackId, _In_ TrackPlayMode mode, _In_ std::wstring const& clipId, _In_ LaunchQuantize quantize);
+        void QueueLaunchAt(_In_ std::wstring const& trackId, _In_ TrackPlayMode mode, _In_ std::wstring const& clipId, _In_ int64_t unwrappedTick);
 
         DestinationInfo LookupDestination(_In_ TrackDestination const& destination) const;
         DestinationInfo LookupDestination(_In_ EndpointRef const& endpoint, _In_ uint8_t group) const;

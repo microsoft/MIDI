@@ -251,4 +251,63 @@ namespace midisequencer
 
         return notes;
     }
+
+    _Use_decl_annotations_
+    Clip RecordingTake::LoopSoFar(int64_t length, int64_t nowTick) const
+    {
+        Clip clip{};
+        clip.Kind = ClipKind::Notes;
+        clip.Loop = true;
+        clip.Origin = ClipOrigin::Recorded;
+        clip.Length = std::max<int64_t>(1, length);
+
+        auto const heldUntil = std::clamp<int64_t>(nowTick - m_startTick, 1, clip.Length);
+
+        for (auto note : m_notes)
+        {
+            if (note.Tick < clip.Length)
+            {
+                note.Length = std::clamp<int64_t>(note.Length, 1, clip.Length - note.Tick);
+                clip.Notes.push_back(note);
+            }
+        }
+
+        for (auto const& open : m_open)
+        {
+            auto note = open.Value;
+
+            if (note.Tick < clip.Length)
+            {
+                note.Length = std::max<int64_t>(1, heldUntil - note.Tick);
+                clip.Notes.push_back(note);
+            }
+        }
+
+        for (auto const& event : m_events)
+        {
+            if (event.Tick < clip.Length)
+            {
+                clip.Events.push_back(event);
+            }
+        }
+
+        SortClip(clip);
+        return clip;
+    }
+
+    _Use_decl_annotations_
+    Clip RecordingTake::FinishLoop(int64_t length, std::wstring clipId, std::wstring name, std::wstring originDetail)
+    {
+        auto clip = LoopSoFar(length, m_startTick + length);
+        clip.Id = std::move(clipId);
+        clip.Name = std::move(name);
+        clip.OriginDetail = std::move(originDetail);
+
+        m_notes.clear();
+        m_open.clear();
+        m_events.clear();
+        m_placementTick = m_startTick;
+
+        return clip;
+    }
 }

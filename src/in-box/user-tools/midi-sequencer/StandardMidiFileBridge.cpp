@@ -251,6 +251,9 @@ namespace midisequencer
             converted.Number = static_cast<uint8_t>(note.NoteNumber & 0x7F);
             converted.Velocity = static_cast<uint16_t>(ScaleUp(note.Velocity, 7, 16));
 
+            // The reader doesn't keep the note off's velocity; 0x8000 is a MIDI 1.0 note off at 64.
+            converted.ReleaseVelocity = 0x8000;
+
             clips[note.TrackIndex].Notes.push_back(converted);
         }
 

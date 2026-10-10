@@ -1,0 +1,16 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace midisequencer
+{
+    // Children left to right, starting a new row when the next one doesn't fit.
+    [default_interface]
+    runtimeclass WrapPanel : Microsoft.UI.Xaml.Controls.Panel
+    {
+        WrapPanel();
+    }
+}

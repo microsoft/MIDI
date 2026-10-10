@@ -175,8 +175,9 @@ namespace midisequencer
                 status = 0x8;
             }
 
+            // The UMP spec (D.3) turns a note on at velocity 0 into a note off at 0x8000.
             first = head(status, data1, 0);
-            word1 = status == 0x9 ? ScaleUp(data2, 7, 16) << 16 : 0;
+            word1 = status == 0x9 ? ScaleUp(data2, 7, 16) << 16 : 0x80000000u;
             break;
 
         case 0x8:

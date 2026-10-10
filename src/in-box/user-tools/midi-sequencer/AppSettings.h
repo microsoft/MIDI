@@ -67,6 +67,10 @@ namespace midisequencer
         uint32_t LaunchQuantizeTicks() const noexcept { return m_launchQuantizeTicks; }
         void LaunchQuantizeTicks(uint32_t value) noexcept;
 
+        // How many bars a take recorded into a launcher slot lasts: 1, 2, 4, 8 or 16.
+        uint32_t SlotRecordBars() const noexcept { return m_slotRecordBars; }
+        void SlotRecordBars(uint32_t value) noexcept;
+
         double EditorHeight() const noexcept { return m_editorHeight; }
         void EditorHeight(double value) noexcept;
 
@@ -95,6 +99,7 @@ namespace midisequencer
         double m_barWidth{ DefaultBarWidth };
         uint32_t m_snapTicks{ 240 };
         uint32_t m_launchQuantizeTicks{ 3840 };
+        uint32_t m_slotRecordBars{ 4 };
         double m_editorHeight{ 300 };
         ValueDisplay m_valuesAs{ ValueDisplay::Midi2 };
         std::wstring m_lastFolder{};

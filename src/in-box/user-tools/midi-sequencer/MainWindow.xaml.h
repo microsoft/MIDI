@@ -242,6 +242,14 @@ namespace winrt::midisequencer::implementation
         void UpdateDisplays(_In_ int64_t tick) noexcept;
         void StartRecording() noexcept;
         void StopRecording() noexcept;
+
+        // Recording into a launcher slot: from the next launch point for the record length, then
+        // the take loops straight away.
+        enum class SlotTakeEnd : uint8_t { ReachedEnd, Early, Stopped };
+        void StartSlotRecording(_In_ std::wstring const& trackId, _In_ size_t scene) noexcept;
+        void UpdateSlotRecording() noexcept;
+        void FinishSlotRecording(_In_ SlotTakeEnd how) noexcept;
+        std::optional<seq::SlotRecording> SlotRecordingView() const;
         void OnSourceMessage(_In_ std::wstring const& endpointId, _In_ uint64_t timestamp, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept;
         void UpdateEchoRoutes() noexcept;
         void SendNow(_In_ seq::TrackDestination const& destination, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept;
@@ -299,6 +307,7 @@ namespace winrt::midisequencer::implementation
 
         // Drawn rather than shown in XAML, so loaded once.
         winrt::hstring m_textPlayingLaunchedClip{};
+        winrt::hstring m_textStoppedFromLauncher{};
         winrt::hstring m_textBackToTimeline{};
         winrt::hstring m_textBarFormat{};
         winrt::hstring m_textRecording{};
@@ -381,6 +390,34 @@ namespace winrt::midisequencer::implementation
         std::vector<EchoRoute> m_echoRoutes{};
         std::map<std::wstring, seq::RecordingTake> m_takes{};
         int64_t m_recordStartTick{ 0 };
+
+        // A take being recorded into a launcher slot. m_slotTake belongs to the UI thread; the take
+        // itself is fed on the service's thread, under m_inputLock. Places are unwrapped ticks.
+        struct SlotTake
+        {
+            std::wstring TrackId{};
+            size_t Scene{ 0 };
+            std::wstring ClipId{};
+            int64_t Start{ 0 };
+            int64_t Length{ 0 };
+            int64_t BarTicks{ 3840 };
+            int64_t LastSeen{ 0 };
+            std::chrono::steady_clock::time_point StartedAt{};
+            bool LaunchQueued{ false };
+            bool Published{ false };
+        };
+
+        struct SlotInput
+        {
+            std::wstring TrackId{};
+            int64_t Start{ 0 };
+            int64_t Length{ 0 };
+            seq::RecordingTake Take{ 0 };
+        };
+
+        std::optional<SlotTake> m_slotTake{};
+        std::optional<SlotInput> m_slotInput{};
+        std::atomic<bool> m_slotRecording{ false };
 
         // The last few minutes each armed track heard, for Capture.
         struct HeardMessage

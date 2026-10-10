@@ -75,6 +75,7 @@ namespace midisequencer
 
         // Strings that are drawn rather than shown in XAML, from the app's resources.
         winrt::hstring PlayingLaunchedClip{};
+        winrt::hstring StoppedFromLauncher{};
         winrt::hstring BackToTimeline{};
         winrt::hstring BarFormat{};             // "Bar {0}"
         winrt::hstring RecordingCaption{};      // "Recording"

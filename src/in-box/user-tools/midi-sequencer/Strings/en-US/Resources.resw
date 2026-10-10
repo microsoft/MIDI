@@ -767,6 +767,9 @@
   <data name="PlayingLaunchedClip" xml:space="preserve">
     <value>Playing a launched clip</value>
   </data>
+  <data name="StoppedFromLauncher" xml:space="preserve">
+    <value>Stopped from the launcher</value>
+  </data>
   <data name="BackToTimelineCaption" xml:space="preserve">
     <value>Back to timeline</value>
   </data>
@@ -799,6 +802,9 @@
   <data name="DevicesInUseMissingFormat" xml:space="preserve">
     <value>{0} devices in use, {1} not connected</value>
   </data>
+  <data name="DevicesInUseOneMissingFormat" xml:space="preserve">
+    <value>{0} device in use, {1} not connected</value>
+  </data>
   <data name="RecordingStatusFormat" xml:space="preserve">
     <value>Recording · notes so far: {0}</value>
   </data>
@@ -816,6 +822,42 @@
   </data>
   <data name="RecordedNothing" xml:space="preserve">
     <value>Nothing was played, so nothing was recorded.</value>
+  </data>
+  <data name="SlotProgressFormat" xml:space="preserve">
+    <value>{0} of {1}</value>
+    <comment>Shown on a launcher slot being recorded into: which bar of how many. {0} and {1} are numbers.</comment>
+  </data>
+  <data name="SlotRecordingStatusFormat" xml:space="preserve">
+    <value>Recording {0} into scene {1} ({2} of {3} bars)</value>
+    <comment>{0} is a track name, {1} is a scene number and name such as "3, Break", {2} and {3} are numbers</comment>
+  </data>
+  <data name="SlotRecordingWaitingFormat" xml:space="preserve">
+    <value>Ready to record {0} into scene {1}</value>
+    <comment>{0} is a track name, {1} is a scene number and name such as "3, Break"</comment>
+  </data>
+  <data name="SlotRecordingBusy" xml:space="preserve">
+    <value>Finish the recording that's going first.</value>
+  </data>
+  <data name="SlotRecordingLost" xml:space="preserve">
+    <value>The take wasn't kept, because its slot changed while it was recording.</value>
+  </data>
+  <data name="RecordedIntoSlotFormat" xml:space="preserve">
+    <value>Recorded {0} notes into scene {1}.</value>
+  </data>
+  <data name="UndoRecordIntoSlot" xml:space="preserve">
+    <value>Record into slot</value>
+  </data>
+  <data name="MenuRecordIntoSlot" xml:space="preserve">
+    <value>Record into this slot</value>
+  </data>
+  <data name="MenuRecordLength" xml:space="preserve">
+    <value>Record length</value>
+  </data>
+  <data name="RecordLengthOneBar" xml:space="preserve">
+    <value>1 bar</value>
+  </data>
+  <data name="RecordLengthBarsFormat" xml:space="preserve">
+    <value>{0} bars</value>
   </data>
   <data name="RecordedFormat" xml:space="preserve">
     <value>Recorded. Notes: {0}.</value>
@@ -915,6 +957,9 @@
   <data name="DestinationChannelCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Channel to play to</value>
   </data>
+  <data name="DestinationChannelCombo.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>The channel to play on. As is plays each note on its own channel.</value>
+  </data>
   <data name="TrySoundButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Try this sound in MIDI Keyboard</value>
   </data>
@@ -943,7 +988,8 @@
     <value>Any channel</value>
   </data>
   <data name="KeepChannel" xml:space="preserve">
-    <value>Each note's own channel</value>
+    <value>As is</value>
+    <comment>Short: it shares a narrow box with "Ch 1" to "Ch 16". Means each note plays on its own channel.</comment>
   </data>
   <data name="GroupChoiceFormat" xml:space="preserve">
     <value>Group {0}</value>
@@ -959,6 +1005,10 @@
   </data>
   <data name="ProtocolNoteMissing" xml:space="preserve">
     <value>This device isn't connected. The track plays to it again when it's back.</value>
+  </data>
+  <data name="ProtocolNoteOffsetFormat" xml:space="preserve">
+    <value>Sent {0} ms early, so it sounds on time. Change this in MIDI Settings.</value>
+    <comment>{0} is a number of milliseconds, such as 7.5</comment>
   </data>
 
   <!-- ==================================== Metronome ==================================== -->

@@ -8,6 +8,8 @@
 #include "pch.h"
 #include "EndpointDirectory.h"
 
+#include "MidiDefs.h"
+
 namespace midisequencer
 {
     namespace
@@ -102,6 +104,51 @@ namespace midisequencer
 
             return midi2;
         }
+
+        // How early a device's messages should leave, by the same rule and limit as the service's
+        // scheduler: the offset from MIDI Settings when it's chosen, otherwise the transport's.
+        // The in-box service doesn't apply it, so the engine does (design section 8).
+        uint32_t DeviceOffsetMicroseconds(midi2enum::MidiEndpointDeviceInformation const& device)
+        {
+            constexpr uint64_t MaximumMicroseconds = 1000000;
+
+            try
+            {
+                auto const properties = device.Properties();
+
+                if (properties == nullptr)
+                {
+                    return 0;
+                }
+
+                auto const calculated = winrt::unbox_value_or<uint64_t>(properties.TryLookup(STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks), 0);
+                auto const custom = winrt::unbox_value_or<uint64_t>(properties.TryLookup(STRING_PKEY_MIDI_MidiOutCustomLatencyTicks), 0);
+
+                // A service that doesn't record the choice treats a custom value as the choice.
+                auto const choice = properties.TryLookup(STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride);
+                auto const useCustom = choice != nullptr ? winrt::unbox_value_or<bool>(choice, false) : custom != 0;
+
+                // Stored unsigned but meant signed. A negative offset isn't applied.
+                auto const ticks = static_cast<int64_t>(useCustom ? custom : calculated);
+                auto const frequency = midi2::MidiClock::TimestampFrequency();
+
+                if (ticks <= 0 || frequency == 0)
+                {
+                    return 0;
+                }
+
+                if (static_cast<uint64_t>(ticks) >= frequency)
+                {
+                    return static_cast<uint32_t>(MaximumMicroseconds);
+                }
+
+                return static_cast<uint32_t>(static_cast<uint64_t>(ticks) * MaximumMicroseconds / frequency);
+            }
+            catch (...)
+            {
+                return 0;
+            }
+        }
     }
 
     _Use_decl_annotations_
@@ -118,7 +165,7 @@ namespace midisequencer
         std::vector<EndpointSummary> endpoints{};
         endpoints.reserve(live.size());
 
-        std::unordered_map<std::wstring, std::array<bool, 16>> known{};
+        std::unordered_map<std::wstring, EndpointSummary> known{};
 
         {
             std::scoped_lock guard{ m_lock };
@@ -127,7 +174,7 @@ namespace midisequencer
             {
                 if (endpoint.Detailed)
                 {
-                    known.emplace(endpoint.Live.EndpointDeviceId, endpoint.GroupSpeaksMidi2);
+                    known.emplace(endpoint.Live.EndpointDeviceId, endpoint);
                 }
             }
         }
@@ -152,6 +199,7 @@ namespace midisequencer
                     if (device != nullptr)
                     {
                         summary.GroupSpeaksMidi2 = GroupProtocols(device);
+                        summary.OffsetMicroseconds = DeviceOffsetMicroseconds(device);
                         summary.Detailed = true;
                     }
                 }
@@ -161,7 +209,8 @@ namespace midisequencer
             }
             else if (auto found = known.find(endpoint.EndpointDeviceId); found != known.end())
             {
-                summary.GroupSpeaksMidi2 = found->second;
+                summary.GroupSpeaksMidi2 = found->second.GroupSpeaksMidi2;
+                summary.OffsetMicroseconds = found->second.OffsetMicroseconds;
                 summary.Detailed = true;
             }
 
@@ -243,10 +292,9 @@ namespace midisequencer
         if (found.has_value())
         {
             info.SpeaksMidi2 = found->GroupSpeaksMidi2[group & 0x0F];
+            info.OffsetMicroseconds = found->OffsetMicroseconds;
         }
 
-        // How early each device is sent to is left to the service (design section 8).
-        info.OffsetMicroseconds = 0;
         return info;
     }
 

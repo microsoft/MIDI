@@ -428,8 +428,8 @@ namespace midisequencer
             m_drawing.Channel = m_clip->Notes.empty() ? uint8_t{ 0 } : m_clip->Notes.front().Channel;
             m_drawing.Velocity = 0xC000;
 
-                // The middle, which is what a MIDI 2.0 note off means when it doesn't care.
-                m_drawing.ReleaseVelocity = 0x8000;
+            // The middle, which is what a MIDI 2.0 note off means when it doesn't care.
+            m_drawing.ReleaseVelocity = 0x8000;
 
             m_selected.clear();
             m_gesture = Gesture::Draw;

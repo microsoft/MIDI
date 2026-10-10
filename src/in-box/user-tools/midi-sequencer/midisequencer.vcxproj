@@ -150,6 +150,7 @@
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="ThemePalette.h" />
+    <ClInclude Include="WrapPanel.h" />
     <ClInclude Include="App.xaml.h">
       <DependentUpon>App.xaml</DependentUpon>
     </ClInclude>
@@ -187,6 +188,7 @@
     <ClCompile Include="SourceMonitor.cpp" />
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="ThemePalette.cpp" />
+    <ClCompile Include="WrapPanel.cpp" />
     <ClCompile Include="App.xaml.cpp">
       <DependentUpon>App.xaml</DependentUpon>
     </ClCompile>
@@ -269,6 +271,7 @@
     <Midl Include="MainWindow.idl">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Midl>
+    <Midl Include="SequencerTypes.idl" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">

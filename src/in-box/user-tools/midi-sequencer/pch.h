@@ -154,3 +154,4 @@ namespace appshared = ::winrt::MidiAppShared;
 // be reachable from every translation unit.
 #include "EndpointChoice.h"
 #include "NamedChoice.h"
+#include "WrapPanel.h"

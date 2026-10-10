@@ -161,6 +161,7 @@ namespace winrt::midisequencer::implementation
     void MainWindow::CreateCanvases()
     {
         m_textPlayingLaunchedClip = res::GetString(L"PlayingLaunchedClip");
+        m_textStoppedFromLauncher = res::GetString(L"StoppedFromLauncher");
         m_textBackToTimeline = res::GetString(L"BackToTimelineCaption");
         m_textBarFormat = res::GetString(L"BarFormat");
         m_textRecording = res::GetString(L"RecordingCaption");
@@ -464,11 +465,14 @@ namespace winrt::midisequencer::implementation
             context.RecordingNotes = &m_recordingPreview;
         }
 
+        context.RecordingSlot = SlotRecordingView();
+
         context.NowTick = m_position;
         context.SceneWidth = SceneWidth;
         context.SceneScrollX = m_sceneScrollX;
 
         context.PlayingLaunchedClip = m_textPlayingLaunchedClip;
+        context.StoppedFromLauncher = m_textStoppedFromLauncher;
         context.BackToTimeline = m_textBackToTimeline;
         context.BarFormat = m_textBarFormat;
         context.RecordingCaption = m_textRecording;
@@ -2976,7 +2980,25 @@ namespace winrt::midisequencer::implementation
             // The triangle at the cell's top left plays it; the rest of the cell opens it.
             auto const xInSlot = static_cast<double>(point.Position().X) + m_sceneScrollX - static_cast<double>(scene) * SceneWidth;
 
-            if (!clipId.empty())
+            if (m_slotTake.has_value() && m_slotTake->TrackId == trackId && m_slotTake->Scene == scene)
+            {
+                // The slot being recorded into: the take ends at the end of this bar. The second
+                // press of a double click that started it doesn't count.
+                auto const sinceStart = std::chrono::steady_clock::now() - m_slotTake->StartedAt;
+
+                if (sinceStart > std::chrono::milliseconds(::GetDoubleClickTime()))
+                {
+                    FinishSlotRecording(SlotTakeEnd::Early);
+                }
+            }
+            else if (clipId.empty())
+            {
+                if (m_armed.contains(trackId) && !track->IsFolder)
+                {
+                    StartSlotRecording(trackId, scene);
+                }
+            }
+            else
             {
                 if (xInSlot < 22.0)
                 {
@@ -3012,6 +3034,13 @@ namespace winrt::midisequencer::implementation
 
             if (track == nullptr)
             {
+                return;
+            }
+
+            // The first press already started or ended a recording here.
+            if (m_slotTake.has_value() && m_slotTake->TrackId == trackId && m_slotTake->Scene == scene)
+            {
+                args.Handled(true);
                 return;
             }
 
@@ -3086,6 +3115,27 @@ namespace winrt::midisequencer::implementation
 
         if (clipId.empty())
         {
+            if (m_armed.contains(trackId) && !track->IsFolder)
+            {
+                add(res::GetString(L"MenuRecordIntoSlot"), L"\uE7C8", [weak, trackId, scene]() { if (auto s = weak.get()) { s->StartSlotRecording(trackId, scene); } });
+
+                controls::MenuFlyoutSubItem length{};
+                length.Text(res::GetString(L"MenuRecordLength"));
+
+                for (uint32_t const bars : { 1u, 2u, 4u, 8u, 16u })
+                {
+                    controls::RadioMenuFlyoutItem item{};
+                    item.Text(bars == 1 ? res::GetString(L"RecordLengthOneBar") : res::FormatString(L"RecordLengthBarsFormat", bars));
+                    item.GroupName(L"SlotRecordLength");
+                    item.IsChecked(seq::AppSettings::Current().SlotRecordBars() == bars);
+                    item.Click([bars](auto&&, auto&&) { seq::AppSettings::Current().SlotRecordBars(bars); });
+                    length.Items().Append(item);
+                }
+
+                menu.Items().Append(length);
+                menu.Items().Append(controls::MenuFlyoutSeparator{});
+            }
+
             add(res::GetString(L"MenuNewClip"), L"\uE710", [weak, trackId, scene]() { if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene); } });
             add(res::GetString(L"MenuStopTrack"), L"\uE71A", [weak, trackId, scene]() { if (auto s = weak.get()) { s->LaunchSlot(trackId, scene); } });
         }
