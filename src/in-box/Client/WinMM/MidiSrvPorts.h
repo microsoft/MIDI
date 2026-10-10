@@ -2,6 +2,7 @@
 
 #include "MidiSrvPort.h"
 #include <cfgmgr32.h>
+#include <list>
 
 #pragma once
 
@@ -76,6 +77,14 @@ private:
     // map of the open midi clients ordered by the port handle, which is just the
     // address of the CMidiPort object for that client. 
     std::map<MidiPortHandle, wil::com_ptr_nothrow<CMidiPort>> m_OpenPorts;
+
+    // Opens in progress outside m_Lock, so a device removal during an open still reaches them.
+    struct PortOpening
+    {
+        std::wstring InterfaceId;
+        bool InterfaceRemoved{ false };
+    };
+    std::list<PortOpening> m_PortsOpening;
 
     unique_cm_notification m_NotifyMidiOut;
     unique_cm_notification m_NotifyMidiIn;

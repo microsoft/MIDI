@@ -2094,6 +2094,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure.h"
 #include "Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf.h"
 #include "Feature_Servicing_MIDI2WinMMPortHandleSlotWidth.h"
+#include "Feature_Servicing_MIDI2WinMMPortListLockScope.h"
 #include "Feature_Servicing_MIDI2WinMMShortMessageNoSendWait.h"
 #include "Feature_Servicing_MIDI2XProcBatchedReads.h"
 #include "Feature_Servicing_MIDI2KSAShutdownCrash.h"
@@ -2163,6 +2164,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure::IsEnabled(),     L"MIDI2WinMMCompleteLongBufferOnFailure (return a winmm long buffer to the app when a send fails)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf::IsEnabled(),            L"MIDI2WinMMInterfaceRemovalPerf (speed up winmm handling of device interface removal)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMPortHandleSlotWidth::IsEnabled(),             L"MIDI2WinMMPortHandleSlotWidth (fix winmm port handle corruption in 32 bit clients)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMPortListLockScope::IsEnabled(),               L"MIDI2WinMMPortListLockScope (stop winmm open, close and device removal from blocking or hanging other winmm calls)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMShortMessageNoSendWait::IsEnabled(),          L"MIDI2WinMMShortMessageNoSendWait (stop winmm waiting for send completion on short messages)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2XProcBatchedReads::IsEnabled(),                    L"MIDI2XProcBatchedReads (batch cross-process reads to reduce per-message overhead)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSAShutdownCrash::IsEnabled(),                     L"MIDI2KSAShutdownCrash (shutdown race)");
