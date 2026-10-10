@@ -18,7 +18,7 @@
 
 <div class="page">
 
-<div class="caption-above"><b>7. Getting MIDI in and out.</b> Import reads Standard MIDI Files, MIDI 2.0 clip files, and captures saved by MIDI Monitor or the console. Export writes MIDI 2.0 clip files (the format MIDI 2.0 calls SMF2) or Standard MIDI Files, for one clip, some tracks or the whole project, and says up front what a format can't hold.</div>
+<div class="caption-above"><b>7. Getting MIDI in and out.</b> Import reads Standard MIDI Files, MIDI 2.0 clip files, DAWproject files from other music apps, and captures saved by MIDI Monitor or the console. Export writes MIDI 2.0 clip files (the format MIDI 2.0 calls SMF2), Standard MIDI Files or DAWproject, for one clip, some tracks or the whole sequence, and says up front what a format can't hold.</div>
 
 <div class="grid2">
 
@@ -36,12 +36,13 @@
         <tr><td colspan="5" style="color:var(--text3)">4 more tracks, all selected</td></tr>
       </table>
       <div class="sect">Put each track</div>
-      <div class="radio on"><div class="rb"></div><div>On a new track in this project, as one clip</div></div>
+      <div class="radio on"><div class="rb"></div><div>On a new track in this sequence, as one clip</div></div>
       <div class="radio"><div class="rb"></div><div>On the selected track, as clips laid end to end</div></div>
       <div class="row"><span style="font-size:13px;width:150px">New tracks play to</span><div class="field small combo grow">General MIDI Synth, keeping each track's channel<span class="spacer"></span><span class="gl">&#xE70D;</span></div></div>
       <div class="sect">Tempo</div>
-      <div class="radio on"><div class="rb"></div><div>Use the file's tempo changes<div class="sub">This project's Tempo and meter track is empty, so nothing is lost.</div></div></div>
-      <div class="radio"><div class="rb"></div><div>Keep this project's tempo<div class="sub">Notes keep their bar and beat and play at 124 BPM.</div></div></div>
+      <div class="radio on"><div class="rb"></div><div>Use the file's tempo changes<div class="sub">This sequence's Tempo and meter track is empty, so nothing is lost.</div></div></div>
+      <div class="radio"><div class="rb"></div><div>Keep this sequence's tempo<div class="sub">Notes keep their bar and beat and play at 124 BPM.</div></div></div>
+      <div class="check on"><div class="cb">&#xE73E;</div><div>Make the file's markers into tags</div></div>
       <div class="check on"><div class="cb">&#xE73E;</div><div>Make the file's program, volume and pan changes into start-up messages</div></div>
       <div style="font-size:11px;color:var(--text3);line-height:1.45">The file's own text is kept with the clips it came from: &ldquo;Copyright 1998 Example Music.&rdquo;</div>
     </div>
@@ -76,15 +77,16 @@
   <div class="dialog static">
     <div class="dlg-body">
       <h2>Export</h2>
-      <div class="row"><span style="font-size:13px;width:60px">What</span><div class="seg"><div class="sel">Whole project</div><div>Selected tracks (2)</div><div>Selected clip</div></div></div>
+      <div class="row"><span style="font-size:13px;width:60px">What</span><div class="seg"><div class="sel">Whole sequence</div><div>Selected tracks (2)</div><div>Selected clip</div></div></div>
       <div class="sect">Format</div>
-      <div class="radio on"><div class="rb"></div><div>MIDI 2.0 clip files (.midi2), one per track<div class="sub">Keeps everything: 16-bit velocity, per-note changes, exact pitch, 32-bit controllers. One file per track, in a folder named after the project.</div></div></div>
+      <div class="radio on"><div class="rb"></div><div>MIDI 2.0 clip files (.midi2), one per track<div class="sub">Keeps everything: 16-bit velocity, per-note changes, exact pitch, 32-bit controllers. One file per track, in a folder named after the sequence.</div></div></div>
       <div class="radio"><div class="rb"></div><div>One MIDI 2.0 clip file (.midi2)<div class="sub">Every track in one file. Tracks are told apart only by group and channel, so two tracks that play on the same channel would merge.</div></div></div>
-      <div class="radio"><div class="rb"></div><div>Standard MIDI File (.mid), one track per track<div class="sub">MIDI 1.0. Opens almost anywhere.</div><div class="lose">This project would lose 412 per-note pitch bend messages and 3 exact pitches, and its velocities would be rounded to 0 to 127.</div></div></div>
-      <div class="infobar info"><span class="gl">&#xE946;</span><div class="bd">The MIDI Association hasn't published the MIDI Container File yet. That's the format meant to hold several MIDI 2.0 tracks in one file. When it's out, whole-project export can use it.</div></div>
-      <div class="check on"><div class="cb">&#xE73E;</div><div>Tempo, meter and markers</div></div>
+      <div class="radio"><div class="rb"></div><div>Standard MIDI File (.mid), one track per track<div class="sub">MIDI 1.0. Opens almost anywhere.</div><div class="lose">This sequence would lose 412 per-note pitch bend messages and 3 exact pitches, and its velocities would be rounded to 0 to 127.</div></div></div>
+      <div class="radio"><div class="rb"></div><div>DAWproject (.dawproject)<div class="sub">For Bitwig Studio, Cubase, Studio One and other apps that open it. Keeps tracks, folders, clips, scenes, tags and automation at full resolution.</div><div class="lose">Leaves out where each track plays (written as a comment on the track), 6 system exclusive messages and 1 NRPN lane.</div></div></div>
+      <div class="infobar info"><span class="gl">&#xE946;</span><div class="bd">The MIDI Association hasn't published the MIDI Container File yet. That's the format meant to hold several MIDI 2.0 tracks in one file. When it's out, whole-sequence export can use it.</div></div>
+      <div class="check on"><div class="cb">&#xE73E;</div><div>Tempo, meter and tags</div></div>
       <div class="check on"><div class="cb">&#xE73E;</div><div>Start-up messages: program, bank, volume and pan</div></div>
-      <div class="check on"><div class="cb">&#xE73E;</div><div>Project name, composer and copyright<div class="sub">From About this project. MIDI 2.0 files carry them as standard text messages.</div></div></div>
+      <div class="check on"><div class="cb">&#xE73E;</div><div>Sequence name, composer and copyright<div class="sub">From About this sequence. MIDI 2.0 files carry them as standard text messages.</div></div></div>
       <div style="font-size:11px;color:var(--text3);line-height:1.45">Pattern, generator and chance notes are written the way they play from bar 1 with their saved seeds. A file holds notes, not the settings that made them.</div>
     </div>
     <div class="dlg-foot"><div class="btn accent">Export</div><div class="btn">Cancel</div></div>
@@ -108,15 +110,43 @@
     </div>
   </div>
 
+  <div class="dialog static">
+    <div class="dlg-body">
+      <h2>Import Night Drive.dawproject</h2>
+      <div class="dlg-sub">DAWproject 1.0 &middot; saved by Bitwig Studio &middot; 6 tracks in 2 folders &middot; 3 scenes</div>
+      <table class="table">
+        <tr><th></th><th>Track in the file</th><th>Played in Bitwig</th><th>Play it to</th></tr>
+        <tr><td><span class="cb on">&#xE73E;</span></td><td class="n">Drums</td><td>Drum Machine</td><td>TR-8S, channel 10</td></tr>
+        <tr><td><span class="cb on">&#xE73E;</span></td><td class="n">Synths / Bass</td><td>Surge XT</td><td>Moog One, channel 2</td></tr>
+        <tr><td><span class="cb on">&#xE73E;</span></td><td class="n">Synths / Pad</td><td>Polymer</td><td style="color:var(--accent)">Choose a device</td></tr>
+        <tr><td><span class="cb on">&#xE73E;</span></td><td class="n">Keys / Rhodes</td><td>Rhodes Mk II</td><td>General MIDI Synth, channel 5</td></tr>
+        <tr><td><span class="cb">&#xE73E;</span></td><td class="n">Vocal</td><td>Audio</td><td style="color:var(--text3)">Audio stays behind</td></tr>
+      </table>
+      <div class="chips"><span class="chip on"><span class="gl">&#xE73E;</span>Folders</span><span class="chip on"><span class="gl">&#xE73E;</span>3 scenes</span><span class="chip on"><span class="gl">&#xE73E;</span>6 markers as tags</span><span class="chip on"><span class="gl">&#xE73E;</span>Tempo changes</span><span class="chip on"><span class="gl">&#xE73E;</span>5 automation lanes</span></div>
+      <div class="lose" style="font-size:12px">Stays behind: 1 audio track with 4 clips, 6 plug-in settings, and the mixer's volume and pan.</div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.45">DAWproject doesn't say which MIDI device a track plays, so you choose. The instrument it played in the other app is shown to help.</div>
+    </div>
+    <div class="dlg-foot"><div class="btn accent">Import</div><div class="btn">Cancel</div></div>
+  </div>
+
+  <div class="card" style="font-size:12px;color:var(--text2);line-height:1.55;align-self:start">
+    <div style="font-weight:600;color:var(--text);margin-bottom:6px">DAWproject, in and out</div>
+    <div class="kv"><span class="k">Comes in</span><span class="v">Note tracks, folders, clips, scenes, automation, markers, tempo.</span></div>
+    <div class="kv"><span class="k">Stays behind</span><span class="v">Audio, plug-ins and the mixer.</span></div>
+    <div class="kv"><span class="k">Goes out</span><span class="v">Everything but devices, system exclusive, RPN and NRPN.</span></div>
+    <div class="kv"><span class="k">Resolution</span><span class="v">Velocity and controllers keep their MIDI 2.0 detail.</span></div>
+  </div>
+
 </div>
 
 <ol class="callouts">
-  <li><b>Standard MIDI Files</b> come in track by track, each as a clip on a new track (or on the selected track). The file's tempo is used when the project has none, and its copyright text stays with the clips it came from.</li>
+  <li><b>Standard MIDI Files</b> come in track by track, each as a clip on a new track (or on the selected track). The file's tempo is used when the sequence has none, its markers become tags, and its copyright text stays with the clips it came from.</li>
   <li><b>Captures from MIDI Monitor and the console.</b> A CSV capture keeps exact times and MIDI 2.0 messages, so a jam you captured becomes a clip that plays back just as it happened. One track per group.</li>
   <li><b>Paste.</b> Messages copied in MIDI Monitor paste straight into a clip. They have no times, so you choose how to lay them out.</li>
-  <li><b>MIDI 2.0 clip files</b> keep everything the project can hold. Whole-project export writes one per track until the MIDI Container File is published.</li>
+  <li><b>MIDI 2.0 clip files</b> keep everything the sequence can hold. Whole-sequence export writes one per track until the MIDI Container File is published.</li>
   <li><b>Standard MIDI Files</b> are still the way to reach most other software. The dialog counts what would be lost before you export, instead of after.</li>
   <li><b>Chance and generators</b> export as the notes they play, from their saved seeds, so the file matches what you heard from bar 1.</li>
+  <li><b>DAWproject</b> is the open format Bitwig Studio, Cubase, Studio One and others use to move a song between apps. It keeps folders, clips, scenes and markers, which a Standard MIDI File can't. It has no MIDI devices, so import asks where each track plays.</li>
 </ol>
 
 </div>

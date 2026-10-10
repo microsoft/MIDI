@@ -29,6 +29,7 @@
 <body>
 <svg width="0" height="0" style="position:absolute">
   <symbol id="appicon" viewBox="0 0 16 16"><rect x=".5" y=".5" width="15" height="15" rx="3.5" fill="#25303D" stroke="#60CDFF" stroke-width=".8"/><rect x="3" y="3.6" width="7" height="2.2" rx="1" fill="#FF8A65"/><rect x="6" y="6.9" width="7" height="2.2" rx="1" fill="#60CDFF"/><rect x="3" y="10.2" width="5" height="2.2" rx="1" fill="#6CCB5F"/></symbol>
+  <symbol id="piano" viewBox="0 0 16 16"><rect x="1" y="2.5" width="14" height="11" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M4.5 8.5v5M8 8.5v5M11.5 2.5v11" stroke="currentColor" stroke-width=".9"/><rect x="3.4" y="2.5" width="2.2" height="6" fill="currentColor"/><rect x="6.9" y="2.5" width="2.2" height="6" fill="currentColor"/></symbol>
 </svg>
 
 <div class="page">
@@ -87,13 +88,13 @@
           <div class="arow tempo">
             <div class="hdr">
               <div class="strip" style="--tc:#BDBDBD"></div><div class="chev"></div><div class="ticon" style="color:var(--text2)">&#xE916;</div>
-              <div class="tinfo"><div class="tname">Tempo and meter<span class="pin">&#xE718;</span></div><div class="tsub">124 BPM &middot; 4/4 &middot; 5 markers</div></div>
+              <div class="tinfo"><div class="tname">Tempo and meter<span class="pin">&#xE718;</span></div><div class="tsub">124 BPM &middot; 4/4 &middot; 5 tags</div></div>
             </div>
             <div class="lane" data-tempo='{"min":118,"max":132,"points":[[1,124],[17,124],[19,128],[23,128]],"labels":[[1,"124"],[19,"128"]]}'>
-              <div class="marker" data-at="1">Intro</div>
-              <div class="marker" data-at="5">Groove</div>
-              <div class="marker" data-at="13">Break</div>
-              <div class="marker" data-at="17">Drop</div>
+              <div class="tag" data-at="1"><span>Intro</span></div>
+              <div class="tag" data-at="5"><span>Groove</span></div>
+              <div class="tag" data-at="13"><span>Break</span></div>
+              <div class="tag" data-at="17" style="--tagc:#F2C14E"><span>Drop</span></div>
             </div>
           </div>
           <div class="arow track" style="--tc:#FF8A65">
@@ -194,6 +195,7 @@
           <div class="field small combo">Any channel<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
           <div class="recchips"><span class="chip on">Notes</span><span class="chip on">Controllers</span><span class="chip on">Pitch bend</span><span class="chip on">Pressure</span><span class="chip on">Program</span><span class="chip">System exclusive</span></div>
           <div class="switch-row"><div class="toggle-sw"></div><div class="tx">Echo to the destination while armed<div class="sub">So you hear what you play.</div></div></div>
+          <div class="btn small" style="align-self:flex-start" title="Records from Default App Loopback (B) and opens MIDI Keyboard on Default App Loopback (A)"><svg class="bglyph"><use href="#piano"/></svg>Record from MIDI Keyboard</div>
         </div>
 
         <div class="insp-section">
@@ -201,6 +203,7 @@
           <div class="field small combo" style="border-color:var(--accent)">General MIDI Synth<span class="spacer"></span><span class="gl">&#xE70E;</span></div>
           <div class="row"><div class="field small combo grow">Group 1 - General MIDI<span class="spacer"></span><span class="gl">&#xE70D;</span></div><div class="field small combo" style="width:72px">Ch 1<span class="spacer"></span><span class="gl">&#xE70D;</span></div></div>
           <div style="font-size:11px;color:var(--text3);line-height:1.4">Sends MIDI 2.0, because the device's function block for group 1 says it speaks MIDI 2.0.</div>
+          <div class="btn small" style="align-self:flex-start"><svg class="bglyph"><use href="#piano"/></svg>Try this sound in MIDI Keyboard</div>
         </div>
 
         <div class="insp-section">
@@ -223,14 +226,15 @@
   <div class="flyout" style="right:306px;top:430px;width:340px">
     <div class="menu-head">Play Lead to</div>
     <div class="epitem sel"><div class="art">&#xE8D6;</div><div class="tx"><div class="n">General MIDI Synth</div><div class="s">Built in &middot; MIDI 2.0</div></div><span class="gl" style="font-size:12px;color:var(--accent)">&#xE73E;</span></div>
-    <div class="epitem"><div class="art">&#xE765;</div><div class="tx"><div class="n">Iridium</div><div class="s">USB &middot; MIDI 1.0</div></div></div>
+    <div class="epitem"><div class="art">&#xE765;</div><div class="tx"><div class="n">Iridium</div><div class="s">USB &middot; MIDI 1.0 &middot; sent 4 ms early</div></div></div>
     <div class="epitem"><div class="art">&#xE765;</div><div class="tx"><div class="n">Hydrasynth</div><div class="s">USB &middot; MIDI 1.0</div></div></div>
     <div class="epitem offline"><div class="art off">&#xE765;</div><div class="tx"><div class="n">Moog One</div><div class="s">Not connected &middot; Bass uses it</div></div></div>
-    <div class="epitem"><div class="art net">&#xE839;</div><div class="tx"><div class="n">Studio Mac</div><div class="s">Network MIDI 2.0</div></div></div>
-    <div class="epitem"><div class="art bt">&#xE702;</div><div class="tx"><div class="n">WIDI Master</div><div class="s">Bluetooth MIDI</div></div></div>
+    <div class="epitem"><div class="art net">&#xE839;</div><div class="tx"><div class="n">Studio Mac</div><div class="s">Network MIDI 2.0 &middot; sent 12 ms early</div></div></div>
+    <div class="epitem"><div class="art bt">&#xE702;</div><div class="tx"><div class="n">WIDI Master</div><div class="s">Bluetooth MIDI &middot; sent 15 ms early</div></div></div>
     <div class="epitem"><div class="art loop">&#xE895;</div><div class="tx"><div class="n">Lights loopback (A)</div><div class="s">Loopback &middot; for another app</div></div></div>
     <div class="menu-sep"></div>
     <div class="menu-item"><span class="gl">&#xE710;</span>Make a loopback for another app</div>
+    <div class="menu-head" style="line-height:1.45;padding:4px 14px 8px">How early to send to a device is set in MIDI Settings. Windows sends that much early, so the sequencer doesn't add it again.</div>
   </div>
 </div>
 
@@ -241,6 +245,8 @@
   <li><b>Missing devices.</b> Moog One is unplugged. Bass keeps it, plays nothing to it, and picks it up again when it's back. Nothing silently goes somewhere else.</li>
   <li><b>When playback starts.</b> Program, bank and any other set-up messages go out before the first note. Program names come from the device over MIDI-CI when it offers them.</li>
   <li><b>Loopbacks.</b> To feed another app (a DAW, a lighting program), play to a loopback. The sequencer can make one from this list.</li>
+  <li><b>How early each device gets its messages.</b> Some devices need messages a little early to sound on time. That's set per device in MIDI Settings, and the list shows it. Windows does the sending early, so the sequencer only makes sure it hands each message over in time.</li>
+  <li><b>MIDI Keyboard.</b> Try this sound opens Windows MIDI Keyboard on the track's destination, group and channel. Record from MIDI Keyboard records from a built-in app loopback and opens MIDI Keyboard on the other side of it, so you can record with the mouse, touch or the computer keyboard.</li>
 </ol>
 
 </div>

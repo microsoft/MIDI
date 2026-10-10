@@ -13,16 +13,19 @@
     .statusline .gl { font-size: 12px; }
     .table td .cb, .table th .cb { margin: 0; }
     .sect { font-size: 14px; font-weight: 600; margin-top: 4px; }
+    .metro-body { padding: 10px 14px 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+    .metro-body .hint { font-size: 11px; color: var(--text3); line-height: 1.45; }
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute">
   <symbol id="appicon" viewBox="0 0 16 16"><rect x=".5" y=".5" width="15" height="15" rx="3.5" fill="#25303D" stroke="#60CDFF" stroke-width=".8"/><rect x="3" y="3.6" width="7" height="2.2" rx="1" fill="#FF8A65"/><rect x="6" y="6.9" width="7" height="2.2" rx="1" fill="#60CDFF"/><rect x="3" y="10.2" width="5" height="2.2" rx="1" fill="#6CCB5F"/></symbol>
+  <symbol id="metro" viewBox="0 0 16 16"><path d="M5.4 1.6h5.2l2.8 12.8H2.6z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M8 11.2 11.4 3.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="10.2" cy="6.2" r="1.4" fill="currentColor"/><path d="M3.5 11.2h9" stroke="currentColor" stroke-width="1"/></symbol>
 </svg>
 
 <div class="page">
 
-<div class="caption-above"><b>6. Clock and sync.</b> Opened from the clock button in the transport. The project can keep its own tempo, or follow another device's MIDI clock. Either way it can send clock, start and stop, song position and MIDI Time Code to other devices, each with its own offset.</div>
+<div class="caption-above"><b>6. Clock and sync.</b> Opened from the clock button in the transport. The sequence can keep its own tempo, or follow another device's MIDI clock. Either way it can send clock, start and stop, song position and MIDI Time Code to other devices, each with its own offset.</div>
 
 <div class="window" style="height:900px">
 
@@ -61,10 +64,10 @@
   <div class="dialog">
     <div class="dlg-body">
       <h2>Clock and sync</h2>
-      <div class="dlg-sub">Where this project's tempo comes from, and which devices follow it.</div>
+      <div class="dlg-sub">Where this sequence's tempo comes from, and which devices follow it.</div>
 
       <div class="sect">Tempo comes from</div>
-      <div class="radio"><div class="rb"></div><div>This project<div class="sub">The Tempo and meter track: 124 BPM, with a ramp to 128 at bar 17. Ramps and changes play exactly.</div></div></div>
+      <div class="radio"><div class="rb"></div><div>This sequence<div class="sub">The Tempo and meter track: 124 BPM, with a ramp to 128 at bar 17. Ramps and changes play exactly.</div></div></div>
       <div class="radio on"><div class="rb"></div><div style="flex:1">Another device's MIDI clock
         <div class="subopts">
           <div class="row"><div class="field small combo" style="width:240px">Clock loopback (B)<span class="spacer"></span><span class="gl">&#xE70D;</span></div><div class="field small combo" style="width:110px">Any group<span class="spacer"></span><span class="gl">&#xE70D;</span></div><div class="statusline"><span class="gl">&#xE73E;</span>Getting 120.0 BPM, steady</div></div>
@@ -76,7 +79,7 @@
         </div>
       </div></div>
 
-      <div class="infobar caution"><span class="gl">&#xE7BA;</span><div class="bd">Following a clock is a little less steady than using this project's own tempo, because the sequencer can only plan as far ahead as the next clock pulse it expects. When you can, let the sequencer be the clock and send it to your other devices instead.</div></div>
+      <div class="infobar caution"><span class="gl">&#xE7BA;</span><div class="bd">Following a clock is a little less steady than using this sequence's own tempo, because the sequencer can only plan as far ahead as the next clock pulse it expects. When you can, let the sequencer be the clock and send it to your other devices instead.</div></div>
 
       <div class="sect">Send clock to</div>
       <table class="table">
@@ -105,6 +108,59 @@
 
 </div>
 
+<div class="caption-above"><b>The metronome.</b> The button next to Loop turns it on, and the arrow beside it opens these settings. With no audio, the click is a note sent to a device you choose. It starts out as the General MIDI Synth's side stick: note 37 on channel 10, a short, rimshot-like click.</div>
+
+<div class="window" style="height:420px">
+
+  <div class="titlebar">
+    <svg class="appicon"><use href="#appicon"/></svg>
+    <div class="title">Night Drive Sketch &mdash; Windows MIDI Sequencer</div>
+    <div class="preview-chiclet">PREVIEW</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="transport">
+    <div class="tbtn">&#xE892;</div>
+    <div class="tbtn play">&#xE768;</div>
+    <div class="tbtn">&#xE71A;</div>
+    <div class="tbtn rec">&#xE7C8;</div>
+    <div class="tbtn on">&#xE8EE;</div>
+    <div class="tbtn on" title="Metronome"><svg><use href="#metro"/></svg></div>
+    <div class="tbtn on split" title="Metronome settings">&#xE70D;</div>
+    <div class="sep"></div>
+    <div class="lcd"><div class="big">1.1.000</div><div class="small">0:00.000</div></div>
+    <div class="lcd" style="min-width:118px"><div class="big">124.00<span class="unit">BPM</span></div><div class="small">4/4</div></div>
+    <div class="spacer"></div>
+  </div>
+
+  <div class="arrange" data-bars="30" style="--bar:34px">
+    <div class="arow ruler"><div class="hdr"></div><div class="launch"></div><div class="lane"></div></div>
+    <div class="arow track" style="--tc:#FF8A65"><div class="hdr"><div class="strip"></div><div class="tinfo"><div class="tname">Drums</div></div></div><div class="launch"></div><div class="lane"><div class="tclip pattern" data-at="1" data-len="8" data-draw="drums"><div class="cap"><span class="t">Beat A</span></div><div class="body"></div></div></div></div>
+    <div class="arow track" style="--tc:#FF6F91"><div class="hdr"><div class="strip"></div><div class="tinfo"><div class="tname">Lead</div></div></div><div class="launch"></div><div class="lane"></div></div>
+    <div class="arow filler"><div class="hdr"></div><div class="launch"></div><div class="lane"></div></div>
+  </div>
+
+  <div class="flyout" style="left:204px;top:90px;width:430px">
+    <div class="metro-body">
+      <div class="row"><div class="toggle-sw"></div><span style="font-size:13px;font-weight:600">Metronome</span><span style="flex:1"></span><div class="seg"><div class="sel">Always</div><div>Only while recording</div></div></div>
+      <div class="lbl" style="margin:4px 0 0 0">Play the click on</div>
+      <div class="field small combo">General MIDI Synth<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+      <div class="row"><div class="field small combo grow">Group 1 - General MIDI<span class="spacer"></span><span class="gl">&#xE70D;</span></div><div class="field small combo" style="width:90px">Ch 10<span class="spacer"></span><span class="gl">&#xE70D;</span></div></div>
+      <div class="row" style="align-items:flex-end">
+        <div class="grow"><div class="lbl">Note</div><div class="field small combo">37 Side Stick<span class="spacer"></span><span class="gl">&#xE70D;</span></div></div>
+        <div style="width:96px"><div class="lbl">First beat</div><div class="field small">100%</div></div>
+        <div style="width:96px"><div class="lbl">Other beats</div><div class="field small">70%</div></div>
+      </div>
+      <div class="row"><div class="btn small" style="flex:0 0 auto"><span class="gl">&#xE768;</span>Try it</div><span class="hint">Settings belong to this PC, not to the sequence, because they name a device.</span></div>
+      <div class="hint">The click is sent like any other note, so it lands exactly on the beat and follows tempo and meter changes.</div>
+    </div>
+  </div>
+
+</div>
+
 <ol class="callouts">
   <li><b>Its own tempo, or someone else's.</b> By default the Tempo and meter track drives everything. Switch to another device's clock and the sequencer starts, stops and moves when that device says so.</li>
   <li><b>A good pairing with MIDI Clock.</b> Here the master is the Windows MIDI Clock app, sending into a loopback. The same clock can drive the sequencer and any hardware it also feeds.</li>
@@ -112,6 +168,7 @@
   <li><b>Send clock to several devices.</b> Each can get clock, start and stop, and song position, with its own offset to line up a slow device. This is the same idea as the offsets in MIDI Clock.</li>
   <li><b>MIDI 2.0 tempo.</b> Devices that speak MIDI 2.0 can also get Set Tempo messages, which tell them the tempo directly instead of making them work it out from clock pulses.</li>
   <li><b>MIDI Time Code out.</b> For video and lighting gear. Following incoming time code is not planned: MIDI Clock made the same call for the same reasons.</li>
+  <li><b>Metronome.</b> A note on a device you pick, scheduled with everything else. Count-in comes later, with punch in and out.</li>
 </ol>
 
 </div>

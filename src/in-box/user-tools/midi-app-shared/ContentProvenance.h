@@ -28,9 +28,11 @@ namespace midiapp
     namespace DigitalSourceTypes
     {
         constexpr wchar_t DigitalCreation[] = L"digitalCreation";
+        constexpr wchar_t DigitalCapture[] = L"digitalCapture";
         constexpr wchar_t TrainedAlgorithmicMedia[] = L"trainedAlgorithmicMedia";
         constexpr wchar_t CompositeWithTrainedAlgorithmicMedia[] = L"compositeWithTrainedAlgorithmicMedia";
         constexpr wchar_t CompositeSynthetic[] = L"compositeSynthetic";
+        constexpr wchar_t Composite[] = L"composite";
         constexpr wchar_t AlgorithmicMedia[] = L"algorithmicMedia";
     }
 
