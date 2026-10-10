@@ -110,6 +110,14 @@ CMidiPorts::MidiInterfaceChange
                 {
                     try
                     {
+                        for (auto& opening : m_PortsOpening)
+                        {
+                            if (opening.InterfaceId == notifiedInterface)
+                            {
+                                opening.InterfaceRemoved = true;
+                            }
+                        }
+
                         std::vector<wil::com_ptr_nothrow<CMidiPort>> openPorts;
                         openPorts.reserve(m_OpenPorts.size());
 
@@ -886,6 +894,7 @@ CMidiPorts::OpenOutsidePortListLock(MidiFlow flow, UINT portNumber, const MIDIOP
         // Service assigned port numbers start at 1, winmm port numbers start at 0.
         UINT localPortNumber = portNumber + 1;
         std::wstring interfaceId;
+        std::list<PortOpening>::iterator opening;
 
         {
             auto lock = m_Lock.lock();
@@ -896,25 +905,27 @@ CMidiPorts::OpenOutsidePortListLock(MidiFlow flow, UINT portNumber, const MIDIOP
             RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), portInfo == m_MidiPortInfo[flow].end());
 
             interfaceId = portInfo->second.InterfaceId;
+            opening = m_PortsOpening.insert(m_PortsOpening.end(), PortOpening{ interfaceId });
         }
+
+        auto forgetOpening = wil::scope_exit([&]()
+        {
+            auto lock = m_Lock.lock();
+            m_PortsOpening.erase(opening);
+        });
 
         // Connecting to the service takes milliseconds, and every winmm midi call in this process needs the lock.
         wil::com_ptr_nothrow<CMidiPort> midiPort;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPort>(&midiPort, m_SessionId, interfaceId, flow, midiOpenDesc, flags));
 
-        bool removedWhileOpening{ true };
+        bool removedWhileOpening{ false };
 
         {
             auto lock = m_Lock.lock();
 
-            for (auto const& [portNum, port] : m_MidiPortInfo[flow])
-            {
-                if (port.InterfaceId == interfaceId)
-                {
-                    removedWhileOpening = false;
-                    break;
-                }
-            }
+            removedWhileOpening = opening->InterfaceRemoved;
+            m_PortsOpening.erase(opening);
+            forgetOpening.release();
 
             m_OpenPorts.emplace((MidiPortHandle) midiPort.get(), midiPort);
         }
