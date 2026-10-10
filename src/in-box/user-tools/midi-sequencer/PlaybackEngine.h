@@ -200,12 +200,22 @@ namespace midisequencer
         EngineCounters Counters() const;
 
     private:
+        // A note that's been started. Its end goes to the service only once it's due within the
+        // look-ahead: a message handed over can't be taken back, and an end sent early would cut
+        // the next note of the same pitch after a restart or a launch.
         struct SoundingNote
         {
+            std::wstring TrackId{};
             EndpointRef Endpoint{};
             uint32_t OffWords[2]{};
+            uint8_t WordCount{ 2 };
+            uint64_t OnTimestamp{ 0 };
             uint64_t OffTimestamp{ 0 };
-            bool Midi2{ true };
+
+            // The device's offset, in clock ticks, already taken off both timestamps.
+            uint64_t Lead{ 0 };
+
+            bool HandedOver{ false };
         };
 
         struct ChannelKey
@@ -264,7 +274,19 @@ namespace midisequencer
         void SweepTracks(_In_ std::vector<Track> const& tracks, _In_ uint64_t now, _In_ bool anySolo, _In_ bool insideSoloedFolder, _In_ bool insideMutedFolder);
         void SweepTrack(_In_ Track const& track, _In_ uint64_t now, _In_ bool audible);
         void RenderMode(_In_ Track const& track, _In_ TrackLaunch const& state, _In_ int64_t fromUnwrapped, _In_ int64_t toUnwrapped, _Inout_ std::vector<RenderedMessage>& messages);
-        void SendRendered(_In_ Track const& track, _In_ DestinationInfo const& info, _In_ int64_t clampOffsAt, _Inout_ std::vector<RenderedMessage>& messages);
+        void SendRendered(_In_ Track const& track, _In_ DestinationInfo const& info, _In_ int64_t clampOffsAt, _In_ uint64_t now, _Inout_ std::vector<RenderedMessage>& messages);
+        void QueueNoteOff(
+            _In_ std::wstring const& trackId,
+            _In_ EndpointRef const& endpoint,
+            _In_ bool midi2,
+            _In_ uint64_t onTimestamp,
+            _In_ uint64_t offTimestamp,
+            _In_ uint64_t lead,
+            _In_reads_(wordCount) uint32_t const* words,
+            _In_ uint8_t wordCount,
+            _In_ uint64_t limit);
+        void SendDueNoteOffs(_In_ uint64_t limit);
+        uint64_t LookAheadTicks() const noexcept;
         void SweepMetronome(_In_ uint64_t now);
         void SweepClockOutputs(_In_ uint64_t now);
         void WrapLoopIfDue(_In_ uint64_t now);

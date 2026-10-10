@@ -58,8 +58,8 @@ namespace midisequencer
                 return;
             }
 
-            // A note comes out with its end, even when the end is past the window, so the engine
-            // never has to remember which notes it started. Ends are harmless to send early.
+            // A note comes out with its end, even when the end is past the window. The engine holds
+            // the end until it's due: one handed over early can't be taken back.
             auto firstNote = std::lower_bound(clip.Notes.begin(), clip.Notes.end(), windowStart - passStart,
                 [](Note const& note, int64_t tick) { return note.Tick < tick; });
 

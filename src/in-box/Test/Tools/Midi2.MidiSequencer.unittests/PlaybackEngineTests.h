@@ -24,6 +24,8 @@ public:
     TEST_METHOD(SoloLeavesOnlyTheSoloedTracks);
     TEST_METHOD(AMidi1DestinationGetsMidi1);
     TEST_METHOD(StopEndsWhatItStarted);
+    TEST_METHOD(ARestartDoesntCutTheNewNotes);
+    TEST_METHOD(AMidi1NoteEndsWithOneWord);
     TEST_METHOD(StartingPartWayChasesTheChannelState);
     TEST_METHOD(StartupMessagesGoFirst);
     TEST_METHOD(TheMetronomeClicksOnTheBeat);

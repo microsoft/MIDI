@@ -152,15 +152,21 @@ void PlaybackEngineTests::NotesGoOutAtTheirTimes()
     VERIFY_ARE_EQUAL(0x40903C00u, ons[0].Words[0]);
     VERIFY_ARE_EQUAL(0xC0000000u, ons[0].Words[1]);
 
-    // The note's end went with it.
+    // The note's end waits until it's due, so a stop or a restart can still move it.
     auto const all = f.Output.All();
-    VERIFY_IS_TRUE(std::any_of(all.begin(), all.end(), [](SentMessage const& message)
+    VERIFY_IS_FALSE(std::any_of(all.begin(), all.end(), [](SentMessage const& message)
     {
-        return message.Words[0] == 0x40803C00u && message.Timestamp == At(480);
+        return message.Words[0] == 0x40803C00u;
     }));
 
     f.Now = 2100000;
     f.Engine.Sweep();
+
+    auto const later = f.Output.All();
+    VERIFY_IS_TRUE(std::any_of(later.begin(), later.end(), [](SentMessage const& message)
+    {
+        return message.Words[0] == 0x40803C00u && message.Timestamp == At(480);
+    }));
 
     ons = NoteOns(f.Output.All());
     VERIFY_ARE_EQUAL(size_t{ 3 }, ons.size());
@@ -295,6 +301,64 @@ void PlaybackEngineTests::StopEndsWhatItStarted()
     auto const sustain = std::find_if(sent.begin(), sent.end(), [](SentMessage const& m) { return m.Words[0] == 0x40B04000u; });
     auto const allNotesOff = std::find_if(sent.begin(), sent.end(), [](SentMessage const& m) { return m.Words[0] == 0x40B07B00u; });
     VERIFY_IS_TRUE(sustain < allNotesOff);
+}
+
+void PlaybackEngineTests::ARestartDoesntCutTheNewNotes()
+{
+    // One note two bars long.
+    auto sequence = KeysSequence();
+    sequence.Clips[0].Notes = { testdata::MakeNote(0, Bar * 2, 60) };
+    sequence.Clips[0].Length = Bar * 2;
+    NormalizeSequence(sequence);
+
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(sequence));
+    f.Engine.Play(0);
+
+    for (; f.Now < At(960); f.Now += 5000)
+    {
+        f.Engine.Sweep();
+    }
+
+    // Played again from the start, half way through the note.
+    auto const restartedAt = f.Now;
+    f.Engine.Play(0);
+
+    for (; f.Now < restartedAt + 20000 + 4000000; f.Now += 5000)
+    {
+        f.Engine.Sweep();
+    }
+
+    auto const sent = f.Output.All();
+    auto const ends = [&sent](uint64_t timestamp)
+    {
+        return std::count_if(sent.begin(), sent.end(), [timestamp](SentMessage const& m)
+        {
+            return m.Words[0] == 0x40803C00u && m.Timestamp == timestamp;
+        });
+    };
+
+    // The first note ended at the restart. Its old end, two bars after the first start, never
+    // went out: it would have cut the new note. The new note ends two bars after the new start.
+    VERIFY_ARE_EQUAL(ptrdiff_t{ 1 }, ends(0));
+    VERIFY_ARE_EQUAL(ptrdiff_t{ 0 }, ends(At(Bar * 2)));
+    VERIFY_ARE_EQUAL(ptrdiff_t{ 1 }, ends(restartedAt + 20000 + 4000000));
+}
+
+void PlaybackEngineTests::AMidi1NoteEndsWithOneWord()
+{
+    Fixture f{};
+    f.Engine.SetDestinationLookup([](EndpointRef const&, uint8_t) { return DestinationInfo{ false, 0 }; });
+    f.Engine.SetSequence(Snapshot(KeysSequence()));
+    f.Engine.Play(0);
+
+    f.Now = 1100000;
+    f.Output.Clear();
+    f.Engine.Stop();
+
+    auto const sent = f.Output.All();
+    VERIFY_ARE_EQUAL(0x20803C00u, sent.front().Words[0] & 0xFFFFFF00u);
+    VERIFY_ARE_EQUAL(uint8_t{ 1 }, sent.front().Count);
 }
 
 void PlaybackEngineTests::StartingPartWayChasesTheChannelState()

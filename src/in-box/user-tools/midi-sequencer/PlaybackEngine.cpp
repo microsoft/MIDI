@@ -418,12 +418,14 @@ namespace midisequencer
     {
         auto const now = m_clock.Now ? m_clock.Now() : 0;
 
-        // First, end every note that's still sounding or still to start.
+        // First, end every note that's still sounding or still to start. One whose start is still
+        // waiting in the service ends just after it, so the end can't arrive first and leave it on.
         for (auto const& note : m_sounding)
         {
             if (note.OffTimestamp > now)
             {
-                m_output.Send(note.Endpoint, timestamp, note.OffWords, 2);
+                auto const at = note.OnTimestamp > now ? std::max(timestamp, note.OnTimestamp + 1) : timestamp;
+                m_output.Send(note.Endpoint, at, note.OffWords, note.WordCount);
             }
         }
 
@@ -633,12 +635,27 @@ namespace midisequencer
 
                 if (audible)
                 {
-                    SendRendered(track, info, switching ? Wrap(stretchEnd) : SegmentEnd(), messages);
+                    SendRendered(track, info, switching ? Wrap(stretchEnd) : SegmentEnd(), now, messages);
                 }
             }
 
             if (switching)
             {
+                // Notes this track started in an earlier sweep end where the launch takes over too,
+                // ahead of anything the new mode starts there.
+                auto const switchAt = EarlierBy(TimestampAtTick(Wrap(stretchEnd)), info.OffsetMicroseconds);
+
+                for (auto& note : m_sounding)
+                {
+                    if (note.TrackId == track.Id && !note.HandedOver && note.OffTimestamp > switchAt)
+                    {
+                        note.OffTimestamp = std::max(switchAt, note.OnTimestamp + 1);
+                        m_output.Send(note.Endpoint, note.OffTimestamp, note.OffWords, note.WordCount);
+                        ++m_counters.MessagesSent;
+                        note.HandedOver = true;
+                    }
+                }
+
                 state.Mode = state.PendingMode;
                 state.ClipId = state.PendingClipId;
                 state.ClipStartUnwrapped = state.PendingAtUnwrapped;
@@ -699,8 +716,15 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
-    void PlaybackEngine::SendRendered(Track const& track, DestinationInfo const& info, int64_t clampOffsAt, std::vector<RenderedMessage>& messages)
+    void PlaybackEngine::SendRendered(Track const& track, DestinationInfo const& info, int64_t clampOffsAt, uint64_t now, std::vector<RenderedMessage>& messages)
     {
+        auto const limit = now + LookAheadTicks();
+        auto const lead = static_cast<uint64_t>(info.OffsetMicroseconds) * m_clock.TicksPerSecond / 1000000;
+
+        // Where each note started, by group, channel and note number, so its end can't be sent
+        // ahead of its start.
+        std::map<uint32_t, uint64_t> starts{};
+
         for (auto& message : messages)
         {
             // A note still sounding where the loop goes round, or where a launch takes over, ends there.
@@ -712,28 +736,86 @@ namespace midisequencer
             ApplyDestination(track.Destination, message.Words, message.WordCount);
 
             auto const timestamp = EarlierBy(TimestampAtTick(message.Tick), info.OffsetMicroseconds);
-            SendTo(track.Destination.Endpoint, info.SpeaksMidi2, timestamp, message.Words.data(), message.WordCount);
+            auto const key = message.Words[0] & 0x0F0FFF00u;
 
-            if (message.Kind == RenderedKind::NoteOff && !track.Destination.Endpoint.IsEmpty())
+            if (message.Kind == RenderedKind::NoteOff)
             {
-                // Remember the end, so Stop can send it early.
-                SoundingNote note{};
-                note.Endpoint = track.Destination.Endpoint;
-                note.OffTimestamp = timestamp;
-                note.Midi2 = info.SpeaksMidi2;
+                auto const start = starts.find(key);
+                QueueNoteOff(track.Id, track.Destination.Endpoint, info.SpeaksMidi2, start != starts.end() ? start->second : 0,
+                    timestamp, lead, message.Words.data(), message.WordCount, limit);
+                continue;
+            }
 
-                auto const translated = info.SpeaksMidi2
-                    ? TranslateToMidi2(message.Words.data(), message.WordCount)
-                    : TranslateToMidi1(message.Words.data(), message.WordCount);
+            if (message.Kind == RenderedKind::NoteOn)
+            {
+                starts[key] = timestamp;
+            }
 
-                if (translated.Count > 0)
-                {
-                    note.OffWords[0] = translated.Messages[0][0];
-                    note.OffWords[1] = translated.Messages[0][1];
-                    m_sounding.push_back(note);
-                }
+            SendTo(track.Destination.Endpoint, info.SpeaksMidi2, timestamp, message.Words.data(), message.WordCount);
+        }
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::QueueNoteOff(
+        std::wstring const& trackId,
+        EndpointRef const& endpoint,
+        bool midi2,
+        uint64_t onTimestamp,
+        uint64_t offTimestamp,
+        uint64_t lead,
+        uint32_t const* words,
+        uint8_t wordCount,
+        uint64_t limit)
+    {
+        if (endpoint.IsEmpty() || wordCount == 0)
+        {
+            return;
+        }
+
+        auto const translated = midi2 ? TranslateToMidi2(words, wordCount) : TranslateToMidi1(words, wordCount);
+
+        if (translated.Count == 0)
+        {
+            return;
+        }
+
+        SoundingNote note{};
+        note.TrackId = trackId;
+        note.Endpoint = endpoint;
+        note.OffWords[0] = translated.Messages[0][0];
+        note.OffWords[1] = translated.Messages[0][1];
+        note.WordCount = translated.WordCounts[0];
+        note.OnTimestamp = onTimestamp;
+        note.OffTimestamp = std::max(offTimestamp, onTimestamp + 1);
+        note.Lead = lead;
+
+        if (note.OffTimestamp <= limit)
+        {
+            m_output.Send(note.Endpoint, note.OffTimestamp, note.OffWords, note.WordCount);
+            ++m_counters.MessagesSent;
+            note.HandedOver = true;
+        }
+
+        m_sounding.push_back(std::move(note));
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::SendDueNoteOffs(uint64_t limit)
+    {
+        for (auto& note : m_sounding)
+        {
+            if (!note.HandedOver && note.OffTimestamp <= limit)
+            {
+                m_output.Send(note.Endpoint, note.OffTimestamp, note.OffWords, note.WordCount);
+                ++m_counters.MessagesSent;
+                note.HandedOver = true;
             }
         }
+    }
+
+    uint64_t PlaybackEngine::LookAheadTicks() const noexcept
+    {
+        return static_cast<uint64_t>(m_settings.LookAheadMicroseconds) * m_clock.TicksPerSecond / 1000000;
     }
 
     _Use_decl_annotations_
@@ -747,6 +829,7 @@ namespace midisequencer
         }
 
         auto const info = LookupDestination(metronome.Endpoint, metronome.Group);
+        auto const lead = static_cast<uint64_t>(info.OffsetMicroseconds) * m_clock.TicksPerSecond / 1000000;
         auto const horizon = now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + info.OffsetMicroseconds) * m_clock.TicksPerSecond / 1000000;
         auto const horizonTick = std::min(TickAtTimestamp(horizon), SegmentEnd());
         auto const& meter = m_sequence->Meter;
@@ -771,10 +854,12 @@ namespace midisequencer
 
             uint32_t words[2]{};
             BuildNoteOn(click, metronome.Group, words);
-            SendTo(metronome.Endpoint, info.SpeaksMidi2, EarlierBy(TimestampAtTick(tick), info.OffsetMicroseconds), words, 2);
+            auto const onAt = EarlierBy(TimestampAtTick(tick), info.OffsetMicroseconds);
+            SendTo(metronome.Endpoint, info.SpeaksMidi2, onAt, words, 2);
 
             BuildNoteOff(click, metronome.Group, words);
-            SendTo(metronome.Endpoint, info.SpeaksMidi2, EarlierBy(TimestampAtTick(tick + ClickTicks), info.OffsetMicroseconds), words, 2);
+            QueueNoteOff(std::wstring{}, metronome.Endpoint, info.SpeaksMidi2, onAt,
+                EarlierBy(TimestampAtTick(tick + ClickTicks), info.OffsetMicroseconds), lead, words, 2, now + LookAheadTicks());
 
             tick += TicksPerBeat(MeterAtTick(meter, tick));
         }
@@ -843,12 +928,15 @@ namespace midisequencer
             return !anySolo;
         });
 
+        // Ends now due go first, so each lands ahead of a new note of the same pitch at its time.
+        SendDueNoteOffs(now + LookAheadTicks());
+
         SweepTracks(m_sequence->Tracks, now, anySolo, false, false);
         SweepMetronome(now);
         SweepClockOutputs(now);
 
         // Notes that have ended don't need ending again.
-        std::erase_if(m_sounding, [now](SoundingNote const& note) { return note.OffTimestamp <= now; });
+        std::erase_if(m_sounding, [now](SoundingNote const& note) { return note.HandedOver && note.OffTimestamp <= now; });
     }
 
     _Use_decl_annotations_
@@ -881,9 +969,23 @@ namespace midisequencer
                 return !anySolo;
             });
 
+            SendDueNoteOffs(loopEndTimestamp + LookAheadTicks());
             SweepTracks(m_sequence->Tracks, loopEndTimestamp, anySolo, false, false);
             SweepMetronome(loopEndTimestamp);
             SweepClockOutputs(loopEndTimestamp);
+
+            // A note whose end is still waiting, such as one started before the loop was turned
+            // on, ends at the loop's end too.
+            for (auto& note : m_sounding)
+            {
+                if (!note.HandedOver)
+                {
+                    auto const end = loopEndTimestamp > note.Lead ? loopEndTimestamp - note.Lead : 1;
+                    note.OffTimestamp = std::max(std::min(note.OffTimestamp, end), note.OnTimestamp + 1);
+                }
+            }
+
+            SendDueNoteOffs(loopEndTimestamp);
 
             m_history.push_back(m_segment);
 
