@@ -4,10 +4,12 @@
 #include "MidiSrvPorts.h"
 #include <ntverp.h>
 #include <ks.h>
+#include <vector>
 
 #include "Feature_Servicing_MIDI2WinMMPortHandleSlotWidth.h"
 #include "Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval.h"
 #include "Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf.h"
+#include "Feature_Servicing_MIDI2WinMMPortListLockScope.h"
 
 using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
@@ -104,9 +106,34 @@ CMidiPorts::MidiInterfaceChange
                     RETURN_IF_FAILED(RefreshPortsForFlow(Flow));
                 }
 
-                for (auto const& [portHandle, openPort] : m_OpenPorts)
+                if (Feature_Servicing_MIDI2WinMMPortListLockScope::IsEnabled())
                 {
-                    openPort->NotifyInterfaceRemoval(notifiedInterface);
+                    try
+                    {
+                        std::vector<wil::com_ptr_nothrow<CMidiPort>> openPorts;
+                        openPorts.reserve(m_OpenPorts.size());
+
+                        for (auto const& [portHandle, openPort] : m_OpenPorts)
+                        {
+                            openPorts.push_back(openPort);
+                        }
+
+                        // A port's Reset and Stop call the app while holding the port lock, and the app may call back into us.
+                        lock.reset();
+
+                        for (auto const& openPort : openPorts)
+                        {
+                            openPort->NotifyInterfaceRemoval(notifiedInterface);
+                        }
+                    }
+                    CATCH_RETURN();
+                }
+                else
+                {
+                    for (auto const& [portHandle, openPort] : m_OpenPorts)
+                    {
+                        openPort->NotifyInterfaceRemoval(notifiedInterface);
+                    }
                 }
             }
 
@@ -733,6 +760,11 @@ _Use_decl_annotations_
 HRESULT
 CMidiPorts::Open(MidiFlow flow, UINT portNumber, const MIDIOPENDESC* midiOpenDesc, DWORD_PTR flags, MidiPortHandle* openedPort)
 {
+    if (Feature_Servicing_MIDI2WinMMPortListLockScope::IsEnabled())
+    {
+        return OpenOutsidePortListLock(flow, portNumber, midiOpenDesc, flags, openedPort);
+    }
+
     TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
@@ -806,6 +838,11 @@ _Use_decl_annotations_
 HRESULT
 CMidiPorts::Close(MidiFlow flow, MidiPortHandle portHandle)
 {
+    if (Feature_Servicing_MIDI2WinMMPortListLockScope::IsEnabled())
+    {
+        return CloseOutsidePortListLock(flow, portHandle);
+    }
+
     TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
@@ -823,6 +860,115 @@ CMidiPorts::Close(MidiFlow flow, MidiPortHandle portHandle)
     // remove it from the open ports list, even if cleanup fails.
     auto remove = wil::scope_exit([&]() { m_OpenPorts.erase(port); });
     RETURN_IF_FAILED(port->second->Shutdown());
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiPorts::OpenOutsidePortListLock(MidiFlow flow, UINT portNumber, const MIDIOPENDESC* midiOpenDesc, DWORD_PTR flags, MidiPortHandle* openedPort)
+{
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)flow, "MidiFlow"),
+        TraceLoggingValue(portNumber, "portNumber"),
+        TraceLoggingValue(flags, "Flags"));
+
+    RETURN_HR_IF(E_POINTER, nullptr == midiOpenDesc);
+    RETURN_HR_IF(E_POINTER, nullptr == openedPort);
+    RETURN_HR_IF(E_INVALIDARG, flow != MidiFlowIn && flow != MidiFlowOut);
+
+    try
+    {
+        // Service assigned port numbers start at 1, winmm port numbers start at 0.
+        UINT localPortNumber = portNumber + 1;
+        std::wstring interfaceId;
+
+        {
+            auto lock = m_Lock.lock();
+
+            RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), localPortNumber > m_MidiPortCount[flow]);
+            auto portInfo = m_MidiPortInfo[flow].find(localPortNumber);
+
+            RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), portInfo == m_MidiPortInfo[flow].end());
+
+            interfaceId = portInfo->second.InterfaceId;
+        }
+
+        // Connecting to the service takes milliseconds, and every winmm midi call in this process needs the lock.
+        wil::com_ptr_nothrow<CMidiPort> midiPort;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPort>(&midiPort, m_SessionId, interfaceId, flow, midiOpenDesc, flags));
+
+        bool removedWhileOpening{ true };
+
+        {
+            auto lock = m_Lock.lock();
+
+            for (auto const& [portNum, port] : m_MidiPortInfo[flow])
+            {
+                if (port.InterfaceId == interfaceId)
+                {
+                    removedWhileOpening = false;
+                    break;
+                }
+            }
+
+            m_OpenPorts.emplace((MidiPortHandle) midiPort.get(), midiPort);
+        }
+
+        // A removal handled while we were connecting had no open port to tell.
+        if (removedWhileOpening)
+        {
+            midiPort->NotifyInterfaceRemoval(interfaceId);
+        }
+
+        *openedPort = (MidiPortHandle) midiPort.get();
+    }
+    CATCH_RETURN();
+
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)flow, "MidiFlow"),
+        TraceLoggingValue(portNumber, "portNumber"),
+        TraceLoggingValue(flags, "Flags"),
+        TraceLoggingValue(*openedPort, "MidiPortHandle"));
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiPorts::CloseOutsidePortListLock(MidiFlow flow, MidiPortHandle portHandle)
+{
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)flow, "MidiFlow"),
+        TraceLoggingValue(portHandle, "MidiPortHandle"));
+
+    wil::com_ptr_nothrow<CMidiPort> port;
+
+    {
+        auto lock = m_Lock.lock();
+
+        auto openPort = m_OpenPorts.find(portHandle);
+        RETURN_HR_IF(E_INVALIDARG, openPort == m_OpenPorts.end());
+        RETURN_HR_IF(E_INVALIDARG, !openPort->second->IsFlow(flow));
+
+        port = std::move(openPort->second);
+        m_OpenPorts.erase(openPort);
+    }
+
+    // Shutdown waits for a callback in progress, which may be calling into winmm and need the lock.
+    RETURN_IF_FAILED(port->Shutdown());
 
     return S_OK;
 }
