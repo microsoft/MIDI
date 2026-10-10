@@ -28,7 +28,7 @@ namespace Windows.Devices.Midi2
         [static_name("Windows.Devices.Midi2.IMidiApiStatics2", UUID_IMidiApiStatics2)]
         [contract(MidiCoreApiContract,1)]
         {
-            [noexcept] static Boolean IsProvidedByWindows();
+            [noexcept] static Boolean IsSystemProvided();
         }
     }
 }

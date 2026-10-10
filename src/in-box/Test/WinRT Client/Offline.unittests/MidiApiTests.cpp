@@ -9,7 +9,7 @@
 
 #include "stdafx.h"
 
-void MidiApiTests::TestIsProvidedByWindowsMatchesServingCopy()
+void MidiApiTests::TestIsSystemProvidedMatchesServingCopy()
 {
     // The factory's code lives in whichever copy of the DLL served the class.
     auto const factory = winrt::get_activation_factory<MidiApi>();
@@ -34,5 +34,5 @@ void MidiApiTests::TestIsProvidedByWindowsMatchesServingCopy()
 
     LOG_OUTPUT(L"Serving copy: %s", modulePath);
 
-    VERIFY_ARE_EQUAL(MidiApi::IsProvidedByWindows(), servedFromSystemFolder);
+    VERIFY_ARE_EQUAL(MidiApi::IsSystemProvided(), servedFromSystemFolder);
 }

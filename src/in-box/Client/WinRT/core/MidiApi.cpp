@@ -262,7 +262,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    bool MidiApi::IsProvidedByWindows() noexcept
+    bool MidiApi::IsSystemProvided() noexcept
     {
         try
         {
@@ -302,7 +302,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // Files are compared rather than path strings, because a module path can be a short name or carry a \\?\ prefix.
             FILE_ID_INFO systemCopy{};
 
-            bool const providedByWindows =
+            bool const systemProvided =
                 SUCCEEDED(GetFileId(systemCopyPath.c_str(), systemCopy)) &&
                 loadedCopy.VolumeSerialNumber == systemCopy.VolumeSerialNumber &&
                 memcmp(&loadedCopy.FileId, &systemCopy.FileId, sizeof(loadedCopy.FileId)) == 0;
@@ -314,10 +314,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
                 TraceLoggingWideString(L"Checked whether this copy of the API is the one in the Windows system folder.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                TraceLoggingBoolean(providedByWindows, "provided by Windows")
+                TraceLoggingBoolean(systemProvided, "system provided")
             );
 
-            return providedByWindows;
+            return systemProvided;
         }
         catch (...)
         {

@@ -19,5 +19,5 @@ public:
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
     END_TEST_CLASS()
 
-    TEST_METHOD(TestIsProvidedByWindowsMatchesServingCopy);
+    TEST_METHOD(TestIsSystemProvidedMatchesServingCopy);
 };

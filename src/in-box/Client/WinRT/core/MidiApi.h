@@ -20,7 +20,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static MidiApiMode GetCurrentlySelectedApiMode() noexcept;
 
-        static bool IsProvidedByWindows() noexcept;
+        static bool IsSystemProvided() noexcept;
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
