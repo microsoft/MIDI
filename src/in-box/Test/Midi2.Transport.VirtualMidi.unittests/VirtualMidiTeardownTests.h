@@ -32,10 +32,24 @@ public:
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
     END_TEST_CLASS()
 
+    TEST_METHOD_SETUP(TestSetup);
+    TEST_METHOD_CLEANUP(TestCleanup);
+
     // the device side is the only connection, which is how an app that publishes a device and
     // then quits looks to the service
     TEST_METHOD(TestClosingDeviceSideDoesNotHangService);
 
     // an app is still connected to the client side when the device side goes away
     TEST_METHOD(TestClosingDeviceSideWithClientConnectedDoesNotHangService);
+
+    // several apps closing their devices at once, each while the service is still running
+    // endpoint discovery on it
+    TEST_METHOD(TestClosingManyDevicesAtOnceDoesNotHangService);
+
+    // one app closes its devices while two others open new ones, so opens and teardowns overlap
+    TEST_METHOD(TestOpeningDevicesWhileOthersCloseDoesNotHangService);
+
+private:
+
+    MidiTest::DeviceNodeTracker m_deviceNodeTracker{};
 };

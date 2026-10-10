@@ -175,11 +175,19 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="TransportConfigTestHelper.h" />
     <ClInclude Include="LoopbackConfigTests.h" />
+    <ClInclude Include="LoopbackDataPathTests.h" />
+    <ClInclude Include="LoopbackServiceTests.h" />
+    <ClInclude Include="LoopbackTeardownTests.h" />
+    <ClInclude Include="LoopbackTestSupport.h" />
+    <ClInclude Include="..\inc\MidiTestServiceHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="TransportConfigTestHelper.cpp" />
     <ClCompile Include="LoopbackConfigTests.cpp" />
+    <ClCompile Include="LoopbackDataPathTests.cpp" />
+    <ClCompile Include="LoopbackServiceTests.cpp" />
+    <ClCompile Include="LoopbackTeardownTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

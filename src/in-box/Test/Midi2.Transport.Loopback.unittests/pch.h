@@ -43,14 +43,19 @@
 #include <Feature_Servicing_MIDI2EndpointCustomizationEnhancements.h>
 #include <Feature_Servicing_MIDI2LoopbackUniqueEndpointNames.h>
 #include <Feature_Servicing_MIDI2LoopbackFeedbackProtection.h>
+#include <Feature_Servicing_MIDI2SessionTrackerConnectionTime.h>
 
 // generated service interfaces, so tests can push configuration the same way the SDK does
 #include <WindowsMidiServices.h>
 #include <WindowsMidiServices_i.c>
 #include <Midi2MidiSrvTransport.h>
 
+// property keys
+#include "MidiDefs.h"
+
 #include "TransportConfigTestHelper.h"
 #include "..\inc\MidiTestDeviceNodes.h"
+#include "..\inc\MidiTestServiceHelpers.h"
 
 #endif //PCH_H
 

@@ -809,6 +809,44 @@ void LoopbackConfigTests::TestOverlongUnicodeNameIsAccepted()
     auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
 
     VERIFY_IS_TRUE(result.IsSuccess());
+
+    // 32 of these characters (96 bytes) is the most which fits, and the cut has to fall between them
+    winrt::Windows::Data::Json::JsonObject response{ nullptr };
+    VERIFY_IS_TRUE(winrt::Windows::Data::Json::JsonObject::TryParse(winrt::hstring{ result.ResponseJson }, response));
+
+    MidiTest::MultithreadedApartment apartment{ };
+
+    auto const nameA = MidiTest::ReadEndpointStringProperty(
+        std::wstring{ response.GetNamedString(L"endpointA", L"") }, STRING_PKEY_MIDI_EndpointName);
+
+    auto const nameB = MidiTest::ReadEndpointStringProperty(
+        std::wstring{ response.GetNamedString(L"endpointB", L"") }, STRING_PKEY_MIDI_EndpointName);
+
+    VERIFY_ARE_EQUAL(longNameA.substr(0, 32), nameA);
+    VERIFY_ARE_EQUAL(longNameB.substr(0, 32), nameB);
+}
+
+
+void LoopbackConfigTests::TestUnrecognizedCommandIsRejectedWithAMessage()
+{
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    auto const result = SendLoopbackConfig(LR"({"transportCommand":{"commandName":"notARealCommand"}})");
+
+    VERIFY_IS_TRUE(result.CallSucceeded);
+    VERIFY_IS_FALSE(result.ReportedSuccess);
+
+    // Both gate states give a message: English text before
+    // Feature_Servicing_MIDI2LoopbackErrorStringResources, the resource file after. A resource
+    // string missing from the file reads as empty.
+    winrt::Windows::Data::Json::JsonObject response{ nullptr };
+    VERIFY_IS_TRUE(winrt::Windows::Data::Json::JsonObject::TryParse(winrt::hstring{ result.ResponseJson }, response));
+
+    VERIFY_IS_FALSE(response.GetNamedString(L"message", L"").empty(), result.ResponseJson.c_str());
 }
 
 

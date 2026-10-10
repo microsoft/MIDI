@@ -7,6 +7,7 @@
 // ============================================================================
 
 #include "pch.h"
+#include <Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock.h>
 
 HRESULT MidiEndpointTable::Shutdown()
 {
@@ -636,35 +637,49 @@ HRESULT MidiEndpointTable::OnDeviceDisconnectedAlwaysTeardown(
             RETURN_IF_FAILED(E_INVALIDARG);  // fallback error
         }
 
-        auto lock = m_entriesLock.lock();
+        auto teardownLock = m_teardownLock.lock();
 
-        if (m_endpoints.find(associationId) == m_endpoints.end())
+        std::wstring clientInstanceId{ };
+        std::wstring deviceInstanceId{ };
+
         {
-            TraceLoggingWrite(
-                MidiVirtualMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Unexpected. There's no entry for associationId", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-            );
+            // not held for the removals below: they wait on the client manager lock, held by opens that wait on this
+            auto lock = m_entriesLock.lock();
 
-            RETURN_IF_FAILED(E_INVALIDARG);  // fallback error
-        }
+            if (m_endpoints.find(associationId) == m_endpoints.end())
+            {
+                TraceLoggingWrite(
+                    MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Unexpected. There's no entry for associationId", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                );
 
-        auto entry = m_endpoints[associationId];
+                RETURN_IF_FAILED(E_INVALIDARG);  // fallback error
+            }
 
-        if (entry.MidiClientBidi != nullptr)
-        {
-            LOG_IF_FAILED(entry.MidiClientBidi->UnlinkAssociatedCallback());
-            entry.MidiClientBidi.reset();
-        }
+            auto entry = m_endpoints[associationId];
 
-        if (entry.MidiDeviceBidi != nullptr)
-        {
-            LOG_IF_FAILED(entry.MidiDeviceBidi->UnlinkAssociatedCallback());
-            entry.MidiDeviceBidi.reset();
+            if (entry.MidiClientBidi != nullptr)
+            {
+                LOG_IF_FAILED(entry.MidiClientBidi->UnlinkAssociatedCallback());
+                entry.MidiClientBidi.reset();
+            }
+
+            if (entry.MidiDeviceBidi != nullptr)
+            {
+                LOG_IF_FAILED(entry.MidiDeviceBidi->UnlinkAssociatedCallback());
+                entry.MidiDeviceBidi.reset();
+            }
+
+            clientInstanceId = entry.CreatedShortClientInstanceId;
+            deviceInstanceId = entry.CreatedShortDeviceInstanceId;
+
+            // gone before the endpoints are, so a late open or close of this device finds nothing to act on
+            m_endpoints.erase(entry.VirtualEndpointAssociationId);
         }
 
         TraceLoggingWrite(
@@ -678,7 +693,7 @@ HRESULT MidiEndpointTable::OnDeviceDisconnectedAlwaysTeardown(
         );
 
         // remove the client endpoint. This will also trigger removal of MIDI 1.0 endpoints
-        LOG_IF_FAILED(TransportState::Current().GetEndpointManager()->DeleteClientEndpoint(entry.CreatedShortClientInstanceId));
+        LOG_IF_FAILED(TransportState::Current().GetEndpointManager()->DeleteClientEndpoint(clientInstanceId));
 
         TraceLoggingWrite(
             MidiVirtualMidiTransportTelemetryProvider::Provider(),
@@ -691,9 +706,7 @@ HRESULT MidiEndpointTable::OnDeviceDisconnectedAlwaysTeardown(
         );
 
         // deactivate the device
-        LOG_IF_FAILED(TransportState::Current().GetEndpointManager()->DeleteDeviceEndpoint(entry.CreatedShortDeviceInstanceId));
-
-        m_endpoints.erase(entry.VirtualEndpointAssociationId);
+        LOG_IF_FAILED(TransportState::Current().GetEndpointManager()->DeleteDeviceEndpoint(deviceInstanceId));
 
         TraceLoggingWrite(
             MidiVirtualMidiTransportTelemetryProvider::Provider(),
@@ -714,17 +727,37 @@ _Use_decl_annotations_
 bool MidiEndpointTable::IsUniqueIdInUse(std::wstring const uniqueId) noexcept
 {
     auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueId);
-    auto lock = m_entriesLock.lock();
 
-    for (auto const& it : m_endpoints)
+    if (Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock::IsEnabled())
     {
-        if (it.second.ShortUniqueId == cleanId)
-        {
-            return true;
-        }
-    }
+        // waits out a teardown in progress, whose endpoints still exist until it ends
+        auto teardownLock = m_teardownLock.lock();
+        auto lock = m_entriesLock.lock();
 
-    return false;
+        for (auto const& it : m_endpoints)
+        {
+            if (it.second.ShortUniqueId == cleanId)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    else
+    {
+        auto lock = m_entriesLock.lock();
+
+        for (auto const& it : m_endpoints)
+        {
+            if (it.second.ShortUniqueId == cleanId)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 

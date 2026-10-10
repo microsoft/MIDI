@@ -8,82 +8,20 @@
 
 #include "pch.h"
 
-#include <atomic>
-#include <memory>
-#include <thread>
-
 #include "VirtualMidiTeardownTests.h"
+#include "VirtualDeviceTestSupport.h"
 
 using namespace WEX::Common;
 using namespace WEX::Logging;
-using namespace TransportConfigTest;
+using namespace VirtualDeviceTest;
 
 namespace
 {
-    // {8FEAAD91-70E1-4A19-997A-377720A719C1}
-    constexpr GUID VirtualMidiTransportId
-    {
-        0x8FEAAD91, 0x70E1, 0x4A19, { 0x99, 0x7A, 0x37, 0x77, 0x20, 0xA7, 0x19, 0xC1 }
-    };
-
-    constexpr wchar_t VirtualMidiTransportIdString[]{ L"{8FEAAD91-70E1-4A19-997A-377720A719C1}" };
-
-    // the calling component id the other service-level transport tests use. The service only
-    // traces it.
-    constexpr GUID TestCallingComponent
-    {
-        0xc24cc593, 0xbc6b, 0x4726, { 0xb5, 0x52, 0xbe, 0xc8, 0x2d, 0xed, 0xb6, 0x8c }
-    };
-
-    // Far longer than a healthy close takes, including protocol negotiation timing out at its
-    // configurable maximum of 50 seconds, so only a hung service gets here.
-    constexpr DWORD HangTimeoutMilliseconds{ 60000 };
-
-
-    // Neither connection is expected to receive anything that matters to these tests.
-    class IgnoreMessagesCallback final : public IMidiCallback
-    {
-    public:
-        STDMETHOD(QueryInterface)(_In_ REFIID riid, _COM_Outptr_ void** object) noexcept override
-        {
-            if (object == nullptr)
-            {
-                return E_POINTER;
-            }
-
-            if (riid == __uuidof(IUnknown) || riid == __uuidof(IMidiCallback))
-            {
-                *object = static_cast<IMidiCallback*>(this);
-                return S_OK;
-            }
-
-            *object = nullptr;
-            return E_NOINTERFACE;
-        }
-
-        // Static lifetime, so a connection left behind on a hung thread can never outlive it.
-        STDMETHOD_(ULONG, AddRef)() noexcept override { return 2; }
-        STDMETHOD_(ULONG, Release)() noexcept override { return 1; }
-
-        STDMETHOD(Callback)(
-            _In_ MessageOptionFlags,
-            _In_ PVOID,
-            _In_ UINT,
-            _In_ LONGLONG,
-            _In_ LONGLONG) noexcept override
-        {
-            return S_OK;
-        }
-    };
-
-    IgnoreMessagesCallback g_ignoreMessages;
-
-
-    // Shared between the test thread and the thread doing the work. The test thread may give up
-    // on a hung run and return while the worker still holds this, hence the shared_ptr.
+    // Shared between the test thread and the worker doing the run, which the test thread may have
+    // to abandon.
     struct TeardownRun
     {
-        explicit TeardownRun(_In_ bool openClientSide) : OpenClientSide{ openClientSide } { }
+        explicit TeardownRun(_In_ bool const openClientSide) : OpenClientSide{ openClientSide } { }
 
         bool const OpenClientSide;
 
@@ -91,7 +29,7 @@ namespace
         // nothing else here is safe to read.
         std::atomic<wchar_t const*> Step{ L"starting" };
 
-        // Written by the worker, and read only after it sets Finished.
+        // Written by the run, and read only after it has finished.
         bool Skipped{ false };
         HRESULT Result{ S_OK };
         wchar_t const* Message{ L"" };
@@ -101,65 +39,21 @@ namespace
         HRESULT DeviceCloseResult{ S_OK };
         ULONGLONG DeviceCloseMilliseconds{ 0 };
         HRESULT ClientCloseResult{ S_OK };
-
-        wil::unique_event_nothrow Finished;
     };
 
 
-    void Fail(_Inout_ TeardownRun& run, _In_ HRESULT result, _In_z_ wchar_t const* message)
+    void Fail(_Inout_ TeardownRun& run, _In_ HRESULT const result, _In_z_ wchar_t const* message)
     {
         run.Result = FAILED(result) ? result : E_FAIL;
         run.Message = message;
     }
 
 
-    // The create response lists the device-side endpoint the service made, under createdDevices.
-    std::wstring ReadCreatedDeviceEndpointId(_In_ std::wstring const& responseJson)
-    {
-        winrt::Windows::Data::Json::JsonObject response{ nullptr };
-
-        if (!winrt::Windows::Data::Json::JsonObject::TryParse(responseJson, response))
-        {
-            return {};
-        }
-
-        auto createdDevices = response.GetNamedArray(L"createdDevices", nullptr);
-
-        if (createdDevices == nullptr || createdDevices.Size() == 0)
-        {
-            return {};
-        }
-
-        return std::wstring{ createdDevices.GetObjectAt(0).GetNamedString(L"id", L"") };
-    }
-
-
-    // Both endpoints are named from the same unique id and differ only in this prefix. The SDK
-    // finds the client side by association id instead, which needs device enumeration.
-    std::wstring ClientEndpointIdFor(_In_ std::wstring const& deviceEndpointId)
-    {
-        constexpr std::wstring_view devicePrefix{ L"midiu_appdev_" };
-        constexpr std::wstring_view clientPrefix{ L"midiu_apppub_" };
-
-        auto position = deviceEndpointId.find(devicePrefix);
-
-        if (position == std::wstring::npos)
-        {
-            return {};
-        }
-
-        std::wstring clientEndpointId{ deviceEndpointId };
-
-        return clientEndpointId.replace(position, devicePrefix.size(), clientPrefix);
-    }
-
-
-    void RunTeardownSteps(_Inout_ TeardownRun& run)
+    void RunTeardown(_Inout_ TeardownRun& run)
     {
         run.Step = L"checking that the Virtual MIDI transport is available";
 
-        // an empty create array is a no-op the transport still answers
-        if (!SendTransportConfig(VirtualMidiTransportId, VirtualMidiTransportIdString, L"{\"create\":[]}").CallSucceeded)
+        if (!VirtualAvailable())
         {
             run.Skipped = true;
             run.Message = L"Virtual MIDI transport is not available.";
@@ -168,75 +62,30 @@ namespace
 
         run.Step = L"connecting to the service";
 
-        wil::com_ptr_nothrow<IMidiTransport> serviceTransport;
+        MidiTest::ServiceSession session{ };
 
-        auto hr = CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceTransport));
-        if (FAILED(hr)) { Fail(run, hr, L"Could not create the MidiSrv transport."); return; }
-
-        wil::com_ptr_nothrow<IMidiSessionTracker> sessionTracker;
-
-        hr = serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker);
-        if (FAILED(hr)) { Fail(run, hr, L"Could not activate the session tracker."); return; }
-
-        hr = sessionTracker->Initialize();
-        if (FAILED(hr)) { Fail(run, hr, L"Could not initialize the session tracker."); return; }
-
-        GUID sessionId{ };
-
-        hr = CoCreateGuid(&sessionId);
-        if (FAILED(hr)) { Fail(run, hr, L"Could not create a session id."); return; }
-
-        hr = sessionTracker->AddClientSession(sessionId, L"Virtual MIDI teardown test");
+        auto hr = session.Open(L"Virtual MIDI teardown test");
         if (FAILED(hr)) { Fail(run, hr, L"Could not register a session with the service."); return; }
-
-        // declared before the connections, so it runs after they are closed
-        auto removeSession = wil::scope_exit([&]
-        {
-            run.Step = L"closing the session";
-            sessionTracker->RemoveClientSession(sessionId);
-        });
 
         run.Step = L"creating the virtual device";
 
-        // There is no command to remove a virtual device. Closing its device side is what removes
-        // it, so a failure before the device side opens leaves it until the service restarts.
-        auto created = SendTransportConfig(
-            VirtualMidiTransportId,
-            VirtualMidiTransportIdString,
-            L"{\"create\":[{"
-            L"\"associationIdentifier\":\"" + MakeGuidString() + L"\","
-            L"\"name\":\"Service Teardown Test Virtual\","
-            L"\"description\":\"Service test virtual device\","
-            L"\"uniqueIdentifier\":\"" + MakeUniqueIdString() + L"\""
-            L"}]}");
+        auto const device = CreateDevice(L"Service Teardown Test Virtual");
 
-        if (!created.IsSuccess())
+        if (device.DeviceEndpointId.empty())
         {
             Fail(run, E_FAIL, L"The service did not create the virtual device.");
-            run.Detail = created.Message + L" " + created.ResponseJson;
+            run.Detail = device.Detail;
             return;
         }
 
-        run.DeviceEndpointId = ReadCreatedDeviceEndpointId(created.ResponseJson);
-
-        if (run.DeviceEndpointId.empty())
-        {
-            Fail(run, E_FAIL, L"The create response did not include the device-side endpoint id.");
-            run.Detail = created.ResponseJson;
-            return;
-        }
+        run.DeviceEndpointId = device.DeviceEndpointId;
 
         run.Step = L"opening the device side";
 
-        TRANSPORTCREATIONPARAMS creationParams{ MessageOptionFlags_None, MidiDataFormats_UMP, TestCallingComponent };
-        DWORD mmcssTaskId{ 0 };
+        auto const deviceMessages = MidiTest::ReceivedMessages::Create(false);
+        wil::com_ptr_nothrow<IMidiBidirectional> deviceSide{ };
 
-        wil::com_ptr_nothrow<IMidiBidirectional> deviceSide;
-
-        hr = serviceTransport->Activate(__uuidof(IMidiBidirectional), (void**)&deviceSide);
-        if (FAILED(hr)) { Fail(run, hr, L"Could not activate the device-side connection."); return; }
-
-        hr = deviceSide->Initialize(run.DeviceEndpointId.c_str(), &creationParams, &mmcssTaskId, &g_ignoreMessages, 0, sessionId);
+        hr = session.Connect(device.DeviceEndpointId, deviceMessages.get(), deviceSide);
         if (FAILED(hr)) { Fail(run, hr, L"Could not open the device side."); return; }
 
         // Opening the device side is what makes the service create the client side, and closing
@@ -247,13 +96,13 @@ namespace
             deviceSide->Shutdown();
         });
 
-        wil::com_ptr_nothrow<IMidiBidirectional> clientSide;
+        auto const clientMessages = MidiTest::ReceivedMessages::Create(false);
+        wil::com_ptr_nothrow<IMidiBidirectional> clientSide{ };
 
         if (run.OpenClientSide)
         {
             run.Step = L"opening the client side";
-
-            run.ClientEndpointId = ClientEndpointIdFor(run.DeviceEndpointId);
+            run.ClientEndpointId = device.ClientEndpointId;
 
             if (run.ClientEndpointId.empty())
             {
@@ -261,19 +110,8 @@ namespace
                 return;
             }
 
-            hr = serviceTransport->Activate(__uuidof(IMidiBidirectional), (void**)&clientSide);
-            if (FAILED(hr)) { Fail(run, hr, L"Could not activate the client-side connection."); return; }
-
-            mmcssTaskId = 0;
-
-            hr = clientSide->Initialize(run.ClientEndpointId.c_str(), &creationParams, &mmcssTaskId, &g_ignoreMessages, 0, sessionId);
-
-            if (FAILED(hr))
-            {
-                clientSide.reset();
-                Fail(run, hr, L"Could not open the client side.");
-                return;
-            }
+            hr = session.Connect(run.ClientEndpointId, clientMessages.get(), clientSide);
+            if (FAILED(hr)) { Fail(run, hr, L"Could not open the client side."); return; }
         }
 
         // The step under test. This is the call that never returns when the service hangs while
@@ -281,7 +119,7 @@ namespace
         run.Step = L"closing the device side";
         closeDeviceSide.release();
 
-        auto closeStart = GetTickCount64();
+        auto const closeStart = GetTickCount64();
         run.DeviceCloseResult = deviceSide->Shutdown();
         run.DeviceCloseMilliseconds = GetTickCount64() - closeStart;
 
@@ -291,59 +129,21 @@ namespace
             run.Step = L"closing the client side";
             run.ClientCloseResult = clientSide->Shutdown();
         }
+
+        run.Step = L"closing the session";
+        session.Close();
     }
 
 
-    void RunTeardown(_Inout_ TeardownRun& run) noexcept
+    std::shared_ptr<TeardownRun> RunGuardedTeardown(
+        _In_ bool const openClientSide,
+        _Out_ MidiTest::GuardedRunResult& guarded)
     {
-        try
-        {
-            auto initializeResult = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+        auto const run = std::make_shared<TeardownRun>(openClientSide);
 
-            if (FAILED(initializeResult))
-            {
-                Fail(run, initializeResult, L"Could not initialize COM on the worker thread.");
-            }
-            else
-            {
-                auto uninitialize = wil::scope_exit([] { CoUninitialize(); });
+        guarded = MidiTest::RunWithHangGuard([run] { RunTeardown(*run); });
 
-                RunTeardownSteps(run);
-            }
-        }
-        catch (...)
-        {
-            Fail(run, wil::ResultFromCaughtException(), L"An exception was thrown.");
-        }
-
-        run.Finished.SetEvent();
-    }
-
-
-    // Runs one teardown on its own thread. A hung service never returns from the close, so
-    // waiting for it inline would stall the whole test pass instead of failing this test.
-    bool FinishedBeforeTimeout(_In_ std::shared_ptr<TeardownRun> const& run)
-    {
-        std::thread worker([run] { RunTeardown(*run); });
-
-        if (run->Finished.wait(HangTimeoutMilliseconds))
-        {
-            worker.join();
-            return true;
-        }
-
-        // The thread is stuck in a call into the service. Keep this DLL loaded so the thread's
-        // code is still there if that call ever returns, and let the thread go.
-        HMODULE pinned{ nullptr };
-
-        GetModuleHandleExW(
-            GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
-            reinterpret_cast<LPCWSTR>(&g_ignoreMessages),
-            &pinned);
-
-        worker.detach();
-
-        return false;
+        return run;
     }
 
 
@@ -372,20 +172,48 @@ namespace
     }
 
 
-    void VerifyTeardownDoesNotHangService(_In_ bool openClientSide)
+    // The close can return while another service thread is still stuck, so the service also has
+    // to be able to add and remove another device afterwards.
+    void VerifyServiceStillAnswers(_In_z_ wchar_t const* after)
     {
-        auto run = std::make_shared<TeardownRun>(openClientSide);
-        VERIFY_SUCCEEDED(run->Finished.create(wil::EventOptions::ManualReset));
+        MidiTest::GuardedRunResult guarded{ };
+        auto const probe = RunGuardedTeardown(false, guarded);
 
-        if (!FinishedBeforeTimeout(run))
+        if (!guarded.Finished)
+        {
+            VERIFY_FAIL(String().Format(
+                L"After %s, the service did not return within %u seconds while %s for another virtual device, so it is hung. MIDI will not work on this PC until the MIDI service is restarted.",
+                after,
+                MidiTest::HangTimeoutMilliseconds / 1000,
+                probe->Step.load()));
+
+            return;
+        }
+
+        VERIFY_SUCCEEDED(guarded.Result, String().Format(L"Exception while %s", probe->Step.load()));
+
+        LogRun(*probe);
+        VERIFY_IS_FALSE(probe->Skipped);
+        VERIFY_SUCCEEDED(probe->Result, String().Format(L"Another device: %s (while %s)", probe->Message, probe->Step.load()));
+    }
+
+
+    void VerifyTeardownDoesNotHangService(_In_ bool const openClientSide)
+    {
+        MidiTest::GuardedRunResult guarded{ };
+        auto const run = RunGuardedTeardown(openClientSide, guarded);
+
+        if (!guarded.Finished)
         {
             VERIFY_FAIL(String().Format(
                 L"The service did not return within %u seconds while %s, so it is hung. MIDI will not work on this PC until the MIDI service is restarted.",
-                HangTimeoutMilliseconds / 1000,
+                MidiTest::HangTimeoutMilliseconds / 1000,
                 run->Step.load()));
 
             return;
         }
+
+        VERIFY_SUCCEEDED(guarded.Result, String().Format(L"Exception while %s", run->Step.load()));
 
         if (run->Skipped)
         {
@@ -396,25 +224,153 @@ namespace
         LogRun(*run);
         VERIFY_SUCCEEDED(run->Result, String().Format(L"%s (while %s)", run->Message, run->Step.load()));
 
-        // The close can return while another service thread is still stuck, so check the service
-        // still answers by adding and removing a second device.
-        auto probe = std::make_shared<TeardownRun>(false);
-        VERIFY_SUCCEEDED(probe->Finished.create(wil::EventOptions::ManualReset));
-
-        if (!FinishedBeforeTimeout(probe))
-        {
-            VERIFY_FAIL(String().Format(
-                L"The first virtual device was removed, but then the service did not return within %u seconds while %s for a second one, so it is hung. MIDI will not work on this PC until the MIDI service is restarted.",
-                HangTimeoutMilliseconds / 1000,
-                probe->Step.load()));
-
-            return;
-        }
-
-        LogRun(*probe);
-        VERIFY_IS_FALSE(probe->Skipped);
-        VERIFY_SUCCEEDED(probe->Result, String().Format(L"Second device: %s (while %s)", probe->Message, probe->Step.load()));
+        VerifyServiceStillAnswers(L"the first virtual device was removed");
     }
+
+
+    // Sized so a service without the negotiation fix, which waits out the 5 second discovery
+    // timeout for each close made during discovery, still finishes well inside the time limit.
+    constexpr uint32_t ChurnThreadCount{ 3 };
+    constexpr uint32_t ChurnDevicesPerThread{ 2 };
+
+    struct ChurnRun
+    {
+        std::atomic<uint32_t> DevicesClosed{ 0 };
+        std::atomic<uint32_t> Failures{ 0 };
+        std::atomic<HRESULT> FirstFailure{ S_OK };
+    };
+
+    // Opens a new device's device side and closes it again straight away, while the service is
+    // still running endpoint discovery on the client side.
+    HRESULT OpenAndCloseOneDevice() noexcept try
+    {
+        MidiTest::ServiceSession session{ };
+        RETURN_IF_FAILED(session.Open(L"Virtual MIDI teardown test, several at once"));
+
+        auto const device = CreateDevice(L"Service Teardown Test Virtual");
+        RETURN_HR_IF(E_FAIL, device.DeviceEndpointId.empty());
+
+        auto const messages = MidiTest::ReceivedMessages::Create(false);
+        wil::com_ptr_nothrow<IMidiBidirectional> deviceSide{ };
+
+        RETURN_IF_FAILED(session.Connect(device.DeviceEndpointId, messages.get(), deviceSide));
+
+        deviceSide->Shutdown();
+        session.Close();
+
+        return S_OK;
+    }
+    CATCH_RETURN();
+
+
+    // Opening an endpoint takes the client manager lock and then the table lock; a teardown must not do the reverse.
+    constexpr uint32_t RaceClosingDeviceCount{ 6 };
+    constexpr uint32_t RaceOpeningAppCount{ 2 };
+    constexpr uint32_t RaceDevicesPerOpeningApp{ 3 };
+
+    struct OpenWhileClosingRun
+    {
+        // String literals only. The test thread reads this after giving up on a hung run.
+        std::atomic<wchar_t const*> Step{ L"starting" };
+
+        // set once every app is ready, so the opens and the closes start together
+        wil::unique_event_nothrow Go{ };
+
+        MidiTest::ServiceSession ClosingSession{ };
+        std::vector<wil::com_ptr_nothrow<IMidiBidirectional>> DevicesToClose{ };
+
+        std::atomic<uint32_t> Closed{ 0 };
+        std::atomic<uint32_t> Opened{ 0 };
+        std::atomic<uint32_t> Failures{ 0 };
+        std::atomic<HRESULT> FirstFailure{ S_OK };
+
+        void RecordFailure(_In_ HRESULT const result) noexcept
+        {
+            HRESULT expected{ S_OK };
+            FirstFailure.compare_exchange_strong(expected, result);
+            Failures++;
+        }
+    };
+
+
+    HRESULT OpenNewDevice(
+        _In_ MidiTest::ServiceSession& session,
+        _Inout_ wil::com_ptr_nothrow<IMidiBidirectional>& deviceSide)
+    {
+        auto const device = CreateDevice(L"Service Teardown Test Virtual");
+        RETURN_HR_IF(E_FAIL, device.DeviceEndpointId.empty());
+
+        auto const messages = MidiTest::ReceivedMessages::Create(false);
+
+        return session.Connect(device.DeviceEndpointId, messages.get(), deviceSide);
+    }
+
+
+    void CloseDevicesDuringRace(_In_ std::shared_ptr<OpenWhileClosingRun> const run) noexcept
+    {
+        MidiTest::MultithreadedApartment apartment{ };
+
+        run->Go.wait();
+
+        for (auto& deviceSide : run->DevicesToClose)
+        {
+            deviceSide->Shutdown();
+            deviceSide.reset();
+
+            run->Closed++;
+        }
+    }
+
+
+    void OpenDevicesDuringRace(_In_ std::shared_ptr<OpenWhileClosingRun> const run) noexcept try
+    {
+        MidiTest::MultithreadedApartment apartment{ };
+        MidiTest::ServiceSession session{ };
+        std::vector<wil::com_ptr_nothrow<IMidiBidirectional>> opened{ };
+
+        auto closeOpened = wil::scope_exit([&]
+            {
+                for (auto& deviceSide : opened)
+                {
+                    deviceSide->Shutdown();
+                }
+
+                opened.clear();
+                session.Close();
+            });
+
+        THROW_IF_FAILED(session.Open(L"Virtual MIDI teardown test, opening while others close"));
+
+        run->Go.wait();
+
+        for (uint32_t i = 0; i < RaceDevicesPerOpeningApp; i++)
+        {
+            wil::com_ptr_nothrow<IMidiBidirectional> deviceSide{ };
+            THROW_IF_FAILED(OpenNewDevice(session, deviceSide));
+
+            opened.push_back(std::move(deviceSide));
+            run->Opened++;
+        }
+    }
+    catch (...)
+    {
+        run->RecordFailure(wil::ResultFromCaughtException());
+    }
+}
+
+
+bool VirtualMidiTeardownTests::TestSetup()
+{
+    m_deviceNodeTracker.Start();
+
+    return true;
+}
+
+bool VirtualMidiTeardownTests::TestCleanup()
+{
+    m_deviceNodeTracker.RemoveDeviceNodesCreatedSinceStart();
+
+    return true;
 }
 
 
@@ -427,4 +383,169 @@ void VirtualMidiTeardownTests::TestClosingDeviceSideDoesNotHangService()
 void VirtualMidiTeardownTests::TestClosingDeviceSideWithClientConnectedDoesNotHangService()
 {
     VerifyTeardownDoesNotHangService(true);
+}
+
+
+void VirtualMidiTeardownTests::TestClosingManyDevicesAtOnceDoesNotHangService()
+{
+    if (!VirtualAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Virtual MIDI transport is not available.");
+        return;
+    }
+
+    auto const run = std::make_shared<ChurnRun>();
+
+    auto const guarded = MidiTest::RunWithHangGuard([run]
+        {
+            std::vector<std::thread> apps{ };
+
+            // joined even if starting one of them throws, because destroying a joinable thread ends the process
+            auto joinAll = wil::scope_exit([&apps]
+                {
+                    for (auto& app : apps)
+                    {
+                        if (app.joinable())
+                        {
+                            app.join();
+                        }
+                    }
+                });
+
+            for (uint32_t i = 0; i < ChurnThreadCount; i++)
+            {
+                apps.emplace_back([run]
+                    {
+                        MidiTest::MultithreadedApartment apartment{ };
+
+                        for (uint32_t j = 0; j < ChurnDevicesPerThread; j++)
+                        {
+                            auto const hr = OpenAndCloseOneDevice();
+
+                            if (SUCCEEDED(hr))
+                            {
+                                run->DevicesClosed++;
+                            }
+                            else
+                            {
+                                HRESULT expected{ S_OK };
+                                run->FirstFailure.compare_exchange_strong(expected, hr);
+                                run->Failures++;
+                            }
+                        }
+                    });
+            }
+        });
+
+    if (!guarded.Finished)
+    {
+        VERIFY_FAIL(String().Format(
+            L"The service did not return within %u seconds while %u apps were closing virtual devices at once (%u of %u closed), so it is hung. MIDI will not work on this PC until the MIDI service is restarted.",
+            MidiTest::HangTimeoutMilliseconds / 1000,
+            ChurnThreadCount,
+            run->DevicesClosed.load(),
+            ChurnThreadCount * ChurnDevicesPerThread));
+
+        return;
+    }
+
+    VERIFY_SUCCEEDED(guarded.Result);
+    VERIFY_ARE_EQUAL(run->Failures.load(), (uint32_t)0,
+        String().Format(L"First failure 0x%08X", static_cast<unsigned int>(run->FirstFailure.load())));
+
+    VerifyServiceStillAnswers(L"several virtual devices were removed at once");
+}
+
+
+void VirtualMidiTeardownTests::TestOpeningDevicesWhileOthersCloseDoesNotHangService()
+{
+    if (!VirtualAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Virtual MIDI transport is not available.");
+        return;
+    }
+
+    auto const run = std::make_shared<OpenWhileClosingRun>();
+    VERIFY_SUCCEEDED(run->Go.create(wil::EventOptions::ManualReset));
+
+    auto const guarded = MidiTest::RunWithHangGuard([run]
+        {
+            // runs after the apps below have finished, and never if one of them hangs
+            auto closeLeftovers = wil::scope_exit([&run]
+                {
+                    run->Step = L"closing the session";
+
+                    for (auto& deviceSide : run->DevicesToClose)
+                    {
+                        if (deviceSide)
+                        {
+                            deviceSide->Shutdown();
+                            deviceSide.reset();
+                        }
+                    }
+
+                    run->ClosingSession.Close();
+                });
+
+            run->Step = L"opening the devices to close";
+
+            THROW_IF_FAILED(run->ClosingSession.Open(L"Virtual MIDI teardown test, closing while others open"));
+
+            for (uint32_t i = 0; i < RaceClosingDeviceCount; i++)
+            {
+                wil::com_ptr_nothrow<IMidiBidirectional> deviceSide{ };
+                THROW_IF_FAILED(OpenNewDevice(run->ClosingSession, deviceSide));
+
+                run->DevicesToClose.push_back(std::move(deviceSide));
+            }
+
+            run->Step = L"one app was closing virtual devices as two others opened new ones";
+
+            std::vector<std::thread> apps{ };
+
+            // starts them together, and joins them even if starting one of them throws
+            auto startAndJoin = wil::scope_exit([&]
+                {
+                    run->Go.SetEvent();
+
+                    for (auto& app : apps)
+                    {
+                        if (app.joinable())
+                        {
+                            app.join();
+                        }
+                    }
+                });
+
+            apps.emplace_back(CloseDevicesDuringRace, run);
+
+            for (uint32_t i = 0; i < RaceOpeningAppCount; i++)
+            {
+                apps.emplace_back(OpenDevicesDuringRace, run);
+            }
+        });
+
+    auto const openedTarget = RaceOpeningAppCount * RaceDevicesPerOpeningApp;
+
+    if (!guarded.Finished)
+    {
+        VERIFY_FAIL(String().Format(
+            L"The service did not return within %u seconds while %s (closed %u of %u, opened %u of %u), so it is hung. MIDI will not work on this PC until the MIDI service is restarted.",
+            MidiTest::HangTimeoutMilliseconds / 1000,
+            run->Step.load(),
+            run->Closed.load(),
+            RaceClosingDeviceCount,
+            run->Opened.load(),
+            openedTarget));
+
+        return;
+    }
+
+    VERIFY_SUCCEEDED(guarded.Result, String().Format(L"Exception while %s", run->Step.load()));
+    VERIFY_ARE_EQUAL(run->Failures.load(), (uint32_t)0,
+        String().Format(L"First failure 0x%08X", static_cast<unsigned int>(run->FirstFailure.load())));
+    VERIFY_ARE_EQUAL(run->Closed.load(), RaceClosingDeviceCount);
+    VERIFY_ARE_EQUAL(run->Opened.load(), openedTarget);
+
+    VerifyServiceStillAnswers(L"devices were opened while others were closing");
 }

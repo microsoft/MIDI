@@ -69,6 +69,9 @@ private:
 
     wil::critical_section m_entriesLock;
 
+    // held for a whole device-side teardown, so IsUniqueIdInUse can wait for the old endpoints to go
+    wil::critical_section m_teardownLock;
+
     // key is the association id
     std::map<std::wstring, MidiVirtualDeviceEndpointEntry> m_endpoints;
 
