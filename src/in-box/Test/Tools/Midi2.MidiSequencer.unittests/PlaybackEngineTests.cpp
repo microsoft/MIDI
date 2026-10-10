@@ -420,18 +420,54 @@ void PlaybackEngineTests::ClockOutSends24PulsesAQuarterNote()
     VERIFY_IS_TRUE(std::any_of(stopped.begin(), stopped.end(), [](SentMessage const& m) { return m.Words[0] == 0x10FC0000u; }));
 }
 
-void PlaybackEngineTests::ADestinationOffsetHandsOverSooner()
+void PlaybackEngineTests::ADestinationOffsetSendsThatMuchEarly()
 {
+    auto sequence = KeysSequence();
+    sequence.Tracks.push_back(MakeTrack(L"t-far", L"Far synth", L"c-keys"));
+    NormalizeSequence(sequence);
+
     Fixture f{};
-    f.Engine.SetDestinationLookup([](EndpointRef const&, uint8_t) { return DestinationInfo{ true, 600000 }; });
-    f.Engine.SetSequence(Snapshot(KeysSequence()));
+    f.Engine.SetDestinationLookup([](EndpointRef const& endpoint, uint8_t)
+    {
+        return DestinationInfo{ true, endpoint.Name == L"Far synth" ? 600000u : 0u };
+    });
+    f.Engine.SetSequence(Snapshot(sequence));
     f.Engine.Play(0);
 
-    // The service will send to this device 600 ms early, so the engine hands its messages over
-    // 600 ms sooner. The timestamps themselves are unchanged: the service applies the offset.
+    // The in-box service doesn't send early, so the engine does. The music starts late enough
+    // for the device that needs its messages 600 ms early, and that device gets each one 600 ms
+    // before the other device gets the same note.
+    constexpr uint64_t Start = MusicStartsAt + 600000;
+
+    f.Now = PlayPressedAt + 600000;
+    f.Engine.Sweep();
+
     auto const ons = NoteOns(f.Output.All());
-    VERIFY_ARE_EQUAL(size_t{ 2 }, ons.size());
-    VERIFY_ARE_EQUAL(At(960), ons[1].Timestamp);
+
+    auto const times = [&ons](std::wstring const& endpoint)
+    {
+        std::vector<uint64_t> found{};
+
+        for (auto const& on : ons)
+        {
+            if (on.Endpoint == endpoint)
+            {
+                found.push_back(on.Timestamp);
+            }
+        }
+
+        return found;
+    };
+
+    auto const prompt = times(L"Synth");
+    auto const early = times(L"Far synth");
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, prompt.size());
+    VERIFY_ARE_EQUAL(Start, prompt[0]);
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, early.size());
+    VERIFY_ARE_EQUAL(Start - 600000, early[0]);
+    VERIFY_ARE_EQUAL(Start + 500000 - 600000, early[1]);
 }
 
 void PlaybackEngineTests::TheThreadPlaysOnItsOwn()
@@ -603,6 +639,47 @@ void PlaybackEngineTests::StoppingATrackSilencesItFromTheNextBar()
     VERIFY_ARE_EQUAL(size_t{ 3 }, NoteOns(f.Output.All()).size());
 }
 
+void PlaybackEngineTests::AClipCanStartAtAnExactPlace()
+{
+    auto sequence = KeysSequence();
+    sequence.Clips[0].Loop = true;
+    sequence.Tracks[0].Timeline[0].Length = Bar * 4;
+
+    Clip loop{};
+    loop.Id = L"c-loop";
+    loop.Length = Bar / 2;
+    loop.Loop = true;
+    loop.Notes = { testdata::MakeNote(0, 240, 72) };
+    sequence.Clips.push_back(loop);
+    NormalizeSequence(sequence);
+
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(sequence));
+    f.Engine.Play(0);
+    RunUntil(f, At(480));
+
+    // What recording into a slot does: the track goes quiet where the take starts, and the take
+    // loops from where it ends.
+    auto const start = f.Engine.NextLaunchPoint(-1);
+    VERIFY_ARE_EQUAL(Bar, start);
+
+    f.Engine.StopTrackAt(L"t-keys", start);
+    RunUntil(f, At(Bar + 480));
+
+    VERIFY_ARE_EQUAL(int64_t{ Bar + 480 }, f.Engine.UnwrappedTickAtTime(At(Bar + 480)));
+
+    f.Engine.LaunchClipAt(L"t-keys", L"c-loop", Bar * 2);
+    RunUntil(f, At(Bar * 3));
+
+    // The first bar's three notes, a quiet bar, then the loop from bar 3.
+    auto const ons = NoteOns(f.Output.All());
+    VERIFY_ARE_EQUAL(size_t{ 6 }, ons.size());
+    VERIFY_ARE_EQUAL(uint8_t{ 64 }, NoteNumber(ons[2]));
+    VERIFY_ARE_EQUAL(uint8_t{ 72 }, NoteNumber(ons[3]));
+    VERIFY_ARE_EQUAL(At(Bar * 2), ons[3].Timestamp);
+    VERIFY_ARE_EQUAL(At(Bar * 2 + Bar / 2), ons[4].Timestamp);
+}
+
 void PlaybackEngineTests::BackToTimelinePicksUpTheTimeline()
 {
     auto sequence = KeysSequence();
@@ -715,7 +792,7 @@ void MessageTranslationTests::Midi1BecomesMidi2()
     uint32_t const noteOff[1]{ 0x20903C00 };
     auto result = TranslateToMidi2(noteOff, 1);
     VERIFY_ARE_EQUAL(0x40803C00u, result.Messages[0][0]);
-    VERIFY_ARE_EQUAL(0x00000000u, result.Messages[0][1]);
+    VERIFY_ARE_EQUAL(0x80000000u, result.Messages[0][1]);
 
     uint32_t const note[1]{ 0x20903C40 };
     result = TranslateToMidi2(note, 1);
