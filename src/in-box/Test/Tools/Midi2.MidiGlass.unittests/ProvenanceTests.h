@@ -23,6 +23,7 @@ class ProvenanceTests
     TEST_METHOD(TheBlockIsWrittenInAFixedOrder);
     TEST_METHOD(AStringBasedOnIsTheName);
     TEST_METHOD(AFullIptcAddressIsShortened);
+    TEST_METHOD(EveryTermTheToolsWriteIsKnown);
     TEST_METHOD(DirectionOverridesAndZeroWidthCharactersAreRemoved);
     TEST_METHOD(ALongNameIsCutWithoutSplittingACharacter);
     TEST_METHOD(OnlyAPlainHttpsAddressIsALink);

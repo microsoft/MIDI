@@ -152,6 +152,27 @@ void ProvenanceTests::AFullIptcAddressIsShortened()
     VERIFY_IS_FALSE(midiapp::InvolvesGenerativeAi(midiapp::DigitalSourceTypes::DigitalCreation));
 }
 
+void ProvenanceTests::EveryTermTheToolsWriteIsKnown()
+{
+    namespace types = midiapp::DigitalSourceTypes;
+
+    for (auto const term : { types::DigitalCreation, types::DigitalCapture, types::TrainedAlgorithmicMedia,
+        types::CompositeWithTrainedAlgorithmicMedia, types::CompositeSynthetic, types::Composite, types::AlgorithmicMedia })
+    {
+        VERIFY_IS_TRUE(midiapp::IsKnownDigitalSourceType(term));
+    }
+
+    VERIFY_IS_FALSE(midiapp::IsKnownDigitalSourceType(L"compositeCapture"));
+
+    // A mix is only an AI mix when IPTC's term says so.
+    VERIFY_IS_FALSE(midiapp::InvolvesGenerativeAi(types::Composite));
+    VERIFY_IS_FALSE(midiapp::InvolvesGenerativeAi(types::DigitalCapture));
+    VERIFY_IS_TRUE(midiapp::InvolvesGenerativeAi(types::CompositeSynthetic));
+
+    auto const read = ParseBlock(LR"({ "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture" })");
+    VERIFY_ARE_EQUAL(std::wstring{ types::DigitalCapture }, read.DigitalSourceType);
+}
+
 void ProvenanceTests::DirectionOverridesAndZeroWidthCharactersAreRemoved()
 {
     VERIFY_ARE_EQUAL(std::wstring{ L"PatExample" }, midiapp::SanitizeProvenanceText(L"Pat\u202EExample", 256));

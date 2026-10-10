@@ -113,6 +113,7 @@
     <ClInclude Include="MackieControlTests.h" />
     <ClInclude Include="ProvenanceTests.h" />
     <ClInclude Include="ContentPackTests.h" />
+    <ClInclude Include="ZipArchiveTests.h" />
     <ClInclude Include="TestLayoutFiles.h" />
     <!-- shared by source with midiglass, so the document layer is tested exactly as it ships -->
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\JsonText.h" />
@@ -153,7 +154,8 @@
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\LfoWave.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ChannelVoiceWords.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.h" />
-    <ClInclude Include="..\..\..\user-tools\midi-app-shared\StoredZip.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\Deflate.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\ZipArchive.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ContentPack.h" />
   </ItemGroup>
   <ItemGroup>
@@ -178,6 +180,7 @@
     <ClCompile Include="MackieControlTests.cpp" />
     <ClCompile Include="ProvenanceTests.cpp" />
     <ClCompile Include="ContentPackTests.cpp" />
+    <ClCompile Include="ZipArchiveTests.cpp" />
     <ClCompile Include="TestLayoutFiles.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\JsonText.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutModel.cpp" />
@@ -218,7 +221,8 @@
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\LfoWave.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ChannelVoiceWords.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.cpp" />
-    <ClCompile Include="..\..\..\user-tools\midi-app-shared\StoredZip.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\Deflate.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\ZipArchive.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ContentPack.cpp" />
   </ItemGroup>
   <ItemGroup>

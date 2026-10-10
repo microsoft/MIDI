@@ -866,7 +866,7 @@ function checkLayout() {
         }
     });
 
-    const textSelectors = ".tname, .tsub, .cap .t, .cell .nm, .chip, .btn, .field, .scene .nm, .slabel .n, .slabel .s, .lanehead .ln, .lanehead .ls, .kv .v, .lbl, .insp-head .t, .menu-item, .table td, .marker, .lcd .big";
+    const textSelectors = ".tname, .tsub, .cap .t, .cell .nm, .chip, .btn, .field, .scene .nm, .slabel .n, .slabel .s, .lanehead .ln, .lanehead .ls, .kv .v, .lbl, .insp-head .t, .menu-item, .table td, .marker, .tag > span, .lcd .big";
 
     document.querySelectorAll(textSelectors).forEach(el => {
         if (el.offsetParent !== null && el.scrollWidth > el.clientWidth) {
@@ -919,13 +919,72 @@ function checkLayout() {
 
 let drawn = false;
 
+// The drawing code was written for the dark theme. Rather than a second copy of it, the light comp
+// remaps the few colors it draws with: white ink becomes black ink, and dark fills become white.
+function applyLightTheme() {
+    const remap = value => {
+        if (!value) {
+            return value;
+        }
+
+        const v = value.replace(/\s+/g, "").toUpperCase();
+        const ink = v.match(/^RGBA\(255,255,255,([\d.]+)\)$/);
+
+        if (ink) {
+            return `rgba(0,0,0,${Math.min(1, parseFloat(ink[1]) * 1.2).toFixed(3)})`;
+        }
+
+        if (v === "#FFF" || v === "#FFFFFF") {
+            return "#1A1A1A";
+        }
+
+        if (v === "#1E1E1E" || v === "#262626") {
+            return "#FFFFFF";
+        }
+
+        if (v === "RGBA(0,0,0,.20)") {
+            return "rgba(0,0,0,.045)";
+        }
+
+        return value;
+    };
+
+    document.querySelectorAll("svg.drawn *").forEach(el => {
+        for (const name of ["fill", "stroke"]) {
+            const before = el.getAttribute(name);
+            const after = remap(before);
+
+            if (after !== before) {
+                el.setAttribute(name, after);
+            }
+        }
+    });
+
+    document.querySelectorAll(".rruler .marks span").forEach(s => {
+        if (s.style.borderLeftColor) {
+            s.style.borderLeftColor = "rgba(0,0,0,.08)";
+        }
+    });
+}
+
 function start() {
     if (drawn) {
         return;
     }
 
     drawn = true;
+
+    const light = location.search.includes("theme=light");
+
+    if (light) {
+        document.documentElement.classList.add("light");
+    }
+
     drawAll();
+
+    if (light) {
+        applyLightTheme();
+    }
 
     if (location.search.includes("check")) {
         checkLayout();

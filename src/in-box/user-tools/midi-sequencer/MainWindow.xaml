@@ -1,0 +1,1015 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midisequencer.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midisequencer"
+    xmlns:shared="using:MidiAppShared"
+    xmlns:primitives="using:Microsoft.UI.Xaml.Controls.Primitives"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid"
+          Loaded="OnRootLoaded"
+          AllowDrop="True"
+          DragOver="OnRootDragOver"
+          Drop="OnRootDrop"
+          Background="Transparent">
+
+        <Grid.Resources>
+            <ResourceDictionary>
+                <ResourceDictionary.ThemeDictionaries>
+                    <!-- The comps' tokens (src/prototypes/midi-sequencer/design/seq.css). -->
+                    <ResourceDictionary x:Key="Default">
+                        <SolidColorBrush x:Key="SeqDividerBrush" Color="#15FFFFFF" />
+                        <SolidColorBrush x:Key="SeqStrokeStrongBrush" Color="#24FFFFFF" />
+                        <SolidColorBrush x:Key="SeqRulerRowBrush" Color="#05FFFFFF" />
+                        <SolidColorBrush x:Key="SeqPinnedTintBrush" Color="#0960CDFF" />
+                        <SolidColorBrush x:Key="SeqLcdBrush" Color="#52000000" />
+                        <SolidColorBrush x:Key="SeqLcdStrokeBrush" Color="#12FFFFFF" />
+                        <SolidColorBrush x:Key="SeqEditorTopBrush" Color="#29FFFFFF" />
+                        <SolidColorBrush x:Key="SeqEditorBackgroundBrush" Color="#05FFFFFF" />
+                        <SolidColorBrush x:Key="SeqInspectorBackgroundBrush" Color="#04FFFFFF" />
+                        <SolidColorBrush x:Key="SeqFolderHeaderBrush" Color="#08FFFFFF" />
+                        <SolidColorBrush x:Key="SeqSelectedHeaderBrush" Color="#0F60CDFF" />
+                        <SolidColorBrush x:Key="SeqPlayBrush" Color="#FF6CCB5F" />
+                        <SolidColorBrush x:Key="SeqRecordBrush" Color="#FFFF5A5F" />
+                        <SolidColorBrush x:Key="SeqRecordTextBrush" Color="#FFFFB3B5" />
+                        <SolidColorBrush x:Key="SeqAccentTextBrush" Color="#FF60CDFF" />
+                        <SolidColorBrush x:Key="SeqChipBrush" Color="#0AFFFFFF" />
+                        <SolidColorBrush x:Key="SeqChipInfoBrush" Color="#1A60CDFF" />
+                        <SolidColorBrush x:Key="SeqChipInfoStrokeBrush" Color="#6660CDFF" />
+                        <SolidColorBrush x:Key="SeqChipOnBrush" Color="#1F6CCB5F" />
+                        <SolidColorBrush x:Key="SeqChipOnStrokeBrush" Color="#736CCB5F" />
+                        <SolidColorBrush x:Key="SeqChipWarnBrush" Color="#1CFCE100" />
+                        <SolidColorBrush x:Key="SeqChipWarnStrokeBrush" Color="#66FCE100" />
+                        <SolidColorBrush x:Key="SeqWarnTextBrush" Color="#FFFCE100" />
+                        <Color x:Key="SeqPinEdgeTopColor">#33FFFFFF</Color>
+                        <Color x:Key="SeqPinEdgeBottomColor">#0FFFFFFF</Color>
+                        <Color x:Key="SeqPinShadowColor">#59000000</Color>
+
+                        <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#2960CDFF" />
+                        <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="#3860CDFF" />
+                        <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="#1F60CDFF" />
+                        <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="#7360CDFF" />
+                        <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="#8C60CDFF" />
+                        <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="#5960CDFF" />
+                        <SolidColorBrush x:Key="ToggleButtonForegroundChecked" Color="#FF60CDFF" />
+                        <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPointerOver" Color="#FF60CDFF" />
+                        <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="#CC60CDFF" />
+                    </ResourceDictionary>
+                    <ResourceDictionary x:Key="Light">
+                        <SolidColorBrush x:Key="SeqDividerBrush" Color="#14000000" />
+                        <SolidColorBrush x:Key="SeqStrokeStrongBrush" Color="#1F000000" />
+                        <SolidColorBrush x:Key="SeqRulerRowBrush" Color="#04000000" />
+                        <SolidColorBrush x:Key="SeqPinnedTintBrush" Color="#09005FB8" />
+                        <SolidColorBrush x:Key="SeqLcdBrush" Color="#FFFFFFFF" />
+                        <SolidColorBrush x:Key="SeqLcdStrokeBrush" Color="#0F000000" />
+                        <SolidColorBrush x:Key="SeqEditorTopBrush" Color="#1F000000" />
+                        <SolidColorBrush x:Key="SeqEditorBackgroundBrush" Color="#73FFFFFF" />
+                        <SolidColorBrush x:Key="SeqInspectorBackgroundBrush" Color="#73FFFFFF" />
+                        <SolidColorBrush x:Key="SeqFolderHeaderBrush" Color="#06000000" />
+                        <SolidColorBrush x:Key="SeqSelectedHeaderBrush" Color="#0F005FB8" />
+                        <SolidColorBrush x:Key="SeqPlayBrush" Color="#FF0F7B0F" />
+                        <SolidColorBrush x:Key="SeqRecordBrush" Color="#FFD13438" />
+                        <SolidColorBrush x:Key="SeqRecordTextBrush" Color="#FFA4262C" />
+                        <SolidColorBrush x:Key="SeqAccentTextBrush" Color="#FF005FB8" />
+                        <SolidColorBrush x:Key="SeqChipBrush" Color="#08000000" />
+                        <SolidColorBrush x:Key="SeqChipInfoBrush" Color="#12005FB8" />
+                        <SolidColorBrush x:Key="SeqChipInfoStrokeBrush" Color="#66005FB8" />
+                        <SolidColorBrush x:Key="SeqChipOnBrush" Color="#140F7B0F" />
+                        <SolidColorBrush x:Key="SeqChipOnStrokeBrush" Color="#730F7B0F" />
+                        <SolidColorBrush x:Key="SeqChipWarnBrush" Color="#FFFFF4CE" />
+                        <SolidColorBrush x:Key="SeqChipWarnStrokeBrush" Color="#669D5D00" />
+                        <SolidColorBrush x:Key="SeqWarnTextBrush" Color="#FF9D5D00" />
+                        <Color x:Key="SeqPinEdgeTopColor">#1A000000</Color>
+                        <Color x:Key="SeqPinEdgeBottomColor">#05000000</Color>
+                        <Color x:Key="SeqPinShadowColor">#24000000</Color>
+
+                        <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#1A005FB8" />
+                        <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="#26005FB8" />
+                        <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="#12005FB8" />
+                        <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="#73005FB8" />
+                        <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="#8C005FB8" />
+                        <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="#59005FB8" />
+                        <SolidColorBrush x:Key="ToggleButtonForegroundChecked" Color="#FF005FB8" />
+                        <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPointerOver" Color="#FF005FB8" />
+                        <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="#CC005FB8" />
+                    </ResourceDictionary>
+                </ResourceDictionary.ThemeDictionaries>
+
+                <!-- seq.css .tbtn: 36 by 32, a glyph, a border only when on. -->
+                <Style x:Key="TransportButtonStyle" TargetType="Button">
+                    <Setter Property="Width" Value="36" />
+                    <Setter Property="Height" Value="32" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="MinWidth" Value="0" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderBrush" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="CornerRadius" Value="4" />
+                    <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
+                    <Setter Property="FontSize" Value="15" />
+                    <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Style>
+
+                <Style x:Key="TransportToggleStyle" TargetType="ToggleButton">
+                    <Setter Property="Width" Value="36" />
+                    <Setter Property="Height" Value="32" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="MinWidth" Value="0" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderBrush" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="CornerRadius" Value="4" />
+                    <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
+                    <Setter Property="FontSize" Value="15" />
+                    <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Style>
+
+                <!-- seq.css .btn.small -->
+                <Style x:Key="SmallButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+                    <Setter Property="Height" Value="26" />
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="Padding" Value="9,0,9,0" />
+                    <Setter Property="FontSize" Value="12" />
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                </Style>
+
+                <Style x:Key="SubtleSmallButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+                    <Setter Property="Height" Value="26" />
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="Padding" Value="9,0,9,0" />
+                    <Setter Property="FontSize" Value="12" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderBrush" Value="Transparent" />
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                </Style>
+
+                <Style x:Key="SmallToggleStyle" TargetType="ToggleButton" BasedOn="{StaticResource DefaultToggleButtonStyle}">
+                    <Setter Property="Height" Value="26" />
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="Padding" Value="9,0,9,0" />
+                    <Setter Property="FontSize" Value="12" />
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                </Style>
+
+                <Style x:Key="SubtleSmallToggleStyle" TargetType="ToggleButton" BasedOn="{StaticResource DefaultToggleButtonStyle}">
+                    <Setter Property="Height" Value="26" />
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="Padding" Value="9,0,9,0" />
+                    <Setter Property="FontSize" Value="12" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderBrush" Value="Transparent" />
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                </Style>
+
+                <Style x:Key="SmallComboStyle" TargetType="ComboBox" BasedOn="{StaticResource DefaultComboBoxStyle}">
+                    <Setter Property="Height" Value="26" />
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="Padding" Value="8,0,0,0" />
+                    <Setter Property="FontSize" Value="12" />
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                </Style>
+
+                <Style x:Key="TransportLabelStyle" TargetType="TextBlock">
+                    <Setter Property="FontSize" Value="11" />
+                    <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                    <Setter Property="Margin" Value="0,0,2,0" />
+                </Style>
+
+                <Style x:Key="InspectorKeyStyle" TargetType="TextBlock">
+                    <Setter Property="FontSize" Value="12" />
+                    <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+                    <Setter Property="Width" Value="104" />
+                </Style>
+
+                <Style x:Key="InspectorValueStyle" TargetType="TextBlock">
+                    <Setter Property="FontSize" Value="12" />
+                    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                    <Setter Property="TextWrapping" Value="NoWrap" />
+                </Style>
+
+                <Style x:Key="SectionHeadStyle" TargetType="TextBlock">
+                    <Setter Property="FontSize" Value="12" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                    <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Style>
+
+                <DataTemplate x:Key="EndpointChoiceTemplate" x:DataType="shared:EndpointChoice">
+                    <TextBlock Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
+                </DataTemplate>
+
+                <DataTemplate x:Key="NamedChoiceTemplate" x:DataType="shared:NamedChoice">
+                    <TextBlock Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
+                </DataTemplate>
+            </ResourceDictionary>
+        </Grid.Resources>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- hidden when a system backdrop is in use, so the material shows through -->
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="5"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <Border x:Name="WindowTint"
+                Grid.Row="0"
+                Grid.RowSpan="5"
+                Visibility="Collapsed" />
+
+        <!-- ================================ Title bar ================================ -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <Grid x:Name="PreviewChiclet"
+                  Grid.Column="0"
+                  Grid.ColumnSpan="5"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Height="18"
+                  IsHitTestVisible="False">
+                <Rectangle RadiusX="9"
+                           RadiusY="9"
+                           StrokeThickness="1"
+                           UseLayoutRounding="False"
+                           Stroke="{ThemeResource SystemFillColorCautionBrush}"
+                           Fill="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
+                <TextBlock x:Name="PreviewChicletText"
+                           x:Uid="PreviewChicletText"
+                           Text="PREVIEW"
+                           FontSize="10"
+                           FontWeight="SemiBold"
+                           Margin="9,0,9,0"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+            </Grid>
+
+            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
+                <StackPanel.Resources>
+                    <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
+                    <!-- the family's own checked look, not the transport's -->
+                    <StaticResource x:Key="ToggleButtonBackgroundChecked" ResourceKey="AccentFillColorDefaultBrush" />
+                    <StaticResource x:Key="ToggleButtonBackgroundCheckedPointerOver" ResourceKey="AccentFillColorSecondaryBrush" />
+                    <StaticResource x:Key="ToggleButtonBackgroundCheckedPressed" ResourceKey="AccentFillColorTertiaryBrush" />
+                    <StaticResource x:Key="ToggleButtonForegroundChecked" ResourceKey="TextOnAccentFillColorPrimaryBrush" />
+                    <StaticResource x:Key="ToggleButtonForegroundCheckedPointerOver" ResourceKey="TextOnAccentFillColorPrimaryBrush" />
+                    <StaticResource x:Key="ToggleButtonForegroundCheckedPressed" ResourceKey="TextOnAccentFillColorSecondaryBrush" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="Transparent" />
+                </StackPanel.Resources>
+
+                <Button x:Name="SettingsButton"
+                        x:Uid="SettingsButton"
+                        Width="46"
+                        Height="32"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="OnSettingsClick">
+                    <FontIcon Glyph="&#xE713;" FontSize="14" />
+                </Button>
+
+                <ToggleButton x:Name="AlwaysOnTopToggle"
+                              x:Uid="AlwaysOnTopToggle"
+                              Width="46"
+                              Height="32"
+                              Padding="0"
+                              BorderThickness="0"
+                              Click="OnAlwaysOnTopToggled">
+                    <FontIcon Glyph="&#xE718;" FontSize="14" />
+                </ToggleButton>
+            </StackPanel>
+        </Grid>
+
+        <!-- ================================ Transport ================================ -->
+        <Grid x:Name="TransportBar"
+              Grid.Row="1"
+              Height="52"
+              Padding="12,0,12,0"
+              BorderThickness="0,0,0,1"
+              BorderBrush="{ThemeResource SeqDividerBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+
+                <!-- Not in the comps: the comps have no place for file commands, so they're here. -->
+                <Button x:Name="FileMenuButton"
+                        x:Uid="FileMenuButton"
+                        Style="{StaticResource TransportButtonStyle}"
+                        Content="&#xE700;">
+                    <Button.Flyout>
+                        <MenuFlyout x:Name="FileMenu">
+                            <MenuFlyoutItem x:Uid="MenuNew" Click="OnNewClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE710;" /></MenuFlyoutItem.Icon>
+                                <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="N" /></MenuFlyoutItem.KeyboardAccelerators>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="MenuOpen" Click="OnOpenClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8E5;" /></MenuFlyoutItem.Icon>
+                                <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="O" /></MenuFlyoutItem.KeyboardAccelerators>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="MenuSave" Click="OnSaveClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74E;" /></MenuFlyoutItem.Icon>
+                                <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="S" /></MenuFlyoutItem.KeyboardAccelerators>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="MenuSaveAs" Click="OnSaveAsClick" />
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem x:Uid="MenuOpenSample" Click="OnOpenSampleClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8D6;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutSubItem x:Uid="MenuImport">
+                                <MenuFlyoutItem x:Uid="MenuImportStandardMidiFile" Click="OnImportStandardMidiFileClick" />
+                                <MenuFlyoutItem x:Uid="MenuImportClipFile" Click="OnImportClipFileClick" />
+                            </MenuFlyoutSubItem>
+                            <MenuFlyoutSubItem x:Uid="MenuExport">
+                                <MenuFlyoutItem x:Uid="MenuExportClipFiles" Click="OnExportClipFilesClick" />
+                                <MenuFlyoutItem x:Uid="MenuExportStandardMidiFile" Click="OnExportStandardMidiFileClick" />
+                            </MenuFlyoutSubItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem x:Uid="MenuClose" Click="OnCloseWindowClick" />
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+
+                <Button x:Name="GoToStartButton"
+                        x:Uid="GoToStartButton"
+                        Style="{StaticResource TransportButtonStyle}"
+                        Content="&#xE892;"
+                        Click="OnGoToStartClick" />
+
+                <ToggleButton x:Name="PlayButton"
+                              x:Uid="PlayButton"
+                              Style="{StaticResource TransportToggleStyle}"
+                              Content="&#xE768;"
+                              Click="OnPlayClick">
+                    <ToggleButton.Resources>
+                        <ResourceDictionary>
+                            <ResourceDictionary.ThemeDictionaries>
+                                <ResourceDictionary x:Key="Default">
+                                    <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#2E6CCB5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="#3D6CCB5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="#246CCB5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="#8C6CCB5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="#A66CCB5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="#736CCB5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonForegroundChecked" Color="#FF6CCB5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPointerOver" Color="#FF6CCB5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="#CC6CCB5F" />
+                                </ResourceDictionary>
+                                <ResourceDictionary x:Key="Light">
+                                    <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#1A0F7B0F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="#260F7B0F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="#120F7B0F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="#800F7B0F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="#990F7B0F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="#660F7B0F" />
+                                    <SolidColorBrush x:Key="ToggleButtonForegroundChecked" Color="#FF0F7B0F" />
+                                    <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPointerOver" Color="#FF0F7B0F" />
+                                    <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="#CC0F7B0F" />
+                                </ResourceDictionary>
+                            </ResourceDictionary.ThemeDictionaries>
+                        </ResourceDictionary>
+                    </ToggleButton.Resources>
+                </ToggleButton>
+
+                <Button x:Name="StopButton"
+                        x:Uid="StopButton"
+                        Style="{StaticResource TransportButtonStyle}"
+                        Content="&#xE71A;"
+                        Click="OnStopClick" />
+
+                <ToggleButton x:Name="RecordButton"
+                              x:Uid="RecordButton"
+                              Style="{StaticResource TransportToggleStyle}"
+                              Foreground="{ThemeResource SeqRecordBrush}"
+                              Content="&#xE7C8;"
+                              Click="OnRecordClick">
+                    <ToggleButton.Resources>
+                        <ResourceDictionary>
+                            <ResourceDictionary.ThemeDictionaries>
+                                <ResourceDictionary x:Key="Default">
+                                    <SolidColorBrush x:Key="ToggleButtonForeground" Color="#FFFF8A8E" />
+                                    <SolidColorBrush x:Key="ToggleButtonForegroundPointerOver" Color="#FFFF8A8E" />
+                                    <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#38FF5A5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="#47FF5A5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="#2EFF5A5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="#99FF5A5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="#B3FF5A5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="#80FF5A5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonForegroundChecked" Color="#FFFF5A5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPointerOver" Color="#FFFF5A5F" />
+                                    <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="#CCFF5A5F" />
+                                </ResourceDictionary>
+                                <ResourceDictionary x:Key="Light">
+                                    <SolidColorBrush x:Key="ToggleButtonForeground" Color="#FFC42B1C" />
+                                    <SolidColorBrush x:Key="ToggleButtonForegroundPointerOver" Color="#FFC42B1C" />
+                                    <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#29D13438" />
+                                    <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="#38D13438" />
+                                    <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="#1FD13438" />
+                                    <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="#99D13438" />
+                                    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="#B3D13438" />
+                                    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="#80D13438" />
+                                    <SolidColorBrush x:Key="ToggleButtonForegroundChecked" Color="#FFD13438" />
+                                    <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPointerOver" Color="#FFD13438" />
+                                    <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="#CCD13438" />
+                                </ResourceDictionary>
+                            </ResourceDictionary.ThemeDictionaries>
+                        </ResourceDictionary>
+                    </ToggleButton.Resources>
+                </ToggleButton>
+
+                <ToggleButton x:Name="LoopToggle"
+                              x:Uid="LoopToggle"
+                              Style="{StaticResource TransportToggleStyle}"
+                              Content="&#xE8EE;"
+                              Click="OnLoopClick" />
+
+                <!-- The metronome, and beside it the arrow for its settings (comp 6). -->
+                <ToggleButton x:Name="MetronomeToggle"
+                              x:Uid="MetronomeToggle"
+                              Style="{StaticResource TransportToggleStyle}"
+                              Click="OnMetronomeClick">
+                    <Viewbox Width="17" Height="17">
+                        <Canvas Width="16" Height="16">
+                            <Path x:Name="MetronomeIconPath"
+                                  Data="M5.4,1.6 L10.6,1.6 L13.4,14.4 L2.6,14.4 Z M8,11.2 L11.4,3.4 M3.5,11.2 L12.5,11.2"
+                                  StrokeThickness="1.2"
+                                  StrokeLineJoin="Round"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <Ellipse x:Name="MetronomeIconWeight" Canvas.Left="8.8" Canvas.Top="4.8" Width="2.8" Height="2.8"
+                                     Fill="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </Canvas>
+                    </Viewbox>
+                </ToggleButton>
+
+                <Button x:Name="MetronomeMenuButton"
+                        x:Uid="MetronomeMenuButton"
+                        Style="{StaticResource TransportButtonStyle}"
+                        Width="18"
+                        Margin="-5,0,0,0"
+                        FontSize="9"
+                        Content="&#xE70D;"
+                        Click="OnMetronomeMenuClick" />
+
+                <Rectangle Width="1" Height="24" Margin="6,0,6,0" Fill="{ThemeResource SeqDividerBrush}" />
+
+                <!-- The two displays: where playback is, and the tempo and meter there. -->
+                <Grid x:Name="PositionDisplay" Height="40" MinWidth="132">
+                    <Rectangle RadiusX="5" RadiusY="5" UseLayoutRounding="False" StrokeThickness="1"
+                               Fill="{ThemeResource SeqLcdBrush}" Stroke="{ThemeResource SeqLcdStrokeBrush}" />
+                    <StackPanel Margin="12,3,12,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="PositionText" FontFamily="Cascadia Mono, Consolas" FontSize="19" LineHeight="21" Text="1.1.000" />
+                        <TextBlock x:Name="TimeText" FontFamily="Cascadia Mono, Consolas" FontSize="11" LineHeight="13"
+                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" Text="0:00.000" />
+                    </StackPanel>
+                </Grid>
+
+                <Grid x:Name="TempoDisplay" Height="40" MinWidth="118">
+                    <Rectangle RadiusX="5" RadiusY="5" UseLayoutRounding="False" StrokeThickness="1"
+                               Fill="{ThemeResource SeqLcdBrush}" Stroke="{ThemeResource SeqLcdStrokeBrush}" />
+                    <StackPanel Margin="12,3,12,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="TempoText" FontFamily="Cascadia Mono, Consolas" FontSize="19" LineHeight="21" Text="120.00" />
+                            <TextBlock x:Uid="BpmUnit" Text="BPM" FontSize="11" Margin="4,0,0,2" VerticalAlignment="Bottom"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        </StackPanel>
+                        <TextBlock x:Name="MeterText" FontFamily="Cascadia Mono, Consolas" FontSize="11" LineHeight="13"
+                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" Text="4/4" />
+                    </StackPanel>
+                </Grid>
+
+                <Button x:Name="ClockButton" Style="{StaticResource SmallButtonStyle}" Click="OnClockClick">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE823;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="ClockButtonText" x:Uid="ClockInternal" />
+                        <FontIcon Glyph="&#xE70D;" FontSize="9" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </Button>
+
+                <Rectangle Width="1" Height="24" Margin="6,0,6,0" Fill="{ThemeResource SeqDividerBrush}" />
+
+                <TextBlock x:Uid="LaunchLabel" Style="{StaticResource TransportLabelStyle}" />
+                <ComboBox x:Name="LaunchCombo"
+                          x:Uid="LaunchCombo"
+                          Style="{StaticResource SmallComboStyle}"
+                          Width="96"
+                          SelectionChanged="OnLaunchQuantizeChanged" />
+
+                <TextBlock x:Uid="SnapLabel" Style="{StaticResource TransportLabelStyle}" />
+                <ComboBox x:Name="SnapCombo"
+                          x:Uid="SnapCombo"
+                          Style="{StaticResource SmallComboStyle}"
+                          Width="80"
+                          SelectionChanged="OnSnapChanged" />
+
+                <Button x:Name="CaptureButton" x:Uid="CaptureButton" Style="{StaticResource SmallButtonStyle}" Click="OnCaptureClick">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE81C;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Uid="CaptureButtonText" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Button x:Name="BackToTimelineButton" x:Uid="BackToTimelineButton" Style="{StaticResource SmallButtonStyle}" Click="OnBackToTimelineClick" />
+
+                <Button x:Name="SilenceButton" x:Uid="SilenceButton" Style="{StaticResource SmallButtonStyle}" Click="OnSilenceClick">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE74F;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Uid="SilenceButtonText" />
+                    </StackPanel>
+                </Button>
+
+                <Rectangle Width="1" Height="24" Margin="6,0,6,0" Fill="{ThemeResource SeqDividerBrush}" />
+
+                <Button x:Name="UndoButton"
+                        x:Uid="UndoButton"
+                        Width="32" Height="32" Padding="0"
+                        Background="Transparent" BorderBrush="Transparent"
+                        Click="OnUndoClick">
+                    <FontIcon Glyph="&#xE7A7;" FontSize="14" />
+                </Button>
+
+                <Button x:Name="RedoButton"
+                        x:Uid="RedoButton"
+                        Width="32" Height="32" Padding="0"
+                        Background="Transparent" BorderBrush="Transparent"
+                        Click="OnRedoClick">
+                    <FontIcon Glyph="&#xE7A6;" FontSize="14" />
+                </Button>
+
+                <!-- seq.css .chip.on -->
+                <Grid x:Name="SavedChip" Height="22" VerticalAlignment="Center">
+                    <Rectangle x:Name="SavedChipShape" RadiusX="11" RadiusY="11" StrokeThickness="1" UseLayoutRounding="False"
+                               Fill="{ThemeResource SeqChipOnBrush}" Stroke="{ThemeResource SeqChipOnStrokeBrush}" />
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="9,0,9,0" VerticalAlignment="Center">
+                        <FontIcon x:Name="SavedChipIcon" Glyph="&#xE73E;" FontSize="11" Foreground="{ThemeResource SeqPlayBrush}" />
+                        <TextBlock x:Name="SavedChipText" FontSize="11" Foreground="{ThemeResource SeqPlayBrush}" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Grid>
+
+        <!-- ================================ Arrangement ================================ -->
+        <Grid x:Name="ArrangeGrid" Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="268" />
+                <ColumnDefinition x:Name="LauncherColumn" Width="500" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="InspectorColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32" />
+                <RowDefinition x:Name="PinnedRow" Height="44" />
+                <RowDefinition Height="6" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Rectangle Grid.Row="0" Grid.ColumnSpan="3" Fill="{ThemeResource SeqRulerRowBrush}" />
+            <Rectangle Grid.Row="1" Grid.ColumnSpan="3" Fill="{ThemeResource SeqPinnedTintBrush}" />
+
+            <!-- The track list's own toolbar, above the rows. -->
+            <Grid x:Name="ArrangeToolbar"
+                  Grid.Row="0"
+                  Grid.Column="0"
+                  Padding="10,0,8,0"
+                  ColumnSpacing="8"
+                  BorderThickness="0,0,1,1"
+                  BorderBrush="{ThemeResource SeqDividerBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Button x:Name="AddTrackButton" x:Uid="AddTrackButton" Style="{StaticResource SmallButtonStyle}" Click="OnAddTrackClick">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE710;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Uid="AddTrackButtonText" />
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="AddFolderButton" x:Uid="AddFolderButton" Grid.Column="1" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnAddFolderClick">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE8B7;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Uid="AddFolderButtonText" />
+                    </StackPanel>
+                </Button>
+
+                <ToggleButton x:Name="LauncherToggle"
+                              x:Uid="LauncherToggle"
+                              Grid.Column="3"
+                              Style="{StaticResource SmallToggleStyle}"
+                              Click="OnLauncherToggleClick" />
+            </Grid>
+
+            <Grid x:Name="SceneHeaderHost"
+                  Grid.Row="0"
+                  Grid.Column="1"
+                  BorderThickness="0,0,1,1"
+                  BorderBrush="{ThemeResource SeqStrokeStrongBrush}" />
+
+            <Grid x:Name="RulerHost" Grid.Row="0" Grid.Column="2" />
+
+            <Canvas x:Name="PinnedHeaderCanvas" Grid.Row="1" Grid.Column="0" />
+            <Grid x:Name="PinnedLauncherHost" Grid.Row="1" Grid.Column="1" />
+            <Grid x:Name="PinnedLaneHost" Grid.Row="1" Grid.Column="2" />
+
+            <!-- seq.css .pin-edge: everything under it scrolls. -->
+            <Grid Grid.Row="2" Grid.ColumnSpan="3" IsHitTestVisible="False">
+                <Rectangle>
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="{ThemeResource SeqPinEdgeTopColor}" Offset="0" />
+                            <GradientStop Color="{ThemeResource SeqPinEdgeBottomColor}" Offset="1" />
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+            </Grid>
+
+            <Canvas x:Name="ScrollHeaderCanvas" Grid.Row="3" Grid.Column="0" Background="Transparent" />
+            <Grid x:Name="ScrollLauncherHost" Grid.Row="3" Grid.Column="1" />
+
+            <Grid x:Name="ScrollLaneHost" Grid.Row="3" Grid.Column="2">
+                <primitives:ScrollBar x:Name="VerticalScroll"
+                                      x:Uid="VerticalScroll"
+                                      Orientation="Vertical"
+                                      HorizontalAlignment="Right"
+                                      IndicatorMode="MouseIndicator"
+                                      Minimum="0"
+                                      SmallChange="46"
+                                      ValueChanged="OnVerticalScrollChanged" />
+                <primitives:ScrollBar x:Name="HorizontalScroll"
+                                      x:Uid="HorizontalScroll"
+                                      Orientation="Horizontal"
+                                      VerticalAlignment="Bottom"
+                                      IndicatorMode="MouseIndicator"
+                                      Minimum="0"
+                                      SmallChange="34"
+                                      Margin="0,0,12,0"
+                                      ValueChanged="OnHorizontalScrollChanged" />
+            </Grid>
+
+            <!-- A shadow under the pinned rows, over what scrolls. -->
+            <Rectangle Grid.Row="3" Grid.ColumnSpan="3" Height="6" VerticalAlignment="Top" IsHitTestVisible="False">
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="{ThemeResource SeqPinShadowColor}" Offset="0" />
+                        <GradientStop Color="Transparent" Offset="1" />
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+
+            <!-- The playhead, over the ruler and every lane. -->
+            <Canvas x:Name="PlayheadLayer" Grid.Row="0" Grid.RowSpan="4" Grid.Column="2" IsHitTestVisible="False">
+                <Rectangle x:Name="PlayheadLine" Width="1.5" Fill="{ThemeResource TextFillColorPrimaryBrush}" />
+                <Polygon x:Name="PlayheadMarker" Points="0,0 11,0 5.5,8" Fill="{ThemeResource TextFillColorPrimaryBrush}" />
+            </Canvas>
+
+            <!-- A track's setup, beside the timeline (comp 5). -->
+            <Grid x:Name="TrackInspector"
+                  Grid.Row="0"
+                  Grid.RowSpan="4"
+                  Grid.Column="3"
+                  Visibility="Collapsed"
+                  BorderThickness="1,0,0,0"
+                  BorderBrush="{ThemeResource SeqDividerBrush}"
+                  Background="{ThemeResource SeqInspectorBackgroundBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Padding="14,11,8,11" ColumnSpacing="8" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource SeqDividerBrush}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="InspectorTitle" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <Grid Grid.Column="1" Height="22" VerticalAlignment="Center">
+                        <Rectangle RadiusX="11" RadiusY="11" StrokeThickness="1" UseLayoutRounding="False"
+                                   Fill="{ThemeResource SeqChipBrush}" Stroke="{ThemeResource SeqStrokeStrongBrush}" />
+                        <TextBlock x:Uid="InspectorTrackChip" FontSize="11" Margin="9,0,9,0" VerticalAlignment="Center"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+                    <Button x:Name="InspectorCloseButton" x:Uid="InspectorCloseButton" Grid.Column="2"
+                            Width="28" Height="28" Padding="0" Background="Transparent" BorderBrush="Transparent"
+                            Click="OnInspectorCloseClick">
+                        <FontIcon Glyph="&#xE711;" FontSize="11" />
+                    </Button>
+                </Grid>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="InspectorBody" Padding="14,12,14,16" Spacing="16">
+
+                        <StackPanel Spacing="8">
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="TrackNameBox" x:Uid="TrackNameBox" FontSize="12" MinHeight="26" Padding="8,3,8,3"
+                                         LostFocus="OnTrackNameCommitted" KeyDown="OnTrackNameKeyDown" />
+                                <ToggleButton x:Name="TrackPinToggle" x:Uid="TrackPinToggle" Grid.Column="1" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnTrackPinClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE718;" FontSize="12" />
+                                        <TextBlock x:Uid="TrackPinText" />
+                                    </StackPanel>
+                                </ToggleButton>
+                            </Grid>
+                            <StackPanel x:Name="TrackSwatches" Orientation="Horizontal" Spacing="6" />
+                        </StackPanel>
+
+                        <StackPanel x:Name="RecordSection" Spacing="6">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE72B;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock x:Uid="RecordFromHeading" Style="{StaticResource SectionHeadStyle}" />
+                            </StackPanel>
+                            <ComboBox x:Name="SourceEndpointCombo" x:Uid="SourceEndpointCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
+                                      ItemTemplate="{StaticResource EndpointChoiceTemplate}" SelectionChanged="OnSourceChanged" />
+                            <ComboBox x:Name="SourceGroupCombo" x:Uid="SourceGroupCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
+                                      ItemTemplate="{StaticResource NamedChoiceTemplate}" SelectionChanged="OnSourceChanged" />
+                            <ComboBox x:Name="SourceChannelCombo" x:Uid="SourceChannelCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
+                                      ItemTemplate="{StaticResource NamedChoiceTemplate}" SelectionChanged="OnSourceChanged" />
+                            <VariableSizedWrapGrid x:Name="RecordKinds" Orientation="Horizontal" ItemHeight="28" />
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <ToggleSwitch x:Name="EchoSwitch" x:Uid="EchoSwitch" OnContent="" OffContent="" MinWidth="0" Width="44"
+                                              Toggled="OnEchoToggled" />
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock x:Uid="EchoTitle" FontSize="13" TextWrapping="Wrap" />
+                                    <TextBlock x:Uid="EchoSub" FontSize="11" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                </StackPanel>
+                            </Grid>
+                            <Button x:Name="RecordFromKeyboardButton" x:Uid="RecordFromKeyboardButton" Style="{StaticResource SmallButtonStyle}" Click="OnRecordFromKeyboardClick">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Viewbox Width="14" Height="14">
+                                        <Canvas Width="16" Height="16">
+                                            <Rectangle Canvas.Left="1" Canvas.Top="2.5" Width="14" Height="11" RadiusX="1.5" RadiusY="1.5" StrokeThickness="1.1" Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <Path Data="M4.5,8.5 L4.5,13.5 M8,8.5 L8,13.5 M11.5,2.5 L11.5,13.5" StrokeThickness="0.9" Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <Rectangle Canvas.Left="3.4" Canvas.Top="2.5" Width="2.2" Height="6" Fill="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <Rectangle Canvas.Left="6.9" Canvas.Top="2.5" Width="2.2" Height="6" Fill="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </Canvas>
+                                    </Viewbox>
+                                    <TextBlock x:Uid="RecordFromKeyboardText" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <StackPanel x:Name="PlaySection" Spacing="6">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE72A;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock x:Uid="PlayToHeading" Style="{StaticResource SectionHeadStyle}" />
+                            </StackPanel>
+                            <ComboBox x:Name="DestinationEndpointCombo" x:Uid="DestinationEndpointCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
+                                      ItemTemplate="{StaticResource EndpointChoiceTemplate}" SelectionChanged="OnDestinationChanged" />
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="80" />
+                                </Grid.ColumnDefinitions>
+                                <ComboBox x:Name="DestinationGroupCombo" x:Uid="DestinationGroupCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
+                                          ItemTemplate="{StaticResource NamedChoiceTemplate}" SelectionChanged="OnDestinationChanged" />
+                                <ComboBox x:Name="DestinationChannelCombo" x:Uid="DestinationChannelCombo" Grid.Column="1" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
+                                          ItemTemplate="{StaticResource NamedChoiceTemplate}" SelectionChanged="OnDestinationChanged" />
+                            </Grid>
+                            <TextBlock x:Name="ProtocolNote" FontSize="11" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            <Button x:Name="TrySoundButton" x:Uid="TrySoundButton" Style="{StaticResource SmallButtonStyle}" Click="OnTrySoundClick">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Viewbox Width="14" Height="14">
+                                        <Canvas Width="16" Height="16">
+                                            <Rectangle Canvas.Left="1" Canvas.Top="2.5" Width="14" Height="11" RadiusX="1.5" RadiusY="1.5" StrokeThickness="1.1" Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <Path Data="M4.5,8.5 L4.5,13.5 M8,8.5 L8,13.5 M11.5,2.5 L11.5,13.5" StrokeThickness="0.9" Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <Rectangle Canvas.Left="3.4" Canvas.Top="2.5" Width="2.2" Height="6" Fill="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <Rectangle Canvas.Left="6.9" Canvas.Top="2.5" Width="2.2" Height="6" Fill="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </Canvas>
+                                    </Viewbox>
+                                    <TextBlock x:Uid="TrySoundText" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <StackPanel x:Name="StartupSection" Spacing="6">
+                            <TextBlock x:Uid="StartupHeading" Style="{StaticResource SectionHeadStyle}" />
+                            <StackPanel x:Name="StartupList" Spacing="2" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+
+        <!-- ================================ Clip editor ================================ -->
+        <Grid x:Name="EditorPanel"
+              Grid.Row="3"
+              Height="300"
+              Background="{ThemeResource SeqEditorBackgroundBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="42" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Rectangle Grid.Row="0" Height="1" VerticalAlignment="Top" Fill="{ThemeResource SeqEditorTopBrush}" />
+
+            <Grid x:Name="EditorHeader"
+                  Grid.Row="0"
+                  Padding="12,0,12,0"
+                  BorderThickness="0,0,0,1"
+                  BorderBrush="{ThemeResource SeqDividerBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Viewbox Width="18" Height="18">
+                        <Canvas x:Name="EditorKindMark" Width="16" Height="16">
+                            <Rectangle Canvas.Left="1" Canvas.Top="3" Width="6" Height="2.4" RadiusX="1" RadiusY="1" />
+                            <Rectangle Canvas.Left="6" Canvas.Top="7" Width="8" Height="2.4" RadiusX="1" RadiusY="1" />
+                            <Rectangle Canvas.Left="3" Canvas.Top="11" Width="5" Height="2.4" RadiusX="1" RadiusY="1" />
+                        </Canvas>
+                    </Viewbox>
+                    <TextBlock x:Name="EditorClipName" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" MaxWidth="260" TextTrimming="CharacterEllipsis" />
+
+                    <Grid Height="22" VerticalAlignment="Center">
+                        <Rectangle RadiusX="11" RadiusY="11" StrokeThickness="1" UseLayoutRounding="False"
+                                   Fill="{ThemeResource SeqChipBrush}" Stroke="{ThemeResource SeqStrokeStrongBrush}" />
+                        <TextBlock x:Name="EditorKindChip" FontSize="11" Margin="9,0,9,0" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+
+                    <Grid Height="22" VerticalAlignment="Center">
+                        <Rectangle RadiusX="11" RadiusY="11" StrokeThickness="1" UseLayoutRounding="False"
+                                   Fill="{ThemeResource SeqChipBrush}" Stroke="{ThemeResource SeqStrokeStrongBrush}" />
+                        <TextBlock x:Name="EditorLengthChip" FontSize="11" Margin="9,0,9,0" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+
+                    <Grid x:Name="EditorUsesChip" Height="22" VerticalAlignment="Center">
+                        <Rectangle RadiusX="11" RadiusY="11" StrokeThickness="1" UseLayoutRounding="False"
+                                   Fill="{ThemeResource SeqChipInfoBrush}" Stroke="{ThemeResource SeqChipInfoStrokeBrush}" />
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="9,0,9,0" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE71B;" FontSize="11" Foreground="{ThemeResource SeqAccentTextBrush}" />
+                            <TextBlock x:Name="EditorUsesText" FontSize="11" Foreground="{ThemeResource SeqAccentTextBrush}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Rectangle Width="1" Height="22" Margin="4,0,4,0" Fill="{ThemeResource SeqDividerBrush}" />
+
+                    <ToggleButton x:Name="EditorDrawToggle" x:Uid="EditorDrawToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnEditorDrawClick">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE70F;" FontSize="12" />
+                            <TextBlock x:Uid="EditorDrawText" />
+                        </StackPanel>
+                    </ToggleButton>
+
+                    <Button x:Name="EditorQuantizeButton" x:Uid="EditorQuantizeButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorQuantizeClick" />
+
+                    <Button x:Name="EditorTransposeButton" x:Uid="EditorTransposeButton" Style="{StaticResource SubtleSmallButtonStyle}">
+                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem x:Uid="TransposeUpOctave" Tag="12" Click="OnTransposeClick" />
+                                <MenuFlyoutItem x:Uid="TransposeUpSemitone" Tag="1" Click="OnTransposeClick" />
+                                <MenuFlyoutItem x:Uid="TransposeDownSemitone" Tag="-1" Click="OnTransposeClick" />
+                                <MenuFlyoutItem x:Uid="TransposeDownOctave" Tag="-12" Click="OnTransposeClick" />
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+
+                    <Button x:Name="EditorKeyboardButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorKeyboardClick">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Viewbox Width="14" Height="14">
+                                <Canvas Width="16" Height="16">
+                                    <Rectangle Canvas.Left="1" Canvas.Top="2.5" Width="14" Height="11" RadiusX="1.5" RadiusY="1.5" StrokeThickness="1.1" Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <Path Data="M4.5,8.5 L4.5,13.5 M8,8.5 L8,13.5 M11.5,2.5 L11.5,13.5" StrokeThickness="0.9" Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <Rectangle Canvas.Left="3.4" Canvas.Top="2.5" Width="2.2" Height="6" Fill="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <Rectangle Canvas.Left="6.9" Canvas.Top="2.5" Width="2.2" Height="6" Fill="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock x:Uid="EditorKeyboardText" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <TextBlock x:Uid="ShowValuesAsLabel" Style="{StaticResource TransportLabelStyle}" />
+                    <ComboBox x:Name="ValuesAsCombo" x:Uid="ValuesAsCombo" Style="{StaticResource SmallComboStyle}" Width="150" SelectionChanged="OnValuesAsChanged" />
+                    <Button x:Name="EditorCloseButton" x:Uid="EditorCloseButton" Width="28" Height="28" Padding="0"
+                            Background="Transparent" BorderBrush="Transparent" Click="OnEditorCloseClick">
+                        <FontIcon Glyph="&#xE711;" FontSize="11" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Drag the top edge to make the editor taller or shorter. -->
+            <Grid x:Name="EditorSplitter"
+                  Grid.Row="0"
+                  Height="6"
+                  Margin="0,-3,0,0"
+                  VerticalAlignment="Top"
+                  Background="Transparent"
+                  PointerPressed="OnSplitterPressed"
+                  PointerMoved="OnSplitterMoved"
+                  PointerReleased="OnSplitterReleased"
+                  PointerCaptureLost="OnSplitterCaptureLost" />
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="236" />
+                </Grid.ColumnDefinitions>
+
+                <Grid x:Name="EditorCanvasHost" />
+
+                <Grid x:Name="EditorInspector"
+                      Grid.Column="1"
+                      BorderThickness="1,0,0,0"
+                      BorderBrush="{ThemeResource SeqDividerBrush}"
+                      Background="{ThemeResource SeqInspectorBackgroundBrush}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid Padding="14,11,14,11" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource SeqDividerBrush}">
+                        <TextBlock x:Name="NoteInspectorTitle" x:Uid="NoteInspectorTitle" FontSize="14" FontWeight="SemiBold" />
+                    </Grid>
+                    <StackPanel x:Name="NoteInspectorBody" Grid.Row="1" Padding="14,12,14,12" Spacing="2" />
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- ================================ Status bar ================================ -->
+        <Grid x:Name="StatusBar"
+              Grid.Row="4"
+              Height="28"
+              Padding="14,0,14,0"
+              BorderThickness="0,1,0,0"
+              BorderBrush="{ThemeResource SeqDividerBrush}">
+            <StackPanel Orientation="Horizontal" Spacing="18" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                    <FontIcon x:Name="ServiceStatusIcon" Glyph="&#xE73E;" FontSize="11" />
+                    <TextBlock x:Name="ServiceStatusText" FontSize="11" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                    <FontIcon Glyph="&#xE823;" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    <TextBlock x:Name="ClockStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                </StackPanel>
+                <TextBlock x:Name="ClockOutStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <TextBlock x:Name="DevicesStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="18" VerticalAlignment="Center" HorizontalAlignment="Right">
+                <StackPanel x:Name="RecordingStatus" Orientation="Horizontal" Spacing="5" Visibility="Collapsed">
+                    <FontIcon Glyph="&#xE7C8;" FontSize="11" Foreground="{ThemeResource SeqRecordTextBrush}" />
+                    <TextBlock x:Name="RecordingStatusText" FontSize="11" Foreground="{ThemeResource SeqRecordTextBrush}" />
+                </StackPanel>
+                <TextBlock x:Name="MessageStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <TextBlock x:Name="SavedStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

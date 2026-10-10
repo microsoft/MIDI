@@ -20,7 +20,7 @@
 
 // Before windows.h, so the JSON projection is declared without the GetObject macro.
 #include "ContentProvenance.h"
-#include "StoredZip.h"
+#include "ZipArchive.h"
 
 #include <windows.h>
 #include <wincrypt.h>

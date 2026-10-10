@@ -348,6 +348,16 @@ namespace midiglass::sharing
                 return resources::GetString(L"SourceProgram");
             }
 
+            if (type == types::DigitalCapture)
+            {
+                return resources::GetString(L"SourceRecorded");
+            }
+
+            if (type == types::Composite)
+            {
+                return resources::GetString(L"SourceCombined");
+            }
+
             return winrt::hstring{ type };
         }
 

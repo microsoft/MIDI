@@ -11,6 +11,7 @@
 #include "ProcessRunner.h"
 #include "StringResources.h"
 #include "ToolPaths.h"
+#include "ZipArchive.h"
 
 namespace res = ::miditroubleshooter::resources;
 namespace rpt = ::mididiag::report;
@@ -19,13 +20,12 @@ namespace miditroubleshooter
 {
     namespace
     {
-        // Listing a zip, or reading one text file out of it, takes well under a second. A
-        // support package also holds a large trace, but tar reads only the parts it needs.
-        constexpr std::chrono::seconds ZipReadTimeout{ 60 };
-
-        // A support package holds a handful of text files. Trying every file in a zip that has
-        // hundreds would take minutes, and a zip like that wasn't made for a MIDI problem.
+        // A support package holds a handful of text files. A zip with hundreds wasn't made for a
+        // MIDI problem, so only the likeliest few are tried.
         constexpr size_t MaximumZipEntriesTried{ 20 };
+
+        // every zip that doesn't need zip64
+        constexpr uint32_t MaximumZipEntries{ 0xFFFF };
 
         constexpr size_t ReadChunkBytes{ 1024 * 1024 };
 
@@ -52,33 +52,6 @@ namespace miditroubleshooter
             auto const separator = path.find_last_of(L"\\/");
 
             return separator == std::wstring_view::npos ? path : path.substr(separator + 1);
-        }
-
-        // "C:\file.zip" gives "C:\", which a plain cut at the last backslash would get wrong.
-        std::wstring FolderOf(_In_ std::wstring const& path)
-        {
-            std::wstring folder{ path };
-
-            if (FAILED(::PathCchRemoveFileSpec(folder.data(), folder.size() + 1)))
-            {
-                return {};
-            }
-
-            folder.resize(wcslen(folder.c_str()));
-
-            return folder;
-        }
-
-        // tar reads its command line in the system's ANSI code page, and can't open a file whose
-        // name has a character that code page doesn't have. GetACP() can't say which characters
-        // those are, because this app's manifest makes it UTF-8 here while tar gets the
-        // system's own. Plain ASCII is in every code page, so only those names go to tar as they are.
-        bool TarCanTakeName(_In_ std::wstring_view const name) noexcept
-        {
-            return std::all_of(name.begin(), name.end(), [](wchar_t const character)
-                {
-                    return character >= L' ' && character <= L'~';
-                });
         }
 
         // A zip starts with a file header, or with the end record when it's empty.
@@ -118,26 +91,6 @@ namespace miditroubleshooter
             return loaded;
         }
 
-        // Entry names come back from tar and go straight back to it on a command line. Only
-        // names made of ordinary characters are used, because quotes don't stop a crafted name
-        // such as "-x" from being read as an option.
-        bool IsOrdinaryEntryName(_In_ std::wstring_view const name) noexcept
-        {
-            if (name.empty() || name.size() > MAX_PATH || name.front() == L'-')
-            {
-                return false;
-            }
-
-            return std::all_of(name.begin(), name.end(), [](wchar_t const character)
-                {
-                    return (character >= L'a' && character <= L'z') ||
-                        (character >= L'A' && character <= L'Z') ||
-                        (character >= L'0' && character <= L'9') ||
-                        character == L' ' || character == L'-' || character == L'_' ||
-                        character == L'.' || character == L'/' || character == L'(' || character == L')';
-                });
-        }
-
         // mididiag.txt is the name both the Troubleshooter and its capture use, so it's tried first.
         int EntryPreference(_In_ std::wstring_view const name) noexcept
         {
@@ -151,69 +104,29 @@ namespace miditroubleshooter
             return StartsWithNoCase(fileName, L"mididiag") ? 1 : 2;
         }
 
-        std::vector<std::wstring> ReportCandidates(_In_ std::wstring_view const listing)
+        std::vector<midiapp::ZipItem const*> ReportCandidates(_In_ std::vector<midiapp::ZipItem> const& items)
         {
-            std::vector<std::wstring> names{};
+            std::vector<midiapp::ZipItem const*> candidates{};
 
-            size_t start{ 0 };
-
-            while (start < listing.size())
+            for (auto const& item : items)
             {
-                auto end = listing.find(L'\n', start);
-
-                if (end == std::wstring_view::npos)
+                if (EndsWithNoCase(item.Name, L".txt"))
                 {
-                    end = listing.size();
-                }
-
-                auto name = listing.substr(start, end - start);
-
-                start = end + 1;
-
-                if (!name.empty() && name.back() == L'\r')
-                {
-                    name.remove_suffix(1);
-                }
-
-                if (EndsWithNoCase(name, L".txt") && IsOrdinaryEntryName(name))
-                {
-                    names.emplace_back(name);
+                    candidates.push_back(&item);
                 }
             }
 
-            std::stable_sort(names.begin(), names.end(), [](std::wstring const& left, std::wstring const& right)
+            std::stable_sort(candidates.begin(), candidates.end(), [](midiapp::ZipItem const* left, midiapp::ZipItem const* right)
                 {
-                    return EntryPreference(left) < EntryPreference(right);
+                    return EntryPreference(left->Name) < EntryPreference(right->Name);
                 });
 
-            if (names.size() > MaximumZipEntriesTried)
+            if (candidates.size() > MaximumZipEntriesTried)
             {
-                names.resize(MaximumZipEntriesTried);
+                candidates.resize(MaximumZipEntriesTried);
             }
 
-            return names;
-        }
-
-        // A copy with a plain name in the temp folder, for a zip whose own name tar can't read.
-        // Empty when the copy couldn't be made.
-        std::wstring CopyToPlainName(_In_ std::wstring const& path)
-        {
-            wchar_t tempFolder[MAX_PATH + 1]{};
-            wchar_t copyPath[MAX_PATH + 1]{};
-
-            if (::GetTempPathW(ARRAYSIZE(tempFolder), tempFolder) == 0 ||
-                ::GetTempFileNameW(tempFolder, L"mdv", 0, copyPath) == 0)
-            {
-                return {};
-            }
-
-            if (!::CopyFileW(path.c_str(), copyPath, FALSE))
-            {
-                ::DeleteFileW(copyPath);
-                return {};
-            }
-
-            return copyPath;
+            return candidates;
         }
 
         LoadedReport LoadFromZip(_In_ std::wstring const& zipPath)
@@ -223,74 +136,30 @@ namespace miditroubleshooter
             failed.FilePath = zipPath;
             failed.Error = ReportLoadError::ZipUnreadable;
 
-            auto const tarPath = GetNativeSystem32Folder() + L"\\tar.exe";
+            midiapp::ZipReader zip{};
 
-            if (!FileExists(tarPath))
+            if (zip.OpenFile(zipPath, MaximumZipEntries) != midiapp::ZipStatus::Read)
             {
                 return failed;
             }
 
-            // tar runs in the zip's folder and is given only the zip's name. See RunCaptureIn.
-            auto folder = FolderOf(zipPath);
-            auto name = std::wstring{ FileNamePart(zipPath) };
-
-            std::wstring copyPath{};
-
-            auto const removeCopy = wil::scope_exit([&copyPath]() noexcept
-                {
-                    if (!copyPath.empty())
-                    {
-                        ::DeleteFileW(copyPath.c_str());
-                    }
-                });
-
-            if (!TarCanTakeName(name))
+            for (auto const* item : ReportCandidates(zip.Items()))
             {
-                copyPath = CopyToPlainName(zipPath);
+                std::vector<uint8_t> bytes{};
 
-                if (copyPath.empty())
-                {
-                    return failed;
-                }
-
-                folder = FolderOf(copyPath);
-                name = FileNamePart(copyPath);
-            }
-
-            if (folder.empty())
-            {
-                return failed;
-            }
-
-            auto const listing = RunCaptureIn(tarPath, std::format(L"-t -f \"{}\"", name), folder, ZipReadTimeout);
-
-            if (!listing.Started || listing.TimedOut || listing.ExitCode != 0)
-            {
-                return failed;
-            }
-
-            for (auto const& entry : ReportCandidates(listing.Output))
-            {
-                auto const extracted = RunCaptureBytes(
-                    tarPath,
-                    std::format(L"-x -O -f \"{}\" \"{}\"", name, entry),
-                    folder,
-                    ZipReadTimeout,
-                    rpt::MaximumReportSize);
-
-                if (!extracted.Started || extracted.TimedOut || extracted.OutputLimitReached || extracted.ExitCode != 0)
+                if (zip.Extract(*item, rpt::MaximumReportSize, bytes) != midiapp::ZipStatus::Read)
                 {
                     continue;
                 }
 
-                auto parsed = rpt::ParseReport(rpt::DecodeReportBytes(std::as_bytes(std::span{ extracted.RawOutput })));
+                auto parsed = rpt::ParseReport(rpt::DecodeReportBytes(std::as_bytes(std::span{ bytes })));
 
                 if (parsed.Status == rpt::ParseStatus::Succeeded)
                 {
                     auto loaded = FromParseResult(std::move(parsed));
 
-                    // a zip made from a folder lists its files as ./name
-                    std::wstring_view shownName{ entry };
+                    // a zip Windows tar made from a folder lists its files as ./name
+                    std::wstring_view shownName{ item->Name };
 
                     while (shownName.starts_with(L"./"))
                     {

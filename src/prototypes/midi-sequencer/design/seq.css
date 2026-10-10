@@ -1037,3 +1037,142 @@ html, body {
 .dot { display: inline-block; width: 9px; height: 9px; border-radius: 5px; background: var(--tc, #888); vertical-align: middle; margin-right: 6px; }
 .origin { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; }
 .origin .gl { font-size: 11px; }
+
+/* ------------------------------------------------------------ tags */
+
+/* A tag is text at a moment. The point of the label sits exactly on the moment, and a dashed line
+   runs down the lane from it. Tags on a track sit at the bottom so a clip's name stays readable. */
+
+.tag { position: absolute; top: 0; bottom: 0; width: 0; z-index: 5; }
+.tag::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 1px dashed color-mix(in srgb, var(--tagc, #D7D7D7) 85%, transparent); }
+
+.tag > span {
+    position: absolute;
+    left: 0;
+    top: 3px;
+    height: 16px;
+    padding: 0 6px 0 12px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 16px;
+    color: #1A1A1A;
+    background: var(--tagc, #D7D7D7);
+    clip-path: polygon(7px 0, 100% 0, 100% 100%, 7px 100%, 0 50%);
+    border-radius: 0 3px 3px 0;
+    white-space: nowrap;
+}
+
+.tag > span::after { content: ""; position: absolute; left: 6px; top: 6.5px; width: 3px; height: 3px; border-radius: 2px; background: rgba(0, 0, 0, .45); }
+.arow.track .tag > span { top: auto; bottom: 5px; }
+
+.tbtn svg { width: 17px; height: 17px; }
+.tbtn.split { width: 18px; flex: 0 0 18px; font-size: 9px; margin-left: -5px; border-radius: 0 4px 4px 0; }
+.tbtn.split.on { border-left-color: transparent; }
+.btn svg.bglyph { width: 15px; height: 15px; color: var(--text2); flex: 0 0 15px; }
+.btn.small svg.bglyph { width: 14px; height: 14px; flex: 0 0 14px; }
+
+/* ------------------------------------------------------------ light theme */
+
+/* Opened with ?theme=light. The tokens carry most of it; the rest are the places the dark comps
+   mix colors by hand. seq.js remaps the colors it draws with. */
+
+html.light {
+    --bg-top: #F9F9F9;
+    --bg-bottom: #F3F3F3;
+    --card: #FFFFFF;
+    --card-alt: #FBFBFB;
+    --stroke: rgba(0, 0, 0, 0.0578);
+    --stroke-strong: rgba(0, 0, 0, 0.12);
+    --divider: rgba(0, 0, 0, 0.0803);
+    --text: rgba(0, 0, 0, 0.894);
+    --text2: rgba(0, 0, 0, 0.62);
+    --text3: rgba(0, 0, 0, 0.47);
+    --text-disabled: rgba(0, 0, 0, 0.361);
+    --accent: #005FB8;
+    --accent-deep: #005FB8;
+    --on-accent: #FFFFFF;
+    --critical: #C42B1C;
+    --critical-bg: #FDE7E9;
+    --caution: #9D5D00;
+    --caution-bg: #FFF4CE;
+    --success: #0F7B0F;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+    --rec: #D13438;
+    --play: #0F7B0F;
+    --lane-bg: rgba(0, 0, 0, 0.022);
+}
+
+html.light, html.light body { background: #E4E4E4; }
+html.light .window { border-color: rgba(0, 0, 0, .12); }
+html.light .preview-chiclet { color: #8A6A00; border-color: rgba(138, 106, 0, .7); }
+html.light .btn { background: rgba(255, 255, 255, .7); border-bottom-color: rgba(0, 0, 0, .22); }
+html.light .btn.subtle { background: transparent; border-color: transparent; }
+html.light .btn.toggled, html.light .tbtn.on, html.light .seg > div.sel { background: rgba(0, 95, 184, .10); border-color: rgba(0, 95, 184, .45); color: var(--accent); }
+html.light .chip { background: rgba(0, 0, 0, .03); }
+html.light .chip.on { border-color: rgba(15, 123, 15, .45); background: rgba(15, 123, 15, .08); }
+html.light .chip.info { border-color: rgba(0, 95, 184, .4); background: rgba(0, 95, 184, .07); }
+html.light .field { background: rgba(255, 255, 255, .7); border-bottom-color: rgba(0, 0, 0, .45); }
+html.light .field.combo { border-bottom-color: var(--stroke-strong); }
+html.light .card { background: rgba(255, 255, 255, .7); }
+html.light .check.on .cb, html.light .table .cb.on { color: #FFF; }
+html.light .toggle-sw::after { background: #FFF; }
+html.light .statusbar .recx, html.light .tsub.recx { color: #A4262C; }
+html.light .tbtn.play.on { background: rgba(15, 123, 15, .10); border-color: rgba(15, 123, 15, .5); color: var(--play); }
+html.light .tbtn.rec { color: #C42B1C; }
+html.light .lcd { background: #FFFFFF; }
+html.light .flyout, html.light .tooltip { background: #F9F9F9; box-shadow: 0 8px 24px rgba(0, 0, 0, .18); }
+html.light .menu-item.hovered { background: rgba(0, 0, 0, .04); }
+
+html.light .arow > .launch { border-right-color: rgba(0, 0, 0, .12); background: rgba(0, 0, 0, .018); }
+html.light .arow > .lane {
+    background-image:
+        repeating-linear-gradient(to right, rgba(0, 0, 0, .085) 0 1px, transparent 1px var(--bar)),
+        repeating-linear-gradient(to right, rgba(0, 0, 0, .03) 0 1px, transparent 1px calc(var(--bar) / 4));
+}
+html.light .arow.ruler > .lane { background-image: none; }
+html.light .arow.folder > .hdr, html.light .arow.auto > .hdr { background: rgba(0, 0, 0, .025); }
+html.light .arow.folder > .lane { background-color: rgba(0, 0, 0, .02); }
+html.light .arow.ruler { background: rgba(0, 0, 0, .015); }
+html.light .indent::after { background: rgba(0, 0, 0, .12); }
+html.light .tb { background: rgba(255, 255, 255, .8); }
+html.light .tb.r { color: #C42B1C; }
+html.light .tb.r.on { color: #FFF; }
+html.light .led { background: rgba(0, 0, 0, .12); }
+html.light .pinned { background: rgba(0, 95, 184, .035); }
+html.light .pin-edge { background: linear-gradient(to bottom, rgba(0, 0, 0, .10), rgba(0, 0, 0, .02)); box-shadow: 0 2px 6px rgba(0, 0, 0, .14); }
+html.light .bar-num { border-left-color: rgba(0, 0, 0, .16); }
+html.light .bar-num.sub { border-left-color: rgba(0, 0, 0, .06); }
+html.light .loop-range { background: rgba(0, 95, 184, .22); border-color: rgba(0, 95, 184, .7); }
+
+html.light .cell { background: color-mix(in srgb, var(--tc) 26%, #FFFFFF); border-color: color-mix(in srgb, var(--tc) 75%, #000 10%); }
+html.light .cell .kind { color: rgba(0, 0, 0, .6); }
+html.light .cell.playing { background: color-mix(in srgb, var(--tc) 46%, #FFFFFF); box-shadow: 0 0 0 1px rgba(15, 123, 15, .45); }
+html.light .cell.queued { border-color: rgba(0, 0, 0, .7); }
+html.light .cell.queued .tri { color: #000; }
+html.light .cell.rec { background: rgba(209, 52, 56, .16); }
+html.light .cell.muted { filter: saturate(.15) brightness(1.04); }
+html.light .empty { border-color: rgba(0, 0, 0, .07); background: rgba(0, 0, 0, .02); color: rgba(0, 0, 0, .25); }
+html.light .empty.armed { color: rgba(209, 52, 56, .75); }
+
+html.light .tclip { background: color-mix(in srgb, var(--tc) 20%, #FFFFFF); border-color: color-mix(in srgb, var(--tc) 80%, #000 10%); }
+html.light .tclip .cap { background: color-mix(in srgb, var(--tc) 48%, #FFFFFF); color: #1A1A1A; }
+html.light .tclip.sel { border-color: #1A1A1A; box-shadow: 0 0 0 1px #1A1A1A; }
+html.light .tclip.muted { filter: saturate(.1) brightness(1.05); }
+html.light .tclip.summary { background: color-mix(in srgb, var(--tc) 14%, transparent); }
+html.light .loopmark { border-left-color: rgba(0, 0, 0, .35); }
+html.light .lane-overlay { background: repeating-linear-gradient(135deg, rgba(243, 243, 243, .86) 0 6px, rgba(243, 243, 243, .72) 6px 12px); }
+html.light .lane-overlay .btn { background: #FFFFFF; }
+html.light .playhead { background: #1A1A1A; box-shadow: none; }
+html.light .ruler .playhead::before { border-top-color: #1A1A1A; }
+html.light .tag > span { color: #1A1A1A; }
+html.light .vbar, html.light .hbar { background: rgba(0, 0, 0, .28); }
+
+html.light .editor { border-top-color: rgba(0, 0, 0, .12); background: rgba(255, 255, 255, .45); }
+html.light .keys, html.light .lanehead, html.light .rruler .corner { border-right-color: rgba(0, 0, 0, .14); }
+html.light .roll, html.light .vlane, html.light .tlane { background: rgba(0, 0, 0, .02); }
+html.light .lanerow { border-top-color: rgba(0, 0, 0, .08); }
+html.light .rruler .marks span { border-left-color: rgba(0, 0, 0, .2); }
+html.light .rruler .loopbar { background: rgba(0, 95, 184, .25); }
+html.light .inspector { background: rgba(255, 255, 255, .45); }
+html.light .swatches i { border-color: rgba(0, 0, 0, .2); }
+html.light .valuebar { background: rgba(0, 0, 0, .1); }

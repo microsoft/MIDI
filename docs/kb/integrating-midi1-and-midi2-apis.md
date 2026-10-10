@@ -13,7 +13,7 @@ Before reviewing this, [please see "Mapping MIDI 1.0 Port Concepts" here]({{ sit
 
 Although the modern UMP-based MIDI 1.0 and MIDI 2.0 Windows.Devices.Midi2 API works with both MIDI 1.0 and MIDI 2.0 devices, there are times when you may want to partially transition to the new API while retaining existing legacy MIDI 1 API functionality, or you may need to map between artifacts from the two APIs.
 
-If you are keeping a WinMM or WinRT MIDI 1.0 code path because you also have to run on PCs which may not have Windows MIDI Services, decide which one to use at startup rather than assuming. The [detect-midi-services](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/detect-midi-services) sample shows that as a decision tree: resolve `Windows.Devices.Midi2.MidiApi`, then call `MidiApi.EnsureServiceAvailable()` because the customer may have put the PC in [Legacy API mode]({{ site.baseurl }}/kb/how-to-change-api-mode/), and fall back to the older APIs when either answer is no.
+If you are keeping a WinMM or WinRT MIDI 1.0 code path because you also have to run on PCs which may not have Windows MIDI Services, decide which one to use at startup rather than assuming. The [detect-midi-services](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/detect-midi-services) sample shows that as a decision tree: check that the PC is Windows 11 25H2 or later, resolve `Windows.Devices.Midi2.MidiApi`, then call `MidiApi.EnsureServiceAvailable()` because the customer may have put the PC in [Legacy API mode]({{ site.baseurl }}/kb/how-to-change-api-mode/), and fall back to the older APIs when any answer is no.
 
 ## Fundamental Differences
 

@@ -5706,6 +5706,12 @@
   <data name="SourceProgram" xml:space="preserve">
     <value>Made by a program</value>
   </data>
+  <data name="SourceRecorded" xml:space="preserve">
+    <value>Recorded from a performance</value>
+  </data>
+  <data name="SourceCombined" xml:space="preserve">
+    <value>Put together from several sources</value>
+  </data>
   <data name="SourceAsWrittenFormat" xml:space="preserve">
     <value>As the file says: {0}</value>
     <comment>{0} is a term from the file that this version has no words for</comment>

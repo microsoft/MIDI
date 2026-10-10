@@ -44,6 +44,7 @@ using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;
 #include "MidiDefs.h"
 
 
+#include "MidiApiTests.h"
 #include "MidiClockTests.h"
 #include "MidiGroupTests.h"
 #include "MidiChannelTests.h"

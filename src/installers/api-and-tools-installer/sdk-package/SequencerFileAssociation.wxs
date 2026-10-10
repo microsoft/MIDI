@@ -1,0 +1,73 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <!--
+      Lets the customer double-click a .midisequence file to open it in MIDI Sequencer, and puts
+      MIDI Sequencer in the Open With list for MIDI files, which it imports into a new sequence.
+      Referenced from the WindowsMIDIServices feature in WindowsMidiServicesSdkRedist.wxs.
+
+      !! THIS DELIBERATELY DOES NOT TAKE THE DEFAULT ASSOCIATION. !!
+      Same rules as the MIDI file association for the player: this registers a ProgId, adds it to
+      the extension's OpenWithProgIds list and publishes the app's capabilities. The extension's
+      own default value is never written, so Windows asks the customer once, on the first
+      double-click.
+
+      The names are indirect string references into the executable (see resource.h there), so they
+      are localized along with the rest of the app.
+  -->
+  <Fragment>
+    <Component Id="SequencerFileAssociation"
+               Bitness="always64"
+               Directory="TOOLSROOT_INSTALLFOLDER"
+               Guid="2e83c8b5-cc73-47aa-902e-f15de1cd6a3f">
+
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\WindowsMidiServices.MidiSequence" ForceDeleteOnUninstall="yes">
+        <RegistryValue Type="string" Value="Windows MIDI Sequencer sequence" />
+        <RegistryValue Type="string" Name="FriendlyTypeName" Value="@[#midisequencerExe],-101" />
+        <RegistryKey Key="DefaultIcon">
+          <RegistryValue Type="string" Value="[#midisequencerExe],0" />
+        </RegistryKey>
+        <RegistryKey Key="shell\open\command">
+          <RegistryValue Type="string" Value="&quot;[#midisequencerExe]&quot; &quot;%1&quot;" />
+        </RegistryKey>
+      </RegistryKey>
+
+      <!-- Adding to the list, not replacing the default. -->
+      <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.midisequence\OpenWithProgIds" Name="WindowsMidiServices.MidiSequence" Type="string" Value="" />
+
+      <!-- What puts the app in the Open With list, and gives it a name there. MIDI files are
+           imported into a new sequence. -->
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Applications\midisequencer.exe" ForceDeleteOnUninstall="yes">
+        <RegistryValue Type="string" Name="FriendlyAppName" Value="@[#midisequencerExe],-102" />
+        <RegistryKey Key="shell\open\command">
+          <RegistryValue Type="string" Value="&quot;[#midisequencerExe]&quot; &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Key="SupportedTypes">
+          <RegistryValue Type="string" Name=".midisequence" Value="" />
+          <RegistryValue Type="string" Name=".mid" Value="" />
+          <RegistryValue Type="string" Name=".midi" Value="" />
+          <RegistryValue Type="string" Name=".midi2" Value="" />
+        </RegistryKey>
+      </RegistryKey>
+
+      <!-- Default apps in Settings reads this. -->
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\MIDI Sequencer\Capabilities" ForceDeleteOnUninstall="yes">
+        <RegistryValue Type="string" Name="ApplicationName" Value="@[#midisequencerExe],-102" />
+        <RegistryValue Type="string" Name="ApplicationDescription" Value="@[#midisequencerExe],-103" />
+        <RegistryKey Key="FileAssociations">
+          <RegistryValue Type="string" Name=".midisequence" Value="WindowsMidiServices.MidiSequence" />
+        </RegistryKey>
+      </RegistryKey>
+
+      <RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications"
+                     Name="Windows MIDI Sequencer"
+                     Type="string"
+                     Value="SOFTWARE\Microsoft\Windows MIDI Services\MIDI Sequencer\Capabilities" />
+
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\MIDI Sequencer">
+        <RegistryValue Type="string" Name="SequenceFileAssociation" Value="registered" KeyPath="yes" />
+      </RegistryKey>
+
+    </Component>
+  </Fragment>
+
+</Wix>

@@ -62,6 +62,10 @@
                   Name="MIDI Glass"
                   Target="[#midiglassExe]"
                   WorkingDirectory="TOOLSROOT_INSTALLFOLDER" />
+        <Shortcut Id="Shortcut_midisequencer"
+                  Name="MIDI Sequencer"
+                  Target="[#midisequencerExe]"
+                  WorkingDirectory="TOOLSROOT_INSTALLFOLDER" />
         <Shortcut Id="Shortcut_miditroubleshooter"
                   Name="MIDI Troubleshooting and Repair"
                   Target="[#miditroubleshooterExe]"

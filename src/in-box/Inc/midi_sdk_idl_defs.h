@@ -29,6 +29,7 @@
 // Windows.Devices.Midi2 : Interface number 001
 
 #define UUID_IMidiApiStatics                                                8087b303-0519-c0de-31d1-ee0010000000
+#define UUID_IMidiApiStatics2                                               8087b303-0519-c0de-31d1-ee0010000002
 
 #define UUID_IMidiChannel									                8087b303-0519-c0de-31d1-dd0010001000
 #define UUID_IMidiChannelStatics							                8087b303-0519-c0de-31d1-ee0010001000

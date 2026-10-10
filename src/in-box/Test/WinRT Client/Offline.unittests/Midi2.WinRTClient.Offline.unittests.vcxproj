@@ -149,6 +149,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="MidiApiTests.cpp" />
     <ClCompile Include="MidiChannelTests.cpp" />
     <ClCompile Include="MidiClockTests.cpp" />
     <ClCompile Include="MidiGroupTests.cpp" />
@@ -166,6 +167,7 @@
     <ClCompile Include="Module.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MidiApiTests.h" />
     <ClInclude Include="MidiChannelTests.h" />
     <ClInclude Include="MidiClockTests.h" />
     <ClInclude Include="MidiGroupTests.h" />

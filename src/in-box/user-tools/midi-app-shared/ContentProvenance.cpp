@@ -628,9 +628,11 @@ namespace midiapp
     bool IsKnownDigitalSourceType(std::wstring_view value) noexcept
     {
         return value == DigitalSourceTypes::DigitalCreation ||
+            value == DigitalSourceTypes::DigitalCapture ||
             value == DigitalSourceTypes::TrainedAlgorithmicMedia ||
             value == DigitalSourceTypes::CompositeWithTrainedAlgorithmicMedia ||
             value == DigitalSourceTypes::CompositeSynthetic ||
+            value == DigitalSourceTypes::Composite ||
             value == DigitalSourceTypes::AlgorithmicMedia;
     }
 

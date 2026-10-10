@@ -482,9 +482,23 @@ namespace midi2monitor
                 }
 
                 case 0x01: // Set Time Signature
-                    AppendField(result, Labels().TimeSignature,
-                        std::format(L"{}/{}", raw[4], raw[5]));
+                {
+                    // The denominator is sent as a negative power of two: 2 is a quarter note.
+                    auto const numerator = raw[4];
+                    auto const denominatorPower = raw[5];
+
+                    if (denominatorPower > 0 && denominatorPower < 32)
+                    {
+                        AppendField(result, Labels().TimeSignature,
+                            std::format(L"{}/{}", numerator, 1u << denominatorPower));
+                    }
+                    else
+                    {
+                        AppendField(result, Labels().TimeSignature,
+                            std::wstring{ resources::FormatString(L"DecodeTimeSignatureNonStandardFormat", numerator) });
+                    }
                     break;
+                }
 
                 case 0x05: // Set Key Signature
                     AppendField(result, Labels().KeySignature, std::format(L"0x{:02X}", raw[4]));

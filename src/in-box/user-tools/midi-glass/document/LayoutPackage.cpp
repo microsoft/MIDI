@@ -10,7 +10,7 @@
 #include "LayoutPackage.h"
 #include "LayoutStore.h"
 #include "LayoutSerializer.h"
-#include "StoredZip.h"
+#include "ZipArchive.h"
 
 #include <windows.h>
 

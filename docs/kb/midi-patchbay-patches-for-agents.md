@@ -780,7 +780,7 @@ foreach ($id in @($kinds.Keys)) {
 }
 
 # Who made it. Optional to Windows MIDI Patchbay, but an AI should always say so.
-$sourceTypes = 'digitalCreation', 'trainedAlgorithmicMedia', 'compositeWithTrainedAlgorithmicMedia', 'compositeSynthetic', 'algorithmicMedia'
+$sourceTypes = 'digitalCreation', 'digitalCapture', 'trainedAlgorithmicMedia', 'compositeWithTrainedAlgorithmicMedia', 'compositeSynthetic', 'composite', 'algorithmicMedia'
 $oversight = 'fully_autonomous', 'prompt_guided', 'human_validated'
 $p = $patch.provenance
 if ($null -eq $p) { $problems.Add('There is no provenance block, so nothing says an AI made this patch.') }

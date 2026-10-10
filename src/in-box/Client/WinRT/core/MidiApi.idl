@@ -23,5 +23,12 @@ namespace Windows.Devices.Midi2
         [noexcept] static Boolean EnsureServiceAvailable();
 
         [noexcept] static MidiApiMode GetCurrentlySelectedApiMode();
+
+        // Added after IMidiApiStatics was in previews, so it is a new interface rather than a change to that one.
+        [static_name("Windows.Devices.Midi2.IMidiApiStatics2", UUID_IMidiApiStatics2)]
+        [contract(MidiCoreApiContract,1)]
+        {
+            [noexcept] static Boolean IsSystemProvided();
+        }
     }
 }

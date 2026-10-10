@@ -12,6 +12,7 @@
 #include "StringResources.h"
 #include "SystemInfo.h"
 #include "ToolPaths.h"
+#include "ZipArchive.h"
 
 namespace miditroubleshooter
 {
@@ -492,29 +493,41 @@ namespace miditroubleshooter
                     return text;
                 }());
 
-            // bsdtar has been in Windows since 1803 and is the only in-box way to write a zip
-            auto const tarPath = Combine(GetNativeSystem32Folder(), L"tar.exe");
+            std::filesystem::path const workingFolder{ m_workingFolder };
+            std::vector<std::filesystem::path> files{};
 
-            if (!FileExists(tarPath))
+            for (auto const& entry : std::filesystem::recursive_directory_iterator{ workingFolder })
             {
-                result.ErrorMessage = res::FormatString(
-                    L"CaptureErrorNoZipFormat", winrt::hstring{ m_workingFolder });
-
-                return result;
+                if (entry.is_regular_file())
+                {
+                    files.push_back(entry.path());
+                }
             }
 
-            ::DeleteFileW(outputZipPath.c_str());
+            std::sort(files.begin(), files.end());
 
-            auto const zipArguments = std::format(
-                L"-a -c -f \"{}\" -C \"{}\" .", outputZipPath, m_workingFolder);
+            midiapp::ZipWriter zip{};
 
-            auto const zipRun = RunCapture(tarPath, zipArguments, std::chrono::seconds{ 900 });
+            auto status = zip.Create(outputZipPath);
 
-            if (!zipRun.Started || zipRun.ExitCode != 0 || !FileExists(outputZipPath))
+            for (auto const& file : files)
             {
-                result.ErrorMessage = zipRun.Output.empty() ?
-                    res::FormatString(L"CaptureErrorNoZipFormat", winrt::hstring{ m_workingFolder }) :
-                    zipRun.Output;
+                if (status != midiapp::ZipStatus::Written)
+                {
+                    break;
+                }
+
+                status = zip.AddFile(file.lexically_relative(workingFolder).wstring(), file, midiapp::ZipCompression::Deflate);
+            }
+
+            if (status == midiapp::ZipStatus::Written)
+            {
+                status = zip.Finish();
+            }
+
+            if (status != midiapp::ZipStatus::Written)
+            {
+                result.ErrorMessage = res::FormatString(L"CaptureErrorNoZipFormat", winrt::hstring{ m_workingFolder });
 
                 return result;
             }

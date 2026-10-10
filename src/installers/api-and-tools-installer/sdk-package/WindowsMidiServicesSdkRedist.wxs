@@ -166,6 +166,7 @@
             <ComponentRef Id="WindowsMidiServicesMidiFileAssociation"/>
             <ComponentRef Id="PatchbayFileAssociation"/>
             <ComponentRef Id="GlassFileAssociation"/>
+            <ComponentRef Id="SequencerFileAssociation"/>
             <ComponentRef Id="LoopbackSetupProtocol"/>
             <ComponentRef Id="NetworkSetupProtocol"/>
     </Feature>
