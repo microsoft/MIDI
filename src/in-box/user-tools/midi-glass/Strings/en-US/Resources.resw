@@ -4045,10 +4045,10 @@
     <value>This layout</value>
   </data>
   <data name="SettingsNavName.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Name and description</value>
+    <value>About this layout</value>
   </data>
   <data name="SettingsNavNameLabel.Text" xml:space="preserve">
-    <value>Name and description</value>
+    <value>About this layout</value>
   </data>
   <data name="SettingsNavAccessibility.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Accessibility check</value>
@@ -5765,6 +5765,76 @@
   </data>
   <data name="EditSignedCopyAction" xml:space="preserve">
     <value>Make my own copy</value>
+  </data>
+  <!-- Seeing and changing who made a layout or theme: the editor's About page, the theme in use, Save as theme -->
+  <data name="LayoutMenuAbout.Text" xml:space="preserve">
+    <value>About this layout…</value>
+  </data>
+  <data name="SettingsAboutCaption" xml:space="preserve">
+    <value>Anyone you share this layout with can see this. Unless it comes from a signed pack, they see the name marked (unverified).</value>
+  </data>
+  <data name="SettingsAboutChangeInfo" xml:space="preserve">
+    <value>Change your info…</value>
+  </data>
+  <data name="SettingsAboutInfoNote" xml:space="preserve">
+    <value>Your info is what Windows MIDI Glass puts in each new layout and theme you make on this PC.</value>
+  </data>
+  <data name="SettingsAboutDetailsHeading" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="FillInYourInfo" xml:space="preserve">
+    <value>Fill in your info</value>
+  </data>
+  <data name="FillInYourInfoTip" xml:space="preserve">
+    <value>Puts in the name, company or group, website and license from Your info for sharing.</value>
+  </data>
+  <data name="DetailsChangeInEditor" xml:space="preserve">
+    <value>Change it in the editor</value>
+  </data>
+  <data name="ProvenanceNotSaid" xml:space="preserve">
+    <value>Doesn't say</value>
+  </data>
+  <data name="ProvenanceOversightLabel" xml:space="preserve">
+    <value>How a person was involved</value>
+  </data>
+  <data name="OversightChoiceNone" xml:space="preserve">
+    <value>Not at all</value>
+  </data>
+  <data name="OversightChoicePrompted" xml:space="preserve">
+    <value>A person told the AI what to make</value>
+  </data>
+  <data name="OversightChoiceChecked" xml:space="preserve">
+    <value>A person checked what the AI made</value>
+  </data>
+  <data name="ProvenanceModelLabel" xml:space="preserve">
+    <value>AI model</value>
+  </data>
+  <data name="ProvenanceModelPlaceholder" xml:space="preserve">
+    <value>Its name, if you know it</value>
+  </data>
+  <data name="ThemeInUseFormat" xml:space="preserve">
+    <value>This layout uses {0}</value>
+    <comment>{0} is the name of a theme</comment>
+  </data>
+  <data name="ThemeOwnByline" xml:space="preserve">
+    <value>Changed for this layout</value>
+  </data>
+  <data name="ThemeAboutButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>About this theme</value>
+  </data>
+  <data name="ThemeAboutLabel.Text" xml:space="preserve">
+    <value>About this theme…</value>
+  </data>
+  <data name="ThemeOwnDetailsFormat" xml:space="preserve">
+    <value>Your changes to {0} are kept inside this layout, so they travel with it. To give the theme its own name and say who made it, use Save as theme further down this page.</value>
+    <comment>{0} is the name of a theme</comment>
+  </data>
+  <data name="SaveThemeAboutNote" xml:space="preserve">
+    <value>Anyone you share the theme with can see this.</value>
+  </data>
+  <data name="ProvenanceRowSpokenFormat" xml:space="preserve">
+    <value>{0}: {1}</value>
+    <comment>What a screen reader says for one detail. {0} is its label, such as Made by, {1} is its value</comment>
   </data>
   <data name="SurfacePlaceholderNote" xml:space="preserve">
     <value>Needs a newer version of Windows MIDI Glass</value>

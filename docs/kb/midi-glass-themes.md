@@ -135,11 +135,14 @@ Picking a theme in the gallery drops any copy the layout was carrying and makes 
 - **To install a theme pack you were sent,** open a layout in the editor and use **Import a theme…** on its **Appearance** page, or select **…** (More options) > **Import a pack…** in the library. Windows MIDI Glass checks the pack, shows who made it and whether it's signed, and asks before it replaces anything. If you already have a different theme with the same name, you can replace it or keep both, and the new one gets a new name.
 - **To install a single `.miditheme` file,** copy it into `Documents\MIDI Layouts\Themes`, or use **Import a theme…**. Import copies the file into the Themes folder under the theme's name, replacing an older file with that name, and puts the theme on the layout you have open. A file on its own has no list of files and can't be signed, so a pack is the better way to share.
 - **To save a theme from the app,** use **Save as theme…** on the **Appearance** page. Windows MIDI Glass won't save under a built-in theme's name. After saving, the layout points at the new file by name instead of carrying its own copy. A theme saved under a new name says what it was based on.
+- **To say who made a theme you save,** fill in **Who made it** in the same box as its name. A theme saved under a new name starts with your info.
 - **To share a layout that uses a theme of your own,** use **Pack for sharing…** on the layout's card in the library. The pack carries the theme file and its picture too. If the person who imports it already has a different theme with that name, the layout carries its own copy of yours instead, so it still looks the way you made it.
 
 ### Who made a theme
 
 A theme file can say who made it in a `provenance` block, the same block a layout has. The gallery shows the name under each theme, marked **(unverified)** unless the theme came from a signed pack and hasn't changed since. Right-click a theme and select **About this theme…** to see everything the block says. **Group themes by** sorts the gallery by who made each theme, or by who signed it.
+
+The **Appearance** page also says which theme the layout uses and who made it, with an **About this theme…** button beside it. For a theme of your own, **About this theme…** lets you change who made it, its website, its license, its version, and how it was made. You can't change a theme that comes with Windows MIDI Glass, one from a signed pack, or one a newer version made. Changes you make to a theme while you edit a layout stay inside that layout and don't have a block of their own. Save them as a theme to give them one.
 
 ```json
 "provenance": {

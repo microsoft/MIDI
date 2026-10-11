@@ -529,7 +529,21 @@ namespace winrt::midiglass::implementation
                 return;
             }
 
-            ::midiglass::sharing::ShowLayoutDetailsAsync(RootGrid().XamlRoot(), std::wstring{ m_menuCard.FilePath() });
+            auto const path = std::wstring{ m_menuCard.FilePath() };
+
+            // Changed in the editor, on the page that has the same fields.
+            ::midiglass::sharing::ShowLayoutDetailsAsync(RootGrid().XamlRoot(), path, [weak = get_weak(), path]()
+                {
+                    ::midiglass::AppSettings::Current().RecordLayoutUse(path);
+
+                    App::OpenEditorWindow(path, L"name");
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->m_cardSignature.clear();
+                        strong->RefreshLibrary();
+                    }
+                });
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the layout's details.")
     }

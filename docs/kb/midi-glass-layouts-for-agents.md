@@ -380,6 +380,7 @@ Tell the customer how to get the file into Windows MIDI Glass, using [Where layo
 - What the layout can't do that they asked for, and what you did instead.
 - Where each number came from, so they can check it against the manual.
 - That **About this layout…** on the layout's card in the library shows what the file says about who made it, and that **Pack for sharing…** on the same menu makes a file they can give to other people.
+- That they can change who made it in the editor, under **Layout…** > **About this layout…**. Once they've checked the layout works, they can set **How a person was involved** there to **A person checked what the AI made**.
 
 ## Where layout files go, and how to bring one in
 
@@ -928,7 +929,7 @@ To control a DAW set up for a Mackie Control surface, give its device `"protocol
 
 ### Who made it
 
-The `provenance` block says who made the layout, with what, and from what. Windows MIDI Glass shows it in **About this layout…** and when someone imports a pack. The names follow [C2PA Content Credentials](https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html), and `digitalSourceType` uses the [IPTC digital source type](https://cv.iptc.org/newscodes/digitalsourcetype/) terms, so the block can be carried into a C2PA manifest later.
+The `provenance` block says who made the layout, with what, and from what. Windows MIDI Glass shows it in **About this layout…**, in the library and in the editor, and when someone imports a pack. The editor's page lets the customer change it. The names follow [C2PA Content Credentials](https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html), and `digitalSourceType` uses the [IPTC digital source type](https://cv.iptc.org/newscodes/digitalsourcetype/) terms, so the block can be carried into a C2PA manifest later.
 
 ```json
 "provenance": {

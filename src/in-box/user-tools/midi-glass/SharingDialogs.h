@@ -45,12 +45,16 @@ namespace midiglass::sharing
         _In_ std::wstring packPath,
         _In_ std::function<void(ImportOutcome, std::wstring const&)> installed);
 
-    // Everything a layout or theme says about who made it, and whether a signature backs it.
+    // Everything a layout says about who made it, and whether a signature backs it. With
+    // `changeInEditor`, a layout that can be changed offers to open it where that's done.
     winrt::Windows::Foundation::IAsyncAction ShowLayoutDetailsAsync(
         _In_ winrt::Microsoft::UI::Xaml::XamlRoot root,
-        _In_ std::wstring layoutFilePath);
+        _In_ std::wstring layoutFilePath,
+        _In_ std::function<void()> changeInEditor = nullptr);
 
-    winrt::Windows::Foundation::IAsyncAction ShowThemeDetailsAsync(
+    // The same for a theme. A theme file of the customer's own can be changed here, and the
+    // result says whether it was.
+    winrt::Windows::Foundation::IAsyncOperation<bool> ShowThemeDetailsAsync(
         _In_ winrt::Microsoft::UI::Xaml::XamlRoot root,
         _In_ glass::Theme theme);
 

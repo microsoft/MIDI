@@ -26,8 +26,11 @@ namespace winrt::midiglass::implementation
         static void OpenRuntimeWindow(_In_ std::wstring const& filePath);
 
         // The editor is one window at a time. Editing the same layout in two windows is a
-        // conflict nobody needs, and a second request focuses the first.
-        static void OpenEditorWindow(_In_ std::wstring const& filePath);
+        // conflict nobody needs, and a second request focuses the first. A settings pane, when
+        // named, is opened once the window is up.
+        static void OpenEditorWindow(
+            _In_ std::wstring const& filePath,
+            _In_ std::wstring const& settingsPane = {});
 
         static void ActivateLibraryWindow();
 
