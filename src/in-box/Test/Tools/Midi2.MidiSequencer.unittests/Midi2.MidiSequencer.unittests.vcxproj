@@ -104,6 +104,8 @@
     <ClInclude Include="PatternTests.h" />
     <ClInclude Include="GeneratorTests.h" />
     <ClInclude Include="RemoteControlTests.h" />
+    <ClInclude Include="DawProjectTests.h" />
+    <ClInclude Include="CaptureImportTests.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.h" />
@@ -116,13 +118,18 @@
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceUndo.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\MidiClipFile.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\StandardMidiFileBridge.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\DawProject.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\CaptureImport.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceEdits.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\RecordingTake.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\RemoteControl.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\GlassLayoutWriter.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\ArrangeLayout.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\ClockFollower.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\ZipArchive.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\Deflate.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Module.cpp" />
@@ -140,6 +147,8 @@
     <ClCompile Include="PatternTests.cpp" />
     <ClCompile Include="GeneratorTests.cpp" />
     <ClCompile Include="RemoteControlTests.cpp" />
+    <ClCompile Include="DawProjectTests.cpp" />
+    <ClCompile Include="CaptureImportTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.cpp" />
@@ -151,6 +160,8 @@
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceUndo.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\MidiClipFile.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\StandardMidiFileBridge.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\DawProject.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\CaptureImport.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceEdits.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\RecordingTake.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\RemoteControl.cpp" />
@@ -158,7 +169,10 @@
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\ArrangeLayout.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SampleSequence.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\ClockFollower.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\ZipArchive.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\Deflate.cpp" />
     <ClCompile Include="..\..\..\Inc\midi_file_sequence.cpp" />
     <ClCompile Include="..\..\..\Inc\midi_file_smf_reader.cpp" />
     <ClCompile Include="..\..\..\Inc\midi_file_smf_writer.cpp" />

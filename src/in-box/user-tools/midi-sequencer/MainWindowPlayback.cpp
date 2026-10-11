@@ -142,6 +142,7 @@ namespace winrt::midisequencer::implementation
             ApplyEngineSettings();
             m_engine->StartThread();
 
+            m_uiQueue = DispatcherQueue();
             m_sources = std::make_unique<seq::SourceMonitor>(m_session);
 
             auto weak = get_weak();
@@ -289,6 +290,22 @@ namespace winrt::midisequencer::implementation
 
                 auto& settings = seq::AppSettings::Current();
 
+                // The device whose clock the sequence follows. Its messages come in with the
+                // sources', and the service's thread picks them out by this id.
+                {
+                    auto const& follow = settings.FollowClock();
+                    auto const followId = follow.IsOn() ? m_directory->ResolveId(seq::EndpointRef{ follow.EndpointName, follow.EndpointId }) : std::wstring{};
+
+                    if (!followId.empty() && std::find(sources.begin(), sources.end(), followId) == sources.end())
+                    {
+                        sources.push_back(followId);
+                    }
+
+                    std::scoped_lock guard{ m_inputLock };
+                    m_followSourceId = followId;
+                    m_followGroup = follow.Group;
+                }
+
                 if (settings.MetronomeEnabled())
                 {
                     seq::EndpointRef metronome{ settings.MetronomeEndpointName(), settings.MetronomeEndpointId() };
@@ -404,6 +421,7 @@ namespace winrt::midisequencer::implementation
             }
 
             m_engine->SetSettings(engine);
+            m_engine->SetFollowing(settings.FollowClock().IsOn());
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to apply the playback settings.")
     }
@@ -423,6 +441,16 @@ namespace winrt::midisequencer::implementation
             }
 
             ApplyEngineSettings();
+
+            // Following another device's clock, that device starts playback.
+            if (m_engine->IsFollowing())
+            {
+                auto const& follow = seq::AppSettings::Current().FollowClock();
+                ShowMessage(res::FormatString(L"FollowPlayWaitsFormat", follow.EndpointName.empty() ? follow.EndpointId : follow.EndpointName));
+                UpdateTransport();
+                return;
+            }
+
             m_engine->Play(std::max<int64_t>(0, fromTick));
             m_position = std::max<int64_t>(0, fromTick);
 
@@ -1083,6 +1111,23 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            // The clock this sequence follows goes to the engine, not to recording.
+            if ((words[0] >> 28) == 0x1)
+            {
+                auto followed{ false };
+
+                {
+                    std::scoped_lock guard{ m_inputLock };
+                    followed = !m_followSourceId.empty() && SameEndpoint(m_followSourceId, endpointId) && ((words[0] >> 24) & 0x0F) == m_followGroup;
+                }
+
+                if (followed)
+                {
+                    OnFollowedClock(timestamp, words[0]);
+                    return;
+                }
+            }
+
             m_lastInputTicks = timestamp;
 
             auto const tick = m_engine != nullptr && m_recording ? m_engine->TickAtTime(timestamp) : -1;
@@ -1137,6 +1182,87 @@ namespace winrt::midisequencer::implementation
         catch (...)
         {
         }
+    }
+
+    // On the service's thread: pulses set the pace, and the rest run the transport.
+    _Use_decl_annotations_
+    void MainWindow::OnFollowedClock(uint64_t timestamp, uint32_t word0) noexcept
+    {
+        try
+        {
+            if (m_engine == nullptr)
+            {
+                return;
+            }
+
+            switch ((word0 >> 16) & 0xFF)
+            {
+            case 0xF8:
+                m_engine->FollowPulse(timestamp);
+                return;
+
+            case 0xFA:
+                m_engine->FollowStart(timestamp);
+                break;
+
+            case 0xFB:
+                m_engine->FollowContinue(timestamp);
+                break;
+
+            case 0xFC:
+                m_engine->FollowStop(timestamp);
+                break;
+
+            case 0xF2:
+                m_engine->FollowSongPosition(timestamp, ((word0 & 0x7F) << 7) | ((word0 >> 8) & 0x7F));
+                break;
+
+            default:
+                return;
+            }
+
+            // The transport moved without the window moving it.
+            if (m_uiQueue != nullptr)
+            {
+                m_uiQueue.TryEnqueue([weak = get_weak()]()
+                {
+                    if (auto window = weak.get())
+                    {
+                        window->OnFollowedTransport();
+                    }
+                });
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+
+    void MainWindow::OnFollowedTransport() noexcept
+    {
+        try
+        {
+            if (m_engine == nullptr || m_closing)
+            {
+                return;
+            }
+
+            if (m_engine->IsPlaying())
+            {
+                m_frameTimer.Start();
+            }
+            else
+            {
+                m_position = m_engine->PositionTick();
+                UpdateDisplays(m_position);
+                UpdatePlayhead();
+                InvalidateArrange();
+            }
+
+            UpdateTransport();
+            UpdateClockStatus();
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to follow the other device's transport.")
     }
 
     void MainWindow::UpdateEchoRoutes() noexcept

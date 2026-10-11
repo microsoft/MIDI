@@ -150,6 +150,16 @@
   <data name="MenuImportClipFile.Text" xml:space="preserve">
     <value>MIDI 2.0 clip file…</value>
   </data>
+  <data name="MenuImportDawProject.Text" xml:space="preserve">
+    <value>DAWproject file…</value>
+    <comment>DAWproject is the name of a file format that DAWs share. Don't translate it.</comment>
+  </data>
+  <data name="MenuImportCapture.Text" xml:space="preserve">
+    <value>Capture from MIDI Monitor or the console (CSV)…</value>
+  </data>
+  <data name="MenuImportPaste.Text" xml:space="preserve">
+    <value>Messages copied in MIDI Monitor…</value>
+  </data>
   <data name="MenuExport.Text" xml:space="preserve">
     <value>Export</value>
   </data>
@@ -158,6 +168,10 @@
   </data>
   <data name="MenuExportStandardMidiFile.Text" xml:space="preserve">
     <value>Standard MIDI File…</value>
+  </data>
+  <data name="MenuExportDawProject.Text" xml:space="preserve">
+    <value>DAWproject file…</value>
+    <comment>DAWproject is the name of a file format that DAWs share. Don't translate it.</comment>
   </data>
   <data name="MenuRemoteControl.Text" xml:space="preserve">
     <value>Remote control and MIDI Glass…</value>
@@ -293,6 +307,12 @@
   <data name="FileTypeClipFile" xml:space="preserve">
     <value>MIDI 2.0 clip file</value>
   </data>
+  <data name="FileTypeDawProject" xml:space="preserve">
+    <value>DAWproject file</value>
+  </data>
+  <data name="FileTypeCapture" xml:space="preserve">
+    <value>Capture from MIDI Monitor or the console</value>
+  </data>
 
   <!-- ==================================== Transport ==================================== -->
   <data name="GoToStartButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
@@ -365,8 +385,20 @@
   <data name="ClockTempoAnotherDevice" xml:space="preserve">
     <value>Another device's MIDI clock</value>
   </data>
-  <data name="ClockTempoAnotherDeviceLater" xml:space="preserve">
-    <value>Following another device's clock comes in a later preview.</value>
+  <data name="ClockTempoAnotherDeviceHelp" xml:space="preserve">
+    <value>Its clock sets the tempo, and its start, stop and song position run playback. While following, the loop is off and Play waits for that device. The sequencer can only plan as far as the next pulse, so timing is a little looser than with its own clock.</value>
+  </data>
+  <data name="FollowDeviceName" xml:space="preserve">
+    <value>Device whose clock to follow</value>
+  </data>
+  <data name="FollowGroupName" xml:space="preserve">
+    <value>Group of the clock to follow</value>
+  </data>
+  <data name="FollowNoDevice" xml:space="preserve">
+    <value>Choose the device whose clock to follow, or let the tempo come from this sequence.</value>
+  </data>
+  <data name="FollowPlayWaitsFormat" xml:space="preserve">
+    <value>Playback follows {0}. It starts when that device starts or continues.</value>
   </data>
   <data name="ClockSendHeading" xml:space="preserve">
     <value>Send clock to</value>
@@ -670,6 +702,133 @@
   </data>
   <data name="UndoImport" xml:space="preserve">
     <value>Import</value>
+  </data>
+  <data name="DawProjectNotAProjectFormat" xml:space="preserve">
+    <value>{0} isn't a DAWproject file, or it couldn't be opened.</value>
+  </data>
+  <data name="DawProjectDamagedFormat" xml:space="preserve">
+    <value>{0} is damaged, so it couldn't be imported.</value>
+  </data>
+  <data name="DawProjectTooLargeFormat" xml:space="preserve">
+    <value>{0} is larger than the sequencer can import.</value>
+  </data>
+  <data name="DawProjectDialogTitle" xml:space="preserve">
+    <value>Import a DAWproject file</value>
+  </data>
+  <data name="DawProjectDialogIntro" xml:space="preserve">
+    <value>A DAWproject file doesn't say which MIDI device a track plays, so pick one for each track. You can change it later in the track's settings.</value>
+  </data>
+  <data name="DawProjectDialogIntroFormat" xml:space="preserve">
+    <value>{0} was made in {1}. A DAWproject file doesn't say which MIDI device a track plays, so pick one for each track. You can change it later in the track's settings.</value>
+    <comment>{0} is the file's name. {1} is the app that made it.</comment>
+  </data>
+  <data name="DawProjectTracksHeading" xml:space="preserve">
+    <value>Tracks</value>
+  </data>
+  <data name="DawProjectInstrumentFormat" xml:space="preserve">
+    <value>Played {0} in {1}</value>
+    <comment>{0} is an instrument plug-in. {1} is the app that made the file.</comment>
+  </data>
+  <data name="DawProjectInstrumentNoAppFormat" xml:space="preserve">
+    <value>Played {0}</value>
+    <comment>{0} is an instrument plug-in.</comment>
+  </data>
+  <data name="DawProjectDeviceNameFormat" xml:space="preserve">
+    <value>Device for {0}</value>
+    <comment>The name a screen reader gives the list of devices for track {0}.</comment>
+  </data>
+  <data name="DawProjectMoreTracksFormat" xml:space="preserve">
+    <value>The tracks after the first {0} play to the built-in synth. You can change that in each track's settings.</value>
+  </data>
+  <data name="DawProjectLeftOutHeading" xml:space="preserve">
+    <value>Left out</value>
+  </data>
+  <data name="DawProjectLeftOutWhy" xml:space="preserve">
+    <value>The sequencer plays MIDI devices. It keeps the notes, MIDI automation, tempo, tags and scenes. Audio and plug-ins stay in the app that made the file.</value>
+  </data>
+  <data name="DawProjectLeftOutAudioTracksFormat" xml:space="preserve">
+    <value>Audio tracks: {0}</value>
+  </data>
+  <data name="DawProjectLeftOutAudioClipsFormat" xml:space="preserve">
+    <value>Audio clips: {0}</value>
+  </data>
+  <data name="DawProjectLeftOutPluginsFormat" xml:space="preserve">
+    <value>Instruments and effects: {0}</value>
+  </data>
+  <data name="DawProjectLeftOutAutomationFormat" xml:space="preserve">
+    <value>Automation of mixer and plug-in settings: {0}</value>
+  </data>
+  <data name="DawProjectLeftOutExpressionsFormat" xml:space="preserve">
+    <value>Expression on single notes, such as one note's own pitch bend: {0}</value>
+  </data>
+  <data name="DawProjectImport" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="DawProjectPlayedOnFormat" xml:space="preserve">
+    <value>Played on {0} in Windows MIDI Sequencer</value>
+    <comment>Written into an exported file as a track's comment. {0} is the MIDI device the track plays.</comment>
+  </data>
+  <data name="ExportedDawProjectSkippedFormat" xml:space="preserve">
+    <value>Exported {0}. DAWproject has no place for some messages, such as system exclusive and start-up messages, so they were left out: {1}.</value>
+  </data>
+  <data name="ExportedDawProjectSkippedLanesFormat" xml:space="preserve">
+    <value>Exported {0}. DAWproject has no place for some MIDI, so it was left out: {1} messages, such as system exclusive and start-up messages, and {2} RPN or NRPN lanes.</value>
+  </data>
+  <data name="CaptureNotACaptureFormat" xml:space="preserve">
+    <value>{0} isn't a capture from MIDI Monitor or the console. In MIDI Monitor, save the capture as CSV and import that.</value>
+  </data>
+  <data name="CaptureTooLargeFormat" xml:space="preserve">
+    <value>{0} has more messages than a sequence can hold.</value>
+  </data>
+  <data name="CaptureTrackNameFormat" xml:space="preserve">
+    <value>Group {0}</value>
+    <comment>A track made from what a capture had on one UMP group. {0} is the group, counted from 1.</comment>
+  </data>
+  <data name="CaptureImportedSkippedFormat" xml:space="preserve">
+    <value>Imported {0}. Tracks added: {1}. Messages a track doesn't record, such as clock, were left out: {2}.</value>
+  </data>
+  <data name="PasteDialogTitle" xml:space="preserve">
+    <value>Paste from MIDI Monitor</value>
+  </data>
+  <data name="PasteDialogIntroFormat" xml:space="preserve">
+    <value>You copied {0} messages as UMP words in MIDI Monitor. The clipboard has the messages but not their times. They go on {1} as a new clip.</value>
+    <comment>{0} is a number of messages. {1} is a track's name.</comment>
+  </data>
+  <data name="PasteOneAStep" xml:space="preserve">
+    <value>One message per step, from the playhead</value>
+  </data>
+  <data name="PasteStepSize" xml:space="preserve">
+    <value>Each step is</value>
+  </data>
+  <data name="PasteAllAtOnce" xml:space="preserve">
+    <value>All at the playhead, in the order copied</value>
+  </data>
+  <data name="PasteAllAtOnceHelp" xml:space="preserve">
+    <value>Good for a set-up dump: sound select, then a system exclusive patch.</value>
+  </data>
+  <data name="PasteButton" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="PasteNothing" xml:space="preserve">
+    <value>The clipboard has no MIDI messages. In MIDI Monitor, select some messages and copy them as UMP words.</value>
+  </data>
+  <data name="PasteNoTrack" xml:space="preserve">
+    <value>Select the track to paste into first.</value>
+  </data>
+  <data name="PastedFormat" xml:space="preserve">
+    <value>Pasted {0} messages into {1}.</value>
+  </data>
+  <data name="PastedSkippedFormat" xml:space="preserve">
+    <value>Pasted {0} messages into {1}. Lines that weren't whole messages were left out: {2}.</value>
+  </data>
+  <data name="PastedClipName" xml:space="preserve">
+    <value>Pasted</value>
+  </data>
+  <data name="PastedOriginDetail" xml:space="preserve">
+    <value>Copied in MIDI Monitor</value>
+  </data>
+  <data name="UndoPaste" xml:space="preserve">
+    <value>Paste</value>
   </data>
 
   <!-- ==================================== Track list ==================================== -->
@@ -1373,6 +1532,18 @@
   </data>
   <data name="ClockStatusSendingFormat" xml:space="preserve">
     <value>Internal clock, {0} BPM, sent to {1} devices</value>
+  </data>
+  <data name="ClockStatusFollowingFormat" xml:space="preserve">
+    <value>Following {0}, {1} BPM</value>
+  </data>
+  <data name="ClockStatusFollowingSendingOneFormat" xml:space="preserve">
+    <value>Following {0}, {1} BPM, sent to 1 device</value>
+  </data>
+  <data name="ClockStatusFollowingSendingFormat" xml:space="preserve">
+    <value>Following {0}, {1} BPM, sent to {2} devices</value>
+  </data>
+  <data name="ClockStatusWaitingFormat" xml:space="preserve">
+    <value>Following {0}, waiting for its clock</value>
   </data>
   <data name="DevicesInUseOneFormat" xml:space="preserve">
     <value>{0} device in use</value>

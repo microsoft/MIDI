@@ -38,6 +38,7 @@ namespace midisequencer
         constexpr wchar_t ValueApplyDeviceOffsets[] = L"ApplyDeviceOffsets";
         constexpr wchar_t ValueClockOutputs[] = L"ClockOutputs";
         constexpr wchar_t ValueTimeCode[] = L"TimeCode";
+        constexpr wchar_t ValueFollowClock[] = L"FollowClock";
         constexpr wchar_t ValueClockSendsTempo[] = L"ClockSendsTempo";
         constexpr wchar_t ValueRemoteControlEnabled[] = L"RemoteControlEnabled";
 
@@ -193,6 +194,42 @@ namespace midisequencer
             return std::wstring{ o.Stringify() };
         }
 
+        FollowClockSetting ParseFollowClock(_In_ std::wstring const& text) noexcept
+        {
+            FollowClockSetting setting{};
+
+            try
+            {
+                json::JsonObject o{ nullptr };
+
+                if (text.empty() || !json::JsonObject::TryParse(text, o))
+                {
+                    return setting;
+                }
+
+                setting.EndpointId = CappedString(o, L"id");
+                setting.EndpointName = CappedString(o, L"name");
+                setting.Enabled = BoolOr(o, L"enabled", false);
+                setting.Group = static_cast<uint8_t>(std::clamp(NumberOr(o, L"group", 0), 0.0, 15.0));
+            }
+            catch (...)
+            {
+                setting = FollowClockSetting{};
+            }
+
+            return setting;
+        }
+
+        std::wstring WriteFollowClock(_In_ FollowClockSetting const& setting)
+        {
+            json::JsonObject o{};
+            o.SetNamedValue(L"enabled", json::JsonValue::CreateBooleanValue(setting.Enabled));
+            o.SetNamedValue(L"id", json::JsonValue::CreateStringValue(setting.EndpointId));
+            o.SetNamedValue(L"name", json::JsonValue::CreateStringValue(setting.EndpointName));
+            o.SetNamedValue(L"group", json::JsonValue::CreateNumberValue(setting.Group));
+            return std::wstring{ o.Stringify() };
+        }
+
         // Snap and launch values a person can pick. Anything else in the registry is ignored.
         bool IsKnownGrid(uint32_t ticks) noexcept
         {
@@ -257,6 +294,7 @@ namespace midisequencer
         m_applyDeviceOffsets = ReadDword(ValueApplyDeviceOffsets, 1) != 0;
         m_clockOutputs = ParseClockOutputs(ReadString(ValueClockOutputs, L""));
         m_timeCode = ParseTimeCode(ReadString(ValueTimeCode, L""));
+        m_followClock = ParseFollowClock(ReadString(ValueFollowClock, L""));
         m_clockSendsTempo = ReadDword(ValueClockSendsTempo, 1) != 0;
         m_remoteControlEnabled = ReadDword(ValueRemoteControlEnabled, 0) != 0;
     }
@@ -385,6 +423,19 @@ namespace midisequencer
         {
             m_timeCode = value;
             WriteString(ValueTimeCode, WriteTimeCode(m_timeCode));
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::FollowClock(FollowClockSetting const& value) noexcept
+    {
+        try
+        {
+            m_followClock = value;
+            WriteString(ValueFollowClock, WriteFollowClock(m_followClock));
         }
         catch (...)
         {

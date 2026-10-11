@@ -441,10 +441,14 @@
                             <MenuFlyoutSubItem x:Uid="MenuImport">
                                 <MenuFlyoutItem x:Uid="MenuImportStandardMidiFile" Click="OnImportStandardMidiFileClick" />
                                 <MenuFlyoutItem x:Uid="MenuImportClipFile" Click="OnImportClipFileClick" />
+                                <MenuFlyoutItem x:Uid="MenuImportDawProject" Click="OnImportDawProjectClick" />
+                                <MenuFlyoutItem x:Uid="MenuImportCapture" Click="OnImportCaptureClick" />
+                                <MenuFlyoutItem x:Uid="MenuImportPaste" Click="OnImportPasteClick" />
                             </MenuFlyoutSubItem>
                             <MenuFlyoutSubItem x:Uid="MenuExport">
                                 <MenuFlyoutItem x:Uid="MenuExportClipFiles" Click="OnExportClipFilesClick" />
                                 <MenuFlyoutItem x:Uid="MenuExportStandardMidiFile" Click="OnExportStandardMidiFileClick" />
+                                <MenuFlyoutItem x:Uid="MenuExportDawProject" Click="OnExportDawProjectClick" />
                             </MenuFlyoutSubItem>
                             <MenuFlyoutSeparator />
                             <MenuFlyoutItem x:Uid="MenuRemoteControl" Click="OnRemoteControlClick">

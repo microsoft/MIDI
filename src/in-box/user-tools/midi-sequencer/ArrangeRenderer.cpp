@@ -56,6 +56,33 @@ namespace midisequencer
             return FromRgb(rgb & 0xFFFFFF);
         }
 
+        // WCAG relative luminance of an sRGB color.
+        double RelativeLuminance(uint32_t rgb) noexcept
+        {
+            auto const channel = [](uint32_t value)
+            {
+                auto const c = static_cast<double>(value & 0xFF) / 255.0;
+                return c <= 0.04045 ? c / 12.92 : std::pow((c + 0.055) / 1.055, 2.4);
+            };
+
+            return 0.2126 * channel(rgb >> 16) + 0.7152 * channel(rgb >> 8) + 0.0722 * channel(rgb);
+        }
+
+        // A tag's label has dark text (seq.css .tag). A color from another app can be too dark or
+        // too strong for it, and then the text is black or white, whichever reads better.
+        uint32_t TagTextColor(uint32_t background) noexcept
+        {
+            constexpr uint32_t Dark = 0x1A1A1A;
+            auto const light = RelativeLuminance(background) + 0.05;
+
+            if (light / (RelativeLuminance(Dark) + 0.05) >= 4.5)
+            {
+                return Dark;
+            }
+
+            return light / 0.05 >= 1.05 / light ? 0x000000 : 0xFFFFFF;
+        }
+
         Color ClipColor(Clip const& clip, Track const& track) noexcept
         {
             return TrackColor(clip.Color.value_or(track.Color));
@@ -1200,7 +1227,8 @@ namespace midisequencer
             return;
         }
 
-        auto const color = tag.Color.has_value() ? FromRgb(*tag.Color) : FromRgb(0xD7D7D7);
+        auto const rgb = tag.Color.value_or(0xD7D7D7);
+        auto const color = FromRgb(rgb);
 
         ds.DrawLine(x + 0.5f, top, x + 0.5f, top + height - 1.0f, WithAlpha(color, 0.85), 1.0f, DashedStroke(3.0f, 3.0f));
 
@@ -1223,7 +1251,7 @@ namespace midisequencer
 
         ds.FillGeometry(canvasGeometry::CanvasGeometry::CreatePath(path), color);
         ds.FillCircle(x + 7.5f, y + 8.0f, 1.5f, Rgba(0, 0, 0, 0.45));
-        ds.DrawText(text, x + 12.0f, y, textWidth + 2.0f, labelHeight, FromRgb(0x1A1A1A), m_tagText);
+        ds.DrawText(text, x + 12.0f, y, textWidth + 2.0f, labelHeight, FromRgb(TagTextColor(rgb)), m_tagText);
     }
 
     _Use_decl_annotations_

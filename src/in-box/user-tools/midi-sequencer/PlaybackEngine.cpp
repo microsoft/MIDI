@@ -149,7 +149,10 @@ namespace midisequencer
     _Use_decl_annotations_
     uint64_t PlaybackEngine::TimestampAtTick(int64_t tick) const noexcept
     {
-        auto const seconds = m_tempo.SecondsAtTick(tick) - m_segment.StartSeconds;
+        // Following, the music moves on from the last pulse at the pulses' pace.
+        auto const seconds = m_following && m_followTicksPerSecond > 0
+            ? static_cast<double>(tick - m_segment.StartTick) / m_followTicksPerSecond
+            : m_tempo.SecondsAtTick(tick) - m_segment.StartSeconds;
         auto const offset = std::llround(seconds * static_cast<double>(m_clock.TicksPerSecond));
 
         if (offset < 0)
@@ -225,6 +228,11 @@ namespace midisequencer
             ? static_cast<double>(timestamp - m_segment.StartTimestamp)
             : -static_cast<double>(m_segment.StartTimestamp - timestamp);
 
+        if (m_following && m_followTicksPerSecond > 0)
+        {
+            return m_segment.StartTick + static_cast<int64_t>(std::floor(elapsed / static_cast<double>(m_clock.TicksPerSecond) * m_followTicksPerSecond + 1e-9));
+        }
+
         return m_tempo.TickAtSeconds(m_segment.StartSeconds + elapsed / static_cast<double>(m_clock.TicksPerSecond));
     }
 
@@ -237,7 +245,7 @@ namespace midisequencer
 
     int64_t PlaybackEngine::SegmentEnd() const noexcept
     {
-        return m_settings.LoopEnabled && m_segment.StartTick < m_settings.LoopEnd ? m_settings.LoopEnd : INT64_MAX;
+        return m_settings.LoopEnabled && !m_following && m_segment.StartTick < m_settings.LoopEnd ? m_settings.LoopEnd : INT64_MAX;
     }
 
     _Use_decl_annotations_
@@ -378,97 +386,123 @@ namespace midisequencer
         {
             std::scoped_lock guard{ m_lock };
 
-            if (m_sequence == nullptr || !m_clock.Now)
+            // While following, the other device starts playback.
+            if (m_following || !StartLocked(fromTick, 0, false))
             {
                 return;
             }
-
-            if (m_playing)
-            {
-                SendSilence(0);
-            }
-
-            auto const now = m_clock.Now();
-
-            m_segment.StartTick = std::max<int64_t>(0, fromTick);
-
-            // Late enough that the device needing its messages earliest still gets them in time.
-            m_segment.StartTimestamp = now + (StartLeadMicroseconds + LongestLeadMicroseconds()) * m_clock.TicksPerSecond / 1000000;
-            m_segment.StartSeconds = m_tempo.SecondsAtTick(m_segment.StartTick);
-            m_segment.UnwrappedStart = m_segment.StartTick;
-            m_history.clear();
-
-            // A start inside the loop's end plays on; the loop applies only from inside it.
-            m_renderedUntil.clear();
-            m_metronomeUntil = m_segment.StartTick;
-            m_clockUntil = m_segment.StartTick;
-            m_tempoSent = std::numeric_limits<double>::quiet_NaN();
-            m_sounding.clear();
-            m_channelsUsed.clear();
-
-            // A launched clip starts again from its beginning; anything waiting goes.
-            for (auto& [id, state] : m_launch)
-            {
-                state.Pending = false;
-
-                if (state.Mode == TrackPlayMode::Clip)
-                {
-                    state.ClipStartUnwrapped = m_segment.UnwrappedStart;
-                }
-            }
-
-            auto const startTick = m_segment.StartTick;
-
-            ForEachTrack(*m_sequence, [this, startTick](Track const& track, size_t)
-            {
-                if (!track.IsFolder)
-                {
-                    SendStartup(track, 0);
-
-                    auto const state = m_launch.find(track.Id);
-
-                    if (state == m_launch.end() || state->second.Mode == TrackPlayMode::Timeline)
-                    {
-                        SendChase(track, startTick, 0);
-                    }
-                }
-
-                return true;
-            });
-
-            for (auto const& output : m_settings.ClockOutputs)
-            {
-                if (startTick == 0)
-                {
-                    if (output.SendStartStop)
-                    {
-                        auto const start = SystemWord(output.Group, 0xFA);
-                        m_output.Send(output.Endpoint, EarlierBy(m_segment.StartTimestamp, ClockLeadMicroseconds(output)), &start, 1);
-                    }
-                }
-                else
-                {
-                    if (output.SendSongPosition)
-                    {
-                        auto const position = std::min<int64_t>(startTick / TicksPerSongPositionBeat, 0x3FFF);
-                        auto const pointer = SystemWord(output.Group, 0xF2, static_cast<uint8_t>(position & 0x7F), static_cast<uint8_t>(position >> 7));
-                        m_output.Send(output.Endpoint, 0, &pointer, 1);
-                    }
-
-                    if (output.SendStartStop)
-                    {
-                        auto const resume = SystemWord(output.Group, 0xFB);
-                        m_output.Send(output.Endpoint, EarlierBy(m_segment.StartTimestamp, ClockLeadMicroseconds(output)), &resume, 1);
-                    }
-                }
-            }
-
-            LocateTimeCode(m_segment.StartTimestamp);
-
-            m_playing = true;
         }
 
         Sweep();
+    }
+
+    // Starts the music at a tick, at a time, or as soon as it safely can when the time is 0. A
+    // jump moves music that's already playing: followers get a song position, not start or continue.
+    _Use_decl_annotations_
+    bool PlaybackEngine::StartLocked(int64_t fromTick, uint64_t startTimestamp, bool jumping)
+    {
+        if (m_sequence == nullptr || !m_clock.Now)
+        {
+            return false;
+        }
+
+        if (m_playing)
+        {
+            SendSilence(0);
+        }
+
+        auto const now = m_clock.Now();
+
+        m_segment.StartTick = std::max<int64_t>(0, fromTick);
+
+        // Late enough that the device needing its messages earliest still gets them in time.
+        m_segment.StartTimestamp = startTimestamp != 0
+            ? std::max(startTimestamp, now + 1)
+            : now + (StartLeadMicroseconds + LongestLeadMicroseconds()) * m_clock.TicksPerSecond / 1000000;
+        m_segment.StartSeconds = m_tempo.SecondsAtTick(m_segment.StartTick);
+        m_segment.UnwrappedStart = m_segment.StartTick;
+        m_history.clear();
+
+        // A start inside the loop's end plays on; the loop applies only from inside it.
+        m_renderedUntil.clear();
+        m_metronomeUntil = m_segment.StartTick;
+        m_clockUntil = m_segment.StartTick;
+        m_tempoSent = std::numeric_limits<double>::quiet_NaN();
+        m_sounding.clear();
+        m_channelsUsed.clear();
+
+        // A launched clip starts again from its beginning; anything waiting goes.
+        for (auto& [id, state] : m_launch)
+        {
+            state.Pending = false;
+
+            if (state.Mode == TrackPlayMode::Clip)
+            {
+                state.ClipStartUnwrapped = m_segment.UnwrappedStart;
+            }
+        }
+
+        auto const startTick = m_segment.StartTick;
+
+        ForEachTrack(*m_sequence, [this, startTick](Track const& track, size_t)
+        {
+            if (!track.IsFolder)
+            {
+                SendStartup(track, 0);
+
+                auto const state = m_launch.find(track.Id);
+
+                if (state == m_launch.end() || state->second.Mode == TrackPlayMode::Timeline)
+                {
+                    SendChase(track, startTick, 0);
+                }
+            }
+
+            return true;
+        });
+
+        for (auto const& output : m_settings.ClockOutputs)
+        {
+            auto const position = std::min<int64_t>(startTick / TicksPerSongPositionBeat, 0x3FFF);
+            auto const pointer = SystemWord(output.Group, 0xF2, static_cast<uint8_t>(position & 0x7F), static_cast<uint8_t>(position >> 7));
+
+            if (jumping)
+            {
+                if (output.SendSongPosition)
+                {
+                    m_output.Send(output.Endpoint, EarlierBy(m_segment.StartTimestamp, ClockLeadMicroseconds(output)) - 1, &pointer, 1);
+                }
+
+                continue;
+            }
+
+            if (startTick == 0)
+            {
+                if (output.SendStartStop)
+                {
+                    auto const start = SystemWord(output.Group, 0xFA);
+                    m_output.Send(output.Endpoint, EarlierBy(m_segment.StartTimestamp, ClockLeadMicroseconds(output)), &start, 1);
+                }
+            }
+            else
+            {
+                if (output.SendSongPosition)
+                {
+                    m_output.Send(output.Endpoint, 0, &pointer, 1);
+                }
+
+                if (output.SendStartStop)
+                {
+                    auto const resume = SystemWord(output.Group, 0xFB);
+                    m_output.Send(output.Endpoint, EarlierBy(m_segment.StartTimestamp, ClockLeadMicroseconds(output)), &resume, 1);
+                }
+            }
+        }
+
+        LocateTimeCode(m_segment.StartTimestamp);
+
+        m_playing = true;
+        return true;
     }
 
     _Use_decl_annotations_
@@ -531,7 +565,11 @@ namespace midisequencer
     void PlaybackEngine::Stop()
     {
         std::scoped_lock guard{ m_lock };
+        StopLocked();
+    }
 
+    void PlaybackEngine::StopLocked()
+    {
         if (!m_playing || !m_clock.Now)
         {
             return;
@@ -576,7 +614,8 @@ namespace midisequencer
 
         m_timeCodeNext.clear();
 
-        m_segment.StartTick = std::max<int64_t>(0, TickAtTimestamp(now));
+        // Following, it stopped where the other device's clock got to.
+        m_segment.StartTick = m_following ? static_cast<int64_t>(m_followNextPulse) * TicksPerClock : std::max<int64_t>(0, TickAtTimestamp(now));
         m_segment.UnwrappedStart = m_segment.StartTick;
         m_history.clear();
         m_sounding.clear();
@@ -619,6 +658,11 @@ namespace midisequencer
         if (!m_playing)
         {
             return -1;
+        }
+
+        if (m_following)
+        {
+            return std::max<int64_t>(0, TickAtTimestamp(timestamp));
         }
 
         auto const at = [this, timestamp](Segment const& segment)
@@ -680,7 +724,7 @@ namespace midisequencer
         auto const info = LookupDestination(track.Destination);
 
         // A destination that needs its messages early is handed them that much sooner.
-        auto const horizon = now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + info.OffsetMicroseconds) * m_clock.TicksPerSecond / 1000000;
+        auto const horizon = PlanUntil(now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + info.OffsetMicroseconds) * m_clock.TicksPerSecond / 1000000);
         auto const horizonTick = std::min(TickAtTimestamp(horizon), SegmentEnd());
 
         auto found = m_renderedUntil.find(track.Id);
@@ -935,7 +979,7 @@ namespace midisequencer
 
         auto const info = LookupDestination(metronome.Endpoint, metronome.Group);
         auto const lead = static_cast<uint64_t>(info.OffsetMicroseconds) * m_clock.TicksPerSecond / 1000000;
-        auto const horizon = now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + info.OffsetMicroseconds) * m_clock.TicksPerSecond / 1000000;
+        auto const horizon = PlanUntil(now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + info.OffsetMicroseconds) * m_clock.TicksPerSecond / 1000000);
         auto const horizonTick = std::min(TickAtTimestamp(horizon), SegmentEnd());
         auto const& meter = m_sequence->Meter;
 
@@ -990,7 +1034,7 @@ namespace midisequencer
             longest = std::max(longest, leads.back());
         }
 
-        auto const horizon = now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + static_cast<uint64_t>(longest)) * m_clock.TicksPerSecond / 1000000;
+        auto const horizon = PlanUntil(now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + static_cast<uint64_t>(longest)) * m_clock.TicksPerSecond / 1000000);
         auto const horizonTick = std::min(TickAtTimestamp(horizon), SegmentEnd());
 
         SendTempoChanges(m_clockUntil, horizonTick, leads);
@@ -1056,6 +1100,19 @@ namespace midisequencer
                 m_output.Send(m_settings.ClockOutputs[i].Endpoint, EarlierBy(base, leads[i]) - 1, words, 4);
             }
         };
+
+        if (m_following)
+        {
+            // A followed clock's pace wavers a little: only a real change is passed on.
+            auto const bpm = m_followTicksPerSecond * 60.0 / static_cast<double>(TicksPerQuarterNote);
+
+            if (bpm > 0 && (std::isnan(m_tempoSent) || std::abs(bpm - m_tempoSent) >= 0.25))
+            {
+                send(fromTick, std::round(bpm * 100.0) / 100.0);
+            }
+
+            return;
+        }
 
         if (fromTick == m_segment.StartTick)
         {
@@ -1161,7 +1218,7 @@ namespace midisequencer
         auto const horizonFor = [this, now](TimeCodeOutput const& output)
         {
             auto const lead = std::max<int64_t>(TimeCodeLeadMicroseconds(output), 0);
-            return SecondsAtTimestamp(now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + static_cast<uint64_t>(lead)) * m_clock.TicksPerSecond / 1000000);
+            return SecondsAtTimestamp(PlanUntil(now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + static_cast<uint64_t>(lead)) * m_clock.TicksPerSecond / 1000000));
         };
 
         // The outputs changed, or the time on the wall jumped (a tempo change before the
@@ -1220,6 +1277,14 @@ namespace midisequencer
 
         auto const now = m_clock.Now();
 
+        // The followed clock has gone quiet: stop, rather than run on at a guess.
+        if (m_following && m_followRunning && now > m_followLastPulse + FollowPatience())
+        {
+            m_followRunning = false;
+            StopLocked();
+            return;
+        }
+
         WrapLoopIfDue(now);
 
         bool anySolo{ false };
@@ -1247,7 +1312,7 @@ namespace midisequencer
     {
         for (int guard = 0; guard < 16; ++guard)
         {
-            if (!m_settings.LoopEnabled || m_segment.StartTick >= m_settings.LoopEnd)
+            if (!m_settings.LoopEnabled || m_following || m_segment.StartTick >= m_settings.LoopEnd)
             {
                 return;
             }
@@ -1416,7 +1481,7 @@ namespace midisequencer
                 return;
             }
 
-            if (!m_playing)
+            if (!m_playing && !m_following)
             {
                 // Launching while stopped starts playback, with this clip from its beginning.
                 startFrom = m_segment.StartTick;
@@ -1547,6 +1612,247 @@ namespace midisequencer
 
         auto const tick = m_tempo.TickAtSeconds(segment->StartSeconds + elapsed / static_cast<double>(m_clock.TicksPerSecond));
         return segment->UnwrappedStart + (tick - segment->StartTick);
+    }
+
+    // ---------------------------------------------------------------- following another clock
+
+    _Use_decl_annotations_
+    void PlaybackEngine::SetFollowing(bool following)
+    {
+        std::scoped_lock guard{ m_lock };
+
+        if (m_following == following)
+        {
+            return;
+        }
+
+        // The music can't change whose clock it keeps to part way through.
+        StopLocked();
+
+        m_following = following;
+        m_followPace = midiapp::ClockFollower{};
+        m_followRunning = false;
+        m_followNextPulse = 0;
+        m_followLastPulse = 0;
+        m_followLastHeard = 0;
+        m_followTicksPerSecond = 0;
+    }
+
+    bool PlaybackEngine::IsFollowing() const
+    {
+        std::scoped_lock guard{ m_lock };
+        return m_following;
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::FollowPulse(uint64_t timestamp)
+    {
+        auto first{ false };
+
+        {
+            std::scoped_lock guard{ m_lock };
+
+            if (!m_following)
+            {
+                return;
+            }
+
+            m_followPace.Pulse(timestamp);
+            m_followLastHeard = timestamp;
+
+            if (!m_followRunning)
+            {
+                return;
+            }
+
+            auto const tick = static_cast<int64_t>(m_followNextPulse++) * TicksPerClock;
+            m_followLastPulse = timestamp;
+
+            if (!m_playing)
+            {
+                return;
+            }
+
+            // The music is exactly here at this pulse, and moves on at the pulses' pace. The time
+            // on the wall carries on, so time code doesn't jump.
+            auto const seconds = SecondsAtTimestamp(timestamp);
+
+            m_followTicksPerSecond = static_cast<double>(TicksPerClock) * static_cast<double>(m_clock.TicksPerSecond) / static_cast<double>(FollowedPulseInterval(tick));
+            m_segment.StartTick = tick;
+            m_segment.StartTimestamp = timestamp;
+            m_segment.StartSeconds = seconds;
+            m_segment.UnwrappedStart = tick;
+            m_history.clear();
+
+            first = !m_followAnchored;
+            m_followAnchored = true;
+        }
+
+        // The first pulse says where the music starts: what's due there goes now, not at the next sweep.
+        if (first)
+        {
+            Sweep();
+        }
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::FollowStart(uint64_t timestamp)
+    {
+        {
+            std::scoped_lock guard{ m_lock };
+
+            if (!m_following)
+            {
+                return;
+            }
+
+            m_followRunning = true;
+            m_followNextPulse = 0;
+
+            if (!StartFollowedLocked(0, timestamp, false))
+            {
+                return;
+            }
+        }
+
+        Sweep();
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::FollowContinue(uint64_t timestamp)
+    {
+        {
+            std::scoped_lock guard{ m_lock };
+
+            if (!m_following || (m_followRunning && m_playing))
+            {
+                return;
+            }
+
+            m_followRunning = true;
+
+            if (!StartFollowedLocked(static_cast<int64_t>(m_followNextPulse) * TicksPerClock, timestamp, false))
+            {
+                return;
+            }
+        }
+
+        Sweep();
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::FollowStop(uint64_t)
+    {
+        std::scoped_lock guard{ m_lock };
+
+        if (m_following)
+        {
+            m_followRunning = false;
+            StopLocked();
+        }
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::FollowSongPosition(uint64_t timestamp, uint32_t sixteenths)
+    {
+        auto jumped = false;
+
+        {
+            std::scoped_lock guard{ m_lock };
+
+            if (!m_following)
+            {
+                return;
+            }
+
+            auto const position = std::min<uint32_t>(sixteenths, 0x3FFF);
+            auto const tick = static_cast<int64_t>(position) * TicksPerSongPositionBeat;
+            m_followNextPulse = static_cast<uint64_t>(position) * midiapp::MidiClocksPerSongPositionStep;
+
+            if (m_playing && m_followRunning)
+            {
+                // Somewhere else while playing, such as another sequencer's loop going round.
+                jumped = StartFollowedLocked(tick, timestamp, true);
+            }
+            else if (!m_playing)
+            {
+                m_segment.StartTick = tick;
+                m_segment.UnwrappedStart = tick;
+            }
+        }
+
+        if (jumped)
+        {
+            Sweep();
+        }
+    }
+
+    double PlaybackEngine::FollowedBeatsPerMinute() const
+    {
+        std::scoped_lock guard{ m_lock };
+
+        auto const interval = m_followPace.PulseInterval();
+
+        if (!m_following || interval == 0 || !m_clock.Now || m_clock.Now() > m_followLastHeard + FollowPatience())
+        {
+            return 0;
+        }
+
+        return 60.0 * static_cast<double>(m_clock.TicksPerSecond) / (static_cast<double>(interval) * midiapp::MidiClocksPerBeat);
+    }
+
+    // The first pulse after Start or Continue is where the music starts, and the one after a song
+    // position is where it says. It hasn't come yet, so the music starts where it's due: a pulse
+    // after the last one, or a pulse after this message when the clock wasn't already running.
+    _Use_decl_annotations_
+    bool PlaybackEngine::StartFollowedLocked(int64_t tick, uint64_t timestamp, bool jumping)
+    {
+        auto const known = m_followPace.PulseInterval() > 0;
+        auto const interval = FollowedPulseInterval(tick);
+        auto const next = m_followLastHeard != 0 && m_followLastHeard + interval > timestamp ? m_followLastHeard + interval : timestamp + interval;
+
+        m_followTicksPerSecond = static_cast<double>(TicksPerClock) * static_cast<double>(m_clock.TicksPerSecond) / static_cast<double>(interval);
+        m_followAnchored = false;
+
+        // Without the pace, a guess would put the downbeat in the wrong place: nothing is planned
+        // until the first pulse says where it is.
+        m_followLastPulse = known ? next - interval : timestamp - std::min(timestamp, 2 * interval);
+
+        return StartLocked(tick, next, jumping);
+    }
+
+    // The followed clock's pace, in clock ticks a pulse. Until two pulses have come, the
+    // sequence's own tempo is the best guess.
+    _Use_decl_annotations_
+    uint64_t PlaybackEngine::FollowedPulseInterval(int64_t tick) const noexcept
+    {
+        if (auto const measured = m_followPace.PulseInterval(); measured > 0)
+        {
+            return measured;
+        }
+
+        auto const bpm = std::max(1.0, m_tempo.BeatsPerMinuteAtTick(std::max<int64_t>(0, tick)));
+        return std::max<uint64_t>(1, static_cast<uint64_t>(std::llround(60.0 * static_cast<double>(m_clock.TicksPerSecond) / (bpm * midiapp::MidiClocksPerBeat))));
+    }
+
+    // How long the followed clock can go quiet before playback stops: eight pulses, and at least
+    // three tenths of a second.
+    uint64_t PlaybackEngine::FollowPatience() const noexcept
+    {
+        return std::max(m_followPace.PulseInterval() * 8, m_clock.TicksPerSecond * 3 / 10);
+    }
+
+    // Following, nothing is planned past the pulse after next: a pulse that comes late, or at a
+    // new pace, can only have put that much in the wrong place.
+    _Use_decl_annotations_
+    uint64_t PlaybackEngine::PlanUntil(uint64_t horizon) const noexcept
+    {
+        if (!m_following)
+        {
+            return horizon;
+        }
+
+        return std::min(horizon, m_followLastPulse + 2 * FollowedPulseInterval(m_segment.StartTick));
     }
 
     std::vector<TrackLaunchView> PlaybackEngine::LaunchState() const

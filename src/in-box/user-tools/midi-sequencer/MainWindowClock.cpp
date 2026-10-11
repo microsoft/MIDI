@@ -180,14 +180,78 @@ namespace winrt::midisequencer::implementation
                     return radio;
                 };
 
+                auto const follow = settings.FollowClock();
+                seq::EndpointRef const followEndpoint{ follow.EndpointName, follow.EndpointId };
+
                 auto const fromSequence = makeRadio(res::GetString(L"ClockTempoThisSequence"),
                     res::FormatString(L"ClockTempoThisSequenceFormat", std::format(L"{:g}", std::round(firstTempo * 100.0) / 100.0)));
-                fromSequence.IsChecked(true);
+                fromSequence.IsChecked(!follow.Enabled);
                 panel.Children().Append(fromSequence);
 
-                auto const fromDevice = makeRadio(res::GetString(L"ClockTempoAnotherDevice"), res::GetString(L"ClockTempoAnotherDeviceLater"));
-                fromDevice.IsEnabled(false);
+                auto const fromDevice = makeRadio(res::GetString(L"ClockTempoAnotherDevice"), res::GetString(L"ClockTempoAnotherDeviceHelp"));
+                fromDevice.IsChecked(follow.Enabled);
                 panel.Children().Append(fromDevice);
+
+                // The device to follow, under its choice.
+                controls::StackPanel followRow{};
+                followRow.Orientation(controls::Orientation::Horizontal);
+                followRow.Spacing(8);
+                followRow.Margin(xaml::Thickness{ 28, 0, 0, 0 });
+
+                controls::ComboBox followDevice{};
+                followDevice.Width(ClockColumns[0]);
+                followDevice.ItemTemplate(endpointTemplate);
+                strong->FillEndpointCombo(followDevice, true, followEndpoint);
+                automation::AutomationProperties::SetName(followDevice, res::GetString(L"FollowDeviceName"));
+                followRow.Children().Append(followDevice);
+
+                controls::ComboBox followGroup{};
+                followGroup.Width(ClockColumns[1]);
+                followGroup.ItemTemplate(namedTemplate);
+                strong->FillGroupCombo(followGroup, true, followEndpoint, follow.Group, false);
+                automation::AutomationProperties::SetName(followGroup, res::GetString(L"FollowGroupName"));
+                followRow.Children().Append(followGroup);
+
+                panel.Children().Append(followRow);
+
+                auto const followError = Note(L"", strong->ThemeBrush(L"SeqWarnTextBrush"));
+                followError.Visibility(xaml::Visibility::Collapsed);
+                followError.Margin(xaml::Thickness{ 28, 0, 0, 0 });
+                panel.Children().Append(followError);
+
+                auto const followChanged = std::make_shared<bool>(false);
+
+                followDevice.SelectionChanged([weak, weakDevice = winrt::make_weak(followDevice), weakGroup = winrt::make_weak(followGroup), followChanged](auto&&, auto&&)
+                {
+                    auto const window = weak.get();
+                    auto const device = weakDevice.get();
+                    auto const group = weakGroup.get();
+
+                    if (window && device && group)
+                    {
+                        *followChanged = true;
+                        window->FillGroupCombo(group, true, ChosenEndpoint(device, {}, true), 0, false);
+                    }
+                });
+
+                // The lists only matter while following is chosen.
+                auto const enableFollowRow = [weakDevice = winrt::make_weak(followDevice), weakGroup = winrt::make_weak(followGroup), weakRadio = winrt::make_weak(fromDevice)]()
+                {
+                    auto const device = weakDevice.get();
+                    auto const group = weakGroup.get();
+                    auto const radio = weakRadio.get();
+
+                    if (device && group && radio)
+                    {
+                        auto const on = radio.IsChecked() != nullptr && radio.IsChecked().GetBoolean();
+                        device.IsEnabled(on);
+                        group.IsEnabled(on);
+                    }
+                };
+
+                enableFollowRow();
+                fromDevice.Checked([enableFollowRow](auto&&, auto&&) { enableFollowRow(); });
+                fromDevice.Unchecked([enableFollowRow](auto&&, auto&&) { enableFollowRow(); });
 
                 // ---- devices that get the clock ----
 
@@ -570,10 +634,19 @@ namespace winrt::midisequencer::implementation
                 dialog.DefaultButton(controls::ContentDialogButton::Primary);
                 dialog.RequestedTheme(strong->RootGrid().ActualTheme());
 
-                // Time code that's on needs a device and a start it can read; the dialog stays open
-                // to say so.
-                dialog.PrimaryButtonClick([timeCodeOn, timeCodeDevice, rate, start, timeCodeError, timeCodeChanged, timeCodeEndpoint](auto&&, controls::ContentDialogButtonClickEventArgs const& args)
+                // Following needs a device; time code that's on needs a device and a start it can
+                // read. The dialog stays open to say so.
+                dialog.PrimaryButtonClick([fromDevice, followDevice, followEndpoint, followChanged, followError, timeCodeOn, timeCodeDevice, rate, start, timeCodeError, timeCodeChanged, timeCodeEndpoint](auto&&, controls::ContentDialogButtonClickEventArgs const& args)
                 {
+                    if (fromDevice.IsChecked() != nullptr && fromDevice.IsChecked().GetBoolean() &&
+                        ChosenEndpoint(followDevice, followEndpoint, *followChanged).IsEmpty())
+                    {
+                        followError.Text(res::GetString(L"FollowNoDevice"));
+                        followError.Visibility(xaml::Visibility::Visible);
+                        args.Cancel(true);
+                        return;
+                    }
+
                     if (!timeCodeOn.IsOn())
                     {
                         return;
@@ -647,6 +720,19 @@ namespace winrt::midisequencer::implementation
                     }
 
                     settings.TimeCode(updated);
+
+                    auto followUpdated = follow;
+                    auto const followChosen = ChosenEndpoint(followDevice, followEndpoint, *followChanged);
+                    followUpdated.Enabled = fromDevice.IsChecked() != nullptr && fromDevice.IsChecked().GetBoolean() && !followChosen.IsEmpty();
+
+                    if (!followChosen.IsEmpty())
+                    {
+                        followUpdated.EndpointName = followChosen.Name;
+                        followUpdated.EndpointId = followChosen.Id;
+                        followUpdated.Group = ChosenGroup(followGroup, follow.Group);
+                    }
+
+                    settings.FollowClock(followUpdated);
 
                     auto const applyOffsets = IsChecked(offsets);
                     settings.ApplyDeviceOffsets(applyOffsets);

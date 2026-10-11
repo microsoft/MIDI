@@ -51,6 +51,19 @@ namespace midisequencer
         bool IsOn() const noexcept { return Enabled && (!EndpointId.empty() || !EndpointName.empty()); }
     };
 
+    // The device whose MIDI clock the sequencer follows, when it doesn't keep its own tempo.
+    struct FollowClockSetting
+    {
+        // Off keeps the device, so following it again needs no new choice.
+        bool Enabled{ false };
+
+        std::wstring EndpointId{};
+        std::wstring EndpointName{};
+        uint8_t Group{ 0 };
+
+        bool IsOn() const noexcept { return Enabled && (!EndpointId.empty() || !EndpointName.empty()); }
+    };
+
     // How values are shown in the editors. The file always holds MIDI 2.0 resolution.
     enum class ValueDisplay : uint32_t
     {
@@ -128,6 +141,9 @@ namespace midisequencer
         TimeCodeSetting const& TimeCode() const noexcept { return m_timeCode; }
         void TimeCode(_In_ TimeCodeSetting const& value) noexcept;
 
+        FollowClockSetting const& FollowClock() const noexcept { return m_followClock; }
+        void FollowClock(_In_ FollowClockSetting const& value) noexcept;
+
         // Whether clock outputs that speak MIDI 2.0 also get Set Tempo messages.
         bool ClockSendsTempo() const noexcept { return m_clockSendsTempo; }
         void ClockSendsTempo(bool value) noexcept;
@@ -166,6 +182,7 @@ namespace midisequencer
         bool m_applyDeviceOffsets{ true };
         std::vector<ClockOutputSetting> m_clockOutputs{};
         TimeCodeSetting m_timeCode{};
+        FollowClockSetting m_followClock{};
         bool m_clockSendsTempo{ true };
         bool m_remoteControlEnabled{ false };
     };

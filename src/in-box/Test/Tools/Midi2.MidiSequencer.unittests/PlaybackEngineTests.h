@@ -31,6 +31,10 @@ public:
     TEST_METHOD(TheMetronomeClicksOnTheBeat);
     TEST_METHOD(ClockOutSends24PulsesAQuarterNote);
     TEST_METHOD(ClockStopFollowsTheLastPulse);
+    TEST_METHOD(FollowingPlaysAtTheIncomingTempo);
+    TEST_METHOD(FollowingWaitsForTheFirstPulse);
+    TEST_METHOD(FollowingStopsWithTheClock);
+    TEST_METHOD(FollowingStartsWhereTheSongPositionSays);
     TEST_METHOD(ClockOutputsSendOnlyWhatTheyAskFor);
     TEST_METHOD(ClockOutputsCanSendTheTempo);
     TEST_METHOD(TheLoopTellsClockFollowersWhereItWent);

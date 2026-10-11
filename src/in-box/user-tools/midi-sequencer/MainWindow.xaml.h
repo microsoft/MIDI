@@ -13,6 +13,7 @@
 #include "ArrangeLayout.h"
 #include "ArrangeRenderer.h"
 #include "EndpointDirectory.h"
+#include "DawProject.h"
 #include "PianoRoll.h"
 #include "PatternEditor.h"
 #include "SequenceGenerator.h"
@@ -52,8 +53,12 @@ namespace winrt::midisequencer::implementation
         void OnSaveAsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnImportStandardMidiFileClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnImportClipFileClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnImportDawProjectClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnImportCaptureClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnImportPasteClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnExportClipFilesClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnExportStandardMidiFileClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnExportDawProjectClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnRemoteControlClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnCloseWindowClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
@@ -119,6 +124,7 @@ namespace winrt::midisequencer::implementation
         void ApplyPalette() noexcept;
         void UpdateTitle() noexcept;
         void UpdateStatusBar() noexcept;
+        void UpdateClockStatus() noexcept;
         void ShowMessage(_In_ winrt::hstring const& text) noexcept;
         void OnFrame() noexcept;
         void OnServiceTimer() noexcept;
@@ -136,6 +142,16 @@ namespace winrt::midisequencer::implementation
         bool OpenSequenceText(_In_ std::wstring const& path, _In_ std::wstring const& text) noexcept;
         void ImportStandardMidiFile(_In_ std::wstring const& path) noexcept;
         void ImportClipFile(_In_ std::wstring const& path) noexcept;
+
+        // A file that isn't a sequence, by its extension: a clip file, a DAWproject file, a
+        // capture from MIDI Monitor or the console, or a Standard MIDI File.
+        void ImportFile(_In_ std::wstring const& path) noexcept;
+        winrt::fire_and_forget ImportDawProjectAsync(std::wstring path);
+        void AddDawProject(_In_ seq::ImportedDawProject imported, _In_ std::wstring const& path) noexcept;
+        winrt::fire_and_forget ImportCaptureAsync(std::wstring path);
+
+        // Messages copied in MIDI Monitor, as a new clip on the selected track at the playhead.
+        winrt::fire_and_forget PasteMessagesAsync();
         winrt::fire_and_forget SaveAsync(bool chooseName);
         winrt::fire_and_forget AutosaveAsync();
 
@@ -323,6 +339,8 @@ namespace winrt::midisequencer::implementation
         void FinishSlotRecording(_In_ SlotTakeEnd how) noexcept;
         std::optional<seq::SlotRecording> SlotRecordingView() const;
         void OnSourceMessage(_In_ std::wstring const& endpointId, _In_ uint64_t timestamp, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept;
+        void OnFollowedClock(_In_ uint64_t timestamp, _In_ uint32_t word0) noexcept;
+        void OnFollowedTransport() noexcept;
         void UpdateEchoRoutes() noexcept;
         void SendNow(_In_ seq::TrackDestination const& destination, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept;
         void AuditionNote(_In_ uint8_t note, _In_ bool on) noexcept;
@@ -566,6 +584,13 @@ namespace winrt::midisequencer::implementation
 
         std::map<std::wstring, std::deque<HeardMessage>> m_heard{};
         std::atomic<uint64_t> m_lastInputTicks{ 0 };
+
+        // The device whose clock the sequence follows, read on the service's thread under
+        // m_inputLock. Its Start and Stop reach the window through the queue.
+        std::wstring m_followSourceId{};
+        uint8_t m_followGroup{ 0 };
+        winrt::Microsoft::UI::Dispatching::DispatcherQueue m_uiQueue{ nullptr };
+        std::chrono::steady_clock::time_point m_clockStatusAt{};
 
         // Remote control: the sequencer's own endpoint, and what a surface was last told.
         std::shared_ptr<seq::RemoteEndpoint> m_remote{};

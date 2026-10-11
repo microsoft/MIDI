@@ -349,6 +349,7 @@ namespace winrt::midisequencer::implementation
             add(VirtualKey::L, VirtualKeyModifiers::None);
             add(VirtualKey::R, VirtualKeyModifiers::None);
             add(VirtualKey::T, VirtualKeyModifiers::Control);
+            add(VirtualKey::V, VirtualKeyModifiers::Control);
 
             // The keyboard accelerators' own tooltips would repeat what the buttons already say.
             RootGrid().KeyboardAcceleratorPlacementMode(input::KeyboardAcceleratorPlacementMode::Hidden);
@@ -389,6 +390,10 @@ namespace winrt::midisequencer::implementation
 
             case VirtualKey::Z:
                 Undo();
+                break;
+
+            case VirtualKey::V:
+                PasteMessagesAsync();
                 break;
 
             case VirtualKey::Y:
@@ -545,30 +550,7 @@ namespace winrt::midisequencer::implementation
                 ServiceStatusIcon().Foreground(brush);
             }
 
-            auto const bpm = m_doc.Tempo.empty() ? 120.0 : seq::TempoMap{ m_doc.Tempo }.BeatsPerMinuteAtTick(m_position);
-            auto const bpmText = std::format(L"{:g}", std::round(bpm * 100.0) / 100.0);
-            auto const& clockSettings = seq::AppSettings::Current();
-
-            // Clock and time code to the same device is still one device.
-            std::set<std::wstring> followerDevices{};
-
-            for (auto const& output : clockSettings.ClockOutputs())
-            {
-                followerDevices.insert(output.EndpointId.empty() ? output.EndpointName : output.EndpointId);
-            }
-
-            if (clockSettings.TimeCode().IsOn())
-            {
-                auto const& timeCode = clockSettings.TimeCode();
-                followerDevices.insert(timeCode.EndpointId.empty() ? timeCode.EndpointName : timeCode.EndpointId);
-            }
-
-            auto const followers = followerDevices.size();
-
-            ClockStatusText().Text(
-                followers == 0 ? res::FormatString(L"ClockStatusInternalFormat", bpmText) :
-                followers == 1 ? res::FormatString(L"ClockStatusSendingOneFormat", bpmText) :
-                res::FormatString(L"ClockStatusSendingFormat", bpmText, followers));
+            UpdateClockStatus();
 
             // How many devices the sequence uses, and how many of those aren't here.
             std::set<std::wstring> used{};
@@ -603,6 +585,60 @@ namespace winrt::midisequencer::implementation
             ClockOutStatusText().Text(L"");
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update the status bar.")
+    }
+
+    // Where the tempo comes from and where the clock goes.
+    void MainWindow::UpdateClockStatus() noexcept
+    {
+        try
+        {
+            auto const& clockSettings = seq::AppSettings::Current();
+
+            // Clock and time code to the same device is still one device.
+            std::set<std::wstring> followerDevices{};
+
+            for (auto const& output : clockSettings.ClockOutputs())
+            {
+                followerDevices.insert(output.EndpointId.empty() ? output.EndpointName : output.EndpointId);
+            }
+
+            if (clockSettings.TimeCode().IsOn())
+            {
+                auto const& timeCode = clockSettings.TimeCode();
+                followerDevices.insert(timeCode.EndpointId.empty() ? timeCode.EndpointName : timeCode.EndpointId);
+            }
+
+            auto const followers = followerDevices.size();
+
+            if (auto const& follow = clockSettings.FollowClock(); follow.IsOn())
+            {
+                auto const name = follow.EndpointName.empty() ? follow.EndpointId : follow.EndpointName;
+                auto const followed = m_engine != nullptr ? m_engine->FollowedBeatsPerMinute() : 0.0;
+
+                if (followed <= 0)
+                {
+                    ClockStatusText().Text(res::FormatString(L"ClockStatusWaitingFormat", name));
+                    return;
+                }
+
+                auto const followedText = std::format(L"{:.1f}", followed);
+
+                ClockStatusText().Text(
+                    followers == 0 ? res::FormatString(L"ClockStatusFollowingFormat", name, followedText) :
+                    followers == 1 ? res::FormatString(L"ClockStatusFollowingSendingOneFormat", name, followedText) :
+                    res::FormatString(L"ClockStatusFollowingSendingFormat", name, followedText, followers));
+                return;
+            }
+
+            auto const bpm = m_doc.Tempo.empty() ? 120.0 : seq::TempoMap{ m_doc.Tempo }.BeatsPerMinuteAtTick(m_position);
+            auto const bpmText = std::format(L"{:g}", std::round(bpm * 100.0) / 100.0);
+
+            ClockStatusText().Text(
+                followers == 0 ? res::FormatString(L"ClockStatusInternalFormat", bpmText) :
+                followers == 1 ? res::FormatString(L"ClockStatusSendingOneFormat", bpmText) :
+                res::FormatString(L"ClockStatusSendingFormat", bpmText, followers));
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update the clock status.")
     }
 
     void MainWindow::OnServiceTimer() noexcept
@@ -645,6 +681,13 @@ namespace winrt::midisequencer::implementation
             UpdateDisplays(m_position);
             UpdateSlotRecording();
 
+            // A followed clock's tempo, twice a second.
+            if (auto const now = std::chrono::steady_clock::now(); now - m_clockStatusAt > std::chrono::milliseconds{ 500 } && m_engine->IsFollowing())
+            {
+                m_clockStatusAt = now;
+                UpdateClockStatus();
+            }
+
             m_launchViews.clear();
 
             for (auto& view : m_engine->LaunchState())
@@ -678,6 +721,7 @@ namespace winrt::midisequencer::implementation
             {
                 m_frameTimer.Stop();
                 UpdateTransport();
+                UpdateClockStatus();
                 InvalidateArrange();
             }
         }
@@ -842,13 +886,9 @@ namespace winrt::midisequencer::implementation
                             OpenInNewWindow(path);
                         }
                     }
-                    else if (_wcsicmp(extension.c_str(), L".midi2") == 0)
-                    {
-                        ImportClipFile(path);
-                    }
                     else
                     {
-                        ImportStandardMidiFile(path);
+                        ImportFile(path);
                     }
 
                     break;

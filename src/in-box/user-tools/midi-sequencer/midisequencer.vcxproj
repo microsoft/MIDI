@@ -153,6 +153,8 @@
     <ClInclude Include="SessionEngineOutput.h" />
     <ClInclude Include="SourceMonitor.h" />
     <ClInclude Include="StandardMidiFileBridge.h" />
+    <ClInclude Include="DawProject.h" />
+    <ClInclude Include="CaptureImport.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="ThemePalette.h" />
@@ -179,7 +181,10 @@
     <ClInclude Include="..\midi-app-shared\EndpointMatch.h" />
     <ClInclude Include="..\midi-app-shared\EndpointCatalog.h" />
     <ClInclude Include="..\midi-app-shared\ContentProvenance.h" />
+    <ClInclude Include="..\midi-app-shared\ClockFollower.h" />
     <ClInclude Include="..\midi-app-shared\MidiTimeCode.h" />
+    <ClInclude Include="..\midi-app-shared\ZipArchive.h" />
+    <ClInclude Include="..\midi-app-shared\Deflate.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -266,6 +271,12 @@
     <ClCompile Include="StandardMidiFileBridge.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="DawProject.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="CaptureImport.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <!-- Standard MIDI File reader and writer, shared with MIDI Player and the Sequencing API -->
     <ClCompile Include="..\..\Inc\midi_file_sequence.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -290,7 +301,16 @@
     <ClCompile Include="..\midi-app-shared\ContentProvenance.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\midi-app-shared\ClockFollower.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\midi-app-shared\MidiTimeCode.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\ZipArchive.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\Deflate.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />

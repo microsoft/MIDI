@@ -547,6 +547,163 @@ void PlaybackEngineTests::ClockStopFollowsTheLastPulse()
     VERIFY_ARE_EQUAL(lastPulse + 1, stop->Timestamp);
 }
 
+void PlaybackEngineTests::FollowingPlaysAtTheIncomingTempo()
+{
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(KeysSequence()));
+    f.Engine.SetFollowing(true);
+
+    // 100 BPM is a pulse every 25 ms. The other device's clock runs before it starts.
+    constexpr uint64_t Pulse = 25000;
+    auto t = PlayPressedAt;
+
+    for (int i = 0; i < 8; ++i, t += Pulse)
+    {
+        f.Now = t;
+        f.Engine.FollowPulse(t);
+    }
+
+    // Only the other device can start it.
+    f.Engine.Play(0);
+    VERIFY_IS_FALSE(f.Engine.IsPlaying());
+
+    // Start comes just before a pulse, and that pulse is the top of the sequence.
+    f.Now = t - 2000;
+    f.Engine.FollowStart(f.Now);
+    VERIFY_IS_TRUE(f.Engine.IsPlaying());
+
+    auto const top = t;
+
+    for (int i = 0; i < 24 * 5; ++i, t += Pulse)
+    {
+        f.Now = t;
+        f.Engine.FollowPulse(t);
+        f.Engine.Sweep();
+        f.Now = t + Pulse / 2;
+        f.Engine.Sweep();
+    }
+
+    // The notes on beats 1, 2 and 3 land on pulses 0, 24 and 48.
+    auto const ons = NoteOns(f.Output.All());
+    VERIFY_ARE_EQUAL(size_t{ 3 }, ons.size());
+    VERIFY_ARE_EQUAL(top, ons[0].Timestamp);
+    VERIFY_ARE_EQUAL(top + 24 * Pulse, ons[1].Timestamp);
+    VERIFY_ARE_EQUAL(top + 48 * Pulse, ons[2].Timestamp);
+
+    VERIFY_ARE_EQUAL(100.0, std::round(f.Engine.FollowedBeatsPerMinute() * 100.0) / 100.0);
+}
+
+void PlaybackEngineTests::FollowingWaitsForTheFirstPulse()
+{
+    // The sequence says 120 BPM, but the other device runs at 100 and sends nothing before Start.
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(KeysSequence()));
+    f.Engine.SetFollowing(true);
+
+    constexpr uint64_t Pulse = 25000;
+    f.Now = PlayPressedAt;
+    f.Engine.FollowStart(f.Now);
+
+    // Nothing is planned before the first pulse says where the top is.
+    VERIFY_ARE_EQUAL(size_t{ 0 }, NoteOns(f.Output.All()).size());
+
+    auto t = PlayPressedAt + 3000;
+    auto const top = t;
+
+    for (int i = 0; i < 24 * 3; ++i, t += Pulse)
+    {
+        f.Now = t;
+        f.Engine.FollowPulse(t);
+        f.Engine.Sweep();
+    }
+
+    auto const ons = NoteOns(f.Output.All());
+    VERIFY_ARE_EQUAL(size_t{ 3 }, ons.size());
+    VERIFY_ARE_EQUAL(top, ons[0].Timestamp);
+    VERIFY_ARE_EQUAL(top + 24 * Pulse, ons[1].Timestamp);
+    VERIFY_ARE_EQUAL(top + 48 * Pulse, ons[2].Timestamp);
+}
+
+void PlaybackEngineTests::FollowingStopsWithTheClock()
+{
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(KeysSequence()));
+    f.Engine.SetFollowing(true);
+
+    constexpr uint64_t Pulse = 20000;
+    auto t = PlayPressedAt;
+
+    auto const pulses = [&](int count)
+    {
+        for (int i = 0; i < count; ++i, t += Pulse)
+        {
+            f.Now = t;
+            f.Engine.FollowPulse(t);
+            f.Engine.Sweep();
+        }
+    };
+
+    pulses(4);
+    f.Engine.FollowStart(t - 1000);
+    pulses(12);
+    VERIFY_IS_TRUE(f.Engine.IsPlaying());
+
+    // Stop from the other device stops it where that device's clock got to.
+    f.Now = t;
+    f.Engine.FollowStop(t);
+    VERIFY_IS_FALSE(f.Engine.IsPlaying());
+    VERIFY_ARE_EQUAL(int64_t{ 12 * (TicksPerQuarterNote / 24) }, f.Engine.PositionTick());
+
+    // Pulses while it's stopped only keep the pace.
+    pulses(4);
+    VERIFY_IS_FALSE(f.Engine.IsPlaying());
+
+    // Continue picks up from there, and the clock going quiet stops it again.
+    f.Engine.FollowContinue(t - 1000);
+    pulses(6);
+    VERIFY_IS_TRUE(f.Engine.IsPlaying());
+
+    f.Now = t + 400000;
+    f.Engine.Sweep();
+    VERIFY_IS_FALSE(f.Engine.IsPlaying());
+}
+
+void PlaybackEngineTests::FollowingStartsWhereTheSongPositionSays()
+{
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(KeysSequence()));
+    f.Engine.SetFollowing(true);
+
+    constexpr uint64_t Pulse = 25000;
+    auto t = PlayPressedAt;
+
+    for (int i = 0; i < 4; ++i, t += Pulse)
+    {
+        f.Now = t;
+        f.Engine.FollowPulse(t);
+    }
+
+    // Four sixteenths in is beat 2, where the second note starts.
+    f.Engine.FollowSongPosition(t - 3000, 4);
+    VERIFY_ARE_EQUAL(int64_t{ TicksPerQuarterNote }, f.Engine.PositionTick());
+
+    f.Engine.FollowContinue(t - 2000);
+    auto const resumed = t;
+
+    for (int i = 0; i < 30; ++i, t += Pulse)
+    {
+        f.Now = t;
+        f.Engine.FollowPulse(t);
+        f.Engine.Sweep();
+    }
+
+    auto const ons = NoteOns(f.Output.All());
+    VERIFY_ARE_EQUAL(size_t{ 2 }, ons.size());
+    VERIFY_ARE_EQUAL(62u, (ons[0].Words[0] >> 8) & 0x7F);
+    VERIFY_ARE_EQUAL(resumed, ons[0].Timestamp);
+    VERIFY_ARE_EQUAL(resumed + 24 * Pulse, ons[1].Timestamp);
+}
+
 void PlaybackEngineTests::ClockOutputsSendOnlyWhatTheyAskFor()
 {
     ClockOutput pulses{ EndpointRef{ L"Pulses", L"" }, 0, 0 };

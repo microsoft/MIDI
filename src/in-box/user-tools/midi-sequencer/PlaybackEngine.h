@@ -36,6 +36,7 @@
 #include "SequenceModel.h"
 #include "SequenceRender.h"
 
+#include "ClockFollower.h"
 #include "MidiTimeCode.h"
 
 namespace midisequencer
@@ -239,6 +240,21 @@ namespace midisequencer
         // Where on the unwrapped timeline a moment was. -1 when not playing.
         int64_t UnwrappedTickAtTime(_In_ uint64_t timestamp) const;
 
+        // Following another device's clock. While it's on, the app hands over what that device
+        // sends, with the time each message arrived: its pulses set the tempo, and its Start,
+        // Continue, Stop and song position run the transport. Play does nothing then, the loop is
+        // off, and playback stops when the pulses stop coming.
+        void SetFollowing(_In_ bool following);
+        bool IsFollowing() const;
+        void FollowPulse(_In_ uint64_t timestamp);
+        void FollowStart(_In_ uint64_t timestamp);
+        void FollowContinue(_In_ uint64_t timestamp);
+        void FollowStop(_In_ uint64_t timestamp);
+        void FollowSongPosition(_In_ uint64_t timestamp, _In_ uint32_t sixteenths);
+
+        // The tempo of the clock being followed, or 0 while it isn't sending.
+        double FollowedBeatsPerMinute() const;
+
         // Hands over everything due before now plus the look-ahead.
         void Sweep();
 
@@ -348,6 +364,12 @@ namespace midisequencer
         void SweepTimeCodeOutputs(_In_ uint64_t now);
         void WrapLoopIfDue(_In_ uint64_t now);
         void SendSilence(_In_ uint64_t timestamp);
+        bool StartLocked(_In_ int64_t fromTick, _In_ uint64_t startTimestamp, _In_ bool jumping);
+        void StopLocked();
+        bool StartFollowedLocked(_In_ int64_t tick, _In_ uint64_t timestamp, _In_ bool jumping);
+        uint64_t FollowedPulseInterval(_In_ int64_t tick) const noexcept;
+        uint64_t FollowPatience() const noexcept;
+        uint64_t PlanUntil(_In_ uint64_t horizon) const noexcept;
         void ThreadMain() noexcept;
 
         IEngineOutput& m_output;
@@ -391,6 +413,20 @@ namespace midisequencer
 
         std::vector<SoundingNote> m_sounding{};
         std::vector<ChannelKey> m_channelsUsed{};
+
+        // Following another device's clock: the pace of its pulses, whether it's running, the
+        // number of its next pulse counted from the top (24 a quarter note), and when its last
+        // pulse came. The music is anchored at that pulse and moves on at the pace.
+        bool m_following{ false };
+        midiapp::ClockFollower m_followPace{};
+        bool m_followRunning{ false };
+        uint64_t m_followNextPulse{ 0 };
+        uint64_t m_followLastPulse{ 0 };
+        uint64_t m_followLastHeard{ 0 };
+        double m_followTicksPerSecond{ 0 };
+
+        // Whether a pulse has placed the music since Start, Continue or a song position.
+        bool m_followAnchored{ false };
 
         EngineCounters m_counters{};
 
