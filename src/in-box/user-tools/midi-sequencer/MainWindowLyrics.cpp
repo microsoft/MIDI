@@ -27,7 +27,7 @@ namespace winrt::midisequencer::implementation
         constexpr double LyricsHeaderWidth = 268.0;
 
         constexpr double LyricsEditorWidth = 560.0;
-        constexpr double LyricsEditorTextHeight = 280.0;
+        constexpr double LyricsEditorTextHeight = 210.0;
         constexpr double LyricsBarMaximumWidth = 960.0;
 
         constexpr wchar_t LyricsGlyph[] = L"\uE8BD";
@@ -433,6 +433,7 @@ namespace winrt::midisequencer::implementation
 
                 if (now.Lyrics)
                 {
+                    lyrics.RubyLanguage = now.Lyrics->RubyLanguage;
                     lyrics.Unknown = now.Lyrics->Unknown;
                 }
 
@@ -520,10 +521,16 @@ namespace winrt::midisequencer::implementation
                 m_lyricsBarNext.TextWrapping(xaml::TextWrapping::NoWrap);
                 m_lyricsBarNext.HorizontalAlignment(xaml::HorizontalAlignment::Center);
 
+                m_lyricsBarCells = controls::StackPanel{};
+                m_lyricsBarCells.Orientation(controls::Orientation::Horizontal);
+                m_lyricsBarCells.HorizontalAlignment(xaml::HorizontalAlignment::Center);
+                m_lyricsBarCells.Visibility(xaml::Visibility::Collapsed);
+
                 controls::StackPanel lines{};
                 lines.Spacing(2);
                 lines.Margin(xaml::Thickness{ 20, 8, 20, 10 });
                 lines.Children().Append(m_lyricsBarLine);
+                lines.Children().Append(m_lyricsBarCells);
                 lines.Children().Append(m_lyricsBarNext);
 
                 // A Rectangle, not a Border: a Border's rounded corners come out stepped at 125%
@@ -552,23 +559,68 @@ namespace winrt::midisequencer::implementation
             m_lyricsBarPlate.Stroke(BrushFor(m_palette.StrokeStrong));
             m_lyricsBarNext.Foreground(BrushFor(m_palette.Text3));
 
-            auto const [done, rest] = seq::LyricLineText(syllables, line, m_position);
+            // A line with ruby shows each syllable with its reading above it. Ruby can't sit
+            // over a run of text, so those lines are built a syllable at a time.
+            auto const first = syllables.begin() + static_cast<ptrdiff_t>(line.First);
+            auto const hasRuby = std::any_of(first, first + static_cast<ptrdiff_t>(line.Count), [](seq::Lyric const& syllable) { return !syllable.Ruby.empty(); });
 
+            m_lyricsBarLine.Visibility(hasRuby ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+            m_lyricsBarCells.Visibility(hasRuby ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            m_lyricsBarCells.Children().Clear();
             m_lyricsBarLine.Inlines().Clear();
 
-            documents::Run sungRun{};
-            sungRun.Text(winrt::hstring{ done });
-            sungRun.Foreground(BrushFor(m_palette.Accent));
-            m_lyricsBarLine.Inlines().Append(sungRun);
+            if (hasRuby)
+            {
+                for (size_t i = 0; i < line.Count; ++i)
+                {
+                    auto const& syllable = syllables[line.First + i];
+                    auto const brush = BrushFor(i < sung ? m_palette.Accent : m_palette.Text);
 
-            documents::Run restRun{};
-            restRun.Text(winrt::hstring{ rest });
-            restRun.Foreground(BrushFor(m_palette.Text));
-            m_lyricsBarLine.Inlines().Append(restRun);
+                    controls::TextBlock ruby{};
+                    ruby.FontSize(11);
+                    ruby.Text(winrt::hstring{ syllable.Ruby });
+                    ruby.HorizontalAlignment(xaml::HorizontalAlignment::Center);
+                    ruby.Foreground(brush);
+
+                    controls::TextBlock text{};
+                    text.FontSize(22);
+                    text.FontWeight(winrt::Microsoft::UI::Text::FontWeights::SemiBold());
+                    text.Text(winrt::hstring{ syllable.Text });
+                    text.HorizontalAlignment(xaml::HorizontalAlignment::Center);
+                    text.Foreground(brush);
+
+                    controls::StackPanel cell{};
+                    cell.Children().Append(ruby);
+                    cell.Children().Append(text);
+
+                    // A space between words, as the plain line has.
+                    if (syllable.End != seq::LyricEnd::None && i + 1 < line.Count)
+                    {
+                        cell.Margin(xaml::Thickness{ 0, 0, 6, 0 });
+                    }
+
+                    m_lyricsBarCells.Children().Append(cell);
+                }
+            }
+            else
+            {
+                auto const [done, rest] = seq::LyricLineText(syllables, line, m_position);
+
+                documents::Run sungRun{};
+                sungRun.Text(winrt::hstring{ done });
+                sungRun.Foreground(BrushFor(m_palette.Accent));
+                m_lyricsBarLine.Inlines().Append(sungRun);
+
+                documents::Run restRun{};
+                restRun.Text(winrt::hstring{ rest });
+                restRun.Foreground(BrushFor(m_palette.Text));
+                m_lyricsBarLine.Inlines().Append(restRun);
+            }
 
             m_lyricsBarNext.Text(index + 1 < m_lyricLines.size()
                 ? winrt::hstring{ seq::LyricLineText(syllables, m_lyricLines[index + 1], INT64_MIN).second }
                 : winrt::hstring{});
+            m_lyricsBarNext.Visibility(m_lyricsBarNext.Text().empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
 
             m_lyricsBar.Visibility(xaml::Visibility::Visible);
 

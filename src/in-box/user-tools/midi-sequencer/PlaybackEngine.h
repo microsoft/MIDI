@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "SequenceModel.h"
+#include "SequenceArpeggiator.h"
 #include "SequenceRender.h"
 
 #include "ClockFollower.h"
@@ -188,6 +189,16 @@ namespace midisequencer
         }
     };
 
+    // A note an arpeggiator played from the keys held, as it was handed over: what recording and
+    // Capture keep, instead of the keys. The words are as rendered, before the destination.
+    struct ArpeggiatedNote
+    {
+        std::wstring TrackId{};
+        uint64_t Timestamp{ 0 };
+        std::array<uint32_t, 4> Words{};
+        uint8_t WordCount{ 0 };
+    };
+
     class PlaybackEngine
     {
     public:
@@ -254,6 +265,21 @@ namespace midisequencer
 
         // The tempo of the clock being followed, or 0 while it isn't sending.
         double FollowedBeatsPerMinute() const;
+
+        // Keys played on the source of a track, for an arpeggiator on it that plays what's held.
+        // Any thread. Stopping playback ends what was latched.
+        void PressKey(_In_ std::wstring const& trackId, _In_ uint8_t number, _In_ uint16_t velocity);
+        void ReleaseKey(_In_ std::wstring const& trackId, _In_ uint8_t number);
+
+        // For a track that stopped listening, so a key that went up unheard doesn't stay down.
+        void ForgetKeys(_In_ std::wstring const& trackId);
+
+        // Whether an arpeggiator that plays held keys was playing on the track at the last sweep,
+        // so what's played on its source goes to the arpeggiator, not straight out. Any thread.
+        bool IsArpeggiating(_In_ std::wstring const& trackId) const;
+
+        // What arpeggiators played since the last call, oldest first. Any thread.
+        std::vector<ArpeggiatedNote> TakeArpeggiated();
 
         // Hands over everything due before now plus the look-ahead.
         void Sweep();
@@ -413,6 +439,12 @@ namespace midisequencer
 
         std::vector<SoundingNote> m_sounding{};
         std::vector<ChannelKey> m_channelsUsed{};
+
+        // Keys held on each track's source, and the tracks whose arpeggiator played them in the
+        // last sweep.
+        std::unordered_map<std::wstring, ArpeggiatorInput> m_keys{};
+        std::unordered_set<std::wstring> m_arpeggiating{};
+        std::vector<ArpeggiatedNote> m_arpeggiated{};
 
         // Following another device's clock: the pace of its pulses, whether it's running, the
         // number of its next pulse counted from the top (24 a quarter note), and when its last

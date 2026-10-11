@@ -986,10 +986,12 @@ namespace midisequencer
                 ds.FillRectangle(0, y, keyWidth, h, black ? colors.KeyBlack : colors.KeyWhite);
                 ds.DrawRectangle(0, y, keyWidth, h, colors.KeyEdge, 0.4f);
 
-                if (note % 12 == 0 && h >= 6.0f)
+                // A fixed size, so it stays readable when the rows are thin; it can spill onto the
+                // white keys next to it.
+                if (note % 12 == 0 && h >= 4.0f)
                 {
-                    m_keyText.FontSize(std::min(10.0f, h));
-                    ds.DrawText(winrt::hstring{ std::format(L"C{}", note / 12 - 2) }, 0, y, KeysWidth - 3.0f, h, colors.KeyLabel, m_keyText);
+                    auto const labelHeight = std::max(h, 12.0f);
+                    ds.DrawText(winrt::hstring{ std::format(L"C{}", note / 12 - 2) }, 0, y + (h - labelHeight) / 2.0f, KeysWidth - 3.0f, labelHeight, colors.KeyLabel, m_keyText);
                 }
             }
 

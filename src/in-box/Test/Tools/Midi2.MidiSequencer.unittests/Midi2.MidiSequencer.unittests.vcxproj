@@ -109,6 +109,7 @@
     <ClInclude Include="LyricsTests.h" />
     <ClInclude Include="SequenceProvenanceTests.h" />
     <ClInclude Include="HostileFileTests.h" />
+    <ClInclude Include="ArpeggiatorTests.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.h" />
@@ -116,6 +117,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceModel.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequencePattern.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceGenerator.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceArpeggiator.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceSerializer.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceRender.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceUndo.h" />
@@ -155,12 +157,14 @@
     <ClCompile Include="LyricsTests.cpp" />
     <ClCompile Include="SequenceProvenanceTests.cpp" />
     <ClCompile Include="HostileFileTests.cpp" />
+    <ClCompile Include="ArpeggiatorTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceModel.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequencePattern.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceGenerator.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceArpeggiator.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceSerializer.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceRender.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceUndo.cpp" />
@@ -169,6 +173,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\DawProject.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\CaptureImport.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\Lyrics.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\LyricData.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceProvenance.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceEdits.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\RecordingTake.cpp" />

@@ -42,7 +42,9 @@ namespace winrt::midisequencer::implementation
             return a.Type == b.Type && a.StepTicks == b.StepTicks && a.ChangesEachPass == b.ChangesEachPass && a.Channel == b.Channel &&
                 a.NoteLength == b.NoteLength && a.Rings == b.Rings && a.ScaleRoot == b.ScaleRoot && a.Scale == b.Scale &&
                 a.LowNote == b.LowNote && a.HighNote == b.HighNote && a.Busy == b.Busy && a.Keep == b.Keep &&
-                a.VelocityLow == b.VelocityLow && a.VelocityHigh == b.VelocityHigh;
+                a.VelocityLow == b.VelocityLow && a.VelocityHigh == b.VelocityHigh &&
+                a.ArpSource == b.ArpSource && a.ArpTrackId == b.ArpTrackId && a.ArpOrder == b.ArpOrder &&
+                a.ArpOctaves == b.ArpOctaves && a.ArpLatch == b.ArpLatch;
         }
 
         controls::TextBlock Text(winrt::hstring const& text, media::Brush const& brush, double size = 12)
@@ -157,7 +159,11 @@ namespace winrt::midisequencer::implementation
             NoteInspectorTitle().Text(res::GetString(TypeKeys[type]));
             body.Children().Append(Text(res::GetString(AboutKeys[type]), BrushFor(m_palette.Text2)));
 
-            auto repeat = Text(res::GetString(L"GeneratorRepeatable"), BrushFor(m_palette.Text3));
+            // An arpeggiator that plays what's held can't be played back from its seed.
+            auto const repeatKey = clip->Generator->Type != seq::GeneratorType::Arpeggiator ? L"GeneratorRepeatable" :
+                clip->Generator->ArpSource == seq::ArpeggiatorSource::Held ? L"ArpHeldNote" : L"ArpTrackNote";
+
+            auto repeat = Text(res::GetString(repeatKey), BrushFor(m_palette.Text3));
             repeat.Margin(xaml::Thickness{ 0, 10, 0, 0 });
             body.Children().Append(repeat);
         }
@@ -441,8 +447,10 @@ namespace winrt::midisequencer::implementation
             }
 
             case seq::GeneratorType::Arpeggiator:
+                AddArpeggiatorSettings(body, generator, edit);
+                break;
+
             default:
-                body.Children().Append(Text(res::GetString(L"ArpeggiatorNotBuilt"), strong, 13));
                 break;
             }
 

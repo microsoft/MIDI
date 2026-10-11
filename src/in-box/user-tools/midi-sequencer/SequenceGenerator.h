@@ -7,9 +7,10 @@
 
 #pragma once
 
-// Generator clips: a Euclidean rhythm and a chance melody. Like a pattern, a generator's notes are
-// worked out from its settings, the clip's seed and the pass, so jumping back replays what you
-// heard and an export writes it. The arpeggiator isn't built yet, and plays nothing.
+// Generator clips: a Euclidean rhythm, a chance melody and an arpeggiator. Like a pattern, a
+// Euclidean rhythm's or a chance melody's notes are worked out from its settings, the clip's seed
+// and the pass, so jumping back replays what you heard and an export writes it. The arpeggiator
+// plays notes it's given, so it lives in SequenceArpeggiator.h, and plays nothing here.
 // Free of pch.h and XAML like the rest of the model, so the unit tests use the same code.
 
 #include <sal.h>

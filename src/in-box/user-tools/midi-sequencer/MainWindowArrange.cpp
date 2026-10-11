@@ -229,6 +229,7 @@ namespace winrt::midisequencer::implementation
                         auto const& rows = pinned ? strong->m_layout.Pinned : strong->m_layout.Scrolling;
                         strong->m_renderer.DrawLanes(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()),
                             rows, pinned ? 0.0 : strong->m_scrollY, !pinned, strong->DrawContext());
+                        strong->DrawKeyboardFocus(args.DrawingSession(), sender);
                     }
                     MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the timeline.")
                 }
@@ -249,6 +250,7 @@ namespace winrt::midisequencer::implementation
                         auto const& rows = pinned ? strong->m_layout.Pinned : strong->m_layout.Scrolling;
                         strong->m_renderer.DrawLauncher(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()),
                             rows, pinned ? 0.0 : strong->m_scrollY, !pinned, strong->DrawContext());
+                        strong->DrawKeyboardFocus(args.DrawingSession(), sender);
                     }
                     MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the clip launcher.")
                 }
@@ -270,7 +272,7 @@ namespace winrt::midisequencer::implementation
                     }
                     else
                     {
-                        strong->m_roll.Draw(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()));
+                        strong->DrawNotesEditor(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()));
                     }
                 }
                 MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the clip editor.")
@@ -390,6 +392,13 @@ namespace winrt::midisequencer::implementation
             if (auto strong = weak.get()) { strong->OnEditorKeyDown(args); }
         });
 
+        m_editorCanvas.ContextRequested([weak](auto&&, input::ContextRequestedEventArgs const& args)
+        {
+            if (auto strong = weak.get()) { strong->OnEditorContextRequested(args); }
+        });
+
+        HookArrangeKeyboard();
+
         m_editorCanvas.SizeChanged([weak](auto&&, xaml::SizeChangedEventArgs const& args)
         {
             if (auto strong = weak.get())
@@ -397,7 +406,7 @@ namespace winrt::midisequencer::implementation
                 // The first time the editor has a size, show the whole clip.
                 if (args.PreviousSize().Height <= 1 && strong->m_roll.HasClip())
                 {
-                    strong->m_roll.FitToClip(static_cast<float>(args.NewSize().Width), static_cast<float>(args.NewSize().Height));
+                    strong->m_roll.FitToClip(static_cast<float>(args.NewSize().Width), strong->NotesEditorRollHeight());
                 }
 
                 strong->InvalidateEditor();
@@ -2583,6 +2592,7 @@ namespace winrt::midisequencer::implementation
             add(res::GetString(L"MenuNewMelodicPatternHere"), L"\uE80A", [weak, trackId, tick]() { if (auto s = weak.get()) { s->CreateClipAt(trackId, tick, seq::PatternMode::Melodic); } });
             add(res::GetString(L"MenuNewEuclideanHere"), L"\uE9F5", [weak, trackId, tick]() { if (auto s = weak.get()) { s->CreateClipAt(trackId, tick, std::nullopt, seq::GeneratorType::Euclidean); } });
             add(res::GetString(L"MenuNewMelodyHere"), L"\uE9F5", [weak, trackId, tick]() { if (auto s = weak.get()) { s->CreateClipAt(trackId, tick, std::nullopt, seq::GeneratorType::ChanceMelody); } });
+            add(res::GetString(L"MenuNewArpeggiatorHere"), L"\uE9F5", [weak, trackId, tick]() { if (auto s = weak.get()) { s->CreateClipAt(trackId, tick, std::nullopt, seq::GeneratorType::Arpeggiator); } });
         }
 
         if (row.Kind == seq::ArrangeRowKind::Track || row.Kind == seq::ArrangeRowKind::Tempo)
@@ -2724,8 +2734,9 @@ namespace winrt::midisequencer::implementation
 
             // A chance melody gets two bars, as in comp 4.
             auto const melody = generator == seq::GeneratorType::ChanceMelody;
+            auto const generatorName = melody ? L"DefaultMelodyName" : generator == seq::GeneratorType::Arpeggiator ? L"DefaultArpName" : L"DefaultEuclidName";
 
-            auto clip = generator.has_value() ? seq::MakeGeneratorClip(NextClipName(melody ? L"DefaultMelodyName" : L"DefaultEuclidName"), *generator, melody ? 2 * length : length) :
+            auto clip = generator.has_value() ? seq::MakeGeneratorClip(NextClipName(generatorName), *generator, melody ? 2 * length : length) :
                 pattern.has_value() ? seq::MakePatternClip(NextClipName(L"DefaultPatternName"), *pattern) : seq::MakeNotesClip(NextClipName(), length);
             clip.Origin = generator.has_value() ? seq::ClipOrigin::Generated : seq::ClipOrigin::Drawn;
             clip.Color = std::nullopt;
@@ -3140,8 +3151,9 @@ namespace winrt::midisequencer::implementation
 
             auto const length = seq::TicksPerBar(m_doc.Meter.empty() ? seq::MeterChange{} : m_doc.Meter.front());
             auto const melody = generator == seq::GeneratorType::ChanceMelody;
+            auto const generatorName = melody ? L"DefaultMelodyName" : generator == seq::GeneratorType::Arpeggiator ? L"DefaultArpName" : L"DefaultEuclidName";
 
-            auto clip = generator.has_value() ? seq::MakeGeneratorClip(NextClipName(melody ? L"DefaultMelodyName" : L"DefaultEuclidName"), *generator, melody ? 2 * length : length) :
+            auto clip = generator.has_value() ? seq::MakeGeneratorClip(NextClipName(generatorName), *generator, melody ? 2 * length : length) :
                 pattern.has_value() ? seq::MakePatternClip(NextClipName(L"DefaultPatternName"), *pattern) : seq::MakeNotesClip(NextClipName(), length);
             clip.Origin = generator.has_value() ? seq::ClipOrigin::Generated : seq::ClipOrigin::Drawn;
 
@@ -3466,6 +3478,7 @@ namespace winrt::midisequencer::implementation
             add(res::GetString(L"MenuNewMelodicPattern"), L"\uE80A", [weak, trackId, scene]() { if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene, seq::PatternMode::Melodic); } });
             add(res::GetString(L"MenuNewEuclidean"), L"\uE9F5", [weak, trackId, scene]() { if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene, std::nullopt, seq::GeneratorType::Euclidean); } });
             add(res::GetString(L"MenuNewMelody"), L"\uE9F5", [weak, trackId, scene]() { if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene, std::nullopt, seq::GeneratorType::ChanceMelody); } });
+            add(res::GetString(L"MenuNewArpeggiator"), L"\uE9F5", [weak, trackId, scene]() { if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene, std::nullopt, seq::GeneratorType::Arpeggiator); } });
             add(res::GetString(L"MenuStopTrack"), L"\uE71A", [weak, trackId, scene]() { if (auto s = weak.get()) { s->LaunchSlot(trackId, scene); } });
         }
         else

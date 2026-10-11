@@ -8,6 +8,7 @@
 #include "LyricsTests.h"
 
 #include "Lyrics.h"
+#include "MidiClipFile.h"
 #include "SequenceRender.h"
 #include "SequenceSerializer.h"
 #include "StandardMidiFileBridge.h"
@@ -213,7 +214,7 @@ void LyricsTests::LyricEventsReadTheWayRp017Says()
         { Beat * 5 / 2, "you" },
         { Beat * 3, "" },                   // a melisma
         { Beat * 3 + 10, "\n" },            // a verse ends, on its own
-        { Beat * 7 / 2, "Ne[ne]xt" },       // ruby is left out
+        { Beat * 7 / 2, "Ne[ne]xt" },       // ruby, kept apart from the words
         { Beat * 4, "a\\[b\\] " },          // escapes
     };
 
@@ -226,6 +227,7 @@ void LyricsTests::LyricEventsReadTheWayRp017Says()
     VerifySyllable(syllables[5], Beat * 5 / 2, L"you", LyricEnd::None);
     VerifySyllable(syllables[6], Beat * 3, L"", LyricEnd::Paragraph);
     VerifySyllable(syllables[7], Beat * 7 / 2, L"Next", LyricEnd::None);
+    VERIFY_ARE_EQUAL(std::wstring{ L"ne" }, syllables[7].Ruby);
     VerifySyllable(syllables[8], Beat * 4, L"a[b]", LyricEnd::Word);
 
     // Written out and read back, nothing changes.
@@ -511,4 +513,158 @@ void LyricsTests::LinesBreakWhereTheLyricsSay()
     }
 
     VERIFY_ARE_EQUAL(size_t{ 3 }, LyricLines(endless).size());
+}
+
+void LyricsTests::RubyIsTypedInBrackets()
+{
+    // Sky (two syllables, read so-ra) and "wo", then "miru" with its kanji read mi, a word with
+    // brackets of its own, and a held syllable that has a reading.
+    std::wstring_view const typed{ L"\u7A7A[\u305D\u3089]-\u3092 \u898B[\u307F]-\u308B\n[[x]]-_[\u3089 ]]]" };
+    auto const syllables = ParseLyricsText(typed, 1000);
+
+    VERIFY_ARE_EQUAL(size_t{ 6 }, syllables.size());
+    VerifySyllable(syllables[0], 0, L"\u7A7A", LyricEnd::None);
+    VERIFY_ARE_EQUAL(std::wstring{ L"\u305D\u3089" }, syllables[0].Ruby);
+    VerifySyllable(syllables[1], 0, L"\u3092", LyricEnd::Word);
+    VERIFY_IS_TRUE(syllables[1].Ruby.empty());
+    VERIFY_ARE_EQUAL(std::wstring{ L"\u307F" }, syllables[2].Ruby);
+    VerifySyllable(syllables[3], 0, L"\u308B", LyricEnd::Line);
+    VerifySyllable(syllables[4], 0, L"[x]", LyricEnd::None);
+    VerifySyllable(syllables[5], 0, L"", LyricEnd::None);
+    VERIFY_ARE_EQUAL(std::wstring{ L"\u3089 ]" }, syllables[5].Ruby);
+
+    // What the editor shows reads back the same.
+    VERIFY_IS_TRUE(syllables == ParseLyricsText(LyricsToText(syllables), 1000));
+
+    // Ruby with nothing in front of it reads the syllable before, as RP-026 has it, and a
+    // reading can have spaces in it.
+    auto const before = ParseLyricsText(L"mi ca-sa [my house]", 1000);
+    VERIFY_ARE_EQUAL(size_t{ 3 }, before.size());
+    VerifySyllable(before[2], 0, L"sa", LyricEnd::Word);
+    VERIFY_ARE_EQUAL(std::wstring{ L"my house" }, before[2].Ruby);
+
+    // A reading that never closes ends with its line.
+    auto const open = ParseLyricsText(L"a[b\nc", 1000);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, open.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"b" }, open[0].Ruby);
+    VerifySyllable(open[0], 0, L"a", LyricEnd::Line);
+    VerifySyllable(open[1], 0, L"c", LyricEnd::None);
+}
+
+void LyricsTests::RubyTravelsInFilesAndMessages()
+{
+    // RP-026: ruby in brackets after the text it reads, or on its own after it.
+    std::vector<LyricFileText> const events{
+        { 0, "\xE7\xA9\xBA[\xE3\x81\x9D\xE3\x82\x89]" },
+        { Beat, "\xE3\x82\x92 " },
+        { Beat * 2, "casa" },
+        { Beat * 2, "[house] " },
+        { Beat * 3, "" },
+        { Beat * 3, "[\xE3\x82\x89] " },
+    };
+
+    auto const syllables = LyricsFromFileText(events, false, SequenceLimits{});
+    VERIFY_ARE_EQUAL(size_t{ 4 }, syllables.size());
+    VerifySyllable(syllables[0], 0, L"\u7A7A", LyricEnd::None);
+    VERIFY_ARE_EQUAL(std::wstring{ L"\u305D\u3089" }, syllables[0].Ruby);
+    VerifySyllable(syllables[2], Beat * 2, L"casa", LyricEnd::Word);
+    VERIFY_ARE_EQUAL(std::wstring{ L"house" }, syllables[2].Ruby);
+    VerifySyllable(syllables[3], Beat * 3, L"", LyricEnd::Word);
+    VERIFY_ARE_EQUAL(std::wstring{ L"\u3089" }, syllables[3].Ruby);
+
+    auto const written = LyricsToFileText(syllables);
+    VERIFY_ARE_EQUAL(std::string{ "casa[house] " }, written[2].Text);
+    VERIFY_IS_TRUE(syllables == LyricsFromFileText(written, false, SequenceLimits{}));
+
+    // Ruby Data: status 3, ending a word of its own unless its syllable ends a line or a verse.
+    auto const ruby = RubyDataPackets(Lyric{ 0, L"x", LyricEnd::None, L"ab" }, 0);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, ruby.size());
+    VERIFY_ARE_EQUAL(0xD0100203u, ruby[0][0]);
+    VERIFY_ARE_EQUAL(0x61622000u, ruby[0][1]);
+    VERIFY_ARE_EQUAL(0x61620D00u, RubyDataPackets(Lyric{ 0, L"x", LyricEnd::Line, L"ab" }, 0)[0][1]);
+    VERIFY_IS_TRUE(RubyDataPackets(Lyric{ 0, L"x", LyricEnd::Word }, 0).empty());
+
+    auto const language = RubyLanguagePackets(L"ja", 0);
+    VERIFY_ARE_EQUAL(0xD0100204u, language[0][0]);
+    VERIFY_ARE_EQUAL(0x6A610000u, language[0][1]);
+
+    // The singing track sends each reading with its syllable, and the ruby's language with the
+    // lyrics'.
+    auto sequence = SungSequence();
+    auto sung = HappyBirthday();
+    sung[2].Ruby = L"berth";
+    sequence.Lyrics = LyricsTrack{ L"en", L"t-voice", sung, nullptr, L"en-fonipa" };
+
+    RenderOptions options{};
+    options.Lyrics = true;
+
+    std::vector<RenderedMessage> messages{};
+    RenderTrack(sequence, sequence.Tracks[0], 0, Beat * 8, messages, options);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, CountLyricMessages(messages, 0x03));
+    VERIFY_ARE_EQUAL(size_t{ 1 }, CountLyricMessages(messages, 0x04));
+
+    // The sequence file keeps both.
+    NormalizeSequence(sequence);
+    auto const text = WriteSequenceJson(sequence);
+
+    Sequence read{};
+    VERIFY_IS_TRUE(ReadSequenceJson(text, read).Succeeded());
+    VERIFY_IS_TRUE(read.Lyrics.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"en-fonipa" }, read.Lyrics->RubyLanguage);
+    VERIFY_IS_TRUE(sequence.Lyrics->Syllables == read.Lyrics->Syllables);
+    VERIFY_ARE_EQUAL(text, WriteSequenceJson(read));
+}
+
+void LyricsTests::ClipFilesBringTheirLyrics()
+{
+    // Exported from a sequence and read back, the way an imported clip file arrives.
+    auto sequence = SungSequence();
+    auto sung = HappyBirthday();
+    sung[0].Ruby = L"hap";
+    sung[3].Text = L"daaaaaaaaaaaaaaaaaay";
+    sung.push_back(Lyric{ Beat * 3, L"", LyricEnd::Word });
+    sequence.Lyrics = LyricsTrack{ L"en", L"t-voice", sung, nullptr, L"en" };
+
+    auto const file = ExportTrackToClipFile(sequence, sequence.Tracks[0], ClipFileText{});
+    auto const bytes = WriteClipFile(file);
+
+    ClipFile read{};
+    VERIFY_IS_TRUE(ReadClipFile(bytes, read).Succeeded());
+
+    auto imported = ImportClipFile(read);
+    auto& clip = imported.Content;
+
+    // A message on a channel of its own stays in the clip, and so does anything else.
+    auto const elsewhere = LyricDataPackets(Lyric{ 0, L"other", LyricEnd::Word }, 0)[0];
+    clip.Events.push_back(ClipEvent{ 0, { (elsewhere[0] & 0xFFCFFFFFu) | 0x00020000u, elsewhere[1], elsewhere[2], elsewhere[3] }, 4 });
+    SortClip(clip);
+
+    auto const eventsBefore = clip.Events.size();
+    auto const lyrics = TakeLyricsFromClip(clip, SequenceLimits{});
+
+    VERIFY_IS_TRUE(lyrics.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"en" }, lyrics->Language);
+    VERIFY_ARE_EQUAL(std::wstring{ L"en" }, lyrics->RubyLanguage);
+    VERIFY_ARE_EQUAL(sung.size(), lyrics->Syllables.size());
+
+    for (size_t i = 0; i < sung.size(); ++i)
+    {
+        VerifySyllable(lyrics->Syllables[i], sung[i].Tick, sung[i].Text, sung[i].End);
+        VERIFY_ARE_EQUAL(sung[i].Ruby, lyrics->Syllables[i].Ruby);
+    }
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, clip.Events.size());
+    VERIFY_IS_TRUE(eventsBefore > clip.Events.size());
+    VERIFY_ARE_EQUAL(0x00020000u, clip.Events[0].Words[0] & 0x003F0000u);
+
+    // A clip with no lyrics gives none, and loses nothing.
+    Clip plain{};
+    plain.Events.push_back(ClipEvent{ 0, { 0x40B00700u, 0x80000000u, 0, 0 }, 2 });
+    VERIFY_IS_FALSE(TakeLyricsFromClip(plain, SequenceLimits{}).has_value());
+    VERIFY_ARE_EQUAL(size_t{ 1 }, plain.Events.size());
+
+    // A Continue or an End with nothing before it is left alone.
+    Clip broken{};
+    broken.Events.push_back(ClipEvent{ 0, { 0xD0D00201u, 0x61000000u, 0, 0 }, 4 });
+    VERIFY_IS_FALSE(TakeLyricsFromClip(broken, SequenceLimits{}).has_value());
 }

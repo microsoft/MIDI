@@ -31,8 +31,9 @@ namespace midisequencer
     // ---- typing ----
 
     // The text the lyrics editor shows: a hyphen between a word's syllables, a space between
-    // words, a line per line, a blank line between verses, and _ for a melisma. A hyphen that
-    // belongs to the word, as in "six-ty--four", is typed twice.
+    // words, a line per line, a blank line between verses, and _ for a melisma. Ruby goes in
+    // brackets right after the text it reads. A hyphen, underscore or bracket that belongs to the
+    // words, as in "six-ty--four", is typed twice.
     std::wstring LyricsToText(_In_ std::vector<Lyric> const& syllables);
 
     // The syllables some typed text holds, in order. Their ticks are all 0 until they're placed.
@@ -102,10 +103,10 @@ namespace midisequencer
         std::string Text{};             // UTF-8
     };
 
-    // Syllables from a file's lyric events (RP-017, with RP-026's escapes, tags and ruby taken
-    // out), or from a Soft Karaoke file's text events when karaoke is true: there / starts a line,
-    // \ starts a verse, a leading space starts a word, and lines that start with @ are about the
-    // file rather than words to sing.
+    // Syllables from a file's lyric events (RP-017, with RP-026's escapes and tags taken out and
+    // its ruby kept), or from a Soft Karaoke file's text events when karaoke is true: there /
+    // starts a line, \ starts a verse, a leading space starts a word, and lines that start with @
+    // are about the file rather than words to sing.
     std::vector<Lyric> LyricsFromFileText(
         _In_ std::vector<LyricFileText> const& events,
         _In_ bool karaoke,
@@ -113,7 +114,8 @@ namespace midisequencer
 
     // Lyric event text as RP-017 writes it: a space after a word's last syllable, a carriage
     // return after a line's and a line feed after a verse's, and an empty event for a melisma.
-    // The characters RP-026 reserves are escaped.
+    // Ruby goes in brackets after its text, as RP-026 has it, and the characters RP-026 reserves
+    // are escaped.
     std::vector<LyricFileText> LyricsToFileText(_In_ std::vector<Lyric> const& syllables);
 
     // ---- MIDI 2.0 ----
@@ -126,6 +128,19 @@ namespace midisequencer
 
     // The Lyrics Language message (status 2) for a BCP 47 tag. Empty for no tag.
     std::vector<std::array<uint32_t, 4>> LyricsLanguagePackets(_In_ std::wstring_view language, _In_ uint8_t group);
+
+    // A syllable's ruby as Ruby Data (status 3), sent with the syllable it reads, ending a word,
+    // or the line or verse its syllable ends. Empty when it has none.
+    std::vector<std::array<uint32_t, 4>> RubyDataPackets(_In_ Lyric const& syllable, _In_ uint8_t group);
+
+    // The Ruby Language message (status 4). Empty for no tag.
+    std::vector<std::array<uint32_t, 4>> RubyLanguagePackets(_In_ std::wstring_view language, _In_ uint8_t group);
+
+    // The lyrics a clip's Lyric Data, Lyrics Language, Ruby Data and Ruby Language messages hold,
+    // taken out of its events (LyricData.cpp). Ruby goes on the syllable sung when it arrives.
+    // When more than one channel or group carries lyrics, the one with the most syllables is
+    // taken and the others stay in the clip. Ticks are the clip's own.
+    std::optional<LyricsTrack> TakeLyricsFromClip(_Inout_ Clip& clip, _In_ SequenceLimits const& limits);
 
     // The Lyric Data messages a track sends in [fromTick, toTick) when it's the track that sings.
     // The language goes before the first syllable, and at fromTick too when sendLanguage is true,

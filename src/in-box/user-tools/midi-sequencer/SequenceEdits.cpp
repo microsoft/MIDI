@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "SequenceEdits.h"
+#include "SequenceArpeggiator.h"
 #include "SequenceGenerator.h"
 #include "SequencePattern.h"
 
@@ -629,7 +630,8 @@ namespace midisequencer
         clip.Loop = true;
         clip.Seed = NewSeed();
         clip.Origin = ClipOrigin::Generated;
-        clip.Generator = type == GeneratorType::ChanceMelody ? MakeChanceMelodyGenerator() : MakeEuclideanGenerator();
+        clip.Generator = type == GeneratorType::ChanceMelody ? MakeChanceMelodyGenerator() :
+            type == GeneratorType::Arpeggiator ? MakeArpeggiatorGenerator() : MakeEuclideanGenerator();
         clip.Generator->Type = type;
         RefreshGeneratorPreview(clip);
         return clip;

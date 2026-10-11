@@ -31,6 +31,8 @@ namespace midisequencer
         constexpr wchar_t KeyLanguage[] = L"language";
         constexpr wchar_t KeyTrack[] = L"track";
         constexpr wchar_t KeySyllables[] = L"syllables";
+        constexpr wchar_t KeyRubyLanguage[] = L"rubyLanguage";
+        constexpr wchar_t KeyRuby[] = L"ruby";
 
         constexpr wchar_t EndWord[] = L"word";
         constexpr wchar_t EndLine[] = L"line";
@@ -49,6 +51,8 @@ namespace midisequencer
         constexpr uint32_t LyricStatusBank = 0x02;
         constexpr uint32_t LyricsStatus = 0x01;
         constexpr uint32_t LyricsLanguageStatus = 0x02;
+        constexpr uint32_t RubyStatus = 0x03;
+        constexpr uint32_t RubyLanguageStatus = 0x04;
         constexpr uint32_t AddressGroup = 0x1;
         constexpr size_t TextBytesPerPacket = 12;
 
@@ -263,21 +267,33 @@ namespace midisequencer
             return FromCodePage(bytes, codePage);
         }
 
-        // RP-026 lyric text as plain text: its escapes become the characters they stand for, and
-        // its tags in braces and ruby in brackets are taken out, since this version shows
-        // neither.
-        std::wstring PlainLyricText(_In_ std::wstring_view text)
+        // RP-026 lyric text split into what's sung and its ruby: escapes become the characters
+        // they stand for, tags in braces are taken out, and what's in brackets is the ruby.
+        struct SplitText
         {
-            std::wstring plain{};
-            plain.reserve(text.size());
+            std::wstring Plain{};
+            std::wstring Ruby{};
+        };
+
+        SplitText SplitLyricText(_In_ std::wstring_view text)
+        {
+            SplitText split{};
+            split.Plain.reserve(text.size());
 
             size_t braces{ 0 };
             size_t brackets{ 0 };
 
+            auto const keep = [&](wchar_t c)
+            {
+                if (braces == 0)
+                {
+                    (brackets == 0 ? split.Plain : split.Ruby).push_back(c);
+                }
+            };
+
             for (size_t i = 0; i < text.size(); ++i)
             {
                 auto const c = text[i];
-                auto const shown = braces == 0 && brackets == 0;
 
                 if (c == L'\\' && i + 1 < text.size())
                 {
@@ -298,11 +314,7 @@ namespace midisequencer
 
                     if (literal != 0)
                     {
-                        if (shown)
-                        {
-                            plain.push_back(literal);
-                        }
-
+                        keep(literal);
                         ++i;
                         continue;
                     }
@@ -316,21 +328,21 @@ namespace midisequencer
                 {
                     --braces;
                 }
-                else if (c == L'[')
+                else if (c == L'[' && braces == 0)
                 {
                     ++brackets;
                 }
-                else if (c == L']' && brackets > 0)
+                else if (c == L']' && braces == 0 && brackets > 0)
                 {
                     --brackets;
                 }
-                else if (shown)
+                else
                 {
-                    plain.push_back(c);
+                    keep(c);
                 }
             }
 
-            return plain;
+            return split;
         }
 
         std::wstring EscapeLyricText(_In_ std::wstring_view text)
@@ -582,6 +594,21 @@ namespace midisequencer
     {
         std::wstring text{};
 
+        // Hyphens, underscores and brackets that belong to the words are typed twice, so they
+        // aren't taken for a break between syllables, a melisma or ruby.
+        auto const appendDoubled = [&text](std::wstring const& part, std::wstring_view doubled)
+        {
+            for (auto const c : part)
+            {
+                if (doubled.find(c) != std::wstring_view::npos)
+                {
+                    text += c;
+                }
+
+                text += c;
+            }
+        };
+
         for (auto const& syllable : syllables)
         {
             if (syllable.Text.empty())
@@ -590,17 +617,14 @@ namespace midisequencer
             }
             else
             {
-                // Hyphens that belong to the word are typed twice, so they aren't taken for a
-                // break between syllables. So is an underscore that isn't a melisma.
-                for (auto const c : syllable.Text)
-                {
-                    if (c == L'-' || c == L'_')
-                    {
-                        text += c;
-                    }
+                appendDoubled(syllable.Text, L"-_[]");
+            }
 
-                    text += c;
-                }
+            if (!syllable.Ruby.empty())
+            {
+                text += L'[';
+                appendDoubled(syllable.Ruby, L"[]");
+                text += L']';
             }
 
             switch (syllable.End)
@@ -630,19 +654,24 @@ namespace midisequencer
     std::vector<Lyric> ParseLyricsText(std::wstring_view text, size_t maximumSyllables)
     {
         std::vector<Lyric> syllables{};
+        auto const maximumText = SequenceLimits{}.MaximumTextLength;
 
-        // Ends the syllable being typed, if there is one, and says what follows it.
+        // The syllable being typed, if there is one, and the ruby typed for it.
         std::wstring current{};
+        std::wstring ruby{};
         bool haveSyllable{ false };
         bool melisma{ false };
+        bool inRuby{ false };
 
+        // Ends the syllable being typed, if there is one, and says what follows it.
         auto const finish = [&](LyricEnd end)
         {
             if (haveSyllable && syllables.size() < maximumSyllables)
             {
                 Lyric syllable{};
-                syllable.Text = melisma ? std::wstring{} : CleanText(current, SequenceLimits{}.MaximumTextLength);
+                syllable.Text = melisma ? std::wstring{} : CleanText(current, maximumText);
                 syllable.End = end;
+                syllable.Ruby = CleanText(ruby, maximumText);
                 syllables.push_back(std::move(syllable));
             }
             else if (!haveSyllable && end != LyricEnd::None && !syllables.empty())
@@ -651,8 +680,25 @@ namespace midisequencer
             }
 
             current.clear();
+            ruby.clear();
             haveSyllable = false;
             melisma = false;
+        };
+
+        // Ruby typed with nothing in front of it reads the syllable before, as RP-026 has it.
+        auto const closeRuby = [&]()
+        {
+            inRuby = false;
+
+            if (!haveSyllable && !ruby.empty())
+            {
+                if (!syllables.empty())
+                {
+                    syllables.back().Ruby = CleanText(syllables.back().Ruby + ruby, maximumText);
+                }
+
+                ruby.clear();
+            }
         };
 
         size_t lineBreaks{ 0 };
@@ -660,17 +706,43 @@ namespace midisequencer
         for (size_t i = 0; i < text.size(); ++i)
         {
             auto c = text[i];
+            auto const next = i + 1 < text.size() ? text[i + 1] : L'\0';
 
             // A TextBox ends its lines with a carriage return alone; other text uses both, or a
             // line feed alone.
             if (c == L'\r')
             {
-                if (i + 1 < text.size() && text[i + 1] == L'\n')
+                if (next == L'\n')
                 {
                     continue;
                 }
 
                 c = L'\n';
+            }
+
+            // Ruby runs to the closing bracket. Spaces and hyphens in it are part of it.
+            if (inRuby && c != L'\n')
+            {
+                if ((c == L'[' || c == L']') && next == c)
+                {
+                    ruby += c;
+                    ++i;
+                }
+                else if (c == L']')
+                {
+                    closeRuby();
+                }
+                else
+                {
+                    ruby += c == L'\t' ? L' ' : c;
+                }
+
+                continue;
+            }
+
+            if (inRuby)
+            {
+                closeRuby();
             }
 
             if (c == L'\n')
@@ -695,12 +767,18 @@ namespace midisequencer
 
             lineBreaks = 0;
 
-            if ((c == L'-' || c == L'_') && i + 1 < text.size() && text[i + 1] == c)
+            if ((c == L'-' || c == L'_' || c == L'[' || c == L']') && next == c)
             {
                 current += c;
                 haveSyllable = true;
                 melisma = false;
                 ++i;
+                continue;
+            }
+
+            if (c == L'[')
+            {
+                inRuby = true;
                 continue;
             }
 
@@ -725,6 +803,11 @@ namespace midisequencer
 
             current += c;
             haveSyllable = true;
+        }
+
+        if (inRuby)
+        {
+            closeRuby();
         }
 
         finish(LyricEnd::None);
@@ -842,6 +925,7 @@ namespace midisequencer
     void NormalizeLyrics(LyricsTrack& lyrics, SequenceLimits const& limits)
     {
         lyrics.Language = CleanLanguage(lyrics.Language);
+        lyrics.RubyLanguage = CleanLanguage(lyrics.RubyLanguage);
 
         if (lyrics.TrackId.size() > MaximumTrackIdLength)
         {
@@ -857,6 +941,7 @@ namespace midisequencer
         {
             syllable.Tick = std::clamp<int64_t>(syllable.Tick, 0, limits.MaximumTick);
             syllable.Text = CleanText(syllable.Text, limits.MaximumTextLength);
+            syllable.Ruby = CleanText(syllable.Ruby, limits.MaximumTextLength);
 
             if (static_cast<uint8_t>(syllable.End) > static_cast<uint8_t>(LyricEnd::Paragraph))
             {
@@ -879,7 +964,7 @@ namespace midisequencer
             {
                 for (auto const& syllable : lyrics->Syllables)
                 {
-                    bytes += sizeof(Lyric) + syllable.Text.size() * sizeof(wchar_t);
+                    bytes += sizeof(Lyric) + (syllable.Text.size() + syllable.Ruby.size()) * sizeof(wchar_t);
                 }
             }
 
@@ -980,9 +1065,13 @@ namespace midisequencer
                 continue;
             }
 
+            std::wstring ruby{};
+
             if (!karaoke)
             {
-                text = PlainLyricText(text);
+                auto split = SplitLyricText(text);
+                text = std::move(split.Plain);
+                ruby = CleanText(split.Ruby, limits.MaximumTextLength);
             }
 
             // A break at the start belongs to the syllable before.
@@ -1048,6 +1137,19 @@ namespace midisequencer
 
             if (text.empty())
             {
+                // Ruby on its own reads the syllable before (RP-026).
+                if (!ruby.empty())
+                {
+                    if (!syllables.empty())
+                    {
+                        auto& previous = syllables.back();
+                        previous.Ruby = CleanText(previous.Ruby + ruby, limits.MaximumTextLength);
+                        previous.End = Stronger(previous.End, end);
+                    }
+
+                    continue;
+                }
+
                 if (end != LyricEnd::None || before != LyricEnd::None)
                 {
                     // A break on its own, like RP-017's [CR] event.
@@ -1069,7 +1171,7 @@ namespace midisequencer
                 continue;
             }
 
-            syllables.push_back(Lyric{ std::max<int64_t>(0, event.Tick), std::move(text), end });
+            syllables.push_back(Lyric{ std::max<int64_t>(0, event.Tick), std::move(text), end, std::move(ruby) });
         }
 
         std::stable_sort(syllables.begin(), syllables.end(), [](Lyric const& a, Lyric const& b) { return a.Tick < b.Tick; });
@@ -1087,19 +1189,24 @@ namespace midisequencer
         {
             auto const ending = FileEnding(syllable.End);
 
+            // RP-026 ruby: in brackets after the text it reads.
+            auto const ruby = syllable.Ruby.empty() ? std::wstring{} : L"[" + EscapeLyricText(syllable.Ruby) + L"]";
+
             if (syllable.Text.empty())
             {
+                // A melisma is an empty event. Its ruby and its end follow in one of their own,
+                // which reads the event before.
                 events.push_back(LyricFileText{ syllable.Tick, std::string{} });
 
-                if (!ending.empty())
+                if (!ruby.empty() || !ending.empty())
                 {
-                    events.push_back(LyricFileText{ syllable.Tick, ToUtf8(ending) });
+                    events.push_back(LyricFileText{ syllable.Tick, ToUtf8(ruby + std::wstring{ ending }) });
                 }
 
                 continue;
             }
 
-            events.push_back(LyricFileText{ syllable.Tick, ToUtf8(EscapeLyricText(syllable.Text) + std::wstring{ ending }) });
+            events.push_back(LyricFileText{ syllable.Tick, ToUtf8(EscapeLyricText(syllable.Text) + ruby + std::wstring{ ending }) });
         }
 
         return events;
@@ -1134,6 +1241,34 @@ namespace midisequencer
     {
         std::vector<std::array<uint32_t, 4>> packets{};
         AppendTextPackets(packets, group, LyricsLanguageStatus, ToUtf8(CleanLanguage(language)));
+        return packets;
+    }
+
+    _Use_decl_annotations_
+    std::vector<std::array<uint32_t, 4>> RubyDataPackets(Lyric const& syllable, uint8_t group)
+    {
+        std::vector<std::array<uint32_t, 4>> packets{};
+
+        if (syllable.Ruby.empty())
+        {
+            return packets;
+        }
+
+        // Each ruby ends a word of its own, so a display that runs them together still keeps them
+        // apart. It ends a line or a verse where its syllable does.
+        auto bytes = ToUtf8(syllable.Ruby);
+        bytes.erase(std::remove(bytes.begin(), bytes.end(), '\0'), bytes.end());
+        bytes += PacketEnding(syllable.End == LyricEnd::None ? LyricEnd::Word : syllable.End);
+
+        AppendTextPackets(packets, group, RubyStatus, bytes);
+        return packets;
+    }
+
+    _Use_decl_annotations_
+    std::vector<std::array<uint32_t, 4>> RubyLanguagePackets(std::wstring_view language, uint8_t group)
+    {
+        std::vector<std::array<uint32_t, 4>> packets{};
+        AppendTextPackets(packets, group, RubyLanguageStatus, ToUtf8(CleanLanguage(language)));
         return packets;
     }
 
@@ -1174,6 +1309,11 @@ namespace midisequencer
             {
                 add(tick, packet);
             }
+
+            for (auto const& packet : RubyLanguagePackets(lyrics.RubyLanguage, 0))
+            {
+                add(tick, packet);
+            }
         };
 
         auto it = std::lower_bound(syllables.begin(), syllables.end(), fromTick,
@@ -1191,6 +1331,11 @@ namespace midisequencer
         for (; it != syllables.end() && it->Tick < toTick && messages.size() < maximum; ++it)
         {
             for (auto const& packet : LyricDataPackets(*it, 0))
+            {
+                add(it->Tick, packet);
+            }
+
+            for (auto const& packet : RubyDataPackets(*it, 0))
             {
                 add(it->Tick, packet);
             }
@@ -1277,6 +1422,12 @@ namespace midisequencer
             out += Quote(lyrics.Language);
         }
 
+        if (!lyrics.RubyLanguage.empty())
+        {
+            member(KeyRubyLanguage);
+            out += Quote(lyrics.RubyLanguage);
+        }
+
         if (!lyrics.TrackId.empty())
         {
             member(KeyTrack);
@@ -1297,6 +1448,12 @@ namespace midisequencer
             {
                 out += L", ";
                 out += Quote(EndName(syllable.End));
+            }
+
+            // What isn't text or an end goes in an object, so a reader can tell it apart.
+            if (!syllable.Ruby.empty())
+            {
+                out += std::format(L", {{{}: {}}}", Quote(KeyRuby), Quote(syllable.Ruby));
             }
 
             out += L"]";
@@ -1346,6 +1503,7 @@ namespace midisequencer
 
         LyricsTrack lyrics{};
         lyrics.Language = StringMember(object, KeyLanguage);
+        lyrics.RubyLanguage = StringMember(object, KeyRubyLanguage);
         lyrics.TrackId = StringMember(object, KeyTrack);
 
         if (object.HasKey(KeySyllables))
@@ -1388,9 +1546,18 @@ namespace midisequencer
                     syllable.Tick = static_cast<int64_t>(std::clamp(std::round(tick), 0.0, static_cast<double>(limits.MaximumTick)));
                     syllable.Text = CleanText(fields.GetAt(1).GetString(), limits.MaximumTextLength);
 
-                    if (fields.Size() > 2 && fields.GetAt(2).ValueType() == json::JsonValueType::String)
+                    for (uint32_t k = 2; k < std::min<uint32_t>(fields.Size(), 4); ++k)
                     {
-                        syllable.End = EndFromName(fields.GetAt(2).GetString());
+                        auto const field = fields.GetAt(k);
+
+                        if (k == 2 && field.ValueType() == json::JsonValueType::String)
+                        {
+                            syllable.End = EndFromName(field.GetString());
+                        }
+                        else if (field.ValueType() == json::JsonValueType::Object)
+                        {
+                            syllable.Ruby = CleanText(StringMember(field.GetObject(), KeyRuby), limits.MaximumTextLength);
+                        }
                     }
 
                     lyrics.Syllables.push_back(std::move(syllable));
@@ -1402,7 +1569,7 @@ namespace midisequencer
         {
             std::wstring_view const key{ pair.Key() };
 
-            if (key == KeyLanguage || key == KeyTrack || key == KeySyllables)
+            if (key == KeyLanguage || key == KeyRubyLanguage || key == KeyTrack || key == KeySyllables)
             {
                 continue;
             }

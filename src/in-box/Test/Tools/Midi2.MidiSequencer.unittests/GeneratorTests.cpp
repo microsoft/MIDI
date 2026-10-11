@@ -331,7 +331,7 @@ void GeneratorTests::GeneratorsRoundTripThroughTheFile()
         "scale": "dorian", "root": 2, "low": 50, "high": 74, "busy": 40, "keep": 60, "velocity": [30000, 60000] } },
     { "id": "c-a", "kind": "generator", "name": "Arp", "length": 3840, "loop": true,
       "settings": { "type": "arpeggiator", "stepTicks": 240, "eachPass": "same", "channel": 0, "noteLength": 60,
-        "order": "upDown", "octaves": 2, "latch": true } }
+        "order": "upAndDown", "octaves": 2, "latch": true } }
   ]
 })";
 
@@ -365,15 +365,21 @@ void GeneratorTests::GeneratorsRoundTripThroughTheFile()
     // The notes written with it are worked out again, not read.
     VERIFY_IS_FALSE(std::any_of(read.Clips[1].Notes.begin(), read.Clips[1].Notes.end(), [](Note const& note) { return note.Velocity == 1000; }));
 
-    // The arpeggiator's settings wait, as written, until it's built.
-    VERIFY_ARE_EQUAL(static_cast<int>(GeneratorType::Arpeggiator), static_cast<int>(read.Clips[2].Generator->Type));
+    // The arpeggiator's settings, with what it plays from left out: the keys held.
+    auto const& arpeggiator = *read.Clips[2].Generator;
+    VERIFY_ARE_EQUAL(static_cast<int>(GeneratorType::Arpeggiator), static_cast<int>(arpeggiator.Type));
+    VERIFY_ARE_EQUAL(static_cast<int>(ArpeggiatorSource::Held), static_cast<int>(arpeggiator.ArpSource));
+    VERIFY_ARE_EQUAL(static_cast<int>(ArpeggiatorOrder::UpAndDown), static_cast<int>(arpeggiator.ArpOrder));
+    VERIFY_ARE_EQUAL(uint8_t{ 2 }, arpeggiator.ArpOctaves);
+    VERIFY_IS_TRUE(arpeggiator.ArpLatch);
 
     auto const written = WriteSequenceJson(read);
     VERIFY_IS_TRUE(Contains(written, L"\"type\": \"euclidean\""));
     VERIFY_IS_TRUE(Contains(written, L"\"eachPass\": \"changes\""));
     VERIFY_IS_TRUE(Contains(written, L"\"scale\": \"dorian\""));
     VERIFY_IS_TRUE(Contains(written, L"\"velocity\": [30000, 60000]"));
-    VERIFY_IS_TRUE(Contains(written, L"\"order\": \"upDown\""));
+    VERIFY_IS_TRUE(Contains(written, L"\"order\": \"upAndDown\""));
+    VERIFY_IS_TRUE(Contains(written, L"\"source\": \"held\""));
     VERIFY_IS_TRUE(Contains(written, L"\"latch\": true"));
     VERIFY_IS_FALSE(Contains(written, L"\"notes\""));
 

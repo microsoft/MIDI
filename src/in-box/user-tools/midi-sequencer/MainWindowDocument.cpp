@@ -714,11 +714,22 @@ namespace winrt::midisequencer::implementation
             clip.OriginDetail = std::filesystem::path{ path }.filename().wstring();
             seq::SortClip(clip);
 
+            // The clip's lyrics become the sequence's lyrics track when it has none, so they show
+            // and can be edited. Otherwise they stay in the clip and still play.
+            auto lyrics = m_doc.Lyrics ? std::optional<seq::LyricsTrack>{} : seq::TakeLyricsFromClip(clip, seq::SequenceLimits{});
+
             auto track = seq::MakeTrack(m_doc, clip.Name, false);
             track.Startup = imported.Startup;
             track.Slots.resize(m_doc.Scenes.size());
             track.Timeline.push_back(seq::Placement{ clip.Id, 0, 0 });
             PlayOnSynth(track);
+
+            if (lyrics)
+            {
+                lyrics->TrackId = track.Id;
+                changes.push_back(seq::MakeLyricsChange(std::nullopt, lyrics));
+                m_doc.Lyrics = std::move(lyrics);
+            }
 
             m_doc.Tracks.push_back(std::move(track));
             changes.push_back(seq::MakeClipPresenceChange(clip, true));

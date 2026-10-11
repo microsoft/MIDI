@@ -299,8 +299,7 @@ namespace winrt::midisequencer::implementation
                 profileRow.Orientation(controls::Orientation::Horizontal);
                 profileRow.Spacing(16);
 
-                controls::HyperlinkButton fill{};
-                fill.Padding(xaml::Thickness{ 0, 4, 0, 4 });
+                controls::Button fill{};
                 fill.Content(winrt::box_value(res::GetString(L"FillInYourInfo")));
                 controls::ToolTipService::SetToolTip(fill, winrt::box_value(res::GetString(L"FillInYourInfoTip")));
                 fill.Click([author, organization, website, license, profile](auto&&, auto&&)

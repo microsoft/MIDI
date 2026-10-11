@@ -10,7 +10,7 @@
 #include <WexTestClass.h>
 
 // The lyrics track: typing it, placing it on notes, and carrying it in Standard MIDI Files, MIDI
-// 2.0 Lyric Data messages, LRC files and the sequence file.
+// 2.0 Lyric Data and Ruby Data messages, MIDI 2.0 clip files, LRC files and the sequence file.
 class LyricsTests : public WEX::TestClass<LyricsTests>
 {
 public:
@@ -32,4 +32,7 @@ public:
     TEST_METHOD(TheSequenceFileKeepsLyrics);
     TEST_METHOD(StandardMidiFilesKeepLyrics);
     TEST_METHOD(LinesBreakWhereTheLyricsSay);
+    TEST_METHOD(RubyIsTypedInBrackets);
+    TEST_METHOD(RubyTravelsInFilesAndMessages);
+    TEST_METHOD(ClipFilesBringTheirLyrics);
 };

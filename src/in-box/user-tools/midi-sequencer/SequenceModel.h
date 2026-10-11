@@ -243,7 +243,23 @@ namespace midisequencer
     {
         Euclidean = 0,
         ChanceMelody = 1,
-        Arpeggiator = 2,    // not built yet: plays nothing, and its settings are kept as written
+        Arpeggiator = 2,
+    };
+
+    // Where an arpeggiator gets the notes it plays.
+    enum class ArpeggiatorSource : uint8_t
+    {
+        Held = 0,           // the keys held on the track's source, as they're played
+        Track = 1,          // the notes another track's timeline plays
+    };
+
+    enum class ArpeggiatorOrder : uint8_t
+    {
+        Up = 0,
+        Down = 1,
+        UpAndDown = 2,
+        AsHeld = 3,         // the order the keys went down, or the notes started
+        Random = 4,
     };
 
     // A ring of a Euclidean rhythm: Pulses spread as evenly as they go over Steps, turned by
@@ -304,7 +320,15 @@ namespace midisequencer
         uint16_t VelocityLow{ 32768 };
         uint16_t VelocityHigh{ 62258 };
 
-        // Keys this version doesn't know, which hold an arpeggiator's settings until it's built.
+        // Arpeggiator: one note a step from what it's given, in an order, over some octaves. Each
+        // note keeps the velocity it was played or written with.
+        ArpeggiatorSource ArpSource{ ArpeggiatorSource::Held };
+        std::wstring ArpTrackId{};          // the track it plays the notes of, for Track
+        ArpeggiatorOrder ArpOrder{ ArpeggiatorOrder::Up };
+        uint8_t ArpOctaves{ 1 };            // 1 to 4
+        bool ArpLatch{ false };             // keeps playing the last keys held after they go up
+
+        // Keys this version doesn't know, kept as written.
         winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };
     };
 
@@ -514,6 +538,10 @@ namespace midisequencer
         std::wstring Text{};
         LyricEnd End{ LyricEnd::None };
 
+        // How to read the syllable, shown in small type above it, like the kana over a kanji.
+        // RP-026 and MIDI 2.0 call it ruby. Empty for none.
+        std::wstring Ruby{};
+
         bool operator==(Lyric const&) const = default;
     };
 
@@ -530,6 +558,10 @@ namespace midisequencer
         std::vector<Lyric> Syllables{};
 
         winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };
+
+        // The language of the ruby, also BCP 47. Empty when no one said. Last, so lyrics written
+        // as { language, track, syllables } still read the same.
+        std::wstring RubyLanguage{};
     };
 
     struct Sequence

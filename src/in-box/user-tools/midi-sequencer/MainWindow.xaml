@@ -347,7 +347,7 @@
                            Fill="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
                 <TextBlock x:Name="PreviewChicletText"
                            x:Uid="PreviewChicletText"
-                           Text="PREVIEW"
+                           Text="EARLY PREVIEW"
                            FontSize="10"
                            FontWeight="SemiBold"
                            Margin="9,0,9,0"
@@ -626,7 +626,7 @@
                             Click="OnTempoDisplayClick" />
                 </Grid>
 
-                <Button x:Name="ClockButton" Style="{StaticResource SmallButtonStyle}" Click="OnClockClick">
+                <Button x:Name="ClockButton" x:Uid="ClockButton" Style="{StaticResource SmallButtonStyle}" Click="OnClockClick">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <FontIcon Glyph="&#xE823;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <TextBlock x:Name="ClockButtonText" x:Uid="ClockInternal" />
@@ -1042,6 +1042,14 @@
                                 <TextBlock x:Uid="EditorKeyboardText" />
                             </StackPanel>
                         </Button>
+
+                        <!-- The clip's own lanes, under the notes. -->
+                        <Button x:Name="EditorAutomationButton" x:Uid="EditorAutomationButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorAutomationClick">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE9D2;" FontSize="12" />
+                                <TextBlock x:Uid="EditorAutomationText" />
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
 
                     <!-- A pattern clip's settings. Shown instead of the notes tools. -->
@@ -1066,7 +1074,7 @@
                                    SpinButtonPlacementMode="Compact" VerticalAlignment="Center" ValueChanged="OnGeneratorBarsChanged" />
                         <TextBlock x:Uid="GeneratorStepSizeLabel" Style="{StaticResource TransportLabelStyle}" />
                         <ComboBox x:Name="GeneratorStepSizeCombo" x:Uid="GeneratorStepSizeCombo" Style="{StaticResource SmallComboStyle}" Width="118" SelectionChanged="OnGeneratorStepSizeChanged" />
-                        <ToggleButton x:Name="GeneratorChangesToggle" x:Uid="GeneratorChangesToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnGeneratorChangesClick" />
+                        <ToggleButton x:Name="GeneratorChangesToggle" x:Uid="GeneratorChangesToggle" Style="{StaticResource SmallToggleStyle}" Click="OnGeneratorChangesClick" />
                     </StackPanel>
                 </StackPanel>
 

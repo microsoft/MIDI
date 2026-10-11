@@ -490,9 +490,11 @@ namespace winrt::midisequencer::implementation
 
                 add.VerticalAlignment(xaml::VerticalAlignment::Top);
                 PlaceIn(actions, add, 0);
+                panel.Children().Append(actions);
 
                 controls::CheckBox sendTempo{};
                 sendTempo.IsChecked(settings.ClockSendsTempo());
+                sendTempo.Margin(xaml::Thickness{ 0, 4, 0, 0 });
                 automation::AutomationProperties::SetName(sendTempo, res::GetString(L"ClockSendTempo"));
 
                 {
@@ -507,8 +509,7 @@ namespace winrt::midisequencer::implementation
                     sendTempo.Content(content);
                 }
 
-                PlaceIn(actions, sendTempo, 1);
-                panel.Children().Append(actions);
+                panel.Children().Append(sendTempo);
 
                 // ---- MIDI Time Code ----
 
@@ -582,6 +583,23 @@ namespace winrt::midisequencer::implementation
                 rateRow.Children().Append(start);
 
                 panel.Children().Append(rateRow);
+
+                // Where and how it's sent only matter while it's on.
+                auto const enableTimeCode = [weakDevice = winrt::make_weak(timeCodeDevice), weakGroup = winrt::make_weak(timeCodeGroup), weakRate = winrt::make_weak(rate), weakStart = winrt::make_weak(start), weakStartingAt = winrt::make_weak(startingAt)](bool on)
+                {
+                    if (auto const device = weakDevice.get()) { device.IsEnabled(on); }
+                    if (auto const group = weakGroup.get()) { group.IsEnabled(on); }
+                    if (auto const rateBox = weakRate.get()) { rateBox.IsEnabled(on); }
+                    if (auto const startBox = weakStart.get()) { startBox.IsEnabled(on); }
+                    if (auto const label = weakStartingAt.get()) { label.Opacity(on ? 1.0 : 0.45); }
+                };
+
+                enableTimeCode(timeCode.Enabled);
+
+                timeCodeOn.Toggled([enableTimeCode](foundation::IInspectable const& sender, auto&&)
+                {
+                    enableTimeCode(sender.as<controls::ToggleSwitch>().IsOn());
+                });
 
                 auto const timeCodeError = Note(L"", strong->ThemeBrush(L"SeqWarnTextBrush"));
                 timeCodeError.Visibility(xaml::Visibility::Collapsed);

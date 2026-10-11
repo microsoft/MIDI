@@ -71,7 +71,7 @@ namespace winrt::midisequencer::implementation
 
             if (changed && m_editorCanvas != nullptr && m_editorCanvas.ActualHeight() > 1)
             {
-                m_roll.FitToClip(static_cast<float>(m_editorCanvas.ActualWidth()), static_cast<float>(m_editorCanvas.ActualHeight()));
+                m_roll.FitToClip(static_cast<float>(m_editorCanvas.ActualWidth()), NotesEditorRollHeight());
             }
 
             InvalidateEditor();
@@ -219,6 +219,7 @@ namespace winrt::midisequencer::implementation
             if (m_editorCanvas != nullptr)
             {
                 automation::AutomationProperties::SetName(m_editorCanvas, res::GetString(pattern ? L"PatternCanvasName" : L"EditorCanvasName"));
+                automation::AutomationProperties::SetHelpText(m_editorCanvas, pattern ? winrt::hstring{} : res::GetString(L"EditorCanvasHelp"));
             }
 
             // Bars and beats, in the meter at the start.
@@ -487,6 +488,12 @@ namespace winrt::midisequencer::implementation
             m_lastEditorPressTime = doubleClick ? std::chrono::steady_clock::time_point{} : now;
             m_lastEditorPressPoint = position;
 
+            // The clip's own lanes, under the roll.
+            if (OnClipLanesPressed(args, position, right, control, doubleClick))
+            {
+                return;
+            }
+
             // The keys on the left play the note.
             if (!right && position.X < seq::PianoRoll::KeysWidth)
             {
@@ -525,6 +532,11 @@ namespace winrt::midisequencer::implementation
 
             auto const position = args.GetCurrentPoint(m_editorCanvas).Position();
 
+            if (OnClipLanesMoved(position))
+            {
+                return;
+            }
+
             if (m_auditioning.has_value())
             {
                 // Sliding along the keys plays each one.
@@ -556,6 +568,11 @@ namespace winrt::midisequencer::implementation
             if (EditorShowsPattern())
             {
                 OnPatternReleased(args);
+                return;
+            }
+
+            if (OnClipLanesReleased(args.GetCurrentPoint(m_editorCanvas).Position()))
+            {
                 return;
             }
 
@@ -617,7 +634,7 @@ namespace winrt::midisequencer::implementation
             auto const control = (modifiers & VirtualKeyModifiers::Control) == VirtualKeyModifiers::Control;
 
             if (m_roll.Wheel(point.Position(), point.Properties().MouseWheelDelta(), shift, control,
-                static_cast<float>(m_editorCanvas.ActualWidth()), static_cast<float>(m_editorCanvas.ActualHeight())))
+                static_cast<float>(m_editorCanvas.ActualWidth()), NotesEditorRollHeight()))
             {
                 InvalidateEditor();
             }
@@ -651,6 +668,14 @@ namespace winrt::midisequencer::implementation
             auto const control = (window & winrt::Windows::UI::Core::CoreVirtualKeyStates::Down) == winrt::Windows::UI::Core::CoreVirtualKeyStates::Down;
             auto const shiftState = winrt::Microsoft::UI::Input::InputKeyboardSource::GetKeyStateForCurrentThread(VirtualKey::Shift);
             auto const shift = (shiftState & winrt::Windows::UI::Core::CoreVirtualKeyStates::Down) == winrt::Windows::UI::Core::CoreVirtualKeyStates::Down;
+            auto const altState = winrt::Microsoft::UI::Input::InputKeyboardSource::GetKeyStateForCurrentThread(VirtualKey::Menu);
+            auto const alt = (altState & winrt::Windows::UI::Core::CoreVirtualKeyStates::Down) == winrt::Windows::UI::Core::CoreVirtualKeyStates::Down;
+
+            if (OnClipLanesKeyDown(args.Key(), shift, alt))
+            {
+                args.Handled(true);
+                return;
+            }
 
             auto const grid = std::max<int64_t>(SnapGrid(), 1);
             std::optional<seq::RollEdit> edit{};
@@ -660,7 +685,11 @@ namespace winrt::midisequencer::implementation
             {
             case VirtualKey::Delete:
             case VirtualKey::Back:
-                edit = m_roll.DeleteSelection();
+                // A point picked on one of the clip's lanes goes first.
+                if (!DeleteSelectedClipLanePoint())
+                {
+                    edit = m_roll.DeleteSelection();
+                }
                 break;
 
             case VirtualKey::Left:
@@ -694,6 +723,7 @@ namespace winrt::midisequencer::implementation
 
             case VirtualKey::Escape:
                 m_roll.ClearSelection();
+                m_clipLanes.ClearSelection();
                 UpdateNoteInspector();
                 InvalidateEditor();
                 break;

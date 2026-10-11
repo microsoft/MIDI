@@ -679,6 +679,7 @@ namespace winrt::midisequencer::implementation
 
             UpdatePlayhead();
             UpdateDisplays(m_position);
+            RecordArpeggiatedNotes();
             UpdateSlotRecording();
 
             // A followed clock's tempo, twice a second.

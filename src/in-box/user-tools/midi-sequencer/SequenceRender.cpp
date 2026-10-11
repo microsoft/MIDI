@@ -7,6 +7,7 @@
 
 #include "SequenceRender.h"
 #include "Lyrics.h"
+#include "SequenceArpeggiator.h"
 #include "SequenceGenerator.h"
 #include "SequencePattern.h"
 
@@ -226,6 +227,7 @@ namespace midisequencer
 
         // One pass through a clip, which starts at passStart and is cut off at passEnd.
         void RenderPass(
+            _In_ Sequence const& sequence,
             _In_ Clip const& clip,
             _In_ int64_t passStart,
             _In_ int64_t passEnd,
@@ -262,6 +264,19 @@ namespace midisequencer
             if (fromSteps)
             {
                 ForEachPatternNote(clip, passStart, passEnd, pass, windowStart, windowEnd, true, addNote);
+            }
+            else if (generated && clip.Generator->Type == GeneratorType::Arpeggiator)
+            {
+                ForEachArpeggiatorNote(sequence, clip, passStart, passEnd, pass, windowStart, windowEnd, options.Arpeggiator, [&](Note const& note)
+                {
+                    auto const first = messages.size();
+                    addNote(note);
+
+                    for (auto i = first; i < messages.size(); ++i)
+                    {
+                        messages[i].Arpeggiated = true;
+                    }
+                });
             }
             else if (generated)
             {
@@ -508,7 +523,7 @@ namespace midisequencer
 
             if (!clip->Loop)
             {
-                RenderPass(*clip, placement.Tick, std::min(end, placement.Tick + clip->Length), 0, fromTick, toTick, options, maximum, messages);
+                RenderPass(sequence, *clip, placement.Tick, std::min(end, placement.Tick + clip->Length), 0, fromTick, toTick, options, maximum, messages);
                 continue;
             }
 
@@ -524,7 +539,7 @@ namespace midisequencer
                     break;
                 }
 
-                RenderPass(*clip, passStart, std::min(end, passStart + clip->Length), static_cast<uint64_t>(pass), fromTick, toTick, options, maximum, messages);
+                RenderPass(sequence, *clip, passStart, std::min(end, passStart + clip->Length), static_cast<uint64_t>(pass), fromTick, toTick, options, maximum, messages);
             }
         }
 

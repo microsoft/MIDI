@@ -71,7 +71,7 @@
     <value>Untitled sequence</value>
   </data>
   <data name="PreviewChicletText.Text" xml:space="preserve">
-    <value>PREVIEW</value>
+    <value>EARLY PREVIEW</value>
     <comment>Shown in the title bar. All capitals on purpose, so it reads as a badge.</comment>
   </data>
   <data name="SettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
@@ -362,6 +362,12 @@
   </data>
   <data name="ClockInternal.Text" xml:space="preserve">
     <value>Internal clock</value>
+  </data>
+  <data name="ClockButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Internal clock, clock and sync settings</value>
+  </data>
+  <data name="ClockButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Clock and sync: follow another device's clock, or send clock and time code to your devices</value>
   </data>
   <data name="ClockDialogTitle" xml:space="preserve">
     <value>Clock and sync</value>
@@ -874,6 +880,45 @@
   <data name="LauncherCanvasName" xml:space="preserve">
     <value>Clip launcher</value>
   </data>
+  <data name="TimelineCanvasHelp" xml:space="preserve">
+    <value>Up and Down pick a track, and Left and Right pick a clip on it. Enter opens the clip, Delete removes it, and Shift+F10 opens its menu, or the track's menu at the playhead. Ctrl and plus or minus zoom in and out.</value>
+  </data>
+  <data name="LauncherCanvasHelp" xml:space="preserve">
+    <value>The arrow keys move between the cells. Enter plays or stops the clip in a cell, and Shift+F10 opens the cell's menu.</value>
+  </data>
+  <data name="KeyboardTimelineStart" xml:space="preserve">
+    <value>Timeline. Press Down to pick a track.</value>
+  </data>
+  <data name="KeyboardLauncherStart" xml:space="preserve">
+    <value>Clip launcher. Press an arrow key to pick a cell.</value>
+  </data>
+  <data name="KeyboardFolderFormat" xml:space="preserve">
+    <value>{0}, folder</value>
+  </data>
+  <data name="KeyboardPlacementFormat" xml:space="preserve">
+    <value>{0}: {1}, from bar {2}</value>
+  </data>
+  <data name="KeyboardTrackFormat" xml:space="preserve">
+    <value>{0}. Clips on the timeline: {1}.</value>
+  </data>
+  <data name="KeyboardTrackEmptyFormat" xml:space="preserve">
+    <value>{0}. No clips on the timeline. Shift+F10 adds one at the playhead.</value>
+  </data>
+  <data name="KeyboardSlotEmptyFormat" xml:space="preserve">
+    <value>{0}: empty. Scene {1}, {2}.</value>
+  </data>
+  <data name="KeyboardSlotFormat" xml:space="preserve">
+    <value>{0}: {1}, {2}. Scene {3}, {4}. {5}.</value>
+  </data>
+  <data name="KeyboardSlotPlaying" xml:space="preserve">
+    <value>Playing</value>
+  </data>
+  <data name="KeyboardSlotQueued" xml:space="preserve">
+    <value>Waiting to start</value>
+  </data>
+  <data name="KeyboardSlotStopped" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
   <data name="EditorCanvasName" xml:space="preserve">
     <value>Piano roll</value>
   </data>
@@ -1069,6 +1114,42 @@
   <data name="ClipLaneCaption" xml:space="preserve">
     <value>The clip's own lane plays here</value>
   </data>
+  <data name="ClipLaneAdd" xml:space="preserve">
+    <value>+ Lane</value>
+  </data>
+  <data name="ClipLanesNone" xml:space="preserve">
+    <value>Lanes here belong to this clip. They go round with it, wherever it plays.</value>
+  </data>
+  <data name="ClipLanesNoneKeyboard" xml:space="preserve">
+    <value>This clip has no lanes. Press Shift+F10 to add one.</value>
+  </data>
+  <data name="ClipLaneNoPointsFormat" xml:space="preserve">
+    <value>{0} has no points. Press Shift+F10 to add one.</value>
+  </data>
+  <data name="ClipLanePointFormat" xml:space="preserve">
+    <value>{0}: bar {1}, beat {2}, {3}</value>
+  </data>
+  <data name="ClipLanePointTicksFormat" xml:space="preserve">
+    <value>{0}: bar {1}, beat {2} and {3} ticks, {4}</value>
+  </data>
+  <data name="ClipLanePointDeleted" xml:space="preserve">
+    <value>Point deleted.</value>
+  </data>
+  <data name="LanePointAddedFormat" xml:space="preserve">
+    <value>Added a point to {0}.</value>
+  </data>
+  <data name="EditorCanvasHelp" xml:space="preserve">
+    <value>The arrow keys move the selected notes. Alt and the arrow keys pick a point on one of the clip's lanes, and then the arrow keys move it or change its value. Shift+F10 opens the menu for the lane or the point.</value>
+  </data>
+  <data name="EditorAutomationText.Text" xml:space="preserve">
+    <value>Automation</value>
+  </data>
+  <data name="EditorAutomationButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add automation to this clip</value>
+  </data>
+  <data name="EditorAutomationButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Add a lane to this clip that changes a controller, pitch bend, pressure or program as it plays.</value>
+  </data>
   <data name="ShowAutomationFormat" xml:space="preserve">
     <value>Show automation for {0}</value>
   </data>
@@ -1141,6 +1222,9 @@
   </data>
   <data name="LaneShortProgram" xml:space="preserve">
     <value>Program</value>
+  </data>
+  <data name="LaneShortBend" xml:space="preserve">
+    <value>Bend</value>
   </data>
   <data name="LaneSubFormat" xml:space="preserve">
     <value>{0} · {1}-bit</value>
@@ -2184,7 +2268,7 @@
     <comment>{0} is a list of lengths, such as "16, 12, 7".</comment>
   </data>
   <data name="PatternSeedFormat" xml:space="preserve">
-    <value>Seed {0} · chance and conditions come out the same each time you play from the start</value>
+    <value>Seed {0} · plays the same way each time from the start</value>
   </data>
   <data name="PatternNoStep" xml:space="preserve">
     <value>No step selected</value>
@@ -2482,6 +2566,15 @@
   <data name="MenuNewMelody" xml:space="preserve">
     <value>New chance melody</value>
   </data>
+  <data name="DefaultArpName" xml:space="preserve">
+    <value>Arp</value>
+  </data>
+  <data name="MenuNewArpeggiatorHere" xml:space="preserve">
+    <value>New arpeggiator here</value>
+  </data>
+  <data name="MenuNewArpeggiator" xml:space="preserve">
+    <value>New arpeggiator</value>
+  </data>
   <data name="GeneratorTypeLabel.Text" xml:space="preserve">
     <value>Type</value>
   </data>
@@ -2614,8 +2707,65 @@
   <data name="GeneratorNoteLength" xml:space="preserve">
     <value>Note length (% of a step)</value>
   </data>
-  <data name="ArpeggiatorNotBuilt" xml:space="preserve">
-    <value>The arpeggiator isn't built yet. This clip plays nothing for now, and its settings are kept.</value>
+  <data name="ArpNotesFrom" xml:space="preserve">
+    <value>Notes from</value>
+  </data>
+  <data name="ArpFromHeld" xml:space="preserve">
+    <value>What you hold on this track's source</value>
+  </data>
+  <data name="ArpNoSource" xml:space="preserve">
+    <value>This track has no source yet. Choose one in the track's setup.</value>
+  </data>
+  <data name="ArpFromTrack" xml:space="preserve">
+    <value>Another track's notes</value>
+  </data>
+  <data name="ArpFromTrackHelp" xml:space="preserve">
+    <value>For example, the chords on another track. Each step plays from what that track's timeline is playing then.</value>
+  </data>
+  <data name="ArpTrackName" xml:space="preserve">
+    <value>Track to follow</value>
+  </data>
+  <data name="ArpOrder" xml:space="preserve">
+    <value>Order</value>
+  </data>
+  <data name="ArpOrderUp" xml:space="preserve">
+    <value>Up</value>
+  </data>
+  <data name="ArpOrderDown" xml:space="preserve">
+    <value>Down</value>
+  </data>
+  <data name="ArpOrderUpAndDown" xml:space="preserve">
+    <value>Up and down</value>
+  </data>
+  <data name="ArpOrderAsHeld" xml:space="preserve">
+    <value>As held</value>
+  </data>
+  <data name="ArpOrderRandom" xml:space="preserve">
+    <value>Random</value>
+  </data>
+  <data name="ArpOctaves" xml:space="preserve">
+    <value>Octaves</value>
+  </data>
+  <data name="ArpLatch" xml:space="preserve">
+    <value>Keep playing after you let go</value>
+  </data>
+  <data name="ArpLatchHelp" xml:space="preserve">
+    <value>With this off and nothing held, the clip plays nothing.</value>
+  </data>
+  <data name="ArpKeepsWhatItPlayed" xml:space="preserve">
+    <value>Capture and Make notes keep the notes the arpeggiator played, not the keys you held.</value>
+  </data>
+  <data name="ArpHeldNote" xml:space="preserve">
+    <value>It plays what you hold as you play it, whether or not the track is armed. Playing from the start again doesn't play it again, and an export has none of its notes.</value>
+  </data>
+  <data name="ArpTrackNote" xml:space="preserve">
+    <value>It follows the other track's timeline, so jumping back replays the same notes, and an export writes what you heard.</value>
+  </data>
+  <data name="ArpHeldMakeNotes" xml:space="preserve">
+    <value>An arpeggiator that plays what you hold has no notes to keep until you play it. Record or Capture keeps what it plays.</value>
+  </data>
+  <data name="ArpNothingPlaced" xml:space="preserve">
+    <value>Make notes works where this arpeggiator is on this track's timeline, and it isn't on it.</value>
   </data>
   <data name="ScaleMajor" xml:space="preserve">
     <value>Major</value>
@@ -2702,7 +2852,7 @@
     <value>Lyrics</value>
   </data>
   <data name="LyricsEditorHelp" xml:space="preserve">
-    <value>Type the words. Put a hyphen between the syllables of a word, like hap-py, and an underscore for a syllable that's held over more notes. Start each line of the song on a new line, and leave a blank line between verses. Each syllable goes on the next note of the track that sings.</value>
+    <value>Type the words. Put a hyphen between the syllables of a word, like hap-py, and an underscore for a syllable that's held over more notes. Start each line of the song on a new line, and leave a blank line between verses. To show how to read a word in small type above it, like the kana over a kanji, put the reading in brackets right after it: 空[そら]. Each syllable goes on the next note of the track that sings.</value>
   </data>
   <data name="LyricsWordsHeader" xml:space="preserve">
     <value>Words</value>

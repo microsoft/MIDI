@@ -16,6 +16,7 @@
 #include "DawProject.h"
 #include "Lyrics.h"
 #include "PianoRoll.h"
+#include "ClipLaneStrip.h"
 #include "PatternEditor.h"
 #include "SequenceGenerator.h"
 #include "PlaybackEngine.h"
@@ -100,6 +101,7 @@ namespace winrt::midisequencer::implementation
         void OnTrySoundClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         void OnEditorDrawClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnEditorAutomationClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorQuantizeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnTransposeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorKeyboardClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -267,6 +269,28 @@ namespace winrt::midisequencer::implementation
         void InvalidateEditor() noexcept;
         seq::Track const* EditorTrack() const noexcept;
 
+        // A notes clip's own automation, in lanes under the piano roll (MainWindowClipLanes.cpp).
+        void DrawNotesEditor(_In_ canvas::CanvasDrawingSession const& ds, _In_ float width, _In_ float height);
+        float NotesEditorRollHeight() const noexcept;
+        bool OnClipLanesPressed(_In_ input::PointerRoutedEventArgs const& args, _In_ foundation::Point position, _In_ bool right, _In_ bool control, _In_ bool doubleClick);
+        bool OnClipLanesMoved(_In_ foundation::Point position);
+        bool OnClipLanesReleased(_In_ foundation::Point position);
+        bool DeleteSelectedClipLanePoint() noexcept;
+        bool OnClipLanesKeyDown(_In_ winrt::Windows::System::VirtualKey key, _In_ bool shift, _In_ bool alt);
+        void OnEditorContextRequested(_In_ input::ContextRequestedEventArgs const& args);
+        void AnnounceClipLanePoint(_In_ seq::Clip const& clip, _In_ size_t lane, _In_ size_t point);
+
+        // ---- the timeline and launcher from the keyboard (MainWindowKeyboard.cpp) ----
+        void HookArrangeKeyboard();
+        std::vector<seq::ArrangeRow const*> KeyboardRows(_In_ bool tracksOnly) const;
+        void ShowRowForKeyboard(_In_ seq::ArrangeRow const& row);
+        foundation::Point RowPoint(_In_ seq::ArrangeRow const& row, _In_ double x) const noexcept;
+        void OnTimelineKeyDown(_In_ input::KeyRoutedEventArgs const& args);
+        void OnLauncherKeyDown(_In_ input::KeyRoutedEventArgs const& args);
+        void ShowKeyboardMenu(_In_ bool launcher);
+        void AnnounceKeyboardCursor(_In_ bool launcher);
+        void DrawKeyboardFocus(_In_ canvas::CanvasDrawingSession const& ds, _In_ canvasXaml::CanvasControl const& canvas);
+
         // ---- pattern clips (MainWindowPattern.cpp) ----
         bool EditorShowsPattern() const noexcept;
         void InitializePatternEditor() noexcept;
@@ -294,7 +318,17 @@ namespace winrt::midisequencer::implementation
         void UpdateGeneratorInspector() noexcept;
         void EditGenerator(_In_ std::wstring const& name, _In_ std::function<void(seq::GeneratorSettings&)> const& edit) noexcept;
 
+        // The arpeggiator (MainWindowArpeggiator.cpp): its settings, Make notes, and the keys
+        // played on the sources of tracks it plays from.
+        void AddArpeggiatorSettings(_In_ controls::StackPanel const& body, _In_ seq::GeneratorSettings const& generator, _In_ std::function<void(std::function<void(seq::GeneratorSettings&)>)> const& edit);
+        void MakeNotesFromArpeggiator() noexcept;
+        void UpdateArpeggiatorRoutes() noexcept;
+        std::vector<std::wstring> FeedArpeggiators(_In_ std::wstring const& endpointId, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept;
+        void RecordArpeggiatedNotes() noexcept;
+
         // ---- automation and the tempo map (MainWindowAutomation.cpp) ----
+        // The lane functions take the id of the track or the clip the lanes belong to.
+        std::vector<seq::AutomationLane>* LanesOwnedBy(_In_ std::wstring const& ownerId) noexcept;
         std::wstring LaneName(_In_ seq::AutomationLane const& lane) const;
         std::wstring LaneDescription(_In_ seq::Track const& track, _In_ seq::AutomationLane const& lane) const;
         std::wstring LaneValueText(_In_ seq::AutomationLane const& lane, _In_ uint32_t value) const;
@@ -520,6 +554,9 @@ namespace winrt::midisequencer::implementation
         shapes::Rectangle m_lyricsBarPlate{ nullptr };
         controls::TextBlock m_lyricsBarLine{ nullptr };
         controls::TextBlock m_lyricsBarNext{ nullptr };
+
+        // A line with ruby, a syllable at a time with its reading above it.
+        controls::StackPanel m_lyricsBarCells{ nullptr };
         bool m_lyricsBarShown{ true };
         std::vector<seq::LyricLine> m_lyricLines{};
         uint64_t m_lyricLinesVersion{ UINT64_MAX };
@@ -530,6 +567,8 @@ namespace winrt::midisequencer::implementation
         seq::Palette m_palette{};
         seq::ArrangeRenderer m_renderer{};
         seq::PianoRoll m_roll{};
+        seq::ClipLaneStrip m_clipLanes{};
+        bool m_clipLaneGesture{ false };
         seq::PatternEditor m_pattern{};
         bool m_updatingPatternUi{ false };
         bool m_patternGesture{ false };
@@ -576,6 +615,19 @@ namespace winrt::midisequencer::implementation
 
         std::mutex m_inputLock{};
         std::vector<EchoRoute> m_echoRoutes{};
+
+        // Tracks with an arpeggiator that plays the keys held on their source, read on the
+        // service's thread under m_inputLock. The UI thread keeps the ids, to tell the engine to
+        // forget the keys of a track that stops listening.
+        struct ArpeggiatorRoute
+        {
+            std::wstring TrackId{};
+            std::wstring SourceId{};
+            seq::RecordFilter Filter{};
+        };
+
+        std::vector<ArpeggiatorRoute> m_arpeggiatorRoutes{};
+        std::unordered_set<std::wstring> m_arpeggiatorTracks{};
         std::map<std::wstring, seq::RecordingTake> m_takes{};
         int64_t m_recordStartTick{ 0 };
 

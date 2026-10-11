@@ -229,6 +229,7 @@ namespace midisequencer
         canvasText::CanvasTextFormat m_captionGlyph{ nullptr };
         canvasText::CanvasTextFormat m_rulerNumber{ nullptr };
         canvasText::CanvasTextFormat m_tagText{ nullptr };
+        canvasText::CanvasTextFormat m_rubyText{ nullptr };
         canvasText::CanvasTextFormat m_cellName{ nullptr };
         canvasText::CanvasTextFormat m_cellGlyph{ nullptr };
         canvasText::CanvasTextFormat m_slotGlyph{ nullptr };

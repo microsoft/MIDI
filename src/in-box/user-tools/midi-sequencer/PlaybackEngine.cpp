@@ -430,6 +430,7 @@ namespace midisequencer
         m_tempoSent = std::numeric_limits<double>::quiet_NaN();
         m_sounding.clear();
         m_channelsUsed.clear();
+        m_arpeggiated.clear();
 
         // A launched clip starts again from its beginning; anything waiting goes.
         for (auto& [id, state] : m_launch)
@@ -620,6 +621,15 @@ namespace midisequencer
         m_history.clear();
         m_sounding.clear();
 
+        // Keys still down stay down, but nothing latched plays on, and the next keys start their
+        // order from the beginning.
+        for (auto& [id, keys] : m_keys)
+        {
+            keys.Restart();
+        }
+
+        m_arpeggiating.clear();
+
         for (auto& [id, state] : m_launch)
         {
             state.Pending = false;
@@ -742,6 +752,11 @@ namespace midisequencer
         options.LaneStepTicks = LaneStepTicks(m_fastestTempo, info.AutomationIntervalMilliseconds);
         options.Lyrics = true;
 
+        // An arpeggiator that plays what's held on the source steps through these keys.
+        auto& keys = m_keys[track.Id];
+        keys.Used = false;
+        options.Arpeggiator = &keys;
+
         // Lanes send where they are after a start, the loop going round, an edit made while
         // playing, or a mute ending. Otherwise they send only where they change.
         auto& editsSeen = m_editsSeen[track.Id];
@@ -783,7 +798,22 @@ namespace midisequencer
 
                 if (audible)
                 {
-                    SendRendered(track, info, switching ? Wrap(stretchEnd) : SegmentEnd(), now, messages);
+                    auto const clampOffsAt = switching ? Wrap(stretchEnd) : SegmentEnd();
+
+                    // What an arpeggiator played, for recording, before the destination changes it.
+                    // The window takes these every frame; a window that doesn't loses the oldest.
+                    constexpr size_t MaximumArpeggiated = 16384;
+
+                    for (auto const& message : messages)
+                    {
+                        if (message.Arpeggiated && m_arpeggiated.size() < MaximumArpeggiated)
+                        {
+                            auto const at = message.Kind == RenderedKind::NoteOff ? std::min(message.Tick, clampOffsAt) : message.Tick;
+                            m_arpeggiated.push_back(ArpeggiatedNote{ track.Id, TimestampAtTick(at), message.Words, message.WordCount });
+                        }
+                    }
+
+                    SendRendered(track, info, clampOffsAt, now, messages);
                 }
             }
 
@@ -819,6 +849,15 @@ namespace midisequencer
             }
 
             cursor = stretchEnd;
+        }
+
+        if (keys.Used)
+        {
+            m_arpeggiating.insert(track.Id);
+        }
+        else
+        {
+            m_arpeggiating.erase(track.Id);
         }
 
         m_renderedUntil[track.Id] = horizonTick;
@@ -1803,6 +1842,48 @@ namespace midisequencer
         }
 
         return 60.0 * static_cast<double>(m_clock.TicksPerSecond) / (static_cast<double>(interval) * midiapp::MidiClocksPerBeat);
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::PressKey(std::wstring const& trackId, uint8_t number, uint16_t velocity)
+    {
+        std::scoped_lock guard{ m_lock };
+        m_keys[trackId].Press(number, velocity);
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::ReleaseKey(std::wstring const& trackId, uint8_t number)
+    {
+        std::scoped_lock guard{ m_lock };
+
+        if (auto const found = m_keys.find(trackId); found != m_keys.end())
+        {
+            found->second.Release(number);
+        }
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::ForgetKeys(std::wstring const& trackId)
+    {
+        std::scoped_lock guard{ m_lock };
+        m_keys.erase(trackId);
+        m_arpeggiating.erase(trackId);
+    }
+
+    _Use_decl_annotations_
+    bool PlaybackEngine::IsArpeggiating(std::wstring const& trackId) const
+    {
+        std::scoped_lock guard{ m_lock };
+        return m_arpeggiating.contains(trackId);
+    }
+
+    std::vector<ArpeggiatedNote> PlaybackEngine::TakeArpeggiated()
+    {
+        std::vector<ArpeggiatedNote> taken{};
+
+        std::scoped_lock guard{ m_lock };
+        taken.swap(m_arpeggiated);
+        return taken;
     }
 
     // The first pulse after Start or Continue is where the music starts, and the one after a song

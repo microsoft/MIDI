@@ -85,8 +85,8 @@ namespace midisequencer
             p.Playhead = Rgba(255, 255, 255);
 
             p.EmptySlotFill = Rgba(255, 255, 255, 0.018);
-            p.EmptySlotStroke = Rgba(255, 255, 255, 0.05);
-            p.EmptySlotGlyph = Rgba(255, 255, 255, 0.22);
+            p.EmptySlotStroke = Rgba(255, 255, 255, 0.10);
+            p.EmptySlotGlyph = Rgba(255, 255, 255, 0.40);
             p.ArmedSlotGlyph = Rgba(255, 90, 95, 0.7);
 
             p.SelectionStroke = Rgba(255, 255, 255);
@@ -118,7 +118,7 @@ namespace midisequencer
         {
             p.Text = Rgba(0, 0, 0, 0.894);
             p.Text2 = Rgba(0, 0, 0, 0.62);
-            p.Text3 = Rgba(0, 0, 0, 0.47);
+            p.Text3 = Rgba(0, 0, 0, 0.56);
             p.Divider = Rgba(0, 0, 0, 0.0803);
             p.StrokeStrong = Rgba(0, 0, 0, 0.12);
             p.Accent = FromRgb(0x005FB8);
@@ -140,13 +140,13 @@ namespace midisequencer
             p.RulerBackground = Rgba(0, 0, 0, 0.015);
             p.RulerBarLine = Rgba(0, 0, 0, 0.16);
             p.RulerBeatLine = Rgba(0, 0, 0, 0.06);
-            p.LoopFill = Rgba(0, 95, 184, 0.22);
-            p.LoopStroke = Rgba(0, 95, 184, 0.7);
+            p.LoopFill = Rgba(0, 95, 184, 0.32);
+            p.LoopStroke = Rgba(0, 95, 184, 0.85);
             p.Playhead = FromRgb(0x1A1A1A);
 
-            p.EmptySlotFill = Rgba(0, 0, 0, 0.02);
-            p.EmptySlotStroke = Rgba(0, 0, 0, 0.07);
-            p.EmptySlotGlyph = Rgba(0, 0, 0, 0.25);
+            p.EmptySlotFill = Rgba(0, 0, 0, 0.03);
+            p.EmptySlotStroke = Rgba(0, 0, 0, 0.14);
+            p.EmptySlotGlyph = Rgba(0, 0, 0, 0.45);
             p.ArmedSlotGlyph = Rgba(209, 52, 56, 0.75);
 
             p.SelectionStroke = FromRgb(0x1A1A1A);
@@ -215,14 +215,15 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
-    Color SummaryFill(Palette const&, Color trackColor) noexcept
+    Color SummaryFill(Palette const& palette, Color trackColor) noexcept
     {
-        return WithAlpha(trackColor, 0.14);
+        return WithAlpha(trackColor, palette.Light ? 0.22 : 0.14);
     }
 
     _Use_decl_annotations_
-    Color SummaryStroke(Palette const&, Color trackColor) noexcept
+    Color SummaryStroke(Palette const& palette, Color trackColor) noexcept
     {
-        return WithAlpha(trackColor, 0.35);
+        // On white, a light track color has to be darkened to show at all.
+        return palette.Light ? WithAlpha(Mix(trackColor, 0.6, FromRgb(0x000000)), 0.75) : WithAlpha(trackColor, 0.35);
     }
 }

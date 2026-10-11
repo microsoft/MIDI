@@ -310,6 +310,7 @@ namespace midisequencer
         m_captionGlyph = MakeFormat(GlyphFont, 8.0f, 400);
         m_rulerNumber = MakeFormat(TextFont, 10.0f, 400, canvasText::CanvasVerticalAlignment::Top);
         m_tagText = MakeFormat(TextFont, 10.0f, 600);
+        m_rubyText = MakeFormat(TextFont, 9.5f, 400);
         m_cellName = MakeFormat(TextFont, 10.5f, 400);
         m_cellGlyph = MakeFormat(GlyphFont, 8.0f, 400);
         m_slotGlyph = MakeFormat(GlyphFont, 8.0f, 400, canvasText::CanvasVerticalAlignment::Center, canvasText::CanvasHorizontalAlignment::Center);
@@ -1426,6 +1427,12 @@ namespace midisequencer
             ds.FillRoundedRectangle(cell, 4.0f, 4.0f, colors.EmptySlotFill);
             ds.DrawRoundedRectangle(cell.X + 0.5f, cell.Y + 0.5f, cell.Width - 1.0f, cell.Height - 1.0f, 3.5f, 3.5f, colors.EmptySlotStroke, 1.0f);
             ds.DrawText(armed ? L"\uE7C8" : L"\uE71A", cell, armed ? colors.ArmedSlotGlyph : colors.EmptySlotGlyph, m_slotGlyph);
+
+            if (context.SelectedSlotTrackId == track.Id && context.SelectedSlot == scene)
+            {
+                ds.DrawRoundedRectangle(cell.X - 1.5f, cell.Y - 1.5f, cell.Width + 3.0f, cell.Height + 3.0f, 5.0f, 5.0f, colors.SelectionStroke, 1.5f);
+            }
+
             return;
         }
 

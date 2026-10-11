@@ -920,6 +920,13 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            // What an arpeggiator plays depends on where it plays, so it has its own.
+            if (seq::IsArpeggiator(*clip))
+            {
+                MakeNotesFromArpeggiator();
+                return;
+            }
+
             auto const trackId = m_editorTrackId;
             auto const patternId = clip->Id;
             auto const patternLength = clip->Length;

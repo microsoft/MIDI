@@ -415,7 +415,7 @@ namespace midisequencer
 
                     Rect const box{ 12.0f, addTop, LaneHeaderWidth - 24.0f, SmallRowHeight };
                     ds.DrawRoundedRectangle(box, 4.0f, 4.0f, colors.EmptySlotStroke, 1.0f, dashed);
-                    ds.DrawText(winrt::hstring{ L"+  " + std::wstring{ m_strings.AddLane } }, box, colors.Text2, m_centerText);
+                    ds.DrawText(winrt::hstring{ L"+  " + std::wstring{ m_strings.AddLane } }, box, colors.Text, m_centerText);
                 }
             }
 
@@ -526,16 +526,18 @@ namespace midisequencer
         }
         else
         {
-            // Bar height is velocity.
+            // Bar height is velocity. The light theme's roll background is nearly transparent, so
+            // the step's color is mixed with white there.
             auto const velocity = m_gesture == Gesture::Velocity && selected ? m_dragVelocity : step->Velocity;
             auto const fraction = std::clamp(static_cast<float>(velocity) / 65535.0f, 0.04f, 1.0f);
             auto const barTop = y + h * (1.0f - fraction);
+            auto const base = colors.Light ? FromRgb(0xFFFFFF) : colors.RollBackground;
 
-            ds.FillRoundedRectangle(x, y, w, h, Radius, Radius, Mix(m_color, 0.42, colors.RollBackground));
+            ds.FillRoundedRectangle(x, y, w, h, Radius, Radius, Mix(m_color, 0.42, base));
 
             {
                 auto layer = ds.CreateLayer(1.0f, Rect{ x, barTop, w, y + h - barTop });
-                ds.FillRoundedRectangle(x, y, w, h, Radius, Radius, Mix(m_color, 0.85, colors.RollBackground));
+                ds.FillRoundedRectangle(x, y, w, h, Radius, Radius, Mix(m_color, 0.85, base));
                 layer.Close();
             }
 

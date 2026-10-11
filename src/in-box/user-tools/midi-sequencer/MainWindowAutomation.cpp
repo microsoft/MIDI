@@ -157,6 +157,18 @@ namespace winrt::midisequencer::implementation
     // ---------------------------------------------------------------- names and values
 
     _Use_decl_annotations_
+    std::vector<seq::AutomationLane>* MainWindow::LanesOwnedBy(std::wstring const& ownerId) noexcept
+    {
+        if (auto const track = seq::FindTrack(m_doc, ownerId); track != nullptr)
+        {
+            return track->IsFolder ? nullptr : &track->Lanes;
+        }
+
+        auto const clip = seq::FindClip(m_doc, ownerId);
+        return clip != nullptr ? &clip->Lanes : nullptr;
+    }
+
+    _Use_decl_annotations_
     std::wstring MainWindow::LaneName(seq::AutomationLane const& lane) const
     {
         if (!lane.Name.empty())
@@ -360,18 +372,27 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
-            auto const track = seq::FindTrack(m_doc, trackId);
+            auto const lanes = LanesOwnedBy(trackId);
 
-            if (track == nullptr)
+            if (lanes == nullptr)
             {
                 return;
             }
 
-            auto before = track->Lanes;
-            edit(track->Lanes);
+            auto before = *lanes;
+            edit(*lanes);
 
             seq::ChangeList changes{};
-            changes.push_back(seq::MakeTrackLanesChange(trackId, std::move(before), track->Lanes));
+
+            if (seq::FindTrack(m_doc, trackId) != nullptr)
+            {
+                changes.push_back(seq::MakeTrackLanesChange(trackId, std::move(before), *lanes));
+            }
+            else
+            {
+                changes.push_back(seq::MakeClipLanesChange(trackId, std::move(before), *lanes));
+            }
+
             Commit(name, std::move(changes));
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to change the automation.")
@@ -380,8 +401,8 @@ namespace winrt::midisequencer::implementation
     _Use_decl_annotations_
     void MainWindow::RenameLane(std::wstring const& trackId, std::wstring const& laneId)
     {
-        auto const track = seq::FindTrack(m_doc, trackId);
-        auto const lane = track != nullptr ? seq::FindLane(track->Lanes, laneId) : nullptr;
+        auto const lanes = LanesOwnedBy(trackId);
+        auto const lane = lanes != nullptr ? seq::FindLane(*lanes, laneId) : nullptr;
 
         if (lane == nullptr)
         {
@@ -417,15 +438,18 @@ namespace winrt::midisequencer::implementation
         {
             try
             {
+                // A track's lanes, or a clip's, which play on the channel its track keeps.
                 auto const track = seq::FindTrack(strong->m_doc, trackId);
+                auto const clip = track == nullptr ? seq::FindClip(strong->m_doc, trackId) : nullptr;
+                auto const player = track != nullptr ? track : strong->EditorTrack();
 
-                if (track == nullptr || track->IsFolder)
+                if ((track == nullptr || track->IsFolder) && clip == nullptr)
                 {
                     co_return;
                 }
 
-                auto const keepsChannels = track->Destination.Channel < 0;
-                auto const trackName = track->Name;
+                auto const keepsChannels = player != nullptr && player->Destination.Channel < 0;
+                auto const trackName = track != nullptr ? track->Name : clip->Name;
 
                 controls::StackPanel panel{};
                 panel.Spacing(12);
@@ -557,23 +581,26 @@ namespace winrt::midisequencer::implementation
                 auto lane = seq::MakeLane(target, number, laneChannel);
                 lane.Name = Trim(std::wstring{ name.Text() }).substr(0, 128);
 
-                // The track can have gone while the dialog was open.
-                auto const now = seq::FindTrack(strong->m_doc, trackId);
+                // The track or the clip can have gone while the dialog was open.
+                auto const lanes = strong->LanesOwnedBy(trackId);
 
-                if (now == nullptr)
+                if (lanes == nullptr)
                 {
                     co_return;
                 }
 
-                now->LanesOpen = true;
+                if (auto const now = seq::FindTrack(strong->m_doc, trackId); now != nullptr)
+                {
+                    now->LanesOpen = true;
+                }
 
                 // One lane for each thing: a second would fight the first.
-                auto const existing = std::find_if(now->Lanes.begin(), now->Lanes.end(), [&lane](seq::AutomationLane const& candidate)
+                auto const existing = std::find_if(lanes->begin(), lanes->end(), [&lane](seq::AutomationLane const& candidate)
                 {
                     return seq::SameLaneTarget(candidate, lane);
                 });
 
-                if (existing != now->Lanes.end())
+                if (existing != lanes->end())
                 {
                     strong->ShowMessage(res::FormatString(L"LaneAlreadyThereFormat", strong->LaneName(*existing)));
                     strong->RebuildLayout();
@@ -592,8 +619,9 @@ namespace winrt::midisequencer::implementation
     _Use_decl_annotations_
     void MainWindow::ShowLaneRowMenu(std::wstring const& trackId, std::wstring const& laneId, std::optional<seq::LanePoint> addAt, xaml::UIElement const& anchor, foundation::Point point)
     {
-        auto const track = seq::FindTrack(m_doc, trackId);
-        auto const lane = track != nullptr ? seq::FindLane(track->Lanes, laneId) : nullptr;
+        auto const lanes = LanesOwnedBy(trackId);
+        auto const lane = lanes != nullptr ? seq::FindLane(*lanes, laneId) : nullptr;
+        auto const onTrack = seq::FindTrack(m_doc, trackId) != nullptr;
 
         if (lane == nullptr)
         {
@@ -609,13 +637,21 @@ namespace winrt::midisequencer::implementation
             {
                 if (auto s = weak.get())
                 {
+                    std::wstring added{};
+
                     s->EditLanes(trackId, std::wstring{ res::GetString(L"UndoEditAutomation") }, [&](std::vector<seq::AutomationLane>& lanes)
                     {
                         if (auto found = seq::FindLane(lanes, laneId); found != nullptr)
                         {
                             seq::AddLanePoint(*found, at);
+                            added = s->LaneName(*found);
                         }
                     });
+
+                    if (!added.empty())
+                    {
+                        s->ShowMessage(res::FormatString(L"LanePointAddedFormat", added));
+                    }
                 }
             });
         }
@@ -637,7 +673,11 @@ namespace winrt::midisequencer::implementation
             }
         }, !lane->Points.empty());
 
-        AddItem(menu, res::GetString(L"MenuHideAutomation"), nullptr, [weak, trackId]() { if (auto s = weak.get()) { s->ToggleLanes(trackId); } });
+        // A clip's lanes show while it's open in the editor; only a track's can be hidden.
+        if (onTrack)
+        {
+            AddItem(menu, res::GetString(L"MenuHideAutomation"), nullptr, [weak, trackId]() { if (auto s = weak.get()) { s->ToggleLanes(trackId); } });
+        }
 
         menu.Items().Append(controls::MenuFlyoutSeparator{});
 
@@ -648,6 +688,7 @@ namespace winrt::midisequencer::implementation
             if (auto s = weak.get())
             {
                 s->ClearAutomationSelection();
+                s->m_clipLanes.ClearSelection();
                 s->EditLanes(trackId, std::wstring{ res::GetString(L"UndoDeleteLane") }, [&](std::vector<seq::AutomationLane>& lanes)
                 {
                     std::erase_if(lanes, [&](seq::AutomationLane const& candidate) { return candidate.Id == laneId; });
@@ -663,8 +704,8 @@ namespace winrt::midisequencer::implementation
     _Use_decl_annotations_
     void MainWindow::ShowLanePointMenu(std::wstring const& trackId, std::wstring const& laneId, size_t index, xaml::UIElement const& anchor, foundation::Point point)
     {
-        auto const track = seq::FindTrack(m_doc, trackId);
-        auto const lane = track != nullptr ? seq::FindLane(track->Lanes, laneId) : nullptr;
+        auto const lanes = LanesOwnedBy(trackId);
+        auto const lane = lanes != nullptr ? seq::FindLane(*lanes, laneId) : nullptr;
 
         if (lane == nullptr || index >= lane->Points.size())
         {
@@ -745,6 +786,7 @@ namespace winrt::midisequencer::implementation
             if (auto s = weak.get())
             {
                 s->ClearAutomationSelection();
+                s->m_clipLanes.ClearSelection();
             }
 
             change(std::wstring{ res::GetString(L"UndoDeletePoint") }, [](seq::AutomationLane& lane, size_t at)

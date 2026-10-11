@@ -61,6 +61,14 @@ namespace midisequencer
         RollTool Tool() const noexcept { return m_tool; }
         bool HasClip() const noexcept { return m_clip != nullptr; }
 
+        // The time scale, snap and playhead, which the clip's lanes under the roll share.
+        double XAtTick(_In_ double tick) const noexcept { return RollLeft() + (tick - m_scrollTick) * m_pixelsPerTick; }
+        double TickAtX(_In_ double x) const noexcept { return m_scrollTick + (x - RollLeft()) / m_pixelsPerTick; }
+        double PixelsPerTick() const noexcept { return m_pixelsPerTick; }
+        int64_t SnapTicks() const noexcept { return m_snap; }
+        int64_t Playhead() const noexcept { return m_playhead; }
+        std::vector<MeterChange> const* Meter() const noexcept { return m_meter; }
+
         void Draw(_In_ canvas::CanvasDrawingSession const& ds, _In_ float width, _In_ float height);
 
         // Shows the whole clip and centers its notes. Called when a clip opens and when asked.
@@ -106,8 +114,6 @@ namespace midisequencer
         float RollBottom() const noexcept { return m_height - LaneHeight - 1.0f; }
         float RollLeft() const noexcept { return KeysWidth; }
 
-        double XAtTick(_In_ double tick) const noexcept { return RollLeft() + (tick - m_scrollTick) * m_pixelsPerTick; }
-        double TickAtX(_In_ double x) const noexcept { return m_scrollTick + (x - RollLeft()) / m_pixelsPerTick; }
         double YAtNote(_In_ double note) const noexcept { return RollTop() + (m_topNote - note) * m_rowHeight; }
         int32_t NoteAtY(_In_ double y) const noexcept;
 

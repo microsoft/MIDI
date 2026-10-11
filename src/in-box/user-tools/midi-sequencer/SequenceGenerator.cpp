@@ -225,6 +225,23 @@ namespace midisequencer
             generator.Scale = ScaleKind::MinorPentatonic;
         }
 
+        if (generator.ArpSource > ArpeggiatorSource::Track)
+        {
+            generator.ArpSource = ArpeggiatorSource::Held;
+        }
+
+        if (generator.ArpOrder > ArpeggiatorOrder::Random)
+        {
+            generator.ArpOrder = ArpeggiatorOrder::Up;
+        }
+
+        generator.ArpOctaves = std::clamp<uint8_t>(generator.ArpOctaves, 1, 4);
+
+        if (generator.ArpTrackId.size() > 128)
+        {
+            generator.ArpTrackId.clear();
+        }
+
         generator.StepTicks = std::clamp<int64_t>(generator.StepTicks, 1, TicksPerQuarterNote * 4);
         generator.Channel &= 0x0F;
         generator.NoteLength = std::clamp<uint16_t>(generator.NoteLength, 1, 1600);

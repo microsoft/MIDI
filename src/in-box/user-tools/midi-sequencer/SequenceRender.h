@@ -20,6 +20,8 @@
 
 namespace midisequencer
 {
+    struct ArpeggiatorInput;
+
     enum class RenderedKind : uint8_t
     {
         // At one tick: note offs go first, so a note repeated on the same tick restarts instead
@@ -35,6 +37,9 @@ namespace midisequencer
         std::array<uint32_t, 4> Words{};
         uint8_t WordCount{ 0 };
         RenderedKind Kind{ RenderedKind::Other };
+
+        // Played by an arpeggiator from the keys held, which recording keeps instead of the keys.
+        bool Arpeggiated{ false };
     };
 
     // A file can place a one-tick looping clip for a billion ticks. One render stops here rather
@@ -65,6 +70,10 @@ namespace midisequencer
         // Whether the track that sings sends the lyrics as Lyric Data. Only playback and clip
         // files ask, and only for MIDI 2.0.
         bool Lyrics{ false };
+
+        // The keys held on the track's source, which an arpeggiator that plays them steps
+        // through. Only playback has them; it's left out everywhere else.
+        ArpeggiatorInput* Arpeggiator{ nullptr };
 
         size_t MaximumMessages{ MaximumRenderedMessages };
     };

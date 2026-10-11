@@ -279,7 +279,7 @@ namespace winrt::midisequencer::implementation
                 m_preparePending = false;
 
                 // Every destination the sequence plays to, the metronome, and the sources of
-                // the armed tracks.
+                // the armed tracks and of tracks whose arpeggiator plays what's held.
                 std::vector<seq::EndpointRef> destinations{};
                 std::vector<std::wstring> sources{};
 
@@ -293,7 +293,8 @@ namespace winrt::midisequencer::implementation
                         }
                     }
 
-                    if (!track.IsFolder && m_armed.contains(track.Id) && !track.Source.Endpoint.IsEmpty())
+                    if (!track.IsFolder && !track.Source.Endpoint.IsEmpty() &&
+                        (m_armed.contains(track.Id) || seq::TrackHasHeldKeysArpeggiator(m_doc, track)))
                     {
                         auto const id = m_directory->ResolveId(track.Source.Endpoint);
 
@@ -1148,6 +1149,18 @@ namespace winrt::midisequencer::implementation
 
             m_lastInputTicks = timestamp;
 
+            // Keys for arpeggiators go to the engine. A track whose arpeggiator is playing them
+            // doesn't echo or record them: it plays, and records, the arpeggiator's notes.
+            std::vector<std::wstring> arpeggiated{};
+
+            for (auto& id : FeedArpeggiators(endpointId, words, wordCount))
+            {
+                if (m_engine != nullptr && m_engine->IsArpeggiating(id))
+                {
+                    arpeggiated.push_back(std::move(id));
+                }
+            }
+
             auto const tick = m_engine != nullptr && m_recording ? m_engine->TickAtTime(timestamp) : -1;
             auto const slotTick = m_engine != nullptr && m_slotRecording ? m_engine->UnwrappedTickAtTime(timestamp) : -1;
 
@@ -1155,7 +1168,8 @@ namespace winrt::midisequencer::implementation
 
             for (auto const& route : m_echoRoutes)
             {
-                if (!SameEndpoint(route.SourceId, endpointId) || !seq::PassesRecordFilter(route.Filter, words, wordCount))
+                if (!SameEndpoint(route.SourceId, endpointId) || !seq::PassesRecordFilter(route.Filter, words, wordCount) ||
+                    std::find(arpeggiated.begin(), arpeggiated.end(), route.TrackId) != arpeggiated.end())
                 {
                     continue;
                 }
@@ -1285,6 +1299,8 @@ namespace winrt::midisequencer::implementation
 
     void MainWindow::UpdateEchoRoutes() noexcept
     {
+        UpdateArpeggiatorRoutes();
+
         try
         {
             std::vector<EchoRoute> routes{};

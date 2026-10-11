@@ -136,6 +136,7 @@
     <ClInclude Include="MessageTranslation.h" />
     <ClInclude Include="MidiClipFile.h" />
     <ClInclude Include="PianoRoll.h" />
+    <ClInclude Include="ClipLaneStrip.h" />
     <ClInclude Include="PatternEditor.h" />
     <ClInclude Include="PlaybackEngine.h" />
     <ClInclude Include="RecordingTake.h" />
@@ -146,6 +147,7 @@
     <ClInclude Include="SequenceEdits.h" />
     <ClInclude Include="SequenceModel.h" />
     <ClInclude Include="SequenceGenerator.h" />
+    <ClInclude Include="SequenceArpeggiator.h" />
     <ClInclude Include="SequencePattern.h" />
     <ClInclude Include="SequenceRender.h" />
     <ClInclude Include="SequenceSerializer.h" />
@@ -200,6 +202,7 @@
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="EndpointDirectory.cpp" />
     <ClCompile Include="PianoRoll.cpp" />
+    <ClCompile Include="ClipLaneStrip.cpp" />
     <ClCompile Include="PatternEditor.cpp" />
     <ClCompile Include="SourceMonitor.cpp" />
     <ClCompile Include="StringResources.cpp" />
@@ -224,6 +227,9 @@
     <ClCompile Include="MainWindowRemote.cpp" />
     <ClCompile Include="MainWindowPattern.cpp" />
     <ClCompile Include="MainWindowGenerator.cpp" />
+    <ClCompile Include="MainWindowArpeggiator.cpp" />
+    <ClCompile Include="MainWindowClipLanes.cpp" />
+    <ClCompile Include="MainWindowKeyboard.cpp" />
     <ClCompile Include="MainWindowTrack.cpp" />
     <!-- the model and the engine are free of the pch and XAML so the unit tests compile them unchanged -->
     <ClCompile Include="ArrangeLayout.cpp">
@@ -263,6 +269,9 @@
     <ClCompile Include="SequenceGenerator.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SequenceArpeggiator.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="SequenceRender.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -285,6 +294,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Lyrics.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LyricData.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SequenceProvenance.cpp">

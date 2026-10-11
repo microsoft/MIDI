@@ -117,6 +117,14 @@ namespace midisequencer
         constexpr wchar_t KeyHigh[] = L"high";
         constexpr wchar_t KeyBusy[] = L"busy";
         constexpr wchar_t KeyKeep[] = L"keep";
+        constexpr wchar_t KeyArpTrack[] = L"track";
+        constexpr wchar_t KeyOrder[] = L"order";
+        constexpr wchar_t KeyOctaves[] = L"octaves";
+        constexpr wchar_t KeyLatch[] = L"latch";
+        constexpr wchar_t ValueHeld[] = L"held";
+
+        // Arpeggiator orders, as written in the file, in ArpeggiatorOrder order.
+        constexpr std::array<wchar_t const*, 5> ArpOrderNames{ L"up", L"down", L"upAndDown", L"asHeld", L"random" };
 
         constexpr wchar_t ValueEuclidean[] = L"euclidean";
         constexpr wchar_t ValueChanceMelody[] = L"chanceMelody";
@@ -956,8 +964,23 @@ namespace midisequencer
                 generator.VelocityHigh = clamp16(velocity.GetAt(1).GetNumber());
             }
 
+            generator.ArpSource = ReadRawString(object, KeySource).value_or(ValueHeld) == ValueTrack ? ArpeggiatorSource::Track : ArpeggiatorSource::Held;
+            generator.ArpTrackId = ReadRawString(object, KeyArpTrack).value_or(L"");
+
+            auto const order = ReadRawString(object, KeyOrder).value_or(L"");
+            auto const ordered = std::find_if(ArpOrderNames.begin(), ArpOrderNames.end(), [&order](wchar_t const* name) { return order == name; });
+
+            if (ordered != ArpOrderNames.end())
+            {
+                generator.ArpOrder = static_cast<ArpeggiatorOrder>(std::distance(ArpOrderNames.begin(), ordered));
+            }
+
+            generator.ArpOctaves = static_cast<uint8_t>(ReadInteger(object, KeyOctaves, 1, 1, 4));
+            generator.ArpLatch = ReadBool(object, KeyLatch, false);
+
             generator.Unknown = UnknownKeys(object, {
-                KeyType, KeyStepTicks, KeyEachPass, KeyChannel, KeyNoteLength, KeyRings, KeyScale, KeyRoot, KeyLow, KeyHigh, KeyBusy, KeyKeep, KeyVelocity });
+                KeyType, KeyStepTicks, KeyEachPass, KeyChannel, KeyNoteLength, KeyRings, KeyScale, KeyRoot, KeyLow, KeyHigh, KeyBusy, KeyKeep, KeyVelocity,
+                KeySource, KeyArpTrack, KeyOrder, KeyOctaves, KeyLatch });
 
             return generator;
         }
@@ -1854,6 +1877,23 @@ namespace midisequencer
                 members.Integer(KeyBusy, generator.Busy);
                 members.Integer(KeyKeep, generator.Keep);
                 members.Raw(KeyVelocity, std::format(L"[{}, {}]", generator.VelocityLow, generator.VelocityHigh));
+            }
+            else if (generator.Type == GeneratorType::Arpeggiator)
+            {
+                members.Text(KeySource, generator.ArpSource == ArpeggiatorSource::Track ? ValueTrack : ValueHeld);
+
+                if (generator.ArpSource == ArpeggiatorSource::Track)
+                {
+                    members.Text(KeyArpTrack, generator.ArpTrackId);
+                }
+
+                members.Text(KeyOrder, ArpOrderNames[std::min<size_t>(static_cast<size_t>(generator.ArpOrder), ArpOrderNames.size() - 1)]);
+                members.Integer(KeyOctaves, generator.ArpOctaves);
+
+                if (generator.ArpLatch)
+                {
+                    members.Bool(KeyLatch, true);
+                }
             }
 
             members.Unknown(generator.Unknown);

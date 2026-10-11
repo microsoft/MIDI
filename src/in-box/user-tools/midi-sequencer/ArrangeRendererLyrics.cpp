@@ -6,7 +6,7 @@
 // ============================================================================
 
 // The lyrics row (design section 23): each syllable where it's sung, or each line where it starts
-// when the syllables are too close together to read.
+// when the syllables are too close together to read. Ruby sits in small text above its syllable.
 
 #include "pch.h"
 #include "ArrangeRenderer.h"
@@ -17,24 +17,34 @@ namespace midisequencer
     namespace
     {
         // About how wide a character of the row's text is, so the row can tell whether a line's
-        // syllables fit without measuring each one.
+        // syllables fit without measuring each one. Kana and kanji are about square.
         constexpr float AverageCharacterWidth = 6.0f;
+        constexpr float WideCharacterWidth = 10.0f;
+        constexpr float RubyScale = 0.95f;
         constexpr float SyllableGap = 4.0f;
         constexpr float TextInset = 2.0f;
+
+        // Where wide East Asian characters start, near enough for an estimate.
+        constexpr wchar_t FirstWideCharacter = L'\u2E80';
+
+        // A line with ruby moves its syllables down this far to make room above them.
+        constexpr float RubyRoom = 4.0f;
+        constexpr float RubyHeight = 13.0f;
 
         // Narrower than this, a line shows only its marks.
         constexpr float MinimumLineWidth = 14.0f;
 
         // Sheet music's marks: a hyphen when the word goes on, a dash for a held syllable, and a
-        // slash where a line ends (two for a verse), as karaoke files write them.
-        std::wstring SyllableLabel(_In_ Lyric const& syllable)
+        // slash where a line ends (two for a verse), as karaoke files write them. A line's last
+        // syllable has no hyphen, even when the file didn't say the word ends there.
+        std::wstring SyllableLabel(_In_ Lyric const& syllable, _In_ bool lastInLine)
         {
             std::wstring label = syllable.Text.empty() ? std::wstring{ L"\u2014" } : syllable.Text;
 
             switch (syllable.End)
             {
             case LyricEnd::None:
-                if (!syllable.Text.empty())
+                if (!syllable.Text.empty() && !lastInLine)
                 {
                     label += L'-';
                 }
@@ -55,9 +65,16 @@ namespace midisequencer
             return label;
         }
 
-        float LabelWidth(_In_ std::wstring const& label) noexcept
+        float LabelWidth(_In_ std::wstring_view label, _In_ float scale = 1.0f) noexcept
         {
-            return AverageCharacterWidth * static_cast<float>(label.size());
+            float width = 0;
+
+            for (auto const c : label)
+            {
+                width += c >= FirstWideCharacter ? WideCharacterWidth : AverageCharacterWidth;
+            }
+
+            return width * scale;
         }
     }
 
@@ -99,8 +116,11 @@ namespace midisequencer
 
             auto const lineEnd = static_cast<float>(context.View.XAtTick(index + 1 < lines.size() ? lines[index + 1].StartTick : line.EndTick));
             auto const sungHere = current != SIZE_MAX && current >= line.First && current < line.First + line.Count;
+            auto const first = syllables.begin() + static_cast<ptrdiff_t>(line.First);
+            auto const hasRuby = std::any_of(first, first + static_cast<ptrdiff_t>(line.Count), [](Lyric const& syllable) { return !syllable.Ruby.empty(); });
+            auto const labelTop = hasRuby ? textTop + RubyRoom : textTop;
 
-            // Each syllable fits before the next one, or the line shows as a whole.
+            // Each syllable, and its ruby, fits before the next one, or the line shows as a whole.
             auto roomy = true;
 
             for (size_t i = 0; i < line.Count && roomy; ++i)
@@ -109,7 +129,7 @@ namespace midisequencer
                 auto const x = static_cast<float>(context.View.XAtTick(syllable.Tick));
                 auto const next = i + 1 < line.Count ? static_cast<float>(context.View.XAtTick(syllables[line.First + i + 1].Tick)) : lineEnd;
 
-                roomy = next - x >= LabelWidth(SyllableLabel(syllable)) + SyllableGap;
+                roomy = next - x >= std::max(LabelWidth(SyllableLabel(syllable, i + 1 == line.Count)), LabelWidth(syllable.Ruby, RubyScale)) + SyllableGap;
             }
 
             for (size_t i = 0; i < line.Count; ++i)
@@ -126,9 +146,14 @@ namespace midisequencer
 
                 if (roomy)
                 {
-                    auto const label = SyllableLabel(syllable);
-                    ds.DrawText(winrt::hstring{ label }, x + TextInset, textTop, LabelWidth(label) + 12.0f, textHeight,
-                        line.First + i == current ? colors.Accent : colors.Text2, m_tagText);
+                    auto const label = SyllableLabel(syllable, i + 1 == line.Count);
+                    auto const color = line.First + i == current ? colors.Accent : colors.Text2;
+                    ds.DrawText(winrt::hstring{ label }, x + TextInset, labelTop, LabelWidth(label) + 12.0f, textHeight, color, m_tagText);
+
+                    if (!syllable.Ruby.empty())
+                    {
+                        ds.DrawText(winrt::hstring{ syllable.Ruby }, x + TextInset, top + 1.0f, LabelWidth(syllable.Ruby, RubyScale) + 12.0f, RubyHeight, color, m_rubyText);
+                    }
                 }
             }
 
