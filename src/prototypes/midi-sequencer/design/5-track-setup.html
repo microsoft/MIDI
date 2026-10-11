@@ -234,7 +234,7 @@
     <div class="epitem"><div class="art loop">&#xE895;</div><div class="tx"><div class="n">Lights loopback (A)</div><div class="s">Loopback &middot; for another app</div></div></div>
     <div class="menu-sep"></div>
     <div class="menu-item"><span class="gl">&#xE710;</span>Make a loopback for another app</div>
-    <div class="menu-head" style="line-height:1.45;padding:4px 14px 8px">How early to send to a device is set in MIDI Settings. Windows sends that much early, so the sequencer doesn't add it again.</div>
+    <div class="menu-head" style="line-height:1.45;padding:4px 14px 8px">How early to send to a device is set in MIDI Settings. The sequencer sends that much early.</div>
   </div>
 </div>
 
@@ -245,7 +245,7 @@
   <li><b>Missing devices.</b> Moog One is unplugged. Bass keeps it, plays nothing to it, and picks it up again when it's back. Nothing silently goes somewhere else.</li>
   <li><b>When playback starts.</b> Program, bank and any other set-up messages go out before the first note. Program names come from the device over MIDI-CI when it offers them.</li>
   <li><b>Loopbacks.</b> To feed another app (a DAW, a lighting program), play to a loopback. The sequencer can make one from this list.</li>
-  <li><b>How early each device gets its messages.</b> Some devices need messages a little early to sound on time. That's set per device in MIDI Settings, and the list shows it. Windows does the sending early, so the sequencer only makes sure it hands each message over in time.</li>
+  <li><b>How early each device gets its messages.</b> Some devices need messages a little early to sound on time. That's set per device in MIDI Settings, and the list shows it. The sequencer sends each device's messages that much early, and starts playback late enough for the device that needs them earliest.</li>
   <li><b>MIDI Keyboard.</b> Try this sound opens Windows MIDI Keyboard on the track's destination, group and channel. Record from MIDI Keyboard records from a built-in app loopback and opens MIDI Keyboard on the other side of it, so you can record with the mouse, touch or the computer keyboard.</li>
 </ol>
 

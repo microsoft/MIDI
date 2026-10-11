@@ -37,13 +37,25 @@
 // otherwise a rollback turns the suite red.
 #include <Feature_Servicing_MIDI2EndpointUniqueIdValidation.h>
 #include <Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit.h>
+#include <Feature_Servicing_MIDI2VirtualDeviceClientReconnect.h>
+#include <Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse.h>
+#include <Feature_Servicing_MIDI2StreamTextUtf8.h>
+
+// not a skip condition for the hang tests, which fail whichever way it is set
+#include <Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock.h>
 
 // generated service interfaces, so tests can push configuration the same way the SDK does
 #include <WindowsMidiServices.h>
 #include <WindowsMidiServices_i.c>
 #include <Midi2MidiSrvTransport.h>
 
+// property keys and stream message constants
+#include "MidiDefs.h"
+#include "midi_ump_message_defs.h"
+
 #include "TransportConfigTestHelper.h"
+#include "..\inc\MidiTestDeviceNodes.h"
+#include "..\inc\MidiTestServiceHelpers.h"
 
 #endif //PCH_H
 

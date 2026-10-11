@@ -15,6 +15,7 @@
 #include "LayoutPack.h"
 #include "LayoutPackage.h"
 #include "LayoutStore.h"
+#include "ProvenanceForm.h"
 #include "ThemeStore.h"
 #include "SignedItems.h"
 
@@ -32,85 +33,9 @@ namespace midiglass::sharing
     {
         using winrt::box_value;
 
-        constexpr double DialogWidth = 460.0;
-
-        media::Brush ThemeBrush(_In_ wchar_t const* key)
-        {
-            return xaml::Application::Current().Resources().Lookup(box_value(key)).as<media::Brush>();
-        }
-
-        controls::TextBlock Paragraph(
-            _In_ winrt::hstring const& text,
-            _In_ double size = 14.0,
-            _In_opt_ wchar_t const* brushKey = nullptr)
-        {
-            controls::TextBlock block{};
-            block.Text(text);
-            block.TextWrapping(xaml::TextWrapping::Wrap);
-            block.FontSize(size);
-
-            if (brushKey != nullptr)
-            {
-                block.Foreground(ThemeBrush(brushKey));
-            }
-
-            return block;
-        }
-
-        controls::TextBox Field(
-            _In_ winrt::hstring const& header,
-            _In_ std::wstring const& text,
-            _In_ int32_t maximumLength)
-        {
-            controls::TextBox box{};
-            box.Header(box_value(header));
-            box.Text(winrt::hstring{ text });
-            box.MaxLength(maximumLength);
-
-            automation::AutomationProperties::SetName(box, header);
-
-            return box;
-        }
-
         std::wstring Clean(_In_ winrt::hstring const& text, _In_ size_t maximumLength)
         {
             return midiapp::SanitizeProvenanceText(std::wstring_view{ text }, maximumLength);
-        }
-
-        std::wstring FormatDate(_In_ int64_t fileTime)
-        {
-            if (fileTime <= 0)
-            {
-                return {};
-            }
-
-            FILETIME utc{};
-            utc.dwLowDateTime = static_cast<DWORD>(static_cast<uint64_t>(fileTime) & 0xFFFFFFFFu);
-            utc.dwHighDateTime = static_cast<DWORD>(static_cast<uint64_t>(fileTime) >> 32);
-
-            SYSTEMTIME universal{};
-
-            if (!::FileTimeToSystemTime(&utc, &universal))
-            {
-                return {};
-            }
-
-            SYSTEMTIME local{};
-
-            if (!::SystemTimeToTzSpecificLocalTime(nullptr, &universal, &local))
-            {
-                local = universal;
-            }
-
-            wchar_t buffer[128]{};
-
-            if (::GetDateFormatEx(LOCALE_NAME_USER_DEFAULT, DATE_LONGDATE, &local, nullptr,
-                buffer, static_cast<int>(std::size(buffer)), nullptr) <= 0)
-            {
-                return {};
-            }
-
-            return buffer;
         }
 
         std::wstring HexOf(_In_ std::vector<uint8_t> const& bytes)
@@ -324,206 +249,6 @@ namespace midiglass::sharing
             }
         }
 
-        winrt::hstring DescribeSource(_In_ std::wstring const& type)
-        {
-            namespace types = midiapp::DigitalSourceTypes;
-
-            if (type == types::DigitalCreation)
-            {
-                return resources::GetString(L"SourcePerson");
-            }
-
-            if (type == types::TrainedAlgorithmicMedia)
-            {
-                return resources::GetString(L"SourceAi");
-            }
-
-            if (type == types::CompositeWithTrainedAlgorithmicMedia || type == types::CompositeSynthetic)
-            {
-                return resources::GetString(L"SourcePersonWithAi");
-            }
-
-            if (type == types::AlgorithmicMedia)
-            {
-                return resources::GetString(L"SourceProgram");
-            }
-
-            if (type == types::DigitalCapture)
-            {
-                return resources::GetString(L"SourceRecorded");
-            }
-
-            if (type == types::Composite)
-            {
-                return resources::GetString(L"SourceCombined");
-            }
-
-            return winrt::hstring{ type };
-        }
-
-        winrt::hstring DescribeOversight(_In_ std::wstring const& level)
-        {
-            namespace levels = midiapp::HumanOversightLevels;
-
-            if (level == levels::FullyAutonomous)
-            {
-                return resources::GetString(L"OversightNone");
-            }
-
-            if (level == levels::PromptGuided)
-            {
-                return resources::GetString(L"OversightPrompted");
-            }
-
-            if (level == levels::HumanValidated)
-            {
-                return resources::GetString(L"OversightChecked");
-            }
-
-            return winrt::hstring{ level };
-        }
-
-        void AddRow(
-            _Inout_ controls::Grid& grid,
-            _In_ winrt::hstring const& label,
-            _In_ xaml::FrameworkElement const& value)
-        {
-            auto const row = static_cast<int32_t>(grid.RowDefinitions().Size());
-
-            controls::RowDefinition definition{};
-            definition.Height(xaml::GridLengthHelper::Auto());
-            grid.RowDefinitions().Append(definition);
-
-            auto name = Paragraph(label, 12.0, L"TextFillColorSecondaryBrush");
-            name.Margin({ 0, 2, 12, 0 });
-
-            controls::Grid::SetRow(name, row);
-            controls::Grid::SetColumn(name, 0);
-            grid.Children().Append(name);
-
-            controls::Grid::SetRow(value, row);
-            controls::Grid::SetColumn(value, 1);
-            grid.Children().Append(value);
-
-            automation::AutomationProperties::SetName(value, label);
-        }
-
-        void AddTextRow(
-            _Inout_ controls::Grid& grid,
-            _In_ wchar_t const* labelKey,
-            _In_ std::wstring const& text)
-        {
-            if (text.empty())
-            {
-                return;
-            }
-
-            auto value = Paragraph(winrt::hstring{ text }, 13.0);
-            value.IsTextSelectionEnabled(true);
-
-            AddRow(grid, resources::GetString(labelKey), value);
-        }
-
-        // Everything the block says, one row each. A website is a link only when it is plainly
-        // one, and shown in full so nobody follows a name they didn't read.
-        controls::Grid ProvenanceGrid(
-            _In_ std::optional<midiapp::ContentProvenance> const& provenance,
-            _In_ std::wstring const& signerName)
-        {
-            controls::Grid grid{};
-            grid.RowSpacing(6.0);
-
-            controls::ColumnDefinition labels{};
-            labels.Width(xaml::GridLengthHelper::Auto());
-
-            controls::ColumnDefinition values{};
-            values.Width(xaml::GridLengthHelper::FromValueAndType(1.0, xaml::GridUnitType::Star));
-
-            grid.ColumnDefinitions().Append(labels);
-            grid.ColumnDefinitions().Append(values);
-
-            if (!provenance.has_value() || provenance->IsEmpty())
-            {
-                auto nobody = Paragraph(resources::GetString(L"ProvenanceNobody"), 13.0, L"TextFillColorSecondaryBrush");
-                controls::Grid::SetColumnSpan(nobody, 2);
-                grid.Children().Append(nobody);
-
-                return grid;
-            }
-
-            auto const& block = *provenance;
-
-            AddTextRow(grid, L"ProvenanceAuthorLabel", DescribeMaker(provenance, signerName));
-            AddTextRow(grid, L"ProvenanceOrganizationLabel", block.Organization);
-
-            if (!block.Url.empty())
-            {
-                if (midiapp::IsSafeWebLink(block.Url))
-                {
-                    controls::HyperlinkButton link{};
-                    link.Content(box_value(winrt::hstring{ block.Url }));
-                    link.NavigateUri(foundation::Uri{ winrt::hstring{ block.Url } });
-                    link.Padding({ 0, 0, 0, 0 });
-
-                    AddRow(grid, resources::GetString(L"ProvenanceWebsiteLabel"), link);
-                }
-                else
-                {
-                    AddTextRow(grid, L"ProvenanceWebsiteLabel", block.Url);
-                }
-            }
-
-            AddTextRow(grid, L"ProvenanceLicenseLabel", block.License);
-            AddTextRow(grid, L"ProvenanceVersionLabel", block.Version);
-            AddTextRow(grid, L"ProvenanceCreatedLabel", FormatDate(midiapp::ParseProvenanceTime(block.Created)));
-            AddTextRow(grid, L"ProvenanceToolLabel", block.Tool);
-
-            if (!block.DigitalSourceType.empty())
-            {
-                AddTextRow(grid, L"ProvenanceSourceLabel", std::wstring{ DescribeSource(block.DigitalSourceType) });
-            }
-
-            if (!block.HumanOversightLevel.empty() || !block.AiModelName.empty())
-            {
-                std::wstring ai{};
-
-                if (!block.HumanOversightLevel.empty())
-                {
-                    ai = std::wstring{ DescribeOversight(block.HumanOversightLevel) };
-                }
-
-                if (!block.AiModelName.empty())
-                {
-                    ai += ai.empty() ? L"" : L" ";
-                    ai += resources::FormatString(L"ProvenanceModelFormat", block.AiModelName);
-                }
-
-                AddTextRow(grid, L"ProvenanceAiLabel", ai);
-            }
-
-            if (block.BasedOn.has_value() && !block.BasedOn->IsEmpty())
-            {
-                auto const& source = *block.BasedOn;
-
-                std::wstring text{ source.Name };
-
-                if (source.BuiltIn)
-                {
-                    text = resources::FormatString(L"ProvenanceBasedOnBuiltInFormat", source.Name);
-                }
-                else if (!source.Author.empty())
-                {
-                    text = resources::FormatString(L"ProvenanceBasedOnFormat", source.Name, source.Author);
-                }
-
-                AddTextRow(grid, L"ProvenanceBasedOnLabel", text);
-            }
-
-            AddTextRow(grid, L"ProvenanceIdLabel", block.Id);
-
-            return grid;
-        }
-
         // The line at the top of every dialog that says whether a signature backs any of it.
         controls::Grid SignatureLine(
             _In_ winrt::hstring const& headline,
@@ -575,36 +300,12 @@ namespace midiglass::sharing
         {
             controls::StackPanel Panel{};
 
-            controls::TextBox Author{ nullptr };
-            controls::TextBox Organization{ nullptr };
-            controls::TextBox Website{ nullptr };
-            controls::TextBox License{ nullptr };
-            controls::TextBox Version{ nullptr };
-            controls::ComboBox Source{ nullptr };
+            std::shared_ptr<ProvenanceForm> About{};
             controls::ComboBox Certificate{ nullptr };
             controls::TextBox Timestamp{ nullptr };
             controls::TextBlock Problem{ nullptr };
 
             std::vector<midiapp::SigningCertificate> Certificates{};
-
-            // A term this build has no words for, kept as it was.
-            std::wstring UnlistedSource{};
-        };
-
-        constexpr wchar_t const* SourceTerms[]
-        {
-            midiapp::DigitalSourceTypes::DigitalCreation,
-            midiapp::DigitalSourceTypes::TrainedAlgorithmicMedia,
-            midiapp::DigitalSourceTypes::CompositeWithTrainedAlgorithmicMedia,
-            midiapp::DigitalSourceTypes::AlgorithmicMedia,
-        };
-
-        constexpr wchar_t const* SourceKeys[]
-        {
-            L"SourcePerson",
-            L"SourceAi",
-            L"SourcePersonWithAi",
-            L"SourceProgram",
         };
 
         std::unique_ptr<ShareForm> BuildShareForm(
@@ -619,67 +320,13 @@ namespace midiglass::sharing
             panel.Width(DialogWidth);
 
             panel.Children().Append(Paragraph(intro, 13.0));
-
-            auto heading = Paragraph(resources::GetString(L"ShareAboutHeading"), 14.0);
-            heading.FontWeight(winrt::Windows::UI::Text::FontWeights::SemiBold());
-            heading.Margin({ 0, 6, 0, 0 });
-            panel.Children().Append(heading);
-
+            panel.Children().Append(Heading(resources::GetString(L"ShareAboutHeading")));
             panel.Children().Append(Paragraph(resources::GetString(L"ShareAboutNote"), 12.0, L"TextFillColorSecondaryBrush"));
 
-            form->Author = Field(resources::GetString(L"AuthorNameLabel"), provenance.Author,
-                static_cast<int32_t>(midiapp::MaximumProvenanceNameLength));
-            form->Organization = Field(resources::GetString(L"AuthorOrganizationLabel"), provenance.Organization,
-                static_cast<int32_t>(midiapp::MaximumProvenanceNameLength));
-            form->Website = Field(resources::GetString(L"AuthorWebsiteLabel"), provenance.Url,
-                static_cast<int32_t>(midiapp::MaximumProvenanceUrlLength));
-            form->Website.PlaceholderText(L"https://");
-            form->License = Field(resources::GetString(L"ProvenanceLicenseLabel"), provenance.License,
-                static_cast<int32_t>(midiapp::MaximumProvenanceNameLength));
-            form->License.PlaceholderText(resources::GetString(L"AuthorLicensePlaceholder"));
-            form->Version = Field(resources::GetString(L"ProvenanceVersionLabel"), provenance.Version,
-                static_cast<int32_t>(midiapp::MaximumProvenanceVersionLength));
+            form->About = BuildProvenanceForm(glass::FieldsOf(provenance), canEdit);
+            panel.Children().Append(form->About->Panel);
 
-            form->Source = controls::ComboBox{};
-            form->Source.Header(box_value(resources::GetString(L"ProvenanceSourceLabel")));
-            form->Source.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
-            automation::AutomationProperties::SetName(form->Source, resources::GetString(L"ProvenanceSourceLabel"));
-
-            int32_t selected{ -1 };
-
-            for (size_t i = 0; i < std::size(SourceTerms); ++i)
-            {
-                form->Source.Items().Append(box_value(resources::GetString(SourceKeys[i])));
-
-                if (provenance.DigitalSourceType == SourceTerms[i])
-                {
-                    selected = static_cast<int32_t>(i);
-                }
-            }
-
-            if (selected < 0 && !provenance.DigitalSourceType.empty())
-            {
-                form->UnlistedSource = provenance.DigitalSourceType;
-                form->Source.Items().Append(box_value(resources::FormatString(
-                    L"SourceAsWrittenFormat", provenance.DigitalSourceType)));
-                selected = static_cast<int32_t>(std::size(SourceTerms));
-            }
-
-            form->Source.SelectedIndex(selected < 0 ? 0 : selected);
-
-            for (auto const& box : { form->Author, form->Organization, form->Website, form->License, form->Version })
-            {
-                box.IsEnabled(canEdit);
-                panel.Children().Append(box);
-            }
-
-            form->Source.IsEnabled(canEdit);
-            panel.Children().Append(form->Source);
-
-            auto signHeading = Paragraph(resources::GetString(L"ShareSignHeading"), 14.0);
-            signHeading.FontWeight(winrt::Windows::UI::Text::FontWeights::SemiBold());
-            signHeading.Margin({ 0, 6, 0, 0 });
-            panel.Children().Append(signHeading);
+            panel.Children().Append(Heading(resources::GetString(L"ShareSignHeading")));
 
             panel.Children().Append(Paragraph(resources::GetString(L"ShareSignNote"), 12.0, L"TextFillColorSecondaryBrush"));
 
@@ -739,43 +386,39 @@ namespace midiglass::sharing
             return form;
         }
 
-        // What the form says, or a sentence about what is wrong with it.
-        winrt::hstring ReadShareForm(
+        // What the form says. False after pointing out what is wrong, at the field it is about.
+        bool ReadShareForm(
             _In_ ShareForm const& form,
             _Inout_ midiapp::ContentProvenance& provenance)
         {
-            auto const website = Clean(form.Website.Text(), midiapp::MaximumProvenanceUrlLength);
+            auto const applied = glass::ApplyProvenanceFields(provenance, ReadProvenanceForm(*form.About));
 
-            if (!website.empty() && !midiapp::IsSafeWebLink(website))
-            {
-                return resources::GetString(L"AuthorWebsiteProblem");
-            }
+            ShowWebsiteProblem(*form.About, applied.WebsiteRejected);
 
             auto const timestamp = Clean(form.Timestamp.Text(), 1024);
+            auto const timestampProblem = form.Certificate.SelectedIndex() > 0 && !IsTimestampServer(timestamp);
 
-            if (form.Certificate.SelectedIndex() > 0 && !IsTimestampServer(timestamp))
+            form.Problem.Text(timestampProblem ? resources::GetString(L"ShareTimestampProblem") : winrt::hstring{});
+            form.Problem.Visibility(timestampProblem ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            if (applied.WebsiteRejected)
             {
-                return resources::GetString(L"ShareTimestampProblem");
+                form.About->Website.Focus(xaml::FocusState::Programmatic);
+                return false;
             }
 
-            provenance.Author = Clean(form.Author.Text(), midiapp::MaximumProvenanceNameLength);
-            provenance.Organization = Clean(form.Organization.Text(), midiapp::MaximumProvenanceNameLength);
-            provenance.Url = website;
-            provenance.License = Clean(form.License.Text(), midiapp::MaximumProvenanceNameLength);
-            provenance.Version = Clean(form.Version.Text(), midiapp::MaximumProvenanceVersionLength);
-
-            auto const index = form.Source.SelectedIndex();
-
-            if (index >= 0 && static_cast<size_t>(index) < std::size(SourceTerms))
+            if (timestampProblem)
             {
-                provenance.DigitalSourceType = SourceTerms[index];
-            }
-            else if (!form.UnlistedSource.empty())
-            {
-                provenance.DigitalSourceType = form.UnlistedSource;
+                form.Timestamp.Focus(xaml::FocusState::Programmatic);
+                return false;
             }
 
-            return {};
+            if (applied.Provenance.has_value())
+            {
+                provenance = *applied.Provenance;
+            }
+
+            return true;
         }
 
         bool SameProvenance(
@@ -897,12 +540,9 @@ namespace midiglass::sharing
                     try
                     {
                         auto edited = *provenance;
-                        auto const problem = ReadShareForm(*form, edited);
 
-                        if (!problem.empty())
+                        if (!ReadShareForm(*form, edited))
                         {
-                            form->Problem.Text(problem);
-                            form->Problem.Visibility(xaml::Visibility::Visible);
                             args.Cancel(true);
                             return;
                         }
@@ -1369,7 +1009,10 @@ namespace midiglass::sharing
     }
 
     _Use_decl_annotations_
-    foundation::IAsyncAction ShowLayoutDetailsAsync(xaml::XamlRoot root, std::wstring layoutFilePath)
+    foundation::IAsyncAction ShowLayoutDetailsAsync(
+        xaml::XamlRoot root,
+        std::wstring layoutFilePath,
+        std::function<void()> changeInEditor)
     {
         auto const dispatcher = winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread();
 
@@ -1420,13 +1063,25 @@ namespace midiglass::sharing
             dialog.Content(scroller);
             dialog.CloseButtonText(resources::GetString(L"DialogClose"));
 
-            co_await dialog.ShowAsync();
+            // Changed where the layout is open, so nothing is written underneath an editor. A
+            // signed layout stays as it was published, and a newer version's is never written.
+            auto const canChange = changeInEditor && !signedItem.has_value() && !read.Document.IsFromNewerVersion;
+
+            if (canChange)
+            {
+                dialog.PrimaryButtonText(resources::GetString(L"DetailsChangeInEditor"));
+            }
+
+            if (co_await dialog.ShowAsync() == controls::ContentDialogResult::Primary && canChange)
+            {
+                changeInEditor();
+            }
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the layout's details.")
     }
 
     _Use_decl_annotations_
-    foundation::IAsyncAction ShowThemeDetailsAsync(xaml::XamlRoot root, glass::Theme theme)
+    foundation::IAsyncOperation<bool> ShowThemeDetailsAsync(xaml::XamlRoot root, glass::Theme theme)
     {
         auto const dispatcher = winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread();
 
@@ -1438,13 +1093,24 @@ namespace midiglass::sharing
                 ? std::optional<glass::SignedItem>{}
                 : glass::SignedItemFor(theme.FilePath);
 
+            // What is on disk now is what a change is made to.
+            auto const file = theme.FilePath.empty() ? glass::ThemeReadResult{} : glass::ReadThemeFile(theme.FilePath);
+
             co_await wil::resume_foreground(dispatcher);
+
+            auto const builtIn = glass::FindBuiltInTheme(theme.Name) != nullptr && theme.FilePath.empty();
+            auto const provenance = file.Succeeded ? file.Value.Provenance : theme.Provenance;
+
+            // Only a theme file of the customer's own, written by this version, that no signature vouches for.
+            auto const canEdit = !builtIn && file.Succeeded && !file.IsFromNewerVersion && !signedItem.has_value();
 
             controls::StackPanel panel{};
             panel.Spacing(12.0);
             panel.Width(DialogWidth);
 
-            if (glass::FindBuiltInTheme(theme.Name) != nullptr && theme.FilePath.empty())
+            std::shared_ptr<ProvenanceForm> form{};
+
+            if (builtIn)
             {
                 panel.Children().Append(SignatureLine(
                     resources::GetString(L"DetailsBuiltIn"),
@@ -1463,8 +1129,25 @@ namespace midiglass::sharing
                         resources::GetString(L"DetailsNotSignedNote"),
                         false));
 
-                panel.Children().Append(ProvenanceGrid(
-                    theme.Provenance, signedItem.has_value() ? signedItem->SignerName : std::wstring{}));
+                if (canEdit)
+                {
+                    panel.Children().Append(Heading(resources::GetString(L"ShareAboutHeading")));
+
+                    form = BuildProvenanceForm(glass::FieldsOf(provenance), true);
+                    panel.Children().Append(form->Panel);
+
+                    if (HasAuthorProfile(midiapp::LoadAuthorProfile()))
+                    {
+                        panel.Children().Append(MakeFillInButton(form, nullptr));
+                    }
+
+                    panel.Children().Append(ProvenanceFactsGrid(provenance));
+                }
+                else
+                {
+                    panel.Children().Append(ProvenanceGrid(
+                        provenance, signedItem.has_value() ? signedItem->SignerName : std::wstring{}));
+                }
             }
 
             controls::ScrollViewer scroller{};
@@ -1476,11 +1159,63 @@ namespace midiglass::sharing
             dialog.XamlRoot(root);
             dialog.Title(box_value(resources::FormatString(L"DetailsTitleFormat", theme.Name)));
             dialog.Content(scroller);
-            dialog.CloseButtonText(resources::GetString(L"DialogClose"));
 
-            co_await dialog.ShowAsync();
+            if (!canEdit)
+            {
+                dialog.CloseButtonText(resources::GetString(L"DialogClose"));
+
+                co_await dialog.ShowAsync();
+                co_return false;
+            }
+
+            dialog.PrimaryButtonText(resources::GetString(L"CommonSave"));
+            dialog.CloseButtonText(resources::GetString(L"DialogCancel"));
+            dialog.DefaultButton(controls::ContentDialogButton::Primary);
+
+            dialog.PrimaryButtonClick([form, provenance](auto const&, controls::ContentDialogButtonClickEventArgs const& args)
+                {
+                    try
+                    {
+                        auto const rejected = glass::ApplyProvenanceFields(provenance, ReadProvenanceForm(*form)).WebsiteRejected;
+
+                        ShowWebsiteProblem(*form, rejected);
+
+                        if (rejected)
+                        {
+                            form->Website.Focus(xaml::FocusState::Programmatic);
+                            args.Cancel(true);
+                        }
+                    }
+                    MIDI_GLASS_CATCH_AND_LOG(L"Unable to read who made the theme.")
+                });
+
+            if (co_await dialog.ShowAsync() != controls::ContentDialogResult::Primary)
+            {
+                co_return false;
+            }
+
+            auto const applied = glass::ApplyProvenanceFields(provenance, ReadProvenanceForm(*form));
+
+            if (!applied.Provenance.has_value() ||
+                (provenance.has_value() && SameProvenance(*provenance, *applied.Provenance)))
+            {
+                co_return false;
+            }
+
+            auto updated = file.Value;
+            updated.Provenance = applied.Provenance;
+
+            if (!glass::WriteThemeFile(updated, theme.FilePath))
+            {
+                co_await ShowNoticeAsync(root, resources::GetString(L"SaveThemeFailedTitle"), resources::GetString(L"SaveThemeFailedDetail"));
+                co_return false;
+            }
+
+            co_return true;
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the theme's details.")
+
+        co_return false;
     }
 
     _Use_decl_annotations_

@@ -34,6 +34,7 @@ public:
     TEST_METHOD(ATakeStartsAndEndsOnBars);
     TEST_METHOD(TheRecordFilterLeavesThingsOut);
     TEST_METHOD(ARepeatedNoteOnRestartsTheNote);
+    TEST_METHOD(ASlotTakeLoopsAtItsExactLength);
 
     TEST_METHOD(PinnedRowsGoToTheTop);
     TEST_METHOD(AClosedFolderHidesItsTracks);

@@ -158,6 +158,12 @@ namespace winrt::midiglass::implementation
                 NewerVersionBar().Message(resources::GetString(L"NewerLayoutMessage"));
                 NewerVersionBar().IsOpen(true);
             }
+
+            if (!m_pendingSettingsPane.empty())
+            {
+                m_settingsPane = std::exchange(m_pendingSettingsPane, {});
+                ShowLayoutSettings(true);
+            }
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to set up the editor window.")
     }

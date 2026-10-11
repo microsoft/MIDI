@@ -12,6 +12,8 @@
 #include "MidiEndpointNameTable.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
 #include "Feature_Servicing_MIDI2DuplicateDeviceNaming.h"
+#include "Feature_Servicing_MIDI2UnicodeConversion.h"
+#include "Feature_Servicing_MIDIPortDisambiguators.h"
 
 using namespace WindowsMidiServicesNamingLib;
 
@@ -32,6 +34,14 @@ namespace
         if (Feature_Servicing_MIDI2DuplicateDeviceNaming::IsEnabled()) { return false; }
 
         WEX::Logging::Log::Comment(L"Feature_Servicing_MIDI2DuplicateDeviceNaming is disabled. Skipping.");
+        return true;
+    }
+
+    bool SkipUnlessUnicodeConversionEnabled()
+    {
+        if (Feature_Servicing_MIDI2UnicodeConversion::IsEnabled()) { return false; }
+
+        WEX::Logging::Log::Comment(L"Feature_Servicing_MIDI2UnicodeConversion is disabled. Skipping.");
         return true;
     }
 
@@ -341,6 +351,7 @@ void NamingTests::TestPopulateEntryForMidi1DeviceUsingUmpDriver()
 void NamingTests::TestLegacyNameKeepsNonAsciiCharacters()
 {
     if (SkipUnlessPortNamingReworkEnabled()) { return; }
+    if (SkipUnlessUnicodeConversionEnabled()) { return; }
 
     MidiEndpointNameTable table;
 
@@ -1427,8 +1438,12 @@ void NamingTests::TestPlaceholderPortNameDetection()
     VERIFY_ARE_EQUAL(std::wstring{ L"ESI M8U eX" }, RemoveGeneratedPinNameSuffix(L"ESI M8U eX [:]"));
     VERIFY_ARE_EQUAL(std::wstring{ L"ESI M8U eX" }, RemoveGeneratedPinNameSuffix(L"ESI M8U eX [31]"));
 
-    // a device really named "[0]" keeps it, because there is no separating space
-    VERIFY_ARE_EQUAL(std::wstring{ L"CircuitPython[0]" }, RemoveGeneratedPinNameSuffix(L"CircuitPython[0]"));
+    // a device really named "[0]" keeps it, because there is no separating space. Before this
+    // gate the suffix was removed with or without the space.
+    if (Feature_Servicing_MIDIPortDisambiguators::IsEnabled())
+    {
+        VERIFY_ARE_EQUAL(std::wstring{ L"CircuitPython[0]" }, RemoveGeneratedPinNameSuffix(L"CircuitPython[0]"));
+    }
 }
 
 void NamingTests::TestPortNameCarriesDeviceName()

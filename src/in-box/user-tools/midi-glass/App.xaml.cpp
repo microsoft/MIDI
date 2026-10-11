@@ -63,7 +63,7 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
-    void App::OpenEditorWindow(std::wstring const& filePath)
+    void App::OpenEditorWindow(std::wstring const& filePath, std::wstring const& settingsPane)
     {
         try
         {
@@ -78,6 +78,11 @@ namespace winrt::midiglass::implementation
 
                 if (implementation != nullptr && SamePath(implementation->LayoutFilePath(), filePath))
                 {
+                    if (!settingsPane.empty())
+                    {
+                        implementation->OpenSettingsPaneWhenLoaded(settingsPane);
+                    }
+
                     existing.Activate();
                     return;
                 }
@@ -88,6 +93,11 @@ namespace winrt::midiglass::implementation
             if (!window->LoadLayout(filePath))
             {
                 return;
+            }
+
+            if (!settingsPane.empty())
+            {
+                window->OpenSettingsPaneWhenLoaded(settingsPane);
             }
 
             auto const cascade = static_cast<int32_t>(g_editorWindows.size()) * EditorCascadeStep;

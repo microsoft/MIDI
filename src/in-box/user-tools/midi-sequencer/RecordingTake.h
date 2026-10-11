@@ -72,6 +72,12 @@ namespace midisequencer
         // nowTick.
         std::vector<Note> NotesSoFar(_In_ int64_t nowTick) const;
 
+        // A take recorded into a launcher slot: a looping clip that starts where the take did and
+        // is exactly length long. Held notes end at nowTick (LoopSoFar) or at the clip's end
+        // (FinishLoop), and anything played after the end is left out.
+        Clip LoopSoFar(_In_ int64_t length, _In_ int64_t nowTick) const;
+        Clip FinishLoop(_In_ int64_t length, _In_ std::wstring clipId, _In_ std::wstring name, _In_ std::wstring originDetail);
+
     private:
         struct OpenNote
         {

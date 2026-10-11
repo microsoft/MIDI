@@ -79,6 +79,15 @@ CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, Mid
     m_Flags = flags;
     m_InterfaceId = interfaceId;
 
+    if (Feature_Servicing_MIDI2WinMMRemovalWithoutPortLock::IsEnabled())
+    {
+        try
+        {
+            m_RemovalInterfaceId = interfaceId;
+        }
+        CATCH_RETURN();
+    }
+
     std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
     RETURN_IF_NULL_ALLOC(midiSrv);
 

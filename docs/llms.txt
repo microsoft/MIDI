@@ -22,5 +22,6 @@ Links inside these files start with `{{ site.baseurl }}`, which stands for `http
 
 - [Windows MIDI Glass](https://microsoft.github.io/MIDI/tools/midiglass/): The app's documentation for customers.
 - [Windows MIDI Patchbay](https://microsoft.github.io/MIDI/tools/midipatchbay/): The app's documentation for customers.
+- [Windows MIDI Sequencer](https://microsoft.github.io/MIDI/tools/midisequencer/): The app's documentation for customers. A very early preview.
 - [Knowledge base](https://microsoft.github.io/MIDI/kb/): Every article, for customers and developers.
 - [WinRT API reference](https://microsoft.github.io/MIDI/sdk-reference/): For developers writing apps that use MIDI on Windows.

@@ -49,6 +49,7 @@ public:
     TEST_METHOD(TestStatusByteTerminatesOpenSysEx7WithLateEndByte);
     TEST_METHOD(TestSysEx7StartWithPendingDataStartsNewMessage);
     TEST_METHOD(TestSysEx7AbandonedMidMessageIsTerminated);
+    TEST_METHOD(TestZeroWordsInsideMessagesSurvive);
     
     //TEST_METHOD(TestLongSysEx7);
 

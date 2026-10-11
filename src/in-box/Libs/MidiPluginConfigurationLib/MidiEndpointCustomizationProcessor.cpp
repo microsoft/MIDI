@@ -98,6 +98,34 @@ namespace WindowsMidiServicesPluginConfigurationLib
             }
         }
 
+        void ReadClearedPortNames(
+            _In_ json::JsonObject const& updateObject,
+            _Inout_ MidiEndpointCustomizationApplyResult& result) noexcept
+        {
+            try
+            {
+                if (!updateObject.HasKey(MidiEndpointCustomProperties::PropertyKey))
+                {
+                    return;
+                }
+
+                auto const customPropsValue = updateObject.GetNamedValue(MidiEndpointCustomProperties::PropertyKey);
+
+                if (customPropsValue.ValueType() != json::JsonValueType::Object)
+                {
+                    return;
+                }
+
+                MidiEndpointCustomProperties::ReadClearedMidi1Ports(
+                    customPropsValue.GetObject(),
+                    result.ClearedSourceGroups,
+                    result.ClearedDestinationGroups);
+            }
+            catch (...)
+            {
+            }
+        }
+
         // Folds the customization's MIDI 1.0 port names into the endpoint's name table and adds
         // the resulting properties. The table is returned so it outlives the property write.
         void BuildProperties(
@@ -115,7 +143,14 @@ namespace WindowsMidiServicesPluginConfigurationLib
                     return;
                 }
 
-                if (result.Properties->Midi1Sources.empty() && result.Properties->Midi1Destinations.empty())
+                auto const changesPortNames =
+                    !result.Properties->Midi1Sources.empty() ||
+                    !result.Properties->Midi1Destinations.empty() ||
+                    !result.ClearedSourceGroups.empty() ||
+                    !result.ClearedDestinationGroups.empty() ||
+                    result.ClearAllPortNames;
+
+                if (!changesPortNames)
                 {
                     return;
                 }
@@ -128,15 +163,7 @@ namespace WindowsMidiServicesPluginConfigurationLib
                     return;
                 }
 
-                for (auto const& source : result.Properties->Midi1Sources)
-                {
-                    result.NameTable->UpdateSourceEntryCustomName(source.second.GroupIndex, source.second.Name);
-                }
-
-                for (auto const& destination : result.Properties->Midi1Destinations)
-                {
-                    result.NameTable->UpdateDestinationEntryCustomName(destination.second.GroupIndex, destination.second.Name);
-                }
+                MidiEndpointCustomizationProcessor::ApplyPortNames(result, *result.NameTable);
 
                 result.NameTable->WriteProperties(result.EndpointProperties);
 
@@ -201,6 +228,8 @@ namespace WindowsMidiServicesPluginConfigurationLib
 
                 result.Properties = ReadCustomProperties(updateObject, rejectImagePaths);
                 result.Provenance = ReadProvenance(updateObject);
+
+                ReadClearedPortNames(updateObject, result);
 
                 if (resolver)
                 {
@@ -295,6 +324,7 @@ namespace WindowsMidiServicesPluginConfigurationLib
                 // An empty set, so the endpoint goes back to what the transport supplied rather
                 // than keeping values whose entry no longer exists.
                 result.Properties = std::make_shared<MidiEndpointCustomProperties>();
+                result.ClearAllPortNames = true;
 
                 if (result.Properties != nullptr)
                 {
@@ -382,6 +412,48 @@ namespace WindowsMidiServicesPluginConfigurationLib
         catch (...)
         {
             RETURN_HR(E_FAIL);
+        }
+    }
+
+
+    _Use_decl_annotations_
+    void MidiEndpointCustomizationProcessor::ApplyPortNames(
+        MidiEndpointCustomizationApplyResult const& result,
+        WindowsMidiServicesNamingLib::MidiEndpointNameTable& nameTable) noexcept
+    {
+        // a table only holds the endpoint's own groups, so updating any other group does nothing
+        if (result.ClearAllPortNames)
+        {
+            for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
+            {
+                nameTable.UpdateSourceEntryCustomName(groupIndex, winrt::hstring{});
+                nameTable.UpdateDestinationEntryCustomName(groupIndex, winrt::hstring{});
+            }
+        }
+
+        for (auto const groupIndex : result.ClearedSourceGroups)
+        {
+            nameTable.UpdateSourceEntryCustomName(groupIndex, winrt::hstring{});
+        }
+
+        for (auto const groupIndex : result.ClearedDestinationGroups)
+        {
+            nameTable.UpdateDestinationEntryCustomName(groupIndex, winrt::hstring{});
+        }
+
+        if (result.Properties == nullptr)
+        {
+            return;
+        }
+
+        for (auto const& source : result.Properties->Midi1Sources)
+        {
+            nameTable.UpdateSourceEntryCustomName(source.second.GroupIndex, source.second.Name);
+        }
+
+        for (auto const& destination : result.Properties->Midi1Destinations)
+        {
+            nameTable.UpdateDestinationEntryCustomName(destination.second.GroupIndex, destination.second.Name);
         }
     }
 }

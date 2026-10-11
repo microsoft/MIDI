@@ -9,6 +9,23 @@
 
 #include "pch.h"
 
+// Net-new for Feature_Servicing_MIDI2LoopbackRejectRemovedEndpoint.
+static bool IsEndpointInterfaceEnabled(_In_ std::wstring const& endpointInterfaceId)
+{
+    try
+    {
+        auto deviceInfo = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
+            winrt::to_hstring(endpointInterfaceId.c_str()),
+            winrt::single_threaded_vector<winrt::hstring>(),
+            winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+
+        return deviceInfo.IsEnabled();
+    }
+    CATCH_LOG();
+
+    return false;
+}
+
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiBidi::Initialize(
@@ -119,6 +136,15 @@ CMidi2LoopbackMidiBidi::Initialize(
             TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
             TraceLoggingWideString(m_associationId.c_str(), "association id")
         );
+
+        if (Feature_Servicing_MIDI2LoopbackRejectRemovedEndpoint::IsEnabled())
+        {
+            // A pair being created is enabled before it is in the table, so only a removed one is disabled.
+            if (!IsEndpointInterfaceEnabled(m_endpointId))
+            {
+                RETURN_HR(HRESULT_FROM_WIN32(ERROR_NOT_FOUND));
+            }
+        }
     }
 
     return hr;

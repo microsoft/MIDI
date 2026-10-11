@@ -25,6 +25,10 @@ namespace midisequencer
         // zoomed all the way out still draws quickly.
         constexpr size_t MaximumPreviewNotes = 6000;
 
+        // A clip lane is drawn once for each pass of its clip that's in view. Past this many, the
+        // passes are narrower than a pixel.
+        constexpr size_t MaximumDrawnPasses = 4096;
+
         canvasText::CanvasTextFormat MakeFormat(
             wchar_t const* family,
             float size,
@@ -54,6 +58,33 @@ namespace midisequencer
         Color TrackColor(uint32_t rgb) noexcept
         {
             return FromRgb(rgb & 0xFFFFFF);
+        }
+
+        // WCAG relative luminance of an sRGB color.
+        double RelativeLuminance(uint32_t rgb) noexcept
+        {
+            auto const channel = [](uint32_t value)
+            {
+                auto const c = static_cast<double>(value & 0xFF) / 255.0;
+                return c <= 0.04045 ? c / 12.92 : std::pow((c + 0.055) / 1.055, 2.4);
+            };
+
+            return 0.2126 * channel(rgb >> 16) + 0.7152 * channel(rgb >> 8) + 0.0722 * channel(rgb);
+        }
+
+        // A tag's label has dark text (seq.css .tag). A color from another app can be too dark or
+        // too strong for it, and then the text is black or white, whichever reads better.
+        uint32_t TagTextColor(uint32_t background) noexcept
+        {
+            constexpr uint32_t Dark = 0x1A1A1A;
+            auto const light = RelativeLuminance(background) + 0.05;
+
+            if (light / (RelativeLuminance(Dark) + 0.05) >= 4.5)
+            {
+                return Dark;
+            }
+
+            return light / 0.05 >= 1.05 / light ? 0x000000 : 0xFFFFFF;
         }
 
         Color ClipColor(Clip const& clip, Track const& track) noexcept
@@ -208,6 +239,66 @@ namespace midisequencer
         return clip.Name;
     }
 
+    namespace
+    {
+        constexpr float LaneRowPadding = 6.0f;
+        constexpr double LaneTop = 4294967295.0;
+
+        // The tempo row's line sits under its labels: 23 pixels from the top, 6 from the bottom.
+        constexpr float TempoTopPadding = 23.0f;
+        constexpr float TempoBottomPadding = 6.0f;
+    }
+
+    _Use_decl_annotations_
+    float LaneValueY(uint32_t value, float top, float height) noexcept
+    {
+        auto const span = std::max(1.0f, height - LaneRowPadding * 2.0f);
+        return top + LaneRowPadding + static_cast<float>((1.0 - static_cast<double>(value) / LaneTop) * span);
+    }
+
+    _Use_decl_annotations_
+    uint32_t LaneValueAtY(float y, float top, float height) noexcept
+    {
+        auto const span = std::max(1.0f, height - LaneRowPadding * 2.0f);
+        auto const fraction = std::clamp(1.0 - static_cast<double>(y - top - LaneRowPadding) / span, 0.0, 1.0);
+        return static_cast<uint32_t>(std::llround(fraction * LaneTop));
+    }
+
+    _Use_decl_annotations_
+    TempoRange TempoRowRange(std::vector<TempoPoint> const& tempo) noexcept
+    {
+        if (tempo.empty())
+        {
+            return TempoRange{};
+        }
+
+        auto lowest = tempo.front().BeatsPerMinute;
+        auto highest = lowest;
+
+        for (auto const& point : tempo)
+        {
+            lowest = std::min(lowest, point.BeatsPerMinute);
+            highest = std::max(highest, point.BeatsPerMinute);
+        }
+
+        auto const low = lowest - 6.0;
+        return TempoRange{ low, std::max(highest + 4.0, low + 1.0) };
+    }
+
+    _Use_decl_annotations_
+    float TempoY(double beatsPerMinute, TempoRange const& range, float top, float height) noexcept
+    {
+        auto const span = std::max(1.0f, height - TempoTopPadding - TempoBottomPadding);
+        return top + TempoTopPadding + static_cast<float>((1.0 - (beatsPerMinute - range.Low) / (range.High - range.Low)) * span);
+    }
+
+    _Use_decl_annotations_
+    double TempoAtY(float y, TempoRange const& range, float top, float height) noexcept
+    {
+        auto const span = std::max(1.0f, height - TempoTopPadding - TempoBottomPadding);
+        return range.Low + (1.0 - static_cast<double>(y - top - TempoTopPadding) / span) * (range.High - range.Low);
+    }
+
     void ArrangeRenderer::EnsureFormats()
     {
         if (m_caption != nullptr)
@@ -219,11 +310,14 @@ namespace midisequencer
         m_captionGlyph = MakeFormat(GlyphFont, 8.0f, 400);
         m_rulerNumber = MakeFormat(TextFont, 10.0f, 400, canvasText::CanvasVerticalAlignment::Top);
         m_tagText = MakeFormat(TextFont, 10.0f, 600);
+        m_rubyText = MakeFormat(TextFont, 9.5f, 400);
         m_cellName = MakeFormat(TextFont, 10.5f, 400);
         m_cellGlyph = MakeFormat(GlyphFont, 8.0f, 400);
         m_slotGlyph = MakeFormat(GlyphFont, 8.0f, 400, canvasText::CanvasVerticalAlignment::Center, canvasText::CanvasHorizontalAlignment::Center);
         m_badge = MakeFormat(TextFont, 9.5f, 400);
         m_tempoLabel = MakeFormat(TextFont, 10.0f, 400);
+        m_meterLabel = MakeFormat(TextFont, 9.5f, 600);
+        m_laneHint = MakeFormat(TextFont, 11.0f, 400);
         m_overlayText = MakeFormat(TextFont, 11.0f, 400);
         m_overlayButton = MakeFormat(TextFont, 12.0f, 400, canvasText::CanvasVerticalAlignment::Center, canvasText::CanvasHorizontalAlignment::Center);
     }
@@ -427,6 +521,17 @@ namespace midisequencer
                 }
                 break;
 
+            case ArrangeRowKind::Lane:
+                if (auto const track = FindTrack(doc, row.TrackId); track != nullptr)
+                {
+                    DrawAutomationRow(ds, *track, row, top, width, context);
+                }
+                break;
+
+            case ArrangeRowKind::Lyrics:
+                DrawLyricsRow(ds, top, rowHeight, width, context);
+                break;
+
             default:
                 break;
             }
@@ -455,23 +560,8 @@ namespace midisequencer
             return;
         }
 
-        auto lowest = tempo.front().BeatsPerMinute;
-        auto highest = lowest;
-
-        for (auto const& point : tempo)
-        {
-            lowest = std::min(lowest, point.BeatsPerMinute);
-            highest = std::max(highest, point.BeatsPerMinute);
-        }
-
-        auto const low = lowest - 6.0;
-        auto const high = std::max(highest + 4.0, low + 1.0);
-
-        auto const y = [&](double bpm)
-        {
-            return top + 23.0f + static_cast<float>((1.0 - (bpm - low) / (high - low)) * (height - 29.0f));
-        };
-
+        auto const range = context.TempoScale.value_or(TempoRowRange(tempo));
+        auto const y = [&](double bpm) { return TempoY(bpm, range, top, height); };
         auto const x = [&](int64_t tick) { return static_cast<float>(context.View.XAtTick(tick)); };
 
         canvasGeometry::CanvasPathBuilder path{ ds };
@@ -520,6 +610,41 @@ namespace midisequencer
             ds.FillRoundedRectangle(px + 6.0f, py - 7.0f, labelWidth, 14.0f, 3.0f, 3.0f, colors.TempoLabelFill);
             ds.DrawRoundedRectangle(px + 6.0f, py - 7.0f, labelWidth, 14.0f, 3.0f, 3.0f, colors.TempoLabelStroke, 0.8f);
             ds.DrawText(text, px + 10.0f, py - 7.0f, labelWidth, 14.0f, colors.TempoLabelText, m_tempoLabel);
+        }
+
+        // A handle on each change, so it can be dragged.
+        for (size_t i = 0; i < tempo.size(); ++i)
+        {
+            auto const px = x(tempo[i].Tick);
+
+            if (px < -6.0f || px > width + 6.0f)
+            {
+                continue;
+            }
+
+            auto const selected = context.SelectedTempoPoint == i;
+            auto const radius = selected ? 4.0f : 2.5f;
+            auto const py = y(tempo[i].BeatsPerMinute);
+
+            ds.FillCircle(px, py, radius, selected ? colors.SelectionStroke : colors.HandleFill);
+            ds.DrawCircle(px, py, radius, selected ? colors.SelectionStroke : colors.TempoLine, 1.2f);
+        }
+
+        // Meter changes after the first, along the bottom.
+        auto const& meter = context.Doc->Meter;
+
+        for (size_t i = 1; i < meter.size(); ++i)
+        {
+            auto const mx = x(meter[i].Tick);
+
+            if (mx < -40.0f || mx > width)
+            {
+                continue;
+            }
+
+            ds.FillRectangle(std::floor(mx), top + height - 15.0f, 1.0f, 14.0f, colors.TempoLabelStroke);
+            ds.DrawText(winrt::hstring{ std::format(L"{}/{}", meter[i].Numerator, meter[i].Denominator) },
+                mx + 3.0f, top + height - 15.0f, 40.0f, 13.0f, colors.Text3, m_meterLabel);
         }
 
         for (auto const& tag : context.Doc->Tags)
@@ -607,10 +732,12 @@ namespace midisequencer
                     ds.DrawLine(stripe, top + height, stripe + height, top, colors.OverlayStripeA, 6.0f);
                 }
 
-                auto const textWidth = MeasureWidth(ds, context.PlayingLaunchedClip, m_overlayText);
-                ds.DrawText(context.PlayingLaunchedClip, 12.0f, top, textWidth + 4.0f, height - 1.0f, colors.Text2, m_overlayText);
+                auto const& caption = found->second.Mode == TrackPlayMode::Stopped ? context.StoppedFromLauncher : context.PlayingLaunchedClip;
+                auto const textWidth = MeasureWidth(ds, caption, m_overlayText);
+                ds.DrawText(caption, 12.0f, top, textWidth + 4.0f, height - 1.0f, colors.Text2, m_overlayText);
 
-                m_overlayTextWidth = textWidth;
+                // The button is in the same place on every row, whichever caption it follows.
+                m_overlayTextWidth = std::max(MeasureWidth(ds, context.PlayingLaunchedClip, m_overlayText), MeasureWidth(ds, context.StoppedFromLauncher, m_overlayText));
                 m_overlayButtonWidth = MeasureWidth(ds, context.BackToTimeline, m_overlayButton) + 18.0f;
 
                 auto const button = BackToTimelineButtonBounds(top, height);
@@ -678,6 +805,210 @@ namespace midisequencer
 
             ds.FillRoundedRectangle(x0, top + 6.0f, x1 - x0, height - 12.0f, 4.0f, 4.0f, fill);
             ds.DrawRoundedRectangle(x0 + 0.5f, top + 6.5f, x1 - x0 - 1.0f, height - 13.0f, 3.5f, 3.5f, stroke, 1.0f);
+        }
+    }
+
+    _Use_decl_annotations_
+    void ArrangeRenderer::DrawLaneLine(
+        canvas::CanvasDrawingSession const& ds,
+        AutomationLane const& lane,
+        int64_t offset,
+        int64_t fromTick,
+        int64_t toTick,
+        float top,
+        float height,
+        float width,
+        ArrangeDrawContext const& context,
+        Color color,
+        bool fill,
+        bool dashed)
+    {
+        auto const& points = lane.Points;
+        auto const& view = context.View;
+
+        // Only what's on screen.
+        auto const visibleFrom = std::max(fromTick, std::max<int64_t>(0, view.TickAtX(-2.0)));
+        auto const visibleTo = std::min(toTick, view.TickAtX(static_cast<double>(width) + 2.0) + 1);
+
+        if (points.empty() || visibleTo <= visibleFrom)
+        {
+            return;
+        }
+
+        auto const x = [&](int64_t tick) { return static_cast<float>(view.XAtTick(tick)); };
+        auto const y = [&](uint32_t value) { return LaneValueY(value, top, height); };
+        auto const valueAt = [&](int64_t tick) { return LaneValueAt(lane, tick - offset).value_or(0); };
+
+        std::vector<std::pair<float, float>> line{};
+        auto current = valueAt(visibleFrom);
+        line.emplace_back(x(visibleFrom), y(current));
+
+        auto index = static_cast<size_t>(std::distance(points.begin(), std::lower_bound(points.begin(), points.end(), visibleFrom - offset,
+            [](LanePoint const& point, int64_t tick) { return point.Tick < tick; })));
+
+        auto const firstHandle = index;
+
+        for (; index < points.size() && points[index].Tick + offset < visibleTo; ++index)
+        {
+            auto const px = x(points[index].Tick + offset);
+
+            // A ramp arrives at the point's value; a hold stays level up to it, then steps.
+            if (index == 0 || !LaneRampsAfter(lane, index - 1))
+            {
+                line.emplace_back(px, y(current));
+            }
+
+            current = points[index].Value;
+            line.emplace_back(px, y(current));
+        }
+
+        auto const lastHandle = index;
+        line.emplace_back(x(visibleTo), y(valueAt(visibleTo - 1)));
+
+        auto const build = [&](bool closed)
+        {
+            canvasGeometry::CanvasPathBuilder path{ ds };
+            path.BeginFigure(line.front().first, line.front().second);
+
+            for (size_t i = 1; i < line.size(); ++i)
+            {
+                path.AddLine(line[i].first, line[i].second);
+            }
+
+            if (closed)
+            {
+                path.AddLine(line.back().first, top + height - 1.0f);
+                path.AddLine(line.front().first, top + height - 1.0f);
+            }
+
+            path.EndFigure(closed ? canvasGeometry::CanvasFigureLoop::Closed : canvasGeometry::CanvasFigureLoop::Open);
+            return canvasGeometry::CanvasGeometry::CreatePath(path);
+        };
+
+        if (fill)
+        {
+            ds.FillGeometry(build(true), WithAlpha(color, 0.12));
+        }
+
+        if (dashed)
+        {
+            ds.DrawGeometry(build(false), WithAlpha(color, 0.85), 1.4f, DashedStroke(4.0f, 3.0f));
+        }
+        else
+        {
+            ds.DrawGeometry(build(false), color, 1.6f);
+        }
+
+        // Handles on the points, when they're far enough apart to aim at.
+        if (!fill || lastHandle - firstHandle > 2000)
+        {
+            return;
+        }
+
+        auto const& colors = *context.Colors;
+        auto lastX = -1000.0f;
+        auto lastY = -1000.0f;
+
+        for (auto i = firstHandle; i < lastHandle; ++i)
+        {
+            auto const selected = context.SelectedLanePoint == i;
+            auto const radius = selected ? 4.0f : 3.0f;
+            auto const px = x(points[i].Tick + offset);
+            auto const py = y(points[i].Value);
+
+            // Drawn points come thick and fast; a handle on top of the last one is noise.
+            if (!selected && (px - lastX) * (px - lastX) + (py - lastY) * (py - lastY) < 49.0f)
+            {
+                continue;
+            }
+
+            lastX = px;
+            lastY = py;
+
+            ds.FillCircle(px, py, radius, selected ? colors.SelectionStroke : colors.HandleFill);
+            ds.DrawCircle(px, py, radius, selected ? colors.SelectionStroke : color, 1.5f);
+        }
+    }
+
+    _Use_decl_annotations_
+    void ArrangeRenderer::DrawAutomationRow(canvas::CanvasDrawingSession const& ds, Track const& track, ArrangeRow const& row, float top, float width, ArrangeDrawContext const& context)
+    {
+        auto const& colors = *context.Colors;
+        auto const height = static_cast<float>(row.Height);
+        auto const lane = std::find_if(track.Lanes.begin(), track.Lanes.end(), [&row](AutomationLane const& candidate) { return candidate.Id == row.LaneId; });
+
+        if (lane == track.Lanes.end())
+        {
+            return;
+        }
+
+        if (lane->Points.empty())
+        {
+            ds.DrawText(context.EmptyLaneHint, 12.0f, top, std::max(1.0f, width - 24.0f), height - 1.0f, colors.Text3, m_laneHint);
+            return;
+        }
+
+        auto const muted = track.Muted || row.InsideMutedFolder;
+        auto const color = Muted(colors, TrackColor(track.Color), muted);
+        auto const selected = context.SelectedLaneTrackId == track.Id && context.SelectedLaneId == lane->Id;
+
+        auto selectedContext = context;
+
+        if (!selected)
+        {
+            selectedContext.SelectedLanePoint = SIZE_MAX;
+        }
+
+        DrawLaneLine(ds, *lane, 0, 0, INT64_MAX, top, height, width, selectedContext, color, true, false);
+
+        // Inside a clip that has its own lane for this, the clip's lane plays instead: the track's
+        // line is shaded there, and the clip's is drawn over it each time the clip goes round.
+        for (auto const& placement : track.Timeline)
+        {
+            auto const clip = FindClip(*context.Doc, placement.ClipId);
+
+            if (clip == nullptr || clip->Length <= 0)
+            {
+                continue;
+            }
+
+            auto const own = std::find_if(clip->Lanes.begin(), clip->Lanes.end(), [&lane](AutomationLane const& candidate)
+            {
+                return !candidate.Points.empty() && SameLaneTarget(candidate, *lane);
+            });
+
+            if (own == clip->Lanes.end())
+            {
+                continue;
+            }
+
+            auto const length = placement.Length > 0 ? placement.Length : clip->Length;
+            auto const end = placement.Tick + (clip->Loop ? length : std::min(length, clip->Length));
+            auto const x0 = std::max(0.0f, static_cast<float>(context.View.XAtTick(placement.Tick)));
+            auto const x1 = std::min(width, static_cast<float>(context.View.XAtTick(end)));
+
+            if (x1 <= x0)
+            {
+                continue;
+            }
+
+            ds.FillRectangle(x0, top, x1 - x0, height - 1.0f, colors.OverlayStripeB);
+
+            // Under the line, so the line stays readable where they cross.
+            ds.DrawText(context.ClipLaneCaption, x0 + 4.0f, top + 2.0f, std::max(1.0f, x1 - x0 - 8.0f), 13.0f, colors.Text3, m_meterLabel);
+
+            // From the first pass in view, and no more passes than the width can show.
+            auto passStart = placement.Tick;
+
+            if (auto const leftTick = static_cast<int64_t>(std::max(0.0, context.View.ScrollX / std::max(1.0e-9, context.View.PixelsPerTick))); leftTick > passStart)
+            {
+                passStart += ((leftTick - passStart) / clip->Length) * clip->Length;
+            }
+
+            for (size_t drawn = 0; passStart < end && context.View.XAtTick(passStart) <= width && drawn < MaximumDrawnPasses; passStart += clip->Length, ++drawn)
+            {
+                DrawLaneLine(ds, *own, passStart, passStart, std::min(end, passStart + clip->Length), top, height, width, context, color, false, true);
+            }
         }
     }
 
@@ -767,13 +1098,22 @@ namespace midisequencer
             DrawNotes(ds, *clip, clip->Notes, body, placement.Tick, placement.Tick + length,
                 context.View.PixelsPerTick, -context.View.ScrollX, noteColor, clip->Kind == ClipKind::Generator);
 
-            // Where a looping clip starts again.
-            if (clip->Loop && length > clip->Length)
+            // Where a looping clip starts again: from the first mark in view, and only when the
+            // marks are far enough apart to see. Closer than that they'd be a smear, and a file
+            // could ask for billions of them.
+            if (clip->Loop && length > clip->Length && static_cast<double>(clip->Length) * context.View.PixelsPerTick >= 3.0)
             {
                 auto const loopColor = colors.Light ? Rgba(0, 0, 0, 0.35) : Rgba(255, 255, 255, 0.35);
                 auto const dashed = DashedStroke(2.0f, 2.0f);
+                auto const leftTick = static_cast<int64_t>(std::max(0.0, context.View.ScrollX / context.View.PixelsPerTick));
+                auto at = placement.Tick + clip->Length;
 
-                for (auto at = placement.Tick + clip->Length; at < placement.Tick + length; at += clip->Length)
+                if (leftTick > at)
+                {
+                    at += ((leftTick - at) / clip->Length) * clip->Length;
+                }
+
+                for (; at < placement.Tick + length; at += clip->Length)
                 {
                     auto const x = static_cast<float>(context.View.XAtTick(at));
 
@@ -913,7 +1253,8 @@ namespace midisequencer
             return;
         }
 
-        auto const color = tag.Color.has_value() ? FromRgb(*tag.Color) : FromRgb(0xD7D7D7);
+        auto const rgb = tag.Color.value_or(0xD7D7D7);
+        auto const color = FromRgb(rgb);
 
         ds.DrawLine(x + 0.5f, top, x + 0.5f, top + height - 1.0f, WithAlpha(color, 0.85), 1.0f, DashedStroke(3.0f, 3.0f));
 
@@ -936,7 +1277,7 @@ namespace midisequencer
 
         ds.FillGeometry(canvasGeometry::CanvasGeometry::CreatePath(path), color);
         ds.FillCircle(x + 7.5f, y + 8.0f, 1.5f, Rgba(0, 0, 0, 0.45));
-        ds.DrawText(text, x + 12.0f, y, textWidth + 2.0f, labelHeight, FromRgb(0x1A1A1A), m_tagText);
+        ds.DrawText(text, x + 12.0f, y, textWidth + 2.0f, labelHeight, FromRgb(TagTextColor(rgb)), m_tagText);
     }
 
     _Use_decl_annotations_
@@ -1086,11 +1427,17 @@ namespace midisequencer
             ds.FillRoundedRectangle(cell, 4.0f, 4.0f, colors.EmptySlotFill);
             ds.DrawRoundedRectangle(cell.X + 0.5f, cell.Y + 0.5f, cell.Width - 1.0f, cell.Height - 1.0f, 3.5f, 3.5f, colors.EmptySlotStroke, 1.0f);
             ds.DrawText(armed ? L"\uE7C8" : L"\uE71A", cell, armed ? colors.ArmedSlotGlyph : colors.EmptySlotGlyph, m_slotGlyph);
+
+            if (context.SelectedSlotTrackId == track.Id && context.SelectedSlot == scene)
+            {
+                ds.DrawRoundedRectangle(cell.X - 1.5f, cell.Y - 1.5f, cell.Width + 3.0f, cell.Height + 3.0f, 5.0f, 5.0f, colors.SelectionStroke, 1.5f);
+            }
+
             return;
         }
 
-        auto const playing = launch != nullptr && launch->Mode == TrackPlayMode::Clip && launch->ClipId == clipId;
-        auto const queued = launch != nullptr && launch->Pending && launch->PendingMode == TrackPlayMode::Clip && launch->PendingClipId == clipId;
+        auto const playing = launch != nullptr && launch->Plays(clipId, scene);
+        auto const queued = launch != nullptr && launch->Queues(clipId, scene);
 
         auto const tc = ClipColor(*clip, track);
         auto const fill = Muted(colors, CellFill(colors, tc, playing), muted);

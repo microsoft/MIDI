@@ -36,4 +36,7 @@ public:
 
     // the ungated parser has to keep behaving exactly as it did, so a rollback is a rollback
     TEST_METHOD(TestUngatedParserStillAcceptsAPath);
+
+    // each value goes to its own device property, not to the note off translation one
+    TEST_METHOD(TestControlChangeIntervalAndMpeUseTheirOwnProperties);
 };

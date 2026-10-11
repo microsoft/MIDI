@@ -11,6 +11,7 @@
 // Covers the endpoint customization work as one rollback unit: the shared customization update
 // path and the listEndpointCustomizations verb, image file name validation, and the loopback
 // transport honoring muted, image and post-creation customization.
+// Also: an update or removal that empties a MIDI 1.0 port name clears it on the running endpoint.
 
 class Feature_Servicing_MIDI2EndpointCustomizationEnhancements
 {

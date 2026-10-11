@@ -136,20 +136,34 @@
     <ClInclude Include="MessageTranslation.h" />
     <ClInclude Include="MidiClipFile.h" />
     <ClInclude Include="PianoRoll.h" />
+    <ClInclude Include="ClipLaneStrip.h" />
+    <ClInclude Include="PatternEditor.h" />
     <ClInclude Include="PlaybackEngine.h" />
     <ClInclude Include="RecordingTake.h" />
+    <ClInclude Include="RemoteControl.h" />
+    <ClInclude Include="RemoteEndpoint.h" />
+    <ClInclude Include="GlassLayoutWriter.h" />
     <ClInclude Include="SampleSequence.h" />
     <ClInclude Include="SequenceEdits.h" />
     <ClInclude Include="SequenceModel.h" />
+    <ClInclude Include="SequenceGenerator.h" />
+    <ClInclude Include="SequenceArpeggiator.h" />
+    <ClInclude Include="SequencePattern.h" />
     <ClInclude Include="SequenceRender.h" />
     <ClInclude Include="SequenceSerializer.h" />
     <ClInclude Include="SequenceUndo.h" />
     <ClInclude Include="SessionEngineOutput.h" />
     <ClInclude Include="SourceMonitor.h" />
     <ClInclude Include="StandardMidiFileBridge.h" />
+    <ClInclude Include="DawProject.h" />
+    <ClInclude Include="CaptureImport.h" />
+    <ClInclude Include="DocumentFiles.h" />
+    <ClInclude Include="Lyrics.h" />
+    <ClInclude Include="SequenceProvenance.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="ThemePalette.h" />
+    <ClInclude Include="WrapPanel.h" />
     <ClInclude Include="App.xaml.h">
       <DependentUpon>App.xaml</DependentUpon>
     </ClInclude>
@@ -172,6 +186,10 @@
     <ClInclude Include="..\midi-app-shared\EndpointMatch.h" />
     <ClInclude Include="..\midi-app-shared\EndpointCatalog.h" />
     <ClInclude Include="..\midi-app-shared\ContentProvenance.h" />
+    <ClInclude Include="..\midi-app-shared\ClockFollower.h" />
+    <ClInclude Include="..\midi-app-shared\MidiTimeCode.h" />
+    <ClInclude Include="..\midi-app-shared\ZipArchive.h" />
+    <ClInclude Include="..\midi-app-shared\Deflate.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -184,9 +202,12 @@
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="EndpointDirectory.cpp" />
     <ClCompile Include="PianoRoll.cpp" />
+    <ClCompile Include="ClipLaneStrip.cpp" />
+    <ClCompile Include="PatternEditor.cpp" />
     <ClCompile Include="SourceMonitor.cpp" />
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="ThemePalette.cpp" />
+    <ClCompile Include="WrapPanel.cpp" />
     <ClCompile Include="App.xaml.cpp">
       <DependentUpon>App.xaml</DependentUpon>
     </ClCompile>
@@ -194,9 +215,21 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="MainWindowArrange.cpp" />
+    <ClCompile Include="MainWindowAutomation.cpp" />
+    <ClCompile Include="MainWindowClock.cpp" />
     <ClCompile Include="MainWindowDocument.cpp" />
+    <ClCompile Include="MainWindowImport.cpp" />
+    <ClCompile Include="MainWindowLyrics.cpp" />
+    <ClCompile Include="MainWindowProvenance.cpp" />
+    <ClCompile Include="ArrangeRendererLyrics.cpp" />
     <ClCompile Include="MainWindowEditor.cpp" />
     <ClCompile Include="MainWindowPlayback.cpp" />
+    <ClCompile Include="MainWindowRemote.cpp" />
+    <ClCompile Include="MainWindowPattern.cpp" />
+    <ClCompile Include="MainWindowGenerator.cpp" />
+    <ClCompile Include="MainWindowArpeggiator.cpp" />
+    <ClCompile Include="MainWindowClipLanes.cpp" />
+    <ClCompile Include="MainWindowKeyboard.cpp" />
     <ClCompile Include="MainWindowTrack.cpp" />
     <!-- the model and the engine are free of the pch and XAML so the unit tests compile them unchanged -->
     <ClCompile Include="ArrangeLayout.cpp">
@@ -214,6 +247,13 @@
     <ClCompile Include="RecordingTake.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="RemoteControl.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="GlassLayoutWriter.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="RemoteEndpoint.cpp" />
     <ClCompile Include="SampleSequence.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -221,6 +261,15 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SequenceModel.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="SequencePattern.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="SequenceGenerator.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="SequenceArpeggiator.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SequenceRender.cpp">
@@ -236,6 +285,21 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="StandardMidiFileBridge.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="DawProject.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="CaptureImport.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lyrics.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LyricData.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="SequenceProvenance.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <!-- Standard MIDI File reader and writer, shared with MIDI Player and the Sequencing API -->
@@ -262,6 +326,18 @@
     <ClCompile Include="..\midi-app-shared\ContentProvenance.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\midi-app-shared\ClockFollower.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\MidiTimeCode.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\ZipArchive.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\Deflate.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -269,6 +345,7 @@
     <Midl Include="MainWindow.idl">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Midl>
+    <Midl Include="SequencerTypes.idl" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">

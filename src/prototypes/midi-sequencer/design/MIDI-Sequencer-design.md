@@ -66,11 +66,15 @@ What I considered and didn't recommend:
 
 **Pattern clips (comp 3)** in the first version: drum lanes (one note per lane) and a melodic mode (one note per step, with accent and slide rows). Steps per pattern, step size and swing. **Each lane can have its own length**, so a 12-step hat against a 16-step kick drifts and comes back. Per step: on, velocity (16-bit), chance, ratchet (2 to 8 quick repeats, with a shape), condition (every Nth pass, first pass only, not the first pass), nudge (early or late), length, and locks (a controller value for that step only; on a MIDI 2.0 destination a lock can be a per-note controller, so it changes only that hit).
 
+**How pattern clips work, as built** (October 10). A click turns a step on or off, and a drag up or down on a step sets how hard it plays. A right click looks at a step without changing it. The arrow keys move between steps, Space turns one on or off, and the inspector beside the grid has every setting, so the grid works from a keyboard too. A lane's conditions count that lane's own passes, so a step every second pass of a 12-step lane plays every 24 steps. Accent plays at full velocity. Slide makes a note run a quarter step into the next one, so a synth set to glide on overlapping notes slides to it. There's no slide time, because the synth sets that. Vary picks a new seed. **Make notes** swaps the pattern on that track for an ordinary notes clip that plays the same thing, for as many bars as it takes the lanes and conditions to line up (at most 64). Each step's chance stays on its note. The pattern stays in the sequence while another track uses it, and undo brings it back. Lanes are named from the General MIDI drum map, or by their note, or by a name you give them. **Not built yet:** locks, and the comp's choice of lane names.
+
 **Generator clips (comp 4)** in the first version:
 
 - **Euclidean rhythm.** Rings of pulses spread as evenly as possible over a number of steps, each with a rotation, note, velocity and chance.
 - **Chance melody.** Notes from a scale within a range, with how busy, note lengths, velocity range, and **Keep from the last pass**: 100% repeats, 0% is new every time, and anything between drifts slowly. That last setting covers the "evolving loop" idea without a separate type.
 - **Arpeggiator.** Plays what you hold on the track's source, or another track's notes, in the usual orders, rates and octaves, with latch. While an arpeggiator clip plays, it listens to the track's source whether or not the track is armed.
+
+**How generator clips work, as built** (October 10). New Euclidean rhythm and New chance melody are in an empty slot's menu and in the timeline's. The editor shows a generator's settings where the piano roll goes. A Euclidean rhythm is a table of up to 16 rings. Each ring has its own number of steps, so rings of different lengths drift against each other like a pattern's lanes. A chance melody is a form: key, scale, lowest and highest note, how busy, keep from the last pass, the velocity range and the note length. The header sets the type, the length (1 to 16 bars), the step size and **Changes each pass**. With it off, every pass plays the same, and a ring's chance only decides which hits that one pass has. With it on, each pass rolls again, and a chance melody keeps as much of the last pass as you ask. Vary picks a new seed. Make notes turns a generator into an ordinary notes clip four passes long (at most 64 bars). **Not built yet:** the arpeggiator (an arpeggiator clip keeps its settings and plays nothing), the comp's ring drawing, and its four-pass preview.
 
 Later candidates, in the order I'd look at them: per-lane speed and a fill mode for patterns; polyrhythm and "bouncing ball" generators; a generator that learns note-to-note movement from a clip you give it.
 
@@ -104,17 +108,22 @@ Later candidates, in the order I'd look at them: per-lane speed and a fill mode 
 
 ## 7. Automation
 
-- **Drawn on the track itself** (comp 1): lanes open under a track on the timeline. A lane can be a controller (7-bit or 32-bit), pitch bend, channel pressure, program change, or a registered or assignable controller (RPN or NRPN). Tempo is a lane on the Tempo and meter track.
-- **Clips have lanes too.** Controller lanes inside a notes clip travel with the clip and loop with it, which is what a launched clip needs.
+- **Drawn on the track itself** (comp 1). Lanes open under their track on the timeline, and the arrow beside a track's name shows or hides them. A lane changes one thing: a controller, pitch bend, channel pressure, program change, or a registered or assignable controller (RPN or NRPN). Add one with the + on a lane's header, or with Add automation in the track's menu.
+- **Points.** Each point has a position and a value. Values are kept at 32 bits, so nothing is lost on a MIDI 2.0 device. The line ramps from one point to the next, unless a point is set to hold until the next one, which makes a step. Before the first point a lane holds the first value, and after the last it holds the last.
+- **Editing.** Click a lane to add a point, and drag a point to move it. Hold Ctrl and drag to draw. Double-click or right-click a point to type a value or make it hold. Delete removes the selected point. Each of those is one undo step. The chip in the lane's header shows the value at the playhead.
+- **Clips have lanes too.** A clip's lane travels with the clip and loops with it, which is what a launched clip needs. The file, playback and exports handle clip lanes now. The editor for them comes later. Until then, a clip's lane shows as a dashed line over the track's lane wherever the clip plays.
 - **Which one wins.** While a track plays a launched clip, the clip's lanes apply and the track's automation waits. On the timeline, a clip's lane for a controller wins over the track's lane for the same controller, but only inside that clip. The innermost lane always wins, so it's predictable.
-- **How often values are sent.** A ramp is sent as steps, no more often than the automation interval set for that device in MIDI Settings (every 10 ms when it has none), and only when the value changes at the destination's resolution. A 7-bit lane can't send more than 128 different values in a ramp, and a MIDI 1.0 cable carries only about a thousand controller messages a second, so a dense 32-bit lane going to a MIDI 1.0 device is thinned on purpose.
-- Drawing: pencil, line, and curve handles, with optional snapping. LFO shapes from MIDI Glass and MIDI Patchbay (the shared LFO wave code) can fill a selection.
+- **How often values are sent.** A ramp goes out as steps, no more often than the automation interval set for that device in MIDI Settings (every 10 ms when it has none). The steps sit at fixed beat positions, spaced for the fastest tempo in the sequence, so they never come faster than that interval. A step goes out only when the value changes at the destination's resolution: 7 bits for most controllers on a MIDI 1.0 device, 14 bits for pitch bend, RPN and NRPN there, and 32 bits on a MIDI 2.0 device. So a 7-bit lane can't send more than 128 different values in a ramp, and a dense lane going to a MIDI 1.0 device is thinned on purpose, because a MIDI 1.0 cable carries only about a thousand controller messages a second.
+- **Starting part way.** Playing from the middle, a loop going round, an edit while playing and unmuting a track each send every lane's value at that point, so a device is never left where an earlier pass put it.
+- **Tempo and meter.** The Tempo and meter track draws the tempo as a line with a handle on each change. Drag a handle to change the tempo or move the change (the first one stays at the start). Double-click one to type a tempo. Right-click the track to change the tempo or meter there, make a tempo ramp to the next change, or delete a change. Selecting the tempo display opens the tempo and meter in effect at the playhead. When a meter change is added or removed, later meter changes stay on the same bar.
+- **Exports.** A Standard MIDI File or clip file export includes the automation as ordinary messages.
+- **Not built yet:** line and curve tools, and filling a selection with an LFO shape from MIDI Glass and MIDI Patchbay (the shared LFO wave code).
 
 ## 8. Clock, sync and timing
 
-**How playback works.** Like the MIDI Player, the app hands each message to the service with the time it's due, and the service sends it then. The engine looks a short time ahead. The catch is that **a message handed over can't be taken back**, so a note you delete, a track you mute or a clip you launch inside that window still plays once. The Player looks 250 ms ahead. An interactive sequencer needs to react faster. My hypothesis was 100 ms. Phase 0 measured it (section 20): a message handed to the service arrives within a fraction of a millisecond of its time, whatever the look-ahead, so the service isn't what limits it. What's left is the engine's own thread, which woke up to 2 ms late on an idle PC. So the look-ahead can be much shorter than the Player's. I'd start at 40 ms, and have the engine stretch it when it sees itself waking late on a busy PC, never below 20 ms or above 250 ms. Launches quantized to a bar are exact as long as the bar is further away than that. A launch set to Immediately starts one window from now.
+**How playback works.** Like the MIDI Player, the app hands each message to the service with the time it's due, and the service sends it then. The engine looks a short time ahead. The catch is that **a message handed over can't be taken back**, so a note you delete, a track you mute or a clip you launch inside that window still plays once. That's also why the engine keeps each note's end until it's almost due, instead of handing it over with the start. An end handed over early can't be taken back either, so after a restart, a jump or a launched clip it would cut off a new note on the same key. The Player looks 250 ms ahead. An interactive sequencer needs to react faster. My hypothesis was 100 ms. Phase 0 measured it (section 20): a message handed to the service arrives within a fraction of a millisecond of its time, whatever the look-ahead, so the service isn't what limits it. What's left is the engine's own thread, which woke up to 2 ms late on an idle PC. So the look-ahead can be much shorter than the Player's. I'd start at 40 ms, and have the engine stretch it when it sees itself waking late on a busy PC, never below 20 ms or above 250 ms. Launches quantized to a bar are exact as long as the bar is further away than that. A launch set to Immediately starts one window from now.
 
-**Each device's offset is applied by the service, not the app.** MIDI Settings lets you set how early to send to each device, and some transports work out a value of their own. The service's scheduler sends each scheduled message that much early, up to one second. So the sequencer must not add its own offset per device, or the offset would be counted twice. It does have to hand a message over before the service needs to send it, so the look-ahead for each destination is the base look-ahead plus that destination's offset. A device with a large offset makes edits on its track take effect a little later, and only on that track. The destination list shows each device's offset (comp 5).
+**Each device's offset is applied by the app, for now.** MIDI Settings lets you set how early to send to each device, and some transports work out a value of their own (Bluetooth MIDI and Network MIDI 2.0 do). A newer version of the service's scheduler sends each message that much early, up to one second, but the service in Windows doesn't do that yet, and that's the service people will have when this app ships. So the engine does it. It reads each device's offset by the same rule as that scheduler (the value from MIDI Settings when you chose one, otherwise the transport's), sends that device's messages that much early, and starts playback late enough that the device needing its messages earliest still gets them in time. The look-ahead for each destination is the base look-ahead plus that destination's offset, so a device with a large offset makes edits on its track take effect a little later, and only on that track. The track setup shows each device's offset (comp 5). Once the service applies offsets itself, the app has to stop, or they're counted twice. Nothing tells the app which service it has, and a marker written by the service would only reach versions of Windows that have it (section 22). So it's a setting: **Send early for each device's offset**, under Timing in the clock menu, on by default. The help beside it explains why it's there, and says to turn it off once your version of Windows MIDI Services sends early by itself, which its release notes will say. With it off, a track's setup still shows the device's offset and says that sending early is off.
 
 **Silence** uses the Player's rules, which were measured: note offs for what's sounding, then sustain off before all notes off, then all sound off and pitch bend center, only on the channels the track uses (Windows MIDI Services is multi-client, so the app must not silence other apps), sent at once and again after the look-ahead. Starting in the middle of a song first sends each channel's bank, program, controllers and pitch bend, like the Player's seek.
 
@@ -122,9 +131,28 @@ Later candidates, in the order I'd look at them: per-lane speed and a fill mode 
 
 **Metronome.** With no audio, the click is a note sent to a destination you choose: endpoint, group, channel and note, with its own velocity for the first beat of each bar. By default it plays the General MIDI Synth's side stick, the rimshot-like click at note 37 on channel 10 in the General MIDI drum map, when that synth is present. The engine schedules it like any other note, so it lands on the beat and follows the tempo and meter. It can play always or only while recording. Count-in comes with punch in and out. It's a button on the transport, with its settings in a flyout (comp 6). The settings belong to the PC rather than the sequence, because they name a device.
 
-**Sending clock** (comp 6). MIDI clock pulses are scheduled from the tempo map like any other message, so a ramp and the notes stay locked together. The shared clock generator assumes one tempo at a time, so it isn't the right tool here. Start, Continue and Stop go out with the transport, and Song Position Pointer goes out when you move the playhead. Each device gets its own offset, the same idea as MIDI Clock. MIDI Time Code out reuses the shared time code generator, because time code doesn't depend on tempo.
+**Sending clock** (comp 6). MIDI clock pulses are scheduled from the tempo map like any other message, so a ramp and the notes stay locked together. The shared clock generator assumes one tempo at a time, so it isn't the right tool here. Start, Continue and Stop go out with the transport, and Song Position Pointer goes out when you move the playhead. Each device gets its own offset, the same idea as MIDI Clock.
+
+**Clock and sync, as built (October 10).** The clock button opens a Clock and sync dialog. Its settings belong to the PC, not the sequence, because they name devices.
+
+- **Send clock to:** a table with a row for each device: the device, its group, and whether it gets clock pulses, start and stop, and song position, plus its own offset in milliseconds. Stop goes out after the last pulse that was already handed over, so a follower never sees pulses after it stopped. When the timeline loop goes round, followers get a song position for the loop start, just ahead of the next pulse.
+- **Also send the tempo itself to devices that speak MIDI 2.0:** a MIDI 2.0 Set Tempo message where playback starts, at each tempo change and once a beat through a ramp, just ahead of the pulse at the same moment. A MIDI 1.0 device gets only the pulses.
+- **MIDI Time Code:** one device and group, 24, 25, 29.97 drop frame or 30 frames a second, and the time code at the top of the sequence (01:00:00:00 unless you change it). Time code counts the time on the wall from the top of the sequence, so a tempo change doesn't change it. The engine schedules the quarter frames itself, with the shared time code math, so they stay in step with the notes and the loop. A full frame message goes out when playback starts, when the loop goes round, and where it stopped.
+- **Tempo comes from:** this sequence, or another device's MIDI clock (below).
+
+The status bar says where the clock goes, such as "Internal clock, 124 BPM, sent to 1 device". Clock and time code to the same device count as one device. Measured through Default App Loopback on October 10: 203 pulses over 4.07 seconds at exactly 124 BPM, every gap 20,161 microseconds; 100 quarter frames a second at 25 frames a second; a full frame for 01:00:00:00 at the start, and one for where it stopped after Stop; Set Tempo for 124 BPM just ahead of Start; and no note messages, because every track played to a missing device.
 
 **Following another device's clock** reuses the clock follower MIDI Patchbay's LFO uses: it turns pulses into a position and a tempo, and handles Start, Continue, Stop and Song Position Pointer. The honest limit is in the comp: the app can only plan as far ahead as the next pulse it expects, so following is looser than the internal clock. When you can, let the sequencer be the clock. If the clock stops arriving, playback stops (or, by choice, carries on at the last tempo).
+
+**Following, as built (October 10).** Choose **Another device's MIDI clock** in Clock and sync, then the device and group. While following:
+
+- That device's pulses set the tempo, and its Start, Continue, Stop and song position run playback. The sequencer's Play button says playback waits for that device, and the loop is off.
+- Each pulse that arrives says exactly where the music is, and the music moves on at the pace of the last few pulses. Nothing is planned further ahead than the pulse after next, so a pulse that comes late, or at a new tempo, can only put that much in the wrong place.
+- When the device starts without having sent its clock first, nothing plays until the first pulse arrives and shows where the downbeat is.
+- If the pulses stop for eight pulses' time, or three tenths of a second, whichever is longer, playback stops. Carrying on at the last tempo isn't built.
+- The status bar says "Following (device), 100.0 BPM", or that it's waiting for that device's clock. Devices that get the sequencer's own clock get the followed tempo passed on.
+
+Measured through Default App Loopback on October 10, with the MIDI console sending 100 BPM: all 41 notes landed exactly on their pulses, and Stop, Continue and the clock going quiet each stopped or restarted playback.
 
 **Not planned: following incoming MIDI Time Code.** MIDI Clock made the same call: it takes a phase-locked receiver and a way to bend the service's clock.
 
@@ -177,6 +205,15 @@ The shape, as phase 1 writes it:
           "slots": [ null, "c-bass-a" ],
           "tags": [
             { "tick": 46080, "text": "Filter opens here" }
+          ],
+          "lanes": [
+            {
+              "id": "a-expression",
+              "target": "controller",
+              "number": 11,
+              "channel": 1,
+              "points": [ [0, 1503238553], [30720, 3435973836], [46080, 1288490189, "hold"], [61440, 2362232012] ]
+            }
           ]
         }
       ]
@@ -203,7 +240,80 @@ The shape, as phase 1 writes it:
 }
 ```
 
-Groups and channels in the file count from 0, like MIDI Glass and MIDI Patchbay files. People and screens count from 1. Folders hold their tracks, the same way DAWproject nests them. A note is `[tick, length, channel, note, velocity]`, with release velocity, attribute type, attribute data and chance after those only when a note needs them, which keeps a big recording small. Per-note pitch bend and per-note controllers are ordinary messages in the clip, because that's what they are on the wire. Other messages, and start-up messages, are written as their UMP words in hex, the way MIDI Monitor shows them. Their group is ignored, because the destination decides the group. A placement's `length` is only there when it plays longer than its clip, looping. Pattern and generator settings will go in a `settings` object when phases 6 and 7 build them. A file written at another `ticksPerQuarterNote` (by hand, or by another tool) is scaled to 960 when it's read, and keys this version doesn't know are kept and written back.
+Groups and channels in the file count from 0, like MIDI Glass and MIDI Patchbay files. People and screens count from 1. Folders hold their tracks, the same way DAWproject nests them. A note is `[tick, length, channel, note, velocity]`, with release velocity, attribute type, attribute data and chance after those only when a note needs them, which keeps a big recording small. Per-note pitch bend and per-note controllers are ordinary messages in the clip, because that's what they are on the wire. Other messages, and start-up messages, are written as their UMP words in hex, the way MIDI Monitor shows them. Their group is ignored, because the destination decides the group. A placement's `length` is only there when it plays longer than its clip, looping. A lane's `target` is `controller`, `pitchBend`, `channelPressure`, `program`, `registered` (RPN) or `assignable` (NRPN). A controller lane has a `number`, and RPN and NRPN lanes have a `bank` and an `index` instead. A lane can also have a `name`. A point is `[tick, value]`, with `"hold"` after them when the value holds until the next point instead of ramping. Values run from 0 to 4,294,967,295 whatever the device takes, and playback scales them down. A track writes `"lanesOpen": false` only when its lanes are hidden. Clips can have `lanes` too, with ticks counted from the clip's start. Generator settings go in a `settings` object too (below). A file written at another `ticksPerQuarterNote` (by hand, or by another tool) is scaled to 960 when it's read, and keys this version doesn't know are kept and written back.
+
+**A pattern clip** keeps its steps in `settings`. Its notes aren't saved, because they come from the steps:
+
+```json
+{
+  "id": "c-beat-a",
+  "kind": "pattern",
+  "name": "Beat A",
+  "length": 3840,
+  "loop": true,
+  "seed": 11,
+  "settings": {
+    "mode": "drums",
+    "stepCount": 16,
+    "stepTicks": 240,
+    "swing": 54,
+    "lanesKeepLength": true,
+    "channel": 9,
+    "lanes": [
+      { "id": "p-kick", "note": 36, "stepCount": 16, "steps": [ [0, 57671], [4, 57671], [8, 57671], [12, 57671] ] },
+      { "id": "p-hat", "note": 42, "stepCount": 12, "steps": [ [0, 36044], [9, 19660, { "ratchet": 3, "shape": "softer" }] ] },
+      { "id": "p-open", "note": 46, "stepCount": 16, "steps": [ [14, 36044, { "condition": "2:2" }] ] }
+    ]
+  }
+}
+```
+
+A step is `[index, velocity]`, counted from 0, with an object after them for anything that isn't the default: `chance` (percent), `ratchet` (2 to 8) and `shape` (`softer` or `louder`), `condition` (`firstPass`, `notFirstPass`, or `"1:2"` for the first pass of every two), `nudge` (ticks, negative is early), `length` (percent of a step, 50 when it isn't there), and in melodic mode `note`, `accent` and `slide`. A lane has a `note` and a `stepCount`, and `name`, `mute` and `solo` when they're set. `mode` is `drums` or `melodic`, and `swing` runs from 50 (straight) to 75. The clip's `length` is written for other readers, but it always comes from `stepCount` times `stepTicks`.
+
+**A generator clip** keeps its settings the same way, and its notes aren't saved either:
+
+```json
+{
+  "id": "c-euclid",
+  "kind": "generator",
+  "name": "Euclid 5/16",
+  "length": 3840,
+  "loop": true,
+  "seed": 23,
+  "settings": {
+    "type": "euclidean",
+    "stepTicks": 240,
+    "eachPass": "same",
+    "channel": 0,
+    "noteLength": 50,
+    "rings": [
+      { "note": 64, "pulses": 5, "steps": 16, "rotate": 0, "velocity": 58982, "chance": 100 },
+      { "note": 79, "pulses": 3, "steps": 12, "rotate": 1, "velocity": 52428, "chance": 70 }
+    ]
+  }
+}
+```
+
+A chance melody's `settings` look like this:
+
+```json
+{
+  "type": "chanceMelody",
+  "stepTicks": 240,
+  "eachPass": "changes",
+  "channel": 0,
+  "noteLength": 80,
+  "scale": "minorPentatonic",
+  "root": 4,
+  "low": 64,
+  "high": 76,
+  "busy": 50,
+  "keep": 75,
+  "velocity": [32768, 62258]
+}
+```
+
+`type` is `euclidean`, `chanceMelody` or `arpeggiator`. `eachPass` is `same` or `changes`, and `noteLength` is a percent of a step. A ring has a `note`, `pulses` (how many hits), `steps` (1 to 64), `rotate` (how many steps later it starts), `velocity` (16-bit) and `chance` (percent). A chance melody has a `scale`, a `root` (0 is C), `low` and `high` notes, `busy` (about how many steps play, in percent), `keep` (the percent kept from the last pass, used only with `changes`), and `velocity` as the lowest and highest 16-bit values. `scale` is `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `harmonicMinor`, `majorPentatonic`, `minorPentatonic`, `blues` or `chromatic`. Each type writes only its own settings. The clip's `length` is how long one pass is.
 
 **Rules carried over from the other tools:** a file from an older version is converted with the original copied to an Earlier versions folder (MIDI Patchbay's rule). A file from a newer version is opened read-only rather than saved over, so newer settings aren't lost (the guard MIDI Patchbay and MIDI Glass got in October). A sequence or MIDI file can arrive by double-click from the internet, so every count and length in it is capped and checked, the way the SMF reader already does it.
 
@@ -216,6 +326,7 @@ Groups and channels in the file count from 0, like MIDI Glass and MIDI Patchbay 
 - **DAWproject files** (.dawproject) from Bitwig Studio, Cubase, Studio One and the other apps that support the format (section 12).
 - **Captures from MIDI Monitor and the console.** A CSV capture (MIDI Monitor's Save as CSV, or the console's `endpoint monitor --capture-format csv`) has exact times and every UMP message, so a jam you captured plays back exactly as it happened, one track per group. A .mid capture is MIDI 1.0 at 960 ticks per beat. Text captures with UMP words, and MIDI Monitor's .bin files, have no times, so they're laid out one message per step, which suits a set-up dump.
 - **Paste.** UMP words copied in MIDI Monitor paste into a clip (comp 7).
+- **Captures and paste, as built (October 10).** File > Import reads the CSV that MIDI Monitor and the console save (the console writes words as `0x1234ABCD`, MIDI Monitor without the `0x`), and Open and drag and drop take a `.csv` too. Each group becomes a track that keeps its messages' own channels, made the same way as recording, with times turned into ticks at the sequence's tempo. Clock, stream and utility messages are left out and counted. Ctrl+V, or File > Import > Messages copied in MIDI Monitor, puts MIDI Monitor's Copy as UMP words on the selected track at the playhead as a new clip: one message a step (1/32 to 1/4), or all at once for a set-up dump. A `.mid` capture already comes in as a Standard MIDI File. Code in `CaptureImport.cpp`, 5 tests. Not seen on screen yet. Not built: MIDI Monitor's text captures and `.bin` files.
 - A small later change to MIDI Monitor could add "Open in Windows MIDI Sequencer" for a selection.
 
 ## 11. Export
@@ -243,8 +354,8 @@ It suits this app better than a Standard MIDI File because it keeps the structur
 | `Arrangement` lanes: a `Clip` holding `Notes`, with `playStart`, `loopStart` and `loopEnd` | Clips on the timeline |
 | `Scenes`, with a `ClipSlot` for each track | Scenes and launcher slots |
 | `Note`: `time`, `duration`, `channel`, `key`, `vel`, `rel` | A note, with 16-bit velocity and release velocity |
-| `Points` for `channelController`, `pitchBend`, `channelPressure`, `polyPressure` and `programChange` | Automation lanes and clip lanes, at 32-bit resolution |
-| `Points` inside a `Note`, for expressions such as `transpose`, `pressure`, `timbre` and `pan` | Per-note pitch bend and per-note controllers. The exact mapping is a phase 9 job, checked against the UMP spec's per-note controller list. |
+| `Points` for `channelController`, `pitchBend`, `channelPressure` and `programChange` | Automation lanes and clip lanes, at 32-bit resolution |
+| `Points` inside a `Note`, for expressions such as `transpose`, `pressure`, `timbre` and `pan` | Per-note pitch bend and per-note controllers. Not built yet: they're counted and left out (as built, below). |
 | The `Transport` tempo and time signature, `TempoAutomation`, `TimeSignatureAutomation` | The Tempo and meter track, with ramps from linear points |
 | `Markers` on the arrangement, and markers in a track's lanes | Tags on the Tempo and meter track, and tags on tracks |
 | `metadata.xml`: title, artist, composer, copyright, website, comment and others | The sequence name and the provenance block |
@@ -253,9 +364,22 @@ It suits this app better than a Standard MIDI File because it keeps the structur
 
 **Export.** Tracks, folders, clips, scenes, automation, tags and the tempo map go out. Patterns and generators go out as the notes they play, like the other exports. Linked clips go out as copies: the format can point one clip at another's content, but I'd write copies until we've seen other apps read that. What doesn't fit: destinations (there's nowhere to put a MIDI device, so the destination's name goes in the track's comment), system exclusive and other raw messages (the format leaves low-level MIDI events out on purpose), and registered and assignable controllers (RPN and NRPN). The export dialog counts them before you export, like the Standard MIDI File export.
 
-**Two pieces of work it needs.** The files inside a ZIP are usually compressed, and the family's ZIP code only reads files stored without compression. So import needs a deflate decoder. I'd write our own from the spec (RFC 1951), with tests, rather than add a dependency. Export can store files without compression, which every ZIP reader accepts. The XML is read with the XML reader built into Windows (XmlLite), which refuses DTDs by default. A file can come from anywhere, so sizes, counts and how far a file expands are capped, like every other import.
+**Two pieces of work it needs.** The files inside a ZIP are usually compressed. The family now has one ZIP implementation for this, with our own deflate code written from the spec (RFC 1951), and MIDI Glass and the Troubleshooter already use it (done October 10). So import can read compressed files, and export can compress them too. The XML is read with the XML reader built into Windows (XmlLite), which refuses DTDs by default. A file can come from anywhere, so sizes, counts and how far a file expands are capped, like every other import.
 
-**Proving it works** needs files from the apps that write DAWproject. The format's repository has test files, and I'd also open our exports in at least one of those apps.
+**Proving it works** needs files from the apps that write DAWproject. The format's repository has no sample project files (its test data is one audio file), so I'd open our exports in at least one of those apps and import files they wrote.
+
+### DAWproject, as built
+
+Import is on File > Import, and Open and drag and drop take a `.dawproject` file too. Export is on File > Export. The reader and writer (`DawProject.cpp`) don't use XAML, so the unit tests compile them unchanged.
+
+- **Reading.** XmlLite with DTDs refused. A file is capped at 32 MB of project XML, 65,536 zip entries, 1.5 million elements, 96 levels deep and 1 MB of text, and what it makes is capped at the sequence limits. A damaged file and a file that's too large each get their own message. A file that isn't a zip with `project.xml` in it is "not a DAWproject file". Only `project.xml` and `metadata.xml` are ever extracted: audio and plug-in files in the zip are never opened.
+- **What comes in.** Note tracks and folders (a track that holds tracks), with name, color, mute and solo. The master, effect returns and VCAs stay out. A track with no `contentType` counts as notes when it has an instrument. Clips on the timeline and in scene slots, in beats or seconds (seconds go through the tempo map). A loop that starts part way in is the same loop turned round, so it becomes a looping clip that starts at its own beginning. Clips that play the same content the same way become one linked clip. Clips inside a clip play as part of it. Notes straight on a track's lane become one clip at the start. Automation of controllers, pitch bend, channel pressure and program change becomes lanes on the track or in the clip, at 32 bits. Markers become tags. The tempo map and meter changes come in, with ramps from linear points, and a tempo point that doesn't say how it moves on holds. The title, artist and copyright come from `metadata.xml`.
+- **The dialog.** It lists each note track with a device list, starting on the General MIDI Synth, and the instrument the track played in the other app. Right after the window opens it waits up to 4 seconds for the device list, so the lists aren't empty. Below that, it says what was left out: audio tracks, audio clips, instruments and effects, automation of mixer and plug-in settings, and per-note expressions. Into a new, untouched sequence, the file takes the sequence's place, scenes and all. Into a sequence with work in it, the file's tracks are added and its scenes come after the sequence's own. Either way it's one undo step.
+- **What goes out.** Tracks and folders with mute, solo and color. Every timeline placement as its own clip (linked clips as copies). Scenes and slots. Track and clip lanes for controllers, pitch bend, pressure and program. Tags as markers (`Markers` on the arrangement, and `markers` in a track's lanes, as the schema spells them). The tempo and meter maps. A recorded clip's controllers, pitch bend, pressure and program changes go out as automation points that hold, so a recorded sustain pedal isn't lost. Patterns and generators go out as the notes Make notes would give, at most 64 bars. A track with a fixed channel writes that channel on its notes and points, because that's what plays. Each track's comment names its device ("Played on Moog One in Windows MIDI Sequencer"). Times, velocities and values have enough decimal places to come back exactly, and there are no timestamps, so the same sequence always gives the same file.
+- **What an export leaves out** is counted in its message, after it's written: system exclusive, per-note and other messages in clips, start-up messages, and RPN and NRPN lanes.
+- **Tests.** Seven: a round trip of the sample sequence; the exported XML's comments and escaping; a project shaped like another DAW's (plug-ins, an audio track, a group, the master, shared content, a loop turned round, automation, markers, tempo and meter changes, a scene); seconds on the timeline; patterns; what's counted; and junk (not a zip, no project, not XML, a DTD, too deep, half a file). 155 tests in all.
+- **Checked in the app** (October 10): the import dialog, choosing a device, the import, and an export through the save dialog whose file names the right devices. The first run found three defects: the device lists were empty when the file was opened at start-up, four empty scenes came before the file's, and the tempo display didn't change after an import. All three are fixed, and the second run confirmed it. Tag labels now pick black or white text when a color from another app is too strong for the usual dark text.
+- **Not built:** per-note expressions in either direction (counted and left out), poly pressure automation, and audio and video beyond counting them. Not yet tried with a file from Bitwig Studio, Cubase or Studio One: the check used a file in the same shape as the format's published Bitwig example.
 
 ## 13. Provenance
 
@@ -274,6 +398,20 @@ It suits this app better than a Standard MIDI File because it keeps the structur
 The sequence as a whole is usually a mix, which IPTC calls `composite`, or `compositeSynthetic` when at least one part was made with generative AI. The app suggests one, and you choose. The shared provenance code now knows `digitalCapture` and `composite` (done October 9). MIDI Glass shows them as "Recorded from a performance" and "Put together from several sources", and the layout and patch agent guides' checkers accept them.
 
 **What reaches an exported file:** a MIDI 2.0 clip file has standard messages for the sequence name, clip name, composer and copyright, and a Standard MIDI File has text events for the same. A DAWproject file's `metadata.xml` has room for the title, artist, composer, copyright, website and a comment. None of them has room for the rest, so the full record stays in the sequence file. Signed packs for sharing sequences (like MIDI Glass's) can come later and reuse the same pack code.
+
+**As built (October 11).**
+
+- File > About this sequence opens the comp 8 dialog (`MainWindowProvenance.cpp`). It uses MIDI Glass's words for the shared fields: Made by, Company or group, Website and License. A website must be `https://` or empty, or Save stays on the dialog and says why.
+- The copyright notice for exports is its own field, `"copyright"` in the sequence file. Standard MIDI File, clip file and DAWproject exports all write it.
+- The suggestion comes from the clips in use (`SequenceProvenance.cpp`, 5 tests):
+  - One kind of clip suggests that kind, and a mix suggests `composite`.
+  - Any clip from an AI assistant suggests `trainedAlgorithmicMedia`, or `compositeWithTrainedAlgorithmicMedia` when other clips are there too. That's the term MIDI Glass uses for help from AI, so this replaces the `compositeSynthetic` named above.
+  - Imported clips alone keep the default, `digitalCreation`.
+- When a source type involves generative AI, the dialog asks how a person was involved and which AI model was used.
+- An imported Standard MIDI File's copyright notice goes with each of its clips ("file.mid, “notice”"). When the file replaces a new, untouched sequence, its notice also becomes the sequence's.
+- A sequence saved for the first time without a provenance block gets one, filled from Your info for sharing, with the suggested source type.
+- "Save these as your info for sharing" updates the profile that all the tools share.
+- Seen on screen (`seq-check-info.ps1`): open, reject an `http://` website, save, reopen with the values kept, and undo.
 
 ## 14. What it reuses
 
@@ -307,6 +445,18 @@ This is phase 8 work. You asked whether the sequencer could make a MIDI Glass co
 
 What I'll check in phase 8: MIDI Glass can already light a control from a note or controller it receives (its `feedback` block), which covers playing and stopped. Showing queued and recording as different states may need a small MIDI Glass change. A layout holds up to 64 pages of 1,024 controls, so a big sequence spreads over pages instead of making the pads tiny.
 
+**As built (October 10).** Remote control is off until you turn it on in **File > Remote control and MIDI Glass**. Then the sequencer makes an endpoint named **MIDI Sequencer**, with one function block that covers all 16 groups. The map:
+
+- Channels 1 to 15 of group 1 are tracks 1 to 15, in the order of the track list, with folders left out. Tracks 16 and up are on group 2 and up.
+- On a track's channel, notes 0 to 63 launch the clips in scenes 1 to 64, note 64 stops the track, and note 65 sends it back to the timeline. Controllers 20, 21 and 22 mute, solo and arm it (64 and up is on).
+- Channel 16 is the whole sequence. Notes 0 to 63 launch scenes 1 to 64, 64 stops every track, 65 sends every track back to the timeline, 96 plays, 97 stops, 98 records, 99 turns the loop on or off, 100 turns the metronome on or off, and 101 goes back to the start.
+
+Notes act when they go on, so a MIDI 1.0 pad controller can send all of it. What goes back is the same notes and controllers: a note on at 127 for a clip that's playing or recording and for a transport button that's on, a note off when it isn't, and controllers at 127 or 0. When an app connects, it gets the whole state at once. A clip that sits in more than one slot lights only the slot it was launched from, in the launcher and on the surface. Queued clips aren't shown on the surface yet; that's the MIDI Glass change mentioned above.
+
+**Make a MIDI Glass layout** writes a 1280 by 800 layout in the Studio Dark theme: 8 tracks by 8 scenes a page, up to 9 pages, with the transport and the page tabs in a band that stays on every page. Each track takes the theme's six colors in turn, so the layout follows any theme you switch it to; it doesn't copy the sequence's own track colors, which the layout guide keeps for controls that must be one exact color. It's saved where you choose, starting in `Documents\MIDI Layouts`, turns remote control on, and opens in MIDI Glass. The layout guide's checker finds no problems in it.
+
+Checked on screen and on the wire through a loopback (October 10): the console's play, scene launch, mute and stop messages all acted, the lights came back for each, and the layout opened in MIDI Glass with the sequence's track and clip names.
+
 ## 17. Accessibility and keyboard
 
 - Every grid has a keyboard path and a screen reader name: a launcher cell reads like "Bass line A, notes clip, scene 2, stopped", and a step reads like "Step 7, Closed hi-hat, on, velocity 73 percent, ratchet 3".
@@ -339,15 +489,15 @@ Each phase ends with something you can use.
 | --- | --- | --- |
 | 0 | Spikes and measurements: look-ahead against edit and launch latency, how late the engine's thread wakes, JSON size and load time, following a clock from MIDI Clock through a loopback, drawing 100,000 notes. | Scheduling, thread wake-up, JSON and rendering measured (below). Drawing and clock following wait for the window. |
 | 1 | The sequence model and file (with tags), undo by change, Standard MIDI File import and export, the MIDI 2.0 clip file writer and reader. A test project like MIDI Patchbay's and MIDI Glass's. No window needed. | Done: 38 tests. The clip file code still needs files from another implementation to prove it reads what others write. |
-| 2 | The engine: timeline playback to many destinations, protocol per destination, mute, solo, silence, chase, internal clock, clock out, the metronome. | Done. Looping the timeline and choosing the protocol per group from function blocks landed October 10. 79 tests in all, and a run through the service (below). |
-| 3 | The main window: tracks, folders, pins, tags, the timeline, the piano roll, recording with echo, the MIDI Keyboard buttons, light and dark themes, the Tools installer. | Mostly done (October 10). The window builds, runs and plays through the service. Checked on screen: the main window, playback, and editing notes in the piano roll with undo. Written but not yet checked on screen: recording with echo, the MIDI Keyboard buttons, the light theme. The installer entries are written, but the installer hasn't been built with them. The icon is a stand-in. Drawing 100,000 notes isn't measured yet. |
-| 4 | The clip launcher: scenes, quantized launching, recording into slots, Capture. | Started. The engine launches clips on a grid, and the launcher in the window is wired to it, but not yet checked on screen. Recording into slots and Capture aren't built. |
-| 5 | Automation lanes and tempo map editing. | Not started |
-| 6 | Pattern clips. | Not started |
-| 7 | Generator clips. | Not started |
-| 8 | Following another clock, MIDI Time Code out, remote control, and making a MIDI Glass layout from a sequence. | Not started |
-| 9 | DAWproject import and export. | Not started |
-| 10 | Provenance screens, capture import and paste, docs, an agent guide, an accessibility pass. | Not started |
+| 2 | The engine: timeline playback to many destinations, protocol per destination, mute, solo, silence, chase, internal clock, clock out, the metronome. | Done. Looping the timeline and choosing the protocol per group from function blocks landed October 10. The engine also applies each device's offset, because the service in Windows doesn't yet (section 8). 79 tests in all, and a run through the service (below). |
+| 3 | The main window: tracks, folders, pins, tags, the timeline, the piano roll, recording with echo, the MIDI Keyboard buttons, light and dark themes, the Tools installer. | Mostly done (October 10). The window builds, runs and plays through the service. Checked on screen: the main window, playback, editing notes in the piano roll with undo, and the track setup panel. Written but not yet checked on screen: recording on the timeline with echo, the MIDI Keyboard buttons, the light theme. The Tools installer's file lists include the app. The icon is a stand-in. Drawing 100,000 notes isn't measured yet. |
+| 4 | The clip launcher: scenes, quantized launching, recording into slots, Capture. | Mostly done (October 10). Select an empty slot on an armed track to record into it from the next launch point, for 1 to 16 bars (set in the slot's menu), and the take loops as soon as it ends. Selecting the slot again ends the take at the end of that bar. Checked on screen: recording into a slot, stopping part way, and Capture. Not yet seen on screen: a take looping as soon as it ends. |
+| 5 | Automation lanes and tempo map editing. | Mostly done (October 10). Lanes under each track for controllers, pitch bend, channel pressure, program change, RPN and NRPN: click to add a point, drag to move it, Ctrl and drag to draw. Tempo and meter editing on the Tempo and meter track and from the tempo display. Lanes are in the file, in playback (stepped at each device's automation interval, thinned at its resolution, and sent again when playback starts part way) and in exports. The sample sequence has an Expression lane on Bass. 102 tests. Checked on screen: adding, moving and drawing points, undo, the tempo flyout, the add-lane dialog, and hiding lanes. Not built yet: an editor for a clip's own lanes, line and curve tools, and LFO fills. |
+| 6 | Pattern clips. | Done (October 10), except locks. Drum and melodic patterns from the launcher's or the timeline's menu, edited in a grid like comp 3 with a step inspector beside it: velocity, chance, ratchet and its shape, condition, nudge and length, and note, accent and slide in melodic mode. Lanes with their own length, swing, step size, Vary and Make notes. The sample's Beat A is a pattern. 116 tests, including one that renders a busy pattern in small windows and matches the whole. Checked on screen: the grid, turning steps on, dragging velocity, the lane menu, adding a lane, and a melodic pattern made from a slot. |
+| 7 | Generator clips. | Mostly done (October 10). Euclidean rhythms and chance melodies, made from a slot's menu or the timeline's, with Vary and Make notes. Their settings take the piano roll's place in the editor. Checked on screen. Not built: the arpeggiator (it keeps its settings and plays nothing), the comp's ring drawing, and its four-pass preview. 127 tests in all. |
+| 8 | Following another clock, MIDI Time Code out, remote control, and making a MIDI Glass layout from a sequence. | Done (October 10). Clock out with choices for each device, MIDI 2.0 Set Tempo, MIDI Time Code out, following another device's clock, the Clock and sync dialog, the remote control endpoint, and Make a MIDI Glass layout (sections 8 and 16). Checked on screen and through a loopback. Not built: carrying on at the last tempo when a followed clock stops. 148 tests in all. |
+| 9 | DAWproject import and export. | Done (October 10). File > Import and Export, and Open and drag and drop. A dialog picks a device for each track and says what was left out. Recorded controllers export as automation, and patterns and generators as notes (section 12). Checked on screen. Not built: per-note expressions. Not yet tried with a file from another DAW. 155 tests in all. |
+| 10 | Provenance screens, capture import and paste, docs, an agent guide, an accessibility pass. | Mostly done (October 11). Built: capture import and paste (section 10), About this sequence (section 13), and the lyrics track (section 23). Also done: the docs page with screenshots, `docs/tools/midisequencer`, which opens by saying the app is a very early preview. The security review bounded loops a file could make run for minutes, and the accessibility and en-US checks found nothing. Not built: an agent guide for `.midisequence` files. 181 tests in all. |
 
 ### Phase 0 results
 
@@ -377,7 +527,7 @@ What this means:
 - **MIDI 2.0 clip file interoperability.** We can write files that match the spec, but we can't prove other software reads them until we have files from another implementation.
 - **The MIDI Container File.** Whole-sequence export waits on a spec with no date.
 - **DAWproject interoperability.** Each app that supports it may write it a little differently. We need files from several of them.
-- **The deflate decoder** is new code that reads files from anywhere. It needs caps, tests with damaged files, and fuzzing.
+- **The deflate decoder** is new code that reads files from anywhere. It has caps, tests with damaged files, and a fuzzing run of 18,000 damaged ZIP files with no errors (October 10).
 - **Undo by change** is new work for this family and is easy to get subtly wrong.
 - **Large recordings in JSON** might be slow to load. Measure before changing anything.
 - **Demand for MPE output.** I don't know how many people would use it. It's a later phase either way.
@@ -401,8 +551,61 @@ Your answers to the first round (October 9):
 | Look | The family's light and dark themes, background color and backdrop, and as close to the comps as possible. |
 | Also asked for | DAWproject import and export (section 12), tags (section 3), a MIDI Glass layout made from a sequence (section 16), and MIDI Keyboard buttons (section 15). |
 
-Still open:
+Your answers to the second round (October 10):
 
-1. **Device offsets on every service.** The sequencer relies on the service to send early for each device (section 8). Does every service the app will run against do that? If not, the app needs a way to tell, so it can show it.
-2. **A deflate decoder for DAWproject import.** I'd write our own from RFC 1951, with tests and caps, rather than take a dependency such as zlib. OK?
-3. **MIDI Keyboard windows.** MIDI Keyboard opens a new window each time it starts. Fine for now, or should the sequencer be able to reuse an open one? That needs a small MIDI Keyboard change.
+| Question | Decision |
+| --- | --- |
+| Device offsets | The service in Windows doesn't apply them yet, so the engine does (section 8). |
+| A deflate decoder for DAWproject import | Our own, and one ZIP implementation for the whole family. Done: MIDI Glass and the Troubleshooter use it, and the Troubleshooter no longer runs `tar.exe`. |
+| MIDI Keyboard windows | A new window each time it starts is fine for now. |
+
+Your answer to the third round (October 10):
+
+| Question | Decision |
+| --- | --- |
+| How the app finds out that a service applies device offsets | It doesn't. A marker written by the service would only reach versions of Windows that have it, and these apps mostly won't be built into Windows. So sending early is a setting in the app, on by default, with help that says when to turn it off (section 8). Done. |
+
+Nothing is open right now.
+
+## 23. Update, October 11: a lyrics track
+
+Pete asked for an optional lyrics track, looking at how Standard MIDI Files and MIDI 2.0 carry lyrics, and at how apps use lyrics today beyond karaoke.
+
+### What the files say
+
+- **Standard MIDI Files: the Lyric meta event (FF 05), as RP-017 defines it (1997).** One syllable per event, placed when its note starts. A space at the end of the text ends a word; no space means the word goes on in the next event. A carriage return (0x0D) ends a line and a line feed (0x0A) ends a paragraph. An event with no text is a melisma: the last syllable keeps being sung. A lyric event at bar 1 turns lyrics on in some players, a line should break within 40 characters, and `\ [ ] { }` are kept for later use.
+- **RP-026 (SMF Language and Display Extensions)** uses those characters: `\r`, `\n` and `\t` as escapes, ruby (small reading text above a word, for Japanese) in `[ ]`, the character set in `{@LATIN}` or `{@JP}` (a byte order mark means Unicode), and song details in `{#Title=...}`, `{#Composer=...}`, `{#Lyrics=...}` and `{#Artist=...}`, closed by `{#}`.
+- **Karaoke `.kar` files** (Soft Karaoke) put the words in ordinary text events (FF 01) instead, usually in a track of their own. They announce themselves with an `@K` text event, use `@` lines for the title and language, and start a syllable with `/` for a new line or `\` for a new paragraph. The shared Standard MIDI File reader already recognizes them.
+- **MIDI 2.0: the Lyric Data message** (UMP and MIDI 2.0 Protocol 1.1, section 7.5.10). It's a Flex Data message (status bank 0x02, status 0x01) holding UTF-8 text, with the same rules: one syllable per message at the start of its note, a space ends a word, a carriage return ends a line, a carriage return and line feed end a paragraph, and a complete packet filled with 0x00 is a melisma. Lyrics Language (status 0x02) gives a BCP 47 language tag, and Ruby and Ruby Language (0x03 and 0x04) carry ruby. A Lyric Data message is addressed to a channel or a whole group, so one song can carry lyrics in two languages at once.
+- **MIDI Clip Files** (M2-116) hold those same Flex Data messages, with every packet of one syllable at one delta clockstamp.
+- **DAWproject** has no place for lyrics.
+
+### How apps use lyrics beyond karaoke
+
+- **A lyrics track and a lyrics display.** Studio One 6 added both: words typed into a track over the arrangement, and a big lyrics display for the singer and band on stage. That's the closest model for this app.
+- **Words on notes, for notation.** Logic Pro, Dorico, MuseScore, Sibelius and Finale attach each syllable to a note, with hyphens and extender lines for melismas, and MusicXML carries them (`<lyric>` with begin, middle, end and single syllables).
+- **Singing synthesis.** Vocaloid, Synthesizer V and UTAU sing whatever syllable sits on each note, so the lyric is part of what the instrument plays.
+- **Lyrics in time with the music, outside music apps.** LRC files (one time stamp per line) for music players, subtitles for lyric videos and live streams, and the time-synced lyrics on streaming services.
+- **Chord charts and lead sheets** for bands and worship teams, with chords above the words, and presentation software that shows the words on screens.
+- **Arranger keyboards** that read lyrics from MIDI files and show them on their screens.
+
+### The design
+
+- **Model.** An optional lyrics track on the sequence: a language (BCP 47, such as `en` or `ja`), the track that sings the words, and syllables. Each syllable has a tick, its text, and what comes after it: more of the same word, the end of a word, the end of a line, or the end of a paragraph. A syllable with no text is a melisma.
+- **Where it shows.** A Lyrics row under the Tempo and meter track, with each syllable at its moment. While the sequence plays, a lyrics bar shows the line being sung and the next one, with the current syllable lit, so the app works as a teleprompter.
+- **Editing.** Type the words: a hyphen between syllables (`Hap-py birth-day`), a space between words, a new line for each line, a blank line between verses, and `_` for a melisma. Then choose the track that sings them, and the syllables go on that track's notes in order (notes that start together count once). With no track chosen, they go a beat apart from the playhead. Opening the editor again gives the same text back, and every change is one undo step.
+- **Files.** The sequence file keeps the lyrics. Standard MIDI File import reads lyric events and karaoke text; export writes RP-017 lyric events. MIDI 2.0 clip file export writes Lyrics Language and Lyric Data messages. LRC export writes a line per time stamp, for music players and video tools. DAWproject export leaves lyrics out and says so.
+- **Playback.** Lyrics go out as MIDI 2.0 Lyric Data messages to the singing track's device, when it speaks MIDI 2.0, so a display or a singing synth can follow along. MIDI 1.0 has no message for lyrics, so a MIDI 1.0 device gets none.
+- **Not in this version:** ruby, lyrics in two languages at once, and dragging single syllables on the Lyrics row.
+
+### As built (October 11)
+
+- **Code.** `Lyrics.h` and `Lyrics.cpp` hold everything that isn't on screen, with 13 tests in `LyricsTests`. The row is drawn in `ArrangeRendererLyrics.cpp`, and the header, menu, editor, lyrics bar and LRC export are in `MainWindowLyrics.cpp`.
+- **The sequence file.** The top-level `"lyrics"` key holds `language`, `track` (the id of the track that sings), and `syllables` as `[tick, text, end]`, where `end` is `"word"`, `"line"` or `"verse"`, or left out when the word goes on. An empty text is a melisma. Keys this version doesn't know are kept.
+- **Typing.** A hyphen splits syllables, two hyphens are a hyphen in the word, `_` is a melisma, a new line ends a line, and a blank line ends a verse. A TextBox ends its lines with a carriage return alone, so that counts as a new line too.
+- **Placing.** Syllables go on the singing track's note starts, as its timeline plays them, counting notes that start together once. When the notes run out, the rest go a beat apart. Editing words that were already placed keeps their times, and puts any new ones on the notes after the last.
+- **Standard MIDI Files.** Import reads the track with the most lyric events, or the words of a karaoke file, and picks the track whose notes start where the most syllables do. It undoes RP-026 escapes, and drops tags and ruby. It reads UTF-16 with a byte order mark, Shift-JIS after `{@JP}`, UTF-8 when the text is valid UTF-8, and Windows-1252 otherwise. Export writes UTF-8 lyric events on the singing track, and escapes `\ [ ] { }`. If that track is left out of the export, so are the words.
+- **MIDI 2.0.** Every Start and Continue packet is a full 12 bytes, because a 0 byte marks the end of the text. That can split one UTF-8 character across two packets. The language goes out before the first syllable, and again at each start, jump and loop. A launched clip sends no lyrics, because the lyrics follow the timeline.
+- **LRC.** One `[mm:ss.xx]` line for each line of lyrics, with `[ti:]` and `[la:]` tags, in UTF-8 with a byte order mark. An empty time stamp clears the words between verses when there's a gap.
+- **Seen on screen** with a probe (`seq-check-lyrics.ps1`, outside the repo): a song file with RP-017 lyrics comes in with its Lyrics row, and the words light up as it plays. The editor changes a word and keeps the times. Undo works, LRC export goes through the save dialog, and remove and undo work three times in a row.
+- **Not built:** reading Lyric Data back from a clip file. Those messages come in as ordinary clip events, and they still play.

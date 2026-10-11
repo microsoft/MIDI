@@ -130,6 +130,7 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="AppProvenance.h" />
     <ClInclude Include="SharingDialogs.h" />
+    <ClInclude Include="ProvenanceForm.h" />
     <ClInclude Include="..\midi-app-shared\FontCatalog.h" />
     <ClInclude Include="..\midi-app-shared\FontNames.h" />
     <ClInclude Include="..\midi-app-shared\DialogSizing.h" />
@@ -178,6 +179,7 @@
     <ClInclude Include="document\LayoutPackage.h" />
     <ClInclude Include="document\LayoutPack.h" />
     <ClInclude Include="document\SignedItems.h" />
+    <ClInclude Include="document\ProvenanceFields.h" />
     <ClInclude Include="document\LayoutSerializer.h" />
     <ClInclude Include="document\LayoutStore.h" />
     <ClInclude Include="document\PageTemplates.h" />
@@ -245,6 +247,7 @@
     <ClCompile Include="MainWindowLibrary.cpp" />
     <ClCompile Include="MainWindowPackaging.cpp" />
     <ClCompile Include="SharingDialogs.cpp" />
+    <ClCompile Include="ProvenanceForm.cpp" />
     <ClCompile Include="MainWindowDialogs.cpp" />
     <ClCompile Include="RuntimeWindow.xaml.cpp">
       <DependentUpon>RuntimeWindow.xaml</DependentUpon>
@@ -260,6 +263,7 @@
     <ClCompile Include="EditorAppearance.cpp" />
     <ClCompile Include="EditorThemeProperties.cpp" />
     <ClCompile Include="EditorLayoutPanes.cpp" />
+    <ClCompile Include="EditorAbout.cpp" />
     <ClCompile Include="EditorControlProperties.cpp" />
     <ClCompile Include="EditorPicturePanel.cpp" />
     <ClCompile Include="EditorPictureVideo.cpp" />
@@ -327,6 +331,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\SignedItems.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\ProvenanceFields.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\LayoutSerializer.cpp">

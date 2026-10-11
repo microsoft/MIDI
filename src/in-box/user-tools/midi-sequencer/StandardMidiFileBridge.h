@@ -43,6 +43,9 @@ namespace midisequencer
         std::vector<Track> Tracks{};
         std::vector<Clip> Clips{};
 
+        // From lyric events, or the words of a Soft Karaoke file, placed on the track that sings.
+        std::optional<LyricsTrack> Lyrics{};
+
         std::wstring Title{};
         std::wstring Copyright{};
     };

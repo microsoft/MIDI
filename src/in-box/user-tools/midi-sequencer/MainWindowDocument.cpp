@@ -9,6 +9,7 @@
 #include "MainWindow.xaml.h"
 
 #include "BackgroundWork.h"
+#include "DocumentFiles.h"
 #include "MidiClipFile.h"
 #include "SampleSequence.h"
 #include "SequenceSerializer.h"
@@ -21,12 +22,13 @@ namespace res = ::midisequencer::resources;
 
 namespace winrt::midisequencer::implementation
 {
-    namespace
+    namespace documentfiles
     {
         // A sequence file is JSON text; far above anything a person makes, and still finite.
         constexpr uint64_t MaximumSequenceFileBytes = 512ull * 1024 * 1024;
         constexpr uint64_t MaximumClipFileBytes = 256ull * 1024 * 1024;
 
+        _Use_decl_annotations_
         bool ReadAllBytes(std::wstring const& path, std::vector<uint8_t>& bytes, uint64_t maximum) noexcept
         {
             try
@@ -70,6 +72,7 @@ namespace winrt::midisequencer::implementation
         }
 
         // Written beside the file, then swapped in, so a crash part way never leaves half a file.
+        _Use_decl_annotations_
         bool WriteAllBytes(std::wstring const& path, void const* data, size_t size) noexcept
         {
             try
@@ -117,6 +120,7 @@ namespace winrt::midisequencer::implementation
             }
         }
 
+        _Use_decl_annotations_
         std::wstring FileStem(std::wstring const& path)
         {
             try
@@ -130,6 +134,7 @@ namespace winrt::midisequencer::implementation
         }
 
         // A name that's safe as part of a file name.
+        _Use_decl_annotations_
         std::wstring SafeFileName(std::wstring name)
         {
             for (auto& c : name)
@@ -153,12 +158,15 @@ namespace winrt::midisequencer::implementation
             return name.empty() ? std::wstring{ L"Sequence" } : name;
         }
 
+        _Use_decl_annotations_
         bool IsDefaultTempo(seq::Sequence const& sequence) noexcept
         {
             return sequence.Tempo.size() == 1 && std::abs(sequence.Tempo[0].BeatsPerMinute - 120.0) < 0.0001 &&
                 sequence.Meter.size() == 1 && sequence.Meter[0].Numerator == 4 && sequence.Meter[0].Denominator == 4;
         }
     }
+
+    using namespace documentfiles;
 
     // ---------------------------------------------------------------- new and open
 
@@ -386,7 +394,9 @@ namespace winrt::midisequencer::implementation
         {
             auto const path = ShowFileDialog(false, std::wstring{}, {
                 { std::wstring{ res::GetString(L"FileTypeSequence") }, L"*.midisequence" },
-                { std::wstring{ res::GetString(L"FileTypeAllMidi") }, L"*.midisequence;*.mid;*.midi;*.kar;*.rmi;*.smf;*.midi2" } });
+                { std::wstring{ res::GetString(L"FileTypeAllMidi") }, L"*.midisequence;*.mid;*.midi;*.kar;*.rmi;*.smf;*.midi2" },
+                { std::wstring{ res::GetString(L"FileTypeDawProject") }, L"*.dawproject" },
+                { std::wstring{ res::GetString(L"FileTypeCapture") }, L"*.csv" } });
 
             if (path.empty())
             {
@@ -397,15 +407,7 @@ namespace winrt::midisequencer::implementation
 
             if (_wcsicmp(extension.c_str(), L".midisequence") != 0)
             {
-                if (_wcsicmp(extension.c_str(), L".midi2") == 0)
-                {
-                    ImportClipFile(path);
-                }
-                else
-                {
-                    ImportStandardMidiFile(path);
-                }
-
+                ImportFile(path);
                 return;
             }
 
@@ -433,15 +435,7 @@ namespace winrt::midisequencer::implementation
             if (_wcsicmp(extension.c_str(), L".midisequence") != 0)
             {
                 // A MIDI file from Explorer: a new sequence made from it.
-                if (_wcsicmp(extension.c_str(), L".midi2") == 0)
-                {
-                    ImportClipFile(path);
-                }
-                else
-                {
-                    ImportStandardMidiFile(path);
-                }
-
+                ImportFile(path);
                 co_return;
             }
 
@@ -449,6 +443,12 @@ namespace winrt::midisequencer::implementation
             bool read{ false };
 
             co_await ::midisequencer::RunOnBackgroundAsync([&]() { read = ReadAllBytes(path, bytes, MaximumSequenceFileBytes); });
+
+            // The window may have closed while the file was read.
+            if (m_closing)
+            {
+                co_return;
+            }
 
             if (!read)
             {
@@ -613,7 +613,15 @@ namespace winrt::midisequencer::implementation
                 {
                     m_doc.Name = imported.Title.empty() ? FileStem(path) : imported.Title;
                 }
+
+                if (m_doc.Copyright.empty())
+                {
+                    m_doc.Copyright = midiapp::SanitizeProvenanceText(imported.Copyright, midiapp::MaximumProvenanceNameLength);
+                }
             }
+
+            // Each clip keeps the file's copyright notice with its name (design section 13).
+            auto const fileCopyright = midiapp::SanitizeProvenanceText(imported.Copyright, midiapp::MaximumProvenanceNameLength);
 
             auto const& swatches = seq::TrackColorSwatches();
             size_t colorIndex{ seq::CountTracks(m_doc) };
@@ -624,22 +632,28 @@ namespace winrt::midisequencer::implementation
                 track.Color = swatches[colorIndex++ % swatches.size()];
 
                 // Each track plays to the synth until it's given a device; the file names none.
-                if (track.Destination.Endpoint.IsEmpty())
-                {
-                    if (auto const synth = m_directory->Resolve(seq::EndpointRef{ L"", m_directory->SynthEndpointId() }); synth.has_value())
-                    {
-                        track.Destination.Endpoint = seq::EndpointDirectory::MakeRef(synth->Live);
-                    }
-                }
+                PlayOnSynth(track);
 
                 m_doc.Tracks.push_back(std::move(track));
             }
 
             for (auto& clip : imported.Clips)
             {
+                if (!fileCopyright.empty())
+                {
+                    clip.OriginDetail = std::wstring{ res::FormatString(L"ImportedWithCopyrightFormat", clip.OriginDetail, fileCopyright) };
+                }
+
                 seq::SortClip(clip);
                 changes.push_back(seq::MakeClipPresenceChange(clip, true));
                 m_doc.Clips.push_back(std::move(clip));
+            }
+
+            // A sequence has one lyrics track, so a file's lyrics come in only when it has none.
+            if (imported.Lyrics && !m_doc.Lyrics)
+            {
+                changes.push_back(seq::MakeLyricsChange(std::nullopt, imported.Lyrics));
+                m_doc.Lyrics = std::move(imported.Lyrics);
             }
 
             changes.push_back(seq::MakeTracksChange(tracksBefore, m_doc.Tracks));
@@ -700,14 +714,21 @@ namespace winrt::midisequencer::implementation
             clip.OriginDetail = std::filesystem::path{ path }.filename().wstring();
             seq::SortClip(clip);
 
+            // The clip's lyrics become the sequence's lyrics track when it has none, so they show
+            // and can be edited. Otherwise they stay in the clip and still play.
+            auto lyrics = m_doc.Lyrics ? std::optional<seq::LyricsTrack>{} : seq::TakeLyricsFromClip(clip, seq::SequenceLimits{});
+
             auto track = seq::MakeTrack(m_doc, clip.Name, false);
             track.Startup = imported.Startup;
             track.Slots.resize(m_doc.Scenes.size());
             track.Timeline.push_back(seq::Placement{ clip.Id, 0, 0 });
+            PlayOnSynth(track);
 
-            if (auto const synth = m_directory->Resolve(seq::EndpointRef{ L"", m_directory->SynthEndpointId() }); synth.has_value())
+            if (lyrics)
             {
-                track.Destination.Endpoint = seq::EndpointDirectory::MakeRef(synth->Live);
+                lyrics->TrackId = track.Id;
+                changes.push_back(seq::MakeLyricsChange(std::nullopt, lyrics));
+                m_doc.Lyrics = std::move(lyrics);
             }
 
             m_doc.Tracks.push_back(std::move(track));
@@ -772,6 +793,7 @@ namespace winrt::midisequencer::implementation
 
             seq::ClipFileText text{};
             text.SequenceName = m_doc.Name;
+            text.Copyright = m_doc.Copyright;
 
             if (m_doc.Provenance.has_value())
             {
@@ -813,6 +835,7 @@ namespace winrt::midisequencer::implementation
 
             seq::ClipFileText text{};
             text.SequenceName = m_doc.Name;
+            text.Copyright = m_doc.Copyright;
 
             if (m_doc.Provenance.has_value())
             {
@@ -906,6 +929,9 @@ namespace winrt::midisequencer::implementation
             {
                 m_doc.Name = FileStem(path);
             }
+
+            // Saved for the first time, it says who made it and how (design section 13).
+            StampProvenance();
 
             auto const text = seq::ToUtf8(seq::WriteSequenceJson(m_doc));
             bool saved{ false };
@@ -1046,7 +1072,7 @@ namespace winrt::midisequencer::implementation
     // ---------------------------------------------------------------- dialogs
 
     _Use_decl_annotations_
-    std::wstring MainWindow::ShowFileDialog(bool save, std::wstring const& defaultName, std::vector<std::pair<std::wstring, std::wstring>> const& filters, bool folders) noexcept
+    std::wstring MainWindow::ShowFileDialog(bool save, std::wstring const& defaultName, std::vector<std::pair<std::wstring, std::wstring>> const& filters, bool folders, std::wstring const& startFolder) noexcept
     {
         // The Win32 dialog, not the WinRT picker: the picker does nothing in an elevated process
         // or over an open ContentDialog, which is how it has failed silently in this family before.
@@ -1099,11 +1125,11 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
-            auto folder = seq::AppSettings::Current().LastFolder();
+            auto folder = startFolder.empty() ? seq::AppSettings::Current().LastFolder() : startFolder;
 
             if (folder.empty() || !std::filesystem::exists(folder))
             {
-                folder = DocumentsFolder();
+                folder = DocumentsFolder(L"MIDI Sequences");
             }
 
             if (!folder.empty())
@@ -1142,7 +1168,8 @@ namespace winrt::midisequencer::implementation
         return {};
     }
 
-    std::wstring MainWindow::DocumentsFolder() noexcept
+    _Use_decl_annotations_
+    std::wstring MainWindow::DocumentsFolder(std::wstring const& subfolder) noexcept
     {
         try
         {
@@ -1153,7 +1180,7 @@ namespace winrt::midisequencer::implementation
                 return {};
             }
 
-            auto folder = std::filesystem::path{ documents.get() } / L"MIDI Sequences";
+            auto folder = std::filesystem::path{ documents.get() } / subfolder;
             std::error_code error{};
             std::filesystem::create_directories(folder, error);
 
@@ -1217,6 +1244,10 @@ namespace winrt::midisequencer::implementation
             UpdateUndoButtons();
             UpdateStatusBar();
 
+            // An import or an undo can change the tempo and meter under a stopped playhead.
+            UpdateDisplays(m_position);
+            UpdateLyricsBar();
+
             if (m_autosaveTimer != nullptr && !m_path.empty() && !m_readOnly)
             {
                 m_autosaveTimer.Stop();
@@ -1249,6 +1280,7 @@ namespace winrt::midisequencer::implementation
             {
                 m_roll.ClearSelection();
                 m_selectedPlacement = SIZE_MAX;
+                ClearAutomationSelection();
                 DocumentChanged();
             }
         }
@@ -1263,6 +1295,7 @@ namespace winrt::midisequencer::implementation
             {
                 m_roll.ClearSelection();
                 m_selectedPlacement = SIZE_MAX;
+                ClearAutomationSelection();
                 DocumentChanged();
             }
         }

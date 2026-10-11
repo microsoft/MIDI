@@ -11,6 +11,7 @@
 #include "MidiEndpointCustomPropertiesTests.h"
 
 #include "Feature_Servicing_MIDI2EndpointCustomizationEnhancements.h"
+#include "Feature_Servicing_MIDI2RecommendedCCIntervalProp.h"
 #include "MidiEndpointCustomProperties.h"
 
 using namespace WEX::Common;
@@ -132,4 +133,54 @@ void MidiEndpointCustomPropertiesTests::TestUngatedParserStillAcceptsAPath()
 
     VERIFY_IS_NOT_NULL(props);
     VERIFY_ARE_EQUAL(winrt::hstring{ L"C:\\Windows\\System32\\evil.png" }, props->Image);
+}
+
+
+void MidiEndpointCustomPropertiesTests::TestControlChangeIntervalAndMpeUseTheirOwnProperties()
+{
+    if (!Feature_Servicing_MIDI2RecommendedCCIntervalProp::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2RecommendedCCIntervalProp is disabled.");
+        return;
+    }
+
+    config::MidiEndpointCustomProperties props{};
+    props.RequiresNoteOffTranslation = false;
+    props.SupportsMidiPolyphonicExpression = true;
+    props.RecommendedControlChangeIntervalMilliseconds = 20;
+
+    // the property buffers point into props, so it has to outlive this list
+    std::vector<DEVPROPERTY> written{};
+    props.WriteNonCommonProperties(written);
+
+    auto findAll = [&written](DEVPROPKEY const& key)
+        {
+            std::vector<DEVPROPERTY> found{};
+
+            for (auto const& property : written)
+            {
+                if (IsEqualDevPropKey(property.CompKey.Key, key))
+                {
+                    found.push_back(property);
+                }
+            }
+
+            return found;
+        };
+
+    // the gate-off path writes both values to this key as well, so it appears three times
+    auto const noteOff = findAll(PKEY_MIDI_RequiresNoteOffTranslation);
+    VERIFY_ARE_EQUAL(noteOff.size(), (size_t)1);
+    VERIFY_ARE_EQUAL(noteOff[0].Type, (DEVPROPTYPE)DEVPROP_TYPE_BOOLEAN);
+    VERIFY_ARE_EQUAL((int)*static_cast<DEVPROP_BOOLEAN*>(noteOff[0].Buffer), (int)DEVPROP_FALSE);
+
+    auto const interval = findAll(PKEY_MIDI_RecommendedCCAutomationIntervalMS);
+    VERIFY_ARE_EQUAL(interval.size(), (size_t)1);
+    VERIFY_ARE_EQUAL(interval[0].Type, (DEVPROPTYPE)DEVPROP_TYPE_UINT16);
+    VERIFY_ARE_EQUAL((uint32_t)*static_cast<uint16_t*>(interval[0].Buffer), (uint32_t)20);
+
+    auto const mpe = findAll(PKEY_MIDI_SupportsMidiPolyphonicExpression);
+    VERIFY_ARE_EQUAL(mpe.size(), (size_t)1);
+    VERIFY_ARE_EQUAL(mpe[0].Type, (DEVPROPTYPE)DEVPROP_TYPE_BOOLEAN);
+    VERIFY_ARE_EQUAL((int)*static_cast<DEVPROP_BOOLEAN*>(mpe[0].Buffer), (int)DEVPROP_TRUE);
 }

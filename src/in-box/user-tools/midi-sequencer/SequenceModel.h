@@ -49,6 +49,10 @@ namespace midisequencer
         size_t MaximumTags{ 100000 };
         size_t MaximumTempoPoints{ 100000 };
         size_t MaximumTextLength{ 1024 };
+        size_t MaximumLanesPerOwner{ 512 };
+        size_t MaximumPointsPerLane{ 1000000 };
+        size_t MaximumLanePointsInSequence{ 8000000 };
+        size_t MaximumLyrics{ 100000 };
         int64_t MaximumTick{ 0x7FFFFFFF };
     };
 
@@ -99,6 +103,235 @@ namespace midisequencer
         Assistant = 5,
     };
 
+    // What an automation lane changes.
+    enum class LaneTarget : uint8_t
+    {
+        Controller = 0,         // Number is the controller, 0 to 127
+        PitchBend = 1,
+        ChannelPressure = 2,
+        Program = 3,
+        Registered = 4,         // RPN. Number is bank * 128 + index
+        Assignable = 5,         // NRPN. Number is bank * 128 + index
+    };
+
+    // A lane's value at a moment. Every target keeps 32 bits; a program lane's value is scaled to
+    // 7 bits when it's sent, and always holds until the next point.
+    struct LanePoint
+    {
+        int64_t Tick{ 0 };
+        uint32_t Value{ 0 };
+
+        // Stay at this value until the next point, rather than a straight line to it.
+        bool Hold{ false };
+
+        bool operator==(LanePoint const&) const = default;
+    };
+
+    // Automation: a controller, pitch bend, pressure or program drawn over time. On a track, ticks
+    // are on the timeline. In a clip they're from the clip's start, and loop with it.
+    struct AutomationLane
+    {
+        std::wstring Id{};
+
+        // Empty uses the target's own name, such as "Controller 74".
+        std::wstring Name{};
+
+        LaneTarget Target{ LaneTarget::Controller };
+        uint16_t Number{ 0 };
+
+        // 0 to 15. A destination that sets a channel overrides it, as it does for notes.
+        uint8_t Channel{ 0 };
+
+        // Sorted by tick. Two points at one tick make a jump: the line arrives at the first and
+        // leaves from the second.
+        std::vector<LanePoint> Points{};
+
+        winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };
+    };
+
+    // ---- pattern clips ----
+
+    enum class PatternMode : uint8_t
+    {
+        Drums = 0,      // a lane for each drum, each playing its own note
+        Melodic = 1,    // one line of notes: each step has its own note, accent and slide
+    };
+
+    // Which passes a step plays on, counted through its own lane.
+    enum class StepCondition : uint8_t
+    {
+        Always = 0,
+        Every = 1,          // pass Of of every Every passes: 1 of 2 is the first of each two
+        FirstPass = 2,
+        NotFirstPass = 3,
+    };
+
+    enum class RatchetShape : uint8_t
+    {
+        Even = 0,
+        Softer = 1,         // each repeat a little softer than the one before
+        Louder = 2,         // each repeat a little louder
+    };
+
+    // A step that plays. Steps that don't play aren't stored.
+    struct PatternStep
+    {
+        uint16_t Index{ 0 };                // which step of its lane, from 0
+        uint16_t Velocity{ 51400 };         // 100 of 127, scaled up
+        uint8_t Chance{ 100 };              // percent
+        uint8_t Ratchet{ 1 };               // how many hits inside the step, 1 to 8
+        RatchetShape Shape{ RatchetShape::Even };
+        StepCondition Condition{ StepCondition::Always };
+        uint8_t Every{ 2 };                 // 2 to 16
+        uint8_t Of{ 1 };                    // 1 to Every
+        int16_t Nudge{ 0 };                 // ticks early (negative) or late, at most half a step
+        uint16_t Length{ 50 };              // percent of a step, 1 to 1600
+        uint8_t Note{ 48 };                 // melodic mode. A drum lane plays the lane's note.
+        bool Accent{ false };               // melodic mode: plays at full velocity
+        bool Slide{ false };                // melodic mode: runs on into the next step
+
+        bool operator==(PatternStep const&) const = default;
+    };
+
+    struct PatternLane
+    {
+        std::wstring Id{};
+
+        // Empty uses the drum's name, or the note's.
+        std::wstring Name{};
+
+        uint8_t Note{ 36 };
+
+        // How many steps before the lane starts again, when lanes keep their own length.
+        uint16_t StepCount{ 16 };
+
+        bool Muted{ false };
+        bool Soloed{ false };
+
+        // Sorted by index, one per step.
+        std::vector<PatternStep> Steps{};
+
+        winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };
+    };
+
+    struct PatternSettings
+    {
+        PatternMode Mode{ PatternMode::Drums };
+
+        // Steps in one pass of the clip, 1 to 64. The clip's length is this many steps.
+        uint16_t StepCount{ 16 };
+        int64_t StepTicks{ TicksPerQuarterNote / 4 };
+
+        // Where every second step starts, as a percent of two steps: 50 is straight, up to 75.
+        uint8_t Swing{ 50 };
+
+        // Each lane runs its own number of steps, so a 12-step lane drifts against a 16-step one.
+        // Off, every lane runs the pattern's StepCount.
+        bool LanesKeepLength{ true };
+
+        // 0 to 15. A destination that sets a channel overrides it, as it does for notes.
+        uint8_t Channel{ 9 };
+
+        std::vector<PatternLane> Lanes{};
+
+        winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };
+    };
+
+    // ---- generator clips ----
+
+    enum class GeneratorType : uint8_t
+    {
+        Euclidean = 0,
+        ChanceMelody = 1,
+        Arpeggiator = 2,
+    };
+
+    // Where an arpeggiator gets the notes it plays.
+    enum class ArpeggiatorSource : uint8_t
+    {
+        Held = 0,           // the keys held on the track's source, as they're played
+        Track = 1,          // the notes another track's timeline plays
+    };
+
+    enum class ArpeggiatorOrder : uint8_t
+    {
+        Up = 0,
+        Down = 1,
+        UpAndDown = 2,
+        AsHeld = 3,         // the order the keys went down, or the notes started
+        Random = 4,
+    };
+
+    // A ring of a Euclidean rhythm: Pulses spread as evenly as they go over Steps, turned by
+    // Rotate. Each ring runs its own number of steps, like a pattern lane.
+    struct EuclidRing
+    {
+        uint8_t Note{ 36 };
+        uint8_t Pulses{ 4 };
+        uint8_t Steps{ 16 };                // 1 to 64
+        uint8_t Rotate{ 0 };                // 0 to Steps - 1
+        uint16_t Velocity{ 51400 };
+        uint8_t Chance{ 100 };              // percent
+
+        bool operator==(EuclidRing const&) const = default;
+    };
+
+    enum class ScaleKind : uint8_t
+    {
+        Major = 0,
+        NaturalMinor = 1,
+        Dorian = 2,
+        Phrygian = 3,
+        Lydian = 4,
+        Mixolydian = 5,
+        HarmonicMinor = 6,
+        MajorPentatonic = 7,
+        MinorPentatonic = 8,
+        Blues = 9,
+        Chromatic = 10,
+    };
+
+    struct GeneratorSettings
+    {
+        GeneratorType Type{ GeneratorType::Euclidean };
+        int64_t StepTicks{ TicksPerQuarterNote / 4 };
+
+        // Off, every pass plays what the first one did. On, chance and choices are made again on
+        // each pass, from the seed and the pass number.
+        bool ChangesEachPass{ false };
+
+        // 0 to 15. A destination that sets a channel overrides it, as it does for notes.
+        uint8_t Channel{ 0 };
+
+        // How long each note lasts, as a percent of a step.
+        uint16_t NoteLength{ 50 };
+
+        // Euclidean rhythm
+        std::vector<EuclidRing> Rings{};
+
+        // Chance melody: notes from a scale inside a range, on about Busy percent of the steps. When
+        // it changes each pass, Keep percent of the steps play what they played the pass before.
+        uint8_t ScaleRoot{ 4 };             // 0 is C, 4 is E
+        ScaleKind Scale{ ScaleKind::MinorPentatonic };
+        uint8_t LowNote{ 52 };
+        uint8_t HighNote{ 64 };
+        uint8_t Busy{ 50 };
+        uint8_t Keep{ 75 };
+        uint16_t VelocityLow{ 32768 };
+        uint16_t VelocityHigh{ 62258 };
+
+        // Arpeggiator: one note a step from what it's given, in an order, over some octaves. Each
+        // note keeps the velocity it was played or written with.
+        ArpeggiatorSource ArpSource{ ArpeggiatorSource::Held };
+        std::wstring ArpTrackId{};          // the track it plays the notes of, for Track
+        ArpeggiatorOrder ArpOrder{ ArpeggiatorOrder::Up };
+        uint8_t ArpOctaves{ 1 };            // 1 to 4
+        bool ArpLatch{ false };             // keeps playing the last keys held after they go up
+
+        // Keys this version doesn't know, kept as written.
+        winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };
+    };
+
     struct Clip
     {
         std::wstring Id{};
@@ -124,8 +357,19 @@ namespace midisequencer
         // The file it was imported from, or the device it was recorded from.
         std::wstring OriginDetail{};
 
-        // Pattern and generator settings, kept exactly as written until those kinds are built.
+        // Settings of a clip kind this version doesn't know, kept exactly as written.
         winrt::Windows::Data::Json::JsonObject Settings{ nullptr };
+
+        // A pattern clip's steps. Its notes are worked out from them (see RefreshPatternPreview),
+        // so drawing a pattern is drawing notes, and they aren't saved.
+        std::optional<PatternSettings> Pattern{};
+
+        // A generator clip's settings. Like a pattern, its notes are worked out, not saved.
+        std::optional<GeneratorSettings> Generator{};
+
+        // Inside a placement of this clip, and while it's launched, a lane here wins over the
+        // track's lane for the same target.
+        std::vector<AutomationLane> Lanes{};
 
         winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };
     };
@@ -235,6 +479,10 @@ namespace midisequencer
 
         std::vector<Tag> Tags{};
 
+        // Automation on the timeline, drawn under the track while LanesOpen.
+        std::vector<AutomationLane> Lanes{};
+        bool LanesOpen{ true };
+
         // Folders only.
         std::vector<Track> Children{};
 
@@ -272,12 +520,59 @@ namespace midisequencer
         bool operator==(MeterChange const&) const = default;
     };
 
+    // What follows a syllable, as RP-017 and the MIDI 2.0 Lyric Data message mark it: a space, a
+    // carriage return, or a carriage return and line feed.
+    enum class LyricEnd : uint8_t
+    {
+        None = 0,           // the word goes on in the next syllable
+        Word = 1,
+        Line = 2,
+        Paragraph = 3,
+    };
+
+    // One sung syllable, at the tick its note starts. No text is a melisma: the syllable before
+    // keeps being sung.
+    struct Lyric
+    {
+        int64_t Tick{ 0 };
+        std::wstring Text{};
+        LyricEnd End{ LyricEnd::None };
+
+        // How to read the syllable, shown in small type above it, like the kana over a kanji.
+        // RP-026 and MIDI 2.0 call it ruby. Empty for none.
+        std::wstring Ruby{};
+
+        bool operator==(Lyric const&) const = default;
+    };
+
+    // The optional lyrics track (design section 23).
+    struct LyricsTrack
+    {
+        // BCP 47, such as "en" or "ja". Empty when no one said.
+        std::wstring Language{};
+
+        // The track that sings the words: its notes place them, and it sends them as it plays.
+        std::wstring TrackId{};
+
+        // Sorted by tick.
+        std::vector<Lyric> Syllables{};
+
+        winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };
+
+        // The language of the ruby, also BCP 47. Empty when no one said. Last, so lyrics written
+        // as { language, track, syllables } still read the same.
+        std::wstring RubyLanguage{};
+    };
+
     struct Sequence
     {
         uint32_t FileVersion{ CurrentFileVersion };
 
         // The name exports carry. Starts out as the file name.
         std::wstring Name{};
+
+        // The copyright notice exports carry, as the person wrote it.
+        std::wstring Copyright{};
 
         std::optional<midiapp::ContentProvenance> Provenance{};
 
@@ -294,6 +589,8 @@ namespace midisequencer
         std::vector<Track> Tracks{};
 
         std::vector<Clip> Clips{};
+
+        std::optional<LyricsTrack> Lyrics{};
 
         winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };
     };
@@ -389,6 +686,26 @@ namespace midisequencer
 
     // The number of words in a Universal MIDI Packet, from its message type.
     uint8_t UmpWordCount(_In_ uint32_t firstWord) noexcept;
+
+    // ---- automation ----
+
+    // A lane's value at a tick. Before its first point the lane holds the first point's value, and
+    // after its last point the last one's. Nothing for a lane with no points.
+    std::optional<uint32_t> LaneValueAt(_In_ AutomationLane const& lane, _In_ int64_t tick) noexcept;
+
+    // Whether the line from a point ramps to the next point rather than holding. A program lane
+    // always holds, and two points at one tick are a jump, not a ramp.
+    bool LaneRampsAfter(_In_ AutomationLane const& lane, _In_ size_t pointIndex) noexcept;
+
+    // Two lanes that change the same thing, so a clip's lane stands in for the track's.
+    bool SameLaneTarget(_In_ AutomationLane const& a, _In_ AutomationLane const& b) noexcept;
+
+    // How many bits of a lane's value a destination gets: all 32 over MIDI 2.0, and 7 or 14 over
+    // MIDI 1.0. A program is 7 bits either way.
+    uint8_t LaneResolutionBits(_In_ LaneTarget target, _In_ bool midi2) noexcept;
+
+    // Lane numbers and channels in range, points in order, and an id for each lane.
+    void NormalizeLanes(_Inout_ std::vector<AutomationLane>& lanes);
 
     // MIDI files carry UTF-8. Anything that isn't well formed comes back as U+FFFD, not a guess.
     std::string ToUtf8(_In_ std::wstring_view text);

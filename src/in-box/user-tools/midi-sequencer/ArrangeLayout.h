@@ -26,18 +26,30 @@ namespace midisequencer
         Track = 1,
         Folder = 2,
         AddTrack = 3,
+
+        // One automation lane, under its track.
+        Lane = 4,
+
+        // The lyrics track, pinned under Tempo and meter when the sequence has one.
+        Lyrics = 5,
     };
 
     // Row heights from the comps (seq.css).
     inline constexpr double TempoRowHeight = 44.0;
+    inline constexpr double LyricsRowHeight = 36.0;
     inline constexpr double TrackRowHeight = 46.0;
     inline constexpr double FolderRowHeight = 30.0;
     inline constexpr double AddTrackRowHeight = 40.0;
+    inline constexpr double LaneRowHeight = 58.0;
 
     struct ArrangeRow
     {
         ArrangeRowKind Kind{ ArrangeRowKind::Track };
         std::wstring TrackId{};
+
+        // Automation rows only: the lane, among its track's lanes.
+        std::wstring LaneId{};
+
         size_t Depth{ 0 };
         double Top{ 0 };
         double Height{ 0 };
@@ -62,10 +74,12 @@ namespace midisequencer
         ArrangeRow const* PinnedRowAt(_In_ double y) const noexcept;
         ArrangeRow const* ScrollingRowAt(_In_ double y) const noexcept;
 
+        // A track's or folder's own row, not one of its automation rows.
         ArrangeRow const* FindRow(_In_ std::wstring_view trackId) const noexcept;
     };
 
     // The Tempo and meter track is always the first pinned row. A pinned track is drawn only in
-    // the pinned area, even when its folder is closed.
+    // the pinned area, even when its folder is closed. A track's open lanes follow it, wherever
+    // it's drawn.
     ArrangeLayout BuildArrangeLayout(_In_ Sequence const& sequence);
 }

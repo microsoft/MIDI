@@ -71,7 +71,7 @@
     <value>Untitled sequence</value>
   </data>
   <data name="PreviewChicletText.Text" xml:space="preserve">
-    <value>PREVIEW</value>
+    <value>EARLY PREVIEW</value>
     <comment>Shown in the title bar. All capitals on purpose, so it reads as a badge.</comment>
   </data>
   <data name="SettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
@@ -150,6 +150,16 @@
   <data name="MenuImportClipFile.Text" xml:space="preserve">
     <value>MIDI 2.0 clip file…</value>
   </data>
+  <data name="MenuImportDawProject.Text" xml:space="preserve">
+    <value>DAWproject file…</value>
+    <comment>DAWproject is the name of a file format that DAWs share. Don't translate it.</comment>
+  </data>
+  <data name="MenuImportCapture.Text" xml:space="preserve">
+    <value>Capture from MIDI Monitor or the console (CSV)…</value>
+  </data>
+  <data name="MenuImportPaste.Text" xml:space="preserve">
+    <value>Messages copied in MIDI Monitor…</value>
+  </data>
   <data name="MenuExport.Text" xml:space="preserve">
     <value>Export</value>
   </data>
@@ -158,6 +168,129 @@
   </data>
   <data name="MenuExportStandardMidiFile.Text" xml:space="preserve">
     <value>Standard MIDI File…</value>
+  </data>
+  <data name="MenuExportDawProject.Text" xml:space="preserve">
+    <value>DAWproject file…</value>
+    <comment>DAWproject is the name of a file format that DAWs share. Don't translate it.</comment>
+  </data>
+  <data name="MenuRemoteControl.Text" xml:space="preserve">
+    <value>Remote control and MIDI Glass…</value>
+  </data>
+  <data name="RemoteEndpointName" xml:space="preserve">
+    <value>MIDI Sequencer</value>
+    <comment>The name other apps see for the sequencer's own MIDI endpoint. Keep it short: older apps show it as a MIDI 1.0 port name.</comment>
+  </data>
+  <data name="RemoteEndpointDescription" xml:space="preserve">
+    <value>Remote control for Windows MIDI Sequencer</value>
+  </data>
+  <data name="RemoteBlockName" xml:space="preserve">
+    <value>Remote control</value>
+  </data>
+  <data name="RemoteUnavailable" xml:space="preserve">
+    <value>The sequencer couldn't make its remote control endpoint. Check that Windows MIDI Services is running and up to date.</value>
+  </data>
+  <data name="RemoteOnFormat" xml:space="preserve">
+    <value>Remote control is on. Other apps and devices can send to {0}.</value>
+  </data>
+  <data name="RemoteOff" xml:space="preserve">
+    <value>Remote control is off.</value>
+  </data>
+  <data name="RemoteDialogTitle" xml:space="preserve">
+    <value>Remote control</value>
+  </data>
+  <data name="RemoteDialogIntroFormat" xml:space="preserve">
+    <value>Turn this on, and the sequencer makes its own MIDI endpoint, {0}. MIDI Glass, another app, or a controller routed through MIDI Patchbay can send to it to launch clips and scenes, run the transport, and mute, solo or arm tracks. The sequencer sends back what's playing, so a surface can light up.</value>
+  </data>
+  <data name="RemoteSwitchHeader" xml:space="preserve">
+    <value>Remote control endpoint</value>
+  </data>
+  <data name="RemoteMapHeading" xml:space="preserve">
+    <value>What each message does</value>
+  </data>
+  <data name="RemoteMapTracks" xml:space="preserve">
+    <value>Channels 1 to 15 are tracks 1 to 15, in the order of the track list, with folders left out. On a track's channel, notes 0 to 63 launch the clips in scenes 1 to 64, note 64 stops the track, and note 65 sends it back to the timeline. Controllers 20, 21 and 22 mute, solo and arm it.</value>
+  </data>
+  <data name="RemoteMapSequence" xml:space="preserve">
+    <value>Channel 16 is the whole sequence. Notes 0 to 63 launch scenes 1 to 64, note 64 stops every track, 65 sends every track back to the timeline, 96 plays, 97 stops, 98 records, 99 turns the loop on or off, 100 turns the metronome on or off, and 101 goes back to the start.</value>
+  </data>
+  <data name="RemoteMapMore" xml:space="preserve">
+    <value>Tracks 16 and up are on group 2 and up. A MIDI 1.0 controller can send all of these. Keep remote control on in only one sequencer window at a time: other apps find the endpoint by its name.</value>
+  </data>
+  <data name="RemoteMakeLayout" xml:space="preserve">
+    <value>Make a MIDI Glass layout…</value>
+  </data>
+  <data name="RemoteMakeLayoutHelp" xml:space="preserve">
+    <value>A layout with a pad for each clip, a button for each scene, the transport, and mute, solo and arm for each track. It opens in MIDI Glass and turns remote control on. After you add tracks or scenes, make it again: a new file leaves the old one alone.</value>
+  </data>
+  <data name="GlassLayoutFilter" xml:space="preserve">
+    <value>MIDI Glass layout</value>
+  </data>
+  <data name="GlassLayoutNameFormat" xml:space="preserve">
+    <value>{0} remote</value>
+    <comment>{0} is the sequence's name.</comment>
+  </data>
+  <data name="GlassLayoutDescriptionFormat" xml:space="preserve">
+    <value>Launches the clips and scenes of {0}, and runs its transport.</value>
+  </data>
+  <data name="GlassLayoutSaved" xml:space="preserve">
+    <value>Saved the MIDI Glass layout and opened it in MIDI Glass.</value>
+  </data>
+  <data name="GlassLayoutSavedPartFormat" xml:space="preserve">
+    <value>Saved the MIDI Glass layout. It has room for the first {0} tracks and {1} scenes.</value>
+  </data>
+  <data name="GlassLayoutNotSaved" xml:space="preserve">
+    <value>The MIDI Glass layout couldn't be saved there. Try another folder.</value>
+  </data>
+  <data name="GlassPlay" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="GlassStop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="GlassRecord" xml:space="preserve">
+    <value>Record</value>
+  </data>
+  <data name="GlassLoop" xml:space="preserve">
+    <value>Loop</value>
+  </data>
+  <data name="GlassMetronome" xml:space="preserve">
+    <value>Metronome</value>
+  </data>
+  <data name="GlassGoToStart" xml:space="preserve">
+    <value>To start</value>
+  </data>
+  <data name="GlassStopAll" xml:space="preserve">
+    <value>Stop all</value>
+  </data>
+  <data name="GlassBackToTimeline" xml:space="preserve">
+    <value>Back to timeline</value>
+  </data>
+  <data name="GlassMute" xml:space="preserve">
+    <value>Mute</value>
+  </data>
+  <data name="GlassSolo" xml:space="preserve">
+    <value>Solo</value>
+  </data>
+  <data name="GlassArm" xml:space="preserve">
+    <value>Arm</value>
+  </data>
+  <data name="GlassStopTrack" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="GlassEmptySlot" xml:space="preserve">
+    <value>Empty</value>
+  </data>
+  <data name="SceneNumberFormat" xml:space="preserve">
+    <value>Scene {0}</value>
+  </data>
+  <data name="GlassTrackFormat" xml:space="preserve">
+    <value>Track {0}</value>
+  </data>
+  <data name="GlassPageFormat" xml:space="preserve">
+    <value>Tracks {0} to {1}, scenes {2} to {3}</value>
+  </data>
+  <data name="GlassPageTabFormat" xml:space="preserve">
+    <value>Page {0}</value>
   </data>
   <data name="MenuClose.Text" xml:space="preserve">
     <value>Close window</value>
@@ -173,6 +306,12 @@
   </data>
   <data name="FileTypeClipFile" xml:space="preserve">
     <value>MIDI 2.0 clip file</value>
+  </data>
+  <data name="FileTypeDawProject" xml:space="preserve">
+    <value>DAWproject file</value>
+  </data>
+  <data name="FileTypeCapture" xml:space="preserve">
+    <value>Capture from MIDI Monitor or the console</value>
   </data>
 
   <!-- ==================================== Transport ==================================== -->
@@ -224,8 +363,166 @@
   <data name="ClockInternal.Text" xml:space="preserve">
     <value>Internal clock</value>
   </data>
-  <data name="ClockNotYet" xml:space="preserve">
-    <value>The sequencer keeps its own time. Following another device's clock, and sending clock to other devices, come in a later preview.</value>
+  <data name="ClockButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Internal clock, clock and sync settings</value>
+  </data>
+  <data name="ClockButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Clock and sync: follow another device's clock, or send clock and time code to your devices</value>
+  </data>
+  <data name="ClockDialogTitle" xml:space="preserve">
+    <value>Clock and sync</value>
+  </data>
+  <data name="ClockDialogIntro" xml:space="preserve">
+    <value>Where this sequence's tempo comes from, and which devices follow it. These settings belong to this PC, not to the sequence, because they name devices.</value>
+  </data>
+  <data name="DialogDone" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="ClockTempoFromHeading" xml:space="preserve">
+    <value>Tempo comes from</value>
+  </data>
+  <data name="ClockTempoThisSequence" xml:space="preserve">
+    <value>This sequence</value>
+  </data>
+  <data name="ClockTempoThisSequenceFormat" xml:space="preserve">
+    <value>The Tempo and meter track, which starts at {0} BPM. Ramps and changes play exactly.</value>
+    <comment>{0} is a tempo, such as 124.</comment>
+  </data>
+  <data name="ClockTempoAnotherDevice" xml:space="preserve">
+    <value>Another device's MIDI clock</value>
+  </data>
+  <data name="ClockTempoAnotherDeviceHelp" xml:space="preserve">
+    <value>Its clock sets the tempo, and its start, stop and song position run playback. While following, the loop is off and Play waits for that device. The sequencer can only plan as far as the next pulse, so timing is a little looser than with its own clock.</value>
+  </data>
+  <data name="FollowDeviceName" xml:space="preserve">
+    <value>Device whose clock to follow</value>
+  </data>
+  <data name="FollowGroupName" xml:space="preserve">
+    <value>Group of the clock to follow</value>
+  </data>
+  <data name="FollowNoDevice" xml:space="preserve">
+    <value>Choose the device whose clock to follow, or let the tempo come from this sequence.</value>
+  </data>
+  <data name="FollowPlayWaitsFormat" xml:space="preserve">
+    <value>Playback follows {0}. It starts when that device starts or continues.</value>
+  </data>
+  <data name="ClockSendHeading" xml:space="preserve">
+    <value>Send clock to</value>
+  </data>
+  <data name="ClockColumnDevice" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="ClockColumnGroup" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="ClockColumnClock" xml:space="preserve">
+    <value>Clock</value>
+  </data>
+  <data name="ClockColumnStartStop" xml:space="preserve">
+    <value>Start and stop</value>
+  </data>
+  <data name="ClockColumnSongPosition" xml:space="preserve">
+    <value>Song position</value>
+  </data>
+  <data name="ClockColumnOffset" xml:space="preserve">
+    <value>Offset (ms)</value>
+  </data>
+  <data name="ClockOffsetToolTip" xml:space="preserve">
+    <value>A positive offset sends later and a negative one sends earlier, to line up a device that's slow or quick.</value>
+  </data>
+  <data name="ClockNoDevices" xml:space="preserve">
+    <value>No devices get this sequence's clock yet.</value>
+  </data>
+  <data name="ClockAddDevice" xml:space="preserve">
+    <value>Add a device</value>
+  </data>
+  <data name="ClockSendTempo" xml:space="preserve">
+    <value>Also send the tempo itself to devices that speak MIDI 2.0</value>
+  </data>
+  <data name="ClockSendTempoHelp" xml:space="preserve">
+    <value>A MIDI 2.0 Set Tempo message, so they know a change is coming before the clock shows it.</value>
+  </data>
+  <data name="ClockRowNoDevice" xml:space="preserve">
+    <value>the new row</value>
+    <comment>Takes the place of a device name in the names below, before a device is chosen.</comment>
+  </data>
+  <data name="ClockRowDeviceFormat" xml:space="preserve">
+    <value>Device for {0}</value>
+  </data>
+  <data name="ClockRowGroupFormat" xml:space="preserve">
+    <value>Group for {0}</value>
+  </data>
+  <data name="ClockRowClockFormat" xml:space="preserve">
+    <value>Send clock to {0}</value>
+  </data>
+  <data name="ClockRowStartStopFormat" xml:space="preserve">
+    <value>Send start and stop to {0}</value>
+  </data>
+  <data name="ClockRowSongPositionFormat" xml:space="preserve">
+    <value>Send song position to {0}</value>
+  </data>
+  <data name="ClockRowOffsetFormat" xml:space="preserve">
+    <value>Offset for {0}, in milliseconds</value>
+  </data>
+  <data name="ClockRowRemoveFormat" xml:space="preserve">
+    <value>Remove {0}</value>
+  </data>
+  <data name="TimeCodeHeading" xml:space="preserve">
+    <value>MIDI Time Code</value>
+  </data>
+  <data name="TimeCodeSwitchName" xml:space="preserve">
+    <value>Send MIDI Time Code</value>
+  </data>
+  <data name="TimeCodeSendTo" xml:space="preserve">
+    <value>Send time code to</value>
+  </data>
+  <data name="TimeCodeDeviceName" xml:space="preserve">
+    <value>Device for time code</value>
+  </data>
+  <data name="TimeCodeGroupName" xml:space="preserve">
+    <value>Group for time code</value>
+  </data>
+  <data name="TimeCodeRateName" xml:space="preserve">
+    <value>Frame rate</value>
+  </data>
+  <data name="TimeCodeRate24" xml:space="preserve">
+    <value>24 fps</value>
+  </data>
+  <data name="TimeCodeRate25" xml:space="preserve">
+    <value>25 fps</value>
+  </data>
+  <data name="TimeCodeRate2997" xml:space="preserve">
+    <value>29.97 fps drop frame</value>
+  </data>
+  <data name="TimeCodeRate30" xml:space="preserve">
+    <value>30 fps</value>
+  </data>
+  <data name="TimeCodeStartingAt" xml:space="preserve">
+    <value>starting at</value>
+  </data>
+  <data name="TimeCodeStartName" xml:space="preserve">
+    <value>Time code at the top of the sequence</value>
+  </data>
+  <data name="TimeCodeHelp" xml:space="preserve">
+    <value>For video and lighting gear. Time code counts the time on the wall from the top of the sequence, so a tempo change doesn't change it.</value>
+  </data>
+  <data name="TimeCodeBadStart" xml:space="preserve">
+    <value>Type the starting time code as hours, minutes, seconds and frames, like 01:00:00:00.</value>
+  </data>
+  <data name="TimeCodeNoDevice" xml:space="preserve">
+    <value>Choose a device for the time code, or turn it off.</value>
+  </data>
+  <data name="TimingTitle" xml:space="preserve">
+    <value>Timing</value>
+  </data>
+  <data name="ApplyOffsetsCheck" xml:space="preserve">
+    <value>Send early for each device's offset</value>
+  </data>
+  <data name="ApplyOffsetsHelp" xml:space="preserve">
+    <value>Some devices need their messages a little early to sound on time. You set how early for each device in MIDI Settings. The MIDI service in Windows doesn't send early yet, so the sequencer does it.</value>
+  </data>
+  <data name="ApplyOffsetsWhenOff" xml:space="preserve">
+    <value>Turn this off once your version of Windows MIDI Services sends early by itself. Its release notes will say so. If both send early, notes reach the device too early by its offset.</value>
   </data>
   <data name="LaunchLabel.Text" xml:space="preserve">
     <value>Launch</value>
@@ -412,6 +709,133 @@
   <data name="UndoImport" xml:space="preserve">
     <value>Import</value>
   </data>
+  <data name="DawProjectNotAProjectFormat" xml:space="preserve">
+    <value>{0} isn't a DAWproject file, or it couldn't be opened.</value>
+  </data>
+  <data name="DawProjectDamagedFormat" xml:space="preserve">
+    <value>{0} is damaged, so it couldn't be imported.</value>
+  </data>
+  <data name="DawProjectTooLargeFormat" xml:space="preserve">
+    <value>{0} is larger than the sequencer can import.</value>
+  </data>
+  <data name="DawProjectDialogTitle" xml:space="preserve">
+    <value>Import a DAWproject file</value>
+  </data>
+  <data name="DawProjectDialogIntro" xml:space="preserve">
+    <value>A DAWproject file doesn't say which MIDI device a track plays, so pick one for each track. You can change it later in the track's settings.</value>
+  </data>
+  <data name="DawProjectDialogIntroFormat" xml:space="preserve">
+    <value>{0} was made in {1}. A DAWproject file doesn't say which MIDI device a track plays, so pick one for each track. You can change it later in the track's settings.</value>
+    <comment>{0} is the file's name. {1} is the app that made it.</comment>
+  </data>
+  <data name="DawProjectTracksHeading" xml:space="preserve">
+    <value>Tracks</value>
+  </data>
+  <data name="DawProjectInstrumentFormat" xml:space="preserve">
+    <value>Played {0} in {1}</value>
+    <comment>{0} is an instrument plug-in. {1} is the app that made the file.</comment>
+  </data>
+  <data name="DawProjectInstrumentNoAppFormat" xml:space="preserve">
+    <value>Played {0}</value>
+    <comment>{0} is an instrument plug-in.</comment>
+  </data>
+  <data name="DawProjectDeviceNameFormat" xml:space="preserve">
+    <value>Device for {0}</value>
+    <comment>The name a screen reader gives the list of devices for track {0}.</comment>
+  </data>
+  <data name="DawProjectMoreTracksFormat" xml:space="preserve">
+    <value>The tracks after the first {0} play to the built-in synth. You can change that in each track's settings.</value>
+  </data>
+  <data name="DawProjectLeftOutHeading" xml:space="preserve">
+    <value>Left out</value>
+  </data>
+  <data name="DawProjectLeftOutWhy" xml:space="preserve">
+    <value>The sequencer plays MIDI devices. It keeps the notes, MIDI automation, tempo, tags and scenes. Audio and plug-ins stay in the app that made the file.</value>
+  </data>
+  <data name="DawProjectLeftOutAudioTracksFormat" xml:space="preserve">
+    <value>Audio tracks: {0}</value>
+  </data>
+  <data name="DawProjectLeftOutAudioClipsFormat" xml:space="preserve">
+    <value>Audio clips: {0}</value>
+  </data>
+  <data name="DawProjectLeftOutPluginsFormat" xml:space="preserve">
+    <value>Instruments and effects: {0}</value>
+  </data>
+  <data name="DawProjectLeftOutAutomationFormat" xml:space="preserve">
+    <value>Automation of mixer and plug-in settings: {0}</value>
+  </data>
+  <data name="DawProjectLeftOutExpressionsFormat" xml:space="preserve">
+    <value>Expression on single notes, such as one note's own pitch bend: {0}</value>
+  </data>
+  <data name="DawProjectImport" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="DawProjectPlayedOnFormat" xml:space="preserve">
+    <value>Played on {0} in Windows MIDI Sequencer</value>
+    <comment>Written into an exported file as a track's comment. {0} is the MIDI device the track plays.</comment>
+  </data>
+  <data name="ExportedDawProjectSkippedFormat" xml:space="preserve">
+    <value>Exported {0}. DAWproject has no place for some messages, such as system exclusive and start-up messages, so they were left out: {1}.</value>
+  </data>
+  <data name="ExportedDawProjectSkippedLanesFormat" xml:space="preserve">
+    <value>Exported {0}. DAWproject has no place for some MIDI, so it was left out: {1} messages, such as system exclusive and start-up messages, and {2} RPN or NRPN lanes.</value>
+  </data>
+  <data name="CaptureNotACaptureFormat" xml:space="preserve">
+    <value>{0} isn't a capture from MIDI Monitor or the console. In MIDI Monitor, save the capture as CSV and import that.</value>
+  </data>
+  <data name="CaptureTooLargeFormat" xml:space="preserve">
+    <value>{0} has more messages than a sequence can hold.</value>
+  </data>
+  <data name="CaptureTrackNameFormat" xml:space="preserve">
+    <value>Group {0}</value>
+    <comment>A track made from what a capture had on one UMP group. {0} is the group, counted from 1.</comment>
+  </data>
+  <data name="CaptureImportedSkippedFormat" xml:space="preserve">
+    <value>Imported {0}. Tracks added: {1}. Messages a track doesn't record, such as clock, were left out: {2}.</value>
+  </data>
+  <data name="PasteDialogTitle" xml:space="preserve">
+    <value>Paste from MIDI Monitor</value>
+  </data>
+  <data name="PasteDialogIntroFormat" xml:space="preserve">
+    <value>You copied {0} messages as UMP words in MIDI Monitor. The clipboard has the messages but not their times. They go on {1} as a new clip.</value>
+    <comment>{0} is a number of messages. {1} is a track's name.</comment>
+  </data>
+  <data name="PasteOneAStep" xml:space="preserve">
+    <value>One message per step, from the playhead</value>
+  </data>
+  <data name="PasteStepSize" xml:space="preserve">
+    <value>Each step is</value>
+  </data>
+  <data name="PasteAllAtOnce" xml:space="preserve">
+    <value>All at the playhead, in the order copied</value>
+  </data>
+  <data name="PasteAllAtOnceHelp" xml:space="preserve">
+    <value>Good for a setup dump: sound select, then a system exclusive patch.</value>
+  </data>
+  <data name="PasteButton" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="PasteNothing" xml:space="preserve">
+    <value>The clipboard has no MIDI messages. In MIDI Monitor, select some messages and copy them as UMP words.</value>
+  </data>
+  <data name="PasteNoTrack" xml:space="preserve">
+    <value>Select the track to paste into first.</value>
+  </data>
+  <data name="PastedFormat" xml:space="preserve">
+    <value>Pasted {0} messages into {1}.</value>
+  </data>
+  <data name="PastedSkippedFormat" xml:space="preserve">
+    <value>Pasted {0} messages into {1}. Lines that weren't whole messages were left out: {2}.</value>
+  </data>
+  <data name="PastedClipName" xml:space="preserve">
+    <value>Pasted</value>
+  </data>
+  <data name="PastedOriginDetail" xml:space="preserve">
+    <value>Copied in MIDI Monitor</value>
+  </data>
+  <data name="UndoPaste" xml:space="preserve">
+    <value>Paste</value>
+  </data>
 
   <!-- ==================================== Track list ==================================== -->
   <data name="AddTrackButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
@@ -455,6 +879,45 @@
   </data>
   <data name="LauncherCanvasName" xml:space="preserve">
     <value>Clip launcher</value>
+  </data>
+  <data name="TimelineCanvasHelp" xml:space="preserve">
+    <value>Up and Down pick a track, and Left and Right pick a clip on it. Enter opens the clip, Delete removes it, and Shift+F10 opens its menu, or the track's menu at the playhead. Ctrl and plus or minus zoom in and out.</value>
+  </data>
+  <data name="LauncherCanvasHelp" xml:space="preserve">
+    <value>The arrow keys move between the cells. Enter plays or stops the clip in a cell, and Shift+F10 opens the cell's menu.</value>
+  </data>
+  <data name="KeyboardTimelineStart" xml:space="preserve">
+    <value>Timeline. Press Down to pick a track.</value>
+  </data>
+  <data name="KeyboardLauncherStart" xml:space="preserve">
+    <value>Clip launcher. Press an arrow key to pick a cell.</value>
+  </data>
+  <data name="KeyboardFolderFormat" xml:space="preserve">
+    <value>{0}, folder</value>
+  </data>
+  <data name="KeyboardPlacementFormat" xml:space="preserve">
+    <value>{0}: {1}, from bar {2}</value>
+  </data>
+  <data name="KeyboardTrackFormat" xml:space="preserve">
+    <value>{0}. Clips on the timeline: {1}.</value>
+  </data>
+  <data name="KeyboardTrackEmptyFormat" xml:space="preserve">
+    <value>{0}. No clips on the timeline. Shift+F10 adds one at the playhead.</value>
+  </data>
+  <data name="KeyboardSlotEmptyFormat" xml:space="preserve">
+    <value>{0}: empty. Scene {1}, {2}.</value>
+  </data>
+  <data name="KeyboardSlotFormat" xml:space="preserve">
+    <value>{0}: {1}, {2}. Scene {3}, {4}. {5}.</value>
+  </data>
+  <data name="KeyboardSlotPlaying" xml:space="preserve">
+    <value>Playing</value>
+  </data>
+  <data name="KeyboardSlotQueued" xml:space="preserve">
+    <value>Waiting to start</value>
+  </data>
+  <data name="KeyboardSlotStopped" xml:space="preserve">
+    <value>Stopped</value>
   </data>
   <data name="EditorCanvasName" xml:space="preserve">
     <value>Piano roll</value>
@@ -644,6 +1107,361 @@
     <value>Gray</value>
   </data>
 
+  <!-- ==================================== Automation ==================================== -->
+  <data name="EmptyLaneHint" xml:space="preserve">
+    <value>Click to add a point. Hold Ctrl and drag to draw.</value>
+  </data>
+  <data name="ClipLaneCaption" xml:space="preserve">
+    <value>The clip's own lane plays here</value>
+  </data>
+  <data name="ClipLaneAdd" xml:space="preserve">
+    <value>+ Lane</value>
+  </data>
+  <data name="ClipLanesNone" xml:space="preserve">
+    <value>Lanes here belong to this clip. They go round with it, wherever it plays.</value>
+  </data>
+  <data name="ClipLanesNoneKeyboard" xml:space="preserve">
+    <value>This clip has no lanes. Press Shift+F10 to add one.</value>
+  </data>
+  <data name="ClipLaneNoPointsFormat" xml:space="preserve">
+    <value>{0} has no points. Press Shift+F10 to add one.</value>
+  </data>
+  <data name="ClipLanePointFormat" xml:space="preserve">
+    <value>{0}: bar {1}, beat {2}, {3}</value>
+  </data>
+  <data name="ClipLanePointTicksFormat" xml:space="preserve">
+    <value>{0}: bar {1}, beat {2} and {3} ticks, {4}</value>
+  </data>
+  <data name="ClipLanePointDeleted" xml:space="preserve">
+    <value>Point deleted.</value>
+  </data>
+  <data name="LanePointAddedFormat" xml:space="preserve">
+    <value>Added a point to {0}.</value>
+  </data>
+  <data name="EditorCanvasHelp" xml:space="preserve">
+    <value>The arrow keys move the selected notes. Alt and the arrow keys pick a point on one of the clip's lanes, and then the arrow keys move it or change its value. Shift+F10 opens the menu for the lane or the point.</value>
+  </data>
+  <data name="EditorAutomationText.Text" xml:space="preserve">
+    <value>Automation</value>
+  </data>
+  <data name="EditorAutomationButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add automation to this clip</value>
+  </data>
+  <data name="EditorAutomationButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Add a lane to this clip that changes a controller, pitch bend, pressure or program as it plays.</value>
+  </data>
+  <data name="ShowAutomationFormat" xml:space="preserve">
+    <value>Show automation for {0}</value>
+  </data>
+  <data name="HideAutomationFormat" xml:space="preserve">
+    <value>Hide automation for {0}</value>
+  </data>
+  <data name="AddLaneToTrackFormat" xml:space="preserve">
+    <value>Add automation to {0}</value>
+  </data>
+  <data name="LaneRowNameFormat" xml:space="preserve">
+    <value>{0}, automation on {1}</value>
+    <comment>{0} is what the lane changes, such as "Pitch bend". {1} is the track's name.</comment>
+  </data>
+  <data name="MenuAddLane" xml:space="preserve">
+    <value>Add automation…</value>
+  </data>
+  <data name="MenuShowAutomation" xml:space="preserve">
+    <value>Show automation</value>
+  </data>
+  <data name="MenuHideAutomation" xml:space="preserve">
+    <value>Hide automation</value>
+  </data>
+  <data name="MenuAddPointHere" xml:space="preserve">
+    <value>Add a point here</value>
+  </data>
+  <data name="MenuRenameLane" xml:space="preserve">
+    <value>Rename lane…</value>
+  </data>
+  <data name="MenuClearLane" xml:space="preserve">
+    <value>Clear all points</value>
+  </data>
+  <data name="MenuDeleteLane" xml:space="preserve">
+    <value>Delete lane</value>
+  </data>
+  <data name="MenuSetValue" xml:space="preserve">
+    <value>Set value…</value>
+  </data>
+  <data name="MenuHoldPoint" xml:space="preserve">
+    <value>Hold until the next point</value>
+  </data>
+  <data name="MenuDeletePoint" xml:space="preserve">
+    <value>Delete point</value>
+  </data>
+  <data name="LaneControllerFormat" xml:space="preserve">
+    <value>Controller {0}</value>
+  </data>
+  <data name="LanePitchBend" xml:space="preserve">
+    <value>Pitch bend</value>
+  </data>
+  <data name="LaneChannelPressure" xml:space="preserve">
+    <value>Channel pressure</value>
+  </data>
+  <data name="LaneProgram" xml:space="preserve">
+    <value>Program change</value>
+  </data>
+  <data name="LaneRegisteredFormat" xml:space="preserve">
+    <value>RPN {0}:{1}</value>
+    <comment>A registered controller: {0} is its bank and {1} its index.</comment>
+  </data>
+  <data name="LaneAssignableFormat" xml:space="preserve">
+    <value>NRPN {0}:{1}</value>
+    <comment>An assignable controller: {0} is its bank and {1} its index.</comment>
+  </data>
+  <data name="LaneShortControllerFormat" xml:space="preserve">
+    <value>CC {0}</value>
+    <comment>Short for control change, as in "CC 74".</comment>
+  </data>
+  <data name="LaneShortPressure" xml:space="preserve">
+    <value>Pressure</value>
+  </data>
+  <data name="LaneShortProgram" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="LaneShortBend" xml:space="preserve">
+    <value>Bend</value>
+  </data>
+  <data name="LaneSubFormat" xml:space="preserve">
+    <value>{0} · {1}-bit</value>
+    <comment>{0} is what the lane changes, such as "NRPN 7:54". {1} is how many bits the device gets, such as 14.</comment>
+  </data>
+  <data name="LaneValuePercentFormat" xml:space="preserve">
+    <value>{0}%</value>
+  </data>
+  <data name="LaneValueProgramFormat" xml:space="preserve">
+    <value>Program {0}</value>
+  </data>
+  <data name="LaneValuePromptPercent" xml:space="preserve">
+    <value>Value, from 0 to 100%</value>
+  </data>
+  <data name="LaneValuePromptBend" xml:space="preserve">
+    <value>Bend, from -100% to +100%</value>
+  </data>
+  <data name="LaneValuePromptProgram" xml:space="preserve">
+    <value>Program number, from 1 to 128</value>
+  </data>
+  <data name="LaneValueOutOfRange" xml:space="preserve">
+    <value>That value is outside what this lane can take.</value>
+  </data>
+  <data name="RenameLaneTitle" xml:space="preserve">
+    <value>Rename automation lane</value>
+  </data>
+  <data name="AddLaneTitleFormat" xml:space="preserve">
+    <value>Add automation to {0}</value>
+  </data>
+  <data name="AddLaneKind" xml:space="preserve">
+    <value>What it changes</value>
+  </data>
+  <data name="LaneKindController" xml:space="preserve">
+    <value>A controller (CC)</value>
+  </data>
+  <data name="LaneKindPitchBend" xml:space="preserve">
+    <value>Pitch bend</value>
+  </data>
+  <data name="LaneKindChannelPressure" xml:space="preserve">
+    <value>Channel pressure</value>
+  </data>
+  <data name="LaneKindProgram" xml:space="preserve">
+    <value>Program change</value>
+  </data>
+  <data name="LaneKindRegistered" xml:space="preserve">
+    <value>A registered controller (RPN)</value>
+  </data>
+  <data name="LaneKindAssignable" xml:space="preserve">
+    <value>An assignable controller (NRPN)</value>
+  </data>
+  <data name="AddLaneController" xml:space="preserve">
+    <value>Controller number</value>
+  </data>
+  <data name="AddLaneBank" xml:space="preserve">
+    <value>Bank</value>
+  </data>
+  <data name="AddLaneIndex" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="AddLaneChannel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="AddLaneName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="AddLaneNamePlaceholder" xml:space="preserve">
+    <value>Optional, such as Filter cutoff</value>
+  </data>
+  <data name="AddLaneAdd" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="LaneAlreadyThereFormat" xml:space="preserve">
+    <value>This track already has a lane for that: {0}.</value>
+  </data>
+  <data name="ControllerName1" xml:space="preserve">
+    <value>Modulation</value>
+  </data>
+  <data name="ControllerName2" xml:space="preserve">
+    <value>Breath</value>
+  </data>
+  <data name="ControllerName4" xml:space="preserve">
+    <value>Foot pedal</value>
+  </data>
+  <data name="ControllerName5" xml:space="preserve">
+    <value>Portamento time</value>
+  </data>
+  <data name="ControllerName7" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="ControllerName8" xml:space="preserve">
+    <value>Balance</value>
+  </data>
+  <data name="ControllerName10" xml:space="preserve">
+    <value>Pan</value>
+  </data>
+  <data name="ControllerName11" xml:space="preserve">
+    <value>Expression</value>
+  </data>
+  <data name="ControllerName64" xml:space="preserve">
+    <value>Sustain pedal</value>
+  </data>
+  <data name="ControllerName65" xml:space="preserve">
+    <value>Portamento</value>
+  </data>
+  <data name="ControllerName66" xml:space="preserve">
+    <value>Sostenuto</value>
+  </data>
+  <data name="ControllerName67" xml:space="preserve">
+    <value>Soft pedal</value>
+  </data>
+  <data name="ControllerName71" xml:space="preserve">
+    <value>Resonance</value>
+  </data>
+  <data name="ControllerName72" xml:space="preserve">
+    <value>Release time</value>
+  </data>
+  <data name="ControllerName73" xml:space="preserve">
+    <value>Attack time</value>
+  </data>
+  <data name="ControllerName74" xml:space="preserve">
+    <value>Brightness</value>
+  </data>
+  <data name="ControllerName91" xml:space="preserve">
+    <value>Reverb</value>
+  </data>
+  <data name="ControllerName93" xml:space="preserve">
+    <value>Chorus</value>
+  </data>
+
+  <!-- ==================================== Tempo and meter ==================================== -->
+  <data name="TempoEditButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Tempo and meter</value>
+  </data>
+  <data name="TempoEditButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Change the tempo or the meter at the playhead</value>
+  </data>
+  <data name="TempoFlyoutTitle" xml:space="preserve">
+    <value>Tempo and meter</value>
+  </data>
+  <data name="TempoFromBarFormat" xml:space="preserve">
+    <value>Tempo from bar {0}, in BPM</value>
+  </data>
+  <data name="MeterFromBarFormat" xml:space="preserve">
+    <value>Meter from bar {0}</value>
+  </data>
+  <data name="MeterBeatsPerBarName" xml:space="preserve">
+    <value>Beats per bar</value>
+  </data>
+  <data name="MeterBeatNoteName" xml:space="preserve">
+    <value>Beat note</value>
+  </data>
+  <data name="MeterSeparator" xml:space="preserve">
+    <value>/</value>
+    <comment>Between the beats per bar and the beat note, the way a meter is written, as in 4/4.</comment>
+  </data>
+  <data name="MeterBeatNote1" xml:space="preserve">
+    <value>1 (whole)</value>
+  </data>
+  <data name="MeterBeatNote2" xml:space="preserve">
+    <value>2 (half)</value>
+  </data>
+  <data name="MeterBeatNote4" xml:space="preserve">
+    <value>4 (quarter)</value>
+  </data>
+  <data name="MeterBeatNote8" xml:space="preserve">
+    <value>8 (eighth)</value>
+  </data>
+  <data name="MeterBeatNote16" xml:space="preserve">
+    <value>16 (16th)</value>
+  </data>
+  <data name="MeterBeatNote32" xml:space="preserve">
+    <value>32 (32nd)</value>
+  </data>
+  <data name="AddTempoChangeAtBarFormat" xml:space="preserve">
+    <value>Add a tempo change at bar {0}…</value>
+  </data>
+  <data name="AddMeterChangeAtBarFormat" xml:space="preserve">
+    <value>Add a meter change at bar {0}…</value>
+  </data>
+  <data name="MenuChangeTempoHere" xml:space="preserve">
+    <value>Change the tempo here…</value>
+  </data>
+  <data name="MenuChangeMeterFormat" xml:space="preserve">
+    <value>Change the meter from bar {0}…</value>
+  </data>
+  <data name="MenuRemoveMeterFormat" xml:space="preserve">
+    <value>Remove the meter change at bar {0}</value>
+  </data>
+  <data name="MenuSetTempo" xml:space="preserve">
+    <value>Set tempo…</value>
+  </data>
+  <data name="MenuRampToNext" xml:space="preserve">
+    <value>Ramp to the next tempo change</value>
+  </data>
+  <data name="MenuDeleteTempoChange" xml:space="preserve">
+    <value>Delete tempo change</value>
+  </data>
+  <data name="TempoPromptFormat" xml:space="preserve">
+    <value>Tempo from bar {0}, in beats per minute</value>
+  </data>
+  <data name="MeterPromptFormat" xml:space="preserve">
+    <value>Meter from bar {0}, such as 3/4 or 7/8</value>
+  </data>
+  <data name="TempoOutOfRange" xml:space="preserve">
+    <value>A tempo has to be from 10 to 999 beats per minute.</value>
+  </data>
+  <data name="MeterInvalid" xml:space="preserve">
+    <value>Type a meter like 3/4 or 7/8. The bottom number has to be 1, 2, 4, 8, 16 or 32.</value>
+  </data>
+  <data name="UndoAddLane" xml:space="preserve">
+    <value>Add automation lane</value>
+  </data>
+  <data name="UndoDeleteLane" xml:space="preserve">
+    <value>Delete automation lane</value>
+  </data>
+  <data name="UndoRenameLane" xml:space="preserve">
+    <value>Rename automation lane</value>
+  </data>
+  <data name="UndoClearLane" xml:space="preserve">
+    <value>Clear automation</value>
+  </data>
+  <data name="UndoEditAutomation" xml:space="preserve">
+    <value>Edit automation</value>
+  </data>
+  <data name="UndoDrawAutomation" xml:space="preserve">
+    <value>Draw automation</value>
+  </data>
+  <data name="UndoDeletePoint" xml:space="preserve">
+    <value>Delete automation point</value>
+  </data>
+  <data name="UndoChangeTempo" xml:space="preserve">
+    <value>Change tempo</value>
+  </data>
+  <data name="UndoChangeMeter" xml:space="preserve">
+    <value>Change meter</value>
+  </data>
+
   <!-- ==================================== Prompts ==================================== -->
   <data name="DialogOk" xml:space="preserve">
     <value>OK</value>
@@ -767,6 +1585,9 @@
   <data name="PlayingLaunchedClip" xml:space="preserve">
     <value>Playing a launched clip</value>
   </data>
+  <data name="StoppedFromLauncher" xml:space="preserve">
+    <value>Stopped from the launcher</value>
+  </data>
   <data name="BackToTimelineCaption" xml:space="preserve">
     <value>Back to timeline</value>
   </data>
@@ -790,6 +1611,24 @@
   <data name="ClockStatusInternalFormat" xml:space="preserve">
     <value>Internal clock, {0} BPM</value>
   </data>
+  <data name="ClockStatusSendingOneFormat" xml:space="preserve">
+    <value>Internal clock, {0} BPM, sent to 1 device</value>
+  </data>
+  <data name="ClockStatusSendingFormat" xml:space="preserve">
+    <value>Internal clock, {0} BPM, sent to {1} devices</value>
+  </data>
+  <data name="ClockStatusFollowingFormat" xml:space="preserve">
+    <value>Following {0}, {1} BPM</value>
+  </data>
+  <data name="ClockStatusFollowingSendingOneFormat" xml:space="preserve">
+    <value>Following {0}, {1} BPM, sent to 1 device</value>
+  </data>
+  <data name="ClockStatusFollowingSendingFormat" xml:space="preserve">
+    <value>Following {0}, {1} BPM, sent to {2} devices</value>
+  </data>
+  <data name="ClockStatusWaitingFormat" xml:space="preserve">
+    <value>Following {0}, waiting for its clock</value>
+  </data>
   <data name="DevicesInUseOneFormat" xml:space="preserve">
     <value>{0} device in use</value>
   </data>
@@ -798,6 +1637,9 @@
   </data>
   <data name="DevicesInUseMissingFormat" xml:space="preserve">
     <value>{0} devices in use, {1} not connected</value>
+  </data>
+  <data name="DevicesInUseOneMissingFormat" xml:space="preserve">
+    <value>{0} device in use, {1} not connected</value>
   </data>
   <data name="RecordingStatusFormat" xml:space="preserve">
     <value>Recording · notes so far: {0}</value>
@@ -816,6 +1658,42 @@
   </data>
   <data name="RecordedNothing" xml:space="preserve">
     <value>Nothing was played, so nothing was recorded.</value>
+  </data>
+  <data name="SlotProgressFormat" xml:space="preserve">
+    <value>{0} of {1}</value>
+    <comment>Shown on a launcher slot being recorded into: which bar of how many. {0} and {1} are numbers.</comment>
+  </data>
+  <data name="SlotRecordingStatusFormat" xml:space="preserve">
+    <value>Recording {0} into scene {1} ({2} of {3} bars)</value>
+    <comment>{0} is a track name, {1} is a scene number and name such as "3, Break", {2} and {3} are numbers</comment>
+  </data>
+  <data name="SlotRecordingWaitingFormat" xml:space="preserve">
+    <value>Ready to record {0} into scene {1}</value>
+    <comment>{0} is a track name, {1} is a scene number and name such as "3, Break"</comment>
+  </data>
+  <data name="SlotRecordingBusy" xml:space="preserve">
+    <value>Finish the recording that's going first.</value>
+  </data>
+  <data name="SlotRecordingLost" xml:space="preserve">
+    <value>The take wasn't kept, because its slot changed while it was recording.</value>
+  </data>
+  <data name="RecordedIntoSlotFormat" xml:space="preserve">
+    <value>Recorded {0} notes into scene {1}.</value>
+  </data>
+  <data name="UndoRecordIntoSlot" xml:space="preserve">
+    <value>Record into slot</value>
+  </data>
+  <data name="MenuRecordIntoSlot" xml:space="preserve">
+    <value>Record into this slot</value>
+  </data>
+  <data name="MenuRecordLength" xml:space="preserve">
+    <value>Record length</value>
+  </data>
+  <data name="RecordLengthOneBar" xml:space="preserve">
+    <value>1 bar</value>
+  </data>
+  <data name="RecordLengthBarsFormat" xml:space="preserve">
+    <value>{0} bars</value>
   </data>
   <data name="RecordedFormat" xml:space="preserve">
     <value>Recorded. Notes: {0}.</value>
@@ -915,6 +1793,9 @@
   <data name="DestinationChannelCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Channel to play to</value>
   </data>
+  <data name="DestinationChannelCombo.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>The channel to play on. As is plays each note on its own channel.</value>
+  </data>
   <data name="TrySoundButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Try this sound in MIDI Keyboard</value>
   </data>
@@ -943,7 +1824,8 @@
     <value>Any channel</value>
   </data>
   <data name="KeepChannel" xml:space="preserve">
-    <value>Each note's own channel</value>
+    <value>As is</value>
+    <comment>Short: it shares a narrow box with "Ch 1" to "Ch 16". Means each note plays on its own channel.</comment>
   </data>
   <data name="GroupChoiceFormat" xml:space="preserve">
     <value>Group {0}</value>
@@ -959,6 +1841,14 @@
   </data>
   <data name="ProtocolNoteMissing" xml:space="preserve">
     <value>This device isn't connected. The track plays to it again when it's back.</value>
+  </data>
+  <data name="ProtocolNoteOffsetFormat" xml:space="preserve">
+    <value>Sent {0} ms early, so it sounds on time. Change this in MIDI Settings.</value>
+    <comment>{0} is a number of milliseconds, such as 7.5</comment>
+  </data>
+  <data name="ProtocolNoteOffsetOffFormat" xml:space="preserve">
+    <value>MIDI Settings has a {0} ms offset for this device, but sending early is turned off in the clock menu.</value>
+    <comment>{0} is a number of milliseconds, such as 7.5</comment>
   </data>
 
   <!-- ==================================== Metronome ==================================== -->
@@ -1242,5 +2132,953 @@
   </data>
   <data name="SampleTagRetake" xml:space="preserve">
     <value>Retake this</value>
+  </data>
+
+  <!-- ==================================== Pattern clips ==================================== -->
+  <data name="DefaultPatternName" xml:space="preserve">
+    <value>Pattern</value>
+  </data>
+  <data name="PatternCanvasName" xml:space="preserve">
+    <value>Pattern steps</value>
+  </data>
+  <data name="MenuNewDrumPatternHere" xml:space="preserve">
+    <value>New drum pattern here</value>
+  </data>
+  <data name="MenuNewMelodicPatternHere" xml:space="preserve">
+    <value>New melodic pattern here</value>
+  </data>
+  <data name="MenuNewDrumPattern" xml:space="preserve">
+    <value>New drum pattern</value>
+  </data>
+  <data name="MenuNewMelodicPattern" xml:space="preserve">
+    <value>New melodic pattern</value>
+  </data>
+  <data name="ClipKindPatternMelodic" xml:space="preserve">
+    <value>Pattern clip · melodic</value>
+  </data>
+  <data name="PatternStepsLabel.Text" xml:space="preserve">
+    <value>Steps</value>
+  </data>
+  <data name="PatternStepsBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Steps in the pattern</value>
+  </data>
+  <data name="PatternStepSizeLabel.Text" xml:space="preserve">
+    <value>Each step</value>
+  </data>
+  <data name="PatternStepSizeCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>How long each step is</value>
+  </data>
+  <data name="PatternSwingLabel.Text" xml:space="preserve">
+    <value>Swing %</value>
+  </data>
+  <data name="PatternSwingBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Swing, in percent</value>
+  </data>
+  <data name="PatternSwingBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>50 is straight. Higher numbers push every second step later, for a shuffle.</value>
+  </data>
+  <data name="PatternKeepLengthToggle.Content" xml:space="preserve">
+    <value>Lanes keep their own length</value>
+  </data>
+  <data name="PatternKeepLengthToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Each lane runs its own number of steps, so a 12-step lane drifts against a 16-step one and comes back.</value>
+  </data>
+  <data name="PatternVaryButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Vary</value>
+  </data>
+  <data name="PatternVaryButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Pick a new seed, so steps with a chance or a condition give different hits</value>
+  </data>
+  <data name="PatternVaryText.Text" xml:space="preserve">
+    <value>Vary</value>
+  </data>
+  <data name="PatternMakeNotesButton.Content" xml:space="preserve">
+    <value>Make notes</value>
+  </data>
+  <data name="PatternMakeNotesButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Swap this pattern on this track for a notes clip that plays the same thing, to edit note by note</value>
+  </data>
+  <data name="PatternStepSize120" xml:space="preserve">
+    <value>1/32</value>
+  </data>
+  <data name="PatternStepSize160" xml:space="preserve">
+    <value>1/16 triplet</value>
+  </data>
+  <data name="PatternStepSize240" xml:space="preserve">
+    <value>1/16</value>
+  </data>
+  <data name="PatternStepSize320" xml:space="preserve">
+    <value>1/8 triplet</value>
+  </data>
+  <data name="PatternStepSize480" xml:space="preserve">
+    <value>1/8</value>
+  </data>
+  <data name="PatternStepSize960" xml:space="preserve">
+    <value>1/4</value>
+  </data>
+  <data name="PatternDrumLanes" xml:space="preserve">
+    <value>Drum lanes</value>
+  </data>
+  <data name="PatternMelodicSteps" xml:space="preserve">
+    <value>Steps</value>
+  </data>
+  <data name="PatternAddLane" xml:space="preserve">
+    <value>Add a lane</value>
+  </data>
+  <data name="PatternNoteRow" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="PatternNoteRowHint" xml:space="preserve">
+    <value>Up and down arrows change it</value>
+  </data>
+  <data name="PatternAccentRow" xml:space="preserve">
+    <value>Accent</value>
+  </data>
+  <data name="PatternSlideRow" xml:space="preserve">
+    <value>Slide</value>
+  </data>
+  <data name="PatternMuteLetter" xml:space="preserve">
+    <value>M</value>
+    <comment>Short for mute, on a drum lane.</comment>
+  </data>
+  <data name="PatternSoloLetter" xml:space="preserve">
+    <value>S</value>
+    <comment>Short for solo, on a drum lane.</comment>
+  </data>
+  <data name="PatternBadgeFirst" xml:space="preserve">
+    <value>1st</value>
+    <comment>On a step that plays on the first pass only. Very little room.</comment>
+  </data>
+  <data name="PatternBadgeNotFirst" xml:space="preserve">
+    <value>Not 1st</value>
+    <comment>On a step that plays on every pass but the first. Very little room.</comment>
+  </data>
+  <data name="PatternLaneDetailFormat" xml:space="preserve">
+    <value>{0} · {1} steps</value>
+    <comment>{0} is the note, such as "C1 (36)". {1} is how many steps the lane runs.</comment>
+  </data>
+  <data name="PatternPlayingFormat" xml:space="preserve">
+    <value>Playing pass {0} · step {1}</value>
+  </data>
+  <data name="PatternPlaysToFormat" xml:space="preserve">
+    <value>Plays to {0}</value>
+  </data>
+  <data name="PatternLineUpFormat" xml:space="preserve">
+    <value>Lanes of {0} steps line up again every {1} steps ({2} bars)</value>
+    <comment>{0} is a list of lengths, such as "16, 12, 7".</comment>
+  </data>
+  <data name="PatternSeedFormat" xml:space="preserve">
+    <value>Seed {0} · plays the same way each time from the start</value>
+  </data>
+  <data name="PatternNoStep" xml:space="preserve">
+    <value>No step selected</value>
+  </data>
+  <data name="PatternNoStepHint" xml:space="preserve">
+    <value>Click a step to turn it on or off. Drag up or down on a step to change how hard it plays. Right-click a step to look at it without changing it.</value>
+  </data>
+  <data name="PatternStepTitleFormat" xml:space="preserve">
+    <value>Step {0} · {1}</value>
+  </data>
+  <data name="PatternStepOnlyFormat" xml:space="preserve">
+    <value>Step {0}</value>
+  </data>
+  <data name="PatternStepPlays" xml:space="preserve">
+    <value>Plays</value>
+  </data>
+  <data name="PatternVelocity16" xml:space="preserve">
+    <value>Velocity (16-bit)</value>
+  </data>
+  <data name="PatternVelocity7" xml:space="preserve">
+    <value>Velocity (7-bit)</value>
+  </data>
+  <data name="PatternVelocityPercent" xml:space="preserve">
+    <value>Velocity (%)</value>
+  </data>
+  <data name="PatternChance" xml:space="preserve">
+    <value>Chance (%)</value>
+  </data>
+  <data name="PatternChanceAlways" xml:space="preserve">
+    <value>Plays every time</value>
+  </data>
+  <data name="PatternChanceNever" xml:space="preserve">
+    <value>Never plays</value>
+  </data>
+  <data name="PatternRatchet" xml:space="preserve">
+    <value>Ratchet: quick repeats inside the step</value>
+  </data>
+  <data name="PatternRatchetCountFormat" xml:space="preserve">
+    <value>{0} hits</value>
+  </data>
+  <data name="PatternShapeName" xml:space="preserve">
+    <value>How the repeats change</value>
+  </data>
+  <data name="PatternShapeEven" xml:space="preserve">
+    <value>Every repeat the same</value>
+  </data>
+  <data name="PatternShapeSofter" xml:space="preserve">
+    <value>Each repeat a little softer</value>
+  </data>
+  <data name="PatternShapeLouder" xml:space="preserve">
+    <value>Each repeat a little louder</value>
+  </data>
+  <data name="PatternCondition" xml:space="preserve">
+    <value>Condition</value>
+  </data>
+  <data name="ConditionAlways" xml:space="preserve">
+    <value>Every time</value>
+  </data>
+  <data name="ConditionFirstPass" xml:space="preserve">
+    <value>First pass only</value>
+  </data>
+  <data name="ConditionNotFirstPass" xml:space="preserve">
+    <value>Every pass but the first</value>
+  </data>
+  <data name="ConditionEveryFormat" xml:space="preserve">
+    <value>Pass {0} of every {1}</value>
+  </data>
+  <data name="PatternNudge" xml:space="preserve">
+    <value>Nudge (ticks, minus is early)</value>
+  </data>
+  <data name="PatternLength" xml:space="preserve">
+    <value>Length (% of a step)</value>
+  </data>
+  <data name="PatternNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="PatternAccent" xml:space="preserve">
+    <value>Accent (full velocity)</value>
+  </data>
+  <data name="PatternSlide" xml:space="preserve">
+    <value>Slide into the next step</value>
+  </data>
+  <data name="MenuRenamePatternLane" xml:space="preserve">
+    <value>Rename lane…</value>
+  </data>
+  <data name="MenuPatternLaneNote" xml:space="preserve">
+    <value>Change the note…</value>
+  </data>
+  <data name="MenuPatternLaneSteps" xml:space="preserve">
+    <value>Steps in this lane</value>
+  </data>
+  <data name="MenuPatternLaneStepsFormat" xml:space="preserve">
+    <value>{0} steps</value>
+  </data>
+  <data name="MenuMovePatternLaneUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="MenuMovePatternLaneDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="MenuDeletePatternLane" xml:space="preserve">
+    <value>Delete lane</value>
+  </data>
+  <data name="PromptPatternLaneName" xml:space="preserve">
+    <value>Lane name</value>
+  </data>
+  <data name="PromptPatternLaneNote" xml:space="preserve">
+    <value>Note number, from 0 to 127</value>
+  </data>
+  <data name="PatternNoteInvalid" xml:space="preserve">
+    <value>Type a note number from 0 to 127.</value>
+  </data>
+  <data name="UndoEditSteps" xml:space="preserve">
+    <value>Edit steps</value>
+  </data>
+  <data name="UndoStepVelocity" xml:space="preserve">
+    <value>Change velocity</value>
+  </data>
+  <data name="UndoPatternSettings" xml:space="preserve">
+    <value>Change pattern</value>
+  </data>
+  <data name="UndoVary" xml:space="preserve">
+    <value>Vary</value>
+  </data>
+  <data name="UndoMakeNotes" xml:space="preserve">
+    <value>Make notes</value>
+  </data>
+  <data name="UndoAddPatternLane" xml:space="preserve">
+    <value>Add lane</value>
+  </data>
+  <data name="UndoDeletePatternLane" xml:space="preserve">
+    <value>Delete lane</value>
+  </data>
+  <data name="UndoPatternLane" xml:space="preserve">
+    <value>Change lane</value>
+  </data>
+  <data name="DrumName35" xml:space="preserve">
+    <value>Acoustic kick</value>
+  </data>
+  <data name="DrumName36" xml:space="preserve">
+    <value>Kick</value>
+  </data>
+  <data name="DrumName37" xml:space="preserve">
+    <value>Side stick</value>
+  </data>
+  <data name="DrumName38" xml:space="preserve">
+    <value>Snare</value>
+  </data>
+  <data name="DrumName39" xml:space="preserve">
+    <value>Hand clap</value>
+  </data>
+  <data name="DrumName40" xml:space="preserve">
+    <value>Electric snare</value>
+  </data>
+  <data name="DrumName41" xml:space="preserve">
+    <value>Low floor tom</value>
+  </data>
+  <data name="DrumName42" xml:space="preserve">
+    <value>Closed hi-hat</value>
+  </data>
+  <data name="DrumName43" xml:space="preserve">
+    <value>High floor tom</value>
+  </data>
+  <data name="DrumName44" xml:space="preserve">
+    <value>Pedal hi-hat</value>
+  </data>
+  <data name="DrumName45" xml:space="preserve">
+    <value>Low tom</value>
+  </data>
+  <data name="DrumName46" xml:space="preserve">
+    <value>Open hi-hat</value>
+  </data>
+  <data name="DrumName47" xml:space="preserve">
+    <value>Low-mid tom</value>
+  </data>
+  <data name="DrumName48" xml:space="preserve">
+    <value>High-mid tom</value>
+  </data>
+  <data name="DrumName49" xml:space="preserve">
+    <value>Crash cymbal</value>
+  </data>
+  <data name="DrumName50" xml:space="preserve">
+    <value>High tom</value>
+  </data>
+  <data name="DrumName51" xml:space="preserve">
+    <value>Ride cymbal</value>
+  </data>
+  <data name="DrumName52" xml:space="preserve">
+    <value>Chinese cymbal</value>
+  </data>
+  <data name="DrumName53" xml:space="preserve">
+    <value>Ride bell</value>
+  </data>
+  <data name="DrumName54" xml:space="preserve">
+    <value>Tambourine</value>
+  </data>
+  <data name="DrumName55" xml:space="preserve">
+    <value>Splash cymbal</value>
+  </data>
+  <data name="DrumName56" xml:space="preserve">
+    <value>Cowbell</value>
+  </data>
+  <data name="DrumName57" xml:space="preserve">
+    <value>Crash cymbal 2</value>
+  </data>
+  <data name="DrumName58" xml:space="preserve">
+    <value>Vibraslap</value>
+  </data>
+  <data name="DrumName59" xml:space="preserve">
+    <value>Ride cymbal 2</value>
+  </data>
+  <data name="DrumName60" xml:space="preserve">
+    <value>High bongo</value>
+  </data>
+  <data name="DrumName61" xml:space="preserve">
+    <value>Low bongo</value>
+  </data>
+  <data name="DrumName62" xml:space="preserve">
+    <value>Muted high conga</value>
+  </data>
+  <data name="DrumName63" xml:space="preserve">
+    <value>Open high conga</value>
+  </data>
+  <data name="DrumName64" xml:space="preserve">
+    <value>Low conga</value>
+  </data>
+  <data name="DrumName65" xml:space="preserve">
+    <value>High timbale</value>
+  </data>
+  <data name="DrumName66" xml:space="preserve">
+    <value>Low timbale</value>
+  </data>
+  <data name="DrumName67" xml:space="preserve">
+    <value>High agogo</value>
+  </data>
+  <data name="DrumName68" xml:space="preserve">
+    <value>Low agogo</value>
+  </data>
+  <data name="DrumName69" xml:space="preserve">
+    <value>Cabasa</value>
+  </data>
+  <data name="DrumName70" xml:space="preserve">
+    <value>Maracas</value>
+  </data>
+  <data name="DrumName71" xml:space="preserve">
+    <value>Short whistle</value>
+  </data>
+  <data name="DrumName72" xml:space="preserve">
+    <value>Long whistle</value>
+  </data>
+  <data name="DrumName73" xml:space="preserve">
+    <value>Short guiro</value>
+  </data>
+  <data name="DrumName74" xml:space="preserve">
+    <value>Long guiro</value>
+  </data>
+  <data name="DrumName75" xml:space="preserve">
+    <value>Claves</value>
+  </data>
+  <data name="DrumName76" xml:space="preserve">
+    <value>High wood block</value>
+  </data>
+  <data name="DrumName77" xml:space="preserve">
+    <value>Low wood block</value>
+  </data>
+  <data name="DrumName78" xml:space="preserve">
+    <value>Muted cuica</value>
+  </data>
+  <data name="DrumName79" xml:space="preserve">
+    <value>Open cuica</value>
+  </data>
+  <data name="DrumName80" xml:space="preserve">
+    <value>Muted triangle</value>
+  </data>
+  <data name="DrumName81" xml:space="preserve">
+    <value>Open triangle</value>
+  </data>
+
+  <!-- ==================================== Generator clips ==================================== -->
+  <data name="DefaultEuclidName" xml:space="preserve">
+    <value>Euclid</value>
+  </data>
+  <data name="DefaultMelodyName" xml:space="preserve">
+    <value>Melody</value>
+  </data>
+  <data name="MenuNewEuclideanHere" xml:space="preserve">
+    <value>New Euclidean rhythm here</value>
+  </data>
+  <data name="MenuNewMelodyHere" xml:space="preserve">
+    <value>New chance melody here</value>
+  </data>
+  <data name="MenuNewEuclidean" xml:space="preserve">
+    <value>New Euclidean rhythm</value>
+  </data>
+  <data name="MenuNewMelody" xml:space="preserve">
+    <value>New chance melody</value>
+  </data>
+  <data name="DefaultArpName" xml:space="preserve">
+    <value>Arp</value>
+  </data>
+  <data name="MenuNewArpeggiatorHere" xml:space="preserve">
+    <value>New arpeggiator here</value>
+  </data>
+  <data name="MenuNewArpeggiator" xml:space="preserve">
+    <value>New arpeggiator</value>
+  </data>
+  <data name="GeneratorTypeLabel.Text" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="GeneratorTypeCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Generator type</value>
+  </data>
+  <data name="GeneratorBarsLabel.Text" xml:space="preserve">
+    <value>Bars</value>
+  </data>
+  <data name="GeneratorBarsBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Length in bars</value>
+  </data>
+  <data name="GeneratorStepSizeLabel.Text" xml:space="preserve">
+    <value>Each step</value>
+  </data>
+  <data name="GeneratorStepSizeCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>How long each step is</value>
+  </data>
+  <data name="GeneratorChangesToggle.Content" xml:space="preserve">
+    <value>Changes each pass</value>
+  </data>
+  <data name="GeneratorChangesToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Off, every pass plays the same. On, chance and choices are made again each time round, from the seed.</value>
+  </data>
+  <data name="GeneratorTypeEuclidean" xml:space="preserve">
+    <value>Euclidean rhythm</value>
+  </data>
+  <data name="GeneratorTypeChanceMelody" xml:space="preserve">
+    <value>Chance melody</value>
+  </data>
+  <data name="GeneratorTypeArpeggiator" xml:space="preserve">
+    <value>Arpeggiator</value>
+  </data>
+  <data name="GeneratorAboutEuclidean" xml:space="preserve">
+    <value>Spreads a number of hits as evenly as it can over a number of steps. Stack rings for interlocking parts.</value>
+  </data>
+  <data name="GeneratorAboutMelody" xml:space="preserve">
+    <value>Picks notes from a scale. You set how busy it is, how wide, and how much it changes from one pass to the next.</value>
+  </data>
+  <data name="GeneratorAboutArpeggiator" xml:space="preserve">
+    <value>Plays the notes you hold, or another track's notes, one after another.</value>
+  </data>
+  <data name="GeneratorRepeatable" xml:space="preserve">
+    <value>Every result comes from the clip's seed and the pass number, so jumping back replays the same notes, and an export writes what you heard.</value>
+  </data>
+  <data name="GeneratorRings" xml:space="preserve">
+    <value>Rings</value>
+  </data>
+  <data name="GeneratorRingHeader" xml:space="preserve">
+    <value>Ring</value>
+  </data>
+  <data name="GeneratorNoteHeader" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="GeneratorPulsesHeader" xml:space="preserve">
+    <value>Pulses</value>
+  </data>
+  <data name="GeneratorStepsHeader" xml:space="preserve">
+    <value>Steps</value>
+  </data>
+  <data name="GeneratorRotateHeader" xml:space="preserve">
+    <value>Rotate</value>
+  </data>
+  <data name="GeneratorVelocityHeader" xml:space="preserve">
+    <value>Velocity (%)</value>
+  </data>
+  <data name="GeneratorChanceHeader" xml:space="preserve">
+    <value>Chance (%)</value>
+  </data>
+  <data name="GeneratorRingNoteFormat" xml:space="preserve">
+    <value>Ring {0} note</value>
+  </data>
+  <data name="GeneratorRingPulsesFormat" xml:space="preserve">
+    <value>Ring {0} pulses</value>
+  </data>
+  <data name="GeneratorRingStepsFormat" xml:space="preserve">
+    <value>Ring {0} steps</value>
+  </data>
+  <data name="GeneratorRingRotateFormat" xml:space="preserve">
+    <value>Ring {0} rotate</value>
+  </data>
+  <data name="GeneratorRingVelocityFormat" xml:space="preserve">
+    <value>Ring {0} velocity, in percent</value>
+  </data>
+  <data name="GeneratorRingChanceFormat" xml:space="preserve">
+    <value>Ring {0} chance, in percent</value>
+  </data>
+  <data name="GeneratorRemoveRingFormat" xml:space="preserve">
+    <value>Remove ring {0}</value>
+  </data>
+  <data name="GeneratorAddRing" xml:space="preserve">
+    <value>Add a ring</value>
+  </data>
+  <data name="GeneratorSameHint" xml:space="preserve">
+    <value>Same each pass: the seed only matters if a ring's chance is under 100%.</value>
+  </data>
+  <data name="GeneratorChangesHint" xml:space="preserve">
+    <value>Changes each pass: a ring with a chance under 100% rolls again each time round.</value>
+  </data>
+  <data name="GeneratorKey" xml:space="preserve">
+    <value>Key</value>
+  </data>
+  <data name="GeneratorScale" xml:space="preserve">
+    <value>Scale</value>
+  </data>
+  <data name="GeneratorLowNote" xml:space="preserve">
+    <value>Lowest note</value>
+  </data>
+  <data name="GeneratorHighNote" xml:space="preserve">
+    <value>Highest note</value>
+  </data>
+  <data name="GeneratorBusy" xml:space="preserve">
+    <value>How busy (%)</value>
+  </data>
+  <data name="GeneratorKeep" xml:space="preserve">
+    <value>Keep from the last pass (%)</value>
+  </data>
+  <data name="GeneratorKeepHelp" xml:space="preserve">
+    <value>100% plays the same notes every pass. 0% is new every time.</value>
+  </data>
+  <data name="GeneratorKeepOff" xml:space="preserve">
+    <value>Turn on Changes each pass to use this.</value>
+  </data>
+  <data name="GeneratorVelocityFrom" xml:space="preserve">
+    <value>Velocity from (%)</value>
+  </data>
+  <data name="GeneratorVelocityTo" xml:space="preserve">
+    <value>Velocity to (%)</value>
+  </data>
+  <data name="GeneratorNoteLength" xml:space="preserve">
+    <value>Note length (% of a step)</value>
+  </data>
+  <data name="ArpNotesFrom" xml:space="preserve">
+    <value>Notes from</value>
+  </data>
+  <data name="ArpFromHeld" xml:space="preserve">
+    <value>What you hold on this track's source</value>
+  </data>
+  <data name="ArpNoSource" xml:space="preserve">
+    <value>This track has no source yet. Choose one in the track's setup.</value>
+  </data>
+  <data name="ArpFromTrack" xml:space="preserve">
+    <value>Another track's notes</value>
+  </data>
+  <data name="ArpFromTrackHelp" xml:space="preserve">
+    <value>For example, the chords on another track. Each step plays from what that track's timeline is playing then.</value>
+  </data>
+  <data name="ArpTrackName" xml:space="preserve">
+    <value>Track to follow</value>
+  </data>
+  <data name="ArpOrder" xml:space="preserve">
+    <value>Order</value>
+  </data>
+  <data name="ArpOrderUp" xml:space="preserve">
+    <value>Up</value>
+  </data>
+  <data name="ArpOrderDown" xml:space="preserve">
+    <value>Down</value>
+  </data>
+  <data name="ArpOrderUpAndDown" xml:space="preserve">
+    <value>Up and down</value>
+  </data>
+  <data name="ArpOrderAsHeld" xml:space="preserve">
+    <value>As held</value>
+  </data>
+  <data name="ArpOrderRandom" xml:space="preserve">
+    <value>Random</value>
+  </data>
+  <data name="ArpOctaves" xml:space="preserve">
+    <value>Octaves</value>
+  </data>
+  <data name="ArpLatch" xml:space="preserve">
+    <value>Keep playing after you let go</value>
+  </data>
+  <data name="ArpLatchHelp" xml:space="preserve">
+    <value>With this off and nothing held, the clip plays nothing.</value>
+  </data>
+  <data name="ArpKeepsWhatItPlayed" xml:space="preserve">
+    <value>Capture and Make notes keep the notes the arpeggiator played, not the keys you held.</value>
+  </data>
+  <data name="ArpHeldNote" xml:space="preserve">
+    <value>It plays what you hold as you play it, whether or not the track is armed. Playing from the start again doesn't play it again, and an export has none of its notes.</value>
+  </data>
+  <data name="ArpTrackNote" xml:space="preserve">
+    <value>It follows the other track's timeline, so jumping back replays the same notes, and an export writes what you heard.</value>
+  </data>
+  <data name="ArpHeldMakeNotes" xml:space="preserve">
+    <value>An arpeggiator that plays what you hold has no notes to keep until you play it. Record or Capture keeps what it plays.</value>
+  </data>
+  <data name="ArpNothingPlaced" xml:space="preserve">
+    <value>Make notes works where this arpeggiator is on this track's timeline, and it isn't on it.</value>
+  </data>
+  <data name="ScaleMajor" xml:space="preserve">
+    <value>Major</value>
+  </data>
+  <data name="ScaleMinor" xml:space="preserve">
+    <value>Minor</value>
+  </data>
+  <data name="ScaleDorian" xml:space="preserve">
+    <value>Dorian</value>
+  </data>
+  <data name="ScalePhrygian" xml:space="preserve">
+    <value>Phrygian</value>
+  </data>
+  <data name="ScaleLydian" xml:space="preserve">
+    <value>Lydian</value>
+  </data>
+  <data name="ScaleMixolydian" xml:space="preserve">
+    <value>Mixolydian</value>
+  </data>
+  <data name="ScaleHarmonicMinor" xml:space="preserve">
+    <value>Harmonic minor</value>
+  </data>
+  <data name="ScaleMajorPentatonic" xml:space="preserve">
+    <value>Major pentatonic</value>
+  </data>
+  <data name="ScaleMinorPentatonic" xml:space="preserve">
+    <value>Minor pentatonic</value>
+  </data>
+  <data name="ScaleBlues" xml:space="preserve">
+    <value>Blues</value>
+  </data>
+  <data name="ScaleChromatic" xml:space="preserve">
+    <value>Chromatic</value>
+  </data>
+  <data name="UndoGeneratorSettings" xml:space="preserve">
+    <value>Change generator</value>
+  </data>
+  <data name="MenuLyrics.Text" xml:space="preserve">
+    <value>Lyrics…</value>
+  </data>
+  <data name="MenuExportLyrics.Text" xml:space="preserve">
+    <value>Lyrics with times (LRC)…</value>
+    <comment>LRC is the name of a file format for lyrics with times. Don't translate it.</comment>
+  </data>
+  <data name="MenuEditLyrics" xml:space="preserve">
+    <value>Edit lyrics…</value>
+  </data>
+  <data name="MenuShowLyricsBar" xml:space="preserve">
+    <value>Show the words as they're sung</value>
+  </data>
+  <data name="MenuSaveLyricsAsLrc" xml:space="preserve">
+    <value>Save as an LRC file…</value>
+    <comment>LRC is the name of a file format for lyrics with times. Don't translate it.</comment>
+  </data>
+  <data name="MenuRemoveLyrics" xml:space="preserve">
+    <value>Remove lyrics</value>
+  </data>
+  <data name="LyricsTrackName" xml:space="preserve">
+    <value>Lyrics</value>
+  </data>
+  <data name="LyricsEmptyHint" xml:space="preserve">
+    <value>No words yet. Double-click here to type them.</value>
+  </data>
+  <data name="LyricsSyllableCountFormat" xml:space="preserve">
+    <value>{0} syllables</value>
+  </data>
+  <data name="LyricsSyllableCountOneFormat" xml:space="preserve">
+    <value>{0} syllable</value>
+  </data>
+  <data name="LyricsSungByFormat" xml:space="preserve">
+    <value>sung by {0}</value>
+    <comment>{0} is the name of a track.</comment>
+  </data>
+  <data name="LyricsSungByNone" xml:space="preserve">
+    <value>no track sings them</value>
+  </data>
+  <data name="UndoEditLyrics" xml:space="preserve">
+    <value>Edit lyrics</value>
+  </data>
+  <data name="UndoRemoveLyrics" xml:space="preserve">
+    <value>Remove lyrics</value>
+  </data>
+  <data name="LyricsEditorTitle" xml:space="preserve">
+    <value>Lyrics</value>
+  </data>
+  <data name="LyricsEditorHelp" xml:space="preserve">
+    <value>Type the words. Put a hyphen between the syllables of a word, like hap-py, and an underscore for a syllable that's held over more notes. Start each line of the song on a new line, and leave a blank line between verses. To show how to read a word in small type above it, like the kana over a kanji, put the reading in brackets right after it: 空[そら]. Each syllable goes on the next note of the track that sings.</value>
+  </data>
+  <data name="LyricsWordsHeader" xml:space="preserve">
+    <value>Words</value>
+  </data>
+  <data name="LyricsWordsPlaceholder" xml:space="preserve">
+    <value>Hap-py birth-day to you</value>
+  </data>
+  <data name="LyricsSingerHeader" xml:space="preserve">
+    <value>Sung by</value>
+  </data>
+  <data name="LyricsSingerNone" xml:space="preserve">
+    <value>No track</value>
+  </data>
+  <data name="LyricsLanguageHeader" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="LyricsLanguagePlaceholder" xml:space="preserve">
+    <value>For example, en or ja</value>
+    <comment>en and ja are language tags (English and Japanese). Keep them as they are.</comment>
+  </data>
+  <data name="LyricsPlacementHeader" xml:space="preserve">
+    <value>Where the words go</value>
+  </data>
+  <data name="LyricsPlaceKeep" xml:space="preserve">
+    <value>Keep their times, and put new words on the notes after them</value>
+  </data>
+  <data name="LyricsPlaceOnNotes" xml:space="preserve">
+    <value>On the notes of the track that sings, from the start</value>
+  </data>
+  <data name="LyricsPlaceBeats" xml:space="preserve">
+    <value>A beat apart, from the playhead</value>
+  </data>
+  <data name="LyricsNothingToExport" xml:space="preserve">
+    <value>This sequence has no lyrics to save.</value>
+  </data>
+  <data name="FileTypeLyrics" xml:space="preserve">
+    <value>Lyrics with times (LRC)</value>
+    <comment>LRC is the name of a file format for lyrics with times. Don't translate it.</comment>
+  </data>
+  <data name="DawProjectNoLyrics" xml:space="preserve">
+    <value>DAWproject has no place for lyrics, so they were left out.</value>
+    <comment>DAWproject is the name of a file format that DAWs share. Don't translate it.</comment>
+  </data>
+  <data name="MenuSequenceInfo.Text" xml:space="preserve">
+    <value>About this sequence…</value>
+  </data>
+  <data name="SequenceInfoTitle" xml:space="preserve">
+    <value>About this sequence</value>
+  </data>
+  <data name="SequenceInfoIntro" xml:space="preserve">
+    <value>Saved in the sequence file and shown to anyone you share it with. It's what you say about your work: nothing here is checked by Windows.</value>
+  </data>
+  <data name="SequenceInfoName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="SequenceInfoAuthor" xml:space="preserve">
+    <value>Made by</value>
+  </data>
+  <data name="SequenceInfoOrganization" xml:space="preserve">
+    <value>Company or group</value>
+  </data>
+  <data name="SequenceInfoWebsite" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="SequenceInfoLicense" xml:space="preserve">
+    <value>License</value>
+  </data>
+  <data name="SequenceInfoOptional" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="SequenceInfoBadWebsite" xml:space="preserve">
+    <value>Use a web address that starts with https://, or leave it empty.</value>
+  </data>
+  <data name="SequenceInfoLicenseNote" xml:space="preserve">
+    <value>A license tells people what they may do with your work. CC-BY-4.0 lets people share and change it if they give you credit. CC0-1.0 gives it away with no conditions.</value>
+    <comment>CC-BY-4.0 and CC0-1.0 are license names. Don't translate them.</comment>
+  </data>
+  <data name="SequenceInfoCopyright" xml:space="preserve">
+    <value>Copyright notice in exported files</value>
+  </data>
+  <data name="SequenceInfoCopyrightPlaceholder" xml:space="preserve">
+    <value>For example, Copyright 2026 Your Name</value>
+  </data>
+  <data name="FillInYourInfo" xml:space="preserve">
+    <value>Fill in your info</value>
+  </data>
+  <data name="FillInYourInfoTip" xml:space="preserve">
+    <value>Puts in the name, company or group, website and license from Your info for sharing.</value>
+  </data>
+  <data name="SequenceInfoRemember" xml:space="preserve">
+    <value>Save these as your info for sharing</value>
+  </data>
+  <data name="SequenceInfoMadeOnFormat" xml:space="preserve">
+    <value>Made on {0}</value>
+    <comment>{0} is a date and time.</comment>
+  </data>
+  <data name="SequenceInfoMadeWithFormat" xml:space="preserve">
+    <value>Made with {0}</value>
+    <comment>{0} is the name of an app.</comment>
+  </data>
+  <data name="DateAndTimeFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>{0} is a date and {1} is a time of day.</comment>
+  </data>
+  <data name="SequenceInfoSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="UndoSequenceInfo" xml:space="preserve">
+    <value>Change the sequence info</value>
+  </data>
+  <data name="SequenceInfoSourceHeading" xml:space="preserve">
+    <value>How the sequence was made</value>
+  </data>
+  <data name="SequenceInfoAuthorPlaceholder" xml:space="preserve">
+    <value>Your name, or the name you share music under</value>
+  </data>
+  <data name="SequenceInfoLicensePlaceholder" xml:space="preserve">
+    <value>For example, CC-BY-4.0</value>
+    <comment>CC-BY-4.0 is a license name. Don't translate it.</comment>
+  </data>
+  <data name="SequenceInfoSuggested" xml:space="preserve">
+    <value>suggested from the clips</value>
+  </data>
+  <data name="SequenceSourceMix" xml:space="preserve">
+    <value>A mix of things played, drawn and generated</value>
+  </data>
+  <data name="SequenceSourceRecorded" xml:space="preserve">
+    <value>Played and recorded</value>
+  </data>
+  <data name="SequenceSourceDrawn" xml:space="preserve">
+    <value>Drawn or typed in by a person</value>
+  </data>
+  <data name="SequenceSourceAlgorithm" xml:space="preserve">
+    <value>Made by an algorithm, like this app's generators</value>
+  </data>
+  <data name="SequenceSourceWithAi" xml:space="preserve">
+    <value>Includes parts made with generative AI</value>
+  </data>
+  <data name="SequenceSourceAi" xml:space="preserve">
+    <value>Made with generative AI</value>
+  </data>
+  <data name="SourceAsWrittenFormat" xml:space="preserve">
+    <value>As the file says: {0}</value>
+  </data>
+  <data name="ProvenanceOversightLabel" xml:space="preserve">
+    <value>How a person was involved</value>
+  </data>
+  <data name="OversightChoiceNone" xml:space="preserve">
+    <value>Not at all</value>
+  </data>
+  <data name="OversightChoicePrompted" xml:space="preserve">
+    <value>A person told the AI what to make</value>
+  </data>
+  <data name="OversightChoiceChecked" xml:space="preserve">
+    <value>A person checked what the AI made</value>
+  </data>
+  <data name="ProvenanceModelLabel" xml:space="preserve">
+    <value>AI model</value>
+  </data>
+  <data name="SequenceInfoClipsHeading" xml:space="preserve">
+    <value>Where the clips came from</value>
+  </data>
+  <data name="SequenceInfoClipColumn" xml:space="preserve">
+    <value>Clip</value>
+  </data>
+  <data name="SequenceInfoHowColumn" xml:space="preserve">
+    <value>How it was made</value>
+  </data>
+  <data name="SequenceInfoDetailsColumn" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="SequenceInfoNoClips" xml:space="preserve">
+    <value>No clips are on the timeline or in the launcher yet.</value>
+  </data>
+  <data name="SequenceInfoMoreClipsFormat" xml:space="preserve">
+    <value>And {0} more clips.</value>
+  </data>
+  <data name="SequenceInfoClipsNote" xml:space="preserve">
+    <value>An imported clip keeps its file's name and copyright notice. A MIDI file only has room for a name, a composer and a copyright notice, so that's all an export writes. The rest stays in the sequence file.</value>
+  </data>
+  <data name="UnnamedClip" xml:space="preserve">
+    <value>Untitled clip</value>
+  </data>
+  <data name="ClipOriginRecorded" xml:space="preserve">
+    <value>Recorded</value>
+  </data>
+  <data name="ClipOriginDrawn" xml:space="preserve">
+    <value>Drawn</value>
+  </data>
+  <data name="ClipOriginPattern" xml:space="preserve">
+    <value>Pattern</value>
+  </data>
+  <data name="ClipOriginGenerated" xml:space="preserve">
+    <value>Generated</value>
+  </data>
+  <data name="ClipOriginImported" xml:space="preserve">
+    <value>Imported</value>
+  </data>
+  <data name="ClipOriginAssistant" xml:space="preserve">
+    <value>AI assistant</value>
+  </data>
+  <data name="ClipOriginUnknown" xml:space="preserve">
+    <value>Not known</value>
+  </data>
+  <data name="ClipFromFormat" xml:space="preserve">
+    <value>From {0}</value>
+    <comment>{0} is the name of a MIDI device.</comment>
+  </data>
+  <data name="ClipPatternDetail" xml:space="preserve">
+    <value>Steps set by hand</value>
+  </data>
+  <data name="ClipNoteCountFormat" xml:space="preserve">
+    <value>{0} notes</value>
+  </data>
+  <data name="ClipNoteCountOneFormat" xml:space="preserve">
+    <value>{0} note</value>
+  </data>
+  <data name="ClipGeneratorFormat" xml:space="preserve">
+    <value>{0}, seed {1}</value>
+    <comment>{0} is a kind of generator, such as Chance melody. {1} is a number in hexadecimal.</comment>
+  </data>
+  <data name="ClipAssistantDetail" xml:space="preserve">
+    <value>Written by an AI assistant</value>
+  </data>
+  <data name="ImportedWithCopyrightFormat" xml:space="preserve">
+    <value>{0}, “{1}”</value>
+    <comment>{0} is a file name. {1} is the copyright notice in that file.</comment>
   </data>
 </root>

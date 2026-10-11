@@ -23,6 +23,13 @@ namespace winrt::midisequencer::implementation
         constexpr size_t MaximumHeardMessages = 50000;
         constexpr double HeardSeconds = 120.0;
 
+        // A note played this much before a slot take starts still counts as its first beat.
+        constexpr int64_t SlotEarlyTicks = seq::TicksPerQuarterNote / 4;
+
+        // How long before a slot take ends its notes go to the engine, so the first time round
+        // already has them. More than the look-ahead and any device's offset need.
+        constexpr double SlotPublishSeconds = 0.3;
+
         bool SameEndpoint(std::wstring const& left, std::wstring const& right) noexcept
         {
             try
@@ -135,6 +142,7 @@ namespace winrt::midisequencer::implementation
             ApplyEngineSettings();
             m_engine->StartThread();
 
+            m_uiQueue = DispatcherQueue();
             m_sources = std::make_unique<seq::SourceMonitor>(m_session);
 
             auto weak = get_weak();
@@ -148,6 +156,11 @@ namespace winrt::midisequencer::implementation
 
             RefreshEndpoints();
             UpdateTransport();
+
+            if (seq::AppSettings::Current().RemoteControlEnabled())
+            {
+                StartRemoteControlAsync();
+            }
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to start MIDI.")
     }
@@ -211,6 +224,24 @@ namespace winrt::midisequencer::implementation
                         }
                     }
 
+                    // Tracks an import made before the synth was known get it now.
+                    if (!strong->m_awaitingSynth.empty())
+                    {
+                        if (auto const synth = directory->Resolve(seq::EndpointRef{ L"", directory->SynthEndpointId() }); synth.has_value())
+                        {
+                            for (auto const& id : strong->m_awaitingSynth)
+                            {
+                                if (auto track = seq::FindTrack(strong->m_doc, id); track != nullptr && !track->IsFolder && track->Destination.Endpoint.IsEmpty())
+                                {
+                                    track->Destination.Endpoint = seq::EndpointDirectory::MakeRef(synth->Live);
+                                }
+                            }
+
+                            strong->m_awaitingSynth.clear();
+                            strong->Publish();
+                        }
+                    }
+
                     strong->RebuildHeaders();
                     strong->RefreshInspector();
                     strong->UpdateEditorHeader();
@@ -248,7 +279,7 @@ namespace winrt::midisequencer::implementation
                 m_preparePending = false;
 
                 // Every destination the sequence plays to, the metronome, and the sources of
-                // the armed tracks.
+                // the armed tracks and of tracks whose arpeggiator plays what's held.
                 std::vector<seq::EndpointRef> destinations{};
                 std::vector<std::wstring> sources{};
 
@@ -262,7 +293,8 @@ namespace winrt::midisequencer::implementation
                         }
                     }
 
-                    if (!track.IsFolder && m_armed.contains(track.Id) && !track.Source.Endpoint.IsEmpty())
+                    if (!track.IsFolder && !track.Source.Endpoint.IsEmpty() &&
+                        (m_armed.contains(track.Id) || seq::TrackHasHeldKeysArpeggiator(m_doc, track)))
                     {
                         auto const id = m_directory->ResolveId(track.Source.Endpoint);
 
@@ -277,6 +309,22 @@ namespace winrt::midisequencer::implementation
 
                 auto& settings = seq::AppSettings::Current();
 
+                // The device whose clock the sequence follows. Its messages come in with the
+                // sources', and the service's thread picks them out by this id.
+                {
+                    auto const& follow = settings.FollowClock();
+                    auto const followId = follow.IsOn() ? m_directory->ResolveId(seq::EndpointRef{ follow.EndpointName, follow.EndpointId }) : std::wstring{};
+
+                    if (!followId.empty() && std::find(sources.begin(), sources.end(), followId) == sources.end())
+                    {
+                        sources.push_back(followId);
+                    }
+
+                    std::scoped_lock guard{ m_inputLock };
+                    m_followSourceId = followId;
+                    m_followGroup = follow.Group;
+                }
+
                 if (settings.MetronomeEnabled())
                 {
                     seq::EndpointRef metronome{ settings.MetronomeEndpointName(), settings.MetronomeEndpointId() };
@@ -290,6 +338,25 @@ namespace winrt::midisequencer::implementation
                     {
                         destinations.push_back(metronome);
                     }
+                }
+
+                // The devices that follow the sequencer's clock, and where time code goes.
+                auto const addDestination = [&destinations](seq::EndpointRef const& endpoint)
+                {
+                    if (!endpoint.IsEmpty() && std::find(destinations.begin(), destinations.end(), endpoint) == destinations.end())
+                    {
+                        destinations.push_back(endpoint);
+                    }
+                };
+
+                for (auto const& clock : settings.ClockOutputs())
+                {
+                    addDestination(seq::EndpointRef{ clock.EndpointName, clock.EndpointId });
+                }
+
+                if (settings.TimeCode().IsOn())
+                {
+                    addDestination(seq::EndpointRef{ settings.TimeCode().EndpointName, settings.TimeCode().EndpointId });
                 }
 
                 auto* output = m_output.get();
@@ -328,7 +395,7 @@ namespace winrt::midisequencer::implementation
             auto const& settings = seq::AppSettings::Current();
 
             seq::EngineSettings engine{};
-            engine.Metronome.Enabled = settings.MetronomeEnabled() && (!settings.MetronomeOnlyWhileRecording() || m_recording);
+            engine.Metronome.Enabled = settings.MetronomeEnabled() && (!settings.MetronomeOnlyWhileRecording() || m_recording || m_slotRecording);
             engine.Metronome.Endpoint = seq::EndpointRef{ settings.MetronomeEndpointName(), settings.MetronomeEndpointId() };
 
             if (engine.Metronome.Endpoint.IsEmpty())
@@ -344,7 +411,36 @@ namespace winrt::midisequencer::implementation
             engine.LoopStart = m_loopStart;
             engine.LoopEnd = m_loopEnd;
 
+            for (auto const& output : settings.ClockOutputs())
+            {
+                seq::ClockOutput clock{};
+                clock.Endpoint = seq::EndpointRef{ output.EndpointName, output.EndpointId };
+                clock.Group = output.Group;
+                clock.OffsetMicroseconds = output.OffsetMilliseconds * 1000;
+                clock.SendClock = output.Clock;
+                clock.SendStartStop = output.StartStop;
+                clock.SendSongPosition = output.SongPosition;
+                clock.SendTempo = settings.ClockSendsTempo();
+                engine.ClockOutputs.push_back(std::move(clock));
+            }
+
+            if (auto const& timeCode = settings.TimeCode(); timeCode.IsOn())
+            {
+                seq::TimeCodeOutput output{};
+                output.Endpoint = seq::EndpointRef{ timeCode.EndpointName, timeCode.EndpointId };
+                output.Group = timeCode.Group;
+                output.Rate = midiapp::FrameRateFromValue(timeCode.Rate);
+
+                if (!midiapp::TryParsePosition(timeCode.Start, output.Rate, output.Start))
+                {
+                    output.Start = midiapp::MidiTimeCodePosition{};
+                }
+
+                engine.TimeCodeOutputs.push_back(std::move(output));
+            }
+
             m_engine->SetSettings(engine);
+            m_engine->SetFollowing(settings.FollowClock().IsOn());
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to apply the playback settings.")
     }
@@ -364,6 +460,16 @@ namespace winrt::midisequencer::implementation
             }
 
             ApplyEngineSettings();
+
+            // Following another device's clock, that device starts playback.
+            if (m_engine->IsFollowing())
+            {
+                auto const& follow = seq::AppSettings::Current().FollowClock();
+                ShowMessage(res::FormatString(L"FollowPlayWaitsFormat", follow.EndpointName.empty() ? follow.EndpointId : follow.EndpointName));
+                UpdateTransport();
+                return;
+            }
+
             m_engine->Play(std::max<int64_t>(0, fromTick));
             m_position = std::max<int64_t>(0, fromTick);
 
@@ -381,6 +487,8 @@ namespace winrt::midisequencer::implementation
             {
                 StopRecording();
             }
+
+            FinishSlotRecording(SlotTakeEnd::Stopped);
 
             if (m_engine == nullptr)
             {
@@ -412,6 +520,8 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            FinishSlotRecording(SlotTakeEnd::Stopped);
+
             if (m_engine != nullptr)
             {
                 m_engine->Stop();
@@ -504,7 +614,7 @@ namespace winrt::midisequencer::implementation
                 CaptureButton().IsEnabled(heard);
             }
 
-            RecordingStatus().Visibility(m_recording ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            RecordingStatus().Visibility(m_recording || m_slotTake.has_value() ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
             if (m_recording)
             {
@@ -536,6 +646,7 @@ namespace winrt::midisequencer::implementation
             MeterText().Text(winrt::hstring{ std::format(L"{}/{}", meter.Numerator, meter.Denominator) });
 
             UpdateLeds();
+            UpdateLaneChips(tick);
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update the displays.")
     }
@@ -671,6 +782,343 @@ namespace winrt::midisequencer::implementation
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to finish recording.")
     }
 
+    // ---------------------------------------------------------------- recording into a slot
+
+    _Use_decl_annotations_
+    void MainWindow::StartSlotRecording(std::wstring const& trackId, size_t scene) noexcept
+    {
+        try
+        {
+            if (m_engine == nullptr)
+            {
+                ShowMessage(res::GetString(L"MidiNotReady"));
+                return;
+            }
+
+            if (m_recording || m_slotTake.has_value())
+            {
+                ShowMessage(res::GetString(L"SlotRecordingBusy"));
+                return;
+            }
+
+            auto const track = seq::FindTrack(m_doc, trackId);
+
+            if (track == nullptr || track->IsFolder || scene >= m_doc.Scenes.size() || !m_armed.contains(trackId))
+            {
+                return;
+            }
+
+            auto const filter = FilterFor(track->Source);
+            auto const barTicks = seq::TicksPerBar(seq::MeterAtTick(m_doc.Meter, m_position));
+            auto const length = static_cast<int64_t>(seq::AppSettings::Current().SlotRecordBars()) * barTicks;
+
+            // The track goes quiet where the take starts, so only the take is heard on it.
+            int64_t start{ 0 };
+
+            if (m_engine->IsPlaying())
+            {
+                start = m_engine->NextLaunchPoint(LaunchQuantize());
+                m_engine->StopTrackAt(trackId, start);
+            }
+            else
+            {
+                // From the start of the playhead's bar, so the take starts with the music.
+                start = seq::TickAtBar(m_doc.Meter, seq::BarPositionAtTick(m_doc.Meter, m_position).Bar);
+                m_engine->StopTrack(trackId, 0);
+                Play(start);
+            }
+
+            // The clip is in the slot from the start, so the engine can play it the moment the take
+            // ends. It becomes an undo step only when the take is finished.
+            auto clip = seq::MakeNotesClip(NextClipName(), length);
+            clip.Loop = true;
+            clip.Origin = seq::ClipOrigin::Recorded;
+            auto const clipId = clip.Id;
+
+            m_doc.Clips.push_back(std::move(clip));
+
+            auto target = seq::FindTrack(m_doc, trackId);
+            target->Slots.resize(m_doc.Scenes.size());
+            target->Slots[scene] = clipId;
+
+            {
+                std::scoped_lock guard{ m_inputLock };
+                m_slotInput = SlotInput{ trackId, start, length, seq::RecordingTake{ start, filter } };
+            }
+
+            SlotTake take{};
+            take.TrackId = trackId;
+            take.Scene = scene;
+            take.ClipId = clipId;
+            take.Start = start;
+            take.Length = length;
+            take.BarTicks = std::max<int64_t>(1, barTicks);
+            take.LastSeen = m_engine->UnwrappedTickAtTime(midi2::MidiClock::Now());
+            take.StartedAt = std::chrono::steady_clock::now();
+            m_slotTake = take;
+            m_slotRecording = true;
+
+            DocumentChanged();
+            ApplyEngineSettings();
+            m_frameTimer.Start();
+            UpdateTransport();
+            InvalidateLaunchers();
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to start recording into the slot.")
+    }
+
+    std::optional<seq::SlotRecording> MainWindow::SlotRecordingView() const
+    {
+        if (!m_slotTake.has_value())
+        {
+            return std::nullopt;
+        }
+
+        auto const& take = *m_slotTake;
+        auto const now = take.LastSeen;
+        auto const bars = take.Length / take.BarTicks;
+
+        seq::SlotRecording view{};
+        view.TrackId = take.TrackId;
+        view.Scene = take.Scene;
+
+        if (now < take.Start)
+        {
+            // Still to start: the bar it starts on.
+            auto const bar = seq::BarPositionAtTick(m_doc.Meter, m_position + (take.Start - now)).Bar;
+            view.Caption = std::vformat(std::wstring_view{ m_textBarFormat }, std::make_wformat_args(bar));
+        }
+        else
+        {
+            auto const bar = std::min<int64_t>((now - take.Start) / take.BarTicks + 1, bars);
+            view.Progress = static_cast<double>(now - take.Start) / static_cast<double>(take.Length);
+            view.Caption = std::wstring{ res::FormatString(L"SlotProgressFormat", bar, bars) };
+        }
+
+        return view;
+    }
+
+    void MainWindow::UpdateSlotRecording() noexcept
+    {
+        try
+        {
+            if (!m_slotTake.has_value() || m_engine == nullptr)
+            {
+                return;
+            }
+
+            if (!m_engine->IsPlaying())
+            {
+                FinishSlotRecording(SlotTakeEnd::Stopped);
+                return;
+            }
+
+            auto& take = *m_slotTake;
+            auto const now = m_engine->UnwrappedTickAtTime(midi2::MidiClock::Now());
+            auto const end = take.Start + take.Length;
+            take.LastSeen = now;
+
+            // Once the track has gone quiet for the take, the take is queued to loop from its end.
+            // Queued any sooner, it would replace the stop.
+            if (!take.LaunchQueued && now >= take.Start)
+            {
+                m_engine->LaunchClipAt(take.TrackId, take.ClipId, end, static_cast<int32_t>(take.Scene));
+                take.LaunchQueued = true;
+            }
+
+            auto const bpm = seq::TempoMap{ m_doc.Tempo }.BeatsPerMinuteAtTick(m_position);
+            auto const margin = static_cast<int64_t>(bpm / 60.0 * static_cast<double>(seq::TicksPerQuarterNote) * SlotPublishSeconds);
+
+            if (!take.Published && now >= end - margin)
+            {
+                seq::Clip soFar{};
+
+                {
+                    std::scoped_lock guard{ m_inputLock };
+
+                    if (m_slotInput.has_value())
+                    {
+                        soFar = m_slotInput->Take.LoopSoFar(take.Length, now);
+                    }
+                }
+
+                if (auto clip = seq::FindClip(m_doc, take.ClipId); clip != nullptr)
+                {
+                    clip->Notes = std::move(soFar.Notes);
+                    clip->Events = std::move(soFar.Events);
+                    Publish();
+                }
+
+                take.Published = true;
+            }
+
+            if (now >= end)
+            {
+                FinishSlotRecording(SlotTakeEnd::ReachedEnd);
+                return;
+            }
+
+            // As the comps put it: Recording Lead into scene 3, Break (2 of 4 bars).
+            auto const track = seq::FindTrack(m_doc, take.TrackId);
+            auto const name = track != nullptr ? track->Name : std::wstring{};
+            auto sceneText = std::to_wstring(take.Scene + 1);
+
+            if (take.Scene < m_doc.Scenes.size() && !m_doc.Scenes[take.Scene].Name.empty())
+            {
+                sceneText += L", " + m_doc.Scenes[take.Scene].Name;
+            }
+
+            auto const bars = take.Length / take.BarTicks;
+
+            if (now < take.Start)
+            {
+                RecordingStatusText().Text(res::FormatString(L"SlotRecordingWaitingFormat", name, sceneText));
+            }
+            else
+            {
+                auto const bar = std::min<int64_t>((now - take.Start) / take.BarTicks + 1, bars);
+                RecordingStatusText().Text(res::FormatString(L"SlotRecordingStatusFormat", name, sceneText, bar, bars));
+            }
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update the recording.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::FinishSlotRecording(SlotTakeEnd how) noexcept
+    {
+        try
+        {
+            if (!m_slotTake.has_value())
+            {
+                return;
+            }
+
+            auto& current = *m_slotTake;
+
+            // Selected while recording: the take ends at the end of the bar it's in, and goes on
+            // recording until then.
+            if (how == SlotTakeEnd::Early && m_engine != nullptr && m_engine->IsPlaying() && current.LastSeen >= current.Start)
+            {
+                auto const bars = (current.LastSeen - current.Start) / current.BarTicks + 1;
+                auto const length = std::min(current.Length, bars * current.BarTicks);
+
+                if (length < current.Length)
+                {
+                    current.Length = length;
+
+                    {
+                        std::scoped_lock guard{ m_inputLock };
+
+                        if (m_slotInput.has_value())
+                        {
+                            m_slotInput->Length = length;
+                        }
+                    }
+
+                    if (current.LaunchQueued)
+                    {
+                        m_engine->LaunchClipAt(current.TrackId, current.ClipId, current.Start + length, static_cast<int32_t>(current.Scene));
+                    }
+                }
+
+                return;
+            }
+
+            auto const take = current;
+            m_slotTake.reset();
+            m_slotRecording = false;
+
+            std::optional<SlotInput> input{};
+
+            {
+                std::scoped_lock guard{ m_inputLock };
+                input.swap(m_slotInput);
+            }
+
+            // Stopped part way, the take keeps the bars it reached.
+            auto length = take.Length;
+
+            if (how != SlotTakeEnd::ReachedEnd)
+            {
+                auto const played = std::max<int64_t>(0, take.LastSeen - take.Start);
+                auto const bars = std::max<int64_t>(1, (played + take.BarTicks - 1) / take.BarTicks);
+                length = std::min(take.Length, bars * take.BarTicks);
+            }
+
+            seq::Clip clip{};
+
+            if (input.has_value())
+            {
+                clip = input->Take.FinishLoop(length, take.ClipId, std::wstring{}, std::wstring{});
+            }
+
+            auto track = seq::FindTrack(m_doc, take.TrackId);
+            auto provisional = seq::FindClip(m_doc, take.ClipId);
+            auto const inSlot = track != nullptr && take.Scene < track->Slots.size() && track->Slots[take.Scene] == take.ClipId;
+            auto const ours = inSlot && provisional != nullptr;
+
+            if (!ours || (clip.Notes.empty() && clip.Events.empty()))
+            {
+                // Nothing played, or an undo took the slot away while recording: nothing to keep.
+                if (inSlot)
+                {
+                    track->Slots[take.Scene].clear();
+                }
+
+                std::erase_if(m_doc.Clips, [&take](seq::Clip const& c) { return c.Id == take.ClipId; });
+
+                if (m_engine != nullptr && m_engine->IsPlaying() && how != SlotTakeEnd::Stopped)
+                {
+                    if (take.LaunchQueued)
+                    {
+                        m_engine->StopTrack(take.TrackId, 0);
+                    }
+                    else
+                    {
+                        m_engine->ReturnToTimeline(take.TrackId, 0);
+                    }
+                }
+
+                DocumentChanged();
+                ApplyEngineSettings();
+                UpdateTransport();
+                ShowMessage(res::GetString(ours ? L"RecordedNothing" : L"SlotRecordingLost"));
+                return;
+            }
+
+            auto const source = m_directory->Resolve(track->Source.Endpoint);
+            clip.Name = provisional->Name;
+            clip.Color = provisional->Color;
+            clip.Seed = provisional->Seed;
+            clip.OriginDetail = source.has_value() ? source->Live.Name : track->Source.Endpoint.Name;
+            *provisional = clip;
+
+            // One undo step for the take: the clip, and the slot that holds it.
+            seq::Sequence before{};
+            before.Tracks = m_doc.Tracks;
+
+            if (auto slotTrack = seq::FindTrack(before, take.TrackId); slotTrack != nullptr)
+            {
+                slotTrack->Slots[take.Scene].clear();
+            }
+
+            seq::ChangeList changes{};
+            changes.push_back(seq::MakeClipPresenceChange(clip, true));
+            changes.push_back(seq::MakeTracksChange(std::move(before.Tracks), m_doc.Tracks));
+            Commit(std::wstring{ res::GetString(L"UndoRecordIntoSlot") }, std::move(changes));
+
+            if (m_engine != nullptr && m_engine->IsPlaying() && how != SlotTakeEnd::Stopped && !take.LaunchQueued)
+            {
+                m_engine->LaunchClipAt(take.TrackId, take.ClipId, take.Start + length, static_cast<int32_t>(take.Scene));
+            }
+
+            ApplyEngineSettings();
+            UpdateTransport();
+            ShowMessage(res::FormatString(L"RecordedIntoSlotFormat", clip.Notes.size(), take.Scene + 1));
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to finish recording into the slot.")
+    }
+
     _Use_decl_annotations_
     void MainWindow::OnSourceMessage(std::wstring const& endpointId, uint64_t timestamp, uint32_t const* words, uint8_t wordCount) noexcept
     {
@@ -682,15 +1130,46 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            // The clock this sequence follows goes to the engine, not to recording.
+            if ((words[0] >> 28) == 0x1)
+            {
+                auto followed{ false };
+
+                {
+                    std::scoped_lock guard{ m_inputLock };
+                    followed = !m_followSourceId.empty() && SameEndpoint(m_followSourceId, endpointId) && ((words[0] >> 24) & 0x0F) == m_followGroup;
+                }
+
+                if (followed)
+                {
+                    OnFollowedClock(timestamp, words[0]);
+                    return;
+                }
+            }
+
             m_lastInputTicks = timestamp;
 
+            // Keys for arpeggiators go to the engine. A track whose arpeggiator is playing them
+            // doesn't echo or record them: it plays, and records, the arpeggiator's notes.
+            std::vector<std::wstring> arpeggiated{};
+
+            for (auto& id : FeedArpeggiators(endpointId, words, wordCount))
+            {
+                if (m_engine != nullptr && m_engine->IsArpeggiating(id))
+                {
+                    arpeggiated.push_back(std::move(id));
+                }
+            }
+
             auto const tick = m_engine != nullptr && m_recording ? m_engine->TickAtTime(timestamp) : -1;
+            auto const slotTick = m_engine != nullptr && m_slotRecording ? m_engine->UnwrappedTickAtTime(timestamp) : -1;
 
             std::scoped_lock guard{ m_inputLock };
 
             for (auto const& route : m_echoRoutes)
             {
-                if (!SameEndpoint(route.SourceId, endpointId) || !seq::PassesRecordFilter(route.Filter, words, wordCount))
+                if (!SameEndpoint(route.SourceId, endpointId) || !seq::PassesRecordFilter(route.Filter, words, wordCount) ||
+                    std::find(arpeggiated.begin(), arpeggiated.end(), route.TrackId) != arpeggiated.end())
                 {
                     continue;
                 }
@@ -706,6 +1185,13 @@ namespace winrt::midisequencer::implementation
                     {
                         take->second.Add(tick, words, wordCount);
                     }
+                }
+
+                // A slot take keeps what's played from just before its start until its end.
+                if (slotTick >= 0 && m_slotInput.has_value() && m_slotInput->TrackId == route.TrackId &&
+                    slotTick >= m_slotInput->Start - SlotEarlyTicks && slotTick < m_slotInput->Start + m_slotInput->Length)
+                {
+                    m_slotInput->Take.Add(slotTick, words, wordCount);
                 }
 
                 auto& heard = m_heard[route.TrackId];
@@ -730,8 +1216,91 @@ namespace winrt::midisequencer::implementation
         }
     }
 
+    // On the service's thread: pulses set the pace, and the rest run the transport.
+    _Use_decl_annotations_
+    void MainWindow::OnFollowedClock(uint64_t timestamp, uint32_t word0) noexcept
+    {
+        try
+        {
+            if (m_engine == nullptr)
+            {
+                return;
+            }
+
+            switch ((word0 >> 16) & 0xFF)
+            {
+            case 0xF8:
+                m_engine->FollowPulse(timestamp);
+                return;
+
+            case 0xFA:
+                m_engine->FollowStart(timestamp);
+                break;
+
+            case 0xFB:
+                m_engine->FollowContinue(timestamp);
+                break;
+
+            case 0xFC:
+                m_engine->FollowStop(timestamp);
+                break;
+
+            case 0xF2:
+                m_engine->FollowSongPosition(timestamp, ((word0 & 0x7F) << 7) | ((word0 >> 8) & 0x7F));
+                break;
+
+            default:
+                return;
+            }
+
+            // The transport moved without the window moving it.
+            if (m_uiQueue != nullptr)
+            {
+                m_uiQueue.TryEnqueue([weak = get_weak()]()
+                {
+                    if (auto window = weak.get())
+                    {
+                        window->OnFollowedTransport();
+                    }
+                });
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+
+    void MainWindow::OnFollowedTransport() noexcept
+    {
+        try
+        {
+            if (m_engine == nullptr || m_closing)
+            {
+                return;
+            }
+
+            if (m_engine->IsPlaying())
+            {
+                m_frameTimer.Start();
+            }
+            else
+            {
+                m_position = m_engine->PositionTick();
+                UpdateDisplays(m_position);
+                UpdatePlayhead();
+                InvalidateArrange();
+            }
+
+            UpdateTransport();
+            UpdateClockStatus();
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to follow the other device's transport.")
+    }
+
     void MainWindow::UpdateEchoRoutes() noexcept
     {
+        UpdateArpeggiatorRoutes();
+
         try
         {
             std::vector<EchoRoute> routes{};
@@ -849,25 +1418,33 @@ namespace winrt::midisequencer::implementation
     }
 
     _Use_decl_annotations_
+    std::filesystem::path MainWindow::SiblingToolPath(std::wstring const& executable) const
+    {
+        // Installed beside this app. A developer build looks in the tool's own output folder,
+        // which sits beside this app's: out\<tool>\<platform>\<configuration>.
+        auto const folder = std::filesystem::path{ ExecutableFolder() };
+        auto path = folder / (executable + L".exe");
+
+        if (!std::filesystem::exists(path) && folder.has_parent_path() && folder.parent_path().has_parent_path())
+        {
+            auto const configuration = folder.filename();
+            auto const platform = folder.parent_path().filename();
+            auto const tools = folder.parent_path().parent_path().parent_path();
+
+            path = tools / executable / platform / configuration / (executable + L".exe");
+        }
+
+        return std::filesystem::exists(path) ? path : std::filesystem::path{};
+    }
+
+    _Use_decl_annotations_
     void MainWindow::LaunchKeyboard(std::wstring const& endpointId, uint8_t group, int8_t channel) noexcept
     {
         try
         {
-            // Installed beside this app. A developer build looks in the keyboard's own output
-            // folder, which sits beside this app's: out\<tool>\<platform>\<configuration>.
-            auto const folder = std::filesystem::path{ ExecutableFolder() };
-            std::filesystem::path keyboard = folder / L"midikeyboard.exe";
+            auto const keyboard = SiblingToolPath(L"midikeyboard");
 
-            if (!std::filesystem::exists(keyboard) && folder.has_parent_path() && folder.parent_path().has_parent_path())
-            {
-                auto const configuration = folder.filename();
-                auto const platform = folder.parent_path().filename();
-                auto const tools = folder.parent_path().parent_path().parent_path();
-
-                keyboard = tools / L"midikeyboard" / platform / configuration / L"midikeyboard.exe";
-            }
-
-            if (!std::filesystem::exists(keyboard))
+            if (keyboard.empty())
             {
                 ShowMessage(res::GetString(L"KeyboardNotFound"));
                 return;
@@ -1198,19 +1775,11 @@ namespace winrt::midisequencer::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::OnClockClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    void MainWindow::OnClockClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         try
         {
-            // Following an external clock, and sending clock, come in a later phase (design section 14).
-            controls::TextBlock text{};
-            text.Text(res::GetString(L"ClockNotYet"));
-            text.TextWrapping(xaml::TextWrapping::Wrap);
-            text.MaxWidth(280);
-
-            controls::Flyout flyout{};
-            flyout.Content(text);
-            flyout.ShowAt(sender.as<xaml::FrameworkElement>());
+            ShowClockDialog();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to show the clock settings.")
     }

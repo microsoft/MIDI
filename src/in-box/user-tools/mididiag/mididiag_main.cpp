@@ -2075,6 +2075,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2EndpointUniqueIdValidation.h"
 #include "Feature_Servicing_MIDI2LoopbackErrorStringResources.h"
 #include "Feature_Servicing_MIDI2LoopbackFeedbackProtection.h"
+#include "Feature_Servicing_MIDI2LoopbackRejectRemovedEndpoint.h"
 #include "Feature_Servicing_MIDI2LoopbackUniqueEndpointNames.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
 #include "Feature_Servicing_MIDI2ProtocolNegotiationDeadlock.h"
@@ -2095,10 +2096,10 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf.h"
 #include "Feature_Servicing_MIDI2WinMMPortHandleSlotWidth.h"
 #include "Feature_Servicing_MIDI2WinMMPortListLockScope.h"
+#include "Feature_Servicing_MIDI2WinMMRemovalWithoutPortLock.h"
 #include "Feature_Servicing_MIDI2WinMMShortMessageNoSendWait.h"
 #include "Feature_Servicing_MIDI2XProcBatchedReads.h"
 #include "Feature_Servicing_MIDI2KSAShutdownCrash.h"
-#include "Feature_Servicing_MIDI2DuplicateDeviceNaming.h"
 
 void OutputSingleFeatureEnablement(_In_ bool enabled, _In_ std::wstring const& featureName)
 {
@@ -2139,12 +2140,13 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2SessionNameLimit::IsEnabled(),                     L"MIDI2SessionNameLimit (bound the session name a client may register or update)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled(),              L"MIDI2ComponentSignatureCache (cache transport and transform signature checks, which cost about a second per dll)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2CustomOutgoingLatency::IsEnabled(),                L"MIDI2CustomOutgoingLatency (user-supplied outgoing latency compensation for an endpoint)");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2DuplicateDeviceNaming::IsEnabled(),                 L"MIDI2DuplicateDeviceNaming (service assigns the number for a second or later unit of a model, and remembers it)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2DuplicateDeviceNaming::IsEnabled(),                L"MIDI2DuplicateDeviceNaming (service assigns the number for a second or later unit of a model, and remembers it)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled(),    L"MIDI2EndpointCustomizationEnhancements (rework of how endpoint customizations are matched and applied)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit::IsEnabled(),            L"MIDI2EndpointNameUtf8ByteLimit (enforce the ump spec utf-8 byte limit on endpoint names)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2EndpointUniqueIdValidation::IsEnabled(),           L"MIDI2EndpointUniqueIdValidation (reject a unique id which is not usable in a device id)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackErrorStringResources::IsEnabled(),         L"MIDI2LoopbackErrorStringResources (localizable error text for loopback configuration failures)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled(),           L"MIDI2LoopbackFeedbackProtection (mute a loopback when MIDI feeds back into it)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackRejectRemovedEndpoint::IsEnabled(),        L"MIDI2LoopbackRejectRemovedEndpoint (fail an open of a removed midi 2.0 loopback endpoint instead of connecting it to nothing)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackUniqueEndpointNames::IsEnabled(),          L"MIDI2LoopbackUniqueEndpointNames (reject duplicate names when creating loopback endpoints)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2PortNamingRework::IsEnabled(),                     L"MIDI2PortNamingRework (rework of how midi 1.0 port names are generated)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2ProtocolNegotiationDeadlock::IsEnabled(),          L"MIDI2ProtocolNegotiationDeadlock (fix service hang during endpoint protocol negotiation)");
@@ -2165,10 +2167,10 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf::IsEnabled(),            L"MIDI2WinMMInterfaceRemovalPerf (speed up winmm handling of device interface removal)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMPortHandleSlotWidth::IsEnabled(),             L"MIDI2WinMMPortHandleSlotWidth (fix winmm port handle corruption in 32 bit clients)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMPortListLockScope::IsEnabled(),               L"MIDI2WinMMPortListLockScope (stop winmm open, close and device removal from blocking or hanging other winmm calls)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMRemovalWithoutPortLock::IsEnabled(),          L"MIDI2WinMMRemovalWithoutPortLock (stop a long winmm sysex send from delaying device removal handling, which could break ports opened after the device came back)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMShortMessageNoSendWait::IsEnabled(),          L"MIDI2WinMMShortMessageNoSendWait (stop winmm waiting for send completion on short messages)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2XProcBatchedReads::IsEnabled(),                    L"MIDI2XProcBatchedReads (batch cross-process reads to reduce per-message overhead)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSAShutdownCrash::IsEnabled(),                     L"MIDI2KSAShutdownCrash (shutdown race)");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2DuplicateDeviceNaming::IsEnabled(),                L"MIDI2DuplicateDeviceNaming (service assigns the number for a second or later unit of a model, and remembers it)");
 
     
 #endif    

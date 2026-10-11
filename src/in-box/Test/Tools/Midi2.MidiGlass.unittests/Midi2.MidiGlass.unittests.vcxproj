@@ -112,6 +112,7 @@
     <ClInclude Include="EditorControllerTests.h" />
     <ClInclude Include="MackieControlTests.h" />
     <ClInclude Include="ProvenanceTests.h" />
+    <ClInclude Include="ProvenanceFieldsTests.h" />
     <ClInclude Include="ContentPackTests.h" />
     <ClInclude Include="ZipArchiveTests.h" />
     <ClInclude Include="TestLayoutFiles.h" />
@@ -129,6 +130,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutPackage.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutPack.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\SignedItems.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\document\ProvenanceFields.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutTemplates.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\MackieControl.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\runtime\PanicMessages.h" />
@@ -179,6 +181,7 @@
     <ClCompile Include="EditorControllerTests.cpp" />
     <ClCompile Include="MackieControlTests.cpp" />
     <ClCompile Include="ProvenanceTests.cpp" />
+    <ClCompile Include="ProvenanceFieldsTests.cpp" />
     <ClCompile Include="ContentPackTests.cpp" />
     <ClCompile Include="ZipArchiveTests.cpp" />
     <ClCompile Include="TestLayoutFiles.cpp" />
@@ -195,6 +198,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutPackage.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutPack.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\SignedItems.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\ProvenanceFields.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutTemplates.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\MackieControl.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\runtime\PanicMessages.cpp" />

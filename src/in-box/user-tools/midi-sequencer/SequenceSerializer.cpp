@@ -6,6 +6,9 @@
 // ============================================================================
 
 #include "SequenceSerializer.h"
+#include "Lyrics.h"
+#include "SequenceGenerator.h"
+#include "SequencePattern.h"
 
 #include <algorithm>
 #include <charconv>
@@ -24,6 +27,7 @@ namespace midisequencer
 
         constexpr wchar_t KeyFileVersion[] = L"fileVersion";
         constexpr wchar_t KeyName[] = L"name";
+        constexpr wchar_t KeyCopyright[] = L"copyright";
         constexpr wchar_t KeyTicksPerQuarterNote[] = L"ticksPerQuarterNote";
         constexpr wchar_t KeyTempo[] = L"tempo";
         constexpr wchar_t KeyMeter[] = L"meter";
@@ -70,11 +74,84 @@ namespace midisequencer
         constexpr wchar_t KeySettings[] = L"settings";
         constexpr wchar_t KeyNotes[] = L"notes";
         constexpr wchar_t KeyEvents[] = L"events";
+        constexpr wchar_t KeyLanes[] = L"lanes";
+        constexpr wchar_t KeyLanesOpen[] = L"lanesOpen";
+        constexpr wchar_t KeyTarget[] = L"target";
+        constexpr wchar_t KeyNumber[] = L"number";
+        constexpr wchar_t KeyBank[] = L"bank";
+        constexpr wchar_t KeyIndex[] = L"index";
+        constexpr wchar_t KeyPoints[] = L"points";
+
+        constexpr wchar_t KeyMode[] = L"mode";
+        constexpr wchar_t KeyStepCount[] = L"stepCount";
+        constexpr wchar_t KeyStepTicks[] = L"stepTicks";
+        constexpr wchar_t KeySwing[] = L"swing";
+        constexpr wchar_t KeyLanesKeepLength[] = L"lanesKeepLength";
+        constexpr wchar_t KeyNote[] = L"note";
+        constexpr wchar_t KeySteps[] = L"steps";
+        constexpr wchar_t KeyChance[] = L"chance";
+        constexpr wchar_t KeyRatchet[] = L"ratchet";
+        constexpr wchar_t KeyShape[] = L"shape";
+        constexpr wchar_t KeyCondition[] = L"condition";
+        constexpr wchar_t KeyNudge[] = L"nudge";
+        constexpr wchar_t KeyAccent[] = L"accent";
+        constexpr wchar_t KeySlide[] = L"slide";
+
+        constexpr wchar_t ValueDrums[] = L"drums";
+        constexpr wchar_t ValueMelodic[] = L"melodic";
+        constexpr wchar_t ValueSofter[] = L"softer";
+        constexpr wchar_t ValueLouder[] = L"louder";
+        constexpr wchar_t ValueFirstPass[] = L"firstPass";
+        constexpr wchar_t ValueNotFirstPass[] = L"notFirstPass";
+
+        constexpr wchar_t KeyType[] = L"type";
+        constexpr wchar_t KeyEachPass[] = L"eachPass";
+        constexpr wchar_t KeyNoteLength[] = L"noteLength";
+        constexpr wchar_t KeyRings[] = L"rings";
+        constexpr wchar_t KeyPulses[] = L"pulses";
+        constexpr wchar_t KeyRotate[] = L"rotate";
+        constexpr wchar_t KeyVelocity[] = L"velocity";
+        constexpr wchar_t KeyScale[] = L"scale";
+        constexpr wchar_t KeyRoot[] = L"root";
+        constexpr wchar_t KeyLow[] = L"low";
+        constexpr wchar_t KeyHigh[] = L"high";
+        constexpr wchar_t KeyBusy[] = L"busy";
+        constexpr wchar_t KeyKeep[] = L"keep";
+        constexpr wchar_t KeyArpTrack[] = L"track";
+        constexpr wchar_t KeyOrder[] = L"order";
+        constexpr wchar_t KeyOctaves[] = L"octaves";
+        constexpr wchar_t KeyLatch[] = L"latch";
+        constexpr wchar_t ValueHeld[] = L"held";
+
+        // Arpeggiator orders, as written in the file, in ArpeggiatorOrder order.
+        constexpr std::array<wchar_t const*, 5> ArpOrderNames{ L"up", L"down", L"upAndDown", L"asHeld", L"random" };
+
+        constexpr wchar_t ValueEuclidean[] = L"euclidean";
+        constexpr wchar_t ValueChanceMelody[] = L"chanceMelody";
+        constexpr wchar_t ValueArpeggiator[] = L"arpeggiator";
+        constexpr wchar_t ValueSame[] = L"same";
+        constexpr wchar_t ValueChanges[] = L"changes";
+
+        // Scales, as written in the file, in ScaleKind order.
+        constexpr std::array<wchar_t const*, 11> ScaleNames{
+            L"major", L"minor", L"dorian", L"phrygian", L"lydian", L"mixolydian", L"harmonicMinor",
+            L"majorPentatonic", L"minorPentatonic", L"blues", L"chromatic" };
 
         constexpr wchar_t ValueAny[] = L"any";
         constexpr wchar_t ValueAsRecorded[] = L"asRecorded";
         constexpr wchar_t ValueTrack[] = L"track";
         constexpr wchar_t ValueFolder[] = L"folder";
+        constexpr wchar_t ValueHold[] = L"hold";
+
+        // What an automation lane changes, as written in the file.
+        constexpr std::array<std::pair<LaneTarget, wchar_t const*>, 6> LaneTargetNames{ {
+            { LaneTarget::Controller, L"controller" },
+            { LaneTarget::PitchBend, L"pitchBend" },
+            { LaneTarget::ChannelPressure, L"channelPressure" },
+            { LaneTarget::Program, L"program" },
+            { LaneTarget::Registered, L"registered" },
+            { LaneTarget::Assignable, L"assignable" },
+        } };
 
         // What a track records, as written in the file.
         constexpr std::array<std::pair<uint8_t, wchar_t const*>, 5> RecordKindNames{ {
@@ -94,6 +171,7 @@ namespace midisequencer
             size_t Skipped{ 0 };
             size_t TotalNotes{ 0 };
             size_t TotalTracks{ 0 };
+            size_t TotalLanePoints{ 0 };
         };
 
         mjson::IJsonValue Find(_In_ mjson::JsonObject const& object, _In_ std::wstring_view key) noexcept
@@ -375,6 +453,99 @@ namespace midisequencer
             return events;
         }
 
+        std::vector<AutomationLane> ReadLanes(_Inout_ ReadContext& context, _In_ mjson::JsonArray const& array)
+        {
+            std::vector<AutomationLane> lanes{};
+
+            if (array == nullptr)
+            {
+                return lanes;
+            }
+
+            for (auto const& value : array)
+            {
+                if (!IsType(value, mjson::JsonValueType::Object) || lanes.size() >= context.Limits.MaximumLanesPerOwner)
+                {
+                    ++context.Skipped;
+                    continue;
+                }
+
+                auto const object = value.GetObject();
+                auto const targetText = ReadRawString(object, KeyTarget).value_or(L"");
+                auto const target = std::find_if(LaneTargetNames.begin(), LaneTargetNames.end(),
+                    [&targetText](auto const& entry) { return targetText == entry.second; });
+
+                // A target from a newer version can't be sent, so its lane is left out.
+                if (target == LaneTargetNames.end())
+                {
+                    ++context.Skipped;
+                    continue;
+                }
+
+                AutomationLane lane{};
+                lane.Id = ReadText(object, KeyId, 128);
+                lane.Name = ReadText(object, KeyName, context.Limits.MaximumTextLength);
+                lane.Target = target->first;
+                lane.Channel = static_cast<uint8_t>(ReadInteger(object, KeyChannel, 0, 0, 15));
+
+                if (lane.Target == LaneTarget::Controller)
+                {
+                    lane.Number = static_cast<uint16_t>(ReadInteger(object, KeyNumber, 0, 0, 127));
+                }
+                else if (lane.Target == LaneTarget::Registered || lane.Target == LaneTarget::Assignable)
+                {
+                    auto const bank = ReadInteger(object, KeyBank, 0, 0, 127);
+                    auto const index = ReadInteger(object, KeyIndex, 0, 0, 127);
+                    lane.Number = static_cast<uint16_t>(bank * 128 + index);
+                }
+
+                if (auto const points = ReadArray(object, KeyPoints); points != nullptr)
+                {
+                    auto const count = points.Size();
+
+                    for (uint32_t i = 0; i < count; ++i)
+                    {
+                        if (lane.Points.size() >= context.Limits.MaximumPointsPerLane || context.TotalLanePoints >= context.Limits.MaximumLanePointsInSequence)
+                        {
+                            context.Skipped += count - i;
+                            break;
+                        }
+
+                        auto const entry = points.GetAt(i);
+
+                        if (!IsType(entry, mjson::JsonValueType::Array))
+                        {
+                            ++context.Skipped;
+                            continue;
+                        }
+
+                        auto const fields = entry.GetArray();
+
+                        if (fields.Size() < 2 || !IsType(fields.GetAt(0), mjson::JsonValueType::Number) || !IsType(fields.GetAt(1), mjson::JsonValueType::Number))
+                        {
+                            ++context.Skipped;
+                            continue;
+                        }
+
+                        auto const raw = fields.GetAt(1).GetNumber();
+
+                        LanePoint point{};
+                        point.Tick = ScaleTick(context, fields.GetAt(0).GetNumber());
+                        point.Value = std::isfinite(raw) ? static_cast<uint32_t>(std::clamp(std::round(raw), 0.0, 4294967295.0)) : 0;
+                        point.Hold = fields.Size() >= 3 && IsType(fields.GetAt(2), mjson::JsonValueType::String) && fields.GetAt(2).GetString() == ValueHold;
+
+                        lane.Points.push_back(point);
+                        ++context.TotalLanePoints;
+                    }
+                }
+
+                lane.Unknown = UnknownKeys(object, { KeyId, KeyName, KeyTarget, KeyNumber, KeyBank, KeyIndex, KeyChannel, KeyPoints });
+                lanes.push_back(std::move(lane));
+            }
+
+            return lanes;
+        }
+
         bool ReadTrack(
             _Inout_ ReadContext& context,
             _In_ mjson::JsonObject const& object,
@@ -404,7 +575,7 @@ namespace midisequencer
 
             track.Unknown = UnknownKeys(object, {
                 KeyId, KeyKind, KeyName, KeyColor, KeyPinned, KeyMute, KeySolo, KeyOpen, KeyTags,
-                KeySource, KeyDestination, KeyStartup, KeyTimeline, KeySlots, KeyTracks });
+                KeySource, KeyDestination, KeyStartup, KeyTimeline, KeySlots, KeyTracks, KeyLanes, KeyLanesOpen });
 
             if (track.IsFolder)
             {
@@ -541,6 +712,9 @@ namespace midisequencer
                 }
             }
 
+            track.Lanes = ReadLanes(context, ReadArray(object, KeyLanes));
+            track.LanesOpen = ReadBool(object, KeyLanesOpen, true);
+
             return true;
         }
 
@@ -549,6 +723,266 @@ namespace midisequencer
             if (text == L"pattern") return ClipKind::Pattern;
             if (text == L"generator") return ClipKind::Generator;
             return ClipKind::Notes;
+        }
+
+        // "firstPass", "notFirstPass", or "1:2" for the first pass of every two.
+        void ParseCondition(_In_ std::wstring_view text, _Inout_ PatternStep& step) noexcept
+        {
+            step.Condition = StepCondition::Always;
+
+            if (text == ValueFirstPass)
+            {
+                step.Condition = StepCondition::FirstPass;
+                return;
+            }
+
+            if (text == ValueNotFirstPass)
+            {
+                step.Condition = StepCondition::NotFirstPass;
+                return;
+            }
+
+            auto const colon = text.find(L':');
+
+            if (colon == std::wstring_view::npos || colon == 0 || colon + 1 >= text.size() || text.size() > 8)
+            {
+                return;
+            }
+
+            uint32_t of{ 0 };
+            uint32_t every{ 0 };
+
+            for (auto const c : text.substr(0, colon))
+            {
+                if (c < L'0' || c > L'9') return;
+                of = of * 10 + static_cast<uint32_t>(c - L'0');
+            }
+
+            for (auto const c : text.substr(colon + 1))
+            {
+                if (c < L'0' || c > L'9') return;
+                every = every * 10 + static_cast<uint32_t>(c - L'0');
+            }
+
+            if (every < 2 || every > 16 || of < 1 || of > every)
+            {
+                return;
+            }
+
+            step.Condition = StepCondition::Every;
+            step.Every = static_cast<uint8_t>(every);
+            step.Of = static_cast<uint8_t>(of);
+        }
+
+        // [index, velocity] or [index, velocity, { options }].
+        bool ReadPatternStep(_In_ ReadContext const& context, _In_ mjson::IJsonValue const& value, _In_ uint8_t laneNote, _Out_ PatternStep& step)
+        {
+            step = PatternStep{};
+            step.Note = laneNote;
+
+            if (!IsType(value, mjson::JsonValueType::Array))
+            {
+                return false;
+            }
+
+            auto const fields = value.GetArray();
+
+            if (fields.Size() < 2 || !IsType(fields.GetAt(0), mjson::JsonValueType::Number) || !IsType(fields.GetAt(1), mjson::JsonValueType::Number))
+            {
+                return false;
+            }
+
+            auto const index = fields.GetAt(0).GetNumber();
+
+            if (!std::isfinite(index) || index < 0 || index >= MaximumPatternSteps)
+            {
+                return false;
+            }
+
+            step.Index = static_cast<uint16_t>(index);
+
+            if (auto const velocity = fields.GetAt(1).GetNumber(); std::isfinite(velocity))
+            {
+                step.Velocity = static_cast<uint16_t>(std::clamp(std::round(velocity), 0.0, 65535.0));
+            }
+
+            if (fields.Size() >= 3 && IsType(fields.GetAt(2), mjson::JsonValueType::Object))
+            {
+                auto const options = fields.GetAt(2).GetObject();
+
+                step.Chance = static_cast<uint8_t>(ReadInteger(options, KeyChance, 100, 0, 100));
+                step.Ratchet = static_cast<uint8_t>(ReadInteger(options, KeyRatchet, 1, 1, MaximumRatchet));
+
+                auto const shape = ReadRawString(options, KeyShape).value_or(L"");
+                step.Shape = shape == ValueSofter ? RatchetShape::Softer : shape == ValueLouder ? RatchetShape::Louder : RatchetShape::Even;
+
+                ParseCondition(ReadRawString(options, KeyCondition).value_or(L""), step);
+
+                if (auto const nudge = ReadNumber(options, KeyNudge); nudge.has_value())
+                {
+                    step.Nudge = static_cast<int16_t>(std::clamp(std::round(*nudge * context.TickScale), -32768.0, 32767.0));
+                }
+
+                step.Length = static_cast<uint16_t>(ReadInteger(options, KeyLength, 50, 1, MaximumStepLength));
+                step.Note = static_cast<uint8_t>(ReadInteger(options, KeyNote, laneNote, 0, 127));
+                step.Accent = ReadBool(options, KeyAccent, false);
+                step.Slide = ReadBool(options, KeySlide, false);
+            }
+
+            return true;
+        }
+
+        PatternSettings ReadPattern(_Inout_ ReadContext& context, _In_ mjson::JsonObject const& object)
+        {
+            PatternSettings pattern{};
+
+            if (object == nullptr)
+            {
+                return pattern;
+            }
+
+            pattern.Mode = ReadRawString(object, KeyMode).value_or(ValueDrums) == ValueMelodic ? PatternMode::Melodic : PatternMode::Drums;
+            pattern.StepCount = static_cast<uint16_t>(ReadInteger(object, KeyStepCount, 16, 1, MaximumPatternSteps));
+
+            if (auto const ticks = ReadNumber(object, KeyStepTicks); ticks.has_value())
+            {
+                pattern.StepTicks = std::max<int64_t>(1, ScaleTick(context, *ticks));
+            }
+
+            pattern.Swing = static_cast<uint8_t>(ReadInteger(object, KeySwing, 50, MinimumSwing, MaximumSwing));
+            pattern.LanesKeepLength = ReadBool(object, KeyLanesKeepLength, true);
+            pattern.Channel = static_cast<uint8_t>(ReadInteger(object, KeyChannel, pattern.Mode == PatternMode::Drums ? 9 : 0, 0, 15));
+
+            if (auto const lanes = ReadArray(object, KeyLanes); lanes != nullptr)
+            {
+                for (auto const& value : lanes)
+                {
+                    if (!IsType(value, mjson::JsonValueType::Object) || pattern.Lanes.size() >= MaximumPatternLanes)
+                    {
+                        ++context.Skipped;
+                        continue;
+                    }
+
+                    auto const laneObject = value.GetObject();
+
+                    PatternLane lane{};
+                    lane.Id = ReadText(laneObject, KeyId, 128);
+                    lane.Name = ReadText(laneObject, KeyName, context.Limits.MaximumTextLength);
+                    lane.Note = static_cast<uint8_t>(ReadInteger(laneObject, KeyNote, 36, 0, 127));
+                    lane.StepCount = static_cast<uint16_t>(ReadInteger(laneObject, KeyStepCount, pattern.StepCount, 1, MaximumPatternSteps));
+                    lane.Muted = ReadBool(laneObject, KeyMute, false);
+                    lane.Soloed = ReadBool(laneObject, KeySolo, false);
+
+                    if (auto const steps = ReadArray(laneObject, KeySteps); steps != nullptr)
+                    {
+                        for (auto const& entry : steps)
+                        {
+                            PatternStep step{};
+
+                            if (lane.Steps.size() >= MaximumPatternSteps || !ReadPatternStep(context, entry, lane.Note, step))
+                            {
+                                ++context.Skipped;
+                                continue;
+                            }
+
+                            lane.Steps.push_back(step);
+                        }
+                    }
+
+                    lane.Unknown = UnknownKeys(laneObject, { KeyId, KeyName, KeyNote, KeyStepCount, KeyMute, KeySolo, KeySteps });
+                    pattern.Lanes.push_back(std::move(lane));
+                }
+            }
+
+            pattern.Unknown = UnknownKeys(object, { KeyMode, KeyStepCount, KeyStepTicks, KeySwing, KeyLanesKeepLength, KeyChannel, KeyLanes });
+            return pattern;
+        }
+
+        GeneratorSettings ReadGenerator(_Inout_ ReadContext& context, _In_ mjson::JsonObject const& object)
+        {
+            GeneratorSettings generator{};
+
+            if (object == nullptr)
+            {
+                return generator;
+            }
+
+            auto const type = ReadRawString(object, KeyType).value_or(ValueEuclidean);
+            generator.Type = type == ValueChanceMelody ? GeneratorType::ChanceMelody : type == ValueArpeggiator ? GeneratorType::Arpeggiator : GeneratorType::Euclidean;
+
+            if (auto const ticks = ReadNumber(object, KeyStepTicks); ticks.has_value())
+            {
+                generator.StepTicks = std::max<int64_t>(1, ScaleTick(context, *ticks));
+            }
+
+            generator.ChangesEachPass = ReadRawString(object, KeyEachPass).value_or(ValueSame) == ValueChanges;
+            generator.Channel = static_cast<uint8_t>(ReadInteger(object, KeyChannel, 0, 0, 15));
+            generator.NoteLength = static_cast<uint16_t>(ReadInteger(object, KeyNoteLength, 50, 1, 1600));
+
+            if (auto const rings = ReadArray(object, KeyRings); rings != nullptr)
+            {
+                for (auto const& value : rings)
+                {
+                    if (!IsType(value, mjson::JsonValueType::Object) || generator.Rings.size() >= MaximumEuclidRings)
+                    {
+                        ++context.Skipped;
+                        continue;
+                    }
+
+                    auto const ringObject = value.GetObject();
+
+                    EuclidRing ring{};
+                    ring.Note = static_cast<uint8_t>(ReadInteger(ringObject, KeyNote, 36, 0, 127));
+                    ring.Steps = static_cast<uint8_t>(ReadInteger(ringObject, KeySteps, 16, 1, MaximumRingSteps));
+                    ring.Pulses = static_cast<uint8_t>(ReadInteger(ringObject, KeyPulses, 4, 0, ring.Steps));
+                    ring.Rotate = static_cast<uint8_t>(ReadInteger(ringObject, KeyRotate, 0, 0, ring.Steps - 1));
+                    ring.Velocity = static_cast<uint16_t>(ReadInteger(ringObject, KeyVelocity, ring.Velocity, 0, 0xFFFF));
+                    ring.Chance = static_cast<uint8_t>(ReadInteger(ringObject, KeyChance, 100, 0, 100));
+                    generator.Rings.push_back(ring);
+                }
+            }
+
+            auto const scale = ReadRawString(object, KeyScale).value_or(L"");
+            auto const named = std::find_if(ScaleNames.begin(), ScaleNames.end(), [&scale](wchar_t const* name) { return scale == name; });
+
+            if (named != ScaleNames.end())
+            {
+                generator.Scale = static_cast<ScaleKind>(std::distance(ScaleNames.begin(), named));
+            }
+
+            generator.ScaleRoot = static_cast<uint8_t>(ReadInteger(object, KeyRoot, generator.ScaleRoot, 0, 11));
+            generator.LowNote = static_cast<uint8_t>(ReadInteger(object, KeyLow, generator.LowNote, 0, 127));
+            generator.HighNote = static_cast<uint8_t>(ReadInteger(object, KeyHigh, generator.HighNote, 0, 127));
+            generator.Busy = static_cast<uint8_t>(ReadInteger(object, KeyBusy, generator.Busy, 0, 100));
+            generator.Keep = static_cast<uint8_t>(ReadInteger(object, KeyKeep, generator.Keep, 0, 100));
+
+            if (auto const velocity = ReadArray(object, KeyVelocity); velocity != nullptr && velocity.Size() == 2 &&
+                IsType(velocity.GetAt(0), mjson::JsonValueType::Number) && IsType(velocity.GetAt(1), mjson::JsonValueType::Number))
+            {
+                auto const clamp16 = [](double value) { return static_cast<uint16_t>(std::isfinite(value) ? std::clamp(std::round(value), 0.0, 65535.0) : 0.0); };
+                generator.VelocityLow = clamp16(velocity.GetAt(0).GetNumber());
+                generator.VelocityHigh = clamp16(velocity.GetAt(1).GetNumber());
+            }
+
+            generator.ArpSource = ReadRawString(object, KeySource).value_or(ValueHeld) == ValueTrack ? ArpeggiatorSource::Track : ArpeggiatorSource::Held;
+            generator.ArpTrackId = ReadRawString(object, KeyArpTrack).value_or(L"");
+
+            auto const order = ReadRawString(object, KeyOrder).value_or(L"");
+            auto const ordered = std::find_if(ArpOrderNames.begin(), ArpOrderNames.end(), [&order](wchar_t const* name) { return order == name; });
+
+            if (ordered != ArpOrderNames.end())
+            {
+                generator.ArpOrder = static_cast<ArpeggiatorOrder>(std::distance(ArpOrderNames.begin(), ordered));
+            }
+
+            generator.ArpOctaves = static_cast<uint8_t>(ReadInteger(object, KeyOctaves, 1, 1, 4));
+            generator.ArpLatch = ReadBool(object, KeyLatch, false);
+
+            generator.Unknown = UnknownKeys(object, {
+                KeyType, KeyStepTicks, KeyEachPass, KeyChannel, KeyNoteLength, KeyRings, KeyScale, KeyRoot, KeyLow, KeyHigh, KeyBusy, KeyKeep, KeyVelocity,
+                KeySource, KeyArpTrack, KeyOrder, KeyOctaves, KeyLatch });
+
+            return generator;
         }
 
         ClipOrigin ParseOrigin(_In_ std::wstring_view text) noexcept
@@ -708,13 +1142,27 @@ namespace midisequencer
                 clip.OriginDetail = ReadText(origin, KeyDetail, context.Limits.MaximumTextLength);
             }
 
-            clip.Settings = ReadObject(object, KeySettings);
+            if (clip.Kind == ClipKind::Pattern)
+            {
+                // A pattern's notes come from its steps, so any written with it are left out.
+                clip.Pattern = ReadPattern(context, ReadObject(object, KeySettings));
+            }
+            else if (clip.Kind == ClipKind::Generator)
+            {
+                // The same for a generator's.
+                clip.Generator = ReadGenerator(context, ReadObject(object, KeySettings));
+            }
+            else
+            {
+                clip.Settings = ReadObject(object, KeySettings);
+                ReadNotes(context, ReadArray(object, KeyNotes), clip);
+            }
 
-            ReadNotes(context, ReadArray(object, KeyNotes), clip);
             ReadEvents(context, ReadArray(object, KeyEvents), clip);
+            clip.Lanes = ReadLanes(context, ReadArray(object, KeyLanes));
 
             clip.Unknown = UnknownKeys(object, {
-                KeyId, KeyKind, KeyName, KeyColor, KeyLength, KeyLoop, KeySeed, KeyOrigin, KeySettings, KeyNotes, KeyEvents });
+                KeyId, KeyKind, KeyName, KeyColor, KeyLength, KeyLoop, KeySeed, KeyOrigin, KeySettings, KeyNotes, KeyEvents, KeyLanes });
 
             return true;
         }
@@ -926,6 +1374,92 @@ namespace midisequencer
             return text;
         }
 
+        std::wstring_view LaneTargetText(_In_ LaneTarget target) noexcept
+        {
+            for (auto const& [kind, text] : LaneTargetNames)
+            {
+                if (kind == target)
+                {
+                    return text;
+                }
+            }
+
+            return LaneTargetNames.front().second;
+        }
+
+        void WriteLanes(_Inout_ std::wstring& out, _In_ std::vector<AutomationLane> const& lanes, _In_ int32_t depth)
+        {
+            out += L"[";
+
+            for (size_t i = 0; i < lanes.size(); ++i)
+            {
+                auto const& lane = lanes[i];
+
+                out += i == 0 ? L"\n" : L",\n";
+                AppendIndent(out, depth + 1);
+                out += L"{";
+
+                Members members{ out, depth + 1, false };
+                members.Text(KeyId, lane.Id);
+
+                if (!lane.Name.empty())
+                {
+                    members.Text(KeyName, lane.Name);
+                }
+
+                members.Text(KeyTarget, LaneTargetText(lane.Target));
+
+                if (lane.Target == LaneTarget::Controller)
+                {
+                    members.Integer(KeyNumber, lane.Number);
+                }
+                else if (lane.Target == LaneTarget::Registered || lane.Target == LaneTarget::Assignable)
+                {
+                    members.Integer(KeyBank, lane.Number >> 7);
+                    members.Integer(KeyIndex, lane.Number & 0x7F);
+                }
+
+                members.Integer(KeyChannel, lane.Channel);
+                members.Key(KeyPoints);
+                out += L"[";
+
+                for (size_t p = 0; p < lane.Points.size(); ++p)
+                {
+                    auto const& point = lane.Points[p];
+
+                    out += p == 0 ? L"\n" : L",\n";
+                    AppendIndent(out, depth + 3);
+                    out += L"[";
+                    AppendInteger(out, point.Tick);
+                    out += L", ";
+                    AppendInteger(out, point.Value);
+
+                    if (point.Hold)
+                    {
+                        out += L", ";
+                        AppendQuoted(out, ValueHold);
+                    }
+
+                    out += L"]";
+                }
+
+                if (!lane.Points.empty())
+                {
+                    out += L"\n";
+                    AppendIndent(out, depth + 2);
+                }
+
+                out += L"]";
+
+                members.Unknown(lane.Unknown);
+                members.Close();
+            }
+
+            out += L"\n";
+            AppendIndent(out, depth);
+            out += L"]";
+        }
+
         void WriteTrack(_Inout_ std::wstring& out, _In_ Track const& track, _In_ int32_t depth)
         {
             AppendIndent(out, depth);
@@ -1092,6 +1626,17 @@ namespace midisequencer
                     slots += L" ]";
                     members.Raw(KeySlots, slots);
                 }
+
+                if (!track.Lanes.empty())
+                {
+                    members.Key(KeyLanes);
+                    WriteLanes(out, track.Lanes, depth + 1);
+                }
+
+                if (!track.LanesOpen)
+                {
+                    members.Bool(KeyLanesOpen, false);
+                }
             }
 
             if (!track.Tags.empty())
@@ -1169,6 +1714,192 @@ namespace midisequencer
             out += L"]";
         }
 
+        std::wstring ConditionText(_In_ PatternStep const& step)
+        {
+            switch (step.Condition)
+            {
+            case StepCondition::Every: return std::format(L"{}:{}", step.Of, step.Every);
+            case StepCondition::FirstPass: return ValueFirstPass;
+            case StepCondition::NotFirstPass: return ValueNotFirstPass;
+            default: return {};
+            }
+        }
+
+        // [index, velocity], with an object of the settings that aren't the defaults after them.
+        std::wstring PatternStepText(_In_ PatternStep const& step, _In_ PatternMode mode, _In_ uint8_t laneNote)
+        {
+            std::wstring text{ L"[" };
+            AppendInteger(text, step.Index);
+            text += L", ";
+            AppendInteger(text, step.Velocity);
+
+            std::wstring options{ L"{" };
+            Members members{ options, 0, true };
+
+            if (step.Chance != 100) members.Integer(KeyChance, step.Chance);
+            if (step.Ratchet > 1) members.Integer(KeyRatchet, step.Ratchet);
+            if (step.Shape == RatchetShape::Softer) members.Text(KeyShape, ValueSofter);
+            if (step.Shape == RatchetShape::Louder) members.Text(KeyShape, ValueLouder);
+            if (step.Condition != StepCondition::Always) members.Text(KeyCondition, ConditionText(step));
+            if (step.Nudge != 0) members.Integer(KeyNudge, step.Nudge);
+            if (step.Length != 50) members.Integer(KeyLength, step.Length);
+            if (mode == PatternMode::Melodic && step.Note != laneNote) members.Integer(KeyNote, step.Note);
+            if (step.Accent) members.Bool(KeyAccent, true);
+            if (step.Slide) members.Bool(KeySlide, true);
+
+            members.Close();
+
+            if (options != L"{}")
+            {
+                text += L", ";
+                text += options;
+            }
+
+            text += L"]";
+            return text;
+        }
+
+        // depth is the indent of the line the "settings" key is on.
+        void WritePattern(_Inout_ std::wstring& out, _In_ PatternSettings const& pattern, _In_ int32_t depth)
+        {
+            out += L"{";
+
+            Members members{ out, depth, false };
+            members.Text(KeyMode, pattern.Mode == PatternMode::Melodic ? ValueMelodic : ValueDrums);
+            members.Integer(KeyStepCount, pattern.StepCount);
+            members.Integer(KeyStepTicks, pattern.StepTicks);
+            members.Integer(KeySwing, pattern.Swing);
+            members.Bool(KeyLanesKeepLength, pattern.LanesKeepLength);
+            members.Integer(KeyChannel, pattern.Channel);
+            members.Key(KeyLanes);
+            out += L"[";
+
+            for (size_t i = 0; i < pattern.Lanes.size(); ++i)
+            {
+                auto const& lane = pattern.Lanes[i];
+
+                out += i == 0 ? L"\n" : L",\n";
+                AppendIndent(out, depth + 2);
+                out += L"{";
+
+                Members laneMembers{ out, depth + 2, false };
+                laneMembers.Text(KeyId, lane.Id);
+
+                if (!lane.Name.empty())
+                {
+                    laneMembers.Text(KeyName, lane.Name);
+                }
+
+                laneMembers.Integer(KeyNote, lane.Note);
+                laneMembers.Integer(KeyStepCount, lane.StepCount);
+
+                if (lane.Muted) laneMembers.Bool(KeyMute, true);
+                if (lane.Soloed) laneMembers.Bool(KeySolo, true);
+
+                std::wstring steps{ L"[" };
+
+                for (size_t s = 0; s < lane.Steps.size(); ++s)
+                {
+                    steps += s == 0 ? L" " : L", ";
+                    steps += PatternStepText(lane.Steps[s], pattern.Mode, lane.Note);
+                }
+
+                steps += lane.Steps.empty() ? L"]" : L" ]";
+                laneMembers.Raw(KeySteps, steps);
+
+                laneMembers.Unknown(lane.Unknown);
+                laneMembers.Close();
+            }
+
+            if (!pattern.Lanes.empty())
+            {
+                out += L"\n";
+                AppendIndent(out, depth + 1);
+            }
+
+            out += L"]";
+
+            members.Unknown(pattern.Unknown);
+            members.Close();
+        }
+
+        // depth is the indent of the line the "settings" key is on.
+        void WriteGenerator(_Inout_ std::wstring& out, _In_ GeneratorSettings const& generator, _In_ int32_t depth)
+        {
+            out += L"{";
+
+            Members members{ out, depth, false };
+            members.Text(KeyType,
+                generator.Type == GeneratorType::ChanceMelody ? ValueChanceMelody :
+                generator.Type == GeneratorType::Arpeggiator ? ValueArpeggiator : ValueEuclidean);
+            members.Integer(KeyStepTicks, generator.StepTicks);
+            members.Text(KeyEachPass, generator.ChangesEachPass ? ValueChanges : ValueSame);
+            members.Integer(KeyChannel, generator.Channel);
+            members.Integer(KeyNoteLength, generator.NoteLength);
+
+            if (generator.Type == GeneratorType::Euclidean)
+            {
+                members.Key(KeyRings);
+                out += L"[";
+
+                for (size_t i = 0; i < generator.Rings.size(); ++i)
+                {
+                    auto const& ring = generator.Rings[i];
+
+                    out += i == 0 ? L"\n" : L",\n";
+                    AppendIndent(out, depth + 2);
+                    out += L"{";
+
+                    Members ringMembers{ out, depth + 2, true };
+                    ringMembers.Integer(KeyNote, ring.Note);
+                    ringMembers.Integer(KeyPulses, ring.Pulses);
+                    ringMembers.Integer(KeySteps, ring.Steps);
+                    ringMembers.Integer(KeyRotate, ring.Rotate);
+                    ringMembers.Integer(KeyVelocity, ring.Velocity);
+                    ringMembers.Integer(KeyChance, ring.Chance);
+                    ringMembers.Close();
+                }
+
+                if (!generator.Rings.empty())
+                {
+                    out += L"\n";
+                    AppendIndent(out, depth + 1);
+                }
+
+                out += L"]";
+            }
+            else if (generator.Type == GeneratorType::ChanceMelody)
+            {
+                members.Text(KeyScale, ScaleNames[std::min<size_t>(static_cast<size_t>(generator.Scale), ScaleNames.size() - 1)]);
+                members.Integer(KeyRoot, generator.ScaleRoot);
+                members.Integer(KeyLow, generator.LowNote);
+                members.Integer(KeyHigh, generator.HighNote);
+                members.Integer(KeyBusy, generator.Busy);
+                members.Integer(KeyKeep, generator.Keep);
+                members.Raw(KeyVelocity, std::format(L"[{}, {}]", generator.VelocityLow, generator.VelocityHigh));
+            }
+            else if (generator.Type == GeneratorType::Arpeggiator)
+            {
+                members.Text(KeySource, generator.ArpSource == ArpeggiatorSource::Track ? ValueTrack : ValueHeld);
+
+                if (generator.ArpSource == ArpeggiatorSource::Track)
+                {
+                    members.Text(KeyArpTrack, generator.ArpTrackId);
+                }
+
+                members.Text(KeyOrder, ArpOrderNames[std::min<size_t>(static_cast<size_t>(generator.ArpOrder), ArpOrderNames.size() - 1)]);
+                members.Integer(KeyOctaves, generator.ArpOctaves);
+
+                if (generator.ArpLatch)
+                {
+                    members.Bool(KeyLatch, true);
+                }
+            }
+
+            members.Unknown(generator.Unknown);
+            members.Close();
+        }
+
         void WriteClip(_Inout_ std::wstring& out, _In_ Clip const& clip, _In_ int32_t depth)
         {
             AppendIndent(out, depth);
@@ -1211,12 +1942,23 @@ namespace midisequencer
                 members.Raw(KeyOrigin, origin);
             }
 
-            if (clip.Settings != nullptr)
+            if (clip.Kind == ClipKind::Pattern && clip.Pattern.has_value())
+            {
+                members.Key(KeySettings);
+                WritePattern(out, *clip.Pattern, depth + 1);
+            }
+            else if (clip.Kind == ClipKind::Generator && clip.Generator.has_value())
+            {
+                members.Key(KeySettings);
+                WriteGenerator(out, *clip.Generator, depth + 1);
+            }
+            else if (clip.Settings != nullptr)
             {
                 members.Raw(KeySettings, clip.Settings.Stringify());
             }
 
-            if (!clip.Notes.empty())
+            // Pattern and generator notes are worked out again when the file is read.
+            if (!clip.Notes.empty() && clip.Kind == ClipKind::Notes)
             {
                 members.Key(KeyNotes);
                 out += L"[";
@@ -1252,6 +1994,12 @@ namespace midisequencer
                 out += L"\n";
                 AppendIndent(out, depth + 1);
                 out += L"]";
+            }
+
+            if (!clip.Lanes.empty())
+            {
+                members.Key(KeyLanes);
+                WriteLanes(out, clip.Lanes, depth + 1);
             }
 
             members.Unknown(clip.Unknown);
@@ -1378,6 +2126,7 @@ namespace midisequencer
         context.TickScale = static_cast<double>(TicksPerQuarterNote) / static_cast<double>(fileTicks);
 
         sequence.Name = ReadText(root, KeyName, limits.MaximumTextLength);
+        sequence.Copyright = ReadText(root, KeyCopyright, limits.MaximumTextLength);
         sequence.Provenance = midiapp::ReadProvenance(root);
 
         sequence.Tempo.clear();
@@ -1479,9 +2228,11 @@ namespace midisequencer
             }
         }
 
+        sequence.Lyrics = ReadLyricsJson(root, limits, context.Skipped);
+
         sequence.Unknown = UnknownKeys(root, {
             KeyFileVersion, KeyName, midiapp::ProvenanceKey, KeyTicksPerQuarterNote, KeyTempo, KeyMeter,
-            KeyTags, KeyScenes, KeyTracks, KeyClips });
+            KeyTags, KeyScenes, KeyTracks, KeyClips, LyricsKey, KeyCopyright });
 
         NormalizeSequence(sequence);
 
@@ -1510,6 +2261,11 @@ namespace midisequencer
         if (!sequence.Name.empty())
         {
             root.Text(KeyName, sequence.Name);
+        }
+
+        if (!sequence.Copyright.empty())
+        {
+            root.Text(KeyCopyright, sequence.Copyright);
         }
 
         if (sequence.Provenance.has_value() && !sequence.Provenance->IsEmpty())
@@ -1568,6 +2324,11 @@ namespace midisequencer
         {
             root.Key(KeyTags);
             WriteTagArray(out, sequence.Tags, 1);
+        }
+
+        if (sequence.Lyrics)
+        {
+            root.Raw(LyricsKey, LyricsToJsonText(*sequence.Lyrics));
         }
 
         if (!sequence.Scenes.empty())

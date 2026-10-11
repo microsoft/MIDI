@@ -16,6 +16,53 @@ namespace
     {
         return (microseconds * frequency) / MICROSECONDS_PER_SECOND;
     }
+
+    // Length of the whole UMP starting at the offset, from its message type, or 0 if the buffer
+    // ends before the message does.
+    UINT WholeUmpByteCountAt(
+        _In_reads_bytes_(byteCount) BYTE const* const data,
+        _In_ UINT const byteCount,
+        _In_ UINT const offset)
+    {
+        if (offset >= byteCount || byteCount - offset < sizeof(uint32_t))
+        {
+            return 0;
+        }
+
+        uint32_t firstWord{ 0 };
+        memcpy(&firstWord, data + offset, sizeof(firstWord));
+
+        UINT const messageByteCount = internal::GetUmpLengthInBytesFromFirstWord(firstWord);
+
+        return (messageByteCount <= byteCount - offset) ? messageByteCount : 0;
+    }
+
+    // Number of whole UMPs in the buffer, or 0 if it does not end exactly on a message boundary.
+    size_t CountWholeUmps(_In_reads_bytes_opt_(byteCount) BYTE const* const data, _In_ UINT const byteCount)
+    {
+        if (data == nullptr)
+        {
+            return 0;
+        }
+
+        size_t count{ 0 };
+        UINT offset{ 0 };
+
+        while (offset < byteCount)
+        {
+            auto const messageByteCount = WholeUmpByteCountAt(data, byteCount, offset);
+
+            if (messageByteCount == 0)
+            {
+                return 0;
+            }
+
+            offset += messageByteCount;
+            count++;
+        }
+
+        return count;
+    }
 }
 
 
@@ -289,7 +336,17 @@ CMidi2SchedulerMidiTransform2::SendMidiMessage(
             return hr;
         }
 
-        if (size < MINIMUM_UMP_DATASIZE || size > MAXIMUM_UMP_DATASIZE)
+        // Batched cross-process reads hand over all the messages that share a timestamp in one
+        // buffer. A buffer too big for one queue slot is queued as its separate messages, in order.
+        // A buffer that fits one slot is queued whole, as before.
+        size_t messageCount{ 1 };
+
+        if (size > MAXIMUM_UMP_DATASIZE)
+        {
+            messageCount = CountWholeUmps(static_cast<BYTE const*>(data), size);
+        }
+
+        if (size < MINIMUM_UMP_DATASIZE || messageCount == 0)
         {
             TraceLoggingWrite(
                 MidiSchedulerTransformTelemetryProvider::Provider(),
@@ -309,23 +366,41 @@ CMidi2SchedulerMidiTransform2::SendMidiMessage(
         {
             std::scoped_lock<std::mutex> lock(m_queueMutex);
 
-            if (m_messageQueue.size() < MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT)
+            // All or nothing, so a refused buffer can be retried without sending any of it twice.
+            if (m_messageQueue.size() + messageCount <= MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT)
             {
-                if (m_messageQueue.empty())
-                {
-                    m_currentReceivedIndex = 0;
-                }
-                else
-                {
-                    m_currentReceivedIndex++;
-                }
+                auto const bytes = static_cast<BYTE const*>(data);
+                UINT offset{ 0 };
 
-                m_messageQueue.emplace(
-                    static_cast<internal::MidiTimestamp>(timestamp),
-                    m_currentReceivedIndex,
-                    optionFlags,
-                    size,
-                    static_cast<BYTE const*>(data));
+                for (size_t messageIndex = 0; messageIndex < messageCount; messageIndex++)
+                {
+                    // Measured again rather than trusted from the count, because the buffer can be
+                    // memory shared with the sending process. Stop rather than read past its end.
+                    auto const messageByteCount = (size <= MAXIMUM_UMP_DATASIZE) ? size : WholeUmpByteCountAt(bytes, size, offset);
+
+                    if (messageByteCount == 0)
+                    {
+                        break;
+                    }
+
+                    if (m_messageQueue.empty())
+                    {
+                        m_currentReceivedIndex = 0;
+                    }
+                    else
+                    {
+                        m_currentReceivedIndex++;
+                    }
+
+                    m_messageQueue.emplace(
+                        static_cast<internal::MidiTimestamp>(timestamp),
+                        m_currentReceivedIndex,
+                        optionFlags,
+                        messageByteCount,
+                        bytes + offset);
+
+                    offset += messageByteCount;
+                }
 
                 m_queueCount = m_messageQueue.size();
 

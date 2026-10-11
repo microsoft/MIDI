@@ -21,6 +21,7 @@
 #include "LayoutPackage.h"
 #include "LayoutPack.h"
 #include "AppProvenance.h"
+#include "ProvenanceForm.h"
 #include "SharingDialogs.h"
 
 #include <algorithm>
@@ -606,6 +607,8 @@ namespace winrt::midiglass::implementation
                 ? resources::GetString(L"SettingsFileNotSaved")
                 : resources::FormatString(L"SettingsFileFormat", m_filePath));
 
+            RefreshAboutPanel();
+
             m_updatingSettings = false;
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the layout name.")
@@ -868,22 +871,118 @@ namespace winrt::midiglass::implementation
             note.FontSize(11.0);
             note.LineHeight(16.0);
             note.TextWrapping(xaml::TextWrapping::Wrap);
-            note.Margin({ 0, 10, 0, 0 });
             note.Foreground(PaneBrush(L"TextFillColorTertiaryBrush"));
 
+            controls::TextBlock aboutNote{};
+
+            aboutNote.Text(resources::GetString(L"SaveThemeAboutNote"));
+            aboutNote.FontSize(11.0);
+            aboutNote.LineHeight(16.0);
+            aboutNote.TextWrapping(xaml::TextWrapping::Wrap);
+            aboutNote.Margin({ 0, -8, 0, 0 });
+            aboutNote.Foreground(PaneBrush(L"TextFillColorTertiaryBrush"));
+
             controls::StackPanel panel{};
-            panel.Width(360.0);
+            panel.Width(::midiglass::sharing::DialogWidth);
+            panel.Spacing(10.0);
             panel.Children().Append(nameBox);
             panel.Children().Append(note);
+
+            // Who made it, filled in for what this save makes: a new theme made from this one
+            // under a new name, or the same theme carried on under its own.
+            auto const fromBuiltIn = glass::FindBuiltInTheme(m_theme.Name) != nullptr;
+            auto const asNew = ::midiglass::CopyProvenance(m_theme.Name, m_theme.Provenance, fromBuiltIn);
+            auto const asItself = m_theme.Provenance.has_value() ? *m_theme.Provenance : ::midiglass::NewProvenance();
+
+            auto const trimmed = [](winrt::hstring const& text)
+                {
+                    std::wstring value{ text };
+
+                    while (!value.empty() && value.front() == L' ') { value.erase(value.begin()); }
+                    while (!value.empty() && value.back() == L' ') { value.pop_back(); }
+
+                    return value;
+                };
+
+            auto const savesAsNew = [fromBuiltIn, themeName = m_theme.Name, trimmed](winrt::hstring const& text)
+                {
+                    return fromBuiltIn || trimmed(text) != themeName;
+                };
+
+            auto about = ::midiglass::sharing::BuildProvenanceForm(glass::FieldsOf(fromBuiltIn ? asNew : asItself), true);
+            auto showsNew = std::make_shared<bool>(fromBuiltIn);
+
+            panel.Children().Append(::midiglass::sharing::Heading(resources::GetString(L"ShareAboutHeading")));
+            panel.Children().Append(aboutNote);
+            panel.Children().Append(about->Panel);
+
+            if (::midiglass::sharing::HasAuthorProfile(midiapp::LoadAuthorProfile()))
+            {
+                panel.Children().Append(::midiglass::sharing::MakeFillInButton(about, nullptr));
+            }
+
+            // Until somebody changes them, the fields follow the name.
+            nameBox.TextChanged([weak = std::weak_ptr{ about }, showsNew, asNew, asItself, savesAsNew](
+                foundation::IInspectable const& sender, auto&&)
+                {
+                    try
+                    {
+                        auto const form = weak.lock();
+                        auto const box = sender.try_as<controls::TextBox>();
+
+                        if (form == nullptr || box == nullptr || savesAsNew(box.Text()) == *showsNew)
+                        {
+                            return;
+                        }
+
+                        auto const& shown = *showsNew ? asNew : asItself;
+                        auto const read = glass::ApplyProvenanceFields(shown, ::midiglass::sharing::ReadProvenanceForm(*form));
+
+                        if (!read.Provenance.has_value() ||
+                            midiapp::ProvenanceToJsonText(*read.Provenance, 0) != midiapp::ProvenanceToJsonText(shown, 0))
+                        {
+                            return;
+                        }
+
+                        *showsNew = !*showsNew;
+                        ::midiglass::sharing::FillProvenanceForm(*form, glass::FieldsOf(*showsNew ? asNew : asItself));
+                    }
+                    MIDI_GLASS_CATCH_AND_LOG(L"Unable to follow the theme name.")
+                });
+
+            controls::ScrollViewer scroller{};
+            scroller.Content(panel);
+            scroller.MaxHeight(560.0);
+            scroller.Padding({ 0, 0, 16, 0 });
 
             controls::ContentDialog dialog{};
 
             dialog.XamlRoot(Content().XamlRoot());
             dialog.Title(box_value(resources::GetString(L"SaveThemeTitle")));
-            dialog.Content(panel);
+            dialog.Content(scroller);
             dialog.PrimaryButtonText(resources::GetString(L"SaveThemeConfirm"));
             dialog.CloseButtonText(resources::GetString(L"DialogCancel"));
             dialog.DefaultButton(controls::ContentDialogButton::Primary);
+
+            dialog.PrimaryButtonClick([about, nameBox, asNew, asItself, savesAsNew](
+                auto const&, controls::ContentDialogButtonClickEventArgs const& args)
+                {
+                    try
+                    {
+                        auto const& base = savesAsNew(nameBox.Text()) ? asNew : asItself;
+                        auto const rejected = glass::ApplyProvenanceFields(
+                            base, ::midiglass::sharing::ReadProvenanceForm(*about)).WebsiteRejected;
+
+                        ::midiglass::sharing::ShowWebsiteProblem(*about, rejected);
+
+                        if (rejected)
+                        {
+                            about->Website.Focus(xaml::FocusState::Programmatic);
+                            args.Cancel(true);
+                        }
+                    }
+                    MIDI_GLASS_CATCH_AND_LOG(L"Unable to check who made the theme.")
+                });
 
             if (co_await dialog.ShowAsync() != controls::ContentDialogResult::Primary)
             {
@@ -916,16 +1015,10 @@ namespace winrt::midiglass::implementation
             saved.IsBuiltIn = false;
 
             // Under a new name it is a new theme made from this one. Under its own name it is the
-            // same theme carried on.
-            if (name != m_theme.Name)
-            {
-                saved.Provenance = ::midiglass::CopyProvenance(
-                    m_theme.Name, m_theme.Provenance, glass::FindBuiltInTheme(m_theme.Name) != nullptr);
-            }
-            else if (!saved.Provenance.has_value())
-            {
-                saved.Provenance = ::midiglass::NewProvenance();
-            }
+            // same theme carried on. Either way it says what the fields say about who made it.
+            saved.Provenance = glass::ApplyProvenanceFields(
+                name != m_theme.Name ? asNew : asItself,
+                ::midiglass::sharing::ReadProvenanceForm(*about)).Provenance;
 
             // Not a theme's to carry: it is a sentence about one of ours, and a customer theme
             // has no business claiming it.
@@ -1122,6 +1215,12 @@ namespace winrt::midiglass::implementation
                     if (strong->m_editor.SetProvenance(provenance))
                     {
                         strong->MarkChanged();
+
+                        // The About page shows the same fields, and they would put the old answers back.
+                        if (strong->m_settingsPane == L"name")
+                        {
+                            strong->RefreshAboutPanel();
+                        }
                     }
 
                     strong->SaveNow();

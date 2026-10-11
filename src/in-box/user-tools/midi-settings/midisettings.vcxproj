@@ -130,6 +130,7 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="BackgroundWork.h" />
     <ClInclude Include="CustomizationHelpers.h" />
+    <ClInclude Include="EndpointSettings.h" />
     <ClInclude Include="Elevation.h" />
     <ClInclude Include="MidiConfig.h" />
     <ClInclude Include="MidiPanic.h" />
@@ -168,6 +169,9 @@
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="Elevation.cpp" />
     <ClCompile Include="CustomizationHelpers.cpp" />
+    <ClCompile Include="EndpointSettings.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="MidiConfig.cpp" />
     <ClCompile Include="MidiPanic.cpp" />
     <ClCompile Include="NotificationSettings.cpp" />

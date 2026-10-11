@@ -7,9 +7,11 @@
 
 #include "SampleSequence.h"
 #include "SequenceEdits.h"
+#include "SequencePattern.h"
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 
 namespace midisequencer
 {
@@ -69,28 +71,68 @@ namespace midisequencer
 
         // General MIDI drums, channel 10.
         constexpr uint8_t Kick = 36;
+        constexpr uint8_t SideStick = 37;
         constexpr uint8_t Snare = 38;
         constexpr uint8_t ClosedHat = 42;
         constexpr uint8_t OpenHat = 46;
         constexpr uint8_t Clap = 39;
 
+        // A step of the sample's pattern and how hard it plays.
+        struct SampleHit
+        {
+            uint16_t Index{ 0 };
+            double Velocity{ 0 };
+        };
+
+        // A pattern clip, like comp 3: a hi-hat lane of 12 steps that drifts against the 16-step
+        // kick, a ghost snare that plays some of the time, a ratchet, an open hi-hat every second
+        // pass, and a muted 7-step side stick to try.
         Clip BeatA(std::wstring const& name)
         {
-            auto clip = NewClip(name, Bar, 11);
+            auto clip = MakePatternClip(name, PatternMode::Drums);
+            clip.Origin = ClipOrigin::Drawn;
+            clip.Seed = 11;
 
-            for (int beat = 0; beat < 4; ++beat)
+            auto& pattern = *clip.Pattern;
+            pattern.Swing = 54;
+            pattern.Lanes.clear();
+            pattern.Lanes.reserve(8);
+
+            auto const lane = [&pattern](uint8_t note, uint16_t steps, std::initializer_list<SampleHit> hits) -> PatternLane&
             {
-                AddNote(clip, beat * Beat, Sixteenth, Kick, 0.88);
-            }
+                auto made = MakePatternLane(note, steps);
 
-            AddNote(clip, Beat, Sixteenth, Snare, 0.78);
-            AddNote(clip, 3 * Beat, Sixteenth, Snare, 0.80);
+                for (auto const& hit : hits)
+                {
+                    PatternStep step{};
+                    step.Index = hit.Index;
+                    step.Velocity = Velocity(hit.Velocity);
+                    step.Note = note;
+                    made.Steps.push_back(step);
+                }
 
-            for (int step = 0; step < 8; ++step)
-            {
-                AddNote(clip, step * Eighth, Sixteenth, step == 7 ? OpenHat : ClosedHat, step % 2 == 0 ? 0.55 : 0.40);
-            }
+                pattern.Lanes.push_back(std::move(made));
+                return pattern.Lanes.back();
+            };
 
+            lane(Kick, 16, { { 0, 0.88 }, { 4, 0.88 }, { 8, 0.88 }, { 12, 0.88 } });
+
+            auto& snare = lane(Snare, 16, { { 4, 0.78 }, { 12, 0.80 }, { 15, 0.30 } });
+            snare.Steps[2].Chance = 35;
+
+            auto& hats = lane(ClosedHat, 12, { { 0, 0.55 }, { 2, 0.40 }, { 4, 0.55 }, { 6, 0.40 }, { 8, 0.55 }, { 9, 0.30 }, { 10, 0.40 } });
+            hats.Steps[5].Ratchet = 3;
+            hats.Steps[5].Shape = RatchetShape::Softer;
+
+            auto& open = lane(OpenHat, 16, { { 14, 0.55 } });
+            open.Steps[0].Condition = StepCondition::Every;
+            open.Steps[0].Every = 2;
+            open.Steps[0].Of = 2;
+
+            auto& sideStick = lane(SideStick, 7, { { 2, 0.45 }, { 5, 0.40 } });
+            sideStick.Muted = true;
+
+            RefreshPatternPreview(clip);
             return clip;
         }
 
@@ -388,6 +430,17 @@ namespace midisequencer
         bass.Timeline = { Place(bassA, 5, 4), Place(bassA, 9, 4), Place(bassB, 13, 4), Place(bassA, 17, 4), Place(bassA, 21, 4) };
         bass.Slots = { L"", bassA.Id, bassB.Id, bassA.Id, L"" };
         bass.Tags = { Tag{ 16 * Bar, text.TagFilterOpens, std::nullopt } };
+
+        // Automation drawn under Bass, shaped like the comps' lane. The built-in synth has no
+        // filter to open, so the lane rides expression instead.
+        auto const at = [](double bar, double value)
+        {
+            return LanePoint{ static_cast<int64_t>(std::llround((bar - 1.0) * static_cast<double>(Bar))), static_cast<uint32_t>(std::llround(value * 4294967295.0)), false };
+        };
+
+        auto swell = MakeLane(LaneTarget::Controller, 11, 1);
+        swell.Points = { at(1, 0.35), at(5, 0.35), at(9, 0.8), at(13, 0.8), at(13, 0.3), at(17, 0.55), at(21, 0.9), at(25, 0.6), at(26.4, 0.6) };
+        bass.Lanes = { swell };
 
         auto pad = makeTrack(text.Pad, 0xB4A7FF, 2, 89);
         pad.Timeline = { Place(padIntro, 1, 4), Place(padChords, 5, 8), Place(padSwell, 13, 4), Place(padChords, 17, 8) };

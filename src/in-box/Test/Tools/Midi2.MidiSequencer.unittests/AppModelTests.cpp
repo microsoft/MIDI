@@ -378,6 +378,48 @@ void AppModelTests::ARepeatedNoteOnRestartsTheNote()
     VERIFY_ARE_EQUAL(size_t{ 2 }, clip.Notes.size());
     VERIFY_ARE_EQUAL(int64_t{ 240 }, clip.Notes[0].Length);
     VERIFY_ARE_EQUAL(int64_t{ 240 }, clip.Notes[1].Length);
+
+    // The UMP spec turns that note on into a note off at the middle release velocity.
+    VERIFY_ARE_EQUAL(uint16_t{ 0x8000 }, clip.Notes[1].ReleaseVelocity);
+}
+
+void AppModelTests::ASlotTakeLoopsAtItsExactLength()
+{
+    // Recorded into a launcher slot from bar 3, for two bars.
+    RecordingTake take{ Bar * 2 };
+    auto const on = Midi1(0x9, 0, 60, 90);
+    auto const off = Midi1(0x8, 0, 60, 0);
+    auto const held = Midi1(0x9, 0, 67, 90);
+    auto const controller = Midi1(0xB, 0, 1, 64);
+
+    // Played a hair early, which still counts as the first beat.
+    take.Add(Bar * 2 - 30, &on, 1);
+    take.Add(Bar * 2 + 100, &controller, 1);
+    take.Add(Bar * 2 + 480, &off, 1);
+    take.Add(Bar * 3 + 960, &held, 1);
+
+    // Past the end: left out.
+    take.Add(Bar * 4 + 10, &controller, 1);
+
+    auto const soFar = take.LoopSoFar(Bar * 2, Bar * 3 + 1440);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, soFar.Notes.size());
+    VERIFY_ARE_EQUAL(int64_t{ 480 }, soFar.Notes[1].Length);
+
+    auto const clip = take.FinishLoop(Bar * 2, L"c", L"Take", L"Keystep 37");
+
+    VERIFY_IS_TRUE(clip.Loop);
+    VERIFY_ARE_EQUAL(Bar * 2, clip.Length);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, clip.Notes.size());
+    VERIFY_ARE_EQUAL(int64_t{ 0 }, clip.Notes[0].Tick);
+    VERIFY_ARE_EQUAL(int64_t{ 480 }, clip.Notes[0].Length);
+
+    // Still held at the end, so it ends there.
+    VERIFY_ARE_EQUAL(Bar + 960, clip.Notes[1].Tick);
+    VERIFY_ARE_EQUAL(Bar - 960, clip.Notes[1].Length);
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, clip.Events.size());
+    VERIFY_ARE_EQUAL(take.StartTick(), take.PlacementTick());
+    VERIFY_ARE_EQUAL(std::wstring{ L"Keystep 37" }, clip.OriginDetail);
 }
 
 void AppModelTests::PinnedRowsGoToTheTop()

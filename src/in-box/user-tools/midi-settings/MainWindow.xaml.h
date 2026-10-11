@@ -10,6 +10,7 @@
 #include "MainWindow.g.h"
 
 #include "AppSettings.h"
+#include "EndpointSettings.h"
 #include "MidiConfig.h"
 #include "SettingsItems.h"
 #include "ToolLauncher.h"
@@ -172,6 +173,10 @@ namespace winrt::midisettings::implementation
         void PopulateMidi1PortNames(midi2enum::MidiEndpointDeviceInformation const& endpoint) noexcept;
         void UpdateMidi1PortNamesApproachCaption() noexcept;
 
+        // reads the endpoint into m_customizeSettings, leaving out the port names this app cleared
+        void LoadCustomizeSettings(_In_ midi2enum::MidiEndpointDeviceInformation const& endpoint) noexcept;
+        void SaveClearedPortNames() noexcept;
+
         winrt::fire_and_forget SendPanicAsync(winrt::hstring endpointDeviceId) noexcept;
 
         // --- global settings ---
@@ -242,6 +247,12 @@ namespace winrt::midisettings::implementation
         bool m_customizeEditsPending{ false };
         winrt::hstring m_pendingCustomizeName{};
         winrt::hstring m_pendingCustomizeDescription{};
+
+        // Everything the endpoint being customized has, carried through both dialogs. A save
+        // resets whatever it leaves out, so each dialog sends back what it does not show.
+        midiapp::customizations::EndpointSettings m_customizeSettings{};
+        midiapp::customizations::ClearedPortNames m_clearedPortNames{};
+        bool m_clearedPortNamesLoaded{ false };
 
         midi2enum::MidiEndpointDeviceWatcher m_endpointWatcher{ nullptr };
         winrt::event_token m_endpointAddedToken{};

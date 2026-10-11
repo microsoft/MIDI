@@ -2,6 +2,10 @@
 
 #pragma once
 
+#include <atomic>
+
+#include "Feature_Servicing_MIDI2WinMMRemovalWithoutPortLock.h"
+
 // base definition of the MIDIHDR structure,
 // entries after dwFlags are for "driver" use, which
 // we do not use. Some legacy apps pass in an incorrect structure,
@@ -32,6 +36,17 @@ public:
 
     void NotifyInterfaceRemoval(std::wstring interfaceId)
     {
+        if (Feature_Servicing_MIDI2WinMMRemovalWithoutPortLock::IsEnabled())
+        {
+            // A long SysEx send holds m_Lock for seconds, and device removal handling must not wait for it.
+            if (m_RemovalInterfaceId == interfaceId)
+            {
+                m_RemovedWithoutPortLock = true;
+            }
+
+            return;
+        }
+
         auto lock = m_Lock.lock();
         if (m_InterfaceId == interfaceId)
         {
@@ -40,6 +55,14 @@ public:
     }
     bool IsInvalidated()
     {
+        if (Feature_Servicing_MIDI2WinMMRemovalWithoutPortLock::IsEnabled())
+        {
+            if (m_RemovedWithoutPortLock)
+            {
+                return true;
+            }
+        }
+
         auto lock = m_Lock.lock();
         return m_Invalidated;
     }
@@ -64,6 +87,10 @@ private:
     wil::critical_section m_Lock;
 
     bool m_Invalidated {false};
+
+    // Set once before the port is published and never changed, so removal handling reads it without m_Lock.
+    std::wstring m_RemovalInterfaceId;
+    std::atomic<bool> m_RemovedWithoutPortLock {false};
 
     MIDIOPENDESC m_OpenDesc {0};
     DWORD_PTR m_Flags {0};

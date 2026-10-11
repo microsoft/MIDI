@@ -38,6 +38,28 @@ namespace midisequencer
                 rows.push_back(std::move(row));
             }
 
+            void AddLanes(_Inout_ std::vector<ArrangeRow>& rows, _Inout_ double& height, _In_ Track const& track, _In_ ArrangeRow const& trackRow)
+            {
+                if (track.IsFolder || !track.LanesOpen)
+                {
+                    return;
+                }
+
+                for (auto const& lane : track.Lanes)
+                {
+                    ArrangeRow row{};
+                    row.Kind = ArrangeRowKind::Lane;
+                    row.TrackId = track.Id;
+                    row.LaneId = lane.Id;
+                    row.Depth = trackRow.Depth;
+                    row.Height = LaneRowHeight;
+                    row.Pinned = trackRow.Pinned;
+                    row.InsideMutedFolder = trackRow.InsideMutedFolder;
+                    row.InsideSoloedFolder = trackRow.InsideSoloedFolder;
+                    Add(rows, height, std::move(row));
+                }
+            }
+
             void Visit(
                 _In_ std::vector<Track> const& tracks,
                 _In_ size_t depth,
@@ -61,11 +83,15 @@ namespace midisequencer
                         row.Pinned = true;
                         row.Depth = 0;
                         row.FolderName = folderName;
+                        auto const copy = row;
                         Add(Layout.Pinned, Layout.PinnedHeight, std::move(row));
+                        AddLanes(Layout.Pinned, Layout.PinnedHeight, track, copy);
                     }
                     else if (visible)
                     {
+                        auto const copy = row;
                         Add(Layout.Scrolling, Layout.ScrollingHeight, std::move(row));
+                        AddLanes(Layout.Scrolling, Layout.ScrollingHeight, track, copy);
                     }
 
                     if (track.IsFolder)
@@ -97,7 +123,7 @@ namespace midisequencer
         {
             for (auto const& row : *rows)
             {
-                if (row.TrackId == trackId)
+                if (row.TrackId == trackId && row.Kind != ArrangeRowKind::Lane)
                 {
                     return &row;
                 }
@@ -119,6 +145,17 @@ namespace midisequencer
         tempo.Top = 0;
         layout.PinnedHeight = TempoRowHeight;
         layout.Pinned.push_back(tempo);
+
+        if (sequence.Lyrics)
+        {
+            ArrangeRow lyrics{};
+            lyrics.Kind = ArrangeRowKind::Lyrics;
+            lyrics.Height = LyricsRowHeight;
+            lyrics.Pinned = true;
+            lyrics.Top = layout.PinnedHeight;
+            layout.PinnedHeight += LyricsRowHeight;
+            layout.Pinned.push_back(lyrics);
+        }
 
         Walker walker{ layout };
         walker.Visit(sequence.Tracks, 0, true, std::wstring{}, false, false);

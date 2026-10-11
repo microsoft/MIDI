@@ -218,6 +218,8 @@ Each control uses one of the theme's six colors, chosen on its **Look** tab. A c
 
 **Layout…**, then **Background image…**, puts a picture or a video behind the controls. You can set how it fits the page and how see-through it is.
 
+Above the gallery, the page says which theme the layout uses and who made it. Select **About this theme…** next to it to see everything the theme's file says.
+
 The theme gallery shows who made each theme under its name. **Group themes by**, above the gallery, sorts the themes by who made them or by who signed them. Right-click a theme to see **About this theme…**, or, for one of your own, **Pack for sharing…**.
 
 [How Windows MIDI Glass themes work]({{ site.baseurl }}/kb/midi-glass-themes/) covers every theme setting, where theme files go, and how to make your own.
@@ -245,6 +247,12 @@ A pack lists every file inside it, with its size and a fingerprint called a SHA-
 Each layout and theme can say who made it: a name, a company or group, a website, a license, a version, and whether AI was used to make it. Windows MIDI Glass fills this in for everything you make, from **Your info for sharing…** on the library's **…** (More options) menu. Other Windows MIDI Services tools use the same info. Before you pack something, Windows MIDI Glass shows what it says and lets you change it.
 
 To see what a layout says about who made it, select **About this layout…** on its card's **…** menu. For a theme, right-click it in the theme gallery and select **About this theme…**.
+
+- **To change who made a layout,** open it in the editor and select **Layout…**, then **About this layout…**. The page has the layout's name and description, the fields that say who made it, and when and with what it was made. Changes save as you type, like everything else in the editor. **Change it in the editor**, in the library's **About this layout…**, takes you to the same page.
+- **To say who made a new theme,** fill in **Who made it** when you select **Save as theme…**. A theme saved under a new name starts with your info.
+- **To change who made one of your own themes,** select **About this theme…**. You can't change a theme that comes with Windows MIDI Glass, one from a signed pack, or one a newer version made.
+- **If AI helped,** say so under **How it was made**, and pick how a person was involved. If an AI assistant made the layout for you, you can say you checked its work after you have.
+- **To change your info,** select **Your info for sharing…** on the library's **…** (More options) menu, or **Change your info…** on the editor's **About this layout** page. Your info is only filled in for what you make from then on. **Fill in your info** puts it into a layout or theme you already have.
 
 Anyone can type any name into a file. So unless a signature backs it, Windows MIDI Glass shows the name with **(unverified)** after it.
 

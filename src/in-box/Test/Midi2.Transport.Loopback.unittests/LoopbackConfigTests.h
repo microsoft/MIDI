@@ -49,6 +49,9 @@ public:
     TEST_METHOD(TestOverlongUnicodeNameIsAccepted);
     TEST_METHOD(TestMalformedJsonIsRejected);
 
+    // a command the transport does not know is refused with a reason a person can read
+    TEST_METHOD(TestUnrecognizedCommandIsRejectedWithAMessage);
+
     // an association id that is not a guid must be named as such, not silently turned into an
     // uninitialized value and looked up
     TEST_METHOD(TestMuteWithMalformedAssociationIdIsRejected);

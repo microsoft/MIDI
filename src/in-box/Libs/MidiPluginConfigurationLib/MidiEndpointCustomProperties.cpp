@@ -305,6 +305,113 @@ std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomProperties::From
 }
 
 _Use_decl_annotations_
+void MidiEndpointCustomProperties::ReadClearedMidi1Ports(
+    json::JsonObject const& customPropertiesObject,
+    std::vector<uint8_t>& clearedSourceGroups,
+    std::vector<uint8_t>& clearedDestinationGroups) noexcept
+{
+    clearedSourceGroups.clear();
+    clearedDestinationGroups.clear();
+
+    try
+    {
+        if (customPropertiesObject == nullptr ||
+            !customPropertiesObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_PORTS_PROPERTY_KEY))
+        {
+            return;
+        }
+
+        auto const midi1PortsValue = customPropertiesObject.GetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_PORTS_PROPERTY_KEY);
+
+        if (midi1PortsValue.ValueType() != json::JsonValueType::Object)
+        {
+            return;
+        }
+
+        auto const midi1Ports = midi1PortsValue.GetObject();
+
+        auto const read = [&midi1Ports](winrt::hstring const& arrayKey, std::vector<uint8_t>& cleared)
+            {
+                if (!midi1Ports.HasKey(arrayKey))
+                {
+                    return;
+                }
+
+                auto const portsValue = midi1Ports.GetNamedValue(arrayKey);
+
+                if (portsValue.ValueType() != json::JsonValueType::Array)
+                {
+                    return;
+                }
+
+                uint16_t named{ 0 };
+                uint16_t emptied{ 0 };
+
+                for (auto const& portValue : portsValue.GetArray())
+                {
+                    if (portValue == nullptr || portValue.ValueType() != json::JsonValueType::Object)
+                    {
+                        continue;
+                    }
+
+                    auto const port = portValue.GetObject();
+
+                    if (!port.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_NAME_ENTRY_GROUP_INDEX_PROPERTY_KEY) ||
+                        !port.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_NAME_ENTRY_CUSTOM_NAME_PROPERTY_KEY))
+                    {
+                        continue;
+                    }
+
+                    auto const groupValue = port.GetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_NAME_ENTRY_GROUP_INDEX_PROPERTY_KEY);
+                    auto const nameValue = port.GetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_NAME_ENTRY_CUSTOM_NAME_PROPERTY_KEY);
+
+                    if (groupValue.ValueType() != json::JsonValueType::Number ||
+                        nameValue.ValueType() != json::JsonValueType::String)
+                    {
+                        continue;
+                    }
+
+                    // the groups FromJson accepts, without casting an out of range number
+                    auto const number = groupValue.GetNumber();
+
+                    if (!(number > -1.0 && number < 16.0))
+                    {
+                        continue;
+                    }
+
+                    auto const bit = static_cast<uint16_t>(1u << static_cast<int>(number));
+
+                    if (internal::TrimmedHStringCopy(nameValue.GetString()).empty())
+                    {
+                        emptied |= bit;
+                    }
+                    else
+                    {
+                        named |= bit;
+                    }
+                }
+
+                // a group named anywhere in the list keeps that name in FromJson, so it is not cleared
+                for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
+                {
+                    if ((emptied & ~named) & (1u << groupIndex))
+                    {
+                        cleared.push_back(groupIndex);
+                    }
+                }
+            };
+
+        read(winrt::hstring{ MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_SOURCES_ARRAY_PROPERTY_KEY }, clearedSourceGroups);
+        read(winrt::hstring{ MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_DESTINATIONS_ARRAY_PROPERTY_KEY }, clearedDestinationGroups);
+    }
+    catch (...)
+    {
+        clearedSourceGroups.clear();
+        clearedDestinationGroups.clear();
+    }
+}
+
+_Use_decl_annotations_
 bool MidiEndpointCustomProperties::WriteJson(json::JsonObject& customPropertiesObject)
 {
     Normalize();

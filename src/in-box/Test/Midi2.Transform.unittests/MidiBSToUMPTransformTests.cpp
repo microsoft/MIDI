@@ -660,6 +660,37 @@ void MidiBSToUMPTransformTests::TestSysEx7StartWithPendingDataStartsNewMessage()
 }
 
 
+// No byte sequence makes the converter emit a NOOP since the library fix, so what the NOOP filter
+// can still get wrong is a zero word which belongs to a message. Several messages share one
+// buffer here, so the filter has to track where each one ends. The output is the same with
+// Feature_Servicing_MIDI2BsToUMPConvDisallowNOOPs on or off.
+void MidiBSToUMPTransformTests::TestZeroWordsInsideMessagesSurvive()
+{
+    uint8_t groupIndex{ 0 };
+
+    uint8_t bytes[] =
+    {
+        0xB0, 0x10, 0x07,           // control change
+        0xF0, 0x0A, 0x0B, 0xF7,     // SysEx with two data bytes, so its second word is zero
+        0xF8,                       // timing clock
+        0xF0, 0xF7,                 // empty SysEx, whose second word is zero too
+        0x90, 0x3C, 0x7F,           // note on
+        0x00, 0x00, 0x00            // padding, as some drivers send
+    };
+
+    std::vector<uint32_t> expectedWords
+    {
+        0x20B01007,
+        0x30020A0B, 0x00000000,
+        0x10F80000,
+        0x30000000, 0x00000000,
+        0x20903C7F
+    };
+
+    InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
+}
+
+
 
 bool MidiBSToUMPTransformTests::ClassSetup()
 {

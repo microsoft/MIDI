@@ -114,6 +114,12 @@ namespace WindowsMidiServicesPluginConfigurationLib
         static std::shared_ptr<MidiEndpointCustomProperties> FromJsonRejectingImagePath(
             _In_::winrt::Windows::Data::Json::JsonObject const& customPropertiesObject);
 
+        // Net-new. Groups the section gives an empty MIDI 1.0 port name, which FromJson leaves out.
+        static void ReadClearedMidi1Ports(
+            _In_ ::winrt::Windows::Data::Json::JsonObject const& customPropertiesObject,
+            _Out_ std::vector<uint8_t>& clearedSourceGroups,
+            _Out_ std::vector<uint8_t>& clearedDestinationGroups) noexcept;
+
         _Success_(return == true)
         bool WriteAllProperties(_In_ std::vector<DEVPROPERTY>& destination);
 

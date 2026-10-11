@@ -51,6 +51,10 @@ namespace midisettings
         std::wstring DismissedOrphanedCustomizations() const noexcept { return m_dismissedOrphanedCustomizations; }
         void DismissedOrphanedCustomizations(std::wstring const& value) noexcept;
 
+        // MIDI 1.0 port names this app cleared, which the service may still show until it restarts.
+        std::wstring ClearedPortNameList() const noexcept { return m_clearedPortNameList; }
+        void ClearedPortNameList(_In_ std::wstring const& value) noexcept;
+
     private:
         AppSettings() noexcept;
 
@@ -59,5 +63,6 @@ namespace midisettings
         std::wstring m_transportFilter{};
         std::wstring m_lastConfigCopyFolder{};
         std::wstring m_dismissedOrphanedCustomizations{};
+        std::wstring m_clearedPortNameList{};
     };
 }

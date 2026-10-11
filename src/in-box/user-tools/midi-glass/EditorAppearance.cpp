@@ -325,6 +325,7 @@ namespace winrt::midiglass::implementation
             RebuildThemeSlots();
             RebuildThemeProperties();
             RefreshThemePreview();
+            RefreshThemeInUse();
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the theme.")
     }
@@ -576,7 +577,7 @@ namespace winrt::midiglass::implementation
                 {
                     if (auto strong = weak.get())
                     {
-                        ::midiglass::sharing::ShowThemeDetailsAsync(strong->Content().XamlRoot(), theme);
+                        strong->ShowThemeAboutAsync(theme, false);
                     }
                 });
             menu.Items().Append(about);
@@ -1035,6 +1036,7 @@ namespace winrt::midiglass::implementation
 
             MarkChanged();
             ApplyThemeEverywhere();
+            RefreshThemeInUse();
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to change the theme.")
     }

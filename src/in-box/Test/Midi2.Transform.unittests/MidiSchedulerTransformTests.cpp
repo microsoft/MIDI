@@ -27,6 +27,7 @@
 #include <iomanip>
 #include <chrono>
 #include <map>
+#include <mutex>
 #include <tlhelp32.h>
 #include <timeapi.h>
 
@@ -485,6 +486,162 @@ void MidiSchedulerTransformTests::SchedulerDoesNotBusyWait()
     // measures 2-20%. The threshold sits in the gap on purpose, so a loaded machine cannot make
     // this flaky: a busy machine gives the worker less CPU, never more.
     VERIFY_IS_LESS_THAN(m_lastWorkerCpuPercent, 60.0);
+}
+
+void MidiSchedulerTransformTests::SameTimestampBatchIsDeliveredOnTime()
+{
+    if (!Feature_Servicing_MIDI2SchedulerV2::IsEnabled())
+    {
+        WEX::Logging::Log::Comment(L"Feature_Servicing_MIDI2SchedulerV2 is disabled, so this is skipped.");
+        return;
+    }
+
+    // MIDI 2.0 note on, MIDI 2.0 note on, MIDI 1.0 note on, MIDI 2.0 note on, all for one moment.
+    // 28 bytes, which is more than one queue slot holds.
+    uint32_t batch[]
+    {
+        0x40903C00, 0xFFFF0000,
+        0x40904000, 0xFFFF0000,
+        0x20904364,
+        0x40904800, 0xFFFF0000
+    };
+
+    std::mutex receivedLock;
+    std::vector<uint32_t> receivedWords;
+    LONGLONG firstArrival{ 0 };
+
+    m_MidiInCallback = [&receivedLock, &receivedWords, &firstArrival]
+        (PVOID data, UINT32 size, LONGLONG, LONGLONG)
+        {
+            LARGE_INTEGER now{};
+            QueryPerformanceCounter(&now);
+
+            std::scoped_lock lock(receivedLock);
+
+            if (firstArrival == 0)
+            {
+                firstArrival = now.QuadPart;
+            }
+
+            auto const words = static_cast<uint32_t const*>(data);
+            receivedWords.insert(receivedWords.end(), words, words + (size / sizeof(uint32_t)));
+        };
+
+    wil::com_ptr_nothrow<IMidiDataTransform> transform;
+    VERIFY_SUCCEEDED(CreateSchedulerTransform(transform));
+
+    TRANSFORMCREATIONPARAMS creationParams{};
+    creationParams.DataFormatIn = MidiDataFormats::MidiDataFormats_UMP;
+    creationParams.DataFormatOut = MidiDataFormats::MidiDataFormats_UMP;
+
+    DWORD mmcssTaskId{ 0 };
+
+    // The worker raises the priority class of the process it runs in.
+    auto const originalPriorityClass = GetPriorityClass(GetCurrentProcess());
+
+    VERIFY_SUCCEEDED(transform->Initialize(L"\\\\?\\swd#midisrv#midiu_loop_a_default#{e7cce071-3c03-423f-88d3-f1045d02552b}", &creationParams, &mmcssTaskId, this, 0, nullptr));
+
+    LARGE_INTEGER frequency{};
+    QueryPerformanceFrequency(&frequency);
+
+    LARGE_INTEGER sendTime{};
+    QueryPerformanceCounter(&sendTime);
+
+    auto const timestamp = sendTime.QuadPart + (frequency.QuadPart / 20);
+
+    auto const sendResult = transform->SendMidiMessage(MessageOptionFlags_None, batch, static_cast<UINT>(sizeof(batch)), timestamp);
+
+    auto const deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+    size_t receivedCount{ 0 };
+
+    while (receivedCount < ARRAYSIZE(batch) && std::chrono::steady_clock::now() < deadline)
+    {
+        Sleep(5);
+
+        std::scoped_lock lock(receivedLock);
+        receivedCount = receivedWords.size();
+    }
+
+    // Verified only after Shutdown, so a failure cannot leave the worker calling into this frame.
+    VERIFY_SUCCEEDED(transform->Shutdown());
+
+    m_MidiInCallback = nullptr;
+
+    SetPriorityClass(GetCurrentProcess(), originalPriorityClass);
+
+    VERIFY_ARE_EQUAL(sendResult, HR_S_MIDI_SENDMSG_SCHEDULED);
+    VERIFY_ARE_EQUAL(static_cast<uint32_t>(receivedWords.size()), static_cast<uint32_t>(ARRAYSIZE(batch)));
+
+    for (size_t i = 0; i < ARRAYSIZE(batch); i++)
+    {
+        VERIFY_ARE_EQUAL(receivedWords[i], batch[i]);
+    }
+
+    auto const latenessMilliseconds = (static_cast<double>(firstArrival - timestamp) * 1000.0) / static_cast<double>(frequency.QuadPart);
+
+    std::wostringstream report;
+    report << L"First message arrived " << std::fixed << std::setprecision(3) << latenessMilliseconds << L" ms after its timestamp";
+    WEX::Logging::Log::Comment(report.str().c_str());
+
+    // Held until its time, less the small allowance for the send path, rather than sent at once.
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(firstArrival, timestamp - (frequency.QuadPart / 1000));
+}
+
+void MidiSchedulerTransformTests::IncompleteBatchIsRefused()
+{
+    if (!Feature_Servicing_MIDI2SchedulerV2::IsEnabled())
+    {
+        WEX::Logging::Log::Comment(L"Feature_Servicing_MIDI2SchedulerV2 is disabled, so this is skipped.");
+        return;
+    }
+
+    // Two whole MIDI 2.0 messages, then the first word of a third with its second word missing.
+    uint32_t batch[]
+    {
+        0x40903C00, 0xFFFF0000,
+        0x40904000, 0xFFFF0000,
+        0x40904300
+    };
+
+    std::atomic<uint32_t> callbackCount{ 0 };
+
+    m_MidiInCallback = [&callbackCount](PVOID, UINT32, LONGLONG, LONGLONG)
+        {
+            callbackCount++;
+        };
+
+    wil::com_ptr_nothrow<IMidiDataTransform> transform;
+    VERIFY_SUCCEEDED(CreateSchedulerTransform(transform));
+
+    TRANSFORMCREATIONPARAMS creationParams{};
+    creationParams.DataFormatIn = MidiDataFormats::MidiDataFormats_UMP;
+    creationParams.DataFormatOut = MidiDataFormats::MidiDataFormats_UMP;
+
+    DWORD mmcssTaskId{ 0 };
+
+    auto const originalPriorityClass = GetPriorityClass(GetCurrentProcess());
+
+    VERIFY_SUCCEEDED(transform->Initialize(L"\\\\?\\swd#midisrv#midiu_loop_a_default#{e7cce071-3c03-423f-88d3-f1045d02552b}", &creationParams, &mmcssTaskId, this, 0, nullptr));
+
+    LARGE_INTEGER frequency{};
+    QueryPerformanceFrequency(&frequency);
+
+    LARGE_INTEGER sendTime{};
+    QueryPerformanceCounter(&sendTime);
+
+    auto const sendResult = transform->SendMidiMessage(MessageOptionFlags_None, batch, static_cast<UINT>(sizeof(batch)), sendTime.QuadPart + (frequency.QuadPart / 50));
+
+    // Well past the timestamp, so anything wrongly queued would have been sent by now.
+    Sleep(200);
+
+    VERIFY_SUCCEEDED(transform->Shutdown());
+
+    m_MidiInCallback = nullptr;
+
+    SetPriorityClass(GetCurrentProcess(), originalPriorityClass);
+
+    VERIFY_ARE_EQUAL(sendResult, HR_E_MIDI_SENDMSG_INVALID_MESSAGE);
+    VERIFY_ARE_EQUAL(callbackCount.load(), 0u);
 }
 
 

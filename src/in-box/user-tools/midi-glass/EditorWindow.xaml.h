@@ -19,6 +19,11 @@
 #include "DeckBrush.h"
 #include "InputRouter.h"
 
+namespace midiglass::sharing
+{
+    struct ProvenanceForm;
+}
+
 namespace winrt::midiglass::implementation
 {
     // One layout being edited. Only one editor window exists at a time: editing the same layout
@@ -35,6 +40,9 @@ namespace winrt::midiglass::implementation
         bool LoadLayout(_In_ std::wstring const& filePath);
 
         std::wstring const& LayoutFilePath() const noexcept { return m_filePath; }
+
+        // Not projected. Opens the layout settings at this pane, now or as soon as the window is up.
+        void OpenSettingsPaneWhenLoaded(_In_ std::wstring const& tag);
 
         void OnRootLoaded(
             foundation::IInspectable const& sender,
@@ -73,6 +81,7 @@ namespace winrt::midiglass::implementation
         void OnSaveThemeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnImportThemeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnThemeGroupChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnThemeAboutClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         void OnSettingsNameChanged(
             foundation::IInspectable const& sender,
@@ -737,6 +746,17 @@ namespace winrt::midiglass::implementation
         winrt::fire_and_forget ShowSaveThemeDialog();
         void ExportLayoutPackage();
 
+        // ---- who made the layout, and the theme in use (EditorAbout.cpp) ----
+
+        void RefreshAboutPanel();
+        void OnAboutFieldsChanged();
+        void ShowAboutWebsiteProblem();
+        winrt::fire_and_forget ChangeAuthorInfoAsync();
+        void RefreshThemeInUse();
+
+        // A theme the layout carries has no file, so it gets a sentence rather than the details.
+        winrt::fire_and_forget ShowThemeAboutAsync(_In_ glass::Theme theme, _In_ bool keptInLayout);
+
         winrt::fire_and_forget ShowEditorNotice(_In_ winrt::hstring title, _In_ winrt::hstring message);
 
         // Runs an edit, then rebuilds the list it came from on the next tick.
@@ -808,6 +828,13 @@ namespace winrt::midiglass::implementation
 
         // Every theme offered in the gallery, in the order it is drawn.
         std::vector<glass::Theme> m_galleryThemes{};
+
+        // The About page's fields, rebuilt each time it is shown.
+        std::shared_ptr<::midiglass::sharing::ProvenanceForm> m_aboutForm{};
+        controls::Button m_aboutFillButton{ nullptr };
+
+        // A pane asked for before the window was loaded.
+        std::wstring m_pendingSettingsPane{};
 
         glass::EditRect m_workArea{};
         double m_canvasScale{ 1.0 };

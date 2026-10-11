@@ -650,6 +650,16 @@ int __cdecl main(int argc, char* argv[])
 
     m_displayThread.request_stop();
 
+    if (m_countAllBytesReceived == 0)
+    {
+        fmt::println(L"");
+        fmt::println(L"");
+        WriteInfoLine(internal::ResourceGetWString(IDS_SUMMARY_NO_MESSAGES_RECEIVED));
+        fmt::println(L"");
+
+        return 0;
+    }
+
 
 
     // Show counts of data received as well as first and last timestamp

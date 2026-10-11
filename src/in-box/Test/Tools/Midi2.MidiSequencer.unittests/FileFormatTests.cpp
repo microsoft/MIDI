@@ -323,6 +323,7 @@ void StandardMidiFileTests::VelocityScalesUpOnImportAndBackOnExport()
         {
             // Every velocity is one a MIDI 1.0 value scales up to.
             VERIFY_ARE_EQUAL(note.Velocity, static_cast<uint16_t>(ScaleUp(ScaleDown(note.Velocity, 16, 7), 7, 16)));
+            VERIFY_ARE_EQUAL(uint16_t{ 0x8000 }, note.ReleaseVelocity);
         }
     }
 

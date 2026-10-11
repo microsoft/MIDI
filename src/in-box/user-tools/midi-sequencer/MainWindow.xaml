@@ -44,6 +44,8 @@
                         <SolidColorBrush x:Key="SeqChipOnStrokeBrush" Color="#736CCB5F" />
                         <SolidColorBrush x:Key="SeqChipWarnBrush" Color="#1CFCE100" />
                         <SolidColorBrush x:Key="SeqChipWarnStrokeBrush" Color="#66FCE100" />
+                        <SolidColorBrush x:Key="SeqChipSelectedBrush" Color="#1F60CDFF" />
+                        <SolidColorBrush x:Key="SeqChipSelectedStrokeBrush" Color="#7360CDFF" />
                         <SolidColorBrush x:Key="SeqWarnTextBrush" Color="#FFFCE100" />
                         <Color x:Key="SeqPinEdgeTopColor">#33FFFFFF</Color>
                         <Color x:Key="SeqPinEdgeBottomColor">#0FFFFFFF</Color>
@@ -82,6 +84,8 @@
                         <SolidColorBrush x:Key="SeqChipOnStrokeBrush" Color="#730F7B0F" />
                         <SolidColorBrush x:Key="SeqChipWarnBrush" Color="#FFFFF4CE" />
                         <SolidColorBrush x:Key="SeqChipWarnStrokeBrush" Color="#669D5D00" />
+                        <SolidColorBrush x:Key="SeqChipSelectedBrush" Color="#12005FB8" />
+                        <SolidColorBrush x:Key="SeqChipSelectedStrokeBrush" Color="#66005FB8" />
                         <SolidColorBrush x:Key="SeqWarnTextBrush" Color="#FF9D5D00" />
                         <Color x:Key="SeqPinEdgeTopColor">#1A000000</Color>
                         <Color x:Key="SeqPinEdgeBottomColor">#05000000</Color>
@@ -171,6 +175,83 @@
                     <Setter Property="Padding" Value="8,0,0,0" />
                     <Setter Property="FontSize" Value="12" />
                     <Setter Property="VerticalAlignment" Value="Center" />
+                </Style>
+
+                <!-- 5-track-setup.html .recchips .chip: a pill, lit when on. -->
+                <Style x:Key="ChipToggleStyle" TargetType="ToggleButton">
+                    <Setter Property="Height" Value="22" />
+                    <Setter Property="MinWidth" Value="0" />
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="Padding" Value="9,0,9,1" />
+                    <Setter Property="FontSize" Value="11" />
+                    <Setter Property="CornerRadius" Value="11" />
+                    <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <Setter Property="UseSystemFocusVisuals" Value="True" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ToggleButton">
+                                <Grid x:Name="Root" Background="Transparent">
+                                    <Rectangle x:Name="Plate" RadiusX="10.5" RadiusY="10.5" StrokeThickness="1" UseLayoutRounding="False"
+                                               Fill="{ThemeResource SeqChipBrush}" Stroke="{ThemeResource SeqStrokeStrongBrush}" />
+                                    <ContentPresenter x:Name="Presenter" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"
+                                                      Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                      Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}" />
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup x:Name="CommonStates">
+                                            <VisualState x:Name="Normal" />
+                                            <VisualState x:Name="PointerOver">
+                                                <VisualState.Setters>
+                                                    <Setter Target="Presenter.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="Pressed">
+                                                <VisualState.Setters>
+                                                    <Setter Target="Presenter.Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="Disabled">
+                                                <VisualState.Setters>
+                                                    <Setter Target="Root.Opacity" Value="0.45" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="Checked">
+                                                <VisualState.Setters>
+                                                    <Setter Target="Plate.Fill" Value="{ThemeResource SeqChipSelectedBrush}" />
+                                                    <Setter Target="Plate.Stroke" Value="{ThemeResource SeqChipSelectedStrokeBrush}" />
+                                                    <Setter Target="Presenter.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="CheckedPointerOver">
+                                                <VisualState.Setters>
+                                                    <Setter Target="Plate.Fill" Value="{ThemeResource SeqChipSelectedBrush}" />
+                                                    <Setter Target="Plate.Stroke" Value="{ThemeResource SeqChipSelectedStrokeBrush}" />
+                                                    <Setter Target="Presenter.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="CheckedPressed">
+                                                <VisualState.Setters>
+                                                    <Setter Target="Plate.Fill" Value="{ThemeResource SeqChipSelectedBrush}" />
+                                                    <Setter Target="Plate.Stroke" Value="{ThemeResource SeqChipSelectedStrokeBrush}" />
+                                                    <Setter Target="Presenter.Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="CheckedDisabled">
+                                                <VisualState.Setters>
+                                                    <Setter Target="Plate.Fill" Value="{ThemeResource SeqChipSelectedBrush}" />
+                                                    <Setter Target="Plate.Stroke" Value="{ThemeResource SeqChipSelectedStrokeBrush}" />
+                                                    <Setter Target="Root.Opacity" Value="0.45" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="Indeterminate" />
+                                            <VisualState x:Name="IndeterminatePointerOver" />
+                                            <VisualState x:Name="IndeterminatePressed" />
+                                            <VisualState x:Name="IndeterminateDisabled" />
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
                 </Style>
 
                 <Style x:Key="TransportLabelStyle" TargetType="TextBlock">
@@ -266,7 +347,7 @@
                            Fill="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
                 <TextBlock x:Name="PreviewChicletText"
                            x:Uid="PreviewChicletText"
-                           Text="PREVIEW"
+                           Text="EARLY PREVIEW"
                            FontSize="10"
                            FontWeight="SemiBold"
                            Margin="9,0,9,0"
@@ -360,11 +441,26 @@
                             <MenuFlyoutSubItem x:Uid="MenuImport">
                                 <MenuFlyoutItem x:Uid="MenuImportStandardMidiFile" Click="OnImportStandardMidiFileClick" />
                                 <MenuFlyoutItem x:Uid="MenuImportClipFile" Click="OnImportClipFileClick" />
+                                <MenuFlyoutItem x:Uid="MenuImportDawProject" Click="OnImportDawProjectClick" />
+                                <MenuFlyoutItem x:Uid="MenuImportCapture" Click="OnImportCaptureClick" />
+                                <MenuFlyoutItem x:Uid="MenuImportPaste" Click="OnImportPasteClick" />
                             </MenuFlyoutSubItem>
                             <MenuFlyoutSubItem x:Uid="MenuExport">
                                 <MenuFlyoutItem x:Uid="MenuExportClipFiles" Click="OnExportClipFilesClick" />
                                 <MenuFlyoutItem x:Uid="MenuExportStandardMidiFile" Click="OnExportStandardMidiFileClick" />
+                                <MenuFlyoutItem x:Uid="MenuExportDawProject" Click="OnExportDawProjectClick" />
+                                <MenuFlyoutItem x:Uid="MenuExportLyrics" Click="OnExportLyricsClick" />
                             </MenuFlyoutSubItem>
+                            <MenuFlyoutItem x:Uid="MenuLyrics" Click="OnLyricsClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8BD;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="MenuSequenceInfo" Click="OnSequenceInfoClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE946;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem x:Uid="MenuRemoteControl" Click="OnRemoteControlClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AF;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
                             <MenuFlyoutSeparator />
                             <MenuFlyoutItem x:Uid="MenuClose" Click="OnCloseWindowClick" />
                         </MenuFlyout>
@@ -518,9 +614,19 @@
                         <TextBlock x:Name="MeterText" FontFamily="Cascadia Mono, Consolas" FontSize="11" LineHeight="13"
                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" Text="4/4" />
                     </StackPanel>
+                    <!-- The whole display is a button: tempo and meter at the playhead. -->
+                    <Button x:Name="TempoEditButton"
+                            x:Uid="TempoEditButton"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Padding="0"
+                            CornerRadius="5"
+                            BorderThickness="0"
+                            Background="Transparent"
+                            Click="OnTempoDisplayClick" />
                 </Grid>
 
-                <Button x:Name="ClockButton" Style="{StaticResource SmallButtonStyle}" Click="OnClockClick">
+                <Button x:Name="ClockButton" x:Uid="ClockButton" Style="{StaticResource SmallButtonStyle}" Click="OnClockClick">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <FontIcon Glyph="&#xE823;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <TextBlock x:Name="ClockButtonText" x:Uid="ClockInternal" />
@@ -775,7 +881,7 @@
                                       ItemTemplate="{StaticResource NamedChoiceTemplate}" SelectionChanged="OnSourceChanged" />
                             <ComboBox x:Name="SourceChannelCombo" x:Uid="SourceChannelCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
                                       ItemTemplate="{StaticResource NamedChoiceTemplate}" SelectionChanged="OnSourceChanged" />
-                            <VariableSizedWrapGrid x:Name="RecordKinds" Orientation="Horizontal" ItemHeight="28" />
+                            <local:WrapPanel x:Name="RecordKinds" />
                             <Grid ColumnSpacing="12">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -813,7 +919,7 @@
                             <Grid ColumnSpacing="8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="84" />
                                 </Grid.ColumnDefinitions>
                                 <ComboBox x:Name="DestinationGroupCombo" x:Uid="DestinationGroupCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
                                           ItemTemplate="{StaticResource NamedChoiceTemplate}" SelectionChanged="OnDestinationChanged" />
@@ -862,9 +968,10 @@
                   Padding="12,0,12,0"
                   BorderThickness="0,0,0,1"
                   BorderBrush="{ThemeResource SeqDividerBrush}">
+                <!-- The left side gives way first, so the close button never leaves the window. -->
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
@@ -901,43 +1008,88 @@
 
                     <Rectangle Width="1" Height="22" Margin="4,0,4,0" Fill="{ThemeResource SeqDividerBrush}" />
 
-                    <ToggleButton x:Name="EditorDrawToggle" x:Uid="EditorDrawToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnEditorDrawClick">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <FontIcon Glyph="&#xE70F;" FontSize="12" />
-                            <TextBlock x:Uid="EditorDrawText" />
-                        </StackPanel>
-                    </ToggleButton>
+                    <StackPanel x:Name="NotesTools" Orientation="Horizontal" Spacing="8">
+                        <ToggleButton x:Name="EditorDrawToggle" x:Uid="EditorDrawToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnEditorDrawClick">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE70F;" FontSize="12" />
+                                <TextBlock x:Uid="EditorDrawText" />
+                            </StackPanel>
+                        </ToggleButton>
 
-                    <Button x:Name="EditorQuantizeButton" x:Uid="EditorQuantizeButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorQuantizeClick" />
+                        <Button x:Name="EditorQuantizeButton" x:Uid="EditorQuantizeButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorQuantizeClick" />
 
-                    <Button x:Name="EditorTransposeButton" x:Uid="EditorTransposeButton" Style="{StaticResource SubtleSmallButtonStyle}">
-                        <Button.Flyout>
-                            <MenuFlyout>
-                                <MenuFlyoutItem x:Uid="TransposeUpOctave" Tag="12" Click="OnTransposeClick" />
-                                <MenuFlyoutItem x:Uid="TransposeUpSemitone" Tag="1" Click="OnTransposeClick" />
-                                <MenuFlyoutItem x:Uid="TransposeDownSemitone" Tag="-1" Click="OnTransposeClick" />
-                                <MenuFlyoutItem x:Uid="TransposeDownOctave" Tag="-12" Click="OnTransposeClick" />
-                            </MenuFlyout>
-                        </Button.Flyout>
-                    </Button>
+                        <Button x:Name="EditorTransposeButton" x:Uid="EditorTransposeButton" Style="{StaticResource SubtleSmallButtonStyle}">
+                            <Button.Flyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem x:Uid="TransposeUpOctave" Tag="12" Click="OnTransposeClick" />
+                                    <MenuFlyoutItem x:Uid="TransposeUpSemitone" Tag="1" Click="OnTransposeClick" />
+                                    <MenuFlyoutItem x:Uid="TransposeDownSemitone" Tag="-1" Click="OnTransposeClick" />
+                                    <MenuFlyoutItem x:Uid="TransposeDownOctave" Tag="-12" Click="OnTransposeClick" />
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
 
-                    <Button x:Name="EditorKeyboardButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorKeyboardClick">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Viewbox Width="14" Height="14">
-                                <Canvas Width="16" Height="16">
-                                    <Rectangle Canvas.Left="1" Canvas.Top="2.5" Width="14" Height="11" RadiusX="1.5" RadiusY="1.5" StrokeThickness="1.1" Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <Path Data="M4.5,8.5 L4.5,13.5 M8,8.5 L8,13.5 M11.5,2.5 L11.5,13.5" StrokeThickness="0.9" Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <Rectangle Canvas.Left="3.4" Canvas.Top="2.5" Width="2.2" Height="6" Fill="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <Rectangle Canvas.Left="6.9" Canvas.Top="2.5" Width="2.2" Height="6" Fill="{ThemeResource TextFillColorSecondaryBrush}" />
-                                </Canvas>
-                            </Viewbox>
-                            <TextBlock x:Uid="EditorKeyboardText" />
-                        </StackPanel>
-                    </Button>
+                        <Button x:Name="EditorKeyboardButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorKeyboardClick">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Viewbox Width="14" Height="14">
+                                    <Canvas Width="16" Height="16">
+                                        <Rectangle Canvas.Left="1" Canvas.Top="2.5" Width="14" Height="11" RadiusX="1.5" RadiusY="1.5" StrokeThickness="1.1" Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <Path Data="M4.5,8.5 L4.5,13.5 M8,8.5 L8,13.5 M11.5,2.5 L11.5,13.5" StrokeThickness="0.9" Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <Rectangle Canvas.Left="3.4" Canvas.Top="2.5" Width="2.2" Height="6" Fill="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <Rectangle Canvas.Left="6.9" Canvas.Top="2.5" Width="2.2" Height="6" Fill="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock x:Uid="EditorKeyboardText" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- The clip's own lanes, under the notes. -->
+                        <Button x:Name="EditorAutomationButton" x:Uid="EditorAutomationButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorAutomationClick">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE9D2;" FontSize="12" />
+                                <TextBlock x:Uid="EditorAutomationText" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- A pattern clip's settings. Shown instead of the notes tools. -->
+                    <StackPanel x:Name="PatternTools" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+                        <TextBlock x:Uid="PatternStepsLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <NumberBox x:Name="PatternStepsBox" x:Uid="PatternStepsBox" Width="92" Minimum="1" Maximum="64" SmallChange="1" LargeChange="4"
+                                   SpinButtonPlacementMode="Compact" VerticalAlignment="Center" ValueChanged="OnPatternStepsChanged" />
+                        <TextBlock x:Uid="PatternStepSizeLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <ComboBox x:Name="PatternStepSizeCombo" x:Uid="PatternStepSizeCombo" Style="{StaticResource SmallComboStyle}" Width="118" SelectionChanged="OnPatternStepSizeChanged" />
+                        <TextBlock x:Uid="PatternSwingLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <NumberBox x:Name="PatternSwingBox" x:Uid="PatternSwingBox" Width="92" Minimum="50" Maximum="75" SmallChange="1" LargeChange="5"
+                                   SpinButtonPlacementMode="Compact" VerticalAlignment="Center" ValueChanged="OnPatternSwingChanged" />
+                        <ToggleButton x:Name="PatternKeepLengthToggle" x:Uid="PatternKeepLengthToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnPatternKeepLengthClick" />
+                    </StackPanel>
+
+                    <!-- A generator clip's settings. -->
+                    <StackPanel x:Name="GeneratorTools" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+                        <TextBlock x:Uid="GeneratorTypeLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <ComboBox x:Name="GeneratorTypeCombo" x:Uid="GeneratorTypeCombo" Style="{StaticResource SmallComboStyle}" Width="170" SelectionChanged="OnGeneratorTypeChanged" />
+                        <TextBlock x:Uid="GeneratorBarsLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <NumberBox x:Name="GeneratorBarsBox" x:Uid="GeneratorBarsBox" Width="92" Minimum="1" Maximum="16" SmallChange="1" LargeChange="4"
+                                   SpinButtonPlacementMode="Compact" VerticalAlignment="Center" ValueChanged="OnGeneratorBarsChanged" />
+                        <TextBlock x:Uid="GeneratorStepSizeLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <ComboBox x:Name="GeneratorStepSizeCombo" x:Uid="GeneratorStepSizeCombo" Style="{StaticResource SmallComboStyle}" Width="118" SelectionChanged="OnGeneratorStepSizeChanged" />
+                        <ToggleButton x:Name="GeneratorChangesToggle" x:Uid="GeneratorChangesToggle" Style="{StaticResource SmallToggleStyle}" Click="OnGeneratorChangesClick" />
+                    </StackPanel>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <TextBlock x:Uid="ShowValuesAsLabel" Style="{StaticResource TransportLabelStyle}" />
+                    <StackPanel x:Name="PatternActions" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+                        <Button x:Name="PatternVaryButton" x:Uid="PatternVaryButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnPatternVaryClick">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE8B1;" FontSize="12" />
+                                <TextBlock x:Uid="PatternVaryText" />
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="PatternMakeNotesButton" x:Uid="PatternMakeNotesButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnPatternMakeNotesClick" />
+                        <Rectangle Width="1" Height="22" Margin="4,0,4,0" Fill="{ThemeResource SeqDividerBrush}" />
+                    </StackPanel>
+                    <TextBlock x:Name="ValuesAsLabel" x:Uid="ShowValuesAsLabel" Style="{StaticResource TransportLabelStyle}" />
                     <ComboBox x:Name="ValuesAsCombo" x:Uid="ValuesAsCombo" Style="{StaticResource SmallComboStyle}" Width="150" SelectionChanged="OnValuesAsChanged" />
                     <Button x:Name="EditorCloseButton" x:Uid="EditorCloseButton" Width="28" Height="28" Padding="0"
                             Background="Transparent" BorderBrush="Transparent" Click="OnEditorCloseClick">
@@ -966,6 +1118,15 @@
 
                 <Grid x:Name="EditorCanvasHost" />
 
+                <!-- A generator's settings, over the canvas. Built in code for the generator's type. -->
+                <ScrollViewer x:Name="GeneratorPanel"
+                              Visibility="Collapsed"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Auto"
+                              Background="{ThemeResource SeqEditorBackgroundBrush}">
+                    <StackPanel x:Name="GeneratorBody" Padding="20,14,20,14" Spacing="10" />
+                </ScrollViewer>
+
                 <Grid x:Name="EditorInspector"
                       Grid.Column="1"
                       BorderThickness="1,0,0,0"
@@ -978,7 +1139,9 @@
                     <Grid Padding="14,11,14,11" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource SeqDividerBrush}">
                         <TextBlock x:Name="NoteInspectorTitle" x:Uid="NoteInspectorTitle" FontSize="14" FontWeight="SemiBold" />
                     </Grid>
-                    <StackPanel x:Name="NoteInspectorBody" Grid.Row="1" Padding="14,12,14,12" Spacing="2" />
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel x:Name="NoteInspectorBody" Padding="14,12,14,12" Spacing="2" />
+                    </ScrollViewer>
                 </Grid>
             </Grid>
         </Grid>

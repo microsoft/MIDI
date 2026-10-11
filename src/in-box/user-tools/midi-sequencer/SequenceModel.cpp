@@ -6,6 +6,9 @@
 // ============================================================================
 
 #include "SequenceModel.h"
+#include "Lyrics.h"
+#include "SequenceGenerator.h"
+#include "SequencePattern.h"
 
 #include <algorithm>
 #include <cmath>
@@ -111,12 +114,14 @@ namespace midisequencer
                     track.Timeline.clear();
                     track.Slots.clear();
                     track.Startup.clear();
+                    track.Lanes.clear();
 
                     NormalizeTracks(track.Children, sequence, clipIds, trackIds);
                     continue;
                 }
 
                 track.Children.clear();
+                NormalizeLanes(track.Lanes);
 
                 std::erase_if(track.Timeline, [&clipIds](Placement const& placement)
                 {
@@ -391,13 +396,51 @@ namespace midisequencer
                 return event.Tick < 0 || event.WordCount == 0 || event.WordCount != UmpWordCount(event.Words[0]);
             });
 
+            // A pattern's length and notes come from its steps.
+            if (clip.Kind == ClipKind::Pattern)
+            {
+                if (!clip.Pattern.has_value())
+                {
+                    clip.Pattern = PatternSettings{};
+                }
+
+                NormalizePattern(*clip.Pattern);
+                RefreshPatternPreview(clip);
+            }
+            else
+            {
+                clip.Pattern.reset();
+            }
+
+            // A generator's notes come from its settings.
+            if (clip.Kind == ClipKind::Generator)
+            {
+                if (!clip.Generator.has_value())
+                {
+                    clip.Generator = GeneratorSettings{};
+                }
+
+                NormalizeGenerator(*clip.Generator);
+                RefreshGeneratorPreview(clip);
+            }
+            else
+            {
+                clip.Generator.reset();
+            }
+
             SortClip(clip);
+            NormalizeLanes(clip.Lanes);
         }
 
         // ---- tracks ----
 
         std::unordered_set<std::wstring> trackIds{};
         NormalizeTracks(sequence.Tracks, sequence, clipIds, trackIds);
+
+        if (sequence.Lyrics)
+        {
+            NormalizeLyrics(*sequence.Lyrics, SequenceLimits{});
+        }
     }
 
     // ---- tempo map ----
@@ -715,6 +758,131 @@ namespace midisequencer
     {
         static constexpr uint8_t counts[16]{ 1, 1, 1, 2, 2, 4, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4 };
         return counts[(firstWord >> 28) & 0x0F];
+    }
+
+    // ---- automation ----
+
+    _Use_decl_annotations_
+    bool LaneRampsAfter(AutomationLane const& lane, size_t pointIndex) noexcept
+    {
+        return lane.Target != LaneTarget::Program &&
+            pointIndex + 1 < lane.Points.size() &&
+            !lane.Points[pointIndex].Hold &&
+            lane.Points[pointIndex + 1].Tick > lane.Points[pointIndex].Tick;
+    }
+
+    _Use_decl_annotations_
+    std::optional<uint32_t> LaneValueAt(AutomationLane const& lane, int64_t tick) noexcept
+    {
+        auto const& points = lane.Points;
+
+        if (points.empty())
+        {
+            return std::nullopt;
+        }
+
+        // The last point at or before the tick. At a jump, that's the point the line leaves from.
+        auto const after = std::upper_bound(points.begin(), points.end(), tick,
+            [](int64_t value, LanePoint const& point) { return value < point.Tick; });
+
+        if (after == points.begin())
+        {
+            return points.front().Value;
+        }
+
+        auto const index = static_cast<size_t>(std::distance(points.begin(), after)) - 1;
+        auto const& point = points[index];
+
+        if (!LaneRampsAfter(lane, index))
+        {
+            return point.Value;
+        }
+
+        auto const& next = points[index + 1];
+        auto const fraction = static_cast<double>(tick - point.Tick) / static_cast<double>(next.Tick - point.Tick);
+        auto const value = static_cast<double>(point.Value) + (static_cast<double>(next.Value) - static_cast<double>(point.Value)) * fraction;
+
+        return static_cast<uint32_t>(std::clamp<long long>(std::llround(value), 0, 0xFFFFFFFFLL));
+    }
+
+    _Use_decl_annotations_
+    bool SameLaneTarget(AutomationLane const& a, AutomationLane const& b) noexcept
+    {
+        return a.Target == b.Target && a.Number == b.Number && a.Channel == b.Channel;
+    }
+
+    _Use_decl_annotations_
+    uint8_t LaneResolutionBits(LaneTarget target, bool midi2) noexcept
+    {
+        if (target == LaneTarget::Program)
+        {
+            return 7;
+        }
+
+        if (midi2)
+        {
+            return 32;
+        }
+
+        switch (target)
+        {
+        case LaneTarget::PitchBend:
+        case LaneTarget::Registered:
+        case LaneTarget::Assignable:
+            return 14;
+
+        default:
+            return 7;
+        }
+    }
+
+    _Use_decl_annotations_
+    void NormalizeLanes(std::vector<AutomationLane>& lanes)
+    {
+        std::unordered_set<std::wstring> ids{};
+
+        for (auto& lane : lanes)
+        {
+            if (lane.Id.empty() || ids.contains(lane.Id))
+            {
+                lane.Id = NewId(L"a");
+            }
+
+            ids.insert(lane.Id);
+
+            switch (lane.Target)
+            {
+            case LaneTarget::Controller:
+                lane.Number = std::min<uint16_t>(lane.Number, 127);
+                break;
+
+            case LaneTarget::Registered:
+            case LaneTarget::Assignable:
+                lane.Number = std::min<uint16_t>(lane.Number, 16383);
+                break;
+
+            case LaneTarget::PitchBend:
+            case LaneTarget::ChannelPressure:
+            case LaneTarget::Program:
+                lane.Number = 0;
+                break;
+
+            default:
+                lane.Target = LaneTarget::Controller;
+                lane.Number = std::min<uint16_t>(lane.Number, 127);
+                break;
+            }
+
+            lane.Channel &= 0x0F;
+
+            for (auto& point : lane.Points)
+            {
+                point.Tick = std::max<int64_t>(0, point.Tick);
+            }
+
+            std::stable_sort(lane.Points.begin(), lane.Points.end(),
+                [](LanePoint const& a, LanePoint const& b) { return a.Tick < b.Tick; });
+        }
     }
 
     _Use_decl_annotations_

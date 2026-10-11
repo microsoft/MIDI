@@ -19,6 +19,7 @@ namespace midisettings
         constexpr wchar_t ValueTransportFilter[] = L"TransportFilter";
         constexpr wchar_t ValueDismissedOrphanedCustomizations[] = L"DismissedOrphanedCustomizations";
         constexpr wchar_t ValueLastConfigCopyFolder[] = L"LastConfigCopyFolder";
+        constexpr wchar_t ValueClearedPortNames[] = L"ClearedPortNames";
     }
 
     AppSettings::AppSettings() noexcept :
@@ -44,6 +45,7 @@ namespace midisettings
         m_transportFilter = ReadString(ValueTransportFilter, std::wstring{});
         m_dismissedOrphanedCustomizations = ReadString(ValueDismissedOrphanedCustomizations, std::wstring{});
         m_lastConfigCopyFolder = ReadString(ValueLastConfigCopyFolder, std::wstring{});
+        m_clearedPortNameList = ReadString(ValueClearedPortNames, std::wstring{});
     }
 
     void AppSettings::ViewMode(EndpointViewMode value) noexcept
@@ -77,5 +79,12 @@ namespace midisettings
     {
         m_dismissedOrphanedCustomizations = value;
         WriteString(ValueDismissedOrphanedCustomizations, m_dismissedOrphanedCustomizations);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::ClearedPortNameList(std::wstring const& value) noexcept
+    {
+        m_clearedPortNameList = value;
+        WriteString(ValueClearedPortNames, m_clearedPortNameList);
     }
 }
