@@ -15,6 +15,7 @@
 
 namespace native = ::midisettings;
 namespace res = ::midisettings::resources;
+namespace custom = ::midiapp::customizations;
 
 namespace winrt::midisettings::implementation
 {
@@ -61,6 +62,21 @@ namespace winrt::midisettings::implementation
             case midi2enum::Midi1PortNamingApproach::UseNewStyle:          return 2;
             default:                                                      return 0;
             }
+        }
+
+        std::vector<custom::PortNameRow> PortNameRows(
+            _In_ collections::IObservableVector<midisettings::Midi1PortNameItem> const& items)
+        {
+            std::vector<custom::PortNameRow> rows{};
+
+            for (uint32_t i = 0; i < items.Size(); i++)
+            {
+                auto const item = items.GetAt(i).as<implementation::Midi1PortNameItem>();
+
+                rows.push_back({ item->GroupIndex(), item->CustomName(), item->InternalOriginalCustomName() });
+            }
+
+            return rows;
         }
     }
 
@@ -129,6 +145,39 @@ namespace winrt::midisettings::implementation
     }
 
     _Use_decl_annotations_
+    void MainWindow::LoadCustomizeSettings(midi2enum::MidiEndpointDeviceInformation const& endpoint) noexcept
+    {
+        try
+        {
+            if (!m_clearedPortNamesLoaded)
+            {
+                m_clearedPortNames.Load(native::AppSettings::Current().ClearedPortNameList());
+                m_clearedPortNamesLoaded = true;
+            }
+
+            m_customizeSettings = custom::ReadEndpointSettings(endpoint, m_clearedPortNames);
+
+            // reading forgets the cleared names the endpoint no longer shows
+            SaveClearedPortNames();
+        }
+        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to read the endpoint's settings.")
+    }
+
+    void MainWindow::SaveClearedPortNames() noexcept
+    {
+        try
+        {
+            auto const text = m_clearedPortNames.Serialize();
+
+            if (text != native::AppSettings::Current().ClearedPortNameList())
+            {
+                native::AppSettings::Current().ClearedPortNameList(text);
+            }
+        }
+        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to save the cleared port names.")
+    }
+
+    _Use_decl_annotations_
     void MainWindow::PopulateMidi1PortNames(midi2enum::MidiEndpointDeviceInformation const& endpoint) noexcept
     {
         try
@@ -179,29 +228,34 @@ namespace winrt::midisettings::implementation
                     endpoint.EndpointDeviceId(), midi2enum::Midi1PortFlow::MidiMessageDestination);
             }
 
+            // Custom names come from the dialog context, which leaves out names this app cleared.
             auto const fill = [](collections::IObservableVector<midisettings::Midi1PortNameItem> const& target,
                 std::vector<midi2enum::Midi1PortNameTableEntry> const& entries,
-                collections::IVectorView<midi2legacy::MidiLegacyPortDeviceInformation> const& publishedPorts)
+                collections::IVectorView<midi2legacy::MidiLegacyPortDeviceInformation> const& publishedPorts,
+                std::map<uint8_t, winrt::hstring> const& customNames)
                 {
                     for (auto const& entry : entries)
                     {
                         auto item = winrt::make<implementation::Midi1PortNameItem>();
 
                         auto const published = PublishedNameForGroup(publishedPorts, entry.Group().Index());
+                        auto const stored = customNames.find(entry.Group().Index());
 
                         item.as<implementation::Midi1PortNameItem>()->Update(
                             entry.Group().Index(),
                             published.empty() ? entry.LegacyCompatibleName() : published,
                             entry.LegacyCompatibleName(),
                             entry.NewStyleName(),
-                            entry.CustomName());
+                            stored == customNames.end() ? winrt::hstring{} : stored->second);
 
                         target.Append(item);
                     }
                 };
 
-            fill(m_midi1PortNameSources, m_midi1PortNameSourceEntries, publishedSources);
-            fill(m_midi1PortNameDestinations, m_midi1PortNameDestinationEntries, publishedDestinations);
+            fill(m_midi1PortNameSources, m_midi1PortNameSourceEntries, publishedSources,
+                m_customizeSettings.SourcePortNames);
+            fill(m_midi1PortNameDestinations, m_midi1PortNameDestinationEntries, publishedDestinations,
+                m_customizeSettings.DestinationPortNames);
 
             Midi1PortNamesNoSourcesText().Visibility(
                 m_midi1PortNameSources.Size() == 0 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
@@ -228,6 +282,12 @@ namespace winrt::midisettings::implementation
 
             m_portNamesEndpointDeviceId = endpointDeviceId;
 
+            // Opened from the customize dialog, which has already read this endpoint.
+            if (!midiapp::EndpointIdsMatch(m_customizeSettings.EndpointDeviceId, endpointDeviceId))
+            {
+                LoadCustomizeSettings(endpoint);
+            }
+
             Midi1PortNamesDialog().Title(
                 winrt::box_value(res::FormatString(L"Midi1PortNamesTitleFormat", endpoint.Name())));
 
@@ -237,7 +297,7 @@ namespace winrt::midisettings::implementation
             PopulateMidi1PortNames(endpoint);
 
             Midi1PortNamesApproachCombo().SelectedIndex(
-                ComboIndexFromApproach(endpoint.Midi1PortNamingApproach()));
+                ComboIndexFromApproach(m_customizeSettings.Midi1PortNamingApproach));
 
             // SelectedIndex above may not have changed, so resolve the columns either way
             UpdateMidi1PortNamesApproachCaption();
@@ -253,39 +313,17 @@ namespace winrt::midisettings::implementation
                 co_return;
             }
 
-            auto const approach = ApproachFromComboIndex(Midi1PortNamesApproachCombo().SelectedIndex());
+            // Starts from everything the endpoint has, because a save resets whatever it leaves out.
+            auto settings = m_customizeSettings;
+            settings.Midi1PortNamingApproach = ApproachFromComboIndex(Midi1PortNamesApproachCombo().SelectedIndex());
 
-            struct PortRename
-            {
-                uint8_t GroupIndex{ 0 };
-                winrt::hstring Name{};
-            };
+            std::vector<custom::ClearedPortName> cleared{};
 
-            std::vector<PortRename> sources{};
-            std::vector<PortRename> destinations{};
+            custom::CollectPortNames(PortNameRows(m_midi1PortNameSources),
+                midi2enum::Midi1PortFlow::MidiMessageSource, settings.SourcePortNames, cleared);
 
-            auto const collect = [](collections::IObservableVector<midisettings::Midi1PortNameItem> const& rows,
-                std::vector<PortRename>& target)
-                {
-                    for (uint32_t i = 0; i < rows.Size(); i++)
-                    {
-                        auto const item = rows.GetAt(i).as<implementation::Midi1PortNameItem>();
-
-                        // Only what the customer actually changed. An emptied box is still sent,
-                        // because that is how a previously customized port gets its generated name
-                        // back, but a port left alone must not be written at all: doing so filled
-                        // the configuration with entries holding an empty name for every group.
-                        if (item->CustomName() == item->InternalOriginalCustomName())
-                        {
-                            continue;
-                        }
-
-                        target.push_back({ item->GroupIndex(), item->CustomName() });
-                    }
-                };
-
-            collect(m_midi1PortNameSources, sources);
-            collect(m_midi1PortNameDestinations, destinations);
+            custom::CollectPortNames(PortNameRows(m_midi1PortNameDestinations),
+                midi2enum::Midi1PortFlow::MidiMessageDestination, settings.DestinationPortNames, cleared);
 
             winrt::guid transportId{};
 
@@ -302,24 +340,15 @@ namespace winrt::midisettings::implementation
 
             co_await native::RunOnBackgroundAsync(
                 [&sent, &saved, &errorMessage, transportId, endpointDeviceId, deviceInstanceId,
-                 approach, sources, destinations]()
+                 settings, cleared]()
                 {
                     midi2config::MidiServiceEndpointCustomizationConfig config{ transportId };
 
                     config.MatchCriteria().EndpointDeviceId(endpointDeviceId);
                     config.MatchCriteria().DeviceInstanceId(deviceInstanceId);
 
-                    config.Midi1PortNamingApproach(approach);
-
-                    for (auto const& source : sources)
-                    {
-                        config.AddMidi1SourcePortCustomName(midi2::MidiGroup{ source.GroupIndex }, source.Name);
-                    }
-
-                    for (auto const& destination : destinations)
-                    {
-                        config.AddMidi1DestinationPortCustomName(midi2::MidiGroup{ destination.GroupIndex }, destination.Name);
-                    }
+                    custom::CopyInto(settings, config);
+                    custom::AddClearedPortNames(cleared, config);
 
                     auto const response = midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(config);
 
@@ -361,6 +390,10 @@ namespace winrt::midisettings::implementation
             }
             else
             {
+                m_customizeSettings = settings;
+                m_clearedPortNames.Saved(settings, cleared);
+                SaveClearedPortNames();
+
                 StatusText().Text(res::GetString(L"Midi1PortNamesSaved"));
             }
         }

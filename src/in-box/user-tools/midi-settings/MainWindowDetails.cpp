@@ -481,6 +481,8 @@ namespace winrt::midisettings::implementation
 
         try
         {
+            auto const editsPending = std::exchange(m_customizeEditsPending, false);
+
             auto endpoint = FindEndpoint(endpointDeviceId);
 
             if (endpoint == nullptr)
@@ -488,34 +490,28 @@ namespace winrt::midisettings::implementation
                 co_return;
             }
 
-            winrt::hstring name{};
-            winrt::hstring description{};
-
-            m_customizeImageFileName = {};
             m_customizeEndpointDeviceId = endpointDeviceId;
 
-            if (auto const userInfo = endpoint.GetUserSuppliedInfo())
+            // Coming back from the port names dialog restores what was typed and keeps what that
+            // dialog saved, rather than re-reading an endpoint which may not have caught up yet.
+            if (editsPending && midiapp::EndpointIdsMatch(m_customizeSettings.EndpointDeviceId, endpointDeviceId))
             {
-                name = userInfo.Name();
-                description = userInfo.Description();
-                m_customizeImageFileName = userInfo.ImageFileName();
-            }
-
-            // An endpoint with no custom name shows the name it currently has, so the customer
-            // edits what they see rather than starting from an empty box.
-            CustomizeNameTextBox().Text(name.empty() ? endpoint.Name() : name);
-            CustomizeDescriptionTextBox().Text(description);
-            CustomizeStatusText().Text({});
-
-            // Coming back from the port names dialog restores what was typed, rather than the
-            // stored values, so stepping out to rename ports does not discard an edit in progress.
-            if (m_customizeEditsPending)
-            {
-                m_customizeEditsPending = false;
-
                 CustomizeNameTextBox().Text(m_pendingCustomizeName);
                 CustomizeDescriptionTextBox().Text(m_pendingCustomizeDescription);
             }
+            else
+            {
+                LoadCustomizeSettings(endpoint);
+                m_customizeImageFileName = m_customizeSettings.ImageFileName;
+
+                // An endpoint with no custom name shows the name it currently has, so the customer
+                // edits what they see rather than starting from an empty box.
+                CustomizeNameTextBox().Text(
+                    m_customizeSettings.Name.empty() ? endpoint.Name() : m_customizeSettings.Name);
+                CustomizeDescriptionTextBox().Text(m_customizeSettings.Description);
+            }
+
+            CustomizeStatusText().Text({});
 
             UpdateCustomizeImagePreview();
 
@@ -566,6 +562,7 @@ namespace winrt::midisettings::implementation
             auto const newImage = m_customizeImageFileName;
 
             auto const deviceInstanceId = endpoint.DeviceInstanceId();
+            auto const settings = m_customizeSettings;
 
             bool sent{ false };
             bool saved{ false };
@@ -573,7 +570,7 @@ namespace winrt::midisettings::implementation
 
             co_await native::RunOnBackgroundAsync(
                 [&sent, &saved, &errorMessage, transportId, endpointDeviceId, deviceInstanceId,
-                 newName, newDescription, newImage]()
+                 newName, newDescription, newImage, settings]()
                 {
                     auto const existing = custom::FindCustomizationForEndpoint(transportId, endpointDeviceId);
 
@@ -581,7 +578,8 @@ namespace winrt::midisettings::implementation
                     // values. Deleting the entry is what the customer meant, and it is the only
                     // way to leave no trace behind.
                     if (newName.empty() && newDescription.empty() && newImage.empty() &&
-                        existing != nullptr && !custom::HasNonDisplayContent(existing))
+                        existing != nullptr && !custom::HasNonDisplayContent(existing) &&
+                        !custom::HasNonDisplayContent(settings))
                     {
                         midi2config::MidiServiceEndpointCustomizationRemovalConfig removal{
                             transportId, existing.MatchCriteria() };
@@ -610,6 +608,9 @@ namespace winrt::midisettings::implementation
                     }
 
                     midi2config::MidiServiceEndpointCustomizationConfig config{ transportId };
+
+                    // A save resets whatever it leaves out, so the rest goes back as it was.
+                    custom::CopyInto(settings, config);
 
                     config.Name(newName);
                     config.Description(newDescription);

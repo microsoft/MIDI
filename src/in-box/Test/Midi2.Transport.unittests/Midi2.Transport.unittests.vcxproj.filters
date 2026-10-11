@@ -30,12 +30,18 @@
     <ClCompile Include="MidiEndpointCustomPropertiesTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidiPortNameCustomizationTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiEndpointCustomPropertiesTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiPortNameCustomizationTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2KSAggregateTransportTests.h">

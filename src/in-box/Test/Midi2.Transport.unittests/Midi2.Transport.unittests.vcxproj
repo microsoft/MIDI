@@ -139,6 +139,7 @@
     <ClCompile Include="Midi2SrvTransportTests.cpp" />
     <ClCompile Include="Midi2TransportTestsBase.cpp" />
     <ClCompile Include="MidiEndpointCustomPropertiesTests.cpp" />
+    <ClCompile Include="MidiPortNameCustomizationTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Midi2KSAggregateTransportTests.h" />
@@ -146,6 +147,7 @@
     <ClInclude Include="Midi2SrvTransportTests.h" />
     <ClInclude Include="Midi2TransportTestsBase.h" />
     <ClInclude Include="MidiEndpointCustomPropertiesTests.h" />
+    <ClInclude Include="MidiPortNameCustomizationTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

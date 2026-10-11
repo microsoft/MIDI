@@ -778,7 +778,7 @@
     <value>Apps which remember ports by name will need to be pointed at them again.</value>
   </data>
   <data name="Midi1PortNamesSaved" xml:space="preserve">
-    <value>The MIDI 1.0 port names were saved. Restart the MIDI service to use them.</value>
+    <value>The MIDI 1.0 port names were saved. Apps see them after you unplug and replug the device, or restart the MIDI service.</value>
   </data>
   <data name="Midi1PortNamesFailed" xml:space="preserve">
     <value>The MIDI 1.0 port names could not be changed.</value>

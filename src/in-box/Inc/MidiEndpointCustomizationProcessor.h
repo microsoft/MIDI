@@ -42,6 +42,13 @@ namespace WindowsMidiServicesPluginConfigurationLib
 
         winrt::hstring ResolvedEndpointDeviceId{};
         std::vector<DEVPROPERTY> EndpointProperties{};
+
+        // ports the update gives an empty name, which the parsed properties leave out
+        std::vector<uint8_t> ClearedSourceGroups{};
+        std::vector<uint8_t> ClearedDestinationGroups{};
+
+        // a removal puts every port back to the name the transport generated
+        bool ClearAllPortNames{ false };
     };
 
     // The update loop every transport that supports endpoint customization was carrying its own
@@ -53,6 +60,11 @@ namespace WindowsMidiServicesPluginConfigurationLib
         using EndpointResolver = std::function<winrt::hstring(MidiEndpointMatchCriteria&)>;
 
         MidiEndpointCustomizationProcessor() = default;
+
+        // Sets the result's custom MIDI 1.0 port names and clears the emptied ones now, not at the next restart.
+        static void ApplyPortNames(
+            _In_ MidiEndpointCustomizationApplyResult const& result,
+            _Inout_ WindowsMidiServicesNamingLib::MidiEndpointNameTable& nameTable) noexcept;
 
         void Initialize(_In_ std::shared_ptr<MidiEndpointCustomPropertiesCache> cache) noexcept
         {
