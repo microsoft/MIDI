@@ -406,7 +406,9 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
-            if (!m_directory->Resolve(track->Destination.Endpoint).has_value())
+            auto const summary = m_directory->Resolve(track->Destination.Endpoint);
+
+            if (!summary.has_value())
             {
                 ProtocolNote().Text(res::GetString(L"ProtocolNoteMissing"));
                 return;
@@ -426,9 +428,9 @@ namespace winrt::midisequencer::implementation
 
             std::wstring note{ res::GetString(midi2 ? L"ProtocolNoteMidi2" : L"ProtocolNoteMidi1") };
 
-            if (info.OffsetMicroseconds > 0)
+            if (summary->OffsetMicroseconds > 0)
             {
-                auto milliseconds = std::format(L"{:.1f}", info.OffsetMicroseconds / 1000.0);
+                auto milliseconds = std::format(L"{:.1f}", summary->OffsetMicroseconds / 1000.0);
 
                 if (milliseconds.ends_with(L".0"))
                 {
@@ -436,7 +438,7 @@ namespace winrt::midisequencer::implementation
                 }
 
                 note += L" ";
-                note += res::FormatString(L"ProtocolNoteOffsetFormat", milliseconds);
+                note += res::FormatString(m_directory->ApplyOffsets() ? L"ProtocolNoteOffsetFormat" : L"ProtocolNoteOffsetOffFormat", milliseconds);
             }
 
             ProtocolNote().Text(winrt::hstring{ note });

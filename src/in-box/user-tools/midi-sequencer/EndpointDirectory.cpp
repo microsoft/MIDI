@@ -149,6 +149,42 @@ namespace midisequencer
                 return 0;
             }
         }
+
+        // How often a ramp may be sent to the device, from MIDI Settings. 0 when it has none.
+        uint32_t AutomationIntervalMilliseconds(midi2enum::MidiEndpointDeviceInformation const& device)
+        {
+            try
+            {
+                auto const properties = device.Properties();
+                auto const value = properties != nullptr ? properties.TryLookup(STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS) : nullptr;
+
+                if (value == nullptr)
+                {
+                    return 0;
+                }
+
+                // Stored as a number of more than one width, depending on what wrote it.
+                if (auto const number = value.try_as<foundation::IReference<int32_t>>(); number != nullptr)
+                {
+                    return static_cast<uint32_t>(std::clamp(number.Value(), 0, 1000));
+                }
+
+                if (auto const number = value.try_as<foundation::IReference<uint32_t>>(); number != nullptr)
+                {
+                    return std::min<uint32_t>(number.Value(), 1000);
+                }
+
+                if (auto const number = value.try_as<foundation::IReference<uint16_t>>(); number != nullptr)
+                {
+                    return std::min<uint32_t>(number.Value(), 1000);
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return 0;
+        }
     }
 
     _Use_decl_annotations_
@@ -200,6 +236,7 @@ namespace midisequencer
                     {
                         summary.GroupSpeaksMidi2 = GroupProtocols(device);
                         summary.OffsetMicroseconds = DeviceOffsetMicroseconds(device);
+                        summary.AutomationIntervalMilliseconds = AutomationIntervalMilliseconds(device);
                         summary.Detailed = true;
                     }
                 }
@@ -211,6 +248,7 @@ namespace midisequencer
             {
                 summary.GroupSpeaksMidi2 = found->second.GroupSpeaksMidi2;
                 summary.OffsetMicroseconds = found->second.OffsetMicroseconds;
+                summary.AutomationIntervalMilliseconds = found->second.AutomationIntervalMilliseconds;
                 summary.Detailed = true;
             }
 
@@ -292,7 +330,8 @@ namespace midisequencer
         if (found.has_value())
         {
             info.SpeaksMidi2 = found->GroupSpeaksMidi2[group & 0x0F];
-            info.OffsetMicroseconds = found->OffsetMicroseconds;
+            info.OffsetMicroseconds = m_applyOffsets ? found->OffsetMicroseconds : 0;
+            info.AutomationIntervalMilliseconds = found->AutomationIntervalMilliseconds;
         }
 
         return info;

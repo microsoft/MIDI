@@ -39,6 +39,22 @@ namespace midisequencer
         std::wstring Caption{};
     };
 
+    // Where a lane value sits in an automation row, and back. The line keeps six pixels from the
+    // top and bottom of the row, as the comps draw it.
+    float LaneValueY(_In_ uint32_t value, _In_ float top, _In_ float height) noexcept;
+    uint32_t LaneValueAtY(_In_ float y, _In_ float top, _In_ float height) noexcept;
+
+    // The tempo row shows from a little below the slowest tempo to a little above the fastest.
+    struct TempoRange
+    {
+        double Low{ 114.0 };
+        double High{ 128.0 };
+    };
+
+    TempoRange TempoRowRange(_In_ std::vector<TempoPoint> const& tempo) noexcept;
+    float TempoY(_In_ double beatsPerMinute, _In_ TempoRange const& range, _In_ float top, _In_ float height) noexcept;
+    double TempoAtY(_In_ float y, _In_ TempoRange const& range, _In_ float top, _In_ float height) noexcept;
+
     struct ArrangeDrawContext
     {
         Sequence const* Doc{ nullptr };
@@ -70,6 +86,16 @@ namespace midisequencer
 
         std::optional<SlotRecording> RecordingSlot{};
 
+        // The selected automation point or tempo change, drawn larger.
+        std::wstring SelectedLaneTrackId{};
+        std::wstring SelectedLaneId{};
+        size_t SelectedLanePoint{ SIZE_MAX };
+        size_t SelectedTempoPoint{ SIZE_MAX };
+
+        // While a tempo change is dragged, the row keeps the scale it had when the drag began, so
+        // the line doesn't slide away under the pointer.
+        std::optional<TempoRange> TempoScale{};
+
         double SceneWidth{ 100 };
         double SceneScrollX{ 0 };
 
@@ -80,6 +106,8 @@ namespace midisequencer
         winrt::hstring BarFormat{};             // "Bar {0}"
         winrt::hstring RecordingCaption{};      // "Recording"
         winrt::hstring GeneratedAsItPlays{};
+        winrt::hstring EmptyLaneHint{};
+        winrt::hstring ClipLaneCaption{};       // over a clip that has its own lane
     };
 
     class ArrangeRenderer
@@ -131,6 +159,23 @@ namespace midisequencer
         void DrawTempoLane(_In_ canvas::CanvasDrawingSession const& ds, _In_ float top, _In_ float height, _In_ float width, _In_ ArrangeDrawContext const& context);
         void DrawTrackLane(_In_ canvas::CanvasDrawingSession const& ds, _In_ Track const& track, _In_ ArrangeRow const& row, _In_ float top, _In_ float width, _In_ ArrangeDrawContext const& context);
         void DrawFolderLane(_In_ canvas::CanvasDrawingSession const& ds, _In_ Track const& folder, _In_ float top, _In_ float height, _In_ float width, _In_ ArrangeDrawContext const& context);
+        void DrawAutomationRow(_In_ canvas::CanvasDrawingSession const& ds, _In_ Track const& track, _In_ ArrangeRow const& row, _In_ float top, _In_ float width, _In_ ArrangeDrawContext const& context);
+
+        // A lane's line from one tick to another, where the lane's tick 0 is at `offset` on the
+        // timeline. Clipped to the visible width.
+        void DrawLaneLine(
+            _In_ canvas::CanvasDrawingSession const& ds,
+            _In_ AutomationLane const& lane,
+            _In_ int64_t offset,
+            _In_ int64_t fromTick,
+            _In_ int64_t toTick,
+            _In_ float top,
+            _In_ float height,
+            _In_ float width,
+            _In_ ArrangeDrawContext const& context,
+            _In_ Color color,
+            _In_ bool fill,
+            _In_ bool dashed);
 
         void DrawClipBlock(
             _In_ canvas::CanvasDrawingSession const& ds,
@@ -185,6 +230,8 @@ namespace midisequencer
         canvasText::CanvasTextFormat m_slotGlyph{ nullptr };
         canvasText::CanvasTextFormat m_badge{ nullptr };
         canvasText::CanvasTextFormat m_tempoLabel{ nullptr };
+        canvasText::CanvasTextFormat m_meterLabel{ nullptr };
+        canvasText::CanvasTextFormat m_laneHint{ nullptr };
         canvasText::CanvasTextFormat m_overlayText{ nullptr };
         canvasText::CanvasTextFormat m_overlayButton{ nullptr };
 

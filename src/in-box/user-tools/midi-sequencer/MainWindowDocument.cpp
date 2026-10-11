@@ -1046,7 +1046,7 @@ namespace winrt::midisequencer::implementation
     // ---------------------------------------------------------------- dialogs
 
     _Use_decl_annotations_
-    std::wstring MainWindow::ShowFileDialog(bool save, std::wstring const& defaultName, std::vector<std::pair<std::wstring, std::wstring>> const& filters, bool folders) noexcept
+    std::wstring MainWindow::ShowFileDialog(bool save, std::wstring const& defaultName, std::vector<std::pair<std::wstring, std::wstring>> const& filters, bool folders, std::wstring const& startFolder) noexcept
     {
         // The Win32 dialog, not the WinRT picker: the picker does nothing in an elevated process
         // or over an open ContentDialog, which is how it has failed silently in this family before.
@@ -1099,11 +1099,11 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
-            auto folder = seq::AppSettings::Current().LastFolder();
+            auto folder = startFolder.empty() ? seq::AppSettings::Current().LastFolder() : startFolder;
 
             if (folder.empty() || !std::filesystem::exists(folder))
             {
-                folder = DocumentsFolder();
+                folder = DocumentsFolder(L"MIDI Sequences");
             }
 
             if (!folder.empty())
@@ -1142,7 +1142,8 @@ namespace winrt::midisequencer::implementation
         return {};
     }
 
-    std::wstring MainWindow::DocumentsFolder() noexcept
+    _Use_decl_annotations_
+    std::wstring MainWindow::DocumentsFolder(std::wstring const& subfolder) noexcept
     {
         try
         {
@@ -1153,7 +1154,7 @@ namespace winrt::midisequencer::implementation
                 return {};
             }
 
-            auto folder = std::filesystem::path{ documents.get() } / L"MIDI Sequences";
+            auto folder = std::filesystem::path{ documents.get() } / subfolder;
             std::error_code error{};
             std::filesystem::create_directories(folder, error);
 
@@ -1249,6 +1250,7 @@ namespace winrt::midisequencer::implementation
             {
                 m_roll.ClearSelection();
                 m_selectedPlacement = SIZE_MAX;
+                ClearAutomationSelection();
                 DocumentChanged();
             }
         }
@@ -1263,6 +1265,7 @@ namespace winrt::midisequencer::implementation
             {
                 m_roll.ClearSelection();
                 m_selectedPlacement = SIZE_MAX;
+                ClearAutomationSelection();
                 DocumentChanged();
             }
         }

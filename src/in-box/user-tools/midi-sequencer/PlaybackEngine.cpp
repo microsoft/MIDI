@@ -8,12 +8,15 @@
 #include "PlaybackEngine.h"
 
 #include "MessageTranslation.h"
+#include "MidiClipFile.h"
 #include "SequenceRender.h"
 
 #include <windows.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <limits>
 #include <map>
 
 namespace midisequencer
@@ -45,6 +48,16 @@ namespace midisequencer
         {
             auto const messageType = word0 >> 28;
             return messageType == 0x2 || messageType == 0x4;
+        }
+
+        bool SameTimeCodeOutputs(_In_ std::vector<TimeCodeOutput> const& a, _In_ std::vector<TimeCodeOutput> const& b) noexcept
+        {
+            return std::equal(a.begin(), a.end(), b.begin(), b.end(), [](TimeCodeOutput const& x, TimeCodeOutput const& y)
+            {
+                return x.Endpoint == y.Endpoint && x.Group == y.Group && x.Rate == y.Rate && x.OffsetMicroseconds == y.OffsetMicroseconds &&
+                    x.Start.Hours == y.Start.Hours && x.Start.Minutes == y.Start.Minutes && x.Start.Seconds == y.Start.Seconds &&
+                    x.Start.Frames == y.Start.Frames;
+            });
         }
     }
 
@@ -80,6 +93,8 @@ namespace midisequencer
 
             m_sequence = std::move(sequence);
             m_tempo = TempoMap{ m_sequence->Tempo };
+            m_fastestTempo = FastestTempo(m_sequence->Tempo);
+            ++m_editCount;
             m_segment.StartTick = tick;
             m_segment.StartTimestamp = now;
             m_segment.StartSeconds = m_tempo.SecondsAtTick(tick);
@@ -90,12 +105,20 @@ namespace midisequencer
 
         m_sequence = std::move(sequence);
         m_tempo = TempoMap{ m_sequence->Tempo };
+        m_fastestTempo = FastestTempo(m_sequence->Tempo);
     }
 
     _Use_decl_annotations_
     void PlaybackEngine::SetSettings(EngineSettings const& settings)
     {
         std::scoped_lock guard{ m_lock };
+
+        // Time code that changes while playing is told where it is again at the next sweep.
+        if (!SameTimeCodeOutputs(m_settings.TimeCodeOutputs, settings.TimeCodeOutputs))
+        {
+            m_timeCodeNext.clear();
+        }
+
         m_settings = settings;
         m_settings.LookAheadMicroseconds = std::clamp<uint32_t>(m_settings.LookAheadMicroseconds, 2000, 1000000);
         m_settings.SweepMicroseconds = std::clamp<uint32_t>(m_settings.SweepMicroseconds, 1000, 50000);
@@ -153,6 +176,12 @@ namespace midisequencer
         return static_cast<int64_t>(LookupDestination(output.Endpoint, output.Group).OffsetMicroseconds) - output.OffsetMicroseconds;
     }
 
+    _Use_decl_annotations_
+    int64_t PlaybackEngine::TimeCodeLeadMicroseconds(TimeCodeOutput const& output) const
+    {
+        return static_cast<int64_t>(LookupDestination(output.Endpoint, output.Group).OffsetMicroseconds) - output.OffsetMicroseconds;
+    }
+
     // The furthest ahead of the beat anything is sent.
     uint64_t PlaybackEngine::LongestLeadMicroseconds() const
     {
@@ -181,6 +210,11 @@ namespace midisequencer
             longest = std::max(longest, ClockLeadMicroseconds(output));
         }
 
+        for (auto const& output : m_settings.TimeCodeOutputs)
+        {
+            longest = std::max(longest, TimeCodeLeadMicroseconds(output));
+        }
+
         return static_cast<uint64_t>(longest);
     }
 
@@ -192,6 +226,13 @@ namespace midisequencer
             : -static_cast<double>(m_segment.StartTimestamp - timestamp);
 
         return m_tempo.TickAtSeconds(m_segment.StartSeconds + elapsed / static_cast<double>(m_clock.TicksPerSecond));
+    }
+
+    _Use_decl_annotations_
+    double PlaybackEngine::SecondsAtTimestamp(uint64_t timestamp) const noexcept
+    {
+        auto const elapsed = static_cast<double>(timestamp) - static_cast<double>(m_segment.StartTimestamp);
+        return m_segment.StartSeconds + elapsed / static_cast<double>(m_clock.TicksPerSecond);
     }
 
     int64_t PlaybackEngine::SegmentEnd() const noexcept
@@ -285,8 +326,12 @@ namespace midisequencer
             return;
         }
 
+        // Lanes aren't chased: the first render after a start sends where each one is.
+        RenderOptions options{};
+        options.Lanes = false;
+
         std::vector<RenderedMessage> earlier{};
-        RenderTrack(*m_sequence, track, 0, fromTick, earlier);
+        RenderTrack(*m_sequence, track, 0, fromTick, earlier, options);
 
         // The last value of each thing a channel remembers. Controllers sort first, by number, so
         // bank select goes before program change; pitch bend and pressure go last.
@@ -357,6 +402,7 @@ namespace midisequencer
             m_renderedUntil.clear();
             m_metronomeUntil = m_segment.StartTick;
             m_clockUntil = m_segment.StartTick;
+            m_tempoSent = std::numeric_limits<double>::quiet_NaN();
             m_sounding.clear();
             m_channelsUsed.clear();
 
@@ -394,18 +440,30 @@ namespace midisequencer
             {
                 if (startTick == 0)
                 {
-                    auto const start = SystemWord(output.Group, 0xFA);
-                    m_output.Send(output.Endpoint, EarlierBy(m_segment.StartTimestamp, ClockLeadMicroseconds(output)), &start, 1);
+                    if (output.SendStartStop)
+                    {
+                        auto const start = SystemWord(output.Group, 0xFA);
+                        m_output.Send(output.Endpoint, EarlierBy(m_segment.StartTimestamp, ClockLeadMicroseconds(output)), &start, 1);
+                    }
                 }
                 else
                 {
-                    auto const position = std::min<int64_t>(startTick / TicksPerSongPositionBeat, 0x3FFF);
-                    auto const pointer = SystemWord(output.Group, 0xF2, static_cast<uint8_t>(position & 0x7F), static_cast<uint8_t>(position >> 7));
-                    auto const resume = SystemWord(output.Group, 0xFB);
-                    m_output.Send(output.Endpoint, 0, &pointer, 1);
-                    m_output.Send(output.Endpoint, EarlierBy(m_segment.StartTimestamp, ClockLeadMicroseconds(output)), &resume, 1);
+                    if (output.SendSongPosition)
+                    {
+                        auto const position = std::min<int64_t>(startTick / TicksPerSongPositionBeat, 0x3FFF);
+                        auto const pointer = SystemWord(output.Group, 0xF2, static_cast<uint8_t>(position & 0x7F), static_cast<uint8_t>(position >> 7));
+                        m_output.Send(output.Endpoint, 0, &pointer, 1);
+                    }
+
+                    if (output.SendStartStop)
+                    {
+                        auto const resume = SystemWord(output.Group, 0xFB);
+                        m_output.Send(output.Endpoint, EarlierBy(m_segment.StartTimestamp, ClockLeadMicroseconds(output)), &resume, 1);
+                    }
                 }
             }
+
+            LocateTimeCode(m_segment.StartTimestamp);
 
             m_playing = true;
         }
@@ -488,11 +546,35 @@ namespace midisequencer
         SendSilence(0);
         SendSilence(again);
 
+        // Pulses already handed over still go out, so stop follows the last of them.
+        auto const lastPulse = ((m_clockUntil - 1) / TicksPerClock) * TicksPerClock;
+
         for (auto const& output : m_settings.ClockOutputs)
         {
-            auto const stop = SystemWord(output.Group, 0xFC);
-            m_output.Send(output.Endpoint, 0, &stop, 1);
+            if (output.SendStartStop)
+            {
+                uint64_t at{ 0 };
+
+                if (output.SendClock && m_clockUntil > m_segment.StartTick && lastPulse >= m_segment.StartTick)
+                {
+                    auto const after = EarlierBy(TimestampAtTick(lastPulse), ClockLeadMicroseconds(output)) + 1;
+                    at = after > now ? after : 0;
+                }
+
+                auto const stop = SystemWord(output.Group, 0xFC);
+                m_output.Send(output.Endpoint, at, &stop, 1);
+            }
         }
+
+        // Time code receivers are told where it stopped, once what was handed over has played.
+        auto const stoppedAt = std::max(m_segment.StartSeconds, SecondsAtTimestamp(now));
+
+        for (auto const& output : m_settings.TimeCodeOutputs)
+        {
+            SendFullFrame(output, again, stoppedAt);
+        }
+
+        m_timeCodeNext.clear();
 
         m_segment.StartTick = std::max<int64_t>(0, TickAtTimestamp(now));
         m_segment.UnwrappedStart = m_segment.StartTick;
@@ -611,6 +693,25 @@ namespace midisequencer
 
         auto& state = m_launch[track.Id];
 
+        RenderOptions options{};
+        options.Midi2 = info.SpeaksMidi2;
+        options.LaneStepTicks = LaneStepTicks(m_fastestTempo, info.AutomationIntervalMilliseconds);
+
+        // Lanes send where they are after a start, the loop going round, an edit made while
+        // playing, or a mute ending. Otherwise they send only where they change.
+        auto& editsSeen = m_editsSeen[track.Id];
+        auto startValues = found == m_renderedUntil.end() || editsSeen != m_editCount || (audible && m_inaudible.contains(track.Id));
+        editsSeen = m_editCount;
+
+        if (audible)
+        {
+            m_inaudible.erase(track.Id);
+        }
+        else
+        {
+            m_inaudible.insert(track.Id);
+        }
+
         std::vector<RenderedMessage> messages{};
         auto cursor = Unwrap(from);
         auto const end = Unwrap(horizonTick);
@@ -631,7 +732,9 @@ namespace midisequencer
             if (stretchEnd > cursor)
             {
                 messages.clear();
-                RenderMode(track, state, cursor, stretchEnd, messages);
+                options.LaneStartValues = startValues;
+                RenderMode(track, state, cursor, stretchEnd, options, messages);
+                startValues = false;
 
                 if (audible)
                 {
@@ -658,8 +761,10 @@ namespace midisequencer
 
                 state.Mode = state.PendingMode;
                 state.ClipId = state.PendingClipId;
+                state.Slot = state.PendingSlot;
                 state.ClipStartUnwrapped = state.PendingAtUnwrapped;
                 state.Pending = false;
+                startValues = true;
 
                 // Back on the timeline part way through: each channel gets what it would have by now.
                 if (state.Mode == TrackPlayMode::Timeline && audible)
@@ -675,12 +780,12 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
-    void PlaybackEngine::RenderMode(Track const& track, TrackLaunch const& state, int64_t fromUnwrapped, int64_t toUnwrapped, std::vector<RenderedMessage>& messages)
+    void PlaybackEngine::RenderMode(Track const& track, TrackLaunch const& state, int64_t fromUnwrapped, int64_t toUnwrapped, RenderOptions const& options, std::vector<RenderedMessage>& messages)
     {
         switch (state.Mode)
         {
         case TrackPlayMode::Timeline:
-            RenderTrack(*m_sequence, track, Wrap(fromUnwrapped), Wrap(toUnwrapped), messages);
+            RenderTrack(*m_sequence, track, Wrap(fromUnwrapped), Wrap(toUnwrapped), messages, options);
             break;
 
         case TrackPlayMode::Clip:
@@ -699,7 +804,7 @@ namespace midisequencer
             launched.Destination = track.Destination;
             launched.Timeline.push_back(Placement{ state.ClipId, state.ClipStartUnwrapped, clip->Loop ? INT64_MAX / 4 : clip->Length });
 
-            RenderTrack(*m_sequence, launched, fromUnwrapped, toUnwrapped, messages);
+            RenderTrack(*m_sequence, launched, fromUnwrapped, toUnwrapped, messages, options);
 
             for (auto& message : messages)
             {
@@ -888,6 +993,8 @@ namespace midisequencer
         auto const horizon = now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + static_cast<uint64_t>(longest)) * m_clock.TicksPerSecond / 1000000;
         auto const horizonTick = std::min(TickAtTimestamp(horizon), SegmentEnd());
 
+        SendTempoChanges(m_clockUntil, horizonTick, leads);
+
         auto tick = ((m_clockUntil + TicksPerClock - 1) / TicksPerClock) * TicksPerClock;
 
         for (; tick < horizonTick; tick += TicksPerClock)
@@ -897,12 +1004,207 @@ namespace midisequencer
             for (size_t i = 0; i < m_settings.ClockOutputs.size(); ++i)
             {
                 auto const& output = m_settings.ClockOutputs[i];
-                auto const pulse = SystemWord(output.Group, 0xF8);
-                m_output.Send(output.Endpoint, EarlierBy(base, leads[i]), &pulse, 1);
+
+                if (output.SendClock)
+                {
+                    auto const pulse = SystemWord(output.Group, 0xF8);
+                    m_output.Send(output.Endpoint, EarlierBy(base, leads[i]), &pulse, 1);
+                }
             }
         }
 
         m_clockUntil = std::max(m_clockUntil, horizonTick);
+    }
+
+    // The tempo where a stretch starts, then each change in it, then once a beat through a ramp.
+    _Use_decl_annotations_
+    void PlaybackEngine::SendTempoChanges(int64_t fromTick, int64_t toTick, std::vector<int64_t> const& leads)
+    {
+        std::vector<size_t> outputs{};
+
+        for (size_t i = 0; i < m_settings.ClockOutputs.size(); ++i)
+        {
+            auto const& output = m_settings.ClockOutputs[i];
+
+            if (output.SendTempo && LookupDestination(output.Endpoint, output.Group).SpeaksMidi2)
+            {
+                outputs.push_back(i);
+            }
+        }
+
+        if (outputs.empty() || m_sequence == nullptr)
+        {
+            return;
+        }
+
+        auto const send = [&](int64_t tick, double bpm)
+        {
+            if (!std::isnan(m_tempoSent) && std::abs(bpm - m_tempoSent) < 0.005)
+            {
+                return;
+            }
+
+            m_tempoSent = bpm;
+            auto const base = TimestampAtTick(tick);
+
+            for (auto const i : outputs)
+            {
+                uint32_t words[4]{};
+                BuildSetTempo(bpm, m_settings.ClockOutputs[i].Group, words);
+
+                // Ahead of the pulse at the same moment, so the pulses are read at the new tempo.
+                m_output.Send(m_settings.ClockOutputs[i].Endpoint, EarlierBy(base, leads[i]) - 1, words, 4);
+            }
+        };
+
+        if (fromTick == m_segment.StartTick)
+        {
+            send(fromTick, m_tempo.BeatsPerMinuteAtTick(fromTick));
+        }
+
+        if (toTick <= fromTick)
+        {
+            return;
+        }
+
+        auto const& points = m_sequence->Tempo;
+
+        for (size_t i = 0; i < points.size(); ++i)
+        {
+            auto const& point = points[i];
+
+            if (point.Tick >= toTick)
+            {
+                break;
+            }
+
+            if (point.Tick >= fromTick)
+            {
+                send(point.Tick, point.BeatsPerMinute);
+            }
+
+            if (point.RampToNext && i + 1 < points.size())
+            {
+                auto const rampEnd = std::min(points[i + 1].Tick, toTick);
+                auto const first = std::max(fromTick, point.Tick + 1);
+                auto beat = point.Tick + ((first - point.Tick + TicksPerQuarterNote - 1) / TicksPerQuarterNote) * TicksPerQuarterNote;
+
+                for (; beat < rampEnd; beat += TicksPerQuarterNote)
+                {
+                    send(beat, m_tempo.BeatsPerMinuteAtTick(beat));
+                }
+            }
+        }
+    }
+
+    // Tells each time code output where playback is at this moment, with a full frame message,
+    // and carries on from the next whole group of eight quarter frames.
+    _Use_decl_annotations_
+    void PlaybackEngine::LocateTimeCode(uint64_t timestamp)
+    {
+        auto const& outputs = m_settings.TimeCodeOutputs;
+        m_timeCodeNext.assign(outputs.size(), 0);
+
+        auto const seconds = std::max({ 0.0, m_segment.StartSeconds, SecondsAtTimestamp(timestamp) });
+
+        for (size_t i = 0; i < outputs.size(); ++i)
+        {
+            auto const quarter = midiapp::SecondsPerFrame(outputs[i].Rate) / midiapp::MidiTimeCodeQuarterFramesPerFrame;
+
+            // A receiver puts a time code together from eight quarter frames, so they always
+            // start a group of eight on the same frames, counted from the top of the sequence.
+            constexpr uint64_t pieces = midiapp::MidiTimeCodePiecesPerSequence;
+            auto const next = static_cast<uint64_t>(std::ceil(seconds / quarter - 1e-6));
+            m_timeCodeNext[i] = (next + pieces - 1) / pieces * pieces;
+
+            // Just ahead of the first quarter frame, so the receiver knows where it is first.
+            SendFullFrame(outputs[i], EarlierBy(timestamp, TimeCodeLeadMicroseconds(outputs[i])) - 1, seconds);
+        }
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::SendFullFrame(TimeCodeOutput const& output, uint64_t timestamp, double seconds)
+    {
+        auto const frames = static_cast<uint64_t>(std::floor(std::max(0.0, seconds) / midiapp::SecondsPerFrame(output.Rate) + 1e-6));
+        auto const position = midiapp::PositionAfterFrames(output.Start, output.Rate, frames);
+
+        std::array<uint8_t, midiapp::MidiTimeCodeFullFramePayloadSize> payload{};
+        midiapp::FillFullFramePayload(position, output.Rate, payload.data());
+
+        // Eight bytes don't fit one system exclusive packet: a start with six, then an end with two.
+        auto const group = static_cast<uint32_t>(output.Group & 0x0F) << 24;
+
+        uint32_t const first[2]{
+            0x30160000u | group | (static_cast<uint32_t>(payload[0]) << 8) | payload[1],
+            (static_cast<uint32_t>(payload[2]) << 24) | (static_cast<uint32_t>(payload[3]) << 16) | (static_cast<uint32_t>(payload[4]) << 8) | payload[5] };
+
+        uint32_t const second[2]{
+            0x30320000u | group | (static_cast<uint32_t>(payload[6]) << 8) | payload[7],
+            0 };
+
+        m_output.Send(output.Endpoint, timestamp, first, 2);
+        m_output.Send(output.Endpoint, timestamp, second, 2);
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::SweepTimeCodeOutputs(uint64_t now)
+    {
+        auto const& outputs = m_settings.TimeCodeOutputs;
+
+        if (outputs.empty())
+        {
+            m_timeCodeNext.clear();
+            return;
+        }
+
+        auto const from = std::max(now, m_segment.StartTimestamp);
+        auto const horizonFor = [this, now](TimeCodeOutput const& output)
+        {
+            auto const lead = std::max<int64_t>(TimeCodeLeadMicroseconds(output), 0);
+            return SecondsAtTimestamp(now + (static_cast<uint64_t>(m_settings.LookAheadMicroseconds) + static_cast<uint64_t>(lead)) * m_clock.TicksPerSecond / 1000000);
+        };
+
+        // The outputs changed, or the time on the wall jumped (a tempo change before the
+        // playhead). Each receiver is told where it is now, rather than rushed or stalled to
+        // catch up.
+        auto relocate = m_timeCodeNext.size() != outputs.size();
+
+        for (size_t i = 0; i < outputs.size() && !relocate; ++i)
+        {
+            auto const frame = midiapp::SecondsPerFrame(outputs[i].Rate);
+            auto const next = static_cast<double>(m_timeCodeNext[i]) * frame / midiapp::MidiTimeCodeQuarterFramesPerFrame;
+
+            relocate = next + frame < m_segment.StartSeconds || next > std::max(horizonFor(outputs[i]), m_segment.StartSeconds) + frame * 3;
+        }
+
+        if (relocate)
+        {
+            LocateTimeCode(from);
+        }
+
+        auto const end = SegmentEnd();
+        auto const endSeconds = end == INT64_MAX ? std::numeric_limits<double>::infinity() : m_tempo.SecondsAtTick(end);
+        auto const ticksPerSecond = static_cast<double>(m_clock.TicksPerSecond);
+
+        for (size_t i = 0; i < outputs.size(); ++i)
+        {
+            auto const& output = outputs[i];
+            auto const lead = TimeCodeLeadMicroseconds(output);
+            auto const quarter = midiapp::SecondsPerFrame(output.Rate) / midiapp::MidiTimeCodeQuarterFramesPerFrame;
+            auto const limit = std::min(horizonFor(output), endSeconds);
+            auto& next = m_timeCodeNext[i];
+
+            for (; static_cast<double>(next) * quarter < limit; ++next)
+            {
+                // Each group of eight spells out the frame it started on.
+                auto const piece = static_cast<uint8_t>(next % midiapp::MidiTimeCodePiecesPerSequence);
+                auto const position = midiapp::PositionAfterFrames(output.Start, output.Rate, (next - piece) / midiapp::MidiTimeCodeQuarterFramesPerFrame);
+                auto const word = SystemWord(output.Group, 0xF1, midiapp::QuarterFrameDataByte(position, output.Rate, piece));
+                auto const offset = std::max(0.0, static_cast<double>(next) * quarter - m_segment.StartSeconds) * ticksPerSecond;
+
+                m_output.Send(output.Endpoint, EarlierBy(m_segment.StartTimestamp + static_cast<uint64_t>(std::llround(offset)), lead), &word, 1);
+            }
+        }
     }
 
     void PlaybackEngine::Sweep()
@@ -934,6 +1236,7 @@ namespace midisequencer
         SweepTracks(m_sequence->Tracks, now, anySolo, false, false);
         SweepMetronome(now);
         SweepClockOutputs(now);
+        SweepTimeCodeOutputs(now);
 
         // Notes that have ended don't need ending again.
         std::erase_if(m_sounding, [now](SoundingNote const& note) { return note.HandedOver && note.OffTimestamp <= now; });
@@ -973,6 +1276,7 @@ namespace midisequencer
             SweepTracks(m_sequence->Tracks, loopEndTimestamp, anySolo, false, false);
             SweepMetronome(loopEndTimestamp);
             SweepClockOutputs(loopEndTimestamp);
+            SweepTimeCodeOutputs(loopEndTimestamp);
 
             // A note whose end is still waiting, such as one started before the loop was turned
             // on, ends at the loop's end too.
@@ -1004,6 +1308,22 @@ namespace midisequencer
             m_renderedUntil.clear();
             m_metronomeUntil = m_settings.LoopStart;
             m_clockUntil = m_settings.LoopStart;
+
+            // A device following the clock is told where the loop went back to, before its next
+            // pulse. Start and stop aren't sent: those would make it start again from the top.
+            for (auto const& output : m_settings.ClockOutputs)
+            {
+                if (output.SendSongPosition)
+                {
+                    auto const position = std::min<int64_t>(m_settings.LoopStart / TicksPerSongPositionBeat, 0x3FFF);
+                    auto const pointer = SystemWord(output.Group, 0xF2, static_cast<uint8_t>(position & 0x7F), static_cast<uint8_t>(position >> 7));
+                    m_output.Send(output.Endpoint, EarlierBy(loopEndTimestamp, ClockLeadMicroseconds(output)) - 1, &pointer, 1);
+                }
+            }
+
+            // Time code goes back with the music.
+            LocateTimeCode(loopEndTimestamp);
+
             ++m_counters.LoopPasses;
         }
     }
@@ -1062,7 +1382,7 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
-    void PlaybackEngine::QueueLaunch(std::wstring const& trackId, TrackPlayMode mode, std::wstring const& clipId, LaunchQuantize quantize)
+    void PlaybackEngine::QueueLaunch(std::wstring const& trackId, TrackPlayMode mode, std::wstring const& clipId, LaunchQuantize quantize, int32_t slot)
     {
         auto& state = m_launch[trackId];
 
@@ -1070,6 +1390,7 @@ namespace midisequencer
         {
             state.Mode = mode;
             state.ClipId = clipId;
+            state.Slot = slot;
             state.ClipStartUnwrapped = m_segment.StartTick;
             state.Pending = false;
             return;
@@ -1078,11 +1399,12 @@ namespace midisequencer
         state.Pending = true;
         state.PendingMode = mode;
         state.PendingClipId = clipId;
+        state.PendingSlot = slot;
         state.PendingAtUnwrapped = QuantizePoint(quantize);
     }
 
     _Use_decl_annotations_
-    void PlaybackEngine::LaunchClip(std::wstring const& trackId, std::wstring const& clipId, LaunchQuantize quantize)
+    void PlaybackEngine::LaunchClip(std::wstring const& trackId, std::wstring const& clipId, LaunchQuantize quantize, int32_t slot)
     {
         int64_t startFrom{ -1 };
 
@@ -1100,7 +1422,7 @@ namespace midisequencer
                 startFrom = m_segment.StartTick;
             }
 
-            QueueLaunch(trackId, TrackPlayMode::Clip, clipId, quantize);
+            QueueLaunch(trackId, TrackPlayMode::Clip, clipId, quantize, slot);
         }
 
         if (startFrom >= 0)
@@ -1116,7 +1438,7 @@ namespace midisequencer
 
         if (!trackId.empty())
         {
-            QueueLaunch(trackId, TrackPlayMode::Stopped, std::wstring{}, quantize);
+            QueueLaunch(trackId, TrackPlayMode::Stopped, std::wstring{}, quantize, -1);
         }
     }
 
@@ -1127,7 +1449,7 @@ namespace midisequencer
 
         if (!trackId.empty())
         {
-            QueueLaunch(trackId, TrackPlayMode::Timeline, std::wstring{}, quantize);
+            QueueLaunch(trackId, TrackPlayMode::Timeline, std::wstring{}, quantize, -1);
             return;
         }
 
@@ -1143,16 +1465,16 @@ namespace midisequencer
 
         for (auto const& id : ids)
         {
-            QueueLaunch(id, TrackPlayMode::Timeline, std::wstring{}, quantize);
+            QueueLaunch(id, TrackPlayMode::Timeline, std::wstring{}, quantize, -1);
         }
     }
 
     _Use_decl_annotations_
-    void PlaybackEngine::QueueLaunchAt(std::wstring const& trackId, TrackPlayMode mode, std::wstring const& clipId, int64_t unwrappedTick)
+    void PlaybackEngine::QueueLaunchAt(std::wstring const& trackId, TrackPlayMode mode, std::wstring const& clipId, int64_t unwrappedTick, int32_t slot)
     {
         if (!m_playing)
         {
-            QueueLaunch(trackId, mode, clipId, 0);
+            QueueLaunch(trackId, mode, clipId, 0, slot);
             return;
         }
 
@@ -1160,6 +1482,7 @@ namespace midisequencer
         state.Pending = true;
         state.PendingMode = mode;
         state.PendingClipId = clipId;
+        state.PendingSlot = slot;
         state.PendingAtUnwrapped = std::max(unwrappedTick, Unwrap(FurthestRendered()));
     }
 
@@ -1171,13 +1494,13 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
-    void PlaybackEngine::LaunchClipAt(std::wstring const& trackId, std::wstring const& clipId, int64_t unwrappedTick)
+    void PlaybackEngine::LaunchClipAt(std::wstring const& trackId, std::wstring const& clipId, int64_t unwrappedTick, int32_t slot)
     {
         std::scoped_lock guard{ m_lock };
 
         if (!trackId.empty() && !clipId.empty())
         {
-            QueueLaunchAt(trackId, TrackPlayMode::Clip, clipId, unwrappedTick);
+            QueueLaunchAt(trackId, TrackPlayMode::Clip, clipId, unwrappedTick, slot);
         }
     }
 
@@ -1188,7 +1511,7 @@ namespace midisequencer
 
         if (!trackId.empty())
         {
-            QueueLaunchAt(trackId, TrackPlayMode::Stopped, std::wstring{}, unwrappedTick);
+            QueueLaunchAt(trackId, TrackPlayMode::Stopped, std::wstring{}, unwrappedTick, -1);
         }
     }
 
@@ -1245,9 +1568,11 @@ namespace midisequencer
             view.TrackId = id;
             view.Mode = state.Mode;
             view.ClipId = state.ClipId;
+            view.Slot = state.Slot;
             view.Pending = state.Pending;
             view.PendingMode = state.PendingMode;
             view.PendingClipId = state.PendingClipId;
+            view.PendingSlot = state.PendingSlot;
             view.PendingTick = Wrap(state.PendingAtUnwrapped);
 
             if (state.Mode == TrackPlayMode::Clip && m_sequence != nullptr && m_playing)
@@ -1261,6 +1586,7 @@ namespace midisequencer
                         view.Progress = clip->Loop || into < clip->Length
                             ? static_cast<double>(into % clip->Length) / static_cast<double>(clip->Length)
                             : 1.0;
+                        view.Pass = static_cast<uint64_t>(into / clip->Length);
                     }
                 }
             }

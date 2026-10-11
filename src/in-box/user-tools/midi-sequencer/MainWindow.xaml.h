@@ -14,8 +14,12 @@
 #include "ArrangeRenderer.h"
 #include "EndpointDirectory.h"
 #include "PianoRoll.h"
+#include "PatternEditor.h"
+#include "SequenceGenerator.h"
 #include "PlaybackEngine.h"
 #include "RecordingTake.h"
+#include "RemoteControl.h"
+#include "RemoteEndpoint.h"
 #include "SequenceEdits.h"
 #include "SequenceModel.h"
 #include "SequenceUndo.h"
@@ -50,6 +54,7 @@ namespace winrt::midisequencer::implementation
         void OnImportClipFileClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnExportClipFilesClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnExportStandardMidiFileClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnRemoteControlClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnCloseWindowClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         void OnGoToStartClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -60,6 +65,7 @@ namespace winrt::midisequencer::implementation
         void OnMetronomeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnMetronomeMenuClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnClockClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnTempoDisplayClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnLaunchQuantizeChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
         void OnSnapChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
         void OnCaptureClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -90,6 +96,16 @@ namespace winrt::midisequencer::implementation
         void OnEditorKeyboardClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnValuesAsChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
         void OnEditorCloseClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPatternStepsChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnPatternStepSizeChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnPatternSwingChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnPatternKeepLengthClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPatternVaryClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPatternMakeNotesClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnGeneratorTypeChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnGeneratorBarsChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnGeneratorStepSizeChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnGeneratorChangesClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnSplitterPressed(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
         void OnSplitterMoved(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
         void OnSplitterReleased(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
@@ -127,8 +143,8 @@ namespace winrt::midisequencer::implementation
         // untouched new one. Otherwise the other sequence opens in a window of its own.
         bool CanReplaceDocument() const noexcept;
         void OpenInNewWindow(_In_ std::wstring const& path, _In_ bool sample = false) noexcept;
-        std::wstring ShowFileDialog(_In_ bool save, _In_ std::wstring const& defaultName, _In_ std::vector<std::pair<std::wstring, std::wstring>> const& filters, _In_ bool folders = false) noexcept;
-        std::wstring DocumentsFolder() noexcept;
+        std::wstring ShowFileDialog(_In_ bool save, _In_ std::wstring const& defaultName, _In_ std::vector<std::pair<std::wstring, std::wstring>> const& filters, _In_ bool folders = false, _In_ std::wstring const& startFolder = {}) noexcept;
+        std::wstring DocumentsFolder(_In_ std::wstring const& subfolder) noexcept;
 
         // Records the changes for undo, marks the sequence changed, and redraws.
         void Commit(_In_ std::wstring const& name, _In_ seq::ChangeList changes);
@@ -156,6 +172,7 @@ namespace winrt::midisequencer::implementation
         void ScrollToTick(_In_ int64_t tick) noexcept;
         void UpdatePlayhead() noexcept;
         xaml::UIElement MakeHeaderRow(_In_ seq::ArrangeRow const& row);
+        xaml::UIElement MakeLaneHeader(_In_ seq::ArrangeRow const& row);
         void SelectTrack(_In_ std::wstring const& trackId) noexcept;
         void ToggleFolder(_In_ std::wstring const& trackId) noexcept;
         void ToggleTrackFlag(_In_ std::wstring const& trackId, _In_ wchar_t flag, _In_ bool value) noexcept;
@@ -189,7 +206,7 @@ namespace winrt::midisequencer::implementation
         LaneHit HitTestLane(_In_ bool pinned, _In_ foundation::Point point) noexcept;
         void ShowPlacementMenu(_In_ std::wstring const& trackId, _In_ size_t placement, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
         void ShowLaneMenu(_In_ seq::ArrangeRow const& row, _In_ int64_t tick, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
-        void CreateClipAt(_In_ std::wstring const& trackId, _In_ int64_t tick) noexcept;
+        void CreateClipAt(_In_ std::wstring const& trackId, _In_ int64_t tick, _In_ std::optional<seq::PatternMode> pattern = std::nullopt, _In_ std::optional<seq::GeneratorType> generator = std::nullopt) noexcept;
         void DeleteSelectedPlacement() noexcept;
         void DuplicateSelectedPlacement() noexcept;
         void MakePlacementUnique(_In_ std::wstring const& trackId, _In_ size_t placement) noexcept;
@@ -199,7 +216,7 @@ namespace winrt::midisequencer::implementation
         void DeleteScene(_In_ size_t scene) noexcept;
         void LaunchScene(_In_ size_t scene) noexcept;
         void LaunchSlot(_In_ std::wstring const& trackId, _In_ size_t scene) noexcept;
-        void CreateClipInSlot(_In_ std::wstring const& trackId, _In_ size_t scene) noexcept;
+        void CreateClipInSlot(_In_ std::wstring const& trackId, _In_ size_t scene, _In_ std::optional<seq::PatternMode> pattern = std::nullopt, _In_ std::optional<seq::GeneratorType> generator = std::nullopt) noexcept;
         void PlaceSlotClipOnTimeline(_In_ std::wstring const& trackId, _In_ size_t scene) noexcept;
         void DeleteSlotClip(_In_ std::wstring const& trackId, _In_ size_t scene) noexcept;
         void ShowSlotMenu(_In_ std::wstring const& trackId, _In_ size_t scene, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
@@ -209,7 +226,7 @@ namespace winrt::midisequencer::implementation
         void SetLauncherVisible(_In_ bool visible) noexcept;
         void UpdateLeds() noexcept;
         int64_t SnapGrid() const noexcept;
-        std::wstring NextClipName() const;
+        std::wstring NextClipName(_In_ wchar_t const* stemKey = L"DefaultClipName") const;
         media::SolidColorBrush BrushFor(_In_ seq::Color color) const;
         media::SolidColorBrush HeaderBackground(_In_ seq::ArrangeRow const& row) const;
         media::Brush ThemeBrush(_In_ wchar_t const* key);
@@ -228,6 +245,61 @@ namespace winrt::midisequencer::implementation
         void OnEditorKeyDown(_In_ input::KeyRoutedEventArgs const& args);
         void InvalidateEditor() noexcept;
         seq::Track const* EditorTrack() const noexcept;
+
+        // ---- pattern clips (MainWindowPattern.cpp) ----
+        bool EditorShowsPattern() const noexcept;
+        void InitializePatternEditor() noexcept;
+        void UpdatePatternToolbar() noexcept;
+        void UpdatePatternInspector() noexcept;
+        void UpdatePatternFooter() noexcept;
+        void ApplyPatternEdit(_In_ std::optional<seq::PatternEdit> edit) noexcept;
+        void EditPattern(_In_ std::wstring const& name, _In_ std::function<void(seq::PatternSettings&)> const& edit) noexcept;
+        void EditSelectedStep(_In_ std::wstring const& name, _In_ std::function<void(seq::PatternStep&)> const& edit) noexcept;
+        std::wstring PatternLaneName(_In_ seq::PatternLane const& lane, _In_ seq::PatternMode mode) const;
+        void ShowPatternLaneMenu(_In_ size_t lane, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
+        void AddPatternLane() noexcept;
+        void VaryPattern() noexcept;
+        void MakeNotesFromPattern() noexcept;
+        void OnPatternPressed(_In_ input::PointerRoutedEventArgs const& args);
+        void OnPatternMoved(_In_ input::PointerRoutedEventArgs const& args);
+        void OnPatternReleased(_In_ input::PointerRoutedEventArgs const& args);
+        bool OnPatternKeyDown(_In_ winrt::Windows::System::VirtualKey key, _In_ bool shift) noexcept;
+
+        // ---- generator clips (MainWindowGenerator.cpp) ----
+        bool EditorShowsGenerator() const noexcept;
+        void InitializeGeneratorEditor() noexcept;
+        void UpdateGeneratorToolbar() noexcept;
+        void UpdateGeneratorPanel() noexcept;
+        void UpdateGeneratorInspector() noexcept;
+        void EditGenerator(_In_ std::wstring const& name, _In_ std::function<void(seq::GeneratorSettings&)> const& edit) noexcept;
+
+        // ---- automation and the tempo map (MainWindowAutomation.cpp) ----
+        std::wstring LaneName(_In_ seq::AutomationLane const& lane) const;
+        std::wstring LaneDescription(_In_ seq::Track const& track, _In_ seq::AutomationLane const& lane) const;
+        std::wstring LaneValueText(_In_ seq::AutomationLane const& lane, _In_ uint32_t value) const;
+        std::optional<uint32_t> PlayingLaneValue(_In_ seq::Track const& track, _In_ seq::AutomationLane const& lane, _In_ int64_t tick) const;
+        void UpdateLaneChips(_In_ int64_t tick) noexcept;
+        void ToggleLanes(_In_ std::wstring const& trackId) noexcept;
+        void ShowAddLaneDialog(_In_ std::wstring const& trackId);
+        void EditLanes(_In_ std::wstring const& trackId, _In_ std::wstring const& name, _In_ std::function<void(std::vector<seq::AutomationLane>&)> const& edit);
+        void RenameLane(_In_ std::wstring const& trackId, _In_ std::wstring const& laneId);
+        void ShowLaneRowMenu(_In_ std::wstring const& trackId, _In_ std::wstring const& laneId, _In_ std::optional<seq::LanePoint> addAt, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
+        void ShowLanePointMenu(_In_ std::wstring const& trackId, _In_ std::wstring const& laneId, _In_ size_t index, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
+        void ShowTempoPointMenu(_In_ size_t index, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
+        void AddTempoMenuItems(_In_ controls::MenuFlyout const& menu, _In_ int64_t tick);
+        void PromptForTempo(_In_ int64_t tick, _In_ std::optional<size_t> index);
+        void PromptForMeter(_In_ int64_t bar);
+        void ShowTempoFlyout(_In_ xaml::FrameworkElement const& anchor);
+        void DeleteSelectedAutomationPoint() noexcept;
+        void ClearAutomationSelection() noexcept;
+        int64_t TickAtLaneX(_In_ double x) const noexcept;
+        size_t HitTestLanePoint(_In_ seq::AutomationLane const& lane, _In_ float rowTop, _In_ float rowHeight, _In_ foundation::Point point) const noexcept;
+        size_t HitTestTempoPoint(_In_ float rowTop, _In_ float rowHeight, _In_ foundation::Point point) const noexcept;
+        bool OnAutomationPressed(_In_ bool pinned, _In_ seq::ArrangeRow const& row, _In_ input::PointerRoutedEventArgs const& args);
+        bool OnTempoPressed(_In_ bool pinned, _In_ seq::ArrangeRow const& row, _In_ input::PointerRoutedEventArgs const& args);
+        void OnPointDragMoved(_In_ input::PointerRoutedEventArgs const& args);
+        void OnPointDragReleased();
+        bool OnAutomationRightTapped(_In_ bool pinned, _In_ seq::ArrangeRow const& row, _In_ input::RightTappedRoutedEventArgs const& args);
 
         // ---- playback, devices and recording (MainWindowPlayback.cpp) ----
         winrt::fire_and_forget StartMidiAsync();
@@ -256,6 +328,21 @@ namespace winrt::midisequencer::implementation
         void AuditionNote(_In_ uint8_t note, _In_ bool on) noexcept;
         void LaunchKeyboard(_In_ std::wstring const& endpointId, _In_ uint8_t group, _In_ int8_t channel) noexcept;
         void ShowMetronomeFlyout();
+
+        // ---- clock and sync (MainWindowClock.cpp) ----
+        void ShowClockDialog();
+
+        // ---- remote control and MIDI Glass (MainWindowRemote.cpp) ----
+        winrt::fire_and_forget StartRemoteControlAsync();
+        void StopRemoteControl() noexcept;
+        void OnRemoteMessage(_In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept;
+        seq::RemoteState CurrentRemoteState();
+        void UpdateRemoteFeedback() noexcept;
+        void ShowRemoteControlDialog();
+        winrt::fire_and_forget MakeGlassLayoutAsync();
+
+        // Another tool installed beside this one, or empty when it isn't.
+        std::filesystem::path SiblingToolPath(_In_ std::wstring const& executable) const;
         seq::LaunchQuantize LaunchQuantize() const noexcept;
         std::wstring DescribeDestination(_In_ seq::Track const& track) const;
         std::wstring DescribeSource(_In_ seq::Track const& track) const;
@@ -342,9 +429,59 @@ namespace winrt::midisequencer::implementation
         double m_splitterStartY{ 0 };
         double m_splitterStartHeight{ 0 };
 
+        // Dragging a point on an automation lane or a tempo change, or drawing on a lane.
+        struct PointDrag
+        {
+            enum class Kind : uint8_t { None, LanePoint, Pencil, TempoPoint };
+
+            Kind What{ Kind::None };
+            bool Pinned{ false };
+            bool Moved{ false };
+            std::wstring TrackId{};
+            std::wstring LaneId{};
+            size_t Point{ SIZE_MAX };
+            foundation::Point Start{};
+            float RowTop{ 0 };
+            float RowHeight{ 0 };
+
+            // The tempo row's scale when the drag began.
+            seq::TempoRange Range{};
+
+            std::vector<seq::AutomationLane> LanesBefore{};
+            std::vector<seq::TempoPoint> TempoBefore{};
+
+            // What the pencil has drawn so far, by tick, and where it last was.
+            std::map<int64_t, uint32_t> Drawn{};
+            int64_t LastTick{ -1 };
+            uint32_t LastValue{ 0 };
+        };
+
+        PointDrag m_pointDrag{};
+
+        // The selected automation point or tempo change, which Delete removes.
+        std::wstring m_selectedLaneTrackId{};
+        std::wstring m_selectedLaneId{};
+        size_t m_selectedLanePoint{ SIZE_MAX };
+        size_t m_selectedTempoPoint{ SIZE_MAX };
+
+        // Each automation header's value chip, by track and lane.
+        struct LaneChip
+        {
+            std::wstring TrackId{};
+            std::wstring LaneId{};
+            controls::TextBlock Text{ nullptr };
+        };
+
+        std::vector<LaneChip> m_laneChips{};
+        winrt::hstring m_textEmptyLane{};
+        winrt::hstring m_textClipLane{};
+
         seq::Palette m_palette{};
         seq::ArrangeRenderer m_renderer{};
         seq::PianoRoll m_roll{};
+        seq::PatternEditor m_pattern{};
+        bool m_updatingPatternUi{ false };
+        bool m_patternGesture{ false };
         std::optional<uint8_t> m_auditioning{};
         std::chrono::steady_clock::time_point m_lastEditorPressTime{};
         foundation::Point m_lastEditorPressPoint{};
@@ -429,6 +566,13 @@ namespace winrt::midisequencer::implementation
 
         std::map<std::wstring, std::deque<HeardMessage>> m_heard{};
         std::atomic<uint64_t> m_lastInputTicks{ 0 };
+
+        // Remote control: the sequencer's own endpoint, and what a surface was last told.
+        std::shared_ptr<seq::RemoteEndpoint> m_remote{};
+        bool m_remoteStarting{ false };
+        std::optional<seq::RemoteState> m_remoteShown{};
+        xaml::DispatcherTimer m_remoteTimer{ nullptr };
+        uint32_t m_remoteTicks{ 0 };
 
         xaml::DispatcherTimer m_frameTimer{ nullptr };
         xaml::DispatcherTimer m_serviceTimer{ nullptr };

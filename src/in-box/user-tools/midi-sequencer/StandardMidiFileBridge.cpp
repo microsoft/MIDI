@@ -476,6 +476,12 @@ namespace midisequencer
         std::vector<OutgoingEvent> outgoing{};
         std::vector<RenderedMessage> rendered{};
 
+        // A Standard MIDI File carries MIDI 1.0, so lanes step at MIDI 1.0's resolution.
+        RenderOptions options{};
+        options.Midi2 = false;
+        options.LaneStepTicks = LaneStepTicks(FastestTempo(sequence.Tempo), 0);
+        options.LaneStartValues = true;
+
         for (size_t t = 0; t < tracks.size() && file.Tracks.size() < 0xFFFE; ++t)
         {
             auto const& track = *tracks[t];
@@ -492,7 +498,7 @@ namespace midisequencer
             }
 
             rendered.clear();
-            RenderTrack(sequence, track, 0, INT64_MAX, rendered);
+            RenderTrack(sequence, track, 0, INT64_MAX, rendered, options);
 
             for (auto& message : rendered)
             {

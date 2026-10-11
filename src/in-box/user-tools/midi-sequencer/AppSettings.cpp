@@ -8,6 +8,12 @@
 #include "pch.h"
 #include "AppSettings.h"
 
+#include "MidiTimeCode.h"
+
+#include <winrt/Windows.Data.Json.h>
+
+namespace json = winrt::Windows::Data::Json;
+
 namespace midisequencer
 {
     namespace
@@ -29,6 +35,163 @@ namespace midisequencer
         constexpr wchar_t ValueEditorHeight[] = L"EditorHeight";
         constexpr wchar_t ValueValuesAs[] = L"ValuesAs";
         constexpr wchar_t ValueLastFolder[] = L"LastFolder";
+        constexpr wchar_t ValueApplyDeviceOffsets[] = L"ApplyDeviceOffsets";
+        constexpr wchar_t ValueClockOutputs[] = L"ClockOutputs";
+        constexpr wchar_t ValueTimeCode[] = L"TimeCode";
+        constexpr wchar_t ValueClockSendsTempo[] = L"ClockSendsTempo";
+        constexpr wchar_t ValueRemoteControlEnabled[] = L"RemoteControlEnabled";
+
+        // Text read back from the registry is capped like anything else read from outside.
+        constexpr size_t MaximumSettingText = 1024;
+
+        std::wstring CappedString(_In_ json::JsonObject const& o, _In_ wchar_t const* key)
+        {
+            if (!o.HasKey(key) || o.Lookup(key).ValueType() != json::JsonValueType::String)
+            {
+                return {};
+            }
+
+            std::wstring text{ o.Lookup(key).GetString() };
+            text.resize(std::min(text.size(), MaximumSettingText));
+            return text;
+        }
+
+        double NumberOr(_In_ json::JsonObject const& o, _In_ wchar_t const* key, _In_ double fallback)
+        {
+            if (!o.HasKey(key) || o.Lookup(key).ValueType() != json::JsonValueType::Number)
+            {
+                return fallback;
+            }
+
+            auto const value = o.Lookup(key).GetNumber();
+            return std::isfinite(value) ? value : fallback;
+        }
+
+        bool BoolOr(_In_ json::JsonObject const& o, _In_ wchar_t const* key, _In_ bool fallback)
+        {
+            return o.HasKey(key) && o.Lookup(key).ValueType() == json::JsonValueType::Boolean ? o.Lookup(key).GetBoolean() : fallback;
+        }
+
+        std::vector<ClockOutputSetting> ParseClockOutputs(_In_ std::wstring const& text) noexcept
+        {
+            std::vector<ClockOutputSetting> outputs{};
+
+            try
+            {
+                json::JsonArray array{ nullptr };
+
+                if (text.empty() || !json::JsonArray::TryParse(text, array))
+                {
+                    return outputs;
+                }
+
+                for (auto const& value : array)
+                {
+                    // An array holds values: check the type, then ask for the object.
+                    if (value.ValueType() != json::JsonValueType::Object)
+                    {
+                        continue;
+                    }
+
+                    auto const o = value.GetObject();
+
+                    ClockOutputSetting output{};
+                    output.EndpointId = CappedString(o, L"id");
+                    output.EndpointName = CappedString(o, L"name");
+                    output.Group = static_cast<uint8_t>(std::clamp(NumberOr(o, L"group", 0), 0.0, 15.0));
+                    output.Clock = BoolOr(o, L"clock", true);
+                    output.StartStop = BoolOr(o, L"startStop", true);
+                    output.SongPosition = BoolOr(o, L"songPosition", true);
+                    output.OffsetMilliseconds = static_cast<int32_t>(std::clamp(NumberOr(o, L"offset", 0),
+                        -static_cast<double>(AppSettings::MaximumClockOffsetMilliseconds), static_cast<double>(AppSettings::MaximumClockOffsetMilliseconds)));
+
+                    if (!output.EndpointId.empty() || !output.EndpointName.empty())
+                    {
+                        outputs.push_back(std::move(output));
+                    }
+
+                    if (outputs.size() >= AppSettings::MaximumClockOutputs)
+                    {
+                        break;
+                    }
+                }
+            }
+            catch (...)
+            {
+                outputs.clear();
+            }
+
+            return outputs;
+        }
+
+        std::wstring WriteClockOutputs(_In_ std::vector<ClockOutputSetting> const& outputs)
+        {
+            json::JsonArray array{};
+
+            for (auto const& output : outputs)
+            {
+                json::JsonObject o{};
+                o.SetNamedValue(L"id", json::JsonValue::CreateStringValue(output.EndpointId));
+                o.SetNamedValue(L"name", json::JsonValue::CreateStringValue(output.EndpointName));
+                o.SetNamedValue(L"group", json::JsonValue::CreateNumberValue(output.Group));
+                o.SetNamedValue(L"clock", json::JsonValue::CreateBooleanValue(output.Clock));
+                o.SetNamedValue(L"startStop", json::JsonValue::CreateBooleanValue(output.StartStop));
+                o.SetNamedValue(L"songPosition", json::JsonValue::CreateBooleanValue(output.SongPosition));
+                o.SetNamedValue(L"offset", json::JsonValue::CreateNumberValue(output.OffsetMilliseconds));
+                array.Append(o);
+            }
+
+            return std::wstring{ array.Stringify() };
+        }
+
+        TimeCodeSetting ParseTimeCode(_In_ std::wstring const& text) noexcept
+        {
+            TimeCodeSetting setting{};
+
+            try
+            {
+                json::JsonObject o{ nullptr };
+
+                if (text.empty() || !json::JsonObject::TryParse(text, o))
+                {
+                    return setting;
+                }
+
+                setting.EndpointId = CappedString(o, L"id");
+                setting.EndpointName = CappedString(o, L"name");
+                setting.Enabled = BoolOr(o, L"enabled", !setting.EndpointId.empty() || !setting.EndpointName.empty());
+                setting.Group = static_cast<uint8_t>(std::clamp(NumberOr(o, L"group", 0), 0.0, 15.0));
+
+                auto const rate = static_cast<int32_t>(std::clamp(NumberOr(o, L"rate", 3), 0.0, 3.0));
+                setting.Rate = midiapp::IsValidFrameRate(rate) ? rate : 3;
+
+                midiapp::MidiTimeCodePosition start{};
+                auto const frameRate = midiapp::FrameRateFromValue(setting.Rate);
+
+                if (midiapp::TryParsePosition(CappedString(o, L"start"), frameRate, start))
+                {
+                    setting.Start = midiapp::FormatPosition(midiapp::ClampPosition(start, frameRate), frameRate);
+                }
+            }
+            catch (...)
+            {
+                setting = TimeCodeSetting{};
+            }
+
+            return setting;
+        }
+
+        std::wstring WriteTimeCode(_In_ TimeCodeSetting const& setting)
+        {
+            json::JsonObject o{};
+            o.SetNamedValue(L"enabled", json::JsonValue::CreateBooleanValue(setting.Enabled));
+            o.SetNamedValue(L"id", json::JsonValue::CreateStringValue(setting.EndpointId));
+            o.SetNamedValue(L"name", json::JsonValue::CreateStringValue(setting.EndpointName));
+            o.SetNamedValue(L"group", json::JsonValue::CreateNumberValue(setting.Group));
+            o.SetNamedValue(L"rate", json::JsonValue::CreateNumberValue(setting.Rate));
+            o.SetNamedValue(L"start", json::JsonValue::CreateStringValue(setting.Start));
+            return std::wstring{ o.Stringify() };
+        }
 
         // Snap and launch values a person can pick. Anything else in the registry is ignored.
         bool IsKnownGrid(uint32_t ticks) noexcept
@@ -91,6 +254,11 @@ namespace midisequencer
         m_valuesAs = valuesAs <= 2 ? static_cast<ValueDisplay>(valuesAs) : ValueDisplay::Midi2;
 
         m_lastFolder = ReadString(ValueLastFolder, L"");
+        m_applyDeviceOffsets = ReadDword(ValueApplyDeviceOffsets, 1) != 0;
+        m_clockOutputs = ParseClockOutputs(ReadString(ValueClockOutputs, L""));
+        m_timeCode = ParseTimeCode(ReadString(ValueTimeCode, L""));
+        m_clockSendsTempo = ReadDword(ValueClockSendsTempo, 1) != 0;
+        m_remoteControlEnabled = ReadDword(ValueRemoteControlEnabled, 0) != 0;
     }
 
     void AppSettings::MetronomeEnabled(bool value) noexcept
@@ -188,5 +356,50 @@ namespace midisequencer
     {
         m_lastFolder = value;
         WriteString(ValueLastFolder, value);
+    }
+
+    void AppSettings::ApplyDeviceOffsets(bool value) noexcept
+    {
+        m_applyDeviceOffsets = value;
+        WriteDword(ValueApplyDeviceOffsets, value ? 1 : 0);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::ClockOutputs(std::vector<ClockOutputSetting> const& value) noexcept
+    {
+        try
+        {
+            m_clockOutputs = value;
+            m_clockOutputs.resize(std::min(m_clockOutputs.size(), MaximumClockOutputs));
+            WriteString(ValueClockOutputs, WriteClockOutputs(m_clockOutputs));
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::TimeCode(TimeCodeSetting const& value) noexcept
+    {
+        try
+        {
+            m_timeCode = value;
+            WriteString(ValueTimeCode, WriteTimeCode(m_timeCode));
+        }
+        catch (...)
+        {
+        }
+    }
+
+    void AppSettings::ClockSendsTempo(bool value) noexcept
+    {
+        m_clockSendsTempo = value;
+        WriteDword(ValueClockSendsTempo, value ? 1 : 0);
+    }
+
+    void AppSettings::RemoteControlEnabled(bool value) noexcept
+    {
+        m_remoteControlEnabled = value;
+        WriteDword(ValueRemoteControlEnabled, value ? 1 : 0);
     }
 }

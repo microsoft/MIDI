@@ -24,15 +24,19 @@
 #include <atomic>
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "SequenceModel.h"
 #include "SequenceRender.h"
+
+#include "MidiTimeCode.h"
 
 namespace midisequencer
 {
@@ -62,6 +66,9 @@ namespace midisequencer
     {
         bool SpeaksMidi2{ true };
         uint32_t OffsetMicroseconds{ 0 };
+
+        // How often a ramp may be sent to the device, from MIDI Settings. 0 when it has none.
+        uint32_t AutomationIntervalMilliseconds{ 0 };
     };
 
     struct MetronomeSettings
@@ -82,6 +89,28 @@ namespace midisequencer
 
         // Positive sends later, negative sends earlier, to line up a device that's slow or quick.
         int32_t OffsetMicroseconds{ 0 };
+
+        // What it gets. A device that only wants some of it can go without the rest.
+        bool SendClock{ true };
+        bool SendStartStop{ true };
+        bool SendSongPosition{ true };
+
+        // A MIDI 2.0 Set Tempo message at each change, and on each beat of a ramp, so the device
+        // knows the tempo before the pulses show it. Only sent to a destination that speaks MIDI 2.0.
+        bool SendTempo{ false };
+    };
+
+    // MIDI Time Code, for video and lighting gear. It counts the time on the wall from the top of
+    // the sequence, starting at Start, so tempo changes don't change it.
+    struct TimeCodeOutput
+    {
+        EndpointRef Endpoint{};
+        uint8_t Group{ 0 };
+        midiapp::MidiTimeCodeFrameRate Rate{ midiapp::MidiTimeCodeFrameRate::Frames30 };
+        midiapp::MidiTimeCodePosition Start{};
+
+        // Positive sends later, negative sends earlier.
+        int32_t OffsetMicroseconds{ 0 };
     };
 
     struct EngineSettings
@@ -90,6 +119,7 @@ namespace midisequencer
         uint32_t SweepMicroseconds{ 5000 };
         MetronomeSettings Metronome{};
         std::vector<ClockOutput> ClockOutputs{};
+        std::vector<TimeCodeOutput> TimeCodeOutputs{};
 
         // The timeline loop. Playback that reaches LoopEnd carries on from LoopStart.
         bool LoopEnabled{ false };
@@ -129,13 +159,32 @@ namespace midisequencer
         TrackPlayMode Mode{ TrackPlayMode::Timeline };
         std::wstring ClipId{};
 
+        // The launcher slot the clip was launched from, or -1. A clip can sit in several slots.
+        int32_t Slot{ -1 };
+
         // How far through its clip a launched clip is, 0 to 1.
         double Progress{ 0 };
+
+        // How many times it has gone round since it was launched.
+        uint64_t Pass{ 0 };
 
         bool Pending{ false };
         TrackPlayMode PendingMode{ TrackPlayMode::Timeline };
         std::wstring PendingClipId{};
+        int32_t PendingSlot{ -1 };
         int64_t PendingTick{ 0 };
+
+        // Whether the slot holding this clip is the one playing, or the one waiting to. A launch
+        // that named no slot counts for every slot that holds the clip.
+        bool Plays(_In_ std::wstring const& clipId, _In_ size_t slot) const noexcept
+        {
+            return Mode == TrackPlayMode::Clip && !clipId.empty() && ClipId == clipId && (Slot < 0 || static_cast<size_t>(Slot) == slot);
+        }
+
+        bool Queues(_In_ std::wstring const& clipId, _In_ size_t slot) const noexcept
+        {
+            return Pending && PendingMode == TrackPlayMode::Clip && !clipId.empty() && PendingClipId == clipId && (PendingSlot < 0 || static_cast<size_t>(PendingSlot) == slot);
+        }
     };
 
     class PlaybackEngine
@@ -172,7 +221,7 @@ namespace midisequencer
 
         // The launcher. A launch or a stop waits for the next quantize point that hasn't been
         // handed over yet. Launching while stopped starts playback with the clip.
-        void LaunchClip(_In_ std::wstring const& trackId, _In_ std::wstring const& clipId, _In_ LaunchQuantize quantize);
+        void LaunchClip(_In_ std::wstring const& trackId, _In_ std::wstring const& clipId, _In_ LaunchQuantize quantize, _In_ int32_t slot = -1);
         void StopTrack(_In_ std::wstring const& trackId, _In_ LaunchQuantize quantize);
 
         // Back to the timeline at the next quantize point. An empty id means every track.
@@ -184,7 +233,7 @@ namespace midisequencer
         // which keep counting when the timeline loop goes round. A place already handed over moves
         // to the first one that isn't.
         int64_t NextLaunchPoint(_In_ LaunchQuantize quantize) const;
-        void LaunchClipAt(_In_ std::wstring const& trackId, _In_ std::wstring const& clipId, _In_ int64_t unwrappedTick);
+        void LaunchClipAt(_In_ std::wstring const& trackId, _In_ std::wstring const& clipId, _In_ int64_t unwrappedTick, _In_ int32_t slot = -1);
         void StopTrackAt(_In_ std::wstring const& trackId, _In_ int64_t unwrappedTick);
 
         // Where on the unwrapped timeline a moment was. -1 when not playing.
@@ -241,27 +290,31 @@ namespace midisequencer
         {
             TrackPlayMode Mode{ TrackPlayMode::Timeline };
             std::wstring ClipId{};
+            int32_t Slot{ -1 };
             int64_t ClipStartUnwrapped{ 0 };
 
             bool Pending{ false };
             TrackPlayMode PendingMode{ TrackPlayMode::Timeline };
             std::wstring PendingClipId{};
+            int32_t PendingSlot{ -1 };
             int64_t PendingAtUnwrapped{ 0 };
         };
 
         uint64_t TimestampAtTick(_In_ int64_t tick) const noexcept;
         uint64_t EarlierBy(_In_ uint64_t timestamp, _In_ int64_t microseconds) const noexcept;
         int64_t ClockLeadMicroseconds(_In_ ClockOutput const& output) const;
+        int64_t TimeCodeLeadMicroseconds(_In_ TimeCodeOutput const& output) const;
         uint64_t LongestLeadMicroseconds() const;
         int64_t TickAtTimestamp(_In_ uint64_t timestamp) const noexcept;
+        double SecondsAtTimestamp(_In_ uint64_t timestamp) const noexcept;
         int64_t TickAtTimeLocked(_In_ uint64_t timestamp) const;
         int64_t Unwrap(_In_ int64_t tick) const noexcept { return m_segment.UnwrappedStart + (tick - m_segment.StartTick); }
         int64_t Wrap(_In_ int64_t unwrapped) const noexcept { return m_segment.StartTick + (unwrapped - m_segment.UnwrappedStart); }
         int64_t SegmentEnd() const noexcept;
         int64_t QuantizePoint(_In_ LaunchQuantize quantize) const;
         int64_t FurthestRendered() const noexcept;
-        void QueueLaunch(_In_ std::wstring const& trackId, _In_ TrackPlayMode mode, _In_ std::wstring const& clipId, _In_ LaunchQuantize quantize);
-        void QueueLaunchAt(_In_ std::wstring const& trackId, _In_ TrackPlayMode mode, _In_ std::wstring const& clipId, _In_ int64_t unwrappedTick);
+        void QueueLaunch(_In_ std::wstring const& trackId, _In_ TrackPlayMode mode, _In_ std::wstring const& clipId, _In_ LaunchQuantize quantize, _In_ int32_t slot);
+        void QueueLaunchAt(_In_ std::wstring const& trackId, _In_ TrackPlayMode mode, _In_ std::wstring const& clipId, _In_ int64_t unwrappedTick, _In_ int32_t slot);
 
         DestinationInfo LookupDestination(_In_ TrackDestination const& destination) const;
         DestinationInfo LookupDestination(_In_ EndpointRef const& endpoint, _In_ uint8_t group) const;
@@ -273,7 +326,7 @@ namespace midisequencer
         void SendChase(_In_ Track const& track, _In_ int64_t fromTick, _In_ uint64_t timestamp);
         void SweepTracks(_In_ std::vector<Track> const& tracks, _In_ uint64_t now, _In_ bool anySolo, _In_ bool insideSoloedFolder, _In_ bool insideMutedFolder);
         void SweepTrack(_In_ Track const& track, _In_ uint64_t now, _In_ bool audible);
-        void RenderMode(_In_ Track const& track, _In_ TrackLaunch const& state, _In_ int64_t fromUnwrapped, _In_ int64_t toUnwrapped, _Inout_ std::vector<RenderedMessage>& messages);
+        void RenderMode(_In_ Track const& track, _In_ TrackLaunch const& state, _In_ int64_t fromUnwrapped, _In_ int64_t toUnwrapped, _In_ RenderOptions const& options, _Inout_ std::vector<RenderedMessage>& messages);
         void SendRendered(_In_ Track const& track, _In_ DestinationInfo const& info, _In_ int64_t clampOffsAt, _In_ uint64_t now, _Inout_ std::vector<RenderedMessage>& messages);
         void QueueNoteOff(
             _In_ std::wstring const& trackId,
@@ -289,6 +342,10 @@ namespace midisequencer
         uint64_t LookAheadTicks() const noexcept;
         void SweepMetronome(_In_ uint64_t now);
         void SweepClockOutputs(_In_ uint64_t now);
+        void SendTempoChanges(_In_ int64_t fromTick, _In_ int64_t toTick, _In_ std::vector<int64_t> const& leads);
+        void LocateTimeCode(_In_ uint64_t timestamp);
+        void SendFullFrame(_In_ TimeCodeOutput const& output, _In_ uint64_t timestamp, _In_ double seconds);
+        void SweepTimeCodeOutputs(_In_ uint64_t now);
         void WrapLoopIfDue(_In_ uint64_t now);
         void SendSilence(_In_ uint64_t timestamp);
         void ThreadMain() noexcept;
@@ -300,6 +357,7 @@ namespace midisequencer
 
         std::shared_ptr<Sequence const> m_sequence{};
         TempoMap m_tempo{};
+        double m_fastestTempo{ 120.0 };
         EngineSettings m_settings{};
         std::function<DestinationInfo(EndpointRef const&, uint8_t)> m_lookup{};
 
@@ -315,7 +373,21 @@ namespace midisequencer
         int64_t m_metronomeUntil{ 0 };
         int64_t m_clockUntil{ 0 };
 
+        // The tempo the clock outputs were last told, or not a number when they haven't been.
+        double m_tempoSent{ std::numeric_limits<double>::quiet_NaN() };
+
+        // The next quarter frame each time code output sends, counted from the top of the
+        // sequence, so the same place always gets the same time code. Empty means each output
+        // has to be told where it is first.
+        std::vector<uint64_t> m_timeCodeNext{};
+
         std::unordered_map<std::wstring, TrackLaunch> m_launch{};
+
+        // Lanes send where they are again after an edit made while playing, and when a muted
+        // track is heard again: each counts edits, and a track remembers the last one it saw.
+        uint64_t m_editCount{ 0 };
+        std::unordered_map<std::wstring, uint64_t> m_editsSeen{};
+        std::unordered_set<std::wstring> m_inaudible{};
 
         std::vector<SoundingNote> m_sounding{};
         std::vector<ChannelKey> m_channelsUsed{};

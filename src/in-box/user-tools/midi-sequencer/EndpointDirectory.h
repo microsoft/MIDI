@@ -29,6 +29,9 @@ namespace midisequencer
         // How early to send to the device: set in MIDI Settings, or worked out by its transport.
         uint32_t OffsetMicroseconds{ 0 };
 
+        // How often a ramp may be sent to it, from MIDI Settings. 0 when it has none.
+        uint32_t AutomationIntervalMilliseconds{ 0 };
+
         bool Detailed{ false };
     };
 
@@ -48,6 +51,11 @@ namespace midisequencer
 
         DestinationInfo Lookup(_In_ EndpointRef const& endpoint, _In_ uint8_t group) const;
 
+        // Off when the service sends early for each device itself, so the offset isn't counted
+        // twice. Lookup then gives no offset; Resolve still shows what MIDI Settings says.
+        void ApplyOffsets(_In_ bool value) noexcept { m_applyOffsets = value; }
+        bool ApplyOffsets() const noexcept { return m_applyOffsets; }
+
         // The built-in General MIDI Synth, when this PC has it.
         std::wstring SynthEndpointId() const;
 
@@ -57,5 +65,6 @@ namespace midisequencer
         mutable std::mutex m_lock{};
         std::vector<EndpointSummary> m_endpoints{};
         std::wstring m_synthId{};
+        std::atomic<bool> m_applyOffsets{ true };
     };
 }

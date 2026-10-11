@@ -6,8 +6,11 @@
 // ============================================================================
 
 #include "SequenceEdits.h"
+#include "SequenceGenerator.h"
+#include "SequencePattern.h"
 
 #include <algorithm>
+#include <cmath>
 #include <format>
 #include <random>
 #include <unordered_set>
@@ -94,6 +97,9 @@ namespace midisequencer
                 clip.Seed = Seed;
                 clip.Kind = Kind;
                 clip.Settings = Settings == nullptr ? nullptr : winrt::Windows::Data::Json::JsonObject::Parse(Settings.Stringify());
+
+                // A generator's drawn notes depend on its length and seed.
+                RefreshGeneratorPreview(clip);
             }
         };
 
@@ -152,6 +158,92 @@ namespace midisequencer
             std::vector<ClipEvent> m_after{};
         };
 
+        size_t LanesCost(_In_ std::vector<AutomationLane> const& lanes) noexcept
+        {
+            size_t cost{ 0 };
+
+            for (auto const& lane : lanes)
+            {
+                cost += sizeof(AutomationLane) + lane.Points.size() * sizeof(LanePoint);
+            }
+
+            return cost;
+        }
+
+        size_t PatternCost(_In_ PatternSettings const& pattern) noexcept
+        {
+            size_t cost{ sizeof(PatternSettings) };
+
+            for (auto const& lane : pattern.Lanes)
+            {
+                cost += sizeof(PatternLane) + lane.Steps.size() * sizeof(PatternStep);
+            }
+
+            return cost;
+        }
+
+        class ClipPatternChange final : public SequenceChange
+        {
+        public:
+            ClipPatternChange(_In_ std::wstring id, _In_ PatternSettings before, _In_ PatternSettings after) :
+                m_id(std::move(id)), m_before(std::move(before)), m_after(std::move(after))
+            {
+            }
+
+            void Apply(_Inout_ Sequence& sequence) override { Set(sequence, m_after); }
+            void Revert(_Inout_ Sequence& sequence) override { Set(sequence, m_before); }
+
+            size_t Cost() const noexcept override
+            {
+                return sizeof(*this) + PatternCost(m_before) + PatternCost(m_after);
+            }
+
+        private:
+            void Set(_Inout_ Sequence& sequence, _In_ PatternSettings const& pattern)
+            {
+                if (auto clip = FindClip(sequence, m_id); clip != nullptr && clip->Kind == ClipKind::Pattern)
+                {
+                    clip->Pattern = pattern;
+                    RefreshPatternPreview(*clip);
+                }
+            }
+
+            std::wstring m_id{};
+            PatternSettings m_before{};
+            PatternSettings m_after{};
+        };
+
+        class ClipGeneratorChange final : public SequenceChange
+        {
+        public:
+            ClipGeneratorChange(_In_ std::wstring id, _In_ GeneratorSettings before, _In_ GeneratorSettings after) :
+                m_id(std::move(id)), m_before(std::move(before)), m_after(std::move(after))
+            {
+            }
+
+            void Apply(_Inout_ Sequence& sequence) override { Set(sequence, m_after); }
+            void Revert(_Inout_ Sequence& sequence) override { Set(sequence, m_before); }
+
+            size_t Cost() const noexcept override
+            {
+                return sizeof(*this) + (m_before.Rings.size() + m_after.Rings.size()) * sizeof(EuclidRing);
+            }
+
+        private:
+            void Set(_Inout_ Sequence& sequence, _In_ GeneratorSettings const& generator)
+            {
+                if (auto clip = FindClip(sequence, m_id); clip != nullptr && clip->Kind == ClipKind::Generator)
+                {
+                    clip->Generator = generator;
+                    RefreshGeneratorPreview(*clip);
+                }
+            }
+
+            std::wstring m_id{};
+            GeneratorSettings m_before{};
+            GeneratorSettings m_after{};
+        };
+
         size_t TreeCost(_In_ std::vector<Track> const& tracks) noexcept
         {
             size_t cost{ 0 };
@@ -159,7 +251,7 @@ namespace midisequencer
             for (auto const& track : tracks)
             {
                 cost += sizeof(Track) + track.Timeline.size() * sizeof(Placement) + track.Slots.size() * 48 +
-                    track.Tags.size() * sizeof(Tag) + track.Startup.size() * sizeof(ClipEvent) + TreeCost(track.Children);
+                    track.Tags.size() * sizeof(Tag) + track.Startup.size() * sizeof(ClipEvent) + LanesCost(track.Lanes) + TreeCost(track.Children);
             }
 
             return cost;
@@ -500,6 +592,55 @@ namespace midisequencer
         return clip;
     }
 
+    _Use_decl_annotations_
+    Clip MakePatternClip(std::wstring name, PatternMode mode)
+    {
+        Clip clip{};
+        clip.Id = NewId(L"c");
+        clip.Kind = ClipKind::Pattern;
+        clip.Name = std::move(name);
+        clip.Loop = true;
+        clip.Seed = NewSeed();
+        clip.Origin = ClipOrigin::Drawn;
+        clip.Pattern = mode == PatternMode::Melodic ? MakeMelodicPattern() : MakeDrumPattern();
+        RefreshPatternPreview(clip);
+        return clip;
+    }
+
+    uint32_t MakeSeed()
+    {
+        return NewSeed();
+    }
+
+    _Use_decl_annotations_
+    std::unique_ptr<SequenceChange> MakeClipPatternChange(std::wstring clipId, PatternSettings before, PatternSettings after)
+    {
+        return std::make_unique<ClipPatternChange>(std::move(clipId), std::move(before), std::move(after));
+    }
+
+    _Use_decl_annotations_
+    Clip MakeGeneratorClip(std::wstring name, GeneratorType type, int64_t length)
+    {
+        Clip clip{};
+        clip.Id = NewId(L"c");
+        clip.Kind = ClipKind::Generator;
+        clip.Name = std::move(name);
+        clip.Length = std::max<int64_t>(1, length);
+        clip.Loop = true;
+        clip.Seed = NewSeed();
+        clip.Origin = ClipOrigin::Generated;
+        clip.Generator = type == GeneratorType::ChanceMelody ? MakeChanceMelodyGenerator() : MakeEuclideanGenerator();
+        clip.Generator->Type = type;
+        RefreshGeneratorPreview(clip);
+        return clip;
+    }
+
+    _Use_decl_annotations_
+    std::unique_ptr<SequenceChange> MakeClipGeneratorChange(std::wstring clipId, GeneratorSettings before, GeneratorSettings after)
+    {
+        return std::make_unique<ClipGeneratorChange>(std::move(clipId), std::move(before), std::move(after));
+    }
+
     std::array<uint32_t, 10> const& TrackColorSwatches() noexcept
     {
         static constexpr std::array<uint32_t, 10> swatches{
@@ -595,5 +736,274 @@ namespace midisequencer
         }
 
         return found;
+    }
+
+    // ---- automation ----
+
+    _Use_decl_annotations_
+    AutomationLane MakeLane(LaneTarget target, uint16_t number, uint8_t channel)
+    {
+        AutomationLane lane{};
+        lane.Id = NewId(L"a");
+        lane.Target = target;
+        lane.Channel = static_cast<uint8_t>(channel & 0x0F);
+
+        switch (target)
+        {
+        case LaneTarget::Controller:
+            lane.Number = std::min<uint16_t>(number, 127);
+            break;
+
+        case LaneTarget::Registered:
+        case LaneTarget::Assignable:
+            lane.Number = std::min<uint16_t>(number, 16383);
+            break;
+
+        default:
+            lane.Number = 0;
+            break;
+        }
+
+        return lane;
+    }
+
+    _Use_decl_annotations_
+    AutomationLane* FindLane(std::vector<AutomationLane>& lanes, std::wstring_view id) noexcept
+    {
+        auto found = std::find_if(lanes.begin(), lanes.end(), [id](AutomationLane const& lane) { return lane.Id == id; });
+        return found == lanes.end() ? nullptr : &*found;
+    }
+
+    _Use_decl_annotations_
+    size_t AddLanePoint(AutomationLane& lane, LanePoint point)
+    {
+        point.Tick = std::max<int64_t>(0, point.Tick);
+
+        auto const at = std::upper_bound(lane.Points.begin(), lane.Points.end(), point.Tick,
+            [](int64_t tick, LanePoint const& existing) { return tick < existing.Tick; });
+
+        auto const index = static_cast<size_t>(std::distance(lane.Points.begin(), at));
+        lane.Points.insert(at, point);
+        return index;
+    }
+
+    _Use_decl_annotations_
+    void MoveLanePoint(AutomationLane& lane, size_t index, int64_t tick, uint32_t value) noexcept
+    {
+        if (index >= lane.Points.size())
+        {
+            return;
+        }
+
+        auto const low = index > 0 ? lane.Points[index - 1].Tick : 0;
+        auto const high = index + 1 < lane.Points.size() ? lane.Points[index + 1].Tick : INT64_MAX;
+
+        lane.Points[index].Tick = std::clamp(tick, low, high);
+        lane.Points[index].Value = value;
+    }
+
+    _Use_decl_annotations_
+    void ReplaceLanePoints(AutomationLane& lane, int64_t fromTick, int64_t toTick, std::vector<LanePoint> const& drawn)
+    {
+        if (toTick < fromTick)
+        {
+            std::swap(fromTick, toTick);
+        }
+
+        std::erase_if(lane.Points, [fromTick, toTick](LanePoint const& point)
+        {
+            return point.Tick >= fromTick && point.Tick <= toTick;
+        });
+
+        auto sorted = drawn;
+
+        for (auto& point : sorted)
+        {
+            point.Tick = std::clamp(point.Tick, fromTick, toTick);
+        }
+
+        std::stable_sort(sorted.begin(), sorted.end(), [](LanePoint const& a, LanePoint const& b) { return a.Tick < b.Tick; });
+
+        auto const at = std::lower_bound(lane.Points.begin(), lane.Points.end(), fromTick,
+            [](LanePoint const& point, int64_t tick) { return point.Tick < tick; });
+
+        lane.Points.insert(at, sorted.begin(), sorted.end());
+    }
+
+    _Use_decl_annotations_
+    std::unique_ptr<SequenceChange> MakeTrackLanesChange(std::wstring trackId, std::vector<AutomationLane> before, std::vector<AutomationLane> after)
+    {
+        auto const cost = LanesCost(before) + LanesCost(after);
+
+        return std::make_unique<SnapshotChange<std::vector<AutomationLane>>>(
+            [trackId = std::move(trackId)](Sequence& sequence) -> std::vector<AutomationLane>*
+            {
+                auto const track = FindTrack(sequence, trackId);
+                return track != nullptr ? &track->Lanes : nullptr;
+            },
+            std::move(before), std::move(after), cost);
+    }
+
+    _Use_decl_annotations_
+    std::unique_ptr<SequenceChange> MakeClipLanesChange(std::wstring clipId, std::vector<AutomationLane> before, std::vector<AutomationLane> after)
+    {
+        auto const cost = LanesCost(before) + LanesCost(after);
+
+        return std::make_unique<SnapshotChange<std::vector<AutomationLane>>>(
+            [clipId = std::move(clipId)](Sequence& sequence) -> std::vector<AutomationLane>*
+            {
+                auto const clip = FindClip(sequence, clipId);
+                return clip != nullptr ? &clip->Lanes : nullptr;
+            },
+            std::move(before), std::move(after), cost);
+    }
+
+    // ---- tempo and meter ----
+
+    namespace
+    {
+        double ValidTempo(_In_ double beatsPerMinute) noexcept
+        {
+            return std::isfinite(beatsPerMinute) ? std::clamp(beatsPerMinute, MinimumBeatsPerMinute, MaximumBeatsPerMinute) : 120.0;
+        }
+
+        // Where meter changes are in bars, so they can be put back at the same bars after the
+        // meter before them changes.
+        struct MeterAtBar
+        {
+            int64_t Bar{ 1 };
+            uint8_t Numerator{ 4 };
+            uint8_t Denominator{ 4 };
+        };
+
+        void PlaceAtBars(_Inout_ std::vector<MeterChange>& meter, _In_ std::vector<MeterAtBar> const& later)
+        {
+            for (auto const& change : later)
+            {
+                auto const tick = TickAtBar(meter, change.Bar);
+
+                if (tick > meter.back().Tick)
+                {
+                    meter.push_back(MeterChange{ tick, change.Numerator, change.Denominator });
+                }
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    void SetTempoAt(std::vector<TempoPoint>& tempo, int64_t tick, double beatsPerMinute)
+    {
+        tick = std::max<int64_t>(0, tick);
+        beatsPerMinute = ValidTempo(beatsPerMinute);
+
+        if (tempo.empty())
+        {
+            tempo.push_back(TempoPoint{});
+        }
+
+        auto const found = std::find_if(tempo.begin(), tempo.end(), [tick](TempoPoint const& point) { return point.Tick == tick; });
+
+        if (found != tempo.end())
+        {
+            found->BeatsPerMinute = beatsPerMinute;
+            return;
+        }
+
+        auto const at = std::upper_bound(tempo.begin(), tempo.end(), tick,
+            [](int64_t value, TempoPoint const& point) { return value < point.Tick; });
+
+        tempo.insert(at, TempoPoint{ tick, beatsPerMinute, false });
+    }
+
+    _Use_decl_annotations_
+    void MoveTempoPoint(std::vector<TempoPoint>& tempo, size_t index, int64_t tick, double beatsPerMinute) noexcept
+    {
+        if (index >= tempo.size())
+        {
+            return;
+        }
+
+        tempo[index].BeatsPerMinute = ValidTempo(beatsPerMinute);
+
+        if (index == 0)
+        {
+            tempo[index].Tick = 0;
+            return;
+        }
+
+        auto const low = tempo[index - 1].Tick + 1;
+        auto const high = index + 1 < tempo.size() ? tempo[index + 1].Tick - 1 : INT64_MAX;
+        tempo[index].Tick = std::clamp(tick, low, std::max(low, high));
+    }
+
+    _Use_decl_annotations_
+    bool RemoveTempoPoint(std::vector<TempoPoint>& tempo, size_t index) noexcept
+    {
+        if (index == 0 || index >= tempo.size())
+        {
+            return false;
+        }
+
+        tempo.erase(tempo.begin() + static_cast<ptrdiff_t>(index));
+        tempo.back().RampToNext = false;
+        return true;
+    }
+
+    _Use_decl_annotations_
+    void SetMeterAt(std::vector<MeterChange>& meter, int64_t bar, uint8_t numerator, uint8_t denominator)
+    {
+        bar = std::max<int64_t>(1, bar);
+        numerator = std::clamp<uint8_t>(numerator, 1, 64);
+
+        if (denominator != 1 && denominator != 2 && denominator != 4 && denominator != 8 && denominator != 16 && denominator != 32)
+        {
+            denominator = 4;
+        }
+
+        if (meter.empty())
+        {
+            meter.push_back(MeterChange{});
+        }
+
+        std::vector<MeterChange> kept{};
+        std::vector<MeterAtBar> later{};
+
+        for (auto const& change : meter)
+        {
+            auto const changeBar = BarPositionAtTick(meter, change.Tick).Bar;
+
+            if (changeBar < bar)
+            {
+                kept.push_back(change);
+            }
+            else if (changeBar > bar)
+            {
+                later.push_back(MeterAtBar{ changeBar, change.Numerator, change.Denominator });
+            }
+        }
+
+        kept.push_back(MeterChange{ kept.empty() ? 0 : TickAtBar(kept, bar), numerator, denominator });
+        PlaceAtBars(kept, later);
+        meter = std::move(kept);
+    }
+
+    _Use_decl_annotations_
+    bool RemoveMeterChange(std::vector<MeterChange>& meter, size_t index)
+    {
+        if (index == 0 || index >= meter.size())
+        {
+            return false;
+        }
+
+        std::vector<MeterAtBar> later{};
+
+        for (size_t i = index + 1; i < meter.size(); ++i)
+        {
+            later.push_back(MeterAtBar{ BarPositionAtTick(meter, meter[i].Tick).Bar, meter[i].Numerator, meter[i].Denominator });
+        }
+
+        meter.resize(index);
+        PlaceAtBars(meter, later);
+        return true;
     }
 }

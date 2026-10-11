@@ -155,6 +155,11 @@ namespace winrt::midisequencer::implementation
 
             RefreshEndpoints();
             UpdateTransport();
+
+            if (seq::AppSettings::Current().RemoteControlEnabled())
+            {
+                StartRemoteControlAsync();
+            }
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to start MIDI.")
     }
@@ -299,6 +304,25 @@ namespace winrt::midisequencer::implementation
                     }
                 }
 
+                // The devices that follow the sequencer's clock, and where time code goes.
+                auto const addDestination = [&destinations](seq::EndpointRef const& endpoint)
+                {
+                    if (!endpoint.IsEmpty() && std::find(destinations.begin(), destinations.end(), endpoint) == destinations.end())
+                    {
+                        destinations.push_back(endpoint);
+                    }
+                };
+
+                for (auto const& clock : settings.ClockOutputs())
+                {
+                    addDestination(seq::EndpointRef{ clock.EndpointName, clock.EndpointId });
+                }
+
+                if (settings.TimeCode().IsOn())
+                {
+                    addDestination(seq::EndpointRef{ settings.TimeCode().EndpointName, settings.TimeCode().EndpointId });
+                }
+
                 auto* output = m_output.get();
                 auto* monitor = m_sources.get();
 
@@ -350,6 +374,34 @@ namespace winrt::midisequencer::implementation
             engine.LoopEnabled = LoopToggle().IsChecked().GetBoolean() && m_loopEnd > m_loopStart;
             engine.LoopStart = m_loopStart;
             engine.LoopEnd = m_loopEnd;
+
+            for (auto const& output : settings.ClockOutputs())
+            {
+                seq::ClockOutput clock{};
+                clock.Endpoint = seq::EndpointRef{ output.EndpointName, output.EndpointId };
+                clock.Group = output.Group;
+                clock.OffsetMicroseconds = output.OffsetMilliseconds * 1000;
+                clock.SendClock = output.Clock;
+                clock.SendStartStop = output.StartStop;
+                clock.SendSongPosition = output.SongPosition;
+                clock.SendTempo = settings.ClockSendsTempo();
+                engine.ClockOutputs.push_back(std::move(clock));
+            }
+
+            if (auto const& timeCode = settings.TimeCode(); timeCode.IsOn())
+            {
+                seq::TimeCodeOutput output{};
+                output.Endpoint = seq::EndpointRef{ timeCode.EndpointName, timeCode.EndpointId };
+                output.Group = timeCode.Group;
+                output.Rate = midiapp::FrameRateFromValue(timeCode.Rate);
+
+                if (!midiapp::TryParsePosition(timeCode.Start, output.Rate, output.Start))
+                {
+                    output.Start = midiapp::MidiTimeCodePosition{};
+                }
+
+                engine.TimeCodeOutputs.push_back(std::move(output));
+            }
 
             m_engine->SetSettings(engine);
         }
@@ -547,6 +599,7 @@ namespace winrt::midisequencer::implementation
             MeterText().Text(winrt::hstring{ std::format(L"{}/{}", meter.Numerator, meter.Denominator) });
 
             UpdateLeds();
+            UpdateLaneChips(tick);
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update the displays.")
     }
@@ -822,7 +875,7 @@ namespace winrt::midisequencer::implementation
             // Queued any sooner, it would replace the stop.
             if (!take.LaunchQueued && now >= take.Start)
             {
-                m_engine->LaunchClipAt(take.TrackId, take.ClipId, end);
+                m_engine->LaunchClipAt(take.TrackId, take.ClipId, end, static_cast<int32_t>(take.Scene));
                 take.LaunchQueued = true;
             }
 
@@ -917,7 +970,7 @@ namespace winrt::midisequencer::implementation
 
                     if (current.LaunchQueued)
                     {
-                        m_engine->LaunchClipAt(current.TrackId, current.ClipId, current.Start + length);
+                        m_engine->LaunchClipAt(current.TrackId, current.ClipId, current.Start + length, static_cast<int32_t>(current.Scene));
                     }
                 }
 
@@ -1009,7 +1062,7 @@ namespace winrt::midisequencer::implementation
 
             if (m_engine != nullptr && m_engine->IsPlaying() && how != SlotTakeEnd::Stopped && !take.LaunchQueued)
             {
-                m_engine->LaunchClipAt(take.TrackId, take.ClipId, take.Start + length);
+                m_engine->LaunchClipAt(take.TrackId, take.ClipId, take.Start + length, static_cast<int32_t>(take.Scene));
             }
 
             ApplyEngineSettings();
@@ -1205,25 +1258,33 @@ namespace winrt::midisequencer::implementation
     }
 
     _Use_decl_annotations_
+    std::filesystem::path MainWindow::SiblingToolPath(std::wstring const& executable) const
+    {
+        // Installed beside this app. A developer build looks in the tool's own output folder,
+        // which sits beside this app's: out\<tool>\<platform>\<configuration>.
+        auto const folder = std::filesystem::path{ ExecutableFolder() };
+        auto path = folder / (executable + L".exe");
+
+        if (!std::filesystem::exists(path) && folder.has_parent_path() && folder.parent_path().has_parent_path())
+        {
+            auto const configuration = folder.filename();
+            auto const platform = folder.parent_path().filename();
+            auto const tools = folder.parent_path().parent_path().parent_path();
+
+            path = tools / executable / platform / configuration / (executable + L".exe");
+        }
+
+        return std::filesystem::exists(path) ? path : std::filesystem::path{};
+    }
+
+    _Use_decl_annotations_
     void MainWindow::LaunchKeyboard(std::wstring const& endpointId, uint8_t group, int8_t channel) noexcept
     {
         try
         {
-            // Installed beside this app. A developer build looks in the keyboard's own output
-            // folder, which sits beside this app's: out\<tool>\<platform>\<configuration>.
-            auto const folder = std::filesystem::path{ ExecutableFolder() };
-            std::filesystem::path keyboard = folder / L"midikeyboard.exe";
+            auto const keyboard = SiblingToolPath(L"midikeyboard");
 
-            if (!std::filesystem::exists(keyboard) && folder.has_parent_path() && folder.parent_path().has_parent_path())
-            {
-                auto const configuration = folder.filename();
-                auto const platform = folder.parent_path().filename();
-                auto const tools = folder.parent_path().parent_path().parent_path();
-
-                keyboard = tools / L"midikeyboard" / platform / configuration / L"midikeyboard.exe";
-            }
-
-            if (!std::filesystem::exists(keyboard))
+            if (keyboard.empty())
             {
                 ShowMessage(res::GetString(L"KeyboardNotFound"));
                 return;
@@ -1554,19 +1615,11 @@ namespace winrt::midisequencer::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::OnClockClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    void MainWindow::OnClockClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         try
         {
-            // Following an external clock, and sending clock, come in a later phase (design section 14).
-            controls::TextBlock text{};
-            text.Text(res::GetString(L"ClockNotYet"));
-            text.TextWrapping(xaml::TextWrapping::Wrap);
-            text.MaxWidth(280);
-
-            controls::Flyout flyout{};
-            flyout.Content(text);
-            flyout.ShowAt(sender.as<xaml::FrameworkElement>());
+            ShowClockDialog();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to show the clock settings.")
     }

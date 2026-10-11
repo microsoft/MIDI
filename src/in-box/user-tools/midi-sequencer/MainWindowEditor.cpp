@@ -92,6 +92,7 @@ namespace winrt::midisequencer::implementation
             m_editorClipId.clear();
             m_editorTrackId.clear();
             m_roll.SetClip(nullptr, seq::Color{});
+            m_pattern.SetClip(nullptr, seq::Color{});
             EditorPanel().Visibility(xaml::Visibility::Collapsed);
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to close the editor.")
@@ -121,9 +122,27 @@ namespace winrt::midisequencer::implementation
             // clip again from the sequence.
             m_roll.SetClip(clip, color);
             m_roll.SetMeter(&m_doc.Meter);
+            m_pattern.SetClip(clip, color);
 
             UpdateEditorHeader();
-            UpdateNoteInspector();
+
+            if (EditorShowsPattern())
+            {
+                UpdatePatternToolbar();
+                UpdatePatternInspector();
+                UpdatePatternFooter();
+            }
+            else if (EditorShowsGenerator())
+            {
+                UpdateGeneratorToolbar();
+                UpdateGeneratorPanel();
+                UpdateGeneratorInspector();
+            }
+            else
+            {
+                UpdateNoteInspector();
+            }
+
             InvalidateEditor();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to refresh the editor.")
@@ -166,7 +185,7 @@ namespace winrt::midisequencer::implementation
             switch (clip->Kind)
             {
             case seq::ClipKind::Pattern:
-                EditorKindChip().Text(res::GetString(L"ClipKindPattern"));
+                EditorKindChip().Text(res::GetString(clip->Pattern.has_value() && clip->Pattern->Mode == seq::PatternMode::Melodic ? L"ClipKindPatternMelodic" : L"ClipKindPattern"));
                 break;
 
             case seq::ClipKind::Generator:
@@ -176,6 +195,30 @@ namespace winrt::midisequencer::implementation
             default:
                 EditorKindChip().Text(res::GetString(L"ClipKindNotes"));
                 break;
+            }
+
+            // A pattern or a generator has its own settings where the notes tools are.
+            auto const pattern = clip->Kind == seq::ClipKind::Pattern && clip->Pattern.has_value();
+            auto const generator = clip->Kind == seq::ClipKind::Generator && clip->Generator.has_value();
+            auto const visible = [](bool show) { return show ? xaml::Visibility::Visible : xaml::Visibility::Collapsed; };
+
+            NotesTools().Visibility(visible(!pattern && !generator));
+            PatternTools().Visibility(visible(pattern));
+            GeneratorTools().Visibility(visible(generator));
+            PatternActions().Visibility(visible(pattern || generator));
+
+            // A generator's settings take the canvas's place. The panel's background lets the
+            // canvas show through, so the canvas goes away rather than sitting under it.
+            GeneratorPanel().Visibility(visible(generator));
+            EditorCanvasHost().Visibility(visible(!generator));
+
+            // Their headers are full. Their inspectors still show velocity the way chosen here.
+            ValuesAsLabel().Visibility(visible(!pattern && !generator));
+            ValuesAsCombo().Visibility(visible(!pattern && !generator));
+
+            if (m_editorCanvas != nullptr)
+            {
+                automation::AutomationProperties::SetName(m_editorCanvas, res::GetString(pattern ? L"PatternCanvasName" : L"EditorCanvasName"));
             }
 
             // Bars and beats, in the meter at the start.
@@ -357,8 +400,9 @@ namespace winrt::midisequencer::implementation
             }
 
             // The playhead in the clip: where the timeline is inside a placement of it on this
-            // track, or how far a launched copy has got.
+            // track, or how far a launched copy has got. The pass is how many times it went round.
             int64_t playhead{ -1 };
+            uint64_t pass{ 0 };
 
             if (auto const clip = seq::FindClip(m_doc, m_editorClipId); clip != nullptr && clip->Length > 0)
             {
@@ -369,6 +413,7 @@ namespace winrt::midisequencer::implementation
                     if (view->second.ClipId == m_editorClipId)
                     {
                         playhead = static_cast<int64_t>(view->second.Progress * static_cast<double>(clip->Length));
+                        pass = view->second.Pass;
                     }
                 }
                 else if (auto const track = EditorTrack(); track != nullptr)
@@ -380,6 +425,7 @@ namespace winrt::midisequencer::implementation
                         if (placement.ClipId == m_editorClipId && m_position >= placement.Tick && m_position < placement.Tick + length)
                         {
                             playhead = (m_position - placement.Tick) % clip->Length;
+                            pass = static_cast<uint64_t>((m_position - placement.Tick) / clip->Length);
                             break;
                         }
                     }
@@ -387,6 +433,9 @@ namespace winrt::midisequencer::implementation
             }
 
             m_roll.SetPlayhead(playhead);
+
+            // The pattern editor marks the playing step only while it plays.
+            m_pattern.SetPlayhead(m_engine != nullptr && m_engine->IsPlaying() ? playhead : -1, pass);
             m_editorCanvas.Invalidate();
         }
         catch (...)
@@ -401,6 +450,12 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            if (EditorShowsPattern())
+            {
+                OnPatternPressed(args);
+                return;
+            }
+
             if (!m_roll.HasClip())
             {
                 return;
@@ -409,6 +464,13 @@ namespace winrt::midisequencer::implementation
             using winrt::Windows::System::VirtualKeyModifiers;
 
             m_editorCanvas.Focus(xaml::FocusState::Pointer);
+
+            // Delete now means the notes, not a point picked on the timeline.
+            if (m_selectedLanePoint != SIZE_MAX || m_selectedTempoPoint != SIZE_MAX)
+            {
+                ClearAutomationSelection();
+                InvalidateArrange();
+            }
 
             auto const point = args.GetCurrentPoint(m_editorCanvas);
             auto const position = point.Position();
@@ -455,6 +517,12 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            if (EditorShowsPattern())
+            {
+                OnPatternMoved(args);
+                return;
+            }
+
             auto const position = args.GetCurrentPoint(m_editorCanvas).Position();
 
             if (m_auditioning.has_value())
@@ -485,6 +553,12 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            if (EditorShowsPattern())
+            {
+                OnPatternReleased(args);
+                return;
+            }
+
             if (m_auditioning.has_value())
             {
                 AuditionNote(*m_auditioning, false);
@@ -525,6 +599,18 @@ namespace winrt::midisequencer::implementation
             using winrt::Windows::System::VirtualKeyModifiers;
 
             auto const point = args.GetCurrentPoint(m_editorCanvas);
+
+            if (EditorShowsPattern())
+            {
+                if (m_pattern.Wheel(point.Properties().MouseWheelDelta()))
+                {
+                    InvalidateEditor();
+                }
+
+                args.Handled(true);
+                return;
+            }
+
             auto const modifiers = args.KeyModifiers();
             auto const shift = (modifiers & VirtualKeyModifiers::Shift) == VirtualKeyModifiers::Shift ||
                 point.Properties().IsHorizontalMouseWheel();
@@ -548,6 +634,13 @@ namespace winrt::midisequencer::implementation
         {
             using winrt::Windows::System::VirtualKey;
             using winrt::Windows::System::VirtualKeyModifiers;
+
+            if (EditorShowsPattern())
+            {
+                auto const shiftKey = winrt::Microsoft::UI::Input::InputKeyboardSource::GetKeyStateForCurrentThread(VirtualKey::Shift);
+                args.Handled(OnPatternKeyDown(args.Key(), (shiftKey & winrt::Windows::UI::Core::CoreVirtualKeyStates::Down) == winrt::Windows::UI::Core::CoreVirtualKeyStates::Down));
+                return;
+            }
 
             if (!m_roll.HasClip())
             {
@@ -708,7 +801,16 @@ namespace winrt::midisequencer::implementation
             auto const value = static_cast<seq::ValueDisplay>(index);
             seq::AppSettings::Current().ValuesAs(value);
             m_roll.SetValuesAs(value);
-            UpdateNoteInspector();
+
+            if (EditorShowsPattern())
+            {
+                UpdatePatternInspector();
+            }
+            else
+            {
+                UpdateNoteInspector();
+            }
+
             InvalidateEditor();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to change how values are shown.")

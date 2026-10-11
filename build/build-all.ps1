@@ -648,6 +648,15 @@ function Test-ServicingGateListing {
         $problems += "  $($entry.Gate) - reported under the wrong label '$($entry.Label)'"
     }
 
+    # The checks above all pass when a gate is listed twice.
+    foreach ($gate in ($reportedGates | Group-Object -CaseSensitive | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Name })) {
+        $problems += "  $gate - reported more than once"
+    }
+
+    foreach ($gate in ($included | Group-Object -CaseSensitive | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Name })) {
+        $problems += "  $gate - included more than once"
+    }
+
     if ($problems.Count -gt 0) {
         Write-Host ''
         Write-Host '     Servicing gate listing in mididiag is out of date:' -ForegroundColor Red

@@ -85,6 +85,21 @@ namespace midisequencer
     // An empty notes clip, with a fresh id and seed.
     Clip MakeNotesClip(_In_ std::wstring name, _In_ int64_t length);
 
+    // A new pattern clip: drum lanes with nothing on, or one melodic lane.
+    Clip MakePatternClip(_In_ std::wstring name, _In_ PatternMode mode);
+
+    // A new seed for a clip, which is what Vary does to a pattern.
+    uint32_t MakeSeed();
+
+    // A pattern's steps and settings before and after. Its length and drawn notes follow.
+    std::unique_ptr<SequenceChange> MakeClipPatternChange(_In_ std::wstring clipId, _In_ PatternSettings before, _In_ PatternSettings after);
+
+    // A new generator clip of a type, with the settings comp 4 shows for it.
+    Clip MakeGeneratorClip(_In_ std::wstring name, _In_ GeneratorType type, _In_ int64_t length);
+
+    // A generator's settings before and after. Its drawn notes follow.
+    std::unique_ptr<SequenceChange> MakeClipGeneratorChange(_In_ std::wstring clipId, _In_ GeneratorSettings before, _In_ GeneratorSettings after);
+
     // The ten colors offered for tracks (0xRRGGBB), in the order the comps show them.
     std::array<uint32_t, 10> const& TrackColorSwatches() noexcept;
 
@@ -105,4 +120,43 @@ namespace midisequencer
         _In_ int64_t toTick,
         _In_ uint8_t lowNote,
         _In_ uint8_t highNote);
+
+    // ---- automation ----
+
+    // A lane with no points yet. It sends nothing until something is drawn on it.
+    AutomationLane MakeLane(_In_ LaneTarget target, _In_ uint16_t number, _In_ uint8_t channel);
+
+    AutomationLane* FindLane(_In_ std::vector<AutomationLane>& lanes, _In_ std::wstring_view id) noexcept;
+
+    // Adds a point after any already at its tick, so a second point at one tick makes a jump.
+    // Returns where it went.
+    size_t AddLanePoint(_Inout_ AutomationLane& lane, _In_ LanePoint point);
+
+    // Moves a point, but never past its neighbors, so the point being dragged stays the same one.
+    void MoveLanePoint(_Inout_ AutomationLane& lane, _In_ size_t index, _In_ int64_t tick, _In_ uint32_t value) noexcept;
+
+    // What was drawn between two ticks replaces the points that were there.
+    void ReplaceLanePoints(_Inout_ AutomationLane& lane, _In_ int64_t fromTick, _In_ int64_t toTick, _In_ std::vector<LanePoint> const& drawn);
+
+    std::unique_ptr<SequenceChange> MakeTrackLanesChange(_In_ std::wstring trackId, _In_ std::vector<AutomationLane> before, _In_ std::vector<AutomationLane> after);
+    std::unique_ptr<SequenceChange> MakeClipLanesChange(_In_ std::wstring clipId, _In_ std::vector<AutomationLane> before, _In_ std::vector<AutomationLane> after);
+
+    // ---- tempo and meter ----
+
+    // The tempo from a tick on: changes the tempo change at that tick, or adds one. A ramp from
+    // the change before now ends here.
+    void SetTempoAt(_Inout_ std::vector<TempoPoint>& tempo, _In_ int64_t tick, _In_ double beatsPerMinute);
+
+    // Moves a tempo change, but never past its neighbors. The first stays at the start.
+    void MoveTempoPoint(_Inout_ std::vector<TempoPoint>& tempo, _In_ size_t index, _In_ int64_t tick, _In_ double beatsPerMinute) noexcept;
+
+    // The first tempo change can't be removed.
+    bool RemoveTempoPoint(_Inout_ std::vector<TempoPoint>& tempo, _In_ size_t index) noexcept;
+
+    // The meter from a bar on. Later meter changes stay at the bars they were at, and nothing
+    // already recorded or drawn moves.
+    void SetMeterAt(_Inout_ std::vector<MeterChange>& meter, _In_ int64_t bar, _In_ uint8_t numerator, _In_ uint8_t denominator);
+
+    // Later meter changes stay at their bars. The first meter can't be removed.
+    bool RemoveMeterChange(_Inout_ std::vector<MeterChange>& meter, _In_ size_t index);
 }

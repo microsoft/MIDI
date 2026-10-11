@@ -84,6 +84,7 @@ namespace winrt::midisequencer::implementation
 
             auto& settings = seq::AppSettings::Current();
             m_barWidth = settings.BarWidth();
+            m_directory->ApplyOffsets(settings.ApplyDeviceOffsets());
 
             CreateCanvases();
             InitializeKeyboard();
@@ -147,6 +148,9 @@ namespace winrt::midisequencer::implementation
             strings.PercentVelocity = res::GetString(L"LaneVelocityPercent");
             strings.EmptyClip = res::GetString(L"EditorNoClip");
             m_roll.SetStrings(strings);
+
+            InitializePatternEditor();
+            InitializeGeneratorEditor();
 
             m_frameTimer = xaml::DispatcherTimer{};
             m_frameTimer.Interval(FrameInterval);
@@ -392,7 +396,11 @@ namespace winrt::midisequencer::implementation
                 break;
 
             case VirtualKey::Delete:
-                if (!m_roll.Selection().empty() && !m_editorClipId.empty())
+                if (m_selectedLanePoint != SIZE_MAX || m_selectedTempoPoint != SIZE_MAX)
+                {
+                    DeleteSelectedAutomationPoint();
+                }
+                else if (!m_roll.Selection().empty() && !m_editorClipId.empty())
                 {
                     ApplyRollEdit(m_roll.DeleteSelection());
                 }
@@ -538,7 +546,29 @@ namespace winrt::midisequencer::implementation
             }
 
             auto const bpm = m_doc.Tempo.empty() ? 120.0 : seq::TempoMap{ m_doc.Tempo }.BeatsPerMinuteAtTick(m_position);
-            ClockStatusText().Text(res::FormatString(L"ClockStatusInternalFormat", std::format(L"{:g}", std::round(bpm * 100.0) / 100.0)));
+            auto const bpmText = std::format(L"{:g}", std::round(bpm * 100.0) / 100.0);
+            auto const& clockSettings = seq::AppSettings::Current();
+
+            // Clock and time code to the same device is still one device.
+            std::set<std::wstring> followerDevices{};
+
+            for (auto const& output : clockSettings.ClockOutputs())
+            {
+                followerDevices.insert(output.EndpointId.empty() ? output.EndpointName : output.EndpointId);
+            }
+
+            if (clockSettings.TimeCode().IsOn())
+            {
+                auto const& timeCode = clockSettings.TimeCode();
+                followerDevices.insert(timeCode.EndpointId.empty() ? timeCode.EndpointName : timeCode.EndpointId);
+            }
+
+            auto const followers = followerDevices.size();
+
+            ClockStatusText().Text(
+                followers == 0 ? res::FormatString(L"ClockStatusInternalFormat", bpmText) :
+                followers == 1 ? res::FormatString(L"ClockStatusSendingOneFormat", bpmText) :
+                res::FormatString(L"ClockStatusSendingFormat", bpmText, followers));
 
             // How many devices the sequence uses, and how many of those aren't here.
             std::set<std::wstring> used{};
@@ -736,6 +766,8 @@ namespace winrt::midisequencer::implementation
                 m_engine->Stop();
                 m_engine->StopThread();
             }
+
+            StopRemoteControl();
 
             if (m_sources != nullptr)
             {

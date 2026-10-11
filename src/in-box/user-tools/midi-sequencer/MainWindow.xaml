@@ -447,6 +447,10 @@
                                 <MenuFlyoutItem x:Uid="MenuExportStandardMidiFile" Click="OnExportStandardMidiFileClick" />
                             </MenuFlyoutSubItem>
                             <MenuFlyoutSeparator />
+                            <MenuFlyoutItem x:Uid="MenuRemoteControl" Click="OnRemoteControlClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AF;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
                             <MenuFlyoutItem x:Uid="MenuClose" Click="OnCloseWindowClick" />
                         </MenuFlyout>
                     </Button.Flyout>
@@ -599,6 +603,16 @@
                         <TextBlock x:Name="MeterText" FontFamily="Cascadia Mono, Consolas" FontSize="11" LineHeight="13"
                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" Text="4/4" />
                     </StackPanel>
+                    <!-- The whole display is a button: tempo and meter at the playhead. -->
+                    <Button x:Name="TempoEditButton"
+                            x:Uid="TempoEditButton"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Padding="0"
+                            CornerRadius="5"
+                            BorderThickness="0"
+                            Background="Transparent"
+                            Click="OnTempoDisplayClick" />
                 </Grid>
 
                 <Button x:Name="ClockButton" Style="{StaticResource SmallButtonStyle}" Click="OnClockClick">
@@ -943,9 +957,10 @@
                   Padding="12,0,12,0"
                   BorderThickness="0,0,0,1"
                   BorderBrush="{ThemeResource SeqDividerBrush}">
+                <!-- The left side gives way first, so the close button never leaves the window. -->
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
@@ -982,43 +997,80 @@
 
                     <Rectangle Width="1" Height="22" Margin="4,0,4,0" Fill="{ThemeResource SeqDividerBrush}" />
 
-                    <ToggleButton x:Name="EditorDrawToggle" x:Uid="EditorDrawToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnEditorDrawClick">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <FontIcon Glyph="&#xE70F;" FontSize="12" />
-                            <TextBlock x:Uid="EditorDrawText" />
-                        </StackPanel>
-                    </ToggleButton>
+                    <StackPanel x:Name="NotesTools" Orientation="Horizontal" Spacing="8">
+                        <ToggleButton x:Name="EditorDrawToggle" x:Uid="EditorDrawToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnEditorDrawClick">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE70F;" FontSize="12" />
+                                <TextBlock x:Uid="EditorDrawText" />
+                            </StackPanel>
+                        </ToggleButton>
 
-                    <Button x:Name="EditorQuantizeButton" x:Uid="EditorQuantizeButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorQuantizeClick" />
+                        <Button x:Name="EditorQuantizeButton" x:Uid="EditorQuantizeButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorQuantizeClick" />
 
-                    <Button x:Name="EditorTransposeButton" x:Uid="EditorTransposeButton" Style="{StaticResource SubtleSmallButtonStyle}">
-                        <Button.Flyout>
-                            <MenuFlyout>
-                                <MenuFlyoutItem x:Uid="TransposeUpOctave" Tag="12" Click="OnTransposeClick" />
-                                <MenuFlyoutItem x:Uid="TransposeUpSemitone" Tag="1" Click="OnTransposeClick" />
-                                <MenuFlyoutItem x:Uid="TransposeDownSemitone" Tag="-1" Click="OnTransposeClick" />
-                                <MenuFlyoutItem x:Uid="TransposeDownOctave" Tag="-12" Click="OnTransposeClick" />
-                            </MenuFlyout>
-                        </Button.Flyout>
-                    </Button>
+                        <Button x:Name="EditorTransposeButton" x:Uid="EditorTransposeButton" Style="{StaticResource SubtleSmallButtonStyle}">
+                            <Button.Flyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem x:Uid="TransposeUpOctave" Tag="12" Click="OnTransposeClick" />
+                                    <MenuFlyoutItem x:Uid="TransposeUpSemitone" Tag="1" Click="OnTransposeClick" />
+                                    <MenuFlyoutItem x:Uid="TransposeDownSemitone" Tag="-1" Click="OnTransposeClick" />
+                                    <MenuFlyoutItem x:Uid="TransposeDownOctave" Tag="-12" Click="OnTransposeClick" />
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
 
-                    <Button x:Name="EditorKeyboardButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorKeyboardClick">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Viewbox Width="14" Height="14">
-                                <Canvas Width="16" Height="16">
-                                    <Rectangle Canvas.Left="1" Canvas.Top="2.5" Width="14" Height="11" RadiusX="1.5" RadiusY="1.5" StrokeThickness="1.1" Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <Path Data="M4.5,8.5 L4.5,13.5 M8,8.5 L8,13.5 M11.5,2.5 L11.5,13.5" StrokeThickness="0.9" Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <Rectangle Canvas.Left="3.4" Canvas.Top="2.5" Width="2.2" Height="6" Fill="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <Rectangle Canvas.Left="6.9" Canvas.Top="2.5" Width="2.2" Height="6" Fill="{ThemeResource TextFillColorSecondaryBrush}" />
-                                </Canvas>
-                            </Viewbox>
-                            <TextBlock x:Uid="EditorKeyboardText" />
-                        </StackPanel>
-                    </Button>
+                        <Button x:Name="EditorKeyboardButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorKeyboardClick">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Viewbox Width="14" Height="14">
+                                    <Canvas Width="16" Height="16">
+                                        <Rectangle Canvas.Left="1" Canvas.Top="2.5" Width="14" Height="11" RadiusX="1.5" RadiusY="1.5" StrokeThickness="1.1" Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <Path Data="M4.5,8.5 L4.5,13.5 M8,8.5 L8,13.5 M11.5,2.5 L11.5,13.5" StrokeThickness="0.9" Stroke="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <Rectangle Canvas.Left="3.4" Canvas.Top="2.5" Width="2.2" Height="6" Fill="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <Rectangle Canvas.Left="6.9" Canvas.Top="2.5" Width="2.2" Height="6" Fill="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock x:Uid="EditorKeyboardText" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- A pattern clip's settings. Shown instead of the notes tools. -->
+                    <StackPanel x:Name="PatternTools" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+                        <TextBlock x:Uid="PatternStepsLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <NumberBox x:Name="PatternStepsBox" x:Uid="PatternStepsBox" Width="92" Minimum="1" Maximum="64" SmallChange="1" LargeChange="4"
+                                   SpinButtonPlacementMode="Compact" VerticalAlignment="Center" ValueChanged="OnPatternStepsChanged" />
+                        <TextBlock x:Uid="PatternStepSizeLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <ComboBox x:Name="PatternStepSizeCombo" x:Uid="PatternStepSizeCombo" Style="{StaticResource SmallComboStyle}" Width="118" SelectionChanged="OnPatternStepSizeChanged" />
+                        <TextBlock x:Uid="PatternSwingLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <NumberBox x:Name="PatternSwingBox" x:Uid="PatternSwingBox" Width="92" Minimum="50" Maximum="75" SmallChange="1" LargeChange="5"
+                                   SpinButtonPlacementMode="Compact" VerticalAlignment="Center" ValueChanged="OnPatternSwingChanged" />
+                        <ToggleButton x:Name="PatternKeepLengthToggle" x:Uid="PatternKeepLengthToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnPatternKeepLengthClick" />
+                    </StackPanel>
+
+                    <!-- A generator clip's settings. -->
+                    <StackPanel x:Name="GeneratorTools" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+                        <TextBlock x:Uid="GeneratorTypeLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <ComboBox x:Name="GeneratorTypeCombo" x:Uid="GeneratorTypeCombo" Style="{StaticResource SmallComboStyle}" Width="170" SelectionChanged="OnGeneratorTypeChanged" />
+                        <TextBlock x:Uid="GeneratorBarsLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <NumberBox x:Name="GeneratorBarsBox" x:Uid="GeneratorBarsBox" Width="92" Minimum="1" Maximum="16" SmallChange="1" LargeChange="4"
+                                   SpinButtonPlacementMode="Compact" VerticalAlignment="Center" ValueChanged="OnGeneratorBarsChanged" />
+                        <TextBlock x:Uid="GeneratorStepSizeLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <ComboBox x:Name="GeneratorStepSizeCombo" x:Uid="GeneratorStepSizeCombo" Style="{StaticResource SmallComboStyle}" Width="118" SelectionChanged="OnGeneratorStepSizeChanged" />
+                        <ToggleButton x:Name="GeneratorChangesToggle" x:Uid="GeneratorChangesToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnGeneratorChangesClick" />
+                    </StackPanel>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <TextBlock x:Uid="ShowValuesAsLabel" Style="{StaticResource TransportLabelStyle}" />
+                    <StackPanel x:Name="PatternActions" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+                        <Button x:Name="PatternVaryButton" x:Uid="PatternVaryButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnPatternVaryClick">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE8B1;" FontSize="12" />
+                                <TextBlock x:Uid="PatternVaryText" />
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="PatternMakeNotesButton" x:Uid="PatternMakeNotesButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnPatternMakeNotesClick" />
+                        <Rectangle Width="1" Height="22" Margin="4,0,4,0" Fill="{ThemeResource SeqDividerBrush}" />
+                    </StackPanel>
+                    <TextBlock x:Name="ValuesAsLabel" x:Uid="ShowValuesAsLabel" Style="{StaticResource TransportLabelStyle}" />
                     <ComboBox x:Name="ValuesAsCombo" x:Uid="ValuesAsCombo" Style="{StaticResource SmallComboStyle}" Width="150" SelectionChanged="OnValuesAsChanged" />
                     <Button x:Name="EditorCloseButton" x:Uid="EditorCloseButton" Width="28" Height="28" Padding="0"
                             Background="Transparent" BorderBrush="Transparent" Click="OnEditorCloseClick">
@@ -1047,6 +1099,15 @@
 
                 <Grid x:Name="EditorCanvasHost" />
 
+                <!-- A generator's settings, over the canvas. Built in code for the generator's type. -->
+                <ScrollViewer x:Name="GeneratorPanel"
+                              Visibility="Collapsed"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Auto"
+                              Background="{ThemeResource SeqEditorBackgroundBrush}">
+                    <StackPanel x:Name="GeneratorBody" Padding="20,14,20,14" Spacing="10" />
+                </ScrollViewer>
+
                 <Grid x:Name="EditorInspector"
                       Grid.Column="1"
                       BorderThickness="1,0,0,0"
@@ -1059,7 +1120,9 @@
                     <Grid Padding="14,11,14,11" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource SeqDividerBrush}">
                         <TextBlock x:Name="NoteInspectorTitle" x:Uid="NoteInspectorTitle" FontSize="14" FontWeight="SemiBold" />
                     </Grid>
-                    <StackPanel x:Name="NoteInspectorBody" Grid.Row="1" Padding="14,12,14,12" Spacing="2" />
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel x:Name="NoteInspectorBody" Padding="14,12,14,12" Spacing="2" />
+                    </ScrollViewer>
                 </Grid>
             </Grid>
         </Grid>
