@@ -49,6 +49,10 @@ public:
     // scheduler legitimately fails it.
     TEST_METHOD(SchedulerDoesNotBusyWait);
 
+    // Batched cross-process reads pass every message sharing a timestamp in one buffer.
+    TEST_METHOD(SameTimestampBatchIsDeliveredOnTime);
+    TEST_METHOD(IncompleteBatchIsRefused);
+
     void RunBaselineScenario(
         _In_z_ wchar_t const* label,
         _In_ uint32_t messageCount,

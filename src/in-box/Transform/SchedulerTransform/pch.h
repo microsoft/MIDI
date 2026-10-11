@@ -70,6 +70,7 @@ using namespace std::literals;
 namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
+#include "ump_helpers.h"
 #include "Feature_Servicing_MIDI2SchedulerV2.h"
 #include "winrt_enumeration_prop_util.h"
 #include "plugin_defs.h"
