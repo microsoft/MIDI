@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "SequenceSerializer.h"
+#include "Lyrics.h"
 #include "SequenceGenerator.h"
 #include "SequencePattern.h"
 
@@ -26,6 +27,7 @@ namespace midisequencer
 
         constexpr wchar_t KeyFileVersion[] = L"fileVersion";
         constexpr wchar_t KeyName[] = L"name";
+        constexpr wchar_t KeyCopyright[] = L"copyright";
         constexpr wchar_t KeyTicksPerQuarterNote[] = L"ticksPerQuarterNote";
         constexpr wchar_t KeyTempo[] = L"tempo";
         constexpr wchar_t KeyMeter[] = L"meter";
@@ -2084,6 +2086,7 @@ namespace midisequencer
         context.TickScale = static_cast<double>(TicksPerQuarterNote) / static_cast<double>(fileTicks);
 
         sequence.Name = ReadText(root, KeyName, limits.MaximumTextLength);
+        sequence.Copyright = ReadText(root, KeyCopyright, limits.MaximumTextLength);
         sequence.Provenance = midiapp::ReadProvenance(root);
 
         sequence.Tempo.clear();
@@ -2185,9 +2188,11 @@ namespace midisequencer
             }
         }
 
+        sequence.Lyrics = ReadLyricsJson(root, limits, context.Skipped);
+
         sequence.Unknown = UnknownKeys(root, {
             KeyFileVersion, KeyName, midiapp::ProvenanceKey, KeyTicksPerQuarterNote, KeyTempo, KeyMeter,
-            KeyTags, KeyScenes, KeyTracks, KeyClips });
+            KeyTags, KeyScenes, KeyTracks, KeyClips, LyricsKey, KeyCopyright });
 
         NormalizeSequence(sequence);
 
@@ -2216,6 +2221,11 @@ namespace midisequencer
         if (!sequence.Name.empty())
         {
             root.Text(KeyName, sequence.Name);
+        }
+
+        if (!sequence.Copyright.empty())
+        {
+            root.Text(KeyCopyright, sequence.Copyright);
         }
 
         if (sequence.Provenance.has_value() && !sequence.Provenance->IsEmpty())
@@ -2274,6 +2284,11 @@ namespace midisequencer
         {
             root.Key(KeyTags);
             WriteTagArray(out, sequence.Tags, 1);
+        }
+
+        if (sequence.Lyrics)
+        {
+            root.Raw(LyricsKey, LyricsToJsonText(*sequence.Lyrics));
         }
 
         if (!sequence.Scenes.empty())

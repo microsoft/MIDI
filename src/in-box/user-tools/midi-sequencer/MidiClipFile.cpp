@@ -451,6 +451,7 @@ namespace midisequencer
         RenderOptions options{};
         options.LaneStepTicks = LaneStepTicks(FastestTempo(sequence.Tempo), 0);
         options.LaneStartValues = true;
+        options.Lyrics = true;
 
         std::vector<RenderedMessage> rendered{};
         RenderTrack(sequence, track, 0, INT64_MAX, rendered, options);

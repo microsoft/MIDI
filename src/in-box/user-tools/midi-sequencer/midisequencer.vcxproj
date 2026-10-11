@@ -155,6 +155,9 @@
     <ClInclude Include="StandardMidiFileBridge.h" />
     <ClInclude Include="DawProject.h" />
     <ClInclude Include="CaptureImport.h" />
+    <ClInclude Include="DocumentFiles.h" />
+    <ClInclude Include="Lyrics.h" />
+    <ClInclude Include="SequenceProvenance.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="ThemePalette.h" />
@@ -212,6 +215,10 @@
     <ClCompile Include="MainWindowAutomation.cpp" />
     <ClCompile Include="MainWindowClock.cpp" />
     <ClCompile Include="MainWindowDocument.cpp" />
+    <ClCompile Include="MainWindowImport.cpp" />
+    <ClCompile Include="MainWindowLyrics.cpp" />
+    <ClCompile Include="MainWindowProvenance.cpp" />
+    <ClCompile Include="ArrangeRendererLyrics.cpp" />
     <ClCompile Include="MainWindowEditor.cpp" />
     <ClCompile Include="MainWindowPlayback.cpp" />
     <ClCompile Include="MainWindowRemote.cpp" />
@@ -275,6 +282,12 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="CaptureImport.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lyrics.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="SequenceProvenance.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <!-- Standard MIDI File reader and writer, shared with MIDI Player and the Sequencing API -->

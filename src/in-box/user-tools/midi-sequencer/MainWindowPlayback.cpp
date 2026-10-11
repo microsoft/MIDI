@@ -224,6 +224,24 @@ namespace winrt::midisequencer::implementation
                         }
                     }
 
+                    // Tracks an import made before the synth was known get it now.
+                    if (!strong->m_awaitingSynth.empty())
+                    {
+                        if (auto const synth = directory->Resolve(seq::EndpointRef{ L"", directory->SynthEndpointId() }); synth.has_value())
+                        {
+                            for (auto const& id : strong->m_awaitingSynth)
+                            {
+                                if (auto track = seq::FindTrack(strong->m_doc, id); track != nullptr && !track->IsFolder && track->Destination.Endpoint.IsEmpty())
+                                {
+                                    track->Destination.Endpoint = seq::EndpointDirectory::MakeRef(synth->Live);
+                                }
+                            }
+
+                            strong->m_awaitingSynth.clear();
+                            strong->Publish();
+                        }
+                    }
+
                     strong->RebuildHeaders();
                     strong->RefreshInspector();
                     strong->UpdateEditorHeader();

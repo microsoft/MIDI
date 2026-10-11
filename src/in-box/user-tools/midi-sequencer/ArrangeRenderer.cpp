@@ -25,6 +25,10 @@ namespace midisequencer
         // zoomed all the way out still draws quickly.
         constexpr size_t MaximumPreviewNotes = 6000;
 
+        // A clip lane is drawn once for each pass of its clip that's in view. Past this many, the
+        // passes are narrower than a pixel.
+        constexpr size_t MaximumDrawnPasses = 4096;
+
         canvasText::CanvasTextFormat MakeFormat(
             wchar_t const* family,
             float size,
@@ -523,6 +527,10 @@ namespace midisequencer
                 }
                 break;
 
+            case ArrangeRowKind::Lyrics:
+                DrawLyricsRow(ds, top, rowHeight, width, context);
+                break;
+
             default:
                 break;
             }
@@ -988,7 +996,15 @@ namespace midisequencer
             // Under the line, so the line stays readable where they cross.
             ds.DrawText(context.ClipLaneCaption, x0 + 4.0f, top + 2.0f, std::max(1.0f, x1 - x0 - 8.0f), 13.0f, colors.Text3, m_meterLabel);
 
-            for (auto passStart = placement.Tick; passStart < end && context.View.XAtTick(passStart) <= width; passStart += clip->Length)
+            // From the first pass in view, and no more passes than the width can show.
+            auto passStart = placement.Tick;
+
+            if (auto const leftTick = static_cast<int64_t>(std::max(0.0, context.View.ScrollX / std::max(1.0e-9, context.View.PixelsPerTick))); leftTick > passStart)
+            {
+                passStart += ((leftTick - passStart) / clip->Length) * clip->Length;
+            }
+
+            for (size_t drawn = 0; passStart < end && context.View.XAtTick(passStart) <= width && drawn < MaximumDrawnPasses; passStart += clip->Length, ++drawn)
             {
                 DrawLaneLine(ds, *own, passStart, passStart, std::min(end, passStart + clip->Length), top, height, width, context, color, false, true);
             }
@@ -1081,13 +1097,22 @@ namespace midisequencer
             DrawNotes(ds, *clip, clip->Notes, body, placement.Tick, placement.Tick + length,
                 context.View.PixelsPerTick, -context.View.ScrollX, noteColor, clip->Kind == ClipKind::Generator);
 
-            // Where a looping clip starts again.
-            if (clip->Loop && length > clip->Length)
+            // Where a looping clip starts again: from the first mark in view, and only when the
+            // marks are far enough apart to see. Closer than that they'd be a smear, and a file
+            // could ask for billions of them.
+            if (clip->Loop && length > clip->Length && static_cast<double>(clip->Length) * context.View.PixelsPerTick >= 3.0)
             {
                 auto const loopColor = colors.Light ? Rgba(0, 0, 0, 0.35) : Rgba(255, 255, 255, 0.35);
                 auto const dashed = DashedStroke(2.0f, 2.0f);
+                auto const leftTick = static_cast<int64_t>(std::max(0.0, context.View.ScrollX / context.View.PixelsPerTick));
+                auto at = placement.Tick + clip->Length;
 
-                for (auto at = placement.Tick + clip->Length; at < placement.Tick + length; at += clip->Length)
+                if (leftTick > at)
+                {
+                    at += ((leftTick - at) / clip->Length) * clip->Length;
+                }
+
+                for (; at < placement.Tick + length; at += clip->Length)
                 {
                     auto const x = static_cast<float>(context.View.XAtTick(at));
 

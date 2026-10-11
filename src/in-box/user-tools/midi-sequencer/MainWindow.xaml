@@ -449,7 +449,14 @@
                                 <MenuFlyoutItem x:Uid="MenuExportClipFiles" Click="OnExportClipFilesClick" />
                                 <MenuFlyoutItem x:Uid="MenuExportStandardMidiFile" Click="OnExportStandardMidiFileClick" />
                                 <MenuFlyoutItem x:Uid="MenuExportDawProject" Click="OnExportDawProjectClick" />
+                                <MenuFlyoutItem x:Uid="MenuExportLyrics" Click="OnExportLyricsClick" />
                             </MenuFlyoutSubItem>
+                            <MenuFlyoutItem x:Uid="MenuLyrics" Click="OnLyricsClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8BD;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="MenuSequenceInfo" Click="OnSequenceInfoClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE946;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
                             <MenuFlyoutSeparator />
                             <MenuFlyoutItem x:Uid="MenuRemoteControl" Click="OnRemoteControlClick">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AF;" /></MenuFlyoutItem.Icon>

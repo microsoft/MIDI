@@ -804,7 +804,7 @@
     <value>All at the playhead, in the order copied</value>
   </data>
   <data name="PasteAllAtOnceHelp" xml:space="preserve">
-    <value>Good for a set-up dump: sound select, then a system exclusive patch.</value>
+    <value>Good for a setup dump: sound select, then a system exclusive patch.</value>
   </data>
   <data name="PasteButton" xml:space="preserve">
     <value>Paste</value>
@@ -2652,5 +2652,283 @@
   </data>
   <data name="UndoGeneratorSettings" xml:space="preserve">
     <value>Change generator</value>
+  </data>
+  <data name="MenuLyrics.Text" xml:space="preserve">
+    <value>Lyrics…</value>
+  </data>
+  <data name="MenuExportLyrics.Text" xml:space="preserve">
+    <value>Lyrics with times (LRC)…</value>
+    <comment>LRC is the name of a file format for lyrics with times. Don't translate it.</comment>
+  </data>
+  <data name="MenuEditLyrics" xml:space="preserve">
+    <value>Edit lyrics…</value>
+  </data>
+  <data name="MenuShowLyricsBar" xml:space="preserve">
+    <value>Show the words as they're sung</value>
+  </data>
+  <data name="MenuSaveLyricsAsLrc" xml:space="preserve">
+    <value>Save as an LRC file…</value>
+    <comment>LRC is the name of a file format for lyrics with times. Don't translate it.</comment>
+  </data>
+  <data name="MenuRemoveLyrics" xml:space="preserve">
+    <value>Remove lyrics</value>
+  </data>
+  <data name="LyricsTrackName" xml:space="preserve">
+    <value>Lyrics</value>
+  </data>
+  <data name="LyricsEmptyHint" xml:space="preserve">
+    <value>No words yet. Double-click here to type them.</value>
+  </data>
+  <data name="LyricsSyllableCountFormat" xml:space="preserve">
+    <value>{0} syllables</value>
+  </data>
+  <data name="LyricsSyllableCountOneFormat" xml:space="preserve">
+    <value>{0} syllable</value>
+  </data>
+  <data name="LyricsSungByFormat" xml:space="preserve">
+    <value>sung by {0}</value>
+    <comment>{0} is the name of a track.</comment>
+  </data>
+  <data name="LyricsSungByNone" xml:space="preserve">
+    <value>no track sings them</value>
+  </data>
+  <data name="UndoEditLyrics" xml:space="preserve">
+    <value>Edit lyrics</value>
+  </data>
+  <data name="UndoRemoveLyrics" xml:space="preserve">
+    <value>Remove lyrics</value>
+  </data>
+  <data name="LyricsEditorTitle" xml:space="preserve">
+    <value>Lyrics</value>
+  </data>
+  <data name="LyricsEditorHelp" xml:space="preserve">
+    <value>Type the words. Put a hyphen between the syllables of a word, like hap-py, and an underscore for a syllable that's held over more notes. Start each line of the song on a new line, and leave a blank line between verses. Each syllable goes on the next note of the track that sings.</value>
+  </data>
+  <data name="LyricsWordsHeader" xml:space="preserve">
+    <value>Words</value>
+  </data>
+  <data name="LyricsWordsPlaceholder" xml:space="preserve">
+    <value>Hap-py birth-day to you</value>
+  </data>
+  <data name="LyricsSingerHeader" xml:space="preserve">
+    <value>Sung by</value>
+  </data>
+  <data name="LyricsSingerNone" xml:space="preserve">
+    <value>No track</value>
+  </data>
+  <data name="LyricsLanguageHeader" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="LyricsLanguagePlaceholder" xml:space="preserve">
+    <value>For example, en or ja</value>
+    <comment>en and ja are language tags (English and Japanese). Keep them as they are.</comment>
+  </data>
+  <data name="LyricsPlacementHeader" xml:space="preserve">
+    <value>Where the words go</value>
+  </data>
+  <data name="LyricsPlaceKeep" xml:space="preserve">
+    <value>Keep their times, and put new words on the notes after them</value>
+  </data>
+  <data name="LyricsPlaceOnNotes" xml:space="preserve">
+    <value>On the notes of the track that sings, from the start</value>
+  </data>
+  <data name="LyricsPlaceBeats" xml:space="preserve">
+    <value>A beat apart, from the playhead</value>
+  </data>
+  <data name="LyricsNothingToExport" xml:space="preserve">
+    <value>This sequence has no lyrics to save.</value>
+  </data>
+  <data name="FileTypeLyrics" xml:space="preserve">
+    <value>Lyrics with times (LRC)</value>
+    <comment>LRC is the name of a file format for lyrics with times. Don't translate it.</comment>
+  </data>
+  <data name="DawProjectNoLyrics" xml:space="preserve">
+    <value>DAWproject has no place for lyrics, so they were left out.</value>
+    <comment>DAWproject is the name of a file format that DAWs share. Don't translate it.</comment>
+  </data>
+  <data name="MenuSequenceInfo.Text" xml:space="preserve">
+    <value>About this sequence…</value>
+  </data>
+  <data name="SequenceInfoTitle" xml:space="preserve">
+    <value>About this sequence</value>
+  </data>
+  <data name="SequenceInfoIntro" xml:space="preserve">
+    <value>Saved in the sequence file and shown to anyone you share it with. It's what you say about your work: nothing here is checked by Windows.</value>
+  </data>
+  <data name="SequenceInfoName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="SequenceInfoAuthor" xml:space="preserve">
+    <value>Made by</value>
+  </data>
+  <data name="SequenceInfoOrganization" xml:space="preserve">
+    <value>Company or group</value>
+  </data>
+  <data name="SequenceInfoWebsite" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="SequenceInfoLicense" xml:space="preserve">
+    <value>License</value>
+  </data>
+  <data name="SequenceInfoOptional" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="SequenceInfoBadWebsite" xml:space="preserve">
+    <value>Use a web address that starts with https://, or leave it empty.</value>
+  </data>
+  <data name="SequenceInfoLicenseNote" xml:space="preserve">
+    <value>A license tells people what they may do with your work. CC-BY-4.0 lets people share and change it if they give you credit. CC0-1.0 gives it away with no conditions.</value>
+    <comment>CC-BY-4.0 and CC0-1.0 are license names. Don't translate them.</comment>
+  </data>
+  <data name="SequenceInfoCopyright" xml:space="preserve">
+    <value>Copyright notice in exported files</value>
+  </data>
+  <data name="SequenceInfoCopyrightPlaceholder" xml:space="preserve">
+    <value>For example, Copyright 2026 Your Name</value>
+  </data>
+  <data name="FillInYourInfo" xml:space="preserve">
+    <value>Fill in your info</value>
+  </data>
+  <data name="FillInYourInfoTip" xml:space="preserve">
+    <value>Puts in the name, company or group, website and license from Your info for sharing.</value>
+  </data>
+  <data name="SequenceInfoRemember" xml:space="preserve">
+    <value>Save these as your info for sharing</value>
+  </data>
+  <data name="SequenceInfoMadeOnFormat" xml:space="preserve">
+    <value>Made on {0}</value>
+    <comment>{0} is a date and time.</comment>
+  </data>
+  <data name="SequenceInfoMadeWithFormat" xml:space="preserve">
+    <value>Made with {0}</value>
+    <comment>{0} is the name of an app.</comment>
+  </data>
+  <data name="DateAndTimeFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>{0} is a date and {1} is a time of day.</comment>
+  </data>
+  <data name="SequenceInfoSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="UndoSequenceInfo" xml:space="preserve">
+    <value>Change the sequence info</value>
+  </data>
+  <data name="SequenceInfoSourceHeading" xml:space="preserve">
+    <value>How the sequence was made</value>
+  </data>
+  <data name="SequenceInfoAuthorPlaceholder" xml:space="preserve">
+    <value>Your name, or the name you share music under</value>
+  </data>
+  <data name="SequenceInfoLicensePlaceholder" xml:space="preserve">
+    <value>For example, CC-BY-4.0</value>
+    <comment>CC-BY-4.0 is a license name. Don't translate it.</comment>
+  </data>
+  <data name="SequenceInfoSuggested" xml:space="preserve">
+    <value>suggested from the clips</value>
+  </data>
+  <data name="SequenceSourceMix" xml:space="preserve">
+    <value>A mix of things played, drawn and generated</value>
+  </data>
+  <data name="SequenceSourceRecorded" xml:space="preserve">
+    <value>Played and recorded</value>
+  </data>
+  <data name="SequenceSourceDrawn" xml:space="preserve">
+    <value>Drawn or typed in by a person</value>
+  </data>
+  <data name="SequenceSourceAlgorithm" xml:space="preserve">
+    <value>Made by an algorithm, like this app's generators</value>
+  </data>
+  <data name="SequenceSourceWithAi" xml:space="preserve">
+    <value>Includes parts made with generative AI</value>
+  </data>
+  <data name="SequenceSourceAi" xml:space="preserve">
+    <value>Made with generative AI</value>
+  </data>
+  <data name="SourceAsWrittenFormat" xml:space="preserve">
+    <value>As the file says: {0}</value>
+  </data>
+  <data name="ProvenanceOversightLabel" xml:space="preserve">
+    <value>How a person was involved</value>
+  </data>
+  <data name="OversightChoiceNone" xml:space="preserve">
+    <value>Not at all</value>
+  </data>
+  <data name="OversightChoicePrompted" xml:space="preserve">
+    <value>A person told the AI what to make</value>
+  </data>
+  <data name="OversightChoiceChecked" xml:space="preserve">
+    <value>A person checked what the AI made</value>
+  </data>
+  <data name="ProvenanceModelLabel" xml:space="preserve">
+    <value>AI model</value>
+  </data>
+  <data name="SequenceInfoClipsHeading" xml:space="preserve">
+    <value>Where the clips came from</value>
+  </data>
+  <data name="SequenceInfoClipColumn" xml:space="preserve">
+    <value>Clip</value>
+  </data>
+  <data name="SequenceInfoHowColumn" xml:space="preserve">
+    <value>How it was made</value>
+  </data>
+  <data name="SequenceInfoDetailsColumn" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="SequenceInfoNoClips" xml:space="preserve">
+    <value>No clips are on the timeline or in the launcher yet.</value>
+  </data>
+  <data name="SequenceInfoMoreClipsFormat" xml:space="preserve">
+    <value>And {0} more clips.</value>
+  </data>
+  <data name="SequenceInfoClipsNote" xml:space="preserve">
+    <value>An imported clip keeps its file's name and copyright notice. A MIDI file only has room for a name, a composer and a copyright notice, so that's all an export writes. The rest stays in the sequence file.</value>
+  </data>
+  <data name="UnnamedClip" xml:space="preserve">
+    <value>Untitled clip</value>
+  </data>
+  <data name="ClipOriginRecorded" xml:space="preserve">
+    <value>Recorded</value>
+  </data>
+  <data name="ClipOriginDrawn" xml:space="preserve">
+    <value>Drawn</value>
+  </data>
+  <data name="ClipOriginPattern" xml:space="preserve">
+    <value>Pattern</value>
+  </data>
+  <data name="ClipOriginGenerated" xml:space="preserve">
+    <value>Generated</value>
+  </data>
+  <data name="ClipOriginImported" xml:space="preserve">
+    <value>Imported</value>
+  </data>
+  <data name="ClipOriginAssistant" xml:space="preserve">
+    <value>AI assistant</value>
+  </data>
+  <data name="ClipOriginUnknown" xml:space="preserve">
+    <value>Not known</value>
+  </data>
+  <data name="ClipFromFormat" xml:space="preserve">
+    <value>From {0}</value>
+    <comment>{0} is the name of a MIDI device.</comment>
+  </data>
+  <data name="ClipPatternDetail" xml:space="preserve">
+    <value>Steps set by hand</value>
+  </data>
+  <data name="ClipNoteCountFormat" xml:space="preserve">
+    <value>{0} notes</value>
+  </data>
+  <data name="ClipNoteCountOneFormat" xml:space="preserve">
+    <value>{0} note</value>
+  </data>
+  <data name="ClipGeneratorFormat" xml:space="preserve">
+    <value>{0}, seed {1}</value>
+    <comment>{0} is a kind of generator, such as Chance melody. {1} is a number in hexadecimal.</comment>
+  </data>
+  <data name="ClipAssistantDetail" xml:space="preserve">
+    <value>Written by an AI assistant</value>
+  </data>
+  <data name="ImportedWithCopyrightFormat" xml:space="preserve">
+    <value>{0}, “{1}”</value>
+    <comment>{0} is a file name. {1} is the copyright notice in that file.</comment>
   </data>
 </root>

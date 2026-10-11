@@ -106,6 +106,9 @@
     <ClInclude Include="RemoteControlTests.h" />
     <ClInclude Include="DawProjectTests.h" />
     <ClInclude Include="CaptureImportTests.h" />
+    <ClInclude Include="LyricsTests.h" />
+    <ClInclude Include="SequenceProvenanceTests.h" />
+    <ClInclude Include="HostileFileTests.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.h" />
@@ -149,6 +152,9 @@
     <ClCompile Include="RemoteControlTests.cpp" />
     <ClCompile Include="DawProjectTests.cpp" />
     <ClCompile Include="CaptureImportTests.cpp" />
+    <ClCompile Include="LyricsTests.cpp" />
+    <ClCompile Include="SequenceProvenanceTests.cpp" />
+    <ClCompile Include="HostileFileTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.cpp" />
@@ -162,6 +168,8 @@
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\StandardMidiFileBridge.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\DawProject.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\CaptureImport.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\Lyrics.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceProvenance.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceEdits.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\RecordingTake.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\RemoteControl.cpp" />

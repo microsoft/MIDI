@@ -29,10 +29,14 @@ namespace midisequencer
 
         // One automation lane, under its track.
         Lane = 4,
+
+        // The lyrics track, pinned under Tempo and meter when the sequence has one.
+        Lyrics = 5,
     };
 
     // Row heights from the comps (seq.css).
     inline constexpr double TempoRowHeight = 44.0;
+    inline constexpr double LyricsRowHeight = 36.0;
     inline constexpr double TrackRowHeight = 46.0;
     inline constexpr double FolderRowHeight = 30.0;
     inline constexpr double AddTrackRowHeight = 40.0;

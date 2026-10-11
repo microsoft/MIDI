@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "SequenceRender.h"
+#include "Lyrics.h"
 #include "SequenceGenerator.h"
 #include "SequencePattern.h"
 
@@ -20,6 +21,11 @@ namespace midisequencer
         // A ramp longer than this many steps in one render is stepped more coarsely, so a hostile
         // file can't keep an export busy for minutes.
         constexpr int64_t MaximumLaneStepsPerSegment = 2000000;
+
+        // A file can loop a one-tick clip with nothing in it for billions of ticks, which renders
+        // nothing and would take minutes. One render stops after this many passes; a real song
+        // loops a short clip a few thousand times.
+        constexpr size_t MaximumRenderedPasses = 4000000;
 
         int64_t PlacementLength(_In_ Placement const& placement, _In_ Clip const& clip) noexcept
         {
@@ -481,6 +487,7 @@ namespace midisequencer
     {
         auto const firstNew = messages.size();
         auto const maximum = firstNew + options.MaximumMessages;
+        size_t passes{ 0 };
 
         for (auto const& placement : track.Timeline)
         {
@@ -512,7 +519,7 @@ namespace midisequencer
             {
                 auto const passStart = placement.Tick + pass * clip->Length;
 
-                if (passStart >= end || passStart >= toTick || messages.size() >= maximum)
+                if (passStart >= end || passStart >= toTick || messages.size() >= maximum || ++passes > MaximumRenderedPasses)
                 {
                     break;
                 }
@@ -527,6 +534,11 @@ namespace midisequencer
             {
                 RenderTrackLane(sequence, track, lane, fromTick, toTick, options, maximum, messages);
             }
+        }
+
+        if (options.Lyrics && options.Midi2)
+        {
+            RenderLyrics(sequence, track, fromTick, toTick, options.LaneStartValues, maximum, messages);
         }
 
         std::stable_sort(messages.begin() + static_cast<ptrdiff_t>(firstNew), messages.end(),

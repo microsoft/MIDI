@@ -174,6 +174,7 @@ namespace winrt::midisequencer::implementation
         m_textGenerated = res::GetString(L"GeneratedAsItPlays");
         m_textEmptyLane = res::GetString(L"EmptyLaneHint");
         m_textClipLane = res::GetString(L"ClipLaneCaption");
+        m_textEmptyLyrics = res::GetString(L"LyricsEmptyHint");
 
         auto const make = [](controls::Grid const& host, bool underOthers)
         {
@@ -494,6 +495,7 @@ namespace winrt::midisequencer::implementation
         context.GeneratedAsItPlays = m_textGenerated;
         context.EmptyLaneHint = m_textEmptyLane;
         context.ClipLaneCaption = m_textClipLane;
+        context.EmptyLyricsHint = m_textEmptyLyrics;
 
         context.SelectedLaneTrackId = m_selectedLaneTrackId;
         context.SelectedLaneId = m_selectedLaneId;
@@ -670,6 +672,11 @@ namespace winrt::midisequencer::implementation
         if (row.Kind == seq::ArrangeRowKind::Lane)
         {
             return MakeLaneHeader(row);
+        }
+
+        if (row.Kind == seq::ArrangeRowKind::Lyrics)
+        {
+            return MakeLyricsHeader(row);
         }
 
         controls::Grid grid{};
@@ -1593,6 +1600,8 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            UpdateLyricsBar();
+
             auto const x = static_cast<double>(m_position) * (m_barWidth / TicksPerFourFourBar) - m_scrollX;
             auto const width = LaneWidth();
 
@@ -2418,6 +2427,13 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            if (hit.Row->Kind == seq::ArrangeRowKind::Lyrics)
+            {
+                args.Handled(true);
+                ShowLyricsEditor();
+                return;
+            }
+
             if (hit.Row->Kind == seq::ArrangeRowKind::Tempo)
             {
                 auto const top = static_cast<float>(hit.Row->Top - (pinned ? 0.0 : m_scrollY));
@@ -2577,6 +2593,11 @@ namespace winrt::midisequencer::implementation
         if (row.Kind == seq::ArrangeRowKind::Tempo)
         {
             AddTempoMenuItems(menu, tick);
+        }
+
+        if (row.Kind == seq::ArrangeRowKind::Lyrics)
+        {
+            AddLyricsMenuItems(menu);
         }
 
         add(res::GetString(L"MenuPlayFromHere"), L"\uE768", [weak, snapped]() { if (auto s = weak.get()) { s->Play(snapped); } });

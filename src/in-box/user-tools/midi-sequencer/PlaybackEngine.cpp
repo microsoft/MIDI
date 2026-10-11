@@ -740,6 +740,7 @@ namespace midisequencer
         RenderOptions options{};
         options.Midi2 = info.SpeaksMidi2;
         options.LaneStepTicks = LaneStepTicks(m_fastestTempo, info.AutomationIntervalMilliseconds);
+        options.Lyrics = true;
 
         // Lanes send where they are after a start, the loop going round, an edit made while
         // playing, or a mute ending. Otherwise they send only where they change.
@@ -842,13 +843,16 @@ namespace midisequencer
             }
 
             // A launched clip loops from where it was launched, on its own clock, whatever the
-            // timeline's loop does.
+            // timeline's loop does. The lyrics follow the timeline, so they stay out of it.
             Track launched{};
             launched.Id = track.Id;
             launched.Destination = track.Destination;
             launched.Timeline.push_back(Placement{ state.ClipId, state.ClipStartUnwrapped, clip->Loop ? INT64_MAX / 4 : clip->Length });
 
-            RenderTrack(*m_sequence, launched, fromUnwrapped, toUnwrapped, messages, options);
+            auto launchedOptions = options;
+            launchedOptions.Lyrics = false;
+
+            RenderTrack(*m_sequence, launched, fromUnwrapped, toUnwrapped, messages, launchedOptions);
 
             for (auto& message : messages)
             {

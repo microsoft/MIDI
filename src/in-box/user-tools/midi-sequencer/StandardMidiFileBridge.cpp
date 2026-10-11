@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "StandardMidiFileBridge.h"
+#include "Lyrics.h"
 
 #include "SequenceRender.h"
 
@@ -17,6 +18,7 @@
 #include <cmath>
 #include <cstring>
 #include <format>
+#include <map>
 #include <span>
 
 namespace midisequencer
@@ -371,6 +373,52 @@ namespace midisequencer
             imported.Tracks.push_back(std::move(tracks[i]));
         }
 
+        // ---- lyrics: lyric events, or a Soft Karaoke file's words in text events ----
+
+        auto const lyricKind = file.IsKaraoke ? midifile::TextKind::Text : midifile::TextKind::Lyric;
+        auto const isLyric = [&file, lyricKind](midifile::TextEvent const& text)
+        {
+            return text.Kind == lyricKind && !(file.IsKaraoke && text.Text.starts_with('@'));
+        };
+
+        // Some files repeat the words on a second track, so only the track with the most of them.
+        std::map<uint16_t, size_t> lyricsPerTrack{};
+
+        for (auto const& text : file.TextEvents)
+        {
+            if (isLyric(text))
+            {
+                ++lyricsPerTrack[text.TrackIndex];
+            }
+        }
+
+        if (!lyricsPerTrack.empty())
+        {
+            auto const wordsTrack = std::max_element(lyricsPerTrack.begin(), lyricsPerTrack.end(),
+                [](auto const& a, auto const& b) { return a.second < b.second; })->first;
+
+            std::vector<LyricFileText> texts{};
+
+            for (auto const& text : file.TextEvents)
+            {
+                if (text.Kind == lyricKind && text.TrackIndex == wordsTrack)
+                {
+                    texts.push_back(LyricFileText{ toTick(text.Tick), text.Text });
+                }
+            }
+
+            std::stable_sort(texts.begin(), texts.end(), [](LyricFileText const& a, LyricFileText const& b) { return a.Tick < b.Tick; });
+
+            LyricsTrack lyrics{};
+            lyrics.Syllables = LyricsFromFileText(texts, file.IsKaraoke, SequenceLimits{});
+
+            if (!lyrics.Syllables.empty())
+            {
+                lyrics.TrackId = TrackThatSings(imported.Tracks, imported.Clips, lyrics.Syllables);
+                imported.Lyrics = std::move(lyrics);
+            }
+        }
+
         return imported;
     }
 
@@ -475,6 +523,7 @@ namespace midisequencer
 
         std::vector<OutgoingEvent> outgoing{};
         std::vector<RenderedMessage> rendered{};
+        uint16_t lyricsTrackIndex{ 0 };
 
         // A Standard MIDI File carries MIDI 1.0, so lanes step at MIDI 1.0's resolution.
         RenderOptions options{};
@@ -509,6 +558,27 @@ namespace midisequencer
             for (auto const& tag : track.Tags)
             {
                 file.TextEvents.push_back(midifile::TextEvent{ clampTick(tag.Tick), trackIndex, midifile::TextKind::Marker, ToUtf8(tag.Text) });
+            }
+
+            // RP-017 puts the words on the track that sings them.
+            if (sequence.Lyrics && !sequence.Lyrics->TrackId.empty() && sequence.Lyrics->TrackId == track.Id)
+            {
+                lyricsTrackIndex = trackIndex;
+            }
+        }
+
+        // Lyrics no track sings go on the first track, so they aren't lost. Lyrics that belong to
+        // a track left out of the export stay out with it.
+        if (sequence.Lyrics && lyricsTrackIndex == 0 && FindTrack(sequence, sequence.Lyrics->TrackId) != nullptr)
+        {
+            lyricsTrackIndex = UINT16_MAX;
+        }
+
+        if (sequence.Lyrics && lyricsTrackIndex != UINT16_MAX)
+        {
+            for (auto& lyric : LyricsToFileText(sequence.Lyrics->Syllables))
+            {
+                file.TextEvents.push_back(midifile::TextEvent{ clampTick(lyric.Tick), lyricsTrackIndex, midifile::TextKind::Lyric, std::move(lyric.Text) });
             }
         }
 

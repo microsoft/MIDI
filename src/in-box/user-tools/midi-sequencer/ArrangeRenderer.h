@@ -108,6 +108,7 @@ namespace midisequencer
         winrt::hstring GeneratedAsItPlays{};
         winrt::hstring EmptyLaneHint{};
         winrt::hstring ClipLaneCaption{};       // over a clip that has its own lane
+        winrt::hstring EmptyLyricsHint{};
     };
 
     class ArrangeRenderer
@@ -160,6 +161,9 @@ namespace midisequencer
         void DrawTrackLane(_In_ canvas::CanvasDrawingSession const& ds, _In_ Track const& track, _In_ ArrangeRow const& row, _In_ float top, _In_ float width, _In_ ArrangeDrawContext const& context);
         void DrawFolderLane(_In_ canvas::CanvasDrawingSession const& ds, _In_ Track const& folder, _In_ float top, _In_ float height, _In_ float width, _In_ ArrangeDrawContext const& context);
         void DrawAutomationRow(_In_ canvas::CanvasDrawingSession const& ds, _In_ Track const& track, _In_ ArrangeRow const& row, _In_ float top, _In_ float width, _In_ ArrangeDrawContext const& context);
+
+        // The syllables where they're sung, with the one at the playhead lit (ArrangeRendererLyrics.cpp).
+        void DrawLyricsRow(_In_ canvas::CanvasDrawingSession const& ds, _In_ float top, _In_ float height, _In_ float width, _In_ ArrangeDrawContext const& context);
 
         // A lane's line from one tick to another, where the lane's tick 0 is at `offset` on the
         // timeline. Clipped to the visible width.

@@ -399,6 +399,20 @@ The sequence as a whole is usually a mix, which IPTC calls `composite`, or `comp
 
 **What reaches an exported file:** a MIDI 2.0 clip file has standard messages for the sequence name, clip name, composer and copyright, and a Standard MIDI File has text events for the same. A DAWproject file's `metadata.xml` has room for the title, artist, composer, copyright, website and a comment. None of them has room for the rest, so the full record stays in the sequence file. Signed packs for sharing sequences (like MIDI Glass's) can come later and reuse the same pack code.
 
+**As built (October 11).**
+
+- File > About this sequence opens the comp 8 dialog (`MainWindowProvenance.cpp`). It uses MIDI Glass's words for the shared fields: Made by, Company or group, Website and License. A website must be `https://` or empty, or Save stays on the dialog and says why.
+- The copyright notice for exports is its own field, `"copyright"` in the sequence file. Standard MIDI File, clip file and DAWproject exports all write it.
+- The suggestion comes from the clips in use (`SequenceProvenance.cpp`, 5 tests):
+  - One kind of clip suggests that kind, and a mix suggests `composite`.
+  - Any clip from an AI assistant suggests `trainedAlgorithmicMedia`, or `compositeWithTrainedAlgorithmicMedia` when other clips are there too. That's the term MIDI Glass uses for help from AI, so this replaces the `compositeSynthetic` named above.
+  - Imported clips alone keep the default, `digitalCreation`.
+- When a source type involves generative AI, the dialog asks how a person was involved and which AI model was used.
+- An imported Standard MIDI File's copyright notice goes with each of its clips ("file.mid, “notice”"). When the file replaces a new, untouched sequence, its notice also becomes the sequence's.
+- A sequence saved for the first time without a provenance block gets one, filled from Your info for sharing, with the suggested source type.
+- "Save these as your info for sharing" updates the profile that all the tools share.
+- Seen on screen (`seq-check-info.ps1`): open, reject an `http://` website, save, reopen with the values kept, and undo.
+
 ## 14. What it reuses
 
 **Can it reuse the Sequencing WinRT API?** For files and the model, yes. For playback, no.
@@ -483,7 +497,7 @@ Each phase ends with something you can use.
 | 7 | Generator clips. | Mostly done (October 10). Euclidean rhythms and chance melodies, made from a slot's menu or the timeline's, with Vary and Make notes. Their settings take the piano roll's place in the editor. Checked on screen. Not built: the arpeggiator (it keeps its settings and plays nothing), the comp's ring drawing, and its four-pass preview. 127 tests in all. |
 | 8 | Following another clock, MIDI Time Code out, remote control, and making a MIDI Glass layout from a sequence. | Done (October 10). Clock out with choices for each device, MIDI 2.0 Set Tempo, MIDI Time Code out, following another device's clock, the Clock and sync dialog, the remote control endpoint, and Make a MIDI Glass layout (sections 8 and 16). Checked on screen and through a loopback. Not built: carrying on at the last tempo when a followed clock stops. 148 tests in all. |
 | 9 | DAWproject import and export. | Done (October 10). File > Import and Export, and Open and drag and drop. A dialog picks a device for each track and says what was left out. Recorded controllers export as automation, and patterns and generators as notes (section 12). Checked on screen. Not built: per-note expressions. Not yet tried with a file from another DAW. 155 tests in all. |
-| 10 | Provenance screens, capture import and paste, docs, an agent guide, an accessibility pass. | Started (October 10). Capture import and paste are built (section 10). Not started: provenance screens, docs, an agent guide, an accessibility pass. 160 tests in all. |
+| 10 | Provenance screens, capture import and paste, docs, an agent guide, an accessibility pass. | Mostly done (October 11). Built: capture import and paste (section 10), About this sequence (section 13), and the lyrics track (section 23). Also done: the docs page with screenshots, `docs/tools/midisequencer`, which opens by saying the app is a very early preview. The security review bounded loops a file could make run for minutes, and the accessibility and en-US checks found nothing. Not built: an agent guide for `.midisequence` files. 181 tests in all. |
 
 ### Phase 0 results
 
@@ -552,3 +566,46 @@ Your answer to the third round (October 10):
 | How the app finds out that a service applies device offsets | It doesn't. A marker written by the service would only reach versions of Windows that have it, and these apps mostly won't be built into Windows. So sending early is a setting in the app, on by default, with help that says when to turn it off (section 8). Done. |
 
 Nothing is open right now.
+
+## 23. Update, October 11: a lyrics track
+
+Pete asked for an optional lyrics track, looking at how Standard MIDI Files and MIDI 2.0 carry lyrics, and at how apps use lyrics today beyond karaoke.
+
+### What the files say
+
+- **Standard MIDI Files: the Lyric meta event (FF 05), as RP-017 defines it (1997).** One syllable per event, placed when its note starts. A space at the end of the text ends a word; no space means the word goes on in the next event. A carriage return (0x0D) ends a line and a line feed (0x0A) ends a paragraph. An event with no text is a melisma: the last syllable keeps being sung. A lyric event at bar 1 turns lyrics on in some players, a line should break within 40 characters, and `\ [ ] { }` are kept for later use.
+- **RP-026 (SMF Language and Display Extensions)** uses those characters: `\r`, `\n` and `\t` as escapes, ruby (small reading text above a word, for Japanese) in `[ ]`, the character set in `{@LATIN}` or `{@JP}` (a byte order mark means Unicode), and song details in `{#Title=...}`, `{#Composer=...}`, `{#Lyrics=...}` and `{#Artist=...}`, closed by `{#}`.
+- **Karaoke `.kar` files** (Soft Karaoke) put the words in ordinary text events (FF 01) instead, usually in a track of their own. They announce themselves with an `@K` text event, use `@` lines for the title and language, and start a syllable with `/` for a new line or `\` for a new paragraph. The shared Standard MIDI File reader already recognizes them.
+- **MIDI 2.0: the Lyric Data message** (UMP and MIDI 2.0 Protocol 1.1, section 7.5.10). It's a Flex Data message (status bank 0x02, status 0x01) holding UTF-8 text, with the same rules: one syllable per message at the start of its note, a space ends a word, a carriage return ends a line, a carriage return and line feed end a paragraph, and a complete packet filled with 0x00 is a melisma. Lyrics Language (status 0x02) gives a BCP 47 language tag, and Ruby and Ruby Language (0x03 and 0x04) carry ruby. A Lyric Data message is addressed to a channel or a whole group, so one song can carry lyrics in two languages at once.
+- **MIDI Clip Files** (M2-116) hold those same Flex Data messages, with every packet of one syllable at one delta clockstamp.
+- **DAWproject** has no place for lyrics.
+
+### How apps use lyrics beyond karaoke
+
+- **A lyrics track and a lyrics display.** Studio One 6 added both: words typed into a track over the arrangement, and a big lyrics display for the singer and band on stage. That's the closest model for this app.
+- **Words on notes, for notation.** Logic Pro, Dorico, MuseScore, Sibelius and Finale attach each syllable to a note, with hyphens and extender lines for melismas, and MusicXML carries them (`<lyric>` with begin, middle, end and single syllables).
+- **Singing synthesis.** Vocaloid, Synthesizer V and UTAU sing whatever syllable sits on each note, so the lyric is part of what the instrument plays.
+- **Lyrics in time with the music, outside music apps.** LRC files (one time stamp per line) for music players, subtitles for lyric videos and live streams, and the time-synced lyrics on streaming services.
+- **Chord charts and lead sheets** for bands and worship teams, with chords above the words, and presentation software that shows the words on screens.
+- **Arranger keyboards** that read lyrics from MIDI files and show them on their screens.
+
+### The design
+
+- **Model.** An optional lyrics track on the sequence: a language (BCP 47, such as `en` or `ja`), the track that sings the words, and syllables. Each syllable has a tick, its text, and what comes after it: more of the same word, the end of a word, the end of a line, or the end of a paragraph. A syllable with no text is a melisma.
+- **Where it shows.** A Lyrics row under the Tempo and meter track, with each syllable at its moment. While the sequence plays, a lyrics bar shows the line being sung and the next one, with the current syllable lit, so the app works as a teleprompter.
+- **Editing.** Type the words: a hyphen between syllables (`Hap-py birth-day`), a space between words, a new line for each line, a blank line between verses, and `_` for a melisma. Then choose the track that sings them, and the syllables go on that track's notes in order (notes that start together count once). With no track chosen, they go a beat apart from the playhead. Opening the editor again gives the same text back, and every change is one undo step.
+- **Files.** The sequence file keeps the lyrics. Standard MIDI File import reads lyric events and karaoke text; export writes RP-017 lyric events. MIDI 2.0 clip file export writes Lyrics Language and Lyric Data messages. LRC export writes a line per time stamp, for music players and video tools. DAWproject export leaves lyrics out and says so.
+- **Playback.** Lyrics go out as MIDI 2.0 Lyric Data messages to the singing track's device, when it speaks MIDI 2.0, so a display or a singing synth can follow along. MIDI 1.0 has no message for lyrics, so a MIDI 1.0 device gets none.
+- **Not in this version:** ruby, lyrics in two languages at once, and dragging single syllables on the Lyrics row.
+
+### As built (October 11)
+
+- **Code.** `Lyrics.h` and `Lyrics.cpp` hold everything that isn't on screen, with 13 tests in `LyricsTests`. The row is drawn in `ArrangeRendererLyrics.cpp`, and the header, menu, editor, lyrics bar and LRC export are in `MainWindowLyrics.cpp`.
+- **The sequence file.** The top-level `"lyrics"` key holds `language`, `track` (the id of the track that sings), and `syllables` as `[tick, text, end]`, where `end` is `"word"`, `"line"` or `"verse"`, or left out when the word goes on. An empty text is a melisma. Keys this version doesn't know are kept.
+- **Typing.** A hyphen splits syllables, two hyphens are a hyphen in the word, `_` is a melisma, a new line ends a line, and a blank line ends a verse. A TextBox ends its lines with a carriage return alone, so that counts as a new line too.
+- **Placing.** Syllables go on the singing track's note starts, as its timeline plays them, counting notes that start together once. When the notes run out, the rest go a beat apart. Editing words that were already placed keeps their times, and puts any new ones on the notes after the last.
+- **Standard MIDI Files.** Import reads the track with the most lyric events, or the words of a karaoke file, and picks the track whose notes start where the most syllables do. It undoes RP-026 escapes, and drops tags and ruby. It reads UTF-16 with a byte order mark, Shift-JIS after `{@JP}`, UTF-8 when the text is valid UTF-8, and Windows-1252 otherwise. Export writes UTF-8 lyric events on the singing track, and escapes `\ [ ] { }`. If that track is left out of the export, so are the words.
+- **MIDI 2.0.** Every Start and Continue packet is a full 12 bytes, because a 0 byte marks the end of the text. That can split one UTF-8 character across two packets. The language goes out before the first syllable, and again at each start, jump and loop. A launched clip sends no lyrics, because the lyrics follow the timeline.
+- **LRC.** One `[mm:ss.xx]` line for each line of lyrics, with `[ti:]` and `[la:]` tags, in UTF-8 with a byte order mark. An empty time stamp clears the words between verses when there's a gap.
+- **Seen on screen** with a probe (`seq-check-lyrics.ps1`, outside the repo): a song file with RP-017 lyrics comes in with its Lyrics row, and the words light up as it plays. The editor changes a word and keeps the times. Undo works, LRC export goes through the save dialog, and remove and undo work three times in a row.
+- **Not built:** reading Lyric Data back from a clip file. Those messages come in as ordinary clip events, and they still play.

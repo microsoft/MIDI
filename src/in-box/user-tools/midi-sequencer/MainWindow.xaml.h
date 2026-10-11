@@ -14,6 +14,7 @@
 #include "ArrangeRenderer.h"
 #include "EndpointDirectory.h"
 #include "DawProject.h"
+#include "Lyrics.h"
 #include "PianoRoll.h"
 #include "PatternEditor.h"
 #include "SequenceGenerator.h"
@@ -59,6 +60,9 @@ namespace winrt::midisequencer::implementation
         void OnExportClipFilesClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnExportStandardMidiFileClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnExportDawProjectClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnExportLyricsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnLyricsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnSequenceInfoClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnRemoteControlClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnCloseWindowClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
@@ -146,6 +150,7 @@ namespace winrt::midisequencer::implementation
         // A file that isn't a sequence, by its extension: a clip file, a DAWproject file, a
         // capture from MIDI Monitor or the console, or a Standard MIDI File.
         void ImportFile(_In_ std::wstring const& path) noexcept;
+        void PlayOnSynth(_Inout_ seq::Track& track) noexcept;
         winrt::fire_and_forget ImportDawProjectAsync(std::wstring path);
         void AddDawProject(_In_ seq::ImportedDawProject imported, _In_ std::wstring const& path) noexcept;
         winrt::fire_and_forget ImportCaptureAsync(std::wstring path);
@@ -303,6 +308,17 @@ namespace winrt::midisequencer::implementation
         void ShowLanePointMenu(_In_ std::wstring const& trackId, _In_ std::wstring const& laneId, _In_ size_t index, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
         void ShowTempoPointMenu(_In_ size_t index, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
         void AddTempoMenuItems(_In_ controls::MenuFlyout const& menu, _In_ int64_t tick);
+
+        // The lyrics track (MainWindowLyrics.cpp).
+        xaml::UIElement MakeLyricsHeader(_In_ seq::ArrangeRow const& row);
+        void AddLyricsMenuItems(_In_ controls::MenuFlyout const& menu);
+        void ShowLyricsEditor();
+        void ApplyLyrics(_In_ std::optional<seq::LyricsTrack> lyrics, _In_ std::wstring const& undoName);
+        void UpdateLyricsBar() noexcept;
+
+        // About this sequence (MainWindowProvenance.cpp).
+        void ShowSequenceInfo();
+        void StampProvenance() noexcept;
         void PromptForTempo(_In_ int64_t tick, _In_ std::optional<size_t> index);
         void PromptForMeter(_In_ int64_t bar);
         void ShowTempoFlyout(_In_ xaml::FrameworkElement const& anchor);
@@ -391,6 +407,9 @@ namespace winrt::midisequencer::implementation
 
         // A new sequence's first track plays to the General MIDI Synth once it's been found.
         bool m_wantsDefaultDestination{ false };
+
+        // Imported tracks waiting for the synth, when an import came before the list of devices.
+        std::vector<std::wstring> m_awaitingSynth{};
 
         seq::ArrangeLayout m_layout{};
         double m_scrollY{ 0 };
@@ -493,6 +512,20 @@ namespace winrt::midisequencer::implementation
         std::vector<LaneChip> m_laneChips{};
         winrt::hstring m_textEmptyLane{};
         winrt::hstring m_textClipLane{};
+        winrt::hstring m_textEmptyLyrics{};
+
+        // The words over the timeline as they're sung, and the lines they fall into, worked out
+        // again only when the sequence changes.
+        controls::Grid m_lyricsBar{ nullptr };
+        shapes::Rectangle m_lyricsBarPlate{ nullptr };
+        controls::TextBlock m_lyricsBarLine{ nullptr };
+        controls::TextBlock m_lyricsBarNext{ nullptr };
+        bool m_lyricsBarShown{ true };
+        std::vector<seq::LyricLine> m_lyricLines{};
+        uint64_t m_lyricLinesVersion{ UINT64_MAX };
+        void const* m_lyricLinesData{ nullptr };
+        size_t m_lyricsBarLineIndex{ SIZE_MAX };
+        size_t m_lyricsBarSungCount{ SIZE_MAX };
 
         seq::Palette m_palette{};
         seq::ArrangeRenderer m_renderer{};

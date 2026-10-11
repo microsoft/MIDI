@@ -62,6 +62,10 @@ namespace midisequencer
         // Whether lanes play at all. Chase leaves them out and asks for start values instead.
         bool Lanes{ true };
 
+        // Whether the track that sings sends the lyrics as Lyric Data. Only playback and clip
+        // files ask, and only for MIDI 2.0.
+        bool Lyrics{ false };
+
         size_t MaximumMessages{ MaximumRenderedMessages };
     };
 

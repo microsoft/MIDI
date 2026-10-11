@@ -146,6 +146,17 @@ namespace midisequencer
         layout.PinnedHeight = TempoRowHeight;
         layout.Pinned.push_back(tempo);
 
+        if (sequence.Lyrics)
+        {
+            ArrangeRow lyrics{};
+            lyrics.Kind = ArrangeRowKind::Lyrics;
+            lyrics.Height = LyricsRowHeight;
+            lyrics.Pinned = true;
+            lyrics.Top = layout.PinnedHeight;
+            layout.PinnedHeight += LyricsRowHeight;
+            layout.Pinned.push_back(lyrics);
+        }
+
         Walker walker{ layout };
         walker.Visit(sequence.Tracks, 0, true, std::wstring{}, false, false);
 

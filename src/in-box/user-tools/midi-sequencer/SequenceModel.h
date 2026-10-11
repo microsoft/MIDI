@@ -52,6 +52,7 @@ namespace midisequencer
         size_t MaximumLanesPerOwner{ 512 };
         size_t MaximumPointsPerLane{ 1000000 };
         size_t MaximumLanePointsInSequence{ 8000000 };
+        size_t MaximumLyrics{ 100000 };
         int64_t MaximumTick{ 0x7FFFFFFF };
     };
 
@@ -495,12 +496,51 @@ namespace midisequencer
         bool operator==(MeterChange const&) const = default;
     };
 
+    // What follows a syllable, as RP-017 and the MIDI 2.0 Lyric Data message mark it: a space, a
+    // carriage return, or a carriage return and line feed.
+    enum class LyricEnd : uint8_t
+    {
+        None = 0,           // the word goes on in the next syllable
+        Word = 1,
+        Line = 2,
+        Paragraph = 3,
+    };
+
+    // One sung syllable, at the tick its note starts. No text is a melisma: the syllable before
+    // keeps being sung.
+    struct Lyric
+    {
+        int64_t Tick{ 0 };
+        std::wstring Text{};
+        LyricEnd End{ LyricEnd::None };
+
+        bool operator==(Lyric const&) const = default;
+    };
+
+    // The optional lyrics track (design section 23).
+    struct LyricsTrack
+    {
+        // BCP 47, such as "en" or "ja". Empty when no one said.
+        std::wstring Language{};
+
+        // The track that sings the words: its notes place them, and it sends them as it plays.
+        std::wstring TrackId{};
+
+        // Sorted by tick.
+        std::vector<Lyric> Syllables{};
+
+        winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };
+    };
+
     struct Sequence
     {
         uint32_t FileVersion{ CurrentFileVersion };
 
         // The name exports carry. Starts out as the file name.
         std::wstring Name{};
+
+        // The copyright notice exports carry, as the person wrote it.
+        std::wstring Copyright{};
 
         std::optional<midiapp::ContentProvenance> Provenance{};
 
@@ -517,6 +557,8 @@ namespace midisequencer
         std::vector<Track> Tracks{};
 
         std::vector<Clip> Clips{};
+
+        std::optional<LyricsTrack> Lyrics{};
 
         winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };
     };

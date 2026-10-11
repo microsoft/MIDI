@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "SequenceModel.h"
+#include "Lyrics.h"
 #include "SequenceGenerator.h"
 #include "SequencePattern.h"
 
@@ -435,6 +436,11 @@ namespace midisequencer
 
         std::unordered_set<std::wstring> trackIds{};
         NormalizeTracks(sequence.Tracks, sequence, clipIds, trackIds);
+
+        if (sequence.Lyrics)
+        {
+            NormalizeLyrics(*sequence.Lyrics, SequenceLimits{});
+        }
     }
 
     // ---- tempo map ----
