@@ -47,6 +47,8 @@ If you need to keep other devices off a host, put it on a network you control, o
 
 **Discovery is automatic.** Devices that advertise themselves appear on their own, usually within a few seconds. There is nothing to scan.
 
+**Network MIDI 2.0 stays off the network until you set something up.** With no hosts and no connections, the MIDI service opens no network ports and sends nothing for it. The service only listens for device announcements while a connection needs one to find its device. Apps that list the devices on your network, like Network MIDI Setup, do their own listening while they're open.
+
 **Connecting can need action at the other end.** Many devices will not simply accept an incoming connection; they wait for you to approve it on a web page, a companion app, or a physical button. If a connection sits at "Connecting", check the device itself. Windows keeps trying, so once you allow it at the other end the connection completes on its own.
 
 **Connections are remembered and re-established on their own.** A connection you set up survives a restart of the service or the PC, with no app running. If the device is switched off, the entry stays and connects when the device reappears.

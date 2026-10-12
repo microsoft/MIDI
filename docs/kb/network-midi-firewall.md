@@ -14,7 +14,7 @@ By default, the Windows MIDI Service is not allowed to listen to incoming connec
 
 ## Using Network MIDI Setup
 
-[Windows MIDI Network Setup]({{ site.baseurl }}/tools/midinetworksetup/#windows-firewall) can do this for you. Open it and select **Firewall** at the bottom of the list of pages. Choose the types of network to allow, then select **Allow through Windows Firewall**, and say yes when Windows asks for administrator permission. The page also tells you whether Windows Firewall lets the MIDI service in on the network you're connected to now. It covers RTP-MIDI hosts too, because they use the same MIDI service.
+[Windows MIDI Network Setup]({{ site.baseurl }}/tools/midinetworksetup/#windows-firewall) can do this for you. Open it and select **Firewall** at the bottom of the list of pages. Choose the types of network to allow, then select **Allow through Windows Firewall**, and say yes when Windows asks for administrator permission. The page also lists the networks you're connected to now, and tells you whether Windows Firewall lets the MIDI service in on each one. It covers RTP-MIDI hosts too, because they use the same MIDI service.
 
 That page changes Windows Firewall only. If your PC uses a firewall from another company, such as one that comes with antivirus software, follow that company's instructions for letting a program accept incoming connections. Choose `midisrv.exe` from the folder described in step 6 below.
 

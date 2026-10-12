@@ -178,13 +178,11 @@ CMidi2RtpMidiEndpointManager::Initialize(
 
         m_initialized = true;
 
-        // Discovery only serves clients configured by name and the list of peers, so a failure here
-        // leaves hosts and clients configured by address working.
-        LOG_IF_FAILED(m_browser.Start(
-            MIDI_RTP_DNSSD_SERVICE_TYPE,
-            [this](WindowsMidiServicesInternal::MidiDnssdService const&) { WakeWorker(); },
-            [this](WindowsMidiServicesInternal::MidiDnssdService const&, uint32_t) { WakeWorker(); },
-            [](std::wstring const&, std::wstring const&) {}));
+        // The worker starts discovery once something needs it
+        {
+            auto lock = std::scoped_lock{ m_discoveryLock };
+            m_discoveryAllowed = true;
+        }
 
         m_worker = std::jthread([this](std::stop_token stopToken) { WorkerLoop(stopToken); });
         SetThreadDescription(m_worker.native_handle(), L"rtpMIDI endpoint worker");
@@ -257,7 +255,12 @@ CMidi2RtpMidiEndpointManager::Shutdown()
 
         if (!m_initialized.exchange(false)) return S_OK;
 
-        m_browser.Stop();
+        {
+            auto lock = std::scoped_lock{ m_discoveryLock };
+
+            m_discoveryAllowed = false;
+            m_browser.Stop();
+        }
 
         // before the worker it wakes
         m_networkChangeMonitor.Stop();
@@ -325,6 +328,130 @@ CMidi2RtpMidiEndpointManager::WakeWorker() noexcept
 }
 
 
+// Called with m_discoveryLock held. A failure leaves hosts and clients configured by address
+// working, and discovery is tried again a little later.
+HRESULT
+CMidi2RtpMidiEndpointManager::StartDiscovery()
+{
+    auto const hr = m_browser.Start(
+        MIDI_RTP_DNSSD_SERVICE_TYPE,
+        [this](WindowsMidiServicesInternal::MidiDnssdService const&) { OnDiscoveryAnswer(); WakeWorker(); },
+        [this](WindowsMidiServicesInternal::MidiDnssdService const&, uint32_t) { OnDiscoveryAnswer(); WakeWorker(); },
+        [this](std::wstring const&, std::wstring const&) { OnDiscoveryAnswer(); });
+
+    auto const now = GetTickCount64();
+
+    if (FAILED(hr))
+    {
+        LOG_IF_FAILED(hr);
+
+        m_nextDiscoveryStartTick = now + MIDI_RTP_DISCOVERY_RETRY_INTERVAL_MS;
+
+        return hr;
+    }
+
+    m_discoveryStartedTick = now;
+
+    TraceLoggingWrite(
+        MidiRtpMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Started looking for RTP-MIDI devices on the network", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return S_OK;
+}
+
+
+void
+CMidi2RtpMidiEndpointManager::OnDiscoveryAnswer() noexcept
+{
+    m_lastDiscoveryAnswerTick = GetTickCount64();
+}
+
+
+// Worker thread only
+void
+CMidi2RtpMidiEndpointManager::UpdateDiscovery()
+{
+    auto const now = GetTickCount64();
+    auto const lastRequest = m_lastAdvertisedRequestTick.load();
+
+    bool needed = lastRequest != 0 && now - lastRequest < MIDI_RTP_DISCOVERY_AFTER_REQUEST_MS;
+
+    if (!needed)
+    {
+        auto const hosts = TransportState::Current().GetHostDefinitions();
+        auto const clients = TransportState::Current().GetClientDefinitions();
+
+        needed =
+            std::any_of(hosts.begin(), hosts.end(), [](RtpMidiHostDefinition const& definition) { return definition.Enabled; }) ||
+            std::any_of(clients.begin(), clients.end(), [](RtpMidiClientDefinition const& definition) { return definition.Enabled; });
+    }
+
+    auto lock = std::scoped_lock{ m_discoveryLock };
+
+    if (!m_discoveryAllowed || needed == m_browser.IsRunning()) return;
+
+    if (needed)
+    {
+        if (now >= m_nextDiscoveryStartTick) (void)StartDiscovery();
+
+        return;
+    }
+
+    m_browser.Stop();
+
+    TraceLoggingWrite(
+        MidiRtpMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Stopped looking for RTP-MIDI devices. No entry or app needs the list now.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+}
+
+
+// A search which has just started has heard nothing yet, so the request that started it waits a
+// moment for devices to answer rather than report an empty network.
+void
+CMidi2RtpMidiEndpointManager::EnsureDiscoveryForRequest()
+{
+    m_lastAdvertisedRequestTick = GetTickCount64();
+
+    uint64_t started{ 0 };
+
+    {
+        auto lock = std::scoped_lock{ m_discoveryLock };
+
+        if (!m_discoveryAllowed) return;
+
+        if (!m_browser.IsRunning())
+        {
+            if (GetTickCount64() < m_nextDiscoveryStartTick || FAILED(StartDiscovery())) return;
+        }
+
+        started = m_discoveryStartedTick;
+    }
+
+    for (;;)
+    {
+        auto const now = GetTickCount64();
+
+        if (!m_initialized.load() || now - started >= MIDI_RTP_DISCOVERY_FIRST_ANSWERS_WAIT_MS) return;
+
+        auto const lastAnswer = m_lastDiscoveryAnswerTick.load();
+
+        if (lastAnswer >= started && now - lastAnswer >= MIDI_RTP_DISCOVERY_ANSWERS_SETTLE_MS) return;
+
+        Sleep(50);
+    }
+}
+
+
 _Use_decl_annotations_
 void
 CMidi2RtpMidiEndpointManager::WorkerLoop(std::stop_token stopToken)
@@ -334,6 +461,7 @@ CMidi2RtpMidiEndpointManager::WorkerLoop(std::stop_token stopToken)
         // one failed pass must not stop the next one
         try
         {
+            UpdateDiscovery();
             ProcessEndpointWork();
             ReconcileHosts(stopToken);
             ReconcileClients(stopToken);
@@ -1779,6 +1907,8 @@ CMidi2RtpMidiEndpointManager::BuildClientsStatusJson()
 json::JsonArray
 CMidi2RtpMidiEndpointManager::BuildAdvertisedHostsJson()
 {
+    EnsureDiscoveryForRequest();
+
     json::JsonArray peers;
 
     for (auto const& service : m_browser.EnumeratedServices())

@@ -2282,14 +2282,32 @@
                                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
 
                                 <!-- What the firewall does with the service on the networks this PC
-                                     is connected to now. Filled in from code. -->
+                                     is connected to now, and each of those networks. Filled in from code. -->
                                 <InfoBar x:Name="FirewallStateBar"
                                          IsOpen="False"
-                                         IsClosable="False" />
+                                         IsClosable="False">
+                                    <StackPanel x:Name="FirewallNetworksPanel"
+                                                Spacing="2"
+                                                Margin="0,0,0,12"
+                                                Visibility="Collapsed">
+                                        <TextBlock x:Uid="FirewallNetworksHeader"
+                                                   Text="Networks this PC is connected to now"
+                                                   FontWeight="SemiBold"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}" />
+                                        <TextBlock x:Name="FirewallNetworksText"
+                                                   TextWrapping="Wrap"
+                                                   IsTextSelectionEnabled="True"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}" />
+                                    </StackPanel>
+                                </InfoBar>
 
                                 <!-- The text is set in code, which also marks the type of network
-                                     in use now -->
+                                     in use now. The domain box only shows on a PC joined to a domain. -->
                                 <StackPanel>
+                                    <CheckBox x:Name="FirewallDomainCheckBox"
+                                              Visibility="Collapsed"
+                                              Checked="OnFirewallNetworkChoiceChanged"
+                                              Unchecked="OnFirewallNetworkChoiceChanged" />
                                     <CheckBox x:Name="FirewallPrivateCheckBox"
                                               Checked="OnFirewallNetworkChoiceChanged"
                                               Unchecked="OnFirewallNetworkChoiceChanged" />

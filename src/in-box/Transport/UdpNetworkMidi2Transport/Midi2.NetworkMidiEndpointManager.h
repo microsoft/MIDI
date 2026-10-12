@@ -155,6 +155,10 @@ private:
     void StartPendingHosts();
     void StartPendingClients(_In_ std::stop_token const& stopToken);
 
+    // Starts the search for advertised hosts while a client entry finds its host by mDNS, and
+    // stops it once none does. Only EndpointCreatorWorker calls this.
+    void UpdateRemoteHostWatcher();
+
     // Where a client definition should connect: the addresses of the advertised host it matches,
     // or of its direct target, in the order to try them. False when there is nowhere to connect yet.
     bool TryResolveClientTarget(
@@ -198,6 +202,13 @@ private:
         _Inout_ std::vector<DEVPROPERTY>& properties);
 
     ::WindowsMidiServicesInternal::MidiDnssdBrowser m_browser;
+
+    // The search sends mDNS queries and takes in whatever any device on the network answers, so it
+    // runs only while something needs it. The lock orders starting and stopping it with shutdown,
+    // and its callbacks never take it.
+    wil::critical_section m_remoteHostWatcherLock;
+    bool m_remoteHostWatcherAllowed{ false };
+
     ::WindowsMidiServicesInternal::MidiDnssdFollowUpAnnouncer m_dnssdAnnouncer;
 
     void OnAdvertisedHostAdded(_In_ ::WindowsMidiServicesInternal::MidiDnssdService const& service);

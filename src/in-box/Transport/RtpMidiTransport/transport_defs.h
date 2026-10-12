@@ -59,6 +59,19 @@
 // How often the worker looks at hosts and clients that are not running as configured.
 #define MIDI_RTP_WORKER_INTERVAL_MS                             1000
 
+// Discovery runs while an entry needs it, and for this long after an app last asked for the list
+// of advertised devices, so an app which keeps asking does not start it over each time.
+#define MIDI_RTP_DISCOVERY_AFTER_REQUEST_MS                     120000
+
+// A search which has just started has heard nothing yet. A request for the list waits up to this
+// long after the start for devices to answer, or until answers have come in and then stopped for
+// the settle time.
+#define MIDI_RTP_DISCOVERY_FIRST_ANSWERS_WAIT_MS                2000
+#define MIDI_RTP_DISCOVERY_ANSWERS_SETTLE_MS                    300
+
+// After discovery fails to start, how long before it is tried again
+#define MIDI_RTP_DISCOVERY_RETRY_INTERVAL_MS                    15000
+
 // A client whose remote did not answer waits this long before inviting it again. Longer than the
 // twelve second invitation cycle, so two cycles never overlap.
 #define MIDI_RTP_CLIENT_RETRY_INTERVAL_MS                       15000

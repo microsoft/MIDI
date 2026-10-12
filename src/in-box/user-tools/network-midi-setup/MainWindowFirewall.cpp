@@ -34,10 +34,22 @@ namespace winrt::midinetworksetup::implementation
             }
         }
 
-        long ChosenNetworks(_In_ controls::CheckBox const& privateBox, _In_ controls::CheckBox const& publicBox) noexcept
+        // A PC which can't be on a domain network has no domain box, and its private box covers both,
+        // so a rule made before the domain box existed still reads as chosen
+        long PrivateBoxNetworks(_In_ bool const domainBoxShown) noexcept
+        {
+            return domainBoxShown ? firewall::PrivateNetworks : (firewall::DomainNetworks | firewall::PrivateNetworks);
+        }
+
+        long ChosenNetworks(
+            _In_ controls::CheckBox const& domainBox,
+            _In_ controls::CheckBox const& privateBox,
+            _In_ controls::CheckBox const& publicBox,
+            _In_ bool const domainBoxShown) noexcept
         {
             return
-                (IsChecked(privateBox) ? firewall::PrivateNetworks : 0) |
+                (domainBoxShown && IsChecked(domainBox) ? firewall::DomainNetworks : 0) |
+                (IsChecked(privateBox) ? PrivateBoxNetworks(domainBoxShown) : 0) |
                 (IsChecked(publicBox) ? firewall::PublicNetworks : 0);
         }
 
@@ -48,6 +60,178 @@ namespace winrt::midinetworksetup::implementation
             auto const text = res::GetString(resourceKey);
 
             return connectedNow ? res::FormatString(L"FirewallConnectedNowFormat", text) : text;
+        }
+
+        // "a public network", for a network Windows gave no name
+        winrt::hstring NetworkTypeText(_In_ long const type) noexcept
+        {
+            return res::GetString(
+                type == firewall::DomainNetworks ? L"FirewallDomainNetworkType" :
+                type == firewall::PrivateNetworks ? L"FirewallPrivateNetworkType" :
+                L"FirewallPublicNetworkType");
+        }
+
+        // The check box for a type of network, as the status names it
+        winrt::hstring NetworkChoiceName(_In_ long const type) noexcept
+        {
+            return res::GetString(
+                type == firewall::DomainNetworks ? L"FirewallDomainNetworksShort" :
+                type == firewall::PrivateNetworks ? L"FirewallPrivateNetworksShort" :
+                L"FirewallPublicNetworksShort");
+        }
+
+        // "A", "A and B", or "A, B, and C"
+        winrt::hstring JoinNames(_In_ std::vector<std::wstring> const& names)
+        {
+            if (names.size() < 2)
+            {
+                return names.empty() ? winrt::hstring{} : winrt::hstring{ names.front() };
+            }
+
+            if (names.size() == 2)
+            {
+                return res::FormatString(L"FirewallNamePairFormat", names[0], names[1]);
+            }
+
+            auto const separator = res::GetString(L"FirewallNameSeparator");
+
+            std::wstring leading{ names.front() };
+
+            for (size_t i = 1; i + 1 < names.size(); i++)
+            {
+                leading += separator;
+                leading += names[i];
+            }
+
+            return res::FormatString(L"FirewallNameSeriesFormat", leading, names.back());
+        }
+
+        // Two networks can share a name, like two that Windows calls "Unidentified network"
+        void AddName(_Inout_ std::vector<std::wstring>& names, _In_ std::wstring const& name)
+        {
+            auto const same = [&](std::wstring const& existing)
+                {
+                    return ::CompareStringOrdinal(existing.c_str(), -1, name.c_str(), -1, TRUE) == CSTR_EQUAL;
+                };
+
+            if (std::none_of(names.begin(), names.end(), same))
+            {
+                names.push_back(name);
+            }
+        }
+
+        bool IsBlocked(_In_ firewall::FirewallStatus const status) noexcept
+        {
+            return
+                status == firewall::FirewallStatus::Closed ||
+                status == firewall::FirewallStatus::ClosedByRule ||
+                status == firewall::FirewallStatus::ClosedForAll;
+        }
+
+        bool DescribesNetworks(_In_ firewall::FirewallStatus const status) noexcept
+        {
+            return IsBlocked(status) || status == firewall::FirewallStatus::Open || status == firewall::FirewallStatus::Off;
+        }
+
+        // The status, naming the networks it is about and saying what to do for a blocked one
+        winrt::hstring DescribeFirewallState(_In_ firewall::FirewallState const& state, _Out_ controls::InfoBarSeverity& severity)
+        {
+            severity = controls::InfoBarSeverity::Warning;
+
+            switch (state.Status)
+            {
+            case firewall::FirewallStatus::ServiceNotFound:
+                severity = controls::InfoBarSeverity::Error;
+                return res::GetString(L"FirewallStateServiceNotFound");
+
+            case firewall::FirewallStatus::NotConnected:
+                severity = controls::InfoBarSeverity::Informational;
+                return res::GetString(L"FirewallStateNotConnected");
+
+            case firewall::FirewallStatus::Unknown:
+                return res::GetString(L"FirewallStateUnknown");
+
+            default:
+                break;
+            }
+
+            std::vector<std::wstring> passing{};
+            std::vector<std::wstring> blocked{};
+            std::vector<std::wstring> notAllowed{};
+            long notAllowedTypes{ 0 };
+
+            for (auto const& network : state.Networks)
+            {
+                std::wstring const name{ network.Name.empty() ? std::wstring{ NetworkTypeText(network.Type) } : network.Name };
+
+                AddName(IsBlocked(network.Status) ? blocked : passing, name);
+
+                if (network.Status == firewall::FirewallStatus::Closed)
+                {
+                    AddName(notAllowed, name);
+                    notAllowedTypes |= network.Type;
+                }
+            }
+
+            if (state.Status == firewall::FirewallStatus::Open)
+            {
+                severity = controls::InfoBarSeverity::Success;
+                return res::FormatString(L"FirewallStateOpenFormat", JoinNames(passing));
+            }
+
+            if (state.Status == firewall::FirewallStatus::Off)
+            {
+                severity = controls::InfoBarSeverity::Informational;
+                return res::FormatString(L"FirewallStateOffFormat", JoinNames(passing));
+            }
+
+            auto const summary = passing.empty() ?
+                res::FormatString(L"FirewallStateClosedFormat", JoinNames(blocked)) :
+                res::FormatString(L"FirewallStatePartlyClosedFormat", JoinNames(passing), JoinNames(blocked));
+
+            if (state.Status == firewall::FirewallStatus::ClosedForAll)
+            {
+                severity = controls::InfoBarSeverity::Error;
+                return res::FormatString(L"FirewallStateBlockAllFormat", summary);
+            }
+
+            if (state.Status == firewall::FirewallStatus::ClosedByRule)
+            {
+                severity = controls::InfoBarSeverity::Error;
+                return res::FormatString(L"FirewallStateRuleFormat", summary);
+            }
+
+            std::vector<std::wstring> choices{};
+
+            for (auto const type : { firewall::DomainNetworks, firewall::PrivateNetworks, firewall::PublicNetworks })
+            {
+                if ((notAllowedTypes & type) != 0)
+                {
+                    choices.emplace_back(NetworkChoiceName(type));
+                }
+            }
+
+            return res::FormatString(L"FirewallStateAllowFormat", summary, JoinNames(notAllowed), JoinNames(choices));
+        }
+
+        // "Unidentified network: a public network, on vEthernet (WSL). Windows Firewall blocks the MIDI service."
+        winrt::hstring DescribeNetwork(_In_ firewall::ConnectedNetwork const& network)
+        {
+            auto const name = network.Name.empty() ? res::GetString(L"FirewallNetworkWithoutName") : winrt::hstring{ network.Name };
+
+            auto const status = res::GetString(
+                network.Status == firewall::FirewallStatus::Open ? L"FirewallNetworkOpen" :
+                network.Status == firewall::FirewallStatus::Off ? L"FirewallNetworkOff" :
+                network.Status == firewall::FirewallStatus::ClosedByRule ? L"FirewallNetworkClosedByRule" :
+                network.Status == firewall::FirewallStatus::ClosedForAll ? L"FirewallNetworkClosedForAll" :
+                L"FirewallNetworkClosed");
+
+            if (network.AdapterNames.empty())
+            {
+                return res::FormatString(L"FirewallNetworkNoAdapterFormat", name, NetworkTypeText(network.Type), status);
+            }
+
+            return res::FormatString(L"FirewallNetworkFormat", name, NetworkTypeText(network.Type), JoinNames(network.AdapterNames), status);
         }
 
         winrt::hstring DescribeAllowResult(_In_ HRESULT const result) noexcept
@@ -137,50 +321,10 @@ namespace winrt::midinetworksetup::implementation
         {
             m_firewallServiceFound = !state.ServicePath.empty();
             m_firewallOwnRuleNetworks = state.OwnRuleNetworks;
+            m_firewallShowDomain = state.JoinedToDomain || (state.ConnectedNetworks & firewall::DomainNetworks) != 0;
 
-            winrt::hstring message{};
             auto severity = controls::InfoBarSeverity::Warning;
-
-            switch (state.Status)
-            {
-            case firewall::FirewallStatus::Open:
-                message = res::GetString(L"FirewallStateOpen");
-                severity = controls::InfoBarSeverity::Success;
-                break;
-
-            case firewall::FirewallStatus::Closed:
-                message = res::GetString(L"FirewallStateClosed");
-                break;
-
-            case firewall::FirewallStatus::ClosedByRule:
-                message = res::GetString(L"FirewallStateClosedByRule");
-                severity = controls::InfoBarSeverity::Error;
-                break;
-
-            case firewall::FirewallStatus::ClosedForAll:
-                message = res::GetString(L"FirewallStateClosedForAll");
-                severity = controls::InfoBarSeverity::Error;
-                break;
-
-            case firewall::FirewallStatus::Off:
-                message = res::GetString(L"FirewallStateOff");
-                severity = controls::InfoBarSeverity::Informational;
-                break;
-
-            case firewall::FirewallStatus::ServiceNotFound:
-                message = res::GetString(L"FirewallStateServiceNotFound");
-                severity = controls::InfoBarSeverity::Error;
-                break;
-
-            case firewall::FirewallStatus::NotConnected:
-                message = res::GetString(L"FirewallStateNotConnected");
-                severity = controls::InfoBarSeverity::Informational;
-                break;
-
-            default:
-                message = res::GetString(L"FirewallStateUnknown");
-                break;
-            }
+            auto message = DescribeFirewallState(state, severity);
 
             if (state.ManagedByPolicy)
             {
@@ -191,12 +335,35 @@ namespace winrt::midinetworksetup::implementation
             FirewallStateBar().Message(message);
             FirewallStateBar().IsOpen(true);
 
+            // Only when Windows named the networks. Without names the status above already says it all.
+            std::wstring lines{};
+
+            if (DescribesNetworks(state.Status) &&
+                std::any_of(state.Networks.begin(), state.Networks.end(), [](firewall::ConnectedNetwork const& network) { return !network.Name.empty(); }))
+            {
+                for (auto const& network : state.Networks)
+                {
+                    lines += lines.empty() ? L"" : L"\n";
+                    lines += std::wstring_view{ DescribeNetwork(network) };
+                }
+            }
+
+            FirewallNetworksText().Text(lines);
+            FirewallNetworksPanel().Visibility(lines.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
             FirewallServicePathText().Text(state.ServicePath.empty() ?
                 res::GetString(L"FirewallServicePathUnknown") :
                 winrt::hstring{ state.ServicePath });
 
+            auto const privateBoxNetworks = PrivateBoxNetworks(m_firewallShowDomain);
+
+            FirewallDomainCheckBox().Visibility(m_firewallShowDomain ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            FirewallDomainCheckBox().Content(winrt::box_value(NetworkChoiceText(
+                L"FirewallDomainNetworks", (state.ConnectedNetworks & firewall::DomainNetworks) != 0)));
+
             FirewallPrivateCheckBox().Content(winrt::box_value(NetworkChoiceText(
-                L"FirewallPrivateNetworks", (state.ConnectedNetworks & firewall::PrivateNetworks) != 0)));
+                L"FirewallPrivateNetworks", (state.ConnectedNetworks & privateBoxNetworks) != 0)));
 
             FirewallPublicCheckBox().Content(winrt::box_value(NetworkChoiceText(
                 L"FirewallPublicNetworks", (state.ConnectedNetworks & firewall::PublicNetworks) != 0)));
@@ -214,7 +381,8 @@ namespace winrt::midinetworksetup::implementation
                 // Windows offers first when an app asks to be let through.
                 auto const networks = state.OwnRuleNetworks != 0 ? state.OwnRuleNetworks : firewall::PrivateNetworks;
 
-                FirewallPrivateCheckBox().IsChecked((networks & firewall::PrivateNetworks) != 0);
+                FirewallDomainCheckBox().IsChecked(m_firewallShowDomain && (networks & firewall::DomainNetworks) != 0);
+                FirewallPrivateCheckBox().IsChecked((networks & privateBoxNetworks) != 0);
                 FirewallPublicCheckBox().IsChecked((networks & firewall::PublicNetworks) != 0);
             }
 
@@ -227,11 +395,12 @@ namespace winrt::midinetworksetup::implementation
     {
         try
         {
-            auto const chosen = ChosenNetworks(FirewallPrivateCheckBox(), FirewallPublicCheckBox());
+            auto const chosen = ChosenNetworks(FirewallDomainCheckBox(), FirewallPrivateCheckBox(), FirewallPublicCheckBox(), m_firewallShowDomain);
 
             // nothing to do while this app's rule already covers exactly what is chosen
             FirewallAllowButton().IsEnabled(
                 !m_firewallBusy && m_firewallServiceFound && chosen != 0 && chosen != m_firewallOwnRuleNetworks);
+            FirewallDomainCheckBox().IsEnabled(!m_firewallBusy);
             FirewallPrivateCheckBox().IsEnabled(!m_firewallBusy);
             FirewallPublicCheckBox().IsEnabled(!m_firewallBusy);
             FirewallProgressRing().IsActive(m_firewallBusy);
@@ -265,7 +434,7 @@ namespace winrt::midinetworksetup::implementation
 
         try
         {
-            auto const networks = ChosenNetworks(FirewallPrivateCheckBox(), FirewallPublicCheckBox());
+            auto const networks = ChosenNetworks(FirewallDomainCheckBox(), FirewallPrivateCheckBox(), FirewallPublicCheckBox(), m_firewallShowDomain);
 
             if (networks == 0)
             {

@@ -451,6 +451,9 @@ namespace winrt::midinetworksetup::implementation
         bool m_firewallServiceFound{ false };
         bool m_firewallChoicesSet{ false };
 
+        // only a PC joined to a domain can be on a domain network, so only it gets that box
+        bool m_firewallShowDomain{ false };
+
         // what this app's rule covers now, so the button is only offered for a change
         long m_firewallOwnRuleNetworks{ 0 };
     };

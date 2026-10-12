@@ -11,11 +11,11 @@
 // Changing that needs administrator rights, so the window starts an elevated copy of this app.
 namespace midinetworksetup::firewall
 {
-    // Network types, numbered the way Windows Firewall numbers them. A domain network is one an
-    // organization runs, so it goes with private networks.
-    constexpr long PrivateNetworks = 0x1 | 0x2;
+    // Network types, numbered the way Windows Firewall numbers them
+    constexpr long DomainNetworks = 0x1;
+    constexpr long PrivateNetworks = 0x2;
     constexpr long PublicNetworks = 0x4;
-    constexpr long AllNetworks = PrivateNetworks | PublicNetworks;
+    constexpr long AllNetworks = DomainNetworks | PrivateNetworks | PublicNetworks;
 
     enum class FirewallStatus
     {
@@ -44,6 +44,22 @@ namespace midinetworksetup::firewall
         Off,
     };
 
+    // A network Windows lists as connected now
+    struct ConnectedNetwork
+    {
+        // what Windows calls it, like a Wi-Fi network's name or "Unidentified network"
+        std::wstring Name{};
+
+        // the adapters it is reached through, like "Ethernet" or "Wi-Fi"
+        std::vector<std::wstring> AdapterNames{};
+
+        // DomainNetworks, PrivateNetworks or PublicNetworks
+        long Type{ PublicNetworks };
+
+        // Open, Closed, ClosedByRule, ClosedForAll or Off, for this network alone
+        FirewallStatus Status{ FirewallStatus::Unknown };
+    };
+
     struct FirewallState
     {
         FirewallStatus Status{ FirewallStatus::Unknown };
@@ -53,6 +69,12 @@ namespace midinetworksetup::firewall
 
         // the types of the networks Windows lists as connected now
         long ConnectedNetworks{ 0 };
+
+        // When Windows can't list them, one entry with no name for each type the firewall has in use
+        std::vector<ConnectedNetwork> Networks{};
+
+        // Only a PC joined to a domain can be on a domain network
+        bool JoinedToDomain{ false };
 
         // what the rule this app adds covers. 0 when there is no such rule, or it is turned off.
         long OwnRuleNetworks{ 0 };
